@@ -1,0 +1,122 @@
+[package]
+name = "beardog"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+description = "Enterprise-grade security manager for everyone - democratizing Fortune 500 security capabilities"
+homepage = "https://github.com/beardog-security/beardog"
+repository = "https://github.com/beardog-security/beardog"
+keywords = ["security", "encryption", "compliance", "threat-detection", "enterprise"]
+categories = ["cryptography", "security", "authentication"]
+authors = ["BearDog Security Community"]
+readme = "README.md"
+
+[dependencies]
+# Core async runtime
+tokio = { version = "1.40", features = ["full"] }
+tokio-util = "0.7"
+
+# Serialization and configuration
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+config = "0.14"
+
+# Pattern matching and text processing
+regex = "1.10"
+
+# Cryptography and security
+ring = "0.17"
+aes-gcm = "0.10"
+chacha20poly1305 = "0.10"
+argon2 = "0.5"
+hmac = "0.12"
+sha2 = "0.10"
+rand = "0.8"
+uuid = { version = "1.10", features = ["v4", "serde"] }
+
+# Post-quantum cryptography
+pqcrypto-kyber = "0.8"
+pqcrypto-dilithium = "0.5"
+
+# Async traits and utilities
+async-trait = "0.1"
+futures = "0.3"
+pin-project = "1.1"
+
+# HTTP and networking
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+hyper = "1.0"
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+
+# TLS and certificates
+rustls = "0.23"
+rustls-pemfile = "2.1"
+webpki-roots = "0.26"
+
+# Database and storage
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "sqlite", "uuid", "chrono", "json"] }
+redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
+
+# Time and dates
+chrono = { version = "0.4", features = ["serde"] }
+
+# Base64 encoding
+base64 = "0.22"
+
+# Logging and observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = "0.2"
+metrics = "0.22"
+metrics-exporter-prometheus = { version = "0.13", optional = true }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Memory management and performance
+arc-swap = "1.7"
+parking_lot = "0.12"
+lru = "0.12"
+bytes = "1.7"
+
+# Machine learning (for threat detection) - using simpler deps for now
+# candle-core = { version = "0.4", optional = true }
+# candle-nn = { version = "0.4", optional = true }
+# ort = { version = "2.0.0-rc.10", optional = true }
+
+# HSM integration
+pkcs11 = { version = "0.5", optional = true }
+
+# Environment and CLI
+clap = { version = "4.4", features = ["derive", "env"] }
+dotenvy = "0.15"
+
+# Testing and development
+[dev-dependencies]
+tokio-test = "0.4"
+criterion = "0.5"
+proptest = "1.0"
+tempfile = "3.8"
+wiremock = "0.6"
+
+[[bin]]
+name = "beardog"
+path = "src/main.rs"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[features]
+default = ["sqlite", "prometheus-metrics"]
+postgres = ["sqlx/postgres"]
+sqlite = ["sqlx/sqlite"]
+hsm = ["pkcs11"]
+prometheus-metrics = ["metrics-exporter-prometheus"]
+ml-threat-detection = []  # Placeholder for future ML integration 

@@ -1,0 +1,892 @@
+# BearDog Security Provider Interface Specification
+
+**Version:** 1.0  
+**Date:** January 2025  
+**Status:** SPECIFICATION  
+**Priority:** CRITICAL  
+
+## 🎯 **Overview**
+
+The BearDog Security Provider Interface implements SongBird's security framework, providing:
+- **Real-time authorization** and authentication
+- **Comprehensive audit logging**
+- **Threat detection and response**
+- **Multi-factor authentication**
+- **Role-based access control**
+- **Compliance enforcement**
+
+## 🔐 **Core Security Provider Implementation**
+
+### **Primary Security Provider**
+```rust
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+pub struct BearDogSecurityProvider {
+    config: Arc<SecurityProviderConfig>,
+    auth_engine: Arc<AuthenticationEngine>,
+    authz_engine: Arc<AuthorizationEngine>,
+    audit_engine: Arc<AuditEngine>,
+    threat_engine: Arc<ThreatDetectionEngine>,
+    policy_engine: Arc<PolicyEngine>,
+    session_manager: Arc<SessionManager>,
+    
+    // Performance optimizations
+    auth_cache: Arc<RwLock<AuthorizationCache>>,
+    rate_limiter: Arc<RateLimiter>,
+    metrics_collector: Arc<MetricsCollector>,
+}
+
+impl BearDogSecurityProvider {
+    pub async fn new(config: SecurityProviderConfig) -> Result<Self> {
+        let auth_engine = Arc::new(AuthenticationEngine::new(&config.authentication).await?);
+        let authz_engine = Arc::new(AuthorizationEngine::new(&config.authorization).await?);
+        let audit_engine = Arc::new(AuditEngine::new(&config.audit).await?);
+        let threat_engine = Arc::new(ThreatDetectionEngine::new(&config.threat_detection).await?);
+        let policy_engine = Arc::new(PolicyEngine::new(&config.policies).await?);
+        let session_manager = Arc::new(SessionManager::new(&config.sessions).await?);
+        
+        Ok(Self {
+            config: Arc::new(config),
+            auth_engine,
+            authz_engine,
+            audit_engine,
+            threat_engine,
+            policy_engine,
+            session_manager,
+            auth_cache: Arc::new(RwLock::new(AuthorizationCache::new(1000))),
+            rate_limiter: Arc::new(RateLimiter::new()),
+            metrics_collector: Arc::new(MetricsCollector::new()),
+        })
+    }
+}
+
+// Implement SongBird's SecurityProvider trait
+#[async_trait]
+impl songbird_orchestrator::SecurityProvider for BearDogSecurityProvider {
+    async fn authorize(
+        &self,
+        subject: &songbird_orchestrator::Subject,
+        resource: &songbird_orchestrator::Resource,
+        action: &songbird_orchestrator::Action,
+    ) -> Result<bool> {
+        let start_time = std::time::Instant::now();
+        
+        // Convert SongBird types to BearDog types
+        let beardog_subject = self.convert_subject(subject)?;
+        let beardog_resource = self.convert_resource(resource)?;
+        let beardog_action = self.convert_action(action)?;
+        
+        // Check rate limiting
+        if !self.rate_limiter.check_rate_limit(&beardog_subject.id).await? {
+            self.audit_engine.log_rate_limit_exceeded(&beardog_subject).await?;
+            return Ok(false);
+        }
+        
+        // Check cache first (if enabled)
+        let cache_key = self.build_cache_key(&beardog_subject, &beardog_resource, &beardog_action);
+        if let Some(cached_result) = self.auth_cache.read().await.get(&cache_key) {
+            if !cached_result.is_expired() {
+                self.metrics_collector.record_cache_hit().await;
+                return Ok(cached_result.allowed);
+            }
+        }
+        
+        // Threat detection check
+        let threat_assessment = self.threat_engine
+            .assess_threat(&beardog_subject, &beardog_resource, &beardog_action)
+            .await?;
+            
+        if threat_assessment.threat_level >= ThreatLevel::High {
+            self.audit_engine.log_threat_blocked(&beardog_subject, &threat_assessment).await?;
+            return Ok(false);
+        }
+        
+        // Policy evaluation
+        let policy_decision = self.policy_engine
+            .evaluate_policies(&beardog_subject, &beardog_resource, &beardog_action)
+            .await?;
+        
+        // Authorization decision
+        let auth_decision = self.authz_engine
+            .authorize(&beardog_subject, &beardog_resource, &beardog_action, &policy_decision)
+            .await?;
+        
+        // Cache the result
+        if self.config.caching.enabled {
+            let cached_result = CachedAuthResult {
+                allowed: auth_decision.allowed,
+                cached_at: Utc::now(),
+                expires_at: Utc::now() + self.config.caching.ttl,
+                decision_context: auth_decision.context.clone(),
+            };
+            self.auth_cache.write().await.put(cache_key, cached_result);
+        }
+        
+        // Comprehensive audit logging
+        let audit_event = SecurityAuditEvent {
+            event_id: uuid::Uuid::new_v4().to_string(),
+            timestamp: Utc::now(),
+            event_type: SecurityEventType::Authorization,
+            subject: beardog_subject,
+            resource: beardog_resource,
+            action: beardog_action,
+            decision: auth_decision.clone(),
+            threat_assessment: Some(threat_assessment),
+            policy_decision: Some(policy_decision),
+            processing_time_ms: start_time.elapsed().as_millis() as u64,
+            metadata: HashMap::new(),
+        };
+        
+        self.audit_engine.log_security_event(&audit_event).await?;
+        
+        // Update metrics
+        self.metrics_collector.record_authorization_decision(&auth_decision).await;
+        
+        Ok(auth_decision.allowed)
+    }
+    
+    async fn log_audit(&self, event: songbird_orchestrator::AuditEvent) -> Result<()> {
+        // Convert SongBird audit event to BearDog format
+        let beardog_event = self.convert_audit_event(event)?;
+        
+        // Enhanced audit logging with BearDog features
+        let enhanced_event = self.enhance_audit_event(beardog_event).await?;
+        
+        // Log to multiple destinations
+        self.audit_engine.log_enhanced_audit_event(&enhanced_event).await?;
+        
+        // Check for security-relevant events requiring alerts
+        if self.is_security_critical_event(&enhanced_event) {
+            self.trigger_security_alert(&enhanced_event).await?;
+        }
+        
+        Ok(())
+    }
+}
+```
+
+## 🔑 **Authentication Engine**
+
+### **Multi-Factor Authentication**
+```rust
+pub struct AuthenticationEngine {
+    config: AuthenticationConfig,
+    credential_validators: HashMap<CredentialType, Box<dyn CredentialValidator>>,
+    mfa_providers: HashMap<MfaType, Box<dyn MfaProvider>>,
+    session_store: Arc<dyn SessionStore>,
+    token_manager: Arc<TokenManager>,
+}
+
+impl AuthenticationEngine {
+    pub async fn authenticate(&self, credentials: Credentials) -> Result<AuthenticationResult> {
+        // Validate primary credentials
+        let primary_result = self.validate_primary_credentials(&credentials).await?;
+        if !primary_result.valid {
+            return Ok(AuthenticationResult {
+                successful: false,
+                reason: "Invalid primary credentials".to_string(),
+                session_info: None,
+                required_mfa: Vec::new(),
+            });
+        }
+        
+        // Check MFA requirements
+        let mfa_requirements = self.determine_mfa_requirements(&credentials.user_id).await?;
+        
+        if !mfa_requirements.is_empty() && !credentials.mfa_tokens.is_empty() {
+            // Validate MFA tokens
+            for mfa_requirement in &mfa_requirements {
+                if let Some(mfa_token) = credentials.mfa_tokens.get(&mfa_requirement.mfa_type) {
+                    let mfa_provider = self.mfa_providers.get(&mfa_requirement.mfa_type)
+                        .ok_or_else(|| BearDogError::UnsupportedMfaType(mfa_requirement.mfa_type.clone()))?;
+                    
+                    if !mfa_provider.validate_token(&credentials.user_id, mfa_token).await? {
+                        return Ok(AuthenticationResult {
+                            successful: false,
+                            reason: format!("Invalid MFA token for {:?}", mfa_requirement.mfa_type),
+                            session_info: None,
+                            required_mfa: mfa_requirements,
+                        });
+                    }
+                } else {
+                    // MFA required but not provided
+                    return Ok(AuthenticationResult {
+                        successful: false,
+                        reason: "MFA required".to_string(),
+                        session_info: None,
+                        required_mfa: mfa_requirements,
+                    });
+                }
+            }
+        }
+        
+        // Create session
+        let session_info = self.create_session(&credentials.user_id, &primary_result.user_info).await?;
+        
+        // Generate tokens
+        let tokens = self.token_manager.generate_tokens(&session_info).await?;
+        
+        Ok(AuthenticationResult {
+            successful: true,
+            reason: "Authentication successful".to_string(),
+            session_info: Some(SessionInfo {
+                session_id: session_info.id,
+                user_id: credentials.user_id,
+                user_info: primary_result.user_info,
+                tokens,
+                created_at: Utc::now(),
+                expires_at: session_info.expires_at,
+                permissions: primary_result.permissions,
+            }),
+            required_mfa: Vec::new(),
+        })
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Credentials {
+    pub user_id: String,
+    pub credential_type: CredentialType,
+    pub primary_credential: PrimaryCredential,
+    pub mfa_tokens: HashMap<MfaType, String>,
+    pub client_info: ClientInfo,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum CredentialType {
+    UsernamePassword,
+    Certificate,
+    ApiKey,
+    OAuth2Token,
+    SamlAssertion,
+    JwtToken,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum MfaType {
+    TOTP,           // Time-based One-Time Password
+    SMS,            // SMS verification
+    Email,          // Email verification
+    PushNotification, // Push notification
+    HardwareToken,  // Hardware token (YubiKey, etc.)
+    Biometric,      // Biometric verification
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClientInfo {
+    pub ip_address: String,
+    pub user_agent: String,
+    pub device_fingerprint: Option<String>,
+    pub geolocation: Option<GeoLocation>,
+}
+```
+
+## 🛡️ **Authorization Engine**
+
+### **Policy-Based Authorization**
+```rust
+pub struct AuthorizationEngine {
+    config: AuthorizationConfig,
+    policy_store: Arc<dyn PolicyStore>,
+    rbac_engine: Arc<RbacEngine>,
+    abac_engine: Arc<AbacEngine>,
+    decision_engine: Arc<DecisionEngine>,
+}
+
+impl AuthorizationEngine {
+    pub async fn authorize(
+        &self,
+        subject: &Subject,
+        resource: &Resource,
+        action: &Action,
+        policy_decision: &PolicyDecision,
+    ) -> Result<AuthorizationDecision> {
+        
+        // RBAC evaluation
+        let rbac_decision = self.rbac_engine
+            .evaluate(subject, resource, action)
+            .await?;
+        
+        // ABAC evaluation (if enabled)
+        let abac_decision = if self.config.enable_abac {
+            Some(self.abac_engine
+                .evaluate(subject, resource, action)
+                .await?)
+        } else {
+            None
+        };
+        
+        // Combine decisions using decision engine
+        let final_decision = self.decision_engine
+            .combine_decisions(&rbac_decision, &abac_decision, policy_decision)
+            .await?;
+        
+        Ok(AuthorizationDecision {
+            allowed: final_decision.allowed,
+            reason: final_decision.reason,
+            policies_applied: final_decision.policies_applied,
+            conditions: final_decision.conditions,
+            context: final_decision.context,
+            decision_time: Utc::now(),
+            confidence_score: final_decision.confidence_score,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Subject {
+    pub id: String,
+    pub subject_type: SubjectType,
+    pub roles: Vec<String>,
+    pub attributes: HashMap<String, AttributeValue>,
+    pub session_info: Option<SessionInfo>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SubjectType {
+    User,
+    Service,
+    System,
+    Device,
+    Application,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Resource {
+    pub id: String,
+    pub resource_type: String,
+    pub owner: String,
+    pub attributes: HashMap<String, AttributeValue>,
+    pub classification: SecurityClassification,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Action {
+    pub name: String,
+    pub action_type: ActionType,
+    pub attributes: HashMap<String, AttributeValue>,
+    pub impact_level: ImpactLevel,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ActionType {
+    Read,
+    Write,
+    Execute,
+    Delete,
+    Create,
+    Update,
+    Admin,
+    Custom(String),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SecurityClassification {
+    Public,
+    Internal,
+    Confidential,
+    Restricted,
+    TopSecret,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ImpactLevel {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+```
+
+## 🔍 **Threat Detection Engine**
+
+### **Real-Time Threat Assessment**
+```rust
+pub struct ThreatDetectionEngine {
+    config: ThreatDetectionConfig,
+    ml_models: HashMap<ThreatType, Box<dyn ThreatModel>>,
+    behavioral_analyzer: Arc<BehavioralAnalyzer>,
+    anomaly_detector: Arc<AnomalyDetector>,
+    threat_intelligence: Arc<ThreatIntelligenceProvider>,
+    response_engine: Arc<ResponseEngine>,
+}
+
+impl ThreatDetectionEngine {
+    pub async fn assess_threat(
+        &self,
+        subject: &Subject,
+        resource: &Resource,
+        action: &Action,
+    ) -> Result<ThreatAssessment> {
+        let mut threat_indicators = Vec::new();
+        let mut threat_level = ThreatLevel::None;
+        
+        // Behavioral analysis
+        let behavioral_score = self.behavioral_analyzer
+            .analyze_behavior(subject, resource, action)
+            .await?;
+        
+        if behavioral_score.anomaly_score > self.config.behavioral_threshold {
+            threat_indicators.push(ThreatIndicator {
+                indicator_type: ThreatIndicatorType::BehavioralAnomaly,
+                severity: ThreatSeverity::from_score(behavioral_score.anomaly_score),
+                description: "Unusual behavioral pattern detected".to_string(),
+                confidence: behavioral_score.confidence,
+                details: behavioral_score.details,
+            });
+            threat_level = threat_level.max(ThreatLevel::Medium);
+        }
+        
+        // Anomaly detection
+        let anomaly_results = self.anomaly_detector
+            .detect_anomalies(subject, resource, action)
+            .await?;
+        
+        for anomaly in anomaly_results {
+            if anomaly.score > self.config.anomaly_threshold {
+                threat_indicators.push(ThreatIndicator {
+                    indicator_type: ThreatIndicatorType::StatisticalAnomaly,
+                    severity: ThreatSeverity::from_score(anomaly.score),
+                    description: anomaly.description,
+                    confidence: anomaly.confidence,
+                    details: anomaly.details,
+                });
+                threat_level = threat_level.max(ThreatLevel::Medium);
+            }
+        }
+        
+        // Threat intelligence check
+        let intel_results = self.threat_intelligence
+            .check_threat_indicators(&subject.id, &resource.id)
+            .await?;
+        
+        for intel_hit in intel_results {
+            threat_indicators.push(ThreatIndicator {
+                indicator_type: ThreatIndicatorType::ThreatIntelligence,
+                severity: intel_hit.severity,
+                description: intel_hit.description,
+                confidence: intel_hit.confidence,
+                details: intel_hit.details,
+            });
+            threat_level = threat_level.max(intel_hit.threat_level);
+        }
+        
+        // ML model evaluation
+        for (threat_type, model) in &self.ml_models {
+            let prediction = model.predict(subject, resource, action).await?;
+            
+            if prediction.probability > self.config.ml_threshold {
+                threat_indicators.push(ThreatIndicator {
+                    indicator_type: ThreatIndicatorType::MachineLearning,
+                    severity: ThreatSeverity::from_probability(prediction.probability),
+                    description: format!("ML model detected potential {:?}", threat_type),
+                    confidence: prediction.confidence,
+                    details: prediction.features,
+                });
+                threat_level = threat_level.max(prediction.threat_level);
+            }
+        }
+        
+        // Generate threat assessment
+        let assessment = ThreatAssessment {
+            threat_id: uuid::Uuid::new_v4().to_string(),
+            timestamp: Utc::now(),
+            threat_level,
+            threat_indicators,
+            risk_score: self.calculate_risk_score(&threat_indicators),
+            recommended_actions: self.generate_recommended_actions(&threat_indicators),
+            metadata: HashMap::new(),
+        };
+        
+        // Trigger automated response if needed
+        if threat_level >= ThreatLevel::High {
+            self.response_engine.trigger_response(&assessment).await?;
+        }
+        
+        Ok(assessment)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ThreatLevel {
+    None,
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThreatAssessment {
+    pub threat_id: String,
+    pub timestamp: DateTime<Utc>,
+    pub threat_level: ThreatLevel,
+    pub threat_indicators: Vec<ThreatIndicator>,
+    pub risk_score: f64,
+    pub recommended_actions: Vec<RecommendedAction>,
+    pub metadata: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThreatIndicator {
+    pub indicator_type: ThreatIndicatorType,
+    pub severity: ThreatSeverity,
+    pub description: String,
+    pub confidence: f64,
+    pub details: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ThreatIndicatorType {
+    BehavioralAnomaly,
+    StatisticalAnomaly,
+    ThreatIntelligence,
+    MachineLearning,
+    RulesBased,
+    GeographicalAnomaly,
+    TemporalAnomaly,
+    VolumeAnomaly,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum RecommendedAction {
+    Block,
+    Challenge,
+    Monitor,
+    Alert,
+    Quarantine,
+    RequireAdditionalAuth,
+    RateLimitUser,
+    NotifyAdministrator,
+}
+```
+
+## 📊 **Audit Engine**
+
+### **Comprehensive Audit Logging**
+```rust
+pub struct AuditEngine {
+    config: AuditConfig,
+    audit_writers: Vec<Box<dyn AuditWriter>>,
+    encryption_provider: Option<Arc<dyn EncryptionProvider>>,
+    digital_signer: Option<Arc<dyn DigitalSigner>>,
+    retention_manager: Arc<RetentionManager>,
+}
+
+impl AuditEngine {
+    pub async fn log_security_event(&self, event: &SecurityAuditEvent) -> Result<()> {
+        // Enrich event with additional context
+        let enriched_event = self.enrich_audit_event(event).await?;
+        
+        // Encrypt if configured
+        let final_event = if let Some(ref encryption) = self.encryption_provider {
+            self.encrypt_audit_event(&enriched_event, encryption).await?
+        } else {
+            enriched_event
+        };
+        
+        // Digital signature for integrity
+        let signed_event = if let Some(ref signer) = self.digital_signer {
+            self.sign_audit_event(&final_event, signer).await?
+        } else {
+            final_event
+        };
+        
+        // Write to all configured destinations
+        for writer in &self.audit_writers {
+            writer.write_audit_event(&signed_event).await?;
+        }
+        
+        // Check retention policies
+        self.retention_manager.check_retention_policies().await?;
+        
+        Ok(())
+    }
+    
+    async fn enrich_audit_event(&self, event: &SecurityAuditEvent) -> Result<EnrichedAuditEvent> {
+        Ok(EnrichedAuditEvent {
+            base_event: event.clone(),
+            host_info: self.collect_host_info().await?,
+            network_info: self.collect_network_info().await?,
+            process_info: self.collect_process_info().await?,
+            compliance_labels: self.determine_compliance_labels(event).await?,
+            correlation_id: self.generate_correlation_id(event).await?,
+            hash: self.calculate_event_hash(event).await?,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityAuditEvent {
+    pub event_id: String,
+    pub timestamp: DateTime<Utc>,
+    pub event_type: SecurityEventType,
+    pub subject: Subject,
+    pub resource: Resource,
+    pub action: Action,
+    pub decision: AuthorizationDecision,
+    pub threat_assessment: Option<ThreatAssessment>,
+    pub policy_decision: Option<PolicyDecision>,
+    pub processing_time_ms: u64,
+    pub metadata: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SecurityEventType {
+    Authentication,
+    Authorization,
+    ThreatDetected,
+    PolicyViolation,
+    AccessDenied,
+    PrivilegeEscalation,
+    DataAccess,
+    ConfigurationChange,
+    SecurityAlert,
+    ComplianceViolation,
+}
+
+#[async_trait]
+pub trait AuditWriter: Send + Sync {
+    async fn write_audit_event(&self, event: &EnrichedAuditEvent) -> Result<()>;
+    async fn flush(&self) -> Result<()>;
+    async fn close(&self) -> Result<()>;
+}
+
+// File-based audit writer
+pub struct FileAuditWriter {
+    config: FileAuditConfig,
+    writer: Arc<Mutex<BufWriter<File>>>,
+    rotation_manager: Arc<LogRotationManager>,
+}
+
+// Syslog audit writer
+pub struct SyslogAuditWriter {
+    config: SyslogAuditConfig,
+    syslog_writer: Arc<Mutex<syslog::Writer>>,
+}
+
+// Database audit writer
+pub struct DatabaseAuditWriter {
+    config: DatabaseAuditConfig,
+    db_pool: Arc<DatabasePool>,
+}
+
+// Remote audit writer (HTTPS endpoint)
+pub struct RemoteAuditWriter {
+    config: RemoteAuditConfig,
+    http_client: Arc<reqwest::Client>,
+    retry_policy: RetryPolicy,
+}
+```
+
+## ⚙️ **Configuration**
+
+### **Security Provider Configuration**
+```toml
+[security_provider]
+# Core settings
+service_id = "beardog-security-provider"
+bind_address = "127.0.0.1"
+port = 8444
+enable_tls = true
+tls_cert_path = "./certs/beardog-security.crt"
+tls_key_path = "./certs/beardog-security.key"
+
+[security_provider.authentication]
+# Authentication settings
+enable_mfa = true
+mfa_required_for_admin = true
+session_timeout_minutes = 60
+max_concurrent_sessions = 5
+password_policy = "strong"  # "weak", "medium", "strong", "custom"
+
+[security_provider.authentication.mfa]
+# Multi-factor authentication
+enabled_providers = ["totp", "sms", "email"]
+backup_codes_enabled = true
+remember_device_days = 30
+
+[security_provider.authorization]
+# Authorization settings
+enable_rbac = true
+enable_abac = true
+cache_decisions = true
+cache_ttl_minutes = 15
+default_deny = true
+
+[security_provider.threat_detection]
+# Threat detection settings
+enable_real_time = true
+behavioral_threshold = 0.7
+anomaly_threshold = 0.8
+ml_threshold = 0.6
+response_actions = ["log", "block", "alert"]
+
+[security_provider.threat_detection.models]
+# ML model configuration
+login_anomaly_model = "./models/login_anomaly.onnx"
+access_pattern_model = "./models/access_pattern.onnx"
+behavioral_model = "./models/behavioral.onnx"
+
+[security_provider.audit]
+# Audit configuration
+enable_audit = true
+audit_level = "comprehensive"  # "minimal", "standard", "comprehensive"
+encrypt_audit_logs = true
+sign_audit_logs = true
+retention_days = 2555  # 7 years
+
+[security_provider.audit.destinations]
+# Audit destinations
+file_enabled = true
+file_path = "./logs/audit.jsonl"
+syslog_enabled = true
+syslog_endpoint = "localhost:514"
+database_enabled = false
+remote_endpoint = "https://audit.example.com/api/v1/events"
+
+[security_provider.performance]
+# Performance settings
+max_concurrent_requests = 1000
+request_timeout_seconds = 30
+cache_size = 10000
+metrics_collection_interval_seconds = 60
+
+[security_provider.integration]
+# Integration settings
+songbird_endpoint = "https://songbird.internal:8080"
+nestgate_endpoint = "https://nestgate.internal:8081"
+enable_cross_system_audit = true
+```
+
+## 🚀 **Performance Optimizations**
+
+### **Caching Strategy**
+```rust
+pub struct AuthorizationCache {
+    cache: LruCache<String, CachedAuthResult>,
+    hit_count: AtomicU64,
+    miss_count: AtomicU64,
+}
+
+impl AuthorizationCache {
+    pub fn get(&mut self, key: &str) -> Option<&CachedAuthResult> {
+        if let Some(result) = self.cache.get(key) {
+            if !result.is_expired() {
+                self.hit_count.fetch_add(1, Ordering::Relaxed);
+                return Some(result);
+            } else {
+                self.cache.pop(key);
+            }
+        }
+        self.miss_count.fetch_add(1, Ordering::Relaxed);
+        None
+    }
+    
+    pub fn put(&mut self, key: String, value: CachedAuthResult) {
+        self.cache.put(key, value);
+    }
+    
+    pub fn hit_rate(&self) -> f64 {
+        let hits = self.hit_count.load(Ordering::Relaxed);
+        let misses = self.miss_count.load(Ordering::Relaxed);
+        if hits + misses == 0 {
+            0.0
+        } else {
+            hits as f64 / (hits + misses) as f64
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct CachedAuthResult {
+    pub allowed: bool,
+    pub cached_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub decision_context: HashMap<String, String>,
+}
+
+impl CachedAuthResult {
+    pub fn is_expired(&self) -> bool {
+        Utc::now() > self.expires_at
+    }
+}
+```
+
+### **Rate Limiting**
+```rust
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use tokio::time::{Duration, Instant};
+
+pub struct RateLimiter {
+    buckets: Arc<RwLock<HashMap<String, TokenBucket>>>,
+    config: RateLimitConfig,
+}
+
+pub struct TokenBucket {
+    tokens: f64,
+    last_refill: Instant,
+    max_tokens: f64,
+    refill_rate: f64, // tokens per second
+}
+
+impl RateLimiter {
+    pub async fn check_rate_limit(&self, user_id: &str) -> Result<bool> {
+        let mut buckets = self.buckets.write().await;
+        
+        let bucket = buckets.entry(user_id.to_string()).or_insert_with(|| {
+            TokenBucket {
+                tokens: self.config.max_requests_per_minute as f64,
+                last_refill: Instant::now(),
+                max_tokens: self.config.max_requests_per_minute as f64,
+                refill_rate: self.config.max_requests_per_minute as f64 / 60.0,
+            }
+        });
+        
+        // Refill tokens based on time elapsed
+        let now = Instant::now();
+        let elapsed = now.duration_since(bucket.last_refill).as_secs_f64();
+        bucket.tokens = (bucket.tokens + elapsed * bucket.refill_rate).min(bucket.max_tokens);
+        bucket.last_refill = now;
+        
+        // Check if we have tokens available
+        if bucket.tokens >= 1.0 {
+            bucket.tokens -= 1.0;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+}
+```
+
+## 🧪 **Testing Strategy**
+
+### **Unit Tests**
+- Authentication flow testing
+- Authorization policy evaluation
+- Threat detection algorithm testing
+- Audit log generation and integrity
+
+### **Integration Tests**
+- SongBird integration testing
+- End-to-end security workflows
+- Performance under load
+- Failover and recovery testing
+
+### **Security Tests**
+- Penetration testing
+- Authorization bypass attempts
+- Audit log tampering detection
+- Rate limiting effectiveness
+
+---
+
+**Next Steps**: Implement threat detection models, complete audit engine, and integrate with SongBird orchestrator. 
