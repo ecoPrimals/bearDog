@@ -71,6 +71,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 tracing-appender = "0.2"
 metrics = "0.22"
+# LICENSED FEATURE: Prometheus export requires BearDog license
 metrics-exporter-prometheus = { version = "0.13", optional = true }
 
 # Error handling
