@@ -34,10 +34,14 @@ hmac = "0.12"
 sha2 = "0.10"
 rand = "0.8"
 uuid = { version = "1.10", features = ["v4", "serde"] }
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+pbkdf2 = "0.12"
+subtle = "2.5"
+hex = "0.4"
 
 # Post-quantum cryptography
-pqcrypto-kyber = "0.8"
-pqcrypto-dilithium = "0.5"
+pqcrypto-mlkem = "0.1"
+pqcrypto-mldsa = "0.1"
 
 # Async traits and utilities
 async-trait = "0.1"
@@ -57,7 +61,7 @@ rustls-pemfile = "2.1"
 webpki-roots = "0.26"
 
 # Database and storage
-sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "sqlite", "uuid", "chrono", "json"] }
+sqlx = { version = "0.8.2", features = ["runtime-tokio-rustls", "postgres", "sqlite", "uuid", "chrono", "json"] }
 redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
 
 # Time and dates
@@ -90,7 +94,7 @@ bytes = "1.7"
 # ort = { version = "2.0.0-rc.10", optional = true }
 
 # HSM integration
-pkcs11 = { version = "0.5", optional = true }
+cryptoki = { version = "0.7", optional = true }
 
 # Environment and CLI
 clap = { version = "4.4", features = ["derive", "env"] }
@@ -103,6 +107,7 @@ criterion = "0.5"
 proptest = "1.0"
 tempfile = "3.8"
 wiremock = "0.6"
+bincode = "2.0.1"
 
 [[bin]]
 name = "beardog"
@@ -118,6 +123,6 @@ strip = true
 default = ["sqlite", "prometheus-metrics"]
 postgres = ["sqlx/postgres"]
 sqlite = ["sqlx/sqlite"]
-hsm = ["pkcs11"]
+hsm = ["cryptoki"]
 prometheus-metrics = ["metrics-exporter-prometheus"]
 ml-threat-detection = []  # Placeholder for future ML integration 

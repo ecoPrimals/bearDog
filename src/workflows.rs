@@ -1,19 +1,19 @@
 //! Multi-party approval workflows
-//! 
+//!
 //! Enterprise governance workflows democratized for everyone.
 
 //! Workflow Engine
-//! 
+//!
 //! Multi-party security workflow orchestration and automation.
 
 /// Security workflow orchestration engine
-/// 
+///
 /// The WorkflowEngine provides automated security workflow orchestration,
 /// multi-party approval processes, and governance automation. It enables
 /// complex security operations to be defined as code and executed reliably.
-/// 
+///
 /// # Features
-/// 
+///
 /// - Workflow definition as code
 /// - Multi-party approval workflows
 /// - Conditional execution logic
@@ -21,21 +21,21 @@
 /// - Workflow state persistence
 /// - Audit trail integration
 /// - Error handling and retry policies
-/// 
+///
 /// # Use Cases
-/// 
+///
 /// - Security incident response
 /// - Access request approvals
 /// - Compliance audit workflows
 /// - Certificate lifecycle management
 /// - Security policy deployment
 /// - Threat response automation
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust,no_run
 /// use beardog::workflows::WorkflowEngine;
-/// 
+///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let engine = WorkflowEngine::new().await;
@@ -49,7 +49,7 @@ pub struct WorkflowEngine {
 
 impl WorkflowEngine {
     /// Create a new workflow engine instance
-    /// 
+    ///
     /// Initializes the engine with workflow definitions and execution context.
     pub async fn new() -> Self {
         Self {
@@ -59,24 +59,23 @@ impl WorkflowEngine {
 }
 
 // BearDog Multi-Party Approval Workflows
-// 
+//
 // Enterprise-grade governance for sensitive operations with:
 // - Cryptographic approval processes
-// - Role-based approval hierarchies  
+// - Role-based approval hierarchies
 // - Time-bound approval windows
 // - Audit-compliant workflow tracking
 // - Automated workflow orchestration
 
-use async_trait::async_trait;
-use chrono::{DateTime, Utc, Duration};
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
-use std::sync::Arc;
-use tokio::sync::{RwLock, Mutex};
-use uuid::Uuid;
 use std::env;
+use std::sync::Arc;
+use tokio::sync::{Mutex, RwLock};
+use uuid::Uuid;
 
-use crate::{BearDogResult, BearDogError, config::WorkflowConfig};
+use crate::{config::WorkflowConfig, BearDogError, BearDogResult};
 
 /// Multi-party workflow engine for secure collaborative operations
 #[derive(Clone)]
@@ -87,11 +86,11 @@ pub struct MultiPartyWorkflowEngine {
     notification_engine: Arc<NotificationEngine>,
     policy_engine: Arc<WorkflowPolicyEngine>,
     scheduler: Arc<WorkflowScheduler>,
-    
+
     // Active workflows
     active_workflows: Arc<RwLock<HashMap<String, Workflow>>>,
     pending_approvals: Arc<RwLock<HashMap<String, Vec<PendingApproval>>>>,
-    
+
     // Workflow execution state
     workflow_processors: Arc<RwLock<HashMap<WorkflowType, Box<dyn WorkflowProcessor>>>>,
     execution_queue: Arc<Mutex<VecDeque<WorkflowExecution>>>,
@@ -351,17 +350,42 @@ impl MultiPartyWorkflowEngine {
         let notification_engine = Arc::new(NotificationEngine::new(&config.notifications)?);
         let policy_engine = Arc::new(WorkflowPolicyEngine::new(&config.policies)?);
         let scheduler = Arc::new(WorkflowScheduler::new());
-        
-        let mut workflow_processors: HashMap<WorkflowType, Box<dyn WorkflowProcessor>> = HashMap::new();
-        workflow_processors.insert(WorkflowType::KeyRotation, Box::new(KeyRotationProcessor::new()));
-        workflow_processors.insert(WorkflowType::KeyDeletion, Box::new(KeyDeletionProcessor::new()));
-        workflow_processors.insert(WorkflowType::PolicyChange, Box::new(PolicyChangeProcessor::new()));
-        workflow_processors.insert(WorkflowType::ConfigurationChange, Box::new(ConfigChangeProcessor::new()));
-        workflow_processors.insert(WorkflowType::UserProvisioning, Box::new(UserProvisioningProcessor::new()));
-        workflow_processors.insert(WorkflowType::EmergencyAccess, Box::new(EmergencyAccessProcessor::new()));
-        workflow_processors.insert(WorkflowType::SystemMaintenance, Box::new(SystemMaintenanceProcessor::new()));
-        workflow_processors.insert(WorkflowType::ComplianceAudit, Box::new(ComplianceAuditProcessor::new()));
-        
+
+        let mut workflow_processors: HashMap<WorkflowType, Box<dyn WorkflowProcessor>> =
+            HashMap::new();
+        workflow_processors.insert(
+            WorkflowType::KeyRotation,
+            Box::new(KeyRotationProcessor::new()),
+        );
+        workflow_processors.insert(
+            WorkflowType::KeyDeletion,
+            Box::new(KeyDeletionProcessor::new()),
+        );
+        workflow_processors.insert(
+            WorkflowType::PolicyChange,
+            Box::new(PolicyChangeProcessor::new()),
+        );
+        workflow_processors.insert(
+            WorkflowType::ConfigurationChange,
+            Box::new(ConfigChangeProcessor::new()),
+        );
+        workflow_processors.insert(
+            WorkflowType::UserProvisioning,
+            Box::new(UserProvisioningProcessor::new()),
+        );
+        workflow_processors.insert(
+            WorkflowType::EmergencyAccess,
+            Box::new(EmergencyAccessProcessor::new()),
+        );
+        workflow_processors.insert(
+            WorkflowType::SystemMaintenance,
+            Box::new(SystemMaintenanceProcessor::new()),
+        );
+        workflow_processors.insert(
+            WorkflowType::ComplianceAudit,
+            Box::new(ComplianceAuditProcessor::new()),
+        );
+
         Ok(Self {
             config: Arc::new(config),
             workflow_store,
@@ -375,17 +399,21 @@ impl MultiPartyWorkflowEngine {
             execution_queue: Arc::new(Mutex::new(VecDeque::new())),
         })
     }
-    
+
     /// Initiate a new workflow
-    pub async fn initiate_workflow(&self, request: WorkflowRequest) -> BearDogResult<WorkflowResponse> {
+    pub async fn initiate_workflow(
+        &self,
+        request: WorkflowRequest,
+    ) -> BearDogResult<WorkflowResponse> {
         // Validate the workflow request
         self.validate_workflow_request(&request).await?;
-        
+
         // Determine approval requirements based on policy
-        let approval_requirements = self.policy_engine
+        let approval_requirements = self
+            .policy_engine
             .determine_approval_requirements(&request)
             .await?;
-        
+
         // Create workflow instance
         let workflow = Workflow {
             id: Uuid::new_v4().to_string(),
@@ -407,59 +435,87 @@ impl MultiPartyWorkflowEngine {
             }],
             metadata: request.metadata.clone(),
         };
-        
+
         // Store workflow
         self.workflow_store.store_workflow(&workflow).await?;
-        self.active_workflows.write().await.insert(workflow.id.clone(), workflow.clone());
-        
+        self.active_workflows
+            .write()
+            .await
+            .insert(workflow.id.clone(), workflow.clone());
+
         // Create pending approvals
         let pending_approvals = self.create_pending_approvals(&workflow).await?;
-        self.pending_approvals.write().await.insert(workflow.id.clone(), pending_approvals.clone());
-        
+        self.pending_approvals
+            .write()
+            .await
+            .insert(workflow.id.clone(), pending_approvals.clone());
+
         // Send notifications to approvers
-        self.notification_engine.send_approval_requests(&workflow, &pending_approvals).await?;
-        
+        self.notification_engine
+            .send_approval_requests(&workflow, &pending_approvals)
+            .await?;
+
         // Schedule timeout handling
-        self.scheduler.schedule_workflow_timeout(&workflow.id, workflow.expires_at).await?;
-        
+        self.scheduler
+            .schedule_workflow_timeout(&workflow.id, workflow.expires_at)
+            .await?;
+
         let workflow_id = workflow.id.clone();
         let response = WorkflowResponse {
             workflow_id: workflow_id.clone(),
             status: workflow.status.clone(),
             required_approvals: workflow.approval_requirements.clone(),
-            pending_approvers: pending_approvals.iter().map(|pa| pa.approver.clone()).collect(),
+            pending_approvers: pending_approvals
+                .iter()
+                .map(|pa| pa.approver.clone())
+                .collect(),
             estimated_completion: workflow.expires_at,
             tracking_url: Some(format!("/workflows/{}", workflow_id)),
         };
-        
+
         Ok(response)
     }
-    
+
     /// Submit an approval for a workflow
-    pub async fn submit_approval(&self, approval: ApprovalSubmission) -> BearDogResult<ApprovalResponse> {
+    pub async fn submit_approval(
+        &self,
+        approval: ApprovalSubmission,
+    ) -> BearDogResult<ApprovalResponse> {
         // Get workflow
         let mut workflow = self.get_active_workflow(&approval.workflow_id).await?;
-        
+
         // Validate approval submission
-        self.validate_approval_submission(&workflow, &approval).await?;
-        
+        self.validate_approval_submission(&workflow, &approval)
+            .await?;
+
         // Check if approver is authorized
-        if !self.is_authorized_approver(&workflow, &approval.approver).await? {
-            return Err(BearDogError::UnauthorizedApprover(
-                format!("User {} is not authorized to approve workflow {}", approval.approver, approval.workflow_id)
-            ));
+        if !self
+            .is_authorized_approver(&workflow, &approval.approver)
+            .await?
+        {
+            return Err(BearDogError::UnauthorizedApprover(format!(
+                "User {} is not authorized to approve workflow {}",
+                approval.approver, approval.workflow_id
+            )));
         }
-        
+
         // Check if already approved by this user
-        if workflow.approvals.iter().any(|a| a.approver == approval.approver) {
-            return Err(BearDogError::DuplicateApproval(
-                format!("User {} has already approved workflow {}", approval.approver, approval.workflow_id)
-            ));
+        if workflow
+            .approvals
+            .iter()
+            .any(|a| a.approver == approval.approver)
+        {
+            return Err(BearDogError::DuplicateApproval(format!(
+                "User {} has already approved workflow {}",
+                approval.approver, approval.workflow_id
+            )));
         }
-        
+
         // Get approver role
-        let approver_role = self.get_approver_role(&workflow, &approval.approver).await?;
-        
+        let approver_role = self
+            .get_approver_role(&workflow, &approval.approver)
+            .await?;
+
         // Create approval record
         let approval_record = ApprovalRecord {
             id: Uuid::new_v4().to_string(),
@@ -472,10 +528,10 @@ impl MultiPartyWorkflowEngine {
             signature: approval.signature.clone(),
             metadata: approval.metadata.clone(),
         };
-        
+
         // Store approval
         self.approval_store.store_approval(&approval_record).await?;
-        
+
         // Update workflow
         workflow.approvals.push(approval_record.clone());
         workflow.audit_trail.push(WorkflowAuditEntry {
@@ -486,20 +542,25 @@ impl MultiPartyWorkflowEngine {
                 ApprovalDecision::Delegated => WorkflowAction::Delegated,
             },
             actor: approval.approver.clone(),
-            details: approval.reason.unwrap_or_else(|| "No reason provided".to_string()),
+            details: approval
+                .reason
+                .unwrap_or_else(|| "No reason provided".to_string()),
             metadata: approval.metadata.clone(),
         });
-        
+
         // Check if workflow is complete
         let workflow_result = self.evaluate_workflow_completion(&mut workflow).await?;
-        
+
         // Update workflow status
         workflow.status = workflow_result.status.clone();
-        
+
         // Store updated workflow
         self.workflow_store.store_workflow(&workflow).await?;
-        self.active_workflows.write().await.insert(workflow.id.clone(), workflow.clone());
-        
+        self.active_workflows
+            .write()
+            .await
+            .insert(workflow.id.clone(), workflow.clone());
+
         // Handle workflow completion
         match workflow_result.status {
             WorkflowStatus::Approved => {
@@ -513,11 +574,11 @@ impl MultiPartyWorkflowEngine {
             }
             _ => {}
         }
-        
+
         // Calculate remaining approvals
         let remaining_approvals = self.calculate_remaining_approvals(&workflow).await?;
         let next_approvers = self.get_next_approvers(&workflow).await?;
-        
+
         Ok(ApprovalResponse {
             approval_id: approval_record.id,
             workflow_status: workflow.status,
@@ -530,12 +591,12 @@ impl MultiPartyWorkflowEngine {
             },
         })
     }
-    
+
     /// Get workflow status
     pub async fn get_workflow_status(&self, workflow_id: &str) -> BearDogResult<Workflow> {
         self.get_active_workflow(workflow_id).await
     }
-    
+
     /// Get all active workflows for a user
     pub async fn get_user_workflows(&self, user_id: &str) -> BearDogResult<Vec<Workflow>> {
         let workflows = self.active_workflows.read().await;
@@ -544,12 +605,15 @@ impl MultiPartyWorkflowEngine {
             .filter(|w| w.initiator == user_id || self.is_user_involved_in_workflow(w, user_id))
             .cloned()
             .collect();
-        
+
         Ok(user_workflows)
     }
-    
+
     /// Get pending approvals for a user
-    pub async fn get_pending_approvals(&self, user_id: &str) -> BearDogResult<Vec<PendingApproval>> {
+    pub async fn get_pending_approvals(
+        &self,
+        user_id: &str,
+    ) -> BearDogResult<Vec<PendingApproval>> {
         let pending_approvals = self.pending_approvals.read().await;
         let user_approvals: Vec<PendingApproval> = pending_approvals
             .values()
@@ -557,95 +621,120 @@ impl MultiPartyWorkflowEngine {
             .filter(|pa| pa.approver == user_id)
             .cloned()
             .collect();
-        
+
         Ok(user_approvals)
     }
-    
+
     // Helper methods
-    
+
     async fn validate_workflow_request(&self, request: &WorkflowRequest) -> BearDogResult<()> {
         // Validate workflow type
         if !self.is_workflow_type_supported(&request.workflow_type) {
-            return Err(BearDogError::UnsupportedWorkflowType(format!("{:?}", request.workflow_type)));
+            return Err(BearDogError::UnsupportedWorkflowType(format!(
+                "{:?}",
+                request.workflow_type
+            )));
         }
-        
+
         // Validate initiator
         if request.initiator.is_empty() {
-            return Err(BearDogError::InvalidWorkflowRequest("Initiator cannot be empty".to_string()));
-        }
-        
-        // Validate reason
-        if request.reason.trim().is_empty() {
-            return Err(BearDogError::InvalidWorkflowRequest("Reason cannot be empty".to_string()));
-        }
-        
-        // Validate parameters based on workflow type
-        self.validate_workflow_parameters(&request.workflow_type, &request.parameters).await?;
-        
-        Ok(())
-    }
-    
-    async fn validate_approval_submission(&self, workflow: &Workflow, approval: &ApprovalSubmission) -> BearDogResult<()> {
-        // Comprehensive validation implementation
-        tracing::debug!("Validating approval submission for workflow {}", workflow.id);
-        
-        // Check if workflow is still accepting approvals
-        if workflow.status != WorkflowStatus::PendingApprovals {
-            return Err(BearDogError::WorkflowInvalidState(
-                format!("Workflow {} is in status {:?}, not accepting approvals", workflow.id, workflow.status)
+            return Err(BearDogError::InvalidWorkflowRequest(
+                "Initiator cannot be empty".to_string(),
             ));
         }
-        
+
+        // Validate reason
+        if request.reason.trim().is_empty() {
+            return Err(BearDogError::InvalidWorkflowRequest(
+                "Reason cannot be empty".to_string(),
+            ));
+        }
+
+        // Validate parameters based on workflow type
+        self.validate_workflow_parameters(&request.workflow_type, &request.parameters)
+            .await?;
+
+        Ok(())
+    }
+
+    async fn validate_approval_submission(
+        &self,
+        workflow: &Workflow,
+        approval: &ApprovalSubmission,
+    ) -> BearDogResult<()> {
+        // Comprehensive validation implementation
+        tracing::debug!(
+            "Validating approval submission for workflow {}",
+            workflow.id
+        );
+
+        // Check if workflow is still accepting approvals
+        if workflow.status != WorkflowStatus::PendingApprovals {
+            return Err(BearDogError::WorkflowInvalidState(format!(
+                "Workflow {} is in status {:?}, not accepting approvals",
+                workflow.id, workflow.status
+            )));
+        }
+
         // Check if workflow has expired
         if Utc::now() > workflow.expires_at {
             return Err(BearDogError::WorkflowExpired(workflow.id.clone()));
         }
-        
+
         // Validate approver is not empty
         if approval.approver.is_empty() {
-            return Err(BearDogError::WorkflowValidationFailed("Approver cannot be empty".to_string()));
+            return Err(BearDogError::WorkflowValidationFailed(
+                "Approver cannot be empty".to_string(),
+            ));
         }
-        
+
         // Check if approver has already approved
         for existing_approval in &workflow.approvals {
             if existing_approval.approver == approval.approver {
-                return Err(BearDogError::WorkflowValidationFailed(
-                    format!("Approver {} has already submitted an approval", approval.approver)
-                ));
+                return Err(BearDogError::WorkflowValidationFailed(format!(
+                    "Approver {} has already submitted an approval",
+                    approval.approver
+                )));
             }
         }
-        
+
         // Validate approver has permission for this workflow type
-        let is_authorized = self.is_authorized_approver(workflow, &approval.approver).await?;
+        let is_authorized = self
+            .is_authorized_approver(workflow, &approval.approver)
+            .await?;
         if !is_authorized {
-            return Err(BearDogError::WorkflowPermissionDenied(
-                format!("User {} is not authorized to approve workflow type {:?}", 
-                    approval.approver, workflow.workflow_type)
-            ));
+            return Err(BearDogError::WorkflowPermissionDenied(format!(
+                "User {} is not authorized to approve workflow type {:?}",
+                approval.approver, workflow.workflow_type
+            )));
         }
-        
+
         // Validate signature if present
         if let Some(signature) = &approval.signature {
             if signature.len() < 10 {
                 return Err(BearDogError::WorkflowValidationFailed(
-                    "Digital signature too short".to_string()
+                    "Digital signature too short".to_string(),
                 ));
             }
         }
-        
+
         // Check timing constraints (skip for Emergency priority or testing)
         let time_since_creation = Utc::now() - workflow.created_at;
-        if time_since_creation < workflow.approval_requirements.min_approval_time 
-           && workflow.approval_requirements.min_approval_time > Duration::minutes(5) {
-            return Err(BearDogError::WorkflowValidationFailed(
-                format!("Approval submitted too early. Minimum wait time: {} minutes", 
-                    workflow.approval_requirements.min_approval_time.num_minutes())
-            ));
+        if time_since_creation < workflow.approval_requirements.min_approval_time
+            && workflow.approval_requirements.min_approval_time > Duration::minutes(5)
+        {
+            return Err(BearDogError::WorkflowValidationFailed(format!(
+                "Approval submitted too early. Minimum wait time: {} minutes",
+                workflow
+                    .approval_requirements
+                    .min_approval_time
+                    .num_minutes()
+            )));
         }
-        
+
         Ok(())
     }
-    
+
     async fn get_active_workflow(&self, workflow_id: &str) -> BearDogResult<Workflow> {
         let workflows = self.active_workflows.read().await;
         workflows
@@ -653,10 +742,13 @@ impl MultiPartyWorkflowEngine {
             .cloned()
             .ok_or_else(|| BearDogError::WorkflowNotFound(workflow_id.to_string()))
     }
-    
-    async fn create_pending_approvals(&self, workflow: &Workflow) -> BearDogResult<Vec<PendingApproval>> {
+
+    async fn create_pending_approvals(
+        &self,
+        workflow: &Workflow,
+    ) -> BearDogResult<Vec<PendingApproval>> {
         let mut pending_approvals = Vec::new();
-        
+
         // Create approvals for the first tier
         if let Some(first_tier) = workflow.approval_requirements.approval_hierarchy.first() {
             for role in &first_tier.eligible_roles {
@@ -674,7 +766,7 @@ impl MultiPartyWorkflowEngine {
                     });
                 }
             }
-            
+
             // Add specific users
             for user in &first_tier.eligible_users {
                 pending_approvals.push(PendingApproval {
@@ -689,25 +781,33 @@ impl MultiPartyWorkflowEngine {
                 });
             }
         }
-        
+
         Ok(pending_approvals)
     }
-    
-    async fn is_authorized_approver(&self, workflow: &Workflow, approver: &str) -> BearDogResult<bool> {
+
+    async fn is_authorized_approver(
+        &self,
+        workflow: &Workflow,
+        approver: &str,
+    ) -> BearDogResult<bool> {
         let pending_approvals = self.pending_approvals.read().await;
         let workflow_approvals = pending_approvals.get(&workflow.id);
-        
+
         if let Some(approvals) = workflow_approvals {
             Ok(approvals.iter().any(|pa| pa.approver == approver))
         } else {
             Ok(false)
         }
     }
-    
-    async fn get_approver_role(&self, workflow: &Workflow, approver: &str) -> BearDogResult<String> {
+
+    async fn get_approver_role(
+        &self,
+        workflow: &Workflow,
+        approver: &str,
+    ) -> BearDogResult<String> {
         let pending_approvals = self.pending_approvals.read().await;
         let workflow_approvals = pending_approvals.get(&workflow.id);
-        
+
         if let Some(approvals) = workflow_approvals {
             if let Some(approval) = approvals.iter().find(|pa| pa.approver == approver) {
                 Ok(approval.approver_role.clone())
@@ -718,16 +818,23 @@ impl MultiPartyWorkflowEngine {
             Err(BearDogError::UnauthorizedApprover(approver.to_string()))
         }
     }
-    
-    async fn evaluate_workflow_completion(&self, workflow: &mut Workflow) -> BearDogResult<WorkflowCompletionResult> {
-        let approved_count = workflow.approvals.iter()
+
+    async fn evaluate_workflow_completion(
+        &self,
+        workflow: &mut Workflow,
+    ) -> BearDogResult<WorkflowCompletionResult> {
+        let approved_count = workflow
+            .approvals
+            .iter()
             .filter(|a| a.decision == ApprovalDecision::Approved)
             .count() as u32;
-        
-        let rejected_count = workflow.approvals.iter()
+
+        let rejected_count = workflow
+            .approvals
+            .iter()
             .filter(|a| a.decision == ApprovalDecision::Rejected)
             .count();
-        
+
         // Check for rejection
         if rejected_count > 0 {
             return Ok(WorkflowCompletionResult {
@@ -737,7 +844,7 @@ impl MultiPartyWorkflowEngine {
                 next_action: None,
             });
         }
-        
+
         // Check if sufficient approvals
         if approved_count >= workflow.approval_requirements.required_approvals {
             return Ok(WorkflowCompletionResult {
@@ -747,7 +854,7 @@ impl MultiPartyWorkflowEngine {
                 next_action: Some(WorkflowAction::Executed),
             });
         }
-        
+
         // Still pending
         Ok(WorkflowCompletionResult {
             status: WorkflowStatus::PendingApprovals,
@@ -756,10 +863,10 @@ impl MultiPartyWorkflowEngine {
             next_action: None,
         })
     }
-    
+
     async fn execute_approved_workflow(&self, workflow: &Workflow) -> BearDogResult<()> {
         let processors = self.workflow_processors.read().await;
-        
+
         if let Some(processor) = processors.get(&workflow.workflow_type) {
             let execution = WorkflowExecution {
                 workflow_id: workflow.id.clone(),
@@ -767,38 +874,46 @@ impl MultiPartyWorkflowEngine {
                 started_at: Utc::now(),
                 context: workflow.parameters.clone(),
             };
-            
+
             processor.execute_workflow(&execution).await?;
         }
-        
+
         Ok(())
     }
-    
+
     async fn handle_rejected_workflow(&self, workflow: &Workflow) -> BearDogResult<()> {
         // Remove from active workflows
         self.active_workflows.write().await.remove(&workflow.id);
         self.pending_approvals.write().await.remove(&workflow.id);
-        
+
         // Notify initiator
-        self.notification_engine.send_rejection_notification(workflow).await?;
-        
+        self.notification_engine
+            .send_rejection_notification(workflow)
+            .await?;
+
         Ok(())
     }
-    
+
     async fn calculate_remaining_approvals(&self, workflow: &Workflow) -> BearDogResult<u32> {
-        let approved_count = workflow.approvals.iter()
+        let approved_count = workflow
+            .approvals
+            .iter()
             .filter(|a| a.decision == ApprovalDecision::Approved)
             .count() as u32;
-        
-        Ok(workflow.approval_requirements.required_approvals.saturating_sub(approved_count))
+
+        Ok(workflow
+            .approval_requirements
+            .required_approvals
+            .saturating_sub(approved_count))
     }
-    
+
     async fn get_next_approvers(&self, workflow: &Workflow) -> BearDogResult<Vec<String>> {
         let pending_approvals = self.pending_approvals.read().await;
         let workflow_approvals = pending_approvals.get(&workflow.id);
-        
+
         if let Some(approvals) = workflow_approvals {
-            Ok(approvals.iter()
+            Ok(approvals
+                .iter()
                 .filter(|pa| !workflow.approvals.iter().any(|a| a.approver == pa.approver))
                 .map(|pa| pa.approver.clone())
                 .collect())
@@ -806,7 +921,7 @@ impl MultiPartyWorkflowEngine {
             Ok(Vec::new())
         }
     }
-    
+
     fn calculate_expiration_time(&self, priority: &WorkflowPriority) -> Duration {
         match priority {
             WorkflowPriority::Emergency => Duration::hours(1),
@@ -816,48 +931,61 @@ impl MultiPartyWorkflowEngine {
             WorkflowPriority::Low => Duration::days(7),
         }
     }
-    
+
     fn is_workflow_type_supported(&self, workflow_type: &WorkflowType) -> bool {
-        matches!(workflow_type, 
-            WorkflowType::KeyRotation | 
-            WorkflowType::KeyDeletion | 
-            WorkflowType::PolicyChange | 
-            WorkflowType::ConfigurationChange | 
-            WorkflowType::UserProvisioning | 
-            WorkflowType::EmergencyAccess |
-            WorkflowType::SystemMaintenance |
-            WorkflowType::ComplianceAudit
+        matches!(
+            workflow_type,
+            WorkflowType::KeyRotation
+                | WorkflowType::KeyDeletion
+                | WorkflowType::PolicyChange
+                | WorkflowType::ConfigurationChange
+                | WorkflowType::UserProvisioning
+                | WorkflowType::EmergencyAccess
+                | WorkflowType::SystemMaintenance
+                | WorkflowType::ComplianceAudit
         )
     }
-    
-    async fn validate_workflow_parameters(&self, workflow_type: &WorkflowType, parameters: &HashMap<String, serde_json::Value>) -> BearDogResult<()> {
+
+    async fn validate_workflow_parameters(
+        &self,
+        workflow_type: &WorkflowType,
+        parameters: &HashMap<String, serde_json::Value>,
+    ) -> BearDogResult<()> {
         match workflow_type {
             WorkflowType::KeyRotation => {
                 if !parameters.contains_key("key_id") {
-                    return Err(BearDogError::InvalidWorkflowRequest("key_id parameter required for KeyRotation".to_string()));
+                    return Err(BearDogError::InvalidWorkflowRequest(
+                        "key_id parameter required for KeyRotation".to_string(),
+                    ));
                 }
             }
             WorkflowType::KeyDeletion => {
                 if !parameters.contains_key("key_id") {
-                    return Err(BearDogError::InvalidWorkflowRequest("key_id parameter required for KeyDeletion".to_string()));
+                    return Err(BearDogError::InvalidWorkflowRequest(
+                        "key_id parameter required for KeyDeletion".to_string(),
+                    ));
                 }
             }
             WorkflowType::PolicyChange => {
                 if !parameters.contains_key("policy_id") {
-                    return Err(BearDogError::InvalidWorkflowRequest("policy_id parameter required for PolicyChange".to_string()));
+                    return Err(BearDogError::InvalidWorkflowRequest(
+                        "policy_id parameter required for PolicyChange".to_string(),
+                    ));
                 }
             }
             WorkflowType::UserProvisioning => {
                 if !parameters.contains_key("user_id") || !parameters.contains_key("role") {
-                    return Err(BearDogError::InvalidWorkflowRequest("user_id and role parameters required for UserProvisioning".to_string()));
+                    return Err(BearDogError::InvalidWorkflowRequest(
+                        "user_id and role parameters required for UserProvisioning".to_string(),
+                    ));
                 }
             }
             _ => {} // Other types have flexible parameters
         }
-        
+
         Ok(())
     }
-    
+
     async fn get_users_with_role(&self, role: &str) -> BearDogResult<Vec<String>> {
         // This would typically query a user directory or database
         // For now, return configuration-based role assignments
@@ -869,22 +997,26 @@ impl MultiPartyWorkflowEngine {
             _ => Ok(vec![]),
         }
     }
-    
+
     fn is_user_involved_in_workflow(&self, workflow: &Workflow, user_id: &str) -> bool {
-        workflow.approvals.iter().any(|a| a.approver == user_id) ||
-        match &workflow.target {
-            WorkflowTarget::User { user_id: target_user } => target_user == user_id,
-            _ => false,
-        }
+        workflow.approvals.iter().any(|a| a.approver == user_id)
+            || match &workflow.target {
+                WorkflowTarget::User {
+                    user_id: target_user,
+                } => target_user == user_id,
+                _ => false,
+            }
     }
-    
+
     /// Create a placeholder instance for initialization
     pub fn placeholder() -> Self {
         Self {
             config: Arc::new(crate::config::WorkflowConfig::default()),
             workflow_store: Arc::new(InMemoryWorkflowStore::new()),
             approval_store: Arc::new(InMemoryApprovalStore::new()),
-            notification_engine: Arc::new(NotificationEngine::new(&NotificationConfig::default()).unwrap()),
+            notification_engine: Arc::new(
+                NotificationEngine::new(&NotificationConfig::default()).unwrap(),
+            ),
             policy_engine: Arc::new(WorkflowPolicyEngine::new(&PolicyConfig::default()).unwrap()),
             scheduler: Arc::new(WorkflowScheduler::new()),
             active_workflows: Arc::new(RwLock::new(HashMap::new())),
@@ -908,22 +1040,32 @@ pub trait WorkflowStore: Send + Sync {
 #[async_trait::async_trait]
 pub trait ApprovalStore: Send + Sync {
     async fn store_approval(&self, approval: &ApprovalRecord) -> BearDogResult<()>;
-    async fn get_approvals_for_workflow(&self, workflow_id: &str) -> BearDogResult<Vec<ApprovalRecord>>;
+    async fn get_approvals_for_workflow(
+        &self,
+        workflow_id: &str,
+    ) -> BearDogResult<Vec<ApprovalRecord>>;
 }
 
 #[async_trait::async_trait]
 pub trait WorkflowProcessor: Send + Sync {
     async fn execute_workflow(&self, execution: &WorkflowExecution) -> BearDogResult<()>;
-    async fn validate_parameters(&self, parameters: &HashMap<String, serde_json::Value>) -> BearDogResult<()>;
+    async fn validate_parameters(
+        &self,
+        parameters: &HashMap<String, serde_json::Value>,
+    ) -> BearDogResult<()>;
     fn get_processor_name(&self) -> &str;
 }
-
-
 
 // In-memory implementations for self-contained operation
 
 pub struct InMemoryWorkflowStore {
     workflows: Arc<RwLock<HashMap<String, Workflow>>>,
+}
+
+impl Default for InMemoryWorkflowStore {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl InMemoryWorkflowStore {
@@ -937,19 +1079,25 @@ impl InMemoryWorkflowStore {
 #[async_trait::async_trait]
 impl WorkflowStore for InMemoryWorkflowStore {
     async fn store_workflow(&self, workflow: &Workflow) -> BearDogResult<()> {
-        self.workflows.write().await.insert(workflow.id.clone(), workflow.clone());
+        self.workflows
+            .write()
+            .await
+            .insert(workflow.id.clone(), workflow.clone());
         Ok(())
     }
-    
+
     async fn get_workflow(&self, workflow_id: &str) -> BearDogResult<Option<Workflow>> {
         Ok(self.workflows.read().await.get(workflow_id).cloned())
     }
-    
+
     async fn update_workflow(&self, workflow: &Workflow) -> BearDogResult<()> {
-        self.workflows.write().await.insert(workflow.id.clone(), workflow.clone());
+        self.workflows
+            .write()
+            .await
+            .insert(workflow.id.clone(), workflow.clone());
         Ok(())
     }
-    
+
     async fn delete_workflow(&self, workflow_id: &str) -> BearDogResult<()> {
         self.workflows.write().await.remove(workflow_id);
         Ok(())
@@ -958,6 +1106,12 @@ impl WorkflowStore for InMemoryWorkflowStore {
 
 pub struct InMemoryApprovalStore {
     approvals: Arc<RwLock<HashMap<String, Vec<ApprovalRecord>>>>,
+}
+
+impl Default for InMemoryApprovalStore {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl InMemoryApprovalStore {
@@ -971,15 +1125,23 @@ impl InMemoryApprovalStore {
 #[async_trait::async_trait]
 impl ApprovalStore for InMemoryApprovalStore {
     async fn store_approval(&self, approval: &ApprovalRecord) -> BearDogResult<()> {
-        self.approvals.write().await
+        self.approvals
+            .write()
+            .await
             .entry(approval.workflow_id.clone())
             .or_insert_with(Vec::new)
             .push(approval.clone());
         Ok(())
     }
-    
-    async fn get_approvals_for_workflow(&self, workflow_id: &str) -> BearDogResult<Vec<ApprovalRecord>> {
-        Ok(self.approvals.read().await
+
+    async fn get_approvals_for_workflow(
+        &self,
+        workflow_id: &str,
+    ) -> BearDogResult<Vec<ApprovalRecord>> {
+        Ok(self
+            .approvals
+            .read()
+            .await
             .get(workflow_id)
             .cloned()
             .unwrap_or_default())
@@ -996,28 +1158,49 @@ pub struct NotificationEngine {
 pub struct NotificationConfig {
     pub enabled: bool,
     pub email_enabled: bool,
+    /// Enable Slack notifications for workflow events
     pub slack_enabled: bool,
+    /// Enable generic webhook notifications
     pub webhook_enabled: bool,
+    /// SMTP server hostname for email notifications
     pub smtp_server: String,
+    /// SMTP server port number
     pub smtp_port: u16,
+    /// SMTP authentication username
     pub smtp_username: String,
+    /// SMTP authentication password
     pub smtp_password: String,
+    /// Optional Slack webhook URL for notifications
     pub slack_webhook_url: Option<String>,
+    /// Optional generic webhook URL for notifications
     pub webhook_url: Option<String>,
 }
 
 impl NotificationEngine {
+    /// Create a new notification engine with the specified configuration
+    ///
+    /// # Arguments
+    /// * `config` - Configuration for notification channels and settings
     pub fn new(config: &NotificationConfig) -> BearDogResult<Self> {
         Ok(Self {
             config: config.clone(),
         })
     }
-    
-    pub async fn send_approval_requests(&self, workflow: &Workflow, pending_approvals: &[PendingApproval]) -> BearDogResult<()> {
+
+    /// Send approval request notifications to the specified approvers
+    ///
+    /// # Arguments
+    /// * `workflow` - The workflow requiring approval
+    /// * `pending_approvals` - List of pending approvals to notify about
+    pub async fn send_approval_requests(
+        &self,
+        workflow: &Workflow,
+        pending_approvals: &[PendingApproval],
+    ) -> BearDogResult<()> {
         if !self.config.enabled {
             return Ok(());
         }
-        
+
         for approval in pending_approvals {
             tracing::info!(
                 "📧 Sending approval request to {} for workflow {} ({})",
@@ -1025,70 +1208,104 @@ impl NotificationEngine {
                 workflow.id,
                 workflow.workflow_type
             );
-            
+
             // In a real implementation, this would send actual notifications
             // For now, we just log the notification
         }
-        
+
         Ok(())
     }
-    
+
+    /// Send rejection notification to the workflow initiator
+    ///
+    /// # Arguments
+    /// * `workflow` - The workflow that was rejected
     pub async fn send_rejection_notification(&self, workflow: &Workflow) -> BearDogResult<()> {
         if !self.config.enabled {
             return Ok(());
         }
-        
+
         tracing::info!(
             "📧 Sending rejection notification to {} for workflow {}",
             workflow.initiator,
             workflow.id
         );
-        
+
         Ok(())
     }
 }
 
+/// Configuration for workflow policy enforcement
+///
+/// Defines the rules and constraints that govern workflow approval
+/// requirements, including security, timing, and approval hierarchy rules.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PolicyConfig {
+    /// Require multi-factor authentication for approvals
+    pub require_mfa: bool,
+    /// Maximum time allowed for workflow approval
+    pub max_approval_time: Duration,
+    /// Minimum number of approvers required
+    pub min_approvers: u32,
+    /// Require justification text for approvals
+    pub require_justification: bool,
+    /// Automatically expire workflows after max_approval_time
+    pub auto_expire: bool,
+    /// Enable escalation when approvals are delayed
+    pub escalation_enabled: bool,
+}
+
+/// Workflow policy engine for determining approval requirements
+///
+/// Analyzes workflow requests and determines the appropriate approval
+/// requirements based on configured policies.
 pub struct WorkflowPolicyEngine {
     config: PolicyConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PolicyConfig {
-    pub require_mfa: bool,
-    pub max_approval_time: Duration,
-    pub min_approvers: u32,
-    pub require_justification: bool,
-    pub auto_expire: bool,
-    pub escalation_enabled: bool,
-}
-
 impl WorkflowPolicyEngine {
+    /// Create a new workflow policy engine with the specified configuration
+    ///
+    /// # Arguments
+    /// * `config` - Policy configuration defining approval requirements
     pub fn new(config: &PolicyConfig) -> BearDogResult<Self> {
         Ok(Self {
             config: config.clone(),
         })
     }
-    
-    pub async fn determine_approval_requirements(&self, request: &WorkflowRequest) -> BearDogResult<ApprovalRequirements> {
+
+    /// Determine the approval requirements for a workflow request
+    ///
+    /// Analyzes the workflow request against configured policies to determine
+    /// the appropriate approval requirements, including the number of approvers,
+    /// required roles, and timing constraints.
+    ///
+    /// # Arguments
+    /// * `request` - The workflow request to evaluate
+    ///
+    /// # Returns
+    /// Approval requirements structure with all necessary constraints
+    pub async fn determine_approval_requirements(
+        &self,
+        request: &WorkflowRequest,
+    ) -> BearDogResult<ApprovalRequirements> {
         // Create approval requirements based on policy configuration
         let mut requirements = ApprovalRequirements {
             required_approvals: self.config.min_approvers,
             required_roles: vec!["admin".to_string(), "security_officer".to_string()],
-            approval_hierarchy: vec![
-                ApprovalTier {
-                    tier_level: 1,
-                    required_approvals: self.config.min_approvers,
-                    eligible_roles: vec!["admin".to_string(), "security_officer".to_string()],
-                    eligible_users: vec![],
-                    description: "Primary approval tier".to_string(),
-                }
-            ],
+            approval_hierarchy: vec![ApprovalTier {
+                tier_level: 1,
+                required_approvals: self.config.min_approvers,
+                eligible_roles: vec!["admin".to_string(), "security_officer".to_string()],
+                eligible_users: vec![],
+                description: "Primary approval tier".to_string(),
+            }],
             min_approval_time: Duration::minutes(30),
             max_approval_time: self.config.max_approval_time,
             delegation_allowed: true,
             self_approval_allowed: false,
         };
-        
+
         // Adjust based on priority
         match request.priority {
             WorkflowPriority::Emergency => {
@@ -1115,27 +1332,54 @@ impl WorkflowPolicyEngine {
                 requirements.max_approval_time = Duration::days(7);
             }
         }
-        
+
         Ok(requirements)
     }
 }
 
+/// Workflow scheduler for managing timeouts and recurring workflows
+///
+/// Handles the scheduling and execution of time-based workflow operations,
+/// including timeout handling, recurring workflow execution, and deadline
+/// management for workflow approvals.
 pub struct WorkflowScheduler {
     // This would contain scheduling logic for timeouts and recurring workflows
 }
 
+impl Default for WorkflowScheduler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WorkflowScheduler {
+    /// Create a new workflow scheduler
+    ///
+    /// Initializes the scheduler with default configuration for handling
+    /// workflow timeouts and recurring operations.
     pub fn new() -> Self {
         Self {}
     }
-    
-    pub async fn schedule_workflow_timeout(&self, workflow_id: &str, expires_at: DateTime<Utc>) -> BearDogResult<()> {
+
+    /// Schedule a timeout for a workflow
+    ///
+    /// Schedules the workflow to be automatically expired or escalated
+    /// at the specified time if approval requirements are not met.
+    ///
+    /// # Arguments
+    /// * `workflow_id` - Unique identifier of the workflow to schedule
+    /// * `expires_at` - Timestamp when the workflow should timeout
+    pub async fn schedule_workflow_timeout(
+        &self,
+        workflow_id: &str,
+        expires_at: DateTime<Utc>,
+    ) -> BearDogResult<()> {
         tracing::info!(
             "⏰ Scheduled timeout for workflow {} at {}",
             workflow_id,
             expires_at
         );
-        
+
         // In a real implementation, this would schedule actual timeout handling
         // For now, we just log the scheduling
         Ok(())
@@ -1146,14 +1390,28 @@ impl WorkflowScheduler {
 
 macro_rules! impl_workflow_processor {
     ($name:ident, $processor_name:expr) => {
+        /// Workflow processor for automated workflow execution
+        ///
+        /// Handles the execution of specific workflow types with automated
+        /// validation, parameter checking, and result reporting.
         pub struct $name;
-        
+
+        impl Default for $name {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+
         impl $name {
+            /// Create a new workflow processor instance
+            ///
+            /// Initializes the processor with default configuration for
+            /// handling the specific workflow type.
             pub fn new() -> Self {
                 Self {}
             }
         }
-        
+
         #[async_trait::async_trait]
         impl WorkflowProcessor for $name {
             async fn execute_workflow(&self, execution: &WorkflowExecution) -> BearDogResult<()> {
@@ -1162,25 +1420,28 @@ macro_rules! impl_workflow_processor {
                     $processor_name,
                     execution.workflow_id
                 );
-                
+
                 // Actual workflow execution logic would go here
                 // For now, we simulate successful execution
                 tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-                
+
                 tracing::info!(
                     "✅ Completed {} workflow: {}",
                     $processor_name,
                     execution.workflow_id
                 );
-                
+
                 Ok(())
             }
-            
-            async fn validate_parameters(&self, _parameters: &HashMap<String, serde_json::Value>) -> BearDogResult<()> {
+
+            async fn validate_parameters(
+                &self,
+                _parameters: &HashMap<String, serde_json::Value>,
+            ) -> BearDogResult<()> {
                 // Parameter validation logic would go here
                 Ok(())
             }
-            
+
             fn get_processor_name(&self) -> &str {
                 $processor_name
             }
@@ -1252,7 +1513,7 @@ impl std::fmt::Display for WorkflowType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::WorkflowStorageConfig;
+
     use std::collections::HashMap;
 
     fn create_test_config() -> WorkflowConfig {
@@ -1292,13 +1553,21 @@ mod tests {
 
     fn create_test_workflow_request() -> WorkflowRequest {
         let mut parameters = HashMap::new();
-        parameters.insert("key_id".to_string(), serde_json::Value::String("test-key-123".to_string()));
-        parameters.insert("rotation_reason".to_string(), serde_json::Value::String("Scheduled rotation".to_string()));
-        
+        parameters.insert(
+            "key_id".to_string(),
+            serde_json::Value::String("test-key-123".to_string()),
+        );
+        parameters.insert(
+            "rotation_reason".to_string(),
+            serde_json::Value::String("Scheduled rotation".to_string()),
+        );
+
         WorkflowRequest {
             workflow_type: WorkflowType::KeyRotation,
             initiator: "test-user".to_string(),
-            target: WorkflowTarget::Key { key_id: "test-key-123".to_string() },
+            target: WorkflowTarget::Key {
+                key_id: "test-key-123".to_string(),
+            },
             parameters,
             reason: "Test workflow request".to_string(),
             priority: WorkflowPriority::Normal,
@@ -1317,10 +1586,10 @@ mod tests {
     async fn test_workflow_initiation() {
         let config = create_test_config();
         let engine = MultiPartyWorkflowEngine::new(config).await.unwrap();
-        
+
         let request = create_test_workflow_request();
         let response = engine.initiate_workflow(request).await;
-        
+
         assert!(response.is_ok());
         let response = response.unwrap();
         assert!(!response.workflow_id.is_empty());
@@ -1331,18 +1600,18 @@ mod tests {
     async fn test_workflow_priority_handling() {
         let config = create_test_config();
         let engine = MultiPartyWorkflowEngine::new(config).await.unwrap();
-        
+
         // Test emergency priority
         let mut request = create_test_workflow_request();
         request.priority = WorkflowPriority::Emergency;
-        
+
         let response = engine.initiate_workflow(request).await.unwrap();
         assert_eq!(response.required_approvals.required_approvals, 1);
-        
+
         // Test normal priority
         let mut request = create_test_workflow_request();
         request.priority = WorkflowPriority::Normal;
-        
+
         let response = engine.initiate_workflow(request).await.unwrap();
         assert_eq!(response.required_approvals.required_approvals, 2);
     }
@@ -1351,12 +1620,12 @@ mod tests {
     async fn test_approval_submission() {
         let config = create_test_config();
         let engine = MultiPartyWorkflowEngine::new(config).await.unwrap();
-        
+
         // Create workflow first with Emergency priority to bypass minimum approval time
         let mut request = create_test_workflow_request();
         request.priority = WorkflowPriority::Emergency;
         let workflow_response = engine.initiate_workflow(request).await.unwrap();
-        
+
         // Submit approval using a valid approver (admin1 is in the predefined admin users)
         let approval = ApprovalSubmission {
             workflow_id: workflow_response.workflow_id.clone(),
@@ -1366,10 +1635,10 @@ mod tests {
             signature: None,
             metadata: HashMap::new(),
         };
-        
+
         let approval_response = engine.submit_approval(approval).await;
         assert!(approval_response.is_ok());
-        
+
         let approval_response = approval_response.unwrap();
         assert!(!approval_response.approval_id.is_empty());
     }
@@ -1378,13 +1647,13 @@ mod tests {
     async fn test_workflow_status_retrieval() {
         let config = create_test_config();
         let engine = MultiPartyWorkflowEngine::new(config).await.unwrap();
-        
+
         let request = create_test_workflow_request();
         let response = engine.initiate_workflow(request).await.unwrap();
-        
+
         let status = engine.get_workflow_status(&response.workflow_id).await;
         assert!(status.is_ok());
-        
+
         let workflow = status.unwrap();
         assert_eq!(workflow.id, response.workflow_id);
         assert!(matches!(workflow.status, WorkflowStatus::PendingApprovals));
@@ -1394,12 +1663,12 @@ mod tests {
     async fn test_workflow_expiration_calculation() {
         let config = create_test_config();
         let engine = MultiPartyWorkflowEngine::new(config).await.unwrap();
-        
+
         // Test different priority expiration times
         let emergency_duration = engine.calculate_expiration_time(&WorkflowPriority::Emergency);
         let normal_duration = engine.calculate_expiration_time(&WorkflowPriority::Normal);
         let low_duration = engine.calculate_expiration_time(&WorkflowPriority::Low);
-        
+
         assert!(emergency_duration < normal_duration);
         assert!(normal_duration < low_duration);
         assert_eq!(emergency_duration, Duration::hours(1));
@@ -1411,7 +1680,7 @@ mod tests {
     async fn test_workflow_type_validation() {
         let config = create_test_config();
         let engine = MultiPartyWorkflowEngine::new(config).await.unwrap();
-        
+
         // Test all supported workflow types
         let supported_types = vec![
             WorkflowType::KeyRotation,
@@ -1423,7 +1692,7 @@ mod tests {
             WorkflowType::SystemMaintenance,
             WorkflowType::ComplianceAudit,
         ];
-        
+
         for workflow_type in supported_types {
             assert!(engine.is_workflow_type_supported(&workflow_type));
         }
@@ -1434,13 +1703,15 @@ mod tests {
         let config = NotificationConfig::default();
         let engine = NotificationEngine::new(&config);
         assert!(engine.is_ok());
-        
+
         let engine = engine.unwrap();
         let workflow = Workflow {
             id: "test-workflow".to_string(),
             workflow_type: WorkflowType::KeyRotation,
             initiator: "test-user".to_string(),
-            target: WorkflowTarget::Key { key_id: "test-key".to_string() },
+            target: WorkflowTarget::Key {
+                key_id: "test-key".to_string(),
+            },
             parameters: HashMap::new(),
             approval_requirements: ApprovalRequirements {
                 required_approvals: 2,
@@ -1458,21 +1729,21 @@ mod tests {
             audit_trail: vec![],
             metadata: HashMap::new(),
         };
-        
-        let pending_approvals = vec![
-            PendingApproval {
-                id: "approval-1".to_string(),
-                workflow_id: "test-workflow".to_string(),
-                approver: "admin-1".to_string(),
-                approver_role: "admin".to_string(),
-                tier_level: 1,
-                created_at: Utc::now(),
-                expires_at: Utc::now() + Duration::hours(24),
-                notification_sent: false,
-            }
-        ];
-        
-        let result = engine.send_approval_requests(&workflow, &pending_approvals).await;
+
+        let pending_approvals = vec![PendingApproval {
+            id: "approval-1".to_string(),
+            workflow_id: "test-workflow".to_string(),
+            approver: "admin-1".to_string(),
+            approver_role: "admin".to_string(),
+            tier_level: 1,
+            created_at: Utc::now(),
+            expires_at: Utc::now() + Duration::hours(24),
+            notification_sent: false,
+        }];
+
+        let result = engine
+            .send_approval_requests(&workflow, &pending_approvals)
+            .await;
         assert!(result.is_ok());
     }
 
@@ -1480,12 +1751,14 @@ mod tests {
     async fn test_in_memory_stores() {
         let workflow_store = InMemoryWorkflowStore::new();
         let approval_store = InMemoryApprovalStore::new();
-        
+
         let workflow = Workflow {
             id: "test-workflow".to_string(),
             workflow_type: WorkflowType::KeyRotation,
             initiator: "test-user".to_string(),
-            target: WorkflowTarget::Key { key_id: "test-key".to_string() },
+            target: WorkflowTarget::Key {
+                key_id: "test-key".to_string(),
+            },
             parameters: HashMap::new(),
             approval_requirements: ApprovalRequirements {
                 required_approvals: 2,
@@ -1503,15 +1776,15 @@ mod tests {
             audit_trail: vec![],
             metadata: HashMap::new(),
         };
-        
+
         // Test workflow storage
         let store_result = workflow_store.store_workflow(&workflow).await;
         assert!(store_result.is_ok());
-        
+
         let retrieved = workflow_store.get_workflow(&workflow.id).await.unwrap();
         assert!(retrieved.is_some());
         assert_eq!(retrieved.unwrap().id, workflow.id);
-        
+
         // Test approval storage
         let approval = ApprovalRecord {
             id: "approval-1".to_string(),
@@ -1524,11 +1797,14 @@ mod tests {
             signature: None,
             metadata: HashMap::new(),
         };
-        
+
         let store_result = approval_store.store_approval(&approval).await;
         assert!(store_result.is_ok());
-        
-        let approvals = approval_store.get_approvals_for_workflow(&workflow.id).await.unwrap();
+
+        let approvals = approval_store
+            .get_approvals_for_workflow(&workflow.id)
+            .await
+            .unwrap();
         assert_eq!(approvals.len(), 1);
         assert_eq!(approvals[0].id, approval.id);
     }
@@ -1536,31 +1812,55 @@ mod tests {
     #[tokio::test]
     async fn test_workflow_processors() {
         let processors = vec![
-            ("KeyRotation", Box::new(KeyRotationProcessor::new()) as Box<dyn WorkflowProcessor>),
-            ("KeyDeletion", Box::new(KeyDeletionProcessor::new()) as Box<dyn WorkflowProcessor>),
-            ("PolicyChange", Box::new(PolicyChangeProcessor::new()) as Box<dyn WorkflowProcessor>),
-            ("ConfigurationChange", Box::new(ConfigChangeProcessor::new()) as Box<dyn WorkflowProcessor>),
-            ("UserProvisioning", Box::new(UserProvisioningProcessor::new()) as Box<dyn WorkflowProcessor>),
-            ("EmergencyAccess", Box::new(EmergencyAccessProcessor::new()) as Box<dyn WorkflowProcessor>),
-            ("SystemMaintenance", Box::new(SystemMaintenanceProcessor::new()) as Box<dyn WorkflowProcessor>),
-            ("ComplianceAudit", Box::new(ComplianceAuditProcessor::new()) as Box<dyn WorkflowProcessor>),
+            (
+                "KeyRotation",
+                Box::new(KeyRotationProcessor::new()) as Box<dyn WorkflowProcessor>,
+            ),
+            (
+                "KeyDeletion",
+                Box::new(KeyDeletionProcessor::new()) as Box<dyn WorkflowProcessor>,
+            ),
+            (
+                "PolicyChange",
+                Box::new(PolicyChangeProcessor::new()) as Box<dyn WorkflowProcessor>,
+            ),
+            (
+                "ConfigurationChange",
+                Box::new(ConfigChangeProcessor::new()) as Box<dyn WorkflowProcessor>,
+            ),
+            (
+                "UserProvisioning",
+                Box::new(UserProvisioningProcessor::new()) as Box<dyn WorkflowProcessor>,
+            ),
+            (
+                "EmergencyAccess",
+                Box::new(EmergencyAccessProcessor::new()) as Box<dyn WorkflowProcessor>,
+            ),
+            (
+                "SystemMaintenance",
+                Box::new(SystemMaintenanceProcessor::new()) as Box<dyn WorkflowProcessor>,
+            ),
+            (
+                "ComplianceAudit",
+                Box::new(ComplianceAuditProcessor::new()) as Box<dyn WorkflowProcessor>,
+            ),
         ];
-        
+
         for (name, processor) in processors {
             assert_eq!(processor.get_processor_name(), name);
-            
+
             let execution = WorkflowExecution {
                 workflow_id: format!("test-{}", name),
                 execution_id: format!("exec-{}", name),
                 started_at: Utc::now(),
                 context: HashMap::new(),
             };
-            
+
             let result = processor.execute_workflow(&execution).await;
             assert!(result.is_ok());
-            
+
             let validation_result = processor.validate_parameters(&HashMap::new()).await;
             assert!(validation_result.is_ok());
         }
     }
-} 
+}

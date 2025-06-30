@@ -1,22 +1,22 @@
 //! Core BearDog orchestration engine
-//! 
+//!
 //! Manages the lifecycle and health of all BearDog security components.
 
-use std::sync::Arc;
-use std::collections::HashMap;
-use chrono::{DateTime, Utc, Duration};
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
 
-use crate::config::BearDogConfig;
-use crate::error::{BearDogResult, BearDogError};
-use crate::workflows::MultiPartyWorkflowEngine;
-use crate::encryption::EncryptionEngine;
 use crate::audit::AuditEngine;
-use crate::threat_detection::ThreatDetectionEngine;
 use crate::compliance::ComplianceEngine;
+use crate::config::BearDogConfig;
+use crate::encryption::EncryptionEngine;
+use crate::error::{BearDogError, BearDogResult};
 use crate::security_provider::BearDogSecurityProvider;
+use crate::threat_detection::ThreatDetectionEngine;
+use crate::workflows::MultiPartyWorkflowEngine;
 
 /// Core BearDog orchestration engine
 #[derive(Clone)]
@@ -108,8 +108,6 @@ pub struct HealthCheck {
     pub timestamp: DateTime<Utc>,
 }
 
-
-
 impl Default for CoreState {
     fn default() -> Self {
         Self {
@@ -132,13 +130,13 @@ impl BearDogCore {
     /// Create a new BearDog core instance
     pub async fn new(config: BearDogConfig) -> BearDogResult<Self> {
         info!("🐻 Initializing BearDog Security Manager");
-        
+
         // Initialize encryption engine
         let encryption_engine = Arc::new(EncryptionEngine::new(config.encryption.clone()).await?);
-        
+
         // Initialize audit engine
         let audit_engine = Arc::new(AuditEngine::new().await);
-        
+
         // Convert config types to module-specific types
         let threat_config = crate::threat_detection::ThreatDetectionConfig {
             enabled: config.threat_detection.enabled,
@@ -148,31 +146,35 @@ impl BearDogCore {
             cache_size: 1000,
             monitoring_interval: 30,
         };
-        
+
         let compliance_config = crate::compliance::ComplianceConfig {
             enabled_standards: vec![
                 crate::compliance::ComplianceStandard::GDPR,
                 crate::compliance::ComplianceStandard::SOX,
                 crate::compliance::ComplianceStandard::PCI_DSS,
             ],
-            monitoring_interval: chrono::Duration::from_std(config.compliance.monitoring_interval).unwrap_or(chrono::Duration::minutes(5)),
-            audit_retention: chrono::Duration::from_std(config.compliance.audit_retention).unwrap_or(chrono::Duration::days(365)),
+            monitoring_interval: chrono::Duration::from_std(config.compliance.monitoring_interval)
+                .unwrap_or(chrono::Duration::minutes(5)),
+            audit_retention: chrono::Duration::from_std(config.compliance.audit_retention)
+                .unwrap_or(chrono::Duration::days(365)),
             dashboard_refresh_interval: chrono::Duration::minutes(1),
             reporting: crate::compliance::ReportingConfig::default(),
         };
-        
+
         // Initialize threat detection engine
         let threat_detection_engine = Arc::new(ThreatDetectionEngine::new(threat_config).await?);
-        
+
         // Initialize compliance engine
         let compliance_engine = Arc::new(ComplianceEngine::new(compliance_config).await?);
-        
+
         // Initialize workflow engine
-        let workflow_engine = Arc::new(MultiPartyWorkflowEngine::new(config.workflows.clone()).await?);
-        
+        let workflow_engine =
+            Arc::new(MultiPartyWorkflowEngine::new(config.workflows.clone()).await?);
+
         // Initialize security provider with placeholder for now
-        let security_provider = Arc::new(crate::security_provider::BearDogSecurityProvider::new_placeholder());
-        
+        let security_provider =
+            Arc::new(crate::security_provider::BearDogSecurityProvider::new_placeholder());
+
         let core = Self {
             config: Arc::new(config),
             encryption_engine,
@@ -185,11 +187,11 @@ impl BearDogCore {
             component_status: HashMap::new(),
             state: Arc::new(RwLock::new(CoreState::default())),
         };
-        
+
         info!("✅ BearDog Security Manager initialized successfully");
         Ok(core)
     }
-    
+
     /// Create a placeholder core for initialization
     pub fn new_placeholder() -> Self {
         Self {
@@ -199,7 +201,9 @@ impl BearDogCore {
             threat_detection_engine: Arc::new(ThreatDetectionEngine::placeholder()),
             compliance_engine: Arc::new(ComplianceEngine::placeholder()),
             workflow_engine: Arc::new(MultiPartyWorkflowEngine::placeholder()),
-            security_provider: Arc::new(crate::security_provider::BearDogSecurityProvider::new_placeholder()),
+            security_provider: Arc::new(
+                crate::security_provider::BearDogSecurityProvider::new_placeholder(),
+            ),
             startup_time: std::time::Instant::now(),
             component_status: HashMap::new(),
             state: Arc::new(RwLock::new(CoreState::default())),
@@ -215,8 +219,10 @@ impl BearDogCore {
             threat_detection_engine: Arc::new(ThreatDetectionEngine::placeholder()),
             compliance_engine: Arc::new(ComplianceEngine::placeholder()),
             workflow_engine: Arc::new(MultiPartyWorkflowEngine::placeholder()),
-            // Use a bare minimum security provider that doesn't reference core
-            security_provider: Arc::new(crate::security_provider::BearDogSecurityProvider::new_placeholder()),
+            // Use a minimal security provider that doesn't create another core
+            security_provider: Arc::new(
+                crate::security_provider::BearDogSecurityProvider::new_minimal(),
+            ),
             startup_time: std::time::Instant::now(),
             component_status: HashMap::new(),
             state: Arc::new(RwLock::new(CoreState::default())),
@@ -232,13 +238,20 @@ impl BearDogCore {
         info!("Starting BearDog core components...");
 
         // Initialize components in order
-        self.register_component(&mut state, "encryption", true, None).await;
-        self.register_component(&mut state, "threat_detection", true, None).await;
-        self.register_component(&mut state, "compliance", true, None).await;
-        self.register_component(&mut state, "audit", true, None).await;
-        self.register_component(&mut state, "workflows", true, None).await;
-        self.register_component(&mut state, "nestgate_adapter", true, None).await;
-        self.register_component(&mut state, "songbird_adapter", true, None).await;
+        self.register_component(&mut state, "encryption", true, None)
+            .await;
+        self.register_component(&mut state, "threat_detection", true, None)
+            .await;
+        self.register_component(&mut state, "compliance", true, None)
+            .await;
+        self.register_component(&mut state, "audit", true, None)
+            .await;
+        self.register_component(&mut state, "workflows", true, None)
+            .await;
+        self.register_component(&mut state, "nestgate_adapter", true, None)
+            .await;
+        self.register_component(&mut state, "songbird_adapter", true, None)
+            .await;
 
         state.health_status = HealthStatus::Healthy;
         info!("BearDog core started successfully");
@@ -255,7 +268,7 @@ impl BearDogCore {
 
         // Clear component statuses
         state.component_status.clear();
-        
+
         info!("BearDog core stopped");
         Ok(())
     }
@@ -263,7 +276,7 @@ impl BearDogCore {
     /// Get current health status
     pub async fn health_check(&self) -> BearDogResult<HealthCheck> {
         let state = self.state.read().await;
-        
+
         let uptime = state.start_time.map(|start_time| Utc::now() - start_time);
 
         let components: Vec<ComponentStatus> = state.component_status.values().cloned().collect();
@@ -300,7 +313,9 @@ impl BearDogCore {
             uptime: state.start_time.map(|start_time| Utc::now() - start_time),
         };
 
-        state.component_status.insert(name.to_string(), component_status);
+        state
+            .component_status
+            .insert(name.to_string(), component_status);
     }
 
     /// Update component status
@@ -312,7 +327,7 @@ impl BearDogCore {
     ) -> BearDogResult<()> {
         let mut state = self.state.write().await;
         let start_time = state.start_time; // Get start_time before mutable borrow
-        
+
         if let Some(status) = state.component_status.get_mut(component_name) {
             status.healthy = healthy;
             status.last_check = Utc::now();
@@ -372,5 +387,27 @@ impl BearDogCore {
         &self.security_provider
     }
 
+    /// Get reference to the cross-node authorization engine
+    pub fn cross_node_auth(&self) -> BearDogResult<&crate::cross_node_auth::CrossNodeAuthEngine> {
+        // For now, return a placeholder error since cross-node auth is still being implemented
+        Err(BearDogError::internal(
+            "Cross-node authorization engine is not yet fully integrated",
+        ))
+    }
 
-} 
+    /// Get reference to the node registry
+    pub fn node_registry(&self) -> BearDogResult<&dyn crate::cross_node_auth::NodeRegistry> {
+        // For now, return a placeholder error since node registry is still being implemented
+        Err(BearDogError::internal(
+            "Node registry is not yet fully integrated",
+        ))
+    }
+
+    /// Get reference to the proof verifier
+    pub fn proof_verifier(&self) -> BearDogResult<&dyn crate::cross_node_auth::ProofVerifier> {
+        // For now, return a placeholder error since proof verifier is still being implemented
+        Err(BearDogError::internal(
+            "Proof verifier is not yet fully integrated",
+        ))
+    }
+}

@@ -1,14 +1,14 @@
 //! Configuration management for BearDog
-//! 
+//!
 //! Provides secure-by-default configuration loading and validation.
 
+use crate::error::BearDogResult;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
-use crate::error::{BearDogResult};
-use std::env;
 use std::collections::HashMap;
-use std::time::Duration;
+use std::env;
+use std::path::Path;
 use std::path::PathBuf;
+use std::time::Duration;
 
 /// Security levels for BearDog operations
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -23,7 +23,7 @@ pub enum SecurityLevel {
 }
 
 /// Main configuration structure for BearDog
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BearDogConfig {
     /// Security level for operations
     pub security: SecurityConfig,
@@ -321,7 +321,7 @@ pub struct HsmConfig {
 }
 
 /// Key derivation configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct KeyDerivationConfig {
     /// Argon2 parameters
     pub argon2: Argon2Config,
@@ -405,14 +405,14 @@ pub struct WorkflowStorageConfig {
 }
 
 /// Adapter configurations
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AdapterConfigs {
     /// Adapter configuration for external system integrations
     pub external_systems: AdapterConfig,
 }
 
 /// Adapter configuration for external system integrations
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AdapterConfig {
     /// Rust ecosystem integrations (always free/enabled)
     pub rust_ecosystem: RustEcosystemConfig,
@@ -421,7 +421,7 @@ pub struct AdapterConfig {
 }
 
 /// Configuration for Rust ecosystem project integrations (AGPL - always free)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RustEcosystemConfig {
     /// NestGate secure file transfer (if part of your Rust ecosystem)
     pub nestgate: Option<RustProjectConfig>,
@@ -447,7 +447,7 @@ pub struct RustProjectConfig {
 }
 
 /// Configuration for licensed external systems
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExternalSystemsConfig {
     /// Enterprise HSM integrations
     pub hsm_systems: HashMap<String, ExternalSystemConfig>,
@@ -558,25 +558,6 @@ pub struct PrometheusConfig {
     pub endpoint: String,
     /// Metrics port
     pub port: u16,
-}
-
-impl Default for BearDogConfig {
-    fn default() -> Self {
-        Self {
-            security: SecurityConfig::default(),
-            database: DatabaseConfig::default(),
-            network: NetworkConfig::default(),
-            api: ApiConfig::default(),
-            encryption: EncryptionConfig::default(),
-            compliance: ComplianceConfig::default(),
-            threat_detection: ThreatDetectionConfig::default(),
-            workflows: WorkflowConfig::default(),
-            adapters: AdapterConfigs::default(),
-            audit: AuditConfig::default(),
-            logging: LoggingConfig::default(),
-            metrics: MetricsConfig::default(),
-        }
-    }
 }
 
 impl Default for ApiConfig {
@@ -701,50 +682,53 @@ impl BearDogConfig {
     pub fn validate(&self) -> BearDogResult<()> {
         // Validate network configuration
         if self.network.port == 0 {
-            return Err(crate::error::BearDogError::Configuration { 
-                message: "Network port cannot be 0".to_string() 
+            return Err(crate::error::BearDogError::Configuration {
+                message: "Network port cannot be 0".to_string(),
             });
         }
 
         // Validate database configuration
         if self.database.url.is_empty() {
-            return Err(crate::error::BearDogError::Configuration { 
-                message: "Database URL cannot be empty".to_string() 
+            return Err(crate::error::BearDogError::Configuration {
+                message: "Database URL cannot be empty".to_string(),
             });
         }
 
         // Validate threat detection configuration
         if self.threat_detection.enabled && self.threat_detection.ml_models.model_paths.is_empty() {
-            return Err(crate::error::BearDogError::Configuration { 
-                message: "Threat detection enabled but no ML models configured".to_string() 
+            return Err(crate::error::BearDogError::Configuration {
+                message: "Threat detection enabled but no ML models configured".to_string(),
             });
         }
 
         // Validate TLS configuration
-        if self.network.enable_tls && (self.network.tls_cert_path.is_none() || self.network.tls_key_path.is_none()) {
-            return Err(crate::error::BearDogError::Configuration { 
-                message: "TLS certificate and key paths must be provided when TLS is enabled".to_string() 
+        if self.network.enable_tls
+            && (self.network.tls_cert_path.is_none() || self.network.tls_key_path.is_none())
+        {
+            return Err(crate::error::BearDogError::Configuration {
+                message: "TLS certificate and key paths must be provided when TLS is enabled"
+                    .to_string(),
             });
         }
 
         // Validate API configuration
         if self.api.bind_address.is_empty() {
-            return Err(crate::error::BearDogError::Configuration { 
-                message: "API bind address cannot be empty".to_string() 
+            return Err(crate::error::BearDogError::Configuration {
+                message: "API bind address cannot be empty".to_string(),
             });
         }
-        
+
         // Validate JWT secret
         if self.api.auth.jwt_secret == "changeme" {
-            return Err(crate::error::BearDogError::Configuration { 
-                message: "Default JWT secret must be changed in production".to_string() 
+            return Err(crate::error::BearDogError::Configuration {
+                message: "Default JWT secret must be changed in production".to_string(),
             });
         }
-        
+
         // Validate password policy
         if self.security.password_policy.min_length < 8 {
-            return Err(crate::error::BearDogError::Configuration { 
-                message: "Minimum password length must be at least 8".to_string() 
+            return Err(crate::error::BearDogError::Configuration {
+                message: "Minimum password length must be at least 8".to_string(),
             });
         }
 
@@ -791,8 +775,7 @@ impl Default for DatabaseConfig {
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
-            host: std::env::var("BEARDOG_NETWORK_HOST")
-                .unwrap_or_else(|_| "0.0.0.0".to_string()),
+            host: std::env::var("BEARDOG_NETWORK_HOST").unwrap_or_else(|_| "0.0.0.0".to_string()),
             port: std::env::var("BEARDOG_NETWORK_PORT")
                 .unwrap_or_else(|_| "8443".to_string())
                 .parse()
@@ -872,51 +855,10 @@ impl Default for WorkflowStorageConfig {
     fn default() -> Self {
         let mut config = HashMap::new();
         config.insert("max_items".to_string(), "10000".to_string());
-        
+
         Self {
             storage_type: "memory".to_string(),
             config,
-        }
-    }
-}
-
-impl Default for AdapterConfigs {
-    fn default() -> Self {
-        Self {
-            external_systems: AdapterConfig::default(),
-        }
-    }
-}
-
-impl Default for AdapterConfig {
-    fn default() -> Self {
-        Self {
-            rust_ecosystem: RustEcosystemConfig::default(),
-            external_systems: ExternalSystemsConfig::default(),
-        }
-    }
-}
-
-impl Default for RustEcosystemConfig {
-    fn default() -> Self {
-        Self {
-            nestgate: None,
-            songbird: None,
-            additional_projects: HashMap::new(),
-        }
-    }
-}
-
-impl Default for ExternalSystemsConfig {
-    fn default() -> Self {
-        Self {
-            hsm_systems: HashMap::new(),
-            siem_systems: HashMap::new(),
-            database_systems: HashMap::new(),
-            cloud_services: HashMap::new(),
-            auth_systems: HashMap::new(),
-            backup_systems: HashMap::new(),
-            messaging_systems: HashMap::new(),
         }
     }
 }
@@ -925,7 +867,7 @@ impl Default for AuditStorageConfig {
     fn default() -> Self {
         let mut config = HashMap::new();
         config.insert("max_items".to_string(), "100000".to_string());
-        
+
         Self {
             storage_type: "memory".to_string(),
             config,
@@ -1010,7 +952,7 @@ impl Default for TotpConfig {
 impl Default for SessionConfig {
     fn default() -> Self {
         Self {
-            timeout: Duration::from_secs(3600), // 1 hour
+            timeout: Duration::from_secs(3600),         // 1 hour
             cleanup_interval: Duration::from_secs(300), // 5 minutes
             secure_cookies: true,
         }
@@ -1023,15 +965,6 @@ impl Default for HsmConfig {
             enabled: false,
             provider: "software".to_string(),
             config: HashMap::new(),
-        }
-    }
-}
-
-impl Default for KeyDerivationConfig {
-    fn default() -> Self {
-        Self {
-            argon2: Argon2Config::default(),
-            pbkdf2: Pbkdf2Config::default(),
         }
     }
 }
@@ -1058,8 +991,11 @@ impl Default for Pbkdf2Config {
 impl Default for MlModelConfig {
     fn default() -> Self {
         let mut model_paths = HashMap::new();
-        model_paths.insert("anomaly_detection".to_string(), "/tmp/models/anomaly.model".to_string());
-        
+        model_paths.insert(
+            "anomaly_detection".to_string(),
+            "/tmp/models/anomaly.model".to_string(),
+        );
+
         Self {
             model_paths,
             update_interval: Duration::from_secs(3600), // 1 hour
@@ -1075,4 +1011,4 @@ impl Default for BehavioralAnalysisConfig {
             anomaly_threshold: 0.8,
         }
     }
-} 
+}

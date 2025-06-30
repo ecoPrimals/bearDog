@@ -1,5 +1,5 @@
 //! Audit Engine
-//! 
+//!
 //! Comprehensive security audit logging and forensics system.
 
 use chrono::{DateTime, Utc};
@@ -65,36 +65,40 @@ pub struct AuditEvent {
     pub metadata: HashMap<String, String>,
     /// Event description
     pub description: String,
+    /// Outcome of the event (success, failure, etc.)
+    pub outcome: String,
+    /// Additional details about the event
+    pub details: HashMap<String, String>,
 }
 
 /// Security audit and forensics engine
-/// 
+///
 /// The AuditEngine provides comprehensive audit logging, forensic analysis,
 /// and security event correlation. It maintains tamper-evident audit trails
 /// and supports forensic investigation workflows.
-/// 
+///
 /// # Features
-/// 
+///
 /// - Tamper-evident audit logging
 /// - Security event correlation
 /// - Forensic analysis tools
 /// - Audit trail visualization
 /// - Compliance audit reporting
 /// - Chain of custody tracking
-/// 
+///
 /// # Security Properties
-/// 
+///
 /// - Cryptographic integrity protection
 /// - Immutable audit records
 /// - Secure log aggregation
 /// - Access control enforcement
 /// - Data retention policies
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust,no_run
 /// use beardog::audit::AuditEngine;
-/// 
+///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let engine = AuditEngine::new().await;
@@ -108,7 +112,7 @@ pub struct AuditEngine {
 
 impl AuditEngine {
     /// Create a new audit engine instance
-    /// 
+    ///
     /// Initializes the engine with secure audit configuration and storage.
     pub async fn new() -> Self {
         Self {
@@ -170,11 +174,11 @@ impl AuditEngine {
             .collect();
         Ok(filtered)
     }
-    
+
     /// Create a placeholder instance for initialization
     pub fn placeholder() -> Self {
         Self {
             events: Arc::new(RwLock::new(Vec::new())),
         }
     }
-} 
+}

@@ -1,6 +1,6 @@
+use crate::error::{BearDogError, BearDogResult};
 use std::env;
 use std::time::Duration;
-use crate::error::{BearDogResult, BearDogError};
 
 /// Environment variable utilities for production deployments
 pub struct EnvUtils;
@@ -9,7 +9,7 @@ impl EnvUtils {
     /// Get a required environment variable
     pub fn get_required(key: &str) -> BearDogResult<String> {
         env::var(key).map_err(|_| BearDogError::Configuration {
-            message: format!("Required environment variable {} not set", key)
+            message: format!("Required environment variable {} not set", key),
         })
     }
 
@@ -66,7 +66,7 @@ impl EnvUtils {
     pub fn validate_production_env() -> BearDogResult<()> {
         let required_vars = [
             "BEARDOG_DATABASE_URL",
-            "BEARDOG_SECRET_KEY", 
+            "BEARDOG_SECRET_KEY",
             "BEARDOG_ENCRYPTION_KEY",
             "BEARDOG_API_BIND_ADDRESS",
         ];
@@ -199,12 +199,12 @@ mod tests {
         env::set_var("TEST_BOOL_TRUE", "true");
         env::set_var("TEST_BOOL_FALSE", "false");
         env::set_var("TEST_BOOL_1", "1");
-        
-        assert_eq!(EnvUtils::get_bool("TEST_BOOL_TRUE", false), true);
-        assert_eq!(EnvUtils::get_bool("TEST_BOOL_FALSE", true), false);
-        assert_eq!(EnvUtils::get_bool("TEST_BOOL_1", false), true);
-        assert_eq!(EnvUtils::get_bool("NON_EXISTENT", true), true);
-        
+
+        assert!(EnvUtils::get_bool("TEST_BOOL_TRUE", false));
+        assert!(!EnvUtils::get_bool("TEST_BOOL_FALSE", true));
+        assert!(EnvUtils::get_bool("TEST_BOOL_1", false));
+        assert!(EnvUtils::get_bool("NON_EXISTENT", true));
+
         env::remove_var("TEST_BOOL_TRUE");
         env::remove_var("TEST_BOOL_FALSE");
         env::remove_var("TEST_BOOL_1");
@@ -215,10 +215,10 @@ mod tests {
         env::set_var("TEST_CSV", "item1,item2,item3");
         let result = EnvUtils::get_csv_list("TEST_CSV", vec!["default"]);
         assert_eq!(result, vec!["item1", "item2", "item3"]);
-        
+
         let default_result = EnvUtils::get_csv_list("NON_EXISTENT", vec!["default1", "default2"]);
         assert_eq!(default_result, vec!["default1", "default2"]);
-        
+
         env::remove_var("TEST_CSV");
     }
-} 
+}

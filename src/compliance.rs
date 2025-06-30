@@ -1,13 +1,13 @@
 //! Compliance Engine
-//! 
+//!
 //! Automated compliance monitoring and reporting for major security frameworks.
 
+use chrono::{DateTime, Duration, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use chrono::{DateTime, Utc, Duration};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use std::sync::Mutex;
+use uuid::Uuid;
 
 use crate::error::BearDogResult;
 
@@ -117,6 +117,8 @@ pub struct ComplianceEvent {
     pub resource: Option<String>,
     /// Additional event data
     pub data: HashMap<String, String>,
+    /// Additional metadata about the event
+    pub metadata: HashMap<String, String>,
 }
 
 /// Compliance violation details
@@ -239,14 +241,21 @@ impl ComplianceEngine {
             event_cache: Arc::new(Mutex::new(Vec::new())),
         })
     }
-    
+
     /// Validate compliance for an event
-    pub async fn validate_compliance(&self, event: &ComplianceEvent) -> BearDogResult<ComplianceResult> {
+    pub async fn validate_compliance(
+        &self,
+        event: &ComplianceEvent,
+    ) -> BearDogResult<ComplianceResult> {
         self.evaluate_event(event.clone()).await
     }
 
-        /// Analyze event for specific compliance standard
-    pub async fn analyze_event(&self, event: &ComplianceEvent, standard: ComplianceStandard) -> BearDogResult<ComplianceResult> {
+    /// Analyze event for specific compliance standard
+    pub async fn analyze_event(
+        &self,
+        event: &ComplianceEvent,
+        standard: ComplianceStandard,
+    ) -> BearDogResult<ComplianceResult> {
         let mut result = ComplianceResult {
             event_id: event.id.clone(),
             compliance_score: 0.0,
@@ -263,10 +272,14 @@ impl ComplianceEngine {
 
         Ok(result)
     }
-    
+
     /// Monitor an event and return compliance result
     pub async fn monitor_event(&self, event: ComplianceEvent) -> BearDogResult<ComplianceResult> {
-        self.event_cache.lock().unwrap().push(event.clone());
+        if let Ok(mut cache) = self.event_cache.lock() {
+            cache.push(event.clone());
+        } else {
+            eprintln!("Warning: Failed to acquire event cache lock in compliance engine");
+        }
         self.evaluate_event(event).await
     }
 
@@ -275,7 +288,7 @@ impl ComplianceEngine {
         let mut violations = Vec::new();
         let mut warnings = Vec::new();
         let mut score = 1.0f64;
-        
+
         // Evaluate against each enabled standard
         for standard in &self.enabled_standards {
             match self.evaluate_standard(standard, &event).await {
@@ -290,7 +303,7 @@ impl ComplianceEngine {
                 }
             }
         }
-        
+
         // Store the result for audit trail
         let result = ComplianceResult {
             event_id: event.id.clone(),
@@ -300,7 +313,7 @@ impl ComplianceEngine {
             evaluated_at: Utc::now(),
             standards_checked: self.enabled_standards.clone(),
         };
-        
+
         // Cache the event
         if let Ok(mut cache) = self.event_cache.lock() {
             cache.push(event);
@@ -309,16 +322,22 @@ impl ComplianceEngine {
                 cache.remove(0);
             }
         }
-        
+
         Ok(result)
     }
-    
+
     /// Evaluate a single standard against an event
-    async fn evaluate_standard(&self, standard: &ComplianceStandard, event: &ComplianceEvent) -> BearDogResult<StandardEvaluationResult> {
+    async fn evaluate_standard(
+        &self,
+        standard: &ComplianceStandard,
+        event: &ComplianceEvent,
+    ) -> BearDogResult<StandardEvaluationResult> {
         match standard {
             ComplianceStandard::GDPR => self.evaluate_gdpr(event).await,
             ComplianceStandard::SOX => self.evaluate_sox(event).await,
-            ComplianceStandard::PciDss | ComplianceStandard::PCI_DSS => self.evaluate_pci_dss(event).await,
+            ComplianceStandard::PciDss | ComplianceStandard::PCI_DSS => {
+                self.evaluate_pci_dss(event).await
+            }
             ComplianceStandard::HIPAA => self.evaluate_hipaa(event).await,
             _ => {
                 // Default implementation for unhandled standards
@@ -330,20 +349,24 @@ impl ComplianceEngine {
             }
         }
     }
-    
+
     /// Evaluate GDPR compliance
-    async fn evaluate_gdpr(&self, event: &ComplianceEvent) -> BearDogResult<StandardEvaluationResult> {
+    async fn evaluate_gdpr(
+        &self,
+        event: &ComplianceEvent,
+    ) -> BearDogResult<StandardEvaluationResult> {
         let mut violations = Vec::new();
         let mut warnings = Vec::new();
         let mut score: f64 = 1.0;
-        
+
         // Check for data access events (case insensitive)
-        let is_data_access = event.event_type.to_lowercase() == "dataaccess" || 
-                            event.event_type.to_lowercase() == "data_access";
-        
+        let is_data_access = event.event_type.to_lowercase() == "dataaccess"
+            || event.event_type.to_lowercase() == "data_access";
+
         // Check for unauthorized access attempts
-        let is_unauthorized_access = event.event_type.to_lowercase() == "unauthorized_access_attempt";
-        
+        let is_unauthorized_access =
+            event.event_type.to_lowercase() == "unauthorized_access_attempt";
+
         if is_unauthorized_access {
             violations.push(ComplianceViolation {
                 id: format!("gdpr-violation-{}", Uuid::new_v4()),
@@ -357,11 +380,12 @@ impl ComplianceEngine {
             });
             score = 0.0; // Zero score for unauthorized access
         }
-        
+
         if is_data_access {
             // Check for consent verification
-            if !event.data.contains_key("consent_verified") || 
-               event.data.get("consent_verified") != Some(&"true".to_string()) {
+            if !event.data.contains_key("consent_verified")
+                || event.data.get("consent_verified") != Some(&"true".to_string())
+            {
                 violations.push(ComplianceViolation {
                     id: format!("gdpr-violation-{}", Uuid::new_v4()),
                     standard: ComplianceStandard::GDPR,
@@ -374,10 +398,11 @@ impl ComplianceEngine {
                 });
                 score = 0.2; // Low score for missing consent
             }
-            
+
             // Check for encryption
-            if !event.data.contains_key("encryption_enabled") || 
-               event.data.get("encryption_enabled") != Some(&"true".to_string()) {
+            if !event.data.contains_key("encryption_enabled")
+                || event.data.get("encryption_enabled") != Some(&"true".to_string())
+            {
                 violations.push(ComplianceViolation {
                     id: format!("gdpr-violation-{}", Uuid::new_v4()),
                     standard: ComplianceStandard::GDPR,
@@ -390,10 +415,11 @@ impl ComplianceEngine {
                 });
                 score = score.min(0.4); // Reduce score for missing encryption
             }
-            
+
             // Check for audit logging
-            if !event.data.contains_key("audit_logged") || 
-               event.data.get("audit_logged") != Some(&"true".to_string()) {
+            if !event.data.contains_key("audit_logged")
+                || event.data.get("audit_logged") != Some(&"true".to_string())
+            {
                 warnings.push(ComplianceWarning {
                     id: format!("gdpr-warning-{}", Uuid::new_v4()),
                     standard: ComplianceStandard::GDPR,
@@ -404,20 +430,23 @@ impl ComplianceEngine {
                 score = score.min(0.7); // Reduce score for missing audit
             }
         }
-        
+
         Ok(StandardEvaluationResult {
             score,
             violations,
             warnings,
         })
     }
-    
+
     /// Evaluate SOX compliance
-    async fn evaluate_sox(&self, event: &ComplianceEvent) -> BearDogResult<StandardEvaluationResult> {
-        let mut violations = Vec::new();
+    async fn evaluate_sox(
+        &self,
+        event: &ComplianceEvent,
+    ) -> BearDogResult<StandardEvaluationResult> {
+        let violations = Vec::new();
         let mut warnings = Vec::new();
         let score = 1.0;
-        
+
         // Basic SOX evaluation logic
         if event.event_type == "DataAccess" && event.data.contains_key("financial_data") {
             warnings.push(ComplianceWarning {
@@ -428,64 +457,77 @@ impl ComplianceEngine {
                 timestamp: Utc::now(),
             });
         }
-        
+
         Ok(StandardEvaluationResult {
             score,
             violations,
             warnings,
         })
     }
-    
+
     /// Evaluate PCI DSS compliance
-    async fn evaluate_pci_dss(&self, event: &ComplianceEvent) -> BearDogResult<StandardEvaluationResult> {
+    async fn evaluate_pci_dss(
+        &self,
+        event: &ComplianceEvent,
+    ) -> BearDogResult<StandardEvaluationResult> {
         let violations = Vec::new();
         let warnings = Vec::new();
         let score = 1.0;
-        
+
         // Basic PCI DSS evaluation logic would go here
-        
+
         Ok(StandardEvaluationResult {
             score,
             violations,
             warnings,
         })
     }
-    
+
     /// Evaluate HIPAA compliance
-    async fn evaluate_hipaa(&self, event: &ComplianceEvent) -> BearDogResult<StandardEvaluationResult> {
+    async fn evaluate_hipaa(
+        &self,
+        event: &ComplianceEvent,
+    ) -> BearDogResult<StandardEvaluationResult> {
         let mut violations = Vec::new();
-        let mut warnings = Vec::new();
+        let warnings = Vec::new();
         let mut score: f64 = 1.0;
-        
+
         // Check for data access events (case insensitive)
-        let is_data_access = event.event_type.to_lowercase() == "dataaccess" || 
-                            event.event_type.to_lowercase() == "data_access";
-        
+        let is_data_access = event.event_type.to_lowercase() == "dataaccess"
+            || event.event_type.to_lowercase() == "data_access";
+
         if is_data_access {
             // Check if accessing medical/PHI data
-            let is_phi_data = event.data.contains_key("data_type") && 
-                             event.data.get("data_type").map(|s| s.contains("medical") || s.contains("health")).unwrap_or(false);
-            
+            let is_phi_data = event.data.contains_key("data_type")
+                && event
+                    .data
+                    .get("data_type")
+                    .map(|s| s.contains("medical") || s.contains("health"))
+                    .unwrap_or(false);
+
             if is_phi_data {
                 // Check for encryption
-                if !event.data.contains_key("encryption_enabled") || 
-                   event.data.get("encryption_enabled") != Some(&"true".to_string()) {
+                if !event.data.contains_key("encryption_enabled")
+                    || event.data.get("encryption_enabled") != Some(&"true".to_string())
+                {
                     violations.push(ComplianceViolation {
                         id: format!("hipaa-violation-{}", Uuid::new_v4()),
                         standard: ComplianceStandard::HIPAA,
                         event_id: event.id.clone(),
                         violation_type: "PHI_ENCRYPTION_MISSING".to_string(),
                         severity: ComplianceSeverity::Critical,
-                        description: "Protected Health Information accessed without encryption".to_string(),
+                        description: "Protected Health Information accessed without encryption"
+                            .to_string(),
                         timestamp: Utc::now(),
                         remediation_required: true,
                     });
                     score = 0.1; // Very low score for unencrypted PHI access
                 }
-                
+
                 // Check for audit logging
-                if !event.data.contains_key("audit_logged") || 
-                   event.data.get("audit_logged") != Some(&"true".to_string()) {
+                if !event.data.contains_key("audit_logged")
+                    || event.data.get("audit_logged") != Some(&"true".to_string())
+                {
                     violations.push(ComplianceViolation {
                         id: format!("hipaa-violation-{}", Uuid::new_v4()),
                         standard: ComplianceStandard::HIPAA,
@@ -500,36 +542,40 @@ impl ComplianceEngine {
                 }
             }
         }
-        
+
         Ok(StandardEvaluationResult {
             score,
             violations,
             warnings,
         })
     }
-    
+
     /// Generate a compliance report for a specific standard and date range
-    pub async fn generate_compliance_report(&self, standard: ComplianceStandard, date_range: (DateTime<Utc>, DateTime<Utc>)) -> BearDogResult<ComplianceReport> {
+    pub async fn generate_compliance_report(
+        &self,
+        standard: ComplianceStandard,
+        date_range: (DateTime<Utc>, DateTime<Utc>),
+    ) -> BearDogResult<ComplianceReport> {
         let (start_date, end_date) = date_range;
-        
+
         // Retrieve events from the date range (placeholder - would need audit engine integration)
         let events = if let Ok(cache) = self.event_cache.lock() {
             cache.clone()
         } else {
             Vec::new()
         };
-        
+
         let mut total_events = 0;
         let mut compliant_events = 0;
         let mut violations = Vec::new();
         let mut recommendations = Vec::new();
-        
+
         // Analyze each event for compliance
         for event in &events {
             total_events += 1;
-            
+
             let compliance_result = self.validate_compliance(event).await?;
-            
+
             if compliance_result.violations.is_empty() {
                 compliant_events += 1;
             } else {
@@ -537,22 +583,26 @@ impl ComplianceEngine {
                 violations.extend(compliance_result.violations);
             }
         }
-        
+
         // Calculate compliance score
         let compliance_score = if total_events > 0 {
             compliant_events as f64 / total_events as f64
         } else {
             1.0 // Perfect compliance if no events
         };
-        
+
         // Generate recommendations based on violations
         self.generate_recommendations(&violations, &mut recommendations);
-        
+
         Ok(ComplianceReport {
             id: format!("report_{}", Utc::now().timestamp()),
             title: format!("{:?} Compliance Report", standard),
             standard,
-            period: format!("{} to {}", start_date.format("%Y-%m-%d"), end_date.format("%Y-%m-%d")),
+            period: format!(
+                "{} to {}",
+                start_date.format("%Y-%m-%d"),
+                end_date.format("%Y-%m-%d")
+            ),
             generated_at: Utc::now(),
             overall_score: compliance_score,
             total_events,
@@ -563,38 +613,52 @@ impl ComplianceEngine {
             summary: format!("Compliance score: {:.2}%", compliance_score * 100.0),
         })
     }
-    
-    fn generate_recommendations(&self, violations: &[ComplianceViolation], recommendations: &mut Vec<String>) {
+
+    fn generate_recommendations(
+        &self,
+        violations: &[ComplianceViolation],
+        recommendations: &mut Vec<String>,
+    ) {
         // Analyze violation patterns and generate specific recommendations
-        let mut violation_counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
-        
+        let mut violation_counts: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::new();
+
         for violation in violations {
             *violation_counts.entry(violation.id.clone()).or_insert(0) += 1;
         }
-        
+
         // Generate recommendations based on most common violations
         for (rule_id, count) in violation_counts {
             if count > 5 {
                 match rule_id.as_str() {
                     "GDPR_DATA_ACCESS" => {
                         recommendations.push("Implement automated data access controls to reduce GDPR compliance violations".to_string());
-                    },
+                    }
                     "SOX_FINANCIAL_ACCESS" => {
                         recommendations.push("Strengthen financial system access controls and implement dual authorization".to_string());
-                    },
+                    }
                     "PCI_DSS_PAYMENT" => {
-                        recommendations.push("Enhance payment processing security controls and encryption".to_string());
-                    },
+                        recommendations.push(
+                            "Enhance payment processing security controls and encryption"
+                                .to_string(),
+                        );
+                    }
                     "HIPAA_PHI_ACCESS" => {
-                        recommendations.push("Implement additional PHI access controls and audit monitoring".to_string());
-                    },
+                        recommendations.push(
+                            "Implement additional PHI access controls and audit monitoring"
+                                .to_string(),
+                        );
+                    }
                     _ => {
-                        recommendations.push(format!("Address recurring compliance violations for rule: {}", rule_id));
+                        recommendations.push(format!(
+                            "Address recurring compliance violations for rule: {}",
+                            rule_id
+                        ));
                     }
                 }
             }
         }
-        
+
         // Always include general recommendations
         if !violations.is_empty() {
             recommendations.push("Regular compliance training for all users".to_string());
@@ -605,7 +669,7 @@ impl ComplianceEngine {
     /// Perform periodic compliance check
     pub async fn perform_periodic_check(&self) -> BearDogResult<()> {
         tracing::debug!("Performing periodic compliance check");
-        
+
         // Create a sample event for periodic checking
         let check_event = ComplianceEvent {
             id: format!("periodic-check-{}", uuid::Uuid::new_v4()),
@@ -614,20 +678,27 @@ impl ComplianceEngine {
             resource: Some("periodic_check".to_string()),
             data: std::collections::HashMap::new(),
             timestamp: chrono::Utc::now(),
+            metadata: std::collections::HashMap::new(),
         };
-        
+
         // Monitor the periodic check event
         let result = self.monitor_event(check_event).await?;
-        
+
         if result.compliance_score < 0.8 {
-            tracing::warn!("Compliance score below threshold: {}", result.compliance_score);
+            tracing::warn!(
+                "Compliance score below threshold: {}",
+                result.compliance_score
+            );
         }
-        
+
         // Log any violations found
         if !result.violations.is_empty() {
-            tracing::warn!("Found {} compliance violations during periodic check", result.violations.len());
+            tracing::warn!(
+                "Found {} compliance violations during periodic check",
+                result.violations.len()
+            );
         }
-        
+
         Ok(())
     }
 
@@ -640,10 +711,11 @@ impl ComplianceEngine {
         };
 
         let recent_events = events.iter().take(10).cloned().collect();
-        
+
         // Calculate actual compliance metrics based on processed events
         let total_events = events.len() as u64;
-        let violations: Vec<ComplianceViolation> = events.iter()
+        let violations: Vec<ComplianceViolation> = events
+            .iter()
             .filter_map(|event| {
                 // Check if event represents a violation based on event type
                 if event.event_type.contains("Violation") || event.event_type.contains("Error") {
@@ -663,7 +735,8 @@ impl ComplianceEngine {
             })
             .collect();
 
-        let warnings: Vec<ComplianceWarning> = events.iter()
+        let warnings: Vec<ComplianceWarning> = events
+            .iter()
             .filter_map(|event| {
                 // Check if event represents a warning
                 if event.event_type.contains("Warning") {
@@ -682,7 +755,7 @@ impl ComplianceEngine {
 
         let violation_count = violations.len() as u64;
         let warning_count = warnings.len() as u64;
-        
+
         // Calculate compliance percentage based on violations vs total events
         let compliance_percentage = if total_events > 0 {
             ((total_events - violation_count) as f64 / total_events as f64) * 100.0
@@ -720,10 +793,12 @@ impl ComplianceEngine {
             recommendations.push("Review and address active compliance violations".to_string());
         }
         if warning_count > 0 {
-            recommendations.push("Investigate compliance warnings to prevent violations".to_string());
+            recommendations
+                .push("Investigate compliance warnings to prevent violations".to_string());
         }
         if compliance_percentage < 90.0 {
-            recommendations.push("Consider implementing additional compliance controls".to_string());
+            recommendations
+                .push("Consider implementing additional compliance controls".to_string());
         }
         if recommendations.is_empty() {
             recommendations.push("Compliance monitoring is operating effectively".to_string());
@@ -770,7 +845,7 @@ impl ComplianceEngine {
 mod tests {
     use super::*;
     use std::collections::HashMap;
-    
+
     fn create_test_config() -> ComplianceConfig {
         ComplianceConfig {
             enabled_standards: vec![
@@ -789,7 +864,7 @@ mod tests {
             },
         }
     }
-    
+
     fn create_test_event() -> ComplianceEvent {
         ComplianceEvent {
             id: "test-compliance-001".to_string(),
@@ -798,152 +873,158 @@ mod tests {
             user_id: Some("test-user".to_string()),
             resource: Some("/sensitive/data.txt".to_string()),
             data: HashMap::new(),
+            metadata: HashMap::new(),
         }
     }
-    
+
     #[tokio::test]
     async fn test_compliance_engine_creation() {
         let config = create_test_config();
         let engine = ComplianceEngine::new(config).await;
         assert!(engine.is_ok());
     }
-    
+
     #[tokio::test]
     async fn test_gdpr_data_access() {
         let config = create_test_config();
         let engine = ComplianceEngine::new(config).await.unwrap();
-        
+
         let mut event = create_test_event();
         event.event_type = "DataAccess".to_string();
         event.data = HashMap::from([("consent_verified".to_string(), "true".to_string())]);
-        
+
         let result = engine.evaluate_event(event).await.unwrap();
         assert!(result.compliance_score >= 0.0);
     }
-    
+
     #[tokio::test]
     async fn test_pci_dss_payment_processing() {
         let config = create_test_config();
         let engine = ComplianceEngine::new(config).await.unwrap();
-        
+
         let mut event = create_test_event();
         event.event_type = "DataProcessing".to_string();
         event.data = HashMap::from([("encryption_verified".to_string(), "true".to_string())]);
-        
+
         let result = engine.evaluate_event(event).await.unwrap();
         assert!(result.compliance_score >= 0.0);
     }
-    
+
     #[tokio::test]
     async fn test_sox_financial_access() {
         let config = create_test_config();
         let engine = ComplianceEngine::new(config).await.unwrap();
-        
+
         let mut event = create_test_event();
         event.event_type = "DataAccess".to_string();
         event.data = HashMap::from([("financial_data".to_string(), "true".to_string())]);
-        
+
         let result = engine.evaluate_event(event).await.unwrap();
         assert!(result.compliance_score >= 0.0);
     }
-    
+
     #[tokio::test]
     async fn test_policy_violation_detection() {
         let config = create_test_config();
         let engine = ComplianceEngine::new(config).await.unwrap();
-        
+
         let mut event = create_test_event();
         event.event_type = "PolicyViolation".to_string();
         event.data = HashMap::from([("policy_id".to_string(), "SECURITY_001".to_string())]);
-        
+
         let result = engine.evaluate_event(event).await.unwrap();
         assert!(result.compliance_score >= 0.0);
     }
-    
+
     #[tokio::test]
     async fn test_data_retention_compliance() {
         let config = create_test_config();
         let engine = ComplianceEngine::new(config).await.unwrap();
-        
+
         let mut event = create_test_event();
         event.event_type = "DataRetention".to_string();
         event.data = HashMap::from([("retention_period".to_string(), "365 days".to_string())]);
-        
+
         let result = engine.evaluate_event(event).await.unwrap();
         assert!(result.compliance_score >= 0.0);
     }
-    
+
     #[tokio::test]
     async fn test_generate_compliance_report() {
         let config = create_test_config();
         let engine = ComplianceEngine::new(config).await.unwrap();
-        
+
         // Process several events
         for i in 0..5 {
             let mut event = create_test_event();
             event.id = format!("test-event-{}", i);
             let _result = engine.evaluate_event(event).await.unwrap();
         }
-        
+
         let date_range = DateRange {
             start_date: Utc::now() - chrono::Duration::days(30),
             end_date: Utc::now(),
         };
-        
-        let report = engine.generate_compliance_report(ComplianceStandard::GDPR, (date_range.start_date, date_range.end_date)).await;
+
+        let report = engine
+            .generate_compliance_report(
+                ComplianceStandard::GDPR,
+                (date_range.start_date, date_range.end_date),
+            )
+            .await;
         assert!(report.is_ok());
-        
+
         let report = report.unwrap();
         assert!(!report.title.is_empty());
         assert!(report.overall_score >= 0.0);
     }
-    
+
     #[tokio::test]
     async fn test_multiple_compliance_standards() {
         let config = create_test_config();
         let engine = ComplianceEngine::new(config).await.unwrap();
-        
+
         let mut event = create_test_event();
         event.event_type = "DataAccess".to_string();
         event.data = HashMap::from([("multi_standard".to_string(), "true".to_string())]);
-        
+
         let result = engine.evaluate_event(event).await.unwrap();
         assert!(result.compliance_score >= 0.0);
     }
-    
+
     #[tokio::test]
     async fn test_audit_trail_creation() {
         let config = create_test_config();
         let engine = ComplianceEngine::new(config).await.unwrap();
-        
+
         let event = create_test_event();
         let _event_id = event.id.clone();
-        
+
         let result = engine.evaluate_event(event).await.unwrap();
-        
+
         assert!(result.compliance_score >= 0.0);
         // Audit trail should be maintained internally
     }
-    
+
     #[tokio::test]
     async fn test_compliance_validation() {
         let config = create_test_config();
         let engine = ComplianceEngine::new(config).await.unwrap();
-        
+
         let mut event = create_test_event();
         event.event_type = "ValidationTest".to_string();
-        
+
         let result = engine.evaluate_event(event).await.unwrap();
         assert!(result.compliance_score >= 0.0);
     }
-    
+
     #[tokio::test]
     async fn test_concurrent_compliance_evaluation() {
         let config = create_test_config();
         let engine = std::sync::Arc::new(ComplianceEngine::new(config).await.unwrap());
-        
+
         let mut handles = vec![];
-        
+
         for i in 0..10 {
             let engine_clone = engine.clone();
             let handle = tokio::spawn(async move {
@@ -954,24 +1035,25 @@ mod tests {
                     user_id: Some(format!("user-{}", i)),
                     resource: Some(format!("/test/resource{}.txt", i)),
                     data: HashMap::from([("test".to_string(), "value".to_string())]),
+                    metadata: HashMap::new(),
                 };
-                
+
                 let result = engine_clone.evaluate_event(event).await.unwrap();
                 assert!(result.compliance_score >= 0.0);
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
             handle.await.unwrap();
         }
     }
-    
+
     #[test]
     fn test_compliance_severity_ordering() {
         assert!(ComplianceSeverity::Critical > ComplianceSeverity::Info);
     }
-    
+
     #[test]
     fn test_compliance_event_creation() {
         let event = create_test_event();
@@ -979,7 +1061,7 @@ mod tests {
         assert!(event.user_id.is_some());
         assert!(event.resource.is_some());
     }
-    
+
     #[test]
     fn test_compliance_standard_debug() {
         // Test that we can debug print the standards
@@ -988,10 +1070,10 @@ mod tests {
             ComplianceStandard::GDPR,
             ComplianceStandard::PciDss,
         ];
-        
+
         for standard in standards {
             let debug_str = format!("{:?}", standard);
             assert!(!debug_str.is_empty());
         }
     }
-} 
+}

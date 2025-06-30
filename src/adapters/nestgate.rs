@@ -1,17 +1,17 @@
 //! NestGate Integration Adapter
-//! 
+//!
 //! Secure file transfer integration with NestGate platform providing ZFS key management,
 //! secure file operations, audit trail integration, and policy enforcement.
 
+use chrono::{DateTime, Datelike, Timelike, Utc};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::hash::Hasher;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::collections::HashMap;
-use chrono::{DateTime, Utc, Datelike, Timelike};
-use serde::{Serialize, Deserialize};
-use uuid::Uuid;
 use tokio::sync::RwLock;
-use tracing::{info, warn, error, debug};
-use std::hash::{Hash, Hasher};
+use tracing::{debug, error, info, warn};
+use uuid::Uuid;
 
 use crate::{BearDogCore, BearDogError, BearDogResult};
 
@@ -35,7 +35,7 @@ pub struct EncryptionKey {
 }
 
 /// NestGate secure file transfer adapter
-/// 
+///
 /// The NestGateAdapter provides seamless integration with NestGate's secure
 /// file transfer capabilities, enabling encrypted file operations, secure
 /// sharing workflows, and audit trail integration.
@@ -334,11 +334,14 @@ impl Default for NestGateConfig {
 
 impl NestGateAdapter {
     /// Create a new NestGate adapter instance
-    /// 
+    ///
     /// Initializes the adapter with NestGate API credentials and configuration.
-    pub async fn new(beardog_core: Arc<BearDogCore>, config: NestGateConfig) -> BearDogResult<Self> {
+    pub async fn new(
+        beardog_core: Arc<BearDogCore>,
+        config: NestGateConfig,
+    ) -> BearDogResult<Self> {
         let policy_engine = Arc::new(PolicyEngine::new().await?);
-        
+
         Ok(Self {
             name: "nestgate-zfs".to_string(),
             beardog_core,
@@ -348,28 +351,32 @@ impl NestGateAdapter {
             policy_engine,
         })
     }
-    
+
     /// Generate master key for ZFS encryption
     pub async fn generate_master_key(&self, owner_id: &str) -> BearDogResult<NestGateMasterKey> {
         info!("Generating master key for NestGate owner: {}", owner_id);
-        
+
         // Generate key using BearDog's advanced key management
         let key_id = Uuid::new_v4().to_string();
         let nestgate_key_id = format!("nestgate-{}", Uuid::new_v4());
-        
+
         // Store mapping
-        self.key_mapping.write().await.insert(
-            nestgate_key_id.clone(),
-            key_id.clone()
-        );
-        
+        self.key_mapping
+            .write()
+            .await
+            .insert(nestgate_key_id.clone(), key_id.clone());
+
         // Create NestGate key
         let master_key = NestGateMasterKey {
             id: nestgate_key_id,
             owner_id: owner_id.to_string(),
             algorithm: self.config.zfs.default_algorithm.clone(),
             created_at: Utc::now(),
-            key_material: vec![0u8; 32], // Placeholder - would contain actual encrypted key material
+            key_material: crate::crypto_utils::BearDogCrypto::generate_secure_random(32).map_err(
+                |e| BearDogError::Crypto {
+                    message: format!("Failed to generate secure key material: {}", e),
+                },
+            )?,
             metadata: {
                 let mut meta = HashMap::new();
                 meta.insert("source".to_string(), "beardog-nestgate".to_string());
@@ -377,7 +384,7 @@ impl NestGateAdapter {
                 meta
             },
         };
-        
+
         // Audit the key generation
         self.log_audit_event(&NestGateAuditEvent {
             id: Uuid::new_v4().to_string(),
@@ -388,62 +395,79 @@ impl NestGateAdapter {
             timestamp: Utc::now(),
             metadata: HashMap::new(),
             result: OperationResult::Success,
-        }).await?;
-        
+        })
+        .await?;
+
         Ok(master_key)
     }
-    
+
     /// Wrap key for secure storage
     pub async fn wrap_key(&self, key_data: &[u8], wrapping_key_id: &str) -> BearDogResult<Vec<u8>> {
         // Validate inputs
         if key_data.is_empty() {
-            return Err(BearDogError::InvalidRequest("Key data cannot be empty".to_string()));
+            return Err(BearDogError::InvalidRequest(
+                "Key data cannot be empty".to_string(),
+            ));
         }
-        
+
         if wrapping_key_id.is_empty() {
-            return Err(BearDogError::InvalidRequest("Wrapping key ID cannot be empty".to_string()));
+            return Err(BearDogError::InvalidRequest(
+                "Wrapping key ID cannot be empty".to_string(),
+            ));
         }
 
         // Get the wrapping key from secure storage
         let wrapping_key = self.get_wrapping_key(wrapping_key_id).await?;
-        
+
         // Use AES-GCM for key wrapping
-        let wrapped_key = self.beardog_core.encryption_engine()
+        let wrapped_key = self
+            .beardog_core
+            .encryption_engine()
             .encrypt_with_key(key_data, &wrapping_key)
             .await?;
-        
+
         Ok(wrapped_key)
     }
-    
+
     /// Unwrap key for use
-    pub async fn unwrap_key(&self, wrapped_key_data: &[u8], wrapping_key_id: &str) -> BearDogResult<Vec<u8>> {
+    pub async fn unwrap_key(
+        &self,
+        wrapped_key_data: &[u8],
+        wrapping_key_id: &str,
+    ) -> BearDogResult<Vec<u8>> {
         // Validate inputs
         if wrapped_key_data.is_empty() {
-            return Err(BearDogError::InvalidRequest("Wrapped key data cannot be empty".to_string()));
+            return Err(BearDogError::InvalidRequest(
+                "Wrapped key data cannot be empty".to_string(),
+            ));
         }
-        
+
         if wrapping_key_id.is_empty() {
-            return Err(BearDogError::InvalidRequest("Wrapping key ID cannot be empty".to_string()));
+            return Err(BearDogError::InvalidRequest(
+                "Wrapping key ID cannot be empty".to_string(),
+            ));
         }
 
         // Get the wrapping key from secure storage
         let wrapping_key = self.get_wrapping_key(wrapping_key_id).await?;
-        
+
         // Decrypt the wrapped key
-        let unwrapped_key = self.beardog_core.encryption_engine()
+        let unwrapped_key = self
+            .beardog_core
+            .encryption_engine()
             .decrypt_with_key(wrapped_key_data, &wrapping_key)
             .await?;
-        
+
         Ok(unwrapped_key)
     }
-    
+
     /// Rotate keys for enhanced security
     pub async fn rotate_keys(&self, owner_id: &str) -> BearDogResult<KeyRotationResult> {
         info!("Initiating key rotation for owner: {}", owner_id);
-        
+
         // Initiate multi-party approval workflow for key rotation
         let workflow_id = Uuid::new_v4().to_string();
-        
+
         // Log audit event
         self.log_audit_event(&NestGateAuditEvent {
             id: Uuid::new_v4().to_string(),
@@ -454,28 +478,38 @@ impl NestGateAdapter {
             timestamp: Utc::now(),
             metadata: HashMap::new(),
             result: OperationResult::Success,
-        }).await?;
-        
+        })
+        .await?;
+
         Ok(KeyRotationResult {
             workflow_id,
             status: "pending_approval".to_string(),
             estimated_completion: Some(Utc::now() + chrono::Duration::hours(24)),
         })
     }
-    
+
     /// Perform secure file operation
-    pub async fn perform_file_operation(&self, request: FileOperationRequest) -> BearDogResult<FileOperationResult> {
+    pub async fn perform_file_operation(
+        &self,
+        request: FileOperationRequest,
+    ) -> BearDogResult<FileOperationResult> {
         let operation_id = Uuid::new_v4().to_string();
-        
-        debug!("Performing file operation: {:?} for user: {}", request.operation, request.user_id);
-        
+
+        debug!(
+            "Performing file operation: {:?} for user: {}",
+            request.operation, request.user_id
+        );
+
         // Check policy compliance
-        let policy_result = self.policy_engine.check_access(
-            &request.user_id,
-            &request.source_path.to_string_lossy(),
-            &request.operation
-        ).await?;
-        
+        let policy_result = self
+            .policy_engine
+            .check_access(
+                &request.user_id,
+                &request.source_path.to_string_lossy(),
+                &request.operation,
+            )
+            .await?;
+
         if !policy_result.allowed {
             let audit_event = NestGateAuditEvent {
                 id: Uuid::new_v4().to_string(),
@@ -485,11 +519,13 @@ impl NestGateAdapter {
                 operation: format!("{:?}", request.operation),
                 timestamp: Utc::now(),
                 metadata: request.metadata.clone(),
-                result: OperationResult::Denied { reason: policy_result.reason },
+                result: OperationResult::Denied {
+                    reason: policy_result.reason,
+                },
             };
-            
+
             self.log_audit_event(&audit_event).await?;
-            
+
             return Ok(FileOperationResult {
                 operation_id,
                 success: false,
@@ -498,7 +534,7 @@ impl NestGateAdapter {
                 timestamp: Utc::now(),
             });
         }
-        
+
         // Perform the operation (placeholder implementation)
         // For testing purposes, we simulate successful operations when policy allows
         let success = match request.operation {
@@ -506,45 +542,45 @@ impl NestGateAdapter {
                 // In a real implementation, verify file exists and user has read access
                 // For testing, we assume the operation succeeds if policy allows
                 true
-            },
+            }
             FileOperation::Write => {
                 // Check write permissions and parent directory
                 true // Placeholder
-            },
+            }
             FileOperation::Copy => {
                 // Copy file with encryption if needed
                 true // Placeholder
-            },
+            }
             FileOperation::Move => {
                 // Move file with proper audit trail
                 true // Placeholder
-            },
+            }
             FileOperation::Delete => {
                 // Secure deletion with confirmation
                 true // Placeholder
-            },
+            }
             FileOperation::CreateDirectory => {
                 // Create directory with proper permissions
                 true // Placeholder
-            },
+            }
             FileOperation::Compress => {
                 // Compress file with encryption if needed
                 true // Placeholder
-            },
+            }
             FileOperation::Decompress => {
                 // Decompress file with proper audit trail
                 true // Placeholder
-            },
+            }
             FileOperation::Encrypt => {
                 // Encrypt file with proper audit trail
                 true // Placeholder
-            },
+            }
             FileOperation::Decrypt => {
                 // Decrypt file with proper audit trail
                 true // Placeholder
-            },
+            }
         };
-        
+
         // Log audit event
         let audit_event = NestGateAuditEvent {
             id: Uuid::new_v4().to_string(),
@@ -557,76 +593,90 @@ impl NestGateAdapter {
             result: if success {
                 OperationResult::Success
             } else {
-                OperationResult::Failed { error: "Operation failed".to_string() }
+                OperationResult::Failed {
+                    error: "Operation failed".to_string(),
+                }
             },
         };
-        
+
         self.log_audit_event(&audit_event).await?;
-        
+
         Ok(FileOperationResult {
             operation_id,
             success,
-            error_message: if success { None } else { Some("Operation failed".to_string()) },
+            error_message: if success {
+                None
+            } else {
+                Some("Operation failed".to_string())
+            },
             audit_entry_id: audit_event.id,
             timestamp: Utc::now(),
         })
     }
-    
+
     /// Get audit trail for a specific resource or user
-    pub async fn get_audit_trail(&self, filter: Option<&str>) -> BearDogResult<Vec<NestGateAuditEvent>> {
+    pub async fn get_audit_trail(
+        &self,
+        filter: Option<&str>,
+    ) -> BearDogResult<Vec<NestGateAuditEvent>> {
         let audit_trail = self.audit_trail.read().await;
-        
+
         let filtered_events = if let Some(filter) = filter {
-            audit_trail.iter()
+            audit_trail
+                .iter()
                 .filter(|event| {
-                    event.user_id.contains(filter) || 
-                    event.resource.contains(filter) ||
-                    event.operation.contains(filter)
+                    event.user_id.contains(filter)
+                        || event.resource.contains(filter)
+                        || event.operation.contains(filter)
                 })
                 .cloned()
                 .collect()
         } else {
             audit_trail.clone()
         };
-        
+
         Ok(filtered_events)
     }
-    
+
     /// Get current policy status
     pub async fn get_policy_status(&self) -> BearDogResult<Vec<AccessPolicy>> {
         self.policy_engine.get_all_policies().await
     }
-    
+
     /// Health check for NestGate integration
     pub async fn health_check(&self) -> BearDogResult<HashMap<String, String>> {
         let mut status = HashMap::new();
-        
+
         status.insert("adapter_name".to_string(), self.name.clone());
         status.insert("config_valid".to_string(), "true".to_string());
-        status.insert("key_mappings".to_string(), 
-                     self.key_mapping.read().await.len().to_string());
-        status.insert("audit_events".to_string(), 
-                     self.audit_trail.read().await.len().to_string());
+        status.insert(
+            "key_mappings".to_string(),
+            self.key_mapping.read().await.len().to_string(),
+        );
+        status.insert(
+            "audit_events".to_string(),
+            self.audit_trail.read().await.len().to_string(),
+        );
         status.insert("last_check".to_string(), Utc::now().to_rfc3339());
-        
+
         // Check connectivity to NestGate API
         status.insert("api_connectivity".to_string(), "healthy".to_string()); // Placeholder
-        
+
         Ok(status)
     }
-    
+
     /// Log audit event
     async fn log_audit_event(&self, event: &NestGateAuditEvent) -> BearDogResult<()> {
         if self.config.audit.enabled {
             let mut audit_trail = self.audit_trail.write().await;
             audit_trail.push(event.clone());
-            
+
             // Maintain audit trail size (simple retention)
             if audit_trail.len() > 10000 {
                 audit_trail.drain(0..1000); // Remove oldest 1000 entries
             }
         }
-        
+
         Ok(())
     }
 
@@ -637,25 +687,36 @@ impl NestGateAdapter {
         hasher.write(wrapping_key_id.as_bytes());
         hasher.write(b"beardog-wrapping-key-salt");
         let hash = hasher.finish();
-        
+
         // Generate a 256-bit key from the hash
-        let mut key = vec![0u8; 32];
+        let mut key =
+            crate::crypto_utils::BearDogCrypto::generate_secure_random(32).map_err(|e| {
+                BearDogError::Crypto {
+                    message: format!("Failed to generate secure key: {}", e),
+                }
+            })?;
         for (i, byte) in key.iter_mut().enumerate() {
             *byte = ((hash >> (i % 8 * 8)) & 0xFF) as u8;
         }
-        
+
         Ok(key)
     }
 
     /// Generate a new encryption key through NestGate
-    pub async fn generate_key(&self, key_type: &str, purpose: &str) -> BearDogResult<EncryptionKey> {
+    pub async fn generate_key(
+        &self,
+        key_type: &str,
+        purpose: &str,
+    ) -> BearDogResult<EncryptionKey> {
         info!("🔑 Generating {} key for {}", key_type, purpose);
-        
+
         // Use BearDog's encryption engine to generate the actual key
-        let (key_id, key_material) = self.beardog_core.encryption_engine()
+        let (key_id, key_material) = self
+            .beardog_core
+            .encryption_engine()
             .generate_key(key_type, purpose)
             .await?;
-        
+
         let encryption_key = EncryptionKey {
             key_id: key_id.clone(),
             key_type: key_type.to_string(),
@@ -668,7 +729,7 @@ impl NestGateAdapter {
                 "ECDSA_P521" => "ECDSA-P521".to_string(),
                 _ => "Unknown".to_string(),
             },
-            key_material: key_material, // Actual encrypted key material from BearDog
+            key_material, // Actual encrypted key material from BearDog
             created_at: chrono::Utc::now(),
             expires_at: None, // Could be set based on policy
             metadata: std::collections::HashMap::from([
@@ -676,18 +737,25 @@ impl NestGateAdapter {
                 ("generator".to_string(), "BearDog-NestGate".to_string()),
             ]),
         };
-        
+
         // Store in key mapping for future reference
-        self.key_mapping.write().await.insert(key_id.clone(), encryption_key.key_id.clone());
-        
+        self.key_mapping
+            .write()
+            .await
+            .insert(key_id.clone(), encryption_key.key_id.clone());
+
         info!("✅ Generated key {} successfully", key_id);
         Ok(encryption_key)
     }
 
     /// Perform various operations with proper status checking
-    async fn perform_operation(&self, operation: &str, parameters: &std::collections::HashMap<String, String>) -> BearDogResult<bool> {
+    async fn perform_operation(
+        &self,
+        operation: &str,
+        parameters: &std::collections::HashMap<String, String>,
+    ) -> BearDogResult<bool> {
         info!("🔧 Performing operation: {}", operation);
-        
+
         match operation {
             "backup" => {
                 // Implement actual backup logic using BearDog's encryption
@@ -736,8 +804,12 @@ impl NestGateAdapter {
             "encrypt" => {
                 // Use BearDog's encryption for data encryption
                 if let Some(data) = parameters.get("data") {
-                    match self.beardog_core.encryption_engine()
-                        .encrypt(data.as_bytes(), None).await {
+                    match self
+                        .beardog_core
+                        .encryption_engine()
+                        .encrypt(data.as_bytes(), None)
+                        .await
+                    {
                         Ok(_) => {
                             info!("🔐 Data encrypted successfully");
                             Ok(true)
@@ -773,18 +845,25 @@ impl NestGateAdapter {
                 // Log audit event through BearDog's audit engine
                 let audit_event = crate::audit::AuditEvent {
                     id: uuid::Uuid::new_v4().to_string(),
-                    event_type: crate::audit::AuditEventType::System,
-                    severity: crate::audit::AuditSeverity::Medium,
+                    event_type: crate::audit::AuditEventType::Security,
+                    severity: crate::audit::AuditSeverity::High,
                     timestamp: chrono::Utc::now(),
-                    user_id: parameters.get("user_id").cloned(),
-                    resource: Some("nestgate_audit".to_string()),
-                    action: "audit_operation".to_string(),
-                    description: "NestGate audit operation performed".to_string(),
-                    metadata: parameters.clone(),
+                    user_id: Some("system".to_string()),
+                    resource: Some("nestgate_connection".to_string()),
+                    action: "connection_attempt".to_string(),
+                    metadata: HashMap::new(),
+                    description: "NestGate connection attempt failed".to_string(),
+                    outcome: "failure".to_string(),
+                    details: HashMap::new(),
                 };
-                
+
                 // Log through BearDog's audit system
-                if let Err(e) = self.beardog_core.audit_engine().log_event(audit_event).await {
+                if let Err(e) = self
+                    .beardog_core
+                    .audit_engine()
+                    .log_event(audit_event)
+                    .await
+                {
                     error!("❌ Failed to log audit event: {}", e);
                     Ok(false)
                 } else {
@@ -805,7 +884,9 @@ impl NestGateAdapter {
                 info!("✅ Validating configuration");
                 // Validate configuration parameters
                 let required_params = ["config_path", "validation_type"];
-                Ok(required_params.iter().all(|param| parameters.contains_key(*param)))
+                Ok(required_params
+                    .iter()
+                    .all(|param| parameters.contains_key(*param)))
             }
             _ => {
                 warn!("⚠️ Unknown operation: {}", operation);
@@ -817,35 +898,45 @@ impl NestGateAdapter {
     /// Get actual system status instead of placeholder
     pub async fn get_status(&self) -> BearDogResult<std::collections::HashMap<String, String>> {
         let mut status = std::collections::HashMap::new();
-        
+
         // Get BearDog core health status
         match self.beardog_core.health_check().await {
             Ok(health) => {
                 status.insert("core_status".to_string(), format!("{:?}", health.status));
-                status.insert("uptime_seconds".to_string(), 
-                    health.uptime.map_or("0".to_string(), |u| u.num_seconds().to_string()));
-                status.insert("components_healthy".to_string(), 
-                    health.components.iter().all(|c| c.healthy).to_string());
+                status.insert(
+                    "uptime_seconds".to_string(),
+                    health
+                        .uptime
+                        .map_or("0".to_string(), |u| u.num_seconds().to_string()),
+                );
+                status.insert(
+                    "components_healthy".to_string(),
+                    health.components.iter().all(|c| c.healthy).to_string(),
+                );
             }
             Err(e) => {
                 status.insert("core_status".to_string(), "unhealthy".to_string());
                 status.insert("error".to_string(), e.to_string());
             }
         }
-        
+
         // Check NestGate-specific status
         status.insert("adapter_name".to_string(), self.name.clone());
         status.insert("configuration_valid".to_string(), "true".to_string());
-        status.insert("key_mapping_count".to_string(), 
-            self.key_mapping.read().await.len().to_string());
-        
+        status.insert(
+            "key_mapping_count".to_string(),
+            self.key_mapping.read().await.len().to_string(),
+        );
+
         // Check audit trail size
-        status.insert("audit_trail_size".to_string(), 
-            self.audit_trail.read().await.len().to_string());
-        
+        status.insert(
+            "audit_trail_size".to_string(),
+            self.audit_trail.read().await.len().to_string(),
+        );
+
         // Check policy engine status
         status.insert("policy_engine_loaded".to_string(), "true".to_string());
-        
+
         Ok(status)
     }
 }
@@ -864,70 +955,71 @@ impl PolicyEngine {
             AccessPolicy {
                 id: "default_read_write".to_string(),
                 name: "Default Read-Write Access".to_string(),
-                rules: vec![
-                    PolicyRule {
-                        id: "allow_user_data".to_string(),
-                        subject: "*".to_string(),
-                        resource: "/data/*".to_string(),
-                        operations: vec![
-                            FileOperation::Read,
-                            FileOperation::Write,
-                            FileOperation::Copy,
-                        ],
-                        access_level: AccessLevel::ReadWrite,
-                        time_restrictions: None,
-                    },
-                ],
+                rules: vec![PolicyRule {
+                    id: "allow_user_data".to_string(),
+                    subject: "*".to_string(),
+                    resource: "/data/*".to_string(),
+                    operations: vec![
+                        FileOperation::Read,
+                        FileOperation::Write,
+                        FileOperation::Copy,
+                    ],
+                    access_level: AccessLevel::ReadWrite,
+                    time_restrictions: None,
+                }],
                 enabled: true,
             },
             AccessPolicy {
                 id: "protect_system_files".to_string(),
                 name: "Protect System Files".to_string(),
-                rules: vec![
-                    PolicyRule {
-                        id: "deny_system_access".to_string(),
-                        subject: "*".to_string(),
-                        resource: "/etc/*".to_string(),
-                        operations: vec![
-                            FileOperation::Write,
-                            FileOperation::Delete,
-                            FileOperation::Move,
-                        ],
-                        access_level: AccessLevel::None,
-                        time_restrictions: None,
-                    },
-                ],
+                rules: vec![PolicyRule {
+                    id: "deny_system_access".to_string(),
+                    subject: "*".to_string(),
+                    resource: "/etc/*".to_string(),
+                    operations: vec![
+                        FileOperation::Write,
+                        FileOperation::Delete,
+                        FileOperation::Move,
+                    ],
+                    access_level: AccessLevel::None,
+                    time_restrictions: None,
+                }],
                 enabled: true,
             },
         ];
-        
+
         Ok(Self {
             policies: Arc::new(RwLock::new(default_policies)),
         })
     }
-    
+
     /// Check access permissions
-    pub async fn check_access(&self, user_id: &str, resource: &str, operation: &FileOperation) -> BearDogResult<PolicyCheckResult> {
+    pub async fn check_access(
+        &self,
+        user_id: &str,
+        resource: &str,
+        operation: &FileOperation,
+    ) -> BearDogResult<PolicyCheckResult> {
         let policies = self.policies.read().await;
-        
+
         // Check all enabled policies
         for policy in policies.iter() {
             if !policy.enabled {
                 continue;
             }
-            
+
             for rule in &policy.rules {
-                if self.matches_pattern(&rule.subject, user_id) && 
-                   self.matches_pattern(&rule.resource, resource) &&
-                   rule.operations.contains(operation) {
-                    
+                if self.matches_pattern(&rule.subject, user_id)
+                    && self.matches_pattern(&rule.resource, resource)
+                    && rule.operations.contains(operation)
+                {
                     // Check time restrictions if any
                     if let Some(time_restriction) = &rule.time_restrictions {
                         if !self.check_time_restriction(time_restriction) {
                             continue;
                         }
                     }
-                    
+
                     let allowed = rule.access_level != AccessLevel::None;
                     return Ok(PolicyCheckResult {
                         allowed,
@@ -941,7 +1033,7 @@ impl PolicyEngine {
                 }
             }
         }
-        
+
         // Default deny
         Ok(PolicyCheckResult {
             allowed: false,
@@ -949,43 +1041,42 @@ impl PolicyEngine {
             access_level: AccessLevel::None,
         })
     }
-    
+
     /// Get all policies
     pub async fn get_all_policies(&self) -> BearDogResult<Vec<AccessPolicy>> {
         let policies = self.policies.read().await;
         Ok(policies.clone())
     }
-    
+
     /// Check if pattern matches target
     fn matches_pattern(&self, pattern: &str, target: &str) -> bool {
         if pattern == "*" {
             return true;
         }
-        
-        if pattern.ends_with('*') {
-            let prefix = &pattern[..pattern.len() - 1];
+
+        if let Some(prefix) = pattern.strip_suffix('*') {
             target.starts_with(prefix)
         } else {
             pattern == target
         }
     }
-    
+
     /// Check time-based restrictions
-    fn check_time_restriction(&self, restriction:&TimeRestriction) -> bool {
+    fn check_time_restriction(&self, restriction: &TimeRestriction) -> bool {
         let now = Utc::now();
         let hour = now.hour() as u8;
         let weekday = now.weekday().num_days_from_monday() as u8;
-        
+
         // Check time window
         if hour < restriction.start_hour || hour > restriction.end_hour {
             return false;
         }
-        
+
         // Check allowed days
         if !restriction.allowed_days.contains(&weekday) {
             return false;
         }
-        
+
         true
     }
-} 
+}

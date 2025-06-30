@@ -1,521 +1,446 @@
-# BearDog Security Manager - Democratizing Enterprise Security
+# BearDog Security Platform Architecture
 
-**Version:** 1.0  
+**Version:** 2.0  
 **Date:** January 2025  
 **Status:** SPECIFICATION  
 **Priority:** CRITICAL  
-**License:** AGPL 3.0 - **Security for Everyone**
 
-## 🌍 **Mission: Democratizing Enterprise-Grade Security**
+## 🎯 **Mission: Democratizing Enterprise Security**
 
-BearDog's mission is revolutionary: **bring enterprise-grade security to everyone**.
+BearDog brings **Fortune 500-grade security to everyone** through:
+- **100% Open Source** (AGPL-3.0) - Complete transparency, no black boxes
+- **Crypto-locked external functions** - Require signed licenses for enterprise integrations
+- **Local security engine** - Secure your NAS, ZFS, and local storage
+- **Cross-node authorization** - Enable distributed storage with cryptographic proof
+- **Enterprise compliance** - SOC2, GDPR, HIPAA, FedRAMP ready
 
-Historically, advanced security capabilities like HSM integration, real-time threat detection, and compliance engines have been locked behind expensive enterprise licenses. BearDog changes this by providing:
+## 🏗️ **Architecture Philosophy**
 
-- **🏛️ Fortune 500-grade security** → **freely available to all**
-- **🔓 Zero vendor lock-in** → pure open source under AGPL 3.0
-- **🚀 Production-ready** → designed for immediate deployment
-- **🤝 Community-driven** → improvements benefit everyone
-- **📚 Accessibility-first** → secure-by-default, zero-config startup
+### **BearDog's Role in the Ecosystem**
+BearDog is **NOT** a standalone server system. It's a **security provider** that:
+- **Encrypts and protects** your local NAS/ZFS storage
+- **Manages keys** for your local data operations  
+- **Provides security services** to other systems (like SongBird)
+- **Carries cryptographic proof** of cross-node permissions
+- **Validates authorization** for distributed operations
 
-### **Why AGPL 3.0?**
-The AGPL 3.0 license ensures that **security improvements stay free**:
-- Deploy BearDog as a service? → Your enhancements must be open sourced
-- Integrate BearDog? → Your security improvements benefit everyone
-- **No security hoarding** → creates a growing commons of security intelligence
+### **SongBird Handles the Network**
+- **Discovery**: Finding other nodes in the network
+- **Orchestration**: Coordinating distributed operations
+- **Load balancing**: Managing traffic between nodes
+- **Network topology**: Understanding the distributed mesh
 
-## 🎯 **Executive Summary**
-
-BearDog is an enterprise-grade, **secure-by-default** Rust-based security management platform designed for:
-- **🔐 Zero-trust encryption** and key management
-- **🚨 Real-time threat detection** and automated response  
-- **🔗 Multi-system integration** (NestGate, SongBird, and others)
-- **📋 Enterprise compliance** (GDPR, HIPAA, SOX, PCI, FedRAMP)
-- **🏗️ Hardware Security Module (HSM)** integration
-- **🔮 Post-quantum cryptography** readiness
-- **👥 Community-driven security evolution**
-
-### **Accessibility Principles**
-1. **🎁 Free Forever** - Core security should never be paywalled
-2. **📦 Works Out-of-Box** - Secure defaults, zero configuration required
-3. **📖 Documentation-First** - Comprehensive guides for all skill levels
-4. **🔧 Easy Integration** - Simple APIs, clear examples
-5. **🌐 Universal Access** - Same tools for individuals, nonprofits, and enterprises
-
-## 🏗️ **System Architecture**
-
-### **Core Design Principles**
-
-1. **Secure by Default** - All operations default to maximum security
-2. **Zero Hardcoding** - Everything configurable via TOML/environment
-3. **Agnostic Design** - Platform and system independent
-4. **Standalone Operation** - Fully functional without external dependencies
-5. **Rust-First** - Memory safety, performance, and reliability
-6. **Pluggable Interfaces** - Extensible via trait-based architecture
-
-### **Architecture Overview**
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    BearDog Security Manager                  │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐  │
-│  │  Core Engine    │  │ Encryption Core │  │HSM Interface│  │
-│  │                 │  │                 │  │             │  │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘  │
-│                                                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐  │
-│  │Security Provider│  │ Threat Engine   │  │Compliance   │  │
-│  │Interface        │  │                 │  │Engine       │  │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘  │
-│                                                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐  │
-│  │Configuration    │  │  Audit Engine   │  │Multi-Party  │  │
-│  │Manager          │  │                 │  │Workflows    │  │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 🔧 **Core Components**
-
-### **1. BearDog Core Engine**
+### **The Beautiful Integration**
 ```rust
-pub struct BearDogCore {
-    config: Arc<BearDogConfig>,
-    encryption_engine: Arc<dyn EncryptionProvider>,
-    hsm_provider: Option<Arc<dyn HsmProvider>>,
-    security_provider: Arc<dyn SecurityProvider>,
-    threat_engine: Arc<ThreatDetectionEngine>,
-    compliance_engine: Arc<ComplianceEngine>,
-    audit_engine: Arc<AuditEngine>,
-    workflow_engine: Arc<MultiPartyWorkflowEngine>,
-    health_monitor: Arc<HealthMonitor>,
+// BearDog provides security services
+pub trait SecurityProvider {
+    async fn encrypt_data(&self, data: &[u8]) -> BearDogResult<EncryptedData>;
+    async fn decrypt_data(&self, encrypted: &EncryptedData) -> BearDogResult<Vec<u8>>;
+    async fn sign_operation(&self, operation: &Operation) -> BearDogResult<Signature>;
+    async fn verify_authorization(&self, proof: &AuthorizationProof) -> BearDogResult<bool>;
 }
 
-impl BearDogCore {
-    pub async fn new(config: BearDogConfig) -> Result<Self>;
-    pub async fn start(&self) -> Result<()>;
-    pub async fn shutdown(&self) -> Result<()>;
-    pub async fn health_check(&self) -> Result<HealthStatus>;
-    pub fn version(&self) -> &'static str;
-}
-```
-
-### **2. Configuration Architecture**
-```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BearDogConfig {
-    pub core: CoreConfig,
-    pub encryption: EncryptionConfig,
-    pub hsm: Option<HsmConfig>,
-    pub security: SecurityConfig,
-    pub threat_detection: ThreatDetectionConfig,
-    pub compliance: ComplianceConfig,
-    pub audit: AuditConfig,
-    pub multi_party: MultiPartyConfig,
-    pub network: NetworkConfig,
-    pub logging: LoggingConfig,
-    pub performance: PerformanceConfig,
-}
-
-// Secure defaults for all configurations
-impl Default for BearDogConfig {
-    fn default() -> Self {
-        Self {
-            core: CoreConfig::secure_default(),
-            encryption: EncryptionConfig::secure_default(),
-            // ... all other configs with secure defaults
-        }
-    }
-}
-```
-
-### **3. Trait-Based Plugin Architecture**
-```rust
-// Core encryption provider trait
-#[async_trait]
-pub trait EncryptionProvider: Send + Sync {
-    async fn generate_key(&self, key_type: KeyType, owner_id: &str) -> Result<Key>;
-    async fn encrypt(&self, data: &[u8], key: &Key) -> Result<EncryptedData>;
-    async fn decrypt(&self, encrypted_data: &EncryptedData, key: &Key) -> Result<Vec<u8>>;
-    async fn rotate_key(&self, key_id: &str) -> Result<Key>;
-    async fn derive_key(&self, master_key: &Key, context: &str) -> Result<Key>;
-}
-
-// HSM integration trait
-#[async_trait]
-pub trait HsmProvider: Send + Sync {
-    async fn initialize(&self, config: &HsmConfig) -> Result<()>;
-    async fn generate_hsm_key(&self, key_spec: KeySpec) -> Result<HsmKey>;
-    async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Signature>;
-    async fn verify(&self, key_id: &str, data: &[u8], signature: &Signature) -> Result<bool>;
-    async fn encrypt_hsm(&self, key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>>;
-    async fn decrypt_hsm(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>>;
-}
-
-// Security provider for external systems
-#[async_trait]
-pub trait SecurityProvider: Send + Sync {
-    async fn authorize(&self, request: AuthorizationRequest) -> Result<AuthorizationResponse>;
-    async fn authenticate(&self, credentials: Credentials) -> Result<AuthenticationResponse>;
-    async fn log_security_event(&self, event: SecurityEvent) -> Result<()>;
-    async fn validate_policy(&self, policy: &SecurityPolicy) -> Result<PolicyValidationResult>;
-}
-```
-
-## 🔐 **Security Architecture**
-
-### **Secure-by-Default Principles**
-
-1. **Zero-Trust Foundation**
-   - All operations require explicit authorization
-   - No implicit trust relationships
-   - Continuous authentication and authorization
-
-2. **Defense in Depth**
-   - Multiple layers of security controls
-   - Fail-secure defaults
-   - Comprehensive audit trails
-
-3. **Principle of Least Privilege**
-   - Minimal permissions by default
-   - Role-based access control
-   - Time-limited permissions
-
-4. **Cryptographic Security**
-   - AES-256-GCM for symmetric encryption
-   - RSA-4096/ECC-P384 for asymmetric operations
-   - Post-quantum ready algorithms
-   - Perfect forward secrecy
-
-### **Security Defaults**
-```rust
-impl SecurityConfig {
-    pub fn secure_default() -> Self {
-        Self {
-            // Bind to localhost only by default
-            bind_address: "127.0.0.1".to_string(),
-            port: 8443, // HTTPS only
-            enable_tls: true,
-            tls_version: TlsVersion::V1_3,
-            
-            // Strong authentication defaults
-            require_mutual_tls: true,
-            jwt_expiration_minutes: 60,
-            max_failed_attempts: 3,
-            lockout_duration_minutes: 30,
-            
-            // Encryption defaults
-            default_cipher: CipherSuite::Aes256Gcm,
-            key_rotation_days: 90,
-            require_hsm: false, // Can be enabled via config
-            
-            // Audit defaults
-            enable_audit_log: true,
-            audit_level: AuditLevel::Comprehensive,
-            audit_encryption: true,
-            
-            // Rate limiting
-            rate_limit_requests_per_minute: 100,
-            rate_limit_burst_size: 10,
-        }
-    }
-}
-```
-
-## 🌐 **Integration Interfaces**
-
-### **NestGate Integration**
-```rust
-// Implements NestGate's KeyManager trait
-pub struct BearDogNestGateAdapter {
-    core: Arc<BearDogCore>,
-    config: NestGateIntegrationConfig,
-}
-
-#[async_trait]
-impl nestgate_zfs::KeyManager for BearDogNestGateAdapter {
-    async fn generate_master_key(&self, owner_id: &str) -> Result<MasterKey> {
-        let key_spec = KeySpec {
-            key_type: KeyType::MasterEncryption,
-            owner_id: owner_id.to_string(),
-            algorithm: self.config.encryption_algorithm,
-            key_size: self.config.key_size,
-        };
+// SongBird uses BearDog for security
+impl DistributedStorageOrchestrator {
+    async fn store_data_on_friend_nas(
+        &self,
+        friend_node: &str,
+        data: &[u8],
+    ) -> Result<StorageResult> {
+        // 1. BearDog encrypts the data
+        let encrypted_data = self.beardog.encrypt_data(data).await?;
         
-        let key = self.core.encryption_engine.generate_key(
-            KeyType::MasterEncryption, 
-            owner_id
+        // 2. BearDog provides authorization proof
+        let auth_proof = self.beardog.prove_cross_node_authorization(
+            friend_node,
+            &StoreDataOperation { size: data.len() }
         ).await?;
         
-        // Convert to NestGate format
-        Ok(MasterKey::from_beardog_key(key))
-    }
-    
-    async fn wrap_key(&self, key: &[u8], master_key_id: &str) -> Result<WrappedKey> {
-        // Implement key wrapping with HSM if available
-        // ... implementation
-    }
-    
-    // ... other trait methods
-}
-```
-
-### **SongBird Integration**
-```rust
-// Implements SongBird's SecurityProvider trait
-pub struct BearDogSongBirdAdapter {
-    core: Arc<BearDogCore>,
-    config: SongBirdIntegrationConfig,
-}
-
-#[async_trait]
-impl songbird_orchestrator::SecurityProvider for BearDogSongBirdAdapter {
-    async fn authorize(&self, subject: &Subject, resource: &Resource, action: &Action) -> Result<bool> {
-        let auth_request = AuthorizationRequest {
-            subject: self.convert_subject(subject),
-            resource: self.convert_resource(resource),
-            action: self.convert_action(action),
-            context: self.build_context(),
-            timestamp: Utc::now(),
-        };
+        // 3. SongBird handles the network routing and storage
+        let storage_result = self.network_client.store_encrypted_data(
+            friend_node,
+            &encrypted_data,
+            &auth_proof,
+        ).await?;
         
-        let response = self.core.security_provider.authorize(auth_request).await?;
-        
-        // Log authorization decision
-        self.core.audit_engine.log_authorization_decision(&response).await?;
-        
-        Ok(response.permitted)
+        Ok(storage_result)
     }
-    
-    // ... other trait methods
 }
 ```
 
-## ⚙️ **Configuration Management**
+## 🔐 **Core Security Architecture**
 
-### **Configuration Sources** (Priority Order)
-1. **Environment Variables** (highest priority)
-2. **Command Line Arguments**
-3. **Configuration Files** (TOML/YAML/JSON)
-4. **Secure Defaults** (lowest priority)
-
-### **Configuration File Structure**
-```toml
-# beardog.toml - Main configuration file
-[core]
-service_id = "beardog-security-manager"
-bind_address = "127.0.0.1"
-port = 8443
-enable_tls = true
-worker_threads = 0  # 0 = auto-detect CPU cores
-
-[encryption]
-default_algorithm = "aes-256-gcm"
-key_derivation = "pbkdf2"
-key_rotation_days = 90
-enable_hsm = false
-
-[hsm]
-# HSM configuration (optional)
-provider = "pkcs11"  # or "aws-kms", "azure-keyvault", "hashicorp-vault"
-library_path = "/usr/lib/libpkcs11.so"
-slot_id = 0
-pin_env_var = "HSM_PIN"
-
-[security]
-require_mutual_tls = true
-jwt_secret_env_var = "BEARDOG_JWT_SECRET"
-jwt_expiration_minutes = 60
-max_failed_attempts = 3
-
-[threat_detection]
-enable_real_time = true
-ml_model_path = "./models/threat_detection.onnx"
-anomaly_threshold = 0.8
-response_actions = ["log", "block", "alert"]
-
-[compliance]
-enabled_standards = ["gdpr", "hipaa", "sox"]
-audit_retention_days = 2555  # 7 years
-report_schedule = "monthly"
-
-[audit]
-enable_audit_log = true
-audit_level = "comprehensive"
-encrypt_audit_logs = true
-syslog_endpoint = "syslog://localhost:514"
-
-[multi_party]
-require_approval_for = ["key_rotation", "key_deletion", "policy_change"]
-min_approvers = 2
-approval_timeout_hours = 24
-
-[network]
-timeout_seconds = 30
-max_retries = 3
-retry_backoff_ms = 1000
-connection_pool_size = 10
-
-[logging]
-level = "info"
-format = "json"
-output = "stdout"  # or file path
-enable_structured_logging = true
-
-[performance]
-max_memory_mb = 512
-cache_size = 1000
-cache_ttl_seconds = 3600
-metrics_collection_interval_seconds = 60
-```
-
-## 🚀 **Startup & Lifecycle**
-
-### **Service Initialization**
+### **Local Security Engine**
 ```rust
-#[tokio::main]
-async fn main() -> Result<()> {
-    // 1. Load configuration with secure defaults
-    let config = BearDogConfig::load_from_sources().await?;
+pub struct BearDogCore {
+    // Core security components
+    pub encryption_engine: Arc<EncryptionEngine>,
+    pub key_manager: Arc<KeyManager>,
+    pub compliance_engine: Arc<ComplianceEngine>,
+    pub audit_logger: Arc<AuditLogger>,
+    pub threat_detector: Arc<ThreatDetector>,
     
-    // 2. Initialize logging
-    init_logging(&config.logging)?;
+    // Cross-node authorization
+    pub workflow_engine: Arc<MultiPartyWorkflowEngine>,
+    pub authorization_store: Arc<CrossNodeAuthStore>,
+    pub proof_verifier: Arc<ProofVerifier>,
     
-    // 3. Initialize core engine
-    let core = BearDogCore::new(config).await?;
+    // Local storage integration
+    pub zfs_adapter: Arc<ZfsAdapter>,
+    pub nas_adapter: Arc<NasAdapter>,
+    pub filesystem_monitor: Arc<FilesystemMonitor>,
     
-    // 4. Start health monitoring
-    let health_monitor = core.start_health_monitoring().await?;
-    
-    // 5. Start API server
-    let api_server = start_api_server(core.clone()).await?;
-    
-    // 6. Register signal handlers for graceful shutdown
-    register_shutdown_handlers(core.clone()).await?;
-    
-    // 7. Main service loop
-    core.start().await?;
-    
-    info!("BearDog Security Manager started successfully");
-    
-    // Wait for shutdown signal
-    shutdown_signal().await;
-    
-    // Graceful shutdown
-    core.shutdown().await?;
-    
-    Ok(())
+    // Security provider interface
+    pub security_provider: Arc<BearDogSecurityProvider>,
 }
-```
 
-### **Graceful Shutdown**
-```rust
 impl BearDogCore {
-    pub async fn shutdown(&self) -> Result<()> {
-        info!("Initiating graceful shutdown...");
+    /// Initialize BearDog as a security provider (not a server)
+    pub async fn new_security_provider(config: BearDogConfig) -> BearDogResult<Self> {
+        let encryption_engine = Arc::new(
+            EncryptionEngine::new(&config.encryption).await?
+        );
         
-        // 1. Stop accepting new requests
-        self.api_server.stop_accepting_requests().await?;
+        let key_manager = Arc::new(
+            KeyManager::new(&config.key_management).await?
+        );
         
-        // 2. Wait for active requests to complete (with timeout)
-        self.wait_for_active_requests(Duration::from_secs(30)).await?;
+        let workflow_engine = Arc::new(
+            MultiPartyWorkflowEngine::new(&config.workflows).await?
+        );
         
-        // 3. Shutdown components in reverse order
-        self.health_monitor.shutdown().await?;
-        self.audit_engine.flush_and_shutdown().await?;
-        self.threat_engine.shutdown().await?;
-        
-        // 4. Close HSM connections
-        if let Some(hsm) = &self.hsm_provider {
-            hsm.disconnect().await?;
-        }
-        
-        // 5. Final audit log entry
-        self.audit_engine.log_shutdown_event().await?;
-        
-        info!("BearDog Security Manager shutdown complete");
-        Ok(())
+        // Initialize as security provider, not server
+        Ok(Self {
+            encryption_engine,
+            key_manager,
+            workflow_engine,
+            security_provider: Arc::new(BearDogSecurityProvider::new()),
+            // ... other components
+        })
+    }
+    
+    /// Provide security services to external systems (like SongBird)
+    pub fn as_security_provider(&self) -> Arc<dyn SecurityProvider> {
+        self.security_provider.clone()
     }
 }
 ```
 
-## 📊 **Performance Requirements**
+### **Cross-Node Authorization Flow**
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Your BearDog  │    │ Friend's BearDog│    │    SongBird     │
+│  (Security)     │    │   (Security)    │    │  (Network)      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │ 1. Request Permission │                       │
+         ├──────────────────────►│                       │
+         │                       │ 2. Human Approval     │
+         │                       ├─────────────────────► │
+         │ 3. Signed Authorization│                       │
+         │◄──────────────────────┤                       │
+         │                       │                       │
+         │ 4. Store Data Request │                       │
+         ├───────────────────────┼──────────────────────►│
+         │                       │                       │ 5. Network Routing
+         │ 6. Present Auth Proof │                       │    & Storage
+         ├──────────────────────►│                       │
+         │                       │ 7. Verify & Allow    │
+         │                       ├──────────────────────►│
+```
 
-### **Performance Targets**
-- **Memory Usage**: < 64MB for basic operations
-- **Startup Time**: < 2 seconds
-- **Request Latency**: < 10ms for authorization
-- **Throughput**: > 1,000 requests/second
-- **Key Operations**: < 5ms for non-HSM, < 50ms for HSM
+## 🌐 **Distributed Ecosystem Integration**
 
-### **Scalability Design**
-- **Horizontal Scaling**: Stateless design for load balancing
-- **Connection Pooling**: Efficient resource utilization
-- **Caching**: Intelligent caching for frequently accessed data
-- **Async Operations**: Non-blocking I/O throughout
-
-## 🔍 **Monitoring & Observability**
-
-### **Health Monitoring**
+### **BearDog + SongBird Architecture**
 ```rust
-#[derive(Debug, Serialize)]
-pub struct HealthStatus {
-    pub overall_status: ServiceStatus,
-    pub components: HashMap<String, ComponentHealth>,
-    pub metrics: HealthMetrics,
-    pub timestamp: DateTime<Utc>,
+// BearDog handles security, SongBird handles networking
+pub struct DistributedSecurityEcosystem {
+    pub beardog: Arc<BearDogCore>,        // Local security engine
+    pub songbird: Arc<SongBirdClient>,    // Network orchestration
+    pub node_registry: Arc<NodeRegistry>, // Known trusted nodes
 }
 
-pub enum ServiceStatus {
-    Healthy,
-    Degraded,
-    Unhealthy,
-}
-
-pub struct ComponentHealth {
-    pub status: ServiceStatus,
-    pub last_check: DateTime<Utc>,
-    pub error_count: u32,
-    pub response_time_ms: u64,
+impl DistributedSecurityEcosystem {
+    /// Store encrypted data on friend's NAS with full security
+    pub async fn secure_distributed_storage(
+        &self,
+        friend_node_id: &str,
+        data: &[u8],
+        metadata: StorageMetadata,
+    ) -> BearDogResult<DistributedStorageResult> {
+        // 1. BearDog encrypts the data locally
+        let encrypted_data = self.beardog.encryption_engine
+            .encrypt_with_key_derivation(data, &metadata.derive_storage_key())
+            .await?;
+        
+        // 2. BearDog checks if we have authorization
+        let auth_proof = self.beardog.workflow_engine
+            .prove_authorization(friend_node_id, &CrossNodeOperation {
+                operation_type: OperationType::StoreData,
+                resource_id: metadata.resource_id.clone(),
+                data_size_bytes: Some(data.len() as u64),
+                estimated_duration: Some(Duration::minutes(30)),
+                metadata: metadata.to_json()?,
+            })
+            .await?;
+        
+        // 3. SongBird handles network discovery and routing
+        let target_endpoint = self.songbird
+            .discover_node_endpoint(friend_node_id)
+            .await?;
+        
+        // 4. SongBird orchestrates the storage operation
+        let storage_result = self.songbird
+            .execute_cross_node_storage(
+                &target_endpoint,
+                &encrypted_data,
+                &auth_proof,
+                &metadata,
+            )
+            .await?;
+        
+        // 5. BearDog logs the operation for compliance
+        self.beardog.audit_logger.log_cross_node_operation(
+            &CrossNodeAuditEvent {
+                operation_type: "distributed_storage".to_string(),
+                target_node: friend_node_id.to_string(),
+                data_size: data.len(),
+                encryption_used: true,
+                authorization_proof: auth_proof.id.clone(),
+                timestamp: Utc::now(),
+            }
+        ).await?;
+        
+        Ok(DistributedStorageResult {
+            storage_id: storage_result.storage_id,
+            friend_node_id: friend_node_id.to_string(),
+            encrypted_size: encrypted_data.len(),
+            verification_hash: storage_result.verification_hash,
+        })
+    }
+    
+    /// Retrieve your data from friend's NAS
+    pub async fn secure_distributed_retrieval(
+        &self,
+        friend_node_id: &str,
+        storage_id: &str,
+    ) -> BearDogResult<Vec<u8>> {
+        // 1. BearDog proves authorization for retrieval
+        let auth_proof = self.beardog.workflow_engine
+            .prove_authorization(friend_node_id, &CrossNodeOperation {
+                operation_type: OperationType::RetrieveData,
+                resource_id: storage_id.to_string(),
+                data_size_bytes: None,
+                estimated_duration: Some(Duration::minutes(10)),
+                metadata: HashMap::new(),
+            })
+            .await?;
+        
+        // 2. SongBird handles the network retrieval
+        let encrypted_data = self.songbird
+            .retrieve_cross_node_data(friend_node_id, storage_id, &auth_proof)
+            .await?;
+        
+        // 3. BearDog decrypts the data locally
+        let decrypted_data = self.beardog.encryption_engine
+            .decrypt_with_key_derivation(&encrypted_data)
+            .await?;
+        
+        Ok(decrypted_data)
+    }
 }
 ```
 
-### **Metrics Collection**
-- **Request Metrics**: Count, latency, error rates
-- **Security Metrics**: Authentication failures, authorization denials
-- **Performance Metrics**: Memory usage, CPU utilization
-- **Business Metrics**: Key operations, compliance status
+### **Local vs Distributed Operations**
 
-## 🧪 **Testing Strategy**
+#### **Local Operations (BearDog Standalone)**
+- Encrypt/decrypt files on your NAS
+- Manage encryption keys locally
+- Monitor filesystem for threats
+- Generate compliance reports
+- Audit local operations
 
-### **Test Categories**
-1. **Unit Tests**: Individual component testing
-2. **Integration Tests**: Cross-component interaction
-3. **Security Tests**: Penetration testing, vulnerability scanning
-4. **Performance Tests**: Load testing, stress testing
-5. **Compliance Tests**: Regulatory requirement validation
+#### **Distributed Operations (BearDog + SongBird)**
+- Request storage permission from friends
+- Store encrypted data on remote NAS
+- Retrieve your data from anywhere
+- Share data with cryptographic proof
+- Coordinate distributed backups
 
-### **Test Requirements**
-- **Code Coverage**: > 90%
-- **Security Testing**: Automated security scans in CI/CD
-- **Performance Testing**: Automated performance regression testing
-- **Chaos Engineering**: Fault injection testing
+## 🔧 **Component Architecture**
 
-## 📋 **Deployment Architecture**
+### **Security Provider Interface**
+```rust
+#[async_trait]
+pub trait SecurityProvider: Send + Sync {
+    // Core encryption services
+    async fn encrypt_data(&self, data: &[u8]) -> BearDogResult<EncryptedData>;
+    async fn decrypt_data(&self, encrypted: &EncryptedData) -> BearDogResult<Vec<u8>>;
+    async fn generate_key(&self, key_type: KeyType) -> BearDogResult<KeyId>;
+    async fn rotate_key(&self, key_id: &KeyId) -> BearDogResult<KeyRotationResult>;
+    
+    // Cross-node authorization
+    async fn request_cross_node_permission(
+        &self,
+        target_node: &str,
+        permissions: Vec<ResourcePermission>,
+        justification: &str,
+    ) -> BearDogResult<WorkflowId>;
+    
+    async fn prove_authorization(
+        &self,
+        target_node: &str,
+        operation: &CrossNodeOperation,
+    ) -> BearDogResult<AuthorizationProof>;
+    
+    async fn verify_authorization_proof(
+        &self,
+        proof: &AuthorizationProof,
+    ) -> BearDogResult<bool>;
+    
+    // Security monitoring
+    async fn scan_for_threats(&self, data: &[u8]) -> BearDogResult<ThreatScanResult>;
+    async fn validate_compliance(&self, operation: &Operation) -> BearDogResult<ComplianceResult>;
+    async fn generate_audit_log(&self, event: &SecurityEvent) -> BearDogResult<AuditEntry>;
+}
+```
 
-### **Deployment Options**
-1. **Standalone Binary**: Single executable with embedded configuration
-2. **Container**: Docker/Podman container with security hardening
-3. **Kubernetes**: Helm chart with security policies
-4. **Systemd Service**: Native Linux service integration
+### **Storage Adapters**
+```rust
+// ZFS integration for advanced filesystem features
+pub struct ZfsAdapter {
+    pool_manager: Arc<ZfsPoolManager>,
+    snapshot_manager: Arc<ZfsSnapshotManager>,
+    encryption_manager: Arc<ZfsEncryptionManager>,
+}
 
-### **Security Hardening**
-- **Container Security**: Non-root user, read-only filesystem
-- **Network Security**: Minimal exposed ports, TLS everywhere
-- **File System**: Secure file permissions, encrypted storage
-- **Process Security**: Capabilities dropping, seccomp filters
+impl ZfsAdapter {
+    pub async fn create_encrypted_dataset(
+        &self,
+        dataset_name: &str,
+        encryption_key: &EncryptionKey,
+    ) -> BearDogResult<ZfsDataset> {
+        // Create ZFS dataset with BearDog encryption
+        let dataset = self.pool_manager
+            .create_dataset(dataset_name)
+            .await?;
+        
+        // Enable BearDog encryption on the dataset
+        self.encryption_manager
+            .enable_encryption(&dataset, encryption_key)
+            .await?;
+        
+        Ok(dataset)
+    }
+    
+    pub async fn create_secure_snapshot(
+        &self,
+        dataset: &ZfsDataset,
+        snapshot_name: &str,
+    ) -> BearDogResult<ZfsSnapshot> {
+        // Create snapshot with audit logging
+        let snapshot = self.snapshot_manager
+            .create_snapshot(dataset, snapshot_name)
+            .await?;
+        
+        // Log for compliance
+        self.audit_snapshot_creation(&snapshot).await?;
+        
+        Ok(snapshot)
+    }
+}
+
+// Generic NAS integration
+pub struct NasAdapter {
+    filesystem_interface: Arc<dyn FilesystemInterface>,
+    encryption_layer: Arc<EncryptionLayer>,
+    monitoring: Arc<FilesystemMonitor>,
+}
+```
+
+## 📊 **Configuration Architecture**
+
+### **Deployment Modes**
+```toml
+[beardog]
+# Deployment mode determines BearDog's role
+deployment_mode = "security_provider"  # Options: "security_provider", "standalone", "distributed"
+
+[beardog.local_security]
+# Local security engine settings
+enable_zfs_integration = true
+enable_nas_monitoring = true
+enable_filesystem_encryption = true
+enable_threat_detection = true
+
+[beardog.cross_node]
+# Cross-node capabilities
+enable_cross_node_auth = true
+enable_distributed_storage = true
+enable_key_recovery_assistance = true
+node_id = "your-unique-node-id"
+
+[beardog.integrations]
+# Integration with other ecosystem components
+songbird.enabled = true
+songbird.endpoint = "http://localhost:8080"
+nestgate.enabled = false  # Optional MCP integration
+
+[beardog.security_provider]
+# Security provider interface settings
+api_port = 8443
+api_bind_address = "127.0.0.1"  # Only local by default
+enable_tls = true
+require_client_certificates = true
+```
+
+## 🚀 **Deployment Scenarios**
+
+### **Scenario 1: Local NAS Security**
+```bash
+# BearDog protects your local NAS/ZFS
+beardog --mode security_provider --local-only
+```
+- Encrypts local storage
+- Monitors for threats
+- Generates compliance reports
+- No network dependencies
+
+### **Scenario 2: Distributed Storage Network**
+```bash
+# BearDog + SongBird for distributed storage
+beardog --mode security_provider --enable-cross-node
+songbird --security-provider beardog://localhost:8443
+```
+- Local security + cross-node authorization
+- Distributed storage with friends
+- Cryptographic proof of permissions
+- Network orchestration via SongBird
+
+### **Scenario 3: Enterprise Integration**
+```bash
+# BearDog with enterprise systems (requires licenses)
+beardog --mode security_provider --enable-enterprise-integrations
+```
+- Integration with Active Directory
+- Prometheus metrics export
+- Splunk log forwarding
+- HSM key storage
+
+## 🔄 **Data Flow Architecture**
+
+### **Local Data Flow**
+```
+[User Data] → [BearDog Encryption] → [Local NAS/ZFS] → [Threat Detection] → [Compliance Audit]
+```
+
+### **Distributed Data Flow**
+```
+[User Data] → [BearDog Encryption] → [SongBird Network] → [Friend's BearDog Verification] → [Remote Storage]
+                     ↓
+[Authorization Proof] → [Cryptographic Verification] → [Cross-Node Audit]
+```
 
 ---
 
-**Next Steps**: Implement each component according to the specifications in the remaining spec files. 
+**Summary**: BearDog is a **security provider**, not a standalone server. It handles encryption, key management, compliance, and cross-node authorization while SongBird handles network discovery, orchestration, and load balancing. Together they enable secure distributed storage with cryptographic proof of authorization. 

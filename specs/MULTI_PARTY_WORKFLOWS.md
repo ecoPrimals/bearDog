@@ -1,17 +1,19 @@
 # BearDog Multi-Party Approval Workflows Specification
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** January 2025  
 **Status:** SPECIFICATION  
-**Priority:** HIGH  
+**Priority:** CRITICAL  
 
 ## 🎯 **Overview**
 
-BearDog's Multi-Party Approval Workflows provide enterprise-grade governance for sensitive operations:
+BearDog's Multi-Party Approval Workflows provide enterprise-grade governance for sensitive operations AND **cross-node authorization** in the distributed ecosystem:
 - **Cryptographic approval processes** for key operations
+- **Cross-node permission workflows** with signed authorization tokens
 - **Role-based approval hierarchies**
 - **Time-bound approval windows**
 - **Audit-compliant workflow tracking**
+- **Peer-to-peer trust establishment**
 - **Automated workflow orchestration**
 - **Integration with external approval systems**
 
@@ -33,9 +35,15 @@ pub struct MultiPartyWorkflowEngine {
     policy_engine: Arc<WorkflowPolicyEngine>,
     scheduler: Arc<WorkflowScheduler>,
     
+    // Cross-node components
+    cross_node_auth_store: Arc<dyn CrossNodeAuthStore>,
+    proof_verifier: Arc<ProofVerifier>,
+    node_registry: Arc<NodeRegistry>,
+    
     // Active workflows
     active_workflows: Arc<RwLock<HashMap<String, Workflow>>>,
     pending_approvals: Arc<RwLock<HashMap<String, Vec<PendingApproval>>>>,
+    cross_node_authorizations: Arc<RwLock<HashMap<String, CrossNodeAuthorization>>>,
     
     // Workflow execution state
     workflow_processors: Arc<RwLock<HashMap<WorkflowType, Box<dyn WorkflowProcessor>>>>,
@@ -65,8 +73,12 @@ impl MultiPartyWorkflowEngine {
             notification_engine,
             policy_engine,
             scheduler,
+            cross_node_auth_store: Arc::new(DatabaseCrossNodeAuthStore::new(&config.database).await?),
+            proof_verifier: Arc::new(ProofVerifier::new()),
+            node_registry: Arc::new(DatabaseNodeRegistry::new(&config.database).await?),
             active_workflows: Arc::new(RwLock::new(HashMap::new())),
             pending_approvals: Arc::new(RwLock::new(HashMap::new())),
+            cross_node_authorizations: Arc::new(RwLock::new(HashMap::new())),
             workflow_processors: Arc::new(RwLock::new(workflow_processors)),
             execution_queue: Arc::new(Mutex::new(VecDeque::new())),
         })
@@ -247,6 +259,213 @@ impl MultiPartyWorkflowEngine {
         
         Ok(())
     }
+
+    /// Initiate a cross-node permission request
+    pub async fn request_cross_node_permission(
+        &self,
+        target_node_id: &str,
+        requested_permissions: Vec<ResourcePermission>,
+        justification: &str,
+    ) -> BearDogResult<String> {
+        let workflow_id = Uuid::new_v4().to_string();
+        
+        let workflow = Workflow {
+            id: workflow_id.clone(),
+            workflow_type: WorkflowType::CrossNodePermissionRequest,
+            initiator: self.config.node_id.clone(),
+            target: WorkflowTarget::CrossNode {
+                target_node: target_node_id.to_string(),
+                requested_permissions: requested_permissions.clone(),
+            },
+            parameters: hashmap! {
+                "justification".to_string() => serde_json::Value::String(justification.to_string()),
+                "requested_permissions".to_string() => serde_json::to_value(requested_permissions)?,
+            },
+            status: WorkflowStatus::PendingRemoteApproval,
+            created_at: Utc::now(),
+            expires_at: Utc::now() + Duration::hours(24),
+            audit_trail: vec![WorkflowAuditEntry {
+                timestamp: Utc::now(),
+                actor: self.config.node_id.clone(),
+                action: "workflow_initiated".to_string(),
+                details: "Cross-node permission request initiated".to_string(),
+            }],
+            ..Default::default()
+        };
+        
+        // Store locally
+        self.workflow_store.store_workflow(&workflow).await?;
+        
+        // Send to target node via SongBird
+        self.send_cross_node_workflow_request(target_node_id, &workflow).await?;
+        
+        Ok(workflow_id)
+    }
+    
+    /// Handle incoming cross-node permission request
+    pub async fn handle_cross_node_request(
+        &self,
+        request: CrossNodeWorkflowRequest,
+    ) -> BearDogResult<()> {
+        let approval_workflow = Workflow {
+            id: Uuid::new_v4().to_string(),
+            workflow_type: WorkflowType::CrossNodePermissionGrant,
+            initiator: request.from_node_id.clone(),
+            target: WorkflowTarget::CrossNode {
+                target_node: request.from_node_id.clone(),
+                requested_permissions: request.requested_permissions.clone(),
+            },
+            approval_requirements: self.policy_engine
+                .determine_cross_node_approval_requirements(&request)
+                .await?,
+            status: WorkflowStatus::PendingApprovals,
+            created_at: Utc::now(),
+            expires_at: Utc::now() + Duration::hours(24),
+            metadata: hashmap! {
+                "original_request_id".to_string() => serde_json::Value::String(request.workflow_id),
+                "justification".to_string() => serde_json::Value::String(request.justification),
+            },
+            ..Default::default()
+        };
+        
+        // Store the approval workflow
+        self.workflow_store.store_workflow(&approval_workflow).await?;
+        
+        // Notify required approvers
+        self.notification_engine
+            .send_cross_node_approval_requests(&approval_workflow)
+            .await?;
+        
+        Ok(())
+    }
+    
+    /// Generate cryptographic proof of authorization
+    pub async fn generate_authorization_proof(
+        &self,
+        workflow_id: &str,
+        grantee_node_id: &str,
+    ) -> BearDogResult<CrossNodeAuthorization> {
+        let workflow = self.workflow_store.get_workflow(workflow_id).await?
+            .ok_or(BearDogError::WorkflowNotFound)?;
+        
+        if workflow.status != WorkflowStatus::Approved {
+            return Err(BearDogError::WorkflowNotApproved);
+        }
+        
+        let permissions = workflow.extract_granted_permissions()?;
+        
+        let authorization = CrossNodeAuthorization {
+            id: Uuid::new_v4().to_string(),
+            grantor_node_id: self.config.node_id.clone(),
+            grantee_node_id: grantee_node_id.to_string(),
+            resource_permissions: permissions,
+            granted_at: Utc::now(),
+            expires_at: workflow.calculate_permission_expiry(),
+            workflow_id: workflow_id.to_string(),
+            approval_chain: workflow.approvals.clone(),
+            conditions: workflow.extract_conditions()?,
+            
+            // Cryptographic proof
+            grantor_signature: self.sign_authorization(&authorization_data).await?,
+        };
+        
+        // Store locally for audit
+        self.cross_node_auth_store.store_authorization(&authorization).await?;
+        
+        Ok(authorization)
+    }
+    
+    /// Verify and store received authorization proof
+    pub async fn receive_cross_node_authorization(
+        &self,
+        authorization: CrossNodeAuthorization,
+    ) -> BearDogResult<()> {
+        // Verify the cryptographic signature
+        let grantor_public_key = self.node_registry
+            .get_node_public_key(&authorization.grantor_node_id)
+            .await?;
+        
+        self.proof_verifier.verify_authorization_signature(
+            &authorization,
+            &grantor_public_key,
+        )?;
+        
+        // Verify the approval chain
+        self.verify_approval_chain(&authorization.approval_chain).await?;
+        
+        // Store the authorization proof
+        self.cross_node_auth_store.store_authorization(&authorization).await?;
+        
+        // Log successful receipt
+        tracing::info!(
+            "✅ Received valid cross-node authorization from {} for permissions: {:?}",
+            authorization.grantor_node_id,
+            authorization.resource_permissions
+        );
+        
+        Ok(())
+    }
+    
+    /// Present proof of authorization for cross-node operation
+    pub async fn prove_authorization(
+        &self,
+        target_node_id: &str,
+        operation: &CrossNodeOperation,
+    ) -> BearDogResult<AuthorizationProof> {
+        let authorization = self.cross_node_auth_store
+            .get_authorization_for_node(target_node_id)
+            .await?
+            .ok_or(BearDogError::NoAuthorization)?;
+        
+        // Check if authorization is still valid
+        if authorization.expires_at < Utc::now() {
+            return Err(BearDogError::AuthorizationExpired);
+        }
+        
+        // Check if operation is permitted
+        if !authorization.permits_operation(operation) {
+            return Err(BearDogError::OperationNotPermitted);
+        }
+        
+        // Create proof that can be verified by target node
+        let proof = AuthorizationProof {
+            authorization: authorization.clone(),
+            operation: operation.clone(),
+            request_timestamp: Utc::now(),
+            requester_signature: self.sign_operation_request(operation).await?,
+        };
+        
+        Ok(proof)
+    }
+    
+    /// Verify authorization proof from another node
+    pub async fn verify_authorization_proof(
+        &self,
+        proof: &AuthorizationProof,
+    ) -> BearDogResult<bool> {
+        // Verify this is our authorization
+        if proof.authorization.grantor_node_id != self.config.node_id {
+            return Ok(false);
+        }
+        
+        // Verify the requester's signature
+        let grantee_public_key = self.node_registry
+            .get_node_public_key(&proof.authorization.grantee_node_id)
+            .await?;
+        
+        proof.verify_requester_signature(&grantee_public_key)?;
+        
+        // Verify our own authorization signature
+        proof.authorization.verify_signature(&self.config.node_keypair.public_key())?;
+        
+        // Check if authorization is still valid
+        if proof.authorization.expires_at < Utc::now() {
+            return Ok(false);
+        }
+        
+        // Check if operation is permitted
+        Ok(proof.authorization.permits_operation(&proof.operation))
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -279,6 +498,14 @@ pub enum WorkflowType {
     ComplianceException,
     DataExport,
     SecurityIncidentResponse,
+    CrossNodePermissionRequest,    // Request permission from another node
+    CrossNodePermissionGrant,      // Grant permission to another node
+    CrossNodeStorageAccess,        // Access storage on another node
+    CrossNodeDataSharing,          // Share data with another node
+    CrossNodeKeyRecovery,          // Recover keys with help from another node
+    CrossNodeEmergencyAccess,      // Emergency access via another node
+    CrossNodeTrustEstablishment,   // Establish trust relationship
+    CrossNodePermissionRevocation, // Revoke previously granted permissions
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -289,6 +516,25 @@ pub enum WorkflowTarget {
     Configuration { config_section: String },
     System { component: String },
     Data { resource_id: String },
+    CrossNode {
+        target_node: String,
+        requested_permissions: Vec<ResourcePermission>,
+    },
+    CrossNodeData {
+        target_node: String,
+        data_resource: String,
+        access_type: DataAccessType,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum DataAccessType {
+    Read,
+    Write,
+    Delete,
+    Share,
+    Copy,
+    Move,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -320,6 +566,7 @@ pub enum WorkflowStatus {
     Executing,
     Completed,
     Failed,
+    PendingRemoteApproval,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -360,678 +607,361 @@ pub enum WorkflowAction {
     Executed,
     Failed,
 }
-```
 
-## 🔐 **Workflow Processors**
+## 🔐 **Cross-Node Authorization Types**
 
-### **Key Rotation Workflow Processor**
+### **Cross-Node Workflow Types**
 ```rust
-pub struct KeyRotationProcessor {
-    key_manager: Arc<dyn KeyManager>,
-    audit_logger: Arc<dyn AuditLogger>,
-}
-
-impl KeyRotationProcessor {
-    pub fn new() -> Self {
-        Self {
-            key_manager: Arc::new(BearDogKeyManager::new()),
-            audit_logger: Arc::new(AuditLogger::new()),
-        }
-    }
-}
-
-#[async_trait]
-impl WorkflowProcessor for KeyRotationProcessor {
-    async fn execute(&self, context: &WorkflowExecutionContext) -> Result<WorkflowExecutionResult> {
-        let workflow = &context.workflow;
-        
-        // Extract key ID from workflow parameters
-        let key_id = workflow.parameters.get("key_id")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| BearDogError::InvalidWorkflowParameters("Missing key_id".to_string()))?;
-        
-        // Perform key rotation
-        let rotation_request = KeyRotationRequest {
-            key_id: key_id.to_string(),
-            reason: "Multi-party approved rotation".to_string(),
-            rotate_derived_keys: workflow.parameters.get("rotate_derived_keys")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(true),
-            metadata: workflow.metadata.clone(),
-        };
-        
-        let rotation_result = self.key_manager.rotate_key(rotation_request).await?;
-        
-        // Audit the key rotation
-        self.audit_logger.log_key_rotation(&rotation_result, &workflow.audit_trail).await?;
-        
-        Ok(WorkflowExecutionResult {
-            success: true,
-            summary: format!("Key {} rotated successfully", key_id),
-            details: serde_json::to_value(&rotation_result)?,
-            artifacts: vec![WorkflowArtifact {
-                artifact_type: "key_rotation_result".to_string(),
-                data: serde_json::to_value(&rotation_result)?,
-                metadata: HashMap::new(),
-            }],
-        })
-    }
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Hash, Eq)]
+pub enum WorkflowType {
+    // Local workflows
+    KeyRotation,
+    KeyDeletion,
+    PolicyChange,
+    ConfigurationChange,
+    UserProvisioning,
+    UserDeprovisioning,
+    RoleAssignment,
+    EmergencyAccess,
+    SystemMaintenance,
+    ComplianceException,
+    DataExport,
+    SecurityIncidentResponse,
     
-    async fn validate_parameters(&self, parameters: &HashMap<String, serde_json::Value>) -> Result<()> {
-        // Validate required parameters for key rotation
-        if !parameters.contains_key("key_id") {
-            return Err(BearDogError::InvalidWorkflowParameters("Missing key_id".to_string()));
-        }
-        
-        if let Some(key_id) = parameters.get("key_id").and_then(|v| v.as_str()) {
-            // Verify key exists and is eligible for rotation
-            if !self.key_manager.key_exists(key_id).await? {
-                return Err(BearDogError::InvalidWorkflowParameters(
-                    format!("Key {} does not exist", key_id)
-                ));
-            }
-        }
-        
-        Ok(())
-    }
-    
-    fn workflow_type(&self) -> WorkflowType {
-        WorkflowType::KeyRotation
-    }
-}
-```
-
-### **Policy Change Workflow Processor**
-```rust
-pub struct PolicyChangeProcessor {
-    policy_manager: Arc<dyn PolicyManager>,
-    security_validator: Arc<SecurityValidator>,
-    backup_manager: Arc<PolicyBackupManager>,
-}
-
-#[async_trait]
-impl WorkflowProcessor for PolicyChangeProcessor {
-    async fn execute(&self, context: &WorkflowExecutionContext) -> Result<WorkflowExecutionResult> {
-        let workflow = &context.workflow;
-        
-        // Extract policy change details
-        let policy_id = workflow.parameters.get("policy_id")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| BearDogError::InvalidWorkflowParameters("Missing policy_id".to_string()))?;
-        
-        let new_policy_content = workflow.parameters.get("new_policy")
-            .ok_or_else(|| BearDogError::InvalidWorkflowParameters("Missing new_policy".to_string()))?;
-        
-        // Backup current policy
-        let backup_result = self.backup_manager.backup_policy(policy_id).await?;
-        
-        // Validate new policy
-        let new_policy: SecurityPolicy = serde_json::from_value(new_policy_content.clone())?;
-        self.security_validator.validate_policy(&new_policy).await?;
-        
-        // Apply policy change
-        let change_result = self.policy_manager.update_policy(policy_id, new_policy).await?;
-        
-        Ok(WorkflowExecutionResult {
-            success: true,
-            summary: format!("Policy {} updated successfully", policy_id),
-            details: serde_json::to_value(&change_result)?,
-            artifacts: vec![
-                WorkflowArtifact {
-                    artifact_type: "policy_backup".to_string(),
-                    data: serde_json::to_value(&backup_result)?,
-                    metadata: HashMap::new(),
-                },
-                WorkflowArtifact {
-                    artifact_type: "policy_change_result".to_string(),
-                    data: serde_json::to_value(&change_result)?,
-                    metadata: HashMap::new(),
-                },
-            ],
-        })
-    }
-    
-    async fn validate_parameters(&self, parameters: &HashMap<String, serde_json::Value>) -> Result<()> {
-        // Validate policy change parameters
-        if !parameters.contains_key("policy_id") || !parameters.contains_key("new_policy") {
-            return Err(BearDogError::InvalidWorkflowParameters(
-                "Missing required parameters: policy_id, new_policy".to_string()
-            ));
-        }
-        
-        // Validate new policy syntax
-        if let Some(new_policy_value) = parameters.get("new_policy") {
-            let new_policy: SecurityPolicy = serde_json::from_value(new_policy_value.clone())
-                .map_err(|e| BearDogError::InvalidWorkflowParameters(
-                    format!("Invalid policy format: {}", e)
-                ))?;
-            
-            self.security_validator.validate_policy(&new_policy).await?;
-        }
-        
-        Ok(())
-    }
-    
-    fn workflow_type(&self) -> WorkflowType {
-        WorkflowType::PolicyChange
-    }
-}
-```
-
-## 📱 **Notification Engine**
-
-### **Multi-Channel Notifications**
-```rust
-pub struct NotificationEngine {
-    config: NotificationConfig,
-    channels: HashMap<NotificationChannel, Box<dyn NotificationProvider>>,
-    template_engine: Arc<NotificationTemplateEngine>,
-}
-
-impl NotificationEngine {
-    pub async fn new(config: &NotificationConfig) -> Result<Self> {
-        let mut channels: HashMap<NotificationChannel, Box<dyn NotificationProvider>> = HashMap::new();
-        
-        if config.email.enabled {
-            channels.insert(
-                NotificationChannel::Email,
-                Box::new(EmailNotificationProvider::new(&config.email).await?)
-            );
-        }
-        
-        if config.slack.enabled {
-            channels.insert(
-                NotificationChannel::Slack,
-                Box::new(SlackNotificationProvider::new(&config.slack).await?)
-            );
-        }
-        
-        if config.sms.enabled {
-            channels.insert(
-                NotificationChannel::SMS,
-                Box::new(SmsNotificationProvider::new(&config.sms).await?)
-            );
-        }
-        
-        if config.webhook.enabled {
-            channels.insert(
-                NotificationChannel::Webhook,
-                Box::new(WebhookNotificationProvider::new(&config.webhook).await?)
-            );
-        }
-        
-        Ok(Self {
-            config: config.clone(),
-            channels,
-            template_engine: Arc::new(NotificationTemplateEngine::new()),
-        })
-    }
-    
-    pub async fn send_approval_requests(
-        &self,
-        workflow: &Workflow,
-        pending_approvals: &[PendingApproval],
-    ) -> Result<()> {
-        for pending_approval in pending_approvals {
-            let notification = self.create_approval_request_notification(workflow, pending_approval).await?;
-            
-            for channel in &self.config.default_channels {
-                if let Some(provider) = self.channels.get(channel) {
-                    if let Err(e) = provider.send_notification(&notification).await {
-                        tracing::error!("Failed to send notification via {:?}: {}", channel, e);
-                        // Continue with other channels
-                    }
-                }
-            }
-        }
-        
-        Ok(())
-    }
-    
-    pub async fn send_workflow_completion(
-        &self,
-        workflow: &Workflow,
-        execution_result: &WorkflowExecutionResult,
-    ) -> Result<()> {
-        let notification = self.create_completion_notification(workflow, execution_result).await?;
-        
-        // Send to workflow initiator
-        for channel in &self.config.default_channels {
-            if let Some(provider) = self.channels.get(channel) {
-                if let Err(e) = provider.send_notification(&notification).await {
-                    tracing::error!("Failed to send completion notification via {:?}: {}", channel, e);
-                }
-            }
-        }
-        
-        // Send to all approvers
-        for approval in &workflow.approvals {
-            let approver_notification = self.create_approver_completion_notification(
-                workflow,
-                execution_result,
-                &approval.approver,
-            ).await?;
-            
-            for channel in &self.config.default_channels {
-                if let Some(provider) = self.channels.get(channel) {
-                    if let Err(e) = provider.send_notification(&approver_notification).await {
-                        tracing::error!("Failed to send approver notification via {:?}: {}", channel, e);
-                    }
-                }
-            }
-        }
-        
-        Ok(())
-    }
-    
-    async fn create_approval_request_notification(
-        &self,
-        workflow: &Workflow,
-        pending_approval: &PendingApproval,
-    ) -> Result<Notification> {
-        let template_data = json!({
-            "workflow_id": workflow.id,
-            "workflow_type": workflow.workflow_type,
-            "initiator": workflow.initiator,
-            "target": workflow.target,
-            "created_at": workflow.created_at,
-            "expires_at": workflow.expires_at,
-            "approver": pending_approval.approver,
-            "approval_url": format!("{}/workflows/{}/approve", self.config.base_url, workflow.id),
-        });
-        
-        let subject = self.template_engine.render_template(
-            "approval_request_subject",
-            &template_data,
-        ).await?;
-        
-        let body = self.template_engine.render_template(
-            "approval_request_body",
-            &template_data,
-        ).await?;
-        
-        Ok(Notification {
-            id: Uuid::new_v4().to_string(),
-            recipient: pending_approval.approver.clone(),
-            subject,
-            body,
-            priority: NotificationPriority::High,
-            notification_type: NotificationType::ApprovalRequest,
-            metadata: template_data,
-        })
-    }
+    // Cross-node workflows
+    CrossNodePermissionRequest,    // Request permission from another node
+    CrossNodePermissionGrant,      // Grant permission to another node
+    CrossNodeStorageAccess,        // Access storage on another node
+    CrossNodeDataSharing,          // Share data with another node
+    CrossNodeKeyRecovery,          // Recover keys with help from another node
+    CrossNodeEmergencyAccess,      // Emergency access via another node
+    CrossNodeTrustEstablishment,   // Establish trust relationship
+    CrossNodePermissionRevocation, // Revoke previously granted permissions
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum NotificationChannel {
-    Email,
-    Slack,
-    SMS,
-    Webhook,
-    PushNotification,
+pub enum WorkflowTarget {
+    // Local targets
+    Key { key_id: String },
+    User { user_id: String },
+    Policy { policy_id: String },
+    Configuration { config_section: String },
+    System { component: String },
+    Data { resource_id: String },
+    
+    // Cross-node targets
+    CrossNode {
+        target_node: String,
+        requested_permissions: Vec<ResourcePermission>,
+    },
+    CrossNodeData {
+        target_node: String,
+        data_resource: String,
+        access_type: DataAccessType,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Notification {
+pub enum DataAccessType {
+    Read,
+    Write,
+    Delete,
+    Share,
+    Copy,
+    Move,
+}
+```
+
+### **Cross-Node Authorization Structure**
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CrossNodeAuthorization {
     pub id: String,
-    pub recipient: String,
-    pub subject: String,
-    pub body: String,
-    pub priority: NotificationPriority,
-    pub notification_type: NotificationType,
-    pub metadata: serde_json::Value,
+    pub grantor_node_id: String,        // Node granting permission
+    pub grantee_node_id: String,        // Node receiving permission
+    pub resource_permissions: Vec<ResourcePermission>,
+    pub granted_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub workflow_id: String,            // Original workflow that granted this
+    pub approval_chain: Vec<ApprovalRecord>, // Who approved this
+    pub conditions: Vec<AccessCondition>,
+    
+    // Cryptographic proof
+    pub grantor_signature: Ed25519Signature,  // Grantor's BearDog signs this
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum NotificationPriority {
-    Low,
-    Medium,
-    High,
-    Urgent,
+pub enum ResourcePermission {
+    StoreData {
+        max_gb: u64,
+        data_types: Vec<DataType>,
+        expires_at: DateTime<Utc>,
+    },
+    RetrieveData {
+        own_data_only: bool,
+        data_types: Vec<DataType>,
+    },
+    DeleteData {
+        own_data_only: bool,
+    },
+    ShareData {
+        max_recipients: u32,
+        require_encryption: bool,
+    },
+    ComputeAccess {
+        max_cpu_hours: u64,
+        max_memory_gb: u64,
+    },
+    NetworkRelay {
+        max_bandwidth_mbps: u64,
+    },
+    KeyRecoveryAssistance {
+        key_types: Vec<KeyType>,
+    },
+    EmergencyAccess {
+        escalation_required: bool,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum NotificationType {
-    ApprovalRequest,
-    ApprovalReminder,
-    WorkflowCompleted,
-    WorkflowRejected,
-    WorkflowExpired,
-    SystemAlert,
+pub enum AccessCondition {
+    TimeWindow {
+        start_hour: u8,  // 0-23
+        end_hour: u8,    // 0-23
+        timezone: String,
+    },
+    GeographicRestriction {
+        allowed_countries: Vec<String>,
+        allowed_regions: Vec<String>,
+    },
+    NetworkRestriction {
+        allowed_ip_ranges: Vec<String>,
+    },
+    RequireAdditionalAuth {
+        auth_methods: Vec<AuthMethod>,
+    },
+    MaxConcurrentOperations(u32),
+    RequireAuditLog(bool),
+    RequireEncryption(bool),
 }
 
-#[async_trait]
-pub trait NotificationProvider: Send + Sync {
-    async fn send_notification(&self, notification: &Notification) -> Result<()>;
-    async fn validate_configuration(&self) -> Result<()>;
-    fn provider_name(&self) -> &str;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum DataType {
+    PersonalData,
+    FinancialData,
+    HealthData,
+    MediaFiles,
+    Documents,
+    BackupData,
+    SystemLogs,
+    ApplicationData,
+}
+```
+
+### **Authorization Proof System**
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthorizationProof {
+    pub authorization: CrossNodeAuthorization,
+    pub operation: CrossNodeOperation,
+    pub request_timestamp: DateTime<Utc>,
+    pub requester_signature: Ed25519Signature,  // Grantee signs the request
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CrossNodeOperation {
+    pub operation_type: OperationType,
+    pub resource_id: String,
+    pub data_size_bytes: Option<u64>,
+    pub estimated_duration: Option<Duration>,
+    pub metadata: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum OperationType {
+    StoreData,
+    RetrieveData,
+    DeleteData,
+    ShareData,
+    ComputeTask,
+    NetworkRelay,
+    KeyRecovery,
+    EmergencyAccess,
+}
+
+impl AuthorizationProof {
+    pub fn verify_requester_signature(&self, public_key: &Ed25519PublicKey) -> BearDogResult<()> {
+        let signature_data = self.create_signature_data()?;
+        public_key.verify(&signature_data, &self.requester_signature)
+            .map_err(|_| BearDogError::InvalidSignature)?;
+        Ok(())
+    }
+    
+    fn create_signature_data(&self) -> BearDogResult<Vec<u8>> {
+        let mut data = Vec::new();
+        data.extend_from_slice(self.authorization.id.as_bytes());
+        data.extend_from_slice(&self.request_timestamp.timestamp().to_le_bytes());
+        data.extend_from_slice(&serde_json::to_vec(&self.operation)?);
+        Ok(data)
+    }
+}
+
+impl CrossNodeAuthorization {
+    pub fn permits_operation(&self, operation: &CrossNodeOperation) -> bool {
+        for permission in &self.resource_permissions {
+            if permission.permits(operation) {
+                return true;
+            }
+        }
+        false
+    }
+    
+    pub fn verify_signature(&self, public_key: &Ed25519PublicKey) -> BearDogResult<()> {
+        let signature_data = self.create_signature_data()?;
+        public_key.verify(&signature_data, &self.grantor_signature)
+            .map_err(|_| BearDogError::InvalidSignature)?;
+        Ok(())
+    }
+    
+    fn create_signature_data(&self) -> BearDogResult<Vec<u8>> {
+        let mut data = Vec::new();
+        data.extend_from_slice(self.grantor_node_id.as_bytes());
+        data.extend_from_slice(self.grantee_node_id.as_bytes());
+        data.extend_from_slice(&self.granted_at.timestamp().to_le_bytes());
+        data.extend_from_slice(&self.expires_at.timestamp().to_le_bytes());
+        data.extend_from_slice(&serde_json::to_vec(&self.resource_permissions)?);
+        Ok(data)
+    }
+}
+```
+
+## 🌐 **Cross-Node Workflow Examples**
+
+### **Example 1: Request Storage Permission**
+```rust
+// Your BearDog requests permission to store data on friend's NAS
+let workflow_id = workflow_engine.request_cross_node_permission(
+    "friend-node-id",
+    vec![
+        ResourcePermission::StoreData {
+            max_gb: 100,
+            data_types: vec![DataType::MediaFiles, DataType::BackupData],
+            expires_at: Utc::now() + Duration::days(365),
+        },
+        ResourcePermission::RetrieveData {
+            own_data_only: true,
+            data_types: vec![DataType::MediaFiles, DataType::BackupData],
+        },
+        ResourcePermission::DeleteData {
+            own_data_only: true,
+        },
+    ],
+    "Family photo backup to trusted friend's NAS",
+).await?;
+```
+
+### **Example 2: Grant Storage Permission**
+```rust
+// Friend's BearDog receives request and creates approval workflow
+let approval = ApprovalRecord {
+    approver: "friend-user-id".to_string(),
+    decision: ApprovalDecision::Approved,
+    justification: "Trust this person with family photos".to_string(),
+    timestamp: Utc::now(),
+    signature: friend_beardog.sign_approval(&approval_data).await?,
+    additional_conditions: vec![
+        AccessCondition::RequireEncryption(true),
+        AccessCondition::MaxConcurrentOperations(5),
+        AccessCondition::RequireAuditLog(true),
+    ],
+};
+
+// Generate signed authorization proof
+let authorization = workflow_engine.generate_authorization_proof(
+    &workflow_id,
+    "your-node-id",
+).await?;
+
+// Send authorization back to requesting node
+songbird.send_authorization_proof("your-node-id", authorization).await?;
+```
+
+### **Example 3: Use Authorization for Storage**
+```rust
+// When SongBird wants to store data on friend's NAS
+let operation = CrossNodeOperation {
+    operation_type: OperationType::StoreData,
+    resource_id: "family-photos-2024".to_string(),
+    data_size_bytes: Some(2_000_000_000), // 2GB
+    estimated_duration: Some(Duration::minutes(30)),
+    metadata: hashmap! {
+        "content_type".to_string() => json!("image/jpeg"),
+        "encryption_algorithm".to_string() => json!("aes-256-gcm"),
+    },
+};
+
+// Present proof of authorization
+let proof = workflow_engine.prove_authorization(
+    "friend-node-id",
+    &operation,
+).await?;
+
+// Friend's BearDog verifies the proof
+let is_authorized = friend_workflow_engine.verify_authorization_proof(&proof).await?;
+
+if is_authorized {
+    // Proceed with storage operation
+    friend_nas.store_encrypted_data(&encrypted_data).await?;
+    
+    // Log the operation for audit
+    friend_audit_engine.log_cross_node_operation(&proof, &operation).await?;
 }
 ```
 
 ## ⚙️ **Configuration**
 
-### **Multi-Party Workflow Configuration**
+### **Cross-Node Workflow Configuration**
 ```toml
-[multi_party]
-# General settings
-default_approval_timeout_hours = 24
-max_concurrent_workflows = 100
-enable_workflow_scheduling = true
-auto_cleanup_completed_workflows_days = 90
+[multi_party.cross_node]
+# Cross-node workflow settings
+enable_cross_node_workflows = true
+default_permission_duration_days = 365
+max_permission_duration_days = 1095  # 3 years
+require_mutual_approval = false
 
-[multi_party.approval_policies]
-# Key management workflows
-key_rotation_min_approvers = 2
-key_rotation_required_roles = ["key-admin", "security-officer"]
-key_deletion_min_approvers = 3
-key_deletion_required_roles = ["key-admin", "security-officer", "compliance-officer"]
+# Trust establishment
+auto_trust_known_nodes = false
+require_manual_trust_establishment = true
+trust_verification_required = true
 
-# Policy workflows
-policy_change_min_approvers = 2
-policy_change_required_roles = ["security-admin", "compliance-officer"]
-policy_change_unanimous_required = true
+# Authorization proof settings
+proof_signature_algorithm = "ed25519"
+proof_expiry_buffer_hours = 1  # How long before expiry to warn
+max_concurrent_authorizations = 100
 
-# Configuration workflows
-config_change_min_approvers = 2
-config_change_required_roles = ["system-admin", "security-officer"]
+[multi_party.cross_node.default_permissions]
+# Default permission limits for cross-node requests
+max_storage_gb = 1000
+max_compute_hours = 100
+max_network_bandwidth_mbps = 100
+require_encryption = true
+require_audit_log = true
 
-# Emergency workflows
-emergency_access_min_approvers = 2
-emergency_access_required_roles = ["emergency-coordinator", "security-officer"]
-emergency_access_timeout_hours = 4
+[multi_party.cross_node.approval_requirements]
+# Default approval requirements for different permission types
+storage_permissions.min_approvers = 1
+storage_permissions.required_roles = ["storage_admin"]
+storage_permissions.timeout_hours = 24
 
-[multi_party.notifications]
-# Notification settings
-base_url = "https://beardog.internal:8443"
-default_channels = ["email", "slack"]
-reminder_intervals_hours = [4, 8, 16]
-escalation_enabled = true
+compute_permissions.min_approvers = 2
+compute_permissions.required_roles = ["compute_admin", "security_admin"]
+compute_permissions.timeout_hours = 12
 
-[multi_party.notifications.email]
-enabled = true
-smtp_server = "smtp.internal.com"
-smtp_port = 587
-smtp_username_env_var = "SMTP_USERNAME"
-smtp_password_env_var = "SMTP_PASSWORD"
-from_address = "beardog-workflows@company.com"
-use_tls = true
-
-[multi_party.notifications.slack]
-enabled = true
-webhook_url_env_var = "SLACK_WEBHOOK_URL"
-channel = "#beardog-approvals"
-mention_users = true
-
-[multi_party.notifications.sms]
-enabled = false
-provider = "twilio"
-account_sid_env_var = "TWILIO_ACCOUNT_SID"
-auth_token_env_var = "TWILIO_AUTH_TOKEN"
-from_number = "+1234567890"
-
-[multi_party.database]
-# Workflow storage
-connection_string_env_var = "WORKFLOW_DATABASE_URL"
-connection_pool_size = 10
-enable_encryption = true
-backup_enabled = true
-backup_interval_hours = 6
-
-[multi_party.security]
-# Security settings
-require_digital_signatures = true
-signature_algorithm = "ed25519"
-enable_approval_delegation = true
-max_delegation_depth = 2
-audit_all_operations = true
-
-[multi_party.performance]
-# Performance settings
-workflow_processing_threads = 4
-notification_batch_size = 50
-database_connection_timeout_seconds = 30
-cache_size = 1000
-cache_ttl_minutes = 30
-```
-
-## 🔍 **Workflow Templates**
-
-### **Predefined Workflow Templates**
-```rust
-pub struct WorkflowTemplateManager {
-    templates: HashMap<WorkflowType, WorkflowTemplate>,
-}
-
-impl WorkflowTemplateManager {
-    pub fn new() -> Self {
-        let mut templates = HashMap::new();
-        
-        // Key rotation template
-        templates.insert(WorkflowType::KeyRotation, WorkflowTemplate {
-            workflow_type: WorkflowType::KeyRotation,
-            name: "Key Rotation".to_string(),
-            description: "Rotate encryption keys with multi-party approval".to_string(),
-            required_parameters: vec![
-                "key_id".to_string(),
-                "rotation_reason".to_string(),
-            ],
-            optional_parameters: vec![
-                "rotate_derived_keys".to_string(),
-                "notification_groups".to_string(),
-            ],
-            default_approval_requirements: ApprovalRequirements {
-                min_approvers: 2,
-                required_roles: vec!["key-admin".to_string(), "security-officer".to_string()],
-                required_users: Vec::new(),
-                approval_levels: vec![
-                    ApprovalLevel {
-                        level: 1,
-                        required_approvers: 1,
-                        eligible_roles: vec!["key-admin".to_string()],
-                        eligible_users: Vec::new(),
-                    },
-                    ApprovalLevel {
-                        level: 2,
-                        required_approvers: 1,
-                        eligible_roles: vec!["security-officer".to_string()],
-                        eligible_users: Vec::new(),
-                    },
-                ],
-                unanimous_required: false,
-                allow_self_approval: false,
-                timeout_hours: 24,
-            },
-            risk_level: WorkflowRiskLevel::High,
-            compliance_requirements: vec![
-                ComplianceRequirement::GDPR,
-                ComplianceRequirement::SOX,
-            ],
-        });
-        
-        // Emergency access template
-        templates.insert(WorkflowType::EmergencyAccess, WorkflowTemplate {
-            workflow_type: WorkflowType::EmergencyAccess,
-            name: "Emergency Access".to_string(),
-            description: "Grant emergency access to critical systems".to_string(),
-            required_parameters: vec![
-                "user_id".to_string(),
-                "resource_id".to_string(),
-                "emergency_reason".to_string(),
-                "access_duration_hours".to_string(),
-            ],
-            optional_parameters: vec![
-                "incident_id".to_string(),
-                "supervisor_contact".to_string(),
-            ],
-            default_approval_requirements: ApprovalRequirements {
-                min_approvers: 2,
-                required_roles: vec!["emergency-coordinator".to_string(), "security-officer".to_string()],
-                required_users: Vec::new(),
-                approval_levels: vec![
-                    ApprovalLevel {
-                        level: 1,
-                        required_approvers: 1,
-                        eligible_roles: vec!["emergency-coordinator".to_string()],
-                        eligible_users: Vec::new(),
-                    },
-                    ApprovalLevel {
-                        level: 2,
-                        required_approvers: 1,
-                        eligible_roles: vec!["security-officer".to_string()],
-                        eligible_users: Vec::new(),
-                    },
-                ],
-                unanimous_required: true,
-                allow_self_approval: false,
-                timeout_hours: 4, // Shorter timeout for emergencies
-            },
-            risk_level: WorkflowRiskLevel::Critical,
-            compliance_requirements: vec![
-                ComplianceRequirement::SOX,
-                ComplianceRequirement::HIPAA,
-            ],
-        });
-        
-        Self { templates }
-    }
-    
-    pub fn get_template(&self, workflow_type: &WorkflowType) -> Option<&WorkflowTemplate> {
-        self.templates.get(workflow_type)
-    }
-    
-    pub fn create_workflow_from_template(
-        &self,
-        template: &WorkflowTemplate,
-        parameters: HashMap<String, serde_json::Value>,
-        initiator: String,
-    ) -> Result<WorkflowRequest> {
-        // Validate required parameters
-        for required_param in &template.required_parameters {
-            if !parameters.contains_key(required_param) {
-                return Err(BearDogError::InvalidWorkflowParameters(
-                    format!("Missing required parameter: {}", required_param)
-                ));
-            }
-        }
-        
-        Ok(WorkflowRequest {
-            workflow_type: template.workflow_type.clone(),
-            initiator,
-            target: self.extract_target_from_parameters(&template.workflow_type, &parameters)?,
-            parameters,
-            approval_requirements: Some(template.default_approval_requirements.clone()),
-            metadata: HashMap::new(),
-        })
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WorkflowTemplate {
-    pub workflow_type: WorkflowType,
-    pub name: String,
-    pub description: String,
-    pub required_parameters: Vec<String>,
-    pub optional_parameters: Vec<String>,
-    pub default_approval_requirements: ApprovalRequirements,
-    pub risk_level: WorkflowRiskLevel,
-    pub compliance_requirements: Vec<ComplianceRequirement>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum WorkflowRiskLevel {
-    Low,
-    Medium,
-    High,
-    Critical,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ComplianceRequirement {
-    GDPR,
-    HIPAA,
-    SOX,
-    PCI,
-    FedRAMP,
-}
-```
-
-## 🧪 **Testing Strategy**
-
-### **Workflow Testing Framework**
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tokio_test;
-    
-    #[tokio::test]
-    async fn test_key_rotation_workflow() {
-        let config = create_test_config();
-        let workflow_engine = MultiPartyWorkflowEngine::new(config).await.unwrap();
-        
-        // Create workflow request
-        let workflow_request = WorkflowRequest {
-            workflow_type: WorkflowType::KeyRotation,
-            initiator: "alice@company.com".to_string(),
-            target: WorkflowTarget::Key { key_id: "test-key-123".to_string() },
-            parameters: {
-                let mut params = HashMap::new();
-                params.insert("key_id".to_string(), json!("test-key-123"));
-                params.insert("rotation_reason".to_string(), json!("Scheduled rotation"));
-                params
-            },
-            approval_requirements: None,
-            metadata: HashMap::new(),
-        };
-        
-        // Initiate workflow
-        let response = workflow_engine.initiate_workflow(workflow_request).await.unwrap();
-        assert_eq!(response.status, WorkflowStatus::PendingApprovals);
-        
-        // Submit first approval
-        let approval1 = ApprovalSubmission {
-            workflow_id: response.workflow_id.clone(),
-            approver: "bob@company.com".to_string(),
-            decision: ApprovalDecision::Approved,
-            reason: Some("Approved for scheduled rotation".to_string()),
-            signature: None,
-            metadata: HashMap::new(),
-        };
-        
-        let approval_response1 = workflow_engine.submit_approval(approval1).await.unwrap();
-        assert_eq!(approval_response1.workflow_status, WorkflowStatus::PendingApprovals);
-        
-        // Submit second approval
-        let approval2 = ApprovalSubmission {
-            workflow_id: response.workflow_id.clone(),
-            approver: "charlie@company.com".to_string(),
-            decision: ApprovalDecision::Approved,
-            reason: Some("Security approved".to_string()),
-            signature: None,
-            metadata: HashMap::new(),
-        };
-        
-        let approval_response2 = workflow_engine.submit_approval(approval2).await.unwrap();
-        assert_eq!(approval_response2.workflow_status, WorkflowStatus::Approved);
-        
-        // Verify workflow completion
-        // (Additional verification logic would be implemented)
-    }
-    
-    #[tokio::test]
-    async fn test_workflow_rejection() {
-        // Test workflow rejection scenario
-        // (Implementation details...)
-    }
-    
-    #[tokio::test]
-    async fn test_workflow_timeout() {
-        // Test workflow timeout handling
-        // (Implementation details...)
-    }
-}
+emergency_access.min_approvers = 3
+emergency_access.required_roles = ["security_admin", "emergency_responder"]
+emergency_access.timeout_hours = 4
 ```
 
 ---
 
-**Next Steps**: Implement workflow scheduling, approval delegation, and integration with external approval systems. 
+**Summary**: Enhanced multi-party workflows to include cross-node authorization with cryptographic proof systems. BearDog nodes can now request permissions from each other, carry signed authorization tokens, and prove authorization for cross-node operations. This enables the distributed storage and compute ecosystem while maintaining security and audit compliance. 

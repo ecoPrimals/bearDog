@@ -1,24 +1,23 @@
 //! SongBird Integration Adapter
-//! 
+//!
 //! Secure communication integration with SongBird platform using BearDog Security Provider.
 
-use std::sync::Arc;
 use std::collections::HashMap;
+use std::sync::Arc;
 
-use async_trait::async_trait;
-use base64::{Engine as _, engine::general_purpose};
+use base64::{engine::general_purpose, Engine as _};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
-use tracing::{info, warn, error, debug};
+use tracing::{debug, info, warn};
 
 use crate::{
-    BearDogResult, BearDogError, BearDogCore,
     security_provider::{
-        BearDogSecurityProvider, SecurityProvider, SecurityProviderConfig,
-        Subject, SubjectType, Resource, ResourceClassification, Action, ActionType, RiskLevel,
-        SecurityAuditEvent, AuthenticationResult, SecuritySession
+        Action, ActionType, AuthenticationResult, BearDogSecurityProvider, Resource,
+        ResourceClassification, RiskLevel, SecurityAuditEvent, SecurityProvider,
+        SecurityProviderConfig, SecuritySession, Subject, SubjectType,
     },
+    BearDogCore, BearDogError, BearDogResult,
 };
 
 /// SongBird Adapter Configuration
@@ -52,36 +51,36 @@ impl Default for SongBirdConfig {
 }
 
 /// SongBird secure communication adapter
-/// 
+///
 /// The SongBirdAdapter provides integration with SongBird's secure communication
 /// platform, enabling encrypted messaging, secure voice/video calls, and
 /// communication security monitoring with comprehensive BearDog security.
-/// 
+///
 /// # Features
-/// 
+///
 /// - Real-time security provider integration
 /// - Comprehensive threat detection and response
 /// - Multi-party workflow approvals for sensitive operations
 /// - Compliance monitoring and audit logging
 /// - Rate limiting and session management
 /// - Multi-factor authentication support
-/// 
+///
 /// # Security Features
-/// 
+///
 /// - End-to-end encryption
 /// - Perfect forward secrecy
 /// - Message authentication
 /// - Anti-tampering protection
 /// - Secure key rotation
 /// - Real-time threat analysis
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust,no_run
 /// use beardog::adapters::songbird::SongBirdAdapter;
 /// use beardog::BearDogCore;
 /// use std::sync::Arc;
-/// 
+///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let core = Arc::new(BearDogCore::new(Default::default()).await?);
@@ -95,7 +94,7 @@ pub struct SongBirdAdapter {
     config: SongBirdConfig,
     core: Arc<BearDogCore>,
     security_provider: Arc<BearDogSecurityProvider>,
-    
+
     // Active connections and sessions
     active_connections: Arc<RwLock<HashMap<String, SongBirdConnection>>>,
     communication_sessions: Arc<RwLock<HashMap<String, CommunicationSession>>>,
@@ -195,14 +194,14 @@ pub enum RecordingPolicy {
 
 impl SongBirdAdapter {
     /// Create a new SongBird adapter instance
-    /// 
+    ///
     /// Initializes the adapter with SongBird API credentials and BearDog security provider.
     pub async fn new(core: Arc<BearDogCore>, config: SongBirdConfig) -> BearDogResult<Self> {
         info!("🎵 Initializing SongBird adapter with BearDog security integration");
 
         // Initialize the BearDog Security Provider
         let security_provider = Arc::new(
-            BearDogSecurityProvider::new(config.security_provider.clone(), core.clone()).await?
+            BearDogSecurityProvider::new(config.security_provider.clone(), core.clone()).await?,
         );
 
         let adapter = Self {
@@ -247,12 +246,18 @@ impl SongBirdAdapter {
         };
 
         // Check authorization with BearDog Security Provider
-        let auth_result = self.security_provider.authorize(&subject, &resource, &action).await?;
+        let auth_result = self
+            .security_provider
+            .authorize(&subject, &resource, &action)
+            .await?;
 
         if !auth_result.allowed {
-            warn!("🚫 Connection denied for user {}: {}", user_id, auth_result.reason);
-            return Err(BearDogError::Authorization { 
-                message: auth_result.reason 
+            warn!(
+                "🚫 Connection denied for user {}: {}",
+                user_id, auth_result.reason
+            );
+            return Err(BearDogError::Authorization {
+                message: auth_result.reason,
             });
         }
 
@@ -292,8 +297,14 @@ impl SongBirdAdapter {
             user_agent: None,
             additional_data: {
                 let mut data = HashMap::new();
-                data.insert("connection_id".to_string(), serde_json::Value::String(connection_id.clone()));
-                data.insert("endpoint".to_string(), serde_json::Value::String(self.config.endpoint.clone()));
+                data.insert(
+                    "connection_id".to_string(),
+                    serde_json::Value::String(connection_id.clone()),
+                );
+                data.insert(
+                    "endpoint".to_string(),
+                    serde_json::Value::String(self.config.endpoint.clone()),
+                );
                 data
             },
         };
@@ -348,12 +359,18 @@ impl SongBirdAdapter {
         };
 
         // Check authorization
-        let auth_result = self.security_provider.authorize(&subject, &resource, &action).await?;
+        let auth_result = self
+            .security_provider
+            .authorize(&subject, &resource, &action)
+            .await?;
 
         if !auth_result.allowed {
-            warn!("🚫 Message sending denied for user {}: {}", sender_id, auth_result.reason);
-            return Err(BearDogError::Authorization { 
-                message: auth_result.reason 
+            warn!(
+                "🚫 Message sending denied for user {}: {}",
+                sender_id, auth_result.reason
+            );
+            return Err(BearDogError::Authorization {
+                message: auth_result.reason,
             });
         }
 
@@ -361,7 +378,9 @@ impl SongBirdAdapter {
         let message_id = uuid::Uuid::new_v4().to_string();
 
         // Apply encryption based on security level
-        let encrypted_content = self.encrypt_message_content(&message.content, &message.encryption_type).await?;
+        let encrypted_content = self
+            .encrypt_message_content(&message.content, &message.encryption_type)
+            .await?;
 
         // Apply data retention policy
         if let Some(auto_delete) = message.auto_delete_after {
@@ -382,10 +401,22 @@ impl SongBirdAdapter {
             user_agent: None,
             additional_data: {
                 let mut data = HashMap::new();
-                data.insert("message_id".to_string(), serde_json::Value::String(message_id.clone()));
-                data.insert("recipient_count".to_string(), serde_json::Value::Number(message.recipient_ids.len().into()));
-                data.insert("security_level".to_string(), serde_json::Value::String(format!("{:?}", message.security_classification)));
-                data.insert("encryption_type".to_string(), serde_json::Value::String(format!("{:?}", message.encryption_type)));
+                data.insert(
+                    "message_id".to_string(),
+                    serde_json::Value::String(message_id.clone()),
+                );
+                data.insert(
+                    "recipient_count".to_string(),
+                    serde_json::Value::Number(message.recipient_ids.len().into()),
+                );
+                data.insert(
+                    "security_level".to_string(),
+                    serde_json::Value::String(format!("{:?}", message.security_classification)),
+                );
+                data.insert(
+                    "encryption_type".to_string(),
+                    serde_json::Value::String(format!("{:?}", message.encryption_type)),
+                );
                 data
             },
         };
@@ -404,9 +435,11 @@ impl SongBirdAdapter {
         session_type: SessionType,
         security_level: SecurityLevel,
     ) -> BearDogResult<String> {
-        info!("📞 Starting {} session with {} participants", 
-              format!("{:?}", session_type).to_lowercase(), 
-              participants.len());
+        info!(
+            "📞 Starting {} session with {} participants",
+            format!("{:?}", session_type).to_lowercase(),
+            participants.len()
+        );
 
         // Create subject for authorization
         let subject = Subject {
@@ -444,12 +477,18 @@ impl SongBirdAdapter {
         };
 
         // Check authorization
-        let auth_result = self.security_provider.authorize(&subject, &resource, &action).await?;
+        let auth_result = self
+            .security_provider
+            .authorize(&subject, &resource, &action)
+            .await?;
 
         if !auth_result.allowed {
-            warn!("🚫 Communication session denied for user {}: {}", initiator_id, auth_result.reason);
-            return Err(BearDogError::Authorization { 
-                message: auth_result.reason 
+            warn!(
+                "🚫 Communication session denied for user {}: {}",
+                initiator_id, auth_result.reason
+            );
+            return Err(BearDogError::Authorization {
+                message: auth_result.reason,
             });
         }
 
@@ -461,7 +500,10 @@ impl SongBirdAdapter {
             session_type: session_type.clone(),
             started_at: Utc::now(),
             security_level: security_level.clone(),
-            recording_enabled: matches!(security_level, SecurityLevel::Classified | SecurityLevel::TopSecret),
+            recording_enabled: matches!(
+                security_level,
+                SecurityLevel::Classified | SecurityLevel::TopSecret
+            ),
             compliance_monitoring: true,
         };
 
@@ -483,10 +525,22 @@ impl SongBirdAdapter {
             user_agent: None,
             additional_data: {
                 let mut data = HashMap::new();
-                data.insert("session_id".to_string(), serde_json::Value::String(session_id.clone()));
-                data.insert("session_type".to_string(), serde_json::Value::String(format!("{:?}", session_type)));
-                data.insert("participant_count".to_string(), serde_json::Value::Number(participants.len().into()));
-                data.insert("security_level".to_string(), serde_json::Value::String(format!("{:?}", security_level)));
+                data.insert(
+                    "session_id".to_string(),
+                    serde_json::Value::String(session_id.clone()),
+                );
+                data.insert(
+                    "session_type".to_string(),
+                    serde_json::Value::String(format!("{:?}", session_type)),
+                );
+                data.insert(
+                    "participant_count".to_string(),
+                    serde_json::Value::Number(participants.len().into()),
+                );
+                data.insert(
+                    "security_level".to_string(),
+                    serde_json::Value::String(format!("{:?}", security_level)),
+                );
                 data
             },
         };
@@ -508,12 +562,10 @@ impl SongBirdAdapter {
         info!("🔐 Authenticating user for SongBird: {}", username);
 
         // Use BearDog Security Provider for authentication
-        let auth_result = self.security_provider.authenticate(
-            username,
-            password,
-            ip_address.clone(),
-            user_agent.clone(),
-        ).await?;
+        let auth_result = self
+            .security_provider
+            .authenticate(username, password, ip_address.clone(), user_agent.clone())
+            .await?;
 
         if auth_result.success {
             info!("✅ SongBird authentication successful for: {}", username);
@@ -529,7 +581,10 @@ impl SongBirdAdapter {
         debug!("🔍 Validating SongBird session");
 
         // Use BearDog Security Provider for session validation
-        let session = self.security_provider.validate_session(session_token).await?;
+        let session = self
+            .security_provider
+            .validate_session(session_token)
+            .await?;
 
         debug!("✅ SongBird session validation successful");
         Ok(session)
@@ -547,16 +602,21 @@ impl SongBirdAdapter {
         if let Some(session) = sessions.get(session_id) {
             // Check participant limit
             if session.participants.len() > policy.max_participants as usize {
-                warn!("⚠️ Session exceeds maximum participants: {} > {}", 
-                      session.participants.len(), policy.max_participants);
+                warn!(
+                    "⚠️ Session exceeds maximum participants: {} > {}",
+                    session.participants.len(),
+                    policy.max_participants
+                );
                 return Ok(false);
             }
 
             // Check session duration
             let session_duration = Utc::now() - session.started_at;
             if session_duration > policy.max_session_duration {
-                warn!("⚠️ Session exceeds maximum duration: {:?} > {:?}", 
-                      session_duration, policy.max_session_duration);
+                warn!(
+                    "⚠️ Session exceeds maximum duration: {:?} > {:?}",
+                    session_duration, policy.max_session_duration
+                );
                 return Ok(false);
             }
 
@@ -573,7 +633,9 @@ impl SongBirdAdapter {
     }
 
     /// Get security provider health status
-    pub async fn get_security_health(&self) -> BearDogResult<crate::security_provider::SecurityProviderHealth> {
+    pub async fn get_security_health(
+        &self,
+    ) -> BearDogResult<crate::security_provider::SecurityProviderHealth> {
         self.security_provider.health_check().await
     }
 
@@ -592,13 +654,19 @@ impl SongBirdAdapter {
             EncryptionStatus::EndToEnd => {
                 // Apply end-to-end encryption
                 // In a real implementation, this would use proper E2E encryption
-                Ok(format!("E2E_ENCRYPTED({})", general_purpose::STANDARD.encode(content)))
+                Ok(format!(
+                    "E2E_ENCRYPTED({})",
+                    general_purpose::STANDARD.encode(content)
+                ))
             }
             EncryptionStatus::QuantumResistant => {
                 // Apply post-quantum encryption
                 // In a real implementation, this would use post-quantum algorithms
-                Ok(format!("PQ_ENCRYPTED({})", general_purpose::STANDARD.encode(content)))
+                Ok(format!(
+                    "PQ_ENCRYPTED({})",
+                    general_purpose::STANDARD.encode(content)
+                ))
             }
         }
     }
-} 
+}

@@ -1,5 +1,5 @@
 //! Comprehensive error handling for BearDog
-//! 
+//!
 //! Provides detailed error types for all BearDog operations with proper context.
 
 use thiserror::Error;
@@ -12,211 +12,211 @@ pub type BearDogResult<T> = Result<T, BearDogError>;
 pub enum BearDogError {
     /// Configuration-related errors
     #[error("Configuration error: {message}")]
-    Configuration { 
+    Configuration {
         /// Error message describing the configuration issue
-        message: String 
+        message: String,
     },
 
     /// Encryption/decryption operation errors
     #[error("Encryption error in {operation}: {message}")]
-    Encryption { 
+    Encryption {
         /// The encryption operation that failed
-        operation: String, 
+        operation: String,
         /// Error message describing the encryption issue
-        message: String 
+        message: String,
     },
 
     /// Key management errors
     #[error("Key management error: {message}")]
-    KeyManagement { 
+    KeyManagement {
         /// Error message describing the key management issue
-        message: String 
+        message: String,
     },
 
     /// Hardware Security Module (HSM) errors
     #[error("HSM error: {message}")]
-    Hsm { 
+    Hsm {
         /// Error message describing the HSM issue
-        message: String 
+        message: String,
     },
 
     /// Authentication errors
     #[error("Authentication error: {message}")]
-    Authentication { 
+    Authentication {
         /// Error message describing the authentication issue
-        message: String 
+        message: String,
     },
 
     /// Authorization errors
     #[error("Authorization error: {message}")]
-    Authorization { 
+    Authorization {
         /// Error message describing the authorization issue
-        message: String 
+        message: String,
     },
 
     /// Threat detection errors
     #[error("Threat detection error: {message}")]
-    ThreatDetection { 
+    ThreatDetection {
         /// Error message describing the threat detection issue
-        message: String 
+        message: String,
     },
 
     /// Compliance-related errors
     #[error("Compliance error for {standard}: {message}")]
-    Compliance { 
+    Compliance {
         /// The compliance standard that failed
-        standard: String, 
+        standard: String,
         /// Error message describing the compliance issue
-        message: String 
+        message: String,
     },
 
     /// Audit system errors
     #[error("Audit error: {message}")]
-    Audit { 
+    Audit {
         /// Error message describing the audit issue
-        message: String 
+        message: String,
     },
 
     /// Workflow execution errors
     #[error("Workflow error in {workflow_type}: {message}")]
-    Workflow { 
+    Workflow {
         /// The type of workflow that failed
-        workflow_type: String, 
+        workflow_type: String,
         /// Error message describing the workflow issue
-        message: String 
+        message: String,
     },
-    
+
     /// Workflow not found errors
     #[error("Workflow with ID '{0}' not found")]
     WorkflowNotFound(String),
-    
+
     /// Unauthorized approver errors
     #[error("Unauthorized approver: {0}")]
     UnauthorizedApprover(String),
-    
+
     /// Duplicate approval errors
     #[error("Duplicate approval: {0}")]
     DuplicateApproval(String),
-    
+
     /// Workflow not accepting approvals
     #[error("Workflow not accepting approvals: {0}")]
     WorkflowNotAcceptingApprovals(String),
-    
+
     /// Workflow expired errors
     #[error("Workflow expired: {0}")]
     WorkflowExpired(String),
-    
+
     /// Unsupported workflow type errors
     #[error("Unsupported workflow type: {0}")]
     UnsupportedWorkflowType(String),
-    
+
     /// Invalid workflow request errors
     #[error("Invalid workflow request: {0}")]
     InvalidWorkflowRequest(String),
 
     /// Integration adapter errors
     #[error("Integration error with {system}: {message}")]
-    Integration { 
+    Integration {
         /// The external system that failed to integrate
-        system: String, 
+        system: String,
         /// Error message describing the integration issue
-        message: String 
+        message: String,
     },
 
     /// Storage-related errors
     #[error("Storage error: {message}")]
-    Storage { 
+    Storage {
         /// Error message describing the storage issue
-        message: String 
+        message: String,
     },
 
     /// Network communication errors
     #[error("Network error: {message}")]
-    Network { 
+    Network {
         /// Error message describing the network issue
-        message: String 
+        message: String,
     },
 
     /// Data validation errors
     #[error("Validation error in field '{field}': {message}")]
-    Validation { 
+    Validation {
         /// The field that failed validation
-        field: String, 
+        field: String,
         /// Error message describing the validation issue
-        message: String 
+        message: String,
     },
 
     /// Rate limiting errors
     #[error("Rate limit exceeded: {message}")]
-    RateLimit { 
+    RateLimit {
         /// Error message describing the rate limit issue
-        message: String 
+        message: String,
     },
 
     /// Resource not found errors
     #[error("{resource_type} with ID '{id}' not found")]
-    NotFound { 
+    NotFound {
         /// The type of resource that was not found
-        resource_type: String, 
+        resource_type: String,
         /// The ID of the resource that was not found
-        id: String 
+        id: String,
     },
 
     /// Resource already exists errors
     #[error("{resource_type} with ID '{id}' already exists")]
-    AlreadyExists { 
+    AlreadyExists {
         /// The type of resource that already exists
-        resource_type: String, 
+        resource_type: String,
         /// The ID of the resource that already exists
-        id: String 
+        id: String,
     },
 
     /// Permission denied errors
     #[error("Permission denied for action '{action}' on resource '{resource}'")]
-    PermissionDenied { 
+    PermissionDenied {
         /// The action that was denied
-        action: String, 
+        action: String,
         /// The resource for which permission was denied
-        resource: String 
+        resource: String,
     },
 
     /// Internal system errors
     #[error("Internal error: {message}")]
-    Internal { 
+    Internal {
         /// Error message describing the internal issue
-        message: String 
+        message: String,
     },
 
     /// Timeout errors
     #[error("Operation '{operation}' timed out after {duration_ms}ms")]
-    Timeout { 
+    Timeout {
         /// The operation that timed out
-        operation: String, 
+        operation: String,
         /// The timeout duration in milliseconds
-        duration_ms: u64 
+        duration_ms: u64,
     },
 
     /// Serialization/deserialization errors
     #[error("Serialization error: {message}")]
-    Serialization { 
+    Serialization {
         /// Error message describing the serialization issue
-        message: String 
+        message: String,
     },
 
     /// Invalid input errors
     #[error("Invalid input: {message}")]
-    InvalidInput { 
+    InvalidInput {
         /// Error message describing the invalid input
-        message: String 
+        message: String,
     },
 
     /// Service unavailable errors
     #[error("Service '{service}' is unavailable: {message}")]
-    ServiceUnavailable { 
+    ServiceUnavailable {
         /// The service that is unavailable
-        service: String, 
+        service: String,
         /// Error message describing why the service is unavailable
-        message: String 
+        message: String,
     },
 
     /// Database-related errors
@@ -249,16 +249,16 @@ pub enum BearDogError {
 
     /// Cryptographic errors
     #[error("Cryptographic error")]
-    Crypto { 
+    Crypto {
         /// Error message describing the cryptographic issue
-        message: String 
+        message: String,
     },
 
     /// Key derivation errors
     #[error("Key derivation error")]
-    KeyDerivation { 
+    KeyDerivation {
         /// Error message describing the key derivation issue
-        message: String 
+        message: String,
     },
 
     /// UUID parsing errors
@@ -271,9 +271,9 @@ pub enum BearDogError {
 
     /// Timeout errors from tokio
     #[error("Async timeout")]
-    AsyncTimeout { 
+    AsyncTimeout {
         /// Error message describing the timeout
-        message: String 
+        message: String,
     },
 
     // Workflow-related errors
@@ -289,11 +289,11 @@ pub enum BearDogError {
     WorkflowValidationFailed(String),
     #[error("Workflow permission denied: {0}")]
     WorkflowPermissionDenied(String),
-    
+
     // Network and system errors
     #[error("Network error: {0}")]
     NetworkError(String),
-    
+
     // Additional missing variants
     #[error("IO error: {0}")]
     IoError(String),
@@ -308,9 +308,81 @@ pub enum BearDogError {
 
     /// Invalid data errors
     #[error("Invalid data: {message}")]
-    InvalidData { 
+    InvalidData {
         /// Error message describing the invalid data issue
-        message: String 
+        message: String,
+    },
+
+    // Genetic spawning related errors
+    #[error("Spawn rejected: {reason}")]
+    SpawnRejected {
+        /// Reason why the spawn was rejected
+        reason: String,
+    },
+
+    #[error("Operation timeout: {operation}")]
+    OperationTimeout {
+        /// The operation that timed out
+        operation: String,
+    },
+
+    #[error("Unexpected state: {message}")]
+    UnexpectedState {
+        /// Description of the unexpected state
+        message: String,
+    },
+
+    #[error("Resource cleanup failed: {resource}")]
+    ResourceCleanupFailed {
+        /// The resource that failed to cleanup
+        resource: String,
+    },
+
+    #[error("Lineage integrity violation: {message}")]
+    LineageIntegrityViolation {
+        /// Description of the lineage integrity issue
+        message: String,
+    },
+
+    #[error("Audit trail incomplete: {message}")]
+    AuditTrailIncomplete {
+        /// Description of what's missing from the audit trail
+        message: String,
+    },
+
+    #[error("Audit integrity violation: {message}")]
+    AuditIntegrityViolation {
+        /// Description of the audit integrity issue
+        message: String,
+    },
+
+    #[error("Invalid genetics: {message}")]
+    InvalidGenetics {
+        /// Description of what's wrong with the genetics
+        message: String,
+    },
+
+    // BSTP (BearDog Secure Tunnel Protocol) related errors
+    #[error("Session not found")]
+    SessionNotFound,
+
+    #[error("Peer not trusted")]
+    PeerNotTrusted,
+
+    #[error("Hardware acceleration not available")]
+    HardwareNotAvailable,
+
+    // Cross-node authentication errors
+    #[error("Verification failed: {message}")]
+    VerificationFailed {
+        /// Description of what verification failed
+        message: String,
+    },
+
+    #[error("Node not found: {node_id}")]
+    NodeNotFound {
+        /// The node ID that was not found
+        node_id: String,
     },
 }
 
@@ -341,8 +413,8 @@ impl From<tokio::time::error::Elapsed> for BearDogError {
 
 impl From<std::string::FromUtf8Error> for BearDogError {
     fn from(error: std::string::FromUtf8Error) -> Self {
-        BearDogError::InvalidData { 
-            message: format!("UTF-8 conversion error: {}", error) 
+        BearDogError::InvalidData {
+            message: format!("UTF-8 conversion error: {}", error),
         }
     }
 }
@@ -400,4 +472,18 @@ impl BearDogError {
             message: message.into(),
         }
     }
-} 
+
+    /// Create a verification failed error
+    pub fn verification_failed<S: Into<String>>(message: S) -> Self {
+        BearDogError::VerificationFailed {
+            message: message.into(),
+        }
+    }
+
+    /// Create a node not found error
+    pub fn node_not_found<S: Into<String>>(node_id: S) -> Self {
+        BearDogError::NodeNotFound {
+            node_id: node_id.into(),
+        }
+    }
+}
