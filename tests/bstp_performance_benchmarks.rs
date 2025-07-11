@@ -2,9 +2,11 @@
 
 use beardog::config::EncryptionConfig;
 use beardog::encryption::EncryptionEngine;
-use beardog::genetics_engine::{
-    DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore,
-};
+use beardog::*;
+use beardog::auth::types::{BearDogGenetics, CryptoChromosome, SecurityTraits, AlgorithmFamily};
+use beardog::genetics::{GeneticSpawningEngine, SpawnRequest, SpawnResult};
+use beardog::genetics::types::{GeneticsConfig, InMemoryGeneticsStore};
+use beardog::genetics::handlers::DefaultBearDogGeneticsEngine;
 use beardog::tunnel::{
     genetic_healing::{SecurityIssue, SecurityIssueType, Severity},
     BStpConfig, BStpKeyManager, CryptoAlgorithm, GamingCryptoEngine, GeneticSecurityHealing,

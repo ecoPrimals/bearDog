@@ -2,12 +2,12 @@
 
 use beardog::config::EncryptionConfig;
 use beardog::encryption::EncryptionEngine;
-use beardog::genetics_engine::{
+use beardog::genetics::{
     DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore,
 };
 use beardog::tunnel::{
     genetic_healing::{HealingResult, NetworkEvent, SecurityIssue, SecurityIssueType, Severity},
-    BStpConfig, BStpKeyManager, CryptoAlgorithm, EncryptedPacket, GamingCryptoEngine,
+    BStpConfig, BStpKeyManager, GamingCryptoEngine,
     GeneticSecurityHealing, SecurityGenetics,
 };
 use beardog::{BearDogError, BearDogResult};

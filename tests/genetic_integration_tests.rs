@@ -9,11 +9,11 @@
 
 use beardog::{
     config::WorkflowConfig,
-    cross_node_auth::{
-        BearDogGenetics, BearDogGeneticsEngine, BearDogWorkflowType, CrossNodeAuthConfig,
+    auth::{
+        BearDogGenetics, BearDogWorkflowType, CrossNodeAuthConfig,
         CrossNodeAuthEngine, ResourceLimits, SpawnPurpose, SpawnStatus, TaskType,
     },
-    genetics_engine::{DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore},
+    genetics::{DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore},
     node_registry::{InMemoryNodeRegistry, NodeInfo, RegistryConfig, TrustLevel},
     workflows::MultiPartyWorkflowEngine,
     BearDogError, BearDogResult,
@@ -976,62 +976,45 @@ impl TestAuthStore {
     }
 }
 
-#[async_trait::async_trait]
-impl beardog::cross_node_auth::ProofGenerator for TestProofGenerator {
-    async fn sign_authorization(
-        &self,
-        auth: beardog::cross_node_auth::CrossNodeAuthorization,
-    ) -> BearDogResult<beardog::cross_node_auth::CrossNodeAuthorization> {
-        Ok(auth)
+impl beardog::auth::ProofVerifier for TestProofGenerator {
+    fn verify_authorization_proof(&self, _proof: &beardog::auth::AuthorizationProof) -> BearDogResult<bool> {
+        Ok(true)
     }
 
-    async fn generate_operation_proof(
-        &self,
-        auth: beardog::cross_node_auth::CrossNodeAuthorization,
-        op: &beardog::cross_node_auth::CrossNodeOperation,
-    ) -> BearDogResult<beardog::cross_node_auth::AuthorizationProof> {
-        Ok(beardog::cross_node_auth::AuthorizationProof {
-            authorization: auth,
-            operation: op.clone(),
-            request_timestamp: chrono::Utc::now(),
-            requester_signature: vec![0; 64], // Test signature
+    fn generate_proof(&self, authorization: &beardog::auth::CrossNodeAuthorization, operation: &beardog::auth::CrossNodeOperation) -> BearDogResult<beardog::auth::AuthorizationProof> {
+
+        Ok(beardog::auth::AuthorizationProof {
+            authorization_id: authorization.id.clone(),
+            operation: operation.clone(),
+            timestamp: chrono::Utc::now(),
+            proof_signature: "test_signature".to_string(),
         })
     }
 }
-
-#[async_trait::async_trait]
-impl beardog::cross_node_auth::ProofVerifier for TestProofVerifier {
-    async fn verify_authorization_proof(
-        &self,
-        _proof: &beardog::cross_node_auth::AuthorizationProof,
-    ) -> BearDogResult<bool> {
-        Ok(true) // Always pass for integration testing
-    }
-}
-
-#[async_trait::async_trait]
-impl beardog::cross_node_auth::CrossNodeAuthStore for TestAuthStore {
-    async fn store_authorization(
-        &self,
-        _auth: &beardog::cross_node_auth::CrossNodeAuthorization,
-    ) -> BearDogResult<()> {
-        Ok(())
-    }
-    async fn get_authorization(
-        &self,
-        _id: &str,
-    ) -> BearDogResult<Option<beardog::cross_node_auth::CrossNodeAuthorization>> {
-        Ok(None)
-    }
-    async fn get_authorization_for_node(
-        &self,
-        _node_id: &str,
-    ) -> BearDogResult<Option<beardog::cross_node_auth::CrossNodeAuthorization>> {
-        Ok(None)
-    }
-    async fn list_active_authorizations(
-        &self,
-    ) -> BearDogResult<Vec<beardog::cross_node_auth::CrossNodeAuthorization>> {
+// 
+// #[async_trait::async_trait]
+// impl beardog::auth::CrossNodeAuthStore for TestAuthStore {
+//     async fn store_authorization(
+//         &self,
+//         _auth: &beardog::auth::CrossNodeAuthorization,
+//     ) -> BearDogResult<()> {
+//         Ok(())
+//     }
+//     async fn get_authorization(
+//         &self,
+//         _id: &str,
+//     ) -> BearDogResult<Option<beardog::auth::CrossNodeAuthorization>> {
+//         Ok(None)
+//     }
+//     async fn get_authorization_for_node(
+//         &self,
+//         _node_id: &str,
+//     ) -> BearDogResult<Option<beardog::auth::CrossNodeAuthorization>> {
+//         Ok(None)
+//     }
+//     async fn list_active_authorizations(
+//         &self,
+//     ) -> BearDogResult<Vec<beardog::auth::CrossNodeAuthorization>> {
         Ok(vec![])
     }
     async fn revoke_authorization(&self, _id: &str) -> BearDogResult<()> {

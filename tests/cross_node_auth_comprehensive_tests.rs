@@ -3,15 +3,24 @@
 //! This test suite ensures 100% coverage of critical cross-node authentication paths
 //! covering spawning, genetic inheritance, workflow authorization, and resource management.
 
-use beardog::cross_node_auth::*;
-use beardog::genetics_engine::*;
+use beardog::*;
+use beardog::auth::*;
+use beardog::genetics::*;
+use beardog::node_registry::*;
+use beardog::verification::*;
 use beardog::workflows::*;
 use beardog::core::*;
 use beardog::error::*;
+use beardog::auth::types::{
+    BearDogGenetics, CryptoChromosome, SecurityTraits, AlgorithmFamily, 
+    EncryptionFamily, NodeCapability, TaskType, SpawnPurpose, ResourceLimits
+};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::time::sleep;
+use tunnel::performance::GamingSecurityProfile;
+use chrono::{DateTime, Utc};
 
 /// Comprehensive cross-node authentication testing
 /// Tests all critical authentication and spawning scenarios
@@ -443,13 +452,6 @@ pub enum OptimizationTarget {
 }
 
 #[derive(Debug, Clone)]
-pub enum TaskType {
-    SecurityAudit,
-    HybridOptimization,
-    CryptographicAnalysis,
-}
-
-#[derive(Debug, Clone)]
 pub enum IncidentType {
     SecurityBreach,
     SystemFailure,
@@ -462,32 +464,4 @@ pub enum IncidentPriority {
     Medium,
     High,
     Critical,
-}
-
-#[derive(Debug, Clone)]
-pub enum SpawnPurpose {
-    TaskSpecific {
-        task_type: TaskType,
-        max_duration: chrono::Duration,
-        resource_limits: ResourceLimits,
-    },
-    EmergencyResponse {
-        incident_type: IncidentType,
-        priority: IncidentPriority,
-        estimated_duration: chrono::Duration,
-    },
-    ResourceConstrained {
-        available_resources: ResourceLimits,
-        optimization_target: OptimizationTarget,
-        efficiency_threshold: f64,
-    },
-}
-
-#[derive(Debug, Clone)]
-pub struct ResourceLimits {
-    pub max_cpu_cores: u32,
-    pub max_memory_gb: u32,
-    pub max_storage_gb: u32,
-    pub max_network_mbps: u32,
-    pub max_crypto_operations_per_second: u32,
 } 

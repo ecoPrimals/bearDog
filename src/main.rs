@@ -10,10 +10,12 @@ use tracing_subscriber::{fmt, EnvFilter};
 
 use beardog::{
     adapters::nestgate::{FileOperation, FileOperationRequest, NestGateAdapter},
-    api::BearDogApiServer,
+    api::server::BearDogApiServer,
     compliance::{ComplianceEngine, ComplianceEvent},
-    threat_detection::{EventType, SecurityEvent, ThreatDetectionEngine},
-    BearDogConfig, BearDogCore, BearDogResult,
+    threat::{ThreatDetectionEngine, types::SecurityEvent},
+    tunnel::events::types::ThreatLevel,
+    config::core::BearDogConfig,
+    BearDogCore, BearDogResult,
 };
 
 #[tokio::main]
@@ -167,21 +169,39 @@ async fn run_demo_mode(beardog_core: Arc<BearDogCore>) -> BearDogResult<()> {
     // Demo 1: Threat Detection
     info!("📊 Demo 1: Threat Detection Engine");
     let demo_event = SecurityEvent {
-        id: "demo-event-001".to_string(),
-        event_type: EventType::FileAccess,
+        event_id: "demo-event-001".to_string(),
+        event_type: "FileAccess".to_string(),
         timestamp: chrono::Utc::now(),
-        source_ip: Some("192.168.1.100".to_string()),
-        user_id: Some("demo-user".to_string()),
-        resource: Some("/etc/passwd".to_string()),
-        metadata: std::collections::HashMap::new(),
+        source_ip: "192.168.1.100".to_string(),
+        destination_ip: "10.0.0.1".to_string(),
+        user_id: "demo-user".to_string(),
+        user_agent: Some("Demo Agent".to_string()),
+        data_size: 1024.0,
+        location: Some("US".to_string()),
+        file_hash: Some("demo123".to_string()),
+        additional_data: std::collections::HashMap::from([
+            ("resource".to_string(), "/etc/passwd".to_string()),
+        ]),
     };
 
-    match threat_detection.analyze_event(demo_event).await {
-        Ok(result) => {
+    // Convert SecurityEvent to HashMap for analyze_event
+    let mut event_data = std::collections::HashMap::new();
+    event_data.insert("event_id".to_string(), demo_event.event_id.clone());
+    event_data.insert("event_type".to_string(), demo_event.event_type.clone());
+    event_data.insert("source_ip".to_string(), demo_event.source_ip.clone());
+    event_data.insert("destination_ip".to_string(), demo_event.destination_ip.clone());
+    event_data.insert("user_id".to_string(), demo_event.user_id.clone());
+    for (key, value) in &demo_event.additional_data {
+        event_data.insert(key.clone(), value.clone());
+    }
+
+    match threat_detection.analyze_event(&event_data).await {
+        Ok(results) => {
             info!("✅ Threat analysis completed:");
-            info!("   Threat Level: {:?}", result.threat_level);
-            info!("   Risk Score: {:.2}", result.risk_score);
-            info!("   Indicators: {}", result.threat_indicators.len());
+            info!("   Detected {} potential threats", results.len());
+            for result in results.iter().take(3) {
+                info!("   Threat: {} (Score: {})", result.threat_type, result.score);
+            }
         }
         Err(e) => warn!("⚠️  Threat analysis failed: {}", e),
     }

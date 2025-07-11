@@ -28,7 +28,7 @@
 //! - **Crossover**: Combining successful configurations
 //! - **Selection**: Choosing optimal configurations for propagation
 
-use crate::genetics_engine::DefaultBearDogGeneticsEngine;
+use crate::genetics::DefaultBearDogGeneticsEngine;
 use crate::BearDogResult;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

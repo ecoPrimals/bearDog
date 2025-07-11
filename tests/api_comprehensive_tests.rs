@@ -9,6 +9,7 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::time::Duration;
 use tokio::time::sleep;
+use tower_http::ServiceBuilderExt;
 use tower::ServiceExt;
 
 /// Comprehensive API security testing
@@ -27,13 +28,15 @@ async fn test_api_comprehensive_security() {
 
 async fn create_test_app() -> axum::Router {
     let config = BearDogConfig::default();
-    let core = BearDogCore::new(config)
+    let core = std::sync::Arc::new(BearDogCore::new(config)
         .await
-        .expect("Core creation failed");
+        .expect("Core creation failed"));
 
-    create_api_router(core)
+    let api_server = beardog::api::BearDogApiServer::new(core)
         .await
-        .expect("API router creation failed")
+        .expect("API server creation failed");
+    
+    api_server.create_router()
 }
 
 async fn test_health_endpoints_security(app: &axum::Router) {

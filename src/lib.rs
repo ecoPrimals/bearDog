@@ -58,18 +58,22 @@ pub mod config;
 pub mod core;
 pub mod error;
 
+// Production and monitoring modules
+pub mod production;
+pub mod monitoring;
+
 // Security modules
 pub mod audit;
 pub mod compliance;
 pub mod encryption;
-pub mod security_provider;
-pub mod threat_detection;
+pub mod security;
+pub mod threat;
 
 // Cross-node authorization modules (NEW - Phase 1 implementation)
-pub mod cross_node_auth;
-pub mod genetics_engine;
+pub mod auth;
+pub mod genetics;
 pub mod node_registry;
-pub mod proof_verifier;
+pub mod verification;
 
 // Integration modules
 pub mod adapters;
@@ -81,6 +85,9 @@ pub mod api;
 // Utilities
 pub mod crypto_utils;
 pub mod utils;
+
+// Business modules
+pub mod licensing;
 
 // BSTP (BearDog Secure Tunnel Protocol) Security Layer
 pub mod tunnel;

@@ -239,7 +239,7 @@ async fn test_performance_monitoring(prod_manager: &mut ProductionManager) {
 }
 
 async fn test_security_hardening_validation(prod_manager: &mut ProductionManager) {
-    println!("�� Testing security hardening validation...");
+    println!(" Testing security hardening validation...");
     
     // Test security configuration validation
     let security_validation = prod_manager.validate_security_hardening().await
@@ -815,33 +815,5 @@ pub struct RtoRpoValidation {
     pub data_loss_minimization_effective: bool,
 }
 
-#[derive(Debug, Clone)]
-pub struct StressTestConfiguration {
-    pub cpu_stress_percentage: u8,
-    pub memory_stress_percentage: u8,
-    pub network_stress_mbps: u32,
-    pub concurrent_operations: u32,
-    pub stress_duration_seconds: u64,
-}
-
-#[derive(Debug, Clone)]
-pub struct StressTestResults {
-    pub system_remained_stable: bool,
-    pub performance_degradation_acceptable: bool,
-    pub error_rate_within_limits: bool,
-    pub recovery_time_acceptable: bool,
-}
-
-#[derive(Debug, Clone)]
-pub struct ResourceExhaustionTest {
-    pub graceful_degradation_functional: bool,
-    pub critical_operations_preserved: bool,
-    pub recovery_procedures_effective: bool,
-}
-
-#[derive(Debug, Clone)]
-pub struct CascadePreventionTest {
-    pub circuit_breakers_functional: bool,
-    pub isolation_mechanisms_effective: bool,
-    pub system_resilience_maintained: bool,
-}
+// Types StressTestConfiguration, StressTestResults, ResourceExhaustionTest, 
+// and CascadePreventionTest are imported from beardog::production module

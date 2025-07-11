@@ -4,7 +4,7 @@
 //! to ensure we can run tests reliably.
 
 use beardog::config::EncryptionConfig;
-use beardog::cross_node_auth::SpawnStatus;
+use beardog::auth::types::SpawnStatus;
 use beardog::node_registry::TrustLevel; // The TrustLevel with Basic, Unknown, etc.
 use beardog::tunnel::events::*;
 use beardog::{BearDogError, BearDogResult};
@@ -59,18 +59,17 @@ fn test_event_types() {
 #[test]
 fn test_spawn_status() {
     // Test spawn status variants - just test the ones that don't need complex types
-    let status = SpawnStatus::Pending;
-    assert!(matches!(status, SpawnStatus::Pending));
+    let status = SpawnStatus::Initializing;
+    assert!(matches!(status, SpawnStatus::Initializing));
 
-    let rejected = SpawnStatus::Rejected {
-        reason: "Test rejection".to_string(),
-    };
-
+    let rejected = SpawnStatus::Failed("Access denied".to_string());
+    
+    // Test pattern matching
     match rejected {
-        SpawnStatus::Rejected { reason } => {
-            assert_eq!(reason, "Test rejection");
+        SpawnStatus::Failed(reason) => {
+            assert_eq!(reason, "Access denied");
         }
-        _ => panic!("Spawn status mismatch"),
+        _ => panic!("Expected Failed variant"),
     }
 }
 

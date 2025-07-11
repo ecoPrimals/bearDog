@@ -2,9 +2,13 @@
 //!
 //! Basic tests for the tunnel layer components
 
-use beardog::tunnel::config::BStpConfig;
+use beardog::tunnel::{
+    config::BStpConfig,
+    events::types::SecurityLevel,
+    session::{SecureSession, SessionManager, CryptoChromosome},
+    genetic_healing::{SecurityIssue, SecurityIssueType, Severity},
+};
 use beardog::tunnel::key_manager::{BStpKeyManager, CryptoAlgorithm};
-use beardog::tunnel::session::SessionManager;
 use beardog::BearDogResult;
 use std::sync::Arc;
 use std::time::Duration;
@@ -21,7 +25,7 @@ async fn test_configuration_profiles() -> BearDogResult<()> {
     let max_security = BStpConfig::maximum_security();
     assert!(max_security.key_management.use_hardware_keys);
     assert!(max_security.key_management.key_derivation_rounds >= 10000);
-    assert!(max_security.genetic_healing.enabled);
+    assert!(max_security.genetic_healing.enable_healing);
 
     // Test default configuration
     let default = BStpConfig::from_env();
@@ -52,7 +56,7 @@ async fn test_key_management_basic() -> BearDogResult<()> {
 
     // Test key retrieval
     let retrieved = key_manager.get_session_key(session_id).await;
-    assert!(retrieved.is_ok());
+    assert!(retrieved.is_some());
 
     Ok(())
 }

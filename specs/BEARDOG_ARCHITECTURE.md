@@ -80,6 +80,17 @@ pub struct BearDogCore {
     pub audit_logger: Arc<AuditLogger>,
     pub threat_detector: Arc<ThreatDetector>,
     
+    // Enhanced genetic spawning with entropy hierarchy
+    pub genetic_spawner: Arc<EntropyAwareGeneticSpawner>,
+    pub entropy_collector: Arc<MultiModalEntropyCollector>,
+    pub entropy_hierarchy: Arc<EntropyHierarchyManager>,
+    
+    // HSM integration for all tiers
+    pub hsm_manager: Arc<HsmManager>,
+    pub smartphone_hsm: Option<Arc<dyn SmartphoneHsm>>,
+    pub software_hsm: Arc<RustSoftwareHsm>,
+    pub hardware_hsm: Option<Arc<dyn HardwareHsm>>,
+    
     // Cross-node authorization
     pub workflow_engine: Arc<MultiPartyWorkflowEngine>,
     pub authorization_store: Arc<CrossNodeAuthStore>,
@@ -95,7 +106,7 @@ pub struct BearDogCore {
 }
 
 impl BearDogCore {
-    /// Initialize BearDog as a security provider (not a server)
+    /// Initialize BearDog with entropy hierarchy and HSM support
     pub async fn new_security_provider(config: BearDogConfig) -> BearDogResult<Self> {
         let encryption_engine = Arc::new(
             EncryptionEngine::new(&config.encryption).await?
@@ -109,11 +120,60 @@ impl BearDogCore {
             MultiPartyWorkflowEngine::new(&config.workflows).await?
         );
         
-        // Initialize as security provider, not server
+        // Initialize HSM management
+        let hsm_manager = Arc::new(
+            HsmManager::new(config.hsm_config).await?
+        );
+        
+        // Initialize smartphone HSM if available
+        let smartphone_hsm = if config.hsm_config.smartphone_enabled {
+            Some(hsm_manager.get_smartphone_hsm().await?)
+        } else {
+            None
+        };
+        
+        // Initialize software HSM (always available)
+        let software_hsm = Arc::new(
+            RustSoftwareHsm::new(config.hsm_config.software_config).await?
+        );
+        
+        // Initialize hardware HSM if configured
+        let hardware_hsm = if config.hsm_config.hardware_enabled {
+            Some(hsm_manager.get_hardware_hsm().await?)
+        } else {
+            None
+        };
+        
+        // Initialize entropy collection system
+        let entropy_collector = Arc::new(
+            MultiModalEntropyCollector::new(config.entropy_config).await?
+        );
+        
+        let entropy_hierarchy = Arc::new(
+            EntropyHierarchyManager::new(config.entropy_hierarchy_config).await?
+        );
+        
+        // Initialize entropy-aware genetic spawning
+        let genetic_spawner = Arc::new(
+            EntropyAwareGeneticSpawner::new(
+                entropy_hierarchy.clone(),
+                hsm_manager.clone(),
+                config.genetic_spawning_config,
+            ).await?
+        );
+        
+        // Initialize as security provider with enhanced capabilities
         Ok(Self {
             encryption_engine,
             key_manager,
             workflow_engine,
+            hsm_manager,
+            smartphone_hsm,
+            software_hsm,
+            hardware_hsm,
+            genetic_spawner,
+            entropy_collector,
+            entropy_hierarchy,
             security_provider: Arc::new(BearDogSecurityProvider::new()),
             // ... other components
         })
@@ -122,6 +182,55 @@ impl BearDogCore {
     /// Provide security services to external systems (like SongBird)
     pub fn as_security_provider(&self) -> Arc<dyn SecurityProvider> {
         self.security_provider.clone()
+    }
+    
+    /// Generate ephemeral seed from human entropy for high-security operations
+    pub async fn generate_human_entropy_seed(
+        &self,
+        requirements: EntropyRequirements,
+    ) -> BearDogResult<EphemeralSeed> {
+        // Collect multi-modal human entropy
+        let human_entropy = self.entropy_collector.collect_human_entropy(
+            requirements.collection_duration,
+            requirements.modalities,
+        ).await?;
+        
+        // Generate ephemeral seed with human-lived experience entropy
+        let seed = EphemeralSeed::generate_from_human_entropy(
+            &*self.entropy_collector,
+            SeedGenerationPolicy {
+                min_quality_score: requirements.min_quality_score,
+                lifetime: requirements.seed_lifetime,
+                usage_policy: requirements.usage_policy,
+                kdf_config: requirements.kdf_config,
+                ownership_config: requirements.ownership_config,
+            },
+        ).await?;
+        
+        Ok(seed)
+    }
+    
+    /// Spawn child node with entropy hierarchy and HSM integration
+    pub async fn spawn_child_with_entropy_hierarchy(
+        &self,
+        parent_nodes: Vec<BearDogNode>,
+        spawn_request: SpawnRequest,
+    ) -> BearDogResult<SpawnedChild> {
+        // Determine entropy requirements for spawning
+        let entropy_requirements = self.determine_entropy_requirements(&spawn_request).await?;
+        
+        // Determine HSM requirements for spawning
+        let hsm_requirements = self.determine_hsm_requirements(&spawn_request).await?;
+        
+        // Perform entropy-aware genetic spawning with HSM integration
+        let child = self.genetic_spawner.spawn_with_entropy_hierarchy(
+            parent_nodes,
+            spawn_request,
+            entropy_requirements,
+            hsm_requirements,
+        ).await?;
+        
+        Ok(child)
     }
 }
 ```
@@ -439,6 +548,148 @@ beardog --mode security_provider --enable-enterprise-integrations
 [User Data] → [BearDog Encryption] → [SongBird Network] → [Friend's BearDog Verification] → [Remote Storage]
                      ↓
 [Authorization Proof] → [Cryptographic Verification] → [Cross-Node Audit]
+```
+
+### **Enhanced Cross-Node Authorization with Entropy Hierarchy**
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Your BearDog  │    │ Friend's BearDog│    │    SongBird     │
+│  (Security +    │    │   (Security +   │    │  (Network)      │
+│   Entropy)      │    │    Entropy)     │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │ 1. Request Permission │                       │
+         │    (with entropy req) │                       │
+         ├──────────────────────►│                       │
+         │                       │ 2. Human Entropy      │
+         │                       │    Collection         │
+         │                       ├─────────────────────► │
+         │                       │ 3. HSM-signed Auth    │
+         │ 4. Entropy-enhanced   │    (human-hierarchy)  │
+         │    Authorization      │                       │
+         │◄──────────────────────┤                       │
+         │                       │                       │
+         │ 5. Store Data Request │                       │
+         │    (with entropy      │                       │
+         │     proof)            │                       │
+         ├───────────────────────┼──────────────────────►│
+         │                       │                       │ 6. Network Routing
+         │ 7. Present Entropy    │                       │    & Storage
+         │    Hierarchy Proof    │                       │
+         ├──────────────────────►│                       │
+         │                       │ 8. Verify Hierarchy  │
+         │                       │    & Allow            │
+         │                       ├──────────────────────►│
+```
+
+## 🧬 **Genetic Spawning with Entropy Hierarchy**
+
+### **Human-Lived Experience Entropy**
+BearDog's genetic spawning system recognizes that **human entropy is fundamentally different**:
+
+- **Irreproducible**: Human-lived experience cannot be replicated by machines
+- **Hierarchical**: Human entropy takes precedence over machine entropy
+- **Uniquely Owned**: Each human's entropy is cryptographically tied to their identity
+- **Ephemeral**: Exists only in the moment of collection
+
+### **Entropy Mixing Rules**
+```rust
+// Entropy hierarchy enforcement
+pub enum EntropyClassification {
+    HumanLivedExperience,    // Highest precedence
+    HumanSupervisedMachine,  // Mixed human/machine
+    StoreBoughtMachine,      // Lowest precedence
+}
+
+// When human and machine entropy mix, result is always human-classified
+impl EntropyMixingEngine {
+    async fn mix_entropy_sources(
+        &self,
+        sources: Vec<EntropySource>,
+    ) -> BearDogResult<MixedEntropy> {
+        let classification = sources.iter()
+            .map(|s| s.classification)
+            .max() // Human always wins
+            .unwrap_or(EntropyClassification::StoreBoughtMachine);
+        
+        let mixed_entropy = self.perform_hierarchy_preserving_mix(sources).await?;
+        
+        Ok(MixedEntropy {
+            bytes: mixed_entropy,
+            classification,
+            irreproducibility_score: self.calculate_irreproducibility(&classification),
+        })
+    }
+}
+```
+
+## 📱 **Multi-Tier HSM Integration**
+
+### **HSM Tier Selection**
+```rust
+// Automatic HSM tier selection based on requirements
+impl HsmManager {
+    pub async fn select_optimal_hsm(
+        &self,
+        requirements: &SecurityRequirements,
+        context: &OperationContext,
+    ) -> BearDogResult<Arc<dyn HsmProvider>> {
+        // High-security operations require hardware HSM
+        if requirements.security_level >= SecurityLevel::High {
+            return self.get_hardware_hsm().await;
+        }
+        
+        // User-interactive operations prefer smartphone HSM
+        if context.user_interaction_required {
+            return self.get_smartphone_hsm().await;
+        }
+        
+        // Default to software HSM for automated operations
+        self.get_software_hsm().await
+    }
+}
+```
+
+### **HSM Capability Matrix**
+| HSM Type | Security Level | Availability | User Interaction | Cost |
+|----------|----------------|--------------|------------------|------|
+| Smartphone | High | Always | Excellent | Low |
+| Software | Medium | Always | None | Minimal |
+| Hardware | Maximum | Limited | None | High |
+| Hybrid | Optimal | High | Flexible | Medium |
+
+## 🔗 **Integration with New Specifications**
+
+This architecture integrates with the following new specifications:
+
+- **[GENETIC_SPAWNING_ENTROPY_HIERARCHY.md](./GENETIC_SPAWNING_ENTROPY_HIERARCHY.md)**: Entropy hierarchy and ephemeral seeds
+- **[HSM_INTEGRATION_SPECIFICATION.md](./HSM_INTEGRATION_SPECIFICATION.md)**: Multi-tier HSM support
+- **[HUMAN_ENTROPY_COLLECTION.md](./HUMAN_ENTROPY_COLLECTION.md)**: Multi-modal human entropy collection
+- **[ENCRYPTION_KEY_MANAGEMENT.md](./ENCRYPTION_KEY_MANAGEMENT.md)**: Enhanced with HSM integration
+
+### **Configuration Updates**
+```toml
+[beardog]
+# Enhanced configuration for entropy hierarchy and HSM
+entropy_hierarchy = true
+hsm_integration = true
+human_entropy_collection = true
+
+[entropy_hierarchy]
+human_entropy_weight = 0.8
+machine_entropy_weight = 0.2
+hierarchy_enforcement = "strict"
+
+[hsm]
+smartphone_enabled = true
+software_enabled = true
+hardware_enabled = false
+auto_tier_selection = true
+
+[human_entropy]
+collection_duration = "30s"
+require_multimodal = true
+min_quality_score = 0.7
 ```
 
 ---

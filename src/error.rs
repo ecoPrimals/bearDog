@@ -384,6 +384,39 @@ pub enum BearDogError {
         /// The node ID that was not found
         node_id: String,
     },
+
+    /// Invalid state errors
+    #[error("Invalid state: {message}")]
+    InvalidState {
+        /// Error message describing the invalid state
+        message: String,
+    },
+
+    /// Unauthorized access errors
+    #[error("Unauthorized: {message}")]
+    Unauthorized {
+        /// Error message describing the unauthorized access
+        message: String,
+    },
+
+    /// Security violation errors
+    #[error("Security violation: {0}")]
+    SecurityViolation(String),
+
+    /// Resource exhaustion errors
+    #[error("Resource exhaustion: {0}")]
+    ResourceExhaustion(String),
+
+    /// Validation errors
+    #[error("Validation error: {0}")]
+    ValidationError(String),
+
+    /// Not implemented errors
+    #[error("Not implemented: {message}")]
+    NotImplemented {
+        /// Error message describing what's not implemented
+        message: String,
+    },
 }
 
 // Manual From implementations for types that don't have std::error::Error

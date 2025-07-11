@@ -8,7 +8,17 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::error::{BearDogResult, BearDogError};
 use crate::utils::env_utils::{EnvUtils, ObservabilityConfig};
-use crate::licensing::{LicenseManager, IntegrationType};
+use crate::licensing::LicenseManager;
+
+/// Metric value types that can be recorded
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum MetricValue {
+    Counter(u64),
+    Gauge(f64),
+    Histogram(Vec<f64>),
+    Timer(Duration),
+    String(String),
+}
 
 /// System health status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -174,7 +184,7 @@ impl MonitoringService {
     /// Update system metrics
     pub async fn update_metrics(&self, metrics: SystemMetrics) {
         let mut current_metrics = self.metrics.write().await;
-        *current_metrics = metrics;
+        *current_metrics = metrics.clone();
         
         // Check for alerts
         self.check_alerts(&metrics).await;
@@ -588,21 +598,21 @@ impl MetricsService {
     }
 
     /// Record metric (always free - native Rust)
-    pub fn record_metric(&self, name: &str, value: MetricValue) {
-        let mut metrics = self.native_metrics.write().unwrap();
+    pub async fn record_metric(&self, name: &str, value: MetricValue) {
+        let mut metrics = self.native_metrics.write().await;
         metrics.insert(name.to_string(), value);
         
         // Update internal collector timestamp
-        *self.internal_collector.last_updated.write().unwrap() = Utc::now();
+        *self.internal_collector.last_updated.write().await = Utc::now();
     }
 
     /// Get native metrics (always free)
-    pub fn get_native_metrics(&self) -> HashMap<String, MetricValue> {
-        self.native_metrics.read().unwrap().clone()
+    pub async fn get_native_metrics(&self) -> HashMap<String, MetricValue> {
+        self.native_metrics.read().await.clone()
     }
 
     /// Get internal metrics summary (always free)
-    pub fn get_internal_summary(&self) -> InternalMetricsSummary {
+    pub async fn get_internal_summary(&self) -> InternalMetricsSummary {
         InternalMetricsSummary {
             security_events: self.internal_collector.security_events.load(Ordering::Relaxed),
             encryption_operations: self.internal_collector.encryption_operations.load(Ordering::Relaxed),
@@ -611,14 +621,14 @@ impl MetricsService {
             api_requests: self.internal_collector.api_requests.load(Ordering::Relaxed),
             error_count: self.internal_collector.error_count.load(Ordering::Relaxed),
             active_sessions: self.internal_collector.active_sessions.load(Ordering::Relaxed),
-            last_updated: *self.internal_collector.last_updated.read().unwrap(),
+            last_updated: *self.internal_collector.last_updated.read().await,
         }
     }
 
     /// Enable Prometheus export (requires license)
     pub async fn enable_prometheus_export(&mut self, config: PrometheusConfig) -> BearDogResult<()> {
         // Check license for Prometheus (external system)
-        if !self.license_manager.verify_adapter_access("prometheus")? {
+        if !self.license_manager.verify_external_function_access("prometheus")? {
             return Err(BearDogError::Configuration {
                 message: "Prometheus export requires a BearDog license. Native Rust metrics are always free. Contact sales for enterprise Prometheus integration.".to_string()
             });
@@ -644,7 +654,7 @@ impl MetricsService {
             }
 
             // Generate Prometheus format
-            let summary = self.get_internal_summary();
+            let summary = self.get_internal_summary().await;
             let prometheus_output = format!(
                 "# HELP beardog_security_events_total Total security events processed\n\
                  # TYPE beardog_security_events_total counter\n\

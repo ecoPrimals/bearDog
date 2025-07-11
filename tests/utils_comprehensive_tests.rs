@@ -3,9 +3,6 @@
 //! This test suite ensures 100% coverage of BearDog's utility functions
 //! including configuration, validation, formatting, and helper functions.
 
-use beardog::utils::*;
-use beardog::core::*;
-use beardog::error::*;
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
@@ -66,7 +63,7 @@ fn test_validation_utilities() {
     
     assert!(is_valid_port(8080));
     assert!(!is_valid_port(0));
-    assert!(!is_valid_port(65536));
+    assert!(!is_valid_port(65535u32));
     
     // Crypto validation
     assert!(is_valid_hex_string("deadbeef"));
@@ -178,8 +175,8 @@ fn is_valid_ip_address(ip: &str) -> bool {
     ip.parse::<std::net::IpAddr>().is_ok()
 }
 
-fn is_valid_port(port: u16) -> bool {
-    port > 0
+fn is_valid_port(port: u32) -> bool {
+    port > 0 && port <= 65535
 }
 
 fn is_valid_hex_string(s: &str) -> bool {

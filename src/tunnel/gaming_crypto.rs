@@ -1,7 +1,7 @@
 // 🛡️ BSTP Gaming Crypto Engine
 
 use crate::encryption::EncryptionEngine;
-use crate::genetics_engine::DefaultBearDogGeneticsEngine;
+use crate::genetics::DefaultBearDogGeneticsEngine;
 use crate::tunnel::config::BStpConfig;
 use crate::tunnel::key_manager::{BStpKeyManager, CryptoKey};
 use crate::tunnel::SecurityGenetics;

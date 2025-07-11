@@ -2,7 +2,7 @@
 
 use beardog::config::EncryptionConfig;
 use beardog::encryption::EncryptionEngine;
-use beardog::genetics_engine::{
+use beardog::genetics::{
     DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore,
 };
 use beardog::tunnel::{
@@ -54,8 +54,8 @@ async fn test_key_isolation_security() -> BearDogResult<()> {
     // Test that wrong session ID returns error
     let wrong_key_result = key_manager.get_session_key("non_existent_session").await;
     assert!(
-        wrong_key_result.is_err(),
-        "Should return error for non-existent session"
+        wrong_key_result.is_none(),
+        "Should return None for non-existent session"
     );
 
     println!("✅ Key isolation security test passed - sessions properly isolated!");
@@ -428,7 +428,8 @@ async fn test_key_rotation_security() -> BearDogResult<()> {
     assert_eq!(key4.algorithm, CryptoAlgorithm::GeneticHybrid);
 
     // Current key should be the latest one
-    let current_key = key_manager.get_session_key(session_id).await?;
+    let current_key = key_manager.get_session_key(session_id).await
+        .expect("Session key should exist after rotation");
     assert_eq!(current_key.key, key4.key);
     assert_eq!(current_key.key_id, key4.key_id);
 

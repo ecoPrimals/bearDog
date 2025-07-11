@@ -1,8 +1,16 @@
-use beardog::tunnel::crypto::*;
+use beardog::tunnel::gaming_crypto::*;
 use beardog::tunnel::events::*;
 use beardog::*;
 use std::sync::Arc;
 use tokio::time::{timeout, Duration};
+use std::collections::HashMap;
+use chrono;
+use std::mem::size_of;
+use beardog::compliance::types::ComplianceEvent;
+use beardog::security::types::{Subject, Resource};
+use beardog::config::EncryptionConfig;
+use beardog::node_registry::TrustLevel;
+use beardog::config::security::AuditConfig;
 
 /// Core BearDog functionality tests - Foundation for robust validation
 ///
@@ -17,7 +25,7 @@ async fn test_beardog_core_initialization() {
     let result = timeout(Duration::from_secs(5), async {
         // Basic crypto engine setup
         let config = EncryptionConfig::default();
-        let crypto_engine = GamingCryptoEngine::new(&config);
+        let crypto_engine = GamingCryptoEngine::new(&config).await;
 
         assert!(crypto_engine.is_ok(), "Crypto engine should initialize");
         Ok::<(), BearDogError>(())
@@ -76,7 +84,7 @@ async fn test_crypto_operations_reliability() {
 
     let result = timeout(Duration::from_secs(10), async {
         let config = EncryptionConfig::default();
-        let mut crypto_engine = GamingCryptoEngine::new(&config)?;
+        let mut crypto_engine = GamingCryptoEngine::new(&config).await?;
 
         // Test basic encryption/decryption cycle
         let test_data = b"Protecting our digital forest for science";
@@ -207,7 +215,7 @@ async fn test_memory_safety_under_load() {
 
         // Perform many operations to test memory safety
         for batch in 0..10 {
-            let mut crypto_engine = GamingCryptoEngine::new(&config)?;
+            let mut crypto_engine = GamingCryptoEngine::new(&config).await?;
 
             for i in 0..20 {
                 let test_data = format!("Load test batch {} iteration {}", batch, i);
@@ -257,7 +265,7 @@ async fn test_graceful_degradation() {
         let config = EncryptionConfig::default();
 
         // Test with increasingly large data
-        let mut crypto_engine = GamingCryptoEngine::new(&config)?;
+        let mut crypto_engine = GamingCryptoEngine::new(&config).await?;
 
         for size_kb in [1, 4, 16, 64] {
             let large_data = vec![0u8; size_kb * 1024];
@@ -293,7 +301,7 @@ async fn test_forest_protection_integrity() {
 
         // Simulate protecting scientific data
         let config = EncryptionConfig::default();
-        let mut crypto_engine = GamingCryptoEngine::new(&config)?;
+        let mut crypto_engine = GamingCryptoEngine::new(&config).await?;
 
         // Test data representing different types of scientific information
         let research_data = b"Quantum cryptography research findings - CONFIDENTIAL";
@@ -338,25 +346,33 @@ async fn test_forest_protection_integrity() {
         println!("   🌍 Testing international compliance simulation...");
 
         // Test compliance event handling
-        let compliance_event = ComplianceEvent {
-            event_id: "GDPR-TEST-001".to_string(),
-            timestamp: std::time::SystemTime::now(),
-            event_type: EventType::ComplianceValidation,
-            compliance_type: ComplianceType::GDPR,
-            region: GeographicRegion::Europe,
-            subject: SubjectInfo {
-                id: "test-subject-eu".to_string(),
-                subject_type: SubjectType::DataProcessor,
-            },
-            resource: Some(ResourceInfo {
-                id: "research-dataset-001".to_string(),
-                resource_type: ResourceType::Dataset,
-            }),
-            metadata: std::collections::HashMap::new(),
+        let event = ComplianceEvent {
+            event_id: "test-event".to_string(),
+            event_type: beardog::compliance::types::ComplianceEventType::DataProcessing,
+            timestamp: chrono::Utc::now(),
+            user_id: Some("test-user".to_string()),
+            data_categories: vec![],
+            processing_purpose: Some("test".to_string()),
+            legal_basis: None,
+            retention_period: None,
+            metadata: HashMap::new(),
         };
 
-        assert_eq!(compliance_event.compliance_type, ComplianceType::GDPR);
-        assert_eq!(compliance_event.region, GeographicRegion::Europe);
+        let subject = Subject {
+            id: "test-subject".to_string(),
+            subject_type: beardog::security::types::SubjectType::User,
+            attributes: HashMap::new(),
+            roles: vec![],
+            clearance_level: None,
+        };
+
+        let resource = Resource {
+            id: "test-resource".to_string(),
+            resource_type: "file".to_string(),
+            classification: beardog::security::types::ResourceClassification::Internal,
+            attributes: HashMap::new(),
+            owner: Some("test-owner".to_string()),
+        };
 
         Ok::<(), BearDogError>(())
     })

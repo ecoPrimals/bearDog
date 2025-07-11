@@ -1,509 +1,314 @@
-//! BearDog Genetic Spawning Demonstration
+//! # BearDog Genetic Spawning System Demo
 //!
-//! Shows how BearDog nodes can "reproduce" by combining their cryptographic genetics
-//! to spawn new task-specific or permanent instances.
-
-use std::sync::Arc;
-use tokio;
-use tracing::{info, Level};
-use tracing_subscriber::FmtSubscriber;
+//! This example demonstrates the genetic spawning capabilities of BearDog, showcasing:
+//! - Genesis node creation
+//! - Multi-party spawning workflows
+//! - Genetic recombination algorithms
+//! - Resource constraint enforcement
+//! - Cryptographic lineage verification
+//!
+//! Run with: `cargo run --example genetic_spawning_demo`
 
 use beardog::{
-    cross_node_auth::{
-        BearDogGeneticsEngine, BearDogWorkflowType, CrossNodeAuthConfig, CrossNodeAuthEngine,
-        ResourceLimits, SpawnPurpose, SpawnStatus, TaskType,
+    genetics::{
+        GeneticsAPI, InMemoryGeneticsStore, GeneticsConfig, SpawnRequest, ResourceLimits,
+        BearDogWorkflowType, quick_spawn_automated_consensus, quick_spawn_human_approval,
     },
-    genetics_engine::{DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore},
-    node_registry::{InMemoryNodeRegistry, RegistryConfig},
-    proof_verifier::DefaultProofVerifier,
-    workflows::{MultiPartyWorkflowEngine, WorkflowConfig},
-    BearDogError, BearDogResult,
+    auth::SpawnPurpose,
+    BearDogResult,
 };
+use std::sync::Arc;
+use tracing::{info, error};
+use uuid::Uuid;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
-    // Initialize tracing
-    let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::INFO)
-        .finish();
-    tracing::subscriber::set_global_default(subscriber).expect("Setting default subscriber failed");
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize logging
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
 
-    info!("🧬 Starting BearDog Genetic Spawning Demonstration");
+    info!("🧬 Starting BearDog Genetic Spawning System Demo");
 
-    // Create the genetic spawning ecosystem
-    let ecosystem = GeneticEcosystem::new().await?;
+    // Initialize the genetics system
+    let genetics_store = Arc::new(InMemoryGeneticsStore::new());
+    let genetics_config = GeneticsConfig {
+        base_mutation_rate: 0.05,
+        max_genetic_diversity: 0.8,
+        min_security_threshold: 0.7,
+        capability_inheritance_weight: 0.8,
+        trait_blending_factor: 0.6,
+        enable_directed_evolution: true,
+    };
+    let genetics_api = GeneticsAPI::new(genetics_store, genetics_config);
 
-    // Demonstrate various spawning scenarios
-    demonstrate_zero_touch_spawning(&ecosystem).await?;
-    demonstrate_human_approved_spawning(&ecosystem).await?;
-    demonstrate_emergency_spawning(&ecosystem).await?;
-    demonstrate_genetic_diversity(&ecosystem).await?;
+    // Demo 1: Create genesis nodes (founding parents)
+    info!("\n📚 Demo 1: Creating Genesis Nodes");
+    let genesis_nodes = create_genesis_nodes(&genetics_api).await?;
 
-    info!("✅ Genetic spawning demonstration complete!");
+    // Demo 2: Automated consensus spawning
+    info!("\n🤖 Demo 2: Automated Consensus Spawning");
+    let consensus_child = demonstrate_automated_consensus(&genetics_api, &genesis_nodes).await?;
+
+    // Demo 3: Human approval spawning
+    info!("\n👨‍💼 Demo 3: Human Approval Spawning");
+    let approval_child = demonstrate_human_approval(&genetics_api, &genesis_nodes).await?;
+
+    // Demo 4: Resource-constrained spawning
+    info!("\n⚡ Demo 4: Resource-Constrained Spawning");
+    demonstrate_resource_constraints(&genetics_api, &genesis_nodes).await?;
+
+    // Demo 5: Show genetic lineage
+    info!("\n🌳 Demo 5: Genetic Lineage Analysis");
+    analyze_genetic_lineage(&genetics_api, &[consensus_child, approval_child]).await?;
+
+    info!("\n✅ BearDog Genetic Spawning Demo completed successfully!");
+    info!("🎯 Key capabilities demonstrated:");
+    info!("   • Genesis node creation with secure genetics");
+    info!("   • Multi-party workflow processing");
+    info!("   • Genetic recombination algorithms");
+    info!("   • Resource constraint enforcement");
+    info!("   • Lineage tracking and verification");
+
     Ok(())
 }
 
-/// BearDog genetic ecosystem for demonstrations
-struct GeneticEcosystem {
-    parent_node_alpha: Arc<CrossNodeAuthEngine>,
-    parent_node_beta: Arc<CrossNodeAuthEngine>,
-    parent_node_gamma: Arc<CrossNodeAuthEngine>,
-    genetics_engine: Arc<DefaultBearDogGeneticsEngine>,
+/// Create several genesis nodes to serve as founding parents
+async fn create_genesis_nodes(genetics_api: &GeneticsAPI) -> BearDogResult<Vec<String>> {
+    let mut genesis_nodes = Vec::new();
+
+    for i in 1..=3 {
+        let node_id = format!("genesis-node-{}", i);
+        info!("Creating genesis node: {}", node_id);
+
+        let genetics = genetics_api.create_genesis_node(&node_id).await?;
+        
+        info!("✅ Created {}: generation {}, {} chromosomes, {} capabilities",
+              node_id, genetics.generation, genetics.crypto_chromosomes.len(), genetics.capability_genes.len());
+        
+        genesis_nodes.push(node_id);
+    }
+
+    Ok(genesis_nodes)
 }
 
-impl GeneticEcosystem {
-    async fn new() -> BearDogResult<Self> {
-        info!("🌱 Creating BearDog genetic ecosystem");
+/// Demonstrate automated consensus spawning workflow
+async fn demonstrate_automated_consensus(
+    genetics_api: &GeneticsAPI,
+    genesis_nodes: &[String],
+) -> BearDogResult<String> {
+    info!("Initiating automated consensus spawn...");
 
-        // Create shared components
-        let genetics_store = Arc::new(InMemoryGeneticsStore::new());
-        let genetics_config = GeneticsConfig {
-            base_mutation_rate: 0.1,
-            max_genetic_diversity: 0.9,
-            min_security_threshold: 0.8,
-            capability_inheritance_weight: 0.85,
-            trait_blending_factor: 0.7,
-            enable_directed_evolution: true,
-        };
-        let genetics_engine = Arc::new(DefaultBearDogGeneticsEngine::new(
-            genetics_store.clone(),
-            genetics_config,
-        ));
+    let participating_nodes = vec![
+        "consensus-node-1".to_string(),
+        "consensus-node-2".to_string(),
+        "consensus-node-3".to_string(),
+    ];
 
-        // Create parent nodes with different characteristics
-        let parent_alpha = Self::create_parent_node(
-            "beardog-alpha-security-focused",
-            genetics_engine.clone(),
-            ParentProfile::SecurityFocused,
-        )
-        .await?;
+    let result = quick_spawn_automated_consensus(
+        genetics_api,
+        &genesis_nodes[0], // First genesis node as parent
+        vec![genesis_nodes[1].clone()], // Second genesis node as co-parent
+        SpawnPurpose::EmergencyResponse,
+        participating_nodes,
+    ).await?;
 
-        let parent_beta = Self::create_parent_node(
-            "beardog-beta-performance-focused",
-            genetics_engine.clone(),
-            ParentProfile::PerformanceFocused,
-        )
-        .await?;
-
-        let parent_gamma = Self::create_parent_node(
-            "beardog-gamma-collaboration-focused",
-            genetics_engine.clone(),
-            ParentProfile::CollaborationFocused,
-        )
-        .await?;
-
-        Ok(Self {
-            parent_node_alpha: parent_alpha,
-            parent_node_beta: parent_beta,
-            parent_node_gamma: parent_gamma,
-            genetics_engine,
+    if result.approved {
+        let child_id = result.child_node_id.as_ref().unwrap();
+        info!("✅ Automated consensus successful!");
+        info!("   Child node: {}", child_id);
+        info!("   Decision: {}", result.decision_reason);
+        info!("   Participants: {:?}", result.decision_participants);
+        Ok(child_id.clone())
+    } else {
+        error!("❌ Automated consensus failed: {}", result.decision_reason);
+        Err(beardog::BearDogError::InvalidInput { 
+            message: "Consensus spawn failed".to_string() 
         })
     }
+}
 
-    async fn create_parent_node(
-        node_id: &str,
-        genetics_engine: Arc<DefaultBearDogGeneticsEngine>,
-        profile: ParentProfile,
-    ) -> BearDogResult<Arc<CrossNodeAuthEngine>> {
-        info!(
-            "🧬 Creating parent node: {} with profile: {:?}",
-            node_id, profile
-        );
+/// Demonstrate human approval spawning workflow
+async fn demonstrate_human_approval(
+    genetics_api: &GeneticsAPI,
+    genesis_nodes: &[String],
+) -> BearDogResult<String> {
+    info!("Initiating human approval spawn...");
 
-        // Create node registry and other required components
-        let node_registry = Arc::new(InMemoryNodeRegistry::new(RegistryConfig::default()));
+    let approver_roles = vec![
+        "security_officer".to_string(),
+        "compliance_lead".to_string(),
+    ];
 
-        // Create auth config based on profile
-        let auth_config = CrossNodeAuthConfig {
-            node_id: node_id.to_string(),
-            signing_key: b"demo_signing_key_32_bytes_long!!".to_vec(),
-            max_authorization_ttl: chrono::Duration::days(30),
-            require_explicit_permissions: true,
-            allow_permission_delegation: true,
-            enable_proof_caching: true,
-        };
+    let result = quick_spawn_human_approval(
+        genetics_api,
+        &genesis_nodes[1], // Second genesis node as parent
+        vec![genesis_nodes[2].clone()], // Third genesis node as co-parent
+        SpawnPurpose::ComplianceAudit,
+        approver_roles,
+        1, // Minimum 1 approval
+    ).await?;
 
-        // Create cross-node auth engine (simplified for demo)
-        // In a real implementation, this would use proper proof generators/verifiers
-        let auth_engine = Arc::new(
-            CrossNodeAuthEngine::new(
-                auth_config,
-                node_registry.clone(),
-                Arc::new(DemoProofGenerator {}),
-                Arc::new(DemoProofVerifier {}),
-                Arc::new(DemoAuthStore {}),
-                genetics_engine.clone(),
-            )
-            .await?,
-        );
-
-        // Customize genetics based on profile
-        let genetics = genetics_engine.get_node_genetics(node_id).await?;
-        // In real implementation, we'd modify genetics based on profile
-
-        Ok(auth_engine)
+    if result.approved {
+        let child_id = result.child_node_id.as_ref().unwrap();
+        info!("✅ Human approval successful!");
+        info!("   Child node: {}", child_id);
+        info!("   Decision: {}", result.decision_reason);
+        Ok(child_id.clone())
+    } else {
+        error!("❌ Human approval failed: {}", result.decision_reason);
+        Err(beardog::BearDogError::InvalidInput { 
+            message: "Human approval spawn failed".to_string() 
+        })
     }
 }
 
-#[derive(Debug, Clone)]
-enum ParentProfile {
-    SecurityFocused,
-    PerformanceFocused,
-    CollaborationFocused,
-}
+/// Demonstrate resource-constrained spawning
+async fn demonstrate_resource_constraints(
+    genetics_api: &GeneticsAPI,
+    genesis_nodes: &[String],
+) -> BearDogResult<()> {
+    info!("Testing resource constraint enforcement...");
 
-/// Demonstrate zero-touch automated spawning
-async fn demonstrate_zero_touch_spawning(ecosystem: &GeneticEcosystem) -> BearDogResult<()> {
-    info!("🤖 === ZERO-TOUCH AUTOMATED SPAWNING ===");
-
-    // Alpha and Beta nodes detect they need a specialized compute node
-    let spawn_purpose = SpawnPurpose::TaskSpecific {
-        task_type: TaskType::ComputeOffload,
-        max_duration: chrono::Duration::hours(8),
-        resource_limits: ResourceLimits {
-            max_cpu_cores: 16,
-            max_memory_gb: 32,
-            max_storage_gb: 500,
-            max_network_mbps: 1000,
-            max_crypto_operations_per_second: 10000,
+    // Create a spawn request with high resource requirements
+    let high_resource_request = SpawnRequest {
+        request_id: Uuid::new_v4().to_string(),
+        requesting_parent: genesis_nodes[0].clone(),
+        co_parents: vec![],
+        purpose: SpawnPurpose::ComputeOffload,
+        resource_requirements: ResourceLimits {
+            max_cpu_percent: 95.0, // Very high CPU requirement
+            max_memory_mb: 16384,  // 16GB RAM
+            max_storage_gb: 1000,  // 1TB storage
+            max_network_mbps: 10000, // 10Gbps network
+            allowed_jurisdictions: vec!["US".to_string(), "EU".to_string(), "APAC".to_string()],
+            temporal_windows: vec![],
+        },
+        workflow_type: BearDogWorkflowType::AutomatedConsensus {
+            participating_nodes: vec!["resource-checker-1".to_string()],
+            consensus_threshold: 1.0,
+            max_decision_time: chrono::Duration::minutes(1),
+        },
+        created_at: chrono::Utc::now(),
+        expires_at: chrono::Utc::now() + chrono::Duration::hours(1),
+        metadata: {
+            let mut meta = std::collections::HashMap::new();
+            meta.insert("resource_intensive".to_string(), "true".to_string());
+            meta
         },
     };
 
-    let workflow_type = BearDogWorkflowType::AutomatedConsensus {
-        participating_nodes: vec![
-            "beardog-alpha-security-focused".to_string(),
-            "beardog-beta-performance-focused".to_string(),
-        ],
-        consensus_threshold: 0.8,
-        max_decision_time: chrono::Duration::minutes(5),
-    };
+    let result = genetics_api.spawn_node(high_resource_request).await?;
+    
+    info!("High-resource spawn result: approved={}", result.approved);
+    info!("Decision reason: {}", result.decision_reason);
 
-    info!("🤖 Alpha node requesting automated spawn for compute offload...");
-
-    // This would normally go through the full workflow
-    let child_genetics = ecosystem
-        .genetics_engine
-        .recombine_genetics(
-            "beardog-alpha-security-focused",
-            &["beardog-beta-performance-focused".to_string()],
-            &spawn_purpose,
-        )
-        .await?;
-
-    info!("🧬 Generated child genetics:");
-    info!("   - Genome ID: {}", child_genetics.genome_id);
-    info!("   - Generation: {}", child_genetics.generation);
-    info!("   - Parent nodes: {:?}", child_genetics.parent_nodes);
-    info!(
-        "   - Crypto chromosomes: {}",
-        child_genetics.crypto_chromosomes.len()
-    );
-    info!(
-        "   - Capability genes: {}",
-        child_genetics.capability_genes.len()
-    );
-    info!(
-        "   - Security traits: paranoia={:.2}, cooperation={:.2}",
-        child_genetics.security_traits.paranoia_level,
-        child_genetics.security_traits.cooperation_tendency
-    );
-    info!("   - Can spawn: {}", child_genetics.can_spawn);
-    info!("   - Max offspring: {}", child_genetics.max_offspring);
-
-    info!("✅ Zero-touch spawning demonstration complete\n");
-    Ok(())
-}
-
-/// Demonstrate human-approved spawning for sensitive operations
-async fn demonstrate_human_approved_spawning(ecosystem: &GeneticEcosystem) -> BearDogResult<()> {
-    info!("👤 === HUMAN-APPROVED SPAWNING ===");
-
-    // Request spawn for sensitive compliance audit
-    let spawn_purpose = SpawnPurpose::TaskSpecific {
-        task_type: TaskType::ComplianceAudit,
-        max_duration: chrono::Duration::days(7),
-        resource_limits: ResourceLimits {
-            max_cpu_cores: 8,
-            max_memory_gb: 16,
-            max_storage_gb: 200,
+    // Create a spawn request with reasonable resource requirements
+    let reasonable_request = SpawnRequest {
+        request_id: Uuid::new_v4().to_string(),
+        requesting_parent: genesis_nodes[0].clone(),
+        co_parents: vec![],
+        purpose: SpawnPurpose::DataMigration,
+        resource_requirements: ResourceLimits {
+            max_cpu_percent: 25.0,
+            max_memory_mb: 1024,
+            max_storage_gb: 50,
             max_network_mbps: 100,
-            max_crypto_operations_per_second: 5000,
+            allowed_jurisdictions: vec!["US".to_string()],
+            temporal_windows: vec![],
         },
+        workflow_type: BearDogWorkflowType::AutomatedConsensus {
+            participating_nodes: vec!["resource-checker-1".to_string()],
+            consensus_threshold: 1.0,
+            max_decision_time: chrono::Duration::minutes(1),
+        },
+        created_at: chrono::Utc::now(),
+        expires_at: chrono::Utc::now() + chrono::Duration::hours(1),
+        metadata: std::collections::HashMap::new(),
     };
 
-    let workflow_type = BearDogWorkflowType::HumanApprovalRequired {
-        approver_roles: vec![
-            "compliance_officer".to_string(),
-            "security_lead".to_string(),
-        ],
-        min_approvals: 2,
-        approval_timeout: chrono::Duration::hours(24),
-    };
+    let result = genetics_api.spawn_node(reasonable_request).await?;
+    
+    info!("Reasonable-resource spawn result: approved={}", result.approved);
+    info!("Decision reason: {}", result.decision_reason);
 
-    info!("👤 Requesting human approval for compliance audit spawn...");
-    info!("   - Required approvers: compliance_officer, security_lead");
-    info!("   - Minimum approvals: 2");
-    info!("   - Approval timeout: 24 hours");
-
-    // Simulate human approval process
-    let child_genetics = ecosystem
-        .genetics_engine
-        .recombine_genetics(
-            "beardog-alpha-security-focused",
-            &["beardog-gamma-collaboration-focused".to_string()],
-            &spawn_purpose,
-        )
-        .await?;
-
-    info!("🧬 Child genetics after human approval:");
-    info!(
-        "   - Enhanced compliance strictness: {:.2}",
-        child_genetics.security_traits.compliance_strictness
-    );
-    info!(
-        "   - Specialized compliance genes: {}",
-        child_genetics
-            .capability_genes
-            .iter()
-            .filter(|g| matches!(
-                g.capability,
-                beardog::cross_node_auth::NodeCapability::ComplianceMonitoring { .. }
-            ))
-            .count()
-    );
-
-    info!("✅ Human-approved spawning demonstration complete\n");
     Ok(())
 }
 
-/// Demonstrate emergency spawning for incident response
-async fn demonstrate_emergency_spawning(ecosystem: &GeneticEcosystem) -> BearDogResult<()> {
-    info!("🚨 === EMERGENCY SPAWNING ===");
+/// Analyze genetic lineage of spawned nodes
+async fn analyze_genetic_lineage(
+    genetics_api: &GeneticsAPI,
+    child_nodes: &[String],
+) -> BearDogResult<()> {
+    info!("Analyzing genetic lineage...");
 
-    let spawn_purpose = SpawnPurpose::EmergencyResponse {
-        incident_type: "Advanced Persistent Threat Detected".to_string(),
-        urgency_level: 9,
-        auto_terminate_when_resolved: true,
-    };
+    for child_node in child_nodes {
+        info!("\n🔍 Analyzing lineage for node: {}", child_node);
+        
+        match genetics_api.get_node_genetics(child_node).await {
+            Ok(genetics) => {
+                info!("   Genetics ID: {}", genetics.genome_id);
+                info!("   Generation: {}", genetics.generation);
+                info!("   Lineage depth: {}", genetics.lineage_depth);
+                info!("   Parent genomes: {:?}", genetics.parent_genomes);
+                info!("   Crypto chromosomes: {}", genetics.crypto_chromosomes.len());
+                info!("   Capability genes: {}", genetics.capability_genes.len());
+                info!("   Offspring count: {}", genetics.offspring_count);
+                
+                // Analyze genetic diversity
+                let diversity_score = calculate_genetic_diversity(&genetics);
+                info!("   Genetic diversity score: {:.3}", diversity_score);
+                
+                // Analyze security traits
+                info!("   Security traits:");
+                info!("     • Paranoia level: {:.3}", genetics.security_traits.paranoia_level);
+                info!("     • Cooperation tendency: {:.3}", genetics.security_traits.cooperation_tendency);
+                info!("     • Innovation rate: {:.3}", genetics.security_traits.innovation_rate);
+                info!("     • Threat sensitivity: {:.3}", genetics.security_traits.threat_sensitivity);
+            }
+            Err(e) => {
+                error!("❌ Failed to get genetics for {}: {}", child_node, e);
+            }
+        }
+    }
 
-    let workflow_type = BearDogWorkflowType::HybridApproval {
-        automated_checks: vec![
-            beardog::cross_node_auth::AutomatedCheck::ThreatAssessment {
-                max_risk_level: 0.9,
-            },
-            beardog::cross_node_auth::AutomatedCheck::ResourceAvailability {
-                min_resources: ResourceLimits {
-                    max_cpu_cores: 4,
-                    max_memory_gb: 8,
-                    max_storage_gb: 50,
-                    max_network_mbps: 500,
-                    max_crypto_operations_per_second: 2000,
-                },
-            },
-        ],
-        human_oversight: true,
-        escalation_conditions: vec![
-            beardog::cross_node_auth::EscalationCondition::HighRiskOperation,
-            beardog::cross_node_auth::EscalationCondition::AnomalousPattern,
-        ],
-    };
-
-    info!("🚨 Emergency spawn request: APT detected!");
-    info!("   - Urgency level: 9/10");
-    info!("   - Auto-terminate when resolved: true");
-    info!("   - Hybrid approval with automated checks");
-
-    // All three nodes contribute to emergency response
-    let child_genetics = ecosystem
-        .genetics_engine
-        .recombine_genetics(
-            "beardog-alpha-security-focused",
-            &[
-                "beardog-beta-performance-focused".to_string(),
-                "beardog-gamma-collaboration-focused".to_string(),
-            ],
-            &spawn_purpose,
-        )
-        .await?;
-
-    info!("🧬 Emergency response child genetics:");
-    info!("   - Triple-parent inheritance from Alpha, Beta, Gamma");
-    info!(
-        "   - Enhanced threat sensitivity: {:.2}",
-        child_genetics.security_traits.threat_sensitivity
-    );
-    info!(
-        "   - Incident response capabilities: {}",
-        child_genetics
-            .capability_genes
-            .iter()
-            .filter(|g| matches!(
-                g.capability,
-                beardog::cross_node_auth::NodeCapability::IncidentResponse { .. }
-            ))
-            .count()
-    );
-    info!("   - Expected lifespan: Emergency duration only");
-
-    info!("✅ Emergency spawning demonstration complete\n");
     Ok(())
 }
 
-/// Demonstrate genetic diversity across multiple generations
-async fn demonstrate_genetic_diversity(ecosystem: &GeneticEcosystem) -> BearDogResult<()> {
-    info!("🌈 === GENETIC DIVERSITY DEMONSTRATION ===");
+/// Calculate a simple genetic diversity score
+fn calculate_genetic_diversity(genetics: &beardog::auth::BearDogGenetics) -> f64 {
+    let mut diversity_factors = Vec::new();
 
-    // Create multiple child generations to show genetic evolution
-    let mut current_generation = Vec::new();
+    // Factor in chromosome variety
+    let chromosome_variety = genetics.crypto_chromosomes.len() as f64 / 10.0; // Normalize
+    diversity_factors.push(chromosome_variety.min(1.0));
 
-    // Generation 1: Basic task-specific children
-    for task_type in &[
-        TaskType::DataMigration,
-        TaskType::NetworkExpansion,
-        TaskType::KeyRecovery,
-    ] {
-        let spawn_purpose = SpawnPurpose::TaskSpecific {
-            task_type: task_type.clone(),
-            max_duration: chrono::Duration::hours(12),
-            resource_limits: ResourceLimits {
-                max_cpu_cores: 4,
-                max_memory_gb: 8,
-                max_storage_gb: 100,
-                max_network_mbps: 200,
-                max_crypto_operations_per_second: 1000,
-            },
-        };
+    // Factor in capability variety
+    let capability_variety = genetics.capability_genes.len() as f64 / 10.0; // Normalize
+    diversity_factors.push(capability_variety.min(1.0));
 
-        let child_genetics = ecosystem
-            .genetics_engine
-            .recombine_genetics(
-                "beardog-alpha-security-focused",
-                &["beardog-beta-performance-focused".to_string()],
-                &spawn_purpose,
-            )
-            .await?;
+    // Factor in generation depth (older lineages have more diversity)
+    let generation_factor = (genetics.generation as f64).min(10.0) / 10.0;
+    diversity_factors.push(generation_factor);
 
-        current_generation.push(child_genetics);
-    }
+    // Factor in parent count (more parents = more diversity)
+    let parent_factor = (genetics.parent_genomes.len() as f64).min(5.0) / 5.0;
+    diversity_factors.push(parent_factor);
 
-    info!(
-        "🧬 Generation 1 created: {} specialized children",
-        current_generation.len()
-    );
-
-    // Show genetic diversity metrics
-    let avg_paranoia = current_generation
-        .iter()
-        .map(|g| g.security_traits.paranoia_level)
-        .sum::<f64>()
-        / current_generation.len() as f64;
-
-    let avg_cooperation = current_generation
-        .iter()
-        .map(|g| g.security_traits.cooperation_tendency)
-        .sum::<f64>()
-        / current_generation.len() as f64;
-
-    info!("📊 Genetic diversity metrics:");
-    info!("   - Average paranoia level: {:.2}", avg_paranoia);
-    info!("   - Average cooperation tendency: {:.2}", avg_cooperation);
-    info!("   - Unique genome IDs: {}", current_generation.len());
-    info!(
-        "   - Capability gene variations: {}",
-        current_generation
-            .iter()
-            .map(|g| g.capability_genes.len())
-            .sum::<usize>()
-    );
-
-    // Demonstrate mutations
-    if let Some(first_child) = current_generation.first() {
-        let mutated = ecosystem
-            .genetics_engine
-            .mutate_capabilities(first_child, 0.2)
-            .await?;
-
-        info!("🔬 Mutation demonstration:");
-        info!("   - Original genome: {}", first_child.genome_id);
-        info!("   - Mutated genome: {}", mutated.genome_id);
-        info!(
-            "   - Mutation history entries: {}",
-            mutated
-                .capability_genes
-                .iter()
-                .map(|g| g.mutation_history.len())
-                .sum::<usize>()
-        );
-    }
-
-    info!("✅ Genetic diversity demonstration complete\n");
-    Ok(())
+    // Average all factors
+    diversity_factors.iter().sum::<f64>() / diversity_factors.len() as f64
 }
 
-// Demo implementations for required traits
-struct DemoProofGenerator;
-struct DemoProofVerifier;
-struct DemoAuthStore;
-
-#[async_trait::async_trait]
-impl beardog::cross_node_auth::ProofGenerator for DemoProofGenerator {
-    async fn sign_authorization(
-        &self,
-        auth: beardog::cross_node_auth::CrossNodeAuthorization,
-    ) -> BearDogResult<beardog::cross_node_auth::CrossNodeAuthorization> {
-        Ok(auth) // Simplified for demo
-    }
-
-    async fn generate_operation_proof(
-        &self,
-        auth: beardog::cross_node_auth::CrossNodeAuthorization,
-        op: &beardog::cross_node_auth::CrossNodeOperation,
-    ) -> BearDogResult<beardog::cross_node_auth::AuthorizationProof> {
-        Ok(beardog::cross_node_auth::AuthorizationProof {
-            authorization: auth,
-            operation: op.clone(),
-            request_timestamp: chrono::Utc::now(),
-            requester_signature: vec![0; 64], // Demo signature
-        })
-    }
-}
-
-#[async_trait::async_trait]
-impl beardog::cross_node_auth::ProofVerifier for DemoProofVerifier {
-    async fn verify_authorization_proof(
-        &self,
-        _proof: &beardog::cross_node_auth::AuthorizationProof,
-    ) -> BearDogResult<bool> {
-        Ok(true) // Always approve for demo
-    }
-}
-
-#[async_trait::async_trait]
-impl beardog::cross_node_auth::CrossNodeAuthStore for DemoAuthStore {
-    async fn store_authorization(
-        &self,
-        _auth: &beardog::cross_node_auth::CrossNodeAuthorization,
-    ) -> BearDogResult<()> {
-        Ok(())
-    }
-    async fn get_authorization(
-        &self,
-        _id: &str,
-    ) -> BearDogResult<Option<beardog::cross_node_auth::CrossNodeAuthorization>> {
-        Ok(None)
-    }
-    async fn get_authorization_for_node(
-        &self,
-        _node_id: &str,
-    ) -> BearDogResult<Option<beardog::cross_node_auth::CrossNodeAuthorization>> {
-        Ok(None)
-    }
-    async fn list_active_authorizations(
-        &self,
-    ) -> BearDogResult<Vec<beardog::cross_node_auth::CrossNodeAuthorization>> {
-        Ok(vec![])
-    }
-    async fn revoke_authorization(&self, _id: &str) -> BearDogResult<()> {
-        Ok(())
-    }
+/// Display spawn request summary
+fn display_spawn_summary(request: &SpawnRequest) {
+    info!("📋 Spawn Request Summary:");
+    info!("   Request ID: {}", request.request_id);
+    info!("   Parent: {}", request.requesting_parent);
+    info!("   Co-parents: {:?}", request.co_parents);
+    info!("   Purpose: {:?}", request.purpose);
+    info!("   Resources: CPU {}%, RAM {}MB, Storage {}GB", 
+          request.resource_requirements.max_cpu_percent,
+          request.resource_requirements.max_memory_mb,
+          request.resource_requirements.max_storage_gb);
+    info!("   Workflow: {:?}", request.workflow_type);
 }

@@ -3,7 +3,7 @@
 //! This test suite ensures 100% coverage of BearDog's genetic algorithm engine
 //! including spawning, mutation, crossover, adaptation, and evolutionary mechanics.
 
-use beardog::genetics_engine::*;
+use beardog::genetics::*;
 use beardog::core::*;
 use beardog::error::*;
 use std::collections::HashMap;
