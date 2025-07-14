@@ -2,11 +2,11 @@
 //!
 //! **Comprehensive adapter architecture for universal ecosystem integration**
 //!
-//! This module provides various adapter types for integrating BearDog with different
-//! ecosystem components and external systems. It includes both legacy integrations
-//! and new universal patterns for ecosystem-wide interoperability.
+//! This module provides various adapter types for integrating any primal with different
+//! ecosystem components and external systems. It includes universal patterns for
+//! ecosystem-wide interoperability.
 
-// Legacy ecosystem adapters
+// Universal ecosystem adapters (refactored for universal patterns)
 pub mod nestgate;
 pub mod songbird;
 

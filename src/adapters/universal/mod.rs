@@ -98,15 +98,19 @@ pub mod ecosystem_ids {
 pub mod capability_ids {
     pub const STORAGE_PROVISION: &str = "storage.provision";
     pub const STORAGE_BACKUP: &str = "storage.backup";
+    pub const STORAGE_PERSIST: &str = "storage.persist";
     pub const COMPUTE_EXECUTE: &str = "compute.execute";
     pub const COMPUTE_ORCHESTRATE: &str = "compute.orchestrate";
     pub const SECURITY_ENCRYPT: &str = "security.encrypt";
     pub const SECURITY_AUTHORIZE: &str = "security.authorize";
+    pub const SECURITY_AUTHENTICATE: &str = "security.authenticate";
     pub const SECURITY_AUDIT: &str = "security.audit";
+    pub const SECURITY_MONITOR: &str = "security.monitor";
     pub const AI_INFERENCE: &str = "ai.inference";
     pub const AI_TRAINING: &str = "ai.training";
     pub const COMMUNICATION_DISCOVERY: &str = "communication.discovery";
     pub const COMMUNICATION_ROUTING: &str = "communication.routing";
+    pub const COMM_DISCOVERY: &str = "communication.discovery";
     pub const MONITORING_METRICS: &str = "monitoring.metrics";
     pub const MONITORING_LOGGING: &str = "monitoring.logging";
     pub const MONITORING_ALERTING: &str = "monitoring.alerting";
@@ -124,12 +128,14 @@ pub mod request_types {
     pub const SECURITY_ENCRYPT: &str = "security.encrypt";
     pub const SECURITY_DECRYPT: &str = "security.decrypt";
     pub const SECURITY_AUTHORIZE: &str = "security.authorize";
+    pub const SECURITY_AUTHENTICATE: &str = "security.authenticate";
     pub const AI_PREDICT: &str = "ai.predict";
     pub const AI_TRAIN: &str = "ai.train";
     pub const COMMUNICATION_SEND: &str = "communication.send";
     pub const COMMUNICATION_RECEIVE: &str = "communication.receive";
-    pub const MONITORING_COLLECT: &str = "monitoring.collect";
     pub const MONITORING_ALERT: &str = "monitoring.alert";
+    pub const HEALTH_CHECK: &str = "health.check";
+    pub const STATUS_GET: &str = "status.get";
 }
 
 /// Universal capability examples for testing and development
