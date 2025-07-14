@@ -1,5 +1,5 @@
 //! Type definitions and data structures for security
-//! 
+//!
 //! Contains all structs, enums, and type aliases for the security module.
 
 use chrono::{DateTime, Utc};
@@ -54,13 +54,18 @@ pub struct MfaConfig {
     pub token_validity_minutes: u32,
 }
 
-/// MFA method types
+/// Multi-factor authentication method types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MfaMethod {
+    /// Time-based One-Time Password (TOTP) authentication
     TOTP,
+    /// SMS-based authentication
     SMS,
+    /// Email-based authentication
     Email,
+    /// Hardware token authentication
     Hardware,
+    /// Biometric authentication
     Biometric,
 }
 
@@ -75,72 +80,133 @@ pub struct SessionConfig {
     pub encryption_enabled: bool,
 }
 
-/// Security subject (user or system)
+/// Security subject (user or system) performing actions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Subject {
+    /// Unique identifier for the subject
     pub id: String,
+    /// Type of subject (user, system, service, device)
     pub subject_type: SubjectType,
+    /// Additional attributes describing the subject
     pub attributes: HashMap<String, String>,
+    /// Roles assigned to this subject
     pub roles: Vec<String>,
+    /// Security clearance level if applicable
     pub clearance_level: Option<u32>,
 }
 
-/// Subject type enumeration
+/// Types of security subjects
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SubjectType {
+    /// Human user
     User,
+    /// System service or daemon
     System,
+    /// External service
     Service,
+    /// IoT device or hardware
     Device,
 }
 
-/// Security resource
+/// Security resource being accessed
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Resource {
+    /// Unique resource identifier
     pub id: String,
+    /// Type of resource
     pub resource_type: String,
+    /// Security classification level
     pub classification: ResourceClassification,
+    /// Additional resource attributes
     pub attributes: HashMap<String, String>,
+    /// Owner of the resource
     pub owner: Option<String>,
 }
 
-/// Resource classification levels
+/// Security classification levels for resources
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ResourceClassification {
+    /// Publicly accessible information
     Public,
+    /// Internal use only
     Internal,
+    /// Confidential information requiring authorization
     Confidential,
+    /// Secret information requiring high clearance
     Secret,
+    /// Top secret information requiring highest clearance
     TopSecret,
 }
 
-/// Security action
+/// Security action being performed
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Action {
+    /// Type of action being performed
     pub action_type: ActionType,
+    /// Additional context for the action
     pub context: HashMap<String, String>,
+    /// When the action was performed
     pub timestamp: DateTime<Utc>,
+    /// Source IP address if applicable
     pub source_ip: Option<String>,
 }
 
-/// Action type enumeration
+/// Types of actions that can be performed on resources
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ActionType {
+    /// Read or view operation
     Read,
+    /// Write or modify operation
     Write,
+    /// Delete operation
     Delete,
+    /// Execute operation
     Execute,
+    /// Approve operation
     Approve,
+    /// Administrative operation
     Admin,
 }
 
-/// Risk level assessment
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Risk level assessment for security actions
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum RiskLevel {
+    /// Low risk action
     Low,
+    /// Medium risk action
     Medium,
+    /// High risk action
     High,
+    /// Critical risk action
     Critical,
+}
+
+/// Compliance status for security policies
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ComplianceStatus {
+    /// Fully compliant with all policies
+    Compliant,
+    /// Not compliant with one or more policies
+    NonCompliant,
+    /// Conditionally compliant with additional requirements
+    ConditionallyCompliant,
+    /// Compliance status unknown
+    Unknown,
+}
+
+/// Account status for user accounts
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AccountStatus {
+    /// Account is active and can be used
+    Active,
+    /// Account is inactive but can be reactivated
+    Inactive,
+    /// Account is locked due to security concerns
+    Locked,
+    /// Account is suspended temporarily
+    Suspended,
+    /// Account is pending activation
+    Pending,
 }
 
 /// Authorization result
@@ -152,15 +218,6 @@ pub struct AuthorizationResult {
     pub additional_requirements: Vec<String>,
     pub expires_at: Option<DateTime<Utc>>,
     pub audit_id: String,
-}
-
-/// Compliance status
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ComplianceStatus {
-    Compliant,
-    NonCompliant,
-    ConditionallyCompliant,
-    Unknown,
 }
 
 /// Security audit event
@@ -198,16 +255,6 @@ pub struct UserInfo {
     pub last_login: Option<DateTime<Utc>>,
 }
 
-/// Account status enumeration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum AccountStatus {
-    Active,
-    Inactive,
-    Locked,
-    Suspended,
-    Pending,
-}
-
 /// Security provider health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityProviderHealth {
@@ -242,44 +289,44 @@ pub struct SecurityProviderMetrics {
     pub successful_authentications: u64,
     pub failed_authentications: u64,
     pub mfa_authentications: u64,
-    
+
     // Authorization metrics
     pub total_authorizations: u64,
     pub permitted_authorizations: u64,
     pub denied_authorizations: u64,
-    
+
     // Session metrics
     pub active_sessions: u64,
     pub total_sessions_created: u64,
     pub expired_sessions: u64,
-    
+
     // Security metrics
     pub security_violations: u64,
     pub rate_limit_violations: u64,
     pub suspicious_activities: u64,
-    
+
     // Performance metrics
     pub avg_auth_time_ms: f64,
     pub avg_authz_time_ms: f64,
     pub avg_session_duration_minutes: f64,
-    
+
     // Compliance metrics
     pub compliance_checks: u64,
     pub compliance_violations: u64,
     pub audit_events_generated: u64,
-    
+
     // System metrics
     pub uptime_seconds: u64,
     pub memory_usage_bytes: u64,
     pub cpu_usage_percent: f64,
     pub disk_usage_bytes: u64,
     pub network_io_bytes: u64,
-    
+
     // Error metrics
     pub total_errors: u64,
     pub critical_errors: u64,
     pub warning_count: u64,
-    
+
     // Rate limiting metrics
     pub rate_limited_requests: u64,
     pub rate_limit_violations_per_user: HashMap<String, u64>,
@@ -431,19 +478,35 @@ impl std::fmt::Display for ActionType {
 /// Security provider trait definition
 pub trait SecurityProvider: Send + Sync {
     /// Authenticate a user
-    fn authenticate(&self, username: &str, password: &str) -> impl std::future::Future<Output = BearDogResult<AuthenticationResult>> + Send;
-    
+    fn authenticate(
+        &self,
+        username: &str,
+        password: &str,
+    ) -> impl std::future::Future<Output = BearDogResult<AuthenticationResult>> + Send;
+
     /// Authorize an action
-    fn authorize(&self, subject: &Subject, resource: &Resource, action: &Action) -> impl std::future::Future<Output = BearDogResult<AuthorizationResult>> + Send;
-    
+    fn authorize(
+        &self,
+        subject: &Subject,
+        resource: &Resource,
+        action: &Action,
+    ) -> impl std::future::Future<Output = BearDogResult<AuthorizationResult>> + Send;
+
     /// Validate a session
-    fn validate_session(&self, session_id: &str) -> impl std::future::Future<Output = BearDogResult<bool>> + Send;
-    
+    fn validate_session(
+        &self,
+        session_id: &str,
+    ) -> impl std::future::Future<Output = BearDogResult<bool>> + Send;
+
     /// Get health status
-    fn health(&self) -> impl std::future::Future<Output = BearDogResult<SecurityProviderHealth>> + Send;
-    
+    fn health(
+        &self,
+    ) -> impl std::future::Future<Output = BearDogResult<SecurityProviderHealth>> + Send;
+
     /// Get metrics
-    fn metrics(&self) -> impl std::future::Future<Output = BearDogResult<SecurityProviderMetrics>> + Send;
+    fn metrics(
+        &self,
+    ) -> impl std::future::Future<Output = BearDogResult<SecurityProviderMetrics>> + Send;
 }
 
 impl BearDogSecurityProvider {
@@ -502,8 +565,6 @@ impl SecurityMetrics {
     }
 }
 
-
-
 #[derive(Debug, Clone)]
 pub struct ThreatAnalyzer {
     pub active_threats: u64,
@@ -511,9 +572,7 @@ pub struct ThreatAnalyzer {
 
 impl ThreatAnalyzer {
     pub fn new() -> Self {
-        Self {
-            active_threats: 0,
-        }
+        Self { active_threats: 0 }
     }
 }
 
@@ -524,9 +583,7 @@ pub struct SecurityRules {
 
 impl SecurityRules {
     pub fn new() -> Self {
-        Self {
-            rules: Vec::new(),
-        }
+        Self { rules: Vec::new() }
     }
 }
 
@@ -555,4 +612,3 @@ impl SecurityRateLimiter {
         }
     }
 }
-

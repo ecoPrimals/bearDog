@@ -1,5 +1,5 @@
 //! Network and API configuration types
-//! 
+//!
 //! Contains all networking, API, TLS, CORS, and authentication configuration structures.
 
 use serde::{Deserialize, Serialize};
@@ -106,20 +106,27 @@ pub struct InterServiceAuth {
     pub method: AuthMethod,
 }
 
-/// Authentication method options
+/// Authentication methods for inter-service communication
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthMethod {
+    /// Shared secret authentication using a pre-configured key
     SharedSecret,
+    /// JSON Web Token based authentication
     JWT,
+    /// Mutual TLS authentication where both parties verify certificates
     Mutual,
 }
 
 /// Retry configuration for network operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetryConfig {
+    /// Maximum number of retry attempts before giving up
     pub max_attempts: u32,
+    /// Initial delay in milliseconds before first retry
     pub initial_delay_ms: u32,
+    /// Maximum delay in milliseconds between retries
     pub max_delay_ms: u32,
+    /// Multiplier applied to delay after each failed attempt
     pub backoff_multiplier: f32,
 }
 
@@ -195,8 +202,13 @@ impl Default for CorsConfig {
         Self {
             enabled: true,
             allowed_origins: vec!["*".to_string()],
-            allowed_methods: vec!["GET".to_string(), "POST".to_string(), "PUT".to_string(), "DELETE".to_string()],
+            allowed_methods: vec![
+                "GET".to_string(),
+                "POST".to_string(),
+                "PUT".to_string(),
+                "DELETE".to_string(),
+            ],
             allowed_headers: vec!["Content-Type".to_string(), "Authorization".to_string()],
         }
     }
-} 
+}

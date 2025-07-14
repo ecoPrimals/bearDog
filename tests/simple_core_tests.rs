@@ -3,8 +3,8 @@
 //! Basic validation of core functionality without complex async operations
 //! to ensure we can run tests reliably.
 
-use beardog::config::EncryptionConfig;
 use beardog::auth::types::SpawnStatus;
+use beardog::config::EncryptionConfig;
 use beardog::node_registry::TrustLevel; // The TrustLevel with Basic, Unknown, etc.
 use beardog::tunnel::events::*;
 use beardog::{BearDogError, BearDogResult};
@@ -63,7 +63,7 @@ fn test_spawn_status() {
     assert!(matches!(status, SpawnStatus::Initializing));
 
     let rejected = SpawnStatus::Failed("Access denied".to_string());
-    
+
     // Test pattern matching
     match rejected {
         SpawnStatus::Failed(reason) => {

@@ -1,5 +1,5 @@
 //! Security configuration types
-//! 
+//!
 //! Contains all security-related configuration structures including encryption,
 //! HSM, MFA, password policies, and session management.
 
@@ -351,7 +351,7 @@ impl Default for TotpConfig {
 impl Default for SessionConfig {
     fn default() -> Self {
         Self {
-            timeout: Duration::from_secs(4 * 3600), // 4 hours
+            timeout: Duration::from_secs(4 * 3600),         // 4 hours
             cleanup_interval: Duration::from_secs(15 * 60), // 15 minutes
             secure_cookies: true,
         }
@@ -426,4 +426,4 @@ impl Default for AuditStorageConfig {
             },
         }
     }
-} 
+}

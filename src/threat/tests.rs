@@ -2,15 +2,15 @@
 //!
 //! Unit tests for the threat detection functionality.
 
-use super::*;
-use crate::threat::{
-    ThreatDetectionConfig, ThreatDetectionEngine, ThreatSeverity, ThreatType,
-    ThreatEvent, ThreatSource, ThreatTarget, ThreatStatus, ThreatIndicator
-};
+#[allow(unused_imports)]
+use crate::threat::handlers::ThreatDetectionEngine;
+#[allow(unused_imports)]
 use crate::threat::types::{
-    ThreatDetectionRule, RuleCondition, ResponseAction, DetectionMethod,
-    SourceClassification, AssetCriticality, ProtectionLevel, IndicatorType
+    AssetCriticality, DetectionMethod, IndicatorType, ProtectionLevel, ResponseAction,
+    RuleCondition, SourceClassification, ThreatDetectionConfig, ThreatDetectionRule, ThreatEvent,
+    ThreatIndicator, ThreatSeverity, ThreatSource, ThreatStatus, ThreatTarget, ThreatType,
 };
+#[allow(unused_imports)]
 use chrono::Utc;
 
 #[tokio::test]
@@ -35,7 +35,10 @@ async fn test_threat_severity_scoring() {
 async fn test_threat_type_display() {
     assert_eq!(ThreatType::Malware.to_string(), "Malware");
     assert_eq!(ThreatType::Phishing.to_string(), "Phishing");
-    assert_eq!(ThreatType::BruteForceAttack.to_string(), "Brute Force Attack");
+    assert_eq!(
+        ThreatType::BruteForceAttack.to_string(),
+        "Brute Force Attack"
+    );
 }
 
 #[tokio::test]
@@ -55,7 +58,7 @@ async fn test_detection_rule_creation() {
         mitre_techniques: vec!["T1566".to_string()],
         response_actions: vec![ResponseAction::LogAlert("Test rule triggered".to_string())],
     };
-    
+
     // Test that rule was created with correct values
     assert_eq!(rule.rule_id, "test_rule");
     assert_eq!(rule.threat_type, ThreatType::Malware);
@@ -95,7 +98,7 @@ async fn test_threat_event_priority() {
         related_events: vec![],
         mitigation_steps: vec![],
     };
-    
+
     assert!(high_priority_threat.is_high_priority());
 }
 
@@ -103,7 +106,7 @@ async fn test_threat_event_priority() {
 async fn test_add_detection_rule() {
     let config = ThreatDetectionConfig::default();
     let mut engine = ThreatDetectionEngine::new(config).await.unwrap();
-    
+
     let rule = ThreatDetectionRule {
         rule_id: "rule_1".to_string(),
         name: "SQL Injection Rule".to_string(),
@@ -117,9 +120,11 @@ async fn test_add_detection_rule() {
         }],
         false_positive_rate: 0.05,
         mitre_techniques: vec!["T1190".to_string()],
-        response_actions: vec![ResponseAction::LogAlert("SQL injection detected".to_string())],
+        response_actions: vec![ResponseAction::LogAlert(
+            "SQL injection detected".to_string(),
+        )],
     };
-    
+
     engine.add_detection_rule(rule);
     // Test that rule was added successfully - just verify the method completes
     // Remove private field access since threat_feeds is private
@@ -136,7 +141,7 @@ async fn test_threat_intelligence_indicator() {
         threat_types: vec![ThreatType::Malware],
         tags: vec!["botnet".to_string()],
     };
-    
+
     assert_eq!(indicator.confidence, 0.9);
     assert!(indicator.threat_types.contains(&ThreatType::Malware));
 }
@@ -148,7 +153,7 @@ async fn test_threat_detection_workflow() {
         ..Default::default()
     };
     let mut engine = ThreatDetectionEngine::new(config).await.unwrap();
-    
+
     let threat = ThreatEvent {
         id: "test_threat".to_string(),
         threat_type: ThreatType::Malware,
@@ -181,13 +186,13 @@ async fn test_threat_detection_workflow() {
         related_events: vec![],
         mitigation_steps: vec![],
     };
-    
+
     // Test the threat engine with event data (HashMap format expected by analyze_event)
     let mut event_data = std::collections::HashMap::new();
     event_data.insert("source_ip".to_string(), "10.0.0.1".to_string());
     event_data.insert("threat_type".to_string(), "malware".to_string());
     event_data.insert("severity".to_string(), "high".to_string());
-    
+
     let result = engine.analyze_event(&event_data).await;
     assert!(result.is_ok());
 }

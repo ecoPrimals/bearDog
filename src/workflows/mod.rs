@@ -1,7 +1,7 @@
 //! Multi-party approval workflows
 //!
 //! Enterprise governance workflows democratized for everyone.
-//! 
+//!
 //! This module was refactored from a large file to improve maintainability.
 //! The workflows module provides automated security workflow orchestration,
 //! multi-party approval processes, and governance automation.
@@ -59,16 +59,16 @@ impl WorkflowEngine {
 }
 
 // Re-export public types and functions from submodules
-pub use types::*;
 pub use processors::*;
+pub use types::*;
 
 // Module declarations
-pub mod types;
 pub mod handlers;
-pub mod storage;
 pub mod notification;
 pub mod policy;
 pub mod processors;
+pub mod storage;
+pub mod types;
 
 #[cfg(test)]
 mod tests;

@@ -1,5 +1,5 @@
 //! Notification engine for workflow events
-//! 
+//!
 //! Handles sending notifications for workflow state changes and approvals.
 
 use super::types::*;
@@ -17,21 +17,21 @@ impl NotificationEngine {
     pub async fn notify_workflow_initiated(&self, workflow: &Workflow) -> BearDogResult<()> {
         let message = format!(
             "Workflow {} initiated by {}: {}",
-            workflow.workflow_type,
-            workflow.initiator,
-            workflow.id
+            workflow.workflow_type, workflow.initiator, workflow.id
         );
 
         self.send_notification(&message, &workflow.metadata).await
     }
 
     /// Notify that an approval has been submitted
-    pub async fn notify_approval_submitted(&self, workflow: &Workflow, approval: &ApprovalRecord) -> BearDogResult<()> {
+    pub async fn notify_approval_submitted(
+        &self,
+        workflow: &Workflow,
+        approval: &ApprovalRecord,
+    ) -> BearDogResult<()> {
         let message = format!(
             "Approval submitted for workflow {}: {} by {}",
-            workflow.id,
-            approval.decision,
-            approval.approver
+            workflow.id, approval.decision, approval.approver
         );
 
         self.send_notification(&message, &approval.metadata).await
@@ -41,15 +41,18 @@ impl NotificationEngine {
     pub async fn notify_workflow_completed(&self, workflow: &Workflow) -> BearDogResult<()> {
         let message = format!(
             "Workflow {} completed with status: {}",
-            workflow.id,
-            workflow.status
+            workflow.id, workflow.status
         );
 
         self.send_notification(&message, &workflow.metadata).await
     }
 
     /// Send notification through configured channels
-    async fn send_notification(&self, message: &str, metadata: &HashMap<String, serde_json::Value>) -> BearDogResult<()> {
+    async fn send_notification(
+        &self,
+        message: &str,
+        metadata: &HashMap<String, serde_json::Value>,
+    ) -> BearDogResult<()> {
         // Email notifications
         if self.config.email_enabled {
             self.send_email_notification(message, metadata).await?;
@@ -79,30 +82,49 @@ impl NotificationEngine {
     }
 
     /// Send email notification
-    async fn send_email_notification(&self, message: &str, _metadata: &HashMap<String, serde_json::Value>) -> BearDogResult<()> {
+    async fn send_email_notification(
+        &self,
+        message: &str,
+        _metadata: &HashMap<String, serde_json::Value>,
+    ) -> BearDogResult<()> {
         // TODO: Implement actual email sending
         println!("EMAIL: {}", message);
         Ok(())
     }
 
     /// Send SMS notification
-    async fn send_sms_notification(&self, message: &str, _metadata: &HashMap<String, serde_json::Value>) -> BearDogResult<()> {
+    async fn send_sms_notification(
+        &self,
+        message: &str,
+        _metadata: &HashMap<String, serde_json::Value>,
+    ) -> BearDogResult<()> {
         // TODO: Implement actual SMS sending
         println!("SMS: {}", message);
         Ok(())
     }
 
     /// Send webhook notification
-    async fn send_webhook_notification(&self, message: &str, metadata: &HashMap<String, serde_json::Value>) -> BearDogResult<()> {
+    async fn send_webhook_notification(
+        &self,
+        message: &str,
+        metadata: &HashMap<String, serde_json::Value>,
+    ) -> BearDogResult<()> {
         if let Some(webhook_url) = &self.config.webhook_url {
             // TODO: Implement actual webhook sending
-            println!("WEBHOOK to {}: {} (metadata: {:?})", webhook_url, message, metadata);
+            println!(
+                "WEBHOOK to {}: {} (metadata: {:?})",
+                webhook_url, message, metadata
+            );
         }
         Ok(())
     }
 
     /// Send Slack notification
-    async fn send_slack_notification(&self, message: &str, _metadata: &HashMap<String, serde_json::Value>) -> BearDogResult<()> {
+    async fn send_slack_notification(
+        &self,
+        message: &str,
+        _metadata: &HashMap<String, serde_json::Value>,
+    ) -> BearDogResult<()> {
         if let Some(slack_url) = &self.config.slack_webhook_url {
             // TODO: Implement actual Slack webhook
             println!("SLACK to {}: {}", slack_url, message);
@@ -111,7 +133,11 @@ impl NotificationEngine {
     }
 
     /// Send Teams notification
-    async fn send_teams_notification(&self, message: &str, _metadata: &HashMap<String, serde_json::Value>) -> BearDogResult<()> {
+    async fn send_teams_notification(
+        &self,
+        message: &str,
+        _metadata: &HashMap<String, serde_json::Value>,
+    ) -> BearDogResult<()> {
         if let Some(teams_url) = &self.config.teams_webhook_url {
             // TODO: Implement actual Teams webhook
             println!("TEAMS to {}: {}", teams_url, message);
@@ -180,4 +206,4 @@ impl NotificationEngine {
         // TODO: Implement Teams configuration test
         Ok(())
     }
-} 
+}

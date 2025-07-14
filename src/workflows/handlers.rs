@@ -1,9 +1,9 @@
 //! Implementation logic and handlers for the workflow engine
-//! 
+//!
 //! Contains the main business logic and implementation details for MultiPartyWorkflowEngine.
 
-use super::types::*;
 use super::processors::*;
+use super::types::*;
 use crate::{BearDogError, BearDogResult};
 
 use chrono::Utc;
@@ -35,8 +35,12 @@ impl MultiPartyWorkflowEngine {
             workflow_processors: Arc::new(RwLock::new(HashMap::new())),
             execution_queue: Arc::new(tokio::sync::Mutex::new(std::collections::VecDeque::new())),
             node_registry: Arc::new(RwLock::new(HashMap::new())),
-            consensus_engine: Arc::new(RwLock::new(crate::workflows::types::ConsensusEngine::new())),
-            security_provider: Arc::new(RwLock::new(crate::workflows::types::WorkflowSecurityProvider::new())),
+            consensus_engine: Arc::new(
+                RwLock::new(crate::workflows::types::ConsensusEngine::new()),
+            ),
+            security_provider: Arc::new(RwLock::new(
+                crate::workflows::types::WorkflowSecurityProvider::new(),
+            )),
             metrics: Arc::new(RwLock::new(crate::workflows::types::WorkflowMetrics::new())),
         };
 
@@ -49,26 +53,45 @@ impl MultiPartyWorkflowEngine {
     /// Register default workflow processors
     async fn register_default_processors(&self) -> BearDogResult<()> {
         let mut processors = self.workflow_processors.write().await;
-        
+
         processors.insert(WorkflowType::KeyRotation, Box::new(KeyRotationProcessor));
         processors.insert(WorkflowType::KeyDeletion, Box::new(KeyDeletionProcessor));
         processors.insert(WorkflowType::PolicyChange, Box::new(PolicyChangeProcessor));
-        processors.insert(WorkflowType::ConfigurationChange, Box::new(ConfigChangeProcessor));
-        processors.insert(WorkflowType::UserProvisioning, Box::new(UserProvisioningProcessor));
-        processors.insert(WorkflowType::EmergencyAccess, Box::new(EmergencyAccessProcessor));
-        processors.insert(WorkflowType::SystemMaintenance, Box::new(SystemMaintenanceProcessor));
-        processors.insert(WorkflowType::ComplianceAudit, Box::new(ComplianceAuditProcessor));
+        processors.insert(
+            WorkflowType::ConfigurationChange,
+            Box::new(ConfigChangeProcessor),
+        );
+        processors.insert(
+            WorkflowType::UserProvisioning,
+            Box::new(UserProvisioningProcessor),
+        );
+        processors.insert(
+            WorkflowType::EmergencyAccess,
+            Box::new(EmergencyAccessProcessor),
+        );
+        processors.insert(
+            WorkflowType::SystemMaintenance,
+            Box::new(SystemMaintenanceProcessor),
+        );
+        processors.insert(
+            WorkflowType::ComplianceAudit,
+            Box::new(ComplianceAuditProcessor),
+        );
 
         Ok(())
     }
 
     /// Initiate a new workflow
-    pub async fn initiate_workflow(&self, request: WorkflowRequest) -> BearDogResult<WorkflowResponse> {
+    pub async fn initiate_workflow(
+        &self,
+        request: WorkflowRequest,
+    ) -> BearDogResult<WorkflowResponse> {
         // Generate workflow ID
         let workflow_id = Uuid::new_v4().to_string();
 
         // Determine approval requirements
-        let approval_requirements = self.policy_engine
+        let approval_requirements = self
+            .policy_engine
             .determine_approval_requirements(&request.workflow_type, &request.priority)
             .await?;
 
@@ -96,7 +119,7 @@ impl MultiPartyWorkflowEngine {
 
         // Store workflow
         self.workflow_store.store_workflow(&workflow).await?;
-        
+
         // Add to active workflows
         {
             let mut active = self.active_workflows.write().await;
@@ -107,11 +130,13 @@ impl MultiPartyWorkflowEngine {
         self.create_pending_approvals(&workflow).await?;
 
         // Send notifications
-        self.notification_engine.notify_workflow_initiated(&workflow).await?;
+        self.notification_engine
+            .notify_workflow_initiated(&workflow)
+            .await?;
 
         // Create response
         let pending_approvers = self.get_pending_approvers(&workflow_id).await?;
-        
+
         Ok(WorkflowResponse {
             workflow_id,
             status: WorkflowStatus::PendingApprovals,
@@ -123,9 +148,13 @@ impl MultiPartyWorkflowEngine {
     }
 
     /// Submit an approval decision
-    pub async fn submit_approval(&self, submission: ApprovalSubmission) -> BearDogResult<ApprovalResponse> {
+    pub async fn submit_approval(
+        &self,
+        submission: ApprovalSubmission,
+    ) -> BearDogResult<ApprovalResponse> {
         // Get workflow
-        let mut workflow = self.workflow_store
+        let mut workflow = self
+            .workflow_store
             .get_workflow(&submission.workflow_id)
             .await?
             .ok_or_else(|| BearDogError::NotFound {
@@ -136,12 +165,13 @@ impl MultiPartyWorkflowEngine {
         // Validate workflow is still pending
         if workflow.status != WorkflowStatus::PendingApprovals {
             return Err(BearDogError::InvalidState {
-                message: "Workflow is not pending approvals".to_string()
+                message: "Workflow is not pending approvals".to_string(),
             });
         }
 
         // Validate approver is authorized
-        self.validate_approver(&workflow, &submission.approver).await?;
+        self.validate_approver(&workflow, &submission.approver)
+            .await?;
 
         // Create approval record
         let approval = ApprovalRecord {
@@ -192,7 +222,9 @@ impl MultiPartyWorkflowEngine {
         }
 
         // Send notifications
-        self.notification_engine.notify_approval_submitted(&workflow, &approval).await?;
+        self.notification_engine
+            .notify_approval_submitted(&workflow, &approval)
+            .await?;
 
         Ok(ApprovalResponse {
             success: true,
@@ -208,12 +240,18 @@ impl MultiPartyWorkflowEngine {
     }
 
     /// List pending approvals for an approver
-    pub async fn list_pending_approvals(&self, approver: &str) -> BearDogResult<Vec<PendingApproval>> {
+    pub async fn list_pending_approvals(
+        &self,
+        approver: &str,
+    ) -> BearDogResult<Vec<PendingApproval>> {
         self.approval_store.list_pending_approvals(approver).await
     }
 
     /// List workflows with optional status filter
-    pub async fn list_workflows(&self, status: Option<WorkflowStatus>) -> BearDogResult<Vec<Workflow>> {
+    pub async fn list_workflows(
+        &self,
+        status: Option<WorkflowStatus>,
+    ) -> BearDogResult<Vec<Workflow>> {
         self.workflow_store.list_workflows(status).await
     }
 
@@ -265,7 +303,7 @@ impl MultiPartyWorkflowEngine {
         }
 
         Err(BearDogError::Unauthorized {
-            message: "Approver not authorized for this workflow".to_string()
+            message: "Approver not authorized for this workflow".to_string(),
         })
     }
 
@@ -274,12 +312,19 @@ impl MultiPartyWorkflowEngine {
         Ok("admin".to_string())
     }
 
-    async fn evaluate_workflow_status(&self, workflow: &Workflow) -> BearDogResult<(WorkflowStatus, u32)> {
-        let approved_count = workflow.approvals.iter()
+    async fn evaluate_workflow_status(
+        &self,
+        workflow: &Workflow,
+    ) -> BearDogResult<(WorkflowStatus, u32)> {
+        let approved_count = workflow
+            .approvals
+            .iter()
             .filter(|a| a.decision == ApprovalDecision::Approved)
             .count() as u32;
 
-        let rejected_count = workflow.approvals.iter()
+        let rejected_count = workflow
+            .approvals
+            .iter()
             .filter(|a| a.decision == ApprovalDecision::Rejected)
             .count() as u32;
 
@@ -315,16 +360,19 @@ impl MultiPartyWorkflowEngine {
     /// Process workflow execution queue
     pub async fn process_execution_queue(&self) -> BearDogResult<()> {
         let mut queue = self.execution_queue.lock().await;
-        
+
         while let Some(execution) = queue.pop_front() {
             // Drop the lock while processing
             drop(queue);
-            
+
             // Process the workflow
             if let Err(e) = self.execute_workflow(&execution).await {
-                eprintln!("Failed to execute workflow {}: {}", execution.workflow_id, e);
+                eprintln!(
+                    "Failed to execute workflow {}: {}",
+                    execution.workflow_id, e
+                );
             }
-            
+
             // Reacquire the lock
             queue = self.execution_queue.lock().await;
         }
@@ -335,19 +383,22 @@ impl MultiPartyWorkflowEngine {
     async fn execute_workflow(&self, execution: &WorkflowExecution) -> BearDogResult<()> {
         // Get processor for workflow type
         let processors = self.workflow_processors.read().await;
-        let processor = processors.get(&execution.workflow_type)
-            .ok_or_else(|| BearDogError::NotFound {
-                resource_type: "Workflow processor".to_string(),
-                id: execution.workflow_type.to_string()
-            })?;
+        let processor =
+            processors
+                .get(&execution.workflow_type)
+                .ok_or_else(|| BearDogError::NotFound {
+                    resource_type: "Workflow processor".to_string(),
+                    id: execution.workflow_type.to_string(),
+                })?;
 
         // Get workflow
-        let mut workflow = self.workflow_store
+        let mut workflow = self
+            .workflow_store
             .get_workflow(&execution.workflow_id)
             .await?
-            .ok_or_else(|| BearDogError::NotFound { 
+            .ok_or_else(|| BearDogError::NotFound {
                 resource_type: "Workflow".to_string(),
-                id: execution.workflow_id.to_string()
+                id: execution.workflow_id.to_string(),
             })?;
 
         // Update status to in progress
@@ -374,16 +425,24 @@ impl MultiPartyWorkflowEngine {
 
         workflow.audit_trail.push(WorkflowAuditEntry {
             timestamp: Utc::now(),
-            action: if result.success { WorkflowAction::Completed } else { WorkflowAction::Failed },
+            action: if result.success {
+                WorkflowAction::Completed
+            } else {
+                WorkflowAction::Failed
+            },
             actor: "system".to_string(),
-            details: result.error.unwrap_or_else(|| "Workflow completed successfully".to_string()),
+            details: result
+                .error
+                .unwrap_or_else(|| "Workflow completed successfully".to_string()),
             metadata: HashMap::new(),
         });
 
         self.workflow_store.update_workflow(&workflow).await?;
 
         // Send completion notification
-        self.notification_engine.notify_workflow_completed(&workflow).await?;
+        self.notification_engine
+            .notify_workflow_completed(&workflow)
+            .await?;
 
         Ok(())
     }
@@ -392,7 +451,7 @@ impl MultiPartyWorkflowEngine {
     pub async fn start(&self) -> BearDogResult<()> {
         // Start scheduler
         self.scheduler.start().await?;
-        
+
         // Start execution queue processor
         tokio::spawn({
             let engine = self.clone();

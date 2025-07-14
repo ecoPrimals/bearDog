@@ -1,5 +1,5 @@
 //! Type definitions and data structures for compliance monitoring
-//! 
+//!
 //! Contains all structs, enums, and type aliases for compliance operations.
 
 use chrono::{DateTime, Duration, Utc};

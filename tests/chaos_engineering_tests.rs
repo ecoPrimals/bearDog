@@ -1,5 +1,3 @@
-use beardog::*;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
@@ -300,7 +298,7 @@ async fn test_resource_starvation_recovery() {
     }
 
     // While resource hogs are running, try normal operations
-    let normal_ops = Vec::new();
+    let mut normal_ops = Vec::new();
     for i in 0..20 {
         let op = tokio::spawn(async move {
             sleep(Duration::from_millis(50)).await;

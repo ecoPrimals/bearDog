@@ -6,28 +6,35 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use beardog::security::SecurityProvider;  // Add this import for authorize method
-use beardog::*;
-use beardog::adapters::nestgate::{FileOperation, FileOperationRequest, NestGateAdapter, NestGateConfig};
+use beardog::adapters::nestgate::{
+    FileOperation, FileOperationRequest, NestGateAdapter, NestGateConfig,
+};
 use beardog::api::server::BearDogApiServer;
 use beardog::audit::{AuditEngine, AuditEvent, AuditEventType, AuditSeverity};
-use beardog::compliance::{ComplianceEngine, ComplianceEvent, ComplianceConfig, ComplianceStandard, ReportingConfig, ReportFormat};
-use beardog::core::{BearDogCore, HealthStatus};
+use beardog::compliance::{
+    ComplianceConfig, ComplianceEngine, ComplianceEvent, ComplianceStandard, ReportFormat,
+    ReportingConfig,
+};
 use beardog::config::core::BearDogConfig;
-use beardog::encryption::{EncryptionEngine, EncryptionConfig, EncryptionAlgorithm, EncryptedData, EncryptionRequest};
-use beardog::licensing::{LicenseManager, LicenseStatus, LicenseTier};
-use beardog::security::{
-    BearDogSecurityProvider, SecurityProviderConfig, Subject, Resource, Action, 
-    SubjectType, ResourceClassification, ActionType, RiskLevel
-};
-use beardog::threat::{ThreatDetectionEngine, ThreatDetectionConfig, SecurityEvent};
-use beardog::tunnel::events::types::ThreatLevel;
-use beardog::tunnel::config::GeneticHealingConfig;
 use beardog::config::integration::WorkflowConfig;
-use beardog::workflows::{
-    MultiPartyWorkflowEngine, WorkflowRequest, WorkflowType, WorkflowTarget,
-    ApprovalRequirements, ApprovalSubmission, WorkflowStatus, ApprovalDecision, WorkflowPriority
+use beardog::core::{BearDogCore, HealthStatus};
+use beardog::encryption::{
+    EncryptedData, EncryptionAlgorithm, EncryptionConfig, EncryptionEngine, EncryptionRequest,
 };
+use beardog::licensing::{LicenseManager, LicenseStatus, LicenseTier};
+use beardog::security::SecurityProvider; // Add this import for authorize method
+use beardog::security::{
+    Action, ActionType, BearDogSecurityProvider, Resource, ResourceClassification, RiskLevel,
+    SecurityProviderConfig, Subject, SubjectType,
+};
+use beardog::threat::{SecurityEvent, ThreatDetectionConfig, ThreatDetectionEngine};
+use beardog::tunnel::config::GeneticHealingConfig;
+use beardog::tunnel::events::types::ThreatLevel;
+use beardog::workflows::{
+    ApprovalDecision, ApprovalRequirements, ApprovalSubmission, MultiPartyWorkflowEngine,
+    WorkflowPriority, WorkflowRequest, WorkflowStatus, WorkflowTarget, WorkflowType,
+};
+use beardog::*;
 
 /// Test helper to create a test configuration
 fn create_test_config() -> BearDogConfig {
@@ -487,8 +494,7 @@ async fn test_integration_api_threat_detection_compliance() -> BearDogResult<()>
         additional_data: HashMap::new(),
     };
 
-    let threat_result = threat_engine.analyze_event(&security_event)
-        .await?;
+    let threat_result = threat_engine.analyze_event(&security_event).await?;
     assert!(threat_result.threat_level >= ThreatLevel::High);
 
     // 2. Check file operation through NestGate
@@ -664,7 +670,10 @@ async fn test_demo_mode_scenario() -> BearDogResult<()> {
     event_data.insert("event_id".to_string(), demo_event.event_id.clone());
     event_data.insert("event_type".to_string(), demo_event.event_type.clone());
     event_data.insert("source_ip".to_string(), demo_event.source_ip.clone());
-    event_data.insert("destination_ip".to_string(), demo_event.destination_ip.clone());
+    event_data.insert(
+        "destination_ip".to_string(),
+        demo_event.destination_ip.clone(),
+    );
     event_data.insert("user_id".to_string(), demo_event.user_id.clone());
     if let Some(user_agent) = &demo_event.user_agent {
         event_data.insert("user_agent".to_string(), user_agent.clone());
@@ -900,8 +909,8 @@ async fn test_security_provider_integration() -> BearDogResult<()> {
     let security_provider =
         BearDogSecurityProvider::new(SecurityProviderConfig::default(), core.clone()).await?;
 
-    let health = security_provider.health_check().await?;
-    assert_eq!(health.status, HealthStatus::Healthy);
+    let health = security_provider.health().await?;
+    assert_eq!(health.overall_status, HealthStatus::Healthy);
 
     // Test authorization flow
     let subject = Subject {
@@ -912,6 +921,7 @@ async fn test_security_provider_integration() -> BearDogResult<()> {
             "department".to_string(),
             "engineering".to_string(),
         )]),
+        clearance_level: Some(3),
     };
 
     let resource = Resource {
@@ -958,20 +968,28 @@ async fn test_notification_engine_integration() -> BearDogResult<()> {
     use std::env;
 
     let config = NotificationConfig {
-        enabled: true,
-        email_enabled: false, // Disable for testing
-        slack_enabled: false,
+        email_enabled: true,
+        email_server: Some(
+            env::var("BEARDOG_SMTP_SERVER").unwrap_or_else(|_| "smtp.beardog.local".to_string()),
+        ),
+        email_username: Some("test".to_string()),
+        email_password: Some("test".to_string()),
+        sms_enabled: false,
+        sms_provider: None,
+        sms_api_key: None,
         webhook_enabled: false,
-        smtp_server: env::var("BEARDOG_SMTP_SERVER")
-            .unwrap_or_else(|_| "smtp.beardog.local".to_string()),
-        smtp_port: 587,
-        smtp_username: "test".to_string(),
-        smtp_password: "test".to_string(),
-        slack_webhook_url: None,
         webhook_url: None,
+        webhook_secret: None,
+        slack_enabled: false,
+        slack_webhook_url: None,
+        teams_enabled: false,
+        teams_webhook_url: None,
+        notification_template_path: None,
+        notification_retry_attempts: 3,
+        notification_retry_delay: Duration::from_secs(60),
     };
 
-    let engine = NotificationEngine::new(&config)?;
+    let engine = NotificationEngine::new(config);
 
     let workflow = beardog::workflows::Workflow {
         id: "test-workflow-123".to_string(),
@@ -993,8 +1011,8 @@ async fn test_notification_engine_integration() -> BearDogResult<()> {
             required_approvals: 2,
             required_roles: vec!["manager".to_string(), "admin".to_string()],
             approval_hierarchy: vec![],
-            min_approval_time: chrono::Duration::seconds(300),
-            max_approval_time: chrono::Duration::hours(24),
+            min_approval_time: Duration::from_secs(300),
+            max_approval_time: Duration::from_secs(24 * 3600),
             delegation_allowed: false,
             self_approval_allowed: false,
         },
@@ -1050,15 +1068,24 @@ async fn test_policy_engine_integration() -> BearDogResult<()> {
     use std::time::Duration;
 
     let config = PolicyConfig {
-        require_mfa: true,
-        max_approval_time: chrono::Duration::seconds(24 * 3600), // 24 hours in seconds
-        min_approvers: 2,
-        require_justification: true,
-        auto_expire: true,
-        escalation_enabled: true,
+        default_approval_timeout: Duration::from_secs(24 * 3600), // 24 hours
+        emergency_approval_timeout: Duration::from_secs(3600),    // 1 hour
+        max_concurrent_workflows: 100,
+        max_workflow_age: Duration::from_secs(7 * 24 * 3600), // 7 days
+        auto_cleanup_enabled: true,
+        risk_scoring_enabled: true,
+        compliance_checking_enabled: true,
+        audit_retention_period: Duration::from_secs(30 * 24 * 3600), // 30 days
+        notification_escalation_enabled: true,
+        escalation_intervals: vec![Duration::from_secs(3600), Duration::from_secs(7200)],
+        delegation_policies: HashMap::new(),
+        role_hierarchies: HashMap::new(),
+        approval_matrix: HashMap::new(),
+        emergency_contacts: vec!["admin@example.com".to_string()],
+        business_hours: None,
     };
 
-    let engine = WorkflowPolicyEngine::new(&config)?;
+    let engine = WorkflowPolicyEngine::new(config);
 
     let request = WorkflowRequest {
         workflow_type: WorkflowType::KeyDeletion,
@@ -1081,7 +1108,7 @@ async fn test_policy_engine_integration() -> BearDogResult<()> {
     let requirements = engine.determine_approval_requirements(&request).await?;
 
     assert!(requirements.required_approvals >= 2);
-    assert!(requirements.max_approval_time.num_seconds() > 0);
+    assert!(requirements.max_approval_time.as_secs() > 0);
 
     Ok(())
 }
@@ -1113,12 +1140,18 @@ async fn test_cross_component_integration() -> BearDogResult<()> {
     event_data.insert("event_id".to_string(), security_event.event_id.clone());
     event_data.insert("event_type".to_string(), security_event.event_type.clone());
     event_data.insert("source_ip".to_string(), security_event.source_ip.clone());
-    event_data.insert("destination_ip".to_string(), security_event.destination_ip.clone());
+    event_data.insert(
+        "destination_ip".to_string(),
+        security_event.destination_ip.clone(),
+    );
     event_data.insert("user_id".to_string(), security_event.user_id.clone());
     if let Some(user_agent) = &security_event.user_agent {
         event_data.insert("user_agent".to_string(), user_agent.clone());
     }
-    event_data.insert("data_size".to_string(), security_event.data_size.to_string());
+    event_data.insert(
+        "data_size".to_string(),
+        security_event.data_size.to_string(),
+    );
     if let Some(location) = &security_event.location {
         event_data.insert("location".to_string(), location.clone());
     }
@@ -1148,9 +1181,7 @@ async fn test_cross_component_integration() -> BearDogResult<()> {
             ("ip_address".to_string(), "192.168.1.100".to_string()),
             ("attempts".to_string(), "5".to_string()),
         ]),
-        metadata: HashMap::from([
-            ("system_id".to_string(), "sensitive-system-123".to_string()),
-        ]),
+        metadata: HashMap::from([("system_id".to_string(), "sensitive-system-123".to_string())]),
     };
 
     let compliance_result = core
@@ -1173,9 +1204,7 @@ async fn test_cross_component_integration() -> BearDogResult<()> {
         metadata: HashMap::new(),
         description: "Test audit event".to_string(),
         outcome: "success".to_string(),
-        details: HashMap::from([
-            ("event_source".to_string(), "integration_test".to_string()),
-        ]),
+        details: HashMap::from([("event_source".to_string(), "integration_test".to_string())]),
     };
 
     core.audit_engine().log_event(audit_event).await?;
@@ -1207,6 +1236,7 @@ async fn test_songbird_security_provider_integration() -> BearDogResult<()> {
                 subject_type: SubjectType::User,
                 roles: vec!["user".to_string()],
                 attributes: std::collections::HashMap::new(),
+                clearance_level: Some(2),
             },
             &Resource {
                 id: "resource1".to_string(),
@@ -1229,7 +1259,10 @@ async fn test_songbird_security_provider_integration() -> BearDogResult<()> {
 
     // Test security health check
     let health = adapter.health().await?;
-    assert_eq!(health.overall_status, beardog::security::HealthStatus::Healthy);
+    assert_eq!(
+        health.overall_status,
+        beardog::security::HealthStatus::Healthy
+    );
 
     Ok(())
 }
@@ -1300,7 +1333,10 @@ async fn test_enhanced_compliance_analysis() -> BearDogResult<()> {
             ("consent_status".to_string(), "granted".to_string()),
         ]),
         metadata: HashMap::from([
-            ("table_id".to_string(), "personal-data-table-123".to_string()),
+            (
+                "table_id".to_string(),
+                "personal-data-table-123".to_string(),
+            ),
             ("compliance_standard".to_string(), "GDPR".to_string()),
         ]),
     };
@@ -1381,6 +1417,7 @@ async fn test_security_provider_comprehensive() -> BearDogResult<()> {
             ("department".to_string(), "engineering".to_string()),
             ("clearance_level".to_string(), "standard".to_string()),
         ]),
+        clearance_level: Some(3),
     };
 
     let resource = Resource {
@@ -1493,9 +1530,12 @@ async fn test_cross_component_real_data_flow() -> BearDogResult<()> {
     event_data.insert("event_id".to_string(), security_event.event_id.clone());
     event_data.insert("event_type".to_string(), security_event.event_type.clone());
     event_data.insert("source_ip".to_string(), security_event.source_ip.clone());
-    event_data.insert("destination_ip".to_string(), security_event.destination_ip.clone());
+    event_data.insert(
+        "destination_ip".to_string(),
+        security_event.destination_ip.clone(),
+    );
     event_data.insert("user_id".to_string(), security_event.user_id.clone());
-    
+
     let threat_config = ThreatDetectionConfig::default();
     let mut threat_engine = ThreatDetectionEngine::new(threat_config).await?;
     let threat_result = threat_engine.analyze_event(&event_data).await?;
@@ -1536,13 +1576,34 @@ async fn test_cross_component_real_data_flow() -> BearDogResult<()> {
 
     // 6. Test workflow engine integration
     let workflow_config = WorkflowConfig {
-        auto_approve_threshold: 0.8,
-        require_unanimous_approval: false,
-        max_approval_time: chrono::Duration::from_secs(3600),
-        enable_delegation: true,
-        audit_all_actions: true,
-        notification_endpoints: vec![],
-        storage_path: "/tmp/workflows".to_string(),
+        default_approval_timeout: Duration::from_secs(3600),
+        max_concurrent_workflows: 10,
+        storage: beardog::config::integration::WorkflowStorageConfig {
+            storage_type: "memory".to_string(),
+            config: HashMap::new(),
+        },
+        notifications: beardog::config::integration::NotificationConfig {
+            enabled: true,
+            email: beardog::config::integration::EmailConfig {
+                enabled: false,
+                smtp_server: "localhost".to_string(),
+                smtp_port: 587,
+                username: "test".to_string(),
+                password: "test".to_string(),
+                from_address: "test@example.com".to_string(),
+            },
+            webhook: beardog::config::integration::WebhookConfig {
+                enabled: false,
+                url: "http://localhost:8080/webhook".to_string(),
+                auth_token: None,
+                timeout: Duration::from_secs(30),
+            },
+        },
+        policies: beardog::config::integration::PolicyConfig {
+            default_policy: "strict".to_string(),
+            evaluation_timeout: Duration::from_secs(60),
+            custom_policies: HashMap::new(),
+        },
     };
 
     let workflow_engine = MultiPartyWorkflowEngine::new(
@@ -1553,11 +1614,8 @@ async fn test_cross_component_real_data_flow() -> BearDogResult<()> {
     .await?;
 
     // 7. Test security provider integration
-    let security_provider = BearDogSecurityProvider::new(
-        SecurityProviderConfig::default(),
-        core.clone(),
-    )
-    .await?;
+    let security_provider =
+        BearDogSecurityProvider::new(SecurityProviderConfig::default(), core.clone()).await?;
 
     let subject = Subject {
         id: "cross-test-user".to_string(),

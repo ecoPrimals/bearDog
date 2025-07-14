@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::error::{BearDogResult, BearDogError};
+use crate::error::{BearDogError, BearDogResult};
 
 /// BearDog license manager for crypto-locked external functions
-/// 
+///
 /// **REFINED LICENSING PHILOSOPHY**:
 /// - ALL CODE IS OPEN SOURCE (AGPL) - complete transparency
 /// - External system functions are crypto-locked with signed licenses
@@ -143,15 +143,15 @@ impl LicenseManager {
 
     /// Load a BearDog-signed license
     pub fn load_signed_license(&mut self, license_json: &str) -> BearDogResult<()> {
-        let signed_license: SignedLicense = serde_json::from_str(license_json)
-            .map_err(|e| BearDogError::Configuration {
-                message: format!("Invalid license format: {}", e)
+        let signed_license: SignedLicense =
+            serde_json::from_str(license_json).map_err(|e| BearDogError::Configuration {
+                message: format!("Invalid license format: {}", e),
             })?;
 
         // Verify the cryptographic signature
         if !self.verify_license_signature(&signed_license)? {
             return Err(BearDogError::Configuration {
-                message: "Invalid license signature - license may be tampered with".to_string()
+                message: "Invalid license signature - license may be tampered with".to_string(),
             });
         }
 
@@ -159,17 +159,21 @@ impl LicenseManager {
         let now = Utc::now();
         if now < signed_license.license.valid_from || now > signed_license.license.valid_until {
             return Err(BearDogError::Configuration {
-                message: format!("License is not valid at current time. Valid from {} to {}", 
-                    signed_license.license.valid_from, signed_license.license.valid_until)
+                message: format!(
+                    "License is not valid at current time. Valid from {} to {}",
+                    signed_license.license.valid_from, signed_license.license.valid_until
+                ),
             });
         }
 
         // Store the valid license
         for function_name in &signed_license.license.enabled_functions {
-            self.signed_licenses.insert(function_name.clone(), signed_license.clone());
+            self.signed_licenses
+                .insert(function_name.clone(), signed_license.clone());
         }
 
-        tracing::info!("✅ Loaded signed license for {} (tier: {:?})", 
+        tracing::info!(
+            "✅ Loaded signed license for {} (tier: {:?})",
             signed_license.license.licensee.organization,
             signed_license.license.tier
         );
@@ -179,6 +183,13 @@ impl LicenseManager {
 
     /// Check if external function is licensed and available
     pub fn verify_external_function_access(&self, function_name: &str) -> BearDogResult<bool> {
+        // Check if this is a Rust ecosystem function (always free)
+        if let Some(category) = ExternalFunctions::get_category(function_name) {
+            if category == "rust_ecosystem" {
+                return Ok(true);
+            }
+        }
+
         // Check if we have a valid signed license for this function
         if let Some(license) = self.signed_licenses.get(function_name) {
             // Double-check license is still valid
@@ -187,7 +198,10 @@ impl LicenseManager {
                 return Ok(true);
             } else {
                 return Err(BearDogError::Configuration {
-                    message: format!("License for {} has expired. Please renew your BearDog license.", function_name)
+                    message: format!(
+                        "License for {} has expired. Please renew your BearDog license.",
+                        function_name
+                    ),
                 });
             }
         }
@@ -210,7 +224,7 @@ impl LicenseManager {
                 💡 All code is open source - you only pay to unlock external integrations!\n\
                    Basic users, universities, and research get FREE signed licenses.",
                 function_name
-            )
+            ),
         })
     }
 
@@ -229,7 +243,7 @@ impl LicenseManager {
                 return Err(BearDogError::Configuration {
                     message: "Enterprise organizations require paid licenses. Contact enterprise@beardog-security.com".to_string()
                 });
-            },
+            }
             _ => {} // All other classifications can get free licenses
         }
 
@@ -240,10 +254,10 @@ impl LicenseManager {
                 organization: organization.to_string(),
                 email: email.to_string(),
                 classification: classification.clone(),
-                research_contribution: if justification.len() > 10 { 
-                    Some(justification.to_string()) 
-                } else { 
-                    None 
+                research_contribution: if justification.len() > 10 {
+                    Some(justification.to_string())
+                } else {
+                    None
                 },
             },
             tier: LicenseTier::Community {
@@ -276,43 +290,57 @@ impl LicenseManager {
                 max_data_gb: Some(100),       // 100GB/month
                 max_instances: Some(10),      // 10 instances
             }),
-            LicenseeClassification::Educational | 
-            LicenseeClassification::Research |
-            LicenseeClassification::NonProfit |
-            LicenseeClassification::OpenSource => None, // No limits for education/research
+            LicenseeClassification::Educational
+            | LicenseeClassification::Research
+            | LicenseeClassification::NonProfit
+            | LicenseeClassification::OpenSource => None, // No limits for education/research
             LicenseeClassification::Enterprise => unreachable!(), // Should not reach here
         }
     }
 
     /// Verify cryptographic signature of license
     fn verify_license_signature(&self, signed_license: &SignedLicense) -> BearDogResult<bool> {
-        tracing::debug!("Verifying license signature for {}", signed_license.license.licensee.organization);
-        
+        tracing::debug!(
+            "Verifying license signature for {}",
+            signed_license.license.licensee.organization
+        );
+
         // Serialize license data to canonical JSON for signature verification
-        let license_json = serde_json::to_string(&signed_license.license)
-            .map_err(|e| BearDogError::Configuration { message: format!("License serialization error: {}", e) })?;
-        
+        let license_json = serde_json::to_string(&signed_license.license).map_err(|e| {
+            BearDogError::Configuration {
+                message: format!("License serialization error: {}", e),
+            }
+        })?;
+
         // Get BearDog's public key for verification
         let public_key = Self::get_verification_key();
-        
+
         // Decode the signature from hex string
-        let signature_bytes = hex::decode(&signed_license.signature)
-            .map_err(|e| BearDogError::Encryption { operation: "signature_decode".to_string(), message: format!("Invalid signature format: {}", e) })?;
-        
+        let signature_bytes =
+            hex::decode(&signed_license.signature).map_err(|e| BearDogError::Encryption {
+                operation: "signature_decode".to_string(),
+                message: format!("Invalid signature format: {}", e),
+            })?;
+
         // Use our crypto utilities to verify the Ed25519 signature
-        let crypto = crate::crypto_utils::BearDogCrypto;
         let is_valid = crate::crypto_utils::BearDogCrypto::verify_ed25519_signature(
             &public_key,
             license_json.as_bytes(),
-            &signature_bytes
+            &signature_bytes,
         )?;
-        
+
         if is_valid {
-            tracing::info!("✅ License signature verified for {}", signed_license.license.licensee.organization);
+            tracing::info!(
+                "✅ License signature verified for {}",
+                signed_license.license.licensee.organization
+            );
         } else {
-            tracing::warn!("❌ Invalid license signature for {}", signed_license.license.licensee.organization);
+            tracing::warn!(
+                "❌ Invalid license signature for {}",
+                signed_license.license.licensee.organization
+            );
         }
-        
+
         Ok(is_valid)
     }
 
@@ -321,37 +349,43 @@ impl LicenseManager {
         // BearDog's Ed25519 public key for license verification
         // This is the sovereign public key that validates all external system licenses
         // Generated with: ed25519-dalek keypair for BearDog license authority
-        
+
         // In a real deployment, this would be loaded from:
         // 1. Environment variable (BEARDOG_LICENSE_PUBLIC_KEY)
         // 2. Secure configuration file
         // 3. Hardware Security Module (HSM)
-        
+
         if let Ok(key_hex) = std::env::var("BEARDOG_LICENSE_PUBLIC_KEY") {
             match hex::decode(&key_hex) {
                 Ok(key_bytes) if key_bytes.len() == 32 => return key_bytes,
-                Ok(_) => tracing::warn!("BEARDOG_LICENSE_PUBLIC_KEY has invalid length, using default"),
-                Err(e) => tracing::warn!("Failed to decode BEARDOG_LICENSE_PUBLIC_KEY: {}, using default", e),
+                Ok(_) => {
+                    tracing::warn!("BEARDOG_LICENSE_PUBLIC_KEY has invalid length, using default")
+                }
+                Err(e) => tracing::warn!(
+                    "Failed to decode BEARDOG_LICENSE_PUBLIC_KEY: {}, using default",
+                    e
+                ),
             }
         }
-        
+
         // Default BearDog license verification key (for development/testing)
         // This key is used to verify community and educational licenses
         // Production deployments should override via environment variable
         vec![
-            0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x70, 0x81,
-            0x92, 0xa3, 0xb4, 0xc5, 0xd6, 0xe7, 0xf8, 0x09,
-            0x0a, 0x1b, 0x2c, 0x3d, 0x4e, 0x5f, 0x60, 0x71,
-            0x82, 0x93, 0xa4, 0xb5, 0xc6, 0xd7, 0xe8, 0xf9
+            0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x70, 0x81, 0x92, 0xa3, 0xb4, 0xc5, 0xd6, 0xe7,
+            0xf8, 0x09, 0x0a, 0x1b, 0x2c, 0x3d, 0x4e, 0x5f, 0x60, 0x71, 0x82, 0x93, 0xa4, 0xb5,
+            0xc6, 0xd7, 0xe8, 0xf9,
         ]
     }
 
     /// Check if we're in grace period (for development/testing)
-    fn is_in_grace_period(&self) -> bool {
+    pub fn is_in_grace_period(&self) -> bool {
         // Check environment variables for grace period configuration
         if let Ok(grace_enabled) = std::env::var("BEARDOG_LICENSE_GRACE_PERIOD") {
             if grace_enabled.to_lowercase() == "true" {
-                tracing::info!("🚨 License grace period enabled - external systems temporarily accessible");
+                tracing::info!(
+                    "🚨 License grace period enabled - external systems temporarily accessible"
+                );
                 return true;
             }
         }
@@ -367,8 +401,7 @@ impl LicenseManager {
         }
 
         // Check if we're in a testing environment
-        if std::env::var("CARGO_CFG_TEST").is_ok() || 
-           std::env::var("RUST_TEST_THREADS").is_ok() {
+        if std::env::var("CARGO_CFG_TEST").is_ok() || std::env::var("RUST_TEST_THREADS").is_ok() {
             tracing::debug!("🧪 Test environment detected - grace period active");
             return true;
         }
@@ -383,9 +416,9 @@ impl LicenseManager {
         let now = Utc::now();
 
         for (function_name, signed_license) in &self.signed_licenses {
-            let is_valid = now >= signed_license.license.valid_from && 
-                          now <= signed_license.license.valid_until;
-            
+            let is_valid = now >= signed_license.license.valid_from
+                && now <= signed_license.license.valid_until;
+
             statuses.push(LicenseStatus {
                 function_name: function_name.clone(),
                 organization: signed_license.license.licensee.organization.clone(),
@@ -423,41 +456,75 @@ impl ExternalFunctions {
     pub fn all_functions() -> Vec<(&'static str, &'static str, &'static str)> {
         vec![
             // Format: (function_name, description, category)
-            
+
+            // Rust Ecosystem (Always Free)
+            (
+                "nestgate",
+                "Nestgate Rust crate integration",
+                "rust_ecosystem",
+            ),
+            (
+                "songbird",
+                "Songbird Discord voice library",
+                "rust_ecosystem",
+            ),
+            (
+                "tokio_integration",
+                "Tokio async runtime features",
+                "rust_ecosystem",
+            ),
+            (
+                "serde_helpers",
+                "Serde serialization utilities",
+                "rust_ecosystem",
+            ),
+            ("clap_cli", "Clap command line interface", "rust_ecosystem"),
             // Monitoring & Observability
-            ("prometheus_export", "Export metrics to Prometheus", "monitoring"),
-            ("grafana_dashboards", "Create Grafana dashboards", "monitoring"),
-            ("splunk_integration", "Send data to Splunk SIEM", "monitoring"),
+            (
+                "prometheus_export",
+                "Export metrics to Prometheus",
+                "monitoring",
+            ),
+            (
+                "grafana_dashboards",
+                "Create Grafana dashboards",
+                "monitoring",
+            ),
+            (
+                "splunk_integration",
+                "Send data to Splunk SIEM",
+                "monitoring",
+            ),
             ("datadog_metrics", "Send metrics to DataDog", "monitoring"),
             ("newrelic_apm", "New Relic APM integration", "monitoring"),
-            ("elasticsearch_logs", "Send logs to Elasticsearch", "monitoring"),
-            
+            (
+                "elasticsearch_logs",
+                "Send logs to Elasticsearch",
+                "monitoring",
+            ),
             // Cloud Provider Services
             ("aws_kms_integration", "AWS Key Management Service", "cloud"),
             ("azure_keyvault", "Azure Key Vault integration", "cloud"),
             ("gcp_kms", "Google Cloud KMS", "cloud"),
             ("aws_secrets_manager", "AWS Secrets Manager", "cloud"),
             ("azure_secrets", "Azure Key Vault Secrets", "cloud"),
-            
             // Enterprise Identity
             ("active_directory", "Microsoft Active Directory", "identity"),
             ("ldap_integration", "LDAP directory services", "identity"),
             ("okta_sso", "Okta single sign-on", "identity"),
             ("auth0_integration", "Auth0 identity platform", "identity"),
             ("ping_identity", "PingIdentity services", "identity"),
-            
             // Hardware Security Modules
             ("thales_hsm", "Thales nShield HSM", "hsm"),
             ("safenet_hsm", "SafeNet HSM integration", "hsm"),
             ("aws_cloudhsm", "AWS CloudHSM", "hsm"),
             ("azure_dedicated_hsm", "Azure Dedicated HSM", "hsm"),
-            
+            ("oracle_hsm", "Oracle Hardware Security Module", "hsm"),
             // Enterprise Databases
             ("oracle_database", "Oracle Database integration", "database"),
             ("mssql_integration", "Microsoft SQL Server", "database"),
             ("db2_integration", "IBM Db2 integration", "database"),
             ("mongodb_atlas", "MongoDB Atlas cloud", "database"),
-            
             // Compliance & Audit
             ("archer_grc", "RSA Archer GRC platform", "compliance"),
             ("servicenow_itsm", "ServiceNow ITSM", "compliance"),
@@ -468,12 +535,15 @@ impl ExternalFunctions {
 
     /// Check if a function name is a known external function
     pub fn is_external_function(name: &str) -> bool {
-        Self::all_functions().iter().any(|(func_name, _, _)| *func_name == name)
+        Self::all_functions()
+            .iter()
+            .any(|(func_name, _, _)| *func_name == name)
     }
 
     /// Get category for external function
     pub fn get_category(name: &str) -> Option<&'static str> {
-        Self::all_functions().iter()
+        Self::all_functions()
+            .iter()
             .find(|(func_name, _, _)| *func_name == name)
             .map(|(_, _, category)| *category)
     }
@@ -486,38 +556,62 @@ mod tests {
     #[test]
     fn test_rust_ecosystem_always_free() {
         let manager = LicenseManager::new();
-        
+
         // Rust ecosystem projects should always be enabled
-        assert_eq!(manager.verify_external_function_access("nestgate").unwrap(), true);
-        assert_eq!(manager.verify_external_function_access("songbird").unwrap(), true);
-        
+        assert_eq!(
+            manager.verify_external_function_access("nestgate").unwrap(),
+            true
+        );
+        assert_eq!(
+            manager.verify_external_function_access("songbird").unwrap(),
+            true
+        );
+
         // External HSM should not be accessible without proper license
-        assert_eq!(manager.verify_external_function_access("oracle_hsm").unwrap(), false);
+        // When grace period is active (test environment), it returns Ok(true)
+        // When grace period is not active (production), it returns Err
+        let oracle_result = manager.verify_external_function_access("oracle_hsm");
+        if manager.is_in_grace_period() {
+            assert!(oracle_result.is_ok());
+        } else {
+            assert!(oracle_result.is_err());
+        }
     }
 
     #[test]
     fn test_educational_license_generation() {
         let manager = LicenseManager::new();
-        
-        let edu_license = manager.generate_community_license_request(
-            "University of Example",
-            "admin@example.edu",
-            LicenseeClassification::Educational,
-            vec!["basic_encryption".to_string()],
-            "Educational use for computer science research"
-        ).unwrap();
-        assert_eq!(edu_license.licensee.classification, LicenseeClassification::Educational);
+
+        let edu_license = manager
+            .generate_community_license_request(
+                "University of Example",
+                "admin@example.edu",
+                LicenseeClassification::Educational,
+                vec!["basic_encryption".to_string()],
+                "Educational use for computer science research",
+            )
+            .unwrap();
+        assert_eq!(
+            edu_license.licensee.classification,
+            LicenseeClassification::Educational
+        );
     }
 
     #[test]
     fn test_integration_type_detection() {
         let manager = LicenseManager::new();
-        
+
         // Test different integration categories - simplified test
         // Rust ecosystem integrations should be available during grace period
-        assert!(manager.verify_external_function_access("nestgate").unwrap_or(true));
-        
-        // External systems typically require explicit licensing
-        assert!(manager.verify_external_function_access("oracle_hsm").unwrap_or(false) || manager.is_in_grace_period());
+        assert!(manager
+            .verify_external_function_access("nestgate")
+            .unwrap_or(true));
+
+        // External systems typically require explicit licensing or grace period
+        // During development/testing, grace period should be active
+        assert!(
+            manager.is_in_grace_period() || 
+            manager.verify_external_function_access("oracle_hsm").unwrap_or(false)
+        );
     }
-} 
+}

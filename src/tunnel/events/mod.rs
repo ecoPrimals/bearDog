@@ -29,17 +29,17 @@
 //! * **capabilities**: Peer capability and trust structures
 
 // Re-export all event types and structures
+pub use capabilities::*;
+pub use compliance::*;
 pub use network::*;
 pub use security::*;
 pub use threat::*;
-pub use compliance::*;
-pub use capabilities::*;
 pub use types::*;
 
 // Module declarations
+pub mod capabilities;
+pub mod compliance;
 pub mod network;
 pub mod security;
 pub mod threat;
-pub mod compliance;
-pub mod capabilities;
-pub mod types; 
+pub mod types;

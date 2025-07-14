@@ -4,9 +4,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::types::*;
 use super::compliance::*;
 use super::threat::ThreatMitigationAction;
+use super::types::*;
 
 /// Events that BearDog security layer sends to Songbird network layer
 ///
@@ -134,4 +134,4 @@ pub enum SecurityResponse {
         /// Recommended immediate action for the network layer
         recommended_action: ThreatMitigationAction,
     },
-} 
+}

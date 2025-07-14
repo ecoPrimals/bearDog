@@ -82,4 +82,4 @@ pub enum ThreatMitigationAction {
     /// Adds additional identity verification steps to prevent unauthorized
     /// access to sensitive research data and academic systems.
     IncreaseAuthentication,
-} 
+}

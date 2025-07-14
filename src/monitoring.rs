@@ -1,14 +1,14 @@
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 use tokio::sync::RwLock;
-use chrono::{DateTime, Utc};
-use std::sync::atomic::{AtomicU64, Ordering};
 
-use crate::error::{BearDogResult, BearDogError};
-use crate::utils::env_utils::{EnvUtils, ObservabilityConfig};
+use crate::error::{BearDogError, BearDogResult};
 use crate::licensing::LicenseManager;
+use crate::utils::env_utils::ObservabilityConfig;
 
 /// Metric value types that can be recorded
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -137,11 +137,11 @@ impl MonitoringService {
         // Check all registered components
         for checker in &self.checkers {
             let check_start = Instant::now();
-            
+
             match checker.check_health().await {
                 Ok(mut component) => {
                     component.check_duration_ms = check_start.elapsed().as_millis() as u64;
-                    
+
                     // Update overall status based on component status
                     match component.status {
                         HealthStatus::Unhealthy => overall_status = HealthStatus::Unhealthy,
@@ -150,7 +150,7 @@ impl MonitoringService {
                         }
                         _ => {}
                     }
-                    
+
                     components.push(component);
                 }
                 Err(e) => {
@@ -185,7 +185,7 @@ impl MonitoringService {
     pub async fn update_metrics(&self, metrics: SystemMetrics) {
         let mut current_metrics = self.metrics.write().await;
         *current_metrics = metrics.clone();
-        
+
         // Check for alerts
         self.check_alerts(&metrics).await;
     }
@@ -198,30 +198,30 @@ impl MonitoringService {
         }
 
         tracing::info!("Starting monitoring service");
-        
+
         let metrics = self.metrics.clone();
         let thresholds = self.alert_thresholds.clone();
-        
+
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(30));
-            
+
             loop {
                 interval.tick().await;
-                
+
                 // Collect system metrics
                 let current_metrics = Self::collect_system_metrics().await;
-                
+
                 // Update metrics
                 {
                     let mut metrics_guard = metrics.write().await;
                     *metrics_guard = current_metrics.clone();
                 }
-                
+
                 // Check thresholds and log warnings
                 Self::check_thresholds(&current_metrics, &thresholds).await;
             }
         });
-        
+
         Ok(())
     }
 
@@ -229,7 +229,7 @@ impl MonitoringService {
     async fn collect_system_metrics() -> SystemMetrics {
         // In a real implementation, you'd use system APIs to get actual metrics
         // For now, we'll provide placeholder implementations
-        
+
         SystemMetrics {
             timestamp: Utc::now(),
             performance: PerformanceMetrics {
@@ -253,21 +253,23 @@ impl MonitoringService {
     async fn check_alerts(&self, metrics: &SystemMetrics) {
         let perf = &metrics.performance;
         let thresholds = &self.alert_thresholds;
-        
+
         if perf.cpu_usage_percent > thresholds.cpu_threshold {
             tracing::warn!("High CPU usage: {:.1}%", perf.cpu_usage_percent);
         }
-        
-        let memory_usage_percent = (perf.memory_usage_bytes as f64 / perf.memory_total_bytes as f64) * 100.0;
+
+        let memory_usage_percent =
+            (perf.memory_usage_bytes as f64 / perf.memory_total_bytes as f64) * 100.0;
         if memory_usage_percent > thresholds.memory_threshold {
             tracing::warn!("High memory usage: {:.1}%", memory_usage_percent);
         }
-        
-        let disk_usage_percent = (perf.disk_usage_bytes as f64 / perf.disk_total_bytes as f64) * 100.0;
+
+        let disk_usage_percent =
+            (perf.disk_usage_bytes as f64 / perf.disk_total_bytes as f64) * 100.0;
         if disk_usage_percent > thresholds.disk_threshold {
             tracing::warn!("High disk usage: {:.1}%", disk_usage_percent);
         }
-        
+
         if perf.avg_response_time_ms > thresholds.response_time_threshold {
             tracing::warn!("High response time: {:.1}ms", perf.avg_response_time_ms);
         }
@@ -276,12 +278,13 @@ impl MonitoringService {
     /// Check thresholds (static version for spawn)
     async fn check_thresholds(metrics: &SystemMetrics, thresholds: &AlertThresholds) {
         let perf = &metrics.performance;
-        
+
         if perf.cpu_usage_percent > thresholds.cpu_threshold {
             tracing::warn!("High CPU usage: {:.1}%", perf.cpu_usage_percent);
         }
-        
-        let memory_usage_percent = (perf.memory_usage_bytes as f64 / perf.memory_total_bytes as f64) * 100.0;
+
+        let memory_usage_percent =
+            (perf.memory_usage_bytes as f64 / perf.memory_total_bytes as f64) * 100.0;
         if memory_usage_percent > thresholds.memory_threshold {
             tracing::warn!("High memory usage: {:.1}%", memory_usage_percent);
         }
@@ -371,11 +374,11 @@ impl DatabaseHealthChecker {
 impl HealthChecker for DatabaseHealthChecker {
     async fn check_health(&self) -> BearDogResult<ComponentHealth> {
         let start = Instant::now();
-        
+
         // In a real implementation, you'd ping the database
         // For now, simulate a health check
         tokio::time::sleep(Duration::from_millis(10)).await;
-        
+
         Ok(ComponentHealth {
             name: "Database".to_string(),
             status: HealthStatus::Healthy,
@@ -411,10 +414,10 @@ impl RedisHealthChecker {
 impl HealthChecker for RedisHealthChecker {
     async fn check_health(&self) -> BearDogResult<ComponentHealth> {
         let start = Instant::now();
-        
+
         // In a real implementation, you'd ping Redis
         tokio::time::sleep(Duration::from_millis(5)).await;
-        
+
         Ok(ComponentHealth {
             name: "Redis".to_string(),
             status: HealthStatus::Healthy,
@@ -456,15 +459,21 @@ impl ExternalServiceHealthChecker {
 impl HealthChecker for ExternalServiceHealthChecker {
     async fn check_health(&self) -> BearDogResult<ComponentHealth> {
         let start = Instant::now();
-        
-        match self.client.get(&self.endpoint).timeout(Duration::from_secs(5)).send().await {
+
+        match self
+            .client
+            .get(&self.endpoint)
+            .timeout(Duration::from_secs(5))
+            .send()
+            .await
+        {
             Ok(response) => {
                 let status = if response.status().is_success() {
                     HealthStatus::Healthy
                 } else {
                     HealthStatus::Degraded
                 };
-                
+
                 Ok(ComponentHealth {
                     name: self.name.clone(),
                     status,
@@ -474,26 +483,27 @@ impl HealthChecker for ExternalServiceHealthChecker {
                     metadata: {
                         let mut meta = HashMap::new();
                         meta.insert("endpoint".to_string(), self.endpoint.clone());
-                        meta.insert("status_code".to_string(), response.status().as_u16().to_string());
+                        meta.insert(
+                            "status_code".to_string(),
+                            response.status().as_u16().to_string(),
+                        );
                         meta
                     },
                 })
             }
-            Err(e) => {
-                Ok(ComponentHealth {
-                    name: self.name.clone(),
-                    status: HealthStatus::Unhealthy,
-                    message: Some(format!("Request failed: {}", e)),
-                    last_check: Utc::now(),
-                    check_duration_ms: start.elapsed().as_millis() as u64,
-                    metadata: {
-                        let mut meta = HashMap::new();
-                        meta.insert("endpoint".to_string(), self.endpoint.clone());
-                        meta.insert("error".to_string(), e.to_string());
-                        meta
-                    },
-                })
-            }
+            Err(e) => Ok(ComponentHealth {
+                name: self.name.clone(),
+                status: HealthStatus::Unhealthy,
+                message: Some(format!("Request failed: {}", e)),
+                last_check: Utc::now(),
+                check_duration_ms: start.elapsed().as_millis() as u64,
+                metadata: {
+                    let mut meta = HashMap::new();
+                    meta.insert("endpoint".to_string(), self.endpoint.clone());
+                    meta.insert("error".to_string(), e.to_string());
+                    meta
+                },
+            }),
         }
     }
 
@@ -516,7 +526,7 @@ mod tests {
             jaeger_endpoint: None,
             otlp_endpoint: None,
         };
-        
+
         let service = MonitoringService::new(config);
         assert_eq!(service.checkers.len(), 0);
     }
@@ -525,7 +535,7 @@ mod tests {
     async fn test_database_health_checker() {
         let checker = DatabaseHealthChecker::new();
         let health = checker.check_health().await.unwrap();
-        
+
         assert_eq!(health.name, "Database");
         assert_eq!(health.status, HealthStatus::Healthy);
     }
@@ -540,21 +550,21 @@ mod tests {
             jaeger_endpoint: None,
             otlp_endpoint: None,
         };
-        
+
         let service = MonitoringService::new(config);
         let health = service.get_health().await.unwrap();
-        
+
         assert_eq!(health.status, HealthStatus::Healthy);
         assert_eq!(health.components.len(), 0);
     }
 }
 
 /// Metrics collection and export system
-/// 
+///
 /// **LICENSING CLARITY**:
 /// - Native Rust metrics collection: FREE (AGPL)
 /// - Prometheus export: REQUIRES LICENSE (external system)
-/// - Internal monitoring: FREE (AGPL) 
+/// - Internal monitoring: FREE (AGPL)
 pub struct MetricsService {
     /// Native Rust metrics (always free)
     native_metrics: Arc<RwLock<HashMap<String, MetricValue>>>,
@@ -601,7 +611,7 @@ impl MetricsService {
     pub async fn record_metric(&self, name: &str, value: MetricValue) {
         let mut metrics = self.native_metrics.write().await;
         metrics.insert(name.to_string(), value);
-        
+
         // Update internal collector timestamp
         *self.internal_collector.last_updated.write().await = Utc::now();
     }
@@ -614,21 +624,42 @@ impl MetricsService {
     /// Get internal metrics summary (always free)
     pub async fn get_internal_summary(&self) -> InternalMetricsSummary {
         InternalMetricsSummary {
-            security_events: self.internal_collector.security_events.load(Ordering::Relaxed),
-            encryption_operations: self.internal_collector.encryption_operations.load(Ordering::Relaxed),
-            threat_detections: self.internal_collector.threat_detections.load(Ordering::Relaxed),
-            compliance_checks: self.internal_collector.compliance_checks.load(Ordering::Relaxed),
+            security_events: self
+                .internal_collector
+                .security_events
+                .load(Ordering::Relaxed),
+            encryption_operations: self
+                .internal_collector
+                .encryption_operations
+                .load(Ordering::Relaxed),
+            threat_detections: self
+                .internal_collector
+                .threat_detections
+                .load(Ordering::Relaxed),
+            compliance_checks: self
+                .internal_collector
+                .compliance_checks
+                .load(Ordering::Relaxed),
             api_requests: self.internal_collector.api_requests.load(Ordering::Relaxed),
             error_count: self.internal_collector.error_count.load(Ordering::Relaxed),
-            active_sessions: self.internal_collector.active_sessions.load(Ordering::Relaxed),
+            active_sessions: self
+                .internal_collector
+                .active_sessions
+                .load(Ordering::Relaxed),
             last_updated: *self.internal_collector.last_updated.read().await,
         }
     }
 
     /// Enable Prometheus export (requires license)
-    pub async fn enable_prometheus_export(&mut self, config: PrometheusConfig) -> BearDogResult<()> {
+    pub async fn enable_prometheus_export(
+        &mut self,
+        config: PrometheusConfig,
+    ) -> BearDogResult<()> {
         // Check license for Prometheus (external system)
-        if !self.license_manager.verify_external_function_access("prometheus")? {
+        if !self
+            .license_manager
+            .verify_external_function_access("prometheus")?
+        {
             return Err(BearDogError::Configuration {
                 message: "Prometheus export requires a BearDog license. Native Rust metrics are always free. Contact sales for enterprise Prometheus integration.".to_string()
             });
@@ -649,7 +680,7 @@ impl MetricsService {
         if let Some(exporter) = &self.prometheus_exporter {
             if !exporter.enabled {
                 return Err(BearDogError::Configuration {
-                    message: "Prometheus export is not enabled".to_string()
+                    message: "Prometheus export is not enabled".to_string(),
                 });
             }
 
@@ -696,37 +727,51 @@ impl MetricsService {
 
     /// Increment security event counter (always free)
     pub fn increment_security_events(&self) {
-        self.internal_collector.security_events.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .security_events
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     /// Increment encryption operations (always free)
     pub fn increment_encryption_operations(&self) {
-        self.internal_collector.encryption_operations.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .encryption_operations
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     /// Record threat detection (always free)
     pub fn record_threat_detection(&self) {
-        self.internal_collector.threat_detections.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .threat_detections
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     /// Record compliance check (always free)
     pub fn record_compliance_check(&self) {
-        self.internal_collector.compliance_checks.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .compliance_checks
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     /// Record API request (always free)
     pub fn record_api_request(&self) {
-        self.internal_collector.api_requests.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .api_requests
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     /// Record error (always free)
     pub fn record_error(&self) {
-        self.internal_collector.error_count.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .error_count
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     /// Update active sessions (always free)
     pub fn update_active_sessions(&self, count: u64) {
-        self.internal_collector.active_sessions.store(count, Ordering::Relaxed);
+        self.internal_collector
+            .active_sessions
+            .store(count, Ordering::Relaxed);
     }
 }
 
@@ -763,4 +808,4 @@ pub struct InternalMetricsSummary {
 pub struct PrometheusConfig {
     pub endpoint: String,
     pub port: u16,
-} 
+}

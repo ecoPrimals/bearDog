@@ -4,9 +4,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::types::*;
 use super::capabilities::*;
 use super::threat::*;
+use super::types::*;
 
 /// Events that Songbird network layer sends to BearDog security layer
 ///
@@ -99,4 +99,4 @@ pub enum NetworkSecurityEvent {
         /// Type of optimization that was performed
         optimization_type: OptimizationType,
     },
-} 
+}

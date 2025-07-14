@@ -1,11 +1,11 @@
 //! Implementation logic and handlers for security provider
-//! 
+//!
 //! Contains the main business logic and implementation details for BearDogSecurityProvider.
 
 use super::types::*;
 use crate::{BearDogError, BearDogResult};
 
-use chrono::{Duration, Utc, Timelike};
+use chrono::{Duration, Timelike, Utc};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -42,7 +42,11 @@ impl BearDogSecurityProvider {
         let window_start = now - Duration::seconds(self.rate_limiter.window_seconds as i64);
 
         // Clean old requests
-        let user_requests = self.rate_limiter.requests.entry(user_id.to_string()).or_insert_with(Vec::new);
+        let user_requests = self
+            .rate_limiter
+            .requests
+            .entry(user_id.to_string())
+            .or_insert_with(Vec::new);
         user_requests.retain(|&timestamp| timestamp > window_start);
 
         // Check if under limit
@@ -52,7 +56,11 @@ impl BearDogSecurityProvider {
         } else {
             self.metrics.rate_limited_requests += 1;
             self.metrics.rate_limit_violations += 1;
-            *self.metrics.rate_limit_violations_per_user.entry(user_id.to_string()).or_insert(0) += 1;
+            *self
+                .metrics
+                .rate_limit_violations_per_user
+                .entry(user_id.to_string())
+                .or_insert(0) += 1;
             Ok(false)
         }
     }
@@ -60,7 +68,8 @@ impl BearDogSecurityProvider {
     /// Check if account is locked
     pub fn is_account_locked(&self, user_id: &str) -> bool {
         if let Some(lockout_time) = self.locked_accounts.get(user_id) {
-            let unlock_time = *lockout_time + Duration::minutes(self.config.lockout_duration_minutes as i64);
+            let unlock_time =
+                *lockout_time + Duration::minutes(self.config.lockout_duration_minutes as i64);
             Utc::now() < unlock_time
         } else {
             false
@@ -85,15 +94,21 @@ impl BearDogSecurityProvider {
     }
 
     /// Create a new security session
-    pub async fn create_session(&mut self, user_id: &str, ip_address: Option<String>) -> BearDogResult<SecuritySession> {
+    pub async fn create_session(
+        &mut self,
+        user_id: &str,
+        ip_address: Option<String>,
+    ) -> BearDogResult<SecuritySession> {
         // Check concurrent session limit
-        let active_user_sessions = self.active_sessions.values()
+        let active_user_sessions = self
+            .active_sessions
+            .values()
             .filter(|s| s.user_id == user_id && s.is_active)
             .count();
 
         if active_user_sessions >= self.config.session.max_concurrent_sessions as usize {
             return Err(BearDogError::SecurityViolation(
-                "Maximum concurrent sessions exceeded".to_string()
+                "Maximum concurrent sessions exceeded".to_string(),
             ));
         }
 
@@ -114,7 +129,8 @@ impl BearDogSecurityProvider {
             attributes: HashMap::new(),
         };
 
-        self.active_sessions.insert(session_id.clone(), session.clone());
+        self.active_sessions
+            .insert(session_id.clone(), session.clone());
         self.metrics.total_sessions_created += 1;
         self.metrics.active_sessions += 1;
 
@@ -125,7 +141,7 @@ impl BearDogSecurityProvider {
     pub async fn validate_and_refresh_session(&mut self, session_id: &str) -> BearDogResult<bool> {
         if let Some(session) = self.active_sessions.get_mut(session_id) {
             let now = Utc::now();
-            
+
             if now > session.expires_at || !session.is_active {
                 session.is_active = false;
                 self.metrics.expired_sessions += 1;
@@ -135,8 +151,9 @@ impl BearDogSecurityProvider {
 
             // Refresh session
             session.last_activity = now;
-            session.expires_at = now + Duration::minutes(self.config.session.timeout_minutes as i64);
-            
+            session.expires_at =
+                now + Duration::minutes(self.config.session.timeout_minutes as i64);
+
             Ok(true)
         } else {
             Ok(false)
@@ -144,7 +161,11 @@ impl BearDogSecurityProvider {
     }
 
     /// Generate MFA token
-    pub async fn generate_mfa_token(&mut self, user_id: &str, method: MfaMethod) -> BearDogResult<String> {
+    pub async fn generate_mfa_token(
+        &mut self,
+        user_id: &str,
+        method: MfaMethod,
+    ) -> BearDogResult<String> {
         let token_id = Uuid::new_v4().to_string();
         let token_value = format!("{:06}", rand::random::<u32>() % 1000000); // 6-digit token
         let now = Utc::now();
@@ -167,13 +188,13 @@ impl BearDogSecurityProvider {
     /// Verify MFA token
     pub async fn verify_mfa_token(&mut self, user_id: &str, token: &str) -> BearDogResult<bool> {
         let now = Utc::now();
-        
-        for (token_id, mfa_token) in &mut self.mfa_tokens {
-            if mfa_token.user_id == user_id 
-                && mfa_token.token == token 
-                && !mfa_token.is_used 
-                && now <= mfa_token.expires_at {
-                
+
+        for (_token_id, mfa_token) in &mut self.mfa_tokens {
+            if mfa_token.user_id == user_id
+                && mfa_token.token == token
+                && !mfa_token.is_used
+                && now <= mfa_token.expires_at
+            {
                 mfa_token.is_used = true;
                 return Ok(true);
             }
@@ -183,7 +204,12 @@ impl BearDogSecurityProvider {
     }
 
     /// Perform threat analysis
-    pub async fn analyze_threat(&self, subject: &Subject, resource: &Resource, action: &Action) -> BearDogResult<RiskLevel> {
+    pub async fn analyze_threat(
+        &self,
+        subject: &Subject,
+        resource: &Resource,
+        action: &Action,
+    ) -> BearDogResult<RiskLevel> {
         // Basic threat analysis - can be enhanced with ML models
         let mut risk_score = 0;
 
@@ -265,9 +291,11 @@ impl BearDogSecurityProvider {
     /// Get current metrics
     pub async fn get_current_metrics(&self) -> SecurityProviderMetrics {
         let mut metrics = self.metrics.clone();
-        
+
         // Update active sessions count
-        metrics.active_sessions = self.active_sessions.values()
+        metrics.active_sessions = self
+            .active_sessions
+            .values()
             .filter(|s| s.is_active)
             .count() as u64;
 
@@ -279,7 +307,9 @@ impl BearDogSecurityProvider {
         let now = Utc::now();
 
         // Clean expired sessions
-        let expired_sessions: Vec<String> = self.active_sessions.iter()
+        let expired_sessions: Vec<String> = self
+            .active_sessions
+            .iter()
             .filter(|(_, session)| now > session.expires_at || !session.is_active)
             .map(|(id, _)| id.clone())
             .collect();
@@ -290,7 +320,9 @@ impl BearDogSecurityProvider {
         }
 
         // Clean expired MFA tokens
-        let expired_tokens: Vec<String> = self.mfa_tokens.iter()
+        let expired_tokens: Vec<String> = self
+            .mfa_tokens
+            .iter()
             .filter(|(_, token)| now > token.expires_at || token.is_used)
             .map(|(id, _)| id.clone())
             .collect();
@@ -310,10 +342,14 @@ impl BearDogSecurityProvider {
 }
 
 impl SecurityProvider for BearDogSecurityProvider {
-    async fn authenticate(&self, username: &str, _password: &str) -> BearDogResult<AuthenticationResult> {
+    async fn authenticate(
+        &self,
+        username: &str,
+        _password: &str,
+    ) -> BearDogResult<AuthenticationResult> {
         // TODO: Implement actual password verification
         // For now, simulate authentication
-        
+
         if self.is_account_locked(username) {
             return Ok(AuthenticationResult {
                 success: false,
@@ -332,33 +368,40 @@ impl SecurityProvider for BearDogSecurityProvider {
             session_id: Some(Uuid::new_v4().to_string()),
             mfa_required: self.config.mfa.enabled,
             reason: "Authentication successful".to_string(),
-            expires_at: Some(Utc::now() + Duration::minutes(self.config.session.timeout_minutes as i64)),
+            expires_at: Some(
+                Utc::now() + Duration::minutes(self.config.session.timeout_minutes as i64),
+            ),
         })
     }
 
-    async fn authorize(&self, subject: &Subject, resource: &Resource, action: &Action) -> BearDogResult<AuthorizationResult> {
+    async fn authorize(
+        &self,
+        subject: &Subject,
+        resource: &Resource,
+        action: &Action,
+    ) -> BearDogResult<AuthorizationResult> {
         let risk_level = self.analyze_threat(subject, resource, action).await?;
-        
+
         // Basic authorization logic - can be enhanced
         let permitted = match risk_level {
             RiskLevel::Low | RiskLevel::Medium => true,
             RiskLevel::High => {
                 // High risk actions might require additional approval
                 subject.roles.contains(&"admin".to_string())
-            },
+            }
             RiskLevel::Critical => {
                 // Critical actions require admin role and additional verification
-                subject.roles.contains(&"admin".to_string()) && 
-                subject.clearance_level.unwrap_or(0) >= 5
-            },
+                subject.roles.contains(&"admin".to_string())
+                    && subject.clearance_level.unwrap_or(0) >= 5
+            }
         };
 
         let result = AuthorizationResult {
             permitted,
-            reason: if permitted { 
-                "Access granted".to_string() 
-            } else { 
-                "Access denied - insufficient privileges".to_string() 
+            reason: if permitted {
+                "Access granted".to_string()
+            } else {
+                "Access denied - insufficient privileges".to_string()
             },
             risk_level: risk_level.clone(),
             additional_requirements: if risk_level == RiskLevel::Critical {
@@ -384,7 +427,7 @@ impl SecurityProvider for BearDogSecurityProvider {
 
     async fn health(&self) -> BearDogResult<SecurityProviderHealth> {
         let now = Utc::now();
-        
+
         // Check component health
         let components = vec![
             ComponentHealth {
@@ -401,10 +444,10 @@ impl SecurityProvider for BearDogSecurityProvider {
             },
             ComponentHealth {
                 name: "Session Management".to_string(),
-                status: if self.active_sessions.len() < 1000 { 
-                    HealthStatus::Healthy 
-                } else { 
-                    HealthStatus::Degraded 
+                status: if self.active_sessions.len() < 1000 {
+                    HealthStatus::Healthy
+                } else {
+                    HealthStatus::Degraded
                 },
                 message: format!("Managing {} active sessions", self.active_sessions.len()),
                 last_check: now,
@@ -414,7 +457,10 @@ impl SecurityProvider for BearDogSecurityProvider {
         // Overall health based on component status
         let overall_status = if components.iter().all(|c| c.status == HealthStatus::Healthy) {
             HealthStatus::Healthy
-        } else if components.iter().any(|c| c.status == HealthStatus::Unhealthy) {
+        } else if components
+            .iter()
+            .any(|c| c.status == HealthStatus::Unhealthy)
+        {
             HealthStatus::Unhealthy
         } else {
             HealthStatus::Degraded

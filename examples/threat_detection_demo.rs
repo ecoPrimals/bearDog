@@ -10,66 +10,74 @@
 use beardog::threat::*;
 use chrono::Utc;
 use std::collections::HashMap;
-use tracing::{info, warn};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
     tracing_subscriber::init();
-    
+
     println!("🔍 BearDog Threat Detection Engine Demo");
     println!("========================================");
-    
+
     // Initialize enhanced threat detection engine with ML
     let (mut threat_engine, ml_engine) = ThreatAPI::new_with_ml().await?;
-    
+
     println!("✅ Threat Detection Engine initialized with ML capabilities");
-    
+
     // Demo 1: Rule-based threat detection
     println!("\n📋 Demo 1: Rule-based Threat Detection");
     println!("--------------------------------------");
-    
+
     // Create suspicious login event
     let suspicious_login = create_suspicious_login_event()?;
     println!("🔍 Analyzing suspicious login event...");
-    
+
     let login_analysis = threat_engine.analyze_event(&suspicious_login).await?;
     println!("🚨 Threats detected: {}", login_analysis.threats_detected);
-    
+
     for threat in &login_analysis.detected_threats {
-        println!("  - {}: {} ({})", threat.threat_type, threat.description, threat.severity);
+        println!(
+            "  - {}: {} ({})",
+            threat.threat_type, threat.description, threat.severity
+        );
     }
-    
+
     // Demo 2: ML-powered anomaly detection
     println!("\n🧠 Demo 2: ML-powered Anomaly Detection");
     println!("--------------------------------------");
-    
+
     // Create data exfiltration event
     let data_exfil_event = create_data_exfiltration_event()?;
     println!("🔍 Analyzing large data transfer event...");
-    
+
     let exfil_analysis = threat_engine.analyze_event(&data_exfil_event).await?;
     println!("🚨 Threats detected: {}", exfil_analysis.threats_detected);
-    
+
     for threat in &exfil_analysis.detected_threats {
-        println!("  - {}: {} ({})", threat.threat_type, threat.description, threat.severity);
+        println!(
+            "  - {}: {} ({})",
+            threat.threat_type, threat.description, threat.severity
+        );
     }
-    
+
     for prediction in &exfil_analysis.ml_predictions {
-        println!("  - ML Prediction: {:?} (confidence: {:.3})", prediction.prediction_type, prediction.confidence_score);
+        println!(
+            "  - ML Prediction: {:?} (confidence: {:.3})",
+            prediction.prediction_type, prediction.confidence_score
+        );
     }
-    
+
     // Demo 3: Brute force attack detection
     println!("\n🔥 Demo 3: Brute Force Attack Detection");
     println!("--------------------------------------");
-    
+
     // Simulate multiple failed login attempts
     println!("🔍 Simulating brute force attack...");
-    
+
     for i in 1..=15 {
         let failed_login = create_failed_login_event(i)?;
         let analysis = threat_engine.analyze_event(&failed_login).await?;
-        
+
         if analysis.threats_detected > 0 {
             println!("🚨 Brute force attack detected after {} attempts!", i);
             for threat in &analysis.detected_threats {
@@ -78,49 +86,54 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             break;
         }
     }
-    
+
     // Demo 4: Threat intelligence integration
     println!("\n🌐 Demo 4: Threat Intelligence Integration");
     println!("----------------------------------------");
-    
+
     // Add threat intelligence feed
     let threat_feed = create_sample_threat_feed()?;
     threat_engine.update_threat_feed(threat_feed).await?;
     println!("✅ Threat intelligence feed updated");
-    
+
     // Create event with known malicious IP
     let malicious_event = create_malicious_ip_event()?;
     println!("🔍 Analyzing event with known malicious IP...");
-    
+
     let intel_analysis = threat_engine.analyze_event(&malicious_event).await?;
     println!("🚨 Threats detected: {}", intel_analysis.threats_detected);
-    
+
     for threat in &intel_analysis.detected_threats {
-        println!("  - {}: {} ({})", threat.threat_type, threat.description, threat.severity);
+        println!(
+            "  - {}: {} ({})",
+            threat.threat_type, threat.description, threat.severity
+        );
     }
-    
+
     // Demo 5: Behavioral analysis
     println!("\n👤 Demo 5: Behavioral Analysis");
     println!("-----------------------------");
-    
+
     // Create unusual access pattern
     let unusual_access = create_unusual_access_event()?;
     println!("🔍 Analyzing unusual access pattern...");
-    
+
     // Use ML engine directly for behavioral analysis
     let behavioral_predictions = ml_engine.analyze_event(&unusual_access).await?;
     for prediction in &behavioral_predictions {
-        println!("🧠 Behavioral anomaly detected: {:?} (confidence: {:.3})", 
-                 prediction.prediction_type, prediction.confidence_score);
+        println!(
+            "🧠 Behavioral anomaly detected: {:?} (confidence: {:.3})",
+            prediction.prediction_type, prediction.confidence_score
+        );
         for evidence in &prediction.evidence {
             println!("  - Evidence: {}", evidence);
         }
     }
-    
+
     // Demo 6: Comprehensive threat statistics
     println!("\n📊 Demo 6: Threat Statistics");
     println!("---------------------------");
-    
+
     let stats = threat_engine.get_threat_statistics().await?;
     println!("Total threats detected: {}", stats.total_threats);
     println!("High severity threats: {}", stats.high_severity_threats);
@@ -130,11 +143,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Detection rules: {}", stats.detection_rules_count);
     println!("Threat feeds: {}", stats.threat_feeds_count);
     println!("ML models: {}", stats.ml_models_count);
-    
+
     // Demo 7: Custom detection rule
     println!("\n🛠️ Demo 7: Custom Detection Rule");
     println!("-------------------------------");
-    
+
     // Add custom rule for cryptocurrency mining
     let crypto_mining_rule = ThreatDetectionRule {
         rule_id: "crypto_mining_001".to_string(),
@@ -154,21 +167,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ],
         enabled: true,
     };
-    
+
     threat_engine.add_detection_rule(crypto_mining_rule);
     println!("✅ Custom detection rule added");
-    
+
     // Test custom rule
     let mining_event = create_crypto_mining_event()?;
     let mining_analysis = threat_engine.analyze_event(&mining_event).await?;
-    
+
     if mining_analysis.threats_detected > 0 {
         println!("🚨 Custom rule triggered!");
         for threat in &mining_analysis.detected_threats {
             println!("  - {}: {}", threat.threat_type, threat.description);
         }
     }
-    
+
     println!("\n🎉 Demo completed successfully!");
     println!("The threat detection engine has demonstrated:");
     println!("✅ Rule-based detection with multiple conditions");
@@ -177,7 +190,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✅ Threat intelligence integration and matching");
     println!("✅ Comprehensive threat statistics and reporting");
     println!("✅ Custom detection rule creation and management");
-    
+
     Ok(())
 }
 
@@ -339,4 +352,4 @@ fn create_crypto_mining_event() -> Result<SecurityEvent, Box<dyn std::error::Err
             data
         },
     })
-} 
+}

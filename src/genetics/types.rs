@@ -1,19 +1,17 @@
 //! Type definitions and data structures for the genetics engine
-//! 
+//!
 //! Contains all structs, enums, and type aliases for genetic operations.
 
+use crate::BearDogResult;
+use async_trait::async_trait;
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use async_trait::async_trait;
 use tokio::sync::RwLock;
-use chrono::{DateTime, Utc, Duration};
-use crate::BearDogResult;
 
 // Import genetics types from auth module (which were in cross_node_auth)
-use crate::auth::{
-    BearDogGenetics, SpawnPurpose, TaskType,
-};
+use crate::auth::{BearDogGenetics, SpawnPurpose, TaskType};
 
 /// Configuration for genetics operations
 ///
@@ -350,6 +348,10 @@ pub struct RecombinationParams {
 pub enum ChromosomeRecombinationStrategy {
     /// Take the dominant (highest strength) chromosome from parents
     DominantSelection,
+    /// Genetic crossover between parents
+    Crossover,
+    /// Average chromosome properties
+    Averaging,
     /// Weighted average of parent chromosomes
     WeightedAverage { weights: Vec<f64> },
     /// Combine flags using bitwise OR
@@ -365,6 +367,10 @@ pub enum TraitBlendingStrategy {
     Average,
     /// Weighted average with specified weights
     WeightedAverage { weights: Vec<f64> },
+    /// Select dominant traits based on random selection
+    Dominant,
+    /// Select best traits from each parent
+    Selective,
     /// Take traits from the most paranoid parent
     MostParanoid,
     /// Take traits from the most cooperative parent  
@@ -380,6 +386,8 @@ pub enum CapabilityMergingStrategy {
     Union,
     /// Intersection of parent capabilities (only common ones)
     Intersection,
+    /// Select capabilities based on random selection and fitness
+    Selective,
     /// Weighted combination of capabilities
     WeightedCombination { weights: Vec<f64> },
     /// Best capabilities from each parent

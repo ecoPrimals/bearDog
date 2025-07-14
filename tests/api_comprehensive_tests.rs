@@ -1,15 +1,10 @@
 use axum::body::Body;
 use axum::http::{Method, StatusCode};
-use axum::response::Response;
-use beardog::api::*;
 use beardog::core::*;
-use beardog::error::*;
 use beardog::*;
-use serde_json::{json, Value};
-use std::collections::HashMap;
+use serde_json::json;
 use std::time::Duration;
 use tokio::time::sleep;
-use tower_http::ServiceBuilderExt;
 use tower::ServiceExt;
 
 /// Comprehensive API security testing
@@ -28,14 +23,16 @@ async fn test_api_comprehensive_security() {
 
 async fn create_test_app() -> axum::Router {
     let config = BearDogConfig::default();
-    let core = std::sync::Arc::new(BearDogCore::new(config)
-        .await
-        .expect("Core creation failed"));
+    let core = std::sync::Arc::new(
+        BearDogCore::new(config)
+            .await
+            .expect("Core creation failed"),
+    );
 
     let api_server = beardog::api::BearDogApiServer::new(core)
         .await
         .expect("API server creation failed");
-    
+
     api_server.create_router()
 }
 
@@ -755,7 +752,7 @@ async fn test_api_authentication_authorization() {
         "Bearer ",
         "Basic invalid_base64",
         "Bearer <script>alert('xss')</script>",
-        "Bearer " + &"A".repeat(10000), // Oversized token
+        "Bearer ".to_owned() + &"A".repeat(10000), // Oversized token
     ];
 
     for token in invalid_tokens {

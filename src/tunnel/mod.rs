@@ -68,42 +68,22 @@
 /// }
 /// ```
 /// Security provider interface and implementation
+pub mod config;
+pub mod events;
+pub mod gaming_crypto;
+pub mod genetic_healing;
+pub mod hsm;
+pub mod key_manager;
+pub mod performance;
 pub mod security_provider;
-
-/// Secure session management with genetic evolution
 pub mod session;
 
-/// Gaming-optimized encryption engine with sub-100μs performance
-pub mod gaming_crypto;
-
-/// Self-healing security with genetic algorithms
-pub mod genetic_healing;
-
-/// Performance monitoring and latency optimization
-pub mod performance;
-
-/// Event system for BSTP security communications
-pub mod events;
-
-/// Configuration management for all BSTP components
-pub mod config;
-
-/// Secure key generation, rotation, and management
-pub mod key_manager;
-
-// Re-export core types
-pub use config::{
-    BStpConfig, GamingConfig, GeneticHealingConfig, KeyManagementConfig, PerformanceConfig,
-};
-pub use events::{
-    NetworkSecurityEvent, SecurityEvolution, SecurityLevel, SecurityMetrics, SecurityNetworkEvent,
-    SecurityResponse,
-};
-pub use gaming_crypto::{CryptoChoice, EncryptedPacket, GamingCryptoEngine};
-pub use genetic_healing::{GeneticSecurityHealing, HealingResult, SecurityIssue};
+pub use config::*;
+pub use events::*;
+pub use gaming_crypto::*;
+pub use genetic_healing::*;
+pub use hsm::{types, AndroidStrongBoxHsm, HsmManager, HsmProvider, RustSoftwareHsm};
 pub use key_manager::{BStpKeyManager, CryptoAlgorithm, CryptoKey, KeyRotationTask};
-pub use performance::{BStpPerformanceTargets, GamingSecurityProfile, LatencyMonitor};
-pub use security_provider::{
-    BStpSecurityManager, BStpSecurityProvider, TrustLevel, VerificationResult,
-};
-pub use session::{SecureSession, SecurityGenetics, SessionManager};
+pub use performance::*;
+pub use security_provider::*;
+pub use session::*;

@@ -1,5 +1,5 @@
 //! Implementation logic and handlers for compliance monitoring
-//! 
+//!
 //! Contains the main business logic and implementation details for the compliance engine.
 
 use super::types::*;
@@ -42,7 +42,7 @@ impl ComplianceEngine {
         standard: ComplianceStandard,
     ) -> BearDogResult<ComplianceResult> {
         let standard_result = self.evaluate_event(event.clone()).await?;
-        
+
         Ok(ComplianceResult {
             event_id: event.id.clone(),
             compliance_score: standard_result.compliance_score,
@@ -102,7 +102,9 @@ impl ComplianceEngine {
         match standard {
             ComplianceStandard::GDPR => self.evaluate_gdpr(event).await,
             ComplianceStandard::SOX => self.evaluate_sox(event).await,
-            ComplianceStandard::PCI_DSS | ComplianceStandard::PciDss => self.evaluate_pci_dss(event).await,
+            ComplianceStandard::PCI_DSS | ComplianceStandard::PciDss => {
+                self.evaluate_pci_dss(event).await
+            }
             ComplianceStandard::HIPAA => self.evaluate_hipaa(event).await,
             ComplianceStandard::ISO27001 => {
                 // Placeholder implementation
@@ -164,8 +166,9 @@ impl ComplianceEngine {
 
         // Check for data export/transfer events
         if event.event_type == "DataExport" || event.event_type == "DataTransfer" {
-            if !event.data.contains_key("adequacy_decision") 
-                && !event.data.contains_key("safeguards") {
+            if !event.data.contains_key("adequacy_decision")
+                && !event.data.contains_key("safeguards")
+            {
                 violations.push(ComplianceViolation {
                     id: Uuid::new_v4().to_string(),
                     standard: ComplianceStandard::GDPR,
@@ -304,7 +307,8 @@ impl ComplianceEngine {
         date_range: (DateTime<Utc>, DateTime<Utc>),
     ) -> BearDogResult<ComplianceReport> {
         let events = if let Ok(cache) = self.event_cache.lock() {
-            cache.iter()
+            cache
+                .iter()
                 .filter(|event| event.timestamp >= date_range.0 && event.timestamp <= date_range.1)
                 .cloned()
                 .collect::<Vec<_>>()
@@ -336,18 +340,27 @@ impl ComplianceEngine {
             id: Uuid::new_v4().to_string(),
             title: format!("{:?} Compliance Report", standard),
             standard,
-            period: format!("{} to {}", date_range.0.format("%Y-%m-%d"), date_range.1.format("%Y-%m-%d")),
+            period: format!(
+                "{} to {}",
+                date_range.0.format("%Y-%m-%d"),
+                date_range.1.format("%Y-%m-%d")
+            ),
             generated_at: Utc::now(),
             overall_score,
             total_events: events.len() as u64,
             violations_found: violations.len() as u64,
             warnings_issued: warnings.len() as u64,
             recommendations,
-            detailed_findings: violations.iter()
+            detailed_findings: violations
+                .iter()
                 .map(|v| format!("{}: {}", v.violation_type, v.description))
                 .collect(),
-            summary: format!("Compliance score: {:.2}%, {} violations, {} warnings", 
-                overall_score * 100.0, violations.len(), warnings.len()),
+            summary: format!(
+                "Compliance score: {:.2}%, {} violations, {} warnings",
+                overall_score * 100.0,
+                violations.len(),
+                warnings.len()
+            ),
         })
     }
 
@@ -360,22 +373,35 @@ impl ComplianceEngine {
         for violation in violations {
             match violation.violation_type.as_str() {
                 "MissingConsent" => {
-                    recommendations.push("Implement explicit consent collection before data access".to_string());
+                    recommendations.push(
+                        "Implement explicit consent collection before data access".to_string(),
+                    );
                 }
                 "IllegalTransfer" => {
                     recommendations.push("Verify adequacy decisions or implement appropriate safeguards for data transfers".to_string());
                 }
                 "UnauthorizedFinancialAccess" => {
-                    recommendations.push("Strengthen financial data access controls and authorization procedures".to_string());
+                    recommendations.push(
+                        "Strengthen financial data access controls and authorization procedures"
+                            .to_string(),
+                    );
                 }
                 "UnencryptedPaymentData" => {
-                    recommendations.push("Implement end-to-end encryption for all payment data processing".to_string());
+                    recommendations.push(
+                        "Implement end-to-end encryption for all payment data processing"
+                            .to_string(),
+                    );
                 }
                 "MinimumNecessaryViolation" => {
-                    recommendations.push("Review and restrict PHI access to minimum necessary for business purposes".to_string());
+                    recommendations.push(
+                        "Review and restrict PHI access to minimum necessary for business purposes"
+                            .to_string(),
+                    );
                 }
                 _ => {
-                    recommendations.push("Review compliance policies and implement necessary controls".to_string());
+                    recommendations.push(
+                        "Review compliance policies and implement necessary controls".to_string(),
+                    );
                 }
             }
         }
@@ -395,11 +421,7 @@ impl ComplianceEngine {
             vec![]
         };
 
-        let recent_events = events.iter()
-            .rev()
-            .take(10)
-            .cloned()
-            .collect();
+        let recent_events = events.iter().rev().take(10).cloned().collect();
 
         let compliance_status = ComplianceStatus {
             overall_status: "Compliant".to_string(),

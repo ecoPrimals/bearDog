@@ -1,5 +1,5 @@
 //! Core configuration types and validation
-//! 
+//!
 //! Contains the main BearDogConfig struct and core configuration logic.
 
 use crate::error::BearDogResult;
@@ -7,10 +7,10 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::path::Path;
 
-use super::security::*;
-use super::network::*;
-use super::monitoring::*;
 use super::integration::*;
+use super::monitoring::*;
+use super::network::*;
+use super::security::*;
 
 /// Security levels for BearDog operations
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -77,16 +77,17 @@ impl Default for DatabaseConfig {
 impl BearDogConfig {
     /// Load configuration from a TOML file
     pub fn from_file<P: AsRef<Path>>(path: P) -> BearDogResult<Self> {
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| crate::error::BearDogError::Configuration {
+        let content = std::fs::read_to_string(path).map_err(|e| {
+            crate::error::BearDogError::Configuration {
                 message: format!("Failed to read config file: {}", e),
-            })?;
-        
-        let config: Self = toml::from_str(&content)
-            .map_err(|e| crate::error::BearDogError::Configuration {
+            }
+        })?;
+
+        let config: Self =
+            toml::from_str(&content).map_err(|e| crate::error::BearDogError::Configuration {
                 message: format!("Failed to parse config file: {}", e),
             })?;
-        
+
         config.validate()?;
         Ok(config)
     }
@@ -139,7 +140,8 @@ impl BearDogConfig {
         // Validate encryption settings
         if self.encryption.key_derivation_iterations < 10000 {
             return Err(crate::error::BearDogError::Configuration {
-                message: "Key derivation iterations must be at least 10,000 for security".to_string(),
+                message: "Key derivation iterations must be at least 10,000 for security"
+                    .to_string(),
             });
         }
 
@@ -175,16 +177,18 @@ impl BearDogConfig {
     /// Generate a default configuration file
     pub fn generate_default_file<P: AsRef<Path>>(path: P) -> BearDogResult<()> {
         let config = Self::default();
-        let toml_content = toml::to_string_pretty(&config)
-            .map_err(|e| crate::error::BearDogError::Configuration {
+        let toml_content = toml::to_string_pretty(&config).map_err(|e| {
+            crate::error::BearDogError::Configuration {
                 message: format!("Failed to serialize default config: {}", e),
-            })?;
-        
-        std::fs::write(path, toml_content)
-            .map_err(|e| crate::error::BearDogError::Configuration {
+            }
+        })?;
+
+        std::fs::write(path, toml_content).map_err(|e| {
+            crate::error::BearDogError::Configuration {
                 message: format!("Failed to write config file: {}", e),
-            })?;
-        
+            }
+        })?;
+
         Ok(())
     }
-} 
+}

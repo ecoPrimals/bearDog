@@ -76,4 +76,4 @@ pub enum TrustIndicator {
 
     /// Peer is geographically close, reducing interception risks
     GeographicallyClose,
-} 
+}

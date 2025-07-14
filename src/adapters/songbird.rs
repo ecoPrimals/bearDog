@@ -200,9 +200,8 @@ impl SongBirdAdapter {
         info!("🎵 Initializing SongBird adapter with BearDog security integration");
 
         // Initialize the BearDog Security Provider
-        let security_provider = Arc::new(
-            BearDogSecurityProvider::new(config.security_provider.clone()).await?,
-        );
+        let security_provider =
+            Arc::new(BearDogSecurityProvider::new(config.security_provider.clone()).await?);
 
         let adapter = Self {
             config,
@@ -243,7 +242,10 @@ impl SongBirdAdapter {
             action_type: ActionType::Execute,
             context: {
                 let mut ctx = HashMap::new();
-                ctx.insert("action_name".to_string(), "establish_connection".to_string());
+                ctx.insert(
+                    "action_name".to_string(),
+                    "establish_connection".to_string(),
+                );
                 ctx
             },
             timestamp: Utc::now(),
@@ -295,7 +297,7 @@ impl SongBirdAdapter {
         }
 
         // Log security audit event
-        let audit_event = SecurityAuditEvent {
+        let _audit_event = SecurityAuditEvent {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp: Utc::now(),
             subject_id: subject.id.clone(),
@@ -305,7 +307,10 @@ impl SongBirdAdapter {
             risk_level: auth_result.risk_level,
             details: {
                 let mut details = HashMap::new();
-                details.insert("event_type".to_string(), "connection_established".to_string());
+                details.insert(
+                    "event_type".to_string(),
+                    "connection_established".to_string(),
+                );
                 details.insert("connection_id".to_string(), connection_id.clone());
                 details.insert("endpoint".to_string(), self.config.endpoint.clone());
                 details
@@ -356,7 +361,10 @@ impl SongBirdAdapter {
             context: {
                 let mut ctx = HashMap::new();
                 ctx.insert("action_name".to_string(), "send_message".to_string());
-                ctx.insert("security_level".to_string(), format!("{:?}", message.security_classification));
+                ctx.insert(
+                    "security_level".to_string(),
+                    format!("{:?}", message.security_classification),
+                );
                 ctx
             },
             timestamp: Utc::now(),
@@ -383,7 +391,7 @@ impl SongBirdAdapter {
         let message_id = uuid::Uuid::new_v4().to_string();
 
         // Apply encryption based on security level
-        let encrypted_content = self
+        let _encrypted_content = self
             .encrypt_message_content(&message.content, &message.encryption_type)
             .await?;
 
@@ -394,7 +402,7 @@ impl SongBirdAdapter {
         }
 
         // Log security audit event
-        let audit_event = SecurityAuditEvent {
+        let _audit_event = SecurityAuditEvent {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp: Utc::now(),
             subject_id: subject.id.clone(),
@@ -411,9 +419,18 @@ impl SongBirdAdapter {
                 let mut details = HashMap::new();
                 details.insert("event_type".to_string(), "secure_message_sent".to_string());
                 details.insert("message_id".to_string(), message_id.clone());
-                details.insert("recipient_count".to_string(), message.recipient_ids.len().to_string());
-                details.insert("security_level".to_string(), format!("{:?}", message.security_classification));
-                details.insert("encryption_type".to_string(), format!("{:?}", message.encryption_type));
+                details.insert(
+                    "recipient_count".to_string(),
+                    message.recipient_ids.len().to_string(),
+                );
+                details.insert(
+                    "security_level".to_string(),
+                    format!("{:?}", message.security_classification),
+                );
+                details.insert(
+                    "encryption_type".to_string(),
+                    format!("{:?}", message.encryption_type),
+                );
                 details
             },
         };
@@ -467,9 +484,15 @@ impl SongBirdAdapter {
             action_type: ActionType::Execute,
             context: {
                 let mut ctx = HashMap::new();
-                ctx.insert("action_name".to_string(), "start_communication_session".to_string());
+                ctx.insert(
+                    "action_name".to_string(),
+                    "start_communication_session".to_string(),
+                );
                 ctx.insert("session_type".to_string(), format!("{:?}", session_type));
-                ctx.insert("security_level".to_string(), format!("{:?}", security_level));
+                ctx.insert(
+                    "security_level".to_string(),
+                    format!("{:?}", security_level),
+                );
                 ctx
             },
             timestamp: Utc::now(),
@@ -513,7 +536,7 @@ impl SongBirdAdapter {
         }
 
         // Log security audit event
-        let audit_event = SecurityAuditEvent {
+        let _audit_event = SecurityAuditEvent {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp: Utc::now(),
             subject_id: subject.id.clone(),
@@ -528,11 +551,20 @@ impl SongBirdAdapter {
             },
             details: {
                 let mut details = HashMap::new();
-                details.insert("event_type".to_string(), "communication_session_started".to_string());
+                details.insert(
+                    "event_type".to_string(),
+                    "communication_session_started".to_string(),
+                );
                 details.insert("session_id".to_string(), session_id.clone());
                 details.insert("session_type".to_string(), format!("{:?}", session_type));
-                details.insert("participant_count".to_string(), participants.len().to_string());
-                details.insert("security_level".to_string(), format!("{:?}", security_level));
+                details.insert(
+                    "participant_count".to_string(),
+                    participants.len().to_string(),
+                );
+                details.insert(
+                    "security_level".to_string(),
+                    format!("{:?}", security_level),
+                );
                 details
             },
         };
@@ -549,8 +581,8 @@ impl SongBirdAdapter {
         &self,
         username: &str,
         password: &str,
-        ip_address: Option<String>,
-        user_agent: Option<String>,
+        _ip_address: Option<String>,
+        _user_agent: Option<String>,
     ) -> BearDogResult<AuthenticationResult> {
         info!("🔐 Authenticating user for SongBird: {}", username);
 

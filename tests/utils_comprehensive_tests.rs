@@ -1,5 +1,5 @@
 //! Comprehensive Utils Tests
-//! 
+//!
 //! This test suite ensures 100% coverage of BearDog's utility functions
 //! including configuration, validation, formatting, and helper functions.
 
@@ -19,57 +19,57 @@ async fn test_utils_comprehensive() {
 
 fn test_string_utilities() {
     println!("�� Testing string utilities...");
-    
+
     // Test string validation
     assert!(is_valid_identifier("valid_name_123"));
     assert!(!is_valid_identifier("invalid-name!"));
     assert!(!is_valid_identifier(""));
-    
+
     // Test string sanitization
     let sanitized = sanitize_user_input("user<script>alert('xss')</script>input");
     assert!(!sanitized.contains("<script>"));
-    
+
     // Test string formatting
     let formatted = format_bytes(1024 * 1024 * 1024);
     assert!(formatted.contains("GB") || formatted.contains("GiB"));
-    
+
     let formatted_duration = format_duration(Duration::from_secs(3661));
     assert!(formatted_duration.contains("1h") || formatted_duration.contains("hour"));
 }
 
 fn test_time_utilities() {
     println!("⏰ Testing time utilities...");
-    
+
     let now = SystemTime::now();
     let future = now + Duration::from_secs(3600);
-    
+
     assert!(is_future_time(&future));
     assert!(!is_future_time(&now));
-    
+
     let elapsed = calculate_elapsed_time(now);
     assert!(elapsed.as_secs() < 1);
-    
+
     let formatted_time = format_timestamp(now);
     assert!(!formatted_time.is_empty());
 }
 
 fn test_validation_utilities() {
     println!("✅ Testing validation utilities...");
-    
+
     // Network validation
     assert!(is_valid_ip_address("192.168.1.1"));
     assert!(is_valid_ip_address("::1"));
     assert!(!is_valid_ip_address("invalid_ip"));
-    
+
     assert!(is_valid_port(8080));
     assert!(!is_valid_port(0));
     assert!(!is_valid_port(65535u32));
-    
+
     // Crypto validation
     assert!(is_valid_hex_string("deadbeef"));
     assert!(is_valid_hex_string("DEADBEEF"));
     assert!(!is_valid_hex_string("ghijklmn"));
-    
+
     let valid_key = vec![0u8; 32];
     assert!(is_valid_key_length(&valid_key, 32));
     assert!(!is_valid_key_length(&valid_key, 16));
@@ -77,53 +77,56 @@ fn test_validation_utilities() {
 
 fn test_formatting_utilities() {
     println!("📄 Testing formatting utilities...");
-    
+
     let json_data = HashMap::from([
         ("key1".to_string(), "value1".to_string()),
         ("key2".to_string(), "value2".to_string()),
     ]);
-    
+
     let formatted_json = format_as_json(&json_data);
     assert!(formatted_json.is_ok());
-    
+
     let table_data = vec![
         vec!["Name".to_string(), "Age".to_string()],
         vec!["Alice".to_string(), "30".to_string()],
         vec!["Bob".to_string(), "25".to_string()],
     ];
-    
+
     let formatted_table = format_as_table(&table_data);
     assert!(!formatted_table.is_empty());
 }
 
 fn test_configuration_utilities() {
     println!("⚙️ Testing configuration utilities...");
-    
+
     let config_map = HashMap::from([
         ("setting1".to_string(), "value1".to_string()),
         ("setting2".to_string(), "123".to_string()),
     ]);
-    
-    assert_eq!(get_config_value(&config_map, "setting1"), Some("value1".to_string()));
+
+    assert_eq!(
+        get_config_value(&config_map, "setting1"),
+        Some("value1".to_string())
+    );
     assert_eq!(get_config_value(&config_map, "nonexistent"), None);
-    
+
     let parsed_int = parse_config_int(&config_map, "setting2");
     assert_eq!(parsed_int, Some(123));
-    
+
     let parsed_invalid = parse_config_int(&config_map, "setting1");
     assert_eq!(parsed_invalid, None);
 }
 
 fn test_security_utilities() {
     println!("🔒 Testing security utilities...");
-    
+
     let sensitive_data = "password123";
     let redacted = redact_sensitive_data(sensitive_data);
     assert_eq!(redacted, "***");
-    
+
     let log_safe = make_log_safe("user input with <tags>");
     assert!(!log_safe.contains("<"));
-    
+
     let random_id = generate_secure_id();
     assert_eq!(random_id.len(), 32);
     assert!(random_id.chars().all(|c| c.is_ascii_alphanumeric()));
@@ -164,7 +167,9 @@ fn is_future_time(time: &SystemTime) -> bool {
 }
 
 fn calculate_elapsed_time(start: SystemTime) -> Duration {
-    SystemTime::now().duration_since(start).unwrap_or(Duration::ZERO)
+    SystemTime::now()
+        .duration_since(start)
+        .unwrap_or(Duration::ZERO)
 }
 
 fn format_timestamp(time: SystemTime) -> String {

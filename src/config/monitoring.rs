@@ -1,5 +1,5 @@
 //! Monitoring and observability configuration types
-//! 
+//!
 //! Contains all logging, metrics, audit, and monitoring configuration structures.
 
 use serde::{Deserialize, Serialize};
@@ -88,4 +88,4 @@ impl Default for PrometheusConfig {
             port: 9090,
         }
     }
-} 
+}

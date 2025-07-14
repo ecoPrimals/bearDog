@@ -2,17 +2,14 @@
 
 use beardog::config::EncryptionConfig;
 use beardog::encryption::EncryptionEngine;
-use beardog::*;
-use beardog::auth::types::{BearDogGenetics, CryptoChromosome, SecurityTraits, AlgorithmFamily};
-use beardog::genetics::{GeneticSpawningEngine, SpawnRequest, SpawnResult};
-use beardog::genetics::types::{GeneticsConfig, InMemoryGeneticsStore};
 use beardog::genetics::handlers::DefaultBearDogGeneticsEngine;
+use beardog::genetics::types::{GeneticsConfig, InMemoryGeneticsStore};
 use beardog::tunnel::{
     genetic_healing::{SecurityIssue, SecurityIssueType, Severity},
     BStpConfig, BStpKeyManager, CryptoAlgorithm, GamingCryptoEngine, GeneticSecurityHealing,
     SecurityGenetics,
 };
-use beardog::{BearDogError, BearDogResult};
+use beardog::BearDogResult;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio;

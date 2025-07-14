@@ -1,16 +1,13 @@
-use beardog::tunnel::gaming_crypto::*;
-use beardog::tunnel::events::*;
-use beardog::*;
-use std::sync::Arc;
-use tokio::time::{timeout, Duration};
-use std::collections::HashMap;
-use chrono;
-use std::mem::size_of;
 use beardog::compliance::types::ComplianceEvent;
-use beardog::security::types::{Subject, Resource};
 use beardog::config::EncryptionConfig;
 use beardog::node_registry::TrustLevel;
-use beardog::config::security::AuditConfig;
+use beardog::security::types::{Resource, Subject};
+use beardog::tunnel::events::*;
+use beardog::tunnel::gaming_crypto::*;
+use beardog::*;
+use chrono;
+use std::collections::HashMap;
+use tokio::time::{timeout, Duration};
 
 /// Core BearDog functionality tests - Foundation for robust validation
 ///
@@ -324,21 +321,26 @@ async fn test_forest_protection_integrity() {
 
         // Simulate threat detection and response
         let threat_event = NetworkSecurityEvent::SuspiciousActivity {
-            peer_id: "suspicious-peer-999".to_string(),
-            activity_type: SuspiciousActivityType::UnauthorizedAccess,
-            evidence: NetworkEvidence {
+            source_peer: "suspicious-peer-999".to_string(),
+            activity_type: SuspiciousActivityType::DataExfiltration,
+            severity: NetworkThreatLevel::High,
+            evidence: vec![NetworkEvidence {
+                evidence_type: "authentication_failure".to_string(),
+                data: {
+                    let mut data = HashMap::new();
+                    data.insert("source_ip".to_string(), "192.168.1.100".to_string());
+                    data.insert("failed_attempts".to_string(), "5".to_string());
+                    data
+                },
                 timestamp: std::time::SystemTime::now(),
-                source_ip: "192.168.1.100".to_string(),
-                threat_indicators: vec!["repeated_failed_auth".to_string()],
-                raw_data: vec![1, 2, 3, 4],
-            },
-            threat_level: NetworkThreatLevel::High,
+                confidence: 0.9,
+            }],
         };
 
         // Verify threat event can be processed
         match threat_event {
-            NetworkSecurityEvent::SuspiciousActivity { threat_level, .. } => {
-                assert_eq!(threat_level, NetworkThreatLevel::High);
+            NetworkSecurityEvent::SuspiciousActivity { severity, .. } => {
+                assert_eq!(severity, NetworkThreatLevel::High);
             }
             _ => panic!("Threat simulation failed"),
         }

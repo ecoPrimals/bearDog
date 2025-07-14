@@ -1,13 +1,13 @@
 //! Implementation logic and handlers for cross-node authorization
-//! 
+//!
 //! Contains the main business logic and implementation details for CrossNodeAuthEngine.
 
 use chrono::{Duration, Utc};
 use std::collections::HashMap;
-use uuid::Uuid;
 use std::sync::Arc;
+use uuid::Uuid;
 
-use crate::security::{Subject, Resource, Action, AuthorizationResult};
+use crate::security::{Action, AuthorizationResult, Resource, ResourceClassification, Subject};
 use crate::{BearDogError, BearDogResult};
 
 use super::types::*;
@@ -60,9 +60,39 @@ impl CrossNodeAuthEngine {
         &self,
         subject: &Subject,
         resource: &Resource,
-        action: &Action,
+        _action: &Action,
         requested_permission: &str,
     ) -> BearDogResult<AuthorizationResult> {
+        // Check trust level for the subject
+        let trust_level = self
+            .node_registry
+            .get_trust_level(&subject.id)
+            .unwrap_or(0.0);
+
+        // Determine minimum trust level based on resource classification
+        let min_trust_level = match resource.classification {
+            ResourceClassification::Public => 0.0,
+            ResourceClassification::Internal => 0.4,
+            ResourceClassification::Confidential => 0.6,
+            ResourceClassification::Secret => 0.8,
+            ResourceClassification::TopSecret => 0.9,
+        };
+
+        // Check if trust level is sufficient
+        if trust_level < min_trust_level {
+            return Ok(AuthorizationResult {
+                permitted: false,
+                reason: format!(
+                    "Insufficient trust level: {} < {}",
+                    trust_level, min_trust_level
+                ),
+                additional_requirements: Vec::new(),
+                risk_level: RiskLevel::High,
+                audit_id: Uuid::new_v4().to_string(),
+                expires_at: Some(chrono::Utc::now() + chrono::Duration::minutes(60)),
+            });
+        }
+
         // Check if consensus is required for this operation
         if self.config.require_consensus {
             // Create consensus-based authorization
@@ -72,7 +102,9 @@ impl CrossNodeAuthEngine {
                 &resource.id,
                 requested_permission,
                 None,
-            )).await.map(|auth| AuthorizationResult {
+            ))
+            .await
+            .map(|_auth| AuthorizationResult {
                 permitted: true,
                 reason: "Consensus authorization granted".to_string(),
                 additional_requirements: Vec::new(),
@@ -82,27 +114,7 @@ impl CrossNodeAuthEngine {
             });
         }
 
-        // Create direct authorization
-        let authorization = CrossNodeAuthorization {
-            id: Uuid::new_v4().to_string(),
-            requester_node_id: subject.id.clone(),
-            resource_owner_node_id: resource.owner.clone().unwrap_or_default(),
-            resource_id: resource.id.clone(),
-            permissions: vec![match requested_permission {
-                "read" => ResourcePermission::Read,
-                "write" => ResourcePermission::Write,
-                "delete" => ResourcePermission::Delete,
-                "execute" => ResourcePermission::Execute,
-                "admin" => ResourcePermission::Admin,
-                _ => ResourcePermission::Read, // Default fallback
-            }],
-            conditions: Vec::new(),
-            created_at: chrono::Utc::now(),
-            expires_at: chrono::Utc::now() + chrono::Duration::minutes(60 as i64),
-            signature: "placeholder_signature".to_string(),
-            is_active: true,
-        };
-
+        // Create direct authorization result
         Ok(AuthorizationResult {
             permitted: true,
             reason: "Direct authorization granted".to_string(),
@@ -120,7 +132,7 @@ impl CrossNodeAuthEngine {
         resource_owner_node_id: &str,
         resource_id: &str,
         requested_permission: &str,
-        consensus_engine: Option<Arc<ConsensusEngine>>,
+        _consensus_engine: Option<Arc<ConsensusEngine>>,
     ) -> BearDogResult<CrossNodeAuthorization> {
         // Create consensus-based authorization without recursion
         let authorization = CrossNodeAuthorization {
@@ -233,13 +245,15 @@ impl CrossNodeAuthEngine {
         }
 
         // Check spawn limits
-        let current_spawns = self.spawned_beardogs.values()
+        let current_spawns = self
+            .spawned_beardogs
+            .values()
             .filter(|spawn| spawn.parent_id == requester_node_id)
             .count();
 
         if current_spawns >= self.config.max_spawns_per_node as usize {
             return Err(BearDogError::ResourceExhaustion(
-                "Maximum spawns per node exceeded".to_string()
+                "Maximum spawns per node exceeded".to_string(),
             ));
         }
 
@@ -264,15 +278,19 @@ impl CrossNodeAuthEngine {
             ecosystem_connections: vec![],
         };
 
-        self.spawned_beardogs.insert(spawned_beardog.id.clone(), spawned_beardog.clone());
+        self.spawned_beardogs
+            .insert(spawned_beardog.id.clone(), spawned_beardog.clone());
         Ok(spawned_beardog)
     }
 
     /// Combine genetics from parent BearDogs
-    fn combine_genetics(&self, parent_genetics: &[BearDogGenetics]) -> BearDogResult<BearDogGenetics> {
+    fn combine_genetics(
+        &self,
+        parent_genetics: &[BearDogGenetics],
+    ) -> BearDogResult<BearDogGenetics> {
         if parent_genetics.is_empty() {
             return Err(BearDogError::ValidationError(
-                "At least one parent genetics required".to_string()
+                "At least one parent genetics required".to_string(),
             ));
         }
 
@@ -302,10 +320,26 @@ impl CrossNodeAuthEngine {
             security_traits: parent_genetics.first().unwrap().security_traits.clone(),
             capabilities: combined_capabilities,
             spawn_restrictions: combined_restrictions,
-            generation: parent_genetics.iter().map(|p| p.generation).max().unwrap_or(0) + 1,
+            generation: parent_genetics
+                .iter()
+                .map(|p| p.generation)
+                .max()
+                .unwrap_or(0)
+                + 1,
             parent_genetics: Some(parent_genetics.iter().map(|p| p.id.clone()).collect()),
             mutations: vec![],
             fitness_score: avg_fitness * 0.95, // Slight degradation for realistic genetics
+            security_clearance: parent_genetics
+                .iter()
+                .map(|p| &p.security_clearance)
+                .max()
+                .unwrap_or(&SecurityClearance::Basic)
+                .clone(),
+            specializations: parent_genetics
+                .iter()
+                .flat_map(|p| p.specializations.iter())
+                .cloned()
+                .collect(),
         };
 
         Ok(combined_genetics)
@@ -328,16 +362,16 @@ impl CrossNodeAuthEngine {
     /// Get ecosystem integration capabilities
     pub fn get_ecosystem_capabilities(&self, node_id: &str) -> Vec<NodeCapability> {
         let mut capabilities = Vec::new();
-        
+
         // Check for spawned BearDogs with ecosystem capabilities
         for spawn in self.spawned_beardogs.values() {
             if spawn.parent_id == node_id {
                 for cap in &spawn.genetics.capabilities {
                     match cap {
-                        NodeCapability::ToadStoolCompute |
-                        NodeCapability::SongBirdDiscovery |
-                        NodeCapability::NestGateStorage |
-                        NodeCapability::SquirrelPlugins => {
+                        NodeCapability::ToadStoolCompute
+                        | NodeCapability::SongBirdDiscovery
+                        | NodeCapability::NestGateStorage
+                        | NodeCapability::SquirrelPlugins => {
                             capabilities.push(cap.clone());
                         }
                         _ => {}
@@ -379,14 +413,13 @@ impl CrossNodeAuthEngine {
         let now = Utc::now();
 
         // Remove expired authorizations
-        self.active_authorizations.retain(|_, auth| {
-            auth.is_active && now < auth.expires_at
-        });
+        self.active_authorizations
+            .retain(|_, auth| auth.is_active && now < auth.expires_at);
 
         // Remove terminated spawns (keep for 24 hours for audit)
         let cleanup_threshold = now - Duration::hours(24);
-        self.spawned_beardogs.retain(|_, spawn| {
-            match &spawn.current_status {
+        self.spawned_beardogs
+            .retain(|_, spawn| match &spawn.current_status {
                 SpawnStatus::Terminated => {
                     if let Some(termination_time) = spawn.expected_lifetime {
                         termination_time > cleanup_threshold
@@ -395,8 +428,7 @@ impl CrossNodeAuthEngine {
                     }
                 }
                 _ => true,
-            }
-        });
+            });
 
         Ok(())
     }
@@ -404,20 +436,33 @@ impl CrossNodeAuthEngine {
     /// Get comprehensive authorization metrics
     pub fn get_authorization_metrics(&self) -> HashMap<String, u64> {
         let mut metrics = HashMap::new();
-        
-        metrics.insert("total_authorizations".to_string(), self.active_authorizations.len() as u64);
-        metrics.insert("active_spawns".to_string(), 
-            self.spawned_beardogs.values().filter(|s| matches!(s.current_status, SpawnStatus::Active)).count() as u64);
-        metrics.insert("total_genetics".to_string(), self.genetics_registry.len() as u64);
-        
+
+        metrics.insert(
+            "total_authorizations".to_string(),
+            self.active_authorizations.len() as u64,
+        );
+        metrics.insert(
+            "active_spawns".to_string(),
+            self.spawned_beardogs
+                .values()
+                .filter(|s| matches!(s.current_status, SpawnStatus::Active))
+                .count() as u64,
+        );
+        metrics.insert(
+            "total_genetics".to_string(),
+            self.genetics_registry.len() as u64,
+        );
+
         // Count by permission types
         let mut permission_counts = HashMap::new();
         for auth in self.active_authorizations.values() {
             for permission in &auth.permissions {
-                *permission_counts.entry(format!("{:?}", permission)).or_insert(0) += 1;
+                *permission_counts
+                    .entry(format!("{:?}", permission))
+                    .or_insert(0) += 1;
             }
         }
-        
+
         for (permission, count) in permission_counts {
             metrics.insert(format!("permission_{}", permission.to_lowercase()), count);
         }
@@ -439,11 +484,11 @@ impl CrossNodeAuthEngine {
         for node_id in participating_nodes {
             // Get node trust level to weight vote
             let trust_level = self.node_registry.get_trust_level(node_id).unwrap_or(0.0);
-            
+
             // Simulate vote based on trust level and proposal content
             let vote = trust_level > 0.6 && !proposal.contains("high_risk");
             votes.insert(node_id.clone(), vote);
-            
+
             if vote {
                 approve_count += 1;
             }

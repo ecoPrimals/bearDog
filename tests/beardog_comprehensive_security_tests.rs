@@ -39,7 +39,9 @@ async fn test_core_security_methods(core: &BearDogCore) {
     let engine = core.encryption_engine();
     // Test encryption/decryption
     let test_data = b"test_security_data";
-    let encrypted = engine.encrypt(test_data, Some(EncryptionAlgorithm::Aes256Gcm)).await;
+    let encrypted = engine
+        .encrypt(test_data, Some(EncryptionAlgorithm::Aes256Gcm))
+        .await;
     assert!(encrypted.is_ok(), "Encryption should succeed");
 
     if let Ok(encrypted_data) = encrypted {
@@ -83,8 +85,13 @@ async fn test_core_error_handling(core: &BearDogCore) {
 
     // Test invalid encryption
     let engine = core.encryption_engine();
-    let encrypt_result = engine.encrypt(b"test_data", Some(EncryptionAlgorithm::Aes256Gcm)).await;
-    assert!(encrypt_result.is_ok(), "Encryption should succeed with valid data");
+    let encrypt_result = engine
+        .encrypt(b"test_data", Some(EncryptionAlgorithm::Aes256Gcm))
+        .await;
+    assert!(
+        encrypt_result.is_ok(),
+        "Encryption should succeed with valid data"
+    );
 
     // Test decryption with invalid data
     let invalid_encrypted = EncryptedData {
@@ -103,7 +110,6 @@ async fn test_core_error_handling(core: &BearDogCore) {
 }
 
 async fn test_core_concurrent_access(core: &BearDogCore) {
-    use std::sync::Arc;
     use tokio::task;
 
     // Clone core data we need for testing to avoid lifetime issues
@@ -115,7 +121,9 @@ async fn test_core_concurrent_access(core: &BearDogCore) {
         // Create test data inside the loop to avoid lifetime issues
         let handle = task::spawn(async move {
             // Create a new core instance for testing instead of sharing
-            let test_core = BearDogCore::new(BearDogConfig::default()).await.expect("Core creation failed");
+            let test_core = BearDogCore::new(BearDogConfig::default())
+                .await
+                .expect("Core creation failed");
             let test_provider = test_core.security_provider();
             let user_id = format!("user_{}", i);
             let token = format!("token_{}", i);
@@ -211,7 +219,10 @@ async fn test_audit_security_events(audit: &AuditEngine) {
     };
 
     let result = audit.log_event(auth_event).await;
-    assert!(result.is_ok(), "Authentication event logging should succeed");
+    assert!(
+        result.is_ok(),
+        "Authentication event logging should succeed"
+    );
 }
 
 async fn test_audit_performance_under_load(audit: &AuditEngine) {
@@ -270,8 +281,11 @@ async fn test_audit_tampering_detection(audit: &AuditEngine) {
 
     // Verify event can be retrieved
     let recent_events = audit.get_recent_events(10).await;
-    assert!(recent_events.is_ok(), "Recent events retrieval should succeed");
-    
+    assert!(
+        recent_events.is_ok(),
+        "Recent events retrieval should succeed"
+    );
+
     let events = recent_events.unwrap();
     assert!(!events.is_empty(), "Should have at least one event");
 }
@@ -324,7 +338,7 @@ async fn test_compliance_violations(compliance: &ComplianceEngine) {
     let mut data = HashMap::new();
     data.insert("data_type".to_string(), "personal_data".to_string());
     data.insert("user_consent".to_string(), "false".to_string());
-    
+
     let violation_event = ComplianceEvent {
         id: "gdpr_violation_001".to_string(),
         event_type: "DataAccess".to_string(),
@@ -337,7 +351,7 @@ async fn test_compliance_violations(compliance: &ComplianceEngine) {
 
     let result = compliance.evaluate_event(violation_event).await;
     assert!(result.is_ok(), "Compliance evaluation should succeed");
-    
+
     let evaluation = result.unwrap();
     assert!(
         evaluation.compliance_score < 1.0,
@@ -347,18 +361,17 @@ async fn test_compliance_violations(compliance: &ComplianceEngine) {
 
 async fn test_compliance_reporting(compliance: &ComplianceEngine) {
     // Test compliance report generation
-    let date_range = (
-        Utc::now() - chrono::Duration::days(30),
-        Utc::now()
+    let date_range = (Utc::now() - chrono::Duration::days(30), Utc::now());
+
+    let report = compliance
+        .generate_compliance_report(ComplianceStandard::GDPR, date_range)
+        .await;
+
+    assert!(
+        report.is_ok(),
+        "Compliance report generation should succeed"
     );
-    
-    let report = compliance.generate_compliance_report(
-        ComplianceStandard::GDPR,
-        date_range
-    ).await;
-    
-    assert!(report.is_ok(), "Compliance report generation should succeed");
-    
+
     let report = report.unwrap();
     assert_eq!(report.standard, ComplianceStandard::GDPR);
     assert!(report.overall_score >= 0.0 && report.overall_score <= 1.0);
@@ -367,12 +380,12 @@ async fn test_compliance_reporting(compliance: &ComplianceEngine) {
 async fn test_compliance_real_time_monitoring(compliance: &ComplianceEngine) {
     // Test real-time compliance monitoring
     let mut monitoring_events = Vec::new();
-    
+
     for i in 0..10 {
         let has_consent = i % 2 == 0;
         let mut data = HashMap::new();
         data.insert("user_consent".to_string(), has_consent.to_string());
-        
+
         let event = ComplianceEvent {
             id: format!("monitoring_event_{}", i),
             event_type: "DataProcessing".to_string(),
@@ -382,7 +395,7 @@ async fn test_compliance_real_time_monitoring(compliance: &ComplianceEngine) {
             data,
             metadata: HashMap::new(),
         };
-        
+
         monitoring_events.push(event);
     }
 
@@ -424,7 +437,7 @@ async fn test_threat_types(detector: &mut ThreatDetectionEngine) {
         event_data.insert("threat_type".to_string(), format!("{:?}", threat_type));
         event_data.insert("source_ip".to_string(), "192.168.1.100".to_string());
         event_data.insert("severity".to_string(), "high".to_string());
-        
+
         let analysis = detector.analyze_event(&event_data).await;
         assert!(
             analysis.is_ok(),
@@ -449,7 +462,7 @@ async fn test_threat_behavioral_analysis(detector: &mut ThreatDetectionEngine) {
         event_data.insert("value".to_string(), value.to_string());
         event_data.insert("source_ip".to_string(), ip.to_string());
         event_data.insert("timestamp".to_string(), Utc::now().to_rfc3339());
-        
+
         let analysis = detector.analyze_event(&event_data).await;
         assert!(
             analysis.is_ok(),
@@ -464,11 +477,17 @@ async fn test_threat_performance_under_attack(detector: &mut ThreatDetectionEngi
     for i in 0..50 {
         let mut event_data = HashMap::new();
         event_data.insert("attack_type".to_string(), "ddos".to_string());
-        event_data.insert("source_ip".to_string(), format!("192.168.{}.{}", i / 256, i % 256));
+        event_data.insert(
+            "source_ip".to_string(),
+            format!("192.168.{}.{}", i / 256, i % 256),
+        );
         event_data.insert("request_rate".to_string(), "1000".to_string());
-        
+
         let analysis = detector.analyze_event(&event_data).await;
-        assert!(analysis.is_ok(), "High-volume threat analysis should succeed");
+        assert!(
+            analysis.is_ok(),
+            "High-volume threat analysis should succeed"
+        );
     }
 }
 
@@ -487,7 +506,7 @@ async fn test_threat_false_positive_management(detector: &mut ThreatDetectionEng
         event_data.insert("user".to_string(), user.to_string());
         event_data.insert("source_ip".to_string(), ip.to_string());
         event_data.insert("legitimate".to_string(), "true".to_string());
-        
+
         let analysis = detector.analyze_event(&event_data).await;
         assert!(
             analysis.is_ok(),
@@ -560,67 +579,114 @@ async fn test_encryption_key_management(engine: &EncryptionEngine) {
 
 async fn test_encryption_performance(engine: &EncryptionEngine) {
     use std::time::Instant;
-    
+
     let test_sizes = vec![1024, 10240, 102400, 1048576]; // 1KB, 10KB, 100KB, 1MB
-    
+
     for size in test_sizes {
         let test_data = vec![0u8; size];
         let start = Instant::now();
-        
-        let encrypted = engine.encrypt(&test_data, Some(EncryptionAlgorithm::Aes256Gcm)).await;
+
+        let encrypted = engine
+            .encrypt(&test_data, Some(EncryptionAlgorithm::Aes256Gcm))
+            .await;
         let encrypt_time = start.elapsed();
-        
-        assert!(encrypted.is_ok(), "Encryption should succeed for {} bytes", size);
-        
+
+        assert!(
+            encrypted.is_ok(),
+            "Encryption should succeed for {} bytes",
+            size
+        );
+
         if let Ok(encrypted_data) = encrypted {
             let start = Instant::now();
             let decrypted = engine.decrypt(&encrypted_data).await;
             let decrypt_time = start.elapsed();
-            
-            assert!(decrypted.is_ok(), "Decryption should succeed for {} bytes", size);
-            assert_eq!(decrypted.unwrap(), test_data, "Decrypted data should match original");
-            
-            println!("Size: {} bytes, Encrypt: {:?}, Decrypt: {:?}", 
-                     size, encrypt_time, decrypt_time);
+
+            assert!(
+                decrypted.is_ok(),
+                "Decryption should succeed for {} bytes",
+                size
+            );
+            assert_eq!(
+                decrypted.unwrap(),
+                test_data,
+                "Decrypted data should match original"
+            );
+
+            println!(
+                "Size: {} bytes, Encrypt: {:?}, Decrypt: {:?}",
+                size, encrypt_time, decrypt_time
+            );
         }
     }
 }
 
 async fn test_encryption_attack_resistance(engine: &EncryptionEngine) {
     let test_data = b"Attack resistance test data";
-    
+
     // Test multiple encryptions of same data produce different ciphertexts
-    let encrypted1 = engine.encrypt(test_data, Some(EncryptionAlgorithm::Aes256Gcm)).await;
-    let encrypted2 = engine.encrypt(test_data, Some(EncryptionAlgorithm::Aes256Gcm)).await;
-    
-    assert!(encrypted1.is_ok() && encrypted2.is_ok(), "Both encryptions should succeed");
-    
+    let encrypted1 = engine
+        .encrypt(test_data, Some(EncryptionAlgorithm::Aes256Gcm))
+        .await;
+    let encrypted2 = engine
+        .encrypt(test_data, Some(EncryptionAlgorithm::Aes256Gcm))
+        .await;
+
+    assert!(
+        encrypted1.is_ok() && encrypted2.is_ok(),
+        "Both encryptions should succeed"
+    );
+
     let enc1 = encrypted1.unwrap();
     let enc2 = encrypted2.unwrap();
-    
+
     // Ciphertexts should be different (due to different nonces)
-    assert_ne!(enc1.ciphertext, enc2.ciphertext, "Ciphertexts should be different");
-    
+    assert_ne!(
+        enc1.ciphertext, enc2.ciphertext,
+        "Ciphertexts should be different"
+    );
+
     // Both should decrypt to the same plaintext
     let dec1 = engine.decrypt(&enc1).await;
     let dec2 = engine.decrypt(&enc2).await;
-    
-    assert!(dec1.is_ok() && dec2.is_ok(), "Both decryptions should succeed");
-    assert_eq!(dec1.unwrap(), test_data, "First decryption should match original");
-    assert_eq!(dec2.unwrap(), test_data, "Second decryption should match original");
+
+    assert!(
+        dec1.is_ok() && dec2.is_ok(),
+        "Both decryptions should succeed"
+    );
+    assert_eq!(
+        dec1.unwrap(),
+        test_data,
+        "First decryption should match original"
+    );
+    assert_eq!(
+        dec2.unwrap(),
+        test_data,
+        "Second decryption should match original"
+    );
 }
 
 /// Test integrated security workflow
 #[tokio::test]
 async fn test_integrated_security_workflow() {
     let (_, compliance_config, threat_config, encryption_config) = create_test_configs();
-    
+
     // Initialize all security components
     let audit = Arc::new(AuditEngine::new().await);
-    let compliance = Arc::new(ComplianceEngine::new(compliance_config).await.expect("Compliance engine creation failed"));
-    let mut threat_detector = ThreatDetectionEngine::new(threat_config).await.expect("Threat detection engine creation failed");
-    let encryption = Arc::new(EncryptionEngine::new(encryption_config).await.expect("Encryption engine creation failed"));
-    
+    let compliance = Arc::new(
+        ComplianceEngine::new(compliance_config)
+            .await
+            .expect("Compliance engine creation failed"),
+    );
+    let mut threat_detector = ThreatDetectionEngine::new(threat_config)
+        .await
+        .expect("Threat detection engine creation failed");
+    let encryption = Arc::new(
+        EncryptionEngine::new(encryption_config)
+            .await
+            .expect("Encryption engine creation failed"),
+    );
+
     // Test integrated workflow
     test_security_incident_workflow(audit.clone(), compliance.clone(), &mut threat_detector).await;
     test_data_protection_workflow(audit.clone(), compliance.clone(), encryption.clone()).await;
@@ -638,10 +704,10 @@ async fn test_security_incident_workflow(
     incident_data.insert("source_ip".to_string(), "192.168.1.100".to_string());
     incident_data.insert("payload".to_string(), "' OR 1=1 --".to_string());
     incident_data.insert("timestamp".to_string(), Utc::now().to_rfc3339());
-    
+
     let analysis = threat_detector.analyze_event(&incident_data).await;
     assert!(analysis.is_ok(), "Threat analysis should succeed");
-    
+
     // 2. Audit Logging - Log the security incident
     let audit_event = AuditEvent {
         id: "security_incident_001".to_string(),
@@ -660,10 +726,10 @@ async fn test_security_incident_workflow(
         },
         details: HashMap::new(),
     };
-    
+
     let audit_result = audit.log_event(audit_event).await;
     assert!(audit_result.is_ok(), "Audit logging should succeed");
-    
+
     // 3. Compliance Evaluation - Check if incident violates policies
     let compliance_event = ComplianceEvent {
         id: "incident_compliance_001".to_string(),
@@ -674,12 +740,18 @@ async fn test_security_incident_workflow(
         data: incident_data,
         metadata: HashMap::new(),
     };
-    
+
     let compliance_result = compliance.evaluate_event(compliance_event).await;
-    assert!(compliance_result.is_ok(), "Compliance evaluation should succeed");
-    
+    assert!(
+        compliance_result.is_ok(),
+        "Compliance evaluation should succeed"
+    );
+
     let evaluation = compliance_result.unwrap();
-    assert!(evaluation.compliance_score < 1.0, "Security incident should affect compliance score");
+    assert!(
+        evaluation.compliance_score < 1.0,
+        "Security incident should affect compliance score"
+    );
 }
 
 async fn test_data_protection_workflow(
@@ -689,9 +761,11 @@ async fn test_data_protection_workflow(
 ) {
     // 1. Data Encryption - Encrypt sensitive user data
     let user_data = b"User personal information: John Doe, SSN: 123-45-6789";
-    let encrypted_result = encryption.encrypt(user_data, Some(EncryptionAlgorithm::Aes256Gcm)).await;
+    let encrypted_result = encryption
+        .encrypt(user_data, Some(EncryptionAlgorithm::Aes256Gcm))
+        .await;
     assert!(encrypted_result.is_ok(), "Data encryption should succeed");
-    
+
     // 2. Audit Data Access
     let audit_event = AuditEvent {
         id: "data_processing_001".to_string(),
@@ -706,16 +780,16 @@ async fn test_data_protection_workflow(
         metadata: HashMap::new(),
         details: HashMap::new(),
     };
-    
+
     let audit_result = audit.log_event(audit_event).await;
     assert!(audit_result.is_ok(), "Data access audit should succeed");
-    
+
     // 3. Compliance Check - Ensure data protection compliance
     let mut compliance_data = HashMap::new();
     compliance_data.insert("data_type".to_string(), "personal_data".to_string());
     compliance_data.insert("encrypted".to_string(), "true".to_string());
     compliance_data.insert("user_consent".to_string(), "true".to_string());
-    
+
     let compliance_event = ComplianceEvent {
         id: "data_processing_001".to_string(),
         event_type: "DataProcessing".to_string(),
@@ -725,10 +799,13 @@ async fn test_data_protection_workflow(
         data: compliance_data,
         metadata: HashMap::new(),
     };
-    
+
     let compliance_result = compliance.evaluate_event(compliance_event).await;
-    assert!(compliance_result.is_ok(), "Data protection compliance should succeed");
-    
+    assert!(
+        compliance_result.is_ok(),
+        "Data protection compliance should succeed"
+    );
+
     let evaluation = compliance_result.unwrap();
     assert!(
         evaluation.compliance_score >= 0.8,
@@ -742,12 +819,12 @@ async fn test_compliance_monitoring_workflow(
 ) {
     // Test continuous compliance monitoring
     let mut compliance_events = Vec::new();
-    
+
     for i in 0..10 {
         let has_consent = i % 2 == 0;
         let mut data = HashMap::new();
         data.insert("user_consent".to_string(), has_consent.to_string());
-        
+
         let event = ComplianceEvent {
             id: format!("monitoring_event_{}", i),
             event_type: "DataProcessing".to_string(),
@@ -757,10 +834,10 @@ async fn test_compliance_monitoring_workflow(
             data,
             metadata: HashMap::new(),
         };
-        
+
         compliance_events.push(event);
     }
-    
+
     // Process all events and create corresponding audit logs
     for event in compliance_events {
         let audit_event = AuditEvent {
@@ -776,12 +853,15 @@ async fn test_compliance_monitoring_workflow(
             metadata: HashMap::new(),
             details: HashMap::new(),
         };
-        
+
         let audit_result = audit.log_event(audit_event).await;
         assert!(audit_result.is_ok(), "Compliance audit should succeed");
-        
+
         let compliance_result = compliance.evaluate_event(event).await;
-        assert!(compliance_result.is_ok(), "Compliance evaluation should succeed");
+        assert!(
+            compliance_result.is_ok(),
+            "Compliance evaluation should succeed"
+        );
     }
 }
 
@@ -792,12 +872,17 @@ fn create_test_configs() -> (
     EncryptionConfig,
 ) {
     let audit_config = ();
-    
+
     let compliance_config = ComplianceConfig::default();
-    
+
     let threat_config = ThreatDetectionConfig::default();
-    
+
     let encryption_config = EncryptionConfig::default();
-    
-    (audit_config, compliance_config, threat_config, encryption_config)
+
+    (
+        audit_config,
+        compliance_config,
+        threat_config,
+        encryption_config,
+    )
 }

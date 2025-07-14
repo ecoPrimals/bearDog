@@ -11,11 +11,11 @@ use crate::tunnel::{
 };
 use crate::{BearDogError, BearDogResult};
 
+use crate::auth::CrossNodeAuthEngine;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 use tokio::sync::RwLock;
-use crate::auth::CrossNodeAuthEngine;
 
 /// Core security provider trait for BSTP gaming tunnels
 #[async_trait::async_trait]
@@ -265,7 +265,7 @@ impl BStpSecurityProvider for BStpSecurityManager {
             NetworkSecurityEvent::PeerDiscovered {
                 peer_id,
                 peer_capabilities,
-                trust_indicators,
+                trust_indicators: _,
             } => {
                 // Create secure session with new peer
                 let session = self
@@ -281,8 +281,8 @@ impl BStpSecurityProvider for BStpSecurityManager {
 
             NetworkSecurityEvent::PeerDisconnected {
                 peer_id,
-                reason,
-                was_planned,
+                reason: _,
+                was_planned: _,
             } => {
                 // Find and terminate session for this peer
                 let session_id = {

@@ -1,5 +1,5 @@
 //! Integration and system configuration types
-//! 
+//!
 //! Contains all workflow, adapter, and external system integration configuration structures.
 
 use serde::{Deserialize, Serialize};
@@ -271,4 +271,4 @@ impl Default for ExternalSystemsConfig {
             messaging_systems: HashMap::new(),
         }
     }
-} 
+}

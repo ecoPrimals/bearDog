@@ -277,28 +277,38 @@ pub enum BearDogError {
     },
 
     // Workflow-related errors
+    /// Error when attempting to create a workflow that already exists
     #[error("Workflow already exists: {0}")]
     WorkflowAlreadyExists(String),
+    /// Error when a workflow is in an invalid state for the requested operation
     #[error("Workflow in invalid state: {0}")]
     WorkflowInvalidState(String),
+    /// Error when workflow approval process fails
     #[error("Workflow approval failed: {0}")]
     WorkflowApprovalFailed(String),
+    /// Error when workflow execution encounters a failure
     #[error("Workflow execution failed: {0}")]
     WorkflowExecutionFailed(String),
+    /// Error when workflow validation fails due to invalid configuration or parameters
     #[error("Workflow validation failed: {0}")]
     WorkflowValidationFailed(String),
+    /// Error when user lacks permission to perform workflow operation
     #[error("Workflow permission denied: {0}")]
     WorkflowPermissionDenied(String),
 
     // Network and system errors
+    /// Network-related errors during communication or connectivity issues
     #[error("Network error: {0}")]
     NetworkError(String),
 
     // Additional missing variants
+    /// Input/Output operation errors
     #[error("IO error: {0}")]
     IoError(String),
+    /// Cryptographic key validation errors
     #[error("Invalid key: {0}")]
     InvalidKey(String),
+    /// Error when a compliance standard is not supported by the system
     #[error("Compliance standard not supported: {0}")]
     ComplianceStandardNotSupported(String),
 
@@ -338,24 +348,28 @@ pub enum BearDogError {
         resource: String,
     },
 
+    /// Error when genetic lineage integrity is compromised or violated
     #[error("Lineage integrity violation: {message}")]
     LineageIntegrityViolation {
         /// Description of the lineage integrity issue
         message: String,
     },
 
+    /// Error when audit trail is incomplete or missing required entries
     #[error("Audit trail incomplete: {message}")]
     AuditTrailIncomplete {
         /// Description of what's missing from the audit trail
         message: String,
     },
 
+    /// Error when audit integrity is violated or compromised
     #[error("Audit integrity violation: {message}")]
     AuditIntegrityViolation {
         /// Description of the audit integrity issue
         message: String,
     },
 
+    /// Error when genetic data is invalid or corrupted
     #[error("Invalid genetics: {message}")]
     InvalidGenetics {
         /// Description of what's wrong with the genetics
@@ -363,12 +377,15 @@ pub enum BearDogError {
     },
 
     // BSTP (BearDog Secure Tunnel Protocol) related errors
+    /// Error when a secure tunnel session cannot be found
     #[error("Session not found")]
     SessionNotFound,
 
+    /// Error when a peer node is not trusted for secure operations
     #[error("Peer not trusted")]
     PeerNotTrusted,
 
+    /// Error when hardware acceleration is required but not available
     #[error("Hardware acceleration not available")]
     HardwareNotAvailable,
 
@@ -415,6 +432,232 @@ pub enum BearDogError {
     #[error("Not implemented: {message}")]
     NotImplemented {
         /// Error message describing what's not implemented
+        message: String,
+    },
+
+    // Human entropy collection errors
+    /// Error when user consent for entropy collection has expired
+    #[error("Consent expired")]
+    ConsentExpired,
+
+    /// Error when user consent is insufficient for the requested entropy collection operation
+    #[error("Insufficient consent for requested collection")]
+    InsufficientConsent,
+
+    /// Error when entropy quality doesn't meet minimum requirements
+    #[error("Insufficient entropy quality: required {required}, actual {actual}")]
+    InsufficientEntropyQuality {
+        /// Required quality score
+        required: f64,
+        /// Actual quality score
+        actual: f64,
+    },
+
+    /// Error when not enough entropy sources are available for multimodal collection
+    #[error("Insufficient entropy sources for multimodal collection")]
+    InsufficientEntropySourcesForMultimodal,
+
+    /// Error when entropy components are empty or missing
+    #[error("Empty entropy components")]
+    EmptyEntropyComponents,
+
+    // HSM-specific error variants
+    /// Error when HSM is not available on the system
+    #[error("HSM unavailable: {hsm_type} - {reason}")]
+    HsmUnavailable {
+        /// The type of HSM that is unavailable
+        hsm_type: String,
+        /// Reason why the HSM is unavailable
+        reason: String,
+    },
+
+    /// Error when HSM operation fails
+    #[error("HSM operation failed: {hsm_type} - {operation} - {error}")]
+    HsmOperationFailed {
+        /// The type of HSM where the operation failed
+        hsm_type: String,
+        /// The operation that failed
+        operation: String,
+        /// Error message describing the failure
+        error: String,
+    },
+
+    /// Error when key generation fails in HSM
+    #[error("HSM key generation failed: {hsm_type} - {error}")]
+    HsmKeyGenerationFailed {
+        /// The type of HSM where key generation failed
+        hsm_type: String,
+        /// Error message describing the failure
+        error: String,
+    },
+
+    /// Error when encryption fails in HSM
+    #[error("HSM encryption failed: {hsm_type} - {key_id} - {error}")]
+    HsmEncryptionFailed {
+        /// The type of HSM where encryption failed
+        hsm_type: String,
+        /// The key ID that was used
+        key_id: String,
+        /// Error message describing the failure
+        error: String,
+    },
+
+    /// Error when decryption fails in HSM
+    #[error("HSM decryption failed: {hsm_type} - {key_id} - {error}")]
+    HsmDecryptionFailed {
+        /// The type of HSM where decryption failed
+        hsm_type: String,
+        /// The key ID that was used
+        key_id: String,
+        /// Error message describing the failure
+        error: String,
+    },
+
+    /// Error when signing fails in HSM
+    #[error("HSM signing failed: {hsm_type} - {key_id} - {error}")]
+    HsmSigningFailed {
+        /// The type of HSM where signing failed
+        hsm_type: String,
+        /// The key ID that was used
+        key_id: String,
+        /// Error message describing the failure
+        error: String,
+    },
+
+    /// Error when an unsupported key type is requested
+    #[error("Unsupported key type: {key_type:?} for HSM type: {hsm_type}")]
+    UnsupportedKeyType {
+        /// The key type that is not supported
+        key_type: crate::tunnel::hsm::types::KeyType,
+        /// The HSM type that doesn't support it
+        hsm_type: String,
+    },
+
+    /// Error when an unsupported HSM type is requested
+    #[error("Unsupported HSM type: {hsm_type} - {reason}")]
+    UnsupportedHsmType {
+        /// The HSM type that is not supported
+        hsm_type: String,
+        /// Reason why the HSM type is not supported
+        reason: String,
+    },
+
+    /// Error when an unsupported operation is requested
+    #[error("Unsupported operation: {operation} for HSM type: {hsm_type} - {reason}")]
+    UnsupportedOperation {
+        /// The operation that is not supported
+        operation: String,
+        /// The HSM type that doesn't support it
+        hsm_type: String,
+        /// Reason why the operation is not supported
+        reason: String,
+    },
+
+    /// Error when an unsupported crypto backend is requested
+    #[error("Unsupported crypto backend: {backend}")]
+    UnsupportedCryptoBackend {
+        /// The crypto backend that is not supported
+        backend: String,
+    },
+
+    /// Error when an unsupported storage type is requested
+    #[error("Unsupported storage type: {storage_type}")]
+    UnsupportedStorageType {
+        /// The storage type that is not supported
+        storage_type: String,
+    },
+
+    /// Error when HSM provider is not found
+    #[error("HSM provider not found: {provider_id}")]
+    ProviderNotFound {
+        /// The provider ID that was not found
+        provider_id: String,
+    },
+
+    /// Error when no suitable HSM provider is found for requirements
+    #[error("No suitable HSM provider found for requirements: {requirements}")]
+    NoSuitableProvider {
+        /// The requirements that couldn't be satisfied
+        requirements: String,
+    },
+
+    /// Error when all HSM providers are unhealthy
+    #[error("All HSM providers are unhealthy (total: {total_providers})")]
+    AllProvidersUnhealthy {
+        /// Total number of providers that are unhealthy
+        total_providers: usize,
+    },
+
+    /// Error when a key is not found
+    #[error("Key not found: {key_id}")]
+    KeyNotFound {
+        /// The key ID that was not found
+        key_id: String,
+    },
+
+    /// Error when HSM configuration is missing
+    #[error("Missing HSM configuration: {component} - {missing_field}")]
+    MissingConfiguration {
+        /// The component that is missing configuration
+        component: String,
+        /// The specific field that is missing
+        missing_field: String,
+    },
+
+    /// Error when key usage limit is exceeded
+    #[error("Key usage exceeded: {key_id} - max: {max_usage}, current: {current_usage}")]
+    KeyUsageExceeded {
+        /// The key ID that exceeded usage
+        key_id: String,
+        /// Maximum allowed usage
+        max_usage: u64,
+        /// Current usage count
+        current_usage: u64,
+    },
+
+    /// Error when data serialization fails
+    #[error("Serialization error: {error}")]
+    SerializationError {
+        /// Error message describing the serialization failure
+        error: String,
+    },
+
+    /// Error when data deserialization fails
+    #[error("Deserialization error: {error}")]
+    DeserializationError {
+        /// Error message describing the deserialization failure
+        error: String,
+    },
+
+    /// Error when unsupported format is requested
+    #[error("Unsupported format: {format}")]
+    UnsupportedFormat {
+        /// The format that is not supported
+        format: String,
+    },
+
+    /// Error when unsupported logger type is requested
+    #[error("Unsupported logger type: {logger_type}")]
+    UnsupportedLoggerType {
+        /// The logger type that is not supported
+        logger_type: String,
+    },
+
+    /// Error when invalid operation is attempted
+    #[error("Invalid operation: {operation} - {reason}")]
+    InvalidOperation {
+        /// The operation that is invalid
+        operation: String,
+        /// Reason why the operation is invalid
+        reason: String,
+    },
+
+    /// Error when invalid configuration is provided
+    #[error("Invalid configuration: {field} - {message}")]
+    InvalidConfig {
+        /// The configuration field that is invalid
+        field: String,
+        /// Error message describing the configuration issue
         message: String,
     },
 }

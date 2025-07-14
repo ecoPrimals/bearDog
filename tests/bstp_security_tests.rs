@@ -4,9 +4,7 @@
 
 use beardog::config::EncryptionConfig;
 use beardog::encryption::EncryptionEngine;
-use beardog::genetics::{
-    DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore,
-};
+use beardog::genetics::{DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore};
 use beardog::tunnel::{
     genetic_healing::{NetworkEvent, SecurityIssue, SecurityIssueType, Severity},
     key_manager::CryptoAlgorithm,
@@ -39,7 +37,10 @@ async fn test_key_manager_security() -> BearDogResult<()> {
     assert_ne!(key1.key_id, key2.key_id);
 
     // Test key retrieval
-    let retrieved_key = key_manager.get_session_key(session_id).await.expect("Session key should exist");
+    let retrieved_key = key_manager
+        .get_session_key(session_id)
+        .await
+        .expect("Session key should exist");
     assert_eq!(retrieved_key.key, key1.key);
     assert_eq!(retrieved_key.algorithm, CryptoAlgorithm::Aes256Gcm);
 
@@ -258,10 +259,7 @@ async fn test_configuration_profiles() -> BearDogResult<()> {
         max_security.key_management.key_rotation_interval,
         Duration::from_secs(900)
     );
-    assert_eq!(
-        max_security.genetic_healing.crossover_rate,
-        1.0
-    );
+    assert_eq!(max_security.genetic_healing.crossover_rate, 1.0);
     assert_eq!(max_security.genetic_healing.population_size, 100);
 
     // Environment-based config

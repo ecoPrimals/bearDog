@@ -1,30 +1,47 @@
 //! Implementation logic and handlers for genetic operations
-//! 
+//!
 //! Contains the main business logic and implementation details for the genetics engine.
 
 use super::types::*;
-use crate::*;
 use crate::auth::{
-    BearDogGenetics, CryptoChromosome, CapabilityGene, SecurityTraits, SpawnRestriction,
-    AlgorithmFamily, NodeCapability, SpawnPurpose, CapabilityMutation, MutationTrigger,
+    AlgorithmFamily, BearDogGenetics, CapabilityGene, CapabilityMutation, CryptoChromosome,
+    MutationTrigger, NodeCapability, NodeSpecialization, SecurityClearance, SecurityTraits,
+    SpawnPurpose, SpawnRestriction,
 };
-use std::sync::Arc;
+use crate::*;
 use chrono::Utc;
 use sha2::{Digest, Sha256};
+use std::sync::Arc;
 
 /// Trait for BearDog genetics engine operations
 pub trait BearDogGeneticsEngine: Send + Sync {
     /// Get genetics for a node
-    fn get_node_genetics(&self, node_id: &str) -> impl std::future::Future<Output = BearDogResult<BearDogGenetics>> + Send;
-    
+    fn get_node_genetics(
+        &self,
+        node_id: &str,
+    ) -> impl std::future::Future<Output = BearDogResult<BearDogGenetics>> + Send;
+
     /// Predict offspring genetics from parents
-    fn predict_offspring_genetics(&self, parent1: &str, parents: &[String]) -> impl std::future::Future<Output = BearDogResult<BearDogGenetics>> + Send;
-    
+    fn predict_offspring_genetics(
+        &self,
+        parent1: &str,
+        parents: &[String],
+    ) -> impl std::future::Future<Output = BearDogResult<BearDogGenetics>> + Send;
+
     /// Recombine genetics for spawning
-    fn recombine_genetics(&self, requesting_node: &str, co_parents: &[String], purpose: &SpawnPurpose) -> impl std::future::Future<Output = BearDogResult<BearDogGenetics>> + Send;
-    
+    fn recombine_genetics(
+        &self,
+        requesting_node: &str,
+        co_parents: &[String],
+        purpose: &SpawnPurpose,
+    ) -> impl std::future::Future<Output = BearDogResult<BearDogGenetics>> + Send;
+
     /// Mutate capabilities
-    fn mutate_capabilities(&self, genetics: &BearDogGenetics, mutation_rate: f64) -> impl std::future::Future<Output = BearDogResult<BearDogGenetics>> + Send;
+    fn mutate_capabilities(
+        &self,
+        genetics: &BearDogGenetics,
+        mutation_rate: f64,
+    ) -> impl std::future::Future<Output = BearDogResult<BearDogGenetics>> + Send;
 }
 
 /// Default implementation of the BearDog genetics engine
@@ -158,20 +175,24 @@ impl DefaultBearDogGeneticsEngine {
     /// to ensure new nodes start with robust security postures.
     pub async fn generate_genesis_genetics(&self, node_id: &str) -> BearDogResult<BearDogGenetics> {
         let node_seed = self.derive_node_seed(node_id);
-        
+
         // Generate crypto chromosomes for foundational cryptographic capabilities
         let crypto_chromosomes = vec![
             // Encryption chromosome with AES-256-GCM preference
             CryptoChromosome {
-                algorithm_family: AlgorithmFamily::Encryption(crate::auth::types::EncryptionFamily::Aes),
+                algorithm_family: AlgorithmFamily::Encryption(
+                    crate::auth::types::EncryptionFamily::Aes,
+                ),
                 strength_bits: 256, // AES-256 strength
                 compatibility_score: 0.8,
                 performance_factor: 0.95, // Very high performance for genesis
-                security_level: 9, // High security level (1-10 scale)
+                security_level: 9,        // High security level (1-10 scale)
             },
             // Signing chromosome with Ed25519 preference
             CryptoChromosome {
-                algorithm_family: AlgorithmFamily::Signing(crate::auth::types::SigningFamily::Ed25519),
+                algorithm_family: AlgorithmFamily::Signing(
+                    crate::auth::types::SigningFamily::Ed25519,
+                ),
                 strength_bits: 255, // Ed25519 equivalent strength
                 compatibility_score: 0.9,
                 performance_factor: 0.92,
@@ -179,7 +200,9 @@ impl DefaultBearDogGeneticsEngine {
             },
             // Hashing chromosome with BLAKE3 preference
             CryptoChromosome {
-                algorithm_family: AlgorithmFamily::Hashing(crate::auth::types::HashingFamily::Blake),
+                algorithm_family: AlgorithmFamily::Hashing(
+                    crate::auth::types::HashingFamily::Blake,
+                ),
                 strength_bits: 256, // BLAKE3-256 strength
                 compatibility_score: 0.95,
                 performance_factor: 0.88,
@@ -197,7 +220,7 @@ impl DefaultBearDogGeneticsEngine {
                 mutable: true,
                 inheritance_weight: self.pseudo_random_f64(node_seed, 13) * 0.5 + 0.5, // 0.5-1.0
             },
-            // Compute capability  
+            // Compute capability
             CapabilityGene {
                 capability: NodeCapability::ComputeProvider,
                 expression_level: self.pseudo_random_f64(node_seed, 14) * 0.4 + 0.5, // 0.5-0.9
@@ -225,10 +248,12 @@ impl DefaultBearDogGeneticsEngine {
             security_traits,
             capabilities: capability_genes.into_iter().map(|g| g.capability).collect(),
             spawn_restrictions,
-            generation: 0, // Genesis generation
-            parent_genetics: None, // No parents for genesis
-            mutations: vec![], // No mutations for genesis
-            fitness_score: 0.85, // High fitness for genesis nodes
+            generation: 0,                               // Genesis generation
+            parent_genetics: None,                       // No parents for genesis
+            mutations: vec![],                           // No mutations for genesis
+            fitness_score: 0.85,                         // High fitness for genesis nodes
+            security_clearance: SecurityClearance::High, // Genesis nodes get high clearance
+            specializations: vec![NodeSpecialization::GeneralPurpose], // Genesis nodes are general purpose
         })
     }
 
@@ -251,15 +276,15 @@ impl DefaultBearDogGeneticsEngine {
         // High paranoia nodes have more restrictions
         if traits.paranoia_level > 7 {
             restrictions.push(SpawnRestriction::MaxConcurrentSpawns(
-                self.pseudo_random_range(seed, 30, 2, 5) as u32
+                self.pseudo_random_range(seed, 30, 2, 5) as u32,
             ));
         }
 
         // High trust threshold adds capability requirements
         if traits.trust_threshold > 0.7 {
-            restrictions.push(SpawnRestriction::RequiredCapabilities(
-                vec![NodeCapability::SecurityAnalysis]
-            ));
+            restrictions.push(SpawnRestriction::RequiredCapabilities(vec![
+                NodeCapability::SecurityAnalysis,
+            ]));
         }
 
         restrictions
@@ -278,7 +303,9 @@ impl BearDogGeneticsEngine for DefaultBearDogGeneticsEngine {
         } else {
             // Generate genesis genetics for new nodes
             let genetics = self.generate_genesis_genetics(node_id).await?;
-            self.genetics_store.store_genetics(node_id, &genetics).await?;
+            self.genetics_store
+                .store_genetics(node_id, &genetics)
+                .await?;
             Ok(genetics)
         }
     }
@@ -297,7 +324,7 @@ impl BearDogGeneticsEngine for DefaultBearDogGeneticsEngine {
         &self,
         _requesting_node: &str,
         co_parents: &[String],
-        purpose: &SpawnPurpose,
+        _purpose: &SpawnPurpose,
     ) -> BearDogResult<BearDogGenetics> {
         // Placeholder implementation - would perform actual genetic recombination
         if let Some(first_parent) = co_parents.first() {
@@ -320,7 +347,7 @@ impl BearDogGeneticsEngine for DefaultBearDogGeneticsEngine {
     ) -> BearDogResult<BearDogGenetics> {
         // Placeholder implementation - would perform actual mutation
         let mut mutated_genetics = genetics.clone();
-        
+
         // Add a mutation record if mutation rate is significant
         if mutation_rate > 0.1 {
             let mutation = CapabilityMutation {
@@ -331,7 +358,7 @@ impl BearDogGeneticsEngine for DefaultBearDogGeneticsEngine {
             };
             mutated_genetics.mutations.push(mutation);
         }
-        
+
         Ok(mutated_genetics)
     }
 }

@@ -1,9 +1,8 @@
 //! Unit tests for the workflows module
-//! 
+//!
 //! Contains all test functions for workflow functionality.
 
 use super::*;
-use std::sync::Arc;
 
 #[cfg(test)]
 mod tests {
@@ -39,7 +38,7 @@ mod tests {
     #[tokio::test]
     async fn test_workflow_store_operations() {
         let store = InMemoryWorkflowStore::new();
-        
+
         let workflow = Workflow {
             id: "test-workflow-1".to_string(),
             workflow_type: WorkflowType::KeyRotation,
@@ -80,7 +79,7 @@ mod tests {
     #[tokio::test]
     async fn test_approval_store_operations() {
         let store = InMemoryApprovalStore::new();
-        
+
         let approval = ApprovalRecord {
             id: "test-approval-1".to_string(),
             workflow_id: "test-workflow-1".to_string(),
@@ -109,7 +108,7 @@ mod tests {
         let engine = NotificationEngine::new(config);
 
         let workflow = create_test_workflow();
-        
+
         // Test workflow initiated notification
         let result = engine.notify_workflow_initiated(&workflow).await;
         assert!(result.is_ok());
@@ -149,7 +148,7 @@ mod tests {
     #[tokio::test]
     async fn test_processor_registry() {
         let registry = WorkflowProcessorRegistry::new();
-        
+
         let processor = registry.get_processor(&WorkflowType::KeyRotation);
         assert!(processor.is_some());
 

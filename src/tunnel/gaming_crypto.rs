@@ -1,11 +1,11 @@
 // 🛡️ BSTP Gaming Crypto Engine
 
 use crate::encryption::EncryptionEngine;
+use crate::error::{BearDogError, BearDogResult};
 use crate::genetics::DefaultBearDogGeneticsEngine;
 use crate::tunnel::config::BStpConfig;
 use crate::tunnel::key_manager::{BStpKeyManager, CryptoKey};
 use crate::tunnel::SecurityGenetics;
-use crate::error::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
@@ -135,7 +135,7 @@ impl GamingCryptoEngine {
         &self,
         session_id: &str,
         data: &[u8],
-        security_genetics: &SecurityGenetics,
+        _security_genetics: &SecurityGenetics,
     ) -> BearDogResult<EncryptedPacket> {
         let start = Instant::now();
 
@@ -183,7 +183,7 @@ impl GamingCryptoEngine {
         &self,
         session_id: &str,
         encrypted_packet: &EncryptedPacket,
-        security_genetics: &SecurityGenetics,
+        _security_genetics: &SecurityGenetics,
     ) -> BearDogResult<Vec<u8>> {
         let start = Instant::now();
 
@@ -372,7 +372,9 @@ impl GamingCryptoEngine {
     ) -> BearDogResult<EncryptedPacket> {
         let encrypted_data = match session_key.algorithm {
             CryptoChoice::Aes256Gcm => self.encrypt_aes_gcm(data, session_key).await?,
-            CryptoChoice::ChaCha20Poly1305 => self.encrypt_chacha20_poly1305(data, session_key).await?,
+            CryptoChoice::ChaCha20Poly1305 => {
+                self.encrypt_chacha20_poly1305(data, session_key).await?
+            }
             CryptoChoice::GeneticHybrid => self.genetic_hybrid_encrypt(data, session_key).await?,
         };
 
@@ -392,8 +394,13 @@ impl GamingCryptoEngine {
     ) -> BearDogResult<Vec<u8>> {
         match packet.crypto_method {
             CryptoChoice::Aes256Gcm => self.decrypt_aes_gcm(&packet.data, session_key).await,
-            CryptoChoice::ChaCha20Poly1305 => self.decrypt_chacha20_poly1305(&packet.data, session_key).await,
-            CryptoChoice::GeneticHybrid => self.genetic_hybrid_decrypt(&packet.data, session_key).await,
+            CryptoChoice::ChaCha20Poly1305 => {
+                self.decrypt_chacha20_poly1305(&packet.data, session_key)
+                    .await
+            }
+            CryptoChoice::GeneticHybrid => {
+                self.genetic_hybrid_decrypt(&packet.data, session_key).await
+            }
         }
     }
 
@@ -439,7 +446,7 @@ impl GamingCryptoEngine {
     /// Analyze encryption performance and suggest optimizations
     pub async fn analyze_performance(
         &self,
-        session_key: &CryptoKey,
+        _session_key: &CryptoKey,
     ) -> BearDogResult<PerformanceAnalysis> {
         Ok(PerformanceAnalysis {
             encryption_throughput: 1_000_000,

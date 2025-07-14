@@ -6,7 +6,7 @@ use super::*;
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
-    routing::{get, post, put, delete},
+    routing::{delete, get, post, put},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -22,26 +22,25 @@ pub fn create_routes() -> Router<AppState> {
         .route("/nodes", get(list_nodes))
         .route("/nodes/:node_id", get(get_node_details))
         .route("/nodes/:node_id", delete(remove_node))
-        
         // Spawning Operations
         .route("/spawn", post(submit_spawn_request))
         .route("/spawn/batch", post(batch_spawn_request))
         .route("/spawn/:request_id", get(get_spawn_status))
         .route("/spawn/:request_id/approve", post(approve_spawn_request))
         .route("/spawn/:request_id/reject", post(reject_spawn_request))
-        
         // Genetic Analysis
         .route("/analyze/:node_id", get(analyze_node_genetics))
         .route("/analyze/:node_id/lineage", get(get_genetic_lineage))
-        .route("/analyze/:node_id/diversity", get(calculate_diversity_score))
+        .route(
+            "/analyze/:node_id/diversity",
+            get(calculate_diversity_score),
+        )
         .route("/analyze/population", get(analyze_population_genetics))
-        
         // Resource Management
         .route("/resources/constraints", get(get_resource_constraints))
         .route("/resources/constraints", put(update_resource_constraints))
         .route("/resources/usage", get(get_resource_usage))
         .route("/resources/optimize", post(optimize_resource_allocation))
-        
         // Statistics and Health
         .route("/stats", get(get_genetics_statistics))
         .route("/stats/diversity", get(get_diversity_metrics))
@@ -50,7 +49,7 @@ pub fn create_routes() -> Router<AppState> {
 }
 
 // ============================================================================
-// REQUEST/RESPONSE MODELS  
+// REQUEST/RESPONSE MODELS
 // ============================================================================
 
 #[derive(Debug, Deserialize)]
@@ -225,14 +224,14 @@ pub struct GeneticsPerformanceMetrics {
 
 /// Create a new genesis node
 async fn create_genesis_node(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     Json(request): Json<CreateGenesisRequest>,
 ) -> Result<Json<ApiResponse<GenesisNodeResponse>>, StatusCode> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
-    
+
     info!("🧬 Creating genesis node: {}", request.node_id);
-    
+
     let response = GenesisNodeResponse {
         node_id: request.node_id.clone(),
         genesis_hash: format!("genesis_{}", &uuid::Uuid::new_v4().to_string()[..8]),
@@ -243,7 +242,9 @@ async fn create_genesis_node(
             memory_gb: request.resource_allocation.memory_gb,
             storage_gb: request.resource_allocation.storage_gb,
             network_bandwidth_mbps: request.resource_allocation.network_bandwidth_mbps,
-            geographic_region: request.resource_allocation.geographic_region
+            geographic_region: request
+                .resource_allocation
+                .geographic_region
                 .unwrap_or_else(|| "us-east-1".to_string()),
             estimated_cost_per_hour: 2.45,
         },
@@ -251,73 +252,97 @@ async fn create_genesis_node(
         created_timestamp: chrono::Utc::now().to_rfc3339(),
         status: "ACTIVE".to_string(),
     };
-    
+
     let processing_time = start_time.elapsed().as_millis() as u64;
-    info!("✅ Genesis node created: {} ({}ms)", request.node_id, processing_time);
-    
-    Ok(Json(success_response(response, request_id, processing_time, false)))
+    info!(
+        "✅ Genesis node created: {} ({}ms)",
+        request.node_id, processing_time
+    );
+
+    Ok(Json(success_response(
+        response,
+        request_id,
+        processing_time,
+        false,
+    )))
 }
 
 /// Submit a spawning request
 async fn submit_spawn_request(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     Json(request): Json<SpawnRequest>,
 ) -> Result<Json<ApiResponse<SpawnResponse>>, StatusCode> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
-    
-    info!("🚀 Spawning request from parent: {}", request.parent_node_id);
-    
+
+    info!(
+        "🚀 Spawning request from parent: {}",
+        request.parent_node_id
+    );
+
     let approval_required = match request.workflow_type.as_str() {
         "automated" => false,
         "human_approval" => true,
         "hybrid" => request.resource_requirements.cpu_cores > 16,
         _ => false,
     };
-    
+
     let participants = if approval_required {
-        vec![
-            WorkflowParticipant {
-                participant_id: "security_team".to_string(),
-                role: "SECURITY_REVIEWER".to_string(),
-                status: "PENDING".to_string(),
-                assigned_timestamp: chrono::Utc::now().to_rfc3339(),
-            },
-        ]
+        vec![WorkflowParticipant {
+            participant_id: "security_team".to_string(),
+            role: "SECURITY_REVIEWER".to_string(),
+            status: "PENDING".to_string(),
+            assigned_timestamp: chrono::Utc::now().to_rfc3339(),
+        }]
     } else {
         vec![]
     };
-    
+
     let response = SpawnResponse {
         request_id: request_id.clone(),
-        status: if approval_required { "PENDING_APPROVAL".to_string() } else { "PROCESSING".to_string() },
+        status: if approval_required {
+            "PENDING_APPROVAL".to_string()
+        } else {
+            "PROCESSING".to_string()
+        },
         workflow_type: request.workflow_type,
-        estimated_completion_time: Some((chrono::Utc::now() + chrono::Duration::minutes(15)).to_rfc3339()),
+        estimated_completion_time: Some(
+            (chrono::Utc::now() + chrono::Duration::minutes(15)).to_rfc3339(),
+        ),
         resource_reservation_id: Some(uuid::Uuid::new_v4().to_string()),
         approval_required,
         participants,
     };
-    
+
     let processing_time = start_time.elapsed().as_millis() as u64;
-    Ok(Json(success_response(response, request_id, processing_time, false)))
+    Ok(Json(success_response(
+        response,
+        request_id,
+        processing_time,
+        false,
+    )))
 }
 
 /// Analyze node genetics
 async fn analyze_node_genetics(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     Path(node_id): Path<String>,
 ) -> Result<Json<ApiResponse<NodeGeneticsResponse>>, StatusCode> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
-    
+
     info!("🧬 Analyzing genetics for node: {}", node_id);
-    
+
     let response = NodeGeneticsResponse {
         node_id: node_id.clone(),
         genetic_profile: GeneticProfile {
             chromosome_hash: "chr_a1b2c3d4e5f6".to_string(),
             trait_vector: vec![0.87, 0.42, 0.95, 0.23, 0.78],
-            capability_genes: vec!["storage".to_string(), "compute".to_string(), "network".to_string()],
+            capability_genes: vec![
+                "storage".to_string(),
+                "compute".to_string(),
+                "network".to_string(),
+            ],
             security_genes: vec!["encryption".to_string(), "authentication".to_string()],
             performance_genes: vec!["optimization".to_string(), "caching".to_string()],
             generation: 3,
@@ -329,15 +354,13 @@ async fn analyze_node_genetics(
             genetic_purity: 0.78,
             mutation_history: vec!["enhanced_security_v1".to_string()],
         },
-        capabilities: vec![
-            CapabilityInfo {
-                capability_id: "storage".to_string(),
-                strength: 0.92,
-                origin: "inherited".to_string(),
-                compatibility: 0.88,
-                performance_impact: 0.15,
-            },
-        ],
+        capabilities: vec![CapabilityInfo {
+            capability_id: "storage".to_string(),
+            strength: 0.92,
+            origin: "inherited".to_string(),
+            compatibility: 0.88,
+            performance_impact: 0.15,
+        }],
         diversity_scores: DiversityScores {
             overall_diversity: 0.83,
             genetic_diversity: 0.78,
@@ -352,18 +375,23 @@ async fn analyze_node_genetics(
             matrix
         },
     };
-    
+
     let processing_time = start_time.elapsed().as_millis() as u64;
-    Ok(Json(success_response(response, request_id, processing_time, true)))
+    Ok(Json(success_response(
+        response,
+        request_id,
+        processing_time,
+        true,
+    )))
 }
 
 /// Get genetics statistics
 async fn get_genetics_statistics(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
 ) -> Result<Json<ApiResponse<GeneticsStatisticsResponse>>, StatusCode> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
-    
+
     let response = GeneticsStatisticsResponse {
         total_nodes: 1247,
         genesis_nodes: 23,
@@ -395,23 +423,37 @@ async fn get_genetics_statistics(
             workflow_automation_rate: 0.732,
         },
     };
-    
+
     let processing_time = start_time.elapsed().as_millis() as u64;
-    Ok(Json(success_response(response, request_id, processing_time, true)))
+    Ok(Json(success_response(
+        response,
+        request_id,
+        processing_time,
+        true,
+    )))
 }
 
 // Simplified implementations for remaining endpoints
-async fn list_nodes(State(_): State<AppState>, Query(_): Query<PaginationParams>) -> Result<Json<ApiResponse<Vec<HashMap<String, serde_json::Value>>>>, StatusCode> {
+async fn list_nodes(
+    State(_): State<AppState>,
+    Query(_): Query<PaginationParams>,
+) -> Result<Json<ApiResponse<Vec<HashMap<String, serde_json::Value>>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     Ok(Json(success_response(vec![], request_id, 8, true)))
 }
 
-async fn get_node_details(State(_): State<AppState>, Path(_): Path<String>) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
+async fn get_node_details(
+    State(_): State<AppState>,
+    Path(_): Path<String>,
+) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     Ok(Json(success_response(HashMap::new(), request_id, 5, true)))
 }
 
-async fn remove_node(State(_): State<AppState>, Path(_): Path<String>) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
+async fn remove_node(
+    State(_): State<AppState>,
+    Path(_): Path<String>,
+) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let mut response = HashMap::new();
     response.insert("status".to_string(), "removed".to_string());
@@ -419,31 +461,53 @@ async fn remove_node(State(_): State<AppState>, Path(_): Path<String>) -> Result
 }
 
 // Additional endpoint stubs
-async fn batch_spawn_request(State(_): State<AppState>, Json(_): Json<serde_json::Value>) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
+async fn batch_spawn_request(
+    State(_): State<AppState>,
+    Json(_): Json<serde_json::Value>,
+) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
-    Ok(Json(success_response(HashMap::new(), request_id, 25, false)))
+    Ok(Json(success_response(
+        HashMap::new(),
+        request_id,
+        25,
+        false,
+    )))
 }
 
-async fn get_spawn_status(State(_): State<AppState>, Path(_): Path<String>) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
+async fn get_spawn_status(
+    State(_): State<AppState>,
+    Path(_): Path<String>,
+) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     Ok(Json(success_response(HashMap::new(), request_id, 15, true)))
 }
 
-async fn approve_spawn_request(State(_): State<AppState>, Path(_): Path<String>, Json(_): Json<serde_json::Value>) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
+async fn approve_spawn_request(
+    State(_): State<AppState>,
+    Path(_): Path<String>,
+    Json(_): Json<serde_json::Value>,
+) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let mut response = HashMap::new();
     response.insert("status".to_string(), "approved".to_string());
     Ok(Json(success_response(response, request_id, 8, false)))
 }
 
-async fn reject_spawn_request(State(_): State<AppState>, Path(_): Path<String>, Json(_): Json<serde_json::Value>) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
+async fn reject_spawn_request(
+    State(_): State<AppState>,
+    Path(_): Path<String>,
+    Json(_): Json<serde_json::Value>,
+) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let mut response = HashMap::new();
     response.insert("status".to_string(), "rejected".to_string());
     Ok(Json(success_response(response, request_id, 6, false)))
 }
 
-async fn get_genetic_lineage(State(_): State<AppState>, Path(_): Path<String>) -> Result<Json<ApiResponse<LineageInfo>>, StatusCode> {
+async fn get_genetic_lineage(
+    State(_): State<AppState>,
+    Path(_): Path<String>,
+) -> Result<Json<ApiResponse<LineageInfo>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let lineage = LineageInfo {
         parent_nodes: vec!["parent_001".to_string()],
@@ -455,7 +519,10 @@ async fn get_genetic_lineage(State(_): State<AppState>, Path(_): Path<String>) -
     Ok(Json(success_response(lineage, request_id, 10, true)))
 }
 
-async fn calculate_diversity_score(State(_): State<AppState>, Path(_): Path<String>) -> Result<Json<ApiResponse<DiversityScores>>, StatusCode> {
+async fn calculate_diversity_score(
+    State(_): State<AppState>,
+    Path(_): Path<String>,
+) -> Result<Json<ApiResponse<DiversityScores>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let scores = DiversityScores {
         overall_diversity: 0.78,
@@ -467,34 +534,53 @@ async fn calculate_diversity_score(State(_): State<AppState>, Path(_): Path<Stri
     Ok(Json(success_response(scores, request_id, 15, true)))
 }
 
-async fn analyze_population_genetics(State(_): State<AppState>) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
+async fn analyze_population_genetics(
+    State(_): State<AppState>,
+) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     Ok(Json(success_response(HashMap::new(), request_id, 20, true)))
 }
 
-async fn get_resource_constraints(State(_): State<AppState>) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
+async fn get_resource_constraints(
+    State(_): State<AppState>,
+) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     Ok(Json(success_response(HashMap::new(), request_id, 5, true)))
 }
 
-async fn update_resource_constraints(State(_): State<AppState>, Json(_): Json<serde_json::Value>) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
+async fn update_resource_constraints(
+    State(_): State<AppState>,
+    Json(_): Json<serde_json::Value>,
+) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let mut response = HashMap::new();
     response.insert("status".to_string(), "updated".to_string());
     Ok(Json(success_response(response, request_id, 8, false)))
 }
 
-async fn get_resource_usage(State(_): State<AppState>) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
+async fn get_resource_usage(
+    State(_): State<AppState>,
+) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     Ok(Json(success_response(HashMap::new(), request_id, 12, true)))
 }
 
-async fn optimize_resource_allocation(State(_): State<AppState>, Json(_): Json<serde_json::Value>) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
+async fn optimize_resource_allocation(
+    State(_): State<AppState>,
+    Json(_): Json<serde_json::Value>,
+) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
-    Ok(Json(success_response(HashMap::new(), request_id, 35, false)))
+    Ok(Json(success_response(
+        HashMap::new(),
+        request_id,
+        35,
+        false,
+    )))
 }
 
-async fn get_diversity_metrics(State(_): State<AppState>) -> Result<Json<ApiResponse<DiversityTrends>>, StatusCode> {
+async fn get_diversity_metrics(
+    State(_): State<AppState>,
+) -> Result<Json<ApiResponse<DiversityTrends>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let trends = DiversityTrends {
         current_diversity_score: 0.847,
@@ -506,7 +592,9 @@ async fn get_diversity_metrics(State(_): State<AppState>) -> Result<Json<ApiResp
     Ok(Json(success_response(trends, request_id, 18, true)))
 }
 
-async fn get_genetics_performance(State(_): State<AppState>) -> Result<Json<ApiResponse<GeneticsPerformanceMetrics>>, StatusCode> {
+async fn get_genetics_performance(
+    State(_): State<AppState>,
+) -> Result<Json<ApiResponse<GeneticsPerformanceMetrics>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let metrics = GeneticsPerformanceMetrics {
         spawn_success_rate: 0.967,
@@ -518,14 +606,19 @@ async fn get_genetics_performance(State(_): State<AppState>) -> Result<Json<ApiR
     Ok(Json(success_response(metrics, request_id, 14, true)))
 }
 
-async fn get_genetics_health(State(_): State<AppState>) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
+async fn get_genetics_health(
+    State(_): State<AppState>,
+) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let health = serde_json::json!({
         "status": "healthy",
         "active_spawns": 15,
         "resource_utilization": 0.67,
         "genetic_diversity": 0.847
-    }).as_object().unwrap().clone();
+    })
+    .as_object()
+    .unwrap()
+    .clone();
     let health: HashMap<String, serde_json::Value> = health.into_iter().collect();
     Ok(Json(success_response(health, request_id, 3, true)))
-} 
+}

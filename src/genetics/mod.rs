@@ -1,9 +1,9 @@
 //! BearDog Genetics Engine
 //!
 //! **Implements genetic algorithms for BearDog node reproduction and evolution.**
-//! 
+//!
 //! This module was refactored from a large file to improve maintainability.
-//! The genetics engine enables BearDog nodes to spawn offspring by combining their 
+//! The genetics engine enables BearDog nodes to spawn offspring by combining their
 //! cryptographic "genetics" - capabilities, security traits, and cryptographic material.
 //!
 //! ## Key Features
@@ -18,34 +18,53 @@
 //! * **RESTful API**: HTTP endpoints for external integration and management
 
 // Re-export public types and functions from submodules
-pub use types::*;
 pub use handlers::*;
 pub use spawning::*;
+pub use types::*;
 
 // Module declarations
-pub mod types;
-pub mod handlers;
-pub mod spawning;
 pub mod api;
+pub mod entropy_hierarchy;
+pub mod handlers;
+pub mod human_entropy;
+pub mod spawning;
+pub mod types;
 
 #[cfg(test)]
 mod tests;
 
 /// Public API for genetic spawning operations
 pub struct GeneticsAPI {
-    spawning_engine: crate::genetics::GeneticSpawningEngine,
+    spawning_engine: crate::genetics::spawning::GeneticSpawningEngine,
     genetics_engine: crate::genetics::DefaultBearDogGeneticsEngine,
 }
 
 impl GeneticsAPI {
     /// Create a new genetics API instance
-    pub fn new(
+    pub fn new(genetics_store: std::sync::Arc<dyn GeneticsStore>, config: GeneticsConfig) -> Self {
+        // Create a basic HSM manager for testing/development
+        let hsm_manager = std::sync::Arc::new(crate::tunnel::hsm::manager::HsmManager::new());
+
+        let spawning_engine =
+            spawning::GeneticSpawningEngine::new(genetics_store.clone(), hsm_manager, config.clone());
+        let genetics_engine = DefaultBearDogGeneticsEngine::new(genetics_store, config);
+
+        Self {
+            spawning_engine,
+            genetics_engine,
+        }
+    }
+
+    /// Create a new genetics API instance with custom HSM manager
+    pub fn with_hsm_manager(
         genetics_store: std::sync::Arc<dyn GeneticsStore>,
+        hsm_manager: std::sync::Arc<crate::tunnel::hsm::manager::HsmManager>,
         config: GeneticsConfig,
     ) -> Self {
-        let spawning_engine = GeneticSpawningEngine::new(genetics_store.clone(), config.clone());
+        let spawning_engine =
+            spawning::GeneticSpawningEngine::new(genetics_store.clone(), hsm_manager, config.clone());
         let genetics_engine = DefaultBearDogGeneticsEngine::new(genetics_store, config);
-        
+
         Self {
             spawning_engine,
             genetics_engine,
@@ -58,12 +77,20 @@ impl GeneticsAPI {
     }
 
     /// Generate genesis genetics for a new node
-    pub async fn create_genesis_node(&self, node_id: &str) -> crate::BearDogResult<crate::auth::BearDogGenetics> {
-        self.genetics_engine.generate_genesis_genetics(node_id).await
+    pub async fn create_genesis_node(
+        &self,
+        node_id: &str,
+    ) -> crate::BearDogResult<crate::auth::BearDogGenetics> {
+        self.genetics_engine
+            .generate_genesis_genetics(node_id)
+            .await
     }
 
     /// Get genetics for an existing node
-    pub async fn get_node_genetics(&self, node_id: &str) -> crate::BearDogResult<crate::auth::BearDogGenetics> {
+    pub async fn get_node_genetics(
+        &self,
+        node_id: &str,
+    ) -> crate::BearDogResult<crate::auth::BearDogGenetics> {
         self.genetics_engine.get_node_genetics(node_id).await
     }
 }

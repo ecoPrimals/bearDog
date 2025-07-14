@@ -6,7 +6,6 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
-
 /// Configuration for threat detection engine
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatDetectionConfig {
@@ -177,47 +176,71 @@ pub struct ThreatTarget {
     pub protection_level: ProtectionLevel,
 }
 
-/// Geographic location information
+/// Geographic location information for threat sources
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GeoLocation {
+    /// Country name or code
     pub country: String,
+    /// State or region within the country
     pub region: Option<String>,
+    /// City name
     pub city: Option<String>,
+    /// Latitude coordinate
     pub latitude: Option<f64>,
+    /// Longitude coordinate
     pub longitude: Option<f64>,
+    /// Whether this is a Tor exit node
     pub is_tor_exit: bool,
+    /// Whether this is a VPN endpoint
     pub is_vpn: bool,
+    /// Whether this is a proxy server
     pub is_proxy: bool,
 }
 
-/// Source classification
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Classification of threat source reliability and trustworthiness
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SourceClassification {
+    /// Trusted source with high confidence
     Trusted,
+    /// Neutral source with no specific reputation
     Neutral,
+    /// Suspicious source requiring monitoring
     Suspicious,
+    /// Malicious source confirmed as threat
     Malicious,
+    /// Blacklisted source blocked by security policies
     Blacklisted,
+    /// Unknown source with no classification data
     Unknown,
 }
 
-/// Asset criticality levels
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Criticality level of assets for threat prioritization
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AssetCriticality {
+    /// Low criticality - minimal impact if compromised
     Low,
+    /// Medium criticality - moderate impact if compromised
     Medium,
+    /// High criticality - significant impact if compromised
     High,
+    /// Critical assets - severe impact if compromised
     Critical,
+    /// Mission-critical assets - catastrophic impact if compromised
     Mission,
 }
 
-/// Protection levels
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Protection level applied to assets
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ProtectionLevel {
+    /// No protection applied
     None,
+    /// Basic protection with minimal security measures
     Basic,
+    /// Standard protection with typical security controls
     Standard,
+    /// Enhanced protection with additional security layers
     Enhanced,
+    /// Maximum protection with all available security measures
     Maximum,
 }
 
@@ -246,7 +269,63 @@ pub enum DetectionMethod {
     NetworkAnalysis,
 }
 
-/// Evidence types
+/// Types of evidence that can be collected during threat detection
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum EvidenceType {
+    /// Network traffic data and packet analysis
+    NetworkTraffic,
+    /// System log files and entries
+    SystemLogs,
+    /// File system analysis and file inspection
+    FileAnalysis,
+    /// Memory dump analysis
+    MemoryDump,
+    /// Running process information
+    ProcessInformation,
+    /// Windows registry changes
+    RegistryChanges,
+    /// Active network connections
+    NetworkConnections,
+    /// DNS query logs
+    DnsQueries,
+    /// HTTP request logs
+    HttpRequests,
+    /// Email header information
+    EmailHeaders,
+    /// Cryptographic file hashes
+    FileHashes,
+    /// Digital signatures and certificates
+    CryptographicSignatures,
+    /// User activity logs
+    UserActivity,
+    /// Database query logs
+    DatabaseQueries,
+    /// API call logs
+    ApiCalls,
+    /// Detection rule matches
+    RuleMatch,
+}
+
+/// Data format for evidence collected during threat detection
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum EvidenceData {
+    /// Plain text evidence data
+    Text(String),
+    /// Binary evidence data
+    Binary(Vec<u8>),
+    /// JSON structured evidence data
+    Json(serde_json::Value),
+    /// Hash value evidence
+    Hash(String),
+    /// Network packet data
+    NetworkPacket(NetworkPacketData),
+    /// System log entry data
+    LogEntry(LogEntryData),
+    /// File metadata information
+    FileMetadata(FileMetadataData),
+}
+
+/// Evidence collected during threat detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatEvidence {
     /// Evidence type
@@ -263,69 +342,54 @@ pub struct ThreatEvidence {
     pub reliability: f64,
 }
 
-/// Types of evidence
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum EvidenceType {
-    NetworkTraffic,
-    SystemLogs,
-    FileAnalysis,
-    MemoryDump,
-    ProcessInformation,
-    RegistryChanges,
-    NetworkConnections,
-    DnsQueries,
-    HttpRequests,
-    EmailHeaders,
-    FileHashes,
-    CryptographicSignatures,
-    UserActivity,
-    DatabaseQueries,
-    ApiCalls,
-    RuleMatch,
-}
-
-/// Evidence data
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum EvidenceData {
-    Text(String),
-    Binary(Vec<u8>),
-    Json(serde_json::Value),
-    Hash(String),
-    NetworkPacket(NetworkPacketData),
-    LogEntry(LogEntryData),
-    FileMetadata(FileMetadataData),
-}
-
-/// Network packet data
+/// Network packet data for evidence collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkPacketData {
+    /// Source IP address
     pub source_ip: String,
+    /// Destination IP address
     pub dest_ip: String,
+    /// Source port number
     pub source_port: u16,
+    /// Destination port number
     pub dest_port: u16,
+    /// Network protocol (TCP, UDP, etc.)
     pub protocol: String,
+    /// Size of the packet payload in bytes
     pub payload_size: usize,
+    /// Protocol-specific flags
     pub flags: Vec<String>,
 }
 
-/// Log entry data
+/// Log entry data for evidence collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogEntryData {
+    /// Log severity level
     pub log_level: String,
+    /// Log message content
     pub message: String,
+    /// Source system or component
     pub source: String,
+    /// Additional structured log fields
     pub additional_fields: HashMap<String, String>,
 }
 
-/// File metadata
+/// File metadata for evidence collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileMetadataData {
+    /// Name of the file
     pub filename: String,
+    /// File size in bytes
     pub file_size: u64,
+    /// File type or MIME type
     pub file_type: String,
+    /// MD5 hash of the file
     pub hash_md5: Option<String>,
+    /// SHA-256 hash of the file
     pub hash_sha256: Option<String>,
+    /// File creation timestamp
     pub created_at: Option<DateTime<Utc>>,
+    /// File last modification timestamp
     pub modified_at: Option<DateTime<Utc>>,
 }
 
@@ -358,30 +422,36 @@ pub enum ThreatAction {
     UpdateThreatIntelligence,
 }
 
-/// Threat event status
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// Status of a threat event in the investigation lifecycle
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ThreatStatus {
-    /// New threat detected
+    /// New threat detected and awaiting initial assessment
     New,
-    /// Under investigation
+    /// Threat under active investigation
     Investigating,
-    /// Confirmed threat
+    /// Threat confirmed as genuine security issue
     Confirmed,
-    /// False positive
+    /// Threat determined to be false positive
     FalsePositive,
-    /// Mitigated
+    /// Threat has been mitigated
     Mitigated,
-    /// Resolved
+    /// Threat has been fully resolved
     Resolved,
-    /// Escalated
+    /// Threat escalated to higher security level
     Escalated,
-    /// Suppressed
+    /// Threat alerts suppressed due to noise
     Suppressed,
+    /// Threat is currently active and ongoing
     Active,
+    /// Threat acknowledged by security team
     Acknowledged,
+    /// Threat contained but not yet eliminated
     Contained,
+    /// Threat fully eradicated from systems
     Eradicated,
+    /// System recovery in progress after threat
     Recovery,
+    /// Post-incident analysis phase
     PostIncidentAnalysis,
 }
 
@@ -423,20 +493,27 @@ pub struct ThreatDetectionStats {
     pub threat_trends: Vec<ThreatTrend>,
 }
 
-/// Detection method statistics
+/// Performance statistics for threat detection methods
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DetectionMethodStats {
+    /// Number of detections by this method
     pub detections: u64,
+    /// Detection accuracy percentage
     pub accuracy: f64,
+    /// Number of false positives generated
     pub false_positives: u64,
+    /// Average confidence score of detections
     pub avg_confidence: f64,
 }
 
-/// Threat trend data
+/// Trend data for threat detection over time
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatTrend {
+    /// Timestamp of the trend data point
     pub timestamp: DateTime<Utc>,
+    /// Total number of threats at this timestamp
     pub threat_count: u64,
+    /// Distribution of threats by severity level
     pub severity_distribution: HashMap<ThreatSeverity, u64>,
 }
 
@@ -461,35 +538,52 @@ pub struct ThreatIntelligenceFeed {
     pub indicators: Vec<ThreatIndicator>,
 }
 
-/// Feed types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of threat intelligence feeds
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum FeedType {
+    /// IP address reputation feed
     IpReputation,
+    /// Domain reputation feed
     DomainReputation,
+    /// Known malicious file hashes
     FileHashes,
+    /// URL blacklist feed
     UrlBlacklist,
+    /// Malware signature definitions
     MalwareSignatures,
+    /// Attack pattern descriptions
     AttackPatterns,
+    /// Known threat actor profiles
     ThreatActors,
+    /// Vulnerability information feed
     Vulnerabilities,
 }
 
-/// Update frequencies
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Update frequency for threat intelligence feeds
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UpdateFrequency {
+    /// Real-time continuous updates
     RealTime,
+    /// Updated every hour
     Hourly,
+    /// Updated daily
     Daily,
+    /// Updated weekly
     Weekly,
+    /// Updated monthly
     Monthly,
 }
 
-/// Feed status
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Status of threat intelligence feeds
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum FeedStatus {
+    /// Feed is active and operational
     Active,
+    /// Feed is inactive or disabled
     Inactive,
+    /// Feed encountered an error
     Error,
+    /// Feed is currently being updated
     Updating,
 }
 
@@ -512,21 +606,34 @@ pub struct ThreatIndicator {
     pub tags: Vec<String>,
 }
 
-/// Indicator types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Types of threat indicators
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum IndicatorType {
+    /// IP address indicator
     IpAddress,
+    /// Domain name indicator
     DomainName,
+    /// URL indicator
     Url,
+    /// File hash indicator
     FileHash,
+    /// Email address indicator
     EmailAddress,
+    /// Windows registry key indicator
     RegistryKey,
+    /// Process mutex indicator
     Mutex,
+    /// User agent string indicator
     UserAgent,
+    /// Digital certificate indicator
     Certificate,
+    /// Process name indicator
     ProcessName,
+    /// Network traffic pattern indicator
     NetworkPattern,
+    /// Behavioral pattern indicator
     BehaviorPattern,
+    /// Custom indicator type
     Custom(String),
 }
 
@@ -573,7 +680,11 @@ pub enum RuleCondition {
     /// Pattern matching
     PatternMatch { field: String, pattern: String },
     /// Threshold detection
-    Threshold { field: String, operator: String, value: f64 },
+    Threshold {
+        field: String,
+        operator: String,
+        value: f64,
+    },
     /// Complex boolean logic
     Complex { expression: String },
     /// Machine learning prediction
@@ -655,8 +766,6 @@ pub struct ThreatDetectionRule {
     pub response_actions: Vec<ResponseAction>,
     pub enabled: bool,
 }
-
-
 
 // Default implementations
 
@@ -743,10 +852,18 @@ impl ThreatType {
     pub fn typical_severity(&self) -> ThreatSeverity {
         match self {
             ThreatType::Phishing | ThreatType::SocialEngineering => ThreatSeverity::Medium,
-            ThreatType::BruteForce | ThreatType::BruteForceAttack | ThreatType::SuspiciousLogin | ThreatType::SqlInjection | ThreatType::Xss => ThreatSeverity::High,
-            ThreatType::Malware | ThreatType::Ransomware | ThreatType::ZeroDayExploit => ThreatSeverity::Critical,
+            ThreatType::BruteForce
+            | ThreatType::BruteForceAttack
+            | ThreatType::SuspiciousLogin
+            | ThreatType::SqlInjection
+            | ThreatType::Xss => ThreatSeverity::High,
+            ThreatType::Malware | ThreatType::Ransomware | ThreatType::ZeroDayExploit => {
+                ThreatSeverity::Critical
+            }
             ThreatType::DdosAttack | ThreatType::NetworkIntrusion => ThreatSeverity::High,
-            ThreatType::DataExfiltration | ThreatType::PrivilegeEscalation => ThreatSeverity::Critical,
+            ThreatType::DataExfiltration | ThreatType::PrivilegeEscalation => {
+                ThreatSeverity::Critical
+            }
             ThreatType::InsiderThreat | ThreatType::Apt => ThreatSeverity::Critical,
             ThreatType::ManInTheMiddle | ThreatType::BotnetActivity => ThreatSeverity::High,
             ThreatType::SupplyChainAttack | ThreatType::AiPoisoning => ThreatSeverity::Critical,

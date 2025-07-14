@@ -1,7 +1,7 @@
 //! # BearDog Comprehensive API System
 //!
 //! **AI-First Headless API Design**
-//! 
+//!
 //! This module provides a complete REST API for all BearDog functionality,
 //! designed primarily for AI/programmatic consumption with human-friendly
 //! responses. All APIs follow consistent patterns for easy integration.
@@ -25,18 +25,18 @@
 //! * **Compression** - Automatic gzip/deflate for large responses
 //! * **Pagination** - Efficient large dataset handling
 
-pub mod server;
 pub mod cache;
 pub mod rate_limiting;
+pub mod server;
 
 // API domains
-pub mod security;
 pub mod genetics;
 pub mod monitoring;
+pub mod security;
 
 // TODO: Add these modules when they are implemented
 // pub mod routes;
-// pub mod middleware; 
+// pub mod middleware;
 // pub mod models;
 // pub mod compliance;
 // pub mod auth;
@@ -47,7 +47,7 @@ pub mod monitoring;
 pub use server::*;
 // TODO: Re-export when modules are implemented
 // pub use routes::*;
-// pub use middleware::*;  
+// pub use middleware::*;
 // pub use models::*;
 
 /// API version constant
@@ -109,17 +109,29 @@ pub struct PaginationParams {
     pub per_page: u32,
 }
 
-fn default_page() -> u32 { 1 }
-fn default_per_page() -> u32 { 50 }
+fn default_page() -> u32 {
+    1
+}
+fn default_per_page() -> u32 {
+    50
+}
 
 impl Default for PaginationParams {
     fn default() -> Self {
-        Self { page: 1, per_page: 50 }
+        Self {
+            page: 1,
+            per_page: 50,
+        }
     }
 }
 
 /// Helper function to create success response
-pub fn success_response<T>(data: T, request_id: String, processing_time_ms: u64, cached: bool) -> ApiResponse<T> {
+pub fn success_response<T>(
+    data: T,
+    request_id: String,
+    processing_time_ms: u64,
+    cached: bool,
+) -> ApiResponse<T> {
     ApiResponse {
         success: true,
         data: Some(data),
@@ -136,7 +148,11 @@ pub fn success_response<T>(data: T, request_id: String, processing_time_ms: u64,
 }
 
 /// Helper function to create error response
-pub fn error_response<T>(error: String, request_id: String, processing_time_ms: u64) -> ApiResponse<T> {
+pub fn error_response<T>(
+    error: String,
+    request_id: String,
+    processing_time_ms: u64,
+) -> ApiResponse<T> {
     ApiResponse {
         success: false,
         data: None,
@@ -173,4 +189,4 @@ pub fn paginated_response<T>(
             pagination: Some(pagination),
         },
     }
-} 
+}

@@ -2,15 +2,13 @@
 
 use beardog::config::EncryptionConfig;
 use beardog::encryption::EncryptionEngine;
-use beardog::genetics::{
-    DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore,
-};
+use beardog::genetics::{DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore};
 use beardog::tunnel::{
     genetic_healing::{NetworkEvent, SecurityIssue, SecurityIssueType, Severity},
     key_manager::CryptoAlgorithm,
-    BStpConfig, BStpKeyManager, BStpSecurityProvider, GamingCryptoEngine, GeneticSecurityHealing,
+    BStpConfig, BStpKeyManager, GamingCryptoEngine, GeneticSecurityHealing,
 };
-use beardog::{BearDogError, BearDogResult};
+use beardog::BearDogResult;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio;
@@ -428,7 +426,9 @@ async fn test_key_rotation_security() -> BearDogResult<()> {
     assert_eq!(key4.algorithm, CryptoAlgorithm::GeneticHybrid);
 
     // Current key should be the latest one
-    let current_key = key_manager.get_session_key(session_id).await
+    let current_key = key_manager
+        .get_session_key(session_id)
+        .await
         .expect("Session key should exist after rotation");
     assert_eq!(current_key.key, key4.key);
     assert_eq!(current_key.key_id, key4.key_id);

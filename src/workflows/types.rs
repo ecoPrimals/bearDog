@@ -1,47 +1,66 @@
 //! Type definitions and data structures for workflows
-//! 
+//!
 //! Contains all structs, enums, and type aliases for the workflows module.
 
 use chrono::{DateTime, Duration, Utc};
+use futures::future::BoxFuture;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
-use tokio::sync::{Mutex, RwLock};
 use std::sync::Arc;
-use futures::future::BoxFuture;
+use tokio::sync::{Mutex, RwLock};
 
 use crate::{config::WorkflowConfig, BearDogResult};
 
 /// Workflow types supported by the engine
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum WorkflowType {
+    /// Cryptographic key rotation workflow
     KeyRotation,
+    /// Cryptographic key deletion workflow
     KeyDeletion,
+    /// Security policy change workflow
     PolicyChange,
+    /// System configuration change workflow
     ConfigurationChange,
+    /// User account provisioning workflow
     UserProvisioning,
+    /// Emergency access request workflow
     EmergencyAccess,
+    /// System maintenance workflow
     SystemMaintenance,
+    /// Compliance audit workflow
     ComplianceAudit,
 }
 
 /// Workflow status enumeration
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum WorkflowStatus {
+    /// Workflow is waiting for required approvals
     PendingApprovals,
+    /// Workflow has been approved and ready for execution
     Approved,
+    /// Workflow has been rejected by approvers
     Rejected,
+    /// Workflow has expired due to timeout
     Expired,
+    /// Workflow has been cancelled by initiator or system
     Cancelled,
+    /// Workflow is currently being executed
     InProgress,
+    /// Workflow execution completed successfully
     Completed,
+    /// Workflow execution failed with error
     Failed,
 }
 
 /// Approval decision types
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ApprovalDecision {
+    /// Approver approved the workflow
     Approved,
+    /// Approver rejected the workflow
     Rejected,
+    /// Approver delegated decision to another person
     Delegated,
 }
 
@@ -58,63 +77,112 @@ impl std::fmt::Display for ApprovalDecision {
 /// Workflow action for audit trail
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum WorkflowAction {
+    /// Workflow was initiated
     Initiated,
+    /// Workflow was approved
     Approved,
+    /// Workflow was rejected
     Rejected,
+    /// Approval was delegated
     Delegated,
+    /// Workflow expired
     Expired,
+    /// Workflow was cancelled
     Cancelled,
+    /// Workflow was executed
     Executed,
+    /// Workflow completed successfully
     Completed,
+    /// Workflow failed during execution
     Failed,
 }
 
 /// Workflow priority levels
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum WorkflowPriority {
+    /// Low priority workflow
     Low,
+    /// Normal priority workflow
     Normal,
+    /// High priority workflow
     High,
+    /// Critical priority workflow
     Critical,
+    /// Emergency priority workflow
     Emergency,
 }
 
 /// Workflow execution state
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WorkflowExecutionState {
+    /// Workflow has been created but not yet queued for execution
     Created,
+    /// Workflow is queued and waiting for execution
     Queued,
+    /// Workflow is currently being executed
     Running,
+    /// Workflow execution completed successfully
     Completed,
+    /// Workflow execution failed with an error
     Failed,
+    /// Workflow execution was cancelled by user or system
     Cancelled,
 }
 
-/// Core workflow structure
+/// Core workflow data structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Workflow {
+    /// Unique workflow identifier
     pub id: String,
+    /// Type of workflow being executed
     pub workflow_type: WorkflowType,
+    /// User who initiated the workflow
     pub initiator: String,
+    /// Target of the workflow operation
     pub target: WorkflowTarget,
+    /// Workflow-specific parameters
     pub parameters: HashMap<String, serde_json::Value>,
+    /// Approval requirements for this workflow
     pub approval_requirements: ApprovalRequirements,
+    /// Current status of the workflow
     pub status: WorkflowStatus,
+    /// Timestamp when workflow was created
     pub created_at: DateTime<Utc>,
+    /// Timestamp when workflow expires
     pub expires_at: DateTime<Utc>,
+    /// List of approval records
     pub approvals: Vec<ApprovalRecord>,
+    /// Complete audit trail of workflow actions
     pub audit_trail: Vec<WorkflowAuditEntry>,
+    /// Additional metadata for the workflow
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
-/// Workflow target specification
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Target entity for workflow operations
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum WorkflowTarget {
+    /// System-wide operation
     System,
-    User { user_id: String },
-    Resource { resource_id: String },
-    Policy { policy_id: String },
-    Key { key_id: String },
+    /// Operation targeting a specific user
+    User {
+        /// User identifier
+        user_id: String,
+    },
+    /// Operation targeting a specific resource
+    Resource {
+        /// Resource identifier
+        resource_id: String,
+    },
+    /// Operation targeting a security policy
+    Policy {
+        /// Policy identifier
+        policy_id: String,
+    },
+    /// Operation targeting a cryptographic key
+    Key {
+        /// Key identifier
+        key_id: String,
+    },
 }
 
 /// Approval requirements for a workflow
@@ -309,8 +377,8 @@ pub struct PolicyConfig {
 /// Business hours configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BusinessHours {
-    pub start_time: String, // HH:MM format
-    pub end_time: String,   // HH:MM format
+    pub start_time: String,    // HH:MM format
+    pub end_time: String,      // HH:MM format
     pub days_of_week: Vec<u8>, // 0=Sunday, 1=Monday, etc.
     pub timezone: String,
 }
@@ -373,19 +441,29 @@ pub trait WorkflowStore: Send + Sync {
     fn store_workflow(&self, workflow: &Workflow) -> BoxFuture<'_, BearDogResult<()>>;
     fn get_workflow(&self, workflow_id: &str) -> BoxFuture<'_, BearDogResult<Option<Workflow>>>;
     fn update_workflow(&self, workflow: &Workflow) -> BoxFuture<'_, BearDogResult<()>>;
-    fn list_workflows(&self, status: Option<WorkflowStatus>) -> BoxFuture<'_, BearDogResult<Vec<Workflow>>>;
+    fn list_workflows(
+        &self,
+        status: Option<WorkflowStatus>,
+    ) -> BoxFuture<'_, BearDogResult<Vec<Workflow>>>;
 }
 
 /// Approval storage trait
 pub trait ApprovalStore: Send + Sync {
     fn store_approval(&self, approval: &ApprovalRecord) -> BoxFuture<'_, BearDogResult<()>>;
-    fn get_approvals(&self, workflow_id: &str) -> BoxFuture<'_, BearDogResult<Vec<ApprovalRecord>>>;
-    fn list_pending_approvals(&self, approver: &str) -> BoxFuture<'_, BearDogResult<Vec<PendingApproval>>>;
+    fn get_approvals(&self, workflow_id: &str)
+        -> BoxFuture<'_, BearDogResult<Vec<ApprovalRecord>>>;
+    fn list_pending_approvals(
+        &self,
+        approver: &str,
+    ) -> BoxFuture<'_, BearDogResult<Vec<PendingApproval>>>;
 }
 
 /// Workflow processor trait
 pub trait WorkflowProcessor: Send + Sync {
-    fn process_workflow(&self, workflow: &Workflow) -> BoxFuture<'_, BearDogResult<WorkflowCompletionResult>>;
+    fn process_workflow(
+        &self,
+        workflow: &Workflow,
+    ) -> BoxFuture<'_, BearDogResult<WorkflowCompletionResult>>;
     fn get_processor_name(&self) -> &'static str;
 }
 
@@ -479,10 +557,18 @@ impl MultiPartyWorkflowEngine {
         // Create a minimal placeholder with missing fields set to None/default
         Self {
             config: Arc::new(WorkflowConfig::default()),
-            workflow_store: Arc::new(InMemoryWorkflowStore { workflows: RwLock::new(HashMap::new()) }),
-            approval_store: Arc::new(InMemoryApprovalStore { approvals: RwLock::new(HashMap::new()) }),
-            notification_engine: Arc::new(NotificationEngine { config: NotificationConfig::default() }),
-            policy_engine: Arc::new(WorkflowPolicyEngine { config: PolicyConfig::default() }),
+            workflow_store: Arc::new(InMemoryWorkflowStore {
+                workflows: RwLock::new(HashMap::new()),
+            }),
+            approval_store: Arc::new(InMemoryApprovalStore {
+                approvals: RwLock::new(HashMap::new()),
+            }),
+            notification_engine: Arc::new(NotificationEngine {
+                config: NotificationConfig::default(),
+            }),
+            policy_engine: Arc::new(WorkflowPolicyEngine {
+                config: PolicyConfig::default(),
+            }),
             scheduler: Arc::new(WorkflowScheduler::default()),
             active_workflows: Arc::new(RwLock::new(HashMap::new())),
             pending_approvals: Arc::new(RwLock::new(HashMap::new())),
@@ -534,4 +620,3 @@ impl WorkflowMetrics {
         }
     }
 }
-

@@ -292,7 +292,7 @@ impl Default for PerformanceConfig {
             enable_compression: false,
             compression_level: 5,
             enable_caching: false,
-            cache_size_mb: 1024, // 1 GB
+            cache_size_mb: 1024,                  // 1 GB
             cache_ttl: Duration::from_secs(3600), // 1 hour
         }
     }
@@ -303,7 +303,7 @@ impl Default for KeyManagementConfig {
         Self {
             use_hardware_keys: true,
             key_derivation_rounds: 100_000,
-            session_key_length: 32, // 256 bits
+            session_key_length: 32,                           // 256 bits
             key_rotation_interval: Duration::from_secs(3600), // 1 hour
             enable_auto_rotation: true,
             backup_frequency: Duration::from_secs(3600), // 1 hour

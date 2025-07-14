@@ -173,9 +173,9 @@ impl SecurityGenetics {
     /// }
     /// ```
     pub async fn new_for_peer(
-        peer_id: &str,
-        peer_capabilities: &crate::tunnel::events::PeerCapabilities,
-        verification: &crate::tunnel::security_provider::VerificationResult,
+        _peer_id: &str,
+        _peer_capabilities: &crate::tunnel::events::PeerCapabilities,
+        _verification: &crate::tunnel::security_provider::VerificationResult,
     ) -> BearDogResult<Self> {
         Ok(Self {
             crypto_genes: CryptoChromosome::default(),

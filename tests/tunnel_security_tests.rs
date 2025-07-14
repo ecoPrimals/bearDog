@@ -2,13 +2,8 @@
 //!
 //! Basic tests for the tunnel layer components
 
-use beardog::tunnel::{
-    config::BStpConfig,
-    events::types::SecurityLevel,
-    session::{SecureSession, SessionManager, CryptoChromosome},
-    genetic_healing::{SecurityIssue, SecurityIssueType, Severity},
-};
 use beardog::tunnel::key_manager::{BStpKeyManager, CryptoAlgorithm};
+use beardog::tunnel::{config::BStpConfig, session::SessionManager};
 use beardog::BearDogResult;
 use std::sync::Arc;
 use std::time::Duration;

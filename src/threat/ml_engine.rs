@@ -9,7 +9,7 @@
 
 use super::types::*;
 use crate::BearDogResult;
-use chrono::{DateTime, Utc, Timelike};
+use chrono::{DateTime, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -98,10 +98,10 @@ struct CachedPrediction {
 pub trait ThreatModel {
     /// Predict threat likelihood for given event
     fn predict(&self, event: &SecurityEvent) -> BearDogResult<MlPrediction>;
-    
+
     /// Get model metadata
     fn get_metadata(&self) -> ModelMetadata;
-    
+
     /// Update model with new training data
     fn update_model(&mut self, training_data: &[SecurityEvent]) -> BearDogResult<()>;
 }
@@ -120,13 +120,13 @@ pub struct ModelMetadata {
 impl MlThreatEngine {
     pub async fn new(config: MlEngineConfig) -> BearDogResult<Self> {
         let mut models: HashMap<String, Box<dyn ThreatModel + Send + Sync>> = HashMap::new();
-        
+
         // Initialize core ML models
         models.insert(
             "login_anomaly".to_string(),
             Box::new(LoginAnomalyModel::new().await?),
         );
-        
+
         models.insert(
             "data_exfiltration".to_string(),
             Box::new(DataExfiltrationModel::new().await?),
@@ -149,14 +149,18 @@ impl MlThreatEngine {
         }
 
         let mut predictions = Vec::new();
-        
+
         // Run all ML models on the event
         for (model_id, model) in &self.models {
             match model.predict(event) {
                 Ok(prediction) => {
-                    if prediction.confidence_score >= self.get_threshold(&prediction.prediction_type) {
-                        info!("🤖 ML Model '{}' detected threat: confidence={:.3}", 
-                              model_id, prediction.confidence_score);
+                    if prediction.confidence_score
+                        >= self.get_threshold(&prediction.prediction_type)
+                    {
+                        info!(
+                            "🤖 ML Model '{}' detected threat: confidence={:.3}",
+                            model_id, prediction.confidence_score
+                        );
                         predictions.push(prediction);
                     }
                 }
@@ -266,7 +270,10 @@ impl ThreatModel for LoginAnomalyModel {
             evidence,
             mitre_techniques: vec!["T1078".to_string()], // Valid Accounts
             recommendations: if anomaly_score > 0.5 {
-                vec!["Verify user identity".to_string(), "Enable additional MFA".to_string()]
+                vec![
+                    "Verify user identity".to_string(),
+                    "Enable additional MFA".to_string(),
+                ]
             } else {
                 vec![]
             },
@@ -296,7 +303,9 @@ impl ThreatModel for LoginAnomalyModel {
 }
 
 impl DataExfiltrationModel {
-    pub async fn new() -> BearDogResult<Self> { Ok(Self) }
+    pub async fn new() -> BearDogResult<Self> {
+        Ok(Self)
+    }
 }
 
 impl ThreatModel for DataExfiltrationModel {
@@ -306,7 +315,8 @@ impl ThreatModel for DataExfiltrationModel {
         let mut evidence = Vec::new();
 
         // Large data volume indicator
-        if event.data_size > (1024.0 * 1024.0 * 500.0) { // 500MB
+        if event.data_size > (1024.0 * 1024.0 * 500.0) {
+            // 500MB
             confidence += 0.4;
             evidence.push(format!("Large data transfer: {} bytes", event.data_size));
         }
@@ -319,7 +329,8 @@ impl ThreatModel for DataExfiltrationModel {
         }
 
         // External destination indicator
-        if !event.destination_ip.starts_with("192.168.") && !event.destination_ip.starts_with("10.") {
+        if !event.destination_ip.starts_with("192.168.") && !event.destination_ip.starts_with("10.")
+        {
             confidence += 0.4;
             evidence.push("Data transfer to external IP".to_string());
         }
@@ -368,4 +379,4 @@ impl ThreatModel for DataExfiltrationModel {
     fn update_model(&mut self, _training_data: &[SecurityEvent]) -> BearDogResult<()> {
         Ok(())
     }
-} 
+}

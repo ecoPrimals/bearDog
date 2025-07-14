@@ -364,16 +364,16 @@ mod tests {
             .expect("Ed25519 signing should never fail with valid keypair");
 
         // Verify signature
-        let is_valid =
-            BearDogCrypto::verify_ed25519_signature(&public_key, message, &signature)
-                .expect("Ed25519 signature verification should never fail with valid inputs");
+        let is_valid = BearDogCrypto::verify_ed25519_signature(&public_key, message, &signature)
+            .expect("Ed25519 signature verification should never fail with valid inputs");
         assert!(is_valid);
 
         // Test with wrong message
         let wrong_message = b"Wrong message";
         let is_invalid =
-            BearDogCrypto::verify_ed25519_signature(&public_key, wrong_message, &signature)
-                .expect("Ed25519 signature verification should handle invalid signatures gracefully");
+            BearDogCrypto::verify_ed25519_signature(&public_key, wrong_message, &signature).expect(
+                "Ed25519 signature verification should handle invalid signatures gracefully",
+            );
         assert!(!is_invalid);
     }
 

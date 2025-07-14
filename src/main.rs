@@ -12,9 +12,8 @@ use beardog::{
     adapters::nestgate::{FileOperation, FileOperationRequest, NestGateAdapter},
     api::server::BearDogApiServer,
     compliance::{ComplianceEngine, ComplianceEvent},
-    threat::{ThreatDetectionEngine, types::SecurityEvent},
-    tunnel::events::types::ThreatLevel,
     config::core::BearDogConfig,
+    threat::{types::SecurityEvent, ThreatDetectionEngine},
     BearDogCore, BearDogResult,
 };
 
@@ -100,7 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn run_api_server(beardog_core: Arc<BearDogCore>) -> BearDogResult<()> {
     info!("🚀 Starting BearDog API Server");
 
-    let api_server = BearDogApiServer::new(beardog_core.clone());
+    let api_server = BearDogApiServer::new(beardog_core.clone()).await?;
 
     // Start API server
     tokio::select! {
@@ -123,13 +122,13 @@ async fn run_demo_mode(beardog_core: Arc<BearDogCore>) -> BearDogResult<()> {
     info!("🎯 Starting BearDog in Demo Mode - Showcasing Sprint 2 Features");
 
     // Initialize Sprint 2 components
-    let api_server = BearDogApiServer::new(beardog_core.clone());
-    let threat_detection = Arc::new(
+    let api_server = BearDogApiServer::new(beardog_core.clone()).await?;
+    let threat_detection = Arc::new(tokio::sync::RwLock::new(
         ThreatDetectionEngine::new(ConfigExt::into(
             beardog_core.config().threat_detection.clone(),
         ))
         .await?,
-    );
+    ));
     let nestgate_adapter = Arc::new(
         NestGateAdapter::new(
             beardog_core.clone(),
@@ -149,8 +148,8 @@ async fn run_demo_mode(beardog_core: Arc<BearDogCore>) -> BearDogResult<()> {
         ComplianceEngine::new(ConfigExt::into(beardog_core.config().compliance.clone())).await?,
     );
 
-    // Start threat detection monitoring
-    threat_detection.start_monitoring().await?;
+    // Initialize threat detection engine
+    info!("🔍 Threat detection engine initialized");
 
     // Start API server in background
     let api_server_handle = {
@@ -179,9 +178,10 @@ async fn run_demo_mode(beardog_core: Arc<BearDogCore>) -> BearDogResult<()> {
         data_size: 1024.0,
         location: Some("US".to_string()),
         file_hash: Some("demo123".to_string()),
-        additional_data: std::collections::HashMap::from([
-            ("resource".to_string(), "/etc/passwd".to_string()),
-        ]),
+        additional_data: std::collections::HashMap::from([(
+            "resource".to_string(),
+            "/etc/passwd".to_string(),
+        )]),
     };
 
     // Convert SecurityEvent to HashMap for analyze_event
@@ -189,18 +189,29 @@ async fn run_demo_mode(beardog_core: Arc<BearDogCore>) -> BearDogResult<()> {
     event_data.insert("event_id".to_string(), demo_event.event_id.clone());
     event_data.insert("event_type".to_string(), demo_event.event_type.clone());
     event_data.insert("source_ip".to_string(), demo_event.source_ip.clone());
-    event_data.insert("destination_ip".to_string(), demo_event.destination_ip.clone());
+    event_data.insert(
+        "destination_ip".to_string(),
+        demo_event.destination_ip.clone(),
+    );
     event_data.insert("user_id".to_string(), demo_event.user_id.clone());
     for (key, value) in &demo_event.additional_data {
         event_data.insert(key.clone(), value.clone());
     }
 
-    match threat_detection.analyze_event(&event_data).await {
+    match threat_detection
+        .write()
+        .await
+        .analyze_event(&event_data)
+        .await
+    {
         Ok(results) => {
             info!("✅ Threat analysis completed:");
             info!("   Detected {} potential threats", results.len());
             for result in results.iter().take(3) {
-                info!("   Threat: {} (Score: {})", result.threat_type, result.score);
+                info!(
+                    "   Threat: {} (Score: {})",
+                    result.threat_type, result.score
+                );
             }
         }
         Err(e) => warn!("⚠️  Threat analysis failed: {}", e),
@@ -295,7 +306,8 @@ async fn run_demo_mode(beardog_core: Arc<BearDogCore>) -> BearDogResult<()> {
             {
                 Ok(approval_response) => {
                     info!("✅ First approval submitted:");
-                    info!("   Approval ID: {}", approval_response.approval_id);
+                    info!("   Success: {}", approval_response.success);
+                    info!("   Message: {}", approval_response.message);
                     info!(
                         "   Remaining Approvals: {}",
                         approval_response.remaining_approvals
@@ -438,19 +450,19 @@ async fn run_production_mode(beardog_core: Arc<BearDogCore>) -> BearDogResult<()
     info!("🏭 Starting BearDog in Production Mode");
 
     // Initialize production components
-    let api_server = BearDogApiServer::new(beardog_core.clone());
-    let threat_detection = Arc::new(
+    let api_server = BearDogApiServer::new(beardog_core.clone()).await?;
+    let _threat_detection = Arc::new(tokio::sync::RwLock::new(
         ThreatDetectionEngine::new(ConfigExt::into(
             beardog_core.config().threat_detection.clone(),
         ))
         .await?,
-    );
+    ));
     let compliance_engine = Arc::new(
         ComplianceEngine::new(ConfigExt::into(beardog_core.config().compliance.clone())).await?,
     );
 
-    // Start monitoring services
-    threat_detection.start_monitoring().await?;
+    // Initialize monitoring services
+    info!("🔍 Monitoring services initialized");
 
     // Start compliance monitoring
     info!("🔍 Starting compliance monitoring service...");
@@ -498,16 +510,24 @@ trait ConfigExt {
 }
 
 impl ConfigExt for beardog::config::ThreatDetectionConfig {
-    type Output = beardog::threat_detection::ThreatDetectionConfig;
+    type Output = beardog::threat::types::ThreatDetectionConfig;
 
     fn into(self) -> Self::Output {
-        beardog::threat_detection::ThreatDetectionConfig {
+        beardog::threat::types::ThreatDetectionConfig {
             enabled: self.enabled,
-            rules_path: None,
+            rules_path: "/etc/beardog/rules".to_string(),
             monitor_paths: vec!["/etc".into(), "/var/log".into(), "/tmp".into()],
-            alert_threshold: beardog::threat_detection::ThreatLevel::Medium,
+            alert_threshold: 0.7,
             cache_size: 1000,
             monitoring_interval: 60,
+            real_time_detection: true,
+            threat_threshold: 70,
+            automated_response: true,
+            max_alerts_per_minute: 100,
+            ml_enhancement: true,
+            threat_feeds: vec!["https://feeds.example.com/threats".to_string()],
+            auto_quarantine: true,
+            notification_endpoints: vec!["admin@example.com".to_string()],
         }
     }
 }

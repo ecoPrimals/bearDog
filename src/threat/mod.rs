@@ -13,19 +13,18 @@
 //! * **Automated Response**: Configurable incident response workflows
 //! * **MITRE ATT&CK Mapping**: Threat categorization using MITRE framework
 
-pub mod types;
 pub mod handlers;
 pub mod ml_engine;
 pub mod tests;
+pub mod types;
 
 // Export specific items to avoid conflicts
 pub use handlers::ThreatDetectionEngine;
+pub use ml_engine::{MlEngineConfig, MlThreatEngine};
 pub use types::{
-    ThreatEvent, ThreatSeverity, ThreatType, ThreatStatus, 
-    ThreatDetectionConfig, DetectionRule, ThreatIndicator,
-    ThreatSource, ThreatTarget, MitigationStep, SecurityEvent
+    DetectionRule, MitigationStep, SecurityEvent, ThreatDetectionConfig, ThreatEvent,
+    ThreatIndicator, ThreatSeverity, ThreatSource, ThreatStatus, ThreatTarget, ThreatType,
 };
-pub use ml_engine::{MlThreatEngine, MlEngineConfig};
 
 /// Quick access to threat detection functionality
 pub struct ThreatAPI;

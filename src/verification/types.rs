@@ -1,5 +1,5 @@
 //! Type definitions and data structures for proof verification
-//! 
+//!
 //! Contains all structs, enums, and type aliases for verification operations.
 
 use chrono::{DateTime, Utc};
@@ -7,9 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // Import auth types that verification depends on
-use crate::auth::{
-    BearDogGenetics, ResourcePermission,
-};
+use crate::auth::{BearDogGenetics, ResourcePermission};
 
 /// Configuration for proof verification operations
 #[derive(Debug, Clone, Serialize, Deserialize)]

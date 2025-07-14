@@ -1,17 +1,17 @@
 //! Implementation logic and handlers for threat detection
-//! 
+//!
 //! Contains the main business logic and implementation details for ThreatDetectionEngine.
 
-use super::types::*;
 use super::ml_engine::*;
+use super::types::*;
 use crate::{BearDogError, BearDogResult};
 
-use chrono::{Duration, Utc, Timelike};
+use chrono::{Duration, Timelike, Utc};
 use std::collections::{HashMap, HashSet};
-use uuid::Uuid;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn};
+use uuid::Uuid;
 
 /// Enhanced Threat Detection Engine with ML capabilities
 pub struct ThreatDetectionEngine {
@@ -73,20 +73,23 @@ impl ThreatDetectionEngine {
             threat_feeds: HashMap::new(),
             stats: crate::threat::types::ThreatDetectionStats::default(),
             ml_models: HashMap::new(),
-            ml_engine: None,  // No ML engine for placeholder
+            ml_engine: None, // No ML engine for placeholder
             event_history: Arc::new(RwLock::new(Vec::new())),
             active_incidents: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
     /// Analyze an event for potential threats
-    pub async fn analyze_event(&mut self, event_data: &HashMap<String, String>) -> BearDogResult<Vec<ThreatEvent>> {
+    pub async fn analyze_event(
+        &mut self,
+        event_data: &HashMap<String, String>,
+    ) -> BearDogResult<Vec<ThreatEvent>> {
         if !self.config.real_time_detection {
             return Ok(vec![]);
         }
 
         let mut detected_threats = Vec::new();
-        let ml_predictions: Vec<(String, f64)> = Vec::new();
+        let _ml_predictions: Vec<(String, f64)> = Vec::new();
 
         // Apply detection rules
         for rule in &self.detection_rules {
@@ -116,7 +119,7 @@ impl ThreatDetectionEngine {
         {
             let mut history = self.event_history.write().await;
             history.extend(detected_threats.clone());
-            
+
             // Limit history size
             if history.len() > 10000 {
                 history.drain(0..1000);
@@ -126,8 +129,9 @@ impl ThreatDetectionEngine {
         // Process detected threats
         for mut threat in &mut detected_threats {
             self.enrich_threat_event(&mut threat).await?;
-            self.active_threats.insert(threat.id.clone(), threat.clone());
-            
+            self.active_threats
+                .insert(threat.id.clone(), threat.clone());
+
             // Auto-response if enabled
             if self.config.automated_response {
                 self.execute_automated_response(&threat).await?;
@@ -138,8 +142,12 @@ impl ThreatDetectionEngine {
         self.stats.total_threats += detected_threats.len() as u64;
         for threat in &detected_threats {
             let severity_key = threat.severity.to_string();
-            *self.stats.threats_by_severity.entry(severity_key).or_insert(0) += 1;
-            
+            *self
+                .stats
+                .threats_by_severity
+                .entry(severity_key)
+                .or_insert(0) += 1;
+
             let type_key = threat.threat_type.to_string();
             *self.stats.threats_by_type.entry(type_key).or_insert(0) += 1;
         }
@@ -155,7 +163,11 @@ impl ThreatDetectionEngine {
     }
 
     /// Check if event data matches a detection rule
-    async fn matches_rule(&self, event_data: &HashMap<String, String>, rule: &ThreatDetectionRule) -> BearDogResult<bool> {
+    async fn matches_rule(
+        &self,
+        event_data: &HashMap<String, String>,
+        rule: &ThreatDetectionRule,
+    ) -> BearDogResult<bool> {
         for condition in &rule.conditions {
             if !self.evaluate_condition(condition, event_data).await? {
                 return Ok(false);
@@ -165,17 +177,21 @@ impl ThreatDetectionEngine {
     }
 
     /// Evaluate individual condition
-    async fn evaluate_condition(&self, condition: &RuleCondition, event_data: &HashMap<String, String>) -> BearDogResult<bool> {
+    async fn evaluate_condition(
+        &self,
+        condition: &RuleCondition,
+        event_data: &HashMap<String, String>,
+    ) -> BearDogResult<bool> {
         match condition {
-            RuleCondition::EventType { event_type } => {
-                Ok(event_data.get("event_type").map_or(false, |t| t == event_type))
-            }
-            RuleCondition::SourceIp { ip_address } => {
-                Ok(event_data.get("source_ip").map_or(false, |ip| ip == ip_address))
-            }
-            RuleCondition::UserAgent { user_agent } => {
-                Ok(event_data.get("user_agent").map_or(false, |ua| ua == user_agent))
-            }
+            RuleCondition::EventType { event_type } => Ok(event_data
+                .get("event_type")
+                .map_or(false, |t| t == event_type)),
+            RuleCondition::SourceIp { ip_address } => Ok(event_data
+                .get("source_ip")
+                .map_or(false, |ip| ip == ip_address)),
+            RuleCondition::UserAgent { user_agent } => Ok(event_data
+                .get("user_agent")
+                .map_or(false, |ua| ua == user_agent)),
             RuleCondition::DataSize { size_bytes } => {
                 if let Some(size_str) = event_data.get("data_size") {
                     let size: u64 = size_str.parse().unwrap_or(0);
@@ -184,7 +200,10 @@ impl ThreatDetectionEngine {
                     Ok(false)
                 }
             }
-            RuleCondition::TimeRange { start_hour, end_hour } => {
+            RuleCondition::TimeRange {
+                start_hour,
+                end_hour,
+            } => {
                 let current_hour = chrono::Utc::now().hour() as u8;
                 if start_hour > end_hour {
                     // Crosses midnight
@@ -193,15 +212,22 @@ impl ThreatDetectionEngine {
                     Ok(current_hour >= *start_hour && current_hour <= *end_hour)
                 }
             }
-            RuleCondition::FrequencyThreshold { count, window_minutes } => {
+            RuleCondition::FrequencyThreshold {
+                count,
+                window_minutes,
+            } => {
                 let source_ip = event_data.get("source_ip").cloned();
-                let window_start = chrono::Utc::now() - chrono::Duration::minutes(*window_minutes as i64);
-                
-                let recent_events = self.event_history.read().await
+                let window_start =
+                    chrono::Utc::now() - chrono::Duration::minutes(*window_minutes as i64);
+
+                let recent_events = self
+                    .event_history
+                    .read()
+                    .await
                     .iter()
                     .filter(|e| e.timestamp > window_start && e.source.ip_address == source_ip)
                     .count();
-                
+
                 Ok(recent_events >= *count as usize)
             }
             _ => Ok(false), // Default for complex conditions
@@ -209,9 +235,13 @@ impl ThreatDetectionEngine {
     }
 
     /// Create a threat event from a rule match
-    fn create_threat_event(&self, rule: &ThreatDetectionRule, event_data: &HashMap<String, String>) -> BearDogResult<ThreatEvent> {
+    fn create_threat_event(
+        &self,
+        rule: &ThreatDetectionRule,
+        event_data: &HashMap<String, String>,
+    ) -> BearDogResult<ThreatEvent> {
         let threat_id = Uuid::new_v4().to_string();
-        
+
         let source = ThreatSource {
             ip_address: event_data.get("source_ip").cloned(),
             hostname: event_data.get("hostname").cloned(),
@@ -223,8 +253,14 @@ impl ThreatDetectionEngine {
         };
 
         let target = ThreatTarget {
-            resource_id: event_data.get("resource_id").unwrap_or(&"unknown".to_string()).clone(),
-            resource_type: event_data.get("resource_type").unwrap_or(&"unknown".to_string()).clone(),
+            resource_id: event_data
+                .get("resource_id")
+                .unwrap_or(&"unknown".to_string())
+                .clone(),
+            resource_type: event_data
+                .get("resource_type")
+                .unwrap_or(&"unknown".to_string())
+                .clone(),
             node_id: event_data.get("node_id").cloned(),
             user_account: event_data.get("user_account").cloned(),
             criticality: AssetCriticality::Medium,
@@ -246,13 +282,10 @@ impl ThreatDetectionEngine {
                 ThreatAction::QuarantineSystem,
                 ThreatAction::InitiateIncidentResponse,
             ],
-            ThreatSeverity::High => vec![
-                ThreatAction::AlertSecurityTeam,
-                ThreatAction::BlockSource,
-            ],
-            ThreatSeverity::Medium => vec![
-                ThreatAction::AlertSecurityTeam,
-            ],
+            ThreatSeverity::High => {
+                vec![ThreatAction::AlertSecurityTeam, ThreatAction::BlockSource]
+            }
+            ThreatSeverity::Medium => vec![ThreatAction::AlertSecurityTeam],
             _ => vec![],
         };
 
@@ -264,7 +297,10 @@ impl ThreatDetectionEngine {
             timestamp: Utc::now(),
             source,
             target,
-            description: format!("Detection rule '{}' triggered: {}", rule.name, rule.description),
+            description: format!(
+                "Detection rule '{}' triggered: {}",
+                rule.name, rule.description
+            ),
             detection_method: DetectionMethod::RuleBased,
             evidence,
             recommended_actions,
@@ -276,13 +312,16 @@ impl ThreatDetectionEngine {
     }
 
     /// Analyze event data using machine learning models
-    async fn analyze_with_ml(&self, event_data: &HashMap<String, String>) -> BearDogResult<Vec<ThreatEvent>> {
+    async fn analyze_with_ml(
+        &self,
+        event_data: &HashMap<String, String>,
+    ) -> BearDogResult<Vec<ThreatEvent>> {
         let mut ml_threats = Vec::new();
 
-        for (model_id, model) in &self.ml_models {
+        for (_model_id, model) in &self.ml_models {
             // Simulate ML analysis
             let prediction_score = self.simulate_ml_prediction(model, event_data)?;
-            
+
             if prediction_score > 0.8 {
                 let threat = ThreatEvent {
                     id: Uuid::new_v4().to_string(),
@@ -300,14 +339,23 @@ impl ThreatDetectionEngine {
                         classification: SourceClassification::Suspicious,
                     },
                     target: ThreatTarget {
-                        resource_id: event_data.get("resource_id").unwrap_or(&"unknown".to_string()).clone(),
-                        resource_type: event_data.get("resource_type").unwrap_or(&"unknown".to_string()).clone(),
+                        resource_id: event_data
+                            .get("resource_id")
+                            .unwrap_or(&"unknown".to_string())
+                            .clone(),
+                        resource_type: event_data
+                            .get("resource_type")
+                            .unwrap_or(&"unknown".to_string())
+                            .clone(),
                         node_id: event_data.get("node_id").cloned(),
                         user_account: event_data.get("user_account").cloned(),
                         criticality: AssetCriticality::Medium,
                         protection_level: ProtectionLevel::Standard,
                     },
-                    description: format!("ML model '{}' detected anomaly with confidence {:.2}", model.name, prediction_score),
+                    description: format!(
+                        "ML model '{}' detected anomaly with confidence {:.2}",
+                        model.name, prediction_score
+                    ),
                     detection_method: DetectionMethod::MachineLearning,
                     evidence: vec![],
                     recommended_actions: vec![ThreatAction::AlertSecurityTeam],
@@ -324,16 +372,26 @@ impl ThreatDetectionEngine {
     }
 
     /// Simulate ML model prediction
-    fn simulate_ml_prediction(&self, _model: &MlModel, _event_data: &HashMap<String, String>) -> BearDogResult<f64> {
+    fn simulate_ml_prediction(
+        &self,
+        _model: &MlModel,
+        _event_data: &HashMap<String, String>,
+    ) -> BearDogResult<f64> {
         // In a real implementation, this would run the actual ML model
         // For now, return a random score for demonstration
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
-        _event_data.get("source_ip").unwrap_or(&"unknown".to_string()).hash(&mut hasher);
-        _event_data.get("event_type").unwrap_or(&"unknown".to_string()).hash(&mut hasher);
-        
+        _event_data
+            .get("source_ip")
+            .unwrap_or(&"unknown".to_string())
+            .hash(&mut hasher);
+        _event_data
+            .get("event_type")
+            .unwrap_or(&"unknown".to_string())
+            .hash(&mut hasher);
+
         // Convert hash to a score between 0.0 and 1.0
         let hash = hasher.finish();
         let score = (hash % 100) as f64 / 100.0;
@@ -341,7 +399,10 @@ impl ThreatDetectionEngine {
     }
 
     /// Check threat intelligence feeds
-    async fn check_threat_feeds(&self, event_data: &HashMap<String, String>) -> BearDogResult<Vec<ThreatEvent>> {
+    async fn check_threat_feeds(
+        &self,
+        event_data: &HashMap<String, String>,
+    ) -> BearDogResult<Vec<ThreatEvent>> {
         let mut feed_threats = Vec::new();
 
         for (_, feed) in &self.threat_feeds {
@@ -361,17 +422,21 @@ impl ThreatDetectionEngine {
     }
 
     /// Check if event data matches a threat indicator
-    async fn matches_indicator(&self, event_data: &HashMap<String, String>, indicator: &ThreatIndicator) -> BearDogResult<bool> {
+    async fn matches_indicator(
+        &self,
+        event_data: &HashMap<String, String>,
+        indicator: &ThreatIndicator,
+    ) -> BearDogResult<bool> {
         let matches = match indicator.indicator_type {
-            IndicatorType::IpAddress => {
-                event_data.get("source_ip").map_or(false, |ip| ip.contains(&indicator.value))
-            }
+            IndicatorType::IpAddress => event_data
+                .get("source_ip")
+                .map_or(false, |ip| ip.contains(&indicator.value)),
             IndicatorType::DomainName => {
                 // Check if domain reputation is good when checking domain-based indicators
                 if self.check_domain_reputation(&indicator.value).await? {
                     return Ok(false); // Good domain, not a threat
                 }
-                
+
                 if let Some(domain) = event_data.get("domain") {
                     domain.contains(&indicator.value)
                 } else if let Some(url) = event_data.get("url") {
@@ -380,21 +445,21 @@ impl ThreatDetectionEngine {
                     false
                 }
             }
-            IndicatorType::Url => {
-                event_data.get("url").map_or(false, |url| url.contains(&indicator.value))
-            }
-            IndicatorType::FileHash => {
-                event_data.get("file_hash").map_or(false, |hash| hash == &indicator.value)
-            }
-            IndicatorType::EmailAddress => {
-                event_data.get("email").map_or(false, |email| email.contains(&indicator.value))
-            }
-            IndicatorType::UserAgent => {
-                event_data.get("user_agent").map_or(false, |ua| ua.contains(&indicator.value))
-            }
-            IndicatorType::ProcessName => {
-                event_data.get("process_name").map_or(false, |proc| proc.contains(&indicator.value))
-            }
+            IndicatorType::Url => event_data
+                .get("url")
+                .map_or(false, |url| url.contains(&indicator.value)),
+            IndicatorType::FileHash => event_data
+                .get("file_hash")
+                .map_or(false, |hash| hash == &indicator.value),
+            IndicatorType::EmailAddress => event_data
+                .get("email")
+                .map_or(false, |email| email.contains(&indicator.value)),
+            IndicatorType::UserAgent => event_data
+                .get("user_agent")
+                .map_or(false, |ua| ua.contains(&indicator.value)),
+            IndicatorType::ProcessName => event_data
+                .get("process_name")
+                .map_or(false, |proc| proc.contains(&indicator.value)),
             IndicatorType::NetworkPattern => {
                 // Pattern matching for network traffic
                 if let Some(pattern) = event_data.get("network_pattern") {
@@ -413,12 +478,16 @@ impl ThreatDetectionEngine {
             }
             _ => false,
         };
-        
+
         Ok(matches)
     }
 
     /// Create threat event from threat indicator
-    fn create_threat_from_indicator(&self, indicator: &ThreatIndicator, event_data: &HashMap<String, String>) -> BearDogResult<ThreatEvent> {
+    fn create_threat_from_indicator(
+        &self,
+        indicator: &ThreatIndicator,
+        event_data: &HashMap<String, String>,
+    ) -> BearDogResult<ThreatEvent> {
         let threat_type = if !indicator.threat_types.is_empty() {
             indicator.threat_types[0].clone()
         } else {
@@ -443,14 +512,23 @@ impl ThreatDetectionEngine {
                 classification: SourceClassification::Malicious,
             },
             target: ThreatTarget {
-                resource_id: event_data.get("resource_id").unwrap_or(&"unknown".to_string()).clone(),
-                resource_type: event_data.get("resource_type").unwrap_or(&"unknown".to_string()).clone(),
+                resource_id: event_data
+                    .get("resource_id")
+                    .unwrap_or(&"unknown".to_string())
+                    .clone(),
+                resource_type: event_data
+                    .get("resource_type")
+                    .unwrap_or(&"unknown".to_string())
+                    .clone(),
                 node_id: event_data.get("node_id").cloned(),
                 user_account: event_data.get("user_account").cloned(),
                 criticality: AssetCriticality::Medium,
                 protection_level: ProtectionLevel::Standard,
             },
-            description: format!("Threat intelligence match: {} ({})", indicator.value, indicator.indicator_type),
+            description: format!(
+                "Threat intelligence match: {} ({})",
+                indicator.value, indicator.indicator_type
+            ),
             detection_method: DetectionMethod::ThreatIntelligence,
             evidence: vec![],
             recommended_actions: vec![ThreatAction::BlockSource, ThreatAction::AlertSecurityTeam],
@@ -537,9 +615,12 @@ impl ThreatDetectionEngine {
 
     /// Send alert notification
     async fn send_alert_notification(&self, threat: &ThreatEvent) -> BearDogResult<()> {
-        for endpoint in &self.config.notification_endpoints {
+        for _endpoint in &self.config.notification_endpoints {
             // In practice, this would send to actual notification systems
-            println!("ALERT: {} - {} (Severity: {})", threat.threat_type, threat.description, threat.severity);
+            println!(
+                "ALERT: {} - {} (Severity: {})",
+                threat.threat_type, threat.description, threat.severity
+            );
         }
         Ok(())
     }
@@ -568,13 +649,23 @@ impl ThreatDetectionEngine {
 
     /// Get active threats
     pub fn get_active_threats(&self) -> Vec<&ThreatEvent> {
-        self.active_threats.values()
-            .filter(|threat| matches!(threat.status, ThreatStatus::New | ThreatStatus::Investigating | ThreatStatus::Confirmed))
+        self.active_threats
+            .values()
+            .filter(|threat| {
+                matches!(
+                    threat.status,
+                    ThreatStatus::New | ThreatStatus::Investigating | ThreatStatus::Confirmed
+                )
+            })
             .collect()
     }
 
     /// Resolve a threat
-    pub async fn resolve_threat(&mut self, threat_id: &str, mitigation_steps: Vec<MitigationStep>) -> BearDogResult<()> {
+    pub async fn resolve_threat(
+        &mut self,
+        threat_id: &str,
+        mitigation_steps: Vec<MitigationStep>,
+    ) -> BearDogResult<()> {
         if let Some(threat) = self.active_threats.get_mut(threat_id) {
             threat.status = ThreatStatus::Resolved;
             threat.mitigation_steps = mitigation_steps;
@@ -591,7 +682,7 @@ impl ThreatDetectionEngine {
     pub async fn mark_false_positive(&mut self, threat_id: &str) -> BearDogResult<()> {
         if let Some(threat) = self.active_threats.get_mut(threat_id) {
             threat.status = ThreatStatus::FalsePositive;
-            
+
             // Update rule statistics
             for rule in &mut self.detection_rules {
                 if rule.threat_type == threat.threat_type {
@@ -599,19 +690,28 @@ impl ThreatDetectionEngine {
                     break;
                 }
             }
-            
+
             // Update global false positive rate
-            let total_resolved = self.active_threats.values()
-                .filter(|t| matches!(t.status, ThreatStatus::Resolved | ThreatStatus::FalsePositive))
+            let total_resolved = self
+                .active_threats
+                .values()
+                .filter(|t| {
+                    matches!(
+                        t.status,
+                        ThreatStatus::Resolved | ThreatStatus::FalsePositive
+                    )
+                })
                 .count() as f64;
-            let false_positives = self.active_threats.values()
+            let false_positives = self
+                .active_threats
+                .values()
                 .filter(|t| t.status == ThreatStatus::FalsePositive)
                 .count() as f64;
-            
+
             if total_resolved > 0.0 {
                 self.stats.false_positive_rate = false_positives / total_resolved;
             }
-            
+
             Ok(())
         } else {
             Err(BearDogError::NotFound {
@@ -624,12 +724,15 @@ impl ThreatDetectionEngine {
     /// Cleanup old threats
     pub async fn cleanup_old_threats(&mut self, retention_days: u32) -> BearDogResult<()> {
         let cutoff_date = Utc::now() - Duration::days(retention_days as i64);
-        
+
         self.active_threats.retain(|_, threat| {
-            threat.timestamp > cutoff_date && 
-            !matches!(threat.status, ThreatStatus::Resolved | ThreatStatus::FalsePositive)
+            threat.timestamp > cutoff_date
+                && !matches!(
+                    threat.status,
+                    ThreatStatus::Resolved | ThreatStatus::FalsePositive
+                )
         });
-        
+
         Ok(())
     }
 
@@ -644,7 +747,12 @@ impl ThreatDetectionEngine {
     }
 
     /// Update threat status
-    pub async fn update_threat_status(&mut self, threat_id: &str, status: ThreatStatus, analyst: Option<String>) -> BearDogResult<()> {
+    pub async fn update_threat_status(
+        &mut self,
+        threat_id: &str,
+        status: ThreatStatus,
+        analyst: Option<String>,
+    ) -> BearDogResult<()> {
         if let Some(threat) = self.active_threats.get_mut(threat_id) {
             threat.status = status;
             threat.assigned_analyst = analyst;
@@ -660,7 +768,7 @@ impl ThreatDetectionEngine {
     /// Trigger incident response
     async fn trigger_incident_response(&self, threat: &ThreatEvent) -> BearDogResult<()> {
         let incident_id = format!("incident_{}", uuid::Uuid::new_v4());
-        
+
         let incident = IncidentResponse {
             incident_id: incident_id.clone(),
             threat_id: threat.id.clone(),
@@ -686,12 +794,19 @@ impl ThreatDetectionEngine {
             self.execute_response_action(action, &incident_id).await?;
         }
 
-        info!("🚨 Incident {} triggered for threat {}", incident_id, threat.id);
+        info!(
+            "🚨 Incident {} triggered for threat {}",
+            incident_id, threat.id
+        );
         Ok(())
     }
 
     /// Execute response action
-    async fn execute_response_action(&self, action: &ThreatAction, incident_id: &str) -> BearDogResult<()> {
+    async fn execute_response_action(
+        &self,
+        action: &ThreatAction,
+        incident_id: &str,
+    ) -> BearDogResult<()> {
         match action {
             ThreatAction::BlockSource => {
                 info!("🚫 Blocking source for incident {}", incident_id);
@@ -702,7 +817,10 @@ impl ThreatDetectionEngine {
                 // TODO: Implement system quarantine
             }
             ThreatAction::AlertSecurityTeam => {
-                warn!("📢 Admin notification [{}]: Security team alerted", incident_id);
+                warn!(
+                    "📢 Admin notification [{}]: Security team alerted",
+                    incident_id
+                );
                 // TODO: Implement admin notification
             }
             _ => {
@@ -722,8 +840,13 @@ impl ThreatDetectionEngine {
             threat_type: ThreatType::SuspiciousLogin,
             severity: ThreatSeverity::Medium,
             conditions: vec![
-                RuleCondition::EventType { event_type: "login".to_string() },
-                RuleCondition::TimeRange { start_hour: 22, end_hour: 6 },
+                RuleCondition::EventType {
+                    event_type: "login".to_string(),
+                },
+                RuleCondition::TimeRange {
+                    start_hour: 22,
+                    end_hour: 6,
+                },
             ],
             false_positive_rate: 0.15,
             mitre_techniques: vec!["T1078".to_string()],
@@ -742,7 +865,9 @@ impl ThreatDetectionEngine {
             threat_type: ThreatType::DataExfiltration,
             severity: ThreatSeverity::High,
             conditions: vec![
-                RuleCondition::DataSize { size_bytes: 1024 * 1024 * 500 }, // 500MB
+                RuleCondition::DataSize {
+                    size_bytes: 1024 * 1024 * 500,
+                }, // 500MB
             ],
             false_positive_rate: 0.05,
             mitre_techniques: vec!["T1041".to_string(), "T1020".to_string()],
@@ -761,8 +886,13 @@ impl ThreatDetectionEngine {
             threat_type: ThreatType::BruteForceAttack,
             severity: ThreatSeverity::High,
             conditions: vec![
-                RuleCondition::EventType { event_type: "login_failed".to_string() },
-                RuleCondition::FrequencyThreshold { count: 10, window_minutes: 5 },
+                RuleCondition::EventType {
+                    event_type: "login_failed".to_string(),
+                },
+                RuleCondition::FrequencyThreshold {
+                    count: 10,
+                    window_minutes: 5,
+                },
             ],
             false_positive_rate: 0.03,
             mitre_techniques: vec!["T1110".to_string()],
@@ -773,7 +903,10 @@ impl ThreatDetectionEngine {
             enabled: true,
         });
 
-        info!("📋 Loaded {} default detection rules", self.detection_rules.len());
+        info!(
+            "📋 Loaded {} default detection rules",
+            self.detection_rules.len()
+        );
         Ok(())
     }
 

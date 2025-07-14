@@ -118,7 +118,7 @@ impl GeneticSecurityHealing {
     /// Respond to Songbird network events with genetic healing
     pub async fn heal_from_network_event(&mut self, event: NetworkEvent) -> BearDogResult<()> {
         match event {
-            NetworkEvent::PeerDisconnected { reason } => {
+            NetworkEvent::PeerDisconnected { reason: _ } => {
                 self.healing_chromosome.strengthen_authentication().await?;
             }
             NetworkEvent::NetworkCongestion { latency_ms } => {

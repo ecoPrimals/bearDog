@@ -133,6 +133,165 @@ pub enum MachineEntropySource {
         manufacturer: String,
         quantum_source: String, // photon, electron, etc.
     },
+    
+    /// Entropy derived from human sources (after ownership transfer)
+    DerivedFromHuman {
+        original_human_entropy: bool,
+        transition_timestamp: DateTime<Utc>,
+    },
+}
+
+/// Human identity for ownership and authentication
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HumanIdentity {
+    pub identity_id: String,
+    pub public_key: Vec<u8>,
+    pub biometric_hash: Option<Vec<u8>>,
+    pub verification_level: VerificationLevel,
+}
+
+/// Verification levels for human identity
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum VerificationLevel {
+    Unverified,
+    BasicBiometric,
+    MultiFactorBiometric,
+    CryptographicProof,
+}
+
+/// Seed generation policy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SeedGenerationPolicy {
+    pub lifetime_policy: SeedLifetimePolicy,
+    pub owner_identity: HumanIdentity,
+    pub min_quality_score: f64,
+    pub usage_policy: SeedUsagePolicy,
+    pub social_context: Option<SocialContext>,
+    pub collection_config: CollectionConfig,
+    pub kdf_config: KdfConfig,
+    pub ownership_config: OwnershipConfig,
+}
+
+/// Collection configuration for entropy gathering
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CollectionConfig {
+    pub duration: Duration,
+    pub modalities: Vec<EntropyModality>,
+    pub quality_threshold: f64,
+}
+
+/// Entropy collection modalities
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum EntropyModality {
+    Microphone,
+    Camera,
+    Haptic,
+    Biometric,
+}
+
+/// Key derivation configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct KdfConfig {
+    pub algorithm: String,
+    pub iterations: u32,
+    pub salt_size: usize,
+}
+
+/// Ownership configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OwnershipConfig {
+    pub proof_type: String,
+    pub verification_required: bool,
+}
+
+/// Ownership transfer proof
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OwnershipTransferProof {
+    pub previous_owner: HumanIdentity,
+    pub new_ownership_proof: OwnershipProof,
+    pub transfer_signature: Vec<u8>,
+    pub timestamp: DateTime<Utc>,
+}
+
+/// Seed usage policy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SeedUsagePolicy {
+    pub allowed_operations: Vec<String>,
+    pub max_uses: Option<u32>,
+    pub requires_approval: bool,
+}
+
+/// Seed usage event for audit trail
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SeedUsageEvent {
+    pub timestamp: DateTime<Utc>,
+    pub operation: SeedOperation,
+    pub context: OperationContext,
+    pub result_hash: Vec<u8>,
+}
+
+/// Operations that can be performed with seeds
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SeedOperation {
+    CryptographicSigning,
+    KeyDerivation,
+    EncryptionKeyGeneration,
+    OwnershipTransfer {
+        from: HumanIdentity,
+        to: HumanIdentity,
+    },
+    EventSharing {
+        event_id: String,
+        participants: Vec<HumanIdentity>,
+    },
+    CommunityContribution {
+        community_id: String,
+        contribution_type: String,
+    },
+}
+
+/// Context for seed operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum OperationContext {
+    PersonalUse,
+    EventSharing,
+    CommunityContribution,
+    OwnershipTransfer,
+    GenerativeCrypto,
+}
+
+/// Result of seed usage
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SeedUsageResult {
+    pub operation_id: String,
+    pub result_data: Vec<u8>,
+    pub timestamp: DateTime<Utc>,
+    pub success: bool,
+}
+
+/// Sharing terms for shared ownership
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SharingTerms {
+    pub max_participants: Option<u32>,
+    pub expiration: Option<DateTime<Utc>>,
+    pub permissions: Vec<String>,
+}
+
+/// Governance model for community ownership
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GovernanceModel {
+    pub voting_mechanism: String,
+    pub decision_threshold: f64,
+    pub participation_requirements: Vec<String>,
+}
+
+/// Proof of contribution to community
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContributionProof {
+    pub contribution_type: String,
+    pub contribution_hash: Vec<u8>,
+    pub timestamp: DateTime<Utc>,
+    pub validators: Vec<HumanIdentity>,
 }
 ```
 
@@ -225,45 +384,185 @@ impl EntropyMixingEngine {
 }
 ```
 
-## 🔐 Ephemeral Seeds Architecture
+## 🔐 Self-Sovereign Entropy Seeds Architecture
 
-### 2.1 Ephemeral Seed Generation
+### 2.1 Entropy Seed Generation
 
 ```rust
-/// Ephemeral seeds are temporary, unique cryptographic seeds derived from
-/// human-lived experience entropy. They cannot be reproduced and have
-/// limited lifetime for security.
+/// Self-sovereign entropy seeds are cryptographic seeds derived from
+/// human-lived experience entropy with configurable ownership and lifetime.
+/// They enable generative crypto use cases and true self-sovereignty.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EphemeralSeed {
+pub struct EntropySeed {
     /// Unique identifier for this seed
     pub id: Uuid,
     
     /// The actual seed bytes (never logged or transmitted)
     pub seed_bytes: SecretBytes,
     
-    /// Entropy classification (must be HumanLivedExperience)
+    /// Entropy classification (preserves hierarchy)
     pub entropy_class: EntropyClass,
     
     /// Timestamp when seed was generated
     pub generation_time: DateTime<Utc>,
     
-    /// Expiration time (enforced in RAM)
-    pub expiration_time: DateTime<Utc>,
+    /// Seed lifetime policy (can be ephemeral, persistent, or transferable)
+    pub lifetime_policy: SeedLifetimePolicy,
+    
+    /// Current ownership information
+    pub ownership: SeedOwnership,
     
     /// Proof that this seed cannot be reproduced
     pub irreproducibility_proof: IrreproducibilityProof,
     
-    /// Ownership proof linking to human source
-    pub ownership_proof: OwnershipProof,
-    
-    /// Usage restrictions
+    /// Usage restrictions and permissions
     pub usage_policy: SeedUsagePolicy,
     
     /// Audit trail (what operations used this seed)
     pub usage_history: Vec<SeedUsageEvent>,
+    
+    /// Social/event context (for shared seeds)
+    pub social_context: Option<SocialContext>,
 }
 
-impl EphemeralSeed {
+/// Flexible lifetime policies for entropy seeds
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SeedLifetimePolicy {
+    /// Ephemeral seeds with automatic expiration
+    Ephemeral {
+        expiration_time: DateTime<Utc>,
+        auto_destroy: bool,
+    },
+    
+    /// Persistent seeds with configurable ownership transfer
+    Persistent {
+        ownership_transfer_allowed: bool,
+        ownership_expiration: Option<DateTime<Utc>>,
+    },
+    
+    /// Event-based seeds for social/generative purposes
+    EventBased {
+        event_id: String,
+        event_type: EventType,
+        sharing_policy: SharingPolicy,
+        event_expiration: Option<DateTime<Utc>>,
+    },
+    
+    /// Self-sovereign seeds with full user control
+    SelfSovereign {
+        user_controlled_lifetime: bool,
+        transfer_permissions: TransferPermissions,
+        downstream_effects: DownstreamEffects,
+    },
+}
+
+/// Ownership model supporting transfer and expiration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SeedOwnership {
+    /// Human-owned with cryptographic proof
+    HumanOwned {
+        owner_identity: HumanIdentity,
+        ownership_proof: OwnershipProof,
+        transfer_count: u32,
+    },
+    
+    /// Machine-owned (after ownership transfer or expiration)
+    MachineOwned {
+        previous_owner: Option<HumanIdentity>,
+        ownership_transition: OwnershipTransition,
+        self_sovereign: bool,
+    },
+    
+    /// Shared ownership for events/social purposes
+    SharedOwnership {
+        primary_owner: HumanIdentity,
+        shared_with: Vec<HumanIdentity>,
+        sharing_terms: SharingTerms,
+    },
+    
+    /// Community-owned for generative purposes
+    CommunityOwned {
+        community_id: String,
+        governance_model: GovernanceModel,
+        contribution_proof: ContributionProof,
+    },
+}
+
+/// Social context for event-based and shared seeds
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SocialContext {
+    /// Event or social setting
+    pub event_type: EventType,
+    
+    /// Location or venue information
+    pub location: Option<String>,
+    
+    /// Participants or attendees
+    pub participants: Vec<HumanIdentity>,
+    
+    /// Tags for categorization
+    pub tags: Vec<String>,
+    
+    /// Timestamp of social event
+    pub event_timestamp: DateTime<Utc>,
+    
+    /// Cultural or artistic significance
+    pub cultural_significance: Option<String>,
+}
+
+/// Additional types for enhanced seed functionality
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum EventType {
+    Concert { artist: String, venue: String },
+    Conference { name: String, topic: String },
+    Workshop { title: String, instructor: String },
+    Social { gathering_type: String },
+    Cultural { event_name: String, significance: String },
+    Educational { course: String, institution: String },
+    Artistic { medium: String, theme: String },
+    Community { group_name: String, purpose: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SharingPolicy {
+    pub max_shares: Option<u32>,
+    pub sharing_expiration: Option<DateTime<Utc>>,
+    pub require_permission: bool,
+    pub allowed_operations: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransferPermissions {
+    pub transferable: bool,
+    pub max_transfers: Option<u32>,
+    pub transfer_requires_approval: bool,
+    pub transfer_audit_trail: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DownstreamEffects {
+    pub inheritance_policy: InheritancePolicy,
+    pub classification_preservation: bool,
+    pub lineage_tracking: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum InheritancePolicy {
+    PreserveHumanClassification,
+    GradualDegradation,
+    ImmediateTransition,
+    UserControlled,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum OwnershipTransition {
+    OwnershipExpired,
+    OwnershipTransferred,
+    OwnershipAbandoned,
+    BecameSelfSovereign,
+}
+
+impl EntropySeed {
     pub async fn generate_from_human_entropy(
         entropy_collector: &dyn HumanEntropyCollector,
         policy: SeedGenerationPolicy,
@@ -300,8 +599,12 @@ impl EphemeralSeed {
             &policy.ownership_config,
         ).await?;
         
-        // Set expiration time
-        let expiration_time = Utc::now() + policy.lifetime;
+        // Create ownership structure
+        let ownership = SeedOwnership::HumanOwned {
+            owner_identity: policy.owner_identity,
+            ownership_proof: ownership_proof.clone(),
+            transfer_count: 0,
+        };
         
         Ok(Self {
             id: Uuid::new_v4(),
@@ -317,30 +620,146 @@ impl EphemeralSeed {
                 ownership_proof: ownership_proof.clone(),
             },
             generation_time: Utc::now(),
-            expiration_time,
+            lifetime_policy: policy.lifetime_policy,
+            ownership,
             irreproducibility_proof,
-            ownership_proof,
             usage_policy: policy.usage_policy,
             usage_history: Vec::new(),
+            social_context: policy.social_context,
         })
     }
     
-    /// Securely destroy the seed (zero memory, remove from RAM)
-    pub fn destroy(&mut self) {
-        // Zero out seed bytes
-        self.seed_bytes.zeroize();
+    /// Create a seed for social/event contexts (concerts, conferences, etc.)
+    pub async fn create_event_seed(
+        entropy_collector: &dyn HumanEntropyCollector,
+        event_context: SocialContext,
+        sharing_policy: SharingPolicy,
+        owner_identity: HumanIdentity,
+    ) -> BearDogResult<Self> {
+        let policy = SeedGenerationPolicy {
+            lifetime_policy: SeedLifetimePolicy::EventBased {
+                event_id: format!("event_{}", Uuid::new_v4()),
+                event_type: event_context.event_type.clone(),
+                sharing_policy,
+                event_expiration: None,
+            },
+            social_context: Some(event_context),
+            owner_identity,
+            min_quality_score: 0.7,
+            // ... other policy fields
+        };
         
-        // Clear sensitive data
-        self.irreproducibility_proof.zeroize();
-        self.ownership_proof.zeroize();
-        
-        // Mark as destroyed
-        self.expiration_time = Utc::now() - Duration::seconds(1);
+        Self::generate_from_human_entropy(entropy_collector, policy).await
     }
     
-    /// Check if seed is still valid (not expired)
+    /// Transfer ownership to another entity
+    pub async fn transfer_ownership(
+        &mut self,
+        new_owner: HumanIdentity,
+        transfer_proof: OwnershipTransferProof,
+    ) -> BearDogResult<()> {
+        match &self.ownership {
+            SeedOwnership::HumanOwned { transfer_count, .. } => {
+                // Check transfer permissions
+                if let SeedLifetimePolicy::SelfSovereign { transfer_permissions, .. } = &self.lifetime_policy {
+                    if !transfer_permissions.transferable {
+                        return Err(BearDogError::TransferNotAllowed);
+                    }
+                    
+                    if let Some(max_transfers) = transfer_permissions.max_transfers {
+                        if *transfer_count >= max_transfers {
+                            return Err(BearDogError::MaxTransfersExceeded);
+                        }
+                    }
+                }
+                
+                // Update ownership
+                self.ownership = SeedOwnership::HumanOwned {
+                    owner_identity: new_owner.clone(),
+                    ownership_proof: transfer_proof.new_ownership_proof,
+                    transfer_count: transfer_count + 1,
+                };
+                
+                // Log transfer
+                self.usage_history.push(SeedUsageEvent {
+                    timestamp: Utc::now(),
+                    operation: SeedOperation::OwnershipTransfer {
+                        from: transfer_proof.previous_owner,
+                        to: new_owner,
+                    },
+                    context: OperationContext::OwnershipTransfer,
+                    result_hash: self.id.as_bytes().to_vec(),
+                });
+                
+                Ok(())
+            }
+            _ => Err(BearDogError::InvalidOwnershipState),
+        }
+    }
+    
+    /// Allow ownership to expire and transition to machine-owned
+    pub async fn expire_ownership(&mut self) -> BearDogResult<()> {
+        if let SeedOwnership::HumanOwned { owner_identity, .. } = &self.ownership {
+            let previous_owner = owner_identity.clone();
+            
+            self.ownership = SeedOwnership::MachineOwned {
+                previous_owner: Some(previous_owner),
+                ownership_transition: OwnershipTransition::OwnershipExpired,
+                self_sovereign: true,
+            };
+            
+            // Update entropy class based on downstream effects
+            if let SeedLifetimePolicy::SelfSovereign { downstream_effects, .. } = &self.lifetime_policy {
+                match downstream_effects.inheritance_policy {
+                    InheritancePolicy::ImmediateTransition => {
+                        self.entropy_class = EntropyClass::StoreBoughtMachine {
+                            source_type: MachineEntropySource::DerivedFromHuman {
+                                original_human_entropy: true,
+                                transition_timestamp: Utc::now(),
+                            },
+                            generation_timestamp: Utc::now(),
+                            reproducibility_index: 0.3, // Still relatively unique
+                        };
+                    }
+                    InheritancePolicy::PreserveHumanClassification => {
+                        // Keep human classification even after ownership expiration
+                    }
+                    _ => {
+                        // Other inheritance policies
+                    }
+                }
+            }
+            
+            Ok(())
+        } else {
+            Err(BearDogError::InvalidOwnershipState)
+        }
+    }
+    
+    /// Check if seed is still valid based on lifetime policy
     pub fn is_valid(&self) -> bool {
-        Utc::now() < self.expiration_time && !self.seed_bytes.is_empty()
+        match &self.lifetime_policy {
+            SeedLifetimePolicy::Ephemeral { expiration_time, .. } => {
+                Utc::now() < *expiration_time && !self.seed_bytes.is_empty()
+            }
+            SeedLifetimePolicy::Persistent { ownership_expiration, .. } => {
+                if let Some(expiration) = ownership_expiration {
+                    Utc::now() < *expiration
+                } else {
+                    true // No expiration
+                }
+            }
+            SeedLifetimePolicy::EventBased { event_expiration, .. } => {
+                if let Some(expiration) = event_expiration {
+                    Utc::now() < *expiration
+                } else {
+                    true // No expiration
+                }
+            }
+            SeedLifetimePolicy::SelfSovereign { .. } => {
+                true // User-controlled, no automatic expiration
+            }
+        }
     }
     
     /// Use the seed for a specific operation (logs usage)
@@ -353,7 +772,7 @@ impl EphemeralSeed {
         if !self.is_valid() {
             return Err(BearDogError::ExpiredSeed {
                 seed_id: self.id,
-                expiration: self.expiration_time,
+                expiration_reason: "Lifetime policy expired".to_string(),
             });
         }
         
@@ -383,6 +802,21 @@ impl EphemeralSeed {
         }
         
         Ok(result)
+    }
+    
+    /// Securely destroy the seed (zero memory, remove from RAM)
+    pub fn destroy(&mut self) {
+        // Zero out seed bytes
+        self.seed_bytes.zeroize();
+        
+        // Clear sensitive data
+        self.irreproducibility_proof.zeroize();
+        
+        // Mark as destroyed by setting ephemeral expiration
+        self.lifetime_policy = SeedLifetimePolicy::Ephemeral {
+            expiration_time: Utc::now() - Duration::seconds(1),
+            auto_destroy: true,
+        };
     }
 }
 ```
@@ -694,9 +1128,10 @@ human_entropy_weight = 0.8
 machine_entropy_weight = 0.2
 hierarchy_enforcement = "strict"
 
-# Ephemeral seed policies
-default_seed_lifetime = "1h"
-max_seed_lifetime = "24h"
+# Self-sovereign seed policies
+default_seed_lifetime_policy = "self_sovereign"
+enable_ownership_transfer = true
+enable_event_seeds = true
 min_entropy_quality = 0.8
 require_biometric_proof = true
 
@@ -711,6 +1146,34 @@ multimodal_fusion = true
 require_human_approval_for_human_entropy = true
 allow_machine_only_spawning = true
 mixed_entropy_policy = "human_dominant"
+
+# Self-sovereignty and generative crypto
+enable_self_sovereign_crypto = true
+enable_generative_purposes = true
+allow_community_ownership = true
+preserve_human_classification = true
+
+# Event-based seed sharing
+enable_concert_seeds = true
+enable_conference_seeds = true
+enable_community_seeds = true
+max_event_participants = 1000
+event_seed_sharing_policy = "permissive"
+
+# Ownership transfer policies
+ownership_transfer_audit_trail = true
+max_ownership_transfers = 10
+transfer_requires_approval = false
+downstream_effects_tracking = true
 ```
 
-This specification provides the foundation for implementing sophisticated entropy hierarchy in BearDog's genetic spawning system, ensuring that human-lived experience entropy maintains its privileged position while enabling secure machine-to-machine operations. 
+This specification provides the foundation for implementing sophisticated entropy hierarchy in BearDog's genetic spawning system, ensuring that human-lived experience entropy maintains its privileged position while enabling:
+
+- **Self-sovereign cryptographic tools** for personal empowerment
+- **Generative crypto capabilities** for creative and social purposes  
+- **Event-based seed sharing** for concerts, conferences, and communities
+- **Configurable ownership models** with transfer and expiration options
+- **Downstream effects control** for inheritance and classification preservation
+- **True crypto accessibility** making advanced cryptography usable by anyone
+
+The system transforms cryptography from a technical barrier into a tool for human expression, community building, and self-sovereignty. 

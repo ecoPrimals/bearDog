@@ -11,26 +11,26 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use tokio::sync::RwLock;
-use tracing::{debug, warn, error};
+use tracing::{debug, error, warn};
 
 /// Cache provider trait for different implementations
 #[async_trait]
 pub trait CacheProvider {
     /// Get value from cache
     async fn get(&self, key: &str) -> Option<String>;
-    
+
     /// Set value in cache with TTL
     async fn set(&self, key: &str, value: &str, ttl: Duration) -> bool;
-    
+
     /// Delete value from cache
     async fn delete(&self, key: &str) -> bool;
-    
+
     /// Check if key exists
     async fn exists(&self, key: &str) -> bool;
-    
+
     /// Clear all cache entries (use with caution)
     async fn clear(&self) -> bool;
-    
+
     /// Get cache statistics
     async fn stats(&self) -> CacheStats;
 }
@@ -55,17 +55,17 @@ impl CacheStats {
             memory_usage_bytes: 0,
         }
     }
-    
+
     pub fn record_hit(&mut self) {
         self.hits += 1;
         self.update_hit_rate();
     }
-    
+
     pub fn record_miss(&mut self) {
         self.misses += 1;
         self.update_hit_rate();
     }
-    
+
     fn update_hit_rate(&mut self) {
         let total = self.hits + self.misses;
         self.hit_rate = if total > 0 {
@@ -83,7 +83,9 @@ pub struct RedisCache {
 }
 
 impl RedisCache {
-    pub async fn new() -> Result<Box<dyn CacheProvider + Send + Sync>, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn new(
+    ) -> Result<Box<dyn CacheProvider + Send + Sync>, Box<dyn std::error::Error + Send + Sync>>
+    {
         // For now, return error to fall back to in-memory
         Err("Redis not implemented yet".into())
     }
@@ -94,7 +96,11 @@ impl CacheProvider for RedisCache {
     async fn get(&self, key: &str) -> Option<String> {
         match self.client.get_async_connection().await {
             Ok(mut conn) => {
-                match redis::cmd("GET").arg(key).query_async::<_, Option<String>>(&mut conn).await {
+                match redis::cmd("GET")
+                    .arg(key)
+                    .query_async::<_, Option<String>>(&mut conn)
+                    .await
+                {
                     Ok(Some(value)) => {
                         self.stats.write().await.record_hit();
                         debug!("Cache HIT: {}", key);
@@ -119,12 +125,18 @@ impl CacheProvider for RedisCache {
             }
         }
     }
-    
+
     async fn set(&self, key: &str, value: &str, ttl: Duration) -> bool {
         match self.client.get_async_connection().await {
             Ok(mut conn) => {
                 let ttl_secs = ttl.as_secs() as usize;
-                match redis::cmd("SETEX").arg(key).arg(ttl_secs).arg(value).query_async::<_, ()>(&mut conn).await {
+                match redis::cmd("SETEX")
+                    .arg(key)
+                    .arg(ttl_secs)
+                    .arg(value)
+                    .query_async::<_, ()>(&mut conn)
+                    .await
+                {
                     Ok(_) => {
                         debug!("Cache SET: {} (TTL: {}s)", key, ttl_secs);
                         true
@@ -141,11 +153,15 @@ impl CacheProvider for RedisCache {
             }
         }
     }
-    
+
     async fn delete(&self, key: &str) -> bool {
         match self.client.get_async_connection().await {
             Ok(mut conn) => {
-                match redis::cmd("DEL").arg(key).query_async::<_, i32>(&mut conn).await {
+                match redis::cmd("DEL")
+                    .arg(key)
+                    .query_async::<_, i32>(&mut conn)
+                    .await
+                {
                     Ok(deleted) => {
                         debug!("Cache DEL: {} (deleted: {})", key, deleted);
                         deleted > 0
@@ -162,11 +178,15 @@ impl CacheProvider for RedisCache {
             }
         }
     }
-    
+
     async fn exists(&self, key: &str) -> bool {
         match self.client.get_async_connection().await {
             Ok(mut conn) => {
-                match redis::cmd("EXISTS").arg(key).query_async::<_, i32>(&mut conn).await {
+                match redis::cmd("EXISTS")
+                    .arg(key)
+                    .query_async::<_, i32>(&mut conn)
+                    .await
+                {
                     Ok(exists) => exists > 0,
                     Err(e) => {
                         warn!("Redis EXISTS error for key {}: {}", key, e);
@@ -180,28 +200,26 @@ impl CacheProvider for RedisCache {
             }
         }
     }
-    
+
     async fn clear(&self) -> bool {
         match self.client.get_async_connection().await {
-            Ok(mut conn) => {
-                match redis::cmd("FLUSHDB").query_async::<_, ()>(&mut conn).await {
-                    Ok(_) => {
-                        warn!("⚠️  Redis cache cleared (FLUSHDB)");
-                        true
-                    }
-                    Err(e) => {
-                        error!("Redis FLUSHDB error: {}", e);
-                        false
-                    }
+            Ok(mut conn) => match redis::cmd("FLUSHDB").query_async::<_, ()>(&mut conn).await {
+                Ok(_) => {
+                    warn!("⚠️  Redis cache cleared (FLUSHDB)");
+                    true
                 }
-            }
+                Err(e) => {
+                    error!("Redis FLUSHDB error: {}", e);
+                    false
+                }
+            },
             Err(e) => {
                 warn!("Redis connection error: {}", e);
                 false
             }
         }
     }
-    
+
     async fn stats(&self) -> CacheStats {
         self.stats.read().await.clone()
     }
@@ -221,7 +239,7 @@ impl CacheEntry {
             expires_at: SystemTime::now() + ttl,
         }
     }
-    
+
     fn is_expired(&self) -> bool {
         SystemTime::now() > self.expires_at
     }
@@ -241,19 +259,19 @@ impl InMemoryCache {
             stats: Arc::new(RwLock::new(CacheStats::new())),
         }
     }
-    
+
     /// Background task to clean up expired entries
     pub async fn cleanup_expired(&self) {
         let mut data = self.data.write().await;
         let initial_count = data.len();
-        
+
         data.retain(|_key, entry| !entry.is_expired());
-        
+
         let cleaned_count = initial_count - data.len();
         if cleaned_count > 0 {
             debug!("Cleaned up {} expired cache entries", cleaned_count);
         }
-        
+
         // Update stats
         let mut stats = self.stats.write().await;
         stats.entries = data.len() as u64;
@@ -265,7 +283,7 @@ impl InMemoryCache {
 impl CacheProvider for InMemoryCache {
     async fn get(&self, key: &str) -> Option<String> {
         let data = self.data.read().await;
-        
+
         if let Some(entry) = data.get(key) {
             if !entry.is_expired() {
                 self.stats.write().await.record_hit();
@@ -273,67 +291,67 @@ impl CacheProvider for InMemoryCache {
                 return Some(entry.value.clone());
             }
         }
-        
+
         self.stats.write().await.record_miss();
         debug!("Cache MISS: {}", key);
         None
     }
-    
+
     async fn set(&self, key: &str, value: &str, ttl: Duration) -> bool {
         let entry = CacheEntry::new(value.to_string(), ttl);
-        
+
         let mut data = self.data.write().await;
         data.insert(key.to_string(), entry);
-        
+
         // Update stats
         let mut stats = self.stats.write().await;
         stats.entries = data.len() as u64;
         stats.memory_usage_bytes = data.len() as u64 * 64; // Rough estimate
-        
+
         debug!("Cache SET: {} (TTL: {:?})", key, ttl);
         true
     }
-    
+
     async fn delete(&self, key: &str) -> bool {
         let mut data = self.data.write().await;
         let removed = data.remove(key).is_some();
-        
+
         if removed {
             // Update stats
             let mut stats = self.stats.write().await;
             stats.entries = data.len() as u64;
             stats.memory_usage_bytes = data.len() as u64 * 64; // Rough estimate
-            
+
             debug!("Cache DEL: {}", key);
         }
-        
+
         removed
     }
-    
+
     async fn exists(&self, key: &str) -> bool {
         let data = self.data.read().await;
-        
+
         if let Some(entry) = data.get(key) {
             !entry.is_expired()
         } else {
             false
         }
     }
-    
+
     async fn clear(&self) -> bool {
         let mut data = self.data.write().await;
         let cleared_count = data.len();
         data.clear();
-        
+
         // Reset stats
         let mut stats = self.stats.write().await;
         stats.entries = 0;
         stats.memory_usage_bytes = 0;
-        
+
         warn!("⚠️  In-memory cache cleared ({} entries)", cleared_count);
         true
     }
-    
+
     async fn stats(&self) -> CacheStats {
         // Trigger cleanup before returning stats
         self.cleanup_expired().await;
@@ -352,33 +370,42 @@ impl CacheKeyBuilder {
             prefix: format!("beardog:{}:", service),
         }
     }
-    
+
     /// Generate cache key for API responses
     pub fn api_response(&self, endpoint: &str, params: &[(&str, &str)]) -> String {
-        let params_str = params.iter()
+        let params_str = params
+            .iter()
             .map(|(k, v)| format!("{}={}", k, v))
             .collect::<Vec<_>>()
             .join("&");
-        
-        format!("{}api:{}:{}", self.prefix, endpoint, 
-               if params_str.is_empty() { "no_params".to_string() } else { params_str })
+
+        format!(
+            "{}api:{}:{}",
+            self.prefix,
+            endpoint,
+            if params_str.is_empty() {
+                "no_params".to_string()
+            } else {
+                params_str
+            }
+        )
     }
-    
+
     /// Generate cache key for user sessions
     pub fn user_session(&self, user_id: &str) -> String {
         format!("{}session:{}", self.prefix, user_id)
     }
-    
+
     /// Generate cache key for threat analysis
     pub fn threat_analysis(&self, event_hash: &str) -> String {
         format!("{}threat:{}", self.prefix, event_hash)
     }
-    
+
     /// Generate cache key for compliance reports
     pub fn compliance_report(&self, report_type: &str, filters_hash: &str) -> String {
         format!("{}compliance:{}:{}", self.prefix, report_type, filters_hash)
     }
-    
+
     /// Generate cache key for node status
     pub fn node_status(&self, node_id: &str) -> String {
         format!("{}node:{}", self.prefix, node_id)
@@ -388,25 +415,25 @@ impl CacheKeyBuilder {
 /// Cache TTL constants for different data types
 pub mod ttl {
     use std::time::Duration;
-    
+
     /// API responses - 5 minutes
     pub const API_RESPONSE: Duration = Duration::from_secs(300);
-    
+
     /// User sessions - 1 hour
     pub const USER_SESSION: Duration = Duration::from_secs(3600);
-    
+
     /// Threat analysis - 10 minutes (security data changes frequently)
     pub const THREAT_ANALYSIS: Duration = Duration::from_secs(600);
-    
+
     /// Compliance reports - 30 minutes
     pub const COMPLIANCE_REPORT: Duration = Duration::from_secs(1800);
-    
+
     /// Node status - 2 minutes
     pub const NODE_STATUS: Duration = Duration::from_secs(120);
-    
+
     /// Configuration data - 1 hour
     pub const CONFIG_DATA: Duration = Duration::from_secs(3600);
-    
+
     /// Static content - 24 hours
     pub const STATIC_CONTENT: Duration = Duration::from_secs(86400);
-} 
+}

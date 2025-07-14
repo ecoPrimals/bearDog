@@ -8,11 +8,11 @@
 //! - Audit trail verification
 
 use beardog::{
-    config::WorkflowConfig,
     auth::{
-        BearDogGenetics, BearDogWorkflowType, CrossNodeAuthConfig,
-        CrossNodeAuthEngine, ResourceLimits, SpawnPurpose, SpawnStatus, TaskType,
+        BearDogGenetics, BearDogWorkflowType, CrossNodeAuthConfig, CrossNodeAuthEngine,
+        ResourceLimits, SpawnPurpose, SpawnStatus, TaskType,
     },
+    config::WorkflowConfig,
     genetics::{DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore},
     node_registry::{InMemoryNodeRegistry, NodeInfo, RegistryConfig, TrustLevel},
     workflows::MultiPartyWorkflowEngine,
@@ -790,12 +790,11 @@ impl GeneticIntegrationHarness {
 
         // Verify security traits are within bounds
         let traits = &child_genetics.security_traits;
-        if traits.paranoia_level < 0.0
-            || traits.paranoia_level > 1.0
-            || traits.cooperation_tendency < 0.0
-            || traits.cooperation_tendency > 1.0
-            || traits.innovation_rate < 0.0
-            || traits.innovation_rate > 1.0
+        if traits.paranoia_level > 10  // u8 scale 1-10
+            || traits.trust_threshold < 0.0
+            || traits.trust_threshold > 1.0
+            || traits.isolation_preference < 0.0
+            || traits.isolation_preference > 1.0
         {
             return Err(BearDogError::InvalidGenetics {
                 message: "Child security traits out of bounds".to_string(),
@@ -820,14 +819,14 @@ impl GeneticIntegrationHarness {
 
         // Verify child has capabilities from multiple parents
         let child_capabilities: std::collections::HashSet<_> = child_genetics
-            .capability_genes
+            .capabilities
             .iter()
             .map(|gene| &gene.capability)
             .collect();
 
         let mut parent_capabilities = std::collections::HashSet::new();
         for parent in &parent_genetics {
-            for gene in &parent.capability_genes {
+            for gene in &parent.capabilities {
                 parent_capabilities.insert(&gene.capability);
             }
         }
@@ -977,12 +976,18 @@ impl TestAuthStore {
 }
 
 impl beardog::auth::ProofVerifier for TestProofGenerator {
-    fn verify_authorization_proof(&self, _proof: &beardog::auth::AuthorizationProof) -> BearDogResult<bool> {
+    fn verify_authorization_proof(
+        &self,
+        _proof: &beardog::auth::AuthorizationProof,
+    ) -> BearDogResult<bool> {
         Ok(true)
     }
 
-    fn generate_proof(&self, authorization: &beardog::auth::CrossNodeAuthorization, operation: &beardog::auth::CrossNodeOperation) -> BearDogResult<beardog::auth::AuthorizationProof> {
-
+    fn generate_proof(
+        &self,
+        authorization: &beardog::auth::CrossNodeAuthorization,
+        operation: &beardog::auth::CrossNodeOperation,
+    ) -> BearDogResult<beardog::auth::AuthorizationProof> {
         Ok(beardog::auth::AuthorizationProof {
             authorization_id: authorization.id.clone(),
             operation: operation.clone(),
@@ -991,7 +996,7 @@ impl beardog::auth::ProofVerifier for TestProofGenerator {
         })
     }
 }
-// 
+//
 // #[async_trait::async_trait]
 // impl beardog::auth::CrossNodeAuthStore for TestAuthStore {
 //     async fn store_authorization(
@@ -1015,12 +1020,12 @@ impl beardog::auth::ProofVerifier for TestProofGenerator {
 //     async fn list_active_authorizations(
 //         &self,
 //     ) -> BearDogResult<Vec<beardog::auth::CrossNodeAuthorization>> {
-        Ok(vec![])
-    }
-    async fn revoke_authorization(&self, _id: &str) -> BearDogResult<()> {
-        Ok(())
-    }
-}
+//         Ok(vec![])
+//     }
+//     async fn revoke_authorization(&self, _id: &str) -> BearDogResult<()> {
+//         Ok(())
+//     }
+// }
 
 /// Run all integration tests
 #[tokio::test]

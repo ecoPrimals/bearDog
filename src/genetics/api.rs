@@ -11,13 +11,10 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{info, error};
+use tracing::{error, info};
 use uuid::Uuid;
 
-use super::types::{
-    GeneticsConfig, InMemoryGeneticsStore,
-    BearDogWorkflowType, ResourceLimits
-};
+use super::types::{BearDogWorkflowType, GeneticsConfig, InMemoryGeneticsStore, ResourceLimits};
 use super::GeneticsAPI;
 use crate::BearDogCore;
 
@@ -88,7 +85,7 @@ pub struct SpawnStatusResponse {
 
 /// Create genesis genetics for a new node
 pub async fn create_genesis_node(
-    State(core): State<Arc<BearDogCore>>,
+    State(_core): State<Arc<BearDogCore>>,
     Json(request): Json<CreateGenesisRequest>,
 ) -> Result<Json<CreateGenesisResponse>, StatusCode> {
     info!("🧬 Creating genesis node: {}", request.node_id);
@@ -100,7 +97,10 @@ pub async fn create_genesis_node(
 
     match genetics_api.create_genesis_node(&request.node_id).await {
         Ok(genetics) => {
-            info!("🧬 Generated genesis genetics for node: {}, genetics ID: {}", request.node_id, genetics.id);
+            info!(
+                "🧬 Generated genesis genetics for node: {}, genetics ID: {}",
+                request.node_id, genetics.id
+            );
 
             Ok(Json(CreateGenesisResponse {
                 node_id: request.node_id,
@@ -111,7 +111,10 @@ pub async fn create_genesis_node(
             }))
         }
         Err(e) => {
-            error!("❌ Failed to create genesis node {}: {}", request.node_id, e);
+            error!(
+                "❌ Failed to create genesis node {}: {}",
+                request.node_id, e
+            );
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -119,10 +122,13 @@ pub async fn create_genesis_node(
 
 /// Submit a spawn request for processing
 pub async fn spawn_node(
-    State(core): State<Arc<BearDogCore>>,
+    State(_core): State<Arc<BearDogCore>>,
     Json(request): Json<SpawnNodeRequest>,
 ) -> Result<Json<SpawnNodeResponse>, StatusCode> {
-    info!("🧬 Processing spawn request from parent: {}", request.requesting_parent);
+    info!(
+        "🧬 Processing spawn request from parent: {}",
+        request.requesting_parent
+    );
 
     // Initialize genetics API
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -135,16 +141,16 @@ pub async fn spawn_node(
         requesting_parent: request.requesting_parent.clone(),
         co_parents: request.co_parents.unwrap_or_default(),
         purpose: request.purpose,
-        resource_requirements: request.resource_requirements.unwrap_or_else(|| {
-            ResourceLimits {
+        resource_requirements: request
+            .resource_requirements
+            .unwrap_or_else(|| ResourceLimits {
                 max_cpu_percent: 50.0,
                 max_memory_mb: 2048,
                 max_storage_gb: 10,
                 max_network_mbps: 100,
                 allowed_jurisdictions: vec!["US".to_string(), "EU".to_string()],
                 temporal_windows: vec![],
-            }
-        }),
+            }),
         workflow_type: BearDogWorkflowType::AutomatedConsensus {
             participating_nodes: vec![request.requesting_parent.clone()],
             consensus_threshold: 0.67,
@@ -156,13 +162,15 @@ pub async fn spawn_node(
     };
 
     let start_time = std::time::Instant::now();
-    
+
     match genetics_api.spawn_node(spawn_request).await {
         Ok(result) => {
             let processing_time = start_time.elapsed().as_millis() as u64;
-            info!("✅ Spawn request processed: approved={}, child_node={:?}", 
-                  result.approved, result.child_node_id);
-            
+            info!(
+                "✅ Spawn request processed: approved={}, child_node={:?}",
+                result.approved, result.child_node_id
+            );
+
             Ok(Json(SpawnNodeResponse {
                 request_id: result.request_id,
                 approved: result.approved,
@@ -173,7 +181,10 @@ pub async fn spawn_node(
             }))
         }
         Err(e) => {
-            error!("❌ Failed to process spawn request from {}: {}", request.requesting_parent, e);
+            error!(
+                "❌ Failed to process spawn request from {}: {}",
+                request.requesting_parent, e
+            );
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -181,7 +192,7 @@ pub async fn spawn_node(
 
 /// Get genetics information for a specific node
 pub async fn get_node_genetics(
-    State(core): State<Arc<BearDogCore>>,
+    State(_core): State<Arc<BearDogCore>>,
     Path(node_id): Path<String>,
 ) -> Result<Json<NodeGeneticsResponse>, StatusCode> {
     info!("🧬 Retrieving genetics for node: {}", node_id);
@@ -193,7 +204,10 @@ pub async fn get_node_genetics(
 
     match genetics_api.get_node_genetics(&node_id).await {
         Ok(genetics) => {
-            info!("✅ Retrieved genetics for node {}: generation {}", node_id, genetics.generation);
+            info!(
+                "✅ Retrieved genetics for node {}: generation {}",
+                node_id, genetics.generation
+            );
             Ok(Json(NodeGeneticsResponse {
                 node_id: node_id.clone(),
                 genetics_id: genetics.id,
@@ -202,7 +216,7 @@ pub async fn get_node_genetics(
                 parent_genomes: genetics.parent_genetics.unwrap_or_default(),
                 capabilities: genetics.capabilities.len() as u32,
                 crypto_chromosomes: genetics.crypto_chromosomes.len() as u32,
-                spawn_count: 0, // TODO: Track actual spawn count
+                spawn_count: 0,                 // TODO: Track actual spawn count
                 created_at: chrono::Utc::now(), // TODO: Track actual creation time in genetics
             }))
         }
@@ -215,7 +229,7 @@ pub async fn get_node_genetics(
 
 /// Get the status of a spawn request
 pub async fn get_spawn_status(
-    State(core): State<Arc<BearDogCore>>,
+    State(_core): State<Arc<BearDogCore>>,
     Path(request_id): Path<String>,
 ) -> Result<Json<SpawnStatusResponse>, StatusCode> {
     info!("🧬 Getting spawn status for request: {}", request_id);
@@ -247,7 +261,7 @@ pub fn create_genetics_api() -> GeneticsAPI {
         trait_blending_factor: 0.6,
         enable_directed_evolution: true,
     };
-    
+
     GeneticsAPI::new(genetics_store, genetics_config)
 }
 
@@ -328,7 +342,11 @@ mod tests {
 
         // Test invalid CPU percentage
         let mut invalid_request = valid_request.clone();
-        invalid_request.resource_requirements.as_mut().unwrap().max_cpu_percent = 150.0;
+        invalid_request
+            .resource_requirements
+            .as_mut()
+            .unwrap()
+            .max_cpu_percent = 150.0;
         assert!(validate_spawn_request(&invalid_request).is_err());
 
         // Test empty requesting parent
@@ -345,4 +363,4 @@ mod tests {
         assert!(demo_request.resource_requirements.is_some());
         assert!(demo_request.metadata.is_some());
     }
-} 
+}

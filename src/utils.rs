@@ -1,5 +1,5 @@
 //! Utility functions and helpers
-//! 
+//!
 //! This module provides various utility functions and helper modules
 //! used throughout the BearDog security system.
 

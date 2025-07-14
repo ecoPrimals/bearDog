@@ -1,10 +1,10 @@
 //! Policy engine and scheduler for workflows
-//! 
+//!
 //! Contains policy determination and workflow scheduling logic.
 
 use super::types::*;
 use crate::BearDogResult;
-use chrono::{Duration, Utc, Datelike};
+use chrono::{Datelike, Duration, Utc};
 
 impl WorkflowPolicyEngine {
     /// Create a new workflow policy engine
@@ -33,7 +33,9 @@ impl WorkflowPolicyEngine {
         };
 
         // Create approval tiers based on workflow type
-        let approval_hierarchy = self.create_approval_hierarchy(workflow_type, required_approvals).await?;
+        let approval_hierarchy = self
+            .create_approval_hierarchy(workflow_type, required_approvals)
+            .await?;
 
         Ok(ApprovalRequirements {
             required_approvals,
@@ -46,74 +48,63 @@ impl WorkflowPolicyEngine {
         })
     }
 
-    async fn create_approval_hierarchy(&self, workflow_type: &WorkflowType, required_approvals: u32) -> BearDogResult<Vec<ApprovalTier>> {
+    async fn create_approval_hierarchy(
+        &self,
+        workflow_type: &WorkflowType,
+        required_approvals: u32,
+    ) -> BearDogResult<Vec<ApprovalTier>> {
         match workflow_type {
             WorkflowType::KeyRotation | WorkflowType::KeyDeletion => {
-                Ok(vec![
-                    ApprovalTier {
-                        tier_level: 1,
-                        required_approvals,
-                        eligible_roles: vec!["security_admin".to_string(), "key_manager".to_string()],
-                        eligible_users: vec!["admin".to_string()], // TODO: Get from config
-                        description: "Security team approval required".to_string(),
-                    }
-                ])
-            },
+                Ok(vec![ApprovalTier {
+                    tier_level: 1,
+                    required_approvals,
+                    eligible_roles: vec!["security_admin".to_string(), "key_manager".to_string()],
+                    eligible_users: vec!["admin".to_string()], // TODO: Get from config
+                    description: "Security team approval required".to_string(),
+                }])
+            }
             WorkflowType::PolicyChange | WorkflowType::ConfigurationChange => {
-                Ok(vec![
-                    ApprovalTier {
-                        tier_level: 1,
-                        required_approvals,
-                        eligible_roles: vec!["policy_admin".to_string(), "system_admin".to_string()],
-                        eligible_users: vec!["admin".to_string()],
-                        description: "Policy/Config change approval required".to_string(),
-                    }
-                ])
-            },
-            WorkflowType::UserProvisioning => {
-                Ok(vec![
-                    ApprovalTier {
-                        tier_level: 1,
-                        required_approvals,
-                        eligible_roles: vec!["hr_admin".to_string(), "user_admin".to_string()],
-                        eligible_users: vec!["admin".to_string()],
-                        description: "User provisioning approval required".to_string(),
-                    }
-                ])
-            },
+                Ok(vec![ApprovalTier {
+                    tier_level: 1,
+                    required_approvals,
+                    eligible_roles: vec!["policy_admin".to_string(), "system_admin".to_string()],
+                    eligible_users: vec!["admin".to_string()],
+                    description: "Policy/Config change approval required".to_string(),
+                }])
+            }
+            WorkflowType::UserProvisioning => Ok(vec![ApprovalTier {
+                tier_level: 1,
+                required_approvals,
+                eligible_roles: vec!["hr_admin".to_string(), "user_admin".to_string()],
+                eligible_users: vec!["admin".to_string()],
+                description: "User provisioning approval required".to_string(),
+            }]),
             WorkflowType::EmergencyAccess => {
-                Ok(vec![
-                    ApprovalTier {
-                        tier_level: 1,
-                        required_approvals: 1, // Emergency access needs quick approval
-                        eligible_roles: vec!["emergency_contact".to_string(), "security_admin".to_string()],
-                        eligible_users: self.config.emergency_contacts.clone(),
-                        description: "Emergency access approval required".to_string(),
-                    }
-                ])
-            },
-            WorkflowType::SystemMaintenance => {
-                Ok(vec![
-                    ApprovalTier {
-                        tier_level: 1,
-                        required_approvals,
-                        eligible_roles: vec!["system_admin".to_string(), "ops_admin".to_string()],
-                        eligible_users: vec!["admin".to_string()],
-                        description: "System maintenance approval required".to_string(),
-                    }
-                ])
-            },
-            WorkflowType::ComplianceAudit => {
-                Ok(vec![
-                    ApprovalTier {
-                        tier_level: 1,
-                        required_approvals,
-                        eligible_roles: vec!["compliance_officer".to_string(), "audit_admin".to_string()],
-                        eligible_users: vec!["admin".to_string()],
-                        description: "Compliance audit approval required".to_string(),
-                    }
-                ])
-            },
+                Ok(vec![ApprovalTier {
+                    tier_level: 1,
+                    required_approvals: 1, // Emergency access needs quick approval
+                    eligible_roles: vec![
+                        "emergency_contact".to_string(),
+                        "security_admin".to_string(),
+                    ],
+                    eligible_users: self.config.emergency_contacts.clone(),
+                    description: "Emergency access approval required".to_string(),
+                }])
+            }
+            WorkflowType::SystemMaintenance => Ok(vec![ApprovalTier {
+                tier_level: 1,
+                required_approvals,
+                eligible_roles: vec!["system_admin".to_string(), "ops_admin".to_string()],
+                eligible_users: vec!["admin".to_string()],
+                description: "System maintenance approval required".to_string(),
+            }]),
+            WorkflowType::ComplianceAudit => Ok(vec![ApprovalTier {
+                tier_level: 1,
+                required_approvals,
+                eligible_roles: vec!["compliance_officer".to_string(), "audit_admin".to_string()],
+                eligible_users: vec!["admin".to_string()],
+                description: "Compliance audit approval required".to_string(),
+            }]),
         }
     }
 
@@ -121,22 +112,22 @@ impl WorkflowPolicyEngine {
         match workflow_type {
             WorkflowType::KeyRotation | WorkflowType::KeyDeletion => {
                 vec!["security_admin".to_string()]
-            },
+            }
             WorkflowType::PolicyChange | WorkflowType::ConfigurationChange => {
                 vec!["policy_admin".to_string()]
-            },
+            }
             WorkflowType::UserProvisioning => {
                 vec!["user_admin".to_string()]
-            },
+            }
             WorkflowType::EmergencyAccess => {
                 vec!["emergency_contact".to_string()]
-            },
+            }
             WorkflowType::SystemMaintenance => {
                 vec!["system_admin".to_string()]
-            },
+            }
             WorkflowType::ComplianceAudit => {
                 vec!["compliance_officer".to_string()]
-            },
+            }
         }
     }
 
@@ -162,7 +153,7 @@ impl WorkflowPolicyEngine {
         if let Some(business_hours) = &self.config.business_hours {
             let now = Utc::now();
             let weekday = now.weekday().num_days_from_sunday() as u8;
-            
+
             // Check if current day is a business day
             if !business_hours.days_of_week.contains(&weekday) {
                 return false;
@@ -218,4 +209,4 @@ impl WorkflowScheduler {
         // TODO: Implement expiration checking
         Ok(Vec::new())
     }
-} 
+}

@@ -73,8 +73,8 @@ use tokio::sync::RwLock;
 use tracing::{debug, info};
 
 // NodeRegistry is defined in this file, no need for import
-use crate::{BearDogError, BearDogResult};
 use crate::auth::NodeRegistry;
+use crate::{BearDogError, BearDogResult};
 
 /// Trust level assigned to nodes in the registry.
 ///
@@ -731,31 +731,31 @@ impl BearDogNodeRegistry {
 
 impl NodeRegistry for BearDogNodeRegistry {
     /// Get node info (from NodeRegistry trait)
-    fn get_node_info(&self, node_id: &str) -> BearDogResult<crate::auth::types::NodeInfo> {
+    fn get_node_info(&self, _node_id: &str) -> BearDogResult<crate::auth::types::NodeInfo> {
         // Convert from internal Node to NodeInfo for trait compatibility
         // This is a simplified implementation
-        Err(BearDogError::NotImplemented { 
-            message: "get_node_info conversion".to_string() 
+        Err(BearDogError::NotImplemented {
+            message: "get_node_info conversion".to_string(),
         })
     }
 
     /// Register node (from NodeRegistry trait)
     fn register_node(&mut self, node_info: crate::auth::types::NodeInfo) -> BearDogResult<()> {
         let node_id = node_info.id.clone();
-        
+
         // Validate node info
         if node_info.id.is_empty() {
-            return Err(BearDogError::InvalidInput { 
-                message: "Node ID cannot be empty".to_string() 
+            return Err(BearDogError::InvalidInput {
+                message: "Node ID cannot be empty".to_string(),
             });
         }
-        
+
         // For trait compatibility, we'll use blocking operations
         // In a real implementation, this would need to be refactored to use async properly
-        
+
         // Create node entry - simplified for trait compatibility
         info!("Node registration requested: {}", node_id);
-        
+
         // Return placeholder success for now
         // This should be handled by the async methods add_node_with_id in practice
         Ok(())
@@ -763,13 +763,13 @@ impl NodeRegistry for BearDogNodeRegistry {
 
     /// Get trust level (from NodeRegistry trait)
     fn get_trust_level(&self, _node_id: &str) -> BearDogResult<f64> {
-        Err(BearDogError::NotImplemented { 
-            message: "get_trust_level conversion".to_string() 
+        Err(BearDogError::NotImplemented {
+            message: "get_trust_level conversion".to_string(),
         })
     }
 
     /// Update trust level (from NodeRegistry trait)
-    fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> BearDogResult<()> {
+    fn update_trust_level(&mut self, _node_id: &str, _trust_level: f64) -> BearDogResult<()> {
         // Convert from f64 to internal TrustLevel and update
         // This is a simplified implementation
         Ok(())
@@ -778,7 +778,11 @@ impl NodeRegistry for BearDogNodeRegistry {
 
 impl BearDogNodeRegistry {
     /// Custom method: Register a new node with its public key
-    pub async fn register_node_with_key(&self, node_id: &str, public_key: &[u8]) -> BearDogResult<()> {
+    pub async fn register_node_with_key(
+        &self,
+        node_id: &str,
+        public_key: &[u8],
+    ) -> BearDogResult<()> {
         let node_info = NodeInfo {
             public_key: public_key.to_vec(),
             trust_level: TrustLevel::Unknown,

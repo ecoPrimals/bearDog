@@ -8,25 +8,22 @@
 //! - Graceful shutdown handling
 
 use super::*;
-use crate::{BearDogCore, BearDogResult, BearDogError};
+use crate::{BearDogCore, BearDogError, BearDogResult};
 use axum::{
     extract::{Request, State},
-    http::StatusCode,
+    http::{HeaderValue, StatusCode},
     middleware::{self, Next},
     response::Response,
     routing::get,
     Router,
 };
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tokio::net::TcpListener;
 use tower_http::{
-    compression::CompressionLayer,
-    cors::CorsLayer,
-    trace::TraceLayer,
-    timeout::TimeoutLayer,
+    compression::CompressionLayer, cors::CorsLayer, timeout::TimeoutLayer, trace::TraceLayer,
 };
-use tracing::{info, warn, debug};
-use std::time::{Duration, Instant};
+use tracing::{info, warn};
 
 use crate::api::cache::InMemoryCache;
 
@@ -70,9 +67,7 @@ impl BearDogApiServer {
         let cache = Arc::new(InMemoryCache::new());
 
         // Initialize rate limiter
-        let rate_limiter = Arc::new(
-            crate::api::rate_limiting::TokenBucketLimiter::new()
-        );
+        let rate_limiter = Arc::new(crate::api::rate_limiting::TokenBucketLimiter::new());
 
         Ok(Self {
             core,
@@ -94,16 +89,22 @@ impl BearDogApiServer {
         let app = Router::new()
             .route("/health", get(self::handlers::health_check))
             .route("/info", get(self::handlers::server_info))
-            
             // API v1 routes
             .nest("/v1", self.create_v1_routes())
-            
             // Apply individual middleware layers
             .layer(middleware::from_fn(request_id_middleware))
-            .layer(middleware::from_fn_with_state(app_state.clone(), rate_limiting_middleware))
-            .layer(middleware::from_fn_with_state(app_state.clone(), performance_middleware))
+            .layer(middleware::from_fn_with_state(
+                app_state.clone(),
+                rate_limiting_middleware,
+            ))
+            .layer(middleware::from_fn_with_state(
+                app_state.clone(),
+                performance_middleware,
+            ))
             .layer(TraceLayer::new_for_http())
-            .layer(TimeoutLayer::new(Duration::from_secs(self.config.request_timeout_seconds)));
+            .layer(TimeoutLayer::new(Duration::from_secs(
+                self.config.request_timeout_seconds,
+            )));
 
         // Apply optional layers based on configuration
         let app = if self.config.compression_enabled {
@@ -126,29 +127,37 @@ impl BearDogApiServer {
         Router::new()
             // Security API
             .nest("/security", crate::api::security::create_routes())
-            // Genetics API  
+            // Genetics API
             .nest("/genetics", crate::api::genetics::create_routes())
             // Monitoring API
             .nest("/monitoring", crate::api::monitoring::create_routes())
-            // TODO: Add these routes when modules are implemented
-            // .nest("/compliance", crate::api::compliance::create_routes())
-            // .nest("/auth", crate::api::auth::create_routes())
-            // .nest("/config", crate::api::config::create_routes())
-            // .nest("/nodes", crate::api::nodes::create_routes())
+        // TODO: Add these routes when modules are implemented
+        // .nest("/compliance", crate::api::compliance::create_routes())
+        // .nest("/auth", crate::api::auth::create_routes())
+        // .nest("/config", crate::api::config::create_routes())
+        // .nest("/nodes", crate::api::nodes::create_routes())
     }
 
     /// Start the API server
     pub async fn start(&self, bind_address: &str) -> BearDogResult<()> {
-        info!("🚀 Starting high-performance BearDog API server on {}", bind_address);
-        
-        let listener = TcpListener::bind(bind_address).await
-            .map_err(|e| BearDogError::internal(&format!("Failed to bind to {}: {}", bind_address, e)))?;
+        info!(
+            "🚀 Starting high-performance BearDog API server on {}",
+            bind_address
+        );
+
+        let listener = TcpListener::bind(bind_address).await.map_err(|e| {
+            BearDogError::internal(&format!("Failed to bind to {}: {}", bind_address, e))
+        })?;
 
         let app = self.create_router();
 
         info!("✅ BearDog API server ready - AI-first design with full BearDog capabilities");
-        info!("📊 Performance features: caching={}, rate_limiting={}, compression={}", 
-              self.config.caching_enabled, self.config.rate_limiting_enabled, self.config.compression_enabled);
+        info!(
+            "📊 Performance features: caching={}, rate_limiting={}, compression={}",
+            self.config.caching_enabled,
+            self.config.rate_limiting_enabled,
+            self.config.compression_enabled
+        );
 
         axum::serve(listener, app)
             .with_graceful_shutdown(shutdown_signal())
@@ -171,26 +180,31 @@ pub struct AppState {
 
 /// Request performance middleware
 async fn performance_middleware(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     mut request: Request,
     next: Next,
 ) -> Response {
     let start = Instant::now();
-    
+
     // Add start time to request extensions
     request.extensions_mut().insert(start);
-    
-    let response = next.run(request).await;
-    
-    let processing_time = start.elapsed();
-    debug!("Request processed in {:?}", processing_time);
-    
-    // Add performance headers
-    let mut response = response;
-    response.headers_mut().insert("X-Processing-Time", 
-                  format!("{}ms", processing_time.as_millis()).parse().unwrap());
-    response.headers_mut().insert("X-Server", "BearDog-API/1.0".parse().unwrap());
-    
+
+    let mut response = next.run(request).await;
+
+    let duration = start.elapsed();
+
+    // Add performance headers to the response
+    if let Ok(header_value) =
+        HeaderValue::from_str(&format!("{:.2}", duration.as_secs_f64() * 1000.0))
+    {
+        response
+            .headers_mut()
+            .insert("X-Response-Time-Ms", header_value);
+    }
+
+    // Log performance for monitoring
+    tracing::debug!("Request took {:.2}ms", duration.as_secs_f64() * 1000.0);
+
     response
 }
 
@@ -206,7 +220,7 @@ async fn rate_limiting_middleware(
 
     // Extract client identifier (IP or API key)
     let client_id = extract_client_id(&request);
-    
+
     // Check rate limit
     if !state.rate_limiter.check_limit(&client_id).await {
         warn!("Rate limit exceeded for client: {}", client_id);
@@ -217,29 +231,24 @@ async fn rate_limiting_middleware(
 }
 
 /// Request ID middleware
-async fn request_id_middleware(
-    mut request: Request,
-    next: Next,
-) -> Response {
+async fn request_id_middleware(mut request: Request, next: Next) -> Response {
     let request_id = uuid::Uuid::new_v4().to_string();
-    
+
     // Add request ID to headers
-    request.headers_mut().insert(
-        "X-Request-ID",
-        request_id.parse().unwrap()
-    );
-    
+    request
+        .headers_mut()
+        .insert("X-Request-ID", request_id.parse().unwrap());
+
     // Store in extensions for handlers
     request.extensions_mut().insert(request_id.clone());
-    
+
     let mut response = next.run(request).await;
-    
+
     // Add request ID to response headers
-    response.headers_mut().insert(
-        "X-Request-ID",
-        request_id.parse().unwrap()
-    );
-    
+    response
+        .headers_mut()
+        .insert("X-Request-ID", request_id.parse().unwrap());
+
     response
 }
 
@@ -251,14 +260,17 @@ fn extract_client_id(request: &Request) -> String {
             return format!("api_key:{}", key_str);
         }
     }
-    
+
     // Fall back to IP address
     if let Some(forwarded) = request.headers().get("X-Forwarded-For") {
         if let Ok(ip_str) = forwarded.to_str() {
-            return format!("ip:{}", ip_str.split(',').next().unwrap_or("unknown").trim());
+            return format!(
+                "ip:{}",
+                ip_str.split(',').next().unwrap_or("unknown").trim()
+            );
         }
     }
-    
+
     // Default fallback
     "unknown".to_string()
 }
@@ -300,9 +312,12 @@ pub mod handlers {
 
     /// Health check endpoint
     pub async fn health_check(State(state): State<AppState>) -> Result<Json<Value>, StatusCode> {
-        let health = state.core.get_health_status().await
+        let health = state
+            .core
+            .get_health_status()
+            .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-        
+
         Ok(Json(json!({
             "status": "healthy",
             "timestamp": chrono::Utc::now(),
@@ -321,7 +336,7 @@ pub mod handlers {
             "description": "Enterprise-grade security manager - AI-first API design",
             "features": [
                 "threat_detection",
-                "genetic_spawning", 
+                "genetic_spawning",
                 "compliance_audit",
                 "cross_node_auth",
                 "encryption",
@@ -336,4 +351,4 @@ pub mod handlers {
             "timestamp": chrono::Utc::now()
         }))
     }
-} 
+}

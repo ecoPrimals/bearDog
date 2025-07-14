@@ -59,37 +59,55 @@ pub mod core;
 pub mod error;
 
 // Production and monitoring modules
-pub mod production;
+/// System monitoring, metrics, and observability
 pub mod monitoring;
+/// Production environment configuration and deployment tools
+pub mod production;
 
 // Security modules
+/// Security audit logging and compliance tracking
 pub mod audit;
+/// Compliance framework implementations (GDPR, HIPAA, SOX, etc.)
 pub mod compliance;
+/// Encryption and cryptographic utilities
 pub mod encryption;
+/// Core security providers and authentication
 pub mod security;
+/// Threat detection and response engine
 pub mod threat;
 
 // Cross-node authorization modules (NEW - Phase 1 implementation)
+/// Authentication and authorization framework
 pub mod auth;
+/// Genetic spawning and entropy management
 pub mod genetics;
+/// Distributed node registry and discovery
 pub mod node_registry;
+/// Identity verification and validation
 pub mod verification;
 
 // Integration modules
+/// Universal adapter system for external services
 pub mod adapters;
+/// Workflow processing and orchestration
 pub mod workflows;
 
 // API module
+/// REST API server and endpoint handlers
 pub mod api;
 
 // Utilities
+/// Cryptographic utility functions
 pub mod crypto_utils;
+/// General utility functions and helpers
 pub mod utils;
 
 // Business modules
+/// Software licensing and validation
 pub mod licensing;
 
 // BSTP (BearDog Secure Tunnel Protocol) Security Layer
+/// Secure tunnel protocol implementation
 pub mod tunnel;
 
 /// BearDog version information
