@@ -28,7 +28,8 @@ impl EntropyMixingEngine {
         }
 
         if sources.len() == 1 {
-            return Ok(sources.into_iter().next().unwrap());
+            return Ok(sources.into_iter().next()
+                .expect("Vector length is 1, so next() should return Some"));
         }
 
         // Find the highest tier entropy source (human dominance principle)
@@ -55,7 +56,10 @@ impl EntropyMixingEngine {
     }
 
     /// Mix human-supervised entropy sources
-    fn mix_human_supervised_sources(&self, sources: &[EntropyClass]) -> BearDogResult<EntropyClass> {
+    fn mix_human_supervised_sources(
+        &self,
+        sources: &[EntropyClass],
+    ) -> BearDogResult<EntropyClass> {
         // Find all human-supervised sources
         let supervised_sources: Vec<_> = sources
             .iter()
@@ -63,7 +67,12 @@ impl EntropyMixingEngine {
             .collect();
 
         if let Some(first_supervised) = supervised_sources.first() {
-            if let EntropyClass::HumanSupervisedMachine { machine_source, human_validator, .. } = first_supervised {
+            if let EntropyClass::HumanSupervisedMachine {
+                machine_source,
+                human_validator,
+                ..
+            } = first_supervised
+            {
                 Ok(EntropyClass::HumanSupervisedMachine {
                     machine_source: machine_source.clone(),
                     human_validator: human_validator.clone(),
@@ -88,7 +97,11 @@ impl EntropyMixingEngine {
         let mut machine_count = 0;
 
         for source in sources {
-            if let EntropyClass::StoreBoughtMachine { reproducibility_index, .. } = source {
+            if let EntropyClass::StoreBoughtMachine {
+                reproducibility_index,
+                ..
+            } = source
+            {
                 total_reproducibility += reproducibility_index;
                 machine_count += 1;
             }
@@ -134,7 +147,10 @@ impl EntropyMixingEngine {
                 // Human supervision adds significant quality
                 0.8
             }
-            EntropyClass::StoreBoughtMachine { reproducibility_index, .. } => {
+            EntropyClass::StoreBoughtMachine {
+                reproducibility_index,
+                ..
+            } => {
                 // Lower reproducibility means higher quality
                 1.0 - reproducibility_index
             }
@@ -155,19 +171,29 @@ impl EntropyMixingEngine {
     /// Calculate quality score for human entropy sources
     fn calculate_human_entropy_quality(&self, source: &HumanEntropySource) -> f64 {
         match source {
-            HumanEntropySource::MultiModalHuman { confidence_score, .. } => *confidence_score,
+            HumanEntropySource::MultiModalHuman {
+                confidence_score, ..
+            } => *confidence_score,
             HumanEntropySource::Biometric { quality_score, .. } => *quality_score,
-            HumanEntropySource::Microphone { spectral_features, .. } => {
+            HumanEntropySource::Microphone {
+                spectral_features, ..
+            } => {
                 // Quality based on spectral diversity
                 let diversity = spectral_features.len() as f64 / 100.0; // Normalize
                 diversity.min(1.0).max(0.5) // Clamp between 0.5 and 1.0
             }
-            HumanEntropySource::Camera { lighting_variations, .. } => {
+            HumanEntropySource::Camera {
+                lighting_variations,
+                ..
+            } => {
                 // Quality based on lighting variation
-                let variation = lighting_variations.iter().sum::<f32>() as f64 / lighting_variations.len() as f64;
+                let variation = lighting_variations.iter().sum::<f32>() as f64
+                    / lighting_variations.len() as f64;
                 variation.min(1.0).max(0.6)
             }
-            HumanEntropySource::Haptic { motion_patterns, .. } => {
+            HumanEntropySource::Haptic {
+                motion_patterns, ..
+            } => {
                 // Quality based on motion complexity
                 let complexity = motion_patterns.len() as f64 / 50.0; // Normalize
                 complexity.min(1.0).max(0.7)
@@ -180,7 +206,7 @@ impl EntropyMixingEngine {
         let mut hasher = Sha3_256::new();
         hasher.update(entropy_data);
         hasher.update(b"entropy_commitment");
-        hasher.update(&chrono::Utc::now().timestamp().to_le_bytes());
+        hasher.update(chrono::Utc::now().timestamp().to_le_bytes());
         Ok(hasher.finalize().to_vec())
     }
 
@@ -197,34 +223,31 @@ impl EntropyMixingEngine {
         // Add each entropy source with its weight
         for (entropy_bytes, weight) in entropy_sources {
             hasher.update(entropy_bytes);
-            hasher.update(&weight.to_le_bytes());
+            hasher.update(weight.to_le_bytes());
         }
 
         // Add mixing metadata
         hasher.update(b"entropy_mixing");
-        hasher.update(&chrono::Utc::now().timestamp().to_le_bytes());
-        
+        hasher.update(chrono::Utc::now().timestamp().to_le_bytes());
+
         Ok(hasher.finalize().to_vec())
     }
 
     /// Calculate weighted entropy score
     pub fn calculate_weighted_entropy_score(&self, entropy_class: &EntropyClass) -> f64 {
         match entropy_class {
-            EntropyClass::HumanLivedExperience { .. } => {
-                self.config.human_entropy_weight * 1.0
-            }
+            EntropyClass::HumanLivedExperience { .. } => self.config.human_entropy_weight * 1.0,
             EntropyClass::HumanSupervisedMachine { .. } => {
                 (self.config.human_entropy_weight + self.config.machine_entropy_weight) / 2.0 * 0.8
             }
-            EntropyClass::StoreBoughtMachine { .. } => {
-                self.config.machine_entropy_weight * 0.5
-            }
+            EntropyClass::StoreBoughtMachine { .. } => self.config.machine_entropy_weight * 0.5,
         }
     }
 
     /// Determine if entropy mixing should prefer human sources
     pub fn should_prefer_human_entropy(&self) -> bool {
-        self.config.hierarchy_enforcement == "strict" && self.config.human_entropy_weight > self.config.machine_entropy_weight
+        self.config.hierarchy_enforcement == "strict"
+            && self.config.human_entropy_weight > self.config.machine_entropy_weight
     }
 
     /// Get mixing recommendations for entropy optimization
@@ -247,19 +270,24 @@ impl EntropyMixingEngine {
             .count();
 
         if human_count == 0 {
-            recommendations.push("Consider adding human entropy sources for higher security".to_string());
+            recommendations
+                .push("Consider adding human entropy sources for higher security".to_string());
         }
 
         if supervised_count == 0 && machine_count > 0 {
-            recommendations.push("Consider human supervision for machine entropy sources".to_string());
+            recommendations
+                .push("Consider human supervision for machine entropy sources".to_string());
         }
 
         if sources.len() < 2 {
-            recommendations.push("Consider mixing multiple entropy sources for better security".to_string());
+            recommendations
+                .push("Consider mixing multiple entropy sources for better security".to_string());
         }
 
         if sources.len() > 5 {
-            recommendations.push("Too many entropy sources may not improve security significantly".to_string());
+            recommendations.push(
+                "Too many entropy sources may not improve security significantly".to_string(),
+            );
         }
 
         recommendations
@@ -275,8 +303,12 @@ impl EntropyMixingEngine {
         }
 
         // Check for conflicting entropy types
-        let has_human = sources.iter().any(|s| matches!(s, EntropyClass::HumanLivedExperience { .. }));
-        let has_machine = sources.iter().any(|s| matches!(s, EntropyClass::StoreBoughtMachine { .. }));
+        let has_human = sources
+            .iter()
+            .any(|s| matches!(s, EntropyClass::HumanLivedExperience { .. }));
+        let has_machine = sources
+            .iter()
+            .any(|s| matches!(s, EntropyClass::StoreBoughtMachine { .. }));
 
         if self.config.hierarchy_enforcement == "strict" && has_human && has_machine {
             // In strict mode, warn about mixing human and machine entropy
@@ -290,4 +322,4 @@ impl EntropyMixingEngine {
 
         Ok(())
     }
-} 
+}

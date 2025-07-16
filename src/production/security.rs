@@ -351,13 +351,7 @@ impl VulnerabilityScanResults {
     }
 
     /// Update scan results
-    pub fn update(
-        &mut self,
-        critical: u32,
-        high: u32,
-        completed: bool,
-        violations: Vec<String>,
-    ) {
+    pub fn update(&mut self, critical: u32, high: u32, completed: bool, violations: Vec<String>) {
         self.critical_vulnerabilities = critical;
         self.high_vulnerabilities = high;
         self.scan_completed_successfully = completed;
@@ -460,12 +454,7 @@ impl PenetrationTestResults {
     }
 
     /// Update test results
-    pub fn update(
-        &mut self,
-        completed_safely: bool,
-        attacks: u32,
-        recommendations: Vec<String>,
-    ) {
+    pub fn update(&mut self, completed_safely: bool, attacks: u32, recommendations: Vec<String>) {
         self.test_completed_safely = completed_safely;
         self.successful_attacks = attacks;
         self.security_recommendations = recommendations;
@@ -544,4 +533,4 @@ impl Default for PenetrationTestResults {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

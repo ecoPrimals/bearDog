@@ -69,7 +69,7 @@ impl DefaultAuditLogger {
     ) -> BearDogResult<()> {
         let mut details = std::collections::HashMap::new();
         details.insert("key_type".to_string(), key_type.to_string());
-        
+
         let entry = AuditLogEntry::new(
             "key_generation".to_string(),
             Some(key_id.to_string()),
@@ -77,7 +77,7 @@ impl DefaultAuditLogger {
             "success".to_string(),
             details,
         );
-        
+
         self.log_operation(&entry).await
     }
 
@@ -92,7 +92,7 @@ impl DefaultAuditLogger {
             Some(key_id.to_string()),
             user_id,
         );
-        
+
         self.log_operation(&entry).await
     }
 
@@ -106,15 +106,15 @@ impl DefaultAuditLogger {
     ) -> BearDogResult<()> {
         let mut details = std::collections::HashMap::new();
         details.insert("data_size".to_string(), data_size.to_string());
-        
+
         let entry = AuditLogEntry::new(
-            format!("crypto_{}", operation),
+            format!("crypto_{operation}"),
             Some(key_id.to_string()),
             user_id,
             "success".to_string(),
             details,
         );
-        
+
         self.log_operation(&entry).await
     }
 
@@ -130,7 +130,7 @@ impl DefaultAuditLogger {
         details.insert("event_type".to_string(), event_type.to_string());
         details.insert("severity".to_string(), severity.to_string());
         details.insert("description".to_string(), description.to_string());
-        
+
         let entry = AuditLogEntry::new(
             "security_event".to_string(),
             None,
@@ -138,7 +138,7 @@ impl DefaultAuditLogger {
             "alert".to_string(),
             details,
         );
-        
+
         self.log_operation(&entry).await
     }
 
@@ -157,7 +157,10 @@ impl DefaultAuditLogger {
     }
 
     /// Purge old audit entries
-    pub async fn purge_old_entries(&self, older_than: chrono::DateTime<chrono::Utc>) -> BearDogResult<usize> {
+    pub async fn purge_old_entries(
+        &self,
+        older_than: chrono::DateTime<chrono::Utc>,
+    ) -> BearDogResult<usize> {
         info!("Purging audit entries older than {}", older_than);
         // TODO: Implement actual purging logic
         // For now, return 0 as no entries were purged
@@ -167,11 +170,11 @@ impl DefaultAuditLogger {
     /// Export audit log
     pub async fn export_audit_log(&self, format: &str) -> BearDogResult<Vec<u8>> {
         info!("Exporting audit log in format: {}", format);
-        
+
         // Get all audit entries
         let filter = AuditLogFilter::new();
         let entries = self.get_audit_log(&filter).await?;
-        
+
         match format {
             "json" => {
                 let json = serde_json::to_string_pretty(&entries).map_err(|e| {
@@ -184,7 +187,7 @@ impl DefaultAuditLogger {
             "csv" => {
                 let mut csv = String::new();
                 csv.push_str("timestamp,operation,key_id,user_id,result,details\n");
-                
+
                 for entry in entries {
                     let details_json = serde_json::to_string(&entry.details).unwrap_or_default();
                     csv.push_str(&format!(
@@ -197,7 +200,7 @@ impl DefaultAuditLogger {
                         details_json
                     ));
                 }
-                
+
                 Ok(csv.into_bytes())
             }
             _ => Err(BearDogError::UnsupportedFormat {
@@ -220,21 +223,21 @@ impl AuditLogger for DefaultAuditLogger {
             entry.result,
             entry.details
         );
-        
+
         if entry.result == "failure" || entry.result == "error" {
             warn!(
                 "AUDIT FAILURE: {} failed for key_id={:?} user_id={:?}",
                 entry.operation, entry.key_id, entry.user_id
             );
         }
-        
+
         Ok(())
     }
 
     /// Get audit log entries
     async fn get_audit_log(&self, filter: &AuditLogFilter) -> BearDogResult<Vec<AuditLogEntry>> {
         debug!("Getting audit log with filter: {:?}", filter);
-        
+
         // TODO: Implement actual filtering and retrieval from storage
         // For now, return empty vector
         Ok(vec![])
@@ -250,8 +253,11 @@ pub struct InMemoryAuditLogger {
 impl InMemoryAuditLogger {
     /// Create a new in-memory audit logger
     pub async fn new(max_entries: usize) -> BearDogResult<Self> {
-        info!("Creating in-memory audit logger with max {} entries", max_entries);
-        
+        info!(
+            "Creating in-memory audit logger with max {} entries",
+            max_entries
+        );
+
         Ok(Self {
             entries: Arc::new(RwLock::new(VecDeque::new())),
             max_entries,
@@ -284,15 +290,15 @@ impl AuditLogger for InMemoryAuditLogger {
     /// Log HSM operation
     async fn log_operation(&self, entry: &AuditLogEntry) -> BearDogResult<()> {
         let mut entries = self.entries.write().await;
-        
+
         // Add new entry
         entries.push_back(entry.clone());
-        
+
         // Remove old entries if we exceed max
         while entries.len() > self.max_entries {
             entries.pop_front();
         }
-        
+
         info!(
             "AUDIT: {} - {} - {} - {:?}",
             entry.timestamp.to_rfc3339(),
@@ -300,14 +306,14 @@ impl AuditLogger for InMemoryAuditLogger {
             entry.result,
             entry.details
         );
-        
+
         Ok(())
     }
 
     /// Get audit log entries
     async fn get_audit_log(&self, filter: &AuditLogFilter) -> BearDogResult<Vec<AuditLogEntry>> {
         let entries = self.entries.read().await;
-        
+
         let filtered: Vec<AuditLogEntry> = entries
             .iter()
             .filter(|entry| {
@@ -322,14 +328,14 @@ impl AuditLogger for InMemoryAuditLogger {
                         return false;
                     }
                 }
-                
+
                 // Apply operation filter
                 if let Some(ref operation) = filter.operation {
                     if entry.operation != *operation {
                         return false;
                     }
                 }
-                
+
                 // Apply key_id filter
                 if let Some(ref key_id) = filter.key_id {
                     match &entry.key_id {
@@ -341,7 +347,7 @@ impl AuditLogger for InMemoryAuditLogger {
                         None => return false,
                     }
                 }
-                
+
                 // Apply user_id filter
                 if let Some(ref user_id) = filter.user_id {
                     match &entry.user_id {
@@ -353,12 +359,12 @@ impl AuditLogger for InMemoryAuditLogger {
                         None => return false,
                     }
                 }
-                
+
                 true
             })
             .cloned()
             .collect();
-        
+
         Ok(filtered)
     }
 }
@@ -366,11 +372,17 @@ impl AuditLogger for InMemoryAuditLogger {
 /// Audit statistics
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AuditStatistics {
+    /// Total number of audit entries
     pub total_entries: usize,
+    /// Number of entries grouped by operation type
     pub entries_by_operation: std::collections::HashMap<String, usize>,
+    /// Number of entries grouped by result status
     pub entries_by_result: std::collections::HashMap<String, usize>,
+    /// Number of entries grouped by user
     pub entries_by_user: std::collections::HashMap<String, usize>,
+    /// Timestamp of the oldest audit entry
     pub oldest_entry: Option<chrono::DateTime<chrono::Utc>>,
+    /// Timestamp of the newest audit entry
     pub newest_entry: Option<chrono::DateTime<chrono::Utc>>,
 }
 
@@ -389,4 +401,4 @@ pub async fn create_audit_logger(logger_type: &str) -> BearDogResult<Box<dyn Aud
             logger_type: logger_type.to_string(),
         }),
     }
-} 
+}

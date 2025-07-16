@@ -4,11 +4,10 @@
 //! mutations to introduce genetic diversity.
 
 use super::engine::GeneticSpawningEngine;
-use super::super::types::*;
 use crate::auth::BearDogGenetics;
 use crate::tunnel::hsm::types::HsmOperation;
 use crate::tunnel::hsm::{SecurityLevel, SecurityRequirements};
-use crate::{BearDogError, BearDogResult};
+use crate::BearDogResult;
 use sha3::{Digest, Sha3_256};
 use tracing::info;
 
@@ -32,7 +31,7 @@ pub async fn apply_directed_evolution(
             genetics
                 .capabilities
                 .push(crate::auth::NodeCapability::DistributedConsensus);
-            genetics.security_traits.trust_threshold = 
+            genetics.security_traits.trust_threshold =
                 (genetics.security_traits.trust_threshold * 1.1).min(1.0);
         }
         crate::auth::SpawnPurpose::SpecializedTask(task_type) => {
@@ -119,7 +118,7 @@ pub async fn apply_directed_evolution(
     // Add evolution record to genetics
     genetics.mutations.push(crate::auth::CapabilityMutation {
         trigger: crate::auth::MutationTrigger::UserRequirement,
-        mutation_type: format!("DirectedEvolution-{:?}", purpose),
+        mutation_type: format!("DirectedEvolution-{purpose:?}"),
         affected_capabilities: genetics.capabilities.clone(),
         fitness_impact: 0.05,
     });
@@ -173,10 +172,8 @@ pub async fn apply_mutations(
             }
             1 => {
                 let delta = (random_bytes[10] as i16 - 128) / 25;
-                genetics.security_traits.paranoia_level = (genetics.security_traits.paranoia_level
-                    as i16
-                    + delta)
-                    .clamp(0, 10) as u8;
+                genetics.security_traits.paranoia_level =
+                    (genetics.security_traits.paranoia_level as i16 + delta).clamp(0, 10) as u8;
             }
             2 => {
                 let delta = (random_bytes[11] as f64 / 255.0 - 0.5) * 0.1;
@@ -185,10 +182,8 @@ pub async fn apply_mutations(
             }
             3 => {
                 let delta = (random_bytes[12] as i32 - 128) / 2;
-                genetics.security_traits.audit_frequency = (genetics.security_traits.audit_frequency
-                    as i32
-                    + delta)
-                    .clamp(0, 100) as u32;
+                genetics.security_traits.audit_frequency =
+                    (genetics.security_traits.audit_frequency as i32 + delta).clamp(0, 100) as u32;
             }
             4 => {
                 genetics.security_traits.consensus_requirement =
@@ -225,7 +220,7 @@ pub async fn apply_mutations(
                 }
                 _ => {}
             }
-            mutations_applied.push(format!("Chromosome-{}", i));
+            mutations_applied.push(format!("Chromosome-{i}"));
         }
     }
 
@@ -242,10 +237,11 @@ pub async fn apply_mutations(
                     crate::auth::NodeCapability::SelfHealing,
                     crate::auth::NodeCapability::FaultTolerant,
                 ];
-                let new_cap = new_capabilities[random_bytes[57] as usize % new_capabilities.len()].clone();
+                let new_cap =
+                    new_capabilities[random_bytes[57] as usize % new_capabilities.len()].clone();
                 if !genetics.capabilities.contains(&new_cap) {
                     genetics.capabilities.push(new_cap.clone());
-                    mutations_applied.push(format!("AddCapability-{:?}", new_cap));
+                    mutations_applied.push(format!("AddCapability-{new_cap:?}"));
                 }
             }
             1 => {
@@ -253,7 +249,7 @@ pub async fn apply_mutations(
                 if !genetics.capabilities.is_empty() {
                     let remove_idx = random_bytes[58] as usize % genetics.capabilities.len();
                     let removed_cap = genetics.capabilities.remove(remove_idx);
-                    mutations_applied.push(format!("RemoveCapability-{:?}", removed_cap));
+                    mutations_applied.push(format!("RemoveCapability-{removed_cap:?}"));
                 }
             }
             2 => {
@@ -277,4 +273,4 @@ pub async fn apply_mutations(
     }
 
     Ok(genetics)
-} 
+}

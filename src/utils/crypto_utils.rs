@@ -125,9 +125,12 @@ pub fn pbkdf2_hmac_sha256(
     use ring::pbkdf2;
 
     let mut output = vec![0u8; output_len];
+    let iterations = std::num::NonZeroU32::new(iterations)
+        .expect("PBKDF2 iterations must be non-zero");
+    
     pbkdf2::derive(
         pbkdf2::PBKDF2_HMAC_SHA256,
-        std::num::NonZeroU32::new(iterations).unwrap(),
+        iterations,
         salt,
         password,
         &mut output,
@@ -138,7 +141,7 @@ pub fn pbkdf2_hmac_sha256(
 
 /// Convert bytes to hexadecimal string
 pub fn bytes_to_hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{:02x}", b)).collect()
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 /// Convert hexadecimal string to bytes

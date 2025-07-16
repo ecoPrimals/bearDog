@@ -147,7 +147,7 @@ fn format_bytes(bytes: u64) -> String {
     } else if bytes >= 1024 * 1024 {
         format!("{:.1} MB", bytes as f64 / (1024.0 * 1024.0))
     } else {
-        format!("{} bytes", bytes)
+        format!("{bytes} bytes")
     }
 }
 
@@ -158,7 +158,7 @@ fn format_duration(duration: Duration) -> String {
     } else if secs >= 60 {
         format!("{}m {}s", secs / 60, secs % 60)
     } else {
-        format!("{}s", secs)
+        format!("{secs}s")
     }
 }
 
@@ -173,7 +173,7 @@ fn calculate_elapsed_time(start: SystemTime) -> Duration {
 }
 
 fn format_timestamp(time: SystemTime) -> String {
-    format!("{:?}", time)
+    format!("{time:?}")
 }
 
 fn is_valid_ip_address(ip: &str) -> bool {
@@ -216,7 +216,7 @@ fn redact_sensitive_data(_data: &str) -> String {
 }
 
 fn make_log_safe(input: &str) -> String {
-    input.replace('<', "").replace('>', "")
+    input.replace(['<', '>'], "")
 }
 
 fn generate_secure_id() -> String {

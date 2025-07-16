@@ -46,7 +46,7 @@ impl BearDogSecurityProvider {
             .rate_limiter
             .requests
             .entry(user_id.to_string())
-            .or_insert_with(Vec::new);
+            .or_default();
         user_requests.retain(|&timestamp| timestamp > window_start);
 
         // Check if under limit
@@ -189,7 +189,7 @@ impl BearDogSecurityProvider {
     pub async fn verify_mfa_token(&mut self, user_id: &str, token: &str) -> BearDogResult<bool> {
         let now = Utc::now();
 
-        for (_token_id, mfa_token) in &mut self.mfa_tokens {
+        for mfa_token in self.mfa_tokens.values_mut() {
             if mfa_token.user_id == user_id
                 && mfa_token.token == token
                 && !mfa_token.is_used
@@ -242,7 +242,7 @@ impl BearDogSecurityProvider {
 
         // Check time-based factors
         let hour = action.timestamp.hour();
-        if hour < 6 || hour > 22 {
+        if !(6..=22).contains(&hour) {
             risk_score += 1; // After hours access
         }
 

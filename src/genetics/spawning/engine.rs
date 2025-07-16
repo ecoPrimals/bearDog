@@ -6,18 +6,13 @@
 
 use super::super::types::*;
 use crate::auth::BearDogGenetics;
-use crate::genetics::types::{ParentSignature, WitnessSignature, WitnessType};
 use crate::tunnel::hsm::manager::HsmManager;
-use crate::tunnel::hsm::types::HsmOperation;
-use crate::tunnel::hsm::{SecurityLevel, SecurityRequirements};
 use crate::{BearDogError, BearDogResult};
-use chrono::{Timelike, Utc};
-use sha3::{Digest, Sha3_256};
+use sha3::Digest;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
-use uuid::Uuid;
 
 /// Core genetic spawning engine with HSM integration
 pub struct GeneticSpawningEngine {
@@ -188,4 +183,4 @@ impl GeneticSpawningEngine {
         )
         .await
     }
-} 
+}

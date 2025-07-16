@@ -34,6 +34,7 @@ pub struct WorkflowStorageConfig {
 
 /// Notification configuration for workflows
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct NotificationConfig {
     /// Enable notifications
     pub enabled: bool,
@@ -86,6 +87,7 @@ pub struct PolicyConfig {
 
 /// Adapter configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct AdapterConfigs {
     /// Adapter configuration for external system integrations
     pub external_systems: AdapterConfig,
@@ -93,6 +95,7 @@ pub struct AdapterConfigs {
 
 /// Adapter configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct AdapterConfig {
     /// Rust ecosystem integrations (always free/enabled)
     pub rust_ecosystem: RustEcosystemConfig,
@@ -102,6 +105,7 @@ pub struct AdapterConfig {
 
 /// Rust ecosystem configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct RustEcosystemConfig {
     /// NestGate secure file transfer (if part of your Rust ecosystem)
     pub nestgate: Option<RustProjectConfig>,
@@ -128,6 +132,7 @@ pub struct RustProjectConfig {
 
 /// External systems configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct ExternalSystemsConfig {
     /// Enterprise HSM integrations
     pub hsm_systems: HashMap<String, ExternalSystemConfig>,
@@ -188,21 +193,12 @@ impl Default for WorkflowStorageConfig {
     }
 }
 
-impl Default for NotificationConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            email: EmailConfig::default(),
-            webhook: WebhookConfig::default(),
-        }
-    }
-}
 
 impl Default for EmailConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            smtp_server: "localhost".to_string(),
+            smtp_server: super::constants::endpoints::DEFAULT_SMTP_SERVER.to_string(),
             smtp_port: 587,
             username: "".to_string(),
             password: "".to_string(),
@@ -232,43 +228,6 @@ impl Default for PolicyConfig {
     }
 }
 
-impl Default for AdapterConfigs {
-    fn default() -> Self {
-        Self {
-            external_systems: AdapterConfig::default(),
-        }
-    }
-}
 
-impl Default for AdapterConfig {
-    fn default() -> Self {
-        Self {
-            rust_ecosystem: RustEcosystemConfig::default(),
-            external_systems: ExternalSystemsConfig::default(),
-        }
-    }
-}
 
-impl Default for RustEcosystemConfig {
-    fn default() -> Self {
-        Self {
-            nestgate: None,
-            songbird: None,
-            additional_projects: HashMap::new(),
-        }
-    }
-}
 
-impl Default for ExternalSystemsConfig {
-    fn default() -> Self {
-        Self {
-            hsm_systems: HashMap::new(),
-            siem_systems: HashMap::new(),
-            database_systems: HashMap::new(),
-            cloud_services: HashMap::new(),
-            auth_systems: HashMap::new(),
-            backup_systems: HashMap::new(),
-            messaging_systems: HashMap::new(),
-        }
-    }
-}

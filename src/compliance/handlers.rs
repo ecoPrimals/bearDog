@@ -165,8 +165,8 @@ impl ComplianceEngine {
         }
 
         // Check for data export/transfer events
-        if event.event_type == "DataExport" || event.event_type == "DataTransfer" {
-            if !event.data.contains_key("adequacy_decision")
+        if (event.event_type == "DataExport" || event.event_type == "DataTransfer")
+            && !event.data.contains_key("adequacy_decision")
                 && !event.data.contains_key("safeguards")
             {
                 violations.push(ComplianceViolation {
@@ -181,7 +181,6 @@ impl ComplianceEngine {
                 });
                 score -= 0.6;
             }
-        }
 
         Ok(StandardEvaluationResult {
             score: score.max(0.0),
@@ -200,8 +199,8 @@ impl ComplianceEngine {
         let mut score: f64 = 1.0;
 
         // Check for financial data access
-        if event.event_type == "FinancialAccess" {
-            if !event.data.contains_key("authorization_level") {
+        if event.event_type == "FinancialAccess"
+            && !event.data.contains_key("authorization_level") {
                 violations.push(ComplianceViolation {
                     id: Uuid::new_v4().to_string(),
                     standard: ComplianceStandard::SOX,
@@ -214,7 +213,6 @@ impl ComplianceEngine {
                 });
                 score -= 0.7;
             }
-        }
 
         Ok(StandardEvaluationResult {
             score: score.max(0.0),
@@ -233,8 +231,8 @@ impl ComplianceEngine {
         let mut score: f64 = 1.0;
 
         // Check for payment data access
-        if event.event_type == "PaymentProcessing" {
-            if !event.data.contains_key("encryption_used") {
+        if event.event_type == "PaymentProcessing"
+            && !event.data.contains_key("encryption_used") {
                 violations.push(ComplianceViolation {
                     id: Uuid::new_v4().to_string(),
                     standard: ComplianceStandard::PCI_DSS,
@@ -247,7 +245,6 @@ impl ComplianceEngine {
                 });
                 score -= 0.8;
             }
-        }
 
         Ok(StandardEvaluationResult {
             score: score.max(0.0),
@@ -338,7 +335,7 @@ impl ComplianceEngine {
 
         Ok(ComplianceReport {
             id: Uuid::new_v4().to_string(),
-            title: format!("{:?} Compliance Report", standard),
+            title: format!("{standard:?} Compliance Report"),
             standard,
             period: format!(
                 "{} to {}",

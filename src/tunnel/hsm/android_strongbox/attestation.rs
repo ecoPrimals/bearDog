@@ -7,7 +7,7 @@ use super::types::*;
 use crate::error::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use std::sync::Arc;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, warn};
 
 impl AndroidAttestationService {
     /// Create a new Android Attestation Service instance
@@ -26,7 +26,10 @@ impl AndroidAttestationService {
 
         // Load trusted certificates
         let trusted_certificates = Self::load_trusted_certificates(&config).await?;
-        info!("📜 Loaded {} trusted certificates", trusted_certificates.len());
+        info!(
+            "📜 Loaded {} trusted certificates",
+            trusted_certificates.len()
+        );
 
         // Initialize challenge generator
         let challenge_generator = Arc::new(ChallengeGenerator::new());
@@ -51,7 +54,7 @@ impl AndroidAttestationService {
         for (i, cert) in self.trusted_certificates.iter().enumerate() {
             if cert.is_empty() {
                 return Err(BearDogError::VerificationFailed {
-                    message: format!("Trusted certificate {} is empty", i),
+                    message: format!("Trusted certificate {i} is empty"),
                 });
             }
         }
@@ -80,7 +83,10 @@ impl AndroidAttestationService {
         chain: &[Vec<u8>],
         challenge: &[u8],
     ) -> BearDogResult<bool> {
-        info!("🔍 Verifying certificate chain ({} certificates)", chain.len());
+        info!(
+            "🔍 Verifying certificate chain ({} certificates)",
+            chain.len()
+        );
 
         if chain.is_empty() {
             return Ok(false);
@@ -95,7 +101,10 @@ impl AndroidAttestationService {
 
         // Verify chain length
         if chain.len() < 2 {
-            warn!("⚠️ Certificate chain too short: {} certificates", chain.len());
+            warn!(
+                "⚠️ Certificate chain too short: {} certificates",
+                chain.len()
+            );
             return Ok(false);
         }
 
@@ -169,7 +178,8 @@ impl AndroidAttestationService {
         attestation_data.extend_from_slice(&(device_info.model.len() as u32).to_be_bytes());
         attestation_data.extend_from_slice(device_info.model.as_bytes());
 
-        attestation_data.extend_from_slice(&(device_info.android_version.len() as u32).to_be_bytes());
+        attestation_data
+            .extend_from_slice(&(device_info.android_version.len() as u32).to_be_bytes());
         attestation_data.extend_from_slice(device_info.android_version.as_bytes());
 
         // Add verified boot state
@@ -193,7 +203,10 @@ impl AndroidAttestationService {
         // Add StrongBox indicator
         attestation_data.push(0x01); // StrongBox-backed
 
-        debug!("📝 Attestation data created: {} bytes", attestation_data.len());
+        debug!(
+            "📝 Attestation data created: {} bytes",
+            attestation_data.len()
+        );
         Ok(attestation_data)
     }
 
@@ -256,8 +269,9 @@ impl AndroidAttestationService {
         // In a real implementation, this would contain the actual Google
         // Hardware Attestation Root certificate
         Ok(vec![
-            0x30, 0x82, 0x01, 0x00, // DER header for mock certificate
-            // ... rest of the certificate would be here
+            0x30, 0x82, 0x01,
+            0x00, // DER header for mock certificate
+                 // ... rest of the certificate would be here
         ])
     }
 
@@ -273,4 +287,4 @@ impl AndroidAttestationService {
         // For simulation, return a mock certificate
         Ok(vec![0x30, 0x82, 0x01, 0x00])
     }
-} 
+}

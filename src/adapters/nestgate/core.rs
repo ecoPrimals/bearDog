@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use super::audit::AuditManager;
@@ -198,7 +198,11 @@ impl UniversalNestGateAdapter {
     }
 
     /// Wrap key using master key
-    pub async fn wrap_key(&self, key_data: &[u8], wrapping_key_id: &str) -> NestGateResult<WrappedKey> {
+    pub async fn wrap_key(
+        &self,
+        key_data: &[u8],
+        wrapping_key_id: &str,
+    ) -> NestGateResult<WrappedKey> {
         debug!("Wrapping key with wrapping key ID: {}", wrapping_key_id);
 
         // Get wrapping key
@@ -223,7 +227,10 @@ impl UniversalNestGateAdapter {
         let wrapping_key = self.get_wrapping_key(wrapping_key_id).await?;
 
         // Unwrap key using ZFS manager
-        let unwrapped_key = self.zfs_manager.unwrap_key(wrapped_key, &wrapping_key).await?;
+        let unwrapped_key = self
+            .zfs_manager
+            .unwrap_key(wrapped_key, &wrapping_key)
+            .await?;
 
         debug!("Key unwrapped successfully");
         Ok(unwrapped_key)
@@ -231,7 +238,11 @@ impl UniversalNestGateAdapter {
 
     /// Rotate keys for owner
     pub async fn rotate_keys(&self, owner_id: &str) -> NestGateResult<KeyRotationResult> {
-        info!("Rotating keys for owner: {} (provider: {})", owner_id, self.provider.name());
+        info!(
+            "Rotating keys for owner: {} (provider: {})",
+            owner_id,
+            self.provider.name()
+        );
 
         // Check policy
         let policy_result = self
@@ -290,7 +301,7 @@ impl UniversalNestGateAdapter {
 
         if !policy_result.allowed {
             let error_msg = format!("Policy violation: {}", policy_result.reason);
-            
+
             // Log audit event for denied operation
             self.audit_manager
                 .log_event(NestGateAuditEvent {
@@ -313,7 +324,10 @@ impl UniversalNestGateAdapter {
         }
 
         // Perform operation using ZFS manager
-        let operation_result = self.zfs_manager.perform_file_operation(request.clone()).await?;
+        let operation_result = self
+            .zfs_manager
+            .perform_file_operation(request.clone())
+            .await?;
 
         // Log audit event
         self.audit_manager
@@ -369,72 +383,96 @@ impl UniversalNestGateAdapter {
         // Check provider health
         match self.provider.health_check().await {
             Ok(provider_health) => {
-                components.insert("provider".to_string(), ComponentHealth {
-                    healthy: provider_health.healthy,
-                    status: provider_health.message,
-                    metrics: HashMap::new(),
-                });
+                components.insert(
+                    "provider".to_string(),
+                    ComponentHealth {
+                        healthy: provider_health.healthy,
+                        status: provider_health.message,
+                        metrics: HashMap::new(),
+                    },
+                );
             }
             Err(e) => {
-                components.insert("provider".to_string(), ComponentHealth {
-                    healthy: false,
-                    status: format!("Provider health check failed: {}", e),
-                    metrics: HashMap::new(),
-                });
+                components.insert(
+                    "provider".to_string(),
+                    ComponentHealth {
+                        healthy: false,
+                        status: format!("Provider health check failed: {e}"),
+                        metrics: HashMap::new(),
+                    },
+                );
             }
         }
 
         // Check ZFS manager health
         match self.zfs_manager.health_check().await {
             Ok(zfs_health) => {
-                components.insert("zfs".to_string(), ComponentHealth {
-                    healthy: zfs_health.healthy,
-                    status: zfs_health.message,
-                    metrics: HashMap::new(),
-                });
+                components.insert(
+                    "zfs".to_string(),
+                    ComponentHealth {
+                        healthy: zfs_health.healthy,
+                        status: zfs_health.message,
+                        metrics: HashMap::new(),
+                    },
+                );
             }
             Err(e) => {
-                components.insert("zfs".to_string(), ComponentHealth {
-                    healthy: false,
-                    status: format!("ZFS health check failed: {}", e),
-                    metrics: HashMap::new(),
-                });
+                components.insert(
+                    "zfs".to_string(),
+                    ComponentHealth {
+                        healthy: false,
+                        status: format!("ZFS health check failed: {e}"),
+                        metrics: HashMap::new(),
+                    },
+                );
             }
         }
 
         // Check policy engine health
         match self.policy_engine.health_check().await {
             Ok(policy_health) => {
-                components.insert("policy".to_string(), ComponentHealth {
-                    healthy: policy_health.healthy,
-                    status: policy_health.message,
-                    metrics: HashMap::new(),
-                });
+                components.insert(
+                    "policy".to_string(),
+                    ComponentHealth {
+                        healthy: policy_health.healthy,
+                        status: policy_health.message,
+                        metrics: HashMap::new(),
+                    },
+                );
             }
             Err(e) => {
-                components.insert("policy".to_string(), ComponentHealth {
-                    healthy: false,
-                    status: format!("Policy engine health check failed: {}", e),
-                    metrics: HashMap::new(),
-                });
+                components.insert(
+                    "policy".to_string(),
+                    ComponentHealth {
+                        healthy: false,
+                        status: format!("Policy engine health check failed: {e}"),
+                        metrics: HashMap::new(),
+                    },
+                );
             }
         }
 
         // Check audit manager health
         match self.audit_manager.health_check().await {
             Ok(audit_health) => {
-                components.insert("audit".to_string(), ComponentHealth {
-                    healthy: audit_health.healthy,
-                    status: audit_health.message,
-                    metrics: HashMap::new(),
-                });
+                components.insert(
+                    "audit".to_string(),
+                    ComponentHealth {
+                        healthy: audit_health.healthy,
+                        status: audit_health.message,
+                        metrics: HashMap::new(),
+                    },
+                );
             }
             Err(e) => {
-                components.insert("audit".to_string(), ComponentHealth {
-                    healthy: false,
-                    status: format!("Audit manager health check failed: {}", e),
-                    metrics: HashMap::new(),
-                });
+                components.insert(
+                    "audit".to_string(),
+                    ComponentHealth {
+                        healthy: false,
+                        status: format!("Audit manager health check failed: {e}"),
+                        metrics: HashMap::new(),
+                    },
+                );
             }
         }
 
@@ -462,7 +500,15 @@ impl UniversalNestGateAdapter {
         // Get provider health status
         match self.provider.health_check().await {
             Ok(health) => {
-                status.insert("provider_status".to_string(), if health.healthy { "healthy" } else { "unhealthy" }.to_string());
+                status.insert(
+                    "provider_status".to_string(),
+                    if health.healthy {
+                        "healthy"
+                    } else {
+                        "unhealthy"
+                    }
+                    .to_string(),
+                );
                 status.insert("provider_message".to_string(), health.message);
             }
             Err(e) => {
@@ -473,7 +519,10 @@ impl UniversalNestGateAdapter {
 
         // Check NestGate-specific status
         status.insert("adapter_name".to_string(), self.name.clone());
-        status.insert("provider_name".to_string(), self.provider.name().to_string());
+        status.insert(
+            "provider_name".to_string(),
+            self.provider.name().to_string(),
+        );
         status.insert("configuration_valid".to_string(), "true".to_string());
         status.insert(
             "key_mapping_count".to_string(),
@@ -482,8 +531,14 @@ impl UniversalNestGateAdapter {
 
         // Check connection pool status
         let pool = self.connection_pool.read().await;
-        status.insert("connection_pool_size".to_string(), pool.connections.len().to_string());
-        status.insert("connection_pool_max".to_string(), pool.max_connections.to_string());
+        status.insert(
+            "connection_pool_size".to_string(),
+            pool.connections.len().to_string(),
+        );
+        status.insert(
+            "connection_pool_max".to_string(),
+            pool.max_connections.to_string(),
+        );
 
         Ok(status)
     }
@@ -499,8 +554,7 @@ impl UniversalNestGateAdapter {
             self.zfs_manager.get_key(wrapping_key_id, owner_id).await
         } else {
             Err(NestGateError::KeyManagement(format!(
-                "Wrapping key not found: {}",
-                wrapping_key_id
+                "Wrapping key not found: {wrapping_key_id}"
             )))
         }
     }
@@ -512,7 +566,10 @@ impl UniversalNestGateAdapter {
         purpose: &str,
         owner_id: &str,
     ) -> NestGateResult<EncryptionKey> {
-        info!("Generating encryption key for owner: {} (purpose: {})", owner_id, purpose);
+        info!(
+            "Generating encryption key for owner: {} (purpose: {})",
+            owner_id, purpose
+        );
 
         // Check policy
         let policy_result = self
@@ -525,7 +582,10 @@ impl UniversalNestGateAdapter {
         }
 
         // Generate key using ZFS manager
-        let encryption_key = self.zfs_manager.generate_encryption_key(key_type, purpose, owner_id).await?;
+        let encryption_key = self
+            .zfs_manager
+            .generate_encryption_key(key_type, purpose, owner_id)
+            .await?;
 
         // Log audit event
         self.audit_manager
@@ -583,9 +643,8 @@ impl ConnectionPool {
         let now = chrono::Utc::now();
         let timeout_duration = chrono::Duration::seconds(self.timeout as i64);
 
-        self.connections.retain(|_, conn| {
-            now.signed_duration_since(conn.last_activity) < timeout_duration
-        });
+        self.connections
+            .retain(|_, conn| now.signed_duration_since(conn.last_activity) < timeout_duration);
     }
 }
 
@@ -609,4 +668,4 @@ impl Connection {
     pub fn set_status(&mut self, status: ConnectionStatus) {
         self.status = status;
     }
-} 
+}

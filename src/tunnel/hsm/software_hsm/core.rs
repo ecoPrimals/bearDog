@@ -3,15 +3,11 @@
 //! This module provides the core Software HSM implementation including the main
 //! RustSoftwareHsm struct and HsmProvider trait implementation.
 
-use super::audit::*;
-use super::crypto_providers::*;
-use super::keystore::*;
 use super::memory::{DefaultMemoryProtector, MemoryProtectionConfig};
-use super::storage::*;
 use super::types::*;
 use crate::error::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
-use crate::tunnel::hsm::{HsmProvider, HsmOperation, SecurityRequirements};
+use crate::tunnel::hsm::HsmProvider;
 use async_trait::async_trait;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -77,9 +73,9 @@ impl RustSoftwareHsm {
             CryptoBackend::Ring => Ok(Arc::new(RingCryptoProvider::new().await?)),
             CryptoBackend::OpenSsl => Ok(Arc::new(OpenSslCryptoProvider::new().await?)),
             CryptoBackend::Custom(name) => {
-                return Err(BearDogError::UnsupportedCryptoBackend {
+                Err(BearDogError::UnsupportedCryptoBackend {
                     backend: name.clone(),
-                });
+                })
             }
         }
     }
@@ -96,8 +92,10 @@ impl RustSoftwareHsm {
             },
             clear_on_drop: config.zero_on_free,
         };
-        
-        Ok(Arc::new(DefaultMemoryProtector::new(memory_protection_config).await?))
+
+        Ok(Arc::new(
+            DefaultMemoryProtector::new(memory_protection_config).await?,
+        ))
     }
 
     /// Create audit logger
@@ -169,7 +167,7 @@ impl RustSoftwareHsm {
         op_fn: impl Fn(&[u8]) -> Result<T, BearDogError>,
     ) -> BearDogResult<T> {
         let start_time = std::time::Instant::now();
-        
+
         // Get key from store
         let key_store = self.key_store.read().await;
         let software_key = key_store.get_key(key_id).await?;
@@ -227,13 +225,13 @@ impl RustSoftwareHsm {
     /// Update configuration
     pub async fn update_config(&mut self, config: SoftwareHsmConfig) -> BearDogResult<()> {
         info!("Updating Software HSM configuration");
-        
+
         // Update configuration
         self.config = config;
-        
+
         // Reinitialize components if needed
         // TODO: Implement configuration hot-reload
-        
+
         info!("Software HSM configuration updated successfully");
         Ok(())
     }
@@ -512,11 +510,7 @@ impl HsmProvider for RustSoftwareHsm {
 
         // Log operation
         self.audit_logger
-            .log_operation(&AuditLogEntry::success(
-                "backup".to_string(),
-                None,
-                None,
-            ))
+            .log_operation(&AuditLogEntry::success("backup".to_string(), None, None))
             .await?;
 
         info!("✅ Software HSM backup created successfully");
@@ -532,11 +526,7 @@ impl HsmProvider for RustSoftwareHsm {
 
         // Log operation
         self.audit_logger
-            .log_operation(&AuditLogEntry::success(
-                "restore".to_string(),
-                None,
-                None,
-            ))
+            .log_operation(&AuditLogEntry::success("restore".to_string(), None, None))
             .await?;
 
         info!("✅ Software HSM restored successfully");
@@ -547,4 +537,4 @@ impl HsmProvider for RustSoftwareHsm {
     async fn health_check(&self) -> BearDogResult<HsmHealthStatus> {
         self.health_monitor.perform_health_check().await
     }
-} 
+}

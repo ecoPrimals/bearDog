@@ -5,7 +5,6 @@
 use beardog::config::*;
 use beardog::core::*;
 use beardog::error::*;
-use beardog::*;
 use std::time::Duration;
 use tokio::time::timeout;
 
@@ -113,8 +112,8 @@ fn test_error_type_coverage() {
 
     // Test that all errors can be formatted and displayed
     for error in errors {
-        let debug_str = format!("{:?}", error);
-        let display_str = format!("{}", error);
+        let debug_str = format!("{error:?}");
+        let display_str = format!("{error}");
 
         assert!(
             !debug_str.is_empty(),
@@ -148,7 +147,7 @@ async fn test_component_status_management() -> BearDogResult<()> {
     // Should have our test components
     let component_names: Vec<&str> = health.components.iter().map(|c| c.name.as_str()).collect();
 
-    println!("Component statuses: {:?}", component_names);
+    println!("Component statuses: {component_names:?}");
 
     Ok(())
 }

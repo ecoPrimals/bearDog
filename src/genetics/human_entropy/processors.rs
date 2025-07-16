@@ -16,6 +16,12 @@ pub struct HumanPreservingFusion {
     entropy_whitener: Arc<EntropyWhitener>,
 }
 
+impl Default for HumanPreservingFusion {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HumanPreservingFusion {
     /// Create a new human-preserving fusion algorithm
     pub fn new() -> Self {
@@ -32,22 +38,22 @@ impl HumanPreservingFusion {
     ) -> BearDogResult<SecretBytes> {
         // Secure entropy mixing
         let mixed_entropy = self.secure_entropy_mixing(sources).await?;
-        
+
         // Whiten the entropy
         let whitened_entropy = self.entropy_whitener.whiten(&mixed_entropy).await?;
-        
+
         Ok(SecretBytes::new(whitened_entropy))
     }
 
     /// Securely mix entropy sources
     async fn secure_entropy_mixing(&self, sources: &[SecretBytes]) -> BearDogResult<Vec<u8>> {
         let mut combined = Vec::new();
-        
+
         // Combine all sources
         for source in sources {
             combined.extend_from_slice(source.as_bytes());
         }
-        
+
         // Derive final entropy
         self.kdf.derive_entropy(&combined, 32).await
     }
@@ -55,6 +61,12 @@ impl HumanPreservingFusion {
 
 /// Audio processing engine
 pub struct AudioProcessor;
+
+impl Default for AudioProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl AudioProcessor {
     /// Create a new audio processor
@@ -66,6 +78,12 @@ impl AudioProcessor {
 /// Privacy filter for audio data
 pub struct PrivacyFilter;
 
+impl Default for PrivacyFilter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PrivacyFilter {
     /// Create a new privacy filter
     pub fn new() -> Self {
@@ -75,6 +93,12 @@ impl PrivacyFilter {
 
 /// Entropy extractor for audio data
 pub struct EntropyExtractor;
+
+impl Default for EntropyExtractor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl EntropyExtractor {
     /// Create a new entropy extractor
@@ -115,6 +139,12 @@ impl EntropyExtractor {
 /// Image processing engine
 pub struct ImageProcessor;
 
+impl Default for ImageProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ImageProcessor {
     /// Create a new image processor
     pub fn new() -> Self {
@@ -125,6 +155,12 @@ impl ImageProcessor {
 /// Visual privacy filter
 pub struct VisualPrivacyFilter;
 
+impl Default for VisualPrivacyFilter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VisualPrivacyFilter {
     /// Create a new visual privacy filter
     pub fn new() -> Self {
@@ -134,6 +170,12 @@ impl VisualPrivacyFilter {
 
 /// Visual entropy extractor
 pub struct VisualEntropyExtractor;
+
+impl Default for VisualEntropyExtractor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl VisualEntropyExtractor {
     /// Create a new visual entropy extractor
@@ -176,6 +218,12 @@ impl VisualEntropyExtractor {
 /// Touch processing engine
 pub struct TouchProcessor;
 
+impl Default for TouchProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TouchProcessor {
     /// Create a new touch processor
     pub fn new() -> Self {
@@ -186,6 +234,12 @@ impl TouchProcessor {
 /// Motion processing engine
 pub struct MotionProcessor;
 
+impl Default for MotionProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MotionProcessor {
     /// Create a new motion processor
     pub fn new() -> Self {
@@ -195,6 +249,12 @@ impl MotionProcessor {
 
 /// Haptic entropy extractor
 pub struct HapticEntropyExtractor;
+
+impl Default for HapticEntropyExtractor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl HapticEntropyExtractor {
     /// Create a new haptic entropy extractor
@@ -233,6 +293,12 @@ impl HapticEntropyExtractor {
 /// Key derivation function
 pub struct KeyDerivationFunction;
 
+impl Default for KeyDerivationFunction {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl KeyDerivationFunction {
     /// Create a new key derivation function
     pub fn new() -> Self {
@@ -249,6 +315,12 @@ impl KeyDerivationFunction {
 /// Entropy whitener
 pub struct EntropyWhitener;
 
+impl Default for EntropyWhitener {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EntropyWhitener {
     /// Create a new entropy whitener
     pub fn new() -> Self {
@@ -261,4 +333,4 @@ impl EntropyWhitener {
         let hash = Sha3_256::digest(entropy);
         Ok(hash.to_vec())
     }
-} 
+}

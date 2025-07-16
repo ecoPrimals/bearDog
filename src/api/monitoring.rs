@@ -14,6 +14,9 @@ use std::collections::HashMap;
 use std::time::Instant;
 use tracing::info;
 
+use crate::monitoring::{PerformanceMetrics, ResourceMetrics};
+use crate::api::ApiResponse;
+
 /// Create monitoring API routes
 pub fn create_routes() -> Router<AppState> {
     Router::new()
@@ -60,215 +63,268 @@ pub fn create_routes() -> Router<AppState> {
 // REQUEST/RESPONSE MODELS
 // ============================================================================
 
+/// System health response containing overall status and component health information
 #[derive(Debug, Serialize)]
 pub struct SystemHealthResponse {
-    pub overall_status: String, // "healthy", "degraded", "critical", "unknown"
+    /// Overall system health status: "healthy", "degraded", "critical", or "unknown"
+    pub overall_status: String,
+    /// System uptime in seconds since last restart
     pub uptime_seconds: u64,
+    /// Current version of the BearDog system
     pub version: String,
+    /// Deployment environment (e.g., "production", "staging", "development")
     pub environment: String,
+    /// Health status of individual system components
     pub components: Vec<ComponentHealth>,
+    /// Aggregated system performance metrics
     pub system_metrics: HealthMetrics,
+    /// ISO 8601 timestamp of when this health check was last updated
     pub last_updated: String,
 }
 
+/// Health information for an individual system component
 #[derive(Debug, Serialize)]
 pub struct ComponentHealth {
+    /// Name of the component being monitored
     pub component: String,
+    /// Current health status of the component
     pub status: String,
+    /// Average response time in milliseconds for this component
     pub response_time_ms: u64,
+    /// Error rate as a percentage (0.0 to 1.0) for this component
     pub error_rate: f64,
+    /// ISO 8601 timestamp of when this component was last checked
     pub last_check: String,
+    /// Optional additional details about the component's current state
     pub details: Option<String>,
 }
 
+/// Aggregated system performance and health metrics
 #[derive(Debug, Serialize)]
 pub struct HealthMetrics {
+    /// CPU usage as a percentage (0.0 to 100.0)
     pub cpu_usage_percent: f64,
+    /// Memory usage as a percentage (0.0 to 100.0)
     pub memory_usage_percent: f64,
+    /// Disk usage as a percentage (0.0 to 100.0)
     pub disk_usage_percent: f64,
+    /// Network throughput in megabits per second
     pub network_throughput_mbps: f64,
+    /// Number of currently active network connections
     pub active_connections: u32,
+    /// Request processing rate per second
     pub request_rate_per_second: f64,
+    /// Error rate as a percentage (0.0 to 100.0)
     pub error_rate_percent: f64,
 }
 
-#[derive(Debug, Serialize)]
-pub struct SystemMetricsResponse {
-    pub timestamp: String,
-    pub performance: PerformanceMetrics,
-    pub resources: ResourceMetrics,
-    pub network: NetworkMetrics,
-    pub application: ApplicationMetrics,
-    pub security: SecurityMetrics,
-}
-
-#[derive(Debug, Serialize)]
-pub struct PerformanceMetrics {
-    pub request_latency_p50_ms: f64,
-    pub request_latency_p95_ms: f64,
-    pub request_latency_p99_ms: f64,
-    pub throughput_requests_per_second: f64,
-    pub error_rate_percent: f64,
-    pub success_rate_percent: f64,
-    pub cache_hit_rate_percent: f64,
-    pub queue_depth: u32,
-}
-
-#[derive(Debug, Serialize)]
-pub struct ResourceMetrics {
-    pub cpu_cores_total: u32,
-    pub cpu_cores_used: f64,
-    pub cpu_usage_percent: f64,
-    pub memory_total_gb: f64,
-    pub memory_used_gb: f64,
-    pub memory_usage_percent: f64,
-    pub disk_total_tb: f64,
-    pub disk_used_tb: f64,
-    pub disk_usage_percent: f64,
-    pub swap_total_gb: f64,
-    pub swap_used_gb: f64,
-}
-
-#[derive(Debug, Serialize)]
-pub struct NetworkMetrics {
-    pub bytes_received_per_second: u64,
-    pub bytes_sent_per_second: u64,
-    pub packets_received_per_second: u64,
-    pub packets_sent_per_second: u64,
+/// System performance metrics
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct SystemMetrics {
+    /// CPU usage percentage (0.0 to 100.0)
+    pub cpu_usage: f64,
+    /// Memory usage in bytes
+    pub memory_usage: f64,
+    /// Current request rate (requests per second)
+    pub request_rate: f64,
+    /// Error rate percentage (0.0 to 100.0)
+    pub error_rate: f64,
+    /// Average response time in milliseconds
+    pub response_time_ms: f64,
+    /// Number of active connections
     pub active_connections: u32,
-    pub connection_errors: u32,
-    pub bandwidth_utilization_percent: f64,
+    /// Network throughput in megabits per second
+    pub throughput_mbps: f64,
 }
 
-#[derive(Debug, Serialize)]
-pub struct ApplicationMetrics {
-    pub active_users: u32,
-    pub active_sessions: u32,
-    pub api_calls_per_minute: u64,
-    pub database_connections: u32,
-    pub cache_size_mb: f64,
-    pub background_jobs_pending: u32,
-    pub background_jobs_running: u32,
-    pub feature_usage: HashMap<String, u64>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct SecurityMetrics {
-    pub authentication_attempts: u64,
-    pub failed_logins: u64,
-    pub blocked_ips: u32,
-    pub security_events: u64,
-    pub threat_detections: u32,
-    pub active_sessions: u32,
-    pub encryption_operations: u64,
-}
-
+/// Alert response containing details about a system alert
 #[derive(Debug, Serialize)]
 pub struct AlertResponse {
+    /// Unique identifier for this alert instance
     pub alert_id: String,
+    /// ID of the rule that triggered this alert
     pub rule_id: String,
-    pub severity: String, // "info", "warning", "error", "critical"
+    /// Severity level: "info", "warning", "error", or "critical"
+    pub severity: String,
+    /// Human-readable title of the alert
     pub title: String,
+    /// Detailed description of the alert condition
     pub description: String,
-    pub status: String, // "active", "acknowledged", "resolved"
+    /// Current status: "active", "acknowledged", or "resolved"
+    pub status: String,
+    /// Name of the component that triggered this alert
     pub component: String,
+    /// ISO 8601 timestamp when the alert was triggered
     pub triggered_at: String,
+    /// ISO 8601 timestamp when the alert was acknowledged (if applicable)
     pub acknowledged_at: Option<String>,
+    /// ISO 8601 timestamp when the alert was resolved (if applicable)
     pub resolved_at: Option<String>,
+    /// Metrics values that triggered this alert
     pub metrics: HashMap<String, serde_json::Value>,
+    /// List of actions taken in response to this alert
     pub actions_taken: Vec<String>,
 }
 
+/// Alert rule configuration defining when alerts should be triggered
 #[derive(Debug, Serialize)]
 pub struct AlertRule {
+    /// Unique identifier for this alert rule
     pub rule_id: String,
+    /// Human-readable name of the alert rule
     pub name: String,
+    /// Detailed description of what this rule monitors
     pub description: String,
+    /// Name of the metric being monitored
     pub metric: String,
-    pub condition: String, // "greater_than", "less_than", "equals", "not_equals"
+    /// Condition type: "greater_than", "less_than", "equals", or "not_equals"
+    pub condition: String,
+    /// Threshold value that triggers the alert
     pub threshold: f64,
+    /// Duration in seconds the condition must persist before triggering
     pub duration_seconds: u64,
+    /// Severity level for alerts triggered by this rule
     pub severity: String,
+    /// Whether this rule is currently enabled
     pub enabled: bool,
+    /// List of notification channels for this rule
     pub notifications: Vec<String>,
+    /// List of automated actions to take when triggered
     pub actions: Vec<String>,
+    /// ISO 8601 timestamp when this rule was created
     pub created_at: String,
+    /// ISO 8601 timestamp when this rule was last updated
     pub updated_at: String,
 }
 
+/// Request to create a new alert rule
 #[derive(Debug, Deserialize)]
 pub struct CreateAlertRuleRequest {
+    /// Human-readable name for the new alert rule
     pub name: String,
+    /// Detailed description of what this rule will monitor
     pub description: String,
+    /// Name of the metric to monitor
     pub metric: String,
+    /// Condition type: "greater_than", "less_than", "equals", or "not_equals"
     pub condition: String,
+    /// Threshold value that will trigger the alert
     pub threshold: f64,
+    /// Duration in seconds the condition must persist before triggering
     pub duration_seconds: u64,
+    /// Severity level for alerts triggered by this rule
     pub severity: String,
+    /// List of notification channels for this rule
     pub notifications: Vec<String>,
+    /// List of automated actions to take when triggered
     pub actions: Vec<String>,
 }
 
+/// Request to search through system logs
 #[derive(Debug, Deserialize)]
 pub struct LogSearchRequest {
+    /// Search query string to match against log messages
     pub query: String,
+    /// Optional start time filter (ISO 8601 format)
     pub start_time: Option<String>,
+    /// Optional end time filter (ISO 8601 format)
     pub end_time: Option<String>,
-    pub level: Option<String>, // "debug", "info", "warn", "error"
+    /// Optional log level filter: "debug", "info", "warn", or "error"
+    pub level: Option<String>,
+    /// Optional component name filter
     pub component: Option<String>,
+    /// Optional limit on number of results returned
     pub limit: Option<u32>,
 }
 
+/// Individual log entry from the system
 #[derive(Debug, Serialize)]
 pub struct LogEntry {
+    /// ISO 8601 timestamp when this log entry was created
     pub timestamp: String,
+    /// Log level: "debug", "info", "warn", or "error"
     pub level: String,
+    /// Name of the component that generated this log entry
     pub component: String,
+    /// Log message content
     pub message: String,
+    /// Optional distributed trace ID for request correlation
     pub trace_id: Option<String>,
+    /// Optional span ID within the trace
     pub span_id: Option<String>,
+    /// Additional metadata fields associated with this log entry
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
+/// Distributed trace information with all associated spans
 #[derive(Debug, Serialize)]
 pub struct TraceResponse {
+    /// Unique identifier for this distributed trace
     pub trace_id: String,
+    /// ISO 8601 timestamp when the trace started
     pub start_time: String,
+    /// Total duration of the trace in milliseconds
     pub duration_ms: u64,
+    /// List of spans that make up this trace
     pub spans: Vec<SpanInfo>,
+    /// List of services involved in this trace
     pub services: Vec<String>,
+    /// Overall status of the trace
     pub status: String,
+    /// Number of errors encountered during the trace
     pub error_count: u32,
 }
 
+/// Information about an individual span within a distributed trace
 #[derive(Debug, Serialize)]
 pub struct SpanInfo {
+    /// Unique identifier for this span
     pub span_id: String,
+    /// ID of the parent span (if this is a child span)
     pub parent_span_id: Option<String>,
+    /// Name of the operation performed in this span
     pub operation_name: String,
+    /// Name of the service that handled this span
     pub service_name: String,
+    /// ISO 8601 timestamp when this span started
     pub start_time: String,
+    /// Duration of this span in milliseconds
     pub duration_ms: u64,
+    /// Status of this span
     pub status: String,
+    /// Key-value tags associated with this span
     pub tags: HashMap<String, String>,
+    /// List of log entries generated during this span
     pub logs: Vec<SpanLog>,
 }
 
+/// Log entry generated during a span execution
 #[derive(Debug, Serialize)]
 pub struct SpanLog {
+    /// ISO 8601 timestamp when this log entry was created
     pub timestamp: String,
+    /// Key-value fields associated with this log entry
     pub fields: HashMap<String, serde_json::Value>,
 }
 
+/// Real-time system metrics response for live monitoring dashboards
 #[derive(Debug, Serialize)]
 pub struct RealtimeMetricsResponse {
+    /// ISO 8601 timestamp when these metrics were collected
     pub timestamp: String,
+    /// CPU usage as a percentage (0.0 to 100.0)
     pub cpu_usage: f64,
+    /// Memory usage as a percentage (0.0 to 100.0)
     pub memory_usage: f64,
+    /// Request processing rate per second
     pub request_rate: f64,
+    /// Error rate as a percentage (0.0 to 100.0)
     pub error_rate: f64,
+    /// Average response time in milliseconds
     pub response_time_ms: f64,
+    /// Number of currently active connections
     pub active_connections: u32,
+    /// Network throughput in megabits per second
     pub throughput_mbps: f64,
 }
 
@@ -349,72 +405,20 @@ async fn get_system_health(
 /// Get comprehensive system metrics
 async fn get_system_metrics(
     State(_state): State<AppState>,
-) -> Result<Json<ApiResponse<SystemMetricsResponse>>, StatusCode> {
+) -> Result<Json<ApiResponse<SystemMetrics>>, StatusCode> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
 
     info!("📈 Collecting system metrics");
 
-    let response = SystemMetricsResponse {
-        timestamp: chrono::Utc::now().to_rfc3339(),
-        performance: PerformanceMetrics {
-            request_latency_p50_ms: 45.2,
-            request_latency_p95_ms: 180.7,
-            request_latency_p99_ms: 425.3,
-            throughput_requests_per_second: 1247.6,
-            error_rate_percent: 0.12,
-            success_rate_percent: 99.88,
-            cache_hit_rate_percent: 87.3,
-            queue_depth: 23,
-        },
-        resources: ResourceMetrics {
-            cpu_cores_total: 32,
-            cpu_cores_used: 21.6,
-            cpu_usage_percent: 67.5,
-            memory_total_gb: 128.0,
-            memory_used_gb: 92.5,
-            memory_usage_percent: 72.3,
-            disk_total_tb: 5.0,
-            disk_used_tb: 2.29,
-            disk_usage_percent: 45.8,
-            swap_total_gb: 16.0,
-            swap_used_gb: 0.8,
-        },
-        network: NetworkMetrics {
-            bytes_received_per_second: 15728640, // 15 MB/s
-            bytes_sent_per_second: 31457280,     // 30 MB/s
-            packets_received_per_second: 12560,
-            packets_sent_per_second: 18940,
-            active_connections: 892,
-            connection_errors: 3,
-            bandwidth_utilization_percent: 23.7,
-        },
-        application: ApplicationMetrics {
-            active_users: 1567,
-            active_sessions: 2341,
-            api_calls_per_minute: 18423,
-            database_connections: 45,
-            cache_size_mb: 2048.5,
-            background_jobs_pending: 127,
-            background_jobs_running: 8,
-            feature_usage: {
-                let mut usage = HashMap::new();
-                usage.insert("genetic_spawning".to_string(), 234);
-                usage.insert("threat_detection".to_string(), 1567);
-                usage.insert("api_calls".to_string(), 18423);
-                usage.insert("cache_operations".to_string(), 45782);
-                usage
-            },
-        },
-        security: SecurityMetrics {
-            authentication_attempts: 3456,
-            failed_logins: 23,
-            blocked_ips: 12,
-            security_events: 45,
-            threat_detections: 3,
-            active_sessions: 2341,
-            encryption_operations: 15678,
-        },
+    let response = SystemMetrics {
+        cpu_usage: 67.5,
+        memory_usage: 72.3,
+        request_rate: 456.7,
+        error_rate: 0.12,
+        response_time_ms: 45.2,
+        active_connections: 892,
+        throughput_mbps: 125.6,
     };
 
     let processing_time = start_time.elapsed().as_millis() as u64;
@@ -572,14 +576,17 @@ async fn get_performance_metrics(
 ) -> Result<Json<ApiResponse<PerformanceMetrics>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let metrics = PerformanceMetrics {
-        request_latency_p50_ms: 45.2,
-        request_latency_p95_ms: 180.7,
-        request_latency_p99_ms: 425.3,
-        throughput_requests_per_second: 1247.6,
-        error_rate_percent: 0.12,
-        success_rate_percent: 99.88,
-        cache_hit_rate_percent: 87.3,
-        queue_depth: 23,
+        cpu_usage_percent: 45.2,
+        memory_usage_bytes: 1024 * 1024 * 1024, // 1GB
+        memory_total_bytes: 8 * 1024 * 1024 * 1024, // 8GB
+        disk_usage_bytes: 10 * 1024 * 1024 * 1024, // 10GB
+        disk_total_bytes: 100 * 1024 * 1024 * 1024, // 100GB
+        network_rx_bytes: 1024 * 1024 * 50, // 50MB
+        network_tx_bytes: 1024 * 1024 * 30, // 30MB
+        active_connections: 23,
+        request_count: 1247,
+        error_count: 2,
+        avg_response_time_ms: 180.7,
     };
     Ok(Json(success_response(metrics, request_id, 12, true)))
 }
@@ -590,18 +597,19 @@ async fn get_resource_metrics(
     let request_id = uuid::Uuid::new_v4().to_string();
     let metrics = ResourceMetrics {
         cpu_cores_total: 32,
-        cpu_cores_used: 21.6,
-        cpu_usage_percent: 67.5,
-        memory_total_gb: 128.0,
-        memory_used_gb: 92.5,
-        memory_usage_percent: 72.3,
-        disk_total_tb: 5.0,
-        disk_used_tb: 2.29,
-        disk_usage_percent: 45.8,
-        swap_total_gb: 16.0,
-        swap_used_gb: 0.8,
+        cpu_cores_used: 22,
+        memory_total_gb: 128,
+        memory_used_gb: 92,
+        disk_total_gb: 5000,
+        disk_used_gb: 2290,
+        network_bandwidth_mbps: 1000,
+        network_utilization_percent: 45.8,
+        active_connections: 156,
+        max_connections: 1000,
+        thread_pool_size: 64,
+        active_threads: 42,
     };
-    Ok(Json(success_response(metrics, request_id, 10, true)))
+    Ok(Json(success_response(metrics, request_id, 8, true)))
 }
 
 // Additional endpoint stubs for comprehensive coverage

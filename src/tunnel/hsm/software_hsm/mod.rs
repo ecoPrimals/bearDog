@@ -1,7 +1,7 @@
 //! # Software HSM Module
 //!
 //! This module provides a comprehensive Software HSM implementation for the BearDog project.
-//! It offers secure key management, cryptographic operations, and audit logging without 
+//! It offers secure key management, cryptographic operations, and audit logging without
 //! requiring hardware security modules.
 //!
 //! ## Architecture
@@ -130,31 +130,38 @@
 //! ```
 
 // Module declarations
+/// Audit logging and compliance tracking
 pub mod audit;
+/// Core HSM implementation
 pub mod core;
+/// Cryptographic provider implementations
 pub mod crypto_providers;
+/// Health monitoring and diagnostics
 pub mod health;
+/// Keystore management and key lifecycle
 pub mod keystore;
+/// Memory management and protection
 pub mod memory;
+/// Data storage and persistence
 pub mod storage;
+/// Type definitions and structures
 pub mod types;
 
 // Re-export main types and functions for convenience
-pub use core::*;
 pub use types::*;
 
 // Re-export commonly used items from submodules
-pub use audit::{AuditStatistics, InMemoryAuditLogger, create_audit_logger};
-pub use crypto_providers::{
-    CryptoProviderCapabilities, create_crypto_provider, get_crypto_provider_capabilities,
-    get_supported_crypto_backends,
+pub use self::audit::{create_audit_logger, AuditStatistics, InMemoryAuditLogger};
+pub use self::crypto_providers::{
+    create_crypto_provider, get_crypto_provider_capabilities, get_supported_crypto_backends,
+    CryptoProviderCapabilities,
 };
-pub use health::{SimpleHealthSummary};
-pub use keystore::{KeyStoreStatistics};
-pub use memory::{MemoryProtectionStats, SecureMemoryRegion, create_memory_protection_stats};
-pub use storage::{
-    MemoryStorageStatistics, StorageBackendCapabilities, StorageScalability,
+pub use self::health::SimpleHealthSummary;
+pub use self::keystore::KeyStoreStatistics;
+pub use self::memory::{create_memory_protection_stats, MemoryProtectionStats, SecureMemoryRegion};
+pub use self::storage::{
     create_storage_backend, get_storage_backend_capabilities, get_supported_storage_backends,
+    MemoryStorageStatistics, StorageBackendCapabilities, StorageScalability,
 };
 
 /// Software HSM module version
@@ -244,7 +251,9 @@ pub async fn create_database_software_hsm() -> crate::error::BearDogResult<RustS
 }
 
 /// Validate Software HSM configuration
-pub fn validate_config(config: &crate::tunnel::hsm::types::SoftwareHsmConfig) -> crate::error::BearDogResult<()> {
+pub fn validate_config(
+    config: &crate::tunnel::hsm::types::SoftwareHsmConfig,
+) -> crate::error::BearDogResult<()> {
     // Validate cache size
     if config.key_store_config.cache_size == 0 {
         return Err(crate::error::BearDogError::InvalidConfig {
@@ -254,7 +263,10 @@ pub fn validate_config(config: &crate::tunnel::hsm::types::SoftwareHsmConfig) ->
     }
 
     // Validate memory protection level compatibility
-    if matches!(config.memory_config.protection_level, crate::tunnel::hsm::types::MemoryProtectionLevel::Maximum) {
+    if matches!(
+        config.memory_config.protection_level,
+        crate::tunnel::hsm::types::MemoryProtectionLevel::Maximum
+    ) {
         // Maximum protection level is supported
     }
 
@@ -300,20 +312,35 @@ pub fn get_capabilities_summary() -> SoftwareHsmCapabilities {
 /// Software HSM capabilities summary
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SoftwareHsmCapabilities {
+    /// List of key types supported by the HSM
     pub supported_key_types: Vec<crate::tunnel::hsm::types::KeyType>,
+    /// List of cryptographic algorithms supported by the HSM
     pub supported_algorithms: Vec<crate::tunnel::hsm::types::Algorithm>,
+    /// List of cryptographic backends supported by the HSM
     pub supported_crypto_backends: Vec<crate::tunnel::hsm::types::CryptoBackend>,
+    /// List of storage backends supported by the HSM
     pub supported_storage_backends: Vec<crate::tunnel::hsm::types::KeyStorageType>,
+    /// Maximum key size in bits supported by the HSM
     pub max_key_size: u32,
+    /// Whether the HSM supports key generation
     pub supports_key_generation: bool,
+    /// Whether the HSM supports key import
     pub supports_key_import: bool,
+    /// Whether the HSM supports key export
     pub supports_key_export: bool,
+    /// Whether the HSM supports key derivation
     pub supports_key_derivation: bool,
+    /// Whether the HSM supports backup operations
     pub supports_backup: bool,
+    /// Whether the HSM supports restore operations
     pub supports_restore: bool,
+    /// Whether the HSM supports audit logging
     pub supports_audit_logging: bool,
+    /// Whether the HSM supports health monitoring
     pub supports_health_monitoring: bool,
+    /// Whether memory protection features are available
     pub memory_protection_available: bool,
+    /// Whether the HSM is hardware-backed
     pub hardware_backed: bool,
 }
 
@@ -390,4 +417,4 @@ mod tests {
         assert!(!VERSION.is_empty());
         assert!(!BUILD_INFO.is_empty());
     }
-} 
+}

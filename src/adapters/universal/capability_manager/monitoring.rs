@@ -7,23 +7,28 @@ use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
-use uuid::Uuid;
+use tracing::debug;
 
-use super::config::CapabilityManagerConfig;
-use super::super::registry::CapabilityRegistry;
 use super::super::traits::*;
+use super::config::CapabilityManagerConfig;
 use crate::BearDogResult;
 
 /// Real-time capability monitoring
 #[derive(Debug, Clone)]
 pub struct CapabilityMonitor {
+    /// Unique identifier for the capability being monitored
     pub capability_id: String,
+    /// Key identifying the provider offering this capability
     pub provider_key: String,
+    /// Timestamp of the last health check
     pub last_health_check: DateTime<Utc>,
+    /// Current performance metrics
     pub current_performance: PerformanceMetrics,
+    /// Historical availability snapshots
     pub availability_history: Vec<AvailabilitySnapshot>,
+    /// Alert thresholds for monitoring
     pub alert_thresholds: AlertThresholds,
+    /// Current status of the capability
     pub status: CapabilityStatus,
 }
 
@@ -108,8 +113,9 @@ impl CapabilityMonitor {
         let monitor_key = format!("{}:{}", provider_key, capability.id);
 
         // Get or create monitor
-        let monitor = monitors_guard.entry(monitor_key.clone()).or_insert_with(|| {
-            CapabilityMonitor {
+        let monitor = monitors_guard
+            .entry(monitor_key.clone())
+            .or_insert_with(|| CapabilityMonitor {
                 capability_id: capability.id.clone(),
                 provider_key: provider_key.to_string(),
                 last_health_check: Utc::now(),
@@ -133,8 +139,7 @@ impl CapabilityMonitor {
                     min_quality_score: 0.8,
                 },
                 status: CapabilityStatus::Unknown,
-            }
-        });
+            });
 
         // Update performance metrics (mock implementation)
         let new_performance = PerformanceMetrics {
@@ -199,4 +204,4 @@ impl CapabilityMonitor {
             CapabilityStatus::Healthy
         }
     }
-} 
+}

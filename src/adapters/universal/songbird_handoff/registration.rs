@@ -14,13 +14,18 @@ use tracing::{debug, info};
 use super::super::capability_manager::CapabilityManager;
 use super::super::traits::{
     Capability, CapabilityCategory, QualityOfService, ResourceRequirements,
+    MonitoringConfig,
 };
 use super::client::SongBirdDiscoveryClient;
 use super::types::{
-    RegistrationStatus, RegistrationState, AdvertisedService, ServiceEndpoint, LoadBalancerConfig,
-    OrchestrationMetadata, RoutingRule, RoutingCondition, RoutingAction, ScalingPolicy,
-    ScalingMetric, ScalingAction, MonitoringConfig, CustomMetric, MetricType, AlertRule,
-    AlertSeverity, SongBirdHandoffConfig,
+    AdvertisedService, LoadBalancerConfig, LoadBalancingAlgorithm, 
+    OrchestrationMetadata, PrimalType, ServiceCapabilities, 
+    ServiceEndpoint, ServiceEndpoints, ServiceHealth,
+    PerformanceMetrics, PerformanceCapabilities, HealthCheckConfig, 
+    ResourceSpec, SecurityConfig, EcosystemServiceRegistration,
+    CircuitBreakerConfig, RegistrationState, RegistrationStatus, 
+    RoutingRule, ScalingPolicy, ScalingAction, SongBirdHandoffConfig,
+    EndpointType, AuthMethod, SecurityLevel,
 };
 use crate::{BearDogCore, BearDogResult};
 
@@ -59,11 +64,8 @@ impl SongBirdRegistrationManager {
 
         // Create SongBird client
         let client = Arc::new(
-            SongBirdDiscoveryClient::new(
-                config.songbird_endpoint.clone(),
-                config.api_key.clone(),
-            )
-            .await?,
+            SongBirdDiscoveryClient::new(config.songbird_endpoint.clone(), config.api_key.clone())
+                .await?,
         );
 
         // Initialize registration status
@@ -116,8 +118,8 @@ impl SongBirdRegistrationManager {
         // Update registration status
         {
             let mut status = self.registration_status.write().await;
-            status.registration_id = registration_result.registration_id;
-            status.status = RegistrationState::Registered;
+            status.registration_id = registration_result.service_id.clone();
+            status.status = RegistrationState::Active;
             status.last_registration = chrono::Utc::now();
             status.consecutive_failures = 0;
         }
@@ -125,7 +127,7 @@ impl SongBirdRegistrationManager {
         // Store advertised service
         {
             let mut services = self.advertised_services.write().await;
-            services.insert(advertised_service.service_id.clone(), advertised_service);
+            services.insert(advertised_service.registration.service_id.clone(), advertised_service);
         }
 
         // Start background tasks
@@ -142,8 +144,14 @@ impl SongBirdRegistrationManager {
     /// Create universal service advertisement
     async fn create_universal_service_advertisement(
         &self,
-        genetic_capabilities: &HashMap<String, super::super::capability_manager::GeneticCapabilityProfile>,
-        emergent_capabilities: &HashMap<String, super::super::capability_manager::EmergentCapability>,
+        genetic_capabilities: &HashMap<
+            String,
+            super::super::capability_manager::GeneticCapabilityProfile,
+        >,
+        emergent_capabilities: &HashMap<
+            String,
+            super::super::capability_manager::EmergentCapability,
+        >,
         _monitoring_status: &HashMap<String, super::super::capability_manager::CapabilityMonitor>,
     ) -> BearDogResult<AdvertisedService> {
         // Create universal service ID (ecosystem-agnostic)
@@ -157,21 +165,30 @@ impl SongBirdRegistrationManager {
 
         // Add genetic capabilities (converted to universal format)
         for genetic_profile in genetic_capabilities.values() {
-            all_capabilities.extend(self.convert_genetic_capabilities_to_universal(genetic_profile));
+            all_capabilities
+                .extend(self.convert_genetic_capabilities_to_universal(genetic_profile));
         }
 
         // Add emergent capabilities (converted to universal format)
         for emergent_capability in emergent_capabilities.values() {
-            all_capabilities.push(self.convert_emergent_capability_to_universal(emergent_capability));
+            all_capabilities
+                .push(self.convert_emergent_capability_to_universal(emergent_capability));
         }
 
         // Create universal service endpoints
         let endpoints = self.create_universal_service_endpoints().await?;
 
         // Create health check URL
-        let health_check_url = format!("{}://{}/health", 
-            endpoints.first().map(|e| e.protocol.as_str()).unwrap_or("http"),
-            endpoints.first().map(|e| format!("{}:{}", e.address, e.port)).unwrap_or_else(|| "localhost:8080".to_string())
+        let health_check_url = format!(
+            "{}://{}/health",
+            endpoints
+                .first()
+                .map(|e| e.protocol.as_str())
+                .unwrap_or("http"),
+            endpoints
+                .first()
+                .map(|e| e.url.clone())
+                .unwrap_or_else(|| "localhost:8080".to_string())
         );
 
         // Create discovery tags (universal ecosystem tags)
@@ -185,24 +202,97 @@ impl SongBirdRegistrationManager {
         // Create load balancer configuration
         let load_balancer_config = LoadBalancerConfig {
             algorithm: self.config.load_balancer_algorithm.clone(),
-            health_check_interval_seconds: self.config.health_check_interval_seconds,
-            max_retries: self.config.max_registration_retries,
-            timeout_seconds: self.config.registration_timeout_seconds,
-            circuit_breaker_enabled: self.config.enable_circuit_breaker,
+            weight: 100,
+            max_requests: 1000,
+            circuit_breaker: CircuitBreakerConfig {
+                failure_threshold: 5,
+                timeout_seconds: 60,
+                success_threshold: 3,
+            },
         };
 
         // Create orchestration metadata
-        let orchestration_metadata = self.create_universal_orchestration_metadata(&all_capabilities).await?;
+        let orchestration_metadata = self
+            .create_universal_orchestration_metadata(&all_capabilities)
+            .await?;
 
         Ok(AdvertisedService {
-            service_id,
-            service_name: "Universal Ecosystem Component".to_string(),
-            capabilities: all_capabilities,
-            endpoints,
-            health_check_url,
-            discovery_tags,
-            load_balancer_config,
-            orchestration_metadata,
+            registration: EcosystemServiceRegistration {
+                service_id,
+                primal_type: PrimalType::BearDog,
+                biome_id: None,
+                capabilities: ServiceCapabilities {
+                    core: all_capabilities.iter()
+                        .filter(|c| c.category == CapabilityCategory::Security)
+                        .map(|c| c.name.clone())
+                        .collect(),
+                    extended: all_capabilities.iter()
+                        .filter(|c| c.category != CapabilityCategory::Security)
+                        .map(|c| c.name.clone())
+                        .collect(),
+                    integrations: vec![
+                        "songbird".to_string(),
+                        "ecosystem".to_string(),
+                        "universal".to_string(),
+                    ],
+                    performance: PerformanceCapabilities {
+                        latency_ms: Some(100),
+                        throughput_rps: Some(1000),
+                        max_concurrent_requests: Some(100),
+                    },
+                },
+                endpoints: ServiceEndpoints {
+                    health: health_check_url.clone(),
+                    metrics: "http://0.0.0.0:9090/metrics".to_string(),
+                    admin: "http://0.0.0.0:8080/admin".to_string(),
+                    websocket: None,
+                    primary: "http://0.0.0.0:8080/api/v1".to_string(),
+                },
+                resource_requirements: ResourceSpec {
+                    cpu_cores: Some(1.0),
+                    memory_mb: Some(512),
+                    storage_mb: Some(1024),
+                    network_mbps: Some(100),
+                    gpu_units: None,
+                },
+                security_config: SecurityConfig {
+                    auth_method: AuthMethod::ApiKey,
+                    encryption_required: true,
+                    security_level: SecurityLevel::High,
+                    compliance: vec!["GDPR".to_string(), "HIPAA".to_string()],
+                },
+                health_check: HealthCheckConfig {
+                    path: health_check_url,
+                    interval_seconds: 30,
+                    timeout_seconds: 5,
+                    failure_threshold: 3,
+                },
+                metadata: HashMap::new(),
+                registered_at: chrono::Utc::now(),
+            },
+            health: ServiceHealth {
+                status: super::types::HealthStatus::Healthy,
+                last_check: chrono::Utc::now(),
+                metrics: PerformanceMetrics {
+                    cpu_percent: 0.0,
+                    memory_percent: 0.0,
+                    latency_ms: 0,
+                    requests_per_second: 0.0,
+                    error_rate_percent: 0.0,
+                },
+                error_details: None,
+            },
+            load_balancer_config: LoadBalancerConfig {
+                algorithm: LoadBalancingAlgorithm::RoundRobin,
+                weight: 100,
+                max_requests: 1000,
+                circuit_breaker: CircuitBreakerConfig {
+                    failure_threshold: 5,
+                    timeout_seconds: 30,
+                    success_threshold: 2,
+                },
+            },
+            orchestration: orchestration_metadata,
         })
     }
 
@@ -212,7 +302,8 @@ impl SongBirdRegistrationManager {
             Capability {
                 id: "universal.health-check".to_string(),
                 name: "Universal Health Check".to_string(),
-                description: "Universal health check capability for any ecosystem component".to_string(),
+                description: "Universal health check capability for any ecosystem component"
+                    .to_string(),
                 category: CapabilityCategory::Monitoring,
                 attributes: HashMap::new(),
                 qos: QualityOfService::default(),
@@ -251,8 +342,10 @@ impl SongBirdRegistrationManager {
             capabilities.push(Capability {
                 id: format!("universal.genetic.{}", trait_obj.trait_id),
                 name: format!("Universal Genetic {:?}", trait_obj.trait_type),
-                description: format!("Universal genetic trait: {:?} (expression: {:.2})", 
-                    trait_obj.trait_type, trait_obj.expression_level),
+                description: format!(
+                    "Universal genetic trait: {:?} (expression: {:.2})",
+                    trait_obj.trait_type, trait_obj.expression_level
+                ),
                 category: CapabilityCategory::Compute,
                 attributes: HashMap::new(),
                 qos: QualityOfService::default(),
@@ -263,9 +356,9 @@ impl SongBirdRegistrationManager {
         // Convert evolved capabilities to universal format (these are capability IDs)
         for capability_id in &genetic_profile.evolved_capabilities {
             capabilities.push(Capability {
-                id: format!("universal.genetic.{}", capability_id),
-                name: format!("Universal Evolved {}", capability_id),
-                description: format!("Universal evolved genetic capability: {}", capability_id),
+                id: format!("universal.genetic.{capability_id}"),
+                name: format!("Universal Evolved {capability_id}"),
+                description: format!("Universal evolved genetic capability: {capability_id}"),
                 category: CapabilityCategory::Compute,
                 attributes: HashMap::new(),
                 qos: QualityOfService::default(),
@@ -298,32 +391,26 @@ impl SongBirdRegistrationManager {
 
         // HTTP/HTTPS endpoint for universal communication
         endpoints.push(ServiceEndpoint {
+            url: "https://0.0.0.0:8443/api/v1".to_string(),
+            endpoint_type: EndpointType::Primary,
             protocol: "https".to_string(),
-            address: "0.0.0.0".to_string(),
             port: 8443,
-            path: Some("/api/v1".to_string()),
-            weight: 100,
-            health_check: true,
         });
 
         // gRPC endpoint for high-performance communication
         endpoints.push(ServiceEndpoint {
+            url: "grpc://0.0.0.0:9443".to_string(),
+            endpoint_type: EndpointType::Custom("grpc".to_string()),
             protocol: "grpc".to_string(),
-            address: "0.0.0.0".to_string(),
             port: 9443,
-            path: None,
-            weight: 80,
-            health_check: true,
         });
 
         // Metrics endpoint for monitoring
         endpoints.push(ServiceEndpoint {
+            url: "http://0.0.0.0:9090/metrics".to_string(),
+            endpoint_type: EndpointType::Metrics,
             protocol: "http".to_string(),
-            address: "0.0.0.0".to_string(),
             port: 9090,
-            path: Some("/metrics".to_string()),
-            weight: 10,
-            health_check: false,
         });
 
         Ok(endpoints)
@@ -337,106 +424,72 @@ impl SongBirdRegistrationManager {
         // Create universal routing rules
         let routing_rules = vec![
             RoutingRule {
-                rule_id: "universal-api-route".to_string(),
-                condition: RoutingCondition::PathPrefix("/api/v1".to_string()),
-                action: RoutingAction::RouteToEndpoint("https-endpoint".to_string()),
-                priority: 100,
+                condition: "path_prefix == '/api/v1'".to_string(),
+                target: "https-endpoint".to_string(),
+                weight: 100,
             },
             RoutingRule {
-                rule_id: "universal-grpc-route".to_string(),
-                condition: RoutingCondition::Header {
-                    name: "content-type".to_string(),
-                    value: "application/grpc".to_string(),
-                },
-                action: RoutingAction::RouteToEndpoint("grpc-endpoint".to_string()),
-                priority: 90,
+                condition: "content-type == 'application/grpc'".to_string(),
+                target: "grpc-endpoint".to_string(),
+                weight: 90,
             },
         ];
 
         // Create universal scaling policies
         let scaling_policies = vec![
             ScalingPolicy {
-                policy_id: "universal-cpu-scaling".to_string(),
-                metric: ScalingMetric::CpuUtilization,
+                metric: "cpu_utilization".to_string(),
                 threshold: 80.0,
-                action: ScalingAction::AutoScale { min: 1, max: 10 },
-                cooldown_seconds: 300,
+                action: ScalingAction::ScaleUp(10),
             },
             ScalingPolicy {
-                policy_id: "universal-request-scaling".to_string(),
-                metric: ScalingMetric::RequestRate,
+                metric: "request_rate".to_string(),
                 threshold: 1000.0,
-                action: ScalingAction::AutoScale { min: 1, max: 5 },
-                cooldown_seconds: 180,
+                action: ScalingAction::ScaleUp(5),
             },
         ];
 
         // Create universal monitoring configuration
         let monitoring_config = MonitoringConfig {
             metrics_enabled: true,
-            tracing_enabled: true,
-            logging_level: "info".to_string(),
-            custom_metrics: vec![
-                CustomMetric {
-                    name: "universal_requests_total".to_string(),
-                    metric_type: MetricType::Counter,
-                    description: "Total number of requests processed".to_string(),
-                    tags: HashMap::new(),
-                },
-                CustomMetric {
-                    name: "universal_capability_usage".to_string(),
-                    metric_type: MetricType::Gauge,
-                    description: "Current capability usage percentage".to_string(),
-                    tags: HashMap::new(),
-                },
-            ],
-            alert_rules: vec![
-                AlertRule {
-                    rule_id: "universal-high-error-rate".to_string(),
-                    condition: "error_rate > 0.05".to_string(),
-                    threshold: 0.05,
-                    severity: AlertSeverity::Warning,
-                    notification_channels: vec!["ecosystem-alerts".to_string()],
-                },
-            ],
+            log_level: "info".to_string(),
+            health_check_interval_seconds: 60,
         };
 
         Ok(OrchestrationMetadata {
             routing_rules,
             scaling_policies,
             affinity_rules: Vec::new(),
-            security_policies: vec!["universal-security".to_string()],
-            monitoring_config,
         })
     }
 
     /// Start heartbeat task for maintaining registration
     async fn start_heartbeat_task(&self) -> BearDogResult<()> {
         debug!("💓 Starting universal heartbeat task");
-        
+
         // TODO: Implement heartbeat task using tokio::spawn
         // This would periodically send heartbeat to SongBird to maintain registration
-        
+
         Ok(())
     }
 
     /// Start health monitoring task
     async fn start_health_monitoring_task(&self) -> BearDogResult<()> {
         debug!("🏥 Starting universal health monitoring task");
-        
+
         // TODO: Implement health monitoring task using tokio::spawn
         // This would periodically check component health and update SongBird
-        
+
         Ok(())
     }
 
     /// Update capability advertisement
     pub async fn update_capability_advertisement(&self) -> BearDogResult<()> {
         debug!("🔄 Updating universal capability advertisement");
-        
+
         // TODO: Implement capability advertisement update
         // This would detect changes in capabilities and update SongBird registration
-        
+
         Ok(())
     }
 
@@ -449,4 +502,4 @@ impl SongBirdRegistrationManager {
     pub async fn get_advertised_services(&self) -> HashMap<String, AdvertisedService> {
         self.advertised_services.read().await.clone()
     }
-} 
+}

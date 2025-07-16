@@ -148,7 +148,7 @@ impl GamingCryptoEngine {
             None => {
                 return Err(BearDogError::encryption(
                     "session_key",
-                    format!("Session key not found for: {}", session_id),
+                    format!("Session key not found for: {session_id}"),
                 ));
             }
         };
@@ -193,7 +193,7 @@ impl GamingCryptoEngine {
             None => {
                 return Err(BearDogError::encryption(
                     "session_key",
-                    format!("Session key not found for decryption: {}", session_id),
+                    format!("Session key not found for decryption: {session_id}"),
                 ));
             }
         };
@@ -493,8 +493,11 @@ pub struct NetworkPerformanceMetrics {
 /// Crypto optimization results from toadstool-compute
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoOptimizationResult {
+    /// List of recommended cryptographic algorithms
     pub recommended_algorithms: Vec<CryptoChoice>,
+    /// Expected performance improvement percentage
     pub performance_improvement: f64,
+    /// Whether network consensus was achieved
     pub network_consensus: bool,
 }
 

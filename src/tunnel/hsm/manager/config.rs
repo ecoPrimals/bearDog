@@ -3,19 +3,24 @@
 //! This module contains all configuration structures for the HSM manager,
 //! including health monitoring, failover, performance, and overall manager config.
 
-use std::time::Duration;
 use super::super::types::HsmConfig;
+use std::time::Duration;
 
 /// Simple HSM tier enum for internal tracking
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SimpleHsmTier {
+    /// Smartphone-based HSM tier
     Smartphone,
+    /// Software-based HSM tier
     Software,
+    /// Hardware-based HSM tier
     Hardware,
+    /// Hybrid HSM tier combining multiple approaches
     Hybrid,
 }
 
 impl SimpleHsmTier {
+    /// Convert the HSM tier to a string representation
     pub fn to_string(&self) -> String {
         match self {
             SimpleHsmTier::Smartphone => "Smartphone".to_string(),
@@ -28,38 +33,56 @@ impl SimpleHsmTier {
 
 /// HSM Manager configuration
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct HsmManagerConfig {
+    /// List of HSM configurations to manage
     pub hsm_configs: Vec<HsmConfig>,
+    /// Health monitoring configuration
     pub health_config: HealthConfig,
+    /// Failover configuration
     pub failover_config: FailoverConfig,
+    /// Performance configuration
     pub performance_config: PerformanceConfig,
 }
 
 /// Health monitoring configuration
 #[derive(Debug, Clone)]
 pub struct HealthConfig {
+    /// Interval between health checks
     pub check_interval: Duration,
+    /// Number of failures before marking HSM as unhealthy
     pub failure_threshold: u32,
+    /// Number of successful checks before marking HSM as healthy again
     pub recovery_threshold: u32,
+    /// Timeout for individual health checks
     pub timeout: Duration,
 }
 
 /// Failover configuration
 #[derive(Debug, Clone)]
 pub struct FailoverConfig {
+    /// Whether failover is enabled
     pub enabled: bool,
+    /// Maximum number of retry attempts
     pub max_retries: u32,
+    /// Delay between retry attempts
     pub retry_delay: Duration,
+    /// Threshold for circuit breaker activation
     pub circuit_breaker_threshold: u32,
+    /// Timeout for circuit breaker reset
     pub circuit_breaker_timeout: Duration,
 }
 
 /// Performance configuration
 #[derive(Debug, Clone)]
 pub struct PerformanceConfig {
+    /// Whether load balancing is enabled
     pub enable_load_balancing: bool,
+    /// Whether caching is enabled
     pub enable_caching: bool,
+    /// Maximum number of concurrent operations
     pub max_concurrent_operations: usize,
+    /// Timeout for individual operations
     pub operation_timeout: Duration,
 }
 
@@ -97,13 +120,3 @@ impl Default for PerformanceConfig {
     }
 }
 
-impl Default for HsmManagerConfig {
-    fn default() -> Self {
-        Self {
-            hsm_configs: Vec::new(),
-            health_config: HealthConfig::default(),
-            failover_config: FailoverConfig::default(),
-            performance_config: PerformanceConfig::default(),
-        }
-    }
-} 

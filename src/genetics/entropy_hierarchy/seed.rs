@@ -102,7 +102,7 @@ impl EntropySeed {
 
         // Create event-based lifetime policy
         let lifetime_policy = SeedLifetimePolicy::EventBased {
-            event_id: format!("event_{}", seed_id),
+            event_id: format!("event_{seed_id}"),
             event_type: event_context.event_type.clone(),
             sharing_policy: sharing_policy.clone(),
             event_expiration: sharing_policy.sharing_expiration,
@@ -138,15 +138,16 @@ impl EntropySeed {
     pub fn is_valid(&self) -> bool {
         // Check expiration based on lifetime policy
         match &self.lifetime_policy {
-            SeedLifetimePolicy::Ephemeral { expiration_time, .. } => {
-                Utc::now() < *expiration_time
-            }
-            SeedLifetimePolicy::Persistent { ownership_expiration, .. } => {
-                ownership_expiration.map_or(true, |exp| Utc::now() < exp)
-            }
-            SeedLifetimePolicy::EventBased { event_expiration, .. } => {
-                event_expiration.map_or(true, |exp| Utc::now() < exp)
-            }
+            SeedLifetimePolicy::Ephemeral {
+                expiration_time, ..
+            } => Utc::now() < *expiration_time,
+            SeedLifetimePolicy::Persistent {
+                ownership_expiration,
+                ..
+            } => ownership_expiration.is_none_or(|exp| Utc::now() < exp),
+            SeedLifetimePolicy::EventBased {
+                event_expiration, ..
+            } => event_expiration.is_none_or(|exp| Utc::now() < exp),
             SeedLifetimePolicy::SelfSovereign { .. } => true, // Self-sovereign seeds don't expire
         }
     }
@@ -155,14 +156,20 @@ impl EntropySeed {
     pub fn transfer_ownership(&mut self, new_owner: HumanIdentity) -> BearDogResult<()> {
         // Check if transfer is allowed
         match &self.lifetime_policy {
-            SeedLifetimePolicy::Persistent { ownership_transfer_allowed, .. } => {
+            SeedLifetimePolicy::Persistent {
+                ownership_transfer_allowed,
+                ..
+            } => {
                 if !ownership_transfer_allowed {
                     return Err(BearDogError::Internal {
                         message: "Ownership transfer not allowed for this seed".to_string(),
                     });
                 }
             }
-            SeedLifetimePolicy::SelfSovereign { transfer_permissions, .. } => {
+            SeedLifetimePolicy::SelfSovereign {
+                transfer_permissions,
+                ..
+            } => {
                 if !transfer_permissions.transferable {
                     return Err(BearDogError::Internal {
                         message: "This self-sovereign seed is not transferable".to_string(),
@@ -204,7 +211,7 @@ impl EntropySeed {
         self.usage_history.push(SeedUsageEvent {
             timestamp: Utc::now(),
             operation: "ownership_transfer".to_string(),
-            context: transfer_context, // Use the saved context
+            context: transfer_context,  // Use the saved context
             result_hash: vec![0u8; 32], // Would be hash of transfer
         });
 
@@ -222,7 +229,10 @@ impl EntropySeed {
         self.ownership = SeedOwnership::MachineOwned {
             previous_owner,
             ownership_transition: OwnershipTransition::OwnershipExpired,
-            self_sovereign: matches!(self.lifetime_policy, SeedLifetimePolicy::SelfSovereign { .. }),
+            self_sovereign: matches!(
+                self.lifetime_policy,
+                SeedLifetimePolicy::SelfSovereign { .. }
+            ),
         };
 
         // Record the expiration
@@ -246,9 +256,13 @@ impl EntropySeed {
         }
 
         // Check if operation is allowed
-        if !self.usage_policy.allowed_operations.contains(&operation.to_string()) {
+        if !self
+            .usage_policy
+            .allowed_operations
+            .contains(&operation.to_string())
+        {
             return Err(BearDogError::Internal {
-                message: format!("Operation '{}' not allowed for this seed", operation),
+                message: format!("Operation '{operation}' not allowed for this seed"),
             });
         }
 
@@ -262,7 +276,9 @@ impl EntropySeed {
 
             if operation_count >= max_uses {
                 return Err(BearDogError::Internal {
-                    message: format!("Maximum usage limit ({}) reached for operation '{}'", max_uses, operation),
+                    message: format!(
+                        "Maximum usage limit ({max_uses}) reached for operation '{operation}'"
+                    ),
                 });
             }
         }
@@ -271,7 +287,7 @@ impl EntropySeed {
         let mut hasher = Sha3_256::new();
         hasher.update(self.seed_bytes.as_bytes());
         hasher.update(operation.as_bytes());
-        hasher.update(&Utc::now().timestamp().to_le_bytes());
+        hasher.update(Utc::now().timestamp().to_le_bytes());
         let result = hasher.finalize().to_vec();
 
         // Record the usage
@@ -320,9 +336,10 @@ impl EntropySeed {
             SeedLifetimePolicy::EventBased { sharing_policy, .. } => {
                 sharing_policy.max_shares.is_some()
             }
-            SeedLifetimePolicy::SelfSovereign { transfer_permissions, .. } => {
-                transfer_permissions.transferable
-            }
+            SeedLifetimePolicy::SelfSovereign {
+                transfer_permissions,
+                ..
+            } => transfer_permissions.transferable,
             _ => false,
         }
     }
@@ -362,4 +379,4 @@ impl EntropySeed {
             max_uses.saturating_sub(used)
         })
     }
-} 
+}

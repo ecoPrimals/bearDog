@@ -25,14 +25,14 @@
 //! * **Compression** - Automatic gzip/deflate for large responses
 //! * **Pagination** - Efficient large dataset handling
 
-pub mod cache;
-pub mod rate_limiting;
-pub mod server;
+use serde::{Deserialize, Serialize};
 
-// API domains
+pub mod cache;
 pub mod genetics;
 pub mod monitoring;
+pub mod rate_limiting;
 pub mod security;
+pub mod server;
 
 // TODO: Add these modules when they are implemented
 // pub mod routes;
@@ -53,9 +53,7 @@ pub use server::*;
 /// API version constant
 pub const API_VERSION: &str = "v1";
 
-/// Standard API response wrapper
-use serde::{Deserialize, Serialize};
-
+/// Standard API response wrapper for all endpoints
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiResponse<T> {
     /// Success indicator
@@ -72,6 +70,7 @@ pub struct ApiResponse<T> {
     pub meta: ResponseMetadata,
 }
 
+/// Metadata included with API responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseMetadata {
     /// Processing time in milliseconds
@@ -84,6 +83,7 @@ pub struct ResponseMetadata {
     pub pagination: Option<PaginationMeta>,
 }
 
+/// Pagination metadata for paginated responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PaginationMeta {
     /// Current page number
@@ -103,8 +103,10 @@ pub struct PaginationMeta {
 /// Standard pagination parameters
 #[derive(Debug, Clone, Deserialize)]
 pub struct PaginationParams {
+    /// Page number (1-based)
     #[serde(default = "default_page")]
     pub page: u32,
+    /// Items per page
     #[serde(default = "default_per_page")]
     pub per_page: u32,
 }

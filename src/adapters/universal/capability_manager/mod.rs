@@ -14,6 +14,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::time::interval;
 use tracing::{debug, info, warn};
+use async_trait::async_trait;
 
 // Re-export all public types and traits
 pub use self::config::*;
@@ -87,6 +88,19 @@ impl CapabilityManager {
         Ok(manager)
     }
 
+    /// Create a placeholder capability manager
+    pub async fn placeholder() -> BearDogResult<Self> {
+        Ok(Self {
+            registry: Arc::new(CapabilityRegistry::placeholder()),
+            capability_monitors: Arc::new(RwLock::new(HashMap::new())),
+            genetic_capabilities: Arc::new(RwLock::new(HashMap::new())),
+            discovery_engine: Arc::new(EmergentCapabilityEngine::new().await?),
+            matcher: Arc::new(AdvancedCapabilityMatcher::new().await?),
+            dependency_resolver: Arc::new(DependencyResolver::new().await?),
+            config: CapabilityManagerConfig::default(),
+        })
+    }
+
     /// Start background monitoring task
     async fn start_monitoring_task(&self) -> BearDogResult<()> {
         let monitors = Arc::clone(&self.capability_monitors);
@@ -141,4 +155,66 @@ impl CapabilityManager {
             .await
             .clone())
     }
-} 
+}
+
+#[async_trait]
+impl crate::ecosystem_integration::EcosystemIntegration for CapabilityManager {
+    async fn register_with_songbird(&self) -> Result<String, crate::ecosystem_integration::EcosystemError> {
+        // For now, return a placeholder implementation
+        Ok("capability-manager-registered".to_string())
+    }
+
+    async fn handle_ecosystem_request(
+        &self,
+        request: crate::ecosystem_integration::EcosystemRequest,
+    ) -> Result<crate::ecosystem_integration::EcosystemResponse, crate::ecosystem_integration::EcosystemError> {
+        // Create response based on request type
+        match request.operation.as_str() {
+            "capability.query" => {
+                let capabilities = self.get_genetic_capabilities().await
+                    .map_err(|e| crate::ecosystem_integration::EcosystemError::RegistrationFailed(e.to_string()))?;
+                
+                Ok(crate::ecosystem_integration::EcosystemResponse {
+                    request_id: request.request_id,
+                    status: crate::ecosystem_integration::ResponseStatus::Success,
+                    payload: serde_json::to_value(capabilities).unwrap_or_default(),
+                    metadata: std::collections::HashMap::new(),
+                    timestamp: chrono::Utc::now(),
+                })
+            }
+            _ => {
+                Ok(crate::ecosystem_integration::EcosystemResponse {
+                    request_id: request.request_id,
+                    status: crate::ecosystem_integration::ResponseStatus::Error {
+                        code: "UNSUPPORTED_OPERATION".to_string(),
+                        message: "Unsupported request type".to_string(),
+                    },
+                    payload: serde_json::json!({
+                        "error": "Unsupported request type",
+                        "operation": request.operation
+                    }),
+                    metadata: std::collections::HashMap::new(),
+                    timestamp: chrono::Utc::now(),
+                })
+            }
+        }
+    }
+
+    async fn report_health(&self, _health: crate::ecosystem_integration::HealthStatus) -> Result<(), crate::ecosystem_integration::EcosystemError> {
+        // For now, just return success
+        Ok(())
+    }
+
+    async fn update_capabilities(
+        &self,
+        _capabilities: crate::ecosystem_integration::ServiceCapabilities,
+    ) -> Result<(), crate::ecosystem_integration::EcosystemError> {
+        // For now, just return success
+        Ok(())
+    }
+
+    async fn deregister(&self) -> Result<(), crate::ecosystem_integration::EcosystemError> {
+        // For now, just return success
+        Ok(())
+    }
+}

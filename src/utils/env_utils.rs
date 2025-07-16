@@ -9,7 +9,7 @@ impl EnvUtils {
     /// Get a required environment variable
     pub fn get_required(key: &str) -> BearDogResult<String> {
         env::var(key).map_err(|_| BearDogError::Configuration {
-            message: format!("Required environment variable {} not set", key),
+            message: format!("Required environment variable {key} not set"),
         })
     }
 
@@ -142,42 +142,64 @@ impl EnvUtils {
 /// Database configuration
 #[derive(Debug, Clone)]
 pub struct DatabaseConfig {
+    /// Database connection URL
     pub url: String,
+    /// Maximum number of concurrent database connections
     pub max_connections: u32,
+    /// Connection timeout for database operations
     pub connection_timeout: Duration,
+    /// Idle timeout for database connections
     pub idle_timeout: Duration,
+    /// Whether to enable SSL for database connections
     pub enable_ssl: bool,
 }
 
 /// Redis configuration
 #[derive(Debug, Clone)]
 pub struct RedisConfig {
+    /// Redis connection URL
     pub url: String,
+    /// Maximum number of concurrent Redis connections
     pub max_connections: u32,
+    /// Connection timeout for Redis operations
     pub connection_timeout: Duration,
+    /// Key prefix for Redis keys
     pub key_prefix: String,
 }
 
 /// Observability configuration
 #[derive(Debug, Clone)]
 pub struct ObservabilityConfig {
+    /// Log level for application logging
     pub log_level: String,
+    /// Whether to enable metrics collection
     pub enable_metrics: bool,
+    /// Port for metrics server
     pub metrics_port: u16,
+    /// Whether to enable distributed tracing
     pub enable_tracing: bool,
+    /// Jaeger endpoint for trace collection
     pub jaeger_endpoint: Option<String>,
+    /// OpenTelemetry endpoint for trace collection
     pub otlp_endpoint: Option<String>,
 }
 
 /// Security configuration
 #[derive(Debug, Clone)]
 pub struct SecurityConfig {
+    /// Secret key for cryptographic operations
     pub secret_key: String,
+    /// Encryption key for data encryption
     pub encryption_key: String,
+    /// JWT token expiry duration
     pub jwt_expiry: Duration,
+    /// Number of requests allowed per rate limit window
     pub rate_limit_requests: u32,
+    /// Time window for rate limiting
     pub rate_limit_window: Duration,
+    /// Whether to enable multi-factor authentication
     pub enable_mfa: bool,
+    /// Session timeout duration
     pub session_timeout: Duration,
 }
 

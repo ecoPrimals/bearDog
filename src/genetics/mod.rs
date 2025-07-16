@@ -45,8 +45,11 @@ impl GeneticsAPI {
         // Create a basic HSM manager for testing/development
         let hsm_manager = std::sync::Arc::new(crate::tunnel::hsm::manager::HsmManager::new());
 
-        let spawning_engine =
-            spawning::GeneticSpawningEngine::new(genetics_store.clone(), hsm_manager, config.clone());
+        let spawning_engine = spawning::GeneticSpawningEngine::new(
+            genetics_store.clone(),
+            hsm_manager,
+            config.clone(),
+        );
         let genetics_engine = DefaultBearDogGeneticsEngine::new(genetics_store, config);
 
         Self {
@@ -61,8 +64,11 @@ impl GeneticsAPI {
         hsm_manager: std::sync::Arc<crate::tunnel::hsm::manager::HsmManager>,
         config: GeneticsConfig,
     ) -> Self {
-        let spawning_engine =
-            spawning::GeneticSpawningEngine::new(genetics_store.clone(), hsm_manager, config.clone());
+        let spawning_engine = spawning::GeneticSpawningEngine::new(
+            genetics_store.clone(),
+            hsm_manager,
+            config.clone(),
+        );
         let genetics_engine = DefaultBearDogGeneticsEngine::new(genetics_store, config);
 
         Self {

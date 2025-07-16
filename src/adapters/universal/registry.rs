@@ -31,29 +31,43 @@ pub struct CapabilityRegistry {
 /// Registry statistics and metrics
 #[derive(Debug, Clone, Default)]
 pub struct RegistryStats {
+    /// Total number of capabilities registered
     pub total_capabilities: u32,
+    /// Total number of providers registered
     pub total_providers: u32,
+    /// Total number of searches performed
     pub total_searches: u64,
+    /// Number of successful matches found
     pub successful_matches: u64,
+    /// Timestamp of last registry update
     pub last_updated: chrono::DateTime<chrono::Utc>,
 }
 
 /// Capability search criteria
 #[derive(Debug, Clone, Default)]
 pub struct CapabilitySearchCriteria {
+    /// Required capability category
     pub category: Option<CapabilityCategory>,
+    /// Minimum QoS response time in milliseconds
     pub min_qos_response_time_ms: Option<u64>,
+    /// Minimum availability percentage required
     pub min_availability_percent: Option<f64>,
+    /// Required attributes that must be present
     pub required_attributes: HashMap<String, String>,
 }
 
 /// Capability match result
 #[derive(Debug, Clone)]
 pub struct CapabilityMatch {
+    /// The matched capability
     pub capability: Capability,
+    /// Ecosystem ID of the provider
     pub provider_ecosystem: String,
+    /// Instance ID of the provider
     pub provider_instance: String,
+    /// Match score indicating compatibility (0.0 to 10.0)
     pub match_score: f64,
+    /// Reasons why this capability is compatible
     pub compatibility_reasons: Vec<String>,
 }
 
@@ -70,6 +84,16 @@ impl CapabilityRegistry {
         })
     }
 
+    /// Create a placeholder capability registry for testing
+    pub fn placeholder() -> Self {
+        Self {
+            capabilities: Arc::new(RwLock::new(HashMap::new())),
+            capability_index: Arc::new(RwLock::new(HashMap::new())),
+            compatibility_matrix: Arc::new(RwLock::new(HashMap::new())),
+            stats: Arc::new(RwLock::new(RegistryStats::default())),
+        }
+    }
+
     /// Register capabilities for an ecosystem component
     pub async fn register_capabilities(
         &self,
@@ -77,7 +101,7 @@ impl CapabilityRegistry {
         instance_id: &str,
         capabilities: Vec<Capability>,
     ) -> BearDogResult<()> {
-        let provider_key = format!("{}:{}", ecosystem_id, instance_id);
+        let provider_key = format!("{ecosystem_id}:{instance_id}");
 
         info!(
             "📋 Registering {} capabilities for {}",
@@ -122,7 +146,7 @@ impl CapabilityRegistry {
         ecosystem_id: &str,
         instance_id: &str,
     ) -> BearDogResult<()> {
-        let provider_key = format!("{}:{}", ecosystem_id, instance_id);
+        let provider_key = format!("{ecosystem_id}:{instance_id}");
 
         info!("📋 Unregistering capabilities for {}", provider_key);
 
@@ -225,7 +249,7 @@ impl CapabilityRegistry {
         ecosystem_id: &str,
         instance_id: &str,
     ) -> BearDogResult<Vec<Capability>> {
-        let provider_key = format!("{}:{}", ecosystem_id, instance_id);
+        let provider_key = format!("{ecosystem_id}:{instance_id}");
         let capabilities = self.capabilities.read().await;
 
         Ok(capabilities.get(&provider_key).cloned().unwrap_or_default())
@@ -361,7 +385,7 @@ impl CapabilityRegistry {
 
         if let Some(ref category) = criteria.category {
             if capability.category == *category {
-                reasons.push(format!("Matches required category: {:?}", category));
+                reasons.push(format!("Matches required category: {category:?}"));
             }
         }
 

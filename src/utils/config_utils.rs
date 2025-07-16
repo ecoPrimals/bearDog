@@ -40,11 +40,11 @@ pub fn validate_config_file(path: &str) -> bool {
 /// Load and validate configuration from file
 pub fn load_config_file(path: &str) -> BearDogResult<BearDogConfig> {
     let content = fs::read_to_string(path).map_err(|e| {
-        BearDogError::config(format!("Failed to read config file '{}': {}", path, e))
+        BearDogError::config(format!("Failed to read config file '{path}': {e}"))
     })?;
 
     let config: BearDogConfig = toml::from_str(&content).map_err(|e| {
-        BearDogError::config(format!("Failed to parse config file '{}': {}", path, e))
+        BearDogError::config(format!("Failed to parse config file '{path}': {e}"))
     })?;
 
     config.validate()?;
@@ -65,7 +65,7 @@ pub fn check_config_permissions(path: &str) -> BearDogResult<bool> {
     }
 
     let metadata = fs::metadata(path)
-        .map_err(|e| BearDogError::config(format!("Failed to read file metadata: {}", e)))?;
+        .map_err(|e| BearDogError::config(format!("Failed to read file metadata: {e}")))?;
 
     let permissions = metadata.permissions();
     let mode = permissions.mode();
@@ -100,11 +100,11 @@ pub fn check_config_permissions(path: &str) -> BearDogResult<bool> {
 pub fn create_default_config(path: &str) -> BearDogResult<()> {
     let config = BearDogConfig::default();
     let toml_content = toml::to_string_pretty(&config)
-        .map_err(|e| BearDogError::config(format!("Failed to serialize default config: {}", e)))?;
+        .map_err(|e| BearDogError::config(format!("Failed to serialize default config: {e}")))?;
 
     // Write the file
     fs::write(path, toml_content)
-        .map_err(|e| BearDogError::config(format!("Failed to write config file: {}", e)))?;
+        .map_err(|e| BearDogError::config(format!("Failed to write config file: {e}")))?;
 
     // Set secure permissions (Unix only)
     #[cfg(unix)]
@@ -113,7 +113,7 @@ pub fn create_default_config(path: &str) -> BearDogResult<()> {
         let mut perms = fs::metadata(path)?.permissions();
         perms.set_mode(0o600); // Owner read/write only
         fs::set_permissions(path, perms)
-            .map_err(|e| BearDogError::config(format!("Failed to set file permissions: {}", e)))?;
+            .map_err(|e| BearDogError::config(format!("Failed to set file permissions: {e}")))?;
     }
 
     Ok(())
@@ -133,7 +133,7 @@ pub fn backup_config(path: &str) -> BearDogResult<String> {
     );
 
     fs::copy(source_path, &backup_path)
-        .map_err(|e| BearDogError::config(format!("Failed to backup config file: {}", e)))?;
+        .map_err(|e| BearDogError::config(format!("Failed to backup config file: {e}")))?;
 
     Ok(backup_path)
 }
@@ -172,8 +172,7 @@ pub fn validate_env_vars() -> Vec<String> {
         let valid_levels = ["trace", "debug", "info", "warn", "error"];
         if !valid_levels.contains(&log_level.to_lowercase().as_str()) {
             errors.push(format!(
-                "BEARDOG_LOG_LEVEL: '{}' is not a valid log level",
-                log_level
+                "BEARDOG_LOG_LEVEL: '{log_level}' is not a valid log level"
             ));
         }
     }
@@ -262,7 +261,7 @@ mod tests {
         let loaded_config = load_config_file(path).unwrap();
 
         // Basic validation that config was loaded
-        assert_eq!(loaded_config.network.host, "127.0.0.1");
+        assert_eq!(loaded_config.network.host, "localhost");
         assert_eq!(loaded_config.network.port, 8080);
     }
 

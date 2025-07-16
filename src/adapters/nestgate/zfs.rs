@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use super::types::*;
@@ -165,10 +165,13 @@ impl ZfsManager {
         let dataset_name = format!("{}/{}", self.config.pool_name, self.config.dataset_prefix);
         let dataset = ZfsDataset {
             name: dataset_name.clone(),
-            path: PathBuf::from(format!("/{}", dataset_name)),
+            path: PathBuf::from(format!("/{dataset_name}")),
             properties: {
                 let mut props = HashMap::new();
-                props.insert("encryption".to_string(), self.config.default_algorithm.clone());
+                props.insert(
+                    "encryption".to_string(),
+                    self.config.default_algorithm.clone(),
+                );
                 props.insert("compression".to_string(), self.config.compression.clone());
                 props.insert("dedup".to_string(), self.config.deduplication.to_string());
                 props.insert("recordsize".to_string(), self.config.record_size.clone());
@@ -238,14 +241,19 @@ impl ZfsManager {
             timestamp: chrono::Utc::now(),
             result: OperationResult::Success,
             metadata: HashMap::new(),
-        }).await;
+        })
+        .await;
 
         info!("Master key generated successfully");
         Ok(master_key)
     }
 
     /// Wrap key
-    pub async fn wrap_key(&self, key_data: &[u8], wrapping_key: &[u8]) -> NestGateResult<WrappedKey> {
+    pub async fn wrap_key(
+        &self,
+        key_data: &[u8],
+        wrapping_key: &[u8],
+    ) -> NestGateResult<WrappedKey> {
         debug!("Wrapping key with length: {}", key_data.len());
 
         // Generate wrapping key ID
@@ -268,11 +276,17 @@ impl ZfsManager {
     }
 
     /// Unwrap key
-    pub async fn unwrap_key(&self, wrapped_key: &WrappedKey, wrapping_key: &[u8]) -> NestGateResult<Vec<u8>> {
+    pub async fn unwrap_key(
+        &self,
+        wrapped_key: &WrappedKey,
+        wrapping_key: &[u8],
+    ) -> NestGateResult<Vec<u8>> {
         debug!("Unwrapping key");
 
         // Verify integrity
-        let expected_check = self.generate_integrity_check(&wrapped_key.wrapped_data).await?;
+        let expected_check = self
+            .generate_integrity_check(&wrapped_key.wrapped_data)
+            .await?;
         if expected_check != wrapped_key.integrity_check {
             return Err(NestGateError::KeyManagement(
                 "Integrity check failed".to_string(),
@@ -280,7 +294,9 @@ impl ZfsManager {
         }
 
         // Decrypt wrapped key
-        let unwrapped_data = self.decrypt_data(&wrapped_key.wrapped_data, wrapping_key).await?;
+        let unwrapped_data = self
+            .decrypt_data(&wrapped_key.wrapped_data, wrapping_key)
+            .await?;
 
         debug!("Key unwrapped successfully");
         Ok(unwrapped_data)
@@ -324,7 +340,8 @@ impl ZfsManager {
             timestamp: chrono::Utc::now(),
             result: OperationResult::Success,
             metadata: HashMap::new(),
-        }).await;
+        })
+        .await;
 
         let rotation_result = KeyRotationResult {
             workflow_id,
@@ -377,7 +394,10 @@ impl ZfsManager {
             FileOperation::Encrypt => self.encrypt_file(&request.source_path).await,
             FileOperation::Decrypt => self.decrypt_file(&request.source_path).await,
             FileOperation::GetAttributes => self.get_file_attributes(&request.source_path).await,
-            FileOperation::SetAttributes => self.set_file_attributes(&request.source_path, &HashMap::new()).await,
+            FileOperation::SetAttributes => {
+                self.set_file_attributes(&request.source_path, &HashMap::new())
+                    .await
+            }
         };
 
         // Log operation
@@ -395,7 +415,8 @@ impl ZfsManager {
                 }
             },
             metadata: request.metadata.clone(),
-        }).await;
+        })
+        .await;
 
         // Create operation result
         let operation_result = FileOperationResult {
@@ -418,7 +439,10 @@ impl ZfsManager {
         purpose: &str,
         owner_id: &str,
     ) -> NestGateResult<EncryptionKey> {
-        info!("Generating encryption key of type: {} for purpose: {}", key_type, purpose);
+        info!(
+            "Generating encryption key of type: {} for purpose: {}",
+            key_type, purpose
+        );
 
         let key_id = Uuid::new_v4().to_string();
         let key_material = self.generate_key_material(256).await?;
@@ -470,9 +494,7 @@ impl ZfsManager {
                 ))
             }
         } else {
-            Err(NestGateError::KeyManagement(
-                "Key not found".to_string(),
-            ))
+            Err(NestGateError::KeyManagement("Key not found".to_string()))
         }
     }
 
@@ -555,16 +577,19 @@ impl ZfsManager {
     async fn get_dataset_for_path(&self, path: &PathBuf) -> NestGateResult<String> {
         let path_str = path.to_string_lossy();
         let datasets = self.datasets.read().await;
-        
+
         // Find matching dataset
         for (name, dataset) in datasets.iter() {
             if path_str.starts_with(&dataset.path.to_string_lossy().to_string()) {
                 return Ok(name.clone());
             }
         }
-        
+
         // Return default dataset
-        Ok(format!("{}/{}", self.config.pool_name, self.config.dataset_prefix))
+        Ok(format!(
+            "{}/{}",
+            self.config.pool_name, self.config.dataset_prefix
+        ))
     }
 
     // File operation implementations (simplified)
@@ -629,8 +654,12 @@ impl ZfsManager {
         Ok(())
     }
 
-    async fn set_file_attributes(&self, _path: &PathBuf, _attributes: &HashMap<String, String>) -> NestGateResult<()> {
+    async fn set_file_attributes(
+        &self,
+        _path: &PathBuf,
+        _attributes: &HashMap<String, String>,
+    ) -> NestGateResult<()> {
         // Simulate setting file attributes
         Ok(())
     }
-} 
+}

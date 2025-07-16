@@ -12,7 +12,6 @@ use chrono::Utc;
 use std::sync::Arc;
 use std::time::Duration;
 
-
 /// Microphone-based entropy collector
 pub struct MicrophoneEntropyCollector {
     /// Audio collection configuration
@@ -76,18 +75,18 @@ impl MicrophoneEntropyCollector {
     async fn simulate_audio_entropy(&self, time_factor: f64) -> BearDogResult<Vec<u8>> {
         // Simulate varying audio characteristics based on time
         let mut entropy = Vec::new();
-        
+
         // Simulate amplitude variations
         for i in 0..((time_factor * 100.0) as usize) {
             let amplitude = (i as f64 * 0.1).sin() * 127.0 + 128.0;
             entropy.push(amplitude as u8);
         }
-        
+
         // Add noise component
         for _ in 0..32 {
             entropy.push(rand::random::<u8>());
         }
-        
+
         Ok(entropy)
     }
 
@@ -147,7 +146,10 @@ impl MicrophoneEntropyCollector {
                     other_sounds: vec!["chair_movement".to_string()],
                 },
                 human_presence_confidence: 0.85,
-                uniqueness_indicators: vec!["breathing_pattern".to_string(), "micro_movements".to_string()],
+                uniqueness_indicators: vec![
+                    "breathing_pattern".to_string(),
+                    "micro_movements".to_string(),
+                ],
             },
             uniqueness_score: 0.7,
             irreproducibility_score: 0.8,
@@ -159,16 +161,16 @@ impl MicrophoneEntropyCollector {
         // Check if consent is recent (within 24 hours)
         let now = Utc::now();
         let consent_age = now.signed_duration_since(consent.consent_timestamp);
-        
+
         if consent_age > chrono::Duration::hours(24) {
             return Err(BearDogError::config("Consent expired"));
         }
-        
+
         // Validate consent signature (simplified - in real implementation, verify cryptographic signature)
         if consent.consent_signature.signature_bytes.is_empty() {
             return Err(BearDogError::config("Invalid consent"));
         }
-        
+
         Ok(())
     }
 }
@@ -213,7 +215,10 @@ impl CameraEntropyCollector {
         let features = self.extract_visual_entropy_features(&visual_data).await?;
 
         // Create entropy result
-        let entropy_bytes = self.entropy_extractor.extract_from_visual(&features).await?;
+        let entropy_bytes = self
+            .entropy_extractor
+            .extract_from_visual(&features)
+            .await?;
 
         Ok(VisualEntropy {
             entropy_bytes: SecretBytes::new(entropy_bytes),
@@ -236,18 +241,18 @@ impl CameraEntropyCollector {
     async fn simulate_visual_entropy(&self, time_factor: f64) -> BearDogResult<Vec<u8>> {
         // Simulate varying visual characteristics
         let mut entropy = Vec::new();
-        
+
         // Simulate lighting variations
         for i in 0..((time_factor * 50.0) as usize) {
             let brightness = (i as f64 * 0.05).sin() * 50.0 + 128.0;
             entropy.push(brightness as u8);
         }
-        
+
         // Add visual noise
         for _ in 0..32 {
             entropy.push(rand::random::<u8>());
         }
-        
+
         Ok(entropy)
     }
 
@@ -282,7 +287,10 @@ impl CameraEntropyCollector {
                 hand_movement_entropy: 0.4,
                 orientation_entropy: 0.2,
                 human_presence_confidence: 0.9,
-                uniqueness_indicators: vec!["eye_movement".to_string(), "hand_gestures".to_string()],
+                uniqueness_indicators: vec![
+                    "eye_movement".to_string(),
+                    "hand_gestures".to_string(),
+                ],
             },
             uniqueness_score: 0.8,
             irreproducibility_score: 0.9,
@@ -294,15 +302,15 @@ impl CameraEntropyCollector {
         // Similar validation logic as audio collector
         let now = Utc::now();
         let consent_age = now.signed_duration_since(consent.consent_timestamp);
-        
+
         if consent_age > chrono::Duration::hours(24) {
             return Err(BearDogError::config("Consent expired"));
         }
-        
+
         if consent.consent_signature.signature_bytes.is_empty() {
             return Err(BearDogError::config("Invalid consent"));
         }
-        
+
         Ok(())
     }
 }
@@ -347,7 +355,10 @@ impl HapticEntropyCollector {
         let features = self.extract_haptic_entropy_features(&haptic_data).await?;
 
         // Create entropy result
-        let entropy_bytes = self.entropy_extractor.extract_from_haptic(&features).await?;
+        let entropy_bytes = self
+            .entropy_extractor
+            .extract_from_haptic(&features)
+            .await?;
 
         Ok(HapticEntropy {
             entropy_bytes: SecretBytes::new(entropy_bytes),
@@ -362,18 +373,18 @@ impl HapticEntropyCollector {
     async fn simulate_haptic_entropy(&self, time_factor: f64) -> BearDogResult<Vec<u8>> {
         // Simulate touch and motion patterns
         let mut entropy = Vec::new();
-        
+
         // Simulate touch pressure variations
         for i in 0..((time_factor * 20.0) as usize) {
             let pressure = (i as f64 * 0.2).sin() * 100.0 + 100.0;
             entropy.push(pressure as u8);
         }
-        
+
         // Add haptic noise
         for _ in 0..32 {
             entropy.push(rand::random::<u8>());
         }
-        
+
         Ok(entropy)
     }
 
@@ -432,7 +443,10 @@ impl HapticEntropyCollector {
                 },
                 pressure_patterns: vec![0.3, 0.5, 0.7, 0.4],
                 human_consistency: 0.8,
-                uniqueness_indicators: vec!["tremor_signature".to_string(), "grip_style".to_string()],
+                uniqueness_indicators: vec![
+                    "tremor_signature".to_string(),
+                    "grip_style".to_string(),
+                ],
             },
             uniqueness_score: 0.85,
             irreproducibility_score: 0.9,
@@ -444,15 +458,15 @@ impl HapticEntropyCollector {
         // Similar validation logic as other collectors
         let now = Utc::now();
         let consent_age = now.signed_duration_since(consent.consent_timestamp);
-        
+
         if consent_age > chrono::Duration::hours(24) {
             return Err(BearDogError::config("Consent expired"));
         }
-        
+
         if consent.consent_signature.signature_bytes.is_empty() {
             return Err(BearDogError::config("Invalid consent"));
         }
-        
+
         Ok(())
     }
 }
@@ -511,39 +525,48 @@ impl MultiModalHumanEntropyCollector {
 
         // Collect from audio if enabled
         if let Some(ref collector) = self.microphone_collector {
-            match collector.collect_audio_entropy(self.config.collection_duration, consent).await {
+            match collector
+                .collect_audio_entropy(self.config.collection_duration, consent)
+                .await
+            {
                 Ok(audio_entropy) => {
                     entropy_sources.push(audio_entropy.entropy_bytes);
                     source_types.push("audio".to_string());
                 }
                 Err(e) => {
-                    println!("Audio entropy collection failed: {:?}", e);
+                    println!("Audio entropy collection failed: {e:?}");
                 }
             }
         }
 
         // Collect from visual if enabled
         if let Some(ref collector) = self.camera_collector {
-            match collector.collect_visual_entropy(self.config.collection_duration, consent).await {
+            match collector
+                .collect_visual_entropy(self.config.collection_duration, consent)
+                .await
+            {
                 Ok(visual_entropy) => {
                     entropy_sources.push(visual_entropy.entropy_bytes);
                     source_types.push("visual".to_string());
                 }
                 Err(e) => {
-                    println!("Visual entropy collection failed: {:?}", e);
+                    println!("Visual entropy collection failed: {e:?}");
                 }
             }
         }
 
         // Collect from haptic if enabled
         if let Some(ref collector) = self.haptic_collector {
-            match collector.collect_haptic_entropy(self.config.collection_duration, consent).await {
+            match collector
+                .collect_haptic_entropy(self.config.collection_duration, consent)
+                .await
+            {
                 Ok(haptic_entropy) => {
                     entropy_sources.push(haptic_entropy.entropy_bytes);
                     source_types.push("haptic".to_string());
                 }
                 Err(e) => {
-                    println!("Haptic entropy collection failed: {:?}", e);
+                    println!("Haptic entropy collection failed: {e:?}");
                 }
             }
         }
@@ -554,7 +577,10 @@ impl MultiModalHumanEntropyCollector {
         }
 
         // Fuse entropy sources
-        let fused_entropy = self.fusion_algorithm.fuse_entropy_sources(&entropy_sources).await?;
+        let fused_entropy = self
+            .fusion_algorithm
+            .fuse_entropy_sources(&entropy_sources)
+            .await?;
         let fusion_quality = self.assess_fusion_quality(&entropy_sources).await?;
 
         Ok(FusedEntropyResult {
@@ -571,10 +597,10 @@ impl MultiModalHumanEntropyCollector {
         // Simple quality assessment based on diversity and quantity
         let source_count = entropy_sources.len();
         let total_entropy = entropy_sources.iter().map(|s| s.len()).sum::<usize>();
-        
+
         let diversity_score = source_count as f64 / 3.0; // Max 3 sources
         let quantity_score = (total_entropy as f64 / 100.0).min(1.0); // Normalize to 1.0
-        
+
         Ok((diversity_score + quantity_score) / 2.0)
     }
-} 
+}

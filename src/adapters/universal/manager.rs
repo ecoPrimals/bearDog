@@ -124,13 +124,13 @@ impl UniversalEcosystemManager {
         // Store the provider and configuration
         {
             let mut providers = self.providers.write().await;
-            let provider_key = format!("{}:{}", ecosystem_id, instance_id);
+            let provider_key = format!("{ecosystem_id}:{instance_id}");
             providers.insert(provider_key, Box::new(provider));
         }
 
         {
             let mut configs = self.provider_configs.write().await;
-            let config_key = format!("{}:{}", ecosystem_id, instance_id);
+            let config_key = format!("{ecosystem_id}:{instance_id}");
             configs.insert(config_key, config);
         }
 
@@ -155,7 +155,7 @@ impl UniversalEcosystemManager {
             ecosystem_id, instance_id
         );
 
-        let provider_key = format!("{}:{}", ecosystem_id, instance_id);
+        let provider_key = format!("{ecosystem_id}:{instance_id}");
 
         // Remove from providers and shutdown
         {
@@ -175,7 +175,7 @@ impl UniversalEcosystemManager {
 
         // Unregister capabilities
         self.capability_registry
-            .unregister_capabilities(&ecosystem_id, &instance_id)
+            .unregister_capabilities(ecosystem_id, instance_id)
             .await?;
 
         // Update manager status
@@ -210,9 +210,8 @@ impl UniversalEcosystemManager {
             if let Some(provider) = providers.get(&provider_key) {
                 provider.handle_request(request.clone()).await
             } else {
-                Err(BearDogError::internal(&format!(
-                    "Provider {} not found after capability check",
-                    provider_key
+                Err(BearDogError::internal(format!(
+                    "Provider {provider_key} not found after capability check"
                 )))
             }
         };
@@ -257,7 +256,7 @@ impl UniversalEcosystemManager {
             }
         }
 
-        Err(BearDogError::internal(&format!(
+        Err(BearDogError::internal(format!(
             "No capable provider found for request type: {}",
             request.request_type
         )))
@@ -292,7 +291,7 @@ impl UniversalEcosystemManager {
         instance_id: &str,
     ) -> Option<ProviderInfo> {
         let providers = self.providers.read().await;
-        let provider_key = format!("{}:{}", ecosystem_id, instance_id);
+        let provider_key = format!("{ecosystem_id}:{instance_id}");
 
         if let Some(provider) = providers.get(&provider_key) {
             Some(ProviderInfo {
@@ -444,44 +443,69 @@ impl UniversalEcosystemManager {
 /// Information about a registered provider
 #[derive(Debug, Clone)]
 pub struct ProviderInfo {
+    /// Ecosystem identifier
     pub ecosystem_id: String,
+    /// Instance identifier
     pub instance_id: String,
+    /// Human-readable service name
     pub service_name: String,
+    /// Service version
     pub service_version: String,
+    /// Capabilities offered by this provider
     pub capabilities: Vec<Capability>,
+    /// Dependencies required by this provider
     pub dependencies: Vec<Dependency>,
+    /// Service endpoints for communication
     pub endpoints: ServiceEndpoints,
+    /// Current health status
     pub health_status: HealthStatus,
+    /// Provider metadata
     pub metadata: ProviderMetadata,
 }
 
 /// Health report for a single provider
 #[derive(Debug, Clone)]
 pub struct ProviderHealthReport {
+    /// Provider key (ecosystem_id:instance_id)
     pub provider_key: String,
+    /// Ecosystem identifier
     pub ecosystem_id: String,
+    /// Instance identifier
     pub instance_id: String,
+    /// Current health status
     pub health_status: HealthStatus,
+    /// When the health check was performed
     pub last_check: chrono::DateTime<chrono::Utc>,
 }
 
 /// Overall ecosystem health report
 #[derive(Debug, Clone)]
 pub struct EcosystemHealthReport {
+    /// Overall health status of the ecosystem
     pub overall_health: EcosystemHealthStatus,
+    /// Total number of providers
     pub total_providers: u32,
+    /// Number of healthy providers
     pub healthy_providers: u32,
+    /// Number of degraded providers
     pub degraded_providers: u32,
+    /// Number of unhealthy providers
     pub unhealthy_providers: u32,
+    /// Individual provider health reports
     pub provider_reports: Vec<ProviderHealthReport>,
+    /// When this report was generated
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
 /// Overall ecosystem health status
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EcosystemHealthStatus {
+    /// All providers are healthy
     Healthy,
+    /// Some providers are degraded
     Degraded,
+    /// Some providers are unhealthy
     Unhealthy,
+    /// Health status is unknown
     Unknown,
 }

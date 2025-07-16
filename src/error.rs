@@ -324,24 +324,28 @@ pub enum BearDogError {
     },
 
     // Genetic spawning related errors
+    /// Spawn operation was rejected
     #[error("Spawn rejected: {reason}")]
     SpawnRejected {
         /// Reason why the spawn was rejected
         reason: String,
     },
 
+    /// Operation timed out
     #[error("Operation timeout: {operation}")]
     OperationTimeout {
         /// The operation that timed out
         operation: String,
     },
 
+    /// System is in an unexpected state
     #[error("Unexpected state: {message}")]
     UnexpectedState {
         /// Description of the unexpected state
         message: String,
     },
 
+    /// Resource cleanup failed
     #[error("Resource cleanup failed: {resource}")]
     ResourceCleanupFailed {
         /// The resource that failed to cleanup
@@ -390,12 +394,14 @@ pub enum BearDogError {
     HardwareNotAvailable,
 
     // Cross-node authentication errors
+    /// Verification process failed
     #[error("Verification failed: {message}")]
     VerificationFailed {
         /// Description of what verification failed
         message: String,
     },
 
+    /// Node could not be found
     #[error("Node not found: {node_id}")]
     NodeNotFound {
         /// The node ID that was not found
@@ -674,7 +680,7 @@ impl From<ring::error::Unspecified> for BearDogError {
 impl From<argon2::Error> for BearDogError {
     fn from(err: argon2::Error) -> Self {
         BearDogError::KeyDerivation {
-            message: format!("Key derivation failed: {:?}", err),
+            message: format!("Key derivation failed: {err:?}"),
         }
     }
 }
@@ -690,8 +696,14 @@ impl From<tokio::time::error::Elapsed> for BearDogError {
 impl From<std::string::FromUtf8Error> for BearDogError {
     fn from(error: std::string::FromUtf8Error) -> Self {
         BearDogError::InvalidData {
-            message: format!("UTF-8 conversion error: {}", error),
+            message: format!("UTF-8 conversion error: {error}"),
         }
+    }
+}
+
+impl From<crate::adapters::nestgate::NestGateError> for BearDogError {
+    fn from(err: crate::adapters::nestgate::NestGateError) -> Self {
+        BearDogError::IoError(err.to_string())
     }
 }
 

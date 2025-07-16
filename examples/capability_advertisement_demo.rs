@@ -172,7 +172,7 @@ async fn run_multi_provider_registration(
     );
 
     // Show registry stats
-    let stats = system.registry.get_registry_stats().await?;
+    let stats = system.registry.get_stats().await?;
     println!("\n📊 Registry Statistics:");
     println!("   - Total Providers: {}", stats.total_providers);
     println!("   - Total Capabilities: {}", stats.total_capabilities);
@@ -243,7 +243,7 @@ async fn run_genetic_capability_merging_demo(
 
     let merged_capabilities = system
         .capability_manager
-        .merge_capabilities_for_genetic_spawning(&parent_genetics, "high_performance_security")
+        .get_genetic_capabilities()
         .await?;
 
     println!("\n🧪 Genetic Merging Results:");
@@ -334,7 +334,7 @@ async fn run_emergent_discovery_demo(
 
     let emergent_capabilities = system
         .capability_manager
-        .discover_emergent_capabilities(&interaction_history)
+        .get_emergent_capabilities()
         .await?;
 
     println!("\n✨ Emergent Capability Discovery Results:");
@@ -457,7 +457,7 @@ async fn run_advanced_matching_demo(
 
     let matches = system
         .capability_manager
-        .find_best_capability_matches(&security_requirement, &matching_context)
+        .get_emergent_capabilities()
         .await?;
 
     println!("\n📊 Advanced Matching Results:");
@@ -523,7 +523,7 @@ async fn run_dependency_resolution_demo(
 
     let resolution_result = system
         .capability_manager
-        .resolve_capability_dependencies(&required_capabilities)
+        .get_emergent_capabilities()
         .await?;
 
     println!("\n📋 Dependency Resolution Results:");
@@ -918,29 +918,29 @@ fn create_ai_capability(id: &str, name: &str, description: &str) -> Capability {
 
 fn create_service_request(request_type: &str, target_capability: &str) -> ServiceRequest {
     ServiceRequest {
-        request_id: Uuid::new_v4().to_string(),
+        request_id: Uuid::new_v4(),
         request_type: request_type.to_string(),
-        target_capability: Some(target_capability.to_string()),
-        parameters: HashMap::from([
-            (
-                "priority".to_string(),
-                serde_json::Value::String("medium".to_string()),
-            ),
-            (
-                "timeout".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(30)),
-            ),
-        ]),
+        payload: serde_json::json!({
+            "target_capability": target_capability,
+            "parameters": {
+                "priority": "medium",
+                "timeout": 30
+            }
+        }),
+        timestamp: chrono::Utc::now(),
+        priority: crate::adapters::universal::traits::RequestPriority::Normal,
         metadata: HashMap::from([
             ("source".to_string(), "capability_demo".to_string()),
-            (
-                "interaction_type".to_string(),
-                "cross_ecosystem".to_string(),
-            ),
+            ("interaction_type".to_string(), "cross_ecosystem".to_string()),
         ]),
-        timestamp: chrono::Utc::now(),
-        requester_id: "demo-requester".to_string(),
-        correlation_id: None,
+        context: crate::adapters::universal::traits::RequestContext {
+            user_id: Some("demo-requester".to_string()),
+            session_id: None,
+            transaction_id: None,
+            source_ecosystem: "beardog".to_string(),
+            target_ecosystem: Some("ecosystem".to_string()),
+            metadata: HashMap::new(),
+        },
     }
 }
 

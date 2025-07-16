@@ -3,13 +3,16 @@
 //! This module provides capability detection and recommendation for HSM providers,
 //! including tier recommendation based on security requirements.
 
-use super::{HsmCapabilityDetector, SecurityRequirements, SecurityLevel};
+use super::{HsmCapabilityDetector, SecurityLevel, SecurityRequirements};
 use crate::error::BearDogResult;
-use crate::tunnel::hsm::types::{HsmCapability, HsmTier, SoftwareHsmType, SmartphoneType, SecureEnclaveType, StrongBoxImplementation, HsmVendor, CertificationLevel, TamperResistanceLevel, KeyHierarchy, FallbackStrategy, MemoryProtectionLevel, KeyStorageType, AttestationLevel};
+use crate::tunnel::hsm::types::{
+    AttestationLevel, CertificationLevel, HsmCapability, HsmTier, HsmVendor, KeyStorageType, MemoryProtectionLevel, SecureEnclaveType, SmartphoneType,
+    SoftwareHsmType, StrongBoxImplementation, TamperResistanceLevel,
+};
+use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use async_trait::async_trait;
 
 /// Default HSM capability detector
 pub struct DefaultHsmCapabilityDetector {
@@ -17,6 +20,7 @@ pub struct DefaultHsmCapabilityDetector {
 }
 
 impl DefaultHsmCapabilityDetector {
+    /// Create a new HSM capability detector with default settings
     pub async fn new() -> BearDogResult<Self> {
         Ok(Self {
             provider_capabilities: Arc::new(RwLock::new(HashMap::new())),
@@ -166,4 +170,4 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
             }
         }
     }
-} 
+}

@@ -1,0 +1,413 @@
+//! Security capability definitions for BearDog PrimalProvider
+//!
+//! This module contains all security capabilities that BearDog provides
+//! to the universal ecosystem, including their attributes and QoS specifications.
+
+use std::collections::HashMap;
+
+use super::super::traits::*;
+use super::super::{capability_ids, ecosystem_ids};
+use super::core::BearDogPrimalProvider;
+
+impl BearDogPrimalProvider {
+    /// Get BearDog's security capabilities
+    pub fn get_security_capabilities(&self) -> Vec<Capability> {
+        vec![
+            self.create_encryption_capability(),
+            self.create_authentication_capability(),
+            self.create_authorization_capability(),
+            self.create_audit_capability(),
+            self.create_monitoring_capability(),
+        ]
+    }
+
+    /// Get BearDog's dependencies
+    pub fn get_dependencies(&self) -> Vec<Dependency> {
+        vec![
+            // Optional dependency on SongBird for service discovery
+            Dependency {
+                id: "songbird-discovery".to_string(),
+                required_capability: capability_ids::COMM_DISCOVERY.to_string(),
+                min_version: Some("1.0.0".to_string()),
+                optional: true,
+                attributes: HashMap::from([
+                    (
+                        "purpose".to_string(),
+                        "Service discovery and registration".to_string(),
+                    ),
+                    ("fallback".to_string(), "Local configuration".to_string()),
+                ]),
+            },
+            // Optional dependency on NestGate for secure storage
+            Dependency {
+                id: "nestgate-storage".to_string(),
+                required_capability: capability_ids::STORAGE_PERSIST.to_string(),
+                min_version: Some("1.0.0".to_string()),
+                optional: true,
+                attributes: HashMap::from([
+                    (
+                        "purpose".to_string(),
+                        "Secure key and audit storage".to_string(),
+                    ),
+                    ("fallback".to_string(), "Local file storage".to_string()),
+                ]),
+            },
+        ]
+    }
+
+    /// Create encryption capability
+    fn create_encryption_capability(&self) -> Capability {
+        Capability {
+            id: capability_ids::SECURITY_ENCRYPT.to_string(),
+            name: "Data Encryption".to_string(),
+            description: "Encrypt data using various algorithms including post-quantum"
+                .to_string(),
+            category: CapabilityCategory::Security,
+            attributes: self.create_encryption_attributes(),
+            qos: QualityOfService {
+                avg_response_time_ms: 5, // Very fast encryption
+                availability_percent: 99.95,
+                throughput: Some(ThroughputMetric {
+                    value: 1000,
+                    unit: "MB/sec".to_string(),
+                }),
+                scalability: ScalabilityInfo {
+                    min_instances: 1,
+                    max_instances: 100,
+                    auto_scaling: true,
+                },
+            },
+            resource_requirements: ResourceRequirements {
+                cpu: Some(ResourceRequirement {
+                    min: 1,
+                    max: Some(8),
+                    unit: "cores".to_string(),
+                }),
+                memory: Some(ResourceRequirement {
+                    min: 512,
+                    max: Some(4096),
+                    unit: "MB".to_string(),
+                }),
+                ..Default::default()
+            },
+        }
+    }
+
+    /// Create authentication capability
+    fn create_authentication_capability(&self) -> Capability {
+        Capability {
+            id: capability_ids::SECURITY_AUTHENTICATE.to_string(),
+            name: "Authentication".to_string(),
+            description: "Authenticate users and services with multiple methods".to_string(),
+            category: CapabilityCategory::Security,
+            attributes: self.create_authentication_attributes(),
+            qos: QualityOfService {
+                avg_response_time_ms: 10, // Fast authentication
+                availability_percent: 99.99,
+                throughput: Some(ThroughputMetric {
+                    value: 10000,
+                    unit: "requests/sec".to_string(),
+                }),
+                scalability: ScalabilityInfo {
+                    min_instances: 2,
+                    max_instances: 50,
+                    auto_scaling: true,
+                },
+            },
+            resource_requirements: ResourceRequirements {
+                cpu: Some(ResourceRequirement {
+                    min: 1,
+                    max: Some(4),
+                    unit: "cores".to_string(),
+                }),
+                memory: Some(ResourceRequirement {
+                    min: 256,
+                    max: Some(2048),
+                    unit: "MB".to_string(),
+                }),
+                ..Default::default()
+            },
+        }
+    }
+
+    /// Create authorization capability
+    fn create_authorization_capability(&self) -> Capability {
+        Capability {
+            id: capability_ids::SECURITY_AUTHORIZE.to_string(),
+            name: "Authorization".to_string(),
+            description: "Authorize access to resources with fine-grained policies".to_string(),
+            category: CapabilityCategory::Security,
+            attributes: self.create_authorization_attributes(),
+            qos: QualityOfService {
+                avg_response_time_ms: 3, // Ultra-fast authorization
+                availability_percent: 99.99,
+                throughput: Some(ThroughputMetric {
+                    value: 50000,
+                    unit: "requests/sec".to_string(),
+                }),
+                scalability: ScalabilityInfo {
+                    min_instances: 2,
+                    max_instances: 100,
+                    auto_scaling: true,
+                },
+            },
+            resource_requirements: ResourceRequirements {
+                cpu: Some(ResourceRequirement {
+                    min: 1,
+                    max: Some(8),
+                    unit: "cores".to_string(),
+                }),
+                memory: Some(ResourceRequirement {
+                    min: 512,
+                    max: Some(4096),
+                    unit: "MB".to_string(),
+                }),
+                ..Default::default()
+            },
+        }
+    }
+
+    /// Create audit capability
+    fn create_audit_capability(&self) -> Capability {
+        Capability {
+            id: capability_ids::SECURITY_AUDIT.to_string(),
+            name: "Security Audit".to_string(),
+            description: "Comprehensive audit logging and compliance monitoring".to_string(),
+            category: CapabilityCategory::Security,
+            attributes: self.create_audit_attributes(),
+            qos: QualityOfService {
+                avg_response_time_ms: 2, // Very fast audit logging
+                availability_percent: 99.99,
+                throughput: Some(ThroughputMetric {
+                    value: 100000,
+                    unit: "events/sec".to_string(),
+                }),
+                scalability: ScalabilityInfo {
+                    min_instances: 1,
+                    max_instances: 20,
+                    auto_scaling: true,
+                },
+            },
+            resource_requirements: ResourceRequirements {
+                cpu: Some(ResourceRequirement {
+                    min: 1,
+                    max: Some(4),
+                    unit: "cores".to_string(),
+                }),
+                memory: Some(ResourceRequirement {
+                    min: 256,
+                    max: Some(2048),
+                    unit: "MB".to_string(),
+                }),
+                storage: Some(ResourceRequirement {
+                    min: 1,
+                    max: Some(1000),
+                    unit: "GB".to_string(),
+                }),
+                ..Default::default()
+            },
+        }
+    }
+
+    /// Create monitoring capability
+    fn create_monitoring_capability(&self) -> Capability {
+        Capability {
+            id: capability_ids::SECURITY_MONITOR.to_string(),
+            name: "Security Monitoring".to_string(),
+            description: "Real-time threat detection and security monitoring".to_string(),
+            category: CapabilityCategory::Security,
+            attributes: self.create_monitoring_attributes(),
+            qos: QualityOfService {
+                avg_response_time_ms: 1, // Near real-time monitoring
+                availability_percent: 99.99,
+                throughput: Some(ThroughputMetric {
+                    value: 1000000,
+                    unit: "events/sec".to_string(),
+                }),
+                scalability: ScalabilityInfo {
+                    min_instances: 1,
+                    max_instances: 10,
+                    auto_scaling: true,
+                },
+            },
+            resource_requirements: ResourceRequirements {
+                cpu: Some(ResourceRequirement {
+                    min: 2,
+                    max: Some(16),
+                    unit: "cores".to_string(),
+                }),
+                memory: Some(ResourceRequirement {
+                    min: 1024,
+                    max: Some(8192),
+                    unit: "MB".to_string(),
+                }),
+                ..Default::default()
+            },
+        }
+    }
+
+    /// Create encryption capability attributes
+    pub fn create_encryption_attributes(&self) -> HashMap<String, CapabilityAttribute> {
+        HashMap::from([
+            (
+                "algorithms".to_string(),
+                CapabilityAttribute {
+                    value: "AES-256-GCM,ChaCha20-Poly1305,Ed25519,Kyber1024".to_string(),
+                    data_type: AttributeDataType::Array,
+                    required: true,
+                    description: Some("Supported encryption algorithms".to_string()),
+                },
+            ),
+            (
+                "key_management".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: true,
+                    description: Some("Automated key management support".to_string()),
+                },
+            ),
+            (
+                "post_quantum".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: false,
+                    description: Some("Post-quantum cryptography support".to_string()),
+                },
+            ),
+        ])
+    }
+
+    /// Create authentication capability attributes
+    pub fn create_authentication_attributes(&self) -> HashMap<String, CapabilityAttribute> {
+        HashMap::from([
+            (
+                "methods".to_string(),
+                CapabilityAttribute {
+                    value: "password,token,certificate,biometric,mfa".to_string(),
+                    data_type: AttributeDataType::Array,
+                    required: true,
+                    description: Some("Supported authentication methods".to_string()),
+                },
+            ),
+            (
+                "mfa_support".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: true,
+                    description: Some("Multi-factor authentication support".to_string()),
+                },
+            ),
+            (
+                "session_management".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: true,
+                    description: Some("Session lifecycle management".to_string()),
+                },
+            ),
+        ])
+    }
+
+    /// Create authorization capability attributes
+    pub fn create_authorization_attributes(&self) -> HashMap<String, CapabilityAttribute> {
+        HashMap::from([
+            (
+                "policy_types".to_string(),
+                CapabilityAttribute {
+                    value: "rbac,abac,policy_engine".to_string(),
+                    data_type: AttributeDataType::Array,
+                    required: true,
+                    description: Some("Supported authorization policy types".to_string()),
+                },
+            ),
+            (
+                "fine_grained".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: true,
+                    description: Some("Fine-grained access control support".to_string()),
+                },
+            ),
+            (
+                "caching".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: false,
+                    description: Some("Authorization decision caching".to_string()),
+                },
+            ),
+        ])
+    }
+
+    /// Create audit capability attributes
+    pub fn create_audit_attributes(&self) -> HashMap<String, CapabilityAttribute> {
+        HashMap::from([
+            (
+                "compliance_standards".to_string(),
+                CapabilityAttribute {
+                    value: "SOC2,GDPR,HIPAA,PCI-DSS,FedRAMP".to_string(),
+                    data_type: AttributeDataType::Array,
+                    required: true,
+                    description: Some("Supported compliance standards".to_string()),
+                },
+            ),
+            (
+                "real_time".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: true,
+                    description: Some("Real-time audit logging".to_string()),
+                },
+            ),
+            (
+                "tamper_proof".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: true,
+                    description: Some("Tamper-proof audit logs".to_string()),
+                },
+            ),
+        ])
+    }
+
+    /// Create monitoring capability attributes
+    pub fn create_monitoring_attributes(&self) -> HashMap<String, CapabilityAttribute> {
+        HashMap::from([
+            (
+                "threat_detection".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: true,
+                    description: Some("Real-time threat detection".to_string()),
+                },
+            ),
+            (
+                "ml_enabled".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: false,
+                    description: Some("Machine learning threat detection".to_string()),
+                },
+            ),
+            (
+                "behavioral_analysis".to_string(),
+                CapabilityAttribute {
+                    value: "true".to_string(),
+                    data_type: AttributeDataType::Boolean,
+                    required: false,
+                    description: Some("Behavioral analysis capabilities".to_string()),
+                },
+            ),
+        ])
+    }
+} 

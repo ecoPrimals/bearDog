@@ -120,6 +120,7 @@ impl Default for InMemoryGeneticsStore {
 }
 
 impl InMemoryGeneticsStore {
+    /// Create a new in-memory genetics store
     pub fn new() -> Self {
         Self {
             genetics: Arc::new(RwLock::new(HashMap::new())),
@@ -211,28 +212,55 @@ pub enum BearDogWorkflowType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AutomatedCheck {
     /// Minimum trust score required
-    TrustScore { min_score: f64 },
+    TrustScore { 
+        /// Minimum trust score that must be met
+        min_score: f64 
+    },
     /// Resource availability check
-    ResourceAvailability { min_resources: ResourceLimits },
+    ResourceAvailability { 
+        /// Minimum resource requirements that must be available
+        min_resources: ResourceLimits 
+    },
     /// Compliance validation
-    ComplianceValidation { required_standards: Vec<String> },
+    ComplianceValidation { 
+        /// List of compliance standards that must be met
+        required_standards: Vec<String> 
+    },
     /// Threat assessment
-    ThreatAssessment { max_risk_level: f64 },
+    ThreatAssessment { 
+        /// Maximum acceptable risk level
+        max_risk_level: f64 
+    },
     /// Geographic compliance
-    GeographicCompliance { allowed_jurisdictions: Vec<String> },
+    GeographicCompliance { 
+        /// List of jurisdictions where spawning is allowed
+        allowed_jurisdictions: Vec<String> 
+    },
     /// Temporal window restrictions
-    TemporalWindow { allowed_hours: Vec<u8> },
+    TemporalWindow { 
+        /// List of allowed hours for spawning (0-23)
+        allowed_hours: Vec<u8> 
+    },
 }
 
 /// Conditions that escalate to human review
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EscalationCondition {
     /// High resource usage
-    HighResourceUsage { threshold: f64 },
+    HighResourceUsage { 
+        /// Resource usage threshold that triggers escalation
+        threshold: f64 
+    },
     /// Unusual genetic patterns
-    UnusualGeneticPattern { deviation_threshold: f64 },
+    UnusualGeneticPattern { 
+        /// Deviation threshold for genetic patterns
+        deviation_threshold: f64 
+    },
     /// Multiple failed automated checks
-    MultipleFailures { max_failures: u32 },
+    MultipleFailures { 
+        /// Maximum number of failures before escalation
+        max_failures: u32 
+    },
     /// Spawning outside normal hours
     OffHoursSpawn,
     /// Cross-jurisdictional spawning
@@ -353,11 +381,17 @@ pub enum ChromosomeRecombinationStrategy {
     /// Average chromosome properties
     Averaging,
     /// Weighted average of parent chromosomes
-    WeightedAverage { weights: Vec<f64> },
+    WeightedAverage { 
+        /// Weights for each parent chromosome
+        weights: Vec<f64> 
+    },
     /// Combine flags using bitwise OR
     BitwiseUnion,
     /// Custom blending with specified parameters
-    CustomBlend { dominance_factor: f64 },
+    CustomBlend { 
+        /// Factor controlling dominance in blending
+        dominance_factor: f64 
+    },
 }
 
 /// Strategy for blending security traits
@@ -366,7 +400,10 @@ pub enum TraitBlendingStrategy {
     /// Simple average of parent traits
     Average,
     /// Weighted average with specified weights
-    WeightedAverage { weights: Vec<f64> },
+    WeightedAverage { 
+        /// Weights for each parent trait
+        weights: Vec<f64> 
+    },
     /// Select dominant traits based on random selection
     Dominant,
     /// Select best traits from each parent
@@ -376,7 +413,10 @@ pub enum TraitBlendingStrategy {
     /// Take traits from the most cooperative parent  
     MostCooperative,
     /// Custom blending with specified factor
-    CustomBlend { blending_factor: f64 },
+    CustomBlend { 
+        /// Factor controlling trait blending
+        blending_factor: f64 
+    },
 }
 
 /// Strategy for merging capabilities
@@ -389,7 +429,10 @@ pub enum CapabilityMergingStrategy {
     /// Select capabilities based on random selection and fitness
     Selective,
     /// Weighted combination of capabilities
-    WeightedCombination { weights: Vec<f64> },
+    WeightedCombination { 
+        /// Weights for each capability
+        weights: Vec<f64> 
+    },
     /// Best capabilities from each parent
     BestOfBreed,
 }
@@ -456,5 +499,8 @@ pub enum WitnessType {
     /// Human approver
     Human,
     /// External system
-    External { system_type: String },
+    External { 
+        /// Type of external system providing witness
+        system_type: String 
+    },
 }

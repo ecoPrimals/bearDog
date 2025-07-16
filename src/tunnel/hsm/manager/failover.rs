@@ -3,19 +3,22 @@
 //! This module provides failover capabilities for HSM providers,
 //! including circuit breaker patterns and automatic retry logic.
 
+use super::config::FailoverConfig;
 use super::{HsmFailoverManager, HsmProvider, SecurityRequirements};
 use crate::error::{BearDogError, BearDogResult};
+use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use super::config::FailoverConfig;
-use async_trait::async_trait;
 
-/// Circuit breaker states
+/// Circuit breaker state for HSM provider failover
 #[derive(Debug, Clone, PartialEq)]
 pub enum CircuitBreakerState {
+    /// Normal operation - requests are processed
     Closed,   // Normal operation
+    /// Failing state - requests are rejected
     Open,     // Failing - reject requests
+    /// Testing state - limited requests are allowed
     HalfOpen, // Testing - allow limited requests
 }
 
@@ -37,6 +40,7 @@ pub struct DefaultHsmFailoverManager {
 }
 
 impl DefaultHsmFailoverManager {
+    /// Create a new HSM failover manager with the specified configuration
     pub async fn new(config: FailoverConfig) -> BearDogResult<Self> {
         Ok(Self {
             circuit_breakers: Arc::new(RwLock::new(HashMap::new())),
@@ -88,7 +92,7 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
         // For now, return an error - in a real implementation,
         // we would have a list of backup providers
         Err(BearDogError::NoSuitableProvider {
-            requirements: format!("{:?}", requirements),
+            requirements: format!("{requirements:?}"),
         })
     }
 
@@ -103,12 +107,13 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
     {
         // Simple failover - in a real implementation, we would try multiple providers
         Err(BearDogError::NoSuitableProvider {
-            requirements: format!("{:?}", requirements),
+            requirements: format!("{requirements:?}"),
         })
     }
 }
 
 impl CircuitBreaker {
+    /// Create a new circuit breaker with the specified failure threshold
     pub fn new(threshold: u32) -> Self {
         Self {
             state: CircuitBreakerState::Closed,
@@ -119,6 +124,7 @@ impl CircuitBreaker {
         }
     }
 
+    /// Record a failure and potentially open the circuit
     pub fn record_failure(&mut self) {
         self.failure_count += 1;
         self.last_failure_time = Some(chrono::Utc::now());
@@ -128,6 +134,7 @@ impl CircuitBreaker {
         }
     }
 
+    /// Record a success and potentially close the circuit
     pub fn record_success(&mut self) {
         self.success_count += 1;
         self.failure_count = 0;
@@ -137,6 +144,7 @@ impl CircuitBreaker {
         }
     }
 
+    /// Check if the circuit allows execution
     pub fn can_execute(&self) -> bool {
         match self.state {
             CircuitBreakerState::Closed => true,
@@ -152,4 +160,4 @@ impl CircuitBreaker {
             CircuitBreakerState::HalfOpen => true,
         }
     }
-} 
+}

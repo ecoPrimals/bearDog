@@ -12,18 +12,18 @@
 //! - User control and transparency
 //! - Immediate raw data deletion after feature extraction
 
-pub mod ethics;
-pub mod config;
-pub mod types;
 pub mod collectors;
+pub mod config;
+pub mod ethics;
 pub mod processors;
+pub mod types;
 
 // Re-export the main types and functions for easy access
-pub use ethics::*;
-pub use config::*;
-pub use types::*;
 pub use collectors::*;
+pub use config::*;
+pub use ethics::*;
 pub use processors::*;
+pub use types::*;
 
 use chrono::Utc;
 use std::time::Duration;
@@ -78,4 +78,4 @@ pub fn create_default_config() -> HumanEntropyConfig {
             privacy_protection: "maximum".to_string(),
         },
     }
-} 
+}

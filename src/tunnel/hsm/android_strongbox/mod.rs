@@ -203,31 +203,31 @@
 //! - **Device Identity**: Hardware-backed device identity
 
 // Re-export all public types and functions
-pub use types::*;
-pub use core::*;
-pub use keystore::*;
-pub use attestation::*;
 pub use device_info::*;
-pub use health::*;
 pub use entropy::*;
+pub use health::*;
+pub use types::*;
 
 // Import from parent HSM module for configuration types
-use crate::tunnel::hsm::types::*;
 use crate::error::{BearDogError, BearDogResult};
 
 // Module declarations
-pub mod types;
-pub mod core;
-pub mod keystore;
 pub mod attestation;
+pub mod core;
 pub mod device_info;
-pub mod health;
 pub mod entropy;
+pub mod health;
+pub mod keystore;
+pub mod types;
 
 // Public API constants
+/// Version of the Android StrongBox HSM integration
 pub const VERSION: &str = "1.0.0";
+/// Minimum Android version required for StrongBox support
 pub const SUPPORTED_ANDROID_VERSION: u32 = 9; // Minimum Android version for StrongBox
+/// Maximum number of keys that can be stored
 pub const MAX_KEY_COUNT: usize = 1000;
+/// Maximum size of attestation challenge in bytes
 pub const MAX_CHALLENGE_SIZE: usize = 1024;
 
 /// Android StrongBox HSM capabilities summary
@@ -247,7 +247,7 @@ pub const CAPABILITIES: &[&str] = &[
 /// Supported key algorithms in Android StrongBox
 pub const SUPPORTED_ALGORITHMS: &[&str] = &[
     "ECDSA-P256",
-    "ECDSA-P384", 
+    "ECDSA-P384",
     "ECDSA-P521",
     "RSA-2048",
     "RSA-4096",
@@ -260,32 +260,47 @@ pub mod benchmarks {
     use std::time::Duration;
 
     /// Typical key generation times
+    /// ECDSA key generation time estimate
     pub const KEY_GENERATION_TIME_ECDSA: Duration = Duration::from_millis(100);
+    /// RSA key generation time estimate
     pub const KEY_GENERATION_TIME_RSA: Duration = Duration::from_millis(200);
+    /// AES key generation time estimate
     pub const KEY_GENERATION_TIME_AES: Duration = Duration::from_millis(50);
 
     /// Typical signing times
+    /// ECDSA signing time estimate
     pub const SIGNING_TIME_ECDSA: Duration = Duration::from_millis(10);
+    /// RSA signing time estimate
     pub const SIGNING_TIME_RSA: Duration = Duration::from_millis(25);
 
     /// Typical verification times
+    /// ECDSA verification time estimate
     pub const VERIFICATION_TIME_ECDSA: Duration = Duration::from_millis(5);
+    /// RSA verification time estimate
     pub const VERIFICATION_TIME_RSA: Duration = Duration::from_millis(15);
 
     /// Typical encryption/decryption times
+    /// AES encryption time estimate
     pub const ENCRYPTION_TIME_AES: Duration = Duration::from_millis(2);
+    /// RSA encryption time estimate
     pub const ENCRYPTION_TIME_RSA: Duration = Duration::from_millis(20);
 
     /// Typical attestation time
+    /// Attestation generation time estimate
     pub const ATTESTATION_TIME: Duration = Duration::from_millis(300);
 }
 
 /// Security summary for Android StrongBox
 pub struct SecuritySummary {
+    /// Whether StrongBox hardware is available
     pub strongbox_available: bool,
+    /// Whether Titan M chip is available
     pub titan_m_available: bool,
+    /// Whether verified boot is in GREEN state
     pub verified_boot_green: bool,
+    /// Whether biometric authentication is supported
     pub biometric_support: bool,
+    /// Whether the configuration is recommended for production use
     pub recommended_for_production: bool,
 }
 
@@ -377,7 +392,7 @@ pub mod utils {
     use super::*;
     use crate::tunnel::hsm::types::{GenerateKeyRequest, KeyType};
     use tracing::debug;
-    
+
     /// Check if StrongBox is supported on the device
     pub async fn is_strongbox_supported() -> BearDogResult<bool> {
         debug!("Checking if StrongBox is supported");
@@ -410,7 +425,7 @@ pub mod utils {
     pub fn validate_key_request(request: &GenerateKeyRequest) -> BearDogResult<()> {
         debug!("Validating key generation request");
         match request.key_type {
-            KeyType::EccP256 | KeyType::EccP384 | KeyType::EccP521 => {},
+            KeyType::EccP256 | KeyType::EccP384 | KeyType::EccP521 => {}
             KeyType::Rsa { key_size } => {
                 if key_size < 2048 {
                     return Err(BearDogError::UnsupportedOperation {
@@ -419,15 +434,15 @@ pub mod utils {
                         reason: "RSA key size must be at least 2048 bits".to_string(),
                     });
                 }
-            },
-            KeyType::Aes128 | KeyType::Aes256 => {},
+            }
+            KeyType::Aes128 | KeyType::Aes256 => {}
             KeyType::Aes192 => {
                 return Err(BearDogError::UnsupportedOperation {
                     operation: "generate_key".to_string(),
                     hsm_type: "android_strongbox".to_string(),
                     reason: "AES-192 is not supported by StrongBox".to_string(),
                 });
-            },
+            }
             _ => {
                 return Err(BearDogError::UnsupportedOperation {
                     operation: "generate_key".to_string(),
@@ -438,4 +453,4 @@ pub mod utils {
         }
         Ok(())
     }
-} 
+}

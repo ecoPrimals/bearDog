@@ -46,11 +46,21 @@ pub mod types;
 // Re-export common types
 pub use android_strongbox::AndroidStrongBoxHsm;
 pub use manager::{
-    HsmManager, HsmManagerConfig, SimpleHsmTier, HsmProviderSelection,
-    DefaultHsmHealthMonitor, DefaultHsmFailoverManager, CircuitBreaker, CircuitBreakerState,
-    DefaultHsmCapabilityDetector, HsmPerformanceTracker, OperationMetrics,
+    CircuitBreaker,
+    CircuitBreakerState,
+    DefaultHsmCapabilityDetector,
+    DefaultHsmFailoverManager,
+    DefaultHsmHealthMonitor,
+    FailoverConfig,
     // Re-export all config types
-    HealthConfig, FailoverConfig, PerformanceConfig
+    HealthConfig,
+    HsmManager,
+    HsmManagerConfig,
+    HsmPerformanceTracker,
+    HsmProviderSelection,
+    OperationMetrics,
+    PerformanceConfig,
+    SimpleHsmTier,
 };
 pub use software_hsm::RustSoftwareHsm;
 pub use types::*;
@@ -168,19 +178,28 @@ pub trait HsmFailoverManager: Send + Sync {
 /// Security requirements for HSM operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityRequirements {
+    /// The required security level for the operation
     pub security_level: SecurityLevel,
+    /// Whether user interaction is required for this operation
     pub user_interaction_required: bool,
+    /// Whether attestation is required for this operation
     pub attestation_required: bool,
+    /// Whether hardware-backed security is required
     pub hardware_backed_required: bool,
+    /// List of compliance standards that must be met
     pub compliance_requirements: Vec<ComplianceStandard>,
+    /// Performance requirements for this operation
     pub performance_requirements: PerformanceRequirements,
 }
 
 /// Performance requirements for HSM operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceRequirements {
+    /// Maximum acceptable latency in milliseconds
     pub max_latency_ms: Option<u64>,
+    /// Minimum required throughput in operations per second
     pub min_throughput_ops_per_sec: Option<u64>,
+    /// Whether to optimize for cost over performance
     pub cost_optimization: bool,
 }
 
@@ -200,37 +219,59 @@ pub enum SecurityLevel {
 /// Compliance standards
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ComplianceStandard {
+    /// General Data Protection Regulation (European Union)
     Gdpr,
+    /// Health Insurance Portability and Accountability Act (United States)
     Hipaa,
+    /// Sarbanes-Oxley Act (United States)
     Sox,
+    /// Payment Card Industry Data Security Standard
     PciDss,
+    /// Federal Risk and Authorization Management Program (United States)
     FedRamp,
+    /// Federal Information Processing Standards 140-2 Level 2
     Fips140Level2,
+    /// Federal Information Processing Standards 140-2 Level 3
     Fips140Level3,
+    /// Common Criteria evaluation standard
     CommonCriteria,
 }
 
 /// Operation context for HSM operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OperationContext {
+    /// The user ID associated with this operation
     pub user_id: Option<String>,
+    /// The session ID for this operation
     pub session_id: Option<String>,
+    /// The type of operation being performed
     pub operation_type: OperationType,
+    /// Whether user interaction is required for this operation
     pub user_interaction_required: bool,
+    /// When this operation was initiated
     pub timestamp: DateTime<Utc>,
 }
 
 /// Types of HSM operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OperationType {
+    /// Generate a new cryptographic key
     KeyGeneration,
+    /// Import an existing key into the HSM
     KeyImport,
+    /// Encrypt data using a key
     Encryption,
+    /// Decrypt data using a key
     Decryption,
+    /// Sign data using a key
     Signing,
+    /// Verify a signature using a key
     Verification,
+    /// Derive a new key from an existing key
     KeyDerivation,
+    /// Backup HSM keys or state
     KeyBackup,
+    /// Restore HSM keys or state from backup
     KeyRestoration,
 }
 

@@ -201,7 +201,7 @@ impl EncryptionEngine {
         let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
 
         let ciphertext = cipher.encrypt(&nonce, data).map_err(|e| {
-            BearDogError::encryption("encrypt_with_key", format!("AES encryption failed: {}", e))
+            BearDogError::encryption("encrypt_with_key", format!("AES encryption failed: {e}"))
         })?;
 
         // Prepend nonce to ciphertext
@@ -225,7 +225,7 @@ impl EncryptionEngine {
         let key = Key::<Aes256Gcm>::from_slice(&key[..32]);
         let cipher = Aes256Gcm::new(key);
         let plaintext = cipher.decrypt(nonce, ciphertext).map_err(|e| {
-            BearDogError::encryption("decrypt_with_key", format!("AES decryption failed: {}", e))
+            BearDogError::encryption("decrypt_with_key", format!("AES decryption failed: {e}"))
         })?;
 
         Ok(plaintext)
@@ -245,15 +245,19 @@ impl EncryptionEngine {
         });
 
         let salt = SaltString::encode_b64(&params.salt)
-            .map_err(|e| BearDogError::internal(format!("Salt encoding failed: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Salt encoding failed: {e}")))?;
 
         let password_hash = Argon2::default()
             .hash_password(password.as_bytes(), &salt)
             .map_err(|e| BearDogError::KeyDerivation {
-                message: format!("Password hashing failed: {:?}", e),
+                message: format!("Password hashing failed: {e:?}"),
             })?;
 
-        Ok(password_hash.hash.unwrap().as_bytes().to_vec())
+        password_hash.hash
+            .ok_or_else(|| BearDogError::KeyDerivation {
+                message: "Password hash generation failed".to_string(),
+            })
+            .map(|hash| hash.as_bytes().to_vec())
     }
 
     /// Rotate encryption keys
@@ -281,7 +285,7 @@ impl EncryptionEngine {
         let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
 
         let ciphertext = cipher.encrypt(&nonce, data).map_err(|e| {
-            BearDogError::encryption("aes_encryption", format!("AES encryption failed: {}", e))
+            BearDogError::encryption("aes_encryption", format!("AES encryption failed: {e}"))
         })?;
 
         // Store the key in metadata so it can be used for decryption
@@ -320,7 +324,7 @@ impl EncryptionEngine {
             key_bytes,
         )
         .map_err(|e| {
-            BearDogError::encryption("aes_decryption", format!("Key decoding failed: {}", e))
+            BearDogError::encryption("aes_decryption", format!("Key decoding failed: {e}"))
         })?;
 
         let nonce_bytes = &encrypted_data.nonce;
@@ -331,7 +335,7 @@ impl EncryptionEngine {
         cipher
             .decrypt(nonce, encrypted_data.ciphertext.as_ref())
             .map_err(|e| {
-                BearDogError::encryption("aes_decryption", format!("AES decryption failed: {}", e))
+                BearDogError::encryption("aes_decryption", format!("AES decryption failed: {e}"))
             })
     }
 
@@ -350,7 +354,7 @@ impl EncryptionEngine {
         let ciphertext = cipher.encrypt(&nonce, data).map_err(|e| {
             BearDogError::encryption(
                 "chacha20_encryption",
-                format!("ChaCha20-Poly1305 encryption failed: {}", e),
+                format!("ChaCha20-Poly1305 encryption failed: {e}"),
             )
         })?;
 
@@ -398,7 +402,7 @@ impl EncryptionEngine {
             key_bytes,
         )
         .map_err(|e| {
-            BearDogError::encryption("chacha20_decryption", format!("Key decoding failed: {}", e))
+            BearDogError::encryption("chacha20_decryption", format!("Key decoding failed: {e}"))
         })?;
 
         let nonce_bytes = &encrypted_data.nonce;
@@ -411,7 +415,7 @@ impl EncryptionEngine {
             .map_err(|e| {
                 BearDogError::encryption(
                     "chacha20_decryption",
-                    format!("ChaCha20-Poly1305 decryption failed: {}", e),
+                    format!("ChaCha20-Poly1305 decryption failed: {e}"),
                 )
             })
     }
@@ -521,17 +525,17 @@ impl EncryptionEngine {
 
         let mut salt = [0u8; 32];
         self.rng.fill(&mut salt).map_err(|e| {
-            BearDogError::encryption("hash_password", format!("Salt generation failed: {}", e))
+            BearDogError::encryption("hash_password", format!("Salt generation failed: {e}"))
         })?;
 
         let salt_string = SaltString::encode_b64(&salt).map_err(|e| {
-            BearDogError::encryption("hash_password", format!("Salt encoding failed: {}", e))
+            BearDogError::encryption("hash_password", format!("Salt encoding failed: {e}"))
         })?;
 
         let password_hash = Argon2::default()
             .hash_password(password.as_bytes(), &salt_string)
             .map_err(|e| {
-                BearDogError::encryption("hash_password", format!("Password hashing failed: {}", e))
+                BearDogError::encryption("hash_password", format!("Password hashing failed: {e}"))
             })?;
 
         match password_hash.hash {
@@ -556,31 +560,42 @@ impl EncryptionEngine {
 /// Encryption request structure for API
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionRequest {
+    /// Data to be encrypted
     pub plaintext: Vec<u8>,
+    /// Optional encryption algorithm specification
     pub algorithm: Option<String>,
 }
 
 /// Encryption response structure for API
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionResponse {
+    /// Base64 encoded encrypted data
     pub encrypted_data: String,
+    /// Identifier of the key used for encryption
     pub key_id: String,
+    /// Encryption algorithm used
     pub algorithm: String,
+    /// Base64 encoded initialization vector
     pub iv: String,
 }
 
 /// Decryption request structure for API
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecryptionRequest {
+    /// Base64 encoded encrypted data to decrypt
     pub encrypted_data: String,
+    /// Optional encryption algorithm specification
     pub algorithm: Option<String>,
 }
 
 /// Decryption response structure for API
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecryptionResponse {
+    /// Decrypted plaintext data
     pub plaintext: Vec<u8>,
+    /// Identifier of the key used for decryption
     pub key_id: String,
+    /// Encryption algorithm used
     pub algorithm: String,
 }
 

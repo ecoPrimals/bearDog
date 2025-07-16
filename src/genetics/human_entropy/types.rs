@@ -553,4 +553,4 @@ pub struct FusedEntropyResult {
     pub source_types: Vec<String>,
     /// Quality of the fusion result
     pub fusion_quality: f64,
-} 
+}

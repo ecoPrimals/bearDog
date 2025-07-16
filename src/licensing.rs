@@ -46,6 +46,7 @@ pub struct LicenseData {
     pub tier: LicenseTier,
     /// License validity period
     pub valid_from: DateTime<Utc>,
+    /// License expiration date
     pub valid_until: DateTime<Utc>,
     /// Enabled external functions
     pub enabled_functions: Vec<String>,
@@ -131,6 +132,12 @@ pub struct UsageLimits {
     pub max_instances: Option<u32>,
 }
 
+impl Default for LicenseManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LicenseManager {
     /// Create new license manager
     pub fn new() -> Self {
@@ -145,7 +152,7 @@ impl LicenseManager {
     pub fn load_signed_license(&mut self, license_json: &str) -> BearDogResult<()> {
         let signed_license: SignedLicense =
             serde_json::from_str(license_json).map_err(|e| BearDogError::Configuration {
-                message: format!("Invalid license format: {}", e),
+                message: format!("Invalid license format: {e}"),
             })?;
 
         // Verify the cryptographic signature
@@ -199,8 +206,7 @@ impl LicenseManager {
             } else {
                 return Err(BearDogError::Configuration {
                     message: format!(
-                        "License for {} has expired. Please renew your BearDog license.",
-                        function_name
+                        "License for {function_name} has expired. Please renew your BearDog license."
                     ),
                 });
             }
@@ -216,14 +222,13 @@ impl LicenseManager {
         // No license and no grace period
         Err(BearDogError::Configuration {
             message: format!(
-                "🔒 External function '{}' requires a BearDog-signed license.\n\n\
+                "🔒 External function '{function_name}' requires a BearDog-signed license.\n\n\
                 📚 For FREE licenses (individuals, universities, research):\n\
                    Contact: free-licenses@beardog-security.com\n\n\
                 🏢 For Enterprise licenses:\n\
                    Contact: enterprise@beardog-security.com\n\n\
                 💡 All code is open source - you only pay to unlock external integrations!\n\
-                   Basic users, universities, and research get FREE signed licenses.",
-                function_name
+                   Basic users, universities, and research get FREE signed licenses."
             ),
         })
     }
@@ -308,7 +313,7 @@ impl LicenseManager {
         // Serialize license data to canonical JSON for signature verification
         let license_json = serde_json::to_string(&signed_license.license).map_err(|e| {
             BearDogError::Configuration {
-                message: format!("License serialization error: {}", e),
+                message: format!("License serialization error: {e}"),
             }
         })?;
 
@@ -319,7 +324,7 @@ impl LicenseManager {
         let signature_bytes =
             hex::decode(&signed_license.signature).map_err(|e| BearDogError::Encryption {
                 operation: "signature_decode".to_string(),
-                message: format!("Invalid signature format: {}", e),
+                message: format!("Invalid signature format: {e}"),
             })?;
 
         // Use our crypto utilities to verify the Ed25519 signature
@@ -440,11 +445,17 @@ impl LicenseManager {
 /// Status information for a loaded license
 #[derive(Debug, Clone)]
 pub struct LicenseStatus {
+    /// Name of the licensed function
     pub function_name: String,
+    /// Organization that owns the license
     pub organization: String,
+    /// License tier level
     pub tier: LicenseTier,
+    /// License expiration date
     pub valid_until: DateTime<Utc>,
+    /// Whether the license is currently valid
     pub is_valid: bool,
+    /// Days remaining before expiration
     pub days_remaining: i64,
 }
 
@@ -599,6 +610,9 @@ mod tests {
 
     #[test]
     fn test_integration_type_detection() {
+        // Set grace period for testing
+        std::env::set_var("BEARDOG_LICENSE_GRACE_PERIOD", "true");
+
         let manager = LicenseManager::new();
 
         // Test different integration categories - simplified test
@@ -610,8 +624,13 @@ mod tests {
         // External systems typically require explicit licensing or grace period
         // During development/testing, grace period should be active
         assert!(
-            manager.is_in_grace_period() || 
-            manager.verify_external_function_access("oracle_hsm").unwrap_or(false)
+            manager.is_in_grace_period()
+                || manager
+                    .verify_external_function_access("oracle_hsm")
+                    .unwrap_or(false)
         );
+
+        // Clean up environment variable
+        std::env::remove_var("BEARDOG_LICENSE_GRACE_PERIOD");
     }
 }

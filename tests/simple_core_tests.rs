@@ -7,7 +7,7 @@ use beardog::auth::types::SpawnStatus;
 use beardog::config::EncryptionConfig;
 use beardog::node_registry::TrustLevel; // The TrustLevel with Basic, Unknown, etc.
 use beardog::tunnel::events::*;
-use beardog::{BearDogError, BearDogResult};
+use beardog::BearDogError;
 // Use specific SecurityLevel from tunnel events to avoid ambiguity
 use beardog::tunnel::events::SecurityLevel as EventsSecurityLevel;
 
@@ -18,8 +18,8 @@ fn test_basic_error_types() {
         reason: "Test rejection".to_string(),
     };
 
-    assert!(format!("{:?}", error).contains("SpawnRejected"));
-    assert!(format!("{:?}", error).contains("Test rejection"));
+    assert!(format!("{error:?}").contains("SpawnRejected"));
+    assert!(format!("{error:?}").contains("Test rejection"));
 }
 
 #[test]
@@ -76,13 +76,11 @@ fn test_spawn_status() {
 #[test]
 fn test_compliance_types() {
     // Test compliance enumeration
-    let compliance_types = vec![
-        ComplianceType::GDPR,
+    let compliance_types = [ComplianceType::GDPR,
         ComplianceType::HIPAA,
         ComplianceType::SOX,
         ComplianceType::DataSovereignty,
-        ComplianceType::ExportControl,
-    ];
+        ComplianceType::ExportControl];
 
     assert_eq!(compliance_types.len(), 5);
 
@@ -94,14 +92,12 @@ fn test_compliance_types() {
 #[test]
 fn test_security_levels() {
     // Test security level enumeration
-    let levels = vec![
-        EventsSecurityLevel::Low,
+    let levels = [EventsSecurityLevel::Low,
         EventsSecurityLevel::Medium,
         EventsSecurityLevel::High,
         EventsSecurityLevel::Ultimate,
         EventsSecurityLevel::Adaptive,
-        EventsSecurityLevel::Optimized,
-    ];
+        EventsSecurityLevel::Optimized];
 
     assert_eq!(levels.len(), 6);
 }

@@ -242,57 +242,95 @@ impl GeneticSecurityHealing {
     }
 }
 
+/// Security issue detected by the genetic healing system
 #[derive(Debug, Clone)]
 pub struct SecurityIssue {
+    /// Type of security issue detected
     pub issue_type: SecurityIssueType,
+    /// Severity level of the issue
     pub severity: Severity,
+    /// Human-readable description of the issue
     pub description: String,
+    /// Timestamp when the issue was detected
     pub timestamp: SystemTime,
 }
 
+/// Types of security issues that can be detected
 #[derive(Debug, Clone, PartialEq)]
 pub enum SecurityIssueType {
+    /// Encryption system has been compromised
     EncryptionCompromised,
+    /// Authentication system has been breached
     AuthenticationBreach,
+    /// System performance has degraded significantly
     PerformanceDegradation,
+    /// Network anomaly detected
     NetworkAnomaly,
 }
 
+/// Severity levels for security issues
 #[derive(Debug, Clone)]
 pub enum Severity {
+    /// Critical security issue requiring immediate attention
     Critical,
+    /// High severity issue needing prompt action
     High,
+    /// Medium severity issue for scheduled resolution
     Medium,
+    /// Low severity issue for routine maintenance
     Low,
 }
 
+/// Results of genetic healing operations
 #[derive(Debug, Clone, PartialEq)]
 pub enum HealingResult {
+    /// Healing operation completed successfully
     Success,
+    /// Healing operation partially completed
     Partial,
+    /// Healing operation failed
     Failed,
 }
 
+/// Network events that can trigger genetic healing
 #[derive(Debug, Clone)]
 pub enum NetworkEvent {
-    PeerDisconnected { reason: String },
-    NetworkCongestion { latency_ms: u64 },
-    SuspiciousTraffic { source: String },
+    /// Peer disconnected from the network
+    PeerDisconnected { 
+        /// Reason for disconnection
+        reason: String 
+    },
+    /// Network congestion detected
+    NetworkCongestion { 
+        /// Latency in milliseconds
+        latency_ms: u64 
+    },
+    /// Suspicious traffic detected
+    SuspiciousTraffic { 
+        /// Source of suspicious traffic
+        source: String 
+    },
 }
 
+/// Genetic chromosome for security healing parameters
 #[derive(Debug, Clone, Default)]
 pub struct SecurityHealingChromosome {
+    /// Authentication strength level (0.0 to 1.0)
     auth_strength: f64,
+    /// Monitoring frequency (0.0 to 1.0)
     monitoring_frequency: f64,
+    /// Threat sensitivity level (0.0 to 1.0)
     threat_sensitivity: f64,
 }
 
 impl SecurityHealingChromosome {
+    /// Strengthen authentication parameters in response to security threats
     pub async fn strengthen_authentication(&mut self) -> BearDogResult<()> {
         self.auth_strength = (self.auth_strength * 1.2).min(1.0);
         Ok(())
     }
 
+    /// Optimize parameters for reduced latency
     pub async fn optimize_for_latency(&mut self, latency_ms: u64) -> BearDogResult<()> {
         if latency_ms > 100 {
             self.monitoring_frequency *= 0.8; // Reduce monitoring to improve performance
@@ -300,6 +338,7 @@ impl SecurityHealingChromosome {
         Ok(())
     }
 
+    /// Adapt threat sensitivity based on detected threats
     pub async fn adapt_to_threat(&mut self, _source: String) -> BearDogResult<()> {
         self.threat_sensitivity = (self.threat_sensitivity * 1.1).min(1.0);
         Ok(())
@@ -333,47 +372,69 @@ pub trait ToadsoolComputeExtension: Send + Sync {
 /// Results of network-wide healing operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkHealingResult {
+    /// Whether network consensus was reached
     pub network_consensus: bool,
+    /// List of affected node identifiers
     pub affected_nodes: Vec<String>,
+    /// Strength of healing applied (0.0 to 1.0)
     pub healing_strength: f64,
+    /// Estimated time to complete recovery
     pub estimated_recovery_time: std::time::Duration,
 }
 
 /// Performance metrics for toadstool-compute optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
+    /// Average encryption latency
     pub avg_encryption_latency: std::time::Duration,
+    /// Average decryption latency
     pub avg_decryption_latency: std::time::Duration,
+    /// Throughput in megabits per second
     pub throughput_mbps: f64,
+    /// Error rate as a percentage (0.0 to 1.0)
     pub error_rate: f64,
+    /// Network jitter variance
     pub jitter_variance: std::time::Duration,
 }
 
 /// Crypto optimization results from toadstool-compute
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoOptimization {
+    /// List of recommended cryptographic algorithms
     pub recommended_algorithms: Vec<String>,
+    /// Recommended key rotation frequency
     pub key_rotation_frequency: std::time::Duration,
+    /// Expected performance improvement (0.0 to 1.0)
     pub performance_improvement: f64,
+    /// Security impact assessment (-1.0 to 1.0)
     pub security_impact: f64,
 }
 
 /// Network-wide genetic evolution results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkGenetics {
+    /// Consensus genome identifier
     pub consensus_genome: String,
+    /// Genetic diversity index (0.0 to 1.0)
     pub diversity_index: f64,
+    /// Current evolution generation number
     pub evolution_generation: u64,
+    /// Network fitness score (0.0 to 1.0)
     pub network_fitness: f64,
 }
 
 /// Triggers for genetic mutations across the network
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MutationTrigger {
+    /// Security breach detected
     SecurityBreach,
+    /// Performance degradation occurred
     PerformanceDegradation,
+    /// Network expansion event
     NetworkExpansion,
+    /// Threat escalation detected
     ThreatEscalation,
+    /// Compliance requirement changed
     ComplianceRequirement,
 }
 
@@ -383,6 +444,7 @@ pub struct SimplifiedToadsoolExtension;
 
 #[async_trait::async_trait]
 impl ToadsoolComputeExtension for SimplifiedToadsoolExtension {
+    /// Coordinate network healing across multiple nodes
     async fn coordinate_network_healing(
         &self,
         _issue_type: SecurityIssueType,
@@ -397,6 +459,7 @@ impl ToadsoolComputeExtension for SimplifiedToadsoolExtension {
         })
     }
 
+    /// Optimize cryptographic algorithms based on performance metrics
     async fn optimize_crypto_algorithms(
         &self,
         _performance_metrics: &PerformanceMetrics,
@@ -410,6 +473,7 @@ impl ToadsoolComputeExtension for SimplifiedToadsoolExtension {
         })
     }
 
+    /// Evolve network genetics based on mutation triggers
     async fn evolve_network_genetics(
         &self,
         _mutation_trigger: MutationTrigger,
@@ -427,31 +491,43 @@ impl ToadsoolComputeExtension for SimplifiedToadsoolExtension {
 impl GeneticSecurityHealing {
     /// Get the toadstool-compute extension for network operations
     pub fn get_toadstool_extension(&self) -> Box<dyn ToadsoolComputeExtension> {
-        // Return simplified implementation for now
-        // TODO: Replace with actual toadstool-compute client
         Box::new(SimplifiedToadsoolExtension)
     }
 }
 
+/// Genetic configuration for healing capabilities
 #[derive(Debug, Clone, Default)]
 pub struct HealingGenes {
+    /// Whether crypto healing is enabled
     crypto_healing: bool,
+    /// Whether authentication healing is enabled
     auth_healing: bool,
+    /// Whether performance healing is enabled
     performance_healing: bool,
 }
 
+/// Process for genetic healing of security issues
 #[derive(Debug, Clone)]
 pub struct HealingProcess {
+    /// Unique identifier for the healing process
     id: String,
+    /// Security issue being addressed
     issue: SecurityIssue,
+    /// Healing genes configuration
     healing_genes: HealingGenes,
+    /// Timestamp when healing started
     started_at: SystemTime,
+    /// Current status of the healing process
     status: HealingStatus,
 }
 
+/// Status of genetic healing processes
 #[derive(Debug, Clone)]
 pub enum HealingStatus {
+    /// Healing process is currently in progress
     InProgress,
+    /// Healing process has completed successfully
     Completed,
+    /// Healing process has failed
     Failed,
 }

@@ -6,7 +6,7 @@
 use super::types::*;
 use crate::error::{BearDogError, BearDogResult};
 use std::sync::Arc;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 impl ChallengeGenerator {
     /// Create a new challenge generator
@@ -21,9 +21,7 @@ impl ChallengeGenerator {
 
         let entropy_source = Arc::new(AndroidEntropySource);
 
-        Self {
-            entropy_source,
-        }
+        Self { entropy_source }
     }
 
     /// Generate a cryptographic challenge
@@ -55,7 +53,10 @@ impl ChallengeGenerator {
         // Generate entropy using the entropy source
         let challenge = self.entropy_source.generate_entropy(length)?;
 
-        debug!("✅ Challenge generated successfully: {} bytes", challenge.len());
+        debug!(
+            "✅ Challenge generated successfully: {} bytes",
+            challenge.len()
+        );
         Ok(challenge)
     }
 
@@ -82,8 +83,9 @@ impl ChallengeGenerator {
         debug!("🎲 Generating session ID");
 
         let entropy = self.generate_challenge(16)?;
-        let session_id = entropy.iter()
-            .map(|b| format!("{:02x}", b))
+        let session_id = entropy
+            .iter()
+            .map(|b| format!("{b:02x}"))
             .collect::<String>();
 
         debug!("✅ Session ID generated: {}", session_id);
@@ -113,7 +115,10 @@ impl ChallengeGenerator {
         challenge.extend_from_slice(&timestamp_bytes);
         challenge.extend_from_slice(&entropy);
 
-        debug!("✅ Timestamp challenge generated: {} bytes", challenge.len());
+        debug!(
+            "✅ Timestamp challenge generated: {} bytes",
+            challenge.len()
+        );
         Ok(challenge)
     }
 
@@ -169,7 +174,7 @@ impl ChallengeGenerator {
         if data.len() >= pattern_length * 4 {
             let pattern = &data[..pattern_length];
             let mut repeats = 0;
-            
+
             for chunk in data.chunks_exact(pattern_length) {
                 if chunk == pattern {
                     repeats += 1;
@@ -177,7 +182,7 @@ impl ChallengeGenerator {
                     break;
                 }
             }
-            
+
             // If more than half the data is the same pattern, consider it weak
             if repeats > data.len() / (pattern_length * 2) {
                 return true;
@@ -234,9 +239,9 @@ impl EntropySource for AndroidEntropySource {
 
         for i in 0..length {
             // Create pseudo-random but deterministic entropy for simulation
-            let value = ((base_time.wrapping_mul(31).wrapping_add(i as u64)) 
-                        ^ (base_time >> 8)
-                        ^ (i as u64 * 17)) as u8;
+            let value = ((base_time.wrapping_mul(31).wrapping_add(i as u64))
+                ^ (base_time >> 8)
+                ^ (i as u64 * 17)) as u8;
             entropy.push(value);
         }
 
@@ -245,7 +250,7 @@ impl EntropySource for AndroidEntropySource {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .subsec_micros() as u8;
-        
+
         for (i, byte) in entropy.iter_mut().enumerate() {
             *byte ^= micro_var.wrapping_add(i as u8);
         }
@@ -290,8 +295,10 @@ impl AndroidEntropySource {
 
         let quality_good = passes_basic_tests && passes_distribution_test && passes_pattern_test;
 
-        debug!("🔍 Entropy quality tests: basic={}, distribution={}, pattern={}, overall={}",
-               passes_basic_tests, passes_distribution_test, passes_pattern_test, quality_good);
+        debug!(
+            "🔍 Entropy quality tests: basic={}, distribution={}, pattern={}, overall={}",
+            passes_basic_tests, passes_distribution_test, passes_pattern_test, quality_good
+        );
 
         Ok(quality_good)
     }
@@ -346,8 +353,12 @@ impl Default for AndroidEntropySource {
 /// Entropy source information
 #[derive(Debug, Clone)]
 pub struct EntropySourceInfo {
+    /// Type of entropy source (e.g., "hardware", "software")
     pub source_type: String,
+    /// Whether the entropy source is hardware-backed
     pub hardware_backed: bool,
+    /// Whether the entropy source is FIPS approved
     pub fips_approved: bool,
+    /// Maximum number of bytes per entropy request
     pub max_bytes_per_request: usize,
-} 
+}

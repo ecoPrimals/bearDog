@@ -49,39 +49,73 @@
 #![warn(missing_docs)]
 
 // Core modules
-pub mod core;
-pub mod error;
-pub mod crypto_utils;
-pub mod utils;
-pub mod config;
-pub mod licensing;
-pub mod monitoring;
-pub mod production;
-pub mod encryption;
+/// Audit logging and compliance tracking
 pub mod audit;
+/// Configuration management and validation
+pub mod config;
+/// Core BearDog functionality and initialization
+pub mod core;
+/// Cryptographic utilities and helpers
+pub mod crypto_utils;
+/// Encryption and decryption operations
+pub mod encryption;
+/// Error types and result handling
+pub mod error;
+/// Licensing and compliance management
+pub mod licensing;
+/// System monitoring and metrics
+pub mod monitoring;
+/// Production-ready configurations and operations
+pub mod production;
+/// Utility functions and helpers
+pub mod utils;
 
-// Security and authentication modules
+// Security modules
+/// Authentication and authorization
 pub mod auth;
-pub mod security;
+/// Compliance frameworks and validation
 pub mod compliance;
+/// Security policies and enforcement
+pub mod security;
+/// Identity and credential verification
 pub mod verification;
 
-// Business logic modules
+// Advanced modules
+/// Genetic algorithms and evolutionary computation
 pub mod genetics;
-pub mod tunnel;
-pub mod workflows;
+/// Threat detection and response
 pub mod threat;
+/// Secure tunneling and networking
+pub mod tunnel;
+/// Workflow automation and management
+pub mod workflows;
 
-// Network and infrastructure modules
+// Integration modules
+/// Adapter patterns for external systems
 pub mod adapters;
+/// REST API and web service interfaces
 pub mod api;
+/// Node discovery and registry services
 pub mod node_registry; // Now uses the new modular structure
 
+// Ecosystem integration
+/// Integration with external ecosystem components
+pub mod ecosystem_integration;
+
 // Re-export commonly used types
-pub use core::BearDogCore;
-pub use error::{BearDogError, BearDogResult};
-pub use node_registry::{BearDogNodeRegistry, NodeInfo, TrustLevel, RegistryConfig, NodeRole};
+/// Core configuration structure for BearDog
 pub use config::core::BearDogConfig;
+/// Main BearDog core functionality
+pub use core::BearDogCore;
+/// BearDog error type
+pub use error::BearDogError;
+/// BearDog result type
+pub use error::BearDogResult;
+/// Node registry exports
+pub use node_registry::{
+    node_types, BearDogNodeRegistry, NodeInfo, NodeType, NodeTypeRegistry, RegistryConfig,
+    TrustLevel,
+};
 
 /// BearDog version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

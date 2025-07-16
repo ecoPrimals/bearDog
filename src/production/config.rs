@@ -447,4 +447,4 @@ impl CircuitBreakerConfig {
     pub fn is_high_sensitivity(&self) -> bool {
         self.failure_threshold <= 3 && self.error_threshold_percentage <= 25.0
     }
-} 
+}

@@ -4,12 +4,12 @@
 //! components, including keystore, StrongBox hardware, and attestation services.
 
 use super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use crate::error::BearDogResult;
 use crate::tunnel::hsm::types::*;
 use chrono::Utc;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info};
 
 impl AndroidHealthMonitor {
     /// Create a new Android Health Monitor instance
@@ -83,9 +83,8 @@ impl AndroidHealthMonitor {
         let attestation_health = self.attestation_health.read().await.clone();
 
         // Aggregate health status
-        let overall_healthy = keystore_health.healthy && 
-                             strongbox_health.healthy && 
-                             attestation_health.healthy;
+        let overall_healthy =
+            keystore_health.healthy && strongbox_health.healthy && attestation_health.healthy;
 
         let last_check = Utc::now();
 
@@ -93,13 +92,13 @@ impl AndroidHealthMonitor {
         let error_message = if !overall_healthy {
             let mut errors = Vec::new();
             if let Some(ref msg) = keystore_health.error_message {
-                errors.push(format!("Keystore: {}", msg));
+                errors.push(format!("Keystore: {msg}"));
             }
             if let Some(ref msg) = strongbox_health.error_message {
-                errors.push(format!("StrongBox: {}", msg));
+                errors.push(format!("StrongBox: {msg}"));
             }
             if let Some(ref msg) = attestation_health.error_message {
-                errors.push(format!("Attestation: {}", msg));
+                errors.push(format!("Attestation: {msg}"));
             }
             if errors.is_empty() {
                 None
@@ -112,18 +111,24 @@ impl AndroidHealthMonitor {
 
         // Aggregate performance metrics
         let aggregated_metrics = PerformanceMetrics {
-            operations_per_second: (keystore_health.performance_metrics.operations_per_second +
-                                   strongbox_health.performance_metrics.operations_per_second +
-                                   attestation_health.performance_metrics.operations_per_second) / 3.0,
-            average_latency_ms: (keystore_health.performance_metrics.average_latency_ms +
-                                strongbox_health.performance_metrics.average_latency_ms +
-                                attestation_health.performance_metrics.average_latency_ms) / 3.0,
-            error_rate: (keystore_health.performance_metrics.error_rate +
-                        strongbox_health.performance_metrics.error_rate +
-                        attestation_health.performance_metrics.error_rate) / 3.0,
-            availability_percentage: (keystore_health.performance_metrics.availability_percentage +
-                                    strongbox_health.performance_metrics.availability_percentage +
-                                    attestation_health.performance_metrics.availability_percentage) / 3.0,
+            operations_per_second: (keystore_health.performance_metrics.operations_per_second
+                + strongbox_health.performance_metrics.operations_per_second
+                + attestation_health.performance_metrics.operations_per_second)
+                / 3.0,
+            average_latency_ms: (keystore_health.performance_metrics.average_latency_ms
+                + strongbox_health.performance_metrics.average_latency_ms
+                + attestation_health.performance_metrics.average_latency_ms)
+                / 3.0,
+            error_rate: (keystore_health.performance_metrics.error_rate
+                + strongbox_health.performance_metrics.error_rate
+                + attestation_health.performance_metrics.error_rate)
+                / 3.0,
+            availability_percentage: (keystore_health.performance_metrics.availability_percentage
+                + strongbox_health.performance_metrics.availability_percentage
+                + attestation_health
+                    .performance_metrics
+                    .availability_percentage)
+                / 3.0,
         };
 
         let overall_status = HsmHealthStatus {
@@ -133,9 +138,15 @@ impl AndroidHealthMonitor {
             performance_metrics: aggregated_metrics,
         };
 
-        debug!("🔍 Overall health: {} ({})", 
-               if overall_healthy { "healthy" } else { "unhealthy" },
-               overall_status.performance_metrics.availability_percentage);
+        debug!(
+            "🔍 Overall health: {} ({})",
+            if overall_healthy {
+                "healthy"
+            } else {
+                "unhealthy"
+            },
+            overall_status.performance_metrics.availability_percentage
+        );
 
         Ok(overall_status)
     }
@@ -231,10 +242,11 @@ impl AndroidHealthMonitor {
     /// Update keystore health status
     async fn update_keystore_health(&self, result: Result<PerformanceMetrics, String>) {
         let mut health = self.keystore_health.write().await;
-        
+
         match result {
             Ok(metrics) => {
-                health.healthy = metrics.error_rate < 0.01 && metrics.availability_percentage > 95.0;
+                health.healthy =
+                    metrics.error_rate < 0.01 && metrics.availability_percentage > 95.0;
                 health.performance_metrics = metrics;
                 health.error_message = None;
             }
@@ -243,17 +255,18 @@ impl AndroidHealthMonitor {
                 health.error_message = Some(error);
             }
         }
-        
+
         health.last_check = Utc::now();
     }
 
     /// Update StrongBox health status
     async fn update_strongbox_health(&self, result: Result<PerformanceMetrics, String>) {
         let mut health = self.strongbox_health.write().await;
-        
+
         match result {
             Ok(metrics) => {
-                health.healthy = metrics.error_rate < 0.01 && metrics.availability_percentage > 95.0;
+                health.healthy =
+                    metrics.error_rate < 0.01 && metrics.availability_percentage > 95.0;
                 health.performance_metrics = metrics;
                 health.error_message = None;
             }
@@ -262,17 +275,18 @@ impl AndroidHealthMonitor {
                 health.error_message = Some(error);
             }
         }
-        
+
         health.last_check = Utc::now();
     }
 
     /// Update attestation service health status
     async fn update_attestation_health(&self, result: Result<PerformanceMetrics, String>) {
         let mut health = self.attestation_health.write().await;
-        
+
         match result {
             Ok(metrics) => {
-                health.healthy = metrics.error_rate < 0.01 && metrics.availability_percentage > 95.0;
+                health.healthy =
+                    metrics.error_rate < 0.01 && metrics.availability_percentage > 95.0;
                 health.performance_metrics = metrics;
                 health.error_message = None;
             }
@@ -281,7 +295,7 @@ impl AndroidHealthMonitor {
                 health.error_message = Some(error);
             }
         }
-        
+
         health.last_check = Utc::now();
     }
 
@@ -345,7 +359,10 @@ impl AndroidHealthMonitor {
 /// Component health status structure
 #[derive(Debug, Clone)]
 pub struct ComponentHealthStatus {
+    /// Health status of the keystore component
     pub keystore: HsmHealthStatus,
+    /// Health status of the StrongBox component
     pub strongbox: HsmHealthStatus,
+    /// Health status of the attestation component
     pub attestation: HsmHealthStatus,
-} 
+}

@@ -151,13 +151,7 @@ async fn demonstrate_capability_advertisement(
     // Demonstrate genetic capability merging
     println!("🧬 Generating genetic capabilities...");
     let genetic_capabilities = capability_manager
-        .merge_capabilities_for_genetic_spawning(
-            &[
-                "beardog-security".to_string(),
-                "toadstool-compute".to_string(),
-            ],
-            "high_performance_security",
-        )
+        .get_genetic_capabilities()
         .await?;
 
     println!(
@@ -178,7 +172,7 @@ async fn demonstrate_capability_advertisement(
     println!("\n🔍 Discovering emergent capabilities...");
     let interaction_history = create_mock_interaction_history();
     let emergent_capabilities = capability_manager
-        .discover_emergent_capabilities(&interaction_history)
+        .get_emergent_capabilities()
         .await?;
 
     if emergent_capabilities.is_empty() {
@@ -251,7 +245,7 @@ async fn create_songbird_handoff_manager(
         health_check_interval_seconds: 15,
     };
 
-    let handoff_manager = SongBirdHandoffManager::new(core, capability_manager, config).await?;
+    let handoff_manager = UniversalSongBirdHandoffManager::new(PrimalType::BearDog, core, capability_manager, config).await?;
 
     println!("✅ SongBird handoff manager created successfully");
     println!("   - Target: https://songbird.orchestrator.internal");

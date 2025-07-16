@@ -5,6 +5,7 @@
 use super::processors::*;
 use super::types::*;
 use crate::{BearDogError, BearDogResult};
+use tracing::error;
 
 use chrono::Utc;
 use std::collections::HashMap;
@@ -230,7 +231,7 @@ impl MultiPartyWorkflowEngine {
             success: true,
             workflow_status: new_status,
             remaining_approvals,
-            message: format!("Approval submitted successfully"),
+            message: "Approval submitted successfully".to_string(),
         })
     }
 
@@ -367,7 +368,7 @@ impl MultiPartyWorkflowEngine {
 
             // Process the workflow
             if let Err(e) = self.execute_workflow(&execution).await {
-                eprintln!(
+                error!(
                     "Failed to execute workflow {}: {}",
                     execution.workflow_id, e
                 );
@@ -458,7 +459,7 @@ impl MultiPartyWorkflowEngine {
             async move {
                 loop {
                     if let Err(e) = engine.process_execution_queue().await {
-                        eprintln!("Error processing execution queue: {}", e);
+                        error!("Error processing execution queue: {e}");
                     }
                     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 }

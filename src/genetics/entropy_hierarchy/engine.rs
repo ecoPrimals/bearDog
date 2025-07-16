@@ -4,12 +4,12 @@
 //! all entropy hierarchy operations including seed management, validation,
 //! and cryptographic operations.
 
-use super::monitoring::{EntropyMonitor, EntropyHealthStatus, PerformanceMetrics};
+use super::monitoring::{EntropyHealthStatus, EntropyMonitor, PerformanceMetrics};
 use super::sources::EntropyMixingEngine;
 use super::types::*;
 use super::validation::EntropyValidator;
 use crate::genetics::human_entropy::MultiModalHumanEntropyCollector;
-use crate::tunnel::hsm::{HsmManager, SecurityLevel, SecurityRequirements};
+use crate::tunnel::hsm::{HsmManager, SecurityLevel};
 use crate::{BearDogError, BearDogResult};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -130,11 +130,12 @@ impl EntropyHierarchyManager {
 
     /// Use a seed for a cryptographic operation
     pub fn use_seed(&mut self, seed_id: &Uuid, operation: &str) -> BearDogResult<Vec<u8>> {
-        let seed = self.active_seeds.get_mut(seed_id).ok_or_else(|| {
-            BearDogError::InvalidInput {
-                message: format!("Seed with ID {} not found", seed_id),
-            }
-        })?;
+        let seed =
+            self.active_seeds
+                .get_mut(seed_id)
+                .ok_or_else(|| BearDogError::InvalidInput {
+                    message: format!("Seed with ID {seed_id} not found"),
+                })?;
 
         seed.use_for_operation(operation)
     }
@@ -193,22 +194,24 @@ impl EntropyHierarchyManager {
             });
         }
 
-        let seed = self.active_seeds.get_mut(seed_id).ok_or_else(|| {
-            BearDogError::InvalidInput {
-                message: format!("Seed with ID {} not found", seed_id),
-            }
-        })?;
+        let seed =
+            self.active_seeds
+                .get_mut(seed_id)
+                .ok_or_else(|| BearDogError::InvalidInput {
+                    message: format!("Seed with ID {seed_id} not found"),
+                })?;
 
         seed.transfer_ownership(new_owner)
     }
 
     /// Expire ownership of a seed
     pub fn expire_seed_ownership(&mut self, seed_id: &Uuid) -> BearDogResult<()> {
-        let seed = self.active_seeds.get_mut(seed_id).ok_or_else(|| {
-            BearDogError::InvalidInput {
-                message: format!("Seed with ID {} not found", seed_id),
-            }
-        })?;
+        let seed =
+            self.active_seeds
+                .get_mut(seed_id)
+                .ok_or_else(|| BearDogError::InvalidInput {
+                    message: format!("Seed with ID {seed_id} not found"),
+                })?;
 
         seed.expire_ownership()
     }
@@ -220,7 +223,7 @@ impl EntropyHierarchyManager {
             Ok(())
         } else {
             Err(BearDogError::InvalidInput {
-                message: format!("Seed with ID {} not found", seed_id),
+                message: format!("Seed with ID {seed_id} not found"),
             })
         }
     }
@@ -256,7 +259,10 @@ impl EntropyHierarchyManager {
     }
 
     /// List seeds by entropy class
-    pub fn list_seeds_by_entropy_class(&self, entropy_class_filter: fn(&EntropyClass) -> bool) -> Vec<Uuid> {
+    pub fn list_seeds_by_entropy_class(
+        &self,
+        entropy_class_filter: fn(&EntropyClass) -> bool,
+    ) -> Vec<Uuid> {
         self.active_seeds
             .iter()
             .filter(|(_, seed)| entropy_class_filter(&seed.entropy_class))
@@ -265,7 +271,10 @@ impl EntropyHierarchyManager {
     }
 
     /// List seeds by ownership type
-    pub fn list_seeds_by_ownership(&self, ownership_filter: fn(&SeedOwnership) -> bool) -> Vec<Uuid> {
+    pub fn list_seeds_by_ownership(
+        &self,
+        ownership_filter: fn(&SeedOwnership) -> bool,
+    ) -> Vec<Uuid> {
         self.active_seeds
             .iter()
             .filter(|(_, seed)| ownership_filter(&seed.ownership))
@@ -314,11 +323,12 @@ impl EntropyHierarchyManager {
         proof: &OwnershipProof,
         owner_identity: &HumanIdentity,
     ) -> BearDogResult<bool> {
-        let seed = self.active_seeds.get(seed_id).ok_or_else(|| {
-            BearDogError::InvalidInput {
-                message: format!("Seed with ID {} not found", seed_id),
-            }
-        })?;
+        let seed = self
+            .active_seeds
+            .get(seed_id)
+            .ok_or_else(|| BearDogError::InvalidInput {
+                message: format!("Seed with ID {seed_id} not found"),
+            })?;
 
         self.validator
             .verify_ownership_proof(proof, owner_identity, seed.seed_bytes.as_bytes())
@@ -331,11 +341,12 @@ impl EntropyHierarchyManager {
         seed_id: &Uuid,
         proof: &IrreproducibilityProof,
     ) -> BearDogResult<bool> {
-        let seed = self.active_seeds.get(seed_id).ok_or_else(|| {
-            BearDogError::InvalidInput {
-                message: format!("Seed with ID {} not found", seed_id),
-            }
-        })?;
+        let seed = self
+            .active_seeds
+            .get(seed_id)
+            .ok_or_else(|| BearDogError::InvalidInput {
+                message: format!("Seed with ID {seed_id} not found"),
+            })?;
 
         self.validator
             .verify_irreproducibility_proof(proof, seed.seed_bytes.as_bytes(), &seed.entropy_class)
@@ -353,10 +364,15 @@ impl EntropyHierarchyManager {
     }
 
     /// Get entropy quality assessment
-    pub fn assess_entropy_quality(&self, entropy_class: &EntropyClass) -> BearDogResult<EntropyQualityAssessment> {
+    pub fn assess_entropy_quality(
+        &self,
+        entropy_class: &EntropyClass,
+    ) -> BearDogResult<EntropyQualityAssessment> {
         let quality_score = self.validator.validate_entropy_quality(entropy_class)?;
         let security_level = self.validator.check_security_requirements(entropy_class)?;
-        let weighted_score = self.mixing_engine.calculate_weighted_entropy_score(entropy_class);
+        let weighted_score = self
+            .mixing_engine
+            .calculate_weighted_entropy_score(entropy_class);
 
         Ok(EntropyQualityAssessment {
             quality_score,
@@ -376,25 +392,37 @@ impl EntropyHierarchyManager {
         let mut recommendations = Vec::new();
 
         match entropy_class {
-            EntropyClass::HumanLivedExperience { source_type, .. } => {
-                match source_type {
-                    HumanEntropySource::MultiModalHuman { .. } => {
-                        recommendations.push("Excellent choice: Multi-modal human entropy provides maximum security".to_string());
-                    }
-                    _ => {
-                        recommendations.push("Consider combining with other human entropy sources for multi-modal entropy".to_string());
-                    }
+            EntropyClass::HumanLivedExperience { source_type, .. } => match source_type {
+                HumanEntropySource::MultiModalHuman { .. } => {
+                    recommendations.push(
+                        "Excellent choice: Multi-modal human entropy provides maximum security"
+                            .to_string(),
+                    );
                 }
-            }
+                _ => {
+                    recommendations.push("Consider combining with other human entropy sources for multi-modal entropy".to_string());
+                }
+            },
             EntropyClass::HumanSupervisedMachine { .. } => {
-                recommendations.push("Consider upgrading to pure human entropy for maximum security".to_string());
-                recommendations.push("Ensure human validator has appropriate verification level".to_string());
+                recommendations.push(
+                    "Consider upgrading to pure human entropy for maximum security".to_string(),
+                );
+                recommendations
+                    .push("Ensure human validator has appropriate verification level".to_string());
             }
-            EntropyClass::StoreBoughtMachine { reproducibility_index, .. } => {
+            EntropyClass::StoreBoughtMachine {
+                reproducibility_index,
+                ..
+            } => {
                 if *reproducibility_index > 0.7 {
-                    recommendations.push("High reproducibility detected - consider human supervision".to_string());
+                    recommendations.push(
+                        "High reproducibility detected - consider human supervision".to_string(),
+                    );
                 }
-                recommendations.push("Machine entropy should be used only when human entropy is not available".to_string());
+                recommendations.push(
+                    "Machine entropy should be used only when human entropy is not available"
+                        .to_string(),
+                );
             }
         }
 
@@ -418,9 +446,14 @@ impl EntropyHierarchyManager {
 /// Assessment of entropy quality
 #[derive(Debug, Clone)]
 pub struct EntropyQualityAssessment {
+    /// Overall quality score of the entropy
     pub quality_score: f64,
+    /// Security level based on entropy quality
     pub security_level: SecurityLevel,
+    /// Weighted score considering various factors
     pub weighted_score: f64,
+    /// Tier classification of the entropy
     pub entropy_tier: u8,
+    /// Recommendations for improving entropy quality
     pub recommendations: Vec<String>,
-} 
+}

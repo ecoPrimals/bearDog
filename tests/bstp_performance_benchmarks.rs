@@ -12,7 +12,6 @@ use beardog::tunnel::{
 use beardog::BearDogResult;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio;
 
 #[tokio::test]
 async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
@@ -62,7 +61,7 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
         let mut decryption_times = Vec::new();
 
         for i in 0..iterations {
-            let session_id = format!("sc2_session_{}_{}", packet_type, i);
+            let session_id = format!("sc2_session_{packet_type}_{i}");
 
             // Encryption benchmark
             let start = Instant::now();
@@ -93,7 +92,7 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
         let min_encryption = encryption_times.iter().min().unwrap();
         let min_decryption = decryption_times.iter().min().unwrap();
 
-        println!("📊 {} Performance:", packet_type);
+        println!("📊 {packet_type} Performance:");
         println!(
             "   Encryption - Avg: {}μs, Min: {}μs, Max: {}μs",
             avg_encryption.as_micros(),
@@ -181,7 +180,7 @@ async fn benchmark_age_of_empires2_scenario() -> BearDogResult<()> {
 
     for command in &aoe2_commands {
         for i in 0..iterations {
-            let session_id = format!("aoe2_session_{}", i);
+            let session_id = format!("aoe2_session_{i}");
 
             let start = Instant::now();
             let encrypted = crypto_engine
@@ -258,7 +257,7 @@ async fn benchmark_throughput_stress_test() -> BearDogResult<()> {
             let genetics = security_genetics.clone();
 
             let handle = tokio::spawn(async move {
-                let session_id = format!("stress_test_{}_{}", size, i);
+                let session_id = format!("stress_test_{size}_{i}");
 
                 let encrypted = crypto
                     .ultra_fast_encrypt(&session_id, &data, &genetics)
@@ -289,19 +288,16 @@ async fn benchmark_throughput_stress_test() -> BearDogResult<()> {
             (size * packets_per_size * 8) as f64 / total_time.as_secs_f64() / 1_000_000.0;
         let packets_per_second = packets_per_size as f64 / total_time.as_secs_f64();
 
-        println!("📊 Packet Size {}B Performance:", size);
-        println!("   Throughput: {:.2} Mbps", throughput_mbps);
-        println!("   Packets/sec: {:.0}", packets_per_second);
+        println!("📊 Packet Size {size}B Performance:");
+        println!("   Throughput: {throughput_mbps:.2} Mbps");
+        println!("   Packets/sec: {packets_per_second:.0}");
         println!("   Total time: {:.2}s", total_time.as_secs_f64());
 
         // Verify throughput requirements
         let min_throughput_mbps = config.performance.min_gaming_throughput;
         assert!(
             throughput_mbps >= min_throughput_mbps as f64,
-            "Throughput {:.2} Mbps below target {:.2} Mbps for {}B packets",
-            throughput_mbps,
-            min_throughput_mbps,
-            size
+            "Throughput {throughput_mbps:.2} Mbps below target {min_throughput_mbps:.2} Mbps for {size}B packets"
         );
     }
 
@@ -336,7 +332,7 @@ async fn benchmark_genetic_healing_performance() -> BearDogResult<()> {
             let security_issue = SecurityIssue {
                 issue_type: threat_type.clone(),
                 severity: Severity::High,
-                description: format!("Test threat {}", i),
+                description: format!("Test threat {i}"),
                 timestamp: std::time::SystemTime::now(),
             };
 
@@ -351,7 +347,7 @@ async fn benchmark_genetic_healing_performance() -> BearDogResult<()> {
         let avg_healing_time = healing_times.iter().sum::<Duration>() / iterations as u32;
         let max_healing_time = healing_times.iter().max().unwrap();
 
-        println!("🧬 {:?} Healing Performance:", threat_type);
+        println!("🧬 {threat_type:?} Healing Performance:");
         println!("   Average: {}ms", avg_healing_time.as_millis());
         println!("   Maximum: {}ms", max_healing_time.as_millis());
 
@@ -384,7 +380,7 @@ async fn benchmark_key_management_performance() -> BearDogResult<()> {
     let mut generation_times = Vec::new();
 
     for i in 0..operations {
-        let session_id = format!("perf_test_session_{}", i);
+        let session_id = format!("perf_test_session_{i}");
 
         let gen_start = Instant::now();
         let _key = key_manager

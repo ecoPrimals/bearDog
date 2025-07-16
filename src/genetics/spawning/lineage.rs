@@ -3,13 +3,13 @@
 //! This module handles lineage tracking, diversity calculation, and cryptographic
 //! proof of genetic lineage for spawned nodes.
 
-use super::engine::GeneticSpawningEngine;
 use super::super::types::*;
+use super::engine::GeneticSpawningEngine;
 use crate::auth::BearDogGenetics;
 use crate::genetics::types::{ParentSignature, WitnessSignature, WitnessType};
 use crate::tunnel::hsm::types::HsmOperation;
 use crate::tunnel::hsm::{SecurityLevel, SecurityRequirements};
-use crate::{BearDogError, BearDogResult};
+use crate::BearDogResult;
 use chrono::Utc;
 use sha3::{Digest, Sha3_256};
 use tracing::info;
@@ -32,14 +32,14 @@ pub async fn create_lineage_record(
     let security_reqs = SecurityRequirements::new(SecurityLevel::High);
 
     // Generate cryptographic hash of child genetics
-    let child_genetics_data = format!("{:?}", child_genetics);
+    let child_genetics_data = format!("{child_genetics:?}");
     let child_genetics_hash = Sha3_256::digest(child_genetics_data.as_bytes()).to_vec();
 
     // Generate parent genetics hashes
     let mut parent_genetics_hashes = Vec::new();
     for parent_id in &parent_node_ids {
         if let Some(parent_genetics) = engine.genetics_store.load_genetics(parent_id).await? {
-            let parent_genetics_data = format!("{:?}", parent_genetics);
+            let parent_genetics_data = format!("{parent_genetics:?}");
             let parent_hash = Sha3_256::digest(parent_genetics_data.as_bytes()).to_vec();
             parent_genetics_hashes.push(parent_hash);
         }
@@ -59,7 +59,7 @@ pub async fn create_lineage_record(
         let signature = engine
             .hsm_manager
             .sign_data(
-                &format!("lineage-{}", parent_id),
+                &format!("lineage-{parent_id}"),
                 &lineage_hash,
                 &security_reqs,
                 &HsmOperation::LineageProof,
@@ -67,7 +67,7 @@ pub async fn create_lineage_record(
             .await?;
 
         // Generate a mock public key for the parent
-        let public_key_data = format!("parent-pubkey-{}", parent_id);
+        let public_key_data = format!("parent-pubkey-{parent_id}");
         let public_key = Sha3_256::digest(public_key_data.as_bytes()).to_vec();
 
         parent_signatures.push(ParentSignature {
@@ -108,12 +108,8 @@ pub async fn create_lineage_record(
     });
 
     // Calculate genetic diversity score
-    let diversity_score = calculate_genetic_diversity_score(
-        engine,
-        child_genetics,
-        &parent_node_ids,
-    )
-    .await?;
+    let diversity_score =
+        calculate_genetic_diversity_score(engine, child_genetics, &parent_node_ids).await?;
 
     let lineage = GeneticLineage {
         child_node_id: child_node_id.to_string(),
@@ -259,8 +255,7 @@ fn calculate_capability_diversity(
         }
     }
 
-    let child_cap_set: std::collections::HashSet<_> =
-        child_capabilities.iter().cloned().collect();
+    let child_cap_set: std::collections::HashSet<_> = child_capabilities.iter().cloned().collect();
 
     // Calculate Jaccard diversity index
     let intersection_size = child_cap_set
@@ -289,8 +284,7 @@ fn calculate_trait_diversity(
     for parent_trait in parent_traits {
         let trust_diff = (child_traits.trust_threshold - parent_trait.trust_threshold).abs();
         let paranoia_diff =
-            (child_traits.paranoia_level as f64 - parent_trait.paranoia_level as f64).abs()
-                / 10.0;
+            (child_traits.paranoia_level as f64 - parent_trait.paranoia_level as f64).abs() / 10.0;
         let isolation_diff =
             (child_traits.isolation_preference - parent_trait.isolation_preference).abs();
         let audit_diff =
@@ -303,4 +297,4 @@ fn calculate_trait_diversity(
 
     let avg_diversity = trait_differences.iter().sum::<f64>() / trait_differences.len() as f64;
     avg_diversity.clamp(0.0, 1.0)
-} 
+}

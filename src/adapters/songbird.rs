@@ -103,92 +103,144 @@ pub struct SongBirdAdapter {
 /// Active SongBird connection
 #[derive(Debug, Clone)]
 pub struct SongBirdConnection {
+    /// Unique identifier for the connection
     pub connection_id: String,
+    /// User ID associated with the connection
     pub user_id: String,
+    /// SongBird orchestrator endpoint
     pub endpoint: String,
+    /// Timestamp when connection was established
     pub established_at: DateTime<Utc>,
+    /// Timestamp of last activity on the connection
     pub last_activity: DateTime<Utc>,
+    /// Current encryption status
     pub encryption_status: EncryptionStatus,
+    /// Current threat level assessment
     pub threat_level: crate::threat::ThreatSeverity,
 }
 
 /// Communication session for voice/video calls
 #[derive(Debug, Clone)]
 pub struct CommunicationSession {
+    /// Unique identifier for the session
     pub session_id: String,
+    /// List of participant user IDs
     pub participants: Vec<String>,
+    /// Type of communication session
     pub session_type: SessionType,
+    /// Timestamp when session was started
     pub started_at: DateTime<Utc>,
+    /// Security level for this session
     pub security_level: SecurityLevel,
+    /// Whether recording is enabled
     pub recording_enabled: bool,
+    /// Whether compliance monitoring is active
     pub compliance_monitoring: bool,
 }
 
 /// Encryption status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EncryptionStatus {
+    /// No encryption
     None,
+    /// In-transit encryption only
     InTransit,
+    /// End-to-end encryption
     EndToEnd,
+    /// Quantum-resistant encryption
     QuantumResistant,
 }
 
 /// Communication session type
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SessionType {
+    /// Text messaging session
     Messaging,
+    /// Voice call session
     VoiceCall,
+    /// Video call session
     VideoCall,
+    /// Conference call session
     Conference,
+    /// Screen sharing session
     ScreenShare,
+    /// File transfer session
     FileTransfer,
 }
 
 /// Security level for communications
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SecurityLevel {
+    /// Standard security level
     Standard,
+    /// Enhanced security level
     Enhanced,
+    /// Classified security level
     Classified,
+    /// Top secret security level
     TopSecret,
 }
 
 /// Message for secure communication
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecureMessage {
+    /// Unique message identifier
     pub message_id: String,
+    /// Sender user ID
     pub sender_id: String,
+    /// List of recipient user IDs
     pub recipient_ids: Vec<String>,
+    /// Message content
     pub content: String,
+    /// Timestamp when message was sent
     pub timestamp: DateTime<Utc>,
+    /// Type of encryption used
     pub encryption_type: EncryptionStatus,
+    /// Security classification level
     pub security_classification: SecurityLevel,
+    /// Whether message requires confirmation
     pub requires_confirmation: bool,
+    /// Auto-delete duration (None = no auto-delete)
     pub auto_delete_after: Option<chrono::Duration>,
 }
 
 /// Communication policy for security enforcement
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommunicationPolicy {
+    /// Unique policy identifier
     pub policy_id: String,
+    /// Human-readable policy name
     pub name: String,
+    /// Policy description
     pub description: String,
+    /// Maximum number of participants allowed
     pub max_participants: u32,
+    /// Maximum session duration
     pub max_session_duration: chrono::Duration,
+    /// Required encryption level
     pub required_encryption: EncryptionStatus,
+    /// List of allowed external domains
     pub allowed_external_domains: Vec<String>,
+    /// Recording policy configuration
     pub recording_policy: RecordingPolicy,
+    /// Data retention period in days
     pub data_retention_days: u32,
+    /// List of compliance standards to enforce
     pub compliance_standards: Vec<String>,
 }
 
 /// Recording policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RecordingPolicy {
+    /// Never record sessions
     Never,
+    /// Opt-in recording (user must explicitly enable)
     OptIn,
+    /// Opt-out recording (user must explicitly disable)
     OptOut,
+    /// Always record sessions
     Always,
+    /// Record only for compliance purposes
     ComplianceOnly,
 }
 
@@ -452,7 +504,7 @@ impl SongBirdAdapter {
     ) -> BearDogResult<String> {
         info!(
             "📞 Starting {} session with {} participants",
-            format!("{:?}", session_type).to_lowercase(),
+            format!("{session_type:?}").to_lowercase(),
             participants.len()
         );
 
@@ -488,10 +540,10 @@ impl SongBirdAdapter {
                     "action_name".to_string(),
                     "start_communication_session".to_string(),
                 );
-                ctx.insert("session_type".to_string(), format!("{:?}", session_type));
+                ctx.insert("session_type".to_string(), format!("{session_type:?}"));
                 ctx.insert(
                     "security_level".to_string(),
-                    format!("{:?}", security_level),
+                    format!("{security_level:?}"),
                 );
                 ctx
             },
@@ -556,14 +608,14 @@ impl SongBirdAdapter {
                     "communication_session_started".to_string(),
                 );
                 details.insert("session_id".to_string(), session_id.clone());
-                details.insert("session_type".to_string(), format!("{:?}", session_type));
+                details.insert("session_type".to_string(), format!("{session_type:?}"));
                 details.insert(
                     "participant_count".to_string(),
                     participants.len().to_string(),
                 );
                 details.insert(
                     "security_level".to_string(),
-                    format!("{:?}", security_level),
+                    format!("{security_level:?}"),
                 );
                 details
             },

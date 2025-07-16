@@ -79,13 +79,13 @@ impl BearDogConfig {
     pub fn from_file<P: AsRef<Path>>(path: P) -> BearDogResult<Self> {
         let content = std::fs::read_to_string(path).map_err(|e| {
             crate::error::BearDogError::Configuration {
-                message: format!("Failed to read config file: {}", e),
+                message: format!("Failed to read config file: {e}"),
             }
         })?;
 
         let config: Self =
             toml::from_str(&content).map_err(|e| crate::error::BearDogError::Configuration {
-                message: format!("Failed to parse config file: {}", e),
+                message: format!("Failed to parse config file: {e}"),
             })?;
 
         config.validate()?;
@@ -179,13 +179,13 @@ impl BearDogConfig {
         let config = Self::default();
         let toml_content = toml::to_string_pretty(&config).map_err(|e| {
             crate::error::BearDogError::Configuration {
-                message: format!("Failed to serialize default config: {}", e),
+                message: format!("Failed to serialize default config: {e}"),
             }
         })?;
 
         std::fs::write(path, toml_content).map_err(|e| {
             crate::error::BearDogError::Configuration {
-                message: format!("Failed to write config file: {}", e),
+                message: format!("Failed to write config file: {e}"),
             }
         })?;
 

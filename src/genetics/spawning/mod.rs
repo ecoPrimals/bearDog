@@ -26,7 +26,7 @@
 //! let genetics_store = Arc::new(InMemoryGeneticsStore::new());
 //! let hsm_manager = Arc::new(HsmManager::new());
 //! let config = GeneticsConfig::default();
-//! 
+//!
 //! let engine = GeneticSpawningEngine::new(genetics_store, hsm_manager, config);
 //!
 //! // Process spawn requests
@@ -34,11 +34,11 @@
 //! ```
 
 pub mod engine;
-pub mod workflows;
-pub mod recombination;
 pub mod evolution;
-pub mod validation;
 pub mod lineage;
+pub mod recombination;
+pub mod validation;
+pub mod workflows;
 
 // Re-export all types from genetics/types that are needed
 pub use super::types::*;
@@ -47,38 +47,23 @@ pub use super::types::*;
 pub use engine::GeneticSpawningEngine;
 
 // Re-export workflow functions for advanced usage
-pub use workflows::{
-    process_automated_consensus,
-    process_human_approval,
-    process_hybrid_approval,
-};
+pub use workflows::{process_automated_consensus, process_human_approval, process_hybrid_approval};
 
 // Re-export recombination functions for advanced usage
 pub use recombination::{
-    recombine_genetics,
-    recombine_chromosomes,
-    blend_security_traits,
-    merge_capabilities,
+    blend_security_traits, merge_capabilities, recombine_chromosomes, recombine_genetics,
 };
 
 // Re-export evolution functions for advanced usage
-pub use evolution::{
-    apply_directed_evolution,
-    apply_mutations,
-};
+pub use evolution::{apply_directed_evolution, apply_mutations};
 
 // Re-export validation functions for advanced usage
 pub use validation::{
-    calculate_spawn_risk_score,
-    run_automated_check,
-    evaluate_escalation_condition,
+    calculate_spawn_risk_score, evaluate_escalation_condition, run_automated_check,
 };
 
 // Re-export lineage functions for advanced usage
-pub use lineage::{
-    create_lineage_record,
-    calculate_genetic_diversity_score,
-};
+pub use lineage::{calculate_genetic_diversity_score, create_lineage_record};
 
 /// Main spawning engine - provides the complete genetic spawning system
-pub type SpawningEngine = GeneticSpawningEngine; 
+pub type SpawningEngine = GeneticSpawningEngine;

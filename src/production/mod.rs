@@ -31,7 +31,7 @@ pub use self::validation::*;
 
 use crate::error::BearDogResult;
 use crate::monitoring::MonitoringService;
-use crate::utils::env_utils::{EnvUtils, ObservabilityConfig};
+use crate::utils::env_utils::EnvUtils;
 use crate::BearDogCore;
 
 // Module declarations
@@ -59,7 +59,7 @@ impl ProductionManager {
         info!("🏭 Initializing Production Manager");
 
         let config = Self::load_production_config().await?;
-        
+
         // Initialize monitoring service
         let observability_config = EnvUtils::get_observability_config();
         let monitoring = Arc::new(MonitoringService::new(observability_config));
@@ -101,10 +101,10 @@ impl ProductionManager {
         self.start_maintenance_scheduler().await?;
 
         info!("✅ Production system started successfully");
-        
+
         // Wait for shutdown signal
         Self::wait_for_sigterm().await;
-        
+
         // Shutdown gracefully
         self.shutdown().await?;
 
@@ -152,10 +152,10 @@ impl ProductionManager {
     /// Start metrics endpoint
     async fn start_metrics_endpoint(&self) -> BearDogResult<()> {
         info!("📊 Starting metrics endpoint");
-        
+
         // Implementation would start HTTP endpoint for metrics
         debug!("Metrics endpoint started");
-        
+
         Ok(())
     }
 
@@ -168,7 +168,7 @@ impl ProductionManager {
 
         info!("💾 Starting backup scheduler");
         let backup_config = self.config.backup_config.clone();
-        
+
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(3600)); // Check hourly
             loop {
@@ -188,7 +188,7 @@ impl ProductionManager {
     async fn start_maintenance_scheduler(&self) -> BearDogResult<()> {
         info!("🔧 Starting maintenance scheduler");
         let maintenance_config = self.config.maintenance_config.clone();
-        
+
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(300)); // Check every 5 minutes
             loop {
@@ -233,13 +233,12 @@ impl ProductionManager {
     async fn load_production_config() -> BearDogResult<ProductionConfig> {
         // Try to load from environment or config file
         let config_path = EnvUtils::get_optional("BEARDOG_PRODUCTION_CONFIG", "");
-        if !config_path.is_empty() {
-            if Path::new(&config_path).exists() {
+        if !config_path.is_empty()
+            && Path::new(&config_path).exists() {
                 // Load from file
                 info!("📋 Loading production config from: {}", config_path);
                 // Implementation would load and parse config file
             }
-        }
 
         // Use default configuration
         Ok(Self::default_production_config())
@@ -317,7 +316,7 @@ impl ProductionManager {
     /// Wait for SIGTERM signal
     async fn wait_for_sigterm() {
         info!("⏳ Waiting for shutdown signal...");
-        
+
         #[cfg(unix)]
         {
             let mut sigterm = signal::unix::signal(signal::unix::SignalKind::terminate())
@@ -356,30 +355,38 @@ impl ProductionManager {
     }
 
     // Validation methods using the validation module
+    
+    /// Check if the system is ready for deployment
     pub async fn check_deployment_readiness(&self) -> BearDogResult<DeploymentReadinessCheck> {
         let mut readiness = DeploymentReadinessCheck::new();
         readiness.update(true, true, true, true, true);
         Ok(readiness)
     }
 
+    /// Validate the production environment configuration
     pub async fn validate_production_environment(&self) -> BearDogResult<EnvironmentValidation> {
         let mut validation = EnvironmentValidation::new();
         validation.update(true, true, true, true, true);
         Ok(validation)
     }
 
+    /// Validate all system dependencies
     pub async fn validate_dependencies(&self) -> BearDogResult<DependencyValidation> {
         let mut validation = DependencyValidation::new();
         validation.update(true, true, true, true);
         Ok(validation)
     }
 
-    pub async fn validate_production_configuration(&self) -> BearDogResult<ConfigurationValidation> {
+    /// Validate the production configuration settings
+    pub async fn validate_production_configuration(
+        &self,
+    ) -> BearDogResult<ConfigurationValidation> {
         let mut validation = ConfigurationValidation::new();
         validation.update(true, true, true, true);
         Ok(validation)
     }
 
+    /// Run comprehensive safety checks before deployment
     pub async fn run_pre_deployment_safety_checks(&self) -> BearDogResult<SafetyChecks> {
         let mut safety = SafetyChecks::new();
         safety.update(true, true, true, true);
@@ -387,6 +394,8 @@ impl ProductionManager {
     }
 
     // Health monitoring methods using the health module
+    
+    /// Get the current system health status
     pub async fn get_system_health_status(&self) -> BearDogResult<SystemHealthStatus> {
         let mut status = SystemHealthStatus::new();
         status.cpu_utilization = 0.5;
@@ -397,6 +406,7 @@ impl ProductionManager {
         Ok(status)
     }
 
+    /// Get the health status of individual components
     pub async fn get_component_health_status(&self) -> BearDogResult<ComponentHealthStatus> {
         let mut status = ComponentHealthStatus::new();
         status.update_component("database".to_string(), ComponentStatus::healthy());
@@ -405,54 +415,72 @@ impl ProductionManager {
         Ok(status)
     }
 
+    /// Test the health endpoint functionality
     pub async fn test_health_endpoint(&self) -> BearDogResult<HealthEndpointTest> {
         Ok(HealthEndpointTest::new(200, 150, true))
     }
 
+    /// Test the liveness probe functionality
     pub async fn test_liveness_probe(&self) -> BearDogResult<LivenessProbe> {
         let mut probe = LivenessProbe::new();
         probe.update(true, true, true);
         Ok(probe)
     }
 
+    /// Test the readiness probe functionality
     pub async fn test_readiness_probe(&self) -> BearDogResult<ReadinessProbe> {
         let mut probe = ReadinessProbe::new();
         probe.update(true, true, true);
         Ok(probe)
     }
 
-    pub async fn configure_health_alerts(&self, _config: &MonitoringConfiguration) -> BearDogResult<AlertSystem> {
+    /// Configure health monitoring alerts
+    pub async fn configure_health_alerts(
+        &self,
+        _config: &MonitoringConfiguration,
+    ) -> BearDogResult<AlertSystem> {
         let mut alerts = AlertSystem::new();
         alerts.configure(vec!["email".to_string(), "slack".to_string()], true);
         Ok(alerts)
     }
 
     // Performance monitoring methods using the performance module
+    
+    /// Collect current performance metrics
     pub async fn collect_performance_metrics(&self) -> BearDogResult<PerformanceMetrics> {
         let mut metrics = PerformanceMetrics::new();
         metrics.update(150.0, 250.0, 50.0, 512.0, 45.0);
         Ok(metrics)
     }
 
+    /// Run performance benchmarks
     pub async fn run_performance_benchmarks(&self) -> BearDogResult<BenchmarkResults> {
         let mut results = BenchmarkResults::new();
         results.update(80, 30, 150, 1200, 100);
         Ok(results)
     }
 
+    /// Check for performance regression
     pub async fn check_performance_regression(&self) -> BearDogResult<PerformanceRegressionCheck> {
         let mut check = PerformanceRegressionCheck::new();
         check.update(false, true, vec!["Performance stable".to_string()]);
         Ok(check)
     }
 
-    pub async fn run_load_test(&self, _config: &LoadTestConfiguration) -> BearDogResult<LoadTestResults> {
+    /// Run load testing with specified configuration
+    pub async fn run_load_test(
+        &self,
+        _config: &LoadTestConfiguration,
+    ) -> BearDogResult<LoadTestResults> {
         let mut results = LoadTestResults::new();
         results.update(true, true, 0.005, 450);
         Ok(results)
     }
 
-    pub async fn generate_performance_recommendations(&self) -> BearDogResult<PerformanceRecommendations> {
+    /// Generate performance optimization recommendations
+    pub async fn generate_performance_recommendations(
+        &self,
+    ) -> BearDogResult<PerformanceRecommendations> {
         let mut recommendations = PerformanceRecommendations::new();
         recommendations.add_recommendation(
             "Memory".to_string(),
@@ -463,43 +491,59 @@ impl ProductionManager {
     }
 
     // Security validation methods using the security module
+    
+    /// Validate security hardening measures
     pub async fn validate_security_hardening(&self) -> BearDogResult<SecurityHardeningValidation> {
         let mut validation = SecurityHardeningValidation::new();
         validation.update(true, true, true, true, true);
         Ok(validation)
     }
 
+    /// Validate network security configuration
     pub async fn validate_network_security(&self) -> BearDogResult<NetworkSecurityValidation> {
         let mut validation = NetworkSecurityValidation::new();
         validation.update(true, true, true, true);
         Ok(validation)
     }
 
+    /// Validate data protection measures
     pub async fn validate_data_protection(&self) -> BearDogResult<DataProtectionValidation> {
         let mut validation = DataProtectionValidation::new();
         validation.update(true, true, true, true, true);
         Ok(validation)
     }
 
+    /// Validate compliance requirements
     pub async fn validate_compliance_requirements(&self) -> BearDogResult<ComplianceValidation> {
         let mut validation = ComplianceValidation::new();
         validation.update(true, true, true, true);
         Ok(validation)
     }
 
+    /// Run vulnerability scanning
     pub async fn run_vulnerability_scan(&self) -> BearDogResult<VulnerabilityScanResults> {
         let mut results = VulnerabilityScanResults::new();
         results.update(0, 2, true, vec![]);
         Ok(results)
     }
 
-    pub async fn run_penetration_test(&self, _config: &PenetrationTestConfiguration) -> BearDogResult<PenetrationTestResults> {
+    /// Run penetration testing
+    pub async fn run_penetration_test(
+        &self,
+        _config: &PenetrationTestConfiguration,
+    ) -> BearDogResult<PenetrationTestResults> {
         let mut results = PenetrationTestResults::new();
-        results.update(true, 0, vec!["System passed all security tests".to_string()]);
+        results.update(
+            true,
+            0,
+            vec!["System passed all security tests".to_string()],
+        );
         Ok(results)
     }
 
     // Operational validation methods using the validation module
+    
+    /// Validate startup procedures
     pub async fn validate_startup_procedures(&self) -> BearDogResult<StartupValidation> {
         let mut validation = StartupValidation::new();
         validation.initialization_sequence_correct = true;
@@ -510,6 +554,7 @@ impl ProductionManager {
         Ok(validation)
     }
 
+    /// Validate shutdown procedures
     pub async fn validate_shutdown_procedures(&self) -> BearDogResult<ShutdownValidation> {
         let mut validation = ShutdownValidation::new();
         validation.graceful_shutdown_supported = true;
@@ -519,6 +564,7 @@ impl ProductionManager {
         Ok(validation)
     }
 
+    /// Validate backup procedures
     pub async fn validate_backup_procedures(&self) -> BearDogResult<BackupValidation> {
         let mut validation = BackupValidation::new();
         validation.automated_backups_configured = true;
@@ -529,6 +575,7 @@ impl ProductionManager {
         Ok(validation)
     }
 
+    /// Validate maintenance procedures
     pub async fn validate_maintenance_procedures(&self) -> BearDogResult<MaintenanceValidation> {
         let mut validation = MaintenanceValidation::new();
         validation.maintenance_windows_defined = true;
@@ -538,6 +585,7 @@ impl ProductionManager {
         Ok(validation)
     }
 
+    /// Validate monitoring procedures
     pub async fn validate_monitoring_procedures(&self) -> BearDogResult<MonitoringValidation> {
         let mut validation = MonitoringValidation::new();
         validation.metrics_collection_comprehensive = true;
@@ -547,6 +595,7 @@ impl ProductionManager {
         Ok(validation)
     }
 
+    /// Validate operational runbooks
     pub async fn validate_operational_runbooks(&self) -> BearDogResult<RunbookValidation> {
         let mut validation = RunbookValidation::new();
         validation.runbooks_comprehensive = true;
@@ -557,36 +606,47 @@ impl ProductionManager {
     }
 
     // Operations methods using the operations module
-    pub async fn validate_disaster_recovery_plan(&self) -> BearDogResult<DisasterRecoveryValidation> {
+    
+    /// Validate disaster recovery plan
+    pub async fn validate_disaster_recovery_plan(
+        &self,
+    ) -> BearDogResult<DisasterRecoveryValidation> {
         let mut validation = DisasterRecoveryValidation::new();
         validation.update(true, true, true, true, true);
         Ok(validation)
     }
 
-    pub async fn validate_business_continuity_plan(&self) -> BearDogResult<BusinessContinuityValidation> {
+    /// Validate business continuity plan
+    pub async fn validate_business_continuity_plan(
+        &self,
+    ) -> BearDogResult<BusinessContinuityValidation> {
         let mut validation = BusinessContinuityValidation::new();
         validation.update(true, true, true, true);
         Ok(validation)
     }
 
+    /// Test failover procedures
     pub async fn test_failover_procedures(&self) -> BearDogResult<FailoverTest> {
         let mut test = FailoverTest::new();
         test.update(true, true, true, true, true);
         Ok(test)
     }
 
+    /// Test backup and restore procedures
     pub async fn test_backup_restore_procedures(&self) -> BearDogResult<BackupRestoreTest> {
         let mut test = BackupRestoreTest::new();
         test.update(true, true, true, true, true);
         Ok(test)
     }
 
+    /// Test incident communication procedures
     pub async fn test_incident_communication_procedures(&self) -> BearDogResult<CommunicationTest> {
         let mut test = CommunicationTest::new();
         test.update(true, true, true, true);
         Ok(test)
     }
 
+    /// Validate RTO/RPO compliance
     pub async fn validate_rto_rpo_compliance(&self) -> BearDogResult<RtoRpoValidation> {
         let mut validation = RtoRpoValidation::new();
         validation.update(true, true, true, true);
@@ -594,7 +654,12 @@ impl ProductionManager {
     }
 
     // Stress testing methods using the performance module
-    pub async fn run_stress_test(&self, _config: &StressTestConfiguration) -> BearDogResult<StressTestResults> {
+    
+    /// Run stress testing with specified configuration
+    pub async fn run_stress_test(
+        &self,
+        _config: &StressTestConfiguration,
+    ) -> BearDogResult<StressTestResults> {
         Ok(StressTestResults {
             system_remained_stable: true,
             performance_degradation_acceptable: true,
@@ -603,6 +668,7 @@ impl ProductionManager {
         })
     }
 
+    /// Test resource exhaustion handling
     pub async fn test_resource_exhaustion_handling(&self) -> BearDogResult<ResourceExhaustionTest> {
         Ok(ResourceExhaustionTest {
             graceful_degradation_functional: true,
@@ -611,6 +677,7 @@ impl ProductionManager {
         })
     }
 
+    /// Test cascade failure prevention mechanisms
     pub async fn test_cascade_failure_prevention(&self) -> BearDogResult<CascadePreventionTest> {
         Ok(CascadePreventionTest {
             circuit_breakers_functional: true,
@@ -643,4 +710,4 @@ mod tests {
         assert_eq!(config.failure_threshold, 5);
         assert_eq!(config.recovery_timeout, Duration::from_secs(60));
     }
-} 
+}

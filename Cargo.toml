@@ -40,6 +40,7 @@ pbkdf2 = "0.12"
 subtle = "2.5"
 hex = "0.4"
 zeroize = "1.7"
+openssl = "0.10"
 
 # Post-quantum cryptography
 pqcrypto-mlkem = "0.1"
@@ -129,4 +130,7 @@ postgres = ["sqlx/postgres"]
 sqlite = ["sqlx/sqlite"]
 hsm = ["cryptoki"]
 prometheus-metrics = ["metrics-exporter-prometheus"]
-ml-threat-detection = []  # Placeholder for future ML integration 
+ml-threat-detection = []  # Placeholder for future ML integration
+genetic-spawning = []     # Genetic spawning system
+compliance = []           # Compliance monitoring
+federation = []           # Federation capabilities 

@@ -69,7 +69,7 @@ impl BearDogCrypto {
         // Create verifying key
         let verifying_key =
             VerifyingKey::from_bytes(&public_key_array).map_err(|e| BearDogError::Crypto {
-                message: format!("Invalid public key: {}", e),
+                message: format!("Invalid public key: {e}"),
             })?;
 
         // Create signature
@@ -136,7 +136,7 @@ impl BearDogCrypto {
     pub fn generate_secure_nonce(size: usize) -> BearDogResult<Vec<u8>> {
         if size == 0 || size > 64 {
             return Err(BearDogError::InvalidInput {
-                message: format!("Invalid nonce size: {} (must be 1-64 bytes)", size),
+                message: format!("Invalid nonce size: {size} (must be 1-64 bytes)"),
             });
         }
 
@@ -155,7 +155,7 @@ impl BearDogCrypto {
     pub fn generate_secure_random(size: usize) -> BearDogResult<Vec<u8>> {
         if size == 0 || size > 1024 {
             return Err(BearDogError::InvalidInput {
-                message: format!("Invalid random size: {} (must be 1-1024 bytes)", size),
+                message: format!("Invalid random size: {size} (must be 1-1024 bytes)"),
             });
         }
 
@@ -183,15 +183,14 @@ impl BearDogCrypto {
         if iterations < 10000 {
             return Err(BearDogError::Crypto {
                 message: format!(
-                    "Insufficient PBKDF2 iterations: {} (minimum 10000)",
-                    iterations
+                    "Insufficient PBKDF2 iterations: {iterations} (minimum 10000)"
                 ),
             });
         }
 
         if key_length == 0 || key_length > 128 {
             return Err(BearDogError::InvalidInput {
-                message: format!("Invalid key length: {} (must be 1-128 bytes)", key_length),
+                message: format!("Invalid key length: {key_length} (must be 1-128 bytes)"),
             });
         }
 
@@ -214,7 +213,7 @@ impl BearDogCrypto {
         let password_hash = argon2
             .hash_password(password.as_bytes(), &salt)
             .map_err(|e| BearDogError::Crypto {
-                message: format!("Password hashing failed: {}", e),
+                message: format!("Password hashing failed: {e}"),
             })?;
 
         Ok(password_hash.to_string())
@@ -231,7 +230,7 @@ impl BearDogCrypto {
     /// * `Ok(false)` if password doesn't match
     pub fn verify_password_argon2(password: &str, hash: &str) -> BearDogResult<bool> {
         let parsed_hash = PasswordHash::new(hash).map_err(|e| BearDogError::Crypto {
-            message: format!("Invalid password hash format: {}", e),
+            message: format!("Invalid password hash format: {e}"),
         })?;
 
         let argon2 = Argon2::default();
@@ -318,7 +317,7 @@ impl BearDogCrypto {
 
         if key_length == 0 || key_length > 128 {
             return Err(BearDogError::InvalidInput {
-                message: format!("Invalid key length: {} (must be 1-128 bytes)", key_length),
+                message: format!("Invalid key length: {key_length} (must be 1-128 bytes)"),
             });
         }
 

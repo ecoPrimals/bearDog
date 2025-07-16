@@ -396,6 +396,7 @@ dependencies = [
  "lru",
  "metrics",
  "metrics-exporter-prometheus",
+ "openssl",
  "parking_lot",
  "pbkdf2",
  "pin-project",

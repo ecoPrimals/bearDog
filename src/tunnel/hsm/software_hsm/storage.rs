@@ -32,7 +32,11 @@ impl StorageBackend for FileStorageBackend {
 
     /// Store encrypted key
     async fn store(&self, key_id: &str, encrypted_key: &[u8]) -> BearDogResult<()> {
-        debug!("Storing key {} ({} bytes) to file", key_id, encrypted_key.len());
+        debug!(
+            "Storing key {} ({} bytes) to file",
+            key_id,
+            encrypted_key.len()
+        );
         // TODO: Write encrypted key to file
         Ok(())
     }
@@ -95,7 +99,11 @@ impl StorageBackend for DatabaseStorageBackend {
 
     /// Store encrypted key
     async fn store(&self, key_id: &str, encrypted_key: &[u8]) -> BearDogResult<()> {
-        debug!("Storing key {} ({} bytes) to database", key_id, encrypted_key.len());
+        debug!(
+            "Storing key {} ({} bytes) to database",
+            key_id,
+            encrypted_key.len()
+        );
         // TODO: Insert encrypted key into database
         Ok(())
     }
@@ -165,9 +173,9 @@ impl MemoryStorageBackend {
     /// Get storage statistics
     pub async fn get_statistics(&self) -> BearDogResult<MemoryStorageStatistics> {
         let storage = self.storage.read().await;
-        
+
         let total_size: usize = storage.values().map(|v| v.len()).sum();
-        
+
         Ok(MemoryStorageStatistics {
             key_count: storage.len(),
             total_size,
@@ -191,11 +199,15 @@ impl StorageBackend for MemoryStorageBackend {
 
     /// Store encrypted key
     async fn store(&self, key_id: &str, encrypted_key: &[u8]) -> BearDogResult<()> {
-        debug!("Storing key {} ({} bytes) to memory", key_id, encrypted_key.len());
-        
+        debug!(
+            "Storing key {} ({} bytes) to memory",
+            key_id,
+            encrypted_key.len()
+        );
+
         let mut storage = self.storage.write().await;
         storage.insert(key_id.to_string(), encrypted_key.to_vec());
-        
+
         debug!("Key stored successfully in memory: {}", key_id);
         Ok(())
     }
@@ -203,7 +215,7 @@ impl StorageBackend for MemoryStorageBackend {
     /// Load encrypted key
     async fn load(&self, key_id: &str) -> BearDogResult<Vec<u8>> {
         debug!("Loading key {} from memory", key_id);
-        
+
         let storage = self.storage.read().await;
         match storage.get(key_id) {
             Some(encrypted_key) => {
@@ -222,7 +234,7 @@ impl StorageBackend for MemoryStorageBackend {
     /// Delete key
     async fn delete(&self, key_id: &str) -> BearDogResult<()> {
         debug!("Deleting key {} from memory", key_id);
-        
+
         let mut storage = self.storage.write().await;
         if storage.remove(key_id).is_some() {
             info!("Key deleted from memory: {}", key_id);
@@ -238,10 +250,10 @@ impl StorageBackend for MemoryStorageBackend {
     /// List all key IDs
     async fn list_keys(&self) -> BearDogResult<Vec<String>> {
         debug!("Listing all keys from memory");
-        
+
         let storage = self.storage.read().await;
         let keys: Vec<String> = storage.keys().cloned().collect();
-        
+
         debug!("Found {} keys in memory storage", keys.len());
         Ok(keys)
     }
@@ -249,14 +261,13 @@ impl StorageBackend for MemoryStorageBackend {
     /// Backup storage
     async fn backup(&self) -> BearDogResult<Vec<u8>> {
         info!("Creating backup of memory storage");
-        
+
         let storage = self.storage.read().await;
-        let backup_data = bincode::serialize(&*storage).map_err(|e| {
-            BearDogError::SerializationError {
+        let backup_data =
+            bincode::serialize(&*storage).map_err(|e| BearDogError::SerializationError {
                 error: e.to_string(),
-            }
-        })?;
-        
+            })?;
+
         info!("Memory storage backup created: {} bytes", backup_data.len());
         Ok(backup_data)
     }
@@ -264,15 +275,15 @@ impl StorageBackend for MemoryStorageBackend {
     /// Restore from backup
     async fn restore(&self, backup_data: &[u8]) -> BearDogResult<()> {
         info!("Restoring memory storage from backup");
-        
+
         let restored_storage: HashMap<String, Vec<u8>> = bincode::deserialize(backup_data)
             .map_err(|e| BearDogError::DeserializationError {
                 error: e.to_string(),
             })?;
-        
+
         let mut storage = self.storage.write().await;
         *storage = restored_storage;
-        
+
         info!("Memory storage restored: {} keys", storage.len());
         Ok(())
     }
@@ -316,8 +327,11 @@ impl EncryptionKey for DefaultEncryptionKey {
 /// Memory storage statistics
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MemoryStorageStatistics {
+    /// Number of keys stored in memory
     pub key_count: usize,
+    /// Total memory usage in bytes
     pub total_size: usize,
+    /// Average size per key in bytes
     pub average_key_size: usize,
 }
 
@@ -339,11 +353,9 @@ pub async fn create_storage_backend(
             let backend = MemoryStorageBackend::new().await?;
             Ok(Box::new(backend))
         }
-        KeyStorageType::Custom(custom_type) => {
-            Err(BearDogError::UnsupportedStorageType {
-                storage_type: custom_type.clone(),
-            })
-        }
+        KeyStorageType::Custom(custom_type) => Err(BearDogError::UnsupportedStorageType {
+            storage_type: custom_type.clone(),
+        }),
     }
 }
 
@@ -357,7 +369,9 @@ pub fn get_supported_storage_backends() -> Vec<KeyStorageType> {
 }
 
 /// Get storage backend capabilities
-pub fn get_storage_backend_capabilities(storage_type: &KeyStorageType) -> StorageBackendCapabilities {
+pub fn get_storage_backend_capabilities(
+    storage_type: &KeyStorageType,
+) -> StorageBackendCapabilities {
     match storage_type {
         KeyStorageType::EncryptedFile => StorageBackendCapabilities {
             persistent: true,
@@ -393,17 +407,25 @@ pub fn get_storage_backend_capabilities(storage_type: &KeyStorageType) -> Storag
 /// Storage backend capabilities
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct StorageBackendCapabilities {
+    /// Whether storage is persistent across restarts
     pub persistent: bool,
+    /// Whether storage is encrypted at rest
     pub encrypted: bool,
+    /// Whether backup operations are supported
     pub backup_supported: bool,
+    /// Whether concurrent access is supported
     pub concurrent_access: bool,
+    /// Scalability characteristics of this storage backend
     pub scalability: StorageScalability,
 }
 
 /// Storage scalability levels
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum StorageScalability {
+    /// Low scalability - suitable for small deployments
     Low,
+    /// Medium scalability - suitable for moderate workloads
     Medium,
+    /// High scalability - suitable for large-scale deployments
     High,
-} 
+}

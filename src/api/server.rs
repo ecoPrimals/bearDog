@@ -35,21 +35,29 @@ pub struct BearDogApiServer {
     config: ApiServerConfig,
 }
 
+/// Configuration settings for the API server
 #[derive(Debug, Clone)]
 pub struct ApiServerConfig {
+    /// Address and port to bind the server to
     pub bind_address: String,
+    /// Request timeout in seconds
     pub request_timeout_seconds: u64,
+    /// Maximum size of incoming requests in bytes
     pub max_request_size: usize,
+    /// Enable gzip compression for responses
     pub compression_enabled: bool,
+    /// Enable Cross-Origin Resource Sharing (CORS)
     pub cors_enabled: bool,
+    /// Enable rate limiting middleware
     pub rate_limiting_enabled: bool,
+    /// Enable response caching
     pub caching_enabled: bool,
 }
 
 impl Default for ApiServerConfig {
     fn default() -> Self {
         Self {
-            bind_address: "0.0.0.0:8080".to_string(),
+            bind_address: crate::config::constants::network::DEFAULT_BIND_ADDRESS.to_string(),
             request_timeout_seconds: 30,
             max_request_size: 16 * 1024 * 1024, // 16MB
             compression_enabled: true,
@@ -146,7 +154,7 @@ impl BearDogApiServer {
         );
 
         let listener = TcpListener::bind(bind_address).await.map_err(|e| {
-            BearDogError::internal(&format!("Failed to bind to {}: {}", bind_address, e))
+            BearDogError::internal(format!("Failed to bind to {bind_address}: {e}"))
         })?;
 
         let app = self.create_router();
@@ -162,7 +170,7 @@ impl BearDogApiServer {
         axum::serve(listener, app)
             .with_graceful_shutdown(shutdown_signal())
             .await
-            .map_err(|e| BearDogError::internal(&format!("Server error: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Server error: {e}")))?;
 
         info!("🛑 BearDog API server shutdown completed");
         Ok(())
@@ -172,9 +180,13 @@ impl BearDogApiServer {
 /// Application state shared across handlers
 #[derive(Clone)]
 pub struct AppState {
+    /// Core BearDog engine instance
     pub core: Arc<BearDogCore>,
+    /// Cache provider for response caching
     pub cache: Arc<dyn crate::api::cache::CacheProvider + Send + Sync>,
+    /// Rate limiter for request throttling
     pub rate_limiter: Arc<dyn crate::api::rate_limiting::RateLimiter + Send + Sync>,
+    /// API server configuration
     pub config: ApiServerConfig,
 }
 
@@ -235,9 +247,9 @@ async fn request_id_middleware(mut request: Request, next: Next) -> Response {
     let request_id = uuid::Uuid::new_v4().to_string();
 
     // Add request ID to headers
-    request
-        .headers_mut()
-        .insert("X-Request-ID", request_id.parse().unwrap());
+    if let Ok(header_value) = request_id.parse() {
+        request.headers_mut().insert("X-Request-ID", header_value);
+    }
 
     // Store in extensions for handlers
     request.extensions_mut().insert(request_id.clone());
@@ -245,9 +257,9 @@ async fn request_id_middleware(mut request: Request, next: Next) -> Response {
     let mut response = next.run(request).await;
 
     // Add request ID to response headers
-    response
-        .headers_mut()
-        .insert("X-Request-ID", request_id.parse().unwrap());
+    if let Ok(header_value) = request_id.parse() {
+        response.headers_mut().insert("X-Request-ID", header_value);
+    }
 
     response
 }
@@ -257,7 +269,7 @@ fn extract_client_id(request: &Request) -> String {
     // Try API key first
     if let Some(api_key) = request.headers().get("X-API-Key") {
         if let Ok(key_str) = api_key.to_str() {
-            return format!("api_key:{}", key_str);
+            return format!("api_key:{key_str}");
         }
     }
 

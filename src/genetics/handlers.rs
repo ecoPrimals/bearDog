@@ -88,6 +88,7 @@ pub struct DefaultBearDogGeneticsEngine {
 }
 
 impl DefaultBearDogGeneticsEngine {
+    /// Create a new genetics engine with the specified store and configuration
     pub fn new(genetics_store: Arc<dyn GeneticsStore>, config: GeneticsConfig) -> Self {
         let seed = {
             let mut hasher = Sha256::new();
@@ -243,7 +244,7 @@ impl DefaultBearDogGeneticsEngine {
         let spawn_restrictions = self.generate_spawn_restrictions(&security_traits, node_seed);
 
         Ok(BearDogGenetics {
-            id: format!("genesis-{}", node_id),
+            id: format!("genesis-{node_id}"),
             crypto_chromosomes,
             security_traits,
             capabilities: capability_genes.into_iter().map(|g| g.capability).collect(),
@@ -352,7 +353,7 @@ impl BearDogGeneticsEngine for DefaultBearDogGeneticsEngine {
         if mutation_rate > 0.1 {
             let mutation = CapabilityMutation {
                 trigger: MutationTrigger::PerformanceOptimization,
-                mutation_type: format!("rate_{:.2}", mutation_rate),
+                mutation_type: format!("rate_{mutation_rate:.2}"),
                 affected_capabilities: vec![NodeCapability::SelfHealing],
                 fitness_impact: mutation_rate * 0.1,
             };

@@ -254,7 +254,8 @@ impl BenchmarkResults {
     pub fn meets_requirements(&self, requirements: &BenchmarkRequirements) -> bool {
         self.encryption_latency_us <= requirements.max_encryption_latency_us
             && self.key_generation_time_ms <= requirements.max_key_generation_time_ms
-            && self.signature_verification_time_us <= requirements.max_signature_verification_time_us
+            && self.signature_verification_time_us
+                <= requirements.max_signature_verification_time_us
             && self.operations_per_second >= requirements.min_operations_per_second
     }
 }
@@ -378,12 +379,7 @@ impl PerformanceRecommendations {
     }
 
     /// Add a recommendation
-    pub fn add_recommendation(
-        &mut self,
-        category: String,
-        description: String,
-        impact_score: f64,
-    ) {
+    pub fn add_recommendation(&mut self, category: String, description: String, impact_score: f64) {
         self.recommendations.push(OptimizationRecommendation {
             category,
             description,
@@ -401,8 +397,12 @@ impl PerformanceRecommendations {
 
     /// Get recommendations sorted by impact score (highest first)
     pub fn sorted_by_impact(&self) -> Vec<&OptimizationRecommendation> {
-        let mut recommendations: Vec<&OptimizationRecommendation> = self.recommendations.iter().collect();
-        recommendations.sort_by(|a, b| b.impact_score.partial_cmp(&a.impact_score).unwrap());
+        let mut recommendations: Vec<&OptimizationRecommendation> =
+            self.recommendations.iter().collect();
+        recommendations.sort_by(|a, b| {
+            b.impact_score.partial_cmp(&a.impact_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         recommendations
     }
 
@@ -449,12 +449,7 @@ impl PerformanceRegressionCheck {
     }
 
     /// Update with regression analysis results
-    pub fn update(
-        &mut self,
-        regression_detected: bool,
-        baseline_valid: bool,
-        trends: Vec<String>,
-    ) {
+    pub fn update(&mut self, regression_detected: bool, baseline_valid: bool, trends: Vec<String>) {
         self.regression_detected = regression_detected;
         self.baseline_comparison_valid = baseline_valid;
         self.performance_trends = trends;
@@ -494,4 +489,4 @@ impl Default for PerformanceRegressionCheck {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

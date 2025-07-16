@@ -35,7 +35,7 @@ async fn test_basic_encryption_decryption() -> BearDogResult<()> {
     // Test encryption
     let encrypted = engine.encrypt(test_data, None).await?;
     assert!(
-        encrypted.ciphertext.len() > 0,
+        !encrypted.ciphertext.is_empty(),
         "Encrypted data should not be empty"
     );
 
@@ -62,12 +62,12 @@ async fn test_encryption_with_different_algorithms() -> BearDogResult<()> {
         let config = EncryptionConfig::default();
         let engine = EncryptionEngine::new(config).await?;
 
-        let test_data = format!("Testing {:?} algorithm", algorithm);
+        let test_data = format!("Testing {algorithm:?} algorithm");
         let encrypted = engine.encrypt(test_data.as_bytes(), algorithm).await?;
         let decrypted = engine.decrypt(&encrypted).await?;
 
         assert_eq!(test_data.as_bytes(), decrypted.as_slice());
-        println!("✅ {:?} encryption/decryption successful", algorithm);
+        println!("✅ {algorithm:?} encryption/decryption successful");
     }
 
     Ok(())
@@ -227,7 +227,7 @@ async fn test_concurrent_encryption_operations() -> BearDogResult<()> {
     let mut handles = Vec::new();
     for i in 0..10 {
         let engine_clone = Arc::clone(&engine);
-        let data = format!("test data {}", i);
+        let data = format!("test data {i}");
         let handle = tokio::spawn(async move {
             let encrypted = engine_clone.encrypt(data.as_bytes(), None).await?;
             let decrypted = engine_clone.decrypt(&encrypted).await?;

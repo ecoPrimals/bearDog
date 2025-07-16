@@ -4,7 +4,7 @@
 //! It provides the foundational components for secure key management, cryptographic operations,
 //! and storage backends.
 
-use crate::error::{BearDogError, BearDogResult};
+use crate::error::BearDogResult;
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
 use chrono::Utc;
@@ -15,38 +15,56 @@ use tokio::sync::RwLock;
 /// Software key representation
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SoftwareKey {
+    /// Unique identifier for the key
     pub id: String,
+    /// Type of the cryptographic key
     pub key_type: KeyType,
+    /// Protected key material
     pub key_material: ProtectedMemory,
+    /// Timestamp when the key was created
     pub created_at: chrono::DateTime<Utc>,
+    /// Additional metadata for the key
     pub metadata: KeyMetadata,
 }
 
 /// Protected memory for secure key storage
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ProtectedMemory {
+    /// The actual key data
     pub data: Vec<u8>,
+    /// Whether the memory is protected
     pub protected: bool,
 }
 
 /// Audit log entry for HSM operations
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AuditLogEntry {
+    /// When the operation occurred
     pub timestamp: chrono::DateTime<Utc>,
+    /// The operation that was performed
     pub operation: String,
+    /// The key ID involved in the operation (if applicable)
     pub key_id: Option<String>,
+    /// The user ID who performed the operation (if applicable)
     pub user_id: Option<String>,
+    /// The result of the operation
     pub result: String,
+    /// Additional details about the operation
     pub details: HashMap<String, String>,
 }
 
 /// Filter for audit log queries
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AuditLogFilter {
+    /// Filter by operations after this time
     pub start_time: Option<chrono::DateTime<Utc>>,
+    /// Filter by operations before this time
     pub end_time: Option<chrono::DateTime<Utc>>,
+    /// Filter by specific operation type
     pub operation: Option<String>,
+    /// Filter by specific key ID
     pub key_id: Option<String>,
+    /// Filter by specific user ID
     pub user_id: Option<String>,
 }
 
@@ -147,19 +165,25 @@ pub trait AuditLogger: Send + Sync {
 
 /// Software key store for encrypted key storage
 pub struct SoftwareKeyStore {
+    /// Storage backend for key persistence
     pub storage_backend: Arc<dyn StorageBackend>,
+    /// Encryption key for protecting stored keys
     pub encryption_key: Arc<dyn EncryptionKey>,
+    /// LRU cache for frequently accessed keys
     pub key_cache: Arc<RwLock<lru::LruCache<String, SoftwareKey>>>,
 }
 
 /// Software health monitor for system status
 pub struct SoftwareHealthMonitor {
+    /// Current health status of the HSM
     pub health_status: Arc<RwLock<HsmHealthStatus>>,
+    /// Performance metrics for the HSM
     pub metrics: Arc<RwLock<PerformanceMetrics>>,
 }
 
 /// Default memory protector implementation
 pub struct DefaultMemoryProtector {
+    /// Configuration for memory protection
     pub config: MemoryConfig,
 }
 
@@ -174,6 +198,7 @@ pub struct DatabaseStorageBackend;
 
 /// Memory storage backend implementation
 pub struct MemoryStorageBackend {
+    /// In-memory storage for keys
     pub storage: Arc<RwLock<HashMap<String, Vec<u8>>>>,
 }
 
@@ -191,11 +216,17 @@ pub struct OpenSslCryptoProvider;
 
 /// Rust Software HSM implementation
 pub struct RustSoftwareHsm {
+    /// Configuration for the software HSM
     pub config: SoftwareHsmConfig,
+    /// Key store for managing keys
     pub key_store: Arc<RwLock<SoftwareKeyStore>>,
+    /// Crypto provider for cryptographic operations
     pub crypto_provider: Arc<dyn CryptoProvider>,
+    /// Memory protector for secure key storage
     pub memory_protector: Arc<dyn MemoryProtector>,
+    /// Audit logger for operation logging
     pub audit_logger: Arc<dyn AuditLogger>,
+    /// Health monitor for system status
     pub health_monitor: Arc<SoftwareHealthMonitor>,
 }
 
@@ -279,12 +310,14 @@ impl AuditLogEntry {
     }
 
     /// Create success entry
-    pub fn success(
-        operation: String,
-        key_id: Option<String>,
-        user_id: Option<String>,
-    ) -> Self {
-        Self::new(operation, key_id, user_id, "success".to_string(), HashMap::new())
+    pub fn success(operation: String, key_id: Option<String>, user_id: Option<String>) -> Self {
+        Self::new(
+            operation,
+            key_id,
+            user_id,
+            "success".to_string(),
+            HashMap::new(),
+        )
     }
 
     /// Create failure entry
@@ -346,4 +379,4 @@ impl Default for AuditLogFilter {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

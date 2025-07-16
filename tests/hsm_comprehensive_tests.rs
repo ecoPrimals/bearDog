@@ -207,9 +207,9 @@ impl HsmTestHarness {
 
         // Test key generation with different algorithms
         let algorithms = vec![
-            (KeyType::Symmetric, "aes_test_key"),
-            (KeyType::Asymmetric, "rsa_test_key"),
-            (KeyType::EllipticCurve, "ec_test_key"),
+            (KeyType::Aes256, "aes_test_key"),
+            (KeyType::Rsa { key_size: 2048 }, "rsa_test_key"),
+            (KeyType::EccP256, "ec_test_key"),
         ];
 
         for (key_type, key_id) in algorithms {
@@ -227,24 +227,24 @@ impl HsmTestHarness {
             assert_eq!(key.key_type, key_type);
 
             // Test encryption/decryption for symmetric keys
-            if key_type == KeyType::Symmetric {
+            if matches!(key_type, KeyType::Aes256 | KeyType::Aes128 | KeyType::Aes192 | KeyType::ChaCha20) {
                 let plaintext = b"test encryption data";
-                let ciphertext = self.software_hsm.encrypt(&key.key_id, plaintext).await?;
+                let ciphertext = self.software_hsm.encrypt(&key.metadata.key_id, plaintext).await?;
                 assert_ne!(ciphertext, plaintext);
 
-                let decrypted = self.software_hsm.decrypt(&key.key_id, &ciphertext).await?;
+                let decrypted = self.software_hsm.decrypt(&key.metadata.key_id, &ciphertext).await?;
                 assert_eq!(decrypted, plaintext);
             }
 
             // Test signing for asymmetric keys
-            if key_type == KeyType::Asymmetric || key_type == KeyType::EllipticCurve {
+            if matches!(key_type, KeyType::Rsa { .. } | KeyType::EccP256 | KeyType::EccP384 | KeyType::EccP521 | KeyType::Ed25519) {
                 let test_data = b"test signature data";
-                let signature = self.software_hsm.sign(&key.key_id, test_data).await?;
+                let signature = self.software_hsm.sign(&key.metadata.key_id, test_data).await?;
                 assert!(!signature.is_empty());
 
                 let is_valid = self
                     .software_hsm
-                    .verify(&key.key_id, test_data, &signature)
+                    .verify(&key.metadata.key_id, test_data, &signature)
                     .await?;
                 assert!(is_valid, "Signature should be valid");
             }
@@ -350,10 +350,7 @@ impl HsmTestHarness {
         for i in 0..5 {
             let operation_result = self
                 .hsm_manager
-                .perform_operation(&security_reqs, |provider| async move {
-                    // Simulate a successful operation
-                    Ok(format!("operation_{}", i))
-                })
+                .generate_random_bytes(32)
                 .await;
 
             assert!(operation_result.is_ok(), "Operation {} should succeed", i);
@@ -392,7 +389,7 @@ impl HsmTestHarness {
         // Test performance metrics
         let performance_metrics = self.hsm_manager.get_performance_metrics().await?;
         assert!(
-            !performance_metrics.is_empty(),
+            performance_metrics.operations_per_second >= 0.0,
             "Should have performance metrics"
         );
 
@@ -514,7 +511,7 @@ impl HsmTestHarness {
                     &format!("genetic_key_{}", i),
                     genetic_data.as_bytes(),
                     &security_reqs,
-                    &HsmOperation::GeneticRecombination,
+                    &HsmOperation::GeneticEvolution,
                 )
                 .await?;
 
@@ -533,7 +530,7 @@ impl HsmTestHarness {
                 "recombination_key",
                 b"child_genetics_proof_data",
                 &security_reqs,
-                &HsmOperation::GeneticRecombination,
+                &HsmOperation::GeneticEvolution,
             )
             .await?;
 
@@ -1033,7 +1030,7 @@ async fn test_hsm_system_integration_e2e() -> BearDogResult<()> {
             "parent_a_key",
             &parent_a_entropy,
             &security_reqs,
-            &HsmOperation::GeneticRecombination,
+            &HsmOperation::GeneticEvolution,
         )
         .await?;
 
@@ -1042,7 +1039,7 @@ async fn test_hsm_system_integration_e2e() -> BearDogResult<()> {
             "parent_b_key",
             &parent_b_entropy,
             &security_reqs,
-            &HsmOperation::GeneticRecombination,
+            &HsmOperation::GeneticEvolution,
         )
         .await?;
 

@@ -11,27 +11,37 @@ use std::path::PathBuf;
 /// Universal result type for NestGate operations
 pub type NestGateResult<T> = Result<T, NestGateError>;
 
-/// Universal error type for NestGate operations
+/// Error types for NestGate adapter operations
 #[derive(Debug, thiserror::Error)]
 pub enum NestGateError {
+    /// Configuration-related errors
     #[error("Configuration error: {0}")]
     Configuration(String),
+    /// Authentication and authorization errors
     #[error("Authentication error: {0}")]
     Authentication(String),
+    /// ZFS filesystem operation errors
     #[error("ZFS operation error: {0}")]
     ZfsOperation(String),
+    /// Policy enforcement and validation errors
     #[error("Policy violation: {0}")]
     PolicyViolation(String),
+    /// Audit logging and compliance errors
     #[error("Audit error: {0}")]
     Audit(String),
+    /// Key management and cryptographic errors
     #[error("Key management error: {0}")]
     KeyManagement(String),
+    /// File system operation errors
     #[error("File operation error: {0}")]
     FileOperation(String),
+    /// Network communication errors
     #[error("Network error: {0}")]
     Network(String),
+    /// Data serialization and deserialization errors
     #[error("Serialization error: {0}")]
     Serialization(String),
+    /// Internal system errors
     #[error("Internal error: {0}")]
     Internal(String),
 }
@@ -41,13 +51,13 @@ pub enum NestGateError {
 pub trait PrimalProvider: Send + Sync {
     /// Get the primal provider name
     fn name(&self) -> &str;
-    
+
     /// Get primal provider capabilities
     fn capabilities(&self) -> Vec<String>;
-    
+
     /// Check if provider is healthy
     async fn health_check(&self) -> NestGateResult<HealthStatus>;
-    
+
     /// Get provider configuration
     fn config(&self) -> &dyn std::any::Any;
 }
@@ -611,4 +621,4 @@ impl Default for AuditConfig {
             encrypt_logs: true,
         }
     }
-} 
+}

@@ -5,6 +5,7 @@
 use super::types::*;
 use crate::BearDogResult;
 use chrono::{Datelike, Duration, Utc};
+use tracing::info;
 
 impl WorkflowPolicyEngine {
     /// Create a new workflow policy engine
@@ -179,7 +180,7 @@ impl WorkflowScheduler {
     pub async fn start(&self) -> BearDogResult<()> {
         if self.cleanup_enabled {
             // TODO: Start background cleanup task
-            println!("Workflow scheduler started with cleanup enabled");
+            info!("Workflow scheduler started with cleanup enabled");
         }
         Ok(())
     }
@@ -187,14 +188,14 @@ impl WorkflowScheduler {
     /// Stop the workflow scheduler
     pub async fn stop(&self) -> BearDogResult<()> {
         // TODO: Stop background tasks
-        println!("Workflow scheduler stopped");
+        info!("Workflow scheduler stopped");
         Ok(())
     }
 
     /// Cleanup expired workflows
     pub async fn cleanup_expired_workflows(&self) -> BearDogResult<u32> {
         // TODO: Implement actual cleanup logic
-        println!("Cleaning up expired workflows");
+        info!("Cleaning up expired workflows");
         Ok(0)
     }
 

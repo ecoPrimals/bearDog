@@ -12,7 +12,7 @@ use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, warn};
 
 impl AndroidStrongBoxHsm {
     /// Create a new Android StrongBox HSM instance
@@ -94,14 +94,17 @@ impl AndroidStrongBoxHsm {
     /// # Returns
     /// * `Ok(HsmKey)` - Successfully generated key
     /// * `Err(BearDogError)` - Key generation failure
-    pub async fn generate_strongbox_key(&self, request: &GenerateKeyRequest) -> BearDogResult<HsmKey> {
+    pub async fn generate_strongbox_key(
+        &self,
+        request: &GenerateKeyRequest,
+    ) -> BearDogResult<HsmKey> {
         info!("🔐 Generating StrongBox key: {}", request.key_id);
 
         // Configure StrongBox parameters
         let key_params = self.configure_strongbox_parameters(request)?;
 
         // Generate key in Android Keystore/StrongBox
-        let _key_result = self
+        self
             .keystore
             .generate_key(&request.key_id, &key_params)
             .await?;
@@ -109,7 +112,10 @@ impl AndroidStrongBoxHsm {
         // Generate attestation if requested
         let attestation = if request.attestation_challenge.is_some() {
             let challenge = request.attestation_challenge.as_ref().unwrap();
-            Some(self.generate_key_attestation(&request.key_id, challenge).await?)
+            Some(
+                self.generate_key_attestation(&request.key_id, challenge)
+                    .await?,
+            )
         } else {
             None
         };
@@ -141,7 +147,10 @@ impl AndroidStrongBoxHsm {
         // Cache key information
         self.cache_key_info(&hsm_key).await?;
 
-        info!("✅ StrongBox key generated successfully: {}", request.key_id);
+        info!(
+            "✅ StrongBox key generated successfully: {}",
+            request.key_id
+        );
         Ok(hsm_key)
     }
 
@@ -308,24 +317,28 @@ impl AndroidStrongBoxHsm {
     /// Cache key information for performance optimization
     async fn cache_key_info(&self, hsm_key: &HsmKey) -> BearDogResult<()> {
         debug!("Caching key info for key: {}", hsm_key.id);
-        
+
         let mut cache = self.key_cache.write().await;
-        
+
         let cache_info = CachedKeyInfo {
             key_id: hsm_key.id.clone(),
             key_type: hsm_key.key_type.clone(),
             hsm_type: hsm_key.hsm_type.clone(),
             strongbox_backed: true,
-            attestation_verified: hsm_key.attestation.as_ref().map(|a| a.verified).unwrap_or(false),
+            attestation_verified: hsm_key
+                .attestation
+                .as_ref()
+                .map(|a| a.verified)
+                .unwrap_or(false),
             last_used: Utc::now(),
             usage_count: 0,
             created_at: hsm_key.created_at,
             usage_policy: hsm_key.metadata.usage_policy.clone(),
             health_status: KeyHealthStatus::Healthy,
         };
-        
+
         cache.insert(hsm_key.id.clone(), cache_info);
-        
+
         Ok(())
     }
 
@@ -438,9 +451,9 @@ impl HsmProvider for AndroidStrongBoxHsm {
 
     async fn get_info(&self) -> BearDogResult<HsmInfo> {
         debug!("Getting Android StrongBox HSM info");
-        
+
         let device_info = AndroidDeviceInfo::detect().await?;
-        
+
         Ok(HsmInfo {
             hsm_type: HsmTier::SmartphoneHsm {
                 device_type: SmartphoneType::Android {
@@ -491,9 +504,9 @@ impl HsmProvider for AndroidStrongBoxHsm {
 
     async fn list_keys(&self) -> BearDogResult<Vec<HsmKeyInfo>> {
         debug!("Listing Android StrongBox keys");
-        
+
         let mut keys = Vec::new();
-        
+
         // Get keys from cache
         let cache = self.key_cache.read().await;
         for (key_id, cache_info) in cache.iter() {
@@ -507,7 +520,7 @@ impl HsmProvider for AndroidStrongBoxHsm {
             };
             keys.push(key_info);
         }
-        
+
         Ok(keys)
     }
 
@@ -543,4 +556,4 @@ impl HsmProvider for AndroidStrongBoxHsm {
     async fn health_check(&self) -> BearDogResult<HsmHealthStatus> {
         self.health_monitor.get_health_status().await
     }
-} 
+}

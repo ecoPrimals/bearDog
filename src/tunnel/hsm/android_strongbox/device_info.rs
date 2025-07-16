@@ -4,9 +4,9 @@
 //! functionality for Android devices with StrongBox capabilities.
 
 use super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use crate::error::BearDogResult;
 use crate::tunnel::hsm::types::*;
-use tracing::{debug, info, warn};
+use tracing::info;
 
 impl AndroidDeviceInfo {
     /// Create a new AndroidDeviceInfo instance
@@ -33,7 +33,7 @@ impl AndroidDeviceInfo {
     /// Detect the current Android device configuration
     pub async fn detect() -> BearDogResult<Self> {
         info!("Detecting Android device configuration");
-        
+
         // Mock implementation - in a real implementation this would use Android APIs
         let device_info = AndroidDeviceInfo::new(
             "Google".to_string(),
@@ -44,7 +44,7 @@ impl AndroidDeviceInfo {
             "2024-01-01".to_string(),
             VerifiedBootState::Green,
         );
-        
+
         Ok(device_info)
     }
 
@@ -55,9 +55,9 @@ impl AndroidDeviceInfo {
 
     /// Check if the device is in optimal security configuration
     pub fn is_optimal_security_config(&self) -> bool {
-        self.strongbox_version.is_some() && 
-        self.titan_m_version.is_some() && 
-        self.verified_boot_state == VerifiedBootState::Green
+        self.strongbox_version.is_some()
+            && self.titan_m_version.is_some()
+            && self.verified_boot_state == VerifiedBootState::Green
     }
 
     /// Get device capabilities
@@ -84,14 +84,22 @@ impl AndroidDeviceInfo {
     pub fn get_strongbox_implementation(&self) -> StrongBoxImplementation {
         if self.titan_m_version.is_some() {
             StrongBoxImplementation::TitanM {
-                version: self.titan_m_version.as_ref().unwrap_or(&"unknown".to_string()).clone(),
+                version: self
+                    .titan_m_version
+                    .as_ref()
+                    .unwrap_or(&"unknown".to_string())
+                    .clone(),
                 security_level: "Hardware".to_string(),
             }
         } else {
             StrongBoxImplementation::Generic {
                 vendor: self.manufacturer.clone(),
                 implementation: "StrongBox".to_string(),
-                version: self.strongbox_version.as_ref().unwrap_or(&"unknown".to_string()).clone(),
+                version: self
+                    .strongbox_version
+                    .as_ref()
+                    .unwrap_or(&"unknown".to_string())
+                    .clone(),
             }
         }
     }
@@ -125,11 +133,15 @@ impl AndroidDeviceInfo {
 /// Device capabilities structure
 #[derive(Debug, Clone)]
 pub struct DeviceCapabilities {
+    /// Whether StrongBox hardware is available
     pub strongbox_available: bool,
+    /// Whether Titan M security chip is available
     pub titan_m_available: bool,
+    /// Whether verified boot is in green state
     pub verified_boot_green: bool,
+    /// Whether biometric authentication is supported
     pub biometric_support: bool,
-} 
+}
 
 impl DeviceCapabilities {
     /// Create new device capabilities
@@ -149,8 +161,6 @@ impl DeviceCapabilities {
 
     /// Check if the device is ready for production use
     pub fn is_production_ready(&self) -> bool {
-        self.strongbox_available && 
-        self.titan_m_available && 
-        self.verified_boot_green
+        self.strongbox_available && self.titan_m_available && self.verified_boot_green
     }
-} 
+}

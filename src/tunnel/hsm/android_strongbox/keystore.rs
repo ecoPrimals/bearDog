@@ -6,7 +6,7 @@
 use super::types::*;
 use crate::error::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, info, warn};
 
 impl AndroidKeystore {
     /// Create a new Android Keystore instance
@@ -100,13 +100,18 @@ impl AndroidKeystore {
         // 3. Store the key in the Android Keystore with StrongBox backing
         // 4. Handle any keystore-specific errors
 
-        debug!("Key parameters: algorithm={:?}, size={}, strongbox={}", 
-               params.algorithm, params.key_size, params.strongbox_required);
+        debug!(
+            "Key parameters: algorithm={:?}, size={}, strongbox={}",
+            params.algorithm, params.key_size, params.strongbox_required
+        );
 
         // Simulate key generation
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
-        info!("✅ Key generated successfully in Android Keystore: {}", key_id);
+        info!(
+            "✅ Key generated successfully in Android Keystore: {}",
+            key_id
+        );
         Ok(())
     }
 
@@ -133,7 +138,10 @@ impl AndroidKeystore {
         let mock_cert = vec![0x30, 0x82, 0x01, 0x00]; // Mock DER certificate
         let certificate_chain = vec![mock_cert];
 
-        info!("✅ Certificate chain retrieved: {} certificates", certificate_chain.len());
+        info!(
+            "✅ Certificate chain retrieved: {} certificates",
+            certificate_chain.len()
+        );
         Ok(certificate_chain)
     }
 
@@ -150,7 +158,11 @@ impl AndroidKeystore {
     /// * `Ok(Vec<u8>)` - Encrypted data
     /// * `Err(BearDogError)` - Encryption failure
     pub async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
-        debug!("🔐 Encrypting {} bytes with key: {}", plaintext.len(), key_id);
+        debug!(
+            "🔐 Encrypting {} bytes with key: {}",
+            plaintext.len(),
+            key_id
+        );
 
         // In a real implementation, this would:
         // 1. Get the key from the Android Keystore
@@ -180,7 +192,11 @@ impl AndroidKeystore {
     /// * `Ok(Vec<u8>)` - Decrypted data
     /// * `Err(BearDogError)` - Decryption failure
     pub async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
-        debug!("🔐 Decrypting {} bytes with key: {}", ciphertext.len(), key_id);
+        debug!(
+            "🔐 Decrypting {} bytes with key: {}",
+            ciphertext.len(),
+            key_id
+        );
 
         // In a real implementation, this would:
         // 1. Get the key from the Android Keystore
@@ -189,7 +205,7 @@ impl AndroidKeystore {
         // 4. Return the plaintext
 
         // For now, simulate decryption (reverse of our simulation encryption)
-        if ciphertext.len() < 3 || &ciphertext[ciphertext.len()-3..] != b"ENC" {
+        if ciphertext.len() < 3 || &ciphertext[ciphertext.len() - 3..] != b"ENC" {
             return Err(BearDogError::HsmDecryptionFailed {
                 hsm_type: "Android StrongBox".to_string(),
                 key_id: key_id.to_string(),
@@ -197,7 +213,7 @@ impl AndroidKeystore {
             });
         }
 
-        let mut plaintext = ciphertext[..ciphertext.len()-3].to_vec();
+        let mut plaintext = ciphertext[..ciphertext.len() - 3].to_vec();
         plaintext.reverse();
 
         debug!("✅ Decryption completed: {} bytes output", plaintext.len());
@@ -256,9 +272,9 @@ impl AndroidKeystore {
         // 4. Return the verification result
 
         // For now, simulate verification (check our simulation format)
-        let expected_sig_suffix = format!("SIG{}", key_id);
+        let expected_sig_suffix = format!("SIG{key_id}");
         let expected_sig_bytes = expected_sig_suffix.as_bytes();
-        
+
         if signature.len() < data.len() + expected_sig_bytes.len() {
             return Ok(false);
         }
@@ -341,4 +357,4 @@ impl AndroidKeystore {
         // For simulation, assume available on supported devices
         Ok(true)
     }
-} 
+}

@@ -38,14 +38,26 @@ pub trait CacheProvider {
 /// Cache statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheStats {
+    /// Number of cache hits
     pub hits: u64,
+    /// Number of cache misses
     pub misses: u64,
+    /// Total number of entries in cache
     pub entries: u64,
+    /// Hit rate as a percentage (0.0 to 1.0)
     pub hit_rate: f64,
+    /// Memory usage in bytes
     pub memory_usage_bytes: u64,
 }
 
+impl Default for CacheStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CacheStats {
+    /// Create a new CacheStats instance with zero values
     pub fn new() -> Self {
         Self {
             hits: 0,
@@ -56,11 +68,13 @@ impl CacheStats {
         }
     }
 
+    /// Record a cache hit and update hit rate
     pub fn record_hit(&mut self) {
         self.hits += 1;
         self.update_hit_rate();
     }
 
+    /// Record a cache miss and update hit rate
     pub fn record_miss(&mut self) {
         self.misses += 1;
         self.update_hit_rate();
@@ -78,11 +92,14 @@ impl CacheStats {
 
 /// Redis-based distributed cache
 pub struct RedisCache {
+    /// Redis client connection
     client: redis::Client,
+    /// Cache statistics tracking
     stats: Arc<RwLock<CacheStats>>,
 }
 
 impl RedisCache {
+    /// Create a new Redis cache instance
     pub async fn new(
     ) -> Result<Box<dyn CacheProvider + Send + Sync>, Box<dyn std::error::Error + Send + Sync>>
     {
@@ -247,11 +264,20 @@ impl CacheEntry {
 
 /// In-memory cache implementation
 pub struct InMemoryCache {
+    /// Hash map storing cached entries
     data: Arc<RwLock<HashMap<String, CacheEntry>>>,
+    /// Cache statistics tracking
     stats: Arc<RwLock<CacheStats>>,
 }
 
+impl Default for InMemoryCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl InMemoryCache {
+    /// Create a new in-memory cache instance
     pub fn new() -> Self {
         debug!("🧠 In-memory cache initialized");
         Self {
@@ -361,13 +387,15 @@ impl CacheProvider for InMemoryCache {
 
 /// Smart cache key generator
 pub struct CacheKeyBuilder {
+    /// Prefix for generated cache keys
     prefix: String,
 }
 
 impl CacheKeyBuilder {
+    /// Create a new cache key builder for a specific service
     pub fn new(service: &str) -> Self {
         Self {
-            prefix: format!("beardog:{}:", service),
+            prefix: format!("beardog:{service}:"),
         }
     }
 
@@ -375,7 +403,7 @@ impl CacheKeyBuilder {
     pub fn api_response(&self, endpoint: &str, params: &[(&str, &str)]) -> String {
         let params_str = params
             .iter()
-            .map(|(k, v)| format!("{}={}", k, v))
+            .map(|(k, v)| format!("{k}={v}"))
             .collect::<Vec<_>>()
             .join("&");
 

@@ -186,7 +186,7 @@ async fn test_concurrent_operations_stability() {
         for handle in handles {
             handle.await.map_err(|e| BearDogError::InvalidGenetics {
                 reason: format!("Task join error: {}", e),
-                genetics_data: vec![],
+                message: "Invalid genetics data".to_string(),
             })??;
         }
 
@@ -212,7 +212,11 @@ async fn test_memory_safety_under_load() {
 
         // Perform many operations to test memory safety
         for batch in 0..10 {
-            let mut crypto_engine = GamingCryptoEngine::new(&config).await?;
+            let encryption_engine = Arc::new(crate::encryption::EncryptionEngine::default().await?);
+            let genetics_engine = Arc::new(crate::genetics::DefaultBearDogGeneticsEngine::default().await?);
+            let key_manager = Arc::new(crate::tunnel::key_manager::BStpKeyManager::new(crate::tunnel::config::KeyManagementConfig::default()).await?);
+            let bstp_config = crate::tunnel::config::BStpConfig::default();
+            let mut crypto_engine = GamingCryptoEngine::new(encryption_engine, genetics_engine, key_manager, bstp_config).await?;
 
             for i in 0..20 {
                 let test_data = format!("Load test batch {} iteration {}", batch, i);
@@ -246,7 +250,7 @@ fn test_configuration_validation() {
 
     // Test default configuration is valid
     let default_config = EncryptionConfig::default();
-    assert!(default_config.key_size > 0, "Key size must be positive");
+    assert!(default_config.key_derivation_iterations > 0, "Key derivation iterations must be positive");
 
     // Test that we can create configurations
     println!("✅ Configuration validation: PASS");
@@ -262,7 +266,11 @@ async fn test_graceful_degradation() {
         let config = EncryptionConfig::default();
 
         // Test with increasingly large data
-        let mut crypto_engine = GamingCryptoEngine::new(&config).await?;
+        let encryption_engine = Arc::new(crate::encryption::EncryptionEngine::default().await?);
+        let genetics_engine = Arc::new(crate::genetics::DefaultBearDogGeneticsEngine::default().await?);
+        let key_manager = Arc::new(crate::tunnel::key_manager::BStpKeyManager::new(crate::tunnel::config::KeyManagementConfig::default()).await?);
+        let bstp_config = crate::tunnel::config::BStpConfig::default();
+        let mut crypto_engine = GamingCryptoEngine::new(encryption_engine, genetics_engine, key_manager, bstp_config).await?;
 
         for size_kb in [1, 4, 16, 64] {
             let large_data = vec![0u8; size_kb * 1024];
@@ -298,7 +306,11 @@ async fn test_forest_protection_integrity() {
 
         // Simulate protecting scientific data
         let config = EncryptionConfig::default();
-        let mut crypto_engine = GamingCryptoEngine::new(&config).await?;
+        let encryption_engine = Arc::new(crate::encryption::EncryptionEngine::default().await?);
+        let genetics_engine = Arc::new(crate::genetics::DefaultBearDogGeneticsEngine::default().await?);
+        let key_manager = Arc::new(crate::tunnel::key_manager::BStpKeyManager::new(crate::tunnel::config::KeyManagementConfig::default()).await?);
+        let bstp_config = crate::tunnel::config::BStpConfig::default();
+        let mut crypto_engine = GamingCryptoEngine::new(encryption_engine, genetics_engine, key_manager, bstp_config).await?;
 
         // Test data representing different types of scientific information
         let research_data = b"Quantum cryptography research findings - CONFIDENTIAL";

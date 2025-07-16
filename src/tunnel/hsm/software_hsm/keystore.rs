@@ -14,7 +14,7 @@ impl SoftwareKeyStore {
     /// Create a new software key store
     pub async fn new(config: &KeyStoreConfig) -> BearDogResult<Self> {
         info!("Creating software key store with config: {:?}", config);
-        
+
         // Initialize storage backend
         let storage_backend: Arc<dyn StorageBackend> = match config.storage_type {
             KeyStorageType::EncryptedFile => Arc::new(FileStorageBackend::new(config).await?),
@@ -34,7 +34,8 @@ impl SoftwareKeyStore {
             storage_backend,
             encryption_key,
             key_cache: Arc::new(RwLock::new(lru::LruCache::new(
-                std::num::NonZeroUsize::new(config.cache_size).unwrap(),
+                std::num::NonZeroUsize::new(config.cache_size)
+                    .expect("HSM cache size must be non-zero"),
             ))),
         })
     }
@@ -42,10 +43,10 @@ impl SoftwareKeyStore {
     /// Initialize the key store
     pub async fn initialize(&self) -> BearDogResult<()> {
         info!("Initializing software key store");
-        
+
         self.storage_backend.initialize().await?;
         self.encryption_key.initialize().await?;
-        
+
         debug!("Software key store initialized successfully");
         Ok(())
     }
@@ -53,7 +54,7 @@ impl SoftwareKeyStore {
     /// Store a key in the key store
     pub async fn store_key(&self, key: &SoftwareKey) -> BearDogResult<()> {
         debug!("Storing key: {}", key.id);
-        
+
         // Serialize key
         let serialized = bincode::serialize(key).map_err(|e| BearDogError::SerializationError {
             error: e.to_string(),
@@ -76,7 +77,7 @@ impl SoftwareKeyStore {
     /// Get a key from the key store
     pub async fn get_key(&self, key_id: &str) -> BearDogResult<SoftwareKey> {
         debug!("Getting key: {}", key_id);
-        
+
         // Check cache first
         {
             let mut cache = self.key_cache.write().await;
@@ -109,7 +110,7 @@ impl SoftwareKeyStore {
     /// Delete a key from the key store
     pub async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
         debug!("Deleting key: {}", key_id);
-        
+
         // Remove from storage
         self.storage_backend.delete(key_id).await?;
 
@@ -136,15 +137,15 @@ impl SoftwareKeyStore {
     /// Restore the key store from backup
     pub async fn restore(&self, backup_data: &[u8]) -> BearDogResult<()> {
         info!("Restoring key store from backup");
-        
+
         // Clear cache before restore
         {
             let mut cache = self.key_cache.write().await;
             cache.clear();
         }
-        
+
         self.storage_backend.restore(backup_data).await?;
-        
+
         info!("Key store restored successfully");
         Ok(())
     }
@@ -156,7 +157,7 @@ impl SoftwareKeyStore {
             let cache = self.key_cache.read().await;
             cache.len()
         };
-        
+
         Ok(KeyStoreStatistics {
             total_keys: keys.len(),
             cached_keys: cache_size,
@@ -191,4 +192,4 @@ pub struct KeyStoreStatistics {
     pub total_keys: usize,
     pub cached_keys: usize,
     pub keys: Vec<String>,
-} 
+}

@@ -8,8 +8,7 @@ use chrono::{DateTime, Utc};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
-use uuid::Uuid;
+use tracing::{debug, info, warn};
 
 use crate::BearDogResult;
 
@@ -57,7 +56,10 @@ impl DependencyResolver {
         &self,
         required_capabilities: &[String],
     ) -> BearDogResult<ResolutionResult> {
-        info!("🔗 Resolving dependencies for {} capabilities", required_capabilities.len());
+        info!(
+            "🔗 Resolving dependencies for {} capabilities",
+            required_capabilities.len()
+        );
 
         let mut dependency_chain = Vec::new();
         let mut resolution_order = Vec::new();
@@ -82,7 +84,8 @@ impl DependencyResolver {
                     &mut unresolved_dependencies,
                     &mut visited,
                     &mut in_progress,
-                ).await?;
+                )
+                .await?;
             }
         }
 
@@ -102,10 +105,15 @@ impl DependencyResolver {
         };
 
         // Cache the result
-        self.resolution_cache.write().await.insert(cache_key, result.clone());
+        self.resolution_cache
+            .write()
+            .await
+            .insert(cache_key, result.clone());
 
-        info!("✅ Dependency resolution complete - {} dependencies resolved", 
-              result.dependency_chain.len());
+        info!(
+            "✅ Dependency resolution complete - {} dependencies resolved",
+            result.dependency_chain.len()
+        );
         Ok(result)
     }
 
@@ -122,8 +130,14 @@ impl DependencyResolver {
         Box::pin(async move {
             // Check for circular dependency
             if in_progress.contains(capability_id) {
-                warn!("🔄 Circular dependency detected for capability: {}", capability_id);
-                self.circular_dependencies.write().await.insert(capability_id.to_string());
+                warn!(
+                    "🔄 Circular dependency detected for capability: {}",
+                    capability_id
+                );
+                self.circular_dependencies
+                    .write()
+                    .await
+                    .insert(capability_id.to_string());
                 return Ok(());
             }
 
@@ -143,7 +157,8 @@ impl DependencyResolver {
                         unresolved_dependencies,
                         visited,
                         in_progress,
-                    ).await?;
+                    )
+                    .await?;
                 }
             }
 
@@ -169,23 +184,28 @@ impl DependencyResolver {
     }
 
     /// Detect circular dependencies in the dependency chain
-    async fn detect_circular_dependencies(&self, dependency_chain: &[String]) -> BearDogResult<bool> {
+    async fn detect_circular_dependencies(
+        &self,
+        dependency_chain: &[String],
+    ) -> BearDogResult<bool> {
         let circular_deps = self.circular_dependencies.read().await;
-        
+
         // Check if any capability in the chain is in the circular dependencies set
-        let has_circular = dependency_chain.iter().any(|cap| circular_deps.contains(cap));
-        
+        let has_circular = dependency_chain
+            .iter()
+            .any(|cap| circular_deps.contains(cap));
+
         if has_circular {
             warn!("🔄 Circular dependencies detected in resolution chain");
         }
-        
+
         Ok(has_circular)
     }
 
     /// Calculate complexity estimate for dependency resolution
     async fn calculate_complexity(&self, dependency_chain: &[String]) -> u32 {
         let mut complexity = dependency_chain.len() as u32;
-        
+
         // Add complexity for each dependency relationship
         let dependency_graph = self.dependency_graph.read().await;
         for capability_id in dependency_chain {
@@ -193,7 +213,7 @@ impl DependencyResolver {
                 complexity += deps.len() as u32;
             }
         }
-        
+
         complexity
     }
 
@@ -204,16 +224,21 @@ impl DependencyResolver {
         dependency_id: &str,
     ) -> BearDogResult<()> {
         let mut dependency_graph = self.dependency_graph.write().await;
-        
-        let dependencies = dependency_graph.entry(capability_id.to_string()).or_insert_with(Vec::new);
+
+        let dependencies = dependency_graph
+            .entry(capability_id.to_string())
+            .or_insert_with(Vec::new);
         if !dependencies.contains(&dependency_id.to_string()) {
             dependencies.push(dependency_id.to_string());
-            debug!("➕ Added dependency: {} -> {}", capability_id, dependency_id);
+            debug!(
+                "➕ Added dependency: {} -> {}",
+                capability_id, dependency_id
+            );
         }
-        
+
         // Clear cache since dependency graph changed
         self.resolution_cache.write().await.clear();
-        
+
         Ok(())
     }
 
@@ -224,15 +249,18 @@ impl DependencyResolver {
         dependency_id: &str,
     ) -> BearDogResult<()> {
         let mut dependency_graph = self.dependency_graph.write().await;
-        
+
         if let Some(dependencies) = dependency_graph.get_mut(capability_id) {
             dependencies.retain(|dep| dep != dependency_id);
-            debug!("➖ Removed dependency: {} -> {}", capability_id, dependency_id);
+            debug!(
+                "➖ Removed dependency: {} -> {}",
+                capability_id, dependency_id
+            );
         }
-        
+
         // Clear cache since dependency graph changed
         self.resolution_cache.write().await.clear();
-        
+
         Ok(())
     }
 
@@ -249,13 +277,13 @@ impl DependencyResolver {
     pub async fn get_dependents(&self, capability_id: &str) -> BearDogResult<Vec<String>> {
         let dependency_graph = self.dependency_graph.read().await;
         let mut dependents = Vec::new();
-        
+
         for (cap_id, deps) in dependency_graph.iter() {
             if deps.contains(&capability_id.to_string()) {
                 dependents.push(cap_id.clone());
             }
         }
-        
+
         Ok(dependents)
     }
 
@@ -271,18 +299,18 @@ impl DependencyResolver {
         let dependency_graph = self.dependency_graph.read().await;
         let circular_deps = self.circular_dependencies.read().await;
         let cache = self.resolution_cache.read().await;
-        
+
         let total_capabilities = dependency_graph.len();
         let total_dependencies = dependency_graph.values().map(|deps| deps.len()).sum();
         let circular_count = circular_deps.len();
         let cache_size = cache.len();
-        
+
         let average_dependencies = if total_capabilities > 0 {
             total_dependencies as f64 / total_capabilities as f64
         } else {
             0.0
         };
-        
+
         Ok(DependencyStatistics {
             total_capabilities,
             total_dependencies,
@@ -358,4 +386,4 @@ impl DependencyStatistics {
             "Very Complex"
         }
     }
-} 
+}

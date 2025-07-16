@@ -236,6 +236,8 @@ async fn run_demo_mode(beardog_core: Arc<BearDogCore>) -> BearDogResult<()> {
         destination_path: None,
         user_id: "demo-user".to_string(),
         metadata: std::collections::HashMap::new(),
+        priority: beardog::adapters::nestgate::OperationPriority::Normal,
+        provider_id: "demo-provider".to_string(),
     };
 
     match nestgate_adapter.perform_file_operation(file_op).await {
@@ -516,9 +518,9 @@ impl ConfigExt for beardog::config::ThreatDetectionConfig {
         beardog::threat::types::ThreatDetectionConfig {
             enabled: self.enabled,
             rules_path: "/etc/beardog/rules".to_string(),
-            monitor_paths: vec!["/etc".into(), "/var/log".into(), "/tmp".into()],
-            alert_threshold: 0.7,
-            cache_size: 1000,
+            monitor_paths: vec!["/etc".into(), "/var/log".into(), beardog::config::constants::storage::DEFAULT_CACHE_DIR.into()],
+            alert_threshold: beardog::config::constants::threat_detection::DEFAULT_ANOMALY_THRESHOLD,
+            cache_size: beardog::config::constants::performance::DEFAULT_CACHE_SIZE,
             monitoring_interval: 60,
             real_time_detection: true,
             threat_threshold: 70,
@@ -572,61 +574,98 @@ impl ConfigExt for Option<beardog::config::RustProjectConfig> {
 
     fn into(self) -> Self::Output {
         use beardog::adapters::nestgate::{
-            AccessLevel, AuditConfig, AuthConfig, PolicyConfig, ZfsConfig,
+            AccessLevel, AuditConfig, AuditStorageBackend, AuthConfig, AuthMethod, PolicyConfig,
+            ZfsConfig,
         };
 
         match self {
             Some(config) => beardog::adapters::nestgate::NestGateConfig {
                 enabled: config.enabled,
                 api_endpoint: config.endpoint,
+                provider_name: "beardog".to_string(),
                 auth: AuthConfig {
+                    method: AuthMethod::ApiKey,
                     api_key: config.auth.map(|a| a.secret).unwrap_or_default(),
                     client_cert_path: None,
                     client_key_path: None,
                     ca_cert_path: None,
+                    token_refresh_interval: 3600,
                 },
                 zfs: ZfsConfig {
                     default_algorithm: "AES-256-GCM".to_string(),
                     wrap_algorithm: "AES-KW".to_string(),
                     pool_name: "beardog".to_string(),
                     dataset_prefix: "beardog/data".to_string(),
+                    compression: "lz4".to_string(),
+                    deduplication: true,
+                    record_size: "128K".to_string(),
                 },
                 policies: PolicyConfig {
                     enabled_policies: vec!["default".to_string()],
                     default_access_level: AccessLevel::ReadWrite,
                     require_approval: vec!["delete".to_string(), "move".to_string()],
+                    refresh_interval: 300,
+                    external_provider: None,
                 },
                 audit: AuditConfig {
                     enabled: true,
                     retention_days: 365,
                     log_all_operations: true,
+                    storage_backend: AuditStorageBackend::Local,
+                    encrypt_logs: true,
                 },
+                capabilities: vec![
+                    "file_operations".to_string(),
+                    "key_management".to_string(),
+                    "zfs_integration".to_string(),
+                    "policy_enforcement".to_string(),
+                    "audit_logging".to_string(),
+                    "beardog_specific".to_string(),
+                ],
             },
             None => beardog::adapters::nestgate::NestGateConfig {
                 enabled: false,
                 api_endpoint: "https://nestgate.internal:8443".to_string(),
+                provider_name: "beardog".to_string(),
                 auth: AuthConfig {
+                    method: AuthMethod::ApiKey,
                     api_key: String::new(),
                     client_cert_path: None,
                     client_key_path: None,
                     ca_cert_path: None,
+                    token_refresh_interval: 3600,
                 },
                 zfs: ZfsConfig {
                     default_algorithm: "AES-256-GCM".to_string(),
                     wrap_algorithm: "AES-KW".to_string(),
                     pool_name: "beardog".to_string(),
                     dataset_prefix: "beardog/data".to_string(),
+                    compression: "lz4".to_string(),
+                    deduplication: true,
+                    record_size: "128K".to_string(),
                 },
                 policies: PolicyConfig {
                     enabled_policies: vec!["default".to_string()],
                     default_access_level: AccessLevel::ReadWrite,
                     require_approval: vec!["delete".to_string(), "move".to_string()],
+                    refresh_interval: 300,
+                    external_provider: None,
                 },
                 audit: AuditConfig {
                     enabled: false,
                     retention_days: 365,
                     log_all_operations: false,
+                    storage_backend: AuditStorageBackend::Local,
+                    encrypt_logs: false,
                 },
+                capabilities: vec![
+                    "file_operations".to_string(),
+                    "key_management".to_string(),
+                    "zfs_integration".to_string(),
+                    "policy_enforcement".to_string(),
+                    "audit_logging".to_string(),
+                    "beardog_specific".to_string(),
+                ],
             },
         }
     }

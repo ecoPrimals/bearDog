@@ -6,15 +6,10 @@
 //! - Monitoring API with health checks and metrics
 //! - Performance features (caching, rate limiting, real-time data)
 
-use beardog::api::*;
-use beardog::genetics::*;
-use beardog::threat::*;
-use reqwest;
 use serde_json::{json, Value};
-use std::collections::HashMap;
 use std::time::Duration;
 use tokio::time::sleep;
-use tracing::{error, info, warn};
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -56,7 +51,7 @@ async fn demo_api_basics(
 
     // Get API information
     let response: Value = client
-        .get(&format!("{}/api/", base_url))
+        .get(format!("{base_url}/api/"))
         .send()
         .await?
         .json()
@@ -66,7 +61,7 @@ async fn demo_api_basics(
 
     // Check API health
     let health: Value = client
-        .get(&format!("{}/api/health", base_url))
+        .get(format!("{base_url}/api/health"))
         .send()
         .await?
         .json()
@@ -76,7 +71,7 @@ async fn demo_api_basics(
 
     // Get comprehensive status
     let status: Value = client
-        .get(&format!("{}/api/v1/status", base_url))
+        .get(format!("{base_url}/api/v1/status"))
         .send()
         .await?
         .json()
@@ -108,7 +103,7 @@ async fn demo_security_api(
     });
 
     let analysis: Value = client
-        .post(&format!("{}/api/v1/security/analyze", base_url))
+        .post(format!("{base_url}/api/v1/security/analyze"))
         .json(&security_event)
         .send()
         .await?
@@ -131,7 +126,7 @@ async fn demo_security_api(
     });
 
     let prediction: Value = client
-        .post(&format!("{}/api/v1/security/ml/predict", base_url))
+        .post(format!("{base_url}/api/v1/security/ml/predict"))
         .json(&ml_request)
         .send()
         .await?
@@ -142,7 +137,7 @@ async fn demo_security_api(
 
     // Get security statistics
     let stats: Value = client
-        .get(&format!("{}/api/v1/security/stats", base_url))
+        .get(format!("{base_url}/api/v1/security/stats"))
         .send()
         .await?
         .json()
@@ -182,7 +177,7 @@ async fn demo_genetics_api(
     });
 
     let genesis_response: Value = client
-        .post(&format!("{}/api/v1/genetics/genesis", base_url))
+        .post(format!("{base_url}/api/v1/genetics/genesis"))
         .json(&genesis_request)
         .send()
         .await?
@@ -214,7 +209,7 @@ async fn demo_genetics_api(
     });
 
     let spawn_response: Value = client
-        .post(&format!("{}/api/v1/genetics/spawn", base_url))
+        .post(format!("{base_url}/api/v1/genetics/spawn"))
         .json(&spawn_request)
         .send()
         .await?
@@ -228,9 +223,8 @@ async fn demo_genetics_api(
     sleep(Duration::from_millis(1000)).await;
 
     let status: Value = client
-        .get(&format!(
-            "{}/api/v1/genetics/spawn/{}",
-            base_url, request_id
+        .get(format!(
+            "{base_url}/api/v1/genetics/spawn/{request_id}"
         ))
         .send()
         .await?
@@ -241,9 +235,8 @@ async fn demo_genetics_api(
 
     // Analyze genetics of the genesis node
     let genetics_analysis: Value = client
-        .get(&format!(
-            "{}/api/v1/genetics/analyze/{}",
-            base_url, genesis_node_id
+        .get(format!(
+            "{base_url}/api/v1/genetics/analyze/{genesis_node_id}"
         ))
         .send()
         .await?
@@ -257,7 +250,7 @@ async fn demo_genetics_api(
 
     // Get genetics statistics
     let genetics_stats: Value = client
-        .get(&format!("{}/api/v1/genetics/stats", base_url))
+        .get(format!("{base_url}/api/v1/genetics/stats"))
         .send()
         .await?
         .json()
@@ -277,7 +270,7 @@ async fn demo_monitoring_api(
 
     // Get comprehensive system health
     let health: Value = client
-        .get(&format!("{}/api/v1/monitoring/health", base_url))
+        .get(format!("{base_url}/api/v1/monitoring/health"))
         .send()
         .await?
         .json()
@@ -291,7 +284,7 @@ async fn demo_monitoring_api(
 
     // Get system metrics
     let metrics: Value = client
-        .get(&format!("{}/api/v1/monitoring/metrics", base_url))
+        .get(format!("{base_url}/api/v1/monitoring/metrics"))
         .send()
         .await?
         .json()
@@ -308,7 +301,7 @@ async fn demo_monitoring_api(
 
     // Get active alerts
     let alerts: Value = client
-        .get(&format!("{}/api/v1/monitoring/alerts", base_url))
+        .get(format!("{base_url}/api/v1/monitoring/alerts"))
         .send()
         .await?
         .json()
@@ -325,7 +318,7 @@ async fn demo_monitoring_api(
     });
 
     let logs: Value = client
-        .post(&format!("{}/api/v1/monitoring/logs/search", base_url))
+        .post(format!("{base_url}/api/v1/monitoring/logs/search"))
         .json(&log_search)
         .send()
         .await?
@@ -348,7 +341,7 @@ async fn demo_realtime_monitoring(
     // Get real-time metrics multiple times to show live data
     for i in 1..=3 {
         let realtime: Value = client
-            .get(&format!("{}/api/v1/monitoring/metrics/realtime", base_url))
+            .get(format!("{base_url}/api/v1/monitoring/metrics/realtime"))
             .send()
             .await?
             .json()
@@ -367,14 +360,14 @@ async fn demo_realtime_monitoring(
 
     // Test liveness and readiness probes
     let liveness: Value = client
-        .get(&format!("{}/api/v1/monitoring/liveness", base_url))
+        .get(format!("{base_url}/api/v1/monitoring/liveness"))
         .send()
         .await?
         .json()
         .await?;
 
     let readiness: Value = client
-        .get(&format!("{}/api/v1/monitoring/readiness", base_url))
+        .get(format!("{base_url}/api/v1/monitoring/readiness"))
         .send()
         .await?
         .json()
@@ -396,7 +389,7 @@ async fn demo_performance_features(
     info!("⚡ Testing Performance Features");
 
     // Make the same request multiple times to test caching
-    let endpoint = format!("{}/api/v1/security/stats", base_url);
+    let endpoint = format!("{base_url}/api/v1/security/stats");
 
     for i in 1..=3 {
         let start = std::time::Instant::now();
@@ -431,7 +424,7 @@ async fn demo_error_handling(
 
     // Test invalid endpoint
     let invalid_response = client
-        .get(&format!("{}/api/v1/invalid/endpoint", base_url))
+        .get(format!("{base_url}/api/v1/invalid/endpoint"))
         .send()
         .await?;
 
@@ -440,7 +433,7 @@ async fn demo_error_handling(
     // Test malformed request
     let malformed_json = "{ invalid json }";
     let malformed_response = client
-        .post(&format!("{}/api/v1/security/analyze", base_url))
+        .post(format!("{base_url}/api/v1/security/analyze"))
         .body(malformed_json)
         .header("Content-Type", "application/json")
         .send()

@@ -142,9 +142,15 @@ impl SystemHealthStatus {
     /// Update the overall status based on component metrics
     pub fn update_overall_status(&mut self) {
         // Determine overall status based on component metrics
-        if self.cpu_utilization > 0.9 || self.memory_utilization > 0.9 || self.disk_utilization > 0.95 {
+        if self.cpu_utilization > 0.9
+            || self.memory_utilization > 0.9
+            || self.disk_utilization > 0.95
+        {
             self.overall_status = HealthStatus::Critical;
-        } else if self.cpu_utilization > 0.8 || self.memory_utilization > 0.8 || self.disk_utilization > 0.9 {
+        } else if self.cpu_utilization > 0.8
+            || self.memory_utilization > 0.8
+            || self.disk_utilization > 0.9
+        {
             self.overall_status = HealthStatus::Warning;
         } else if self.network_connectivity {
             self.overall_status = HealthStatus::Healthy;
@@ -175,7 +181,11 @@ impl SystemHealthStatus {
             self.cpu_utilization * 100.0,
             self.memory_utilization * 100.0,
             self.disk_utilization * 100.0,
-            if self.network_connectivity { "OK" } else { "DOWN" }
+            if self.network_connectivity {
+                "OK"
+            } else {
+                "DOWN"
+            }
         )
     }
 }
@@ -239,11 +249,23 @@ impl ComponentHealthStatus {
 
     /// Get the overall health based on worst component
     pub fn overall_health(&self) -> ComponentHealth {
-        if self.components.values().any(|s| matches!(s.health, ComponentHealth::Down)) {
+        if self
+            .components
+            .values()
+            .any(|s| matches!(s.health, ComponentHealth::Down))
+        {
             ComponentHealth::Down
-        } else if self.components.values().any(|s| matches!(s.health, ComponentHealth::Critical)) {
+        } else if self
+            .components
+            .values()
+            .any(|s| matches!(s.health, ComponentHealth::Critical))
+        {
             ComponentHealth::Critical
-        } else if self.components.values().any(|s| matches!(s.health, ComponentHealth::Warning)) {
+        } else if self
+            .components
+            .values()
+            .any(|s| matches!(s.health, ComponentHealth::Warning))
+        {
             ComponentHealth::Warning
         } else {
             ComponentHealth::Healthy
@@ -298,10 +320,7 @@ impl ComponentStatus {
 
     /// Get the time since last check in seconds
     pub fn seconds_since_last_check(&self) -> u64 {
-        self.last_check
-            .elapsed()
-            .unwrap_or_default()
-            .as_secs()
+        self.last_check.elapsed().unwrap_or_default().as_secs()
     }
 }
 
@@ -321,7 +340,12 @@ impl LivenessProbe {
     }
 
     /// Update the liveness status
-    pub fn update(&mut self, is_alive: bool, core_responding: bool, critical_processes_running: bool) {
+    pub fn update(
+        &mut self,
+        is_alive: bool,
+        core_responding: bool,
+        critical_processes_running: bool,
+    ) {
         self.is_alive = is_alive;
         self.core_responding = core_responding;
         self.critical_processes_running = critical_processes_running;
@@ -344,7 +368,12 @@ impl ReadinessProbe {
     }
 
     /// Update the readiness status
-    pub fn update(&mut self, is_ready: bool, accepting_requests: bool, dependencies_available: bool) {
+    pub fn update(
+        &mut self,
+        is_ready: bool,
+        accepting_requests: bool,
+        dependencies_available: bool,
+    ) {
         self.is_ready = is_ready;
         self.accepting_requests = accepting_requests;
         self.dependencies_available = dependencies_available;
@@ -446,11 +475,7 @@ impl AlertSystem {
     }
 
     /// Configure the alert system
-    pub fn configure(
-        &mut self,
-        notification_channels: Vec<String>,
-        escalation_procedures: bool,
-    ) {
+    pub fn configure(&mut self, notification_channels: Vec<String>, escalation_procedures: bool) {
         self.notification_channels = notification_channels;
         self.escalation_procedures_defined = escalation_procedures;
         self.alerts_configured = !self.notification_channels.is_empty();
@@ -510,4 +535,4 @@ impl Default for AlertSystem {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

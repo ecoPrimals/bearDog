@@ -10,7 +10,6 @@ use beardog::tunnel::{
 use beardog::{BearDogError, BearDogResult};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
-use tokio;
 
 #[tokio::test]
 async fn test_full_bstp_integration() -> BearDogResult<()> {
@@ -40,17 +39,15 @@ async fn test_full_bstp_integration() -> BearDogResult<()> {
 
     // Test rapid packet encryption/decryption (gaming scenario)
     let security_genetics = SecurityGenetics::default();
-    let gaming_packets = vec![
-        b"player_move_command_1".to_vec(),
+    let gaming_packets = [b"player_move_command_1".to_vec(),
         b"player_attack_unit_2".to_vec(),
-        b"player_build_structure_3".to_vec(),
-    ];
+        b"player_build_structure_3".to_vec()];
 
     let mut total_encryption_time = Duration::ZERO;
     let mut total_decryption_time = Duration::ZERO;
 
     for (i, packet) in gaming_packets.iter().enumerate() {
-        let session_id_packet = format!("test_session_{}", i);
+        let session_id_packet = format!("test_session_{i}");
 
         let start = Instant::now();
         let encrypted = crypto_engine
@@ -212,12 +209,12 @@ async fn test_concurrent_gaming_sessions() -> BearDogResult<()> {
 
         let handle = tokio::spawn(async move {
             // Test concurrent session creation
-            let session_id = format!("concurrent_session_{}", i);
+            let session_id = format!("concurrent_session_{i}");
             let encryption_start = Instant::now();
 
             // Simulate gaming packets
             let security_genetics = SecurityGenetics::default();
-            let packet = format!("gaming_packet_from_peer_{}", i).into_bytes();
+            let packet = format!("gaming_packet_from_peer_{i}").into_bytes();
 
             let encrypted = engine
                 .ultra_fast_encrypt(&session_id, &packet, &security_genetics)
@@ -233,7 +230,7 @@ async fn test_concurrent_gaming_sessions() -> BearDogResult<()> {
             assert!(encryption_time <= Duration::from_micros(200)); // Gaming target
 
             // Validate session is valid
-            let is_valid = encrypted.data.len() > 0;
+            let is_valid = !encrypted.data.is_empty();
             assert!(is_valid);
 
             Ok::<(), BearDogError>(())
@@ -250,8 +247,7 @@ async fn test_concurrent_gaming_sessions() -> BearDogResult<()> {
     }
 
     println!(
-        "✅ Concurrent gaming sessions test passed - {} sessions handled",
-        num_sessions
+        "✅ Concurrent gaming sessions test passed - {num_sessions} sessions handled"
     );
     Ok(())
 }

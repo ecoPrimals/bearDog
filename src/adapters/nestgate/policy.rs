@@ -3,12 +3,11 @@
 //! Policy engine implementation for access control, rule evaluation, and policy management
 //! that can be used by any ecosystem component.
 
+use chrono::{Datelike, Timelike};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
-use uuid::Uuid;
-use chrono::{Datelike, Timelike};
+use tracing::{debug, info};
 
 use super::types::*;
 
@@ -51,7 +50,10 @@ pub struct PolicyStatistics {
 impl PolicyEngine {
     /// Create new policy engine
     pub async fn new(config: PolicyConfig) -> NestGateResult<Self> {
-        info!("Creating policy engine with {} enabled policies", config.enabled_policies.len());
+        info!(
+            "Creating policy engine with {} enabled policies",
+            config.enabled_policies.len()
+        );
 
         let engine = Self {
             config,
@@ -235,10 +237,13 @@ impl PolicyEngine {
     ) -> NestGateResult<PolicyCheckResult> {
         let start_time = std::time::Instant::now();
 
-        debug!("Checking access for user: {}, resource: {}, operation: {:?}", user_id, resource, operation);
+        debug!(
+            "Checking access for user: {}, resource: {}, operation: {:?}",
+            user_id, resource, operation
+        );
 
         // Check evaluation cache first
-        let cache_key = format!("{}:{}:{:?}", user_id, resource, operation);
+        let cache_key = format!("{user_id}:{resource}:{operation:?}");
         if let Some(cached_result) = self.get_cached_evaluation(&cache_key).await? {
             debug!("Using cached policy evaluation result");
             return Ok(cached_result.result);
@@ -257,24 +262,35 @@ impl PolicyEngine {
         };
 
         for policy in policies {
-            if let Some(rule_result) = self.evaluate_policy(&policy, user_id, resource, operation).await? {
+            if let Some(rule_result) = self
+                .evaluate_policy(&policy, user_id, resource, operation)
+                .await?
+            {
                 final_result = rule_result;
                 break; // First matching policy wins (highest priority)
             }
         }
 
         // Cache the result
-        self.cache_evaluation_result(&cache_key, &final_result).await?;
+        self.cache_evaluation_result(&cache_key, &final_result)
+            .await?;
 
         // Update statistics
-        self.update_statistics(&final_result, start_time.elapsed()).await?;
+        self.update_statistics(&final_result, start_time.elapsed())
+            .await?;
 
-        debug!("Access check completed: allowed={}, reason={}", final_result.allowed, final_result.reason);
+        debug!(
+            "Access check completed: allowed={}, reason={}",
+            final_result.allowed, final_result.reason
+        );
         Ok(final_result)
     }
 
     /// Get cached evaluation result
-    async fn get_cached_evaluation(&self, cache_key: &str) -> NestGateResult<Option<PolicyEvaluationResult>> {
+    async fn get_cached_evaluation(
+        &self,
+        cache_key: &str,
+    ) -> NestGateResult<Option<PolicyEvaluationResult>> {
         let cache = self.evaluation_cache.read().await;
         if let Some(cached) = cache.get(cache_key) {
             if chrono::Utc::now() < cached.expires_at {
@@ -285,25 +301,29 @@ impl PolicyEngine {
     }
 
     /// Cache evaluation result
-    async fn cache_evaluation_result(&self, cache_key: &str, result: &PolicyCheckResult) -> NestGateResult<()> {
+    async fn cache_evaluation_result(
+        &self,
+        cache_key: &str,
+        result: &PolicyCheckResult,
+    ) -> NestGateResult<()> {
         let cached_result = PolicyEvaluationResult {
             result: result.clone(),
             timestamp: chrono::Utc::now(),
             expires_at: chrono::Utc::now() + chrono::Duration::seconds(300), // 5 minutes cache
         };
 
-        self.evaluation_cache.write().await.insert(cache_key.to_string(), cached_result);
+        self.evaluation_cache
+            .write()
+            .await
+            .insert(cache_key.to_string(), cached_result);
         Ok(())
     }
 
     /// Get enabled policies sorted by priority
     async fn get_enabled_policies_by_priority(&self) -> NestGateResult<Vec<AccessPolicy>> {
         let policies = self.policies.read().await;
-        let mut enabled_policies: Vec<AccessPolicy> = policies
-            .values()
-            .filter(|p| p.enabled)
-            .cloned()
-            .collect();
+        let mut enabled_policies: Vec<AccessPolicy> =
+            policies.values().filter(|p| p.enabled).cloned().collect();
 
         // Sort by priority (higher priority first)
         enabled_policies.sort_by(|a, b| b.priority.cmp(&a.priority));
@@ -320,7 +340,10 @@ impl PolicyEngine {
         operation: &FileOperation,
     ) -> NestGateResult<Option<PolicyCheckResult>> {
         for rule in &policy.rules {
-            if self.evaluate_rule(rule, user_id, resource, operation).await? {
+            if self
+                .evaluate_rule(rule, user_id, resource, operation)
+                .await?
+            {
                 return Ok(Some(PolicyCheckResult {
                     allowed: rule.access_level != AccessLevel::None,
                     reason: if rule.access_level != AccessLevel::None {
@@ -369,7 +392,10 @@ impl PolicyEngine {
 
         // Check conditions
         for condition in &rule.conditions {
-            if !self.evaluate_condition(condition, user_id, resource).await? {
+            if !self
+                .evaluate_condition(condition, user_id, resource)
+                .await?
+            {
                 return Ok(false);
             }
         }
@@ -451,26 +477,27 @@ impl PolicyEngine {
         evaluation_time: std::time::Duration,
     ) -> NestGateResult<()> {
         let mut stats = self.statistics.write().await;
-        
+
         stats.total_evaluations += 1;
-        
+
         // Update decision counts
         let decision_key = if result.allowed { "allowed" } else { "denied" };
         *stats.decisions.entry(decision_key.to_string()).or_insert(0) += 1;
-        
+
         // Update policy usage
         if let Some(policy_id) = &result.policy_id {
             *stats.policy_usage.entry(policy_id.clone()).or_insert(0) += 1;
         }
-        
+
         // Update average evaluation time
         let eval_time_micros = evaluation_time.as_micros() as u64;
         stats.avg_evaluation_time = if stats.total_evaluations == 1 {
             eval_time_micros
         } else {
-            ((stats.avg_evaluation_time * (stats.total_evaluations - 1)) + eval_time_micros) / stats.total_evaluations
+            ((stats.avg_evaluation_time * (stats.total_evaluations - 1)) + eval_time_micros)
+                / stats.total_evaluations
         };
-        
+
         Ok(())
     }
 
@@ -483,42 +510,48 @@ impl PolicyEngine {
     /// Add policy
     pub async fn add_policy(&self, policy: AccessPolicy) -> NestGateResult<()> {
         info!("Adding policy: {} ({})", policy.name, policy.id);
-        
+
         // Clear cache when policies change
         self.evaluation_cache.write().await.clear();
-        
-        self.policies.write().await.insert(policy.id.clone(), policy);
+
+        self.policies
+            .write()
+            .await
+            .insert(policy.id.clone(), policy);
         Ok(())
     }
 
     /// Remove policy
     pub async fn remove_policy(&self, policy_id: &str) -> NestGateResult<bool> {
         info!("Removing policy: {}", policy_id);
-        
+
         // Clear cache when policies change
         self.evaluation_cache.write().await.clear();
-        
+
         Ok(self.policies.write().await.remove(policy_id).is_some())
     }
 
     /// Update policy
     pub async fn update_policy(&self, policy: AccessPolicy) -> NestGateResult<()> {
         info!("Updating policy: {} ({})", policy.name, policy.id);
-        
+
         // Clear cache when policies change
         self.evaluation_cache.write().await.clear();
-        
-        self.policies.write().await.insert(policy.id.clone(), policy);
+
+        self.policies
+            .write()
+            .await
+            .insert(policy.id.clone(), policy);
         Ok(())
     }
 
     /// Enable policy
     pub async fn enable_policy(&self, policy_id: &str) -> NestGateResult<bool> {
         info!("Enabling policy: {}", policy_id);
-        
+
         // Clear cache when policies change
         self.evaluation_cache.write().await.clear();
-        
+
         if let Some(policy) = self.policies.write().await.get_mut(policy_id) {
             policy.enabled = true;
             policy.modified_at = chrono::Utc::now();
@@ -531,10 +564,10 @@ impl PolicyEngine {
     /// Disable policy
     pub async fn disable_policy(&self, policy_id: &str) -> NestGateResult<bool> {
         info!("Disabling policy: {}", policy_id);
-        
+
         // Clear cache when policies change
         self.evaluation_cache.write().await.clear();
-        
+
         if let Some(policy) = self.policies.write().await.get_mut(policy_id) {
             policy.enabled = false;
             policy.modified_at = chrono::Utc::now();
@@ -568,10 +601,12 @@ impl PolicyEngine {
 
         let policies = self.policies.read().await;
         let enabled_count = policies.values().filter(|p| p.enabled).count();
-        
+
         let healthy = !policies.is_empty() && enabled_count > 0;
         let message = if healthy {
-            format!("Policy engine healthy with {} enabled policies", enabled_count)
+            format!(
+                "Policy engine healthy with {enabled_count} enabled policies"
+            )
         } else {
             "Policy engine unhealthy - no enabled policies".to_string()
         };
@@ -588,10 +623,10 @@ impl PolicyEngine {
     pub async fn cleanup_cache(&self) -> NestGateResult<()> {
         let mut cache = self.evaluation_cache.write().await;
         let now = chrono::Utc::now();
-        
+
         cache.retain(|_, entry| entry.expires_at > now);
-        
+
         debug!("Cleaned up expired cache entries");
         Ok(())
     }
-} 
+}

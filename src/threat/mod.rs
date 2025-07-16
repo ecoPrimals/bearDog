@@ -19,7 +19,7 @@ pub mod tests;
 pub mod types;
 
 // Export specific items to avoid conflicts
-pub use handlers::ThreatDetectionEngine;
+pub use handlers::core::ThreatDetectionEngine;
 pub use ml_engine::{MlEngineConfig, MlThreatEngine};
 pub use types::{
     DetectionRule, MitigationStep, SecurityEvent, ThreatDetectionConfig, ThreatEvent,

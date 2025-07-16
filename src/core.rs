@@ -9,13 +9,16 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
 
+use crate::adapters::nestgate::{
+    ComponentHealth, HealthStatus as NestGateHealthStatus, NestGateResult, PrimalProvider,
+};
 use crate::audit::AuditEngine;
 use crate::compliance::ComplianceEngine;
 use crate::config::BearDogConfig;
 use crate::encryption::EncryptionEngine;
 use crate::error::{BearDogError, BearDogResult};
 use crate::security::BearDogSecurityProvider;
-use crate::threat::handlers::ThreatDetectionEngine;
+use crate::threat::ThreatDetectionEngine;
 use crate::workflows::InMemoryApprovalStore;
 use crate::workflows::InMemoryWorkflowStore;
 use crate::workflows::MultiPartyWorkflowEngine;
@@ -153,7 +156,7 @@ impl BearDogCore {
             rules_path: "rules/".to_string(),
             monitor_paths: vec![],
             alert_threshold: 0.8,
-            cache_size: 1000,
+            cache_size: crate::config::constants::performance::DEFAULT_CACHE_SIZE,
             monitoring_interval: 30,
         };
 
@@ -187,9 +190,13 @@ impl BearDogCore {
             .await?,
         );
 
-        // Initialize security provider with placeholder for now
-        let security_provider =
-            Arc::new(crate::security::BearDogSecurityProvider::new_placeholder());
+        // Initialize security provider with proper configuration
+        let security_provider = Arc::new(
+            crate::security::BearDogSecurityProvider::new(
+                crate::security::SecurityProviderConfig::default(),
+            )
+            .await?,
+        );
 
         let core = Self {
             config: Arc::new(config),
@@ -209,7 +216,19 @@ impl BearDogCore {
     }
 
     /// Create a placeholder core for initialization
+    ///
+    /// ⚠️ WARNING: This method is deprecated and should not be used in production.
+    /// Use `BearDogCore::new(config)` instead for proper initialization.
+    #[deprecated(
+        since = "0.1.0",
+        note = "Use BearDogCore::new(config) instead for proper initialization"
+    )]
     pub fn new_placeholder() -> Self {
+        // Log warning for deprecated usage
+        tracing::warn!(
+            "🚨 Using deprecated new_placeholder() method. Use BearDogCore::new(config) instead."
+        );
+
         Self {
             config: Arc::new(BearDogConfig::default()),
             encryption_engine: Arc::new(EncryptionEngine::placeholder()),
@@ -217,7 +236,7 @@ impl BearDogCore {
             threat_detection_engine: Arc::new(ThreatDetectionEngine::placeholder()),
             compliance_engine: Arc::new(ComplianceEngine::placeholder()),
             workflow_engine: Arc::new(MultiPartyWorkflowEngine::placeholder()),
-            security_provider: Arc::new(crate::security::BearDogSecurityProvider::new_placeholder()),
+            security_provider: Arc::new(crate::security::BearDogSecurityProvider::new_minimal()),
             startup_time: std::time::Instant::now(),
             component_status: HashMap::new(),
             state: Arc::new(RwLock::new(CoreState::default())),
@@ -225,7 +244,17 @@ impl BearDogCore {
     }
 
     /// Create a core without security provider to break circular dependency
+    ///
+    /// ⚠️ WARNING: This method is deprecated and should not be used in production.
+    /// Use `BearDogCore::new(config)` instead for proper initialization.
+    #[deprecated(
+        since = "0.1.0",
+        note = "Use BearDogCore::new(config) instead for proper initialization"
+    )]
     pub fn new_without_security_provider() -> Self {
+        // Log warning for deprecated usage
+        tracing::warn!("🚨 Using deprecated new_without_security_provider() method. Use BearDogCore::new(config) instead.");
+
         Self {
             config: Arc::new(BearDogConfig::default()),
             encryption_engine: Arc::new(EncryptionEngine::placeholder()),
@@ -439,5 +468,66 @@ impl BearDogCore {
         status.insert("node_count".to_string(), "unavailable".to_string());
 
         Ok(status)
+    }
+}
+
+#[async_trait::async_trait]
+impl PrimalProvider for BearDogCore {
+    fn name(&self) -> &str {
+        "beardog"
+    }
+
+    fn capabilities(&self) -> Vec<String> {
+        vec![
+            "file_operations".to_string(),
+            "key_management".to_string(),
+            "zfs_integration".to_string(),
+            "policy_enforcement".to_string(),
+            "audit_logging".to_string(),
+            "beardog_specific".to_string(),
+        ]
+    }
+
+    async fn health_check(&self) -> NestGateResult<NestGateHealthStatus> {
+        let health = self.health_check().await.map_err(|e| {
+            crate::adapters::nestgate::NestGateError::Internal(format!(
+                "Health check failed: {e}"
+            ))
+        })?;
+
+        let components = health
+            .components
+            .into_iter()
+            .map(|comp| {
+                (
+                    comp.name,
+                    ComponentHealth {
+                        healthy: comp.healthy,
+                        status: comp.error_message.unwrap_or_else(|| "OK".to_string()),
+                        metrics: HashMap::new(),
+                    },
+                )
+            })
+            .collect();
+
+        Ok(NestGateHealthStatus {
+            healthy: matches!(health.status, HealthStatus::Healthy),
+            message: format!(
+                "BearDog core is {}",
+                match health.status {
+                    HealthStatus::Healthy => "healthy",
+                    HealthStatus::Degraded => "degraded",
+                    HealthStatus::Unhealthy => "unhealthy",
+                    HealthStatus::Starting => "starting",
+                    HealthStatus::Stopping => "stopping",
+                }
+            ),
+            components,
+            last_check: chrono::Utc::now(),
+        })
+    }
+
+    fn config(&self) -> &dyn std::any::Any {
+        self
     }
 }

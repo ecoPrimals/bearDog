@@ -747,12 +747,13 @@ async fn test_api_authentication_authorization() {
     }
 
     // Test with invalid authentication tokens
+    let oversized_token = "Bearer ".to_owned() + &"A".repeat(10000);
     let invalid_tokens = vec![
         "Bearer invalid_token",
         "Bearer ",
         "Basic invalid_base64",
         "Bearer <script>alert('xss')</script>",
-        "Bearer ".to_owned() + &"A".repeat(10000), // Oversized token
+        &oversized_token, // Oversized token
     ];
 
     for token in invalid_tokens {

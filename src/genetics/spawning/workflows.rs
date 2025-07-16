@@ -3,10 +3,9 @@
 //! This module handles different types of spawning workflows including automated
 //! consensus, human approval, and hybrid approval systems.
 
-use super::engine::GeneticSpawningEngine;
 use super::super::types::*;
-use crate::auth::BearDogGenetics;
-use crate::{BearDogError, BearDogResult};
+use super::engine::GeneticSpawningEngine;
+use crate::BearDogResult;
 use chrono::Utc;
 use std::collections::HashMap;
 use tracing::info;
@@ -119,8 +118,7 @@ pub async fn process_human_approval(
         actor: "system".to_string(),
         action: "human_approval_requested".to_string(),
         result: format!(
-            "Requesting {} approvals from roles: {:?}",
-            min_approvals, approver_roles
+            "Requesting {min_approvals} approvals from roles: {approver_roles:?}"
         ),
         context: HashMap::new(),
     });
@@ -192,7 +190,7 @@ pub async fn process_hybrid_approval(
         decision_audit_trail.push(DecisionAuditEntry {
             timestamp: Utc::now(),
             actor: "automated_check".to_string(),
-            action: format!("check_{:?}", check),
+            action: format!("check_{check:?}"),
             result: if check_result { "pass" } else { "fail" }.to_string(),
             context: HashMap::new(),
         });
@@ -210,7 +208,7 @@ pub async fn process_hybrid_approval(
                 timestamp: Utc::now(),
                 actor: "system".to_string(),
                 action: "escalation_triggered".to_string(),
-                result: format!("{:?}", condition),
+                result: format!("{condition:?}"),
                 context: HashMap::new(),
             });
             break;
@@ -266,4 +264,4 @@ async fn simulate_node_vote(
 ) -> BearDogResult<bool> {
     // Simulate a vote - in real implementation, this would make network calls
     Ok(true) // Simulate approval for demo
-} 
+}

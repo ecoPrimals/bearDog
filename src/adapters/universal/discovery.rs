@@ -28,47 +28,74 @@ pub struct EcosystemDiscovery {
 /// Ecosystem service information
 #[derive(Debug, Clone)]
 pub struct EcosystemService {
+    /// Unique identifier for the service
     pub service_id: String,
+    /// Identifier of the ecosystem this service belongs to
     pub ecosystem_id: String,
+    /// Unique identifier for this service instance
     pub instance_id: String,
+    /// Type of service provided
     pub service_type: EcosystemServiceType,
+    /// Network endpoints for accessing the service
     pub endpoints: ServiceEndpoints,
+    /// List of capabilities provided by this service
     pub capabilities: Vec<Capability>,
+    /// When this service was first discovered
     pub discovery_time: chrono::DateTime<chrono::Utc>,
+    /// Last time this service was seen as active
     pub last_seen: chrono::DateTime<chrono::Utc>,
+    /// Additional metadata about the service
     pub metadata: HashMap<String, String>,
 }
 
 /// Types of ecosystem services
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EcosystemServiceType {
-    Compute,       // ToadStool
-    Storage,       // NestGate
-    Communication, // SongBird
-    AI,            // Squirrel
-    BioMe,         // biomeOS
-    Security,      // BearDog
+    /// Compute services (ToadStool)
+    Compute,
+    /// Storage services (NestGate)
+    Storage,
+    /// Communication services (SongBird)
+    Communication,
+    /// AI services (Squirrel)
+    AI,
+    /// BioMe services (biomeOS)
+    BioMe,
+    /// Security services (BearDog)
+    Security,
+    /// Custom service type with name
     Custom(String),
 }
 
 /// Ecosystem service health information
 #[derive(Debug, Clone)]
 pub struct EcosystemServiceHealth {
+    /// Unique identifier for the service
     pub service_id: String,
+    /// Current health status of the service
     pub health_status: HealthStatus,
+    /// When the last health check was performed
     pub last_health_check: chrono::DateTime<chrono::Utc>,
+    /// Response time in milliseconds
     pub response_time_ms: u64,
+    /// Availability percentage (0-100)
     pub availability_percentage: f64,
+    /// Error rate percentage (0-100)
     pub error_rate_percentage: f64,
 }
 
 /// Discovery configuration
 #[derive(Debug, Clone)]
 pub struct EcosystemDiscoveryConfig {
+    /// Interval between discovery attempts in seconds
     pub discovery_interval_seconds: u64,
+    /// Interval between health checks in seconds
     pub health_check_interval_seconds: u64,
+    /// Timeout for service operations in seconds
     pub service_timeout_seconds: u64,
+    /// Maximum number of discovery attempts before giving up
     pub max_discovery_attempts: u32,
+    /// List of ecosystems to discover services for
     pub enabled_ecosystems: Vec<String>,
 }
 
@@ -211,7 +238,7 @@ impl EcosystemDiscovery {
                     let failed_health = EcosystemServiceHealth {
                         service_id: service.service_id.clone(),
                         health_status: HealthStatus::Unhealthy {
-                            reason: format!("Health check failed: {}", e),
+                            reason: format!("Health check failed: {e}"),
                             recovery_time: None,
                         },
                         last_health_check: chrono::Utc::now(),
@@ -539,6 +566,8 @@ impl EcosystemDiscovery {
 /// Service search criteria
 #[derive(Debug, Clone, Default)]
 pub struct ServiceSearchCriteria {
+    /// Filter by ecosystem ID
     pub ecosystem_id: Option<String>,
+    /// Filter by service type
     pub service_type: Option<EcosystemServiceType>,
 }

@@ -158,4 +158,4 @@ pub struct PrivacyMetadata {
     pub anonymization_level: AnonymizationLevel,
     /// When the data was processed
     pub processing_timestamp: DateTime<Utc>,
-} 
+}

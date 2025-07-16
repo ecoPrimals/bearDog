@@ -4,17 +4,12 @@
 //! mutation mechanisms, and genetic spawning for capability evolution.
 
 use chrono::{DateTime, Utc};
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
 use uuid::Uuid;
+use serde::{Deserialize, Serialize};
 
-use super::super::traits::*;
-use crate::BearDogResult;
 
 /// Genetic capability profile for spawning integration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticCapabilityProfile {
     /// Unique genetic identifier
     pub genetic_id: String,
@@ -33,7 +28,7 @@ pub struct GeneticCapabilityProfile {
 }
 
 /// Trait characteristics for genetic capabilities
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityTrait {
     /// Unique trait identifier
     pub trait_id: String,
@@ -48,7 +43,7 @@ pub struct CapabilityTrait {
 }
 
 /// Categories of capability traits
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CapabilityTraitType {
     /// Performance-related traits
     Performance,
@@ -69,7 +64,7 @@ pub enum CapabilityTraitType {
 }
 
 /// Mutation event in genetic capability evolution
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityMutation {
     /// Unique mutation identifier
     pub mutation_id: String,
@@ -86,7 +81,7 @@ pub struct CapabilityMutation {
 }
 
 /// Types of genetic mutations
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MutationType {
     /// Enhancement of existing traits
     Enhancement,
@@ -101,7 +96,7 @@ pub enum MutationType {
 }
 
 /// Triggers for genetic mutations
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MutationTrigger {
     /// Changes in operating environment
     EnvironmentalPressure,
@@ -135,19 +130,19 @@ impl GeneticCapabilityProfile {
         match mutation.mutation_type {
             MutationType::Enhancement => {
                 self.fitness_score += mutation.mutation_strength * 0.2;
-            },
+            }
             MutationType::Specialization => {
                 self.fitness_score += mutation.mutation_strength * 0.15;
-            },
+            }
             MutationType::Hybridization => {
                 self.fitness_score += mutation.mutation_strength * 0.25;
-            },
+            }
             MutationType::Adaptation => {
                 self.fitness_score += mutation.mutation_strength * 0.3;
-            },
+            }
             MutationType::Optimization => {
                 self.fitness_score += mutation.mutation_strength * 0.1;
-            },
+            }
         }
 
         // Clamp fitness score between 0.0 and 1.0
@@ -159,15 +154,16 @@ impl GeneticCapabilityProfile {
 
     /// Calculate dominance score for trait inheritance
     pub fn calculate_dominance(&self, trait_type: &CapabilityTraitType) -> f64 {
-        let matching_traits: Vec<_> = self.inherited_traits
+        let matching_traits: Vec<_> = self
+            .inherited_traits
             .iter()
             .filter(|t| std::mem::discriminant(&t.trait_type) == std::mem::discriminant(trait_type))
             .collect();
-        
+
         if matching_traits.is_empty() {
             return 0.0;
         }
-        
+
         matching_traits
             .iter()
             .map(|t| t.dominance * t.expression_level)
@@ -208,7 +204,7 @@ impl CapabilityTrait {
         Self::new(
             CapabilityTraitType::Security,
             expression_level,
-            0.9, // Very high dominance for security
+            0.9,  // Very high dominance for security
             0.85, // High heritability
         )
     }
@@ -219,7 +215,7 @@ impl CapabilityTrait {
             CapabilityTraitType::Reliability,
             expression_level,
             0.85, // High dominance for reliability
-            0.8, // High heritability
+            0.8,  // High heritability
         )
     }
 
@@ -228,7 +224,7 @@ impl CapabilityTrait {
         Self::new(
             CapabilityTraitType::Scalability,
             expression_level,
-            0.7, // Medium-high dominance
+            0.7,  // Medium-high dominance
             0.75, // Medium-high heritability
         )
     }
@@ -249,7 +245,7 @@ impl CapabilityTrait {
             CapabilityTraitType::Adaptability,
             expression_level,
             0.75, // Medium-high dominance
-            0.8, // High heritability
+            0.8,  // High heritability
         )
     }
 
@@ -341,4 +337,4 @@ impl CapabilityMutation {
             MutationTrigger::PerformanceOptimization,
         )
     }
-} 
+}

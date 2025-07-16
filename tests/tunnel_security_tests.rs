@@ -129,7 +129,7 @@ async fn test_key_generation_security() -> BearDogResult<()> {
     // Test that we can create multiple unique keys
     let mut keys = Vec::new();
     for i in 0..10 {
-        let session_id = format!("security_test_{}", i);
+        let session_id = format!("security_test_{i}");
         let key = key_manager
             .generate_session_key(&session_id, CryptoAlgorithm::Aes256Gcm)
             .await?;
@@ -139,7 +139,7 @@ async fn test_key_generation_security() -> BearDogResult<()> {
     // All keys should be unique
     for i in 0..keys.len() {
         for j in (i + 1)..keys.len() {
-            assert_ne!(keys[i], keys[j], "Keys {} and {} are identical!", i, j);
+            assert_ne!(keys[i], keys[j], "Keys {i} and {j} are identical!");
         }
     }
 

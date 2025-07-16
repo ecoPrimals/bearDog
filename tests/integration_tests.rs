@@ -167,7 +167,7 @@ async fn test_nestgate_adapter_key_management() -> BearDogResult<()> {
     let test_key = b"test-key-data-32-bytes-long-ok!!";
     let wrapped_key = adapter.wrap_key(test_key, &master_key.id).await?;
     // Note: wrapped_key is Vec<u8>, not a struct with fields
-    assert!(!wrapped_key.is_empty());
+    assert!(!wrapped_key.wrapped_data.is_empty());
 
     // Test key unwrapping
     let unwrapped_key = adapter.unwrap_key(&wrapped_key, &master_key.id).await?;
@@ -907,10 +907,10 @@ async fn test_security_provider_integration() -> BearDogResult<()> {
 
     // Test security provider creation and health
     let security_provider =
-        BearDogSecurityProvider::new(SecurityProviderConfig::default(), core.clone()).await?;
+        BearDogSecurityProvider::new(SecurityProviderConfig::default()).await?;
 
     let health = security_provider.health().await?;
-    assert_eq!(health.overall_status, HealthStatus::Healthy);
+    assert_eq!(health.overall_status, beardog::security::HealthStatus::Healthy);
 
     // Test authorization flow
     let subject = Subject {
@@ -933,24 +933,22 @@ async fn test_security_provider_integration() -> BearDogResult<()> {
     };
 
     let action = Action {
-        name: "read".to_string(),
         action_type: ActionType::Read,
-        risk_level: RiskLevel::Low,
-        attributes: std::collections::HashMap::new(),
+        context: std::collections::HashMap::new(),
+        timestamp: chrono::Utc::now(),
+        source_ip: None,
     };
 
     let auth_result = security_provider
         .authorize(&subject, &resource, &action)
         .await?;
-    assert!(auth_result.allowed);
+    assert!(auth_result.permitted);
 
     // Test authentication flow
     let auth_result = security_provider
         .authenticate(
             "test_user",
             "test_password",
-            Some("192.168.1.1".to_string()),
-            Some("test-agent".to_string()),
         )
         .await?;
 
@@ -986,7 +984,7 @@ async fn test_notification_engine_integration() -> BearDogResult<()> {
         teams_webhook_url: None,
         notification_template_path: None,
         notification_retry_attempts: 3,
-        notification_retry_delay: Duration::from_secs(60),
+        notification_retry_delay: chrono::Duration::from_std(Duration::from_secs(60)).unwrap(),
     };
 
     let engine = NotificationEngine::new(config);
@@ -1011,8 +1009,8 @@ async fn test_notification_engine_integration() -> BearDogResult<()> {
             required_approvals: 2,
             required_roles: vec!["manager".to_string(), "admin".to_string()],
             approval_hierarchy: vec![],
-            min_approval_time: Duration::from_secs(300),
-            max_approval_time: Duration::from_secs(24 * 3600),
+            min_approval_time: chrono::Duration::from_std(Duration::from_secs(300)).unwrap(),
+            max_approval_time: chrono::Duration::from_std(Duration::from_secs(24 * 3600)).unwrap(),
             delegation_allowed: false,
             self_approval_allowed: false,
         },
@@ -1055,7 +1053,7 @@ async fn test_notification_engine_integration() -> BearDogResult<()> {
 
     // Test notification sending (should not fail even with disabled email)
     let result = engine
-        .send_approval_requests(&workflow, &pending_approvals)
+        .notify_workflow_initiated(&workflow)
         .await;
     assert!(result.is_ok());
 
@@ -1068,16 +1066,16 @@ async fn test_policy_engine_integration() -> BearDogResult<()> {
     use std::time::Duration;
 
     let config = PolicyConfig {
-        default_approval_timeout: Duration::from_secs(24 * 3600), // 24 hours
-        emergency_approval_timeout: Duration::from_secs(3600),    // 1 hour
+        default_approval_timeout: chrono::Duration::from_std(Duration::from_secs(24 * 3600)).unwrap(), // 24 hours
+        emergency_approval_timeout: chrono::Duration::from_std(Duration::from_secs(3600)).unwrap(),    // 1 hour
         max_concurrent_workflows: 100,
-        max_workflow_age: Duration::from_secs(7 * 24 * 3600), // 7 days
+        max_workflow_age: chrono::Duration::from_std(Duration::from_secs(7 * 24 * 3600)).unwrap(), // 7 days
         auto_cleanup_enabled: true,
         risk_scoring_enabled: true,
         compliance_checking_enabled: true,
-        audit_retention_period: Duration::from_secs(30 * 24 * 3600), // 30 days
+        audit_retention_period: chrono::Duration::from_std(Duration::from_secs(30 * 24 * 3600)).unwrap(), // 30 days
         notification_escalation_enabled: true,
-        escalation_intervals: vec![Duration::from_secs(3600), Duration::from_secs(7200)],
+        escalation_intervals: vec![chrono::Duration::from_std(Duration::from_secs(3600)).unwrap(), chrono::Duration::from_std(Duration::from_secs(7200)).unwrap()],
         delegation_policies: HashMap::new(),
         role_hierarchies: HashMap::new(),
         approval_matrix: HashMap::new(),
@@ -1105,10 +1103,10 @@ async fn test_policy_engine_integration() -> BearDogResult<()> {
         )]),
     };
 
-    let requirements = engine.determine_approval_requirements(&request).await?;
+    let requirements = engine.determine_approval_requirements(&request.workflow_type, &request.priority).await?;
 
     assert!(requirements.required_approvals >= 2);
-    assert!(requirements.max_approval_time.as_secs() > 0);
+    assert!(requirements.max_approval_time.num_seconds() > 0);
 
     Ok(())
 }
@@ -1226,7 +1224,7 @@ async fn test_songbird_security_provider_integration() -> BearDogResult<()> {
 
     let songbird_config = SecurityProviderConfig::default();
 
-    let adapter = BearDogSecurityProvider::new(songbird_config, core).await?;
+    let adapter = BearDogSecurityProvider::new(songbird_config).await?;
 
     // Test secure connection establishment
     let connection_result = adapter
@@ -1246,10 +1244,10 @@ async fn test_songbird_security_provider_integration() -> BearDogResult<()> {
                 attributes: std::collections::HashMap::new(),
             },
             &Action {
-                name: "read".to_string(),
                 action_type: ActionType::Read,
-                risk_level: RiskLevel::Low,
-                attributes: std::collections::HashMap::new(),
+                context: std::collections::HashMap::new(),
+                timestamp: chrono::Utc::now(),
+                source_ip: None,
             },
         )
         .await;
@@ -1429,10 +1427,10 @@ async fn test_security_provider_comprehensive() -> BearDogResult<()> {
     };
 
     let action = Action {
-        name: "read".to_string(),
         action_type: ActionType::Read,
-        risk_level: RiskLevel::Low,
-        attributes: HashMap::new(),
+        context: HashMap::new(),
+        timestamp: chrono::Utc::now(),
+        source_ip: None,
     };
 
     // Test authorization with comprehensive analysis
@@ -1441,11 +1439,11 @@ async fn test_security_provider_comprehensive() -> BearDogResult<()> {
         .await?;
 
     // Should provide detailed authorization result
-    assert!(auth_result.allowed || !auth_result.reason.is_empty());
-    assert!(auth_result.policy_used.is_some() || !auth_result.reason.is_empty());
+    assert!(auth_result.permitted || !auth_result.reason.is_empty());
+    assert!(!auth_result.reason.is_empty());
 
     // Test health check with real metrics
-    let health = security_provider.health_check().await?;
+    let health = security_provider.health().await?;
     assert!(!health.components.is_empty());
     assert!(health.uptime_seconds >= 0);
 
@@ -1615,7 +1613,7 @@ async fn test_cross_component_real_data_flow() -> BearDogResult<()> {
 
     // 7. Test security provider integration
     let security_provider =
-        BearDogSecurityProvider::new(SecurityProviderConfig::default(), core.clone()).await?;
+        BearDogSecurityProvider::new(SecurityProviderConfig::default()).await?;
 
     let subject = Subject {
         id: "cross-test-user".to_string(),
@@ -1729,7 +1727,7 @@ async fn test_error_handling_and_recovery() -> BearDogResult<()> {
         algorithm: EncryptionAlgorithm::Aes256Gcm,
         key_id: None,
         metadata: HashMap::new(),
-        tag: vec![7, 8, 9],
+        tag: Some(vec![7, 8, 9]),
     };
 
     let decrypt_result = core

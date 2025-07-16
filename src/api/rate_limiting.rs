@@ -352,6 +352,12 @@ pub struct TokenBucketLimiter {
     stats: Arc<RwLock<RateLimitStats>>,
 }
 
+impl Default for TokenBucketLimiter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TokenBucketLimiter {
     pub fn new() -> Self {
         Self::with_config(RateLimitConfig::default())

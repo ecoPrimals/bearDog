@@ -68,14 +68,23 @@
 /// }
 /// ```
 /// Security provider interface and implementation
+/// Tunnel configuration management
 pub mod config;
+/// Event handling and processing
 pub mod events;
+/// Gaming cryptography implementations
 pub mod gaming_crypto;
+/// Genetic healing and recovery systems
 pub mod genetic_healing;
+/// Hardware Security Module integration
 pub mod hsm;
+/// Key management and lifecycle
 pub mod key_manager;
+/// Performance monitoring and metrics
 pub mod performance;
+/// Security provider implementations
 pub mod security_provider;
+/// Session management and lifecycle
 pub mod session;
 
 pub use config::*;

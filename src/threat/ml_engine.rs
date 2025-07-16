@@ -9,6 +9,7 @@
 
 use super::types::*;
 use crate::BearDogResult;
+use crate::config::constants::network::PRIVATE_IP_RANGES;
 use chrono::{DateTime, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -18,9 +19,13 @@ use tracing::{info, warn};
 
 /// Machine Learning Threat Detection Engine
 pub struct MlThreatEngine {
+    /// Configuration for the ML engine
     config: MlEngineConfig,
+    /// Collection of trained ML models
     models: HashMap<String, Box<dyn ThreatModel + Send + Sync>>,
+    /// Behavioral analysis engine
     behavioral_analyzer: Arc<BehavioralAnalyzer>,
+    /// Cache for ML predictions
     prediction_cache: Arc<RwLock<HashMap<String, CachedPrediction>>>,
 }
 
@@ -57,13 +62,21 @@ impl Default for MlEngineConfig {
 /// ML prediction result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MlPrediction {
+    /// Model that generated this prediction
     pub model_id: String,
+    /// Type of prediction made
     pub prediction_type: PredictionType,
+    /// Confidence score (0.0-1.0)
     pub confidence_score: f64,
+    /// Risk level of the threat
     pub risk_level: ThreatSeverity,
+    /// Evidence supporting the prediction
     pub evidence: Vec<String>,
+    /// MITRE ATT&CK techniques identified
     pub mitre_techniques: Vec<String>,
+    /// Recommended actions
     pub recommendations: Vec<String>,
+    /// Additional metadata
     pub metadata: HashMap<String, String>,
 }
 
@@ -109,15 +122,22 @@ pub trait ThreatModel {
 /// Model metadata
 #[derive(Debug, Clone)]
 pub struct ModelMetadata {
+    /// Unique model identifier
     pub model_id: String,
+    /// Type of model (e.g., "anomaly_detection")
     pub model_type: String,
+    /// Model version
     pub version: String,
+    /// When the model was trained
     pub trained_at: DateTime<Utc>,
+    /// Model accuracy (0.0-1.0)
     pub accuracy: f64,
+    /// False positive rate (0.0-1.0)
     pub false_positive_rate: f64,
 }
 
 impl MlThreatEngine {
+    /// Create a new ML threat detection engine
     pub async fn new(config: MlEngineConfig) -> BearDogResult<Self> {
         let mut models: HashMap<String, Box<dyn ThreatModel + Send + Sync>> = HashMap::new();
 
@@ -189,20 +209,27 @@ impl MlThreatEngine {
 
 /// Behavioral analysis engine
 pub struct BehavioralAnalyzer {
+    /// User behavior profiles for anomaly detection
     user_profiles: Arc<RwLock<HashMap<String, UserBehaviorProfile>>>,
 }
 
 /// User behavior profile for anomaly detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserBehaviorProfile {
+    /// User identifier
     pub user_id: String,
+    /// Typical login hours (0-23)
     pub typical_login_hours: Vec<u8>,
+    /// Typical login locations
     pub typical_locations: Vec<String>,
+    /// Current risk score (0.0-1.0)
     pub risk_score: f64,
+    /// Last time profile was updated
     pub last_updated: DateTime<Utc>,
 }
 
 impl BehavioralAnalyzer {
+    /// Create a new behavioral analyzer
     pub async fn new() -> BearDogResult<Self> {
         Ok(Self {
             user_profiles: Arc::new(RwLock::new(HashMap::new())),
@@ -211,10 +238,15 @@ impl BehavioralAnalyzer {
 }
 
 // Concrete ML model implementations
+
+/// Login anomaly detection model
 pub struct LoginAnomalyModel;
+
+/// Data exfiltration detection model
 pub struct DataExfiltrationModel;
 
 impl LoginAnomalyModel {
+    /// Create a new login anomaly model
     pub async fn new() -> BearDogResult<Self> {
         Ok(Self)
     }
@@ -241,13 +273,13 @@ impl ThreatModel for LoginAnomalyModel {
         let mut evidence = Vec::new();
 
         // Check for unusual login times
-        if hour < 6 || hour > 22 {
+        if !(6..=22).contains(&hour) {
             anomaly_score += 0.3;
-            evidence.push(format!("Login at unusual hour: {}:00", hour));
+            evidence.push(format!("Login at unusual hour: {hour}:00"));
         }
 
         // Check for unusual source IP patterns
-        if !event.source_ip.starts_with("192.168.") {
+        if !is_private_ip(&event.source_ip) {
             anomaly_score += 0.4;
             evidence.push("Login from external IP address".to_string());
         }
@@ -303,6 +335,7 @@ impl ThreatModel for LoginAnomalyModel {
 }
 
 impl DataExfiltrationModel {
+    /// Create a new data exfiltration model
     pub async fn new() -> BearDogResult<Self> {
         Ok(Self)
     }
@@ -323,14 +356,13 @@ impl ThreatModel for DataExfiltrationModel {
 
         // Unusual time indicator
         let hour = event.timestamp.hour();
-        if hour < 6 || hour > 22 {
+        if !(6..=22).contains(&hour) {
             confidence += 0.3;
             evidence.push("Data transfer during off-hours".to_string());
         }
 
         // External destination indicator
-        if !event.destination_ip.starts_with("192.168.") && !event.destination_ip.starts_with("10.")
-        {
+        if !is_private_ip(&event.destination_ip) {
             confidence += 0.4;
             evidence.push("Data transfer to external IP".to_string());
         }
@@ -379,4 +411,9 @@ impl ThreatModel for DataExfiltrationModel {
     fn update_model(&mut self, _training_data: &[SecurityEvent]) -> BearDogResult<()> {
         Ok(())
     }
+}
+
+/// Check if an IP address is in a private range
+fn is_private_ip(ip: &str) -> bool {
+    PRIVATE_IP_RANGES.iter().any(|range| ip.starts_with(range))
 }

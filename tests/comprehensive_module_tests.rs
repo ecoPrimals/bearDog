@@ -228,7 +228,7 @@ async fn test_adapter_system() -> BearDogResult<()> {
     // Test adapter status
     for adapter in &adapters {
         let status = adapter_manager.get_adapter_status(adapter).await?;
-        println!("Adapter '{}' status: {}", adapter, status);
+        println!("Adapter '{adapter}' status: {status}");
     }
 
     println!("✅ Adapter system test successful");
@@ -263,7 +263,7 @@ fn test_error_propagation() -> BearDogResult<()> {
     };
 
     // Test error formatting
-    let error_string = format!("{}", test_error);
+    let error_string = format!("{test_error}");
     assert!(error_string.contains("Configuration error"));
 
     println!("✅ Error propagation test successful");
@@ -389,7 +389,7 @@ impl AdapterManager {
             .rust_ecosystem
             .nestgate
             .as_ref()
-            .map_or(false, |c| c.enabled)
+            .is_some_and(|c| c.enabled)
         {
             adapters.push("nestgate".to_string());
         }
@@ -399,7 +399,7 @@ impl AdapterManager {
             .rust_ecosystem
             .songbird
             .as_ref()
-            .map_or(false, |c| c.enabled)
+            .is_some_and(|c| c.enabled)
         {
             adapters.push("songbird".to_string());
         }
@@ -422,13 +422,13 @@ impl AdapterManager {
                 .rust_ecosystem
                 .nestgate
                 .as_ref()
-                .map_or(false, |c| c.enabled)),
+                .is_some_and(|c| c.enabled)),
             "songbird" => Ok(self
                 .config
                 .rust_ecosystem
                 .songbird
                 .as_ref()
-                .map_or(false, |c| c.enabled)),
+                .is_some_and(|c| c.enabled)),
             _ => Ok(false),
         }
     }

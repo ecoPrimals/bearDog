@@ -4,7 +4,7 @@
 //! and cryptographic proof generation for ownership and irreproducibility.
 
 use super::types::*;
-use crate::tunnel::hsm::{HsmManager, SecurityLevel, SecurityRequirements};
+use crate::tunnel::hsm::{HsmManager, SecurityLevel};
 use crate::{BearDogError, BearDogResult};
 use chrono::Utc;
 use sha3::{Digest, Sha3_256};
@@ -62,7 +62,9 @@ impl EntropyValidator {
         let temporal_proof = self.generate_temporal_proof(entropy_class).await?;
 
         // Generate uniqueness proof
-        let uniqueness_proof = self.generate_uniqueness_proof(entropy_data, entropy_class).await?;
+        let uniqueness_proof = self
+            .generate_uniqueness_proof(entropy_data, entropy_class)
+            .await?;
 
         Ok(IrreproducibilityProof {
             entropy_commitment,
@@ -90,10 +92,10 @@ impl EntropyValidator {
 
         // Include entropy data hash (not raw entropy for privacy)
         let entropy_hash = Sha3_256::digest(entropy_data);
-        hasher.update(&entropy_hash);
+        hasher.update(entropy_hash);
 
         // Include timestamp for freshness
-        hasher.update(&Utc::now().timestamp().to_le_bytes());
+        hasher.update(Utc::now().timestamp().to_le_bytes());
 
         // Include proof type identifier
         hasher.update(b"entropy_ownership_proof");
@@ -106,21 +108,32 @@ impl EntropyValidator {
         let mut hasher = Sha3_256::new();
         hasher.update(entropy_data);
         hasher.update(b"entropy_commitment");
-        hasher.update(&Utc::now().timestamp().to_le_bytes());
+        hasher.update(Utc::now().timestamp().to_le_bytes());
         Ok(hasher.finalize().to_vec())
     }
 
     /// Generate temporal proof showing when entropy was captured
-    async fn generate_temporal_proof(&self, entropy_class: &EntropyClass) -> BearDogResult<Vec<u8>> {
+    async fn generate_temporal_proof(
+        &self,
+        entropy_class: &EntropyClass,
+    ) -> BearDogResult<Vec<u8>> {
         let timestamp = match entropy_class {
-            EntropyClass::HumanLivedExperience { capture_timestamp, .. } => *capture_timestamp,
-            EntropyClass::HumanSupervisedMachine { validation_timestamp, .. } => *validation_timestamp,
-            EntropyClass::StoreBoughtMachine { generation_timestamp, .. } => *generation_timestamp,
+            EntropyClass::HumanLivedExperience {
+                capture_timestamp, ..
+            } => *capture_timestamp,
+            EntropyClass::HumanSupervisedMachine {
+                validation_timestamp,
+                ..
+            } => *validation_timestamp,
+            EntropyClass::StoreBoughtMachine {
+                generation_timestamp,
+                ..
+            } => *generation_timestamp,
         };
 
         // Create temporal proof data
         let mut hasher = Sha3_256::new();
-        hasher.update(&timestamp.timestamp().to_le_bytes());
+        hasher.update(timestamp.timestamp().to_le_bytes());
         hasher.update(b"temporal_proof");
 
         // Add entropy class type for additional binding
@@ -153,7 +166,7 @@ impl EntropyValidator {
         let mut hasher = Sha3_256::new();
 
         // Include entropy data hash
-        hasher.update(&Sha3_256::digest(entropy_data));
+        hasher.update(Sha3_256::digest(entropy_data));
 
         // Include source-specific uniqueness factors
         match entropy_class {
@@ -163,25 +176,32 @@ impl EntropyValidator {
                 ..
             } => {
                 hasher.update(b"human_lived_experience");
-                
+
                 // Add source-specific data
                 match source_type {
-                    HumanEntropySource::Microphone { spectral_features, .. } => {
+                    HumanEntropySource::Microphone {
+                        spectral_features, ..
+                    } => {
                         hasher.update(b"microphone");
                         for feature in spectral_features {
-                            hasher.update(&feature.to_le_bytes());
+                            hasher.update(feature.to_le_bytes());
                         }
                     }
-                    HumanEntropySource::Camera { lighting_variations, .. } => {
+                    HumanEntropySource::Camera {
+                        lighting_variations,
+                        ..
+                    } => {
                         hasher.update(b"camera");
                         for variation in lighting_variations {
-                            hasher.update(&variation.to_le_bytes());
+                            hasher.update(variation.to_le_bytes());
                         }
                     }
-                    HumanEntropySource::Haptic { motion_patterns, .. } => {
+                    HumanEntropySource::Haptic {
+                        motion_patterns, ..
+                    } => {
                         hasher.update(b"haptic");
                         for pattern in motion_patterns {
-                            hasher.update(&pattern.to_le_bytes());
+                            hasher.update(pattern.to_le_bytes());
                         }
                     }
                     HumanEntropySource::Biometric { entropy_hash, .. } => {
@@ -190,17 +210,21 @@ impl EntropyValidator {
                     }
                     HumanEntropySource::MultiModalHuman { sources, .. } => {
                         hasher.update(b"multimodal");
-                        hasher.update(&sources.len().to_le_bytes());
+                        hasher.update(sources.len().to_le_bytes());
                     }
                 }
 
                 // Add biometric signature
                 hasher.update(&biometric_signature.0);
             }
-            EntropyClass::HumanSupervisedMachine { machine_source, human_validator, .. } => {
+            EntropyClass::HumanSupervisedMachine {
+                machine_source,
+                human_validator,
+                ..
+            } => {
                 hasher.update(b"human_supervised_machine");
                 hasher.update(human_validator.identity_id.as_bytes());
-                
+
                 // Add machine source specifics
                 match machine_source {
                     MachineEntropySource::HardwareRNG { device_id, .. } => {
@@ -209,22 +233,33 @@ impl EntropyValidator {
                     MachineEntropySource::CSPRNG { algorithm, .. } => {
                         hasher.update(algorithm.as_bytes());
                     }
-                    MachineEntropySource::DerivedFromHuman { transition_timestamp, .. } => {
-                        hasher.update(&transition_timestamp.timestamp().to_le_bytes());
+                    MachineEntropySource::DerivedFromHuman {
+                        transition_timestamp,
+                        ..
+                    } => {
+                        hasher.update(transition_timestamp.timestamp().to_le_bytes());
                     }
                 }
             }
-            EntropyClass::StoreBoughtMachine { source_type, reproducibility_index, .. } => {
+            EntropyClass::StoreBoughtMachine {
+                source_type,
+                reproducibility_index,
+                ..
+            } => {
                 hasher.update(b"store_bought_machine");
-                hasher.update(&reproducibility_index.to_le_bytes());
-                
+                hasher.update(reproducibility_index.to_le_bytes());
+
                 match source_type {
                     MachineEntropySource::HardwareRNG { device_id, .. } => {
                         hasher.update(device_id.as_bytes());
                     }
-                    MachineEntropySource::CSPRNG { algorithm, state_size, .. } => {
+                    MachineEntropySource::CSPRNG {
+                        algorithm,
+                        state_size,
+                        ..
+                    } => {
                         hasher.update(algorithm.as_bytes());
-                        hasher.update(&state_size.to_le_bytes());
+                        hasher.update(state_size.to_le_bytes());
                     }
                     MachineEntropySource::DerivedFromHuman { .. } => {
                         hasher.update(b"derived_from_human");
@@ -234,7 +269,7 @@ impl EntropyValidator {
         }
 
         // Add current timestamp for freshness
-        hasher.update(&Utc::now().timestamp().to_le_bytes());
+        hasher.update(Utc::now().timestamp().to_le_bytes());
         hasher.update(b"uniqueness_proof");
 
         let uniqueness_data = hasher.finalize().to_vec();
@@ -260,7 +295,10 @@ impl EntropyValidator {
                 // Human supervision significantly improves quality
                 0.8
             }
-            EntropyClass::StoreBoughtMachine { reproducibility_index, .. } => {
+            EntropyClass::StoreBoughtMachine {
+                reproducibility_index,
+                ..
+            } => {
                 // Lower reproducibility means higher quality for machine sources
                 1.0 - reproducibility_index
             }
@@ -281,32 +319,55 @@ impl EntropyValidator {
     /// Calculate quality score for human entropy sources
     fn calculate_human_entropy_quality(&self, source: &HumanEntropySource) -> BearDogResult<f64> {
         let quality = match source {
-            HumanEntropySource::MultiModalHuman { confidence_score, sources, .. } => {
+            HumanEntropySource::MultiModalHuman {
+                confidence_score,
+                sources,
+                ..
+            } => {
                 // Multi-modal gets bonus for diversity
                 let diversity_bonus = (sources.len() as f64 / 10.0).min(0.2);
                 confidence_score + diversity_bonus
             }
             HumanEntropySource::Biometric { quality_score, .. } => *quality_score,
-            HumanEntropySource::Microphone { spectral_features, duration_ms, .. } => {
+            HumanEntropySource::Microphone {
+                spectral_features,
+                duration_ms,
+                ..
+            } => {
                 // Quality based on spectral diversity and duration
                 let feature_diversity = spectral_features.len() as f64 / 100.0;
                 let duration_factor = (*duration_ms as f64 / 10000.0).min(1.0); // 10 seconds max
-                (feature_diversity * 0.7 + duration_factor * 0.3).min(1.0).max(0.5)
+                (feature_diversity * 0.7 + duration_factor * 0.3)
+                    .min(1.0)
+                    .max(0.5)
             }
-            HumanEntropySource::Camera { lighting_variations, duration_ms, .. } => {
+            HumanEntropySource::Camera {
+                lighting_variations,
+                duration_ms,
+                ..
+            } => {
                 // Quality based on lighting variation and capture duration
                 if lighting_variations.is_empty() {
                     return Ok(0.6); // Base quality for camera without variations
                 }
-                let variation_score = lighting_variations.iter().sum::<f32>() as f64 / lighting_variations.len() as f64;
+                let variation_score = lighting_variations.iter().sum::<f32>() as f64
+                    / lighting_variations.len() as f64;
                 let duration_factor = (*duration_ms as f64 / 5000.0).min(1.0); // 5 seconds max
-                (variation_score * 0.8 + duration_factor * 0.2).min(1.0).max(0.6)
+                (variation_score * 0.8 + duration_factor * 0.2)
+                    .min(1.0)
+                    .max(0.6)
             }
-            HumanEntropySource::Haptic { motion_patterns, touch_points, .. } => {
+            HumanEntropySource::Haptic {
+                motion_patterns,
+                touch_points,
+                ..
+            } => {
                 // Quality based on motion complexity and touch diversity
                 let motion_complexity = motion_patterns.len() as f64 / 50.0;
                 let touch_diversity = touch_points.len() as f64 / 20.0;
-                (motion_complexity * 0.6 + touch_diversity * 0.4).min(1.0).max(0.7)
+                (motion_complexity * 0.6 + touch_diversity * 0.4)
+                    .min(1.0)
+                    .max(0.7)
             }
         };
 
@@ -346,7 +407,11 @@ impl EntropyValidator {
     }
 
     /// Validate seed usage policy
-    pub fn validate_usage_policy(&self, policy: &SeedUsagePolicy, entropy_class: &EntropyClass) -> BearDogResult<()> {
+    pub fn validate_usage_policy(
+        &self,
+        policy: &SeedUsagePolicy,
+        entropy_class: &EntropyClass,
+    ) -> BearDogResult<()> {
         // Check if operations are appropriate for entropy class
         match entropy_class {
             EntropyClass::HumanLivedExperience { .. } => {
@@ -355,9 +420,15 @@ impl EntropyValidator {
             }
             EntropyClass::HumanSupervisedMachine { .. } => {
                 // Supervised entropy has some restrictions
-                if policy.allowed_operations.contains(&"high_security_signing".to_string()) && !policy.requires_approval {
+                if policy
+                    .allowed_operations
+                    .contains(&"high_security_signing".to_string())
+                    && !policy.requires_approval
+                {
                     return Err(BearDogError::InvalidInput {
-                        message: "High security operations with supervised entropy require approval".to_string(),
+                        message:
+                            "High security operations with supervised entropy require approval"
+                                .to_string(),
                     });
                 }
                 Ok(())
@@ -380,11 +451,17 @@ impl EntropyValidator {
     }
 
     /// Check if entropy meets minimum security requirements
-    pub fn check_security_requirements(&self, entropy_class: &EntropyClass) -> BearDogResult<SecurityLevel> {
+    pub fn check_security_requirements(
+        &self,
+        entropy_class: &EntropyClass,
+    ) -> BearDogResult<SecurityLevel> {
         let security_level = match entropy_class {
             EntropyClass::HumanLivedExperience { .. } => SecurityLevel::Maximum,
             EntropyClass::HumanSupervisedMachine { .. } => SecurityLevel::High,
-            EntropyClass::StoreBoughtMachine { reproducibility_index, .. } => {
+            EntropyClass::StoreBoughtMachine {
+                reproducibility_index,
+                ..
+            } => {
                 if *reproducibility_index < 0.3 {
                     SecurityLevel::High
                 } else if *reproducibility_index < 0.7 {
@@ -397,4 +474,4 @@ impl EntropyValidator {
 
         Ok(security_level)
     }
-} 
+}

@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use super::types::*;
@@ -139,7 +139,10 @@ pub struct AuditReportData {
 impl AuditManager {
     /// Create new audit manager
     pub async fn new(config: AuditConfig) -> NestGateResult<Self> {
-        info!("Creating audit manager with retention: {} days", config.retention_days);
+        info!(
+            "Creating audit manager with retention: {} days",
+            config.retention_days
+        );
 
         let retention_policy = RetentionPolicy {
             retention_days: config.retention_days,
@@ -181,7 +184,11 @@ impl AuditManager {
                 user_ids: vec!["*".to_string()],
                 provider_ids: vec!["*".to_string()],
                 resources: vec!["*".to_string()],
-                severities: vec![EventSeverity::Warning, EventSeverity::Error, EventSeverity::Critical],
+                severities: vec![
+                    EventSeverity::Warning,
+                    EventSeverity::Error,
+                    EventSeverity::Critical,
+                ],
                 time_range: None,
             },
             AuditFilter {
@@ -191,7 +198,12 @@ impl AuditManager {
                 user_ids: vec!["admin:*".to_string()],
                 provider_ids: vec!["*".to_string()],
                 resources: vec!["*".to_string()],
-                severities: vec![EventSeverity::Info, EventSeverity::Warning, EventSeverity::Error, EventSeverity::Critical],
+                severities: vec![
+                    EventSeverity::Info,
+                    EventSeverity::Warning,
+                    EventSeverity::Error,
+                    EventSeverity::Critical,
+                ],
                 time_range: None,
             },
             AuditFilter {
@@ -204,7 +216,11 @@ impl AuditManager {
                 user_ids: vec!["*".to_string()],
                 provider_ids: vec!["*".to_string()],
                 resources: vec!["*".to_string()],
-                severities: vec![EventSeverity::Info, EventSeverity::Warning, EventSeverity::Error],
+                severities: vec![
+                    EventSeverity::Info,
+                    EventSeverity::Warning,
+                    EventSeverity::Error,
+                ],
                 time_range: None,
             },
         ];
@@ -224,7 +240,10 @@ impl AuditManager {
             return Ok(());
         }
 
-        debug!("Logging audit event: {} (type: {})", event.id, event.event_type);
+        debug!(
+            "Logging audit event: {} (type: {})",
+            event.id, event.event_type
+        );
 
         // Store event
         self.events.write().await.push(event.clone());
@@ -258,19 +277,25 @@ impl AuditManager {
     /// Update statistics
     async fn update_statistics(&self, event: &NestGateAuditEvent) -> NestGateResult<()> {
         let mut stats = self.statistics.write().await;
-        
+
         stats.total_events += 1;
-        
+
         // Update event type counts
-        *stats.events_by_type.entry(event.event_type.clone()).or_insert(0) += 1;
-        
+        *stats
+            .events_by_type
+            .entry(event.event_type.clone())
+            .or_insert(0) += 1;
+
         // Update severity counts
         let severity_key = format!("{:?}", event.severity);
         *stats.events_by_severity.entry(severity_key).or_insert(0) += 1;
-        
+
         // Update provider counts
-        *stats.events_by_provider.entry(event.provider_id.clone()).or_insert(0) += 1;
-        
+        *stats
+            .events_by_provider
+            .entry(event.provider_id.clone())
+            .or_insert(0) += 1;
+
         // Update result counts
         let result_key = match &event.result {
             OperationResult::Success => "success".to_string(),
@@ -279,10 +304,10 @@ impl AuditManager {
             OperationResult::Pending { .. } => "pending".to_string(),
         };
         *stats.events_by_result.entry(result_key).or_insert(0) += 1;
-        
+
         // Update storage size (rough estimate)
         stats.storage_size_bytes += 512; // Approximate size per event
-        
+
         Ok(())
     }
 
@@ -318,7 +343,7 @@ impl AuditManager {
         debug!("Getting audit trail with filter: {:?}", filter);
 
         let events = self.events.read().await;
-        
+
         if let Some(filter_id) = filter {
             // Apply filter
             if let Some(audit_filter) = self.filters.read().await.get(filter_id) {
@@ -340,32 +365,44 @@ impl AuditManager {
     /// Check if event matches filter
     fn matches_filter(&self, event: &NestGateAuditEvent, filter: &AuditFilter) -> bool {
         // Check event type
-        if !filter.event_types.is_empty() && !filter.event_types.contains(&"*".to_string()) {
-            if !filter.event_types.iter().any(|pattern| self.matches_pattern(pattern, &event.event_type)) {
+        if !filter.event_types.is_empty() && !filter.event_types.contains(&"*".to_string())
+            && !filter
+                .event_types
+                .iter()
+                .any(|pattern| self.matches_pattern(pattern, &event.event_type))
+            {
                 return false;
             }
-        }
 
         // Check user ID
-        if !filter.user_ids.is_empty() && !filter.user_ids.contains(&"*".to_string()) {
-            if !filter.user_ids.iter().any(|pattern| self.matches_pattern(pattern, &event.user_id)) {
+        if !filter.user_ids.is_empty() && !filter.user_ids.contains(&"*".to_string())
+            && !filter
+                .user_ids
+                .iter()
+                .any(|pattern| self.matches_pattern(pattern, &event.user_id))
+            {
                 return false;
             }
-        }
 
         // Check provider ID
-        if !filter.provider_ids.is_empty() && !filter.provider_ids.contains(&"*".to_string()) {
-            if !filter.provider_ids.iter().any(|pattern| self.matches_pattern(pattern, &event.provider_id)) {
+        if !filter.provider_ids.is_empty() && !filter.provider_ids.contains(&"*".to_string())
+            && !filter
+                .provider_ids
+                .iter()
+                .any(|pattern| self.matches_pattern(pattern, &event.provider_id))
+            {
                 return false;
             }
-        }
 
         // Check resource
-        if !filter.resources.is_empty() && !filter.resources.contains(&"*".to_string()) {
-            if !filter.resources.iter().any(|pattern| self.matches_pattern(pattern, &event.resource)) {
+        if !filter.resources.is_empty() && !filter.resources.contains(&"*".to_string())
+            && !filter
+                .resources
+                .iter()
+                .any(|pattern| self.matches_pattern(pattern, &event.resource))
+            {
                 return false;
             }
-        }
 
         // Check severity
         if !filter.severities.is_empty() && !filter.severities.contains(&event.severity) {
@@ -421,11 +458,16 @@ impl AuditManager {
     }
 
     /// Get events in time range
-    async fn get_events_in_range(&self, time_range: &TimeRange) -> NestGateResult<Vec<NestGateAuditEvent>> {
+    async fn get_events_in_range(
+        &self,
+        time_range: &TimeRange,
+    ) -> NestGateResult<Vec<NestGateAuditEvent>> {
         let events = self.events.read().await;
         let filtered_events = events
             .iter()
-            .filter(|event| event.timestamp >= time_range.start && event.timestamp <= time_range.end)
+            .filter(|event| {
+                event.timestamp >= time_range.start && event.timestamp <= time_range.end
+            })
             .cloned()
             .collect();
         Ok(filtered_events)
@@ -450,27 +492,38 @@ impl AuditManager {
                 for event in events {
                     *event_counts.entry(event.event_type.clone()).or_insert(0) += 1;
                 }
-                
+
                 let event_chart: Vec<(String, u64)> = event_counts.into_iter().collect();
                 charts.insert("events_by_type".to_string(), event_chart);
-                
-                summary.insert("unique_event_types".to_string(), charts.get("events_by_type").unwrap().len() as u64);
-                
-                recommendations.push("Review high-frequency events for potential optimization".to_string());
+
+                summary.insert(
+                    "unique_event_types".to_string(),
+                    charts.get("events_by_type").unwrap().len() as u64,
+                );
+
+                recommendations
+                    .push("Review high-frequency events for potential optimization".to_string());
             }
             AuditReportType::SecurityEvents => {
                 // Filter security-related events
                 let security_events: Vec<_> = events
                     .iter()
-                    .filter(|event| matches!(event.severity, EventSeverity::Warning | EventSeverity::Error | EventSeverity::Critical))
+                    .filter(|event| {
+                        matches!(
+                            event.severity,
+                            EventSeverity::Warning | EventSeverity::Error | EventSeverity::Critical
+                        )
+                    })
                     .cloned()
                     .collect();
-                
+
                 summary.insert("security_events".to_string(), security_events.len() as u64);
-                
+
                 if !security_events.is_empty() {
-                    recommendations.push("Review security events for potential threats".to_string());
-                    recommendations.push("Consider implementing additional security measures".to_string());
+                    recommendations
+                        .push("Review security events for potential threats".to_string());
+                    recommendations
+                        .push("Consider implementing additional security measures".to_string());
                 }
             }
             AuditReportType::ComplianceReport => {
@@ -485,11 +538,12 @@ impl AuditManager {
                     };
                     *result_counts.entry(result_key.to_string()).or_insert(0) += 1;
                 }
-                
+
                 let result_chart: Vec<(String, u64)> = result_counts.into_iter().collect();
                 charts.insert("results".to_string(), result_chart);
-                
-                recommendations.push("Ensure all denied operations are properly documented".to_string());
+
+                recommendations
+                    .push("Ensure all denied operations are properly documented".to_string());
             }
             AuditReportType::UserActivity => {
                 // Count events by user
@@ -497,33 +551,38 @@ impl AuditManager {
                 for event in events {
                     *user_counts.entry(event.user_id.clone()).or_insert(0) += 1;
                 }
-                
+
                 let user_chart: Vec<(String, u64)> = user_counts.into_iter().collect();
                 charts.insert("activity_by_user".to_string(), user_chart.clone());
-                
+
                 summary.insert("unique_users".to_string(), user_chart.len() as u64);
-                
+
                 recommendations.push("Monitor users with high activity levels".to_string());
             }
             AuditReportType::SystemEvents => {
                 // Count events by provider
                 let mut provider_counts: HashMap<String, u64> = HashMap::new();
                 for event in events {
-                    *provider_counts.entry(event.provider_id.clone()).or_insert(0) += 1;
+                    *provider_counts
+                        .entry(event.provider_id.clone())
+                        .or_insert(0) += 1;
                 }
-                
+
                 let provider_chart: Vec<(String, u64)> = provider_counts.into_iter().collect();
                 charts.insert("events_by_provider".to_string(), provider_chart.clone());
-                
+
                 summary.insert("unique_providers".to_string(), provider_chart.len() as u64);
-                
-                recommendations.push("Ensure all system components are properly monitored".to_string());
+
+                recommendations
+                    .push("Ensure all system components are properly monitored".to_string());
             }
             AuditReportType::Custom(custom_type) => {
                 // Handle custom report types
                 match custom_type.as_str() {
                     "performance" => {
-                        recommendations.push("Review performance metrics for optimization opportunities".to_string());
+                        recommendations.push(
+                            "Review performance metrics for optimization opportunities".to_string(),
+                        );
                     }
                     _ => {
                         recommendations.push("Custom report generated successfully".to_string());
@@ -548,19 +607,29 @@ impl AuditManager {
             AuditReportType::ComplianceReport => "Compliance Report".to_string(),
             AuditReportType::UserActivity => "User Activity Report".to_string(),
             AuditReportType::SystemEvents => "System Events Report".to_string(),
-            AuditReportType::Custom(custom_type) => format!("Custom Report: {}", custom_type),
+            AuditReportType::Custom(custom_type) => format!("Custom Report: {custom_type}"),
         }
     }
 
     /// Get report description
     fn get_report_description(&self, report_type: &AuditReportType) -> String {
         match report_type {
-            AuditReportType::ActivitySummary => "Summary of all audit events and system activity".to_string(),
-            AuditReportType::SecurityEvents => "Analysis of security-related events and potential threats".to_string(),
-            AuditReportType::ComplianceReport => "Compliance analysis and regulatory reporting".to_string(),
-            AuditReportType::UserActivity => "User activity patterns and access analysis".to_string(),
-            AuditReportType::SystemEvents => "System-level events and component activity".to_string(),
-            AuditReportType::Custom(custom_type) => format!("Custom report for: {}", custom_type),
+            AuditReportType::ActivitySummary => {
+                "Summary of all audit events and system activity".to_string()
+            }
+            AuditReportType::SecurityEvents => {
+                "Analysis of security-related events and potential threats".to_string()
+            }
+            AuditReportType::ComplianceReport => {
+                "Compliance analysis and regulatory reporting".to_string()
+            }
+            AuditReportType::UserActivity => {
+                "User activity patterns and access analysis".to_string()
+            }
+            AuditReportType::SystemEvents => {
+                "System-level events and component activity".to_string()
+            }
+            AuditReportType::Custom(custom_type) => format!("Custom report for: {custom_type}"),
         }
     }
 
@@ -580,15 +649,16 @@ impl AuditManager {
     /// Cleanup old events
     pub async fn cleanup_old_events(&self) -> NestGateResult<u64> {
         let retention_policy = self.retention_policy.read().await;
-        let cutoff_time = chrono::Utc::now() - chrono::Duration::days(retention_policy.retention_days as i64);
-        
+        let cutoff_time =
+            chrono::Utc::now() - chrono::Duration::days(retention_policy.retention_days as i64);
+
         let mut events = self.events.write().await;
         let initial_count = events.len();
-        
+
         events.retain(|event| event.timestamp > cutoff_time);
-        
+
         let removed_count = initial_count - events.len();
-        
+
         info!("Cleaned up {} old audit events", removed_count);
         Ok(removed_count as u64)
     }
@@ -599,10 +669,10 @@ impl AuditManager {
 
         let stats = self.statistics.read().await;
         let events_count = self.events.read().await.len();
-        
+
         let healthy = self.config.enabled && events_count < 1000000; // Arbitrary limit
         let message = if healthy {
-            format!("Audit manager healthy with {} events", events_count)
+            format!("Audit manager healthy with {events_count} events")
         } else {
             "Audit manager unhealthy - too many events or disabled".to_string()
         };
@@ -633,4 +703,4 @@ impl AuditManager {
         let filters = self.filters.read().await;
         Ok(filters.values().cloned().collect())
     }
-} 
+}

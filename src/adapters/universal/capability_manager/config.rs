@@ -40,4 +40,4 @@ impl Default for CapabilityManagerConfig {
             alert_notification_enabled: true,
         }
     }
-} 
+}

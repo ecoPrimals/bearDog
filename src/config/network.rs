@@ -134,8 +134,8 @@ pub struct RetryConfig {
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
-            host: "127.0.0.1".to_string(),
-            port: 8080,
+            host: super::constants::network::DEFAULT_HOST.to_string(),
+            port: super::constants::network::DEFAULT_API_PORT,
             enable_tls: false,
             tls_cert_path: None,
             tls_key_path: None,
@@ -146,7 +146,7 @@ impl Default for NetworkConfig {
 impl Default for ApiConfig {
     fn default() -> Self {
         Self {
-            bind_address: "127.0.0.1:3000".to_string(),
+            bind_address: "127.0.0.1:3000".to_string(), // Keep this different from the main API port
             tls: TlsConfig::default(),
             auth: AuthConfig::default(),
             rate_limiting: RateLimitConfig::default(),

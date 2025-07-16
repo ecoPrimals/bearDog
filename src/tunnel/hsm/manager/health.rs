@@ -3,16 +3,16 @@
 //! This module provides health monitoring capabilities for HSM providers,
 //! including health status tracking and periodic health checks.
 
+use super::config::HealthConfig;
 use super::{HsmHealthMonitor, HsmProvider};
 use crate::error::BearDogResult;
 use crate::tunnel::hsm::types::{HsmHealthStatus, PerformanceMetrics};
+use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::time::{interval, timeout};
-use super::config::HealthConfig;
 use tracing::{debug, error, info, warn};
-use async_trait::async_trait;
 
 /// Default HSM health monitor
 pub struct DefaultHsmHealthMonitor {
@@ -22,6 +22,7 @@ pub struct DefaultHsmHealthMonitor {
 }
 
 impl DefaultHsmHealthMonitor {
+    /// Create a new HSM health monitor with the specified configuration
     pub async fn new(config: HealthConfig) -> BearDogResult<Self> {
         Ok(Self {
             provider_health: Arc::new(RwLock::new(HashMap::new())),
@@ -30,6 +31,7 @@ impl DefaultHsmHealthMonitor {
         })
     }
 
+    /// Get the health status of a specific HSM provider
     pub async fn get_provider_health(
         &self,
         provider_id: &str,
@@ -50,7 +52,10 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {
         *is_active = true;
         drop(is_active);
 
-        info!("🏥 Starting HSM health monitoring for {} providers", providers.len());
+        info!(
+            "🏥 Starting HSM health monitoring for {} providers",
+            providers.len()
+        );
 
         // Initialize health status for all providers
         {
@@ -58,12 +63,15 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {
             for provider in &providers {
                 let provider_info = provider.get_info().await?;
                 let provider_id = provider_info.vendor;
-                health_map.insert(provider_id.clone(), HsmHealthStatus {
-                    healthy: true,
-                    last_check: chrono::Utc::now(),
-                    error_message: None,
-                    performance_metrics: PerformanceMetrics::default(),
-                });
+                health_map.insert(
+                    provider_id.clone(),
+                    HsmHealthStatus {
+                        healthy: true,
+                        last_check: chrono::Utc::now(),
+                        error_message: None,
+                        performance_metrics: PerformanceMetrics::default(),
+                    },
+                );
             }
         }
 
@@ -99,8 +107,9 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {
                     // Perform health check with timeout
                     let health_result = timeout(
                         health_config.timeout,
-                        Self::perform_health_check(provider.clone())
-                    ).await;
+                        Self::perform_health_check(provider.clone()),
+                    )
+                    .await;
 
                     let health_status = match health_result {
                         Ok(Ok(status)) => {
@@ -117,7 +126,7 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {
                             HsmHealthStatus {
                                 healthy,
                                 last_check: chrono::Utc::now(),
-                                error_message: Some(format!("Health check failed: {:?}", e)),
+                                error_message: Some(format!("Health check failed: {e:?}")),
                                 performance_metrics: PerformanceMetrics::default(),
                             }
                         }
@@ -139,18 +148,22 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {
                     // Update health status
                     {
                         let mut health_map = provider_health.write().await;
-                        let previous_status = health_map.get(&provider_id).cloned().unwrap_or_else(|| {
-                            HsmHealthStatus {
-                                healthy: true,
-                                last_check: chrono::Utc::now(),
-                                error_message: None,
-                                performance_metrics: PerformanceMetrics::default(),
-                            }
-                        });
+                        let previous_status =
+                            health_map.get(&provider_id).cloned().unwrap_or_else(|| {
+                                HsmHealthStatus {
+                                    healthy: true,
+                                    last_check: chrono::Utc::now(),
+                                    error_message: None,
+                                    performance_metrics: PerformanceMetrics::default(),
+                                }
+                            });
                         health_map.insert(provider_id.clone(), health_status.clone());
 
                         if previous_status.healthy != health_status.healthy {
-                            info!("🏥 Provider {} health changed: {} -> {}", provider_id, previous_status.healthy, health_status.healthy);
+                            info!(
+                                "🏥 Provider {} health changed: {} -> {}",
+                                provider_id, previous_status.healthy, health_status.healthy
+                            );
                         }
                     }
                 }
@@ -178,7 +191,7 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {
             let provider_id = provider_info.vendor;
 
             let health_status = self.get_provider_health(&provider_id).await?;
-            
+
             match health_status {
                 Some(status) if status.healthy => {
                     healthy_providers.push(provider);
@@ -194,7 +207,9 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {
 }
 
 impl DefaultHsmHealthMonitor {
-    async fn perform_health_check(provider: Arc<dyn HsmProvider>) -> BearDogResult<HsmHealthStatus> {
+    async fn perform_health_check(
+        provider: Arc<dyn HsmProvider>,
+    ) -> BearDogResult<HsmHealthStatus> {
         // Simple health check - try to get provider info
         match provider.get_info().await {
             Ok(_) => Ok(HsmHealthStatus {
@@ -208,10 +223,10 @@ impl DefaultHsmHealthMonitor {
                 Ok(HsmHealthStatus {
                     healthy: false,
                     last_check: chrono::Utc::now(),
-                    error_message: Some(format!("Health check failed: {:?}", e)),
+                    error_message: Some(format!("Health check failed: {e:?}")),
                     performance_metrics: PerformanceMetrics::default(),
                 })
             }
         }
     }
-} 
+}

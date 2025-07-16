@@ -212,172 +212,259 @@ pub enum AccountStatus {
 /// Authorization result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizationResult {
+    /// Whether the authorization was granted
     pub permitted: bool,
+    /// Reason for the authorization decision
     pub reason: String,
+    /// Risk level assessed for this authorization
     pub risk_level: RiskLevel,
+    /// Additional requirements that must be met
     pub additional_requirements: Vec<String>,
+    /// When this authorization expires
     pub expires_at: Option<DateTime<Utc>>,
+    /// Unique identifier for audit trail
     pub audit_id: String,
 }
 
 /// Security audit event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityAuditEvent {
+    /// Unique identifier for the audit event
     pub id: String,
+    /// When the event occurred
     pub timestamp: DateTime<Utc>,
+    /// ID of the subject performing the action
     pub subject_id: String,
+    /// ID of the resource being accessed
     pub resource_id: String,
+    /// Type of action performed
     pub action: ActionType,
+    /// Whether the action was successful
     pub result: bool,
+    /// Risk level of the action
     pub risk_level: RiskLevel,
+    /// Additional details about the event
     pub details: HashMap<String, String>,
 }
 
 /// Authentication result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationResult {
+    /// Whether authentication was successful
     pub success: bool,
+    /// ID of the authenticated user
     pub user_id: Option<String>,
+    /// Session ID if authentication was successful
     pub session_id: Option<String>,
+    /// Whether multi-factor authentication is required
     pub mfa_required: bool,
+    /// Reason for authentication result
     pub reason: String,
+    /// When the authentication expires
     pub expires_at: Option<DateTime<Utc>>,
 }
 
 /// User information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserInfo {
+    /// Unique user identifier
     pub id: String,
+    /// Username for the user
     pub username: String,
+    /// Email address of the user
     pub email: Option<String>,
+    /// Roles assigned to the user
     pub roles: Vec<String>,
+    /// Current status of the user account
     pub account_status: AccountStatus,
+    /// Timestamp of last login
     pub last_login: Option<DateTime<Utc>>,
 }
 
 /// Security provider health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityProviderHealth {
+    /// Overall health status of the security provider
     pub overall_status: HealthStatus,
+    /// Health status of individual components
     pub components: Vec<ComponentHealth>,
+    /// Timestamp of last health check
     pub last_check: DateTime<Utc>,
+    /// System uptime in seconds
     pub uptime_seconds: u64,
 }
 
 /// Health status enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum HealthStatus {
+    /// System is operating normally
     Healthy,
+    /// System is functional but with reduced performance
     Degraded,
+    /// System is not functioning properly
     Unhealthy,
 }
 
 /// Component health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentHealth {
+    /// Name of the component
     pub name: String,
+    /// Health status of the component
     pub status: HealthStatus,
+    /// Health status message
     pub message: String,
+    /// Timestamp of last health check
     pub last_check: DateTime<Utc>,
 }
 
 /// Security provider metrics
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SecurityProviderMetrics {
-    // Authentication metrics
+    /// Total number of authentication attempts
     pub total_authentications: u64,
+    /// Number of successful authentication attempts
     pub successful_authentications: u64,
+    /// Number of failed authentication attempts
     pub failed_authentications: u64,
+    /// Number of multi-factor authentication attempts
     pub mfa_authentications: u64,
 
-    // Authorization metrics
+    /// Total number of authorization checks
     pub total_authorizations: u64,
+    /// Number of permitted authorization checks
     pub permitted_authorizations: u64,
+    /// Number of denied authorization checks
     pub denied_authorizations: u64,
 
-    // Session metrics
+    /// Number of currently active sessions
     pub active_sessions: u64,
+    /// Total number of sessions created
     pub total_sessions_created: u64,
+    /// Number of expired sessions
     pub expired_sessions: u64,
 
-    // Security metrics
+    /// Number of security violations detected
     pub security_violations: u64,
+    /// Number of rate limit violations
     pub rate_limit_violations: u64,
+    /// Number of suspicious activities detected
     pub suspicious_activities: u64,
 
-    // Performance metrics
+    /// Average authentication time in milliseconds
     pub avg_auth_time_ms: f64,
+    /// Average authorization time in milliseconds
     pub avg_authz_time_ms: f64,
+    /// Average session duration in minutes
     pub avg_session_duration_minutes: f64,
 
-    // Compliance metrics
+    /// Number of compliance checks performed
     pub compliance_checks: u64,
+    /// Number of compliance violations found
     pub compliance_violations: u64,
+    /// Number of audit events generated
     pub audit_events_generated: u64,
 
-    // System metrics
+    /// System uptime in seconds
     pub uptime_seconds: u64,
+    /// Memory usage in bytes
     pub memory_usage_bytes: u64,
+    /// CPU usage percentage
     pub cpu_usage_percent: f64,
+    /// Disk usage in bytes
     pub disk_usage_bytes: u64,
+    /// Network I/O in bytes
     pub network_io_bytes: u64,
 
-    // Error metrics
+    /// Total number of errors
     pub total_errors: u64,
+    /// Number of critical errors
     pub critical_errors: u64,
+    /// Number of warnings
     pub warning_count: u64,
 
-    // Rate limiting metrics
+    /// Number of rate limited requests
     pub rate_limited_requests: u64,
+    /// Rate limit violations per user
     pub rate_limit_violations_per_user: HashMap<String, u64>,
 }
 
 /// Security session
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecuritySession {
+    /// Unique session identifier
     pub id: String,
+    /// ID of the user who owns this session
     pub user_id: String,
+    /// When the session was created
     pub created_at: DateTime<Utc>,
+    /// When the session expires
     pub expires_at: DateTime<Utc>,
+    /// Timestamp of last activity
     pub last_activity: DateTime<Utc>,
+    /// IP address of the client
     pub ip_address: Option<String>,
+    /// User agent string of the client
     pub user_agent: Option<String>,
+    /// Whether the session is currently active
     pub is_active: bool,
+    /// Whether multi-factor authentication was verified
     pub mfa_verified: bool,
+    /// Additional session attributes
     pub attributes: HashMap<String, String>,
 }
 
 /// Rate limiter implementation
 #[derive(Debug, Clone)]
 pub struct RateLimiter {
+    /// Maximum number of requests allowed
     pub max_requests: u32,
+    /// Time window in seconds for rate limiting
     pub window_seconds: u32,
+    /// Request history for each client
     pub requests: HashMap<String, Vec<DateTime<Utc>>>,
 }
 
 /// MFA token information
 #[derive(Debug, Clone)]
 pub struct MfaToken {
+    /// Unique token identifier
     pub id: String,
+    /// ID of the user this token belongs to
     pub user_id: String,
+    /// MFA method used for this token
     pub method: MfaMethod,
+    /// The actual token value
     pub token: String,
+    /// When the token was created
     pub created_at: DateTime<Utc>,
+    /// When the token expires
     pub expires_at: DateTime<Utc>,
+    /// Whether the token has been used
     pub is_used: bool,
 }
 
 /// Main security provider implementation
 pub struct BearDogSecurityProvider {
+    /// Configuration for the security provider
     pub config: SecurityProviderConfig,
+    /// Rate limiter for request throttling
     pub rate_limiter: RateLimiter,
+    /// Currently active user sessions
     pub active_sessions: HashMap<String, SecuritySession>,
+    /// Active MFA tokens
     pub mfa_tokens: HashMap<String, MfaToken>,
+    /// Failed login attempts per user
     pub failed_attempts: HashMap<String, u32>,
+    /// Locked accounts with unlock timestamps
     pub locked_accounts: HashMap<String, DateTime<Utc>>,
+    /// Security provider metrics
     pub metrics: SecurityProviderMetrics,
+    /// Audit events for security actions
     pub audit_events: Vec<SecurityAuditEvent>,
+    /// Optional threat detection engine
     pub threat_detector: Option<crate::threat::ThreatDetectionEngine>,
+    /// Optional workflow engine for approval processes
     pub workflow_engine: Option<crate::workflows::MultiPartyWorkflowEngine>,
 }
 
@@ -511,7 +598,17 @@ pub trait SecurityProvider: Send + Sync {
 
 impl BearDogSecurityProvider {
     /// Create placeholder security provider for testing
+    ///
+    /// ⚠️ WARNING: This method is deprecated and should not be used in production.
+    /// Use `BearDogSecurityProvider::new(config)` instead for proper initialization.
+    #[deprecated(
+        since = "0.1.0",
+        note = "Use BearDogSecurityProvider::new(config) instead for proper initialization"
+    )]
     pub fn new_placeholder() -> Self {
+        // Log warning for deprecated usage
+        tracing::warn!("🚨 Using deprecated BearDogSecurityProvider::new_placeholder() method. Use BearDogSecurityProvider::new(config) instead.");
+
         Self {
             config: SecurityProviderConfig::default(),
             rate_limiter: RateLimiter::default(),
@@ -528,14 +625,28 @@ impl BearDogSecurityProvider {
 
     /// Create minimal security provider for development
     pub fn new_minimal() -> Self {
-        Self::new_placeholder()
+        Self {
+            config: SecurityProviderConfig::default(),
+            rate_limiter: RateLimiter::default(),
+            active_sessions: HashMap::new(),
+            mfa_tokens: HashMap::new(),
+            failed_attempts: HashMap::new(),
+            locked_accounts: HashMap::new(),
+            metrics: SecurityProviderMetrics::default(),
+            audit_events: Vec::new(),
+            threat_detector: None,
+            workflow_engine: None,
+        }
     }
 }
 
 // Add missing types for security provider
+/// Security configuration settings
 #[derive(Debug, Clone)]
 pub struct SecurityConfig {
+    /// Authentication timeout duration
     pub auth_timeout: Duration,
+    /// Maximum number of concurrent sessions
     pub max_sessions: u32,
 }
 
@@ -548,14 +659,25 @@ impl Default for SecurityConfig {
     }
 }
 
+/// Security metrics and statistics
 #[derive(Debug, Clone)]
 pub struct SecurityMetrics {
+    /// Number of authentication attempts
     pub authentication_attempts: u64,
+    /// Number of authorization checks performed
     pub authorization_checks: u64,
+    /// Number of security events recorded
     pub security_events: u64,
 }
 
+impl Default for SecurityMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SecurityMetrics {
+    /// Create a new SecurityMetrics instance with default values
     pub fn new() -> Self {
         Self {
             authentication_attempts: 0,
@@ -565,34 +687,61 @@ impl SecurityMetrics {
     }
 }
 
+/// Threat analysis and detection system
 #[derive(Debug, Clone)]
 pub struct ThreatAnalyzer {
+    /// Number of currently active threats
     pub active_threats: u64,
 }
 
+impl Default for ThreatAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ThreatAnalyzer {
+    /// Create a new ThreatAnalyzer instance with default values
     pub fn new() -> Self {
         Self { active_threats: 0 }
     }
 }
 
+/// Security rules and policies
 #[derive(Debug, Clone)]
 pub struct SecurityRules {
+    /// List of security rules
     pub rules: Vec<String>,
 }
 
+impl Default for SecurityRules {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SecurityRules {
+    /// Create a new SecurityRules instance with default values
     pub fn new() -> Self {
         Self { rules: Vec::new() }
     }
 }
 
+/// Audit logging system for security events
 #[derive(Debug, Clone)]
 pub struct AuditLogger {
+    /// Audit log entries
     pub entries: Vec<String>,
 }
 
+impl Default for AuditLogger {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AuditLogger {
+    /// Create a new AuditLogger instance with default values
     pub fn new() -> Self {
         Self {
             entries: Vec::new(),
@@ -600,12 +749,21 @@ impl AuditLogger {
     }
 }
 
+/// Rate limiting system for security operations
 #[derive(Debug, Clone)]
 pub struct SecurityRateLimiter {
+    /// Rate limits per client or endpoint
     pub limits: HashMap<String, u32>,
 }
 
+impl Default for SecurityRateLimiter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SecurityRateLimiter {
+    /// Create a new SecurityRateLimiter instance with default values
     pub fn new() -> Self {
         Self {
             limits: HashMap::new(),

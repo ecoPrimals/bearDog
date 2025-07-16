@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use super::super::traits::*;
@@ -124,21 +124,32 @@ impl EmergentCapabilityEngine {
         available_capabilities: &[Capability],
         interaction_history: &HashMap<String, Vec<ServiceRequest>>,
     ) -> BearDogResult<Vec<EmergentCapability>> {
-        info!("🔍 Discovering emergent capabilities from {} available capabilities", 
-              available_capabilities.len());
+        info!(
+            "🔍 Discovering emergent capabilities from {} available capabilities",
+            available_capabilities.len()
+        );
 
         let mut discovered_capabilities = Vec::new();
 
         // Run each discovery algorithm
         for algorithm in &self.discovery_algorithms {
-            match algorithm.discover_emergent_capabilities(available_capabilities, interaction_history) {
+            match algorithm
+                .discover_emergent_capabilities(available_capabilities, interaction_history)
+            {
                 Ok(mut capabilities) => {
-                    info!("✨ Algorithm '{}' discovered {} emergent capabilities",
-                          algorithm.algorithm_name(), capabilities.len());
+                    info!(
+                        "✨ Algorithm '{}' discovered {} emergent capabilities",
+                        algorithm.algorithm_name(),
+                        capabilities.len()
+                    );
                     discovered_capabilities.append(&mut capabilities);
-                },
+                }
                 Err(e) => {
-                    warn!("⚠️  Algorithm '{}' failed: {}", algorithm.algorithm_name(), e);
+                    warn!(
+                        "⚠️  Algorithm '{}' failed: {}",
+                        algorithm.algorithm_name(),
+                        e
+                    );
                 }
             }
         }
@@ -152,36 +163,47 @@ impl EmergentCapabilityEngine {
         }
 
         // Update combination patterns based on discoveries
-        self.update_combination_patterns(&discovered_capabilities).await?;
+        self.update_combination_patterns(&discovered_capabilities)
+            .await?;
 
-        info!("🎯 Total emergent capabilities discovered: {}", discovered_capabilities.len());
+        info!(
+            "🎯 Total emergent capabilities discovered: {}",
+            discovered_capabilities.len()
+        );
         Ok(discovered_capabilities)
     }
 
     /// Update combination patterns based on discovered capabilities
-    async fn update_combination_patterns(&self, discovered: &[EmergentCapability]) -> BearDogResult<()> {
+    async fn update_combination_patterns(
+        &self,
+        discovered: &[EmergentCapability],
+    ) -> BearDogResult<()> {
         let mut patterns = self.combination_patterns.write().await;
 
         for capability in discovered {
             // Create or update pattern based on parent capabilities
             let pattern_key = capability.parent_capabilities.join("+");
-            let pattern = patterns.entry(pattern_key.clone()).or_insert_with(|| {
-                CombinationPattern {
-                    pattern_id: Uuid::new_v4().to_string(),
-                    required_capabilities: capability.parent_capabilities.clone(),
-                    optional_capabilities: Vec::new(),
-                    expected_emergent: Vec::new(),
-                    success_probability: 0.0,
-                    observed_instances: 0,
-                }
-            });
+            let pattern =
+                patterns
+                    .entry(pattern_key.clone())
+                    .or_insert_with(|| CombinationPattern {
+                        pattern_id: Uuid::new_v4().to_string(),
+                        required_capabilities: capability.parent_capabilities.clone(),
+                        optional_capabilities: Vec::new(),
+                        expected_emergent: Vec::new(),
+                        success_probability: 0.0,
+                        observed_instances: 0,
+                    });
 
             // Update pattern statistics
             pattern.observed_instances += 1;
-            pattern.expected_emergent.push(capability.capability_id.clone());
-            
+            pattern
+                .expected_emergent
+                .push(capability.capability_id.clone());
+
             // Update success probability based on stability
-            pattern.success_probability = (pattern.success_probability + capability.stability_score) / 2.0;
+            pattern.success_probability =
+                (pattern.success_probability + capability.stability_score) / 2.0;
         }
 
         debug!("📊 Updated {} combination patterns", patterns.len());
@@ -216,16 +238,16 @@ impl EmergentCapability {
             parent_capabilities,
             emergence_conditions,
             discovery_timestamp: Utc::now(),
-            stability_score: 0.7, // Default stability
+            stability_score: 0.7,  // Default stability
             uniqueness_score: 0.8, // Default uniqueness
         }
     }
 
     /// Check if all emergence conditions are met
     pub fn conditions_met(&self) -> bool {
-        self.emergence_conditions.iter().all(|condition| {
-            condition.current_value >= condition.threshold_value
-        })
+        self.emergence_conditions
+            .iter()
+            .all(|condition| condition.current_value >= condition.threshold_value)
     }
 
     /// Calculate overall emergence score
@@ -233,9 +255,11 @@ impl EmergentCapability {
         let condition_score = if self.emergence_conditions.is_empty() {
             1.0
         } else {
-            self.emergence_conditions.iter()
+            self.emergence_conditions
+                .iter()
                 .map(|c| (c.current_value / c.threshold_value).min(1.0))
-                .sum::<f64>() / self.emergence_conditions.len() as f64
+                .sum::<f64>()
+                / self.emergence_conditions.len() as f64
         };
 
         // Weight stability, uniqueness, and condition satisfaction
@@ -339,18 +363,22 @@ impl CombinationPattern {
 
     /// Check if this pattern matches the given capabilities
     pub fn matches(&self, available_capabilities: &[String]) -> bool {
-        self.required_capabilities.iter().all(|required| {
-            available_capabilities.contains(required)
-        })
+        self.required_capabilities
+            .iter()
+            .all(|required| available_capabilities.contains(required))
     }
 
     /// Calculate pattern strength based on available capabilities
     pub fn calculate_strength(&self, available_capabilities: &[String]) -> f64 {
-        let required_present = self.required_capabilities.iter()
+        let required_present = self
+            .required_capabilities
+            .iter()
             .filter(|req| available_capabilities.contains(req))
             .count();
-        
-        let optional_present = self.optional_capabilities.iter()
+
+        let optional_present = self
+            .optional_capabilities
+            .iter()
             .filter(|opt| available_capabilities.contains(opt))
             .count();
 
@@ -364,4 +392,4 @@ impl CombinationPattern {
         // Weight required capabilities more heavily
         (required_ratio * 0.8) + (optional_ratio * 0.2)
     }
-} 
+}

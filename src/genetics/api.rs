@@ -22,60 +22,99 @@ use crate::BearDogCore;
 // REQUEST/RESPONSE TYPES
 // ========================================================================================
 
+/// Request to create a genesis node with initial genetics
 #[derive(Debug, Clone, Deserialize)]
 pub struct CreateGenesisRequest {
+    /// The unique identifier for the new node
     pub node_id: String,
 }
 
+/// Response containing the newly created genesis node information
 #[derive(Debug, Serialize)]
 pub struct CreateGenesisResponse {
+    /// The unique identifier for the node
     pub node_id: String,
+    /// The unique identifier for the genetics configuration
     pub genetics_id: String,
+    /// The generation number (0 for genesis nodes)
     pub generation: u32,
+    /// The number of capabilities inherited by this node
     pub capabilities: u32,
+    /// The timestamp when the genesis node was created
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
+/// Request to spawn a new child node from existing parent(s)
 #[derive(Debug, Clone, Deserialize)]
 pub struct SpawnNodeRequest {
+    /// The primary parent node requesting the spawn
     pub requesting_parent: String,
+    /// Optional additional parent nodes for multi-parent spawning
     pub co_parents: Option<Vec<String>>,
+    /// The purpose/reason for spawning this new node
     pub purpose: crate::auth::SpawnPurpose,
+    /// Optional resource limits for the child node
     pub resource_requirements: Option<ResourceLimits>,
+    /// Optional workflow type for the spawning process
     pub workflow_type: Option<BearDogWorkflowType>,
+    /// Optional additional metadata for the spawn request
     pub metadata: Option<HashMap<String, String>>,
 }
 
+/// Response containing the result of a spawn request
 #[derive(Debug, Serialize)]
 pub struct SpawnNodeResponse {
+    /// The unique identifier for the spawn request
     pub request_id: String,
+    /// Whether the spawn request was approved
     pub approved: bool,
+    /// The ID of the newly created child node (if approved)
     pub child_node_id: Option<String>,
+    /// The reason for the approval/rejection decision
     pub decision_reason: String,
+    /// The timestamp when the decision was made
     pub decided_at: chrono::DateTime<chrono::Utc>,
+    /// The time taken to process the request in milliseconds
     pub processing_time_ms: u64,
 }
 
+/// Response containing genetics information for a node
 #[derive(Debug, Serialize)]
 pub struct NodeGeneticsResponse {
+    /// The unique identifier for the node
     pub node_id: String,
+    /// The unique identifier for the genetics configuration
     pub genetics_id: String,
+    /// The generation number of this node
     pub generation: u32,
+    /// The depth of the lineage tree from genesis
     pub lineage_depth: u32,
+    /// The list of parent genome identifiers
     pub parent_genomes: Vec<String>,
+    /// The number of capabilities inherited by this node
     pub capabilities: u32,
+    /// The number of cryptographic chromosomes
     pub crypto_chromosomes: u32,
+    /// The number of nodes spawned by this node
     pub spawn_count: u32,
+    /// The timestamp when the node was created
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
+/// Response containing the status of a spawn request
 #[derive(Debug, Serialize)]
 pub struct SpawnStatusResponse {
+    /// The unique identifier for the spawn request
     pub request_id: String,
+    /// The current status of the spawn request
     pub status: String,
+    /// The timestamp when the request was created
     pub created_at: chrono::DateTime<chrono::Utc>,
+    /// The timestamp when the request expires
     pub expires_at: chrono::DateTime<chrono::Utc>,
+    /// The primary parent node that made the request
     pub requesting_parent: String,
+    /// The list of co-parent nodes involved in the request
     pub co_parents: Vec<String>,
 }
 

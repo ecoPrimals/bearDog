@@ -11,7 +11,6 @@ use beardog::tunnel::{
 use beardog::BearDogResult;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
-use tokio;
 
 #[tokio::test]
 async fn test_key_isolation_security() -> BearDogResult<()> {
@@ -134,11 +133,10 @@ async fn test_encryption_tamper_resistance() -> BearDogResult<()> {
         // Tampered data should always fail to decrypt
         assert!(
             decrypt_result.is_err(),
-            "Tamper test '{}' should have failed but didn't",
-            test_name
+            "Tamper test '{test_name}' should have failed but didn't"
         );
 
-        println!("✅ Tamper resistance test '{}' passed", test_name);
+        println!("✅ Tamper resistance test '{test_name}' passed");
     }
 
     // Verify original untampered data still works
@@ -199,7 +197,7 @@ async fn test_timing_attack_resistance() -> BearDogResult<()> {
         let mut decryption_times = Vec::new();
 
         for i in 0..iterations {
-            let session_id = format!("timing_test_{}_{}", pattern_idx, i);
+            let session_id = format!("timing_test_{pattern_idx}_{i}");
 
             // Measure encryption timing
             let start = std::time::Instant::now();
@@ -357,7 +355,7 @@ async fn test_genetic_healing_security() -> BearDogResult<()> {
 
         // Should still succeed but safely handle malicious content
         assert_eq!(result, beardog::tunnel::HealingResult::Success);
-        println!("✅ Safely handled malicious issue {}", i);
+        println!("✅ Safely handled malicious issue {i}");
     }
 
     // Test extreme network events
@@ -377,8 +375,7 @@ async fn test_genetic_healing_security() -> BearDogResult<()> {
         let result = healing.heal_from_network_event(event).await;
         assert!(
             result.is_ok(),
-            "Extreme event {} should be handled gracefully",
-            i
+            "Extreme event {i} should be handled gracefully"
         );
     }
 

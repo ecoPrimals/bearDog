@@ -72,4 +72,4 @@ pub struct BiometricConfig {
     pub require_explicit_consent: bool,
     /// Privacy protection level for biometric data
     pub privacy_protection: String,
-} 
+}

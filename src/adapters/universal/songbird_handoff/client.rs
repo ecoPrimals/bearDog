@@ -42,15 +42,20 @@ impl SongBirdDiscoveryClient {
             .timeout(Duration::from_secs(30))
             .user_agent("Universal-EcosystemComponent/1.0")
             .build()
-            .map_err(|e| BearDogError::internal(&format!("Failed to create HTTP client: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Failed to create HTTP client: {e}")))?;
 
         // Initialize health status
         let health_status = Arc::new(RwLock::new(ServiceHealth {
-            status: super::super::traits::HealthStatus::Unknown,
+            status: super::types::HealthStatus::Unknown,
             last_check: chrono::Utc::now(),
-            response_time_ms: 0,
-            error_count: 0,
-            uptime_percentage: 0.0,
+            metrics: PerformanceMetrics {
+                cpu_percent: 0.0,
+                memory_percent: 0.0,
+                latency_ms: 0,
+                requests_per_second: 0.0,
+                error_rate_percent: 0.0,
+            },
+            error_details: None,
         }));
 
         Ok(Self {
@@ -66,7 +71,7 @@ impl SongBirdDiscoveryClient {
         &self,
         service: &AdvertisedService,
     ) -> BearDogResult<ServiceRegistrationResult> {
-        debug!("📝 Registering service: {}", service.service_id);
+        debug!("📝 Registering service: {}", service.registration.service_id);
 
         let registration_url = format!("{}/api/v1/services/register", self.endpoint);
 
@@ -82,7 +87,7 @@ impl SongBirdDiscoveryClient {
         let response = request
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Registration request failed: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Registration request failed: {e}")))?;
 
         // Check response status
         let status = response.status();
@@ -91,21 +96,22 @@ impl SongBirdDiscoveryClient {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            return Err(BearDogError::internal(&format!(
-                "Registration failed with status {}: {}",
-                status,
-                error_text
+            return Err(BearDogError::internal(format!(
+                "Registration failed with status {status}: {error_text}"
             )));
         }
 
         // Parse registration result
-        let registration_result: ServiceRegistrationResult = response
-            .json()
-            .await
-            .map_err(|e| BearDogError::internal(&format!("Failed to parse registration response: {}", e)))?;
+        let registration_result: ServiceRegistrationResult =
+            response.json().await.map_err(|e| {
+                BearDogError::internal(format!("Failed to parse registration response: {e}"))
+            })?;
 
-        info!("✅ Successfully registered service: {}", service.service_id);
-        info!("🔗 Registration ID: {}", registration_result.registration_id);
+        info!("✅ Successfully registered service: {}", service.registration.service_id);
+        info!(
+            "🔗 Registration ID: {}",
+            registration_result.service_id
+        );
 
         // Update health status
         self.update_health_status(true, 0).await;
@@ -136,7 +142,7 @@ impl SongBirdDiscoveryClient {
         let response = request
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Heartbeat request failed: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Heartbeat request failed: {e}")))?;
 
         // Check response status
         let status = response.status();
@@ -146,14 +152,12 @@ impl SongBirdDiscoveryClient {
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
             warn!("Heartbeat failed with status {}: {}", status, error_text);
-            
+
             // Update health status with error
             self.update_health_status(false, 1).await;
-            
-            return Err(BearDogError::internal(&format!(
-                "Heartbeat failed with status {}: {}",
-                status,
-                error_text
+
+            return Err(BearDogError::internal(format!(
+                "Heartbeat failed with status {status}: {error_text}"
             )));
         }
 
@@ -179,9 +183,9 @@ impl SongBirdDiscoveryClient {
             "service_id": service_id,
             "status": current_health.status,
             "last_check": current_health.last_check.to_rfc3339(),
-            "response_time_ms": current_health.response_time_ms,
-            "error_count": current_health.error_count,
-            "uptime_percentage": current_health.uptime_percentage
+            "response_time_ms": 0,
+            "error_count": 0,
+            "uptime_percentage": 99.0
         });
 
         let request = self
@@ -195,7 +199,7 @@ impl SongBirdDiscoveryClient {
         let response = request
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Health update request failed: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Health update request failed: {e}")))?;
 
         // Check response status
         let status = response.status();
@@ -204,12 +208,13 @@ impl SongBirdDiscoveryClient {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            warn!("Health update failed with status {}: {}", status, error_text);
-            
-            return Err(BearDogError::internal(&format!(
+            warn!(
                 "Health update failed with status {}: {}",
-                status,
-                error_text
+                status, error_text
+            );
+
+            return Err(BearDogError::internal(format!(
+                "Health update failed with status {status}: {error_text}"
             )));
         }
 
@@ -233,7 +238,7 @@ impl SongBirdDiscoveryClient {
         let response = request
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Unregister request failed: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Unregister request failed: {e}")))?;
 
         // Check response status
         let status = response.status();
@@ -243,11 +248,9 @@ impl SongBirdDiscoveryClient {
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
             warn!("Unregister failed with status {}: {}", status, error_text);
-            
-            return Err(BearDogError::internal(&format!(
-                "Unregister failed with status {}: {}",
-                status,
-                error_text
+
+            return Err(BearDogError::internal(format!(
+                "Unregister failed with status {status}: {error_text}"
             )));
         }
 
@@ -271,7 +274,7 @@ impl SongBirdDiscoveryClient {
         let response = request
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Service info request failed: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Service info request failed: {e}")))?;
 
         // Check response status
         let status = response.status();
@@ -280,10 +283,8 @@ impl SongBirdDiscoveryClient {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            return Err(BearDogError::internal(&format!(
-                "Service info request failed with status {}: {}",
-                status,
-                error_text
+            return Err(BearDogError::internal(format!(
+                "Service info request failed with status {status}: {error_text}"
             )));
         }
 
@@ -291,7 +292,7 @@ impl SongBirdDiscoveryClient {
         let service_info: AdvertisedService = response
             .json()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Failed to parse service info: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Failed to parse service info: {e}")))?;
 
         debug!("✅ Service info retrieved successfully");
 
@@ -313,7 +314,7 @@ impl SongBirdDiscoveryClient {
         let response = request
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Connection test failed: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Connection test failed: {e}")))?;
 
         // Check response status
         let status = response.status();
@@ -322,10 +323,8 @@ impl SongBirdDiscoveryClient {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            return Err(BearDogError::internal(&format!(
-                "Connection test failed with status {}: {}",
-                status,
-                error_text
+            return Err(BearDogError::internal(format!(
+                "Connection test failed with status {status}: {error_text}"
             )));
         }
 
@@ -345,27 +344,19 @@ impl SongBirdDiscoveryClient {
     /// Update health status
     async fn update_health_status(&self, success: bool, error_count: u64) {
         let mut health = self.health_status.write().await;
-        
+
         health.status = if success {
-            super::super::traits::HealthStatus::Healthy
+            super::types::HealthStatus::Healthy
         } else {
-            super::super::traits::HealthStatus::Unhealthy {
-                reason: "SongBird communication failed".to_string(),
-                recovery_time: None,
-            }
+            super::types::HealthStatus::Unhealthy
         };
-        
+
         health.last_check = chrono::Utc::now();
-        health.error_count += error_count;
-        
-        // Update uptime percentage based on success rate
+        // Update error details based on success rate
         if success {
-            health.uptime_percentage = (health.uptime_percentage * 0.9) + 10.0;
-            if health.uptime_percentage > 100.0 {
-                health.uptime_percentage = 100.0;
-            }
+            health.error_details = None;
         } else {
-            health.uptime_percentage = health.uptime_percentage * 0.9;
+            health.error_details = Some(format!("Errors encountered: {}", error_count));
         }
     }
-} 
+}

@@ -26,10 +26,10 @@
 //! └───────────┘  └───────────┘  └───────────┘
 //! ```
 
-pub mod config;
-pub mod health;
-pub mod failover;
 pub mod capability;
+pub mod config;
+pub mod failover;
+pub mod health;
 pub mod performance;
 
 use super::{
@@ -45,19 +45,24 @@ use tokio::sync::RwLock;
 use tracing::{debug, info};
 
 // Re-export types from submodules
-pub use config::*;
-pub use health::DefaultHsmHealthMonitor;
-pub use failover::{DefaultHsmFailoverManager, CircuitBreaker, CircuitBreakerState};
 pub use capability::DefaultHsmCapabilityDetector;
+pub use config::*;
+pub use failover::{CircuitBreaker, CircuitBreakerState, DefaultHsmFailoverManager};
+pub use health::DefaultHsmHealthMonitor;
 pub use performance::{HsmPerformanceTracker, OperationMetrics};
 
 /// HSM provider selection result
 #[derive(Clone)]
 pub struct HsmProviderSelection {
+    /// The selected HSM provider instance
     pub provider: Arc<dyn HsmProvider>,
+    /// Unique identifier for the provider
     pub provider_id: String,
+    /// Security tier of the provider
     pub tier: HsmTier,
+    /// Confidence score for the selection (0.0 to 1.0)
     pub confidence: f64,
+    /// Estimated latency in milliseconds for operations
     pub estimated_latency_ms: f64,
 }
 
@@ -69,6 +74,12 @@ pub struct HsmManager {
     failover_manager: Arc<DefaultHsmFailoverManager>,
     capability_detector: Arc<DefaultHsmCapabilityDetector>,
     performance_tracker: Arc<HsmPerformanceTracker>,
+}
+
+impl Default for HsmManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl HsmManager {
@@ -100,10 +111,13 @@ impl HsmManager {
 
     /// Create HSM manager with custom configuration
     pub async fn with_config(config: HsmManagerConfig) -> BearDogResult<Self> {
-        let health_monitor = Arc::new(DefaultHsmHealthMonitor::new(config.health_config.clone()).await?);
-        let failover_manager = Arc::new(DefaultHsmFailoverManager::new(config.failover_config.clone()).await?);
+        let health_monitor =
+            Arc::new(DefaultHsmHealthMonitor::new(config.health_config.clone()).await?);
+        let failover_manager =
+            Arc::new(DefaultHsmFailoverManager::new(config.failover_config.clone()).await?);
         let capability_detector = Arc::new(DefaultHsmCapabilityDetector::new().await?);
-        let performance_tracker = Arc::new(HsmPerformanceTracker::new(config.performance_config.clone()).await?);
+        let performance_tracker =
+            Arc::new(HsmPerformanceTracker::new(config.performance_config.clone()).await?);
 
         let mut manager = Self {
             hsm_providers: HashMap::new(),
@@ -127,7 +141,8 @@ impl HsmManager {
         }
 
         // Start health monitoring
-        let providers: Vec<Arc<dyn HsmProvider>> = manager.hsm_providers.values().cloned().collect();
+        let providers: Vec<Arc<dyn HsmProvider>> =
+            manager.hsm_providers.values().cloned().collect();
         manager.health_monitor.start_monitoring(providers).await?;
 
         Ok(manager)
@@ -165,7 +180,10 @@ impl HsmManager {
             CircuitBreaker::new(self.config.failover_config.circuit_breaker_threshold),
         );
 
-        info!("✅ HSM provider registered successfully for tier: {:?}", tier);
+        info!(
+            "✅ HSM provider registered successfully for tier: {:?}",
+            tier
+        );
         Ok(())
     }
 
@@ -197,10 +215,10 @@ impl HsmManager {
     /// Get simple health check status
     pub async fn health_check(&self) -> BearDogResult<HsmHealthStatus> {
         let health_statuses = self.health_monitor.get_health_status().await?;
-        
+
         // Return overall health status
         let healthy = health_statuses.values().all(|status| status.healthy);
-        
+
         Ok(HsmHealthStatus {
             healthy,
             last_check: chrono::Utc::now(),
@@ -212,7 +230,7 @@ impl HsmManager {
     /// Get available HSM tiers
     pub async fn get_available_tiers(&self) -> BearDogResult<Vec<SimpleHsmTier>> {
         let mut tiers = Vec::new();
-        
+
         for provider_id in self.hsm_providers.keys() {
             match provider_id.as_str() {
                 "Smartphone" => tiers.push(SimpleHsmTier::Smartphone),
@@ -222,7 +240,7 @@ impl HsmManager {
                 _ => {}
             }
         }
-        
+
         Ok(tiers)
     }
 
@@ -231,8 +249,11 @@ impl HsmManager {
         &self,
         requirements: &SecurityRequirements,
     ) -> BearDogResult<SimpleHsmTier> {
-        let recommended_tier = self.capability_detector.recommend_hsm_tier(requirements).await?;
-        
+        let recommended_tier = self
+            .capability_detector
+            .recommend_hsm_tier(requirements)
+            .await?;
+
         // Convert HsmTier to SimpleHsmTier
         let simple_tier = match recommended_tier {
             HsmTier::SoftwareHsm { .. } => SimpleHsmTier::Software,
@@ -240,7 +261,7 @@ impl HsmManager {
             HsmTier::HardwareHsm { .. } => SimpleHsmTier::Hardware,
             HsmTier::HybridHsm { .. } => SimpleHsmTier::Hybrid,
         };
-        
+
         // Check if the recommended tier is available
         if self.hsm_providers.contains_key(&simple_tier.to_string()) {
             Ok(simple_tier)
@@ -250,7 +271,7 @@ impl HsmManager {
                 Ok(SimpleHsmTier::Software)
             } else {
                 Err(BearDogError::NoSuitableProvider {
-                    requirements: format!("{:?}", requirements),
+                    requirements: format!("{requirements:?}"),
                 })
             }
         }
@@ -259,7 +280,7 @@ impl HsmManager {
     /// Get performance metrics for all providers
     pub async fn get_performance_metrics(&self) -> BearDogResult<PerformanceMetrics> {
         let all_metrics = self.performance_tracker.get_all_metrics().await?;
-        
+
         // Aggregate metrics
         let mut total_ops = 0u64;
         let mut successful_ops = 0u64;
@@ -308,14 +329,17 @@ impl HsmManager {
         &self,
         requirements: &SecurityRequirements,
     ) -> BearDogResult<HsmProviderSelection> {
-        debug!("🔍 Selecting best HSM provider for requirements: {:?}", requirements);
+        debug!(
+            "🔍 Selecting best HSM provider for requirements: {:?}",
+            requirements
+        );
 
         // Get candidate providers
         let candidates = self.get_candidate_providers(requirements).await?;
 
         if candidates.is_empty() {
             return Err(BearDogError::NoSuitableProvider {
-                requirements: format!("{:?}", requirements),
+                requirements: format!("{requirements:?}"),
             });
         }
 
@@ -352,7 +376,10 @@ impl HsmManager {
         let mut candidates = Vec::new();
 
         for (provider_id, provider) in &self.hsm_providers {
-            if self.provider_meets_requirements(provider_id, requirements).await? {
+            if self
+                .provider_meets_requirements(provider_id, requirements)
+                .await?
+            {
                 candidates.push(provider.clone());
             }
         }
@@ -366,11 +393,12 @@ impl HsmManager {
         provider_id: &str,
         requirements: &SecurityRequirements,
     ) -> BearDogResult<bool> {
-        let provider = self.hsm_providers.get(provider_id).ok_or_else(|| {
-            BearDogError::ProviderNotFound {
-                provider_id: provider_id.to_string(),
-            }
-        })?;
+        let provider =
+            self.hsm_providers
+                .get(provider_id)
+                .ok_or_else(|| BearDogError::ProviderNotFound {
+                    provider_id: provider_id.to_string(),
+                })?;
 
         // Get provider info
         let provider_info = provider.get_info().await?;
@@ -410,18 +438,23 @@ impl HsmManager {
         }
 
         // Check attestation requirement
-        if requirements.attestation_required {
-            if !provider_info.capabilities.contains(&HsmCapability::KeyAttestation) {
+        if requirements.attestation_required
+            && !provider_info
+                .capabilities
+                .contains(&HsmCapability::KeyAttestation)
+            {
                 return Ok(false);
             }
-        }
 
         // Check user interaction requirement
         if requirements.user_interaction_required {
             match provider_info.hsm_type {
                 HsmTier::SmartphoneHsm { .. } => {
                     // Smartphone HSMs support user interaction
-                    if !provider_info.capabilities.contains(&HsmCapability::UserPresenceValidation) {
+                    if !provider_info
+                        .capabilities
+                        .contains(&HsmCapability::UserPresenceValidation)
+                    {
                         return Ok(false);
                     }
                 }
@@ -446,7 +479,9 @@ impl HsmManager {
             let provider_id = self.get_provider_id(&provider).await?;
 
             // Calculate provider score based on requirements
-            let score = self.calculate_provider_score(&provider_info, requirements).await?;
+            let score = self
+                .calculate_provider_score(&provider_info, requirements)
+                .await?;
 
             if score > best_score {
                 best_score = score;
@@ -461,7 +496,7 @@ impl HsmManager {
         }
 
         best_selection.ok_or_else(|| BearDogError::NoSuitableProvider {
-            requirements: format!("{:?}", requirements),
+            requirements: format!("{requirements:?}"),
         })
     }
 
@@ -580,10 +615,10 @@ impl HsmManager {
 
         // Default estimates based on HSM type
         match provider_info.hsm_type {
-            HsmTier::SoftwareHsm { .. } => Ok(10.0),  // Fast software
+            HsmTier::SoftwareHsm { .. } => Ok(10.0),   // Fast software
             HsmTier::SmartphoneHsm { .. } => Ok(50.0), // Moderate smartphone
-            HsmTier::HardwareHsm { .. } => Ok(100.0), // Slower hardware
-            HsmTier::HybridHsm { .. } => Ok(75.0),    // Mixed performance
+            HsmTier::HardwareHsm { .. } => Ok(100.0),  // Slower hardware
+            HsmTier::HybridHsm { .. } => Ok(75.0),     // Mixed performance
         }
     }
 
@@ -614,7 +649,7 @@ impl HsmManager {
         requirements: &SecurityRequirements,
     ) -> BearDogResult<Vec<u8>> {
         let selection = self.get_best_provider(requirements).await?;
-        
+
         // Use the provider's random generation capability
         // This is a simplified implementation
         let mut bytes = vec![0u8; length];
@@ -644,4 +679,4 @@ impl HsmManager {
         let selection = self.get_best_provider(requirements).await?;
         selection.provider.sign(key_id, data).await
     }
-} 
+}

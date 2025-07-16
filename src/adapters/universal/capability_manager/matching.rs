@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::info;
 use uuid::Uuid;
 
 use super::super::registry::CapabilityMatch;
@@ -271,7 +271,10 @@ impl AdvancedCapabilityMatcher {
         available_capabilities: &[Capability],
         context: &MatchingContext,
     ) -> BearDogResult<Vec<CapabilityMatch>> {
-        info!("🔍 Finding matches for requirement: {}", requirement.requirement_id);
+        info!(
+            "🔍 Finding matches for requirement: {}",
+            requirement.requirement_id
+        );
 
         let mut matches = Vec::new();
 
@@ -303,7 +306,7 @@ impl AdvancedCapabilityMatcher {
                     match_score: average_score,
                     compatibility_reasons: algorithm_scores
                         .iter()
-                        .map(|(alg, score)| format!("{}: {:.2}", alg, score))
+                        .map(|(alg, score)| format!("{alg}: {score:.2}"))
                         .collect(),
                 });
             }
@@ -317,7 +320,8 @@ impl AdvancedCapabilityMatcher {
         });
 
         // Record matching outcome
-        self.record_matching_outcome(requirement, &matches, context).await?;
+        self.record_matching_outcome(requirement, &matches, context)
+            .await?;
 
         info!("✅ Found {} capability matches", matches.len());
         Ok(matches)
@@ -358,7 +362,8 @@ impl AdvancedCapabilityMatcher {
 
         for (attr_name, required_attr) in &requirement.required_attributes {
             if let Some(capability_attribute) = capability.attributes.get(attr_name) {
-                let match_score = self.evaluate_attribute_match(required_attr, &capability_attribute.value);
+                let match_score =
+                    self.evaluate_attribute_match(required_attr, &capability_attribute.value);
                 total_score += match_score * required_attr.weight;
                 total_weight += required_attr.weight;
             } else if required_attr.required {
@@ -375,7 +380,11 @@ impl AdvancedCapabilityMatcher {
     }
 
     /// Evaluate attribute match based on operator
-    fn evaluate_attribute_match(&self, required_attr: &RequiredAttribute, capability_value: &str) -> f64 {
+    fn evaluate_attribute_match(
+        &self,
+        required_attr: &RequiredAttribute,
+        capability_value: &str,
+    ) -> f64 {
         match required_attr.operator {
             AttributeOperator::Equals => {
                 if capability_value == required_attr.value {
@@ -383,35 +392,35 @@ impl AdvancedCapabilityMatcher {
                 } else {
                     0.0
                 }
-            },
+            }
             AttributeOperator::NotEquals => {
                 if capability_value != required_attr.value {
                     1.0
                 } else {
                     0.0
                 }
-            },
+            }
             AttributeOperator::Contains => {
                 if capability_value.contains(&required_attr.value) {
                     1.0
                 } else {
                     0.0
                 }
-            },
+            }
             AttributeOperator::StartsWith => {
                 if capability_value.starts_with(&required_attr.value) {
                     1.0
                 } else {
                     0.0
                 }
-            },
+            }
             AttributeOperator::EndsWith => {
                 if capability_value.ends_with(&required_attr.value) {
                     1.0
                 } else {
                     0.0
                 }
-            },
+            }
             _ => {
                 // For numeric comparisons, we'd need to parse the values
                 // For now, return a default match
@@ -479,7 +488,10 @@ impl AdvancedCapabilityMatcher {
     }
 
     /// Get ecosystem preferences
-    pub async fn get_preferences(&self, ecosystem_id: &str) -> BearDogResult<Option<MatchingPreferences>> {
+    pub async fn get_preferences(
+        &self,
+        ecosystem_id: &str,
+    ) -> BearDogResult<Option<MatchingPreferences>> {
         let preferences = self.ecosystem_preferences.read().await;
         Ok(preferences.get(ecosystem_id).cloned())
     }
@@ -567,13 +579,11 @@ impl QoSRequirements {
                 sustained_duration: Duration::from_secs(60),
             }),
             max_error_rate_percent: Some(0.1),
-            reliability_requirements: vec![
-                ReliabilityRequirement {
-                    requirement_type: ReliabilityType::Uptime,
-                    threshold: 99.99,
-                    measurement_period: Duration::from_secs(3600),
-                },
-            ],
+            reliability_requirements: vec![ReliabilityRequirement {
+                requirement_type: ReliabilityType::Uptime,
+                threshold: 99.99,
+                measurement_period: Duration::from_secs(3600),
+            }],
         }
     }
 }
@@ -623,7 +633,10 @@ impl MatchingContext {
     }
 
     /// Add performance history
-    pub fn with_performance_history(mut self, history: HashMap<String, PerformanceMetrics>) -> Self {
+    pub fn with_performance_history(
+        mut self,
+        history: HashMap<String, PerformanceMetrics>,
+    ) -> Self {
         self.performance_history = Some(history);
         self
     }
@@ -677,4 +690,4 @@ impl MatchingPreferences {
             innovation_preference: 0.3,
         }
     }
-} 
+}

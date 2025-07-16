@@ -127,6 +127,7 @@ pub struct HsmConfig {
 
 /// Key derivation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct KeyDerivationConfig {
     /// Argon2 parameters
     pub argon2: Argon2Config,
@@ -368,14 +369,6 @@ impl Default for HsmConfig {
     }
 }
 
-impl Default for KeyDerivationConfig {
-    fn default() -> Self {
-        Self {
-            argon2: Argon2Config::default(),
-            pbkdf2: Pbkdf2Config::default(),
-        }
-    }
-}
 
 impl Default for Argon2Config {
     fn default() -> Self {

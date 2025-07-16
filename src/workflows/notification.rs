@@ -6,6 +6,7 @@ use super::types::*;
 use crate::BearDogResult;
 
 use std::collections::HashMap;
+use tracing::info;
 
 impl NotificationEngine {
     /// Create a new notification engine
@@ -88,7 +89,7 @@ impl NotificationEngine {
         _metadata: &HashMap<String, serde_json::Value>,
     ) -> BearDogResult<()> {
         // TODO: Implement actual email sending
-        println!("EMAIL: {}", message);
+        info!("Sending email notification: {}", message);
         Ok(())
     }
 
@@ -99,7 +100,7 @@ impl NotificationEngine {
         _metadata: &HashMap<String, serde_json::Value>,
     ) -> BearDogResult<()> {
         // TODO: Implement actual SMS sending
-        println!("SMS: {}", message);
+        info!("Sending SMS notification: {}", message);
         Ok(())
     }
 
@@ -111,8 +112,8 @@ impl NotificationEngine {
     ) -> BearDogResult<()> {
         if let Some(webhook_url) = &self.config.webhook_url {
             // TODO: Implement actual webhook sending
-            println!(
-                "WEBHOOK to {}: {} (metadata: {:?})",
+            info!(
+                "Sending webhook notification to {}: {} (metadata: {:?})",
                 webhook_url, message, metadata
             );
         }
@@ -127,7 +128,7 @@ impl NotificationEngine {
     ) -> BearDogResult<()> {
         if let Some(slack_url) = &self.config.slack_webhook_url {
             // TODO: Implement actual Slack webhook
-            println!("SLACK to {}: {}", slack_url, message);
+            info!("Sending Slack notification to {}: {}", slack_url, message);
         }
         Ok(())
     }
@@ -140,7 +141,7 @@ impl NotificationEngine {
     ) -> BearDogResult<()> {
         if let Some(teams_url) = &self.config.teams_webhook_url {
             // TODO: Implement actual Teams webhook
-            println!("TEAMS to {}: {}", teams_url, message);
+            info!("Sending Teams notification to {}: {}", teams_url, message);
         }
         Ok(())
     }

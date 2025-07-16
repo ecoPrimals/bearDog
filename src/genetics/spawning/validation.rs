@@ -3,9 +3,9 @@
 //! This module handles risk assessment, automated checks, and validation logic
 //! for genetic spawning requests.
 
-use super::engine::GeneticSpawningEngine;
 use super::super::types::*;
-use crate::{BearDogError, BearDogResult};
+use super::engine::GeneticSpawningEngine;
+use crate::BearDogResult;
 use chrono::{Timelike, Utc};
 use tracing::info;
 
@@ -37,7 +37,7 @@ pub async fn calculate_spawn_risk_score(
     // Time-based risk
     let now = Utc::now();
     let hour = now.hour();
-    if hour < 6 || hour > 22 {
+    if !(6..=22).contains(&hour) {
         risk_score += 0.2; // Off-hours spawning is riskier
     }
 
@@ -64,7 +64,9 @@ pub async fn run_automated_check(
                     && request.resource_requirements.max_memory_mb <= min_resources.max_memory_mb,
             )
         }
-        AutomatedCheck::ComplianceValidation { required_standards: _ } => {
+        AutomatedCheck::ComplianceValidation {
+            required_standards: _,
+        } => {
             // Simulate compliance check
             Ok(true)
         }
@@ -72,7 +74,9 @@ pub async fn run_automated_check(
             let risk_score = calculate_spawn_risk_score(engine, request).await?;
             Ok(risk_score <= *max_risk_level)
         }
-        AutomatedCheck::GeographicCompliance { allowed_jurisdictions } => {
+        AutomatedCheck::GeographicCompliance {
+            allowed_jurisdictions,
+        } => {
             // Check if spawn location is allowed
             Ok(request
                 .resource_requirements
@@ -100,7 +104,9 @@ pub async fn evaluate_escalation_condition(
             let usage = request.resource_requirements.max_cpu_percent / 100.0;
             Ok(usage > *threshold)
         }
-        EscalationCondition::UnusualGeneticPattern { deviation_threshold: _ } => {
+        EscalationCondition::UnusualGeneticPattern {
+            deviation_threshold: _,
+        } => {
             // This would require genetic analysis - simplified for now
             Ok(request.co_parents.len() > 3) // Escalate if too many co-parents
         }
@@ -110,10 +116,10 @@ pub async fn evaluate_escalation_condition(
         }
         EscalationCondition::OffHoursSpawn => {
             let hour = Utc::now().hour();
-            Ok(hour < 6 || hour > 22)
+            Ok(!(6..=22).contains(&hour))
         }
         EscalationCondition::CrossBorderSpawn => {
             Ok(request.resource_requirements.allowed_jurisdictions.len() > 1)
         }
     }
-} 
+}

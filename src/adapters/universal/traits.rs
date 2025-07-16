@@ -118,13 +118,21 @@ pub struct CapabilityAttribute {
 /// Data types for capability attributes
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AttributeDataType {
+    /// String data type
     String,
+    /// Integer data type
     Integer,
+    /// Float data type
     Float,
+    /// Boolean data type
     Boolean,
+    /// Array data type
     Array,
+    /// Object data type
     Object,
+    /// Duration data type
     Duration,
+    /// Bytes data type
     Bytes,
 }
 
@@ -163,6 +171,7 @@ pub struct ScalabilityInfo {
 
 /// Resource requirements for a capability
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct ResourceRequirements {
     /// CPU requirements
     pub cpu: Option<ResourceRequirement>,
@@ -226,12 +235,16 @@ pub enum HealthStatus {
     Healthy,
     /// Provider is degraded but functional
     Degraded {
+        /// List of issues causing degradation
         issues: Vec<String>,
+        /// Impact level of the degradation
         impact: HealthImpact,
     },
     /// Provider is unhealthy and requires attention
     Unhealthy {
+        /// Reason for unhealthy status
         reason: String,
+        /// Estimated recovery time
         recovery_time: Option<DateTime<Utc>>,
     },
     /// Provider is starting up
@@ -245,10 +258,15 @@ pub enum HealthStatus {
 /// Health impact levels
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HealthImpact {
+    /// No impact on service
     None,
+    /// Low impact on service
     Low,
+    /// Medium impact on service
     Medium,
+    /// High impact on service
     High,
+    /// Critical impact on service
     Critical,
 }
 
@@ -274,10 +292,15 @@ pub struct ServiceRequest {
 /// Request priority levels
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RequestPriority {
+    /// Low priority request
     Low,
+    /// Normal priority request
     Normal,
+    /// High priority request
     High,
+    /// Critical priority request
     Critical,
+    /// Emergency priority request
     Emergency,
 }
 
@@ -350,10 +373,15 @@ pub struct EcosystemRegistration {
 /// Registration status
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RegistrationStatus {
+    /// Registration is pending approval
     Pending,
+    /// Registration is active
     Active,
+    /// Registration is inactive
     Inactive,
+    /// Registration is temporarily suspended
     Suspended,
+    /// Registration has been revoked
     Revoked,
 }
 
@@ -457,17 +485,6 @@ impl Default for QualityOfService {
     }
 }
 
-impl Default for ResourceRequirements {
-    fn default() -> Self {
-        Self {
-            cpu: None,
-            memory: None,
-            storage: None,
-            network: None,
-            custom: HashMap::new(),
-        }
-    }
-}
 
 impl Default for NetworkConfig {
     fn default() -> Self {

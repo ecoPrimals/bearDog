@@ -14,6 +14,7 @@ use super::types::*;
 use crate::security::RiskLevel;
 
 // Placeholder consensus engine type
+/// Consensus engine type placeholder for future implementation
 pub type ConsensusEngine = ();
 
 impl CrossNodeAuthEngine {
@@ -83,8 +84,7 @@ impl CrossNodeAuthEngine {
             return Ok(AuthorizationResult {
                 permitted: false,
                 reason: format!(
-                    "Insufficient trust level: {} < {}",
-                    trust_level, min_trust_level
+                    "Insufficient trust level: {trust_level} < {min_trust_level}"
                 ),
                 additional_requirements: Vec::new(),
                 risk_level: RiskLevel::High,
@@ -150,7 +150,7 @@ impl CrossNodeAuthEngine {
             }],
             conditions: Vec::new(),
             created_at: chrono::Utc::now(),
-            expires_at: chrono::Utc::now() + chrono::Duration::minutes(60 as i64),
+            expires_at: chrono::Utc::now() + chrono::Duration::minutes(60_i64),
             signature: "consensus_signature".to_string(),
             is_active: true,
         };
@@ -263,7 +263,7 @@ impl CrossNodeAuthEngine {
         // Create spawned instance
         let spawn_id = Uuid::new_v4().to_string();
         let spawned_beardog = SpawnedBearDog {
-            id: spawn_id,
+            id: spawn_id.clone(),
             parent_id: requester_node_id.to_string(),
             genetics: combined_genetics,
             spawn_purpose: spawn_request.spawn_purpose,
@@ -278,9 +278,11 @@ impl CrossNodeAuthEngine {
             ecosystem_connections: vec![],
         };
 
-        self.spawned_beardogs
-            .insert(spawned_beardog.id.clone(), spawned_beardog.clone());
-        Ok(spawned_beardog)
+        // Insert and return the value in one step to avoid cloning
+        let result = spawned_beardog.clone(); // Only clone once for return
+        self.spawned_beardogs.insert(spawn_id, spawned_beardog);
+        
+        Ok(result)
     }
 
     /// Combine genetics from parent BearDogs
@@ -294,17 +296,29 @@ impl CrossNodeAuthEngine {
             ));
         }
 
-        let mut combined_capabilities = Vec::new();
-        let mut combined_chromosomes = Vec::new();
-        let mut combined_restrictions = Vec::new();
-        let mut fitness_sum = 0.0;
-
-        for parent in parent_genetics {
-            combined_capabilities.extend(parent.capabilities.clone());
-            combined_chromosomes.extend(parent.crypto_chromosomes.clone());
-            combined_restrictions.extend(parent.spawn_restrictions.clone());
-            fitness_sum += parent.fitness_score;
-        }
+        // Use iterators to avoid cloning until necessary
+        let mut combined_capabilities: Vec<_> = parent_genetics
+            .iter()
+            .flat_map(|p| p.capabilities.iter())
+            .cloned()
+            .collect();
+        
+        let mut combined_chromosomes: Vec<_> = parent_genetics
+            .iter()
+            .flat_map(|p| p.crypto_chromosomes.iter())
+            .cloned()
+            .collect();
+        
+        let mut combined_restrictions: Vec<_> = parent_genetics
+            .iter()
+            .flat_map(|p| p.spawn_restrictions.iter())
+            .cloned()
+            .collect();
+        
+        let fitness_sum: f64 = parent_genetics
+            .iter()
+            .map(|p| p.fitness_score)
+            .sum();
 
         // Remove duplicates and optimize
         combined_capabilities.sort();
@@ -313,33 +327,42 @@ impl CrossNodeAuthEngine {
         // Calculate average fitness
         let avg_fitness = fitness_sum / parent_genetics.len() as f64;
 
+        // Find max generation without cloning
+        let max_generation = parent_genetics
+            .iter()
+            .map(|p| p.generation)
+            .max()
+            .unwrap_or(0);
+
+        // Find highest security clearance without cloning
+        let max_security_clearance = parent_genetics
+            .iter()
+            .map(|p| &p.security_clearance)
+            .max()
+            .unwrap_or(&SecurityClearance::Basic);
+
+        // Collect specializations efficiently
+        let mut specializations: Vec<_> = parent_genetics
+            .iter()
+            .flat_map(|p| p.specializations.iter())
+            .cloned()
+            .collect();
+        specializations.sort();
+        specializations.dedup();
+
         // Create new genetics with inheritance
         let combined_genetics = BearDogGenetics {
             id: Uuid::new_v4().to_string(),
             crypto_chromosomes: combined_chromosomes,
-            security_traits: parent_genetics.first().unwrap().security_traits.clone(),
+            security_traits: parent_genetics[0].security_traits.clone(), // Only clone once
             capabilities: combined_capabilities,
             spawn_restrictions: combined_restrictions,
-            generation: parent_genetics
-                .iter()
-                .map(|p| p.generation)
-                .max()
-                .unwrap_or(0)
-                + 1,
+            generation: max_generation + 1,
             parent_genetics: Some(parent_genetics.iter().map(|p| p.id.clone()).collect()),
             mutations: vec![],
             fitness_score: avg_fitness * 0.95, // Slight degradation for realistic genetics
-            security_clearance: parent_genetics
-                .iter()
-                .map(|p| &p.security_clearance)
-                .max()
-                .unwrap_or(&SecurityClearance::Basic)
-                .clone(),
-            specializations: parent_genetics
-                .iter()
-                .flat_map(|p| p.specializations.iter())
-                .cloned()
-                .collect(),
+            security_clearance: max_security_clearance.clone(),
+            specializations,
         };
 
         Ok(combined_genetics)
@@ -361,24 +384,18 @@ impl CrossNodeAuthEngine {
 
     /// Get ecosystem integration capabilities
     pub fn get_ecosystem_capabilities(&self, node_id: &str) -> Vec<NodeCapability> {
-        let mut capabilities = Vec::new();
-
-        // Check for spawned BearDogs with ecosystem capabilities
-        for spawn in self.spawned_beardogs.values() {
-            if spawn.parent_id == node_id {
-                for cap in &spawn.genetics.capabilities {
-                    match cap {
-                        NodeCapability::ToadStoolCompute
-                        | NodeCapability::SongBirdDiscovery
-                        | NodeCapability::NestGateStorage
-                        | NodeCapability::SquirrelPlugins => {
-                            capabilities.push(cap.clone());
-                        }
-                        _ => {}
-                    }
-                }
-            }
-        }
+        let mut capabilities: Vec<NodeCapability> = self.spawned_beardogs
+            .values()
+            .filter(|spawn| spawn.parent_id == node_id)
+            .flat_map(|spawn| &spawn.genetics.capabilities)
+            .filter(|cap| matches!(cap, 
+                NodeCapability::ToadStoolCompute
+                | NodeCapability::SongBirdDiscovery
+                | NodeCapability::NestGateStorage
+                | NodeCapability::SquirrelPlugins
+            ))
+            .cloned()
+            .collect();
 
         capabilities.sort();
         capabilities.dedup();
@@ -458,7 +475,7 @@ impl CrossNodeAuthEngine {
         for auth in self.active_authorizations.values() {
             for permission in &auth.permissions {
                 *permission_counts
-                    .entry(format!("{:?}", permission))
+                    .entry(format!("{permission:?}"))
                     .or_insert(0) += 1;
             }
         }
