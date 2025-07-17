@@ -131,13 +131,13 @@ impl HsmManager {
         // Register configured HSM providers
         for hsm_config in &config.hsm_configs {
             let provider = Self::create_hsm_provider(hsm_config).await?;
-            let provider_id = match &hsm_config.hsm_type {
-                HsmType::SoftwareRust => "Software".to_string(),
-                HsmType::SmartphoneAndroid => "Smartphone".to_string(),
-                HsmType::HardwareAws => "Hardware".to_string(),
-                _ => "Unknown".to_string(),
+            let provider_id = match &hsm_config.tier_config {
+                HsmTierConfig::Software(_) => "software_hsm",
+                HsmTierConfig::Hardware(_) => "hardware_hsm",
+                HsmTierConfig::Smartphone(_) => "smartphone_hsm",
+                HsmTierConfig::Hybrid(_) => "hybrid_hsm",
             };
-            manager.hsm_providers.insert(provider_id, provider);
+            manager.hsm_providers.insert(provider_id.to_string(), provider);
         }
 
         // Start health monitoring
@@ -189,20 +189,27 @@ impl HsmManager {
 
     /// Create HSM provider from configuration
     async fn create_hsm_provider(config: &HsmConfig) -> BearDogResult<Arc<dyn HsmProvider>> {
-        match &config.hsm_type {
-            HsmType::SoftwareRust => {
-                let software_config = config.software_config.clone().unwrap_or_default();
-                let software_hsm = RustSoftwareHsm::new(software_config).await?;
+        match &config.tier_config {
+            HsmTierConfig::Software(software_config) => {
+                let software_hsm = RustSoftwareHsm::new(software_config.clone()).await?;
                 Ok(Arc::new(software_hsm))
             }
-            HsmType::SmartphoneAndroid => {
-                let android_config = config.android_config.clone().unwrap_or_default();
-                let android_hsm = AndroidStrongBoxHsm::new(android_config).await?;
+            HsmTierConfig::Smartphone(SmartphoneHsmConfig::Android(android_config)) => {
+                let android_hsm = AndroidStrongBoxHsm::new(android_config.clone()).await?;
                 Ok(Arc::new(android_hsm))
             }
-            _ => Err(BearDogError::UnsupportedHsmType {
-                hsm_type: format!("{:?}", config.hsm_type),
-                reason: "HSM type not supported in this configuration".to_string(),
+            HsmTierConfig::Hardware(_) => {
+                Err(BearDogError::Unimplemented {
+                    message: "Hardware HSM not yet implemented".to_string(),
+                })
+            }
+            HsmTierConfig::Hybrid(_) => {
+                Err(BearDogError::Unimplemented {
+                    message: "Hybrid HSM not yet implemented".to_string(),
+                })
+            }
+            _ => Err(BearDogError::Configuration {
+                message: "HSM type not supported in this configuration".to_string(),
             }),
         }
     }
@@ -271,7 +278,7 @@ impl HsmManager {
                 Ok(SimpleHsmTier::Software)
             } else {
                 Err(BearDogError::NoSuitableProvider {
-                    requirements: format!("{requirements:?}"),
+                    message: format!("No suitable provider for requirements: {requirements:?}"),
                 })
             }
         }
@@ -339,7 +346,7 @@ impl HsmManager {
 
         if candidates.is_empty() {
             return Err(BearDogError::NoSuitableProvider {
-                requirements: format!("{requirements:?}"),
+                message: format!("No suitable provider for requirements: {requirements:?}"),
             });
         }
 
@@ -350,8 +357,8 @@ impl HsmManager {
             .await?;
 
         if healthy_candidates.is_empty() {
-            return Err(BearDogError::AllProvidersUnhealthy {
-                total_providers: self.hsm_providers.len(),
+            return Err(BearDogError::Unavailable {
+                message: "All HSM providers are unhealthy".to_string(),
             });
         }
 
@@ -396,8 +403,8 @@ impl HsmManager {
         let provider =
             self.hsm_providers
                 .get(provider_id)
-                .ok_or_else(|| BearDogError::ProviderNotFound {
-                    provider_id: provider_id.to_string(),
+                .ok_or_else(|| BearDogError::NotFound {
+                    message: format!("Provider not found: {}", provider_id),
                 })?;
 
         // Get provider info
@@ -510,7 +517,7 @@ impl HsmManager {
         }
 
         best_selection.ok_or_else(|| BearDogError::NoSuitableProvider {
-            requirements: format!("{requirements:?}"),
+            message: format!("No suitable provider for requirements: {requirements:?}"),
         })
     }
 

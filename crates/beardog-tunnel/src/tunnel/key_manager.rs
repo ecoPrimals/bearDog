@@ -450,33 +450,42 @@ impl BStpKeyManager {
         let hsm_config = crate::tunnel::hsm::manager::HsmManagerConfig {
             hsm_configs: vec![
                 // Try software HSM first
-                crate::tunnel::hsm::HsmConfig {
-                    id: "software_hsm".to_string(),
-                    hsm_type: crate::tunnel::hsm::types::HsmType::SoftwareRust,
-                    priority: 100,
-                    enabled: true,
-                    ios_config: None,
-                    android_config: None,
-                    software_config: Some(crate::tunnel::hsm::software_hsm::SoftwareHsmConfig {
-                        implementation: crate::tunnel::hsm::software_hsm::SoftwareHsmType::RustSoftwareHsm,
-                        key_store_config: crate::tunnel::hsm::software_hsm::KeyStoreConfig {
-                            storage_type: crate::tunnel::hsm::software_hsm::KeyStorageType::Memory,
-                            encryption_key_source: crate::tunnel::hsm::software_hsm::KeySource::Derived,
-                            backup_enabled: false,
-                            cache_size: 100,
-                            file_config: None,
-                            db_config: None,
-                        },
-                        memory_config: crate::tunnel::hsm::software_hsm::MemoryConfig::default(),
-                        crypto_backend: crate::tunnel::hsm::software_hsm::CryptoBackend::RustCrypto,
-                    }),
-                    aws_config: None,
-                    luna_config: None,
+                crate::tunnel::hsm::types::HsmConfig {
+                    instance_id: "software_hsm".to_string(),
+                    tier_config: crate::tunnel::hsm::types::HsmTierConfig::Software(
+                        crate::tunnel::hsm::types::SoftwareHsmConfig {
+                            implementation: "RustSoftwareHsm".to_string(),
+                            key_storage: crate::tunnel::hsm::types::KeyStoreConfig {
+                                storage_type: crate::tunnel::hsm::types::KeyStorageType::InMemory,
+                                encryption_key_source: crate::tunnel::hsm::types::KeySource::Derived,
+                                backup_enabled: false,
+                                cache_size: 100,
+                                file_config: None,
+                                db_config: None,
+                            },
+                            memory_protection: crate::tunnel::hsm::types::MemoryProtectionLevel::Basic,
+                            crypto_backend: crate::tunnel::hsm::types::CryptoBackend::RustCrypto,
+                            enable_key_caching: true,
+                            max_cached_keys: 1000,
+                            key_store_config: crate::tunnel::hsm::types::KeyStoreConfig {
+                                storage_type: crate::tunnel::hsm::types::KeyStorageType::InMemory,
+                                encryption_key_source: crate::tunnel::hsm::types::KeySource::Derived,
+                                backup_enabled: false,
+                                cache_size: 100,
+                                file_config: None,
+                                db_config: None,
+                            },
+                            memory_config: crate::tunnel::hsm::types::MemoryConfig::default(),
+                        }
+                    ),
+                    security_config: crate::tunnel::hsm::types::SecurityConfig::default(),
+                    performance_config: crate::tunnel::hsm::types::PerformanceConfig::default(),
+                    monitoring_config: crate::tunnel::hsm::types::MonitoringConfig::default(),
                 },
             ],
             health_config: crate::tunnel::hsm::manager::HealthConfig::default(),
-            failover_config: crate::tunnel::hsm::manager::FailoverConfig::default(),
-            performance_config: crate::tunnel::hsm::manager::PerformanceConfig::default(),
+            failover_config: crate::tunnel::hsm::manager::config::FailoverConfig::default(),
+            performance_config: crate::tunnel::hsm::manager::config::PerformanceConfig::default(),
         };
 
         crate::tunnel::hsm::manager::HsmManager::new().await

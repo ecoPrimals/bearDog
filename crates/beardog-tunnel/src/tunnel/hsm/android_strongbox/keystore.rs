@@ -205,10 +205,8 @@ impl AndroidKeystore {
 
         // For now, simulate decryption (reverse of our simulation encryption)
         if ciphertext.len() < 3 || &ciphertext[ciphertext.len() - 3..] != b"ENC" {
-            return Err(BearDogError::HsmDecryptionFailed {
-                hsm_type: "Android StrongBox".to_string(),
-                key_id: key_id.to_string(),
-                error: "Invalid ciphertext format".to_string(),
+            return Err(BearDogError::Hsm {
+                message: "HSM decryption failed".to_string(),
             });
         }
 

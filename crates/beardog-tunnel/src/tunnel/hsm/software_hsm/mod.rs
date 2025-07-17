@@ -257,8 +257,7 @@ pub fn validate_config(
 ) -> beardog_errors::BearDogResult<()> {
     // Validate cache size
     if config.key_store_config.cache_size == 0 {
-        return Err(crate::error::BearDogError::InvalidConfig {
-            field: "key_store_config.cache_size".to_string(),
+        return Err(beardog_errors::BearDogError::Configuration {
             message: "Cache size must be greater than 0".to_string(),
         });
     }

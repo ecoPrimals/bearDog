@@ -51,7 +51,7 @@ pub use manager::{
     DefaultHsmCapabilityDetector,
     DefaultHsmFailoverManager,
     DefaultHsmHealthMonitor,
-    FailoverConfig,
+    config::FailoverConfig,
     // Re-export all config types
     HealthConfig,
     HsmManager,
@@ -59,7 +59,7 @@ pub use manager::{
     HsmPerformanceTracker,
     HsmProviderSelection,
     OperationMetrics,
-    PerformanceConfig,
+    config::PerformanceConfig,
     SimpleHsmTier,
 };
 pub use software_hsm::RustSoftwareHsm;

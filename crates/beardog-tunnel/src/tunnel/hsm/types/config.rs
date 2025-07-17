@@ -614,16 +614,6 @@ impl Default for AttestationConfig {
     }
 }
 
-impl Default for MemoryConfig {
-    fn default() -> Self {
-        Self {
-            max_memory_bytes: 1024 * 1024 * 100, // 100MB
-            enable_memory_protection: true,
-            cleanup_interval_seconds: 300, // 5 minutes
-        }
-    }
-}
-
 impl Default for SoftwareHsmConfig {
     fn default() -> Self {
         Self {
