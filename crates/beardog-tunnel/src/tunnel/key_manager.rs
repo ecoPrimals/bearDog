@@ -392,6 +392,7 @@ impl BStpKeyManager {
                     },
                     metadata: crate::tunnel::hsm::KeyMetadata {
                         key_id: format!("session_key_{}", uuid::Uuid::new_v4()),
+                        key_name: "session_key".to_string(), // Add missing key_name field
                         key_type: key_type.clone(),
                         created_at: chrono::Utc::now(),
                         expires_at: None,
@@ -410,6 +411,8 @@ impl BStpKeyManager {
                     },
                     attestation_challenge: None,
                     require_user_presence: false,
+                    generate_attestation: false, // Add missing field
+                    target_hsm_tier: "SoftwareHsm".to_string(), // Add missing field
                 };
 
                 // Generate key using HSM

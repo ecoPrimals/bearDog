@@ -30,6 +30,7 @@ pub mod factory;
 pub use factory::{
     create_crypto_provider,
     get_supported_crypto_backends,
+    get_supported_storage_backends,
     get_crypto_provider_capabilities,
     CryptoProviderCapabilities,
     is_crypto_backend_supported,

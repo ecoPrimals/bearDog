@@ -64,9 +64,8 @@ impl AndroidKeystore {
 
         // For now, we simulate the check
         if !self.strongbox_available {
-            return Err(BearDogError::HsmUnavailable {
-                hsm_type: "Android Keystore".to_string(),
-                reason: "StrongBox not available".to_string(),
+            return Err(BearDogError::Unavailable {
+                message: "StrongBox keystore is not available on this device".to_string(),
             });
         }
 

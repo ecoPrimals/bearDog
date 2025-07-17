@@ -663,8 +663,8 @@ impl HsmManager {
         // This is a simplified implementation
         // In a real implementation, we would find the provider that has this key
         // and retrieve the public key from it
-        Err(BearDogError::KeyNotFound {
-            key_id: key_id.to_string(),
+        Err(BearDogError::NotFound {
+            message: format!("Key not found: {}", key_id),
         })
     }
 

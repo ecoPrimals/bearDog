@@ -144,16 +144,18 @@ impl RustSoftwareHsm {
         // Create HSM key
         let hsm_key = HsmKey {
             id: request.key_id.clone(),
-            hsm_type: HsmTier::SoftwareHsm {
-                implementation: SoftwareHsmType::RustSoftwareHsm,
-                key_storage: self.config.key_store_config.storage_type.clone(),
-                encryption_at_rest: true,
-                memory_protection: self.config.memory_config.protection_level.clone(),
-            },
+            hsm_type: "SoftwareHsm".to_string(), // Convert HsmTier to String
             key_type: request.key_type.clone(),
+            metadata: request.metadata.clone(),
+            key_material: KeyMaterial::Encrypted {
+                encrypted_data: key_material,
+                encryption_algorithm: "AES-256-GCM".to_string(),
+                key_derivation_info: None,
+            },
+            hsm_tier: "SoftwareHsm".to_string(),
+            health_status: KeyHealthStatus::Healthy,
             attestation: None, // Software HSM doesn't provide hardware attestation
             created_at: Utc::now(),
-            metadata: request.metadata.clone(),
         };
 
         info!("✅ Software key generated successfully: {}", request.key_id);
@@ -464,17 +466,22 @@ impl HsmProvider for RustSoftwareHsm {
         for key_id in key_ids {
             if let Ok(key) = key_store.get_key(&key_id).await {
                 key_infos.push(HsmKeyInfo {
+                    metadata: key.metadata().clone(),
+                    hsm_tier: "SoftwareHsm".to_string(),
+                    health_status: KeyHealthStatus::Healthy,
+                    performance_metrics: KeyPerformanceMetrics {
+                        avg_latency_ms: 1.0,
+                        ops_per_second: 1000.0,
+                        error_rate: 0.0,
+                        success_rate: 1.0,
+                    },
+                    last_accessed: Some(chrono::Utc::now()),
+                    access_count: 0,
                     key_id: key.id().to_string(),
                     key_type: key.key_type().clone(),
-                    hsm_type: HsmTier::SoftwareHsm {
-                        implementation: SoftwareHsmType::RustSoftwareHsm,
-                        key_storage: self.config.key_store_config.storage_type.clone(),
-                        encryption_at_rest: true,
-                        memory_protection: self.config.memory_config.protection_level.clone(),
-                    },
+                    hsm_type: "SoftwareHsm".to_string(),
                     created_at: key.created_at(),
                     usage_policy: key.metadata().usage_policy.clone(),
-                    health_status: KeyHealthStatus::Healthy,
                 });
             }
         }

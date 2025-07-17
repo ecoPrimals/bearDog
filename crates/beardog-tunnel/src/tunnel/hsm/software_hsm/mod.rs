@@ -154,6 +154,7 @@ pub use types::*;
 pub use self::audit::{create_audit_logger, AuditStatistics, InMemoryAuditLogger};
 pub use self::crypto_providers::{
     create_crypto_provider, get_crypto_provider_capabilities, get_supported_crypto_backends,
+    get_supported_storage_backends,
     CryptoProviderCapabilities,
 };
 pub use self::health::SimpleHealthSummary;

@@ -117,6 +117,13 @@ pub enum KeyMaterial {
         /// HSM instance identifier
         hsm_instance: String,
     },
+    /// Hardware-backed key reference
+    HardwareReference {
+        /// Hardware reference identifier
+        reference: String,
+        /// Hardware location identifier
+        hsm_location: String,
+    },
     /// Hardware-backed key handle
     Handle {
         /// HSM key handle
@@ -183,6 +190,10 @@ pub struct KeyAttestation {
     pub attestation_type: String,
     /// Attestation data (legacy field for compatibility)
     pub attestation_data: Vec<u8>,
+    /// Attestation signature
+    pub attestation_signature: Vec<u8>,
+    /// Whether the attestation is verified
+    pub verified: bool,
 }
 
 /// Health status of an HSM key

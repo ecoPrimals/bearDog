@@ -48,6 +48,8 @@ pub struct SoftwareHsmConfig {
     pub key_store_config: KeyStoreConfig,
     /// Memory configuration (legacy field for compatibility)
     pub memory_config: MemoryConfig,
+    /// Implementation type (legacy field for compatibility)
+    pub implementation: String,
 }
 
 /// Memory configuration for HSM
@@ -632,6 +634,7 @@ impl Default for SoftwareHsmConfig {
             max_cached_keys: 1000,
             key_store_config: KeyStoreConfig::default(),
             memory_config: MemoryConfig::default(),
+            implementation: "SoftwareHSM".to_string(),
         }
     }
 }

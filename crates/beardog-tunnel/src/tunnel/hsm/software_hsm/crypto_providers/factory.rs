@@ -39,6 +39,15 @@ pub fn get_supported_crypto_backends() -> Vec<CryptoBackend> {
     ]
 }
 
+/// Get supported storage backends
+pub fn get_supported_storage_backends() -> Vec<String> {
+    vec![
+        "EncryptedFile".to_string(),
+        "Memory".to_string(),
+        "Database".to_string(),
+    ]
+}
+
 /// Get crypto provider capabilities
 pub fn get_crypto_provider_capabilities(backend: &CryptoBackend) -> CryptoProviderCapabilities {
     match backend {

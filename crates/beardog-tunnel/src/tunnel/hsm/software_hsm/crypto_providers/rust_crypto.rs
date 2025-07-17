@@ -150,7 +150,12 @@ impl CryptoProvider for RustCryptoProvider {
         })?);
         
         // Sign the data
-        let signature = signing_key.sign(data);
+        let signature = signing_key.try_sign(data).map_err(|e| {
+            BearDogError::Crypto {
+                operation: "signing".to_string(),
+                message: format!("Failed to sign data: {}", e),
+            }
+        })?;
         
         Ok(signature.to_bytes().to_vec())
     }
@@ -200,7 +205,7 @@ impl CryptoProvider for RustCryptoProvider {
         })?);
         
         // Verify signature
-        match verifying_key.verify(data, &signature_obj) {
+        match verifying_key.verify_strict(data, &signature_obj) {
             Ok(()) => Ok(true),
             Err(_) => Ok(false), // Invalid signature, not an error
         }

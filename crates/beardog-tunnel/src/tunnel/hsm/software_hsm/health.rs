@@ -4,7 +4,7 @@
 //! It tracks system status, performance metrics, and provides health assessments.
 
 use super::types::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use std::sync::Arc;
 use tokio::sync::RwLock;

@@ -50,9 +50,8 @@ impl AndroidStrongBoxHsm {
 
         // Verify StrongBox availability
         if !keystore.is_strongbox_available() {
-            return Err(BearDogError::HsmUnavailable {
-                hsm_type: "Android StrongBox".to_string(),
-                reason: "StrongBox not available on this device".to_string(),
+            return Err(BearDogError::Unavailable {
+                message: format!("StrongBox HSM is not available on this device: {}", e),
             });
         }
 
@@ -122,25 +121,17 @@ impl AndroidStrongBoxHsm {
         // Create HsmKey structure
         let hsm_key = HsmKey {
             id: request.key_id.clone(),
-            hsm_type: HsmTier::SmartphoneHsm {
-                device_type: SmartphoneType::Android {
-                    manufacturer: self.device_info.manufacturer.clone(),
-                    model: self.device_info.model.clone(),
-                    android_version: self.device_info.android_version.clone(),
-                    strongbox_version: self.device_info.strongbox_version.clone(),
-                },
-                secure_enclave: SecureEnclaveType::AndroidStrongBox {
-                    implementation: self.keystore.strongbox_implementation.clone(),
-                    hardware_backed: true,
-                    key_attestation: true,
-                },
-                attestation_level: AttestationLevel::Hardware,
-                user_presence_required: request.require_user_presence,
-            },
+            hsm_type: "SmartphoneHsm".to_string(), // Convert HsmTier to String
             key_type: request.key_type.clone(),
+            metadata: request.metadata.clone(),
+            key_material: KeyMaterial::HardwareReference {
+                reference: request.key_id.clone(),
+                hsm_location: "AndroidStrongBox".to_string(),
+            },
+            hsm_tier: "SmartphoneHsm".to_string(),
+            health_status: KeyHealthStatus::Healthy,
             attestation,
             created_at: Utc::now(),
-            metadata: request.metadata.clone(),
         };
 
         // Cache key information
@@ -305,7 +296,7 @@ impl AndroidStrongBoxHsm {
             .await?;
 
         Ok(KeyAttestation {
-            attestation_type: AttestationLevel::Hardware,
+            attestation_type: "Hardware".to_string(), // Convert AttestationLevel to String
             certificate_chain,
             attestation_data,
             attestation_signature: signature,
@@ -356,8 +347,8 @@ impl AndroidStrongBoxHsm {
         // Check if key exists in cache
         let cache = self.key_cache.read().await;
         if !cache.contains_key(key_id) {
-            return Err(BearDogError::KeyNotFound {
-                key_id: key_id.to_string(),
+            return Err(BearDogError::NotFound {
+                message: format!("Key not found: {}", key_id),
             });
         }
         Ok(())

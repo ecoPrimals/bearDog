@@ -146,10 +146,10 @@ impl GamingCryptoEngine {
         let session_key = match self.key_manager.get_session_key(session_id).await {
             Some(key) => key,
             None => {
-                return Err(BearDogError::encryption(
-                    "session_key",
-                    format!("Session key not found for: {session_id}"),
-                ));
+                return Err(BearDogError::Encryption {
+                    operation: "session_key".to_string(),
+                    message: format!("Session key not found for: {session_id}"),
+                });
             }
         };
 
@@ -191,10 +191,10 @@ impl GamingCryptoEngine {
         let session_key = match self.key_manager.get_session_key(session_id).await {
             Some(key) => key,
             None => {
-                return Err(BearDogError::encryption(
-                    "session_key",
-                    format!("Session key not found for decryption: {session_id}"),
-                ));
+                return Err(BearDogError::Encryption {
+                    operation: "session_key".to_string(),
+                    message: format!("Session key not found for decryption: {session_id}"),
+                });
             }
         };
 
