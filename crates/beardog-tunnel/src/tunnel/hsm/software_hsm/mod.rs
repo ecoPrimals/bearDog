@@ -160,8 +160,8 @@ pub use self::health::SimpleHealthSummary;
 pub use self::keystore::KeyStoreStatistics;
 pub use self::memory::{create_memory_protection_stats, MemoryProtectionStats, SecureMemoryRegion};
 pub use self::storage::{
-    create_storage_backend, get_storage_backend_capabilities, get_supported_storage_backends,
-    MemoryStorageStatistics, StorageBackendCapabilities, StorageScalability,
+    // create_storage_backend, get_storage_backend_capabilities, get_supported_storage_backends,
+    MemoryStorageStatistics, // StorageBackendCapabilities, StorageScalability,
 };
 
 /// Software HSM module version

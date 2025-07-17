@@ -1,7 +1,7 @@
 // 🛡️ BSTP Session Management
 
 use crate::tunnel::{GamingSecurityProfile, SecurityEvolution, SecurityLevel};
-use crate::BearDogResult;
+use beardog_errors::BearDogResult;
 
 use std::collections::HashMap;
 use std::sync::Arc;

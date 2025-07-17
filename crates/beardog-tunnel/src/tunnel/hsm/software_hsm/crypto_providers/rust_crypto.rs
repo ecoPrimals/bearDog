@@ -130,7 +130,7 @@ impl CryptoProvider for RustCryptoProvider {
 
     /// Sign data with key
     async fn sign(&self, key_material: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
-        use ed25519_dalek::{SigningKey, Signer};
+        // use ed25519_dalek::{SigningKey, Signer};
         
         debug!("Signing {} bytes with Rust crypto provider (Ed25519)", data.len());
         
@@ -161,7 +161,7 @@ impl CryptoProvider for RustCryptoProvider {
         data: &[u8],
         signature: &[u8],
     ) -> BearDogResult<bool> {
-        use ed25519_dalek::{VerifyingKey, Verifier, Signature};
+        // use ed25519_dalek::{VerifyingKey, Verifier, Signature};
         
         debug!(
             "Verifying signature for {} bytes with Rust crypto provider (Ed25519)",

@@ -9,7 +9,7 @@ use crate::tunnel::{
     GamingSecurityProfile, GeneticSecurityHealing, LatencyMonitor, NetworkSecurityEvent,
     SecureSession, SecurityGenetics, SecurityResponse,
 };
-use crate::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 
 use beardog_auth::auth::CrossNodeAuthEngine;
 use std::collections::HashMap;

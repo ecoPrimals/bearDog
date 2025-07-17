@@ -52,8 +52,8 @@ impl CryptoProvider for OpenSslCryptoProvider {
 
     /// Encrypt data with key
     async fn encrypt(&self, key_material: &[u8], plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
-        use openssl::symm::{Cipher, Crypter, Mode};
-        use openssl::rand::rand_bytes;
+        // use openssl::symm::{Cipher, Crypter, Mode};
+        // use openssl::rand::rand_bytes;
         
         debug!(
             "Encrypting {} bytes with OpenSSL crypto provider (AES-256-GCM)",
@@ -110,7 +110,7 @@ impl CryptoProvider for OpenSslCryptoProvider {
 
     /// Decrypt data with key
     async fn decrypt(&self, key_material: &[u8], ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
-        use openssl::symm::{Cipher, Crypter, Mode};
+        // use openssl::symm::{Cipher, Crypter, Mode};
         
         debug!(
             "Decrypting {} bytes with OpenSSL crypto provider (AES-256-GCM)",
@@ -167,8 +167,8 @@ impl CryptoProvider for OpenSslCryptoProvider {
 
     /// Sign data with key
     async fn sign(&self, key_material: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
-        use openssl::pkey::{PKey, Private};
-        use openssl::sign::Signer;
+        // use openssl::pkey::{PKey, Private};
+        // use openssl::sign::Signer;
         
         debug!("Signing {} bytes with OpenSSL crypto provider (Ed25519)", data.len());
         
@@ -207,8 +207,8 @@ impl CryptoProvider for OpenSslCryptoProvider {
         data: &[u8],
         signature: &[u8],
     ) -> BearDogResult<bool> {
-        use openssl::pkey::PKey;
-        use openssl::sign::Verifier;
+        // use openssl::pkey::PKey;
+        // use openssl::sign::Verifier;
         
         debug!(
             "Verifying signature for {} bytes with OpenSSL crypto provider (Ed25519)",
@@ -255,9 +255,9 @@ impl CryptoProvider for OpenSslCryptoProvider {
         master_key: &[u8],
         derivation_data: &[u8],
     ) -> BearDogResult<Vec<u8>> {
-        use openssl::hash::MessageDigest;
-        use openssl::pkey::PKey;
-        use openssl::sign::Signer;
+        // use openssl::hash::MessageDigest;
+        // use openssl::pkey::PKey;
+        // use openssl::sign::Signer;
         
         debug!("Deriving key with OpenSSL crypto provider (HMAC-SHA256)");
         

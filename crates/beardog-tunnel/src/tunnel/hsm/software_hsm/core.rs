@@ -324,7 +324,7 @@ impl HsmProvider for RustSoftwareHsm {
 
         self.perform_crypto_operation(key_id, "encrypt", |key_material| {
             // This would be async in real implementation
-            futures::executor::block_on(async {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
                 self.crypto_provider.encrypt(key_material, plaintext).await
             })
         })
@@ -336,7 +336,7 @@ impl HsmProvider for RustSoftwareHsm {
         debug!("🔓 Decrypting data with software key: {}", key_id);
 
         self.perform_crypto_operation(key_id, "decrypt", |key_material| {
-            futures::executor::block_on(async {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
                 self.crypto_provider.decrypt(key_material, ciphertext).await
             })
         })
@@ -348,7 +348,7 @@ impl HsmProvider for RustSoftwareHsm {
         debug!("✍️ Signing data with software key: {}", key_id);
 
         self.perform_crypto_operation(key_id, "sign", |key_material| {
-            futures::executor::block_on(async {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
                 self.crypto_provider.sign(key_material, data).await
             })
         })
@@ -360,7 +360,7 @@ impl HsmProvider for RustSoftwareHsm {
         debug!("🔍 Verifying signature with software key: {}", key_id);
 
         self.perform_crypto_operation(key_id, "verify", |key_material| {
-            futures::executor::block_on(async {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
                 self.crypto_provider
                     .verify(key_material, data, signature)
                     .await

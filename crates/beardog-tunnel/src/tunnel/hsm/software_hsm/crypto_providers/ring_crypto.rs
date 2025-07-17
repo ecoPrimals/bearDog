@@ -52,8 +52,8 @@ impl CryptoProvider for RingCryptoProvider {
 
     /// Encrypt data with key
     async fn encrypt(&self, key_material: &[u8], plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
-        use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, AES_256_GCM};
-        use ring::rand::{SecureRandom, SystemRandom};
+        // use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, AES_256_GCM};
+        // use ring::rand::{SecureRandom, SystemRandom};
         
         debug!(
             "Encrypting {} bytes with Ring crypto provider (AES-256-GCM)",
@@ -100,7 +100,7 @@ impl CryptoProvider for RingCryptoProvider {
 
     /// Decrypt data with key
     async fn decrypt(&self, key_material: &[u8], ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
-        use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, AES_256_GCM};
+        // use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, AES_256_GCM};
         
         debug!(
             "Decrypting {} bytes with Ring crypto provider (AES-256-GCM)",
@@ -148,7 +148,7 @@ impl CryptoProvider for RingCryptoProvider {
 
     /// Sign data with key
     async fn sign(&self, key_material: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
-        use ring::signature::{Ed25519KeyPair, KeyPair};
+        // use ring::signature::{Ed25519KeyPair, KeyPair};
         
         debug!("Signing {} bytes with Ring crypto provider (Ed25519)", data.len());
         
@@ -178,7 +178,7 @@ impl CryptoProvider for RingCryptoProvider {
         data: &[u8],
         signature: &[u8],
     ) -> BearDogResult<bool> {
-        use ring::signature::{UnparsedPublicKey, ED25519};
+        // use ring::signature::{UnparsedPublicKey, ED25519};
         
         debug!(
             "Verifying signature for {} bytes with Ring crypto provider (Ed25519)",
@@ -215,7 +215,7 @@ impl CryptoProvider for RingCryptoProvider {
         master_key: &[u8],
         derivation_data: &[u8],
     ) -> BearDogResult<Vec<u8>> {
-        use ring::hkdf::{Prk, HKDF_SHA256};
+        // use ring::hkdf::{Prk, HKDF_SHA256};
         
         debug!("Deriving key with Ring crypto provider (HKDF-SHA256)");
         

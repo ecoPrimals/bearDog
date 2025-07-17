@@ -19,7 +19,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use beardog_errors::{BearDogError, BearDogResult};
-use beardog_utils::crypto_utils::generate_secure_random_bytes;
+// use beardog_utils::crypto_utils::generate_secure_random_bytes;
 
 /// In-memory storage for HSM keys
 #[derive(Clone)]
@@ -98,7 +98,7 @@ impl MemoryHsmStorage {
     /// Create new memory HSM storage
     pub fn new() -> BearDogResult<Self> {
         // Generate a secure master key for storage encryption
-        let master_key_bytes = generate_secure_random_bytes(32)?;
+        let master_key_bytes = rand::random::<[u8; 32]>();
         let master_key = Key::<Aes256Gcm>::from_slice(&master_key_bytes);
 
         info!("Initialized memory HSM storage with secure master key");
@@ -275,7 +275,7 @@ impl DefaultEncryptionKey {
     /// Create a new default encryption key
     pub fn new() -> BearDogResult<Self> {
         // Generate a secure key for the cipher
-        let key_bytes = generate_secure_random_bytes(32)?;
+        let key_bytes = rand::random::<[u8; 32]>();
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
         let cipher = Aes256Gcm::new(key);
 
