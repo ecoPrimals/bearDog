@@ -22,8 +22,7 @@ pub async fn recombine_genetics(
 ) -> BearDogResult<BearDogGenetics> {
     if parents.is_empty() {
         return Err(BearDogError::NotFound {
-            resource_type: "parent_genetics".to_string(),
-            id: "empty_parents".to_string(),
+            message: "parent_genetics: empty_parents".to_string(),
         });
     }
 

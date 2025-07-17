@@ -4,7 +4,7 @@
 
 use super::types::*;
 use beardog_errors::{BearDogResult, BearDogError};
-use beardog_auth::auth::{SpawnPurpose, SecurityTraits, CryptoChromosome, NodeCapability, BearDogGenetics, SecurityClearance};
+use beardog_auth::auth::{SpawnPurpose, SecurityTraits, CryptoChromosome, NodeCapability, BearDogGenetics, SecurityClearance, NodeSpecialization};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
@@ -166,10 +166,4 @@ impl DefaultBearDogGeneticsEngine {
 pub struct SpawnRestriction {
     pub restriction_type: String,
     pub description: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct NodeSpecialization {
-    pub name: String,
-    pub level: u32,
 }

@@ -146,8 +146,7 @@ impl GeneticSpawningEngine {
             parent_genetics.push(genetics);
         } else {
             return Err(BearDogError::NotFound {
-                resource_type: "parent_genetics".to_string(),
-                id: request.requesting_parent.clone(),
+                message: format!("parent_genetics with id: {}", request.requesting_parent),
             });
         }
 

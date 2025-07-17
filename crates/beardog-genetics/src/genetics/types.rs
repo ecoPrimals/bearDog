@@ -156,25 +156,8 @@ impl GeneticsStore for InMemoryGeneticsStore {
     }
 }
 
-// Re-export TaskType string conversion for backwards compatibility
-impl ToString for TaskType {
-    fn to_string(&self) -> String {
-        match self {
-            TaskType::DataStorage => "data_storage".to_string(),
-            TaskType::Storage => "storage".to_string(),
-            TaskType::ComputeTask => "compute_task".to_string(),
-            TaskType::Compute => "compute".to_string(),
-            TaskType::SecurityAnalysis => "security_analysis".to_string(),
-            TaskType::Security => "security".to_string(),
-            TaskType::NetworkRelay => "network_relay".to_string(),
-            TaskType::Network => "network".to_string(),
-            TaskType::ComplianceCheck => "compliance_check".to_string(),
-            TaskType::ThreatHunting => "threat_hunting".to_string(),
-            TaskType::BackupOperation => "backup_operation".to_string(),
-            TaskType::DisasterRecovery => "disaster_recovery".to_string(),
-        }
-    }
-}
+// Note: TaskType ToString implementation moved to beardog_auth crate to avoid orphan rule violations
+// Use Display trait or format! macro instead for string conversion
 
 /// Multi-party workflow types for genetic spawning
 #[derive(Debug, Clone, Serialize, Deserialize)]
