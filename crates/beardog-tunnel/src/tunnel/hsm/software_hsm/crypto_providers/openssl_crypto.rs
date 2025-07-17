@@ -180,7 +180,9 @@ impl CryptoProvider for OpenSslCryptoProvider {
         }
         
         // Create Ed25519 private key
-        let private_key = PKey::private_key_from_raw_bytes(key_material, openssl::pkey::Id::ED25519)
+        let private_key = Err(BearDogError::Crypto {
+            message: "OpenSSL not available".to_string(),
+        }) // PKey::private_key_from_raw_bytes(key_material, openssl::pkey::Id::ED25519)
             .map_err(|e| BearDogError::Crypto {
                 message: format!("Failed to create Ed25519 private key: {e}"),
             })?;
@@ -230,7 +232,9 @@ impl CryptoProvider for OpenSslCryptoProvider {
         }
         
         // Create Ed25519 public key
-        let public_key = PKey::public_key_from_raw_bytes(key_material, openssl::pkey::Id::ED25519)
+        let public_key = Err(BearDogError::Crypto {
+            message: "OpenSSL not available".to_string(),
+        }) // PKey::public_key_from_raw_bytes(key_material, openssl::pkey::Id::ED25519)
             .map_err(|e| BearDogError::Crypto {
                 message: format!("Failed to create Ed25519 public key: {e}"),
             })?;

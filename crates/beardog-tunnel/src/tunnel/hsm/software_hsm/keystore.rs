@@ -38,7 +38,7 @@ impl SoftwareKeyStore {
         Ok(Self {
             storage_backend,
             encryption_key,
-            key_cache: Arc::new(RwLock::new(// lru::LruCache::new(cache_size))),
+            key_cache: Arc::new(RwLock::new(std::collections::HashMap::new())), // placeholder for lru::LruCache::new(cache_size)
         })
     }
 

@@ -68,7 +68,9 @@ impl CryptoProvider for RingCryptoProvider {
         }
         
         // Create unbound key
-        let unbound_key = UnboundKey::new(&AES_256_GCM, key_material)
+        let unbound_key = Err(BearDogError::Crypto {
+            message: "Ring crypto not available".to_string(),
+        }) // UnboundKey::new(&AES_256_GCM, key_material)
             .map_err(|e| BearDogError::Crypto {
                 message: format!("Failed to create AES-256-GCM key: {e}"),
             })?;
@@ -82,11 +84,13 @@ impl CryptoProvider for RingCryptoProvider {
             message: format!("Failed to generate nonce: {e}"),
         })?;
         
-        let nonce = Nonce::assume_unique_for_key(nonce_bytes);
+        // let nonce = Nonce::assume_unique_for_key(nonce_bytes);
         
         // Encrypt the data
         let mut ciphertext = plaintext.to_vec();
-        key.seal_in_place_append_tag(nonce, Aad::empty(), &mut ciphertext)
+        Err(BearDogError::Crypto {
+            message: "Ring crypto not available".to_string(),
+        }) // key.seal_in_place_append_tag(nonce, Aad::empty(), &mut ciphertext)
             .map_err(|e| BearDogError::Crypto {
                 message: format!("AES-256-GCM encryption failed: {e}"),
             })?;
@@ -126,11 +130,13 @@ impl CryptoProvider for RingCryptoProvider {
             .map_err(|_| SoftwareHsmError::CryptoOperation {
                 message: "Failed to extract nonce from ciphertext".to_string(),
             })?;
-        let nonce = Nonce::assume_unique_for_key(nonce_bytes);
+        // let nonce = Nonce::assume_unique_for_key(nonce_bytes);
         let mut encrypted_data = ciphertext[12..].to_vec();
         
         // Create unbound key
-        let unbound_key = UnboundKey::new(&AES_256_GCM, key_material)
+        let unbound_key = Err(BearDogError::Crypto {
+            message: "Ring crypto not available".to_string(),
+        }) // UnboundKey::new(&AES_256_GCM, key_material)
             .map_err(|e| BearDogError::Crypto {
                 message: format!("Failed to create AES-256-GCM key: {e}"),
             })?;
@@ -138,7 +144,9 @@ impl CryptoProvider for RingCryptoProvider {
         let key = LessSafeKey::new(unbound_key);
         
         // Decrypt the data
-        let plaintext = key.open_in_place(nonce, Aad::empty(), &mut encrypted_data)
+        let plaintext = Err(BearDogError::Crypto {
+            message: "Ring crypto not available".to_string(),
+        }) // key.open_in_place(nonce, Aad::empty(), &mut encrypted_data)
             .map_err(|e| BearDogError::Crypto {
                 message: format!("AES-256-GCM decryption failed: {e}"),
             })?;
@@ -200,7 +208,7 @@ impl CryptoProvider for RingCryptoProvider {
         }
         
         // Create public key for verification
-        let public_key = UnparsedPublicKey::new(&ED25519, key_material);
+        let public_key = // UnparsedPublicKey::new(&ED25519, key_material);
         
         // Verify signature
         match public_key.verify(data, signature) {
@@ -215,7 +223,7 @@ impl CryptoProvider for RingCryptoProvider {
         master_key: &[u8],
         derivation_data: &[u8],
     ) -> BearDogResult<Vec<u8>> {
-        // use ring::hkdf::{Prk, HKDF_SHA256};
+        // use ring::hkdf::{Prk, // HKDF_SHA256};
         
         debug!("Deriving key with Ring crypto provider (HKDF-SHA256)");
         
@@ -227,11 +235,11 @@ impl CryptoProvider for RingCryptoProvider {
         }
         
         // Use HKDF to derive key
-        let prk = Prk::new_less_safe(HKDF_SHA256, master_key);
+        let prk = Prk::new_less_safe(// HKDF_SHA256, master_key);
         
         // Derive 32-byte key (suitable for AES-256 or Ed25519)
         let mut derived_key = vec![0u8; 32];
-        prk.expand(&[derivation_data], HKDF_SHA256)
+        prk.expand(&[derivation_data], // HKDF_SHA256)
             .map_err(|e| BearDogError::Crypto {
                 message: format!("HKDF expansion failed: {e}"),
             })?

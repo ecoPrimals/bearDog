@@ -11,6 +11,27 @@
 //! - `algorithm`: Cryptographic algorithm definitions
 //! - `status`: HSM health and status monitoring types
 
+/// HSM type enumeration
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum HsmType {
+    /// iOS-based smartphone HSM
+    SmartphoneIos,
+    /// Android-based smartphone HSM
+    SmartphoneAndroid,
+    /// Rust software HSM
+    SoftwareRust,
+    /// AWS hardware HSM
+    HardwareAws,
+    /// Luna hardware HSM
+    HardwareLuna,
+    /// Thales hardware HSM
+    HardwareThales,
+    /// Utimaco hardware HSM
+    HardwareUtimaco,
+    /// Custom HSM type
+    Custom(String),
+}
+
 pub mod tier;
 pub mod key;
 pub mod config;

@@ -175,7 +175,7 @@ pub const BUILD_INFO: &str = concat!(
 );
 
 /// Create a new Software HSM with default configuration
-pub async fn create_default_software_hsm() -> crate::error::BearDogResult<RustSoftwareHsm> {
+pub async fn create_default_software_hsm() -> beardog_errors::BearDogResult<RustSoftwareHsm> {
     let config = crate::tunnel::hsm::types::SoftwareHsmConfig {
         implementation: crate::tunnel::hsm::types::SoftwareHsmType::RustSoftwareHsm,
         crypto_backend: crate::tunnel::hsm::types::CryptoBackend::Ring,
@@ -199,7 +199,7 @@ pub async fn create_default_software_hsm() -> crate::error::BearDogResult<RustSo
 }
 
 /// Create a new Software HSM with file-based storage
-pub async fn create_file_software_hsm() -> crate::error::BearDogResult<RustSoftwareHsm> {
+pub async fn create_file_software_hsm() -> beardog_errors::BearDogResult<RustSoftwareHsm> {
     let config = crate::tunnel::hsm::types::SoftwareHsmConfig {
         implementation: crate::tunnel::hsm::types::SoftwareHsmType::RustSoftwareHsm,
         crypto_backend: crate::tunnel::hsm::types::CryptoBackend::Ring,
@@ -223,7 +223,7 @@ pub async fn create_file_software_hsm() -> crate::error::BearDogResult<RustSoftw
 }
 
 /// Create a new Software HSM with database storage
-pub async fn create_database_software_hsm() -> crate::error::BearDogResult<RustSoftwareHsm> {
+pub async fn create_database_software_hsm() -> beardog_errors::BearDogResult<RustSoftwareHsm> {
     let config = crate::tunnel::hsm::types::SoftwareHsmConfig {
         implementation: crate::tunnel::hsm::types::SoftwareHsmType::RustSoftwareHsm,
         crypto_backend: crate::tunnel::hsm::types::CryptoBackend::Ring,
@@ -253,7 +253,7 @@ pub async fn create_database_software_hsm() -> crate::error::BearDogResult<RustS
 /// Validate Software HSM configuration
 pub fn validate_config(
     config: &crate::tunnel::hsm::types::SoftwareHsmConfig,
-) -> crate::error::BearDogResult<()> {
+) -> beardog_errors::BearDogResult<()> {
     // Validate cache size
     if config.key_store_config.cache_size == 0 {
         return Err(crate::error::BearDogError::InvalidConfig {

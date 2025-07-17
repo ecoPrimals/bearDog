@@ -169,8 +169,8 @@ pub struct SoftwareKeyStore {
     pub storage_backend: Arc<dyn StorageBackend>,
     /// Encryption key for protecting stored keys
     pub encryption_key: Arc<dyn EncryptionKey>,
-    /// LRU cache for frequently accessed keys
-    pub key_cache: Arc<RwLock<// lru::LruCache<String, SoftwareKey>>>,
+    /// Cache for frequently accessed keys (placeholder for LRU cache)
+    pub key_cache: Arc<RwLock<std::collections::HashMap<String, SoftwareKey>>>, // placeholder for lru::LruCache<String, SoftwareKey>
 }
 
 /// Software health monitor for system status
