@@ -478,7 +478,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
             loop {
                 interval.tick().await;
                 
-                match client.send_heartbeat(&primal_id).await {
+                match client.send_heartbeat().await {
                     Ok(_) => {
                         debug!("💓 Heartbeat sent successfully for primal: {}", primal_id);
                     }

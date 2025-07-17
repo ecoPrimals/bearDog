@@ -22,7 +22,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 #[async_trait]
-impl<T: Send + Sync> PrimalProvider for BearDogPrimalProvider<T> {
+impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
     fn ecosystem_id(&self) -> &str {
         ecosystem_ids::BEARDOG
     }
@@ -48,7 +48,14 @@ impl<T: Send + Sync> PrimalProvider for BearDogPrimalProvider<T> {
     }
 
     fn endpoints(&self) -> ServiceEndpoints {
-        self.endpoints.clone()
+        ServiceEndpoints {
+            primary: "http://localhost:8443".to_string(),
+            health: "http://localhost:8443/health".to_string(),
+            metrics: Some("http://localhost:8443/metrics".to_string()),
+            admin: Some("http://localhost:8443/admin".to_string()),
+            events: Some("http://localhost:8443/events".to_string()),
+            custom: HashMap::new(),
+        }
     }
 
     async fn health_check(&self) -> HealthStatus {
@@ -62,9 +69,10 @@ impl<T: Send + Sync> PrimalProvider for BearDogPrimalProvider<T> {
     }
 
     async fn handle_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse> {
-        info!("🔐 BearDog handling request: {}", request.id);
+        let request_id = request.id.clone();
+        info!("🔐 BearDog handling request: {}", request_id);
 
-        // Route to appropriate handler based on request type
+        // Match request type and route to appropriate handler
         let result = match request.request_type.as_str() {
             // Core security operations
             request_types::SECURITY_ENCRYPT => self.handle_encrypt_request(&request).await,
@@ -81,7 +89,7 @@ impl<T: Send + Sync> PrimalProvider for BearDogPrimalProvider<T> {
             _ => {
                 warn!("❌ Unknown request type: {}", request.request_type);
                 Ok(ServiceResponse::error(
-                    request.id,
+                    request_id.clone(),
                     "UNSUPPORTED_REQUEST_TYPE".to_string(),
                     format!("BearDog does not support request type: {}", request.request_type),
                 ))
@@ -90,15 +98,15 @@ impl<T: Send + Sync> PrimalProvider for BearDogPrimalProvider<T> {
 
         match result {
             Ok(response) => {
-                info!("✅ BearDog request completed successfully: {}", request.id);
+                info!("✅ BearDog request completed successfully: {}", request_id);
                 Ok(response)
             }
             Err(e) => {
-                warn!("❌ BearDog request failed: {} - {}", request.id, e);
+                warn!("❌ BearDog request failed: {} - {}", request_id, e);
                 Ok(ServiceResponse::error(
-                    request.id,
-                    "INTERNAL_ERROR".to_string(),
-                    format!("BearDog internal error: {}", e),
+                    request_id,
+                    "REQUEST_FAILED".to_string(),
+                    format!("Request processing failed: {}", e),
                 ))
             }
         }
@@ -186,11 +194,20 @@ impl<T: Send + Sync> PrimalProvider for BearDogPrimalProvider<T> {
     }
 
     fn metadata(&self) -> ProviderMetadata {
-        self.metadata.clone()
+        ProviderMetadata {
+            name: self.metadata.name.clone(),
+            version: self.metadata.version.clone(),
+            description: self.metadata.description.clone(),
+            author: "BearDog Security Team".to_string(),
+            website: Some("https://beardog.security".to_string()),
+            license: "MIT".to_string(),
+            tags: vec!["security".to_string(), "encryption".to_string()],
+            custom: HashMap::new(),
+        }
     }
 }
 
-impl<T: Send + Sync> BearDogPrimalProvider<T> {
+impl<T: Send + Sync + 'static> BearDogPrimalProvider<T> {
     // Private implementation methods
     
     async fn start_background_tasks(&self) -> BearDogResult<()> {

@@ -66,10 +66,9 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
         let endpoints = ServiceEndpoints {
             primary: "http://localhost:8443".to_string(),
             health: "http://localhost:8443/health".to_string(),
-            metrics: Some("http://localhost:8443/metrics".to_string()),
-            admin: Some("http://localhost:8443/admin".to_string()),
-            events: Some("http://localhost:8443/events".to_string()),
-            custom: HashMap::new(),
+            metrics: "http://localhost:8443/metrics".to_string(),
+            admin: "http://localhost:8443/admin".to_string(),
+            websocket: Some("ws://localhost:8443/ws".to_string()),
         };
 
         let metadata = ProviderMetadata {

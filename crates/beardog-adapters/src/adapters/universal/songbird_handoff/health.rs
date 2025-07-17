@@ -168,7 +168,7 @@ impl UniversalHealthMonitor {
             config,
             performance_metrics,
             health_history,
-            primal_id: "universal-component".to_string(), // Placeholder
+            primal_id: PrimalId::from_id("universal-component"), // Placeholder
         })
     }
 
@@ -231,32 +231,32 @@ impl UniversalHealthMonitor {
     }
 
     /// Perform comprehensive health check
-    async fn perform_comprehensive_health_check(primal_id: &PrimalId) -> BearDogResult<HealthCheckResult> {
+    async fn perform_comprehensive_health_check(&self, primal_id: &PrimalId) -> BearDogResult<HealthCheckResult> {
         let start_time = std::time::Instant::now();
         
         // Check memory usage
-        let memory_usage = Self::check_memory_usage().await?;
+        let memory_usage = self.check_memory_usage().await?;
         
         // Check CPU usage
-        let cpu_usage = Self::check_cpu_usage().await?;
+        let cpu_usage = UniversalHealthMonitor::check_cpu_usage().await?;
         
         // Check disk space
-        let disk_space = Self::check_disk_space().await?;
+        let disk_space = self.check_disk_space().await?;
         
         // Check active connections
-        let active_connections = Self::check_active_connections().await?;
+        let active_connections = self.check_active_connections().await?;
         
         // Check component health
-        let component_health = Self::check_all_components().await?;
+        let component_health = self.check_all_components().await?;
         
         // Calculate response time
         let response_time_ms = start_time.elapsed().as_millis() as f64;
         
         // Calculate error rate (this would be based on recent metrics)
-        let error_rate = Self::calculate_error_rate().await?;
+        let error_rate = self.calculate_error_rate().await?;
         
         // Determine overall health status
-        let overall_health = Self::determine_overall_health(
+        let overall_health = self.determine_overall_health(
             memory_usage,
             cpu_usage,
             disk_space,
@@ -265,7 +265,7 @@ impl UniversalHealthMonitor {
         );
         
         // Generate alerts if needed
-        let alerts = Self::generate_health_alerts(
+        let alerts = self.generate_health_alerts(
             memory_usage,
             cpu_usage,
             disk_space,
@@ -315,14 +315,14 @@ impl UniversalHealthMonitor {
     }
 
     /// Check active connections
-    async fn check_active_connections() -> BearDogResult<u32> {
+    async fn check_active_connections(&self) -> BearDogResult<u32> {
         // Get active connection count
         debug!("📊 Checking active connections");
         Ok(42) // Placeholder: 42 active connections
     }
 
     /// Check all components
-    async fn check_all_components() -> BearDogResult<std::collections::HashMap<String, HealthStatus>> {
+    async fn check_all_components(&self) -> BearDogResult<std::collections::HashMap<String, HealthStatus>> {
         let mut component_health = std::collections::HashMap::new();
         
         // Check BearDog core
@@ -348,7 +348,7 @@ impl UniversalHealthMonitor {
     }
 
     /// Calculate error rate
-    async fn calculate_error_rate() -> BearDogResult<f64> {
+    async fn calculate_error_rate(&self) -> BearDogResult<f64> {
         // Calculate error rate based on recent metrics
         debug!("📊 Calculating error rate");
         Ok(0.5) // Placeholder: 0.5% error rate
@@ -486,9 +486,12 @@ impl UniversalHealthMonitor {
 
 
     /// Check network connectivity
-    async fn check_network_connectivity(&self) -> BearDogResult<()> {
-        // Test connection to SongBird
-        self.client.test_connection().await
+    async fn check_network_connectivity(&self) -> BearDogResult<f64> {
+        // Test connection to SongBird and return connectivity score
+        match self.client.test_connection().await {
+            Ok(()) => Ok(100.0), // 100% connectivity
+            Err(_) => Ok(0.0),    // 0% connectivity
+        }
     }
 
     /// Update health status
@@ -504,9 +507,10 @@ impl UniversalHealthMonitor {
             super::super::traits::HealthStatus::Unhealthy { .. } => {
                 super::types::HealthStatus::Unhealthy
             }
-            super::super::traits::HealthStatus::Unhealthy { reason, recovery_time } => super::types::HealthStatus::Unhealthy,
             super::super::traits::HealthStatus::Starting => super::types::HealthStatus::Healthy,
             super::super::traits::HealthStatus::Shutting => super::types::HealthStatus::Unhealthy,
+            super::super::traits::HealthStatus::Warning => super::types::HealthStatus::Degraded,
+            super::super::traits::HealthStatus::Critical => super::types::HealthStatus::Unhealthy,
         };
         health.last_check = _result.timestamp;
 

@@ -35,7 +35,7 @@ pub struct UniversalEcosystemManager<T> {
     ecosystem_discovery: Arc<EcosystemDiscovery<T>>,
 
     /// Active service requests
-    active_requests: Arc<RwLock<HashMap<Uuid, ServiceRequest>>>,
+    active_requests: Arc<RwLock<HashMap<String, ServiceRequest>>>,
 
     /// Provider configurations
     provider_configs: Arc<RwLock<HashMap<String, ProviderConfig>>>,
@@ -195,12 +195,10 @@ impl<T: Send + Sync> UniversalEcosystemManager<T> {
             request.request_type, request.id
         );
 
-        // Store active request
+        // Track active request
         {
             let mut active_requests = self.active_requests.write().await;
-            let request_uuid = uuid::Uuid::parse_str(&request.id)
-                .unwrap_or_else(|_| uuid::Uuid::new_v4()); // Generate new UUID if parsing fails
-            active_requests.insert(request_uuid, request.clone());
+            active_requests.insert(request.id.clone(), request.clone());
         }
 
         // Find capable provider
@@ -239,10 +237,10 @@ impl<T: Send + Sync> UniversalEcosystemManager<T> {
         }
 
         // If no explicit handler, try to find by capability
-        if let Some(target_ecosystem) = &request.target {
+        if !request.target.is_empty() {
             // Look for specific ecosystem
             for (provider_key, _) in providers.iter() {
-                if provider_key.starts_with(target_ecosystem) {
+                if provider_key.starts_with(&request.target) {
                     return Ok(provider_key.clone());
                 }
             }
