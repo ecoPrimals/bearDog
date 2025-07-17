@@ -1,0 +1,113 @@
+# Distributed BearDog Configuration
+# Optimized for: Local instances + Mobile HSM for human identity
+
+[app]
+name = "BearDog-Distributed"
+version = "1.0.0"
+# Enable standalone mode for local instances
+standalone_mode = true
+environment = "distributed"
+debug = false
+
+[network]
+# Local network optimization
+[network.http]
+enabled = true
+bind_address = "0.0.0.0:8080"
+port = 8080
+max_request_size = 10485760  # 10MB
+keep_alive_timeout = 300
+
+[network.node_communication]
+enabled = true
+protocol = "Http"
+retry.max_attempts = 3
+retry.initial_delay_ms = 100
+retry.max_delay_ms = 1000
+
+# HSM Configuration - Multi-tier with mobile priority
+[hsm]
+# Mobile HSM (Pixel 8) - High security operations
+[hsm.mobile]
+enabled = true
+priority = 1
+device_type = "Pixel8"
+secure_enclave = "StrongBox"
+user_presence_required = true
+# Only use for human identity operations
+operation_types = ["human_identity", "root_key_generation", "critical_auth"]
+
+# Software HSM - Always available for routine operations
+[hsm.software]
+enabled = true
+priority = 2
+implementation = "RustSoftwareHsm"
+key_storage = "Memory"
+memory_protection = "High"
+# Handle all routine operations
+operation_types = ["file_encryption", "data_processing", "local_spawning", "backup"]
+
+# Hardware HSM - Optional enhancement
+[hsm.hardware]
+enabled = false
+priority = 3
+
+# Operation Routing Rules
+[operation_routing]
+# Route high-security operations to mobile HSM when available
+human_identity = "mobile_hsm_preferred"
+root_key_generation = "mobile_hsm_required"
+critical_authentication = "mobile_hsm_preferred"
+
+# Route routine operations to local software HSM
+file_encryption = "software_hsm"
+data_processing = "software_hsm"
+local_spawning = "software_hsm"
+backup_operations = "software_hsm"
+
+# Genetic Spawning - Operates without HSM
+[genetics]
+enable_offline_spawning = true
+base_mutation_rate = 0.05
+max_genetic_diversity = 0.8
+min_security_threshold = 0.7
+# Allow spawning even when mobile HSM unavailable
+hsm_requirement = "optional"
+
+# Local Instance Optimization
+[performance]
+# Enable local caching for reduced latency
+local_key_cache_size = 1000
+local_operation_cache_ttl = 300
+# Prefetch commonly used keys
+enable_key_prefetch = true
+# Background sync when HSM available
+background_sync_interval = 900  # 15 minutes
+
+# Security Levels Based on HSM Availability
+[security.hsm_available]
+min_security_level = "High"
+enable_ml_threat_detection = true
+audit_level = "Detailed"
+
+[security.hsm_unavailable]
+min_security_level = "Standard"
+enable_ml_threat_detection = false
+audit_level = "Basic"
+# Still secure, but optimized for local operation
+
+# Distributed Coordination
+[distributed]
+enable_peer_discovery = true
+local_network_range = "192.168.0.0/16"
+sync_interval = 300
+# Coordinate between local instances
+enable_instance_coordination = true
+
+# Graceful Degradation
+[failover]
+enable_graceful_degradation = true
+fallback_timeout = 5000  # 5 seconds
+max_retry_attempts = 3
+# Continue operation even if HSM temporarily unavailable
+continue_without_hsm = true 

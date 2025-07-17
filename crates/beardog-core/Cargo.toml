@@ -1,0 +1,35 @@
+[package]
+name = "beardog-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "BearDog core module"
+authors.workspace = true
+
+[dependencies]
+beardog-errors = { workspace = true }
+beardog-config = { workspace = true }
+beardog-security = { workspace = true }
+beardog-threat = { workspace = true }
+beardog-monitoring = { workspace = true }
+beardog-compliance = { workspace = true }
+beardog-genetics = { workspace = true }
+beardog-tunnel = { workspace = true }
+beardog-utils = { workspace = true }
+beardog-auth = { workspace = true }
+beardog-node-registry = { workspace = true }
+beardog-production = { workspace = true }
+beardog-workflows = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+axum = "0.7"
+serde_json = "1.0"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace", "compression-full", "timeout"] }
+anyhow = "1.0" 
+

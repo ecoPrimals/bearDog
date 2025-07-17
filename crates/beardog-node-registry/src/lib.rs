@@ -1,0 +1,1 @@
+//! BearDog node-registry module

@@ -4,7 +4,7 @@
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](https://www.rust-lang.org/)
-[![Tests](https://img.shields.io/badge/tests-151%2F151_passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-165%2F165_passing-brightgreen.svg)]()
 [![Security](https://img.shields.io/badge/security-production_ready-green.svg)]()
 
 ## 🌍 Mission
@@ -15,9 +15,10 @@ BearDog brings Fortune 500-grade security capabilities to everyone - individuals
 
 ## 🎯 Current Status: **PRODUCTION READY** ✅
 
-- **151/151 tests passing (100% success rate)**
+- **165/165 tests passing (100% success rate)**
 - **Full ecosystem integration capabilities**
 - **Complete security architecture implemented**
+- **User-controlled recovery system** - Distributed trust, no single point of failure ✅ **NEW**
 - **Ready for EcoPrimals ecosystem deployment**
 
 ## 🚀 Development Setup
@@ -45,6 +46,13 @@ cargo build --release
 - **HSM integration** with any PKCS#11 compatible device
 - **Automatic key rotation** with governance workflows
 - **Owner-only decryption** for zero-trust security
+
+### 🔄 **User-Controlled Recovery** ✅ **NEW**
+- **Distributed trust model** - No single point of failure
+- **Shamir's Secret Sharing** - Threshold cryptography (K-of-N)
+- **Mixed recovery methods** - Combine social, federation, and emergency
+- **Worthless key principle** - Individual shards are cryptographically useless
+- **User-defined policies** - Configurable trust boundaries and recovery contexts
 
 ### 🚨 **Intelligent Threat Detection**
 - **ML-powered** behavioral analysis

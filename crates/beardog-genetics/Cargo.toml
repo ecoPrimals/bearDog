@@ -1,0 +1,22 @@
+[package]
+name = "beardog-genetics"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "BearDog genetics module"
+authors.workspace = true
+
+[dependencies]
+beardog-errors = { workspace = true }
+beardog-auth = { workspace = true }
+beardog-tunnel = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+rand = "0.8"
+serde_json = "1.0"
+base64 = "0.21"

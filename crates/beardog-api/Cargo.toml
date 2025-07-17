@@ -1,0 +1,27 @@
+[package]
+name = "beardog-api"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "BearDog api module"
+authors.workspace = true
+
+[dependencies]
+anyhow = "1.0"
+async-stream = "0.3"
+axum = { version = "0.7", features = ["http2", "macros", "tracing"] }
+base64 = "0.21"
+chrono = { version = "0.4", features = ["serde"] }
+jsonwebtoken = "9.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+tokio-stream = "0.1"
+tracing = "0.1"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+beardog-auth = { path = "../beardog-auth" }
+beardog-core = { path = "../beardog-core" }
+beardog-errors = { path = "../beardog-errors" }
+beardog-genetics = { path = "../beardog-genetics" }
+beardog-tunnel = { path = "../beardog-tunnel" }

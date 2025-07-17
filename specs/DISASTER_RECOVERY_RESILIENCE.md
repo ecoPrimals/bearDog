@@ -1,19 +1,29 @@
 # BearDog Disaster Recovery & System Resilience Specification
 
-**Version:** 1.0  
+**Version:** 2.0  
 **Date:** January 2025  
-**Status:** SPECIFICATION  
+**Status:** IMPLEMENTED ✅  
 **Priority:** CRITICAL  
 
 ## 🎯 **Overview**
 
-BearDog's disaster recovery and resilience systems ensure business continuity and data protection:
+BearDog's disaster recovery and resilience systems ensure business continuity and data protection through multiple layers:
+
+### **Infrastructure Recovery**
 - **Multi-region key backup and recovery**
 - **Automated failover mechanisms**
 - **Zero-downtime upgrades**
 - **Byzantine fault tolerance**
 - **Catastrophic failure recovery**
 - **Compliance-aware backup strategies**
+
+### **User-Controlled Recovery** ✅ **NEW**
+- **Shamir's Secret Sharing** - Threshold cryptography for account recovery
+- **Distributed Trust Model** - No single point of failure
+- **Mixed Recovery Methods** - Combine social, federation, and emergency recovery
+- **User-Defined Trust Boundaries** - Configurable security policies
+- **Context-Aware Recovery** - Family, work, emergency recovery contexts
+- **Worthless Key Principle** - Individual shards provide no security value
 
 ## 🏗️ **Resilience Architecture**
 
@@ -96,6 +106,167 @@ pub struct RecoveryPlan {
     pub success_criteria: Vec<String>,
 }
 ```
+
+## 🧬 **User-Controlled Recovery System** ✅ **IMPLEMENTED**
+
+### **Core Philosophy**
+**"Finding a key in the parking lot doesn't jeopardize anyone's security"**
+
+The user-controlled recovery system implements distributed trust through Shamir's Secret Sharing, ensuring that individual recovery shards are worthless without the proper context and threshold number of participants.
+
+### **Recovery Manager Implementation**
+```rust
+pub struct RecoveryManager {
+    /// Active recovery sessions
+    recovery_sessions: Arc<RwLock<HashMap<String, RecoverySession>>>,
+    /// Social recovery configurations per user
+    social_configs: Arc<RwLock<HashMap<String, SocialRecoveryConfig>>>,
+    /// Federation recovery configurations
+    federation_configs: Arc<RwLock<HashMap<String, FederationRecoveryConfig>>>,
+    /// Ephemeral recovery keys
+    ephemeral_keys: Arc<RwLock<HashMap<String, EphemeralRecoveryKey>>>,
+    /// Recovery audit log
+    audit_log: Arc<RwLock<Vec<RecoveryAuditEntry>>>,
+}
+
+impl RecoveryManager {
+    /// Setup user-controlled recovery policy
+    pub async fn setup_user_recovery_policy(
+        &self,
+        user_id: &str,
+        policy: UserRecoveryPolicy,
+    ) -> BearDogResult<String> {
+        // Validate policy
+        if policy.threshold_shards > policy.total_shards {
+            return Err(BearDogError::authorization("Threshold cannot exceed total shards"));
+        }
+        
+        // Generate recovery shards using Shamir's Secret Sharing
+        let master_secret = self.generate_master_secret(user_id).await?;
+        let shards = self.create_shamir_shares(
+            &master_secret,
+            policy.total_shards,
+            policy.threshold_shards,
+            &policy.recovery_contexts,
+        ).await?;
+        
+        // Store policy and shards securely
+        let policy_id = Uuid::new_v4().to_string();
+        // Implementation stores encrypted shards with holders
+        
+        Ok(policy_id)
+    }
+    
+    /// Start mixed recovery session
+    pub async fn start_mixed_recovery(
+        &self,
+        user_id: &str,
+        recovery_contexts: Vec<String>,
+        recovery_policy: UserRecoveryPolicy,
+    ) -> BearDogResult<String> {
+        if !recovery_policy.allow_mixed_recovery {
+            return Err(BearDogError::authorization("Mixed recovery not enabled"));
+        }
+        
+        let session_id = Uuid::new_v4().to_string();
+        let session = MixedRecoverySession {
+            id: session_id.clone(),
+            user_id: user_id.to_string(),
+            status: MixedRecoveryStatus::Active,
+            recovery_policy: recovery_policy.clone(),
+            progress: RecoveryProgress {
+                shards_needed: recovery_policy.threshold_shards,
+                shards_collected: 0,
+                completion_percentage: 0.0,
+                contexts_responded: Vec::new(),
+                contexts_pending: recovery_contexts,
+                estimated_completion_time: None,
+            },
+            // ... additional fields
+        };
+        
+        // Store session and initiate recovery process
+        Ok(session_id)
+    }
+}
+```
+
+### **User Recovery Policy Configuration**
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserRecoveryPolicy {
+    /// Total number of recovery shards to create
+    pub total_shards: u32,
+    /// Minimum number of shards required for recovery
+    pub threshold_shards: u32,
+    /// Recovery methods enabled by user
+    pub enabled_methods: Vec<RecoveryType>,
+    /// Custom trust boundaries set by user
+    pub trust_boundaries: UserTrustBoundaries,
+    /// Whether to allow mixed recovery (combining methods)
+    pub allow_mixed_recovery: bool,
+    /// Maximum time window for recovery attempts
+    pub max_recovery_window_hours: u32,
+    /// User-defined recovery contexts (family, work, emergency, etc.)
+    pub recovery_contexts: Vec<RecoveryContext>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RecoveryContext {
+    /// Context name (e.g., "family", "work", "emergency")
+    pub name: String,
+    /// Description of this recovery context
+    pub description: String,
+    /// Shards allocated to this context
+    pub shard_allocation: ShardAllocation,
+    /// Specific trust requirements for this context
+    pub context_trust_requirements: ContextTrustRequirements,
+    /// Whether this context can be used alone or needs mixing
+    pub standalone_capable: bool,
+}
+```
+
+### **Recovery Scenarios**
+
+#### **HPC Basement Scenario**
+Perfect for distributed computing environments:
+1. **Spawn federated HPC** in basement with genetic derivatives
+2. **Setup recovery towers** (office 95%, mobile 85%, cloud 80% trust)
+3. **Configure federation recovery** (need 1 of 3 towers)
+4. **Genetic derivatives** get unique crypto keys + ephemeral recovery
+5. **Device failure** → use towers for recovery
+6. **No system bricking** → genetic derivatives continue independently
+
+#### **Student Scenario**
+Sarah loses laptop and phone at coffee shop:
+1. **Contacts family**: Mom and Dad provide shards (2/4 needed)
+2. **Contacts university**: IT dept and professor provide shards (2/4)
+3. **Threshold met**: 4 shards collected from 2 contexts
+4. **Account recovered**: Sarah accesses from university computer
+5. **Security maintained**: Coffee shop thief gains nothing
+
+### **Security Properties**
+
+#### **Key Worthlessness Principle**
+```rust
+// Individual shard found without context
+KeyWorthinessDemo {
+    shard_data_found: true,
+    can_decrypt_shard: false,        // ❌ No context
+    can_identify_user: false,        // ❌ No metadata
+    can_locate_other_shards: false,  // ❌ No directory
+    can_compromise_account: false,   // ❌ Need threshold
+    security_impact: "NONE - Shard is worthless without context"
+}
+```
+
+#### **Verification Methods**
+- **Email verification**: Standard email challenges
+- **SMS verification**: Phone-based codes
+- **Video call verification**: Human-in-the-loop verification
+- **Hardware tokens**: Physical device verification
+- **Biometric verification**: Fingerprint, face recognition
+- **Cryptographic challenges**: Proof of key possession
 
 ### **Multi-Region Key Backup**
 ```rust

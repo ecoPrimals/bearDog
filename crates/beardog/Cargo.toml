@@ -1,0 +1,52 @@
+[package]
+name = "beardog"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "BearDog Security Manager - Convenience library re-exporting all components"
+authors.workspace = true
+
+[dependencies]
+beardog-core = { workspace = true }
+beardog-errors = { workspace = true }
+beardog-config = { workspace = true }
+beardog-security = { workspace = true }
+beardog-auth = { workspace = true }
+beardog-api = { workspace = true }
+beardog-genetics = { workspace = true }
+beardog-threat = { workspace = true }
+beardog-tunnel = { workspace = true }
+beardog-workflows = { workspace = true }
+beardog-adapters = { workspace = true }
+beardog-compliance = { workspace = true }
+beardog-monitoring = { workspace = true }
+beardog-node-registry = { workspace = true }
+beardog-production = { workspace = true }
+beardog-utils = { workspace = true }
+
+# Additional dependencies for examples
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
+
+# Define examples
+[[example]]
+name = "ecosystem_integration_demo"
+path = "../../examples/ecosystem_integration_demo.rs"
+
+[[example]]
+name = "standalone_crypto_demo"
+path = "../../examples/standalone_crypto_demo.rs"
+
+[[example]]
+name = "recovery_demo"
+path = "../../examples/recovery_demo.rs"
+
+[[example]]
+name = "hpc_genetic_recovery_demo"
+path = "../../examples/hpc_genetic_recovery_demo.rs" 

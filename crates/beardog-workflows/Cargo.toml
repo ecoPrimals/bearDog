@@ -1,0 +1,29 @@
+[package]
+name = "beardog-workflows"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "BearDog workflows module"
+authors.workspace = true
+
+[dependencies]
+beardog-errors = { workspace = true }
+beardog-config = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+rand = { workspace = true }
+
+# Dependencies for notification system
+reqwest = { workspace = true }
+hex = "0.4"
+hmac = "0.12"
+sha2 = "0.10"
+lettre = "0.11"
+base64 = "0.22"

@@ -34,6 +34,7 @@ pub struct BearDogSecurityProvider {
     threat_engine: Arc<ThreatDetectionEngine>,
     policy_engine: Arc<PolicyEngine>,
     session_manager: Arc<SessionManager>,
+    recovery_manager: Arc<RecoveryManager>,  // ✅ NEW: User-controlled recovery
     
     // Performance optimizations
     auth_cache: Arc<RwLock<AuthorizationCache>>,
@@ -866,6 +867,161 @@ impl RateLimiter {
     }
 }
 ```
+
+## 🔄 **Recovery Manager** ✅ **IMPLEMENTED**
+
+### **User-Controlled Recovery System**
+
+The BearDog Security Provider now includes a comprehensive user-controlled recovery system that implements distributed trust through Shamir's Secret Sharing.
+
+### **Recovery Manager Integration**
+```rust
+impl BearDogSecurityProvider {
+    pub async fn new(config: SecurityProviderConfig) -> Result<Self> {
+        let auth_engine = Arc::new(AuthenticationEngine::new(&config.authentication).await?);
+        let authz_engine = Arc::new(AuthorizationEngine::new(&config.authorization).await?);
+        let audit_engine = Arc::new(AuditEngine::new(&config.audit).await?);
+        let threat_engine = Arc::new(ThreatDetectionEngine::new(&config.threat_detection).await?);
+        let policy_engine = Arc::new(PolicyEngine::new(&config.policies).await?);
+        let session_manager = Arc::new(SessionManager::new(&config.session).await?);
+        let recovery_manager = Arc::new(RecoveryManager::new().await?);  // ✅ NEW
+
+        Ok(Self {
+            config: Arc::new(config),
+            auth_engine,
+            authz_engine,
+            audit_engine,
+            threat_engine,
+            policy_engine,
+            session_manager,
+            recovery_manager,  // ✅ NEW
+            auth_cache: Arc::new(RwLock::new(AuthorizationCache::new())),
+            rate_limiter: Arc::new(RateLimiter::new()),
+            metrics_collector: Arc::new(MetricsCollector::new()),
+        })
+    }
+    
+    /// Setup user-controlled recovery policy
+    pub async fn setup_recovery_policy(
+        &self,
+        user_id: &str,
+        policy: UserRecoveryPolicy,
+    ) -> SecurityResult<String> {
+        // Validate user authorization
+        let context = AuthorizationContext::new(user_id, "recovery:setup");
+        self.authorize(&context).await?;
+        
+        // Setup recovery policy
+        let policy_id = self.recovery_manager
+            .setup_user_recovery_policy(user_id, policy)
+            .await?;
+        
+        // Audit log the setup
+        self.audit_engine.log_recovery_setup(user_id, &policy_id).await?;
+        
+        Ok(policy_id)
+    }
+    
+    /// Start mixed recovery session
+    pub async fn start_recovery_session(
+        &self,
+        user_id: &str,
+        recovery_contexts: Vec<String>,
+        recovery_policy: UserRecoveryPolicy,
+    ) -> SecurityResult<String> {
+        // Rate limit recovery attempts
+        if !self.rate_limiter.check_rate_limit(user_id).await? {
+            return Err(SecurityError::RateLimitExceeded);
+        }
+        
+        // Start recovery session
+        let session_id = self.recovery_manager
+            .start_mixed_recovery(user_id, recovery_contexts, recovery_policy)
+            .await?;
+        
+        // Audit log the attempt
+        self.audit_engine.log_recovery_attempt(user_id, &session_id).await?;
+        
+        Ok(session_id)
+    }
+    
+    /// Submit recovery shard
+    pub async fn submit_recovery_shard(
+        &self,
+        session_id: &str,
+        shard: CollectedShard,
+        verification_proof: Option<String>,
+    ) -> SecurityResult<RecoveryProgress> {
+        // Validate session exists and is active
+        let session = self.recovery_manager.get_session(session_id).await?;
+        if session.status != RecoveryStatus::Active {
+            return Err(SecurityError::RecoverySessionInactive);
+        }
+        
+        // Submit shard
+        let progress = self.recovery_manager
+            .submit_recovery_shard(session_id, shard, verification_proof)
+            .await?;
+        
+        // Audit log the submission
+        self.audit_engine.log_shard_submission(session_id, &progress).await?;
+        
+        Ok(progress)
+    }
+    
+    /// Attempt secret reconstruction
+    pub async fn attempt_recovery_reconstruction(
+        &self,
+        session_id: &str,
+    ) -> SecurityResult<bool> {
+        // Attempt reconstruction
+        let success = self.recovery_manager
+            .attempt_secret_reconstruction(session_id)
+            .await?;
+        
+        // Audit log the result
+        self.audit_engine.log_recovery_result(session_id, success).await?;
+        
+        if success {
+            // Invalidate existing sessions for security
+            self.session_manager.invalidate_user_sessions(&session_id).await?;
+        }
+        
+        Ok(success)
+    }
+}
+```
+
+### **Recovery Security Properties**
+
+#### **Key Worthlessness Principle**
+Individual recovery shards are cryptographically worthless without:
+- **Context**: Knowledge of what the shard unlocks
+- **Threshold**: Minimum number of shards required
+- **Verification**: Proof of authorized access
+- **Time window**: Valid recovery session
+
+#### **Distributed Trust Model**
+- **No single point of failure**: Multiple recovery contexts required
+- **User-controlled boundaries**: Configurable trust levels and policies
+- **Mixed recovery methods**: Combine social, federation, and emergency recovery
+- **Threshold cryptography**: Shamir's Secret Sharing ensures K-of-N security
+
+#### **Audit and Compliance**
+All recovery operations are fully audited:
+- **Policy setup**: When and how recovery policies are configured
+- **Session management**: Recovery session lifecycle and status
+- **Shard submissions**: Who provides shards and verification status
+- **Reconstruction attempts**: Success/failure of recovery operations
+
+### **Integration with Existing Security**
+
+The recovery system seamlessly integrates with existing security components:
+- **Authentication**: Recovered accounts go through full re-authentication
+- **Authorization**: Recovery operations require proper authorization
+- **Audit**: All recovery activities are logged and auditable
+- **Threat Detection**: Recovery attempts are monitored for anomalies
+- **Rate Limiting**: Recovery attempts are rate-limited to prevent abuse
 
 ## 🧪 **Testing Strategy**
 

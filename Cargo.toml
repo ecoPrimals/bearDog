@@ -1,17 +1,36 @@
-[package]
-name = "beardog"
+[workspace]
+resolver = "2"
+members = [
+    "crates/beardog",
+    "crates/beardog-cli",
+    "crates/beardog-core",
+    "crates/beardog-errors",
+    "crates/beardog-config",
+    "crates/beardog-security",
+    "crates/beardog-auth",
+    "crates/beardog-api",
+    "crates/beardog-genetics",
+    "crates/beardog-threat",
+    "crates/beardog-tunnel",
+    "crates/beardog-workflows",
+    "crates/beardog-adapters",
+    "crates/beardog-compliance",
+    "crates/beardog-monitoring",
+    "crates/beardog-node-registry",
+    "crates/beardog-production",
+    "crates/beardog-utils",
+]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "AGPL-3.0-only"
 description = "Enterprise-grade security manager for everyone - democratizing Fortune 500 security capabilities"
 homepage = "https://github.com/beardog-security/beardog"
 repository = "https://github.com/beardog-security/beardog"
-keywords = ["security", "encryption", "compliance", "threat-detection", "enterprise"]
-categories = ["cryptography", "security", "authentication"]
 authors = ["BearDog Security Community"]
-readme = "README.md"
 
-[dependencies]
+[workspace.dependencies]
 # Core async runtime
 tokio = { version = "1.40", features = ["full"] }
 tokio-util = "0.7"
@@ -20,117 +39,73 @@ tokio-util = "0.7"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
-config = "0.14"
 
-# Pattern matching and text processing
-regex = "1.10"
-
-# Cryptography and security
-ring = "0.17"
-aes-gcm = "0.10"
-chacha20poly1305 = "0.10"
-argon2 = "0.5"
-hmac = "0.12"
-sha2 = "0.10"
-sha3 = "0.10"
-rand = "0.8"
-uuid = { version = "1.10", features = ["v4", "serde"] }
-ed25519-dalek = { version = "2.1", features = ["rand_core"] }
-pbkdf2 = "0.12"
-subtle = "2.5"
-hex = "0.4"
-zeroize = "1.7"
-openssl = "0.10"
-
-# Post-quantum cryptography
-pqcrypto-mlkem = "0.1"
-pqcrypto-mldsa = "0.1"
-
-# Async traits and utilities
+# Async and traits
 async-trait = "0.1"
 futures = "0.3"
-pin-project = "1.1"
 
-# HTTP and networking
-axum = "0.7"
-tower = "0.4"
-tower-http = { version = "0.5", features = ["cors", "trace", "compression-gzip", "timeout", "util"] }
-hyper = "1.0"
-reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
-
-# TLS and certificates
-rustls = "0.23"
-rustls-pemfile = "2.1"
-webpki-roots = "0.26"
-
-# Database and storage
-sqlx = { version = "0.8.2", features = ["runtime-tokio-rustls", "postgres", "sqlite", "uuid", "chrono", "json"] }
-redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
-
-# Time and dates
+# Time and UUIDs
 chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
 
-# Base64 encoding
-base64 = "0.22"
-
-# Logging and observability
+# Logging and tracing
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
-metrics = "0.22"
-# LICENSED FEATURE: Prometheus export requires BearDog license
-metrics-exporter-prometheus = { version = "0.13", optional = true }
 
 # Error handling
-thiserror = "1.0"
 anyhow = "1.0"
+thiserror = "1.0"
 
-# Memory management and performance
-arc-swap = "1.7"
-parking_lot = "0.12"
-lru = "0.12"
-bytes = "1.7"
+# Cryptography
+ring = "0.16"
+aes-gcm = "0.10"
+sha2 = "0.10"
+rand = "0.8"
+base64 = "0.21"
+rustls = "0.21"
+argon2 = "0.5"
 
-# Machine learning (for threat detection) - using simpler deps for now
-# candle-core = { version = "0.4", optional = true }
-# candle-nn = { version = "0.4", optional = true }
-# ort = { version = "2.0.0-rc.10", optional = true }
+# HTTP and networking
+reqwest = { version = "0.11", features = ["json", "stream"] }
+hyper = { version = "0.14", features = ["full"] }
+axum = { version = "0.7", features = ["ws", "macros"] }
+tower = { version = "0.4", features = ["util", "timeout", "load-shed", "limit"] }
+tower-http = { version = "0.5", features = ["cors", "trace"] }
 
-# HSM integration
-cryptoki = { version = "0.7", optional = true }
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
+redis = { version = "0.23", features = ["tokio-comp"] }
 
-# Environment and CLI
-clap = { version = "4.4", features = ["derive", "env"] }
-dotenvy = "0.15"
+# Configuration and CLI
+clap = { version = "4.0", features = ["derive"] }
+config = "0.13"
 
-# Serialization for HSM key storage
-bincode = "1.3"
+# Testing
+mockall = "0.11"
 
-# Testing and development
-[dev-dependencies]
-tokio-test = "0.4"
-criterion = "0.5"
-proptest = "1.0"
-tempfile = "3.8"
-wiremock = "0.6"
+# Internal crates
+beardog = { path = "crates/beardog" }
+beardog-cli = { path = "crates/beardog-cli" }
+beardog-core = { path = "crates/beardog-core" }
+beardog-errors = { path = "crates/beardog-errors" }
+beardog-config = { path = "crates/beardog-config" }
+beardog-security = { path = "crates/beardog-security" }
+beardog-auth = { path = "crates/beardog-auth" }
+beardog-api = { path = "crates/beardog-api" }
+beardog-genetics = { path = "crates/beardog-genetics" }
+beardog-threat = { path = "crates/beardog-threat" }
+beardog-tunnel = { path = "crates/beardog-tunnel" }
+beardog-workflows = { path = "crates/beardog-workflows" }
+beardog-adapters = { path = "crates/beardog-adapters" }
+beardog-compliance = { path = "crates/beardog-compliance" }
+beardog-monitoring = { path = "crates/beardog-monitoring" }
+beardog-node-registry = { path = "crates/beardog-node-registry" }
+beardog-production = { path = "crates/beardog-production" }
+beardog-utils = { path = "crates/beardog-utils" }
 
-[[bin]]
-name = "beardog"
-path = "src/main.rs"
+# Add missing feature flags to workspace metadata
+[workspace.metadata.docs.rs]
+features = ["hsm", "ml-threat-detection", "genetic-spawning", "compliance", "federation"]
 
-[profile.release]
-lto = true
-codegen-units = 1
-panic = "abort"
-strip = true
-
-[features]
-default = ["sqlite", "prometheus-metrics"]
-postgres = ["sqlx/postgres"]
-sqlite = ["sqlx/sqlite"]
-hsm = ["cryptoki"]
-prometheus-metrics = ["metrics-exporter-prometheus"]
-ml-threat-detection = []  # Placeholder for future ML integration
-genetic-spawning = []     # Genetic spawning system
-compliance = []           # Compliance monitoring
-federation = []           # Federation capabilities 
+ 

@@ -1,0 +1,20 @@
+[package]
+name = "beardog-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "BearDog Security Manager CLI"
+authors.workspace = true
+
+[[bin]]
+name = "beardog"
+path = "src/main.rs"
+
+[dependencies]
+beardog-core = { workspace = true }
+beardog-config = { workspace = true }
+beardog-errors = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true } 

@@ -12,10 +12,11 @@
 - **[Project Status Report 2025](docs/PROJECT_STATUS_2025.md)** - Comprehensive status and achievements
 - **[Current Status Summary](CURRENT_STATUS_2025.md)** - Quick overview of project state
 
-### 🏆 **Major Achievement**
+### 🏆 **Major Achievements**
 - **Documentation Coverage:** 100% (15,536 warnings eliminated)
 - **Total Warning Reduction:** 99.8% (23,870 → 48 warnings)
 - **Quality Standard:** Enterprise-grade documentation throughout
+- **Recovery System:** User-controlled distributed recovery implemented ✅ **NEW**
 
 ---
 
@@ -44,6 +45,10 @@
 - **[HSM Integration Specification](specs/HSM_INTEGRATION_SPECIFICATION.md)** - Hardware security module integration
 - **[Encryption Key Management](specs/ENCRYPTION_KEY_MANAGEMENT.md)** - Cryptographic key lifecycle
 - **[Threat Detection & Response](specs/THREAT_DETECTION_RESPONSE.md)** - Threat management system
+
+### 🔄 **Recovery & Resilience** ✅ **NEW**
+- **[User-Controlled Recovery System](specs/USER_CONTROLLED_RECOVERY_SYSTEM.md)** - Distributed recovery implementation
+- **[Disaster Recovery & Resilience](specs/DISASTER_RECOVERY_RESILIENCE.md)** - Infrastructure and user recovery
 
 ---
 

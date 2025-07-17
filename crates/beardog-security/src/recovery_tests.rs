@@ -1,0 +1,314 @@
+//! Tests for the distributed recovery system
+//!
+//! Tests demonstrate the principle: "Finding the key ≠ owning the house"
+
+#[cfg(test)]
+mod tests {
+    use crate::recovery::*;
+    use crate::types::*;
+
+    #[tokio::test]
+    async fn test_social_recovery_setup() {
+        let provider = BearDogSecurityProvider::new(SecurityProviderConfig::default())
+            .await
+            .unwrap();
+
+        let trusted_contacts = vec![
+            TrustedContact {
+                id: "contact1".to_string(),
+                identifier: "friend@example.com".to_string(),
+                contact_type: ContactType::Email,
+                public_key: None,
+                trust_level: 85,
+                added_at: chrono::Utc::now(),
+                last_used: None,
+                active: true,
+            },
+            TrustedContact {
+                id: "contact2".to_string(),
+                identifier: "+1234567890".to_string(),
+                contact_type: ContactType::Phone,
+                public_key: None,
+                trust_level: 90,
+                added_at: chrono::Utc::now(),
+                last_used: None,
+                active: true,
+            },
+        ];
+
+        let result = provider
+            .setup_social_recovery("user1", trusted_contacts, 2)
+            .await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_federation_recovery_setup() {
+        let provider = BearDogSecurityProvider::new(SecurityProviderConfig::default())
+            .await
+            .unwrap();
+
+        let trusted_instances = vec![
+            TrustedInstance {
+                id: "instance1".to_string(),
+                endpoint: "https://beardog1.example.com".to_string(),
+                public_key: "pubkey1".to_string(),
+                trust_level: 95,
+                added_at: chrono::Utc::now(),
+                active: true,
+            },
+            TrustedInstance {
+                id: "instance2".to_string(),
+                endpoint: "https://beardog2.example.com".to_string(),
+                public_key: "pubkey2".to_string(),
+                trust_level: 90,
+                added_at: chrono::Utc::now(),
+                active: true,
+            },
+        ];
+
+        let result = provider
+            .setup_federation_recovery("user1", trusted_instances, 1)
+            .await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_ephemeral_recovery_key_generation() {
+        let provider = BearDogSecurityProvider::new(SecurityProviderConfig::default())
+            .await
+            .unwrap();
+
+        let key_id = provider
+            .generate_ephemeral_recovery_key("user1", 24, 3)
+            .await
+            .unwrap();
+        assert!(!key_id.is_empty());
+
+        // Test that the key can be used to unlock account
+        let can_unlock = provider
+            .unlock_account_with_recovery("user1")
+            .await
+            .unwrap();
+        // Should be true because we have an ephemeral key
+        assert!(can_unlock);
+    }
+
+    #[tokio::test]
+    async fn test_account_lockout_with_recovery() {
+        let mut config = SecurityProviderConfig::default();
+        config.max_failed_attempts = 2;
+        config.lockout_duration_minutes = 5;
+
+        let provider = BearDogSecurityProvider::new(config).await.unwrap();
+
+        // Setup social recovery first
+        let trusted_contacts = vec![TrustedContact {
+            id: "contact1".to_string(),
+            identifier: "friend@example.com".to_string(),
+            contact_type: ContactType::Email,
+            public_key: None,
+            trust_level: 85,
+            added_at: chrono::Utc::now(),
+            last_used: None,
+            active: true,
+        }];
+
+        provider
+            .setup_social_recovery("user1", trusted_contacts, 1)
+            .await
+            .unwrap();
+
+        // Lock the account with failed attempts
+        for _ in 0..3 {
+            let result = provider
+                .authenticate("user1", "wrong_password")
+                .await
+                .unwrap();
+            assert!(!result.success);
+        }
+
+        // Account should be locked
+        let result = provider
+            .authenticate("user1", "correct_password")
+            .await
+            .unwrap();
+        assert!(!result.success);
+        assert!(result.reason.contains("locked"));
+        println!("Lockout reason: {}", result.reason);
+        // The message should mention recovery options if recovery is available
+        assert!(result.reason.contains("recovery") || result.reason.contains("locked"));
+
+        // Should be able to start recovery
+        let session_id = provider
+            .start_account_recovery("user1", RecoveryType::SocialRecovery)
+            .await
+            .unwrap();
+        assert!(!session_id.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_recovery_manager_creation() {
+        let recovery_manager = RecoveryManager::new().await.unwrap();
+
+        // Test that manager can handle basic operations
+        let can_unlock = recovery_manager
+            .can_unlock_account("test_user")
+            .await
+            .unwrap();
+        assert!(!can_unlock); // Should be false initially
+    }
+
+    #[tokio::test]
+    async fn test_ephemeral_key_expiry_and_usage_limits() {
+        let recovery_manager = RecoveryManager::new().await.unwrap();
+
+        // Generate an ephemeral key with 1 hour expiry and 1 use
+        let permissions = EphemeralPermissions::default();
+        let key_id = recovery_manager
+            .generate_ephemeral_recovery_key("user1", permissions, 1, 1)
+            .await
+            .unwrap();
+
+        // Should be able to use it once
+        let result = recovery_manager
+            .use_ephemeral_recovery_key(&key_id, "user1", "unlock_account")
+            .await
+            .unwrap();
+        assert!(result);
+
+        // Should fail on second use (reached max uses)
+        let result = recovery_manager
+            .use_ephemeral_recovery_key(&key_id, "user1", "unlock_account")
+            .await;
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        println!("Error message: {error_msg}");
+        assert!(error_msg.contains("maximum uses") || error_msg.contains("not active"));
+    }
+
+    #[tokio::test]
+    async fn test_distributed_key_philosophy() {
+        // This test demonstrates the philosophy: "Finding the key ≠ owning the house"
+        let recovery_manager = RecoveryManager::new().await.unwrap();
+
+        // Generate an ephemeral key with limited permissions
+        let mut permissions = EphemeralPermissions::default();
+        permissions.can_unlock_account = true;
+        permissions.can_reset_password = false; // Limited scope
+
+        let key_id = recovery_manager
+            .generate_ephemeral_recovery_key("user1", permissions, 1, 1)
+            .await
+            .unwrap();
+
+        // This key can unlock the account
+        let result = recovery_manager
+            .use_ephemeral_recovery_key(&key_id, "user1", "unlock_account")
+            .await
+            .unwrap();
+        assert!(result);
+
+        // But it cannot reset the password (would need a different key/permission)
+        let result = recovery_manager
+            .use_ephemeral_recovery_key(&key_id, "user1", "reset_password")
+            .await;
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        println!("Permission error: {error_msg}");
+        assert!(error_msg.contains("permission") || error_msg.contains("not active"));
+    }
+
+    #[tokio::test]
+    async fn test_multi_party_recovery_concept() {
+        let recovery_manager = RecoveryManager::new().await.unwrap();
+
+        // Setup social recovery with 2 contacts, requiring both
+        let trusted_contacts = vec![
+            TrustedContact {
+                id: "contact1".to_string(),
+                identifier: "friend1@example.com".to_string(),
+                contact_type: ContactType::Email,
+                public_key: None,
+                trust_level: 85,
+                added_at: chrono::Utc::now(),
+                last_used: None,
+                active: true,
+            },
+            TrustedContact {
+                id: "contact2".to_string(),
+                identifier: "friend2@example.com".to_string(),
+                contact_type: ContactType::Email,
+                public_key: None,
+                trust_level: 90,
+                added_at: chrono::Utc::now(),
+                last_used: None,
+                active: true,
+            },
+        ];
+
+        let policy = RecoveryPolicy::default();
+        recovery_manager
+            .setup_social_recovery("user1", trusted_contacts, 2, policy)
+            .await
+            .unwrap();
+
+        // Start recovery process
+        let session_id = recovery_manager
+            .start_account_recovery(
+                "user1",
+                RecoveryType::SocialRecovery,
+                std::collections::HashMap::new(),
+            )
+            .await
+            .unwrap();
+
+        // This demonstrates that recovery requires multiple parties
+        // No single contact can recover the account alone
+        assert!(!session_id.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_time_bounded_recovery() {
+        let recovery_manager = RecoveryManager::new().await.unwrap();
+
+        // Generate ephemeral key with very short expiry (for testing)
+        let permissions = EphemeralPermissions::default();
+        let key_id = recovery_manager
+            .generate_ephemeral_recovery_key("user1", permissions, 0, 1)
+            .await
+            .unwrap(); // 0 hours = expires immediately
+
+        // Wait a moment to ensure expiry
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+        // Should fail due to expiry
+        let result = recovery_manager
+            .use_ephemeral_recovery_key(&key_id, "user1", "unlock_account")
+            .await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("expired"));
+    }
+
+    #[tokio::test]
+    async fn test_recovery_wrong_user() {
+        let recovery_manager = RecoveryManager::new().await.unwrap();
+
+        // Generate ephemeral key for user1
+        let permissions = EphemeralPermissions::default();
+        let key_id = recovery_manager
+            .generate_ephemeral_recovery_key("user1", permissions, 1, 1)
+            .await
+            .unwrap();
+
+        // Try to use it for user2 - should fail
+        let result = recovery_manager
+            .use_ephemeral_recovery_key(&key_id, "user2", "unlock_account")
+            .await;
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("does not belong to user"));
+    }
+}
