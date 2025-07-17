@@ -558,6 +558,17 @@ pub struct SimpleHealthSummary {
     pub last_check: chrono::DateTime<chrono::Utc>,
 }
 
+/// Software HSM health status
+#[derive(Debug, Clone)]
+pub struct SoftwareHsmHealth {
+    /// Whether the HSM is healthy
+    pub is_healthy: bool,
+    /// Brief status message
+    pub status_message: String,
+    /// Timestamp of last health check
+    pub last_check: chrono::DateTime<chrono::Utc>,
+}
+
 impl SimpleHealthSummary {
     /// Create a simple health summary from full health status
     pub fn from_health_status(health: &SoftwareHsmHealth) -> Self {

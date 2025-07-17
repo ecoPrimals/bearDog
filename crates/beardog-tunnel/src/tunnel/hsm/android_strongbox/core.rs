@@ -51,7 +51,7 @@ impl AndroidStrongBoxHsm {
         // Verify StrongBox availability
         if !keystore.is_strongbox_available() {
             return Err(BearDogError::Unavailable {
-                message: format!("StrongBox HSM is not available on this device: {}", e),
+                message: "StrongBox HSM is not available on this device".to_string(),
             });
         }
 
@@ -296,8 +296,12 @@ impl AndroidStrongBoxHsm {
             .await?;
 
         Ok(KeyAttestation {
-            attestation_type: "Hardware".to_string(), // Convert AttestationLevel to String
             certificate_chain,
+            attestation_statement: attestation_data.clone(),
+            format: "android-strongbox".to_string(),
+            generated_at: chrono::Utc::now(),
+            valid_until: chrono::Utc::now() + chrono::Duration::days(30),
+            attestation_type: "Hardware".to_string(), // Convert AttestationLevel to String
             attestation_data,
             attestation_signature: signature,
             verified: true,
@@ -313,7 +317,21 @@ impl AndroidStrongBoxHsm {
         let cache_info = CachedKeyInfo {
             key_id: hsm_key.id.clone(),
             key_type: hsm_key.key_type.clone(),
-            hsm_type: hsm_key.hsm_type.clone(),
+            hsm_type: HsmTier::SmartphoneHsm {
+                device_type: SmartphoneType::Android {
+                    manufacturer: self.device_info.manufacturer.clone(),
+                    model: self.device_info.model.clone(),
+                    android_version: self.device_info.android_version.clone(),
+                    strongbox_version: self.device_info.strongbox_version.clone(),
+                },
+                secure_enclave: SecureEnclaveType::AndroidStrongBox {
+                    implementation: self.keystore.strongbox_implementation.clone(),
+                    hardware_backed: true,
+                    key_attestation: true,
+                },
+                attestation_level: AttestationLevel::Hardware,
+                user_presence_required: false,
+            },
             strongbox_backed: true,
             attestation_verified: hsm_key
                 .attestation

@@ -488,7 +488,21 @@ impl HsmManager {
                 best_selection = Some(HsmProviderSelection {
                     provider: provider.clone(),
                     provider_id,
-                    tier: provider_info.hsm_type.clone(),
+                    tier: if provider_info.hsm_type == "SoftwareHsm" {
+                        HsmTier::SoftwareHsm {
+                            implementation: SoftwareHsmType::RustSoftwareHsm,
+                            key_storage: KeyStorageType::EncryptedFile,
+                            encryption_at_rest: true,
+                            memory_protection: MemoryProtectionLevel::Basic,
+                        }
+                    } else {
+                        HsmTier::SoftwareHsm {
+                            implementation: SoftwareHsmType::RustSoftwareHsm,
+                            key_storage: KeyStorageType::EncryptedFile,
+                            encryption_at_rest: true,
+                            memory_protection: MemoryProtectionLevel::Basic,
+                        }
+                    },
                     confidence: score,
                     estimated_latency_ms: self.get_estimated_latency(&provider_info).await?,
                 });

@@ -479,7 +479,7 @@ impl BStpKeyManager {
             performance_config: crate::tunnel::hsm::manager::PerformanceConfig::default(),
         };
 
-        crate::tunnel::hsm::manager::HsmManager::new(hsm_config).await
+        crate::tunnel::hsm::manager::HsmManager::new().await
     }
 
     /// Extract key material from HSM key (this is a simplified implementation)
