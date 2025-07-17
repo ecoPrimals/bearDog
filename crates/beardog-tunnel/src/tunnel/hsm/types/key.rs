@@ -5,36 +5,26 @@ use std::collections::HashMap;
 /// Key types supported by the HSM system
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum KeyType {
-    /// Symmetric encryption key
-    Symmetric {
-        /// Key size in bits
-        key_size: u32,
-        /// Encryption algorithm
-        algorithm: String,
-    },
-    /// Asymmetric key pair
-    Asymmetric {
-        /// Key size in bits
-        key_size: u32,
-        /// Asymmetric algorithm (RSA, ECDSA, etc.)
-        algorithm: String,
-        /// Curve name for elliptic curve keys
-        curve: Option<String>,
-    },
+    /// AES 128-bit symmetric encryption key
+    Aes128,
+    /// AES 192-bit symmetric encryption key
+    Aes192,
+    /// AES 256-bit symmetric encryption key
+    Aes256,
+    /// ChaCha20 symmetric encryption key
+    ChaCha20,
+    /// ECDSA P-256 curve key
+    EccP256,
+    /// ECDSA P-384 curve key
+    EccP384,
+    /// ECDSA P-521 curve key
+    EccP521,
+    /// RSA key with specified key size
+    Rsa { key_size: u32 },
     /// HMAC key
-    Hmac {
-        /// Key size in bits
-        key_size: u32,
-        /// Hash algorithm used with HMAC
-        hash_algorithm: String,
-    },
+    Hmac { key_size: u32 },
     /// Key derivation key
-    KeyDerivation {
-        /// Key size in bits
-        key_size: u32,
-        /// Key derivation function
-        kdf: String,
-    },
+    KeyDerivation { key_size: u32 },
 }
 
 /// Metadata associated with HSM keys
@@ -57,7 +47,7 @@ pub struct KeyMetadata {
 }
 
 /// Key usage policy defining how a key can be used
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct KeyUsagePolicy {
     /// Whether the key can be used for encryption
     pub can_encrypt: bool,
@@ -104,6 +94,8 @@ pub struct HsmKey {
     pub health_status: KeyHealthStatus,
     /// Key attestation information
     pub attestation: Option<KeyAttestation>,
+    /// Key creation timestamp (legacy field for compatibility)
+    pub created_at: DateTime<Utc>,
 }
 
 /// Key material representation
@@ -149,6 +141,16 @@ pub struct HsmKeyInfo {
     pub last_accessed: Option<DateTime<Utc>>,
     /// Access count
     pub access_count: u64,
+    /// Key identifier (legacy field for compatibility)
+    pub key_id: String,
+    /// Key type (legacy field for compatibility)
+    pub key_type: KeyType,
+    /// HSM type (legacy field for compatibility)
+    pub hsm_type: String,
+    /// Key creation timestamp (legacy field for compatibility)
+    pub created_at: DateTime<Utc>,
+    /// Key usage policy (legacy field for compatibility)
+    pub usage_policy: KeyUsagePolicy,
 }
 
 /// Key performance metrics
@@ -177,6 +179,10 @@ pub struct KeyAttestation {
     pub generated_at: DateTime<Utc>,
     /// Attestation validity period
     pub valid_until: DateTime<Utc>,
+    /// Attestation type (legacy field for compatibility)
+    pub attestation_type: String,
+    /// Attestation data (legacy field for compatibility)
+    pub attestation_data: Vec<u8>,
 }
 
 /// Health status of an HSM key

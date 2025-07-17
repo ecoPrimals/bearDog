@@ -8,6 +8,11 @@ use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
 use tracing::{debug, info};
+use openssl::symm::{Cipher, Crypter, Mode};
+use openssl::sign::{Signer, Verifier};
+use openssl::pkey::PKey;
+use openssl::hash::MessageDigest;
+use openssl::rand::rand_bytes;
 
 /// OpenSSL-based crypto provider using OpenSSL bindings
 impl OpenSslCryptoProvider {

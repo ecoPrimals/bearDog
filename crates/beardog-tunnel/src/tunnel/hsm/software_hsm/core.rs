@@ -10,6 +10,7 @@ use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::HsmProvider;
 use async_trait::async_trait;
 use chrono::Utc;
+use hex;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;

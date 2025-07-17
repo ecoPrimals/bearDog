@@ -119,7 +119,7 @@ pub struct HsmError {
 }
 
 /// Error severity levels
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ErrorSeverity {
     /// Informational message
     Info,
@@ -492,6 +492,16 @@ pub struct HsmInfo {
     pub current_key_count: u32,
     /// HSM status
     pub status: HsmOperationalStatus,
+    /// HSM type (legacy field for compatibility)
+    pub hsm_type: String,
+    /// HSM version (legacy field for compatibility)
+    pub version: String,
+    /// Maximum key size supported
+    pub max_key_size: Option<u32>,
+    /// Certification information
+    pub certification: Option<String>,
+    /// Tamper resistance level
+    pub tamper_resistance: crate::tunnel::hsm::types::tier::TamperResistanceLevel,
 }
 
 /// HSM capability enumeration
@@ -537,6 +547,16 @@ pub enum HsmCapability {
     RoleBasedAccess,
     /// Multi-factor authentication capability
     MultiFactor,
+    /// User presence validation capability
+    UserPresenceValidation,
+    /// Key import capability
+    KeyImport,
+    /// Key export capability
+    KeyExport,
+    /// Secure backup capability
+    SecureBackup,
+    /// Secure restore capability
+    SecureRestore,
     /// Custom capability
     Custom(String),
 } 

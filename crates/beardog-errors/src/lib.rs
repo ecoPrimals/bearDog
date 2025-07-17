@@ -778,6 +778,20 @@ pub enum BearDogError {
         /// Description of the forensics issue
         issue: String,
     },
+
+    /// Error when an operation is not supported
+    #[error("Unsupported operation: {operation}")]
+    UnsupportedOperation {
+        /// The operation that is not supported
+        operation: String,
+    },
+
+    /// Error when no suitable provider is found
+    #[error("No suitable provider found: {message}")]
+    NoSuitableProvider {
+        /// Error message describing why no suitable provider was found
+        message: String,
+    },
 }
 
 impl BearDogError {

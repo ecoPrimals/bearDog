@@ -44,6 +44,31 @@ pub struct SoftwareHsmConfig {
     pub enable_key_caching: bool,
     /// Maximum number of keys to cache
     pub max_cached_keys: usize,
+    /// Key store configuration (legacy field for compatibility)
+    pub key_store_config: KeyStoreConfig,
+    /// Memory configuration (legacy field for compatibility)
+    pub memory_config: MemoryConfig,
+}
+
+/// Memory configuration for HSM
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryConfig {
+    /// Memory protection level
+    pub protection_level: MemoryProtectionLevel,
+    /// Enable memory encryption
+    pub enable_encryption: bool,
+    /// Memory pool size
+    pub pool_size: usize,
+}
+
+impl Default for MemoryConfig {
+    fn default() -> Self {
+        Self {
+            protection_level: MemoryProtectionLevel::Basic,
+            enable_encryption: true,
+            pool_size: 1024 * 1024, // 1MB
+        }
+    }
 }
 
 /// Hardware HSM configuration
@@ -493,6 +518,14 @@ pub struct AttestationConfig {
     pub attestation_challenge: Vec<u8>,
     /// Include application identifier in attestation
     pub include_app_id: bool,
+    /// Enable/disable attestation (legacy field for compatibility)
+    pub enabled: bool,
+    /// Require hardware-backed attestation
+    pub require_hardware_backed: bool,
+    /// List of trusted certificates for verification
+    pub trusted_certificates: Vec<String>,
+    /// Challenge length for attestation
+    pub challenge_length: usize,
 }
 
 /// Key storage configuration
@@ -549,17 +582,6 @@ pub struct DatabaseConfig {
     pub enable_encryption_at_rest: bool,
 }
 
-/// Memory configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MemoryConfig {
-    /// Maximum memory usage in bytes
-    pub max_memory_bytes: u64,
-    /// Enable memory protection
-    pub enable_memory_protection: bool,
-    /// Memory cleanup interval in seconds
-    pub cleanup_interval_seconds: u64,
-}
-
 /// Crypto backend types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CryptoBackend {
@@ -582,6 +604,10 @@ impl Default for AttestationConfig {
             enable_key_attestation: false,
             attestation_challenge: Vec::new(),
             include_app_id: true,
+            enabled: false,
+            require_hardware_backed: false,
+            trusted_certificates: Vec::new(),
+            challenge_length: 0,
         }
     }
 }
@@ -604,6 +630,8 @@ impl Default for SoftwareHsmConfig {
             crypto_backend: CryptoBackend::Ring,
             enable_key_caching: true,
             max_cached_keys: 1000,
+            key_store_config: KeyStoreConfig::default(),
+            memory_config: MemoryConfig::default(),
         }
     }
 }

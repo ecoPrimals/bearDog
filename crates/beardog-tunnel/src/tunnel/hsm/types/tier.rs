@@ -186,6 +186,10 @@ pub enum MemoryProtectionLevel {
     Basic,
     /// Advanced memory protection (encrypted + locked)
     Advanced,
+    /// High memory protection (encrypted + locked + isolated)
+    High,
+    /// Maximum memory protection (encrypted + locked + isolated + hardware)
+    Maximum,
     /// Hardware-backed memory protection
     Hardware,
 }
@@ -237,6 +241,12 @@ pub enum TamperResistanceLevel {
     TamperResistant,
     /// Tamper responsive (responds to tampering)
     TamperResponsive,
+    /// Hardware tamper resistance
+    Hardware,
+    /// Software tamper resistance
+    Software,
+    /// Hardware destruction on tampering
+    HardwareDestruction,
 }
 
 /// Key hierarchy management strategies
@@ -276,4 +286,6 @@ pub enum AttestationLevel {
     Hardware,
     /// Strong attestation with remote verification
     Strong,
+    /// Certified hardware attestation
+    CertifiedHardware,
 } 
