@@ -9,7 +9,6 @@ authors.workspace = true
 [dependencies]
 beardog-errors = { workspace = true }
 beardog-auth = { workspace = true }
-beardog-tunnel = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
 chrono = { workspace = true }
@@ -20,3 +19,6 @@ async-trait = { workspace = true }
 rand = "0.8"
 serde_json = "1.0"
 base64 = "0.21"
+axum = { workspace = true }
+sha3 = { workspace = true }
+zeroize = { workspace = true }

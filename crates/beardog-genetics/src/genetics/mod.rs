@@ -18,8 +18,8 @@
 //! * **RESTful API**: HTTP endpoints for external integration and management
 
 use beardog_errors::BearDogResult;
-use beardog_auth::{SpawnPurpose, SecurityTraits, CryptoChromosome, NodeCapability, BearDogGenetics};
-use beardog_tunnel::tunnel::hsm::manager::HsmManager;
+use beardog_auth::auth::{SpawnPurpose, SecurityTraits, CryptoChromosome, NodeCapability, BearDogGenetics};
+// use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 
 // Re-export public types and functions from submodules
 pub use handlers::*;
@@ -47,12 +47,12 @@ impl GeneticsAPI {
     /// Create a new genetics API instance
     pub fn new(genetics_store: std::sync::Arc<dyn GeneticsStore>, config: GeneticsConfig) -> Self {
         // Create a basic HSM manager for testing/development
-        let hsm_manager = std::sync::Arc::new(HsmManager::new());
+        // let hsm_manager = std::sync::Arc::new(HsmManager::new());
 
         let spawning_engine = spawning::GeneticSpawningEngine::new(
-            genetics_store.clone(),
-            hsm_manager,
-            config.clone(),
+            genetics_store,
+            // hsm_manager,
+            config,
         );
 
         let genetics_engine = handlers::DefaultBearDogGeneticsEngine::new(
@@ -68,7 +68,7 @@ impl GeneticsAPI {
 
     /// Spawn a new node with genetic recombination
     pub async fn spawn_node(&self, request: SpawnRequest) -> BearDogResult<SpawnResult> {
-        self.spawning_engine.spawn_node(request).await
+        self.spawning_engine.process_spawn_request(request).await
     }
 
     /// Create genesis genetics for a new node
@@ -95,24 +95,31 @@ impl GeneticsAPI {
         // Create a temporary engine for breeding
         let config = GeneticsConfig::default();
         let genetics_store = std::sync::Arc::new(spawning::InMemoryGeneticsStore::new());
-        let hsm_manager = std::sync::Arc::new(HsmManager::new());
+        // let hsm_manager = std::sync::Arc::new(HsmManager::new());
         
         let spawning_engine = spawning::GeneticSpawningEngine::new(
             genetics_store,
-            hsm_manager,
+            // hsm_manager,
             config,
         );
 
         let request = SpawnRequest {
-            requesting_node_id: "breeder".to_string(),
-            parent_genetics: parent_genetics.to_vec(),
+            request_id: format!("spawn_{}", uuid::Uuid::new_v4()),
+            requesting_parent: "breeder".to_string(),
+            co_parents: vec![],
             purpose,
-            resource_limits: spawning::ResourceLimits::default(),
-            workflow_type: spawning::BearDogWorkflowType::Automated,
+            resource_requirements: types::ResourceLimits::default(),
+            workflow_type: types::BearDogWorkflowType::AutomatedConsensus {
+                participating_nodes: vec!["breeder".to_string()],
+                consensus_threshold: 0.5,
+                max_decision_time: chrono::Duration::minutes(5),
+            },
+            created_at: chrono::Utc::now(),
+            expires_at: chrono::Utc::now() + chrono::Duration::hours(24),
             metadata: std::collections::HashMap::new(),
         };
 
-        spawning_engine.spawn_node(request).await
+        spawning_engine.process_spawn_request(request).await
     }
 
     /// Batch breed genetics from multiple parent sets
@@ -123,11 +130,11 @@ impl GeneticsAPI {
         // Similar to breed_genetics but for multiple sets
         let config = GeneticsConfig::default();
         let genetics_store = std::sync::Arc::new(spawning::InMemoryGeneticsStore::new());
-        let hsm_manager = std::sync::Arc::new(HsmManager::new());
+        // let hsm_manager = std::sync::Arc::new(HsmManager::new());
         
         let spawning_engine = spawning::GeneticSpawningEngine::new(
             genetics_store,
-            hsm_manager,
+            // hsm_manager,
             config,
         );
 
@@ -135,15 +142,22 @@ impl GeneticsAPI {
         let parent_genetics = parent_sets.first().cloned().unwrap_or_default();
 
         let request = SpawnRequest {
-            requesting_node_id: "batch_breeder".to_string(),
-            parent_genetics,
+            request_id: format!("batch_spawn_{}", uuid::Uuid::new_v4()),
+            requesting_parent: "batch_breeder".to_string(),
+            co_parents: vec![],
             purpose,
-            resource_limits: spawning::ResourceLimits::default(),
-            workflow_type: spawning::BearDogWorkflowType::Automated,
+            resource_requirements: types::ResourceLimits::default(),
+            workflow_type: types::BearDogWorkflowType::AutomatedConsensus {
+                participating_nodes: vec!["batch_breeder".to_string()],
+                consensus_threshold: 0.5,
+                max_decision_time: chrono::Duration::minutes(5),
+            },
+            created_at: chrono::Utc::now(),
+            expires_at: chrono::Utc::now() + chrono::Duration::hours(24),
             metadata: std::collections::HashMap::new(),
         };
 
-        spawning_engine.spawn_node(request).await
+        spawning_engine.process_spawn_request(request).await
     }
 }
 

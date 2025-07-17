@@ -4,7 +4,7 @@
 //! for combining different entropy sources while preserving the hierarchy.
 
 use super::types::*;
-use crate::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use sha3::{Digest, Sha3_256};
 
 /// Engine for mixing different entropy sources while preserving hierarchy

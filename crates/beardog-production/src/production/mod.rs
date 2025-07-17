@@ -29,7 +29,7 @@ pub use self::performance::*;
 pub use self::security::*;
 pub use self::validation::*;
 
-use crate::error::BearDogResult;
+use beardog_errors::BearDogResult;
 use crate::monitoring::MonitoringService;
 use crate::utils::env_utils::EnvUtils;
 use crate::BearDogCore;

@@ -5,7 +5,7 @@
 
 use super::super::types::*;
 use super::engine::GeneticSpawningEngine;
-use crate::BearDogResult;
+use beardog_errors::BearDogResult;
 use chrono::{Timelike, Utc};
 use tracing::info;
 

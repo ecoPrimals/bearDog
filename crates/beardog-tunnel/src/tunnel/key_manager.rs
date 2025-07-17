@@ -19,7 +19,7 @@
 //! - Secure memory wiping on key destruction
 //! - Cryptographically secure random number generation
 
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::config::KeyManagementConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

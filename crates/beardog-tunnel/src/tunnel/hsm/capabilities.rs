@@ -8,7 +8,7 @@ use super::{
     SoftwareHsmType, KeyStorageType, MemoryProtectionLevel, SmartphoneType, SecureEnclaveType,
     StrongBoxImplementation, AttestationLevel,
 };
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;

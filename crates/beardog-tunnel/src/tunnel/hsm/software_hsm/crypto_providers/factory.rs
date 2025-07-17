@@ -4,7 +4,7 @@
 //! It acts as a unified interface for working with different crypto backends.
 
 use super::super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 
 /// Create a crypto provider based on the specified backend

@@ -4,7 +4,7 @@
 //! including tier recommendation based on security requirements.
 
 use super::{HsmCapabilityDetector, SecurityLevel, SecurityRequirements};
-use crate::error::BearDogResult;
+use beardog_errors::BearDogResult;
 use crate::tunnel::hsm::types::{
     AttestationLevel, CertificationLevel, HsmCapability, HsmTier, HsmVendor, KeyStorageType, MemoryProtectionLevel, SecureEnclaveType, SmartphoneType,
     SoftwareHsmType, StrongBoxImplementation, TamperResistanceLevel,

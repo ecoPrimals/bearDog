@@ -4,7 +4,7 @@
 //! operation metrics, latency tracking, and provider selection based on performance.
 
 use super::config::PerformanceConfig;
-use crate::error::BearDogResult;
+use beardog_errors::BearDogResult;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;

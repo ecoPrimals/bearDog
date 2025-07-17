@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use super::types::*;
-use crate::error::BearDogResult;
+use beardog_errors::BearDogResult;
 
 /// Memory protection for software HSM
 pub struct DefaultMemoryProtector {

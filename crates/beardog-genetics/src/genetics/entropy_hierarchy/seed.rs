@@ -4,7 +4,7 @@
 //! including creation, validation, ownership transfer, and operations.
 
 use super::types::*;
-use crate::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;
 use sha3::{Digest, Sha3_256};
 use std::collections::HashMap;

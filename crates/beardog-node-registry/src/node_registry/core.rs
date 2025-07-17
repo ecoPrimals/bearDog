@@ -17,7 +17,7 @@ use super::types::{
     NodeInfo, TrustLevel, RegistryConfig, RegistryStatistics, ServiceHealthStatus,
     ServiceAdvertisement,
 };
-use crate::auth::NodeRegistry;
+use beardog_auth::auth::NodeRegistry;
 use crate::{BearDogError, BearDogResult};
 
 /// The main node registry implementation for BearDog with decentralized features.

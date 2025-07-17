@@ -4,7 +4,7 @@
 //! It tracks system status, performance metrics, and provides health assessments.
 
 use super::types::*;
-use crate::error::BearDogResult;
+use beardog_errors::BearDogResult;
 use crate::tunnel::hsm::types::*;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -295,7 +295,7 @@ impl SoftwareHealthMonitor {
 
     async fn encrypt_data(&self, key: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
         // Basic AES-256-GCM encryption for testing
-        use aes_gcm::{Aes256Gcm, KeyInit, Nonce, Aead};
+        use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
         
         let cipher = Aes256Gcm::new_from_slice(key)
             .map_err(|e| BearDogError::Crypto {
@@ -312,7 +312,7 @@ impl SoftwareHealthMonitor {
 
     async fn decrypt_data(&self, key: &[u8], encrypted_data: &[u8]) -> BearDogResult<Vec<u8>> {
         // Basic AES-256-GCM decryption for testing
-        use aes_gcm::{Aes256Gcm, KeyInit, Nonce, Aead};
+        use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
         
         let cipher = Aes256Gcm::new_from_slice(key)
             .map_err(|e| BearDogError::Crypto {

@@ -5,9 +5,9 @@
 
 use super::super::types::*;
 use super::engine::GeneticSpawningEngine;
-use crate::auth::BearDogGenetics;
-use crate::tunnel::hsm::{SecurityLevel, SecurityRequirements};
-use crate::{BearDogError, BearDogResult};
+use beardog_auth::auth::{BearDogGenetics, SpawnPurpose};
+// use beardog_tunnel::tunnel::hsm::{SecurityLevel, SecurityRequirements};
+use beardog_errors::{BearDogError, BearDogResult};
 use sha3::Digest;
 use std::collections::HashMap;
 use tracing::info;
@@ -18,7 +18,7 @@ pub async fn recombine_genetics(
     engine: &GeneticSpawningEngine,
     parents: &[BearDogGenetics],
     params: &RecombinationParams,
-    purpose: &crate::auth::SpawnPurpose,
+    purpose: &beardog_auth::auth::SpawnPurpose,
 ) -> BearDogResult<BearDogGenetics> {
     if parents.is_empty() {
         return Err(BearDogError::NotFound {
@@ -33,7 +33,7 @@ pub async fn recombine_genetics(
         id: Uuid::new_v4().to_string(),
         generation: first_parent.generation + 1,
         crypto_chromosomes: Vec::new(), // Will be populated by recombination
-        security_traits: crate::auth::SecurityTraits::default(), // Will be populated by blending
+        security_traits: beardog_auth::auth::SecurityTraits::default(), // Will be populated by blending
         capabilities: Vec::new(), // Will be populated by merging
         spawn_restrictions: first_parent.spawn_restrictions.clone(),
         parent_genetics: Some(parents.iter().map(|p| p.id.clone()).collect()),
@@ -91,22 +91,22 @@ pub async fn recombine_chromosomes(
     engine: &GeneticSpawningEngine,
     parents: &[BearDogGenetics],
     strategy: &ChromosomeRecombinationStrategy,
-) -> BearDogResult<Vec<crate::auth::CryptoChromosome>> {
+) -> BearDogResult<Vec<beardog_auth::auth::CryptoChromosome>> {
     info!("Recombining chromosomes with HSM-backed operations");
 
     let mut result_chromosomes = Vec::new();
-    let security_reqs = SecurityRequirements::new(SecurityLevel::High);
+    let security_reqs = (); // SecurityRequirements::new(SecurityLevel::High);
 
     // Extract chromosome references from parents
-    let parent_chromosomes: Vec<&Vec<crate::auth::CryptoChromosome>> = parents
+    let parent_chromosomes = parents
         .iter()
         .map(|p| &p.crypto_chromosomes)
-        .collect();
+        .collect::<Vec<_>>();
 
     match strategy {
         ChromosomeRecombinationStrategy::DominantSelection => {
             // Select the strongest chromosomes from parents
-            let mut all_chromosomes: Vec<&crate::auth::CryptoChromosome> = parent_chromosomes
+            let mut all_chromosomes: Vec<&beardog_auth::auth::CryptoChromosome> = parent_chromosomes
                 .iter()
                 .flat_map(|chromosomes| chromosomes.iter())
                 .collect();
@@ -132,7 +132,7 @@ pub async fn recombine_chromosomes(
         }
         ChromosomeRecombinationStrategy::WeightedAverage { weights: _ } => {
             // Group chromosomes by algorithm family
-            let mut family_groups: HashMap<String, Vec<&crate::auth::CryptoChromosome>> = HashMap::new();
+            let mut family_groups: HashMap<String, Vec<&beardog_auth::auth::CryptoChromosome>> = HashMap::new();
             for chromosomes in &parent_chromosomes {
                 for chromosome in chromosomes.iter() {
                     let family_key = format!("{:?}", chromosome.algorithm_family);
@@ -151,7 +151,7 @@ pub async fn recombine_chromosomes(
                     let avg_security = chromosomes.iter().map(|c| c.security_level as f64).sum::<f64>() / chromosomes.len() as f64;
                     let avg_strength = chromosomes.iter().map(|c| c.strength_bits as f64).sum::<f64>() / chromosomes.len() as f64;
 
-                    let averaged_chromosome = crate::auth::CryptoChromosome {
+                    let averaged_chromosome = beardog_auth::auth::CryptoChromosome {
                         algorithm_family: first_chromosome.algorithm_family.clone(),
                         strength_bits: avg_strength.round() as u32,
                         compatibility_score: avg_compatibility,
@@ -165,7 +165,7 @@ pub async fn recombine_chromosomes(
         }
         _ => {
             // Fallback for other strategies - use dominant selection
-            let mut all_chromosomes: Vec<&crate::auth::CryptoChromosome> = parent_chromosomes
+            let mut all_chromosomes: Vec<&beardog_auth::auth::CryptoChromosome> = parent_chromosomes
                 .iter()
                 .flat_map(|chromosomes| chromosomes.iter())
                 .collect();
@@ -197,25 +197,25 @@ pub async fn blend_security_traits(
     engine: &GeneticSpawningEngine,
     parents: &[BearDogGenetics],
     strategy: &TraitBlendingStrategy,
-) -> BearDogResult<crate::auth::SecurityTraits> {
+) -> BearDogResult<beardog_auth::auth::SecurityTraits> {
     info!("Blending security traits with HSM-backed operations");
 
     if parents.is_empty() {
-        return Ok(crate::auth::SecurityTraits::default());
+        return Ok(beardog_auth::auth::SecurityTraits::default());
     }
 
     // Extract trait references from parents
-    let parent_traits: Vec<&crate::auth::SecurityTraits> = parents
+    let parent_traits: Vec<&beardog_auth::auth::SecurityTraits> = parents
         .iter()
         .map(|p| &p.security_traits)
         .collect();
 
-    let security_reqs = SecurityRequirements::new(SecurityLevel::Medium);
+    let security_reqs = (); // SecurityRequirements::new(SecurityLevel::Medium);
 
     match strategy {
         TraitBlendingStrategy::WeightedAverage { weights } => {
             // Create default traits as starting point
-            let mut blended_traits = crate::auth::SecurityTraits::default();
+            let mut blended_traits = beardog_auth::auth::SecurityTraits::default();
 
             // If we have weights, apply them proportionally
             if weights.len() == parent_traits.len() {
@@ -235,7 +235,7 @@ pub async fn blend_security_traits(
 
             // Use HSM for secure random decision making
             let random_bytes = engine
-                .hsm_manager
+                // .hsm_manager
                 .generate_random_bytes(32, &security_reqs)
                 .await?;
 
@@ -257,7 +257,7 @@ pub async fn merge_capabilities(
     engine: &GeneticSpawningEngine,
     parents: &[BearDogGenetics],
     strategy: &CapabilityMergingStrategy,
-) -> BearDogResult<Vec<crate::auth::NodeCapability>> {
+) -> BearDogResult<Vec<beardog_auth::auth::NodeCapability>> {
     info!("Merging capabilities with HSM-backed operations");
 
     if parents.is_empty() {
@@ -265,12 +265,12 @@ pub async fn merge_capabilities(
     }
 
     // Extract capability references from parents
-    let parent_capabilities: Vec<&Vec<crate::auth::NodeCapability>> = parents
+    let parent_capabilities: Vec<&Vec<beardog_auth::auth::NodeCapability>> = parents
         .iter()
         .map(|p| &p.capabilities)
         .collect();
 
-    let security_reqs = SecurityRequirements::new(SecurityLevel::Medium);
+    let security_reqs = (); // SecurityRequirements::new(SecurityLevel::Medium);
 
     match strategy {
         CapabilityMergingStrategy::Union => {
@@ -305,7 +305,7 @@ pub async fn merge_capabilities(
         CapabilityMergingStrategy::WeightedCombination { weights: _ } => {
             // Use HSM random for weighted selection
             let random_bytes = engine
-                .hsm_manager
+                // .hsm_manager
                 .generate_random_bytes(64, &security_reqs)
                 .await?;
 

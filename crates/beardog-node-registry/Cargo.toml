@@ -9,6 +9,7 @@ authors.workspace = true
 [dependencies]
 beardog-errors = { workspace = true }
 beardog-config = { workspace = true }
+beardog-auth = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
 chrono = { workspace = true }

@@ -4,7 +4,7 @@
 //! components, including keystore, StrongBox hardware, and attestation services.
 
 use super::types::*;
-use crate::error::BearDogResult;
+use beardog_errors::BearDogResult;
 use crate::tunnel::hsm::types::*;
 use chrono::Utc;
 use std::sync::Arc;

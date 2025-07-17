@@ -28,8 +28,8 @@
 //! - **Crossover**: Combining successful configurations
 //! - **Selection**: Choosing optimal configurations for propagation
 
-use crate::genetics::DefaultBearDogGeneticsEngine;
-use crate::BearDogResult;
+use beardog_genetics::genetics::DefaultBearDogGeneticsEngine;
+use beardog_errors::BearDogResult;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;

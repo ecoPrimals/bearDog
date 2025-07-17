@@ -4,7 +4,7 @@
 //! operation metrics, latency tracking, and provider selection based on performance.
 
 use super::{HsmProvider, HsmTier};
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::config::PerformanceConfig;
 use std::collections::HashMap;
 use std::sync::Arc;

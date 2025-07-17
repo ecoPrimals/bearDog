@@ -5,7 +5,7 @@
 
 use super::memory::{DefaultMemoryProtector, MemoryProtectionConfig};
 use super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::HsmProvider;
 use async_trait::async_trait;

@@ -7,7 +7,7 @@ use super::{
     HsmFailoverManager, HsmProvider, SecurityRequirements, SoftwareHsmConfig, SoftwareHsmType,
     KeyStoreConfig, KeyStorageType, KeySource, MemoryConfig, CryptoBackend,
 };
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::config::FailoverConfig;
 use crate::tunnel::hsm::software_hsm::RustSoftwareHsm;
 use async_trait::async_trait;

@@ -36,7 +36,7 @@ use super::{
     HsmCapabilityDetector, HsmFailoverManager, HsmHealthMonitor, HsmProvider, SecurityLevel,
     SecurityRequirements,
 };
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::{AndroidStrongBoxHsm, RustSoftwareHsm};
 use std::collections::HashMap;

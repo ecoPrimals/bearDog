@@ -4,7 +4,7 @@
 //! It uses `aes-gcm` for AES-256-GCM encryption/decryption and `ed25519-dalek` for Ed25519 signing/verification.
 
 use super::super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
 use tracing::{debug, info};

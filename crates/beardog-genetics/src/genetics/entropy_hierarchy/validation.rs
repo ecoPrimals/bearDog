@@ -4,23 +4,23 @@
 //! and cryptographic proof generation for ownership and irreproducibility.
 
 use super::types::*;
-use crate::tunnel::hsm::{HsmManager, SecurityLevel};
-use crate::{BearDogError, BearDogResult};
+// use beardog_tunnel::tunnel::hsm::{HsmManager, SecurityLevel};
+use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;
 use sha3::{Digest, Sha3_256};
 use std::sync::Arc;
 
 /// Validates entropy quality and generates cryptographic proofs
 pub struct EntropyValidator {
-    hsm_manager: Arc<HsmManager>,
+    // hsm_manager: Arc<HsmManager>,
     config: EntropyHierarchyConfig,
 }
 
 impl EntropyValidator {
     /// Create a new entropy validator
-    pub fn new(hsm_manager: Arc<HsmManager>, config: EntropyHierarchyConfig) -> Self {
+    pub fn new(/* hsm_manager: Arc<HsmManager>, */ config: EntropyHierarchyConfig) -> Self {
         Self {
-            hsm_manager,
+            // hsm_manager,
             config,
         }
     }
@@ -454,20 +454,23 @@ impl EntropyValidator {
     pub fn check_security_requirements(
         &self,
         entropy_class: &EntropyClass,
-    ) -> BearDogResult<SecurityLevel> {
+    ) -> BearDogResult<u8> {
         let security_level = match entropy_class {
-            EntropyClass::HumanLivedExperience { .. } => SecurityLevel::Maximum,
-            EntropyClass::HumanSupervisedMachine { .. } => SecurityLevel::High,
+            EntropyClass::HumanLivedExperience { .. } => 100, // SecurityLevel::Maximum,
+            EntropyClass::HumanSupervisedMachine { .. } => 80, // SecurityLevel::High,
             EntropyClass::StoreBoughtMachine {
                 reproducibility_index,
                 ..
             } => {
                 if *reproducibility_index < 0.3 {
-                    SecurityLevel::High
+                    // SecurityLevel::High
+                    80
                 } else if *reproducibility_index < 0.7 {
-                    SecurityLevel::Medium
+                    // SecurityLevel::Medium
+                    60
                 } else {
-                    SecurityLevel::Basic // Changed from Minimal to Basic
+                    // SecurityLevel::Basic // Changed from Minimal to Basic
+                    40
                 }
             }
         };

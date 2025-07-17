@@ -4,7 +4,7 @@
 //! It handles encrypted key storage, caching, and key lifecycle management.
 
 use super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use std::sync::Arc;
 use tokio::sync::RwLock;

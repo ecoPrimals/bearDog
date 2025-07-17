@@ -4,7 +4,7 @@
 //! It provides the foundational components for secure key management, cryptographic operations,
 //! and storage backends.
 
-use crate::error::BearDogResult;
+use beardog_errors::BearDogResult;
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
 use chrono::Utc;

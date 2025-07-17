@@ -2,7 +2,7 @@
 //!
 //! Contains all structs, enums, and type aliases for genetic operations.
 
-use crate::BearDogResult;
+use beardog_errors::BearDogResult;
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
@@ -11,7 +11,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 // Import genetics types from auth module (which were in cross_node_auth)
-use crate::auth::{BearDogGenetics, SpawnPurpose, TaskType};
+use beardog_auth::auth::{BearDogGenetics, SpawnPurpose, TaskType};
 
 /// Configuration for genetics operations
 ///
@@ -282,6 +282,19 @@ pub struct ResourceLimits {
     pub allowed_jurisdictions: Vec<String>,
     /// Temporal spawning windows
     pub temporal_windows: Vec<TimeWindow>,
+}
+
+impl Default for ResourceLimits {
+    fn default() -> Self {
+        Self {
+            max_cpu_percent: 80.0,
+            max_memory_mb: 4096,
+            max_storage_gb: 100,
+            max_network_mbps: 1000,
+            allowed_jurisdictions: vec!["US".to_string(), "EU".to_string()],
+            temporal_windows: vec![],
+        }
+    }
 }
 
 /// Time window for allowed spawning

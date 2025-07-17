@@ -17,9 +17,9 @@
 //! ## Usage
 //!
 //! ```rust
-//! use crate::genetics::spawning::{GeneticSpawningEngine, GeneticsConfig};
-//! use crate::genetics::types::InMemoryGeneticsStore;
-//! use crate::tunnel::hsm::HsmManager;
+//! use beardog_genetics::genetics::spawning::{GeneticSpawningEngine, GeneticsConfig};
+//! use beardog_genetics::genetics::types::InMemoryGeneticsStore;
+//! // use beardog_tunnel::tunnel::hsm::HsmManager;
 //! use std::sync::Arc;
 //!
 //! // Create the spawning engine

@@ -16,7 +16,7 @@ use uuid::Uuid;
 
 use super::types::{BearDogWorkflowType, GeneticsConfig, InMemoryGeneticsStore, ResourceLimits};
 use super::GeneticsAPI;
-use crate::BearDogCore;
+use beardog_auth::auth::SpawnPurpose;
 
 // ========================================================================================
 // REQUEST/RESPONSE TYPES
@@ -52,7 +52,7 @@ pub struct SpawnNodeRequest {
     /// Optional additional parent nodes for multi-parent spawning
     pub co_parents: Option<Vec<String>>,
     /// The purpose/reason for spawning this new node
-    pub purpose: crate::auth::SpawnPurpose,
+    pub purpose: SpawnPurpose,
     /// Optional resource limits for the child node
     pub resource_requirements: Option<ResourceLimits>,
     /// Optional workflow type for the spawning process
@@ -124,7 +124,7 @@ pub struct SpawnStatusResponse {
 
 /// Create genesis genetics for a new node
 pub async fn create_genesis_node(
-    State(_core): State<Arc<BearDogCore>>,
+    State(_core): State<Arc<()>>,
     Json(request): Json<CreateGenesisRequest>,
 ) -> Result<Json<CreateGenesisResponse>, StatusCode> {
     info!("🧬 Creating genesis node: {}", request.node_id);
@@ -134,7 +134,7 @@ pub async fn create_genesis_node(
     let genetics_config = GeneticsConfig::default();
     let genetics_api = GeneticsAPI::new(genetics_store, genetics_config);
 
-    match genetics_api.create_genesis_node(&request.node_id).await {
+    match genetics_api.create_genesis_genetics(&request.node_id).await {
         Ok(genetics) => {
             info!(
                 "🧬 Generated genesis genetics for node: {}, genetics ID: {}",
@@ -161,7 +161,7 @@ pub async fn create_genesis_node(
 
 /// Submit a spawn request for processing
 pub async fn spawn_node(
-    State(_core): State<Arc<BearDogCore>>,
+    State(_core): State<Arc<()>>,
     Json(request): Json<SpawnNodeRequest>,
 ) -> Result<Json<SpawnNodeResponse>, StatusCode> {
     info!(
@@ -231,7 +231,7 @@ pub async fn spawn_node(
 
 /// Get genetics information for a specific node
 pub async fn get_node_genetics(
-    State(_core): State<Arc<BearDogCore>>,
+    State(_core): State<Arc<()>>,
     Path(node_id): Path<String>,
 ) -> Result<Json<NodeGeneticsResponse>, StatusCode> {
     info!("🧬 Retrieving genetics for node: {}", node_id);
@@ -268,7 +268,7 @@ pub async fn get_node_genetics(
 
 /// Get the status of a spawn request
 pub async fn get_spawn_status(
-    State(_core): State<Arc<BearDogCore>>,
+    State(_core): State<Arc<()>>,
     Path(request_id): Path<String>,
 ) -> Result<Json<SpawnStatusResponse>, StatusCode> {
     info!("🧬 Getting spawn status for request: {}", request_id);
@@ -332,7 +332,7 @@ pub fn create_demo_spawn_request(requesting_parent: &str) -> SpawnNodeRequest {
     SpawnNodeRequest {
         requesting_parent: requesting_parent.to_string(),
         co_parents: Some(vec!["demo-node-2".to_string()]),
-        purpose: crate::auth::SpawnPurpose::EmergencyResponse,
+        purpose: SpawnPurpose::EmergencyResponse,
         resource_requirements: Some(ResourceLimits {
             max_cpu_percent: 25.0,
             max_memory_mb: 1024,
@@ -364,7 +364,7 @@ mod tests {
         let valid_request = SpawnNodeRequest {
             requesting_parent: "test-node".to_string(),
             co_parents: None,
-            purpose: crate::auth::SpawnPurpose::EmergencyResponse,
+            purpose: SpawnPurpose::EmergencyResponse,
             resource_requirements: Some(ResourceLimits {
                 max_cpu_percent: 50.0,
                 max_memory_mb: 1024,

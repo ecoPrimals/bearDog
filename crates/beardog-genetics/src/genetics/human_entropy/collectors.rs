@@ -7,7 +7,7 @@ use super::config::*;
 use super::ethics::*;
 use super::processors::*;
 use super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;
 use std::sync::Arc;
 use std::time::Duration;

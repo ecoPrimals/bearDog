@@ -4,13 +4,12 @@
 //! Each backend offers different persistence mechanisms and capabilities.
 
 use super::types::*;
-use crate::error::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
+use tracing::{debug, error, info, warn};
 
 use aes_gcm::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
@@ -18,10 +17,6 @@ use aes_gcm::{
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
 
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_utils::crypto_utils::generate_secure_random_bytes;

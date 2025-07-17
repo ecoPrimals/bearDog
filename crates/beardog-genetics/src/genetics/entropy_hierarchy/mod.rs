@@ -23,7 +23,7 @@
 //! ## Usage
 //!
 //! ```rust
-//! use crate::genetics::entropy_hierarchy::{
+//! use beardog_genetics::genetics::entropy_hierarchy::{
 //!     EntropyHierarchyManager, EntropyHierarchyConfig, EntropyClass, HumanIdentity
 //! };
 //!
@@ -84,11 +84,11 @@ pub use validation::EntropyValidator;
 mod tests {
     use super::*;
     use crate::genetics::human_entropy;
-    use crate::tunnel::hsm::manager::HsmManager;
-    use crate::BearDogResult;
+    // use beardog_tunnel::tunnel::hsm::manager::HsmManager;
+    use beardog_errors::BearDogResult;
     use chrono::Utc;
     use std::sync::Arc;
-    use crate::tunnel::hsm::android_strongbox::EntropySource;
+    // use beardog_tunnel::tunnel::hsm::android_strongbox::EntropySource;
 
     async fn create_test_manager() -> BearDogResult<EntropyHierarchyManager> {
         let config = EntropyHierarchyConfig::default();

@@ -4,7 +4,7 @@
 
 use super::types::*;
 use beardog_errors::{BearDogResult, BearDogError};
-use beardog_auth::{SpawnPurpose, SecurityTraits, CryptoChromosome, NodeCapability, BearDogGenetics};
+use beardog_auth::auth::{SpawnPurpose, SecurityTraits, CryptoChromosome, NodeCapability, BearDogGenetics, SecurityClearance};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
@@ -31,18 +31,17 @@ impl DefaultBearDogGeneticsEngine {
         
         // Create basic genesis genetics with placeholder values
         let genetics = BearDogGenetics {
-            node_id: node_id.to_string(),
+            id: node_id.to_string(),
             generation: 0,
-            parent_lineage: vec![],
+            parent_genetics: None,
             crypto_chromosomes: vec![],
             security_traits: SecurityTraits::default(),
             capabilities: vec![],
             spawn_restrictions: vec![],
-            created_at: chrono::Utc::now(),
-            last_updated: chrono::Utc::now(),
+            mutations: vec![],
             fitness_score: 1.0,
-            specializations: vec![],
-            metadata: std::collections::HashMap::new(),
+            security_clearance: SecurityClearance::Basic,
+            specializations: vec![NodeSpecialization::GeneralPurpose],
         };
 
         Ok(genetics)
@@ -72,11 +71,11 @@ impl DefaultBearDogGeneticsEngine {
         let mut child_genetics = first_parent.clone();
         
         // Basic recombination logic (placeholder)
-        child_genetics.node_id = format!("child_{}", uuid::Uuid::new_v4());
+        child_genetics.id = format!("child_{}", uuid::Uuid::new_v4());
         child_genetics.generation = first_parent.generation + 1;
-        child_genetics.parent_lineage = vec![first_parent.node_id.clone()];
-        child_genetics.created_at = chrono::Utc::now();
-        child_genetics.last_updated = chrono::Utc::now();
+        child_genetics.parent_genetics = Some(vec![first_parent.id.clone()]);
+        // child_genetics.created_at = chrono::Utc::now();
+        // child_genetics.last_updated = chrono::Utc::now();
 
         Ok(child_genetics)
     }
@@ -91,14 +90,14 @@ impl DefaultBearDogGeneticsEngine {
         
         // Apply mutations based on purpose (placeholder)
         mutated_genetics.fitness_score *= 1.1; // Slight improvement
-        mutated_genetics.last_updated = chrono::Utc::now();
+        // mutated_genetics.last_updated = chrono::Utc::now();
 
         Ok(mutated_genetics)
     }
 
     /// Validate genetics (placeholder implementation)
     pub async fn validate_genetics(&self, genetics: &BearDogGenetics) -> BearDogResult<()> {
-        if genetics.node_id.is_empty() {
+        if genetics.id.is_empty() {
             return Err(BearDogError::InvalidGenetics {
                 message: "Node ID cannot be empty".to_string(),
             });

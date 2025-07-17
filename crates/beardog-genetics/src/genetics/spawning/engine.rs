@@ -5,9 +5,9 @@
 //! and lineage tracking.
 
 use super::super::types::*;
-use crate::auth::BearDogGenetics;
-use crate::tunnel::hsm::manager::HsmManager;
-use crate::{BearDogError, BearDogResult};
+use beardog_auth::auth::BearDogGenetics;
+// use beardog_tunnel::tunnel::hsm::manager::HsmManager;
+use beardog_errors::{BearDogError, BearDogResult};
 use sha3::Digest;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -19,7 +19,7 @@ pub struct GeneticSpawningEngine {
     /// Storage for genetic data
     pub(crate) genetics_store: Arc<dyn GeneticsStore>,
     /// HSM manager for cryptographic operations
-    pub(crate) hsm_manager: Arc<HsmManager>,
+    // pub(crate) hsm_manager: Arc<HsmManager>,
     /// Configuration settings
     pub(crate) config: GeneticsConfig,
     /// Active spawn requests being processed
@@ -32,12 +32,12 @@ impl GeneticSpawningEngine {
     /// Create a new genetic spawning engine
     pub fn new(
         genetics_store: Arc<dyn GeneticsStore>,
-        hsm_manager: Arc<HsmManager>,
+        // hsm_manager: Arc<HsmManager>,
         config: GeneticsConfig,
     ) -> Self {
         Self {
             genetics_store,
-            hsm_manager,
+            // hsm_manager,
             config,
             active_spawn_requests: Arc::new(RwLock::new(HashMap::new())),
             lineage_store: Arc::new(RwLock::new(HashMap::new())),

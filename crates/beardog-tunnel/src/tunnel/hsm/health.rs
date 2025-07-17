@@ -7,7 +7,7 @@ use super::{
     HsmHealthMonitor, HsmProvider, HsmHealthStatus, HsmInfo, HsmTier, SoftwareHsmType,
     KeyStorageType, MemoryProtectionLevel, TamperResistanceLevel, PerformanceMetrics,
 };
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::config::HealthConfig;
 use async_trait::async_trait;
 use std::collections::HashMap;

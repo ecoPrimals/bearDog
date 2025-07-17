@@ -4,7 +4,7 @@
 //! functionality for Android devices with StrongBox capabilities.
 
 use super::types::*;
-use crate::error::BearDogResult;
+use beardog_errors::BearDogResult;
 use crate::tunnel::hsm::types::*;
 use tracing::info;
 

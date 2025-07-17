@@ -4,7 +4,7 @@
 //! It tracks all operations, maintains audit trails, and provides query capabilities.
 
 use super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use async_trait::async_trait;
 use std::collections::VecDeque;
 use std::sync::Arc;

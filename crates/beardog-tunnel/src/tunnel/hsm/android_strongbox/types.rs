@@ -3,7 +3,7 @@
 //! This module contains all types, structs, and enums specific to the Android StrongBox HSM.
 //! It includes device information, key parameters, error types, and supporting structures.
 
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use chrono::Utc;
 use std::collections::HashMap;

@@ -5,7 +5,7 @@
 
 use super::super::types::*;
 use super::engine::GeneticSpawningEngine;
-use crate::BearDogResult;
+use beardog_errors::BearDogResult;
 use chrono::Utc;
 use std::collections::HashMap;
 use tracing::info;

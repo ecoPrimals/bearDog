@@ -1,9 +1,9 @@
 // 🛡️ BSTP Security Provider - Core security interface for gaming tunnels
 
 // CrossNodeAuthEngine functionality is now part of this module
-use crate::encryption::EncryptionEngine;
-use crate::genetics::DefaultBearDogGeneticsEngine;
-use crate::threat::ThreatDetectionEngine;
+use beardog_security::encryption::EncryptionEngine;
+use beardog_genetics::genetics::DefaultBearDogGeneticsEngine;
+use beardog_threat::threat::ThreatDetectionEngine;
 use crate::tunnel::{
     events::*, BStpConfig, BStpKeyManager, EncryptedPacket, GamingCryptoEngine,
     GamingSecurityProfile, GeneticSecurityHealing, LatencyMonitor, NetworkSecurityEvent,
@@ -11,7 +11,7 @@ use crate::tunnel::{
 };
 use crate::{BearDogError, BearDogResult};
 
-use crate::auth::CrossNodeAuthEngine;
+use beardog_auth::auth::CrossNodeAuthEngine;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};

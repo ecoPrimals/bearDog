@@ -4,7 +4,7 @@
 //! specifically targeting StrongBox-backed operations.
 
 use super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use tracing::{debug, info, warn};
 

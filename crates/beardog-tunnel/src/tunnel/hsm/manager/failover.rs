@@ -5,7 +5,7 @@
 
 use super::config::FailoverConfig;
 use super::{HsmFailoverManager, HsmProvider, SecurityRequirements};
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;

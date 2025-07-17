@@ -4,7 +4,7 @@
 //! It uses Ring's AES-256-GCM for encryption/decryption, Ed25519 for signing/verification, and HKDF for key derivation.
 
 use super::super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
 use tracing::{debug, info};

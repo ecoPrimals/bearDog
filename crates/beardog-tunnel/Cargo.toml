@@ -9,6 +9,11 @@ authors.workspace = true
 [dependencies]
 beardog-errors = { workspace = true }
 beardog-config = { workspace = true }
+beardog-security = { workspace = true }
+beardog-genetics = { workspace = true }
+beardog-utils = { workspace = true }
+beardog-threat = { workspace = true }
+beardog-auth = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
 chrono = { workspace = true }
@@ -19,3 +24,4 @@ async-trait = { workspace = true }
 hkdf = "0.12"
 sha2 = { workspace = true }
 aes-gcm = { workspace = true }
+rand = { workspace = true }

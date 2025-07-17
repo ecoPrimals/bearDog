@@ -4,7 +4,7 @@
 //! and utility processors used in human entropy collection.
 
 use super::types::*;
-use crate::error::BearDogResult;
+use beardog_errors::BearDogResult;
 use sha3::{Digest, Sha3_256};
 use std::sync::Arc;
 

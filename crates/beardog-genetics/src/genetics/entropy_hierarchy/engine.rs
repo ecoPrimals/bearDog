@@ -9,8 +9,8 @@ use super::sources::EntropyMixingEngine;
 use super::types::*;
 use super::validation::EntropyValidator;
 use crate::genetics::human_entropy::MultiModalHumanEntropyCollector;
-use crate::tunnel::hsm::{HsmManager, SecurityLevel};
-use crate::{BearDogError, BearDogResult};
+// // use beardog_tunnel::tunnel::hsm::{HsmManager, SecurityLevel};
+use beardog_errors::{BearDogError, BearDogResult};
 use std::collections::HashMap;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -27,7 +27,7 @@ pub struct EntropyHierarchyManager {
     pub mixing_engine: EntropyMixingEngine,
 
     /// HSM manager for cryptographic operations
-    pub hsm_manager: Arc<HsmManager>,
+    // pub hsm_manager: Arc<HsmManager>,
 
     /// Human entropy collector
     pub human_entropy_collector: Arc<MultiModalHumanEntropyCollector>,
@@ -43,18 +43,18 @@ impl EntropyHierarchyManager {
     /// Create a new entropy hierarchy manager
     pub fn new(
         config: EntropyHierarchyConfig,
-        hsm_manager: Arc<HsmManager>,
+        // hsm_manager: Arc<HsmManager>,
         human_entropy_collector: Arc<MultiModalHumanEntropyCollector>,
     ) -> Self {
         let mixing_engine = EntropyMixingEngine::new(config.clone());
-        let validator = EntropyValidator::new(hsm_manager.clone(), config.clone());
+        let validator = EntropyValidator::new(/* hsm_manager.clone(), */ config.clone());
         let monitor = EntropyMonitor::new(config.clone());
 
         Self {
             config,
             active_seeds: HashMap::new(),
             mixing_engine,
-            hsm_manager,
+            // hsm_manager,
             human_entropy_collector,
             validator,
             monitor,
@@ -376,7 +376,7 @@ impl EntropyHierarchyManager {
 
         Ok(EntropyQualityAssessment {
             quality_score,
-            security_level,
+            // security_level,
             weighted_score,
             entropy_tier: match entropy_class {
                 EntropyClass::HumanLivedExperience { .. } => 3,
@@ -433,7 +433,7 @@ impl EntropyHierarchyManager {
     pub fn update_config(&mut self, new_config: EntropyHierarchyConfig) {
         self.config = new_config.clone();
         self.mixing_engine = EntropyMixingEngine::new(new_config.clone());
-        self.validator = EntropyValidator::new(self.hsm_manager.clone(), new_config.clone());
+        self.validator = EntropyValidator::new(/* self.hsm_manager.clone(), */ new_config.clone());
         self.monitor = EntropyMonitor::new(new_config);
     }
 
@@ -449,7 +449,7 @@ pub struct EntropyQualityAssessment {
     /// Overall quality score of the entropy
     pub quality_score: f64,
     /// Security level based on entropy quality
-    pub security_level: SecurityLevel,
+    // pub security_level: SecurityLevel,
     /// Weighted score considering various factors
     pub weighted_score: f64,
     /// Tier classification of the entropy

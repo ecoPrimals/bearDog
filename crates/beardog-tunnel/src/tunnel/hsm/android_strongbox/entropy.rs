@@ -4,7 +4,7 @@
 //! creation functionality for Android StrongBox attestation and authentication.
 
 use super::types::*;
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use std::sync::Arc;
 use tracing::{debug, info};
 

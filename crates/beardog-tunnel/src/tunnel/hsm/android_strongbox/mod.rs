@@ -209,7 +209,7 @@ pub use health::*;
 pub use types::*;
 
 // Import from parent HSM module for configuration types
-use crate::error::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 
 // Module declarations
 pub mod attestation;
