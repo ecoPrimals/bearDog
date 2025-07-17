@@ -50,9 +50,9 @@ impl GeneticsAPI {
         // let hsm_manager = std::sync::Arc::new(HsmManager::new());
 
         let spawning_engine = spawning::GeneticSpawningEngine::new(
-            genetics_store,
+            genetics_store.clone(),
             // hsm_manager,
-            config,
+            config.clone(),
         );
 
         let genetics_engine = handlers::DefaultBearDogGeneticsEngine::new(
@@ -98,9 +98,9 @@ impl GeneticsAPI {
         // let hsm_manager = std::sync::Arc::new(HsmManager::new());
         
         let spawning_engine = spawning::GeneticSpawningEngine::new(
-            genetics_store,
+            genetics_store.clone(),
             // hsm_manager,
-            config,
+            config.clone(),
         );
 
         let request = SpawnRequest {
@@ -133,9 +133,9 @@ impl GeneticsAPI {
         // let hsm_manager = std::sync::Arc::new(HsmManager::new());
         
         let spawning_engine = spawning::GeneticSpawningEngine::new(
-            genetics_store,
+            genetics_store.clone(),
             // hsm_manager,
-            config,
+            config.clone(),
         );
 
         // For now, just use the first parent set

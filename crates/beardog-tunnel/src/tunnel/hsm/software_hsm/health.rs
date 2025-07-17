@@ -461,6 +461,7 @@ struct AuditLogFilter {
     result: Option<String>,
 }
 
+impl SoftwareHealthMonitor {
     /// Record operation metrics
     pub async fn record_operation(
         &self,
@@ -544,6 +545,7 @@ struct AuditLogFilter {
 
         Ok(())
     }
+}
 
 /// Simplified health summary for quick overview
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

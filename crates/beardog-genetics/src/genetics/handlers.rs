@@ -120,7 +120,7 @@ impl DefaultBearDogGeneticsEngine {
     /// Inherit security clearance (placeholder implementation)
     pub fn inherit_security_clearance(&self, parent_genetics: &[BearDogGenetics]) -> String {
         parent_genetics.first()
-            .map(|g| g.security_traits.security_level.clone())
+            .map(|g| g.security_traits.trust_threshold.to_string())
             .unwrap_or_else(|| "Basic".to_string())
     }
 

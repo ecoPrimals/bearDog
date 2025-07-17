@@ -69,7 +69,7 @@ pub async fn create_lineage_record(
 
         parent_signatures.push(ParentSignature {
             parent_node_id: parent_id.clone(),
-            signature: lineage_signature,
+            signature: lineage_signature.as_bytes().to_vec(),
             public_key,
         });
     }
@@ -97,7 +97,7 @@ pub async fn create_lineage_record(
     witness_signatures.push(WitnessSignature {
         witness_id: "genetic-witness".to_string(),
         witness_type: WitnessType::Node,
-        signature: witness_signature_bytes,
+        signature: witness_signature_bytes.as_bytes().to_vec(),
         public_key: witness_public_key,
     });
 

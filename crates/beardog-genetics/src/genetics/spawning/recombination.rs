@@ -233,10 +233,13 @@ pub async fn blend_security_traits(
             }
 
             // Use HSM for secure random decision making
-            let random_bytes = engine
-                // .hsm_manager
-                .generate_random_bytes(32, &security_reqs)
-                .await?;
+            let random_bytes = {
+                let mut bytes = vec![0u8; 32];
+                for i in 0..32 {
+                    bytes[i] = rand::random::<u8>();
+                }
+                bytes
+            }; // engine.hsm_manager.generate_random_bytes(32, &security_reqs).await?;
 
             // Use random bytes to influence trait selection
             let random_index = (random_bytes[0] as usize) % parent_traits.len();
@@ -303,10 +306,13 @@ pub async fn merge_capabilities(
         }
         CapabilityMergingStrategy::WeightedCombination { weights: _ } => {
             // Use HSM random for weighted selection
-            let random_bytes = engine
-                // .hsm_manager
-                .generate_random_bytes(64, &security_reqs)
-                .await?;
+            let random_bytes = {
+                let mut bytes = vec![0u8; 64];
+                for i in 0..64 {
+                    bytes[i] = rand::random::<u8>();
+                }
+                bytes
+            }; // engine.hsm_manager.generate_random_bytes(64, &security_reqs).await?;
 
             let mut rng_state = u64::from_le_bytes([
                 random_bytes[0],

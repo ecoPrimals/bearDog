@@ -198,7 +198,9 @@ impl<T: Send + Sync> UniversalEcosystemManager<T> {
         // Store active request
         {
             let mut active_requests = self.active_requests.write().await;
-            active_requests.insert(request.id, request.clone());
+            let request_uuid = uuid::Uuid::parse_str(&request.id)
+                .unwrap_or_else(|_| uuid::Uuid::new_v4()); // Generate new UUID if parsing fails
+            active_requests.insert(request_uuid, request.clone());
         }
 
         // Find capable provider

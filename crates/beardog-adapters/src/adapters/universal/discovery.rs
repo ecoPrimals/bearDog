@@ -279,6 +279,7 @@ impl<T> EcosystemDiscovery<T> {
             endpoints: ServiceEndpoints::default(),
             capabilities: self.get_beardog_universal_capabilities(),
             registered_at: chrono::Utc::now(),
+            expires_at: Some(chrono::Utc::now() + chrono::Duration::hours(24)), // Registration expires in 24 hours
             status: RegistrationStatus::Active,
         };
 
