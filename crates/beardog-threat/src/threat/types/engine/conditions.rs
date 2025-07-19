@@ -496,7 +496,7 @@ impl RuleCondition {
     /// let condition = RuleCondition::field_equals("event_type", "login");
     /// let not_condition = RuleCondition::not(condition);
     /// ```
-    pub fn not(condition: RuleCondition) -> Self {
+    pub fn negate(condition: RuleCondition) -> Self {
         Self::Not {
             condition: Box::new(condition),
         }

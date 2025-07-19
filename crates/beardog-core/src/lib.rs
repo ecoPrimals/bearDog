@@ -2,11 +2,76 @@
 //!
 //! This crate provides the main BearDog orchestration engine and core functionality.
 
+pub mod biome_yaml_parser;
 pub mod core;
+pub mod node_registry;
+pub mod types;
 pub mod ecosystem_integration;
-pub mod licensing;
+pub mod ecosystem_simple;
+pub mod local_optimizer;
+pub mod songbird_client;
+pub mod universal_discovery;
+pub mod universal_optimization;
+pub mod universal_primal_provider;
 
-// Re-export commonly used types
-pub use core::BearDogCore;
-pub use ecosystem_integration::*;
-pub use licensing::*;
+use async_trait::async_trait;
+use beardog_config::*;
+use beardog_errors::{BearDogError, BearDogResult};
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+
+// Re-export core functionality
+pub use crate::biome_yaml_parser::{
+    BiomeEnvironment, BiomeManifest, BiomeMetadata, BiomeSecurityContext, BiomeYamlParser,
+    PrimalConfig, PrimalResourceRequirements, ServiceDefinition,
+};
+pub use crate::core::BearDogCore;
+pub use crate::ecosystem_integration::{
+    BearDogEcosystemProvider, EcosystemIntegration, EcosystemRequest, EcosystemResponse,
+};
+pub use crate::ecosystem_simple::{
+    BearDogEcosystemProvider as SimpleBearDogEcosystemProvider,
+};
+// Use universal ecosystem integration from beardog-adapters
+pub use beardog_adapters::BearDogEcosystemIntegration;
+pub use crate::local_optimizer::BearDogLocalOptimizer;
+pub use crate::songbird_client::{
+    DiscoveredService, RegistrationInfo, RegistrationStatus, ResponseStatus, ServiceMeshInfo,
+    ServiceRequest, ServiceResponse, UniversalServiceMesh, UniversalServiceMeshClient,
+};
+pub use crate::universal_discovery::{
+    CapabilityType, EcosystemCapabilityDiscovery, ModuleInstance, PerformanceRequirements,
+    QualityRequirements, UniversalCapabilityDiscovery, UniversalModuleRequest,
+    UniversalModuleResponse,
+};
+pub use crate::universal_optimization::{
+    EcosystemOptimizationService, GeneticTarget, LocalOptimizer, OptimizationRequest,
+    OptimizationResponse, PerformanceMetrics as UniversalPerformanceMetrics,
+    UniversalOptimizationService, WorkloadType,
+};
+pub use crate::universal_primal_provider::{
+    EcosystemRole, PrimalCapability, PrimalIdentity, PrimalMetadata, PrimalService, PrimalType,
+    SecurityContext, ServiceContext, ServiceEndpoint, ServiceHealth, UniversalPrimalProvider,
+};
+
+// Core traits and types
+#[async_trait]
+pub trait BearDogService: Send + Sync {
+    async fn start(&mut self) -> BearDogResult<()>;
+    async fn stop(&mut self) -> BearDogResult<()>;
+    async fn health_check(&self) -> BearDogResult<HealthStatus>;
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum HealthStatus {
+    Healthy,
+    Degraded,
+    Unhealthy,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceInfo {
+    pub name: String,
+    pub version: String,
+    pub status: HealthStatus,
+}

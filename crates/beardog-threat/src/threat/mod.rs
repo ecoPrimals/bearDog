@@ -31,7 +31,7 @@ pub struct ThreatAPI;
 
 impl ThreatAPI {
     /// Create a new threat detection engine with default configuration
-    pub async fn new() -> beardog_errors::BearDogResult<ThreatDetectionEngine> {
+    pub async fn create_default() -> beardog_errors::BearDogResult<ThreatDetectionEngine> {
         ThreatDetectionEngine::new(ThreatDetectionConfig::default()).await
     }
 

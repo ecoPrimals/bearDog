@@ -28,7 +28,9 @@ impl EntropyMixingEngine {
         }
 
         if sources.len() == 1 {
-            return Ok(sources.into_iter().next()
+            return Ok(sources
+                .into_iter()
+                .next()
                 .expect("Vector length is 1, so next() should return Some"));
         }
 
@@ -180,7 +182,7 @@ impl EntropyMixingEngine {
             } => {
                 // Quality based on spectral diversity
                 let diversity = spectral_features.len() as f64 / 100.0; // Normalize
-                diversity.min(1.0).max(0.5) // Clamp between 0.5 and 1.0
+                diversity.clamp(0.5, 1.0) // Clamp between 0.5 and 1.0
             }
             HumanEntropySource::Camera {
                 lighting_variations,
@@ -189,14 +191,14 @@ impl EntropyMixingEngine {
                 // Quality based on lighting variation
                 let variation = lighting_variations.iter().sum::<f32>() as f64
                     / lighting_variations.len() as f64;
-                variation.min(1.0).max(0.6)
+                variation.clamp(0.6, 1.0)
             }
             HumanEntropySource::Haptic {
                 motion_patterns, ..
             } => {
                 // Quality based on motion complexity
                 let complexity = motion_patterns.len() as f64 / 50.0; // Normalize
-                complexity.min(1.0).max(0.7)
+                complexity.clamp(0.7, 1.0)
             }
         }
     }

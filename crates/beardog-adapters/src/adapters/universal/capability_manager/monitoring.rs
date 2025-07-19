@@ -188,17 +188,18 @@ impl CapabilityMonitor {
         performance: &PerformanceMetrics,
         thresholds: &AlertThresholds,
     ) -> CapabilityStatus {
-        if performance.error_rate_percent > thresholds.max_error_rate_percent * 2.0 {
+        // Check for critical conditions
+        if performance.error_rate_percent > thresholds.max_error_rate_percent * 2.0
+            || performance.response_time_ms > thresholds.max_response_time_ms * 2
+            || performance.quality_score < thresholds.min_quality_score * 0.5
+        {
             CapabilityStatus::Critical
-        } else if performance.response_time_ms > thresholds.max_response_time_ms * 2 {
-            CapabilityStatus::Critical
-        } else if performance.quality_score < thresholds.min_quality_score * 0.5 {
-            CapabilityStatus::Critical
-        } else if performance.error_rate_percent > thresholds.max_error_rate_percent {
-            CapabilityStatus::Degraded
-        } else if performance.response_time_ms > thresholds.max_response_time_ms {
-            CapabilityStatus::Degraded
-        } else if performance.quality_score < thresholds.min_quality_score {
+        }
+        // Check for degraded conditions
+        else if performance.error_rate_percent > thresholds.max_error_rate_percent
+            || performance.response_time_ms > thresholds.max_response_time_ms
+            || performance.quality_score < thresholds.min_quality_score
+        {
             CapabilityStatus::Degraded
         } else {
             CapabilityStatus::Healthy

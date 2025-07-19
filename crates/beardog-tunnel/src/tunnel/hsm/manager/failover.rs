@@ -5,8 +5,8 @@
 
 use super::config::FailoverConfig;
 use super::{HsmFailoverManager, HsmProvider, SecurityRequirements};
-use beardog_errors::{BearDogError, BearDogResult};
 use async_trait::async_trait;
+use beardog_errors::{BearDogError, BearDogResult};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -15,9 +15,9 @@ use tokio::sync::RwLock;
 #[derive(Debug, Clone, PartialEq)]
 pub enum CircuitBreakerState {
     /// Normal operation - requests are processed
-    Closed,   // Normal operation
+    Closed, // Normal operation
     /// Failing state - requests are rejected
-    Open,     // Failing - reject requests
+    Open, // Failing - reject requests
     /// Testing state - limited requests are allowed
     HalfOpen, // Testing - allow limited requests
 }
@@ -92,7 +92,7 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
         // For now, return an error - in a real implementation,
         // we would have a list of backup providers
         Err(BearDogError::NoSuitableProvider {
-            requirements: format!("{requirements:?}"),
+            message: format!("No suitable provider found for requirements: {requirements:?}"),
         })
     }
 
@@ -107,7 +107,7 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
     {
         // Simple failover - in a real implementation, we would try multiple providers
         Err(BearDogError::NoSuitableProvider {
-            requirements: format!("{requirements:?}"),
+            message: format!("No suitable provider found for requirements: {requirements:?}"),
         })
     }
 }

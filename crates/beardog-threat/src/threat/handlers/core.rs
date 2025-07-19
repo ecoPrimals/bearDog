@@ -156,11 +156,9 @@ impl ThreatDetectionEngine {
     /// ```rust
     /// use beardog::threat::handlers::ThreatDetectionEngine;
     ///
-    /// fn main() {
-    ///     let engine = ThreatDetectionEngine::placeholder();
-    ///     assert!(engine.ml_engine.is_none());
-    ///     assert!(engine.detection_rules.is_empty());
-    /// }
+    /// let engine = ThreatDetectionEngine::placeholder();
+    /// assert!(engine.ml_engine.is_none());
+    /// assert!(engine.detection_rules.is_empty());
     /// ```
     pub fn placeholder() -> Self {
         Self {

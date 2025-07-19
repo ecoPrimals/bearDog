@@ -3,7 +3,18 @@
 //! This module contains utility functions and helpers used throughout
 //! the security API implementation.
 
-use beardog_config::constants::network::PRIVATE_IP_RANGES;
+// Private IP ranges for security validation
+const PRIVATE_IP_RANGES: &[&str] = &[
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16",
+    "127.0.0.0/8",
+    "169.254.0.0/16",
+    "::1/128",
+    "fc00::/7",
+    "fe80::/10",
+];
+
 use std::net::IpAddr;
 
 /// Check if an IP address is in a private range

@@ -21,7 +21,7 @@ impl EntropyMonitor {
 
     /// Clean up expired seeds from the seed collection
     pub fn cleanup_expired_seeds(&self, active_seeds: &mut HashMap<Uuid, EntropySeed>) {
-        let now = Utc::now();
+        let _now = Utc::now();
         let mut expired_seeds = Vec::new();
 
         for (seed_id, seed) in active_seeds.iter() {

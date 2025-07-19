@@ -3,13 +3,13 @@
 //! This module provides different storage backend implementations for the Software HSM.
 //! Each backend offers different persistence mechanisms and capabilities.
 
-use super::types::*;
-use crate::tunnel::hsm::types::*;
-use async_trait::async_trait;
+// use super::types::*;
+// use crate::tunnel::hsm::types::*;
+// use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 use aes_gcm::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
@@ -81,12 +81,18 @@ pub struct StorageStats {
 pub trait EncryptionKey: Send + Sync {
     /// Initialize the encryption key
     fn initialize(&self) -> impl std::future::Future<Output = BearDogResult<()>> + Send;
-    
+
     /// Encrypt data
-    fn encrypt(&self, plaintext: &[u8]) -> impl std::future::Future<Output = BearDogResult<Vec<u8>>> + Send;
-    
+    fn encrypt(
+        &self,
+        plaintext: &[u8],
+    ) -> impl std::future::Future<Output = BearDogResult<Vec<u8>>> + Send;
+
     /// Decrypt data
-    fn decrypt(&self, ciphertext: &[u8]) -> impl std::future::Future<Output = BearDogResult<Vec<u8>>> + Send;
+    fn decrypt(
+        &self,
+        ciphertext: &[u8],
+    ) -> impl std::future::Future<Output = BearDogResult<Vec<u8>>> + Send;
 }
 
 /// Default encryption key implementation using AES-256-GCM
@@ -122,12 +128,15 @@ impl MemoryHsmStorage {
         // Encrypt the key data
         let cipher = Aes256Gcm::new(&self.master_key);
         let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
-        
-        let encrypted_data = cipher
-            .encrypt(&nonce, key_data)
-            .map_err(|e| BearDogError::Cryptographic {
-                message: format!("Failed to encrypt key data: {}", e),
-            })?;
+
+        let encrypted_data =
+            cipher
+                .encrypt(&nonce, key_data)
+                .map_err(|e| BearDogError::Cryptographic {
+                    operation: format!("Failed to encrypt key data: {e}"),
+                })?;
+
+        let encrypted_data_len = encrypted_data.len();
 
         let stored_key = StoredKey {
             key_id: key_id.clone(),
@@ -148,7 +157,7 @@ impl MemoryHsmStorage {
         {
             let mut stats = self.stats.write().await;
             stats.total_keys += 1;
-            stats.total_size += encrypted_data.len();
+            stats.total_size += encrypted_data_len;
             stats.operations_count += 1;
             stats.last_operation = Some(Utc::now());
         }
@@ -163,11 +172,11 @@ impl MemoryHsmStorage {
 
         let stored_key = {
             let mut storage = self.storage.write().await;
-            let stored_key = storage.get_mut(key_id).ok_or_else(|| {
-                BearDogError::NotFound {
-                    message: format!("Key not found: {}", key_id),
-                }
-            })?;
+            let stored_key = storage
+                .get_mut(key_id)
+                .ok_or_else(|| BearDogError::NotFound {
+                    message: format!("Key not found: {key_id}"),
+                })?;
 
             // Update last accessed time
             stored_key.last_accessed = Utc::now();
@@ -177,11 +186,11 @@ impl MemoryHsmStorage {
         // Decrypt the key data
         let cipher = Aes256Gcm::new(&self.master_key);
         let nonce = Nonce::from_slice(&stored_key.nonce);
-        
+
         let decrypted_data = cipher
             .decrypt(nonce, stored_key.encrypted_data.as_ref())
             .map_err(|e| BearDogError::Cryptographic {
-                message: format!("Failed to decrypt key data: {}", e),
+                operation: format!("Failed to decrypt key data: {e}"),
             })?;
 
         // Update statistics
@@ -201,11 +210,11 @@ impl MemoryHsmStorage {
 
         let removed_key = {
             let mut storage = self.storage.write().await;
-            storage.remove(key_id).ok_or_else(|| {
-                BearDogError::NotFound {
-                    message: format!("Key not found: {}", key_id),
-                }
-            })?
+            storage
+                .remove(key_id)
+                .ok_or_else(|| BearDogError::NotFound {
+                    message: format!("Key not found: {key_id}"),
+                })?
         };
 
         // Update statistics
@@ -225,7 +234,7 @@ impl MemoryHsmStorage {
     pub async fn list_keys(&self) -> BearDogResult<Vec<String>> {
         let storage = self.storage.read().await;
         let keys: Vec<String> = storage.keys().cloned().collect();
-        
+
         debug!("Listed {} keys from memory HSM", keys.len());
         Ok(keys)
     }
@@ -233,10 +242,8 @@ impl MemoryHsmStorage {
     /// Get key metadata
     pub async fn get_key_metadata(&self, key_id: &str) -> BearDogResult<KeyMetadata> {
         let storage = self.storage.read().await;
-        let stored_key = storage.get(key_id).ok_or_else(|| {
-            BearDogError::NotFound {
-                message: format!("Key not found: {}", key_id),
-            }
+        let stored_key = storage.get(key_id).ok_or_else(|| BearDogError::NotFound {
+            message: format!("Key not found: {key_id}"),
         })?;
 
         Ok(stored_key.metadata.clone())
@@ -251,7 +258,7 @@ impl MemoryHsmStorage {
     /// Clear all keys from storage
     pub async fn clear_storage(&self) -> BearDogResult<()> {
         warn!("Clearing all keys from memory HSM storage");
-        
+
         {
             let mut storage = self.storage.write().await;
             storage.clear();
@@ -294,43 +301,50 @@ impl EncryptionKey for DefaultEncryptionKey {
     /// Encrypt data using AES-256-GCM
     async fn encrypt(&self, plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
         debug!("Encrypting {} bytes with AES-256-GCM", plaintext.len());
-        
+
         let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
-        let ciphertext = self.cipher
-            .encrypt(&nonce, plaintext)
-            .map_err(|e| BearDogError::Cryptographic {
-                message: format!("Failed to encrypt data: {}", e),
-            })?;
+        let ciphertext =
+            self.cipher
+                .encrypt(&nonce, plaintext)
+                .map_err(|e| BearDogError::Cryptographic {
+                    operation: format!("Failed to encrypt data: {e}"),
+                })?;
 
         // Prepend nonce to ciphertext for decryption
         let mut encrypted_data = nonce.to_vec();
         encrypted_data.extend_from_slice(&ciphertext);
 
-        debug!("Successfully encrypted data, output size: {} bytes", encrypted_data.len());
+        debug!(
+            "Successfully encrypted data, output size: {} bytes",
+            encrypted_data.len()
+        );
         Ok(encrypted_data)
     }
 
     /// Decrypt data using AES-256-GCM
     async fn decrypt(&self, ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
         debug!("Decrypting {} bytes with AES-256-GCM", ciphertext.len());
-        
+
         if ciphertext.len() < 12 {
             return Err(BearDogError::Cryptographic {
-                message: "Ciphertext too short to contain nonce".to_string(),
+                operation: "Ciphertext too short to contain nonce".to_string(),
             });
         }
 
         // Extract nonce and ciphertext
         let (nonce_bytes, encrypted_data) = ciphertext.split_at(12);
         let nonce = Nonce::from_slice(nonce_bytes);
-        
-        let plaintext = self.cipher
-            .decrypt(nonce, encrypted_data)
-            .map_err(|e| BearDogError::Cryptographic {
-                message: format!("Failed to decrypt data: {}", e),
-            })?;
 
-        debug!("Successfully decrypted data, output size: {} bytes", plaintext.len());
+        let plaintext = self.cipher.decrypt(nonce, encrypted_data).map_err(|e| {
+            BearDogError::Cryptographic {
+                operation: format!("Failed to decrypt data: {e}"),
+            }
+        })?;
+
+        debug!(
+            "Successfully decrypted data, output size: {} bytes",
+            plaintext.len()
+        );
         Ok(plaintext)
     }
 }
@@ -370,7 +384,7 @@ mod tests {
     #[tokio::test]
     async fn test_memory_storage_operations() {
         let storage = MemoryHsmStorage::new().unwrap();
-        
+
         let key_data = b"test_key_data_123";
         let metadata = KeyMetadata {
             key_type: "aes256".to_string(),
@@ -381,7 +395,10 @@ mod tests {
         };
 
         // Store key
-        storage.store_key("test_key".to_string(), key_data, metadata).await.unwrap();
+        storage
+            .store_key("test_key".to_string(), key_data, metadata)
+            .await
+            .unwrap();
 
         // Retrieve key
         let retrieved_data = storage.retrieve_key("test_key").await.unwrap();
@@ -394,7 +411,7 @@ mod tests {
 
         // Delete key
         storage.delete_key("test_key").await.unwrap();
-        
+
         // Verify key is deleted
         let result = storage.retrieve_key("test_key").await;
         assert!(result.is_err());
@@ -415,7 +432,7 @@ mod tests {
     #[tokio::test]
     async fn test_storage_statistics() {
         let storage = MemoryHsmStorage::new().unwrap();
-        
+
         let stats = storage.get_statistics().await.unwrap();
         assert_eq!(stats.total_keys, 0);
         assert_eq!(stats.total_size, 0);
@@ -429,7 +446,10 @@ mod tests {
             attributes: HashMap::new(),
         };
 
-        storage.store_key("test_key".to_string(), key_data, metadata).await.unwrap();
+        storage
+            .store_key("test_key".to_string(), key_data, metadata)
+            .await
+            .unwrap();
 
         let stats = storage.get_statistics().await.unwrap();
         assert_eq!(stats.total_keys, 1);

@@ -208,7 +208,6 @@ pub type ResponseActionType = ResponseAction;
 /// - Implement custom `RuleCondition` types for specialized detection
 /// - Extend `EvidenceType` for new data sources
 /// - Create custom `IndicatorType` for domain-specific indicators
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -319,9 +318,11 @@ mod tests {
 
     #[test]
     fn test_threat_source_classification() {
-        let mut source = ThreatSource::default();
-        source.classification = SourceClassification::Malicious;
-        source.reputation_score = 0.1;
+        let mut source = ThreatSource {
+            classification: SourceClassification::Malicious,
+            reputation_score: 0.1,
+            ..Default::default()
+        };
 
         assert!(source.is_malicious());
         assert!(!source.is_trustworthy());
@@ -335,9 +336,11 @@ mod tests {
 
     #[test]
     fn test_threat_target_risk_assessment() {
-        let mut target = ThreatTarget::default();
-        target.criticality = AssetCriticality::Critical;
-        target.protection_level = ProtectionLevel::Basic;
+        let target = ThreatTarget {
+            criticality: AssetCriticality::Critical,
+            protection_level: ProtectionLevel::Basic,
+            ..Default::default()
+        };
 
         assert!(target.is_high_value());
         assert!(!target.is_well_protected());
@@ -487,6 +490,11 @@ mod tests {
             vec!["packet_count".to_string(), "byte_count".to_string()],
         );
 
+        // New model starts with 0.0 accuracy, not high accuracy
+        assert!(!model.is_high_accuracy());
+
+        // Update accuracy to high value
+        model.update_accuracy(0.9);
         assert!(model.is_high_accuracy());
         assert_eq!(model.age_days(), 0);
         assert!(!model.needs_retraining());
@@ -516,7 +524,7 @@ mod tests {
         engine.add_detection_rule(rule);
 
         // Create a security event
-        let event = SecurityEvent::new(
+        let _event = SecurityEvent::new(
             "event-001".to_string(),
             "file_scan".to_string(),
             "192.168.1.100".to_string(),

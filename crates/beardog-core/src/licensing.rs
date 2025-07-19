@@ -441,6 +441,27 @@ impl LicenseManager {
 
         statuses
     }
+
+    /// Get the verification key used for license signature verification
+    pub fn get_current_verification_key(&self) -> &[u8] {
+        &self.verification_key
+    }
+
+    /// Check if the verification key is properly configured
+    pub fn is_verification_key_valid(&self) -> bool {
+        // Ed25519 public keys should be exactly 32 bytes
+        self.verification_key.len() == 32
+    }
+
+    /// Get verification key fingerprint for debugging
+    pub fn get_verification_key_fingerprint(&self) -> String {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        let mut hasher = DefaultHasher::new();
+        self.verification_key.hash(&mut hasher);
+        format!("{:x}", hasher.finish())
+    }
 }
 
 /// Status information for a loaded license
@@ -570,12 +591,8 @@ mod tests {
         let manager = LicenseManager::new();
 
         // Rust ecosystem projects should always be enabled
-        assert!(
-            manager.verify_external_function_access("nestgate").unwrap()
-        );
-        assert!(
-            manager.verify_external_function_access("songbird").unwrap()
-        );
+        assert!(manager.verify_external_function_access("nestgate").unwrap());
+        assert!(manager.verify_external_function_access("songbird").unwrap());
 
         // External HSM should not be accessible without proper license
         // When grace period is active (test environment), it returns Ok(true)

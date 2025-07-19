@@ -7,16 +7,15 @@
 //! - Comprehensive error codes
 //! - No interactive prompts (automation-friendly)
 
-use clap::{Args, Subcommand, ValueEnum};
+use clap::{Subcommand, ValueEnum};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::io::Write;
 use std::path::PathBuf;
 use tokio::fs;
-use tracing::{debug, error, info, warn};
+use tracing::info;
 
 use beardog_core::BearDogCore;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogResult;
 
 /// AI-optimized CLI response format
 #[derive(Debug, Serialize, Deserialize)]
@@ -47,10 +46,58 @@ pub struct CliError {
 }
 
 /// AI CLI command group
-#[derive(Debug, Args)]
-pub struct AiCommand {
-    #[command(subcommand)]
-    pub command: AiSubcommand,
+#[derive(Debug, Subcommand)]
+pub enum AiCommand {
+    /// System status and health
+    Status {
+        /// Output format
+        #[arg(long, value_enum, default_value = "json")]
+        format: OutputFormat,
+        /// Include detailed metrics
+        #[arg(long)]
+        detailed: bool,
+        /// Monitor continuously
+        #[arg(long)]
+        watch: bool,
+        /// Watch interval in seconds
+        #[arg(long, default_value = "5")]
+        interval: u64,
+    },
+    /// Security operations
+    Security {
+        #[command(subcommand)]
+        operation: SecurityOperation,
+    },
+    /// Genetic spawning operations
+    Genetics {
+        #[command(subcommand)]
+        operation: GeneticsOperation,
+    },
+    /// HSM operations
+    Hsm {
+        #[command(subcommand)]
+        operation: HsmOperation,
+    },
+    /// Batch operations
+    Batch {
+        /// Batch operation file (JSON)
+        #[arg(long)]
+        file: PathBuf,
+        /// Maximum parallel operations
+        #[arg(long, default_value = "10")]
+        max_parallel: u32,
+        /// Continue on error
+        #[arg(long)]
+        continue_on_error: bool,
+        /// Output file for results
+        #[arg(long)]
+        output: Option<PathBuf>,
+    },
+    /// Configuration management
+    Config {
+        #[command(subcommand)]
+        operation: ConfigOperation,
+    },
 }
 
 /// AI subcommands
@@ -394,98 +441,95 @@ pub enum BenchmarkOperation {
     KeyGen,
 }
 
-/// Execute AI command
+/// Execute AI command with proper error handling and JSON response formatting
 pub async fn execute_ai_command(
     command: AiCommand,
     core: Option<&BearDogCore>,
 ) -> BearDogResult<()> {
     let start_time = std::time::Instant::now();
-    
-    let result = match command.command {
-        AiSubcommand::Status { format, detailed, watch, interval } => {
-            execute_status_command(core, format, detailed, watch, interval).await
-        }
-        AiSubcommand::Security { operation } => {
-            execute_security_command(core, operation).await
-        }
-        AiSubcommand::Genetics { operation } => {
-            execute_genetics_command(core, operation).await
-        }
-        AiSubcommand::Hsm { operation } => {
-            execute_hsm_command(core, operation).await
-        }
-        AiSubcommand::Batch { file, max_parallel, continue_on_error, output } => {
-            execute_batch_command(core, file, max_parallel, continue_on_error, output).await
-        }
-        AiSubcommand::Stream { stream_type, output, duration } => {
-            execute_stream_command(core, stream_type, output, duration).await
-        }
-        AiSubcommand::Config { operation } => {
-            execute_config_command(core, operation).await
-        }
+
+    let result = match command {
+        AiCommand::Status {
+            format,
+            detailed,
+            watch,
+            interval,
+        } => handle_status_command(format, detailed, watch, interval, core).await,
+        AiCommand::Security { operation } => handle_security_command(operation, core).await,
+        AiCommand::Genetics { operation } => handle_genetics_command(operation, core).await,
+        AiCommand::Hsm { operation } => handle_hsm_command(operation, core).await,
+        AiCommand::Batch {
+            file,
+            max_parallel,
+            continue_on_error,
+            output,
+        } => handle_batch_command(file, max_parallel, continue_on_error, output, core).await,
+        AiCommand::Config { operation } => handle_config_command(operation, core).await,
     };
-    
-    let execution_time = start_time.elapsed().as_millis() as u64;
-    
-    match result {
-        Ok(data) => {
-            let response = CliResponse {
-                success: true,
-                data: Some(data),
-                error: None,
-                execution_time_ms: execution_time,
-                metadata: HashMap::new(),
-            };
-            println!("{}", serde_json::to_string_pretty(&response)?);
-        }
-        Err(e) => {
-            let error = CliError {
-                code: "COMMAND_ERROR".to_string(),
+
+    let execution_time = start_time.elapsed();
+
+    // Format and output response
+    let response = match result {
+        Ok(data) => CliResponse {
+            success: true,
+            data: Some(data),
+            error: None,
+            execution_time_ms: execution_time.as_millis() as u64,
+            metadata: HashMap::new(),
+        },
+        Err(e) => CliResponse {
+            success: false,
+            data: None,
+            error: Some(CliError {
+                code: "AI_COMMAND_ERROR".to_string(),
                 message: e.to_string(),
                 exit_code: 1,
                 context: None,
-            };
-            let response = CliResponse::<serde_json::Value> {
-                success: false,
-                data: None,
-                error: Some(error),
-                execution_time_ms: execution_time,
-                metadata: HashMap::new(),
-            };
-            println!("{}", serde_json::to_string_pretty(&response)?);
-            std::process::exit(1);
-        }
+            }),
+            execution_time_ms: execution_time.as_millis() as u64,
+            metadata: HashMap::new(),
+        },
+    };
+
+    // Output JSON response
+    let json_output = serde_json::to_string_pretty(&response)?;
+    println!("{json_output}");
+
+    // Exit with appropriate code
+    if !response.success {
+        std::process::exit(1);
     }
-    
+
     Ok(())
 }
 
-/// Execute status command
-async fn execute_status_command(
-    core: Option<&BearDogCore>,
+/// Handle status command
+async fn handle_status_command(
     format: OutputFormat,
     detailed: bool,
     watch: bool,
     interval: u64,
+    core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     if let Some(core) = core {
         let health = core.health_check().await?;
-        
+
         let mut status = serde_json::json!({
             "health": format!("{:?}", health.status),
             "uptime_seconds": health.uptime.map(|d| d.num_seconds()).unwrap_or(0),
             "components": health.components,
         });
-        
+
         if detailed {
             status["metrics"] = serde_json::json!(health.metrics);
         }
-        
+
         if watch {
             // In a real implementation, this would stream updates
             info!("Watch mode not implemented in this example");
         }
-        
+
         Ok(status)
     } else {
         Ok(serde_json::json!({
@@ -494,13 +538,18 @@ async fn execute_status_command(
     }
 }
 
-/// Execute security command
-async fn execute_security_command(
-    core: Option<&BearDogCore>,
+/// Handle security command
+async fn handle_security_command(
     operation: SecurityOperation,
+    core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     match operation {
-        SecurityOperation::Encrypt { input, key_id, output, algorithm } => {
+        SecurityOperation::Encrypt {
+            input,
+            key_id,
+            output,
+            algorithm,
+        } => {
             // Implementation would go here
             Ok(serde_json::json!({
                 "operation": "encrypt",
@@ -511,7 +560,11 @@ async fn execute_security_command(
                 "output": output
             }))
         }
-        SecurityOperation::Decrypt { input, key_id, output } => {
+        SecurityOperation::Decrypt {
+            input,
+            key_id,
+            output,
+        } => {
             // Implementation would go here
             Ok(serde_json::json!({
                 "operation": "decrypt",
@@ -521,7 +574,11 @@ async fn execute_security_command(
                 "output": output
             }))
         }
-        SecurityOperation::GenerateKey { key_type, usage, metadata } => {
+        SecurityOperation::GenerateKey {
+            key_type,
+            usage,
+            metadata,
+        } => {
             // Implementation would go here
             Ok(serde_json::json!({
                 "operation": "generate_key",
@@ -532,7 +589,12 @@ async fn execute_security_command(
                 "metadata": metadata
             }))
         }
-        SecurityOperation::Sign { input, key_id, algorithm, output } => {
+        SecurityOperation::Sign {
+            input,
+            key_id,
+            algorithm,
+            output,
+        } => {
             // Implementation would go here
             Ok(serde_json::json!({
                 "operation": "sign",
@@ -543,7 +605,11 @@ async fn execute_security_command(
                 "output": output
             }))
         }
-        SecurityOperation::Verify { input, signature, key_id } => {
+        SecurityOperation::Verify {
+            input,
+            signature,
+            key_id,
+        } => {
             // Implementation would go here
             Ok(serde_json::json!({
                 "operation": "verify",
@@ -558,8 +624,8 @@ async fn execute_security_command(
             Ok(serde_json::json!({
                 "operation": "list_keys",
                 "filter": {
-                    "key_type": key_type.map(|t| format!("{:?}", t)),
-                    "usage": usage.map(|u| format!("{:?}", u))
+                    "key_type": key_type.map(|t| format!("{t:?}")),
+                    "usage": usage.map(|u| format!("{u:?}"))
                 },
                 "keys": [
                     {
@@ -574,13 +640,19 @@ async fn execute_security_command(
     }
 }
 
-/// Execute genetics command
-async fn execute_genetics_command(
-    core: Option<&BearDogCore>,
+/// Handle genetics command
+async fn handle_genetics_command(
     operation: GeneticsOperation,
+    core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     match operation {
-        GeneticsOperation::Spawn { parent, co_parents, purpose, resources, workflow } => {
+        GeneticsOperation::Spawn {
+            parent,
+            co_parents,
+            purpose,
+            resources,
+            workflow,
+        } => {
             // Implementation would go here
             Ok(serde_json::json!({
                 "operation": "spawn",
@@ -642,10 +714,10 @@ async fn execute_genetics_command(
     }
 }
 
-/// Execute HSM command
-async fn execute_hsm_command(
-    core: Option<&BearDogCore>,
+/// Handle HSM command
+async fn handle_hsm_command(
     operation: HsmOperation,
+    core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     match operation {
         HsmOperation::Status => {
@@ -695,7 +767,10 @@ async fn execute_hsm_command(
                 "timestamp": chrono::Utc::now().to_rfc3339()
             }))
         }
-        HsmOperation::Benchmark { operations, operation_type } => {
+        HsmOperation::Benchmark {
+            operations,
+            operation_type,
+        } => {
             // Implementation would go here
             Ok(serde_json::json!({
                 "operation": "benchmark",
@@ -714,18 +789,18 @@ async fn execute_hsm_command(
     }
 }
 
-/// Execute batch command
-async fn execute_batch_command(
-    core: Option<&BearDogCore>,
+/// Handle batch command
+async fn handle_batch_command(
     file: PathBuf,
     max_parallel: u32,
     continue_on_error: bool,
     output: Option<PathBuf>,
+    core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     // Read batch file
     let batch_content = fs::read_to_string(&file).await?;
     let batch_operations: serde_json::Value = serde_json::from_str(&batch_content)?;
-    
+
     // Process batch operations
     let results = serde_json::json!({
         "operation": "batch",
@@ -749,17 +824,17 @@ async fn execute_batch_command(
             }
         ]
     });
-    
+
     // Write output if specified
     if let Some(output_path) = output {
         fs::write(&output_path, serde_json::to_string_pretty(&results)?).await?;
     }
-    
+
     Ok(results)
 }
 
-/// Execute stream command
-async fn execute_stream_command(
+/// Handle stream command
+async fn handle_stream_command(
     core: Option<&BearDogCore>,
     stream_type: StreamType,
     output: Option<PathBuf>,
@@ -775,43 +850,35 @@ async fn execute_stream_command(
     }))
 }
 
-/// Execute config command
-async fn execute_config_command(
-    core: Option<&BearDogCore>,
+/// Handle config command
+async fn handle_config_command(
     operation: ConfigOperation,
+    core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     match operation {
-        ConfigOperation::Get { key } => {
-            Ok(serde_json::json!({
-                "operation": "get_config",
-                "key": key,
-                "value": "placeholder_value"
-            }))
-        }
-        ConfigOperation::Set { key, value } => {
-            Ok(serde_json::json!({
-                "operation": "set_config",
-                "key": key,
-                "value": value,
-                "previous_value": "placeholder_previous",
-                "timestamp": chrono::Utc::now().to_rfc3339()
-            }))
-        }
-        ConfigOperation::Validate { file } => {
-            Ok(serde_json::json!({
-                "operation": "validate_config",
-                "file": file,
-                "valid": true,
-                "issues": []
-            }))
-        }
-        ConfigOperation::Export { output, format } => {
-            Ok(serde_json::json!({
-                "operation": "export_config",
-                "output": output,
-                "format": format!("{:?}", format),
-                "exported": true
-            }))
-        }
+        ConfigOperation::Get { key } => Ok(serde_json::json!({
+            "operation": "get_config",
+            "key": key,
+            "value": "placeholder_value"
+        })),
+        ConfigOperation::Set { key, value } => Ok(serde_json::json!({
+            "operation": "set_config",
+            "key": key,
+            "value": value,
+            "previous_value": "placeholder_previous",
+            "timestamp": chrono::Utc::now().to_rfc3339()
+        })),
+        ConfigOperation::Validate { file } => Ok(serde_json::json!({
+            "operation": "validate_config",
+            "file": file,
+            "valid": true,
+            "issues": []
+        })),
+        ConfigOperation::Export { output, format } => Ok(serde_json::json!({
+            "operation": "export_config",
+            "output": output,
+            "format": format!("{:?}", format),
+            "exported": true
+        })),
     }
-} 
+}

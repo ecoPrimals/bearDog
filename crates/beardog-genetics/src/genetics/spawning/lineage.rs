@@ -5,8 +5,8 @@
 
 use super::super::types::*;
 use super::engine::GeneticSpawningEngine;
-use beardog_auth::auth::{BearDogGenetics, SpawnPurpose};
 use crate::genetics::types::{ParentSignature, WitnessSignature, WitnessType};
+use beardog_auth::auth::BearDogGenetics;
 // use beardog_tunnel::tunnel::hsm::types::HsmOperation;
 // use beardog_tunnel::tunnel::hsm::{SecurityLevel, SecurityRequirements};
 use beardog_errors::BearDogResult;
@@ -29,7 +29,7 @@ pub async fn create_lineage_record(
     let mut parent_node_ids = vec![request.requesting_parent.clone()];
     parent_node_ids.extend(request.co_parents.clone());
 
-    let security_reqs = (); // SecurityRequirements::new(SecurityLevel::High);
+    let _security_reqs = (); // SecurityRequirements::new(SecurityLevel::High);
 
     // Generate cryptographic hash of child genetics
     let child_genetics_data = format!("{child_genetics:?}");
@@ -47,21 +47,21 @@ pub async fn create_lineage_record(
 
     // Generate HSM signatures for lineage proof
     let mut parent_signatures = Vec::new();
-    for (i, parent_id) in parent_node_ids.iter().enumerate() {
+    for parent_id in parent_node_ids.iter() {
         // Create lineage proof data for signing
         let lineage_proof_data = format!(
             "lineage-{}-{}-{}-{}",
             child_node_id, parent_id, child_genetics.generation, request.request_id
         );
-        let lineage_hash = Sha3_256::digest(lineage_proof_data.as_bytes());
+        let _lineage_hash = Sha3_256::digest(lineage_proof_data.as_bytes());
 
         // Generate signature proof for this parent
         let lineage_signature = "signature_placeholder"; // engine.hsm_manager.sign_data(
-            // &format!("lineage-{parent_id}"),
-            // &lineage_hash,
-            // &security_reqs,
-            // &HsmOperation::LineageProof,
-        // ).await?;
+                                                         // &format!("lineage-{parent_id}"),
+                                                         // &lineage_hash,
+                                                         // &security_reqs,
+                                                         // &HsmOperation::LineageProof,
+                                                         // ).await?;
 
         // Generate a mock public key for the parent
         let public_key_data = format!("parent-pubkey-{parent_id}");
@@ -82,14 +82,14 @@ pub async fn create_lineage_record(
         request.request_id,
         Utc::now().timestamp()
     );
-    let witness_hash = Sha3_256::digest(witness_data.as_bytes());
+    let _witness_hash = Sha3_256::digest(witness_data.as_bytes());
 
     let witness_signature_bytes = "witness_signature_placeholder".to_string(); // engine.hsm_manager.sign_data(
-        // "genetic-witness",
-        // &witness_hash,
-        // &security_reqs,
-        // &HsmOperation::GeneticWitness,
-    // ).await?;
+                                                                               // "genetic-witness",
+                                                                               // &witness_hash,
+                                                                               // &security_reqs,
+                                                                               // &HsmOperation::GeneticWitness,
+                                                                               // ).await?;
 
     // Generate a mock public key for the witness
     let witness_public_key = Sha3_256::digest(b"genetic-witness-pubkey").to_vec();

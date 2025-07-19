@@ -37,7 +37,7 @@ pub enum NetworkSecurityEvent {
         /// Unique identifier for the discovered peer
         peer_id: String,
         /// Security and performance capabilities of the peer
-        peer_capabilities: PeerCapabilities,
+        peer_capabilities: Box<PeerCapabilities>,
         /// Trust indicators that help assess peer safety
         trust_indicators: Vec<TrustIndicator>,
     },

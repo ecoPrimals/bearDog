@@ -5,7 +5,7 @@
 use super::*;
 
 #[cfg(test)]
-mod tests {
+mod unit_tests {
     use super::*;
 
     /// Test workflow request creation

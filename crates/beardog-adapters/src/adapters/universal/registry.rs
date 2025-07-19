@@ -372,7 +372,7 @@ impl CapabilityRegistry {
             _ => {}
         }
 
-        score.max(0.0).min(10.0) // Clamp between 0 and 10
+        score.clamp(0.0, 10.0) // Clamp between 0 and 10
     }
 
     /// Get compatibility reasons for a capability match
@@ -412,5 +412,61 @@ impl CapabilityRegistry {
         }
 
         reasons
+    }
+
+    /// Add compatibility rule to the matrix
+    pub async fn add_compatibility_rule(&self, capability: String, compatible_with: Vec<String>) {
+        let mut compatibility_matrix = self.compatibility_matrix.write().await;
+        compatibility_matrix.insert(capability, compatible_with);
+    }
+
+    /// Check if two capabilities are compatible using the compatibility matrix
+    pub async fn are_capabilities_compatible(
+        &self,
+        capability_a: &str,
+        capability_b: &str,
+    ) -> bool {
+        let compatibility_matrix = self.compatibility_matrix.read().await;
+
+        // Check bidirectional compatibility
+        if let Some(compatible_capabilities) = compatibility_matrix.get(capability_a) {
+            if compatible_capabilities.contains(&capability_b.to_string()) {
+                return true;
+            }
+        }
+
+        if let Some(compatible_capabilities) = compatibility_matrix.get(capability_b) {
+            if compatible_capabilities.contains(&capability_a.to_string()) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Initialize default compatibility rules
+    pub async fn initialize_default_compatibility_rules(&self) {
+        let mut compatibility_matrix = self.compatibility_matrix.write().await;
+
+        // Security capabilities are compatible with each other
+        compatibility_matrix.insert(
+            "security_auth".to_string(),
+            vec![
+                "security_encryption".to_string(),
+                "security_audit".to_string(),
+            ],
+        );
+
+        // Storage capabilities compatibility
+        compatibility_matrix.insert(
+            "storage_file".to_string(),
+            vec!["storage_database".to_string(), "storage_cache".to_string()],
+        );
+
+        // Compute capabilities compatibility
+        compatibility_matrix.insert(
+            "compute_cpu".to_string(),
+            vec!["compute_gpu".to_string(), "compute_memory".to_string()],
+        );
     }
 }

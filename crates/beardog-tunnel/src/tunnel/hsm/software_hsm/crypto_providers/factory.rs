@@ -3,9 +3,15 @@
 //! This module provides factory functions for creating crypto providers and querying their capabilities.
 //! It acts as a unified interface for working with different crypto backends.
 
-use super::super::types::*;
+use super::ring_crypto::RingCryptoProvider;
+use crate::tunnel::hsm::software_hsm::types::{
+    CryptoProvider, OpenSslCryptoProvider, RustCryptoProvider,
+};
+use crate::tunnel::hsm::types::config::CryptoBackend;
+use crate::tunnel::hsm::types::tier::KeyStorageType;
+// use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
-use crate::tunnel::hsm::types::*;
+// use std::sync::Arc;
 
 /// Create a crypto provider based on the specified backend
 pub async fn create_crypto_provider(
@@ -24,8 +30,11 @@ pub async fn create_crypto_provider(
             let provider = OpenSslCryptoProvider::new().await?;
             Ok(Box::new(provider))
         }
-        CryptoBackend::Custom(name) => Err(BearDogError::UnsupportedCryptoBackend {
-            backend: name.clone(),
+        CryptoBackend::Hardware => Err(BearDogError::UnsupportedOperation {
+            operation: "Hardware crypto backend not supported in software HSM".to_string(),
+        }),
+        CryptoBackend::Custom(name) => Err(BearDogError::UnsupportedOperation {
+            operation: format!("Unsupported crypto backend: {name}"),
         }),
     }
 }
@@ -40,11 +49,11 @@ pub fn get_supported_crypto_backends() -> Vec<CryptoBackend> {
 }
 
 /// Get supported storage backends
-pub fn get_supported_storage_backends() -> Vec<String> {
+pub fn get_supported_storage_backends() -> Vec<KeyStorageType> {
     vec![
-        "EncryptedFile".to_string(),
-        "Memory".to_string(),
-        "Database".to_string(),
+        KeyStorageType::EncryptedFile,
+        KeyStorageType::InMemory,
+        KeyStorageType::Database,
     ]
 }
 
@@ -79,6 +88,13 @@ pub fn get_crypto_provider_capabilities(backend: &CryptoBackend) -> CryptoProvid
             supports_rsa: false,
             supports_hardware_acceleration: false,
         },
+        CryptoBackend::Hardware => CryptoProviderCapabilities {
+            supports_aes: true,
+            supports_chacha20: true,
+            supports_ecc: true,
+            supports_rsa: true,
+            supports_hardware_acceleration: true,
+        },
     }
 }
 
@@ -99,10 +115,9 @@ pub struct CryptoProviderCapabilities {
 
 /// Check if a crypto backend is supported
 pub fn is_crypto_backend_supported(backend: &CryptoBackend) -> bool {
-    matches!(backend, 
-        CryptoBackend::RustCrypto | 
-        CryptoBackend::Ring | 
-        CryptoBackend::OpenSsl
+    matches!(
+        backend,
+        CryptoBackend::RustCrypto | CryptoBackend::Ring | CryptoBackend::OpenSsl
     )
 }
 
@@ -129,7 +144,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_rust_crypto_provider() {
-        let provider = create_crypto_provider(&CryptoBackend::RustCrypto).await.unwrap();
+        let provider = create_crypto_provider(&CryptoBackend::RustCrypto)
+            .await
+            .unwrap();
         assert!(provider.initialize().await.is_ok());
     }
 
@@ -141,7 +158,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_openssl_crypto_provider() {
-        let provider = create_crypto_provider(&CryptoBackend::OpenSsl).await.unwrap();
+        let provider = create_crypto_provider(&CryptoBackend::OpenSsl)
+            .await
+            .unwrap();
         assert!(provider.initialize().await.is_ok());
     }
 
@@ -183,7 +202,9 @@ mod tests {
         assert!(is_crypto_backend_supported(&CryptoBackend::RustCrypto));
         assert!(is_crypto_backend_supported(&CryptoBackend::Ring));
         assert!(is_crypto_backend_supported(&CryptoBackend::OpenSsl));
-        assert!(!is_crypto_backend_supported(&CryptoBackend::Custom("unknown".to_string())));
+        assert!(!is_crypto_backend_supported(&CryptoBackend::Custom(
+            "unknown".to_string()
+        )));
     }
 
     #[test]
@@ -194,9 +215,18 @@ mod tests {
 
     #[test]
     fn test_get_crypto_backend_by_name() {
-        assert_eq!(get_crypto_backend_by_name("rust"), Some(CryptoBackend::RustCrypto));
-        assert_eq!(get_crypto_backend_by_name("ring"), Some(CryptoBackend::Ring));
-        assert_eq!(get_crypto_backend_by_name("openssl"), Some(CryptoBackend::OpenSsl));
+        assert_eq!(
+            get_crypto_backend_by_name("rust"),
+            Some(CryptoBackend::RustCrypto)
+        );
+        assert_eq!(
+            get_crypto_backend_by_name("ring"),
+            Some(CryptoBackend::Ring)
+        );
+        assert_eq!(
+            get_crypto_backend_by_name("openssl"),
+            Some(CryptoBackend::OpenSsl)
+        );
         assert_eq!(get_crypto_backend_by_name("unknown"), None);
     }
-} 
+}

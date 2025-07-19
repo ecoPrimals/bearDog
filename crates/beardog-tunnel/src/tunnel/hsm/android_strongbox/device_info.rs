@@ -4,8 +4,8 @@
 //! functionality for Android devices with StrongBox capabilities.
 
 use super::types::*;
-use beardog_errors::BearDogResult;
 use crate::tunnel::hsm::types::*;
+use beardog_errors::BearDogResult;
 use tracing::info;
 
 impl AndroidDeviceInfo {
@@ -94,7 +94,6 @@ impl AndroidDeviceInfo {
         } else {
             StrongBoxImplementation::Generic {
                 vendor: self.manufacturer.clone(),
-                implementation: "StrongBox".to_string(),
                 version: self
                     .strongbox_version
                     .as_ref()

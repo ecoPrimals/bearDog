@@ -4,12 +4,13 @@
 //! including tier recommendation based on security requirements.
 
 use super::{HsmCapabilityDetector, SecurityLevel, SecurityRequirements};
-use beardog_errors::BearDogResult;
 use crate::tunnel::hsm::types::{
-    AttestationLevel, CertificationLevel, HsmCapability, HsmTier, HsmVendor, KeyStorageType, MemoryProtectionLevel, SecureEnclaveType, SmartphoneType,
-    SoftwareHsmType, StrongBoxImplementation, TamperResistanceLevel,
+    AttestationLevel, CertificationLevel, HsmCapability, HsmTier, HsmVendor, KeyStorageType,
+    MemoryProtectionLevel, SecureEnclaveType, SmartphoneType, SoftwareHsmType,
+    StrongBoxImplementation, TamperResistanceLevel,
 };
 use async_trait::async_trait;
+use beardog_errors::BearDogResult;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -169,5 +170,27 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
                 }
             }
         }
+    }
+}
+
+impl DefaultHsmCapabilityDetector {
+    /// Get cached provider capabilities
+    pub async fn get_provider_capabilities(
+        &self,
+        provider_id: &str,
+    ) -> BearDogResult<Vec<HsmCapability>> {
+        let capabilities = self.provider_capabilities.read().await;
+        Ok(capabilities.get(provider_id).cloned().unwrap_or_default())
+    }
+
+    /// Update provider capabilities cache
+    pub async fn update_provider_capabilities(
+        &self,
+        provider_id: String,
+        capabilities: Vec<HsmCapability>,
+    ) -> BearDogResult<()> {
+        let mut provider_capabilities = self.provider_capabilities.write().await;
+        provider_capabilities.insert(provider_id, capabilities);
+        Ok(())
     }
 }

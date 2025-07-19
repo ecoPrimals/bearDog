@@ -152,22 +152,22 @@ impl ThreatDetectionEngine {
     /// use beardog::threat::types::*;
     /// use std::collections::HashMap;
     ///
-    /// fn main() {
-    ///     let engine = ThreatDetectionEngine::placeholder();
-    ///     
-    ///     let mut event_data = HashMap::new();
-    ///     event_data.insert("source_ip".to_string(), "192.168.1.100".to_string());
-    ///     
-    ///     let indicator = ThreatIndicator {
-    ///         id: "malicious_ip".to_string(),
-    ///         indicator_type: "ip_address".to_string(),
-    ///         value: "192.168.1.100".to_string(),
-    ///         // ... other fields
-    ///     };
-    ///     
-    ///     let matches = engine.matches_indicator(&event_data, &indicator);
-    ///     println!("Indicator match: {}", matches);
-    /// }
+    /// # fn example() {
+    /// let engine = ThreatDetectionEngine::placeholder();
+    ///
+    /// let mut event_data = HashMap::new();
+    /// event_data.insert("source_ip".to_string(), "192.168.1.100".to_string());
+    ///
+    /// let indicator = ThreatIndicator {
+    ///     id: "malicious_ip".to_string(),
+    ///     indicator_type: "ip_address".to_string(),
+    ///     value: "192.168.1.100".to_string(),
+    ///     // ... other fields
+    /// };
+    ///
+    /// let matches = engine.matches_indicator(&event_data, &indicator);
+    /// println!("Indicator match: {}", matches);
+    /// # }
     /// ```
     ///
     /// # Indicator Types
@@ -354,20 +354,20 @@ impl ThreatDetectionEngine {
     /// use beardog::threat::handlers::ThreatDetectionEngine;
     /// use beardog::threat::types::*;
     ///
-    /// fn main() {
-    ///     let mut engine = ThreatDetectionEngine::placeholder();
-    ///     
-    ///     let feed = ThreatIntelligenceFeed {
-    ///         id: "apt_indicators".to_string(),
-    ///         name: "APT Indicators Feed".to_string(),
-    ///         source: "government_agency".to_string(),
-    ///         feed_type: "apt_intelligence".to_string(),
-    ///         // ... other fields
-    ///     };
-    ///     
-    ///     engine.add_threat_feed(feed);
-    ///     println!("Threat feed added successfully");
-    /// }
+    /// # fn example() {
+    /// let mut engine = ThreatDetectionEngine::placeholder();
+    ///
+    /// let feed = ThreatIntelligenceFeed {
+    ///     id: "apt_indicators".to_string(),
+    ///     name: "APT Indicators Feed".to_string(),
+    ///     source: "government_agency".to_string(),
+    ///     feed_type: "apt_intelligence".to_string(),
+    ///     // ... other fields
+    /// };
+    ///
+    /// engine.add_threat_feed(feed);
+    /// println!("Threat feed added successfully");
+    /// # }
     /// ```
     ///
     /// # Feed Management

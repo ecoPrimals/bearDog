@@ -111,20 +111,15 @@ impl EntropyExtractor {
         &self,
         features: &AudioEntropyFeatures,
     ) -> BearDogResult<Vec<u8>> {
-        let mut entropy = Vec::new();
-
-        // Use spectral features
-        entropy.push((features.spectral_features.spectral_centroid / 100.0) as u8);
-        entropy.push((features.spectral_features.spectral_rolloff / 100.0) as u8);
-        entropy.push((features.spectral_features.spectral_entropy * 255.0) as u8);
-
-        // Use human features
-        entropy.push((features.human_features.breathing_pattern.rate * 10.0) as u8);
-        entropy.push((features.human_features.human_presence_confidence * 255.0) as u8);
-
-        // Use uniqueness scores
-        entropy.push((features.uniqueness_score * 255.0) as u8);
-        entropy.push((features.irreproducibility_score * 255.0) as u8);
+        let mut entropy = vec![
+            (features.spectral_features.spectral_centroid / 100.0) as u8,
+            (features.spectral_features.spectral_rolloff / 100.0) as u8,
+            (features.spectral_features.spectral_entropy * 255.0) as u8,
+            (features.human_features.breathing_pattern.rate * 10.0) as u8,
+            (features.human_features.human_presence_confidence * 255.0) as u8,
+            (features.uniqueness_score * 255.0) as u8,
+            (features.irreproducibility_score * 255.0) as u8,
+        ];
 
         // Pad to 32 bytes
         while entropy.len() < 32 {
@@ -188,22 +183,15 @@ impl VisualEntropyExtractor {
         &self,
         features: &VisualEntropyFeatures,
     ) -> BearDogResult<Vec<u8>> {
-        let mut entropy = Vec::new();
-
-        // Use lighting features
-        entropy.push((features.lighting_features.brightness_variation * 255.0) as u8);
-        entropy.push((features.lighting_features.color_temperature / 100.0) as u8);
-
-        // Use motion features
-        entropy.push((features.motion_features.motion_intensity * 255.0) as u8);
-
-        // Use human features
-        entropy.push((features.human_features.eye_movement_entropy * 255.0) as u8);
-        entropy.push((features.human_features.human_presence_confidence * 255.0) as u8);
-
-        // Use uniqueness scores
-        entropy.push((features.uniqueness_score * 255.0) as u8);
-        entropy.push((features.irreproducibility_score * 255.0) as u8);
+        let mut entropy = vec![
+            (features.lighting_features.brightness_variation * 255.0) as u8,
+            (features.lighting_features.color_temperature / 100.0) as u8,
+            (features.motion_features.motion_intensity * 255.0) as u8,
+            (features.human_features.eye_movement_entropy * 255.0) as u8,
+            (features.human_features.human_presence_confidence * 255.0) as u8,
+            (features.uniqueness_score * 255.0) as u8,
+            (features.irreproducibility_score * 255.0) as u8,
+        ];
 
         // Pad to 32 bytes
         while entropy.len() < 32 {
@@ -267,18 +255,13 @@ impl HapticEntropyExtractor {
         &self,
         features: &HapticEntropyFeatures,
     ) -> BearDogResult<Vec<u8>> {
-        let mut entropy = Vec::new();
-
-        // Use touch patterns
-        entropy.push((features.touch_patterns.touch_frequency * 50.0) as u8);
-
-        // Use human features
-        entropy.push((features.human_features.tremor_patterns.tremor_frequency * 10.0) as u8);
-        entropy.push((features.human_features.human_consistency * 255.0) as u8);
-
-        // Use uniqueness scores
-        entropy.push((features.uniqueness_score * 255.0) as u8);
-        entropy.push((features.irreproducibility_score * 255.0) as u8);
+        let mut entropy = vec![
+            (features.touch_patterns.touch_frequency * 50.0) as u8,
+            (features.human_features.tremor_patterns.tremor_frequency * 10.0) as u8,
+            (features.human_features.human_consistency * 255.0) as u8,
+            (features.uniqueness_score * 255.0) as u8,
+            (features.irreproducibility_score * 255.0) as u8,
+        ];
 
         // Pad to 32 bytes
         while entropy.len() < 32 {

@@ -4,18 +4,21 @@
 //! that can be used by any ecosystem component.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 use uuid::Uuid;
 
 use super::types::*;
+use beardog_security::types::{ContextAwareKeyConfig, KeyExpiryPolicy, KeyExpiryStatus};
 
 /// Universal ZFS manager
 pub struct ZfsManager {
     /// ZFS configuration
     config: ZfsConfig,
+    /// Context-aware key configuration
+    key_config: ContextAwareKeyConfig,
     /// Active datasets
     datasets: Arc<RwLock<HashMap<String, ZfsDataset>>>,
     /// Key store
@@ -79,14 +82,21 @@ pub struct ZfsOperation {
 
 impl ZfsManager {
     /// Create new ZFS manager
-    pub async fn new(config: ZfsConfig) -> NestGateResult<Self> {
+    pub async fn new(
+        config: ZfsConfig,
+        key_config: Option<ContextAwareKeyConfig>,
+    ) -> NestGateResult<Self> {
         info!("Creating ZFS manager with pool: {}", config.pool_name);
 
         // Validate ZFS configuration
         Self::validate_zfs_config(&config)?;
 
+        // Use provided key config or default
+        let key_config = key_config.unwrap_or_default();
+
         let manager = Self {
             config,
+            key_config,
             datasets: Arc::new(RwLock::new(HashMap::new())),
             key_store: Arc::new(RwLock::new(HashMap::new())),
             operation_history: Arc::new(RwLock::new(Vec::new())),
@@ -188,12 +198,20 @@ impl ZfsManager {
         Ok(())
     }
 
-    /// Generate master key
-    pub async fn generate_master_key(&self, owner_id: &str) -> NestGateResult<NestGateMasterKey> {
-        info!("Generating master key for owner: {}", owner_id);
+    /// Generate context-aware encryption key (NEW AGE CRYPTO - no master keys)
+    pub async fn generate_owner_encryption_key(
+        &self,
+        owner_id: &str,
+        context: &str,
+    ) -> NestGateResult<NestGateContextKey> {
+        info!(
+            "Generating context-aware encryption key for owner: {} in context: {}",
+            owner_id, context
+        );
 
-        // Generate key ID
-        let key_id = Uuid::new_v4().to_string();
+        // NEW AGE CRYPTO: Keys are context-specific, not master keys
+        // Generate key ID that includes owner and context information
+        let key_id = format!("owner_{}_context_{}_{}", owner_id, context, Uuid::new_v4());
 
         // Generate key material
         let key_material = self.generate_key_material(256).await?;
@@ -209,22 +227,65 @@ impl ZfsManager {
             key_length: 256,
         };
 
-        // Create master key
-        let master_key = NestGateMasterKey {
+        // Create context-aware key (NEW AGE CRYPTO - no master keys)
+        // Use configurable expiry with entropy integration
+        let entropy_integration = self.create_entropy_integration(context, owner_id).await?;
+        let expiry_policy = self
+            .determine_expiry_policy(context, &entropy_integration)
+            .await?;
+        let expiry_status = self
+            .calculate_initial_expiry_status(&expiry_policy, &entropy_integration)
+            .await?;
+        let genetic_renewal = if entropy_integration
+            .should_enable_genetic_renewal(&self.key_config.entropy_adjustments)
+        {
+            Some(self.key_config.genetic_renewal.clone())
+        } else {
+            None
+        };
+
+        let context_key = NestGateContextKey {
             id: key_id.clone(),
             owner_id: owner_id.to_string(),
+            context: context.to_string(),
             algorithm: self.config.default_algorithm.clone(),
             created_at: chrono::Utc::now(),
             key_material: key_material.clone(),
-            metadata: HashMap::new(),
+            metadata: {
+                let mut metadata = HashMap::new();
+                metadata.insert("context".to_string(), context.to_string());
+                metadata.insert("owner".to_string(), owner_id.to_string());
+                metadata.insert(
+                    "purpose".to_string(),
+                    "context_specific_encryption".to_string(),
+                );
+                metadata.insert(
+                    "entropy_tier".to_string(),
+                    entropy_integration.entropy_tier.to_string(),
+                );
+                metadata.insert(
+                    "entropy_quality".to_string(),
+                    entropy_integration.entropy_quality.to_string(),
+                );
+                metadata
+            },
             derivation_info,
+            scope_constraints: vec![
+                format!("owner:{}", owner_id),
+                format!("context:{}", context),
+                "single_purpose_only".to_string(),
+            ],
+            expiry_policy,
+            expiry_status,
+            entropy_integration: Some(entropy_integration),
+            genetic_renewal,
         };
 
-        // Store key
+        // Store key with context information
         let stored_key = StoredKey {
             id: key_id.clone(),
             material: key_material,
-            key_type: "master".to_string(),
+            key_type: format!("context_{}", context), // Context-specific type instead of "master"
             owner_id: owner_id.to_string(),
             status: KeyStatus::Active,
             created_at: chrono::Utc::now(),
@@ -235,7 +296,7 @@ impl ZfsManager {
         // Log operation
         self.log_operation(ZfsOperation {
             id: Uuid::new_v4().to_string(),
-            operation_type: "generate_master_key".to_string(),
+            operation_type: "generate_context_key".to_string(),
             dataset: "key_store".to_string(),
             user_id: owner_id.to_string(),
             timestamp: chrono::Utc::now(),
@@ -245,7 +306,7 @@ impl ZfsManager {
         .await;
 
         info!("Master key generated successfully");
-        Ok(master_key)
+        Ok(context_key)
     }
 
     /// Wrap key
@@ -532,8 +593,8 @@ impl ZfsManager {
     async fn generate_key_material(&self, length: usize) -> NestGateResult<Vec<u8>> {
         // Simulate key generation (in real implementation, use proper crypto)
         let mut key_material = vec![0u8; length];
-        for i in 0..length {
-            key_material[i] = (i % 256) as u8;
+        for (i, item) in key_material.iter_mut().enumerate().take(length) {
+            *item = (i % 256) as u8;
         }
         Ok(key_material)
     }
@@ -574,7 +635,7 @@ impl ZfsManager {
     }
 
     /// Get dataset for path
-    async fn get_dataset_for_path(&self, path: &PathBuf) -> NestGateResult<String> {
+    async fn get_dataset_for_path(&self, path: &Path) -> NestGateResult<String> {
         let path_str = path.to_string_lossy();
         let datasets = self.datasets.read().await;
 
@@ -592,71 +653,240 @@ impl ZfsManager {
         ))
     }
 
+    /// Create entropy integration for a key context
+    async fn create_entropy_integration(
+        &self,
+        context: &str,
+        owner_id: &str,
+    ) -> NestGateResult<EntropyIntegration> {
+        // TODO: In production, this should query the entropy hierarchy system
+        // For now, we simulate entropy characteristics based on context and owner
+
+        let (entropy_tier, entropy_quality, human_source_type, is_self_sovereign) = self
+            .estimate_entropy_characteristics(context, owner_id)
+            .await?;
+
+        Ok(EntropyIntegration::from_entropy_hierarchy(
+            entropy_tier,
+            entropy_quality,
+            human_source_type,
+            is_self_sovereign,
+        ))
+    }
+
+    /// Estimate entropy characteristics based on context configuration
+    async fn estimate_entropy_characteristics(
+        &self,
+        context: &str,
+        _owner_id: &str,
+    ) -> NestGateResult<(u8, f64, Option<String>, bool)> {
+        // Use configuration-based entropy estimation instead of hard-coded values
+        if let Some(context_config) = self.key_config.context_configs.get(context) {
+            Ok((
+                context_config.default_entropy_tier,
+                context_config.default_entropy_quality,
+                context_config.default_human_source.clone(),
+                context_config.is_self_sovereign,
+            ))
+        } else {
+            // Fallback to default context configuration
+            if let Some(default_config) = self.key_config.context_configs.get("default") {
+                Ok((
+                    default_config.default_entropy_tier,
+                    default_config.default_entropy_quality,
+                    default_config.default_human_source.clone(),
+                    default_config.is_self_sovereign,
+                ))
+            } else {
+                // Ultimate fallback (should never happen with proper defaults)
+                Ok((1, 0.5, None, false))
+            }
+        }
+    }
+
+    /// Determine expiry policy based on context configuration
+    async fn determine_expiry_policy(
+        &self,
+        context: &str,
+        _entropy: &EntropyIntegration,
+    ) -> NestGateResult<KeyExpiryPolicy> {
+        // Use configuration-based expiry policy determination
+        if let Some(context_config) = self.key_config.context_configs.get(context) {
+            Ok(context_config.default_expiry_policy.clone())
+        } else {
+            // Fallback to default context configuration
+            if let Some(default_config) = self.key_config.context_configs.get("default") {
+                Ok(default_config.default_expiry_policy.clone())
+            } else {
+                // Ultimate fallback - use global default policy
+                Ok(self.key_config.expiry.default_policy.clone())
+            }
+        }
+    }
+
+    /// Calculate initial expiry status for a new key
+    async fn calculate_initial_expiry_status(
+        &self,
+        policy: &KeyExpiryPolicy,
+        entropy: &EntropyIntegration,
+    ) -> NestGateResult<KeyExpiryStatus> {
+        let now = chrono::Utc::now();
+
+        let status = match policy {
+            KeyExpiryPolicy::Fixed { duration: _ } => {
+                let adjusted_duration =
+                    entropy.calculate_expiry_duration(policy, &self.key_config.entropy_adjustments);
+                KeyExpiryStatus::Active {
+                    expires_at: Some(now + adjusted_duration),
+                    uses_remaining: None,
+                    last_activity: Some(now),
+                }
+            }
+            KeyExpiryPolicy::EntropyAdaptive { .. } => {
+                let adjusted_duration =
+                    entropy.calculate_expiry_duration(policy, &self.key_config.entropy_adjustments);
+                KeyExpiryStatus::Active {
+                    expires_at: Some(now + adjusted_duration),
+                    uses_remaining: None,
+                    last_activity: Some(now),
+                }
+            }
+            KeyExpiryPolicy::UsageBased {
+                max_uses,
+                max_duration,
+            } => {
+                let expires_at = max_duration.map(|d| now + d);
+                KeyExpiryStatus::Active {
+                    expires_at,
+                    uses_remaining: Some(*max_uses),
+                    last_activity: Some(now),
+                }
+            }
+            KeyExpiryPolicy::ActivityBased {
+                absolute_max_duration,
+                ..
+            } => KeyExpiryStatus::Active {
+                expires_at: Some(now + *absolute_max_duration),
+                uses_remaining: None,
+                last_activity: Some(now),
+            },
+            KeyExpiryPolicy::GeneticRenewal {
+                generation_duration,
+                ..
+            } => KeyExpiryStatus::Active {
+                expires_at: Some(now + *generation_duration),
+                uses_remaining: None,
+                last_activity: Some(now),
+            },
+            KeyExpiryPolicy::Permanent {
+                justification,
+                authorized_by,
+                granted_at,
+            } => KeyExpiryStatus::Permanent {
+                granted_at: *granted_at,
+                authorized_by: authorized_by.clone(),
+                justification: justification.clone(),
+            },
+        };
+
+        Ok(status)
+    }
+
+    /// Check if a key should be renewed based on its expiry status
+    pub async fn check_key_renewal(&self, key: &NestGateContextKey) -> NestGateResult<bool> {
+        match &key.expiry_status {
+            KeyExpiryStatus::Approaching {
+                renewal_available, ..
+            } => Ok(*renewal_available),
+            KeyExpiryStatus::Expired { renewable, .. } => Ok(*renewable),
+            KeyExpiryStatus::Active { expires_at, .. } => {
+                // Check if approaching expiry using configurable threshold
+                if let Some(expiry_time) = expires_at {
+                    let now = chrono::Utc::now();
+                    let lifetime = *expiry_time - key.created_at;
+                    let warning_threshold = lifetime
+                        * (self
+                            .key_config
+                            .lifecycle_thresholds
+                            .renewal_warning_threshold as i32)
+                        / 100;
+                    let time_remaining = *expiry_time - now;
+
+                    Ok(time_remaining <= warning_threshold)
+                } else {
+                    Ok(false) // No expiry, no renewal needed
+                }
+            }
+            KeyExpiryStatus::Permanent { .. } => Ok(false), // Permanent keys don't need renewal
+            KeyExpiryStatus::Renewed { .. } => Ok(false),   // Already renewed
+        }
+    }
+
     // File operation implementations (simplified)
 
-    async fn read_file(&self, _path: &PathBuf) -> NestGateResult<()> {
+    async fn read_file(&self, _path: &Path) -> NestGateResult<()> {
         // Simulate file read
         Ok(())
     }
 
-    async fn write_file(&self, _path: &PathBuf, _data: &[u8]) -> NestGateResult<()> {
+    async fn write_file(&self, _path: &Path, _data: &[u8]) -> NestGateResult<()> {
         // Simulate file write
         Ok(())
     }
 
-    async fn copy_file(&self, _source: &PathBuf, _dest: &PathBuf) -> NestGateResult<()> {
+    async fn copy_file(&self, _source: &Path, _dest: &Path) -> NestGateResult<()> {
         // Simulate file copy
         Ok(())
     }
 
-    async fn move_file(&self, _source: &PathBuf, _dest: &PathBuf) -> NestGateResult<()> {
+    async fn move_file(&self, _source: &Path, _dest: &Path) -> NestGateResult<()> {
         // Simulate file move
         Ok(())
     }
 
-    async fn delete_file(&self, _path: &PathBuf) -> NestGateResult<()> {
+    async fn delete_file(&self, _path: &Path) -> NestGateResult<()> {
         // Simulate file delete
         Ok(())
     }
 
-    async fn create_directory(&self, _path: &PathBuf) -> NestGateResult<()> {
+    async fn create_directory(&self, _path: &Path) -> NestGateResult<()> {
         // Simulate directory creation
         Ok(())
     }
 
-    async fn list_directory(&self, _path: &PathBuf) -> NestGateResult<()> {
+    async fn list_directory(&self, _path: &Path) -> NestGateResult<()> {
         // Simulate directory listing
         Ok(())
     }
 
-    async fn compress_file(&self, _path: &PathBuf) -> NestGateResult<()> {
+    async fn compress_file(&self, _path: &Path) -> NestGateResult<()> {
         // Simulate file compression
         Ok(())
     }
 
-    async fn decompress_file(&self, _path: &PathBuf) -> NestGateResult<()> {
+    async fn decompress_file(&self, _path: &Path) -> NestGateResult<()> {
         // Simulate file decompression
         Ok(())
     }
 
-    async fn encrypt_file(&self, _path: &PathBuf) -> NestGateResult<()> {
+    async fn encrypt_file(&self, _path: &Path) -> NestGateResult<()> {
         // Simulate file encryption
         Ok(())
     }
 
-    async fn decrypt_file(&self, _path: &PathBuf) -> NestGateResult<()> {
+    async fn decrypt_file(&self, _path: &Path) -> NestGateResult<()> {
         // Simulate file decryption
         Ok(())
     }
 
-    async fn get_file_attributes(&self, _path: &PathBuf) -> NestGateResult<()> {
+    async fn get_file_attributes(&self, _path: &Path) -> NestGateResult<()> {
         // Simulate getting file attributes
         Ok(())
     }
 
     async fn set_file_attributes(
         &self,
-        _path: &PathBuf,
+        _path: &Path,
         _attributes: &HashMap<String, String>,
     ) -> NestGateResult<()> {
         // Simulate setting file attributes

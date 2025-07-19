@@ -3,10 +3,83 @@
 //! Universal data structures and types for NestGate integration that can be used
 //! by any ecosystem component (BearDog, SongBird, ToadStool, biomeOS, etc.)
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
+
+// Import the new expiry types from beardog-security
+use beardog_security::types::{
+    EntropyAdjustmentConfig, EntropyBasedExpiry, GeneticRenewalConfig, KeyExpiryPolicy,
+    KeyExpiryStatus,
+};
+
+/// Integration with BearDog's entropy hierarchy system
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EntropyIntegration {
+    /// Entropy tier (1=machine, 2=supervised, 3=human)  
+    pub entropy_tier: u8,
+    /// Quality score from entropy hierarchy (0.0-1.0)
+    pub entropy_quality: f64,
+    /// Human entropy source type (if applicable)
+    pub human_source_type: Option<String>,
+    /// Whether this key uses self-sovereign entropy
+    pub is_self_sovereign: bool,
+    /// Entropy source identifier for tracking
+    pub entropy_source_id: Option<String>,
+    /// Genetic traits inherited from entropy
+    pub genetic_traits: HashMap<String, String>,
+    /// Link to entropy hierarchy manager
+    pub entropy_manager_ref: Option<String>,
+}
+
+impl EntropyIntegration {
+    /// Create entropy integration from entropy hierarchy data
+    pub fn from_entropy_hierarchy(
+        entropy_tier: u8,
+        entropy_quality: f64,
+        human_source_type: Option<String>,
+        is_self_sovereign: bool,
+    ) -> Self {
+        Self {
+            entropy_tier,
+            entropy_quality,
+            human_source_type,
+            is_self_sovereign,
+            entropy_source_id: None,
+            genetic_traits: HashMap::new(),
+            entropy_manager_ref: None,
+        }
+    }
+
+    /// Calculate expiry duration based on entropy characteristics and configuration
+    pub fn calculate_expiry_duration(
+        &self,
+        base_policy: &KeyExpiryPolicy,
+        entropy_config: &EntropyAdjustmentConfig,
+    ) -> Duration {
+        let entropy_expiry = EntropyBasedExpiry {
+            entropy_quality: self.entropy_quality,
+            entropy_tier: self.entropy_tier,
+            human_source_type: self.human_source_type.clone(),
+            is_self_sovereign: self.is_self_sovereign,
+        };
+
+        entropy_expiry.calculate_expiry_duration(base_policy, entropy_config)
+    }
+
+    /// Determine if genetic renewal should be enabled for this key based on configuration
+    pub fn should_enable_genetic_renewal(&self, entropy_config: &EntropyAdjustmentConfig) -> bool {
+        let entropy_expiry = EntropyBasedExpiry {
+            entropy_quality: self.entropy_quality,
+            entropy_tier: self.entropy_tier,
+            human_source_type: self.human_source_type.clone(),
+            is_self_sovereign: self.is_self_sovereign,
+        };
+
+        entropy_expiry.should_enable_genetic_renewal(entropy_config)
+    }
+}
 
 /// Universal result type for NestGate operations
 pub type NestGateResult<T> = Result<T, NestGateError>;
@@ -133,8 +206,8 @@ pub enum AuthMethod {
     Certificate,
     /// OAuth2 authentication
     OAuth2,
-    /// JWT token authentication
-    JWT,
+    /// Ed25519 cryptographic authentication
+    Ed25519,
 }
 
 /// ZFS configuration
@@ -248,8 +321,42 @@ pub enum KeyStatus {
     Pending,
 }
 
-/// Universal master key structure
+/// Context-aware encryption key (NEW AGE CRYPTO - replaces master keys)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NestGateContextKey {
+    /// Key ID (includes context information)
+    pub id: String,
+    /// Owner ID (primal provider ID)  
+    pub owner_id: String,
+    /// Context for this key (what it's used for)
+    pub context: String,
+    /// Encryption algorithm
+    pub algorithm: String,
+    /// Key creation timestamp
+    pub created_at: DateTime<Utc>,
+    /// Key material (encrypted, context-specific)
+    pub key_material: Vec<u8>,
+    /// Key metadata
+    pub metadata: HashMap<String, String>,
+    /// Key derivation information
+    pub derivation_info: KeyDerivationInfo,
+    /// Key scope constraints (what this key can/cannot do)
+    pub scope_constraints: Vec<String>,
+    /// Configurable expiry policy (can be permanent if authorized)
+    pub expiry_policy: KeyExpiryPolicy,
+    /// Current expiry status
+    pub expiry_status: KeyExpiryStatus,
+    /// Integration with entropy hierarchy
+    pub entropy_integration: Option<EntropyIntegration>,
+    /// Genetic renewal configuration
+    pub genetic_renewal: Option<GeneticRenewalConfig>,
+}
+
+/// Universal master key structure (DEPRECATED - use NestGateContextKey)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[deprecated(
+    note = "Master keys violate new age crypto principles. Use NestGateContextKey instead."
+)]
 pub struct NestGateMasterKey {
     /// Key ID
     pub id: String,

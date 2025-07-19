@@ -8,12 +8,12 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
-use std::time::Duration;
 
-use super::super::traits::{HealthImpact, HealthStatus};
 use super::super::primal_registry::PrimalId;
+use super::super::traits::{HealthImpact, HealthStatus};
 use super::client::SongBirdDiscoveryClient;
 use super::types::*;
 use beardog_errors::BearDogResult;
@@ -179,49 +179,51 @@ impl UniversalHealthMonitor {
         let client = Arc::clone(&self.client);
         let primal_id = self.primal_id.clone();
         let health_history = Arc::clone(&self.health_history);
-        
+
+        // Create a health monitor instance for the spawned task
+        let health_monitor = UniversalHealthMonitor {
+            client: Arc::clone(&self.client),
+            health_status: Arc::clone(&self.health_status),
+            config: self.config.clone(),
+            performance_metrics: Arc::clone(&self.performance_metrics),
+            health_history: Arc::clone(&self.health_history),
+            primal_id: self.primal_id.clone(),
+        };
+
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(60));
-            
+
             loop {
                 interval.tick().await;
-                
+
                 // Perform comprehensive health check
-                match Self::perform_comprehensive_health_check(&primal_id).await {
+                match health_monitor
+                    .perform_comprehensive_health_check(&primal_id)
+                    .await
+                {
                     Ok(health_result) => {
                         // Store health result in history
                         {
                             let mut history = health_history.write().await;
                             history.push(health_result.clone());
-                            
+
                             // Keep only last 100 health checks
                             if history.len() > 100 {
                                 history.remove(0);
                             }
                         }
-                        
+
                         // Report health status to SongBird
-                        if let Err(e) = client.update_health_status(&primal_id, &health_result).await {
-                            warn!("Failed to update health status to SongBird: {}", e);
-                        } else {
-                            debug!("✅ Health status updated to SongBird");
-                        }
+                        let success = matches!(health_result.status, HealthStatus::Healthy);
+                        let error_count = if success { 0 } else { 1 };
+                        client.update_health_status(success, error_count).await;
+                        debug!("✅ Health status updated to SongBird");
                     }
                     Err(e) => {
                         warn!("Health check failed: {}", e);
-                        
+
                         // Report unhealthy status to SongBird
-                        let unhealthy_result = HealthCheckResult {
-                            timestamp: chrono::Utc::now(),
-                            status: HealthStatus::Critical,
-                            response_time_ms: 0,
-                            error_message: Some(e.to_string()),
-                            metrics: PerformanceMetrics::default(),
-                        };
-                        
-                        if let Err(e) = client.update_health_status(&primal_id, &unhealthy_result).await {
-                            warn!("Failed to update unhealthy status to SongBird: {}", e);
-                        }
+                        client.update_health_status(false, 1).await;
                     }
                 }
             }
@@ -231,48 +233,51 @@ impl UniversalHealthMonitor {
     }
 
     /// Perform comprehensive health check
-    async fn perform_comprehensive_health_check(&self, primal_id: &PrimalId) -> BearDogResult<HealthCheckResult> {
+    async fn perform_comprehensive_health_check(
+        &self,
+        _primal_id: &PrimalId,
+    ) -> BearDogResult<HealthCheckResult> {
         let start_time = std::time::Instant::now();
-        
+
         // Check memory usage
         let memory_usage = self.check_memory_usage().await?;
-        
+
         // Check CPU usage
         let cpu_usage = UniversalHealthMonitor::check_cpu_usage().await?;
-        
+
         // Check disk space
         let disk_space = self.check_disk_space().await?;
-        
+
         // Check active connections
         let active_connections = self.check_active_connections().await?;
-        
+
         // Check component health
         let component_health = self.check_all_components().await?;
-        
+
         // Calculate response time
         let response_time_ms = start_time.elapsed().as_millis() as f64;
-        
+
         // Calculate error rate (this would be based on recent metrics)
         let error_rate = self.calculate_error_rate().await?;
-        
+
         // Determine overall health status
-        let overall_health = self.determine_overall_health(
+        let overall_health = UniversalHealthMonitor::determine_overall_health(
             memory_usage,
             cpu_usage,
             disk_space,
             error_rate,
             &component_health,
         );
-        
+
         // Generate alerts if needed
-        let alerts = self.generate_health_alerts(
+        let _alerts = UniversalHealthMonitor::generate_health_alerts(
             memory_usage,
             cpu_usage,
             disk_space,
             error_rate,
             &component_health,
         );
-        
+
         Ok(HealthCheckResult {
             timestamp: chrono::Utc::now(),
             status: overall_health,
@@ -322,27 +327,29 @@ impl UniversalHealthMonitor {
     }
 
     /// Check all components
-    async fn check_all_components(&self) -> BearDogResult<std::collections::HashMap<String, HealthStatus>> {
+    async fn check_all_components(
+        &self,
+    ) -> BearDogResult<std::collections::HashMap<String, HealthStatus>> {
         let mut component_health = std::collections::HashMap::new();
-        
+
         // Check BearDog core
         component_health.insert("beardog_core".to_string(), HealthStatus::Healthy);
-        
+
         // Check HSM
         component_health.insert("hsm".to_string(), HealthStatus::Healthy);
-        
+
         // Check database
         component_health.insert("database".to_string(), HealthStatus::Healthy);
-        
+
         // Check encryption engine
         component_health.insert("encryption".to_string(), HealthStatus::Healthy);
-        
+
         // Check audit system
         component_health.insert("audit".to_string(), HealthStatus::Healthy);
-        
+
         // Check threat detection
         component_health.insert("threat_detection".to_string(), HealthStatus::Healthy);
-        
+
         debug!("🔍 All components checked");
         Ok(component_health)
     }
@@ -366,22 +373,28 @@ impl UniversalHealthMonitor {
         if memory_usage > 90.0 || cpu_usage > 95.0 || disk_space > 95.0 || error_rate > 10.0 {
             return HealthStatus::Critical;
         }
-        
+
         // Check for unhealthy components
-        if component_health.values().any(|status| matches!(status, HealthStatus::Critical)) {
+        if component_health
+            .values()
+            .any(|status| matches!(status, HealthStatus::Critical))
+        {
             return HealthStatus::Critical;
         }
-        
+
         // Check for warning conditions
         if memory_usage > 80.0 || cpu_usage > 85.0 || disk_space > 85.0 || error_rate > 5.0 {
             return HealthStatus::Warning;
         }
-        
+
         // Check for degraded components
-        if component_health.values().any(|status| matches!(status, HealthStatus::Warning)) {
+        if component_health
+            .values()
+            .any(|status| matches!(status, HealthStatus::Warning))
+        {
             return HealthStatus::Warning;
         }
-        
+
         HealthStatus::Healthy
     }
 
@@ -394,29 +407,29 @@ impl UniversalHealthMonitor {
         component_health: &std::collections::HashMap<String, HealthStatus>,
     ) -> Vec<String> {
         let mut alerts = Vec::new();
-        
+
         if memory_usage > 85.0 {
-            alerts.push(format!("High memory usage: {:.1}%", memory_usage));
+            alerts.push(format!("High memory usage: {memory_usage:.1}%"));
         }
-        
+
         if cpu_usage > 90.0 {
-            alerts.push(format!("High CPU usage: {:.1}%", cpu_usage));
+            alerts.push(format!("High CPU usage: {cpu_usage:.1}%"));
         }
-        
+
         if disk_space > 90.0 {
-            alerts.push(format!("High disk usage: {:.1}%", disk_space));
+            alerts.push(format!("High disk usage: {disk_space:.1}%"));
         }
-        
+
         if error_rate > 5.0 {
-            alerts.push(format!("High error rate: {:.1}%", error_rate));
+            alerts.push(format!("High error rate: {error_rate:.1}%"));
         }
-        
+
         for (component, status) in component_health {
             if !matches!(status, HealthStatus::Healthy) {
-                alerts.push(format!("Component {} is {:?}", component, status));
+                alerts.push(format!("Component {component} is {status:?}"));
             }
         }
-        
+
         alerts
     }
 
@@ -460,7 +473,7 @@ impl UniversalHealthMonitor {
         // Basic health checks
         let checks = vec![
             self.check_memory_usage().await,
-            self.check_cpu_usage().await,
+            UniversalHealthMonitor::check_cpu_usage().await,
             self.check_disk_space().await,
             self.check_network_connectivity().await,
         ];
@@ -483,14 +496,12 @@ impl UniversalHealthMonitor {
         }
     }
 
-
-
     /// Check network connectivity
     async fn check_network_connectivity(&self) -> BearDogResult<f64> {
         // Test connection to SongBird and return connectivity score
         match self.client.test_connection().await {
             Ok(()) => Ok(100.0), // 100% connectivity
-            Err(_) => Ok(0.0),    // 0% connectivity
+            Err(_) => Ok(0.0),   // 0% connectivity
         }
     }
 

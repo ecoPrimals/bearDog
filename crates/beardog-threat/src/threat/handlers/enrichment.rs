@@ -416,11 +416,10 @@ impl ThreatDetectionEngine {
     /// to provide real geographic information for IP addresses.
     async fn simulate_geolocation_lookup(&self, ip_address: &str) -> BearDogResult<String> {
         // Simulate different geographic locations based on IP
-        let location = if ip_address.starts_with("192.168") {
-            "Private Network (RFC 1918)"
-        } else if ip_address.starts_with("10.") {
-            "Private Network (RFC 1918)"
-        } else if ip_address.starts_with("172.") {
+        let location = if ip_address.starts_with("192.168")
+            || ip_address.starts_with("10.")
+            || ip_address.starts_with("172.")
+        {
             "Private Network (RFC 1918)"
         } else if ip_address.starts_with("203.") {
             "Asia Pacific Region"

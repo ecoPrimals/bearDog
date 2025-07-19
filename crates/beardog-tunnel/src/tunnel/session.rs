@@ -259,6 +259,29 @@ impl SecurityGenetics {
             .optimize_for_latency(performance_metrics.encryption_latency);
         Ok(SecurityEvolution::PerformanceOptimized)
     }
+
+    /// Get the crypto genes
+    pub fn get_crypto_genes(&self) -> &CryptoChromosome {
+        &self.crypto_genes
+    }
+
+    /// Get the authentication genes
+    pub fn get_auth_genes(&self) -> &AuthenticationChromosome {
+        &self.auth_genes
+    }
+
+    /// Get the threat response genes
+    pub fn get_threat_genes(&self) -> &ThreatResponseChromosome {
+        &self.threat_genes
+    }
+
+    /// Calculate overall security strength
+    pub fn calculate_security_strength(&self) -> f64 {
+        (self.crypto_genes.get_algorithm_preference()
+            + self.auth_genes.get_trust_threshold()
+            + self.threat_genes.get_response_aggressiveness())
+            / 3.0
+    }
 }
 
 /// Cryptographic chromosome for genetic security evolution
@@ -277,6 +300,23 @@ pub struct CryptoChromosome {
     algorithm_preference: f64,
     key_strength: u32,
     hardware_acceleration: bool,
+}
+
+impl CryptoChromosome {
+    /// Get algorithm preference value
+    pub fn get_algorithm_preference(&self) -> f64 {
+        self.algorithm_preference
+    }
+
+    /// Get key strength value
+    pub fn get_key_strength(&self) -> u32 {
+        self.key_strength
+    }
+
+    /// Check if hardware acceleration is enabled
+    pub fn is_hardware_acceleration_enabled(&self) -> bool {
+        self.hardware_acceleration
+    }
 }
 
 /// Authentication chromosome for genetic security evolution
@@ -305,6 +345,18 @@ impl Default for AuthenticationChromosome {
     }
 }
 
+impl AuthenticationChromosome {
+    /// Get trust threshold value
+    pub fn get_trust_threshold(&self) -> f64 {
+        self.trust_threshold
+    }
+
+    /// Get session lifetime duration
+    pub fn get_session_lifetime(&self) -> Duration {
+        self.session_lifetime
+    }
+}
+
 /// Threat response chromosome for genetic security evolution
 ///
 /// Contains genetic information for evolving threat detection sensitivity,
@@ -328,6 +380,18 @@ impl Default for ThreatResponseChromosome {
             monitoring_frequency: Duration::from_secs(30),
             response_aggressiveness: 0.5,
         }
+    }
+}
+
+impl ThreatResponseChromosome {
+    /// Get monitoring frequency
+    pub fn get_monitoring_frequency(&self) -> Duration {
+        self.monitoring_frequency
+    }
+
+    /// Get response aggressiveness value
+    pub fn get_response_aggressiveness(&self) -> f64 {
+        self.response_aggressiveness
     }
 }
 

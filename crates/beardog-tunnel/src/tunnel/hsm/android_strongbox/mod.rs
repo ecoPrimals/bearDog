@@ -330,6 +330,9 @@ pub mod config {
                 require_hardware_backed: true,
                 trusted_certificates: vec![],
                 challenge_length: 32,
+                attestation_challenge: None,
+                enable_key_attestation: true,
+                include_app_id: false,
             },
         }
     }
@@ -356,6 +359,9 @@ pub mod config {
                 require_hardware_backed: false,
                 trusted_certificates: vec![],
                 challenge_length: 32,
+                attestation_challenge: None,
+                enable_key_attestation: true,
+                include_app_id: false,
             },
         }
     }
@@ -382,6 +388,9 @@ pub mod config {
                 require_hardware_backed: true,
                 trusted_certificates: vec![],
                 challenge_length: 32,
+                attestation_challenge: None,
+                enable_key_attestation: true,
+                include_app_id: false,
             },
         }
     }
@@ -429,25 +438,19 @@ pub mod utils {
             KeyType::Rsa { key_size } => {
                 if key_size < 2048 {
                     return Err(BearDogError::UnsupportedOperation {
-                        operation: "generate_key".to_string(),
-                        hsm_type: "android_strongbox".to_string(),
-                        reason: "RSA key size must be at least 2048 bits".to_string(),
+                        operation: "RSA key size must be at least 2048 bits".to_string(),
                     });
                 }
             }
             KeyType::Aes128 | KeyType::Aes256 => {}
             KeyType::Aes192 => {
                 return Err(BearDogError::UnsupportedOperation {
-                    operation: "generate_key".to_string(),
-                    hsm_type: "android_strongbox".to_string(),
-                    reason: "AES-192 is not supported by StrongBox".to_string(),
+                    operation: "AES-192 is not supported by StrongBox".to_string(),
                 });
             }
             _ => {
                 return Err(BearDogError::UnsupportedOperation {
-                    operation: "generate_key".to_string(),
-                    hsm_type: "android_strongbox".to_string(),
-                    reason: format!("Unsupported key type: {:?}", request.key_type),
+                    operation: format!("Unsupported key type: {:?}", request.key_type),
                 });
             }
         }

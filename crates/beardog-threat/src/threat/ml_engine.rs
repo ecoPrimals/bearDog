@@ -25,8 +25,10 @@ pub struct MlThreatEngine {
     /// Collection of trained ML models
     models: HashMap<String, Box<dyn ThreatModel + Send + Sync>>,
     /// Behavioral analysis engine
+    #[allow(dead_code)]
     behavioral_analyzer: Arc<BehavioralAnalyzer>,
     /// Cache for ML predictions
+    #[allow(dead_code)]
     prediction_cache: Arc<RwLock<HashMap<String, CachedPrediction>>>,
 }
 
@@ -102,6 +104,7 @@ pub enum PredictionType {
 
 /// Cached prediction for performance optimization
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct CachedPrediction {
     prediction: MlPrediction,
     cached_at: DateTime<Utc>,
@@ -211,6 +214,7 @@ impl MlThreatEngine {
 /// Behavioral analysis engine
 pub struct BehavioralAnalyzer {
     /// User behavior profiles for anomaly detection
+    #[allow(dead_code)]
     user_profiles: Arc<RwLock<HashMap<String, UserBehaviorProfile>>>,
 }
 

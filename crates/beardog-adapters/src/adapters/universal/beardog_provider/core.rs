@@ -2,20 +2,14 @@
 //!
 //! This module contains the main BearDogPrimalProvider struct and its constructor.
 
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
-use tracing::{debug, info, warn};
 
-use super::super::capability_manager::CapabilityManager;
-use super::super::songbird_handoff::registration::SongBirdRegistrationManager;
 use super::super::songbird_handoff::health::UniversalHealthMonitor;
-use super::super::traits::{
-    Capability, CapabilityCategory, MonitoringConfig, QualityOfService, ResourceRequirements,
-};
+use super::super::songbird_handoff::registration::SongBirdRegistrationManager;
+
 use beardog_config::BearDogConfig;
-use beardog_errors::BearDogResult;
 
 /// Metadata for the BearDog provider
 #[derive(Debug, Clone)]
@@ -57,13 +51,13 @@ pub struct BearDogPrimalProvider<T: Send + Sync> {
 impl<T: Send + Sync> BearDogPrimalProvider<T> {
     /// Create a new BearDog PrimalProvider
     pub fn new(
-        core: Arc<RwLock<Option<T>>>, 
+        core: Arc<RwLock<Option<T>>>,
         instance_id: String,
         config: Arc<BearDogConfig>,
         registration_manager: Arc<SongBirdRegistrationManager<T>>,
         health_monitor: Arc<UniversalHealthMonitor>,
     ) -> Self {
-        let endpoints = ServiceEndpoints {
+        let _endpoints = ServiceEndpoints {
             primary: "http://localhost:8443".to_string(),
             health: "http://localhost:8443/health".to_string(),
             metrics: "http://localhost:8443/metrics".to_string(),

@@ -415,11 +415,8 @@ impl WorkflowProcessorRegistry {
     }
 
     /// Get a processor for a workflow type
-    pub fn get_processor(
-        &self,
-        workflow_type: &WorkflowType,
-    ) -> Option<&Box<dyn WorkflowProcessor>> {
-        self.processors.get(workflow_type)
+    pub fn get_processor(&self, workflow_type: &WorkflowType) -> Option<&dyn WorkflowProcessor> {
+        self.processors.get(workflow_type).map(|p| p.as_ref())
     }
 
     /// Register a custom processor

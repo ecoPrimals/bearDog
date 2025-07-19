@@ -40,6 +40,7 @@
 //! ```
 
 pub mod conditions;
+#[allow(clippy::module_inception)]
 pub mod engine;
 pub mod ml_models;
 pub mod rules;

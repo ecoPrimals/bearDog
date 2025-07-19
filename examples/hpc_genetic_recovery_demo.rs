@@ -20,9 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let main_beardog = BearDogSecurityProvider::new(main_config).await?;
     let main_user = "hpc_admin";
 
-    println!(
-        "✅ Main BearDog instance initialized for user: {main_user}"
-    );
+    println!("✅ Main BearDog instance initialized for user: {main_user}");
     println!();
 
     // Step 2: Set up your other towers as recovery points
@@ -106,11 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Generate actual crypto keys for each derivative
         let crypto_key = main_beardog
-            .generate_key(
-                crypto_type,
-                "encryption",
-                &format!("{main_user}_{task_id}"),
-            )
+            .generate_key(crypto_type, "encryption", &format!("{main_user}_{task_id}"))
             .await?;
         println!("      🔐 Crypto key: {crypto_key}");
     }
@@ -169,9 +163,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (derivative_id, task_name) in surviving_derivatives {
-        println!(
-            "   🧬 {derivative_id} ({task_name}) is still operational"
-        );
+        println!("   🧬 {derivative_id} ({task_name}) is still operational");
         println!("      - Can continue processing independently");
         println!("      - Can be accessed via ephemeral keys");
         println!("      - Can spawn new derivatives if needed");

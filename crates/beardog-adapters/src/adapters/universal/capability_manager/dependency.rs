@@ -123,7 +123,7 @@ impl DependencyResolver {
         capability_id: &'a str,
         dependency_chain: &'a mut Vec<String>,
         resolution_order: &'a mut Vec<String>,
-        unresolved_dependencies: &'a mut Vec<String>,
+        _unresolved_dependencies: &'a mut Vec<String>,
         visited: &'a mut HashSet<String>,
         in_progress: &'a mut HashSet<String>,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<()>> + Send + 'a>> {
@@ -154,7 +154,7 @@ impl DependencyResolver {
                         dep,
                         dependency_chain,
                         resolution_order,
-                        unresolved_dependencies,
+                        _unresolved_dependencies,
                         visited,
                         in_progress,
                     )

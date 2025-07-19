@@ -369,7 +369,7 @@ impl EntropyHierarchyManager {
         entropy_class: &EntropyClass,
     ) -> BearDogResult<EntropyQualityAssessment> {
         let quality_score = self.validator.validate_entropy_quality(entropy_class)?;
-        let security_level = self.validator.check_security_requirements(entropy_class)?;
+        let _security_level = self.validator.check_security_requirements(entropy_class)?;
         let weighted_score = self
             .mixing_engine
             .calculate_weighted_entropy_score(entropy_class);
@@ -433,7 +433,8 @@ impl EntropyHierarchyManager {
     pub fn update_config(&mut self, new_config: EntropyHierarchyConfig) {
         self.config = new_config.clone();
         self.mixing_engine = EntropyMixingEngine::new(new_config.clone());
-        self.validator = EntropyValidator::new(/* self.hsm_manager.clone(), */ new_config.clone());
+        self.validator =
+            EntropyValidator::new(/* self.hsm_manager.clone(), */ new_config.clone());
         self.monitor = EntropyMonitor::new(new_config);
     }
 

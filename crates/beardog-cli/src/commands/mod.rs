@@ -5,4 +5,4 @@
 pub mod ai;
 
 // Re-export AI commands for main CLI
-pub use ai::{AiCommand, execute_ai_command}; 
+pub use ai::{execute_ai_command, AiCommand};

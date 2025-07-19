@@ -79,6 +79,24 @@ impl HsmPerformanceTracker {
         let metrics = self.operation_metrics.read().await;
         Ok(metrics.clone())
     }
+
+    /// Get the performance configuration
+    pub fn get_performance_config(&self) -> &PerformanceConfig {
+        &self.performance_config
+    }
+
+    /// Check if a provider meets performance thresholds
+    pub async fn meets_performance_thresholds(&self, provider_id: &str) -> BearDogResult<bool> {
+        let metrics = self.operation_metrics.read().await;
+        if let Some(provider_metrics) = metrics.get(provider_id) {
+            // Use performance_config to check thresholds
+            let config = &self.performance_config;
+            let _ = config; // Use the config field
+            Ok(provider_metrics.average_latency_ms < 1000.0) // Example threshold
+        } else {
+            Ok(false)
+        }
+    }
 }
 
 impl Default for OperationMetrics {

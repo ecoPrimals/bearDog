@@ -3,9 +3,9 @@
 //! Comprehensive tests for security provider functionality
 
 #[cfg(test)]
+#[allow(clippy::module_inception)]
 mod tests {
-    
-    
+
     use crate::types::*;
     use tokio;
 
@@ -36,6 +36,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_authentication() {
+        // Set environment to development for testing
+        std::env::set_var("BEARDOG_ENVIRONMENT", "development");
+
         let config = SecurityProviderConfig::default();
         let provider = BearDogSecurityProvider::new(config).await.unwrap();
 
@@ -108,9 +111,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_account_lockout() {
-        let mut config = SecurityProviderConfig::default();
-        config.max_failed_attempts = 2;
-        config.lockout_duration_minutes = 5;
+        let config = SecurityProviderConfig {
+            max_failed_attempts: 2,
+            lockout_duration_minutes: 5,
+            ..Default::default()
+        };
 
         let provider = BearDogSecurityProvider::new(config).await.unwrap();
 
@@ -134,8 +139,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_memory_key_manager() {
-        let mut config = SecurityProviderConfig::default();
-        config.enable_memory_key_manager = true;
+        let config = SecurityProviderConfig {
+            enable_memory_key_manager: true,
+            ..Default::default()
+        };
 
         let provider = BearDogSecurityProvider::new(config).await.unwrap();
         assert!(provider.is_standalone_mode());

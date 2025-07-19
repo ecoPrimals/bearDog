@@ -168,7 +168,7 @@ pub struct HsmStatistics {
 }
 
 /// Error statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ErrorStatistics {
     /// Total errors
     pub total_errors: u64,
@@ -422,16 +422,7 @@ impl Default for HsmStatistics {
     }
 }
 
-impl Default for ErrorStatistics {
-    fn default() -> Self {
-        Self {
-            total_errors: 0,
-            errors_by_severity: std::collections::HashMap::new(),
-            errors_by_code: std::collections::HashMap::new(),
-            recent_errors: Vec::new(),
-        }
-    }
-}
+// Default implementation is now derived
 
 impl HsmHealthStatus {
     /// Create a new healthy status
@@ -458,7 +449,10 @@ impl HsmHealthStatus {
 impl HsmOperationalStatus {
     /// Check if the HSM is available for operations
     pub fn is_available(&self) -> bool {
-        matches!(self, HsmOperationalStatus::Operational | HsmOperationalStatus::Degraded { .. })
+        matches!(
+            self,
+            HsmOperationalStatus::Operational | HsmOperationalStatus::Degraded { .. }
+        )
     }
 
     /// Check if the HSM is offline
@@ -557,6 +551,10 @@ pub enum HsmCapability {
     SecureBackup,
     /// Secure restore capability
     SecureRestore,
+    /// Tamper detection capability
+    TamperDetection,
+    /// Biometric authentication capability
+    BiometricAuthentication,
     /// Custom capability
     Custom(String),
-} 
+}

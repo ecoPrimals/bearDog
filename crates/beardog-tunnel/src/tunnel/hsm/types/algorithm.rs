@@ -378,13 +378,24 @@ impl CryptographicAlgorithm {
             CryptographicAlgorithm::Aes128 | CryptographicAlgorithm::Aes128Gcm => Some(128),
             CryptographicAlgorithm::Aes192 | CryptographicAlgorithm::Aes192Gcm => Some(192),
             CryptographicAlgorithm::Aes256 | CryptographicAlgorithm::Aes256Gcm => Some(256),
-            CryptographicAlgorithm::ChaCha20Poly1305 | CryptographicAlgorithm::ChaCha20Poly1305Aead => Some(256),
+            CryptographicAlgorithm::ChaCha20Poly1305
+            | CryptographicAlgorithm::ChaCha20Poly1305Aead => Some(256),
             CryptographicAlgorithm::RsaPkcs1V15 | CryptographicAlgorithm::RsaPss => Some(2048),
-            CryptographicAlgorithm::EccP256 | CryptographicAlgorithm::EcdsaSha256 | CryptographicAlgorithm::EcdhP256 => Some(256),
-            CryptographicAlgorithm::EccP384 | CryptographicAlgorithm::EcdsaSha384 | CryptographicAlgorithm::EcdhP384 => Some(384),
-            CryptographicAlgorithm::EccP521 | CryptographicAlgorithm::EcdsaSha512 | CryptographicAlgorithm::EcdhP521 => Some(521),
-            CryptographicAlgorithm::Ed25519 | CryptographicAlgorithm::X25519 | CryptographicAlgorithm::X25519KeyAgreement => Some(256),
-            CryptographicAlgorithm::RsaSha256 | CryptographicAlgorithm::RsaSha384 | CryptographicAlgorithm::RsaSha512 => Some(2048),
+            CryptographicAlgorithm::EccP256
+            | CryptographicAlgorithm::EcdsaSha256
+            | CryptographicAlgorithm::EcdhP256 => Some(256),
+            CryptographicAlgorithm::EccP384
+            | CryptographicAlgorithm::EcdsaSha384
+            | CryptographicAlgorithm::EcdhP384 => Some(384),
+            CryptographicAlgorithm::EccP521
+            | CryptographicAlgorithm::EcdsaSha512
+            | CryptographicAlgorithm::EcdhP521 => Some(521),
+            CryptographicAlgorithm::Ed25519
+            | CryptographicAlgorithm::X25519
+            | CryptographicAlgorithm::X25519KeyAgreement => Some(256),
+            CryptographicAlgorithm::RsaSha256
+            | CryptographicAlgorithm::RsaSha384
+            | CryptographicAlgorithm::RsaSha512 => Some(2048),
             CryptographicAlgorithm::AesGcm => Some(256),
             _ => None,
         }
@@ -434,4 +445,4 @@ impl CryptographicAlgorithm {
 }
 
 /// Algorithm type alias for backward compatibility
-pub type Algorithm = CryptographicAlgorithm; 
+pub type Algorithm = CryptographicAlgorithm;

@@ -3,12 +3,13 @@
 //! This module provides the core Software HSM implementation including the main
 //! RustSoftwareHsm struct and HsmProvider trait implementation.
 
+use super::crypto_providers::ring_crypto::RingCryptoProvider;
 use super::memory::{DefaultMemoryProtector, MemoryProtectionConfig};
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::HsmProvider;
 use async_trait::async_trait;
+use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;
 use hex;
 use std::collections::HashMap;
@@ -33,11 +34,11 @@ impl RustSoftwareHsm {
 
         // Create memory protector with conversion from MemoryConfig to MemoryProtectionConfig
         let memory_config = MemoryProtectionConfig {
-            enable_protection: match config.memory_config.protection_level {
-                MemoryProtectionLevel::None => false,
-                _ => true,
-            },
-            clear_on_drop: config.memory_config.zero_on_free,
+            enable_protection: matches!(
+                config.memory_config.protection_level,
+                MemoryProtectionLevel::High | MemoryProtectionLevel::Maximum
+            ),
+            clear_on_drop: config.memory_config.enable_encryption,
         };
         let memory_protector = Arc::new(DefaultMemoryProtector::new(memory_config).await?);
 
@@ -73,25 +74,23 @@ impl RustSoftwareHsm {
             CryptoBackend::RustCrypto => Ok(Arc::new(RustCryptoProvider::new().await?)),
             CryptoBackend::Ring => Ok(Arc::new(RingCryptoProvider::new().await?)),
             CryptoBackend::OpenSsl => Ok(Arc::new(OpenSslCryptoProvider::new().await?)),
-            CryptoBackend::Custom(name) => {
-                Err(BearDogError::UnsupportedCryptoBackend {
-                    backend: name.clone(),
-                })
-            }
+            CryptoBackend::Hardware => Err(BearDogError::UnsupportedOperation {
+                operation: "Hardware crypto backend not supported in software HSM".to_string(),
+            }),
+            CryptoBackend::Custom(name) => Err(BearDogError::UnsupportedOperation {
+                operation: format!("Unsupported crypto backend: {name}"),
+            }),
         }
     }
 
     /// Create memory protector based on configuration
-    async fn create_memory_protector(
+    pub async fn create_memory_protector(
         config: &MemoryConfig,
     ) -> BearDogResult<Arc<dyn MemoryProtector>> {
         // Convert MemoryConfig to MemoryProtectionConfig
         let memory_protection_config = MemoryProtectionConfig {
-            enable_protection: match config.protection_level {
-                MemoryProtectionLevel::None => false,
-                _ => true,
-            },
-            clear_on_drop: config.zero_on_free,
+            enable_protection: !matches!(config.protection_level, MemoryProtectionLevel::None),
+            clear_on_drop: config.enable_encryption,
         };
 
         Ok(Arc::new(
@@ -150,7 +149,7 @@ impl RustSoftwareHsm {
             key_material: KeyMaterial::Encrypted {
                 encrypted_data: key_material,
                 encryption_algorithm: "AES-256-GCM".to_string(),
-                key_derivation_info: None,
+                kdf_params: None,
             },
             hsm_tier: "SoftwareHsm".to_string(),
             health_status: KeyHealthStatus::Healthy,
@@ -280,6 +279,7 @@ impl HsmProvider for RustSoftwareHsm {
 
         // Protect key material
         let protected_key = self.memory_protector.protect_key_material(key_data).await?;
+        let protected_key_data = protected_key.data.clone();
 
         // Create software key
         let software_key = SoftwareKey::new(
@@ -305,16 +305,18 @@ impl HsmProvider for RustSoftwareHsm {
         // Create HSM key
         let hsm_key = HsmKey {
             id: metadata.key_id.clone(),
-            hsm_type: HsmTier::SoftwareHsm {
-                implementation: SoftwareHsmType::RustSoftwareHsm,
-                key_storage: self.config.key_store_config.storage_type.clone(),
-                encryption_at_rest: true,
-                memory_protection: self.config.memory_config.protection_level.clone(),
-            },
+            hsm_type: "SoftwareHsm".to_string(),
             key_type: metadata.key_type.clone(),
+            metadata,
+            key_material: KeyMaterial::Encrypted {
+                encrypted_data: protected_key_data,
+                encryption_algorithm: "AES-256-GCM".to_string(),
+                kdf_params: None,
+            },
+            hsm_tier: "SoftwareHsm".to_string(),
+            health_status: KeyHealthStatus::Healthy,
             attestation: None,
             created_at: Utc::now(),
-            metadata,
         };
 
         info!("✅ Key imported successfully: {}", hsm_key.id);
@@ -327,9 +329,9 @@ impl HsmProvider for RustSoftwareHsm {
 
         self.perform_crypto_operation(key_id, "encrypt", |key_material| {
             // This would be async in real implementation
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self.crypto_provider.encrypt(key_material, plaintext).await
-            })
+            tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(async { self.crypto_provider.encrypt(key_material, plaintext).await })
         })
         .await
     }
@@ -339,9 +341,9 @@ impl HsmProvider for RustSoftwareHsm {
         debug!("🔓 Decrypting data with software key: {}", key_id);
 
         self.perform_crypto_operation(key_id, "decrypt", |key_material| {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self.crypto_provider.decrypt(key_material, ciphertext).await
-            })
+            tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(async { self.crypto_provider.decrypt(key_material, ciphertext).await })
         })
         .await
     }
@@ -351,9 +353,9 @@ impl HsmProvider for RustSoftwareHsm {
         debug!("✍️ Signing data with software key: {}", key_id);
 
         self.perform_crypto_operation(key_id, "sign", |key_material| {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
-                self.crypto_provider.sign(key_material, data).await
-            })
+            tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(async { self.crypto_provider.sign(key_material, data).await })
         })
         .await
     }
@@ -410,7 +412,8 @@ impl HsmProvider for RustSoftwareHsm {
             created_at: Utc::now(),
             expires_at: None,
             usage_policy: KeyUsagePolicy::default(),
-            attributes: HashMap::new(),
+            key_name: format!("derived-{derived_key_id}"),
+            tags: HashMap::new(),
         };
 
         // Import derived key
@@ -421,15 +424,12 @@ impl HsmProvider for RustSoftwareHsm {
     /// Get HSM information and capabilities
     async fn get_info(&self) -> BearDogResult<HsmInfo> {
         Ok(HsmInfo {
-            hsm_type: HsmTier::SoftwareHsm {
-                implementation: SoftwareHsmType::RustSoftwareHsm,
-                key_storage: self.config.key_store_config.storage_type.clone(),
-                encryption_at_rest: true,
-                memory_protection: self.config.memory_config.protection_level.clone(),
-            },
+            instance_id: "software-hsm-001".to_string(),
+            tier_type: "Software".to_string(),
             vendor: "BearDog".to_string(),
             model: "Rust Software HSM".to_string(),
-            version: "1.0.0".to_string(),
+            firmware_version: "1.0.0".to_string(),
+            api_version: "1.0".to_string(),
             capabilities: vec![
                 HsmCapability::KeyGeneration,
                 HsmCapability::KeyImport,
@@ -438,22 +438,16 @@ impl HsmProvider for RustSoftwareHsm {
                 HsmCapability::Decryption,
                 HsmCapability::Signing,
                 HsmCapability::Verification,
-                HsmCapability::KeyDerivation,
-                HsmCapability::SecureBackup,
-                HsmCapability::SecureRestore,
             ],
-            supported_algorithms: vec![
-                Algorithm::Aes256Gcm,
-                Algorithm::ChaCha20Poly1305,
-                Algorithm::EccP256,
-                Algorithm::EccP384,
-                Algorithm::EcdsaSha256,
-                Algorithm::RsaSha256,
-                Algorithm::HkdfSha256,
-            ],
+            supported_algorithms: vec!["AES-256".to_string(), "RSA-2048".to_string()],
+            max_key_count: 10000,
+            current_key_count: 0, // TODO: Get actual count from key store
+            status: HsmOperationalStatus::Operational,
+            hsm_type: "SoftwareHsm".to_string(),
+            version: "1.0.0".to_string(),
             max_key_size: Some(4096),
             certification: None,
-            tamper_resistance: TamperResistanceLevel::Software,
+            tamper_resistance: crate::tunnel::hsm::types::tier::TamperResistanceLevel::None,
         })
     }
 
@@ -473,7 +467,7 @@ impl HsmProvider for RustSoftwareHsm {
                         avg_latency_ms: 1.0,
                         ops_per_second: 1000.0,
                         error_rate: 0.0,
-                        success_rate: 1.0,
+                        total_operations: 1,
                     },
                     last_accessed: Some(chrono::Utc::now()),
                     access_count: 0,

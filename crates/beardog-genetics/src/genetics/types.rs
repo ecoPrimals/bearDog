@@ -2,8 +2,8 @@
 //!
 //! Contains all structs, enums, and type aliases for genetic operations.
 
-use beardog_errors::BearDogResult;
 use async_trait::async_trait;
+use beardog_errors::BearDogResult;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,7 +11,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 // Import genetics types from auth module (which were in cross_node_auth)
-use beardog_auth::auth::{BearDogGenetics, SpawnPurpose, TaskType};
+use beardog_auth::auth::{BearDogGenetics, SpawnPurpose};
 
 /// Configuration for genetics operations
 ///
@@ -195,34 +195,34 @@ pub enum BearDogWorkflowType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AutomatedCheck {
     /// Minimum trust score required
-    TrustScore { 
+    TrustScore {
         /// Minimum trust score that must be met
-        min_score: f64 
+        min_score: f64,
     },
     /// Resource availability check
-    ResourceAvailability { 
+    ResourceAvailability {
         /// Minimum resource requirements that must be available
-        min_resources: ResourceLimits 
+        min_resources: ResourceLimits,
     },
     /// Compliance validation
-    ComplianceValidation { 
+    ComplianceValidation {
         /// List of compliance standards that must be met
-        required_standards: Vec<String> 
+        required_standards: Vec<String>,
     },
     /// Threat assessment
-    ThreatAssessment { 
+    ThreatAssessment {
         /// Maximum acceptable risk level
-        max_risk_level: f64 
+        max_risk_level: f64,
     },
     /// Geographic compliance
-    GeographicCompliance { 
+    GeographicCompliance {
         /// List of jurisdictions where spawning is allowed
-        allowed_jurisdictions: Vec<String> 
+        allowed_jurisdictions: Vec<String>,
     },
     /// Temporal window restrictions
-    TemporalWindow { 
+    TemporalWindow {
         /// List of allowed hours for spawning (0-23)
-        allowed_hours: Vec<u8> 
+        allowed_hours: Vec<u8>,
     },
 }
 
@@ -230,19 +230,19 @@ pub enum AutomatedCheck {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EscalationCondition {
     /// High resource usage
-    HighResourceUsage { 
+    HighResourceUsage {
         /// Resource usage threshold that triggers escalation
-        threshold: f64 
+        threshold: f64,
     },
     /// Unusual genetic patterns
-    UnusualGeneticPattern { 
+    UnusualGeneticPattern {
         /// Deviation threshold for genetic patterns
-        deviation_threshold: f64 
+        deviation_threshold: f64,
     },
     /// Multiple failed automated checks
-    MultipleFailures { 
+    MultipleFailures {
         /// Maximum number of failures before escalation
-        max_failures: u32 
+        max_failures: u32,
     },
     /// Spawning outside normal hours
     OffHoursSpawn,
@@ -377,16 +377,16 @@ pub enum ChromosomeRecombinationStrategy {
     /// Average chromosome properties
     Averaging,
     /// Weighted average of parent chromosomes
-    WeightedAverage { 
+    WeightedAverage {
         /// Weights for each parent chromosome
-        weights: Vec<f64> 
+        weights: Vec<f64>,
     },
     /// Combine flags using bitwise OR
     BitwiseUnion,
     /// Custom blending with specified parameters
-    CustomBlend { 
+    CustomBlend {
         /// Factor controlling dominance in blending
-        dominance_factor: f64 
+        dominance_factor: f64,
     },
 }
 
@@ -396,9 +396,9 @@ pub enum TraitBlendingStrategy {
     /// Simple average of parent traits
     Average,
     /// Weighted average with specified weights
-    WeightedAverage { 
+    WeightedAverage {
         /// Weights for each parent trait
-        weights: Vec<f64> 
+        weights: Vec<f64>,
     },
     /// Select dominant traits based on random selection
     Dominant,
@@ -409,9 +409,9 @@ pub enum TraitBlendingStrategy {
     /// Take traits from the most cooperative parent  
     MostCooperative,
     /// Custom blending with specified factor
-    CustomBlend { 
+    CustomBlend {
         /// Factor controlling trait blending
-        blending_factor: f64 
+        blending_factor: f64,
     },
 }
 
@@ -425,9 +425,9 @@ pub enum CapabilityMergingStrategy {
     /// Select capabilities based on random selection and fitness
     Selective,
     /// Weighted combination of capabilities
-    WeightedCombination { 
+    WeightedCombination {
         /// Weights for each capability
-        weights: Vec<f64> 
+        weights: Vec<f64>,
     },
     /// Best capabilities from each parent
     BestOfBreed,
@@ -495,8 +495,8 @@ pub enum WitnessType {
     /// Human approver
     Human,
     /// External system
-    External { 
+    External {
         /// Type of external system providing witness
-        system_type: String 
+        system_type: String,
     },
 }

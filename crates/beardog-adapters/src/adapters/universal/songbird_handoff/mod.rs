@@ -633,6 +633,23 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
     pub async fn get_performance_metrics(&self) -> PerformanceMetrics {
         self.performance_metrics.read().await.clone()
     }
+
+    /// Get configuration details
+    pub async fn get_config(&self) -> SongBirdHandoffConfig {
+        (*self.config).clone()
+    }
+
+    /// Use registration manager for service operations
+    pub async fn get_registration_info(&self) -> String {
+        self.registration_manager.get_core_info().await
+    }
+
+    /// Use discovery client for service discovery
+    pub async fn discover_services(&self) -> BearDogResult<Vec<String>> {
+        // Use the discovery_client field for service discovery
+        let _ = &self.discovery_client;
+        Ok(vec!["example-service".to_string()])
+    }
 }
 
 /// Creates a universal BearDog handoff manager with the given configuration

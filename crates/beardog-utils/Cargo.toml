@@ -1,26 +1,25 @@
 [package]
 name = "beardog-utils"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-description = "BearDog utils module"
-authors.workspace = true
+version = "0.1.0"
+edition = "2021"
+description = "Utility functions for BearDog Security Manager"
+license = "AGPL-3.0"
+repository = "https://github.com/ecoPrimals/beardog"
 
 [dependencies]
-beardog-errors = { workspace = true }
-beardog-config = { workspace = true }
-tokio = { workspace = true }
-serde = { workspace = true }
-chrono = { workspace = true }
-tracing = { workspace = true }
-uuid = { workspace = true }
-thiserror = { workspace = true }
-async-trait = { workspace = true }
+anyhow = "1.0"
+beardog-config = { path = "../beardog-config" }
+beardog-errors = { path = "../beardog-errors" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+tracing = "0.1"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
 rand = "0.8"
 ring = "0.16"
 hmac = "0.12"
 sha2 = "0.10"
-toml = "0.8"
 
 [dev-dependencies]
 tempfile = "3.0"

@@ -17,8 +17,8 @@
 //! * **Cryptographic Lineage**: Verifiable parent-child relationships with Ed25519 signatures
 //! * **RESTful API**: HTTP endpoints for external integration and management
 
+use beardog_auth::auth::{BearDogGenetics, SpawnPurpose};
 use beardog_errors::BearDogResult;
-use beardog_auth::auth::{SpawnPurpose, SecurityTraits, CryptoChromosome, NodeCapability, BearDogGenetics};
 // use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 
 // Re-export public types and functions from submodules
@@ -55,10 +55,7 @@ impl GeneticsAPI {
             config.clone(),
         );
 
-        let genetics_engine = handlers::DefaultBearDogGeneticsEngine::new(
-            genetics_store,
-            config,
-        );
+        let genetics_engine = handlers::DefaultBearDogGeneticsEngine::new(genetics_store, config);
 
         Self {
             spawning_engine,
@@ -72,31 +69,25 @@ impl GeneticsAPI {
     }
 
     /// Create genesis genetics for a new node
-    pub async fn create_genesis_genetics(
-        &self,
-        node_id: &str,
-    ) -> BearDogResult<BearDogGenetics> {
+    pub async fn create_genesis_genetics(&self, node_id: &str) -> BearDogResult<BearDogGenetics> {
         self.genetics_engine.create_genesis_genetics(node_id).await
     }
 
     /// Get genetics for a specific node
-    pub async fn get_node_genetics(
-        &self,
-        node_id: &str,
-    ) -> BearDogResult<BearDogGenetics> {
+    pub async fn get_node_genetics(&self, node_id: &str) -> BearDogResult<BearDogGenetics> {
         self.genetics_engine.get_node_genetics(node_id).await
     }
 
     /// Breed genetics from multiple parents
     pub async fn breed_genetics(
-        parent_genetics: &[BearDogGenetics],
+        _parent_genetics: &[BearDogGenetics],
         purpose: SpawnPurpose,
     ) -> BearDogResult<SpawnResult> {
         // Create a temporary engine for breeding
         let config = GeneticsConfig::default();
         let genetics_store = std::sync::Arc::new(spawning::InMemoryGeneticsStore::new());
         // let hsm_manager = std::sync::Arc::new(HsmManager::new());
-        
+
         let spawning_engine = spawning::GeneticSpawningEngine::new(
             genetics_store.clone(),
             // hsm_manager,
@@ -131,7 +122,7 @@ impl GeneticsAPI {
         let config = GeneticsConfig::default();
         let genetics_store = std::sync::Arc::new(spawning::InMemoryGeneticsStore::new());
         // let hsm_manager = std::sync::Arc::new(HsmManager::new());
-        
+
         let spawning_engine = spawning::GeneticSpawningEngine::new(
             genetics_store.clone(),
             // hsm_manager,
@@ -139,7 +130,7 @@ impl GeneticsAPI {
         );
 
         // For now, just use the first parent set
-        let parent_genetics = parent_sets.first().cloned().unwrap_or_default();
+        let _parent_genetics = parent_sets.first().cloned().unwrap_or_default();
 
         let request = SpawnRequest {
             request_id: format!("batch_spawn_{}", uuid::Uuid::new_v4()),
@@ -162,6 +153,8 @@ impl GeneticsAPI {
 }
 
 // Re-export types from submodules for convenience
-pub use types::*;
-pub use spawning::{SpawnRequest, SpawnResult, GeneticsStore, GeneticsConfig, ResourceLimits, BearDogWorkflowType};
 pub use handlers::DefaultBearDogGeneticsEngine;
+pub use spawning::{
+    BearDogWorkflowType, GeneticsConfig, GeneticsStore, ResourceLimits, SpawnRequest, SpawnResult,
+};
+// pub use types::*; // Unused re-export

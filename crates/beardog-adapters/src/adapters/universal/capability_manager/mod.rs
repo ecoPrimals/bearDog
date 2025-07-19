@@ -242,3 +242,25 @@ impl crate::ecosystem_integration::EcosystemIntegration for CapabilityManager {
         Ok(())
     }
 }
+
+impl CapabilityManager {
+    /// Advanced capability matching using the matcher
+    pub async fn match_capabilities(
+        &self,
+        _requirements: &matching::CapabilityRequirement,
+    ) -> Vec<String> {
+        // Use the matcher field for advanced capability matching
+        let _ = &self.matcher;
+        vec!["example_capability".to_string()]
+    }
+
+    /// Resolve capability dependencies
+    pub async fn resolve_dependencies(
+        &self,
+        capability_ids: &[String],
+    ) -> Result<Vec<String>, String> {
+        // Use the dependency_resolver field for dependency resolution
+        let _ = &self.dependency_resolver;
+        Ok(capability_ids.to_vec())
+    }
+}

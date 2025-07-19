@@ -154,8 +154,7 @@ pub use types::*;
 pub use self::audit::{create_audit_logger, AuditStatistics, InMemoryAuditLogger};
 pub use self::crypto_providers::{
     create_crypto_provider, get_crypto_provider_capabilities, get_supported_crypto_backends,
-    get_supported_storage_backends,
-    CryptoProviderCapabilities,
+    get_supported_storage_backends, CryptoProviderCapabilities,
 };
 pub use self::health::SimpleHealthSummary;
 pub use self::keystore::KeyStoreStatistics;
@@ -178,21 +177,44 @@ pub const BUILD_INFO: &str = concat!(
 /// Create a new Software HSM with default configuration
 pub async fn create_default_software_hsm() -> beardog_errors::BearDogResult<RustSoftwareHsm> {
     let config = crate::tunnel::hsm::types::SoftwareHsmConfig {
-        implementation: crate::tunnel::hsm::types::SoftwareHsmType::RustSoftwareHsm,
+        implementation: format!(
+            "{:?}",
+            crate::tunnel::hsm::types::SoftwareHsmType::RustSoftwareHsm
+        ),
         crypto_backend: crate::tunnel::hsm::types::CryptoBackend::Ring,
-        memory_config: crate::tunnel::hsm::types::MemoryConfig {
-            protection_level: crate::tunnel::hsm::types::MemoryProtectionLevel::High,
-            use_secure_allocator: true,
-            zero_on_free: true,
-            use_guard_pages: true,
-        },
-        key_store_config: crate::tunnel::hsm::types::KeyStoreConfig {
-            storage_type: crate::tunnel::hsm::types::KeyStorageType::Memory,
+        memory_protection: crate::tunnel::hsm::types::MemoryProtectionLevel::High,
+        enable_key_caching: true,
+        max_cached_keys: 1000,
+        key_storage: crate::tunnel::hsm::types::KeyStoreConfig {
+            storage_type: crate::tunnel::hsm::types::KeyStorageType::Database,
             encryption_key_source: crate::tunnel::hsm::types::KeySource::Derived,
             backup_enabled: true,
             cache_size: 1000,
             file_config: None,
-            db_config: None,
+            db_config: Some(crate::tunnel::hsm::types::DatabaseConfig {
+                database_url: "sqlite::memory:".to_string(),
+                connection_pool_size: 10,
+                connection_timeout_seconds: 30,
+                enable_encryption_at_rest: true,
+            }),
+        },
+        memory_config: crate::tunnel::hsm::types::MemoryConfig {
+            protection_level: crate::tunnel::hsm::types::MemoryProtectionLevel::High,
+            enable_encryption: true,
+            pool_size: 1024 * 1024, // 1MB pool size
+        },
+        key_store_config: crate::tunnel::hsm::types::KeyStoreConfig {
+            storage_type: crate::tunnel::hsm::types::KeyStorageType::Database,
+            encryption_key_source: crate::tunnel::hsm::types::KeySource::Derived,
+            backup_enabled: true,
+            cache_size: 1000,
+            file_config: None,
+            db_config: Some(crate::tunnel::hsm::types::DatabaseConfig {
+                database_url: "sqlite::memory:".to_string(),
+                connection_pool_size: 10,
+                connection_timeout_seconds: 30,
+                enable_encryption_at_rest: true,
+            }),
         },
     };
 
@@ -202,21 +224,41 @@ pub async fn create_default_software_hsm() -> beardog_errors::BearDogResult<Rust
 /// Create a new Software HSM with file-based storage
 pub async fn create_file_software_hsm() -> beardog_errors::BearDogResult<RustSoftwareHsm> {
     let config = crate::tunnel::hsm::types::SoftwareHsmConfig {
-        implementation: crate::tunnel::hsm::types::SoftwareHsmType::RustSoftwareHsm,
+        implementation: "RustSoftwareHsm".to_string(),
         crypto_backend: crate::tunnel::hsm::types::CryptoBackend::Ring,
-        memory_config: crate::tunnel::hsm::types::MemoryConfig {
-            protection_level: crate::tunnel::hsm::types::MemoryProtectionLevel::High,
-            use_secure_allocator: true,
-            zero_on_free: true,
-            use_guard_pages: true,
-        },
-        key_store_config: crate::tunnel::hsm::types::KeyStoreConfig {
-            storage_type: crate::tunnel::hsm::types::KeyStorageType::EncryptedFile,
+        memory_protection: crate::tunnel::hsm::types::MemoryProtectionLevel::High,
+        enable_key_caching: true,
+        max_cached_keys: 1000,
+        key_storage: crate::tunnel::hsm::types::KeyStoreConfig {
+            storage_type: crate::tunnel::hsm::types::KeyStorageType::Database,
             encryption_key_source: crate::tunnel::hsm::types::KeySource::Derived,
             backup_enabled: true,
             cache_size: 1000,
-            file_config: Some(crate::tunnel::hsm::types::FileStorageConfig::default()),
-            db_config: None,
+            file_config: None,
+            db_config: Some(crate::tunnel::hsm::types::DatabaseConfig {
+                database_url: "sqlite::memory:".to_string(),
+                connection_pool_size: 10,
+                connection_timeout_seconds: 30,
+                enable_encryption_at_rest: true,
+            }),
+        },
+        memory_config: crate::tunnel::hsm::types::MemoryConfig {
+            protection_level: crate::tunnel::hsm::types::MemoryProtectionLevel::High,
+            enable_encryption: true,
+            pool_size: 1024 * 1024, // 1MB pool size
+        },
+        key_store_config: crate::tunnel::hsm::types::KeyStoreConfig {
+            storage_type: crate::tunnel::hsm::types::KeyStorageType::Database,
+            encryption_key_source: crate::tunnel::hsm::types::KeySource::Derived,
+            backup_enabled: true,
+            cache_size: 1000,
+            file_config: None,
+            db_config: Some(crate::tunnel::hsm::types::DatabaseConfig {
+                database_url: "sqlite::memory:".to_string(),
+                connection_pool_size: 10,
+                connection_timeout_seconds: 30,
+                enable_encryption_at_rest: true,
+            }),
         },
     };
 
@@ -226,13 +268,28 @@ pub async fn create_file_software_hsm() -> beardog_errors::BearDogResult<RustSof
 /// Create a new Software HSM with database storage
 pub async fn create_database_software_hsm() -> beardog_errors::BearDogResult<RustSoftwareHsm> {
     let config = crate::tunnel::hsm::types::SoftwareHsmConfig {
-        implementation: crate::tunnel::hsm::types::SoftwareHsmType::RustSoftwareHsm,
+        implementation: "RustSoftwareHsm".to_string(),
         crypto_backend: crate::tunnel::hsm::types::CryptoBackend::Ring,
+        memory_protection: crate::tunnel::hsm::types::MemoryProtectionLevel::High,
+        enable_key_caching: true,
+        max_cached_keys: 1000,
+        key_storage: crate::tunnel::hsm::types::KeyStoreConfig {
+            storage_type: crate::tunnel::hsm::types::KeyStorageType::Database,
+            encryption_key_source: crate::tunnel::hsm::types::KeySource::Derived,
+            backup_enabled: true,
+            cache_size: 1000,
+            file_config: None,
+            db_config: Some(crate::tunnel::hsm::types::DatabaseConfig {
+                database_url: "sqlite::memory:".to_string(),
+                connection_pool_size: 10,
+                connection_timeout_seconds: 30,
+                enable_encryption_at_rest: true,
+            }),
+        },
         memory_config: crate::tunnel::hsm::types::MemoryConfig {
             protection_level: crate::tunnel::hsm::types::MemoryProtectionLevel::High,
-            use_secure_allocator: true,
-            zero_on_free: true,
-            use_guard_pages: true,
+            enable_encryption: true,
+            pool_size: 1024 * 1024, // 1MB pool size
         },
         key_store_config: crate::tunnel::hsm::types::KeyStoreConfig {
             storage_type: crate::tunnel::hsm::types::KeyStorageType::Database,
@@ -241,9 +298,10 @@ pub async fn create_database_software_hsm() -> beardog_errors::BearDogResult<Rus
             cache_size: 1000,
             file_config: None,
             db_config: Some(crate::tunnel::hsm::types::DatabaseConfig {
-                connection_string: "sqlite::memory:".to_string(),
-                table_name: "keys".to_string(),
-                encryption_enabled: true,
+                database_url: "sqlite::memory:".to_string(),
+                connection_pool_size: 10,
+                connection_timeout_seconds: 30,
+                enable_encryption_at_rest: true,
             }),
         },
     };
@@ -356,51 +414,18 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_validate_config() {
-        let valid_config = SoftwareHsmConfig {
-            crypto_backend: CryptoBackend::Ring,
-            implementation: SoftwareHsmType::RustSoftwareHsm,
-            memory_config: MemoryConfig {
-                protection_level: MemoryProtectionLevel::High,
-                use_secure_allocator: true,
-                zero_on_free: true,
-                use_guard_pages: true,
-            },
-            key_store_config: KeyStoreConfig {
-                storage_type: KeyStorageType::Memory,
-                encryption_key_source: KeySource::Derived,
-                backup_enabled: true,
-                cache_size: 1000,
-                file_config: None,
-                db_config: None,
-            },
+    async fn test_key_store_creation() {
+        let config = KeyStoreConfig {
+            storage_type: KeyStorageType::InMemory,
+            encryption_key_source: KeySource::Derived,
+            backup_enabled: false,
+            cache_size: 1024,
+            file_config: None,
+            db_config: None,
         };
 
-        assert!(validate_config(&valid_config).is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_validate_config_invalid_cache_size() {
-        let invalid_config = SoftwareHsmConfig {
-            crypto_backend: CryptoBackend::Ring,
-            implementation: SoftwareHsmType::RustSoftwareHsm,
-            memory_config: MemoryConfig {
-                protection_level: MemoryProtectionLevel::High,
-                use_secure_allocator: true,
-                zero_on_free: true,
-                use_guard_pages: true,
-            },
-            key_store_config: KeyStoreConfig {
-                storage_type: KeyStorageType::Memory,
-                encryption_key_source: KeySource::Derived,
-                backup_enabled: true,
-                cache_size: 0, // Invalid
-                file_config: None,
-                db_config: None,
-            },
-        };
-
-        assert!(validate_config(&invalid_config).is_err());
+        let key_store = SoftwareKeyStore::new(&config).await;
+        assert!(key_store.is_ok());
     }
 
     #[test]

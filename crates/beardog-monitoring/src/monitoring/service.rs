@@ -411,8 +411,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_alert_generation() {
-        let mut config = MonitoringConfig::default();
-        config.cpu_alert_threshold = 0.1; // Very low threshold to trigger alert
+        let config = MonitoringConfig {
+            cpu_alert_threshold: 0.1, // Very low threshold to trigger alert
+            ..Default::default()
+        };
 
         let service = MonitoringService::new(config);
         let metrics = service.collect_metrics().await.unwrap();

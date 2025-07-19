@@ -59,6 +59,7 @@ pub struct Connection {
     /// Last activity timestamp
     last_activity: chrono::DateTime<chrono::Utc>,
     /// Connection metadata
+    #[allow(dead_code)]
     metadata: HashMap<String, String>,
 }
 
@@ -90,7 +91,7 @@ impl UniversalNestGateAdapter {
         Self::validate_config(&config)?;
 
         // Create managers
-        let zfs_manager = Arc::new(ZfsManager::new(config.zfs.clone()).await?);
+        let zfs_manager = Arc::new(ZfsManager::new(config.zfs.clone(), None).await?);
         let policy_engine = Arc::new(PolicyEngine::new(config.policies.clone()).await?);
         let audit_manager = Arc::new(AuditManager::new(config.audit.clone()).await?);
 
@@ -151,7 +152,11 @@ impl UniversalNestGateAdapter {
     }
 
     /// Generate master key for provider
-    pub async fn generate_master_key(&self, owner_id: &str) -> NestGateResult<NestGateMasterKey> {
+    pub async fn generate_context_key(
+        &self,
+        owner_id: &str,
+        context: &str,
+    ) -> NestGateResult<NestGateContextKey> {
         info!(
             "Generating master key for owner: {} (provider: {})",
             owner_id,
@@ -169,13 +174,16 @@ impl UniversalNestGateAdapter {
         }
 
         // Generate master key using ZFS manager
-        let master_key = self.zfs_manager.generate_master_key(owner_id).await?;
+        let context_key = self
+            .zfs_manager
+            .generate_owner_encryption_key(owner_id, context)
+            .await?;
 
         // Store key mapping
         self.key_mapping
             .write()
             .await
-            .insert(master_key.id.clone(), owner_id.to_string());
+            .insert(context_key.id.clone(), owner_id.to_string());
 
         // Log audit event
         self.audit_manager
@@ -194,7 +202,7 @@ impl UniversalNestGateAdapter {
             .await?;
 
         info!("Master key generated successfully for owner: {}", owner_id);
-        Ok(master_key)
+        Ok(context_key)
     }
 
     /// Wrap key using master key

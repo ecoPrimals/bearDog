@@ -275,21 +275,21 @@ impl ThreatDetectionEngine {
     /// use beardog::threat::handlers::ThreatDetectionEngine;
     /// use beardog::threat::types::*;
     ///
-    /// fn main() {
-    ///     let mut engine = ThreatDetectionEngine::placeholder();
-    ///     
-    ///     let model = MlModel {
-    ///         id: "behavioral_analyzer".to_string(),
-    ///         name: "User Behavior Analyzer".to_string(),
-    ///         model_type: "behavioral_analysis".to_string(),
-    ///         version: "2.1.0".to_string(),
-    ///         confidence_threshold: 0.85,
-    ///         // ... other fields
-    ///     };
-    ///     
-    ///     engine.add_ml_model(model);
-    ///     println!("ML model added successfully");
-    /// }
+    /// # fn example() {
+    /// let mut engine = ThreatDetectionEngine::placeholder();
+    ///
+    /// let model = MlModel {
+    ///     id: "behavioral_analyzer".to_string(),
+    ///     name: "User Behavior Analyzer".to_string(),
+    ///     model_type: "behavioral_analysis".to_string(),
+    ///     version: "2.1.0".to_string(),
+    ///     confidence_threshold: 0.85,
+    ///     // ... other fields
+    /// };
+    ///
+    /// engine.add_ml_model(model);
+    /// println!("ML model added successfully");
+    /// # }
     /// ```
     ///
     /// # Model Management

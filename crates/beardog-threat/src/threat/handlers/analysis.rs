@@ -150,6 +150,7 @@ impl ThreatDetectionEngine {
     }
 
     /// Evaluates a single condition against event data
+    #[allow(clippy::only_used_in_recursion)]
     pub fn evaluate_condition<'a>(
         &'a self,
         condition: &'a RuleCondition,

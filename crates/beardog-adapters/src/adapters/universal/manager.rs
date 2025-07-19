@@ -10,9 +10,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info};
-use uuid::Uuid;
 
-use super::discovery::EcosystemDiscovery;
+use super::discovery::{EcosystemDiscovery, EcosystemService};
 use super::registry::CapabilityRegistry;
 use super::traits::*;
 use beardog_errors::{BearDogError, BearDogResult};
@@ -508,4 +507,126 @@ pub enum EcosystemHealthStatus {
     Unhealthy,
     /// Health status is unknown
     Unknown,
+}
+
+impl<T> UniversalEcosystemManager<T> {
+    /// Initialize ecosystem discovery using core capabilities
+    pub async fn initialize_ecosystem_discovery(&self) -> BearDogResult<()> {
+        info!("🔄 Initializing ecosystem discovery with core integration");
+
+        // Use core instance for initialization
+        let _core_ref = Arc::clone(&self.core);
+
+        // Start background discovery using the ecosystem discovery service
+        self.ecosystem_discovery
+            .start_background_discovery()
+            .await?;
+
+        // Initialize capability registry with default compatibility rules
+        self.capability_registry
+            .initialize_default_compatibility_rules()
+            .await;
+
+        info!("✅ Ecosystem discovery initialized successfully");
+        Ok(())
+    }
+
+    /// Get core instance for advanced operations
+    pub fn get_core(&self) -> Arc<T> {
+        Arc::clone(&self.core)
+    }
+
+    /// Perform ecosystem-wide service discovery
+    pub async fn discover_ecosystem_services(
+        &self,
+        ecosystem_id: &str,
+    ) -> BearDogResult<Vec<EcosystemService>> {
+        info!("🔍 Discovering services for ecosystem: {}", ecosystem_id);
+
+        // Use ecosystem discovery service
+        let services = self
+            .ecosystem_discovery
+            .discover_ecosystem_services(ecosystem_id)
+            .await?;
+
+        // Register discovered services with capability registry
+        for service in &services {
+            for capability in &service.capabilities {
+                let compatible_ids: Vec<String> =
+                    service.capabilities.iter().map(|c| c.id.clone()).collect();
+
+                // Add compatibility rules based on discovered capabilities
+                self.capability_registry
+                    .add_compatibility_rule(capability.id.clone(), compatible_ids)
+                    .await;
+            }
+        }
+
+        info!(
+            "✅ Discovered {} services for ecosystem: {}",
+            services.len(),
+            ecosystem_id
+        );
+        Ok(services)
+    }
+
+    /// Check compatibility between capabilities using core and discovery data
+    pub async fn check_capability_compatibility(
+        &self,
+        capability_a: &str,
+        capability_b: &str,
+    ) -> BearDogResult<bool> {
+        // Use the capability registry that was populated through ecosystem discovery
+        let compatible = self
+            .capability_registry
+            .are_capabilities_compatible(capability_a, capability_b)
+            .await;
+
+        if compatible {
+            info!(
+                "✅ Capabilities '{}' and '{}' are compatible",
+                capability_a, capability_b
+            );
+        } else {
+            info!(
+                "❌ Capabilities '{}' and '{}' are not compatible",
+                capability_a, capability_b
+            );
+        }
+
+        Ok(compatible)
+    }
+
+    /// Register with ecosystem using core and discovery services
+    pub async fn register_with_ecosystem(
+        &self,
+        ecosystem_id: &str,
+        registration: &EcosystemRegistration,
+    ) -> BearDogResult<()> {
+        info!("📝 Registering with ecosystem: {}", ecosystem_id);
+
+        // Use ecosystem discovery service for registration
+        self.ecosystem_discovery
+            .register_with_ecosystem(ecosystem_id, registration)
+            .await?;
+
+        // Update capability registry with new registration capabilities
+        for capability in &registration.capabilities {
+            let compatible_ids: Vec<String> = registration
+                .capabilities
+                .iter()
+                .map(|c| c.id.clone())
+                .collect();
+
+            self.capability_registry
+                .add_compatibility_rule(capability.id.clone(), compatible_ids)
+                .await;
+        }
+
+        info!(
+            "✅ Successfully registered with ecosystem: {}",
+            ecosystem_id
+        );
+        Ok(())
+    }
 }

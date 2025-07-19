@@ -3,6 +3,8 @@
 //! This module provides comprehensive management capabilities for threat detection
 //! rules, statistics tracking, and system lifecycle operations. It handles rule
 //! creation, updates, deletion, and performance monitoring.
+
+#![allow(clippy::needless_doctest_main)]
 //!
 //! # Features
 //!

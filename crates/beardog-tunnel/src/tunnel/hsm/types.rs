@@ -32,50 +32,45 @@ pub enum HsmType {
     Custom(String),
 }
 
-pub mod tier;
-pub mod key;
-pub mod config;
 pub mod algorithm;
+pub mod config;
+pub mod key;
 pub mod status;
+pub mod tier;
 
 // Re-export commonly used types for convenience
 pub use tier::{
-    HsmTier, SmartphoneType, SecureEnclaveType, StrongBoxImplementation,
-    SoftwareHsmType, KeyStorageType, MemoryProtectionLevel, HsmVendor,
-    CertificationLevel, TamperResistanceLevel, KeyHierarchy, FallbackStrategy,
-    AttestationLevel,
+    AttestationLevel, CertificationLevel, FallbackStrategy, HsmTier, HsmVendor, KeyHierarchy,
+    KeyStorageType, MemoryProtectionLevel, SecureEnclaveType, SmartphoneType, SoftwareHsmType,
+    StrongBoxImplementation, TamperResistanceLevel,
 };
 
 pub use key::{
-    KeyType, KeyMetadata, KeyUsagePolicy, HsmKey, HsmKeyInfo, KeyAttestation,
-    KeyHealthStatus, WarningSeverity, GenerateKeyRequest, KeyMaterial,
-    KeyPerformanceMetrics, HsmOperation,
+    GenerateKeyRequest, HsmKey, HsmKeyInfo, HsmOperation, KeyAttestation, KeyHealthStatus,
+    KeyMaterial, KeyMetadata, KeyPerformanceMetrics, KeyType, KeyUsagePolicy, WarningSeverity,
 };
 
 pub use config::{
-    HsmConfig, HsmTierConfig, SoftwareHsmConfig, HardwareHsmConfig,
-    SmartphoneHsmConfig, IosHsmConfig, AndroidHsmConfig, HybridHsmConfig,
-    SecurityConfig, PerformanceConfig, MonitoringConfig, AlertThresholds,
-    HsmConnectionConfig, ConnectionType, AuthConfig, AuthMethod, AuthCredentials,
-    MfaConfig, HaConfig, ClusterConfig, ClusterNode, FailoverConfig,
-    FailoverStrategy, LoadBalancingStrategy, HealthCheckConfig, KeyRotationPolicy,
-    AuditConfig, AuditLogFormat, AuditLogDestination, AuditEvent,
-    SecureEnclaveConfig, KeychainConfig, KeychainAccessibility, KeystoreConfig,
-    AttestationConfig, KeyStoreConfig, KeySource, FileStorageConfig,
-    DatabaseConfig, MemoryConfig, CryptoBackend,
+    AlertThresholds, AndroidHsmConfig, AttestationConfig, AuditConfig, AuditEvent,
+    AuditLogDestination, AuditLogFormat, AuthConfig, AuthCredentials, AuthMethod, ClusterConfig,
+    ClusterNode, ConnectionType, CryptoBackend, DatabaseConfig, FailoverConfig, FailoverStrategy,
+    FileStorageConfig, HaConfig, HardwareHsmConfig, HealthCheckConfig, HsmConfig,
+    HsmConnectionConfig, HsmTierConfig, HybridHsmConfig, IosHsmConfig, KeyRotationPolicy,
+    KeySource, KeyStoreConfig, KeychainAccessibility, KeychainConfig, KeystoreConfig,
+    LoadBalancingStrategy, MemoryConfig, MfaConfig, MonitoringConfig, PerformanceConfig,
+    SecureEnclaveConfig, SecurityConfig, SmartphoneHsmConfig, SoftwareHsmConfig,
 };
 
 pub use algorithm::{
-    CryptographicAlgorithm, AlgorithmParameters, AlgorithmSpecificParameters,
-    AesMode, RsaPadding, HashAlgorithm, EllipticCurveType, AlgorithmCapability,
-    PerformanceCharacteristics, Algorithm,
+    AesMode, Algorithm, AlgorithmCapability, AlgorithmParameters, AlgorithmSpecificParameters,
+    CryptographicAlgorithm, EllipticCurveType, HashAlgorithm, PerformanceCharacteristics,
+    RsaPadding,
 };
 
 pub use status::{
-    HsmHealthStatus, PerformanceMetrics, HsmOperationalStatus, DegradationSeverity,
-    ResourceUtilization, HsmCapacity, HsmError, ErrorSeverity, ErrorContext,
-    HsmStatistics, ErrorStatistics, HsmAuditLogEntry, AuditEventType,
-    OperationResult, HsmStatusSummary, HsmClusterStatus, HsmNodeStatus,
-    NodeRole, ClusterHealth, LoadBalancingStatus, FailoverStatus, FailoverEvent,
-    HsmInfo, HsmCapability,
-}; 
+    AuditEventType, ClusterHealth, DegradationSeverity, ErrorContext, ErrorSeverity,
+    ErrorStatistics, FailoverEvent, FailoverStatus, HsmAuditLogEntry, HsmCapability, HsmCapacity,
+    HsmClusterStatus, HsmError, HsmHealthStatus, HsmInfo, HsmNodeStatus, HsmOperationalStatus,
+    HsmStatistics, HsmStatusSummary, LoadBalancingStatus, NodeRole, OperationResult,
+    PerformanceMetrics, ResourceUtilization,
+};

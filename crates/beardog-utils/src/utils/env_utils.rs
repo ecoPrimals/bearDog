@@ -130,7 +130,8 @@ impl EnvUtils {
         Ok(SecurityConfig {
             secret_key: Self::get_required("BEARDOG_SECRET_KEY")?,
             encryption_key: Self::get_required("BEARDOG_ENCRYPTION_KEY")?,
-            jwt_expiry: Self::get_duration_secs("BEARDOG_JWT_EXPIRY", 3600),
+            // Decentralized auth token lifetime duration
+            auth_token_lifetime: Self::get_duration_secs("BEARDOG_AUTH_TOKEN_LIFETIME", 3600),
             rate_limit_requests: Self::get_u32("BEARDOG_RATE_LIMIT_REQUESTS", 100),
             rate_limit_window: Self::get_duration_secs("BEARDOG_RATE_LIMIT_WINDOW", 60),
             enable_mfa: Self::get_bool("BEARDOG_ENABLE_MFA", true),
@@ -191,8 +192,8 @@ pub struct SecurityConfig {
     pub secret_key: String,
     /// Encryption key for data encryption
     pub encryption_key: String,
-    /// JWT token expiry duration
-    pub jwt_expiry: Duration,
+    /// Decentralized auth token lifetime duration
+    pub auth_token_lifetime: Duration,
     /// Number of requests allowed per rate limit window
     pub rate_limit_requests: u32,
     /// Time window for rate limiting

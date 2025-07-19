@@ -14,6 +14,60 @@ use std::time::{Duration, Instant, SystemTime};
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
+/// Concrete rate limiter enum to avoid trait object issues with async traits
+#[derive(Clone)]
+pub enum RateLimiterType {
+    TokenBucket(TokenBucketLimiter),
+}
+
+impl Default for RateLimiterType {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl RateLimiterType {
+    /// Create a new rate limiter instance
+    pub fn new() -> Self {
+        RateLimiterType::TokenBucket(TokenBucketLimiter::new())
+    }
+}
+
+#[async_trait]
+impl RateLimiter for RateLimiterType {
+    async fn check_limit(&self, client_id: &str) -> bool {
+        match self {
+            RateLimiterType::TokenBucket(limiter) => limiter.check_limit(client_id).await,
+        }
+    }
+
+    async fn check_endpoint_limit(&self, client_id: &str, endpoint: &str) -> bool {
+        match self {
+            RateLimiterType::TokenBucket(limiter) => {
+                limiter.check_endpoint_limit(client_id, endpoint).await
+            }
+        }
+    }
+
+    async fn get_quota(&self, client_id: &str) -> RateQuota {
+        match self {
+            RateLimiterType::TokenBucket(limiter) => limiter.get_quota(client_id).await,
+        }
+    }
+
+    async fn reset_client(&self, client_id: &str) -> bool {
+        match self {
+            RateLimiterType::TokenBucket(limiter) => limiter.reset_client(client_id).await,
+        }
+    }
+
+    async fn stats(&self) -> RateLimitStats {
+        match self {
+            RateLimiterType::TokenBucket(limiter) => limiter.stats().await,
+        }
+    }
+}
+
 /// Rate limiter trait for different implementations
 #[async_trait]
 pub trait RateLimiter {
@@ -343,13 +397,14 @@ impl ClientState {
 }
 
 /// Token bucket rate limiter implementation
+#[derive(Clone)]
 pub struct TokenBucketLimiter {
-    /// Client states
-    clients: Arc<RwLock<HashMap<String, ClientState>>>,
-    /// Configuration
-    config: RateLimitConfig,
-    /// Statistics
+    /// Per-client token buckets
+    buckets: Arc<RwLock<HashMap<String, ClientState>>>,
+    /// Rate limiting statistics
     stats: Arc<RwLock<RateLimitStats>>,
+    /// Configuration for rate limiting
+    config: RateLimitConfig,
 }
 
 impl Default for TokenBucketLimiter {
@@ -379,20 +434,20 @@ impl TokenBucketLimiter {
         );
 
         Self {
-            clients: Arc::new(RwLock::new(HashMap::new())),
-            config,
+            buckets: Arc::new(RwLock::new(HashMap::new())),
             stats: Arc::new(RwLock::new(RateLimitStats {
                 total_requests: 0,
                 blocked_requests: 0,
                 active_clients: 0,
                 block_rate: 0.0,
             })),
+            config,
         }
     }
 
     /// Get or create client state
     async fn get_or_create_client(&self, client_id: &str) -> ClientState {
-        let clients = self.clients.write().await;
+        let clients = self.buckets.write().await;
 
         clients
             .get(client_id)
@@ -402,7 +457,7 @@ impl TokenBucketLimiter {
 
     /// Cleanup inactive clients periodically
     pub async fn cleanup_inactive_clients(&self) {
-        let mut clients = self.clients.write().await;
+        let mut clients = self.buckets.write().await;
         let initial_count = clients.len();
 
         // Remove clients that haven't been active for 1 hour
@@ -430,7 +485,7 @@ impl RateLimiter for TokenBucketLimiter {
     }
 
     async fn check_endpoint_limit(&self, client_id: &str, endpoint: &str) -> bool {
-        let mut clients = self.clients.write().await;
+        let mut clients = self.buckets.write().await;
         let mut stats = self.stats.write().await;
 
         stats.total_requests += 1;
@@ -482,7 +537,7 @@ impl RateLimiter for TokenBucketLimiter {
     }
 
     async fn get_quota(&self, client_id: &str) -> RateQuota {
-        let mut clients = self.clients.write().await;
+        let mut clients = self.buckets.write().await;
 
         if let Some(client_state) = clients.get_mut(client_id) {
             let remaining = client_state.general_bucket.remaining();
@@ -506,7 +561,7 @@ impl RateLimiter for TokenBucketLimiter {
     }
 
     async fn reset_client(&self, client_id: &str) -> bool {
-        let mut clients = self.clients.write().await;
+        let mut clients = self.buckets.write().await;
         let removed = clients.remove(client_id).is_some();
 
         if removed {

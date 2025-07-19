@@ -2,51 +2,112 @@
 //!
 //! Provides validation and manipulation of BearDog configuration files.
 
+use beardog_config::core::BearDogResult;
 use beardog_config::BearDogConfig;
-use beardog_errors::{BearDogError, BearDogResult};
+
 use std::fs;
 use std::path::Path;
 
-/// Validate a configuration file
-pub fn validate_config_file(path: &str) -> bool {
-    let path = Path::new(path);
+/// Configuration loading utilities
+pub struct ConfigLoader;
 
-    // Check if file exists
-    if !path.exists() {
-        return false;
+impl ConfigLoader {
+    /// Load configuration from a file
+    pub fn load_from_file<P: AsRef<Path>>(path: P) -> BearDogResult<BearDogConfig> {
+        let path = path.as_ref();
+        let content = fs::read_to_string(path)?;
+
+        let config: BearDogConfig = toml::from_str(&content)?;
+
+        Ok(config)
     }
 
-    // Check if file is readable
-    if !path.is_file() {
-        return false;
-    }
+    /// Load configuration from multiple possible locations
+    pub fn load_with_fallback(primary: &str, fallbacks: &[&str]) -> BearDogResult<BearDogConfig> {
+        if let Ok(config) = Self::load_from_file(primary) {
+            return Ok(config);
+        }
 
-    // Try to read and parse the configuration
-    match fs::read_to_string(path) {
-        Ok(content) => {
-            // Try to parse as TOML
-            match toml::from_str::<BearDogConfig>(&content) {
-                Ok(config) => {
-                    // Validate the parsed configuration
-                    config.validate().is_ok()
-                }
-                Err(_) => false,
+        for fallback in fallbacks {
+            if let Ok(config) = Self::load_from_file(fallback) {
+                return Ok(config);
             }
         }
-        Err(_) => false,
+
+        Err(anyhow::anyhow!("No valid configuration file found"))
+    }
+
+    /// Save configuration to a file
+    pub fn save_to_file<P: AsRef<Path>>(config: &BearDogConfig, path: P) -> BearDogResult<()> {
+        let content = toml::to_string_pretty(config)?;
+
+        fs::write(path, content)?;
+        Ok(())
     }
 }
 
-/// Load and validate configuration from file
+/// Load configuration from a file
 pub fn load_config_file(path: &str) -> BearDogResult<BearDogConfig> {
-    let content = fs::read_to_string(path)
-        .map_err(|e| BearDogError::config(format!("Failed to read config file '{path}': {e}")))?;
+    let config = ConfigLoader::load_from_file(path)?;
 
-    let config: BearDogConfig = toml::from_str(&content)
-        .map_err(|e| BearDogError::config(format!("Failed to parse config file '{path}': {e}")))?;
+    // Validate the configuration
+    config
+        .validate()
+        .map_err(|e| anyhow::anyhow!("Configuration validation failed: {}", e))?;
 
-    config.validate()?;
     Ok(config)
+}
+
+/// Validate a configuration file
+pub fn validate_config_file(path: &str) -> bool {
+    load_config_file(path).is_ok()
+}
+
+/// Get configuration file paths to search
+pub fn get_config_paths() -> Vec<String> {
+    vec![
+        "./beardog.toml".to_string(),
+        "./config/beardog.toml".to_string(),
+        "/etc/beardog/beardog.toml".to_string(),
+    ]
+}
+
+/// Automatically find and load configuration
+pub fn auto_load_config() -> BearDogResult<BearDogConfig> {
+    let paths = get_config_paths();
+
+    for path in &paths {
+        if Path::new(path).exists() {
+            return load_config_file(path);
+        }
+    }
+
+    Err(anyhow::anyhow!(
+        "No configuration file found in standard locations"
+    ))
+}
+
+/// Configuration utilities
+#[allow(clippy::module_inception)]
+pub mod config_utils {
+    use super::*;
+
+    /// Find configuration file in standard locations
+    pub fn find_config_file() -> Option<String> {
+        let paths = get_config_paths();
+
+        paths
+            .iter()
+            .find(|path| validate_config_file(path))
+            .cloned()
+    }
+
+    /// Merge configurations (base + override)
+    pub fn merge_configs(_base: &BearDogConfig, override_config: &BearDogConfig) -> BearDogConfig {
+        // For now, just return the override config
+        // In a full implementation, this would merge the configurations
+        override_config.clone()
+    }
 }
 
 /// Check if a configuration file has required permissions (Unix only)
@@ -56,14 +117,14 @@ pub fn check_config_permissions(path: &str) -> BearDogResult<bool> {
 
     let path = Path::new(path);
     if !path.exists() {
-        return Err(BearDogError::not_found(format!(
+        return Err(anyhow::anyhow!(
             "Config file not found: {}",
             path.to_string_lossy()
-        )));
+        ));
     }
 
-    let metadata = fs::metadata(path)
-        .map_err(|e| BearDogError::config(format!("Failed to read file metadata: {e}")))?;
+    let metadata =
+        fs::metadata(path).map_err(|e| anyhow::anyhow!("Failed to read file metadata: {}", e))?;
 
     let permissions = metadata.permissions();
     let mode = permissions.mode();
@@ -82,67 +143,49 @@ pub fn check_config_permissions(path: &str) -> BearDogResult<bool> {
 pub fn check_config_permissions(path: &str) -> BearDogResult<bool> {
     let path = Path::new(path);
     if !path.exists() {
-        return Err(BearDogError::not_found(
-            "config file",
-            path.to_string_lossy(),
-        ));
+        return Err(anyhow::anyhow!("Config file not found: {}"));
     }
 
     // On Windows, just check if file is readable
-    fs::File::open(path)
-        .map(|_| true)
-        .map_err(|e| BearDogError::config(format!("Cannot read config file: {}", e)))
+    let _content =
+        fs::read_to_string(path).map_err(|e| anyhow::anyhow!("Cannot read config file: {}", e))?;
+
+    Ok(true)
 }
 
-/// Create a default configuration file with secure permissions
+/// Create a default configuration file
 pub fn create_default_config(path: &str) -> BearDogResult<()> {
-    let config = BearDogConfig::default();
-    let toml_content = toml::to_string_pretty(&config)
-        .map_err(|e| BearDogError::config(format!("Failed to serialize default config: {e}")))?;
+    let default_config = BearDogConfig::default();
+    let content = toml::to_string_pretty(&default_config)
+        .map_err(|e| anyhow::anyhow!("Failed to serialize default config: {}", e))?;
 
-    // Write the file
-    fs::write(path, toml_content)
-        .map_err(|e| BearDogError::config(format!("Failed to write config file: {e}")))?;
+    fs::write(path, content).map_err(|e| anyhow::anyhow!("Failed to write config file: {}", e))?;
 
-    // Set secure permissions (Unix only)
+    // Set proper permissions on Unix systems
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
         let mut perms = fs::metadata(path)?.permissions();
         perms.set_mode(0o600); // Owner read/write only
         fs::set_permissions(path, perms)
-            .map_err(|e| BearDogError::config(format!("Failed to set file permissions: {e}")))?;
+            .map_err(|e| anyhow::anyhow!("Failed to set file permissions: {}", e))?;
     }
 
     Ok(())
 }
 
-/// Backup a configuration file
-pub fn backup_config(path: &str) -> BearDogResult<String> {
-    let source_path = Path::new(path);
-    if !source_path.exists() {
-        return Err(BearDogError::not_found(format!(
-            "Config file not found: {path}"
-        )));
+/// Create a backup of a configuration file
+pub fn backup_config_file(path: &str) -> BearDogResult<String> {
+    let path = Path::new(path);
+    if !path.exists() {
+        return Err(anyhow::anyhow!("Config file not found: {}", path.display()));
     }
 
-    let backup_path = format!(
-        "{}.backup.{}",
-        path,
-        chrono::Utc::now().format("%Y%m%d_%H%M%S")
-    );
-
-    fs::copy(source_path, &backup_path)
-        .map_err(|e| BearDogError::config(format!("Failed to backup config file: {e}")))?;
+    let backup_path = format!("{}.backup", path.to_string_lossy());
+    fs::copy(path, &backup_path)
+        .map_err(|e| anyhow::anyhow!("Failed to backup config file: {}", e))?;
 
     Ok(backup_path)
-}
-
-/// Merge two configurations (second config overrides first)
-pub fn merge_configs(_base: BearDogConfig, override_config: BearDogConfig) -> BearDogConfig {
-    // For now, just return the override config
-    // In a more sophisticated implementation, you would merge individual fields
-    override_config
 }
 
 /// Validate configuration environment variables
@@ -178,45 +221,6 @@ pub fn validate_env_vars() -> Vec<String> {
     }
 
     errors
-}
-
-/// Get configuration search paths in order of priority
-pub fn get_config_search_paths() -> Vec<String> {
-    let mut paths = Vec::new();
-
-    // 1. Current directory
-    paths.push("./beardog.toml".to_string());
-    paths.push("./config.toml".to_string());
-
-    // 2. User config directory
-    if let Some(home) = std::env::var_os("HOME") {
-        let home_path = Path::new(&home);
-        paths.push(
-            home_path
-                .join(".config/beardog/config.toml")
-                .to_string_lossy()
-                .to_string(),
-        );
-        paths.push(
-            home_path
-                .join(".beardog.toml")
-                .to_string_lossy()
-                .to_string(),
-        );
-    }
-
-    // 3. System config directories
-    paths.push("/etc/beardog/config.toml".to_string());
-    paths.push("/usr/local/etc/beardog/config.toml".to_string());
-
-    paths
-}
-
-/// Find the first valid configuration file in search paths
-pub fn find_config_file() -> Option<String> {
-    get_config_search_paths()
-        .into_iter()
-        .find(|path| validate_config_file(path))
 }
 
 #[cfg(test)]

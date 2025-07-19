@@ -1,7 +1,10 @@
+use beardog_config::network::RetryConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::tier::{CertificationLevel, KeyStorageType, MemoryProtectionLevel, StrongBoxImplementation};
+use super::tier::{
+    CertificationLevel, KeyStorageType, MemoryProtectionLevel, StrongBoxImplementation,
+};
 
 /// HSM configuration structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -137,7 +140,7 @@ pub struct HybridHsmConfig {
 }
 
 /// Security configuration for HSM
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityConfig {
     /// Minimum security level required
     pub min_security_level: u32,
@@ -149,32 +152,30 @@ pub struct SecurityConfig {
     pub audit_config: AuditConfig,
 }
 
-/// Performance configuration for HSM
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Performance configuration for HSM operations
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PerformanceConfig {
+    /// Maximum operation timeout in milliseconds
+    pub max_operation_timeout: u64,
     /// Maximum concurrent operations
     pub max_concurrent_operations: u32,
-    /// Operation timeout in milliseconds
-    pub operation_timeout_ms: u64,
     /// Connection pool size
     pub connection_pool_size: u32,
-    /// Enable performance monitoring
-    pub enable_performance_monitoring: bool,
+    /// Retry configuration
+    pub retry_config: RetryConfig,
 }
 
-/// Monitoring configuration for HSM
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Monitoring configuration for HSM operations
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MonitoringConfig {
-    /// Enable health monitoring
-    pub enable_health_monitoring: bool,
-    /// Health check interval in seconds
-    pub health_check_interval_seconds: u64,
-    /// Enable performance metrics
-    pub enable_performance_metrics: bool,
+    /// Enable metrics collection
+    pub enable_metrics: bool,
     /// Metrics collection interval in seconds
-    pub metrics_interval_seconds: u64,
-    /// Alert thresholds
-    pub alert_thresholds: AlertThresholds,
+    pub metrics_interval: u64,
+    /// Enable health checks
+    pub enable_health_checks: bool,
+    /// Health check interval in seconds
+    pub health_check_interval: u64,
 }
 
 /// Alert thresholds for HSM monitoring
@@ -385,7 +386,7 @@ pub struct HealthCheckConfig {
 }
 
 /// Key rotation policy
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct KeyRotationPolicy {
     /// Enable automatic key rotation
     pub enable_auto_rotation: bool,
@@ -398,7 +399,7 @@ pub struct KeyRotationPolicy {
 }
 
 /// Audit configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuditConfig {
     /// Enable audit logging
     pub enable_audit_logging: bool,
@@ -411,9 +412,10 @@ pub struct AuditConfig {
 }
 
 /// Audit log formats
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum AuditLogFormat {
     /// JSON format
+    #[default]
     Json,
     /// CEF (Common Event Format)
     Cef,
@@ -424,10 +426,11 @@ pub enum AuditLogFormat {
 }
 
 /// Audit log destinations
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum AuditLogDestination {
     /// Local file
-    File(String),
+    #[default]
+    File,
     /// Syslog server
     Syslog {
         /// Syslog server address
@@ -445,9 +448,10 @@ pub enum AuditLogDestination {
 }
 
 /// Audit events
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum AuditEvent {
     /// Key generation events
+    #[default]
     KeyGeneration,
     /// Key usage events
     KeyUsage,
@@ -514,20 +518,13 @@ pub struct KeystoreConfig {
 /// Attestation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AttestationConfig {
-    /// Enable key attestation
-    pub enable_key_attestation: bool,
-    /// Attestation challenge
-    pub attestation_challenge: Vec<u8>,
-    /// Include application identifier in attestation
-    pub include_app_id: bool,
-    /// Enable/disable attestation (legacy field for compatibility)
     pub enabled: bool,
-    /// Require hardware-backed attestation
     pub require_hardware_backed: bool,
-    /// List of trusted certificates for verification
     pub trusted_certificates: Vec<String>,
-    /// Challenge length for attestation
     pub challenge_length: usize,
+    pub attestation_challenge: Option<Vec<u8>>,
+    pub enable_key_attestation: bool,
+    pub include_app_id: bool,
 }
 
 /// Key storage configuration
@@ -585,7 +582,7 @@ pub struct DatabaseConfig {
 }
 
 /// Crypto backend types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CryptoBackend {
     /// OpenSSL backend
     OpenSsl,
@@ -603,13 +600,13 @@ pub enum CryptoBackend {
 impl Default for AttestationConfig {
     fn default() -> Self {
         Self {
-            enable_key_attestation: false,
-            attestation_challenge: Vec::new(),
-            include_app_id: true,
             enabled: false,
             require_hardware_backed: false,
             trusted_certificates: Vec::new(),
             challenge_length: 0,
+            attestation_challenge: None,
+            enable_key_attestation: false,
+            include_app_id: true,
         }
     }
 }
@@ -678,4 +675,4 @@ impl Default for KeystoreConfig {
             require_strongbox: false,
         }
     }
-} 
+}

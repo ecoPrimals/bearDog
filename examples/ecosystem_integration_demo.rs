@@ -18,9 +18,8 @@ use uuid::Uuid;
 use beardog::{
     adapters::universal::traits::PrimalProvider,
     core::ecosystem_integration::{
-        BearDogEcosystemProvider, EcosystemIntegration, EcosystemRequest,
-        HealthStatus, HealthStatusType, ResourceUsage, SecurityContext,
-        SecurityLevel,
+        BearDogEcosystemProvider, EcosystemIntegration, EcosystemRequest, HealthStatus,
+        HealthStatusType, ResourceUsage, SecurityContext, SecurityLevel,
     },
     BearDogConfig, BearDogCore, BearDogResult,
 };

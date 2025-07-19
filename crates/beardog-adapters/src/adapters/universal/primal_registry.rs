@@ -10,8 +10,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use beardog_errors::BearDogResult;
 use super::traits::PrimalProvider;
+use beardog_errors::BearDogResult;
 
 /// Universal primal identifier - replaces hardcoded enum
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -124,13 +124,10 @@ impl UniversalPrimalRegistry {
     }
 
     /// Register a provider instance
-    pub async fn register_provider(
-        &self,
-        provider: Arc<dyn PrimalProvider>,
-    ) -> BearDogResult<()> {
+    pub async fn register_provider(&self, provider: Arc<dyn PrimalProvider>) -> BearDogResult<()> {
         let ecosystem_id = provider.ecosystem_id().to_string();
         let instance_id = provider.instance_id().to_string();
-        let key = format!("{}:{}", ecosystem_id, instance_id);
+        let key = format!("{ecosystem_id}:{instance_id}");
 
         let mut providers = self.providers.write().await;
         providers.insert(key, provider);
@@ -150,7 +147,7 @@ impl UniversalPrimalRegistry {
         ecosystem_id: &str,
         instance_id: &str,
     ) -> BearDogResult<Option<Arc<dyn PrimalProvider>>> {
-        let key = format!("{}:{}", ecosystem_id, instance_id);
+        let key = format!("{ecosystem_id}:{instance_id}");
         let providers = self.providers.read().await;
         Ok(providers.get(&key).cloned())
     }
@@ -180,7 +177,7 @@ impl UniversalPrimalRegistry {
         ecosystem_id: &str,
         instance_id: &str,
     ) -> BearDogResult<()> {
-        let key = format!("{}:{}", ecosystem_id, instance_id);
+        let key = format!("{ecosystem_id}:{instance_id}");
         let mut providers = self.providers.write().await;
         providers.remove(&key);
         Ok(())
@@ -203,13 +200,15 @@ impl Default for UniversalPrimalRegistry {
 }
 
 /// Global registry instance
-static GLOBAL_REGISTRY: tokio::sync::OnceCell<Arc<UniversalPrimalRegistry>> = tokio::sync::OnceCell::const_new();
+static GLOBAL_REGISTRY: tokio::sync::OnceCell<Arc<UniversalPrimalRegistry>> =
+    tokio::sync::OnceCell::const_new();
 
 /// Get the global primal registry
 pub async fn global_registry() -> Arc<UniversalPrimalRegistry> {
-    GLOBAL_REGISTRY.get_or_init(|| async {
-        Arc::new(UniversalPrimalRegistry::new())
-    }).await.clone()
+    GLOBAL_REGISTRY
+        .get_or_init(|| async { Arc::new(UniversalPrimalRegistry::new()) })
+        .await
+        .clone()
 }
 
 /// Register a primal type in the global registry
@@ -219,7 +218,9 @@ pub async fn register_primal_type(
     metadata: HashMap<String, String>,
 ) -> BearDogResult<()> {
     let registry = global_registry().await;
-    registry.register_primal(id, discovery_endpoint, metadata).await
+    registry
+        .register_primal(id, discovery_endpoint, metadata)
+        .await
 }
 
 /// Register a provider in the global registry
@@ -241,14 +242,16 @@ mod tests {
     #[tokio::test]
     async fn test_universal_primal_registry() {
         let registry = UniversalPrimalRegistry::new();
-        
+
         // Test primal registration
         let custom_primal = PrimalId::new("custom-ai", "CustomAI", "0.1.0");
-        let result = registry.register_primal(
-            custom_primal.clone(),
-            "https://custom-ai.example.com".to_string(),
-            HashMap::new(),
-        ).await;
+        let result = registry
+            .register_primal(
+                custom_primal.clone(),
+                "https://custom-ai.example.com".to_string(),
+                HashMap::new(),
+            )
+            .await;
         assert!(result.is_ok());
 
         // Test discovery
@@ -274,4 +277,4 @@ mod tests {
         assert_eq!(custom.name, "my-custom-primal");
         assert_eq!(custom.version, "1.0.0");
     }
-} 
+}

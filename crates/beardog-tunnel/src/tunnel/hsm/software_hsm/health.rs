@@ -4,11 +4,16 @@
 //! It tracks system status, performance metrics, and provides health assessments.
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
+use beardog_errors::{BearDogError, BearDogResult};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
+
+/// Type alias for complex health test future
+type HealthTestFuture<'a> = std::pin::Pin<
+    Box<dyn std::future::Future<Output = BearDogResult<Option<Vec<u8>>>> + Send + 'a>,
+>;
 
 impl SoftwareHealthMonitor {
     /// Create a new software health monitor
@@ -135,17 +140,19 @@ impl SoftwareHealthMonitor {
     /// Check key store health
     async fn check_keystore_health(&self) -> BearDogResult<()> {
         debug!("Checking key store health");
-        
+
         // Check if key store is accessible
         let key_store = self.get_key_store().await?;
-        
+
         // Test key store operations
         let test_key_id = "health_check_test_key";
-        
+
         // Try to generate a test key
         let test_key_material = vec![0u8; 32];
-        key_store.store_key(test_key_id, &test_key_material, &KeyType::Aes256).await?;
-        
+        key_store
+            .store_key(test_key_id, &test_key_material, &KeyType::Aes256)
+            .await?;
+
         // Try to retrieve the test key
         let retrieved_key = key_store.get_key(test_key_id).await?;
         if retrieved_key.is_none() {
@@ -153,10 +160,10 @@ impl SoftwareHealthMonitor {
                 message: "Key store failed to retrieve test key".to_string(),
             });
         }
-        
+
         // Clean up test key
         key_store.delete_key(test_key_id).await?;
-        
+
         info!("Key store health check passed");
         Ok(())
     }
@@ -164,34 +171,34 @@ impl SoftwareHealthMonitor {
     /// Check crypto provider health
     async fn check_crypto_provider_health(&self) -> BearDogResult<()> {
         debug!("Checking crypto provider health");
-        
+
         // Test encryption/decryption functionality
         let test_data = b"health_check_test_data";
         let test_key = vec![0u8; 32]; // Test key
-        
+
         // Test encryption
         let encrypted = self.encrypt_data(&test_key, test_data).await?;
-        
+
         // Test decryption
         let decrypted = self.decrypt_data(&test_key, &encrypted).await?;
-        
+
         // Verify data integrity
         if decrypted != test_data {
             return Err(BearDogError::Hsm {
                 message: "Crypto provider failed data integrity check".to_string(),
             });
         }
-        
+
         // Test key derivation
         let derivation_data = b"test_derivation_context";
         let derived_key = self.derive_key(&test_key, derivation_data).await?;
-        
+
         if derived_key.len() != 32 {
             return Err(BearDogError::Hsm {
                 message: "Crypto provider failed key derivation check".to_string(),
             });
         }
-        
+
         info!("Crypto provider health check passed");
         Ok(())
     }
@@ -199,24 +206,27 @@ impl SoftwareHealthMonitor {
     /// Check memory protector health
     async fn check_memory_protector_health(&self) -> BearDogResult<()> {
         debug!("Checking memory protector health");
-        
+
         // Check if memory protection is active
         let memory_protector = self.get_memory_protector().await?;
-        
+
         // Test memory protection capabilities
         let test_sensitive_data = b"sensitive_test_data";
         let protected_memory = memory_protector.protect_memory(test_sensitive_data).await?;
-        
+
         // Verify protection is active
         if !protected_memory.is_protected() {
             return Err(BearDogError::Hsm {
                 message: "Memory protector failed to protect sensitive data".to_string(),
             });
         }
-        
+
+        // Log protected memory details
+        debug!("Protected memory ID: {}", protected_memory.get_id());
+
         // Test memory clearing
         memory_protector.clear_memory(&protected_memory).await?;
-        
+
         info!("Memory protector health check passed");
         Ok(())
     }
@@ -224,7 +234,7 @@ impl SoftwareHealthMonitor {
     /// Check audit logger health
     async fn check_audit_logger_health(&self) -> BearDogResult<()> {
         debug!("Checking audit logger health");
-        
+
         // Test audit logging functionality
         let test_entry = AuditLogEntry::new(
             "health_check".to_string(),
@@ -233,21 +243,48 @@ impl SoftwareHealthMonitor {
             "success".to_string(),
             std::collections::HashMap::new(),
         );
-        
+
         // Test logging
-        self.get_audit_logger().await?.log_operation(&test_entry).await?;
-        
+        self.get_audit_logger()
+            .await?
+            .log_operation(&test_entry)
+            .await?;
+
+        // Test audit entry fields
+        debug!(
+            "Audit entry - Operation: {}, Key ID: {:?}, User ID: {:?}, Result: {}",
+            test_entry.get_operation(),
+            test_entry.get_key_id(),
+            test_entry.get_user_id(),
+            test_entry.get_result()
+        );
+        debug!("Audit entry timestamp: {:?}", test_entry.get_timestamp());
+        debug!("Audit entry details: {:?}", test_entry.get_details());
+
         // Test log retrieval
         let filter = AuditLogFilter {
             operation: Some("health_check".to_string()),
             ..Default::default()
         };
-        
-        let logs = self.get_audit_logger().await?.get_audit_log(&filter).await?;
-        
+
+        // Test filter fields
+        debug!(
+            "Filter - Operation: {:?}, Key ID: {:?}, User ID: {:?}, Result: {:?}",
+            filter.get_operation(),
+            filter.get_key_id(),
+            filter.get_user_id(),
+            filter.get_result()
+        );
+
+        let _logs = self
+            .get_audit_logger()
+            .await?
+            .get_audit_log(&filter)
+            .await?;
+
         // Verify log was written (in a real implementation)
         // For now, just check that the operation completed without error
-        
+
         info!("Audit logger health check passed");
         Ok(())
     }
@@ -255,15 +292,29 @@ impl SoftwareHealthMonitor {
     /// Check system resources
     async fn check_system_resources(&self) -> BearDogResult<()> {
         debug!("Checking system resource health");
-        
+
         // Check available memory
         let memory_info = self.get_memory_info().await?;
-        if memory_info.available_bytes < 1024 * 1024 { // Less than 1MB
+        if memory_info.available_bytes < 1024 * 1024 {
+            // Less than 1MB
             return Err(BearDogError::Hsm {
                 message: "Insufficient memory available".to_string(),
             });
         }
-        
+
+        // Check memory usage percentage
+        let usage_percentage = memory_info.usage_percentage();
+        if usage_percentage > 90.0 {
+            debug!("High memory usage detected: {:.1}%", usage_percentage);
+        }
+
+        // Log memory statistics
+        debug!(
+            "Memory stats - Total: {} bytes, Used: {} bytes",
+            memory_info.get_total_bytes(),
+            memory_info.get_used_bytes()
+        );
+
         // Check CPU usage
         let cpu_usage = self.get_cpu_usage().await?;
         if cpu_usage > 95.0 {
@@ -271,15 +322,29 @@ impl SoftwareHealthMonitor {
                 message: "CPU usage too high".to_string(),
             });
         }
-        
+
         // Check disk space
         let disk_info = self.get_disk_info().await?;
-        if disk_info.available_bytes < 10 * 1024 * 1024 { // Less than 10MB
+        if disk_info.available_bytes < 10 * 1024 * 1024 {
+            // Less than 10MB
             return Err(BearDogError::Hsm {
                 message: "Insufficient disk space available".to_string(),
             });
         }
-        
+
+        // Check disk usage percentage
+        let disk_usage_percentage = disk_info.usage_percentage();
+        if disk_usage_percentage > 95.0 {
+            debug!("High disk usage detected: {:.1}%", disk_usage_percentage);
+        }
+
+        // Log disk statistics
+        debug!(
+            "Disk stats - Total: {} bytes, Used: {} bytes",
+            disk_info.get_total_bytes(),
+            disk_info.get_used_bytes()
+        );
+
         info!("System resources health check passed");
         Ok(())
     }
@@ -295,51 +360,72 @@ impl SoftwareHealthMonitor {
 
     async fn encrypt_data(&self, key: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
         // Basic AES-256-GCM encryption for testing
-        use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
-        
-        let cipher = Aes256Gcm::new_from_slice(key)
+        use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
+        use rand::RngCore;
+
+        let cipher = Aes256Gcm::new_from_slice(key).map_err(|e| BearDogError::Crypto {
+            message: format!("Failed to create cipher: {e}"),
+        })?;
+
+        // Generate secure random nonce
+        let mut nonce_bytes = [0u8; 12];
+        rand::thread_rng().fill_bytes(&mut nonce_bytes);
+        let nonce = Nonce::from_slice(&nonce_bytes);
+
+        let ciphertext = cipher
+            .encrypt(nonce, data)
             .map_err(|e| BearDogError::Crypto {
-                message: format!("Failed to create cipher: {}", e),
+                message: format!("Encryption failed: {e}"),
             })?;
-        
-        let nonce = Nonce::from_slice(b"unique nonce"); // In real implementation, use random nonce
-        
-        cipher.encrypt(nonce, data)
-            .map_err(|e| BearDogError::Crypto {
-                message: format!("Encryption failed: {}", e),
-            })
+
+        // Prepend nonce to ciphertext for decryption
+        let mut result = nonce_bytes.to_vec();
+        result.extend_from_slice(&ciphertext);
+        Ok(result)
     }
 
     async fn decrypt_data(&self, key: &[u8], encrypted_data: &[u8]) -> BearDogResult<Vec<u8>> {
         // Basic AES-256-GCM decryption for testing
-        use aes_gcm::{Aes256Gcm, KeyInit, Nonce, aead::Aead};
-        
-        let cipher = Aes256Gcm::new_from_slice(key)
+        use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
+
+        if encrypted_data.len() < 12 {
+            return Err(BearDogError::Crypto {
+                message: "Encrypted data too short to contain nonce".to_string(),
+            });
+        }
+
+        let cipher = Aes256Gcm::new_from_slice(key).map_err(|e| BearDogError::Crypto {
+            message: format!("Failed to create cipher: {e}"),
+        })?;
+
+        // Extract nonce and ciphertext
+        let (nonce_bytes, ciphertext) = encrypted_data.split_at(12);
+        let nonce = Nonce::from_slice(nonce_bytes);
+
+        cipher
+            .decrypt(nonce, ciphertext)
             .map_err(|e| BearDogError::Crypto {
-                message: format!("Failed to create cipher: {}", e),
-            })?;
-        
-        let nonce = Nonce::from_slice(b"unique nonce"); // Must match encryption nonce
-        
-        cipher.decrypt(nonce, encrypted_data)
-            .map_err(|e| BearDogError::Crypto {
-                message: format!("Decryption failed: {}", e),
+                message: format!("Decryption failed: {e}"),
             })
     }
 
-    async fn derive_key(&self, master_key: &[u8], derivation_data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn derive_key(
+        &self,
+        master_key: &[u8],
+        derivation_data: &[u8],
+    ) -> BearDogResult<Vec<u8>> {
         // Use HKDF for key derivation
-        use sha2::Sha256;
         use hkdf::Hkdf;
-        
+        use sha2::Sha256;
+
         let hkdf = Hkdf::<Sha256>::new(None, master_key);
         let mut derived_key = vec![0u8; 32];
-        
+
         hkdf.expand(derivation_data, &mut derived_key)
             .map_err(|e| BearDogError::Crypto {
-                message: format!("Key derivation failed: {}", e),
+                message: format!("Key derivation failed: {e}"),
             })?;
-        
+
         Ok(derived_key)
     }
 
@@ -360,9 +446,9 @@ impl SoftwareHealthMonitor {
     async fn get_memory_info(&self) -> BearDogResult<MemoryInfo> {
         // Basic memory info implementation
         Ok(MemoryInfo {
-            total_bytes: 8 * 1024 * 1024 * 1024, // 8GB
+            total_bytes: 8 * 1024 * 1024 * 1024,     // 8GB
             available_bytes: 4 * 1024 * 1024 * 1024, // 4GB
-            used_bytes: 4 * 1024 * 1024 * 1024, // 4GB
+            used_bytes: 4 * 1024 * 1024 * 1024,      // 4GB
         })
     }
 
@@ -374,28 +460,52 @@ impl SoftwareHealthMonitor {
     async fn get_disk_info(&self) -> BearDogResult<DiskInfo> {
         // Basic disk info implementation
         Ok(DiskInfo {
-            total_bytes: 1024 * 1024 * 1024 * 1024, // 1TB
+            total_bytes: 1024 * 1024 * 1024 * 1024,    // 1TB
             available_bytes: 512 * 1024 * 1024 * 1024, // 512GB
-            used_bytes: 512 * 1024 * 1024 * 1024, // 512GB
+            used_bytes: 512 * 1024 * 1024 * 1024,      // 512GB
         })
     }
 }
 
 // Helper traits and types for health checking
 trait KeyStore: Send + Sync {
-    fn store_key(&self, key_id: &str, key_material: &[u8], key_type: &KeyType) -> impl std::future::Future<Output = BearDogResult<()>> + Send;
-    fn get_key(&self, key_id: &str) -> impl std::future::Future<Output = BearDogResult<Option<Vec<u8>>>> + Send;
-    fn delete_key(&self, key_id: &str) -> impl std::future::Future<Output = BearDogResult<()>> + Send;
+    fn store_key(
+        &self,
+        key_id: &str,
+        key_material: &[u8],
+        key_type: &KeyType,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<()>> + Send + '_>>;
+    fn get_key(&self, key_id: &str) -> HealthTestFuture<'_>;
+    fn delete_key(
+        &self,
+        key_id: &str,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<()>> + Send + '_>>;
 }
 
 trait MemoryProtector: Send + Sync {
-    fn protect_memory(&self, data: &[u8]) -> impl std::future::Future<Output = BearDogResult<ProtectedMemory>> + Send;
-    fn clear_memory(&self, protected: &ProtectedMemory) -> impl std::future::Future<Output = BearDogResult<()>> + Send;
+    fn protect_memory(
+        &self,
+        data: &[u8],
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = BearDogResult<ProtectedMemory>> + Send + '_>,
+    >;
+    fn clear_memory(
+        &self,
+        protected: &ProtectedMemory,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<()>> + Send + '_>>;
 }
 
 trait AuditLogger: Send + Sync {
-    fn log_operation(&self, entry: &AuditLogEntry) -> impl std::future::Future<Output = BearDogResult<()>> + Send;
-    fn get_audit_log(&self, filter: &AuditLogFilter) -> impl std::future::Future<Output = BearDogResult<Vec<AuditLogEntry>>> + Send;
+    fn log_operation(
+        &self,
+        entry: &AuditLogEntry,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<()>> + Send + '_>>;
+    fn get_audit_log(
+        &self,
+        filter: &AuditLogFilter,
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = BearDogResult<Vec<AuditLogEntry>>> + Send + '_>,
+    >;
 }
 
 #[derive(Debug, Clone)]
@@ -408,6 +518,11 @@ impl ProtectedMemory {
     fn is_protected(&self) -> bool {
         self.protected
     }
+
+    /// Get the protected memory ID
+    pub fn get_id(&self) -> &str {
+        &self.id
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -417,11 +532,53 @@ struct MemoryInfo {
     used_bytes: u64,
 }
 
+impl MemoryInfo {
+    /// Get total memory in bytes
+    pub fn get_total_bytes(&self) -> u64 {
+        self.total_bytes
+    }
+
+    /// Get used memory in bytes
+    pub fn get_used_bytes(&self) -> u64 {
+        self.used_bytes
+    }
+
+    /// Calculate memory usage percentage
+    pub fn usage_percentage(&self) -> f64 {
+        if self.total_bytes == 0 {
+            0.0
+        } else {
+            (self.used_bytes as f64 / self.total_bytes as f64) * 100.0
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct DiskInfo {
     total_bytes: u64,
     available_bytes: u64,
     used_bytes: u64,
+}
+
+impl DiskInfo {
+    /// Get total disk space in bytes
+    pub fn get_total_bytes(&self) -> u64 {
+        self.total_bytes
+    }
+
+    /// Get used disk space in bytes
+    pub fn get_used_bytes(&self) -> u64 {
+        self.used_bytes
+    }
+
+    /// Calculate disk usage percentage
+    pub fn usage_percentage(&self) -> f64 {
+        if self.total_bytes == 0 {
+            0.0
+        } else {
+            (self.used_bytes as f64 / self.total_bytes as f64) * 100.0
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -432,6 +589,38 @@ struct AuditLogEntry {
     result: String,
     details: std::collections::HashMap<String, String>,
     timestamp: chrono::DateTime<chrono::Utc>,
+}
+
+impl AuditLogEntry {
+    /// Get the operation name
+    pub fn get_operation(&self) -> &str {
+        &self.operation
+    }
+
+    /// Get the key ID if present
+    pub fn get_key_id(&self) -> Option<&str> {
+        self.key_id.as_deref()
+    }
+
+    /// Get the user ID if present
+    pub fn get_user_id(&self) -> Option<&str> {
+        self.user_id.as_deref()
+    }
+
+    /// Get the operation result
+    pub fn get_result(&self) -> &str {
+        &self.result
+    }
+
+    /// Get the operation details
+    pub fn get_details(&self) -> &std::collections::HashMap<String, String> {
+        &self.details
+    }
+
+    /// Get the timestamp
+    pub fn get_timestamp(&self) -> chrono::DateTime<chrono::Utc> {
+        self.timestamp
+    }
 }
 
 impl AuditLogEntry {
@@ -459,6 +648,28 @@ struct AuditLogFilter {
     key_id: Option<String>,
     user_id: Option<String>,
     result: Option<String>,
+}
+
+impl AuditLogFilter {
+    /// Get the operation filter
+    pub fn get_operation(&self) -> Option<&str> {
+        self.operation.as_deref()
+    }
+
+    /// Get the key ID filter
+    pub fn get_key_id(&self) -> Option<&str> {
+        self.key_id.as_deref()
+    }
+
+    /// Get the user ID filter
+    pub fn get_user_id(&self) -> Option<&str> {
+        self.user_id.as_deref()
+    }
+
+    /// Get the result filter
+    pub fn get_result(&self) -> Option<&str> {
+        self.result.as_deref()
+    }
 }
 
 impl SoftwareHealthMonitor {
@@ -505,11 +716,14 @@ impl SoftwareHealthMonitor {
     /// Get simplified health summary
     pub async fn get_health_summary(&self) -> BearDogResult<SimpleHealthSummary> {
         let health_status = self.health_status.read().await;
-        let metrics = self.metrics.read().await;
+        let _metrics = self.metrics.read().await;
 
         Ok(SimpleHealthSummary {
             is_healthy: health_status.healthy,
-            status_message: health_status.error_message.clone().unwrap_or_else(|| "Healthy".to_string()),
+            status_message: health_status
+                .error_message
+                .clone()
+                .unwrap_or_else(|| "Healthy".to_string()),
             last_check: health_status.last_check,
         })
     }

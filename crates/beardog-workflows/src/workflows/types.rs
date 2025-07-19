@@ -9,7 +9,7 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock};
 
-use beardog_config::WorkflowConfig;
+use beardog_config::integration::WorkflowConfig;
 use beardog_errors::BearDogResult;
 
 /// Workflow types supported by the engine
@@ -491,19 +491,31 @@ impl NotificationResult {
     /// Get the number of channels that were attempted
     pub fn channels_attempted(&self) -> u32 {
         let mut count = 0;
-        if self.email_sent { count += 1; }
-        if self.sms_sent { count += 1; }
-        if self.webhook_sent { count += 1; }
-        if self.slack_sent { count += 1; }
-        if self.teams_sent { count += 1; }
+        if self.email_sent {
+            count += 1;
+        }
+        if self.sms_sent {
+            count += 1;
+        }
+        if self.webhook_sent {
+            count += 1;
+        }
+        if self.slack_sent {
+            count += 1;
+        }
+        if self.teams_sent {
+            count += 1;
+        }
         count
     }
-    
+
     /// Get the success rate of notifications
     pub fn success_rate(&self) -> f64 {
         let attempted = self.channels_attempted();
-        if attempted == 0 { return 0.0; }
-        
+        if attempted == 0 {
+            return 0.0;
+        }
+
         let successful = self.channels_attempted() - self.errors.len() as u32;
         successful as f64 / attempted as f64
     }
@@ -555,6 +567,10 @@ pub struct PolicyConfig {
     pub emergency_contacts: Vec<String>,
     /// Business hours configuration for approval timing
     pub business_hours: Option<BusinessHours>,
+    /// Eligible users by workflow type
+    pub eligible_users_by_workflow: Option<HashMap<String, Vec<String>>>,
+    /// Eligible users by role
+    pub eligible_users_by_role: Option<HashMap<String, Vec<String>>>,
 }
 
 /// Business hours configuration
@@ -623,6 +639,12 @@ pub struct WorkflowPolicyEngine {
 pub struct WorkflowScheduler {
     /// Whether automatic cleanup of old workflows is enabled
     pub cleanup_enabled: bool,
+    /// Reference to active workflows for cleanup operations
+    pub workflows: Arc<RwLock<HashMap<String, Workflow>>>,
+    /// Policy configuration for cleanup thresholds
+    pub policy_config: Arc<PolicyConfig>,
+    /// Background task handle for cleanup operations (with interior mutability)
+    pub cleanup_task_handle: Arc<RwLock<Option<tokio::task::JoinHandle<()>>>>,
 }
 
 /// In-memory workflow storage
@@ -741,6 +763,98 @@ impl Default for NotificationConfig {
 
 impl Default for PolicyConfig {
     fn default() -> Self {
+        let mut eligible_by_workflow = HashMap::new();
+        eligible_by_workflow.insert(
+            "key_rotation".to_string(),
+            vec![
+                "admin".to_string(),
+                "security_admin".to_string(),
+                "key_manager".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "key_deletion".to_string(),
+            vec![
+                "admin".to_string(),
+                "security_admin".to_string(),
+                "key_manager".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "policy_change".to_string(),
+            vec![
+                "admin".to_string(),
+                "policy_admin".to_string(),
+                "system_admin".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "configuration_change".to_string(),
+            vec![
+                "admin".to_string(),
+                "policy_admin".to_string(),
+                "system_admin".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "user_provisioning".to_string(),
+            vec![
+                "admin".to_string(),
+                "hr_admin".to_string(),
+                "user_admin".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "emergency_access".to_string(),
+            vec![
+                "admin".to_string(),
+                "emergency_contact".to_string(),
+                "security_admin".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "system_maintenance".to_string(),
+            vec![
+                "admin".to_string(),
+                "system_admin".to_string(),
+                "maintenance_team".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "compliance_audit".to_string(),
+            vec![
+                "admin".to_string(),
+                "compliance_officer".to_string(),
+                "audit_team".to_string(),
+            ],
+        );
+
+        let mut eligible_by_role = HashMap::new();
+        eligible_by_role.insert(
+            "admin".to_string(),
+            vec![
+                "admin".to_string(),
+                "root".to_string(),
+                "system.admin".to_string(),
+            ],
+        );
+        eligible_by_role.insert(
+            "security_admin".to_string(),
+            vec![
+                "security.admin".to_string(),
+                "sec.admin".to_string(),
+                "security_officer".to_string(),
+            ],
+        );
+        eligible_by_role.insert(
+            "key_manager".to_string(),
+            vec![
+                "key.manager".to_string(),
+                "crypto.admin".to_string(),
+                "security.key_manager".to_string(),
+            ],
+        );
+
         Self {
             default_approval_timeout: Duration::hours(24),
             emergency_approval_timeout: Duration::hours(2),
@@ -757,6 +871,8 @@ impl Default for PolicyConfig {
             approval_matrix: HashMap::new(),
             emergency_contacts: Vec::new(),
             business_hours: None,
+            eligible_users_by_workflow: Some(eligible_by_workflow),
+            eligible_users_by_role: Some(eligible_by_role),
         }
     }
 }
@@ -765,6 +881,24 @@ impl Default for WorkflowScheduler {
     fn default() -> Self {
         Self {
             cleanup_enabled: true,
+            workflows: Arc::new(RwLock::new(HashMap::new())),
+            policy_config: Arc::new(PolicyConfig::default()),
+            cleanup_task_handle: Arc::new(RwLock::new(None)),
+        }
+    }
+}
+
+impl WorkflowScheduler {
+    /// Create a new workflow scheduler with specific workflow storage and policy
+    pub fn new(
+        workflows: Arc<RwLock<HashMap<String, Workflow>>>,
+        policy_config: Arc<PolicyConfig>,
+    ) -> Self {
+        Self {
+            cleanup_enabled: true,
+            workflows,
+            policy_config,
+            cleanup_task_handle: Arc::new(RwLock::new(None)),
         }
     }
 }

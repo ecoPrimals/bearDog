@@ -16,6 +16,7 @@ use axum::{
     routing::get,
     Router,
 };
+use beardog_config::core::BearDogConfig;
 use beardog_errors::{BearDogError, BearDogResult};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -25,13 +26,13 @@ use tower_http::{
 };
 use tracing::{error, info, warn};
 
-use crate::api::cache::InMemoryCache;
+use crate::api::rate_limiting::RateLimiter;
 
 /// High-performance BearDog API Server
 pub struct BearDogApiServer {
     core: Arc<dyn std::any::Any + Send + Sync>,
-    cache: Arc<dyn crate::api::cache::CacheProvider + Send + Sync>,
-    rate_limiter: Arc<dyn crate::api::rate_limiting::RateLimiter + Send + Sync>,
+    cache: Arc<crate::api::cache::CacheProviderType>,
+    rate_limiter: Arc<crate::api::rate_limiting::RateLimiterType>,
     config: ApiServerConfig,
 }
 
@@ -57,31 +58,75 @@ pub struct ApiServerConfig {
 impl Default for ApiServerConfig {
     fn default() -> Self {
         Self {
-            bind_address: beardog_config::constants::network::DEFAULT_BIND_ADDRESS.to_string(),
-            request_timeout_seconds: 30,
-            max_request_size: 16 * 1024 * 1024, // 16MB
-            compression_enabled: true,
-            cors_enabled: true,
-            rate_limiting_enabled: true,
-            caching_enabled: true,
+            bind_address: std::env::var("BEARDOG_API_BIND_ADDRESS")
+                .unwrap_or_else(|_| "0.0.0.0:3000".to_string()),
+            request_timeout_seconds: std::env::var("BEARDOG_API_REQUEST_TIMEOUT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(30),
+            max_request_size: std::env::var("BEARDOG_API_MAX_REQUEST_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(16 * 1024 * 1024), // 16MB
+            compression_enabled: std::env::var("BEARDOG_API_COMPRESSION_ENABLED")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(true),
+            cors_enabled: std::env::var("BEARDOG_API_CORS_ENABLED")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(true),
+            rate_limiting_enabled: std::env::var("BEARDOG_API_RATE_LIMITING_ENABLED")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(true),
+            caching_enabled: std::env::var("BEARDOG_API_CACHING_ENABLED")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(true),
+        }
+    }
+}
+
+impl ApiServerConfig {
+    /// Create ApiServerConfig from BearDogConfig
+    pub fn from_beardog_config(config: &BearDogConfig) -> Self {
+        Self {
+            bind_address: config.api.http.bind_address.clone(),
+            request_timeout_seconds: config.api.timeout.request_timeout,
+            max_request_size: config.api.http.max_request_size,
+            compression_enabled: true, // Enable compression by default
+            cors_enabled: config.api.cors.enabled,
+            rate_limiting_enabled: config.api.rate_limiting.enabled,
+            caching_enabled: true, // Enable caching by default
         }
     }
 }
 
 impl BearDogApiServer {
     /// Create new API server with comprehensive middleware
-    pub fn new(core: Arc<dyn std::any::Any + Send + Sync>) -> BearDogResult<Self> {
+    pub async fn new(core: Arc<dyn std::any::Any + Send + Sync>) -> BearDogResult<Self> {
+        Self::new_with_config(core, ApiServerConfig::default()).await
+    }
+
+    /// Create new API server with custom configuration
+    pub async fn new_with_config(
+        core: Arc<dyn std::any::Any + Send + Sync>,
+        config: ApiServerConfig,
+    ) -> BearDogResult<Self> {
         // Initialize cache provider
-        let cache = Arc::new(InMemoryCache::new());
+        let cache = Arc::new(crate::api::cache::CacheProviderType::InMemory(
+            crate::api::cache::InMemoryCache::new(),
+        ));
 
         // Initialize rate limiter
-        let rate_limiter = Arc::new(crate::api::rate_limiting::TokenBucketLimiter::new());
+        let rate_limiter = Arc::new(crate::api::rate_limiting::RateLimiterType::new());
 
         Ok(Self {
             core,
             cache,
             rate_limiter,
-            config: ApiServerConfig::default(),
+            config,
         })
     }
 
@@ -183,9 +228,9 @@ pub struct AppState {
     /// Core BearDog engine instance (stored as Any to break circular dependency)
     pub core: Arc<dyn std::any::Any + Send + Sync>,
     /// Cache provider for response caching
-    pub cache: Arc<dyn crate::api::cache::CacheProvider + Send + Sync>,
+    pub cache: Arc<crate::api::cache::CacheProviderType>,
     /// Rate limiter for request throttling
-    pub rate_limiter: Arc<dyn crate::api::rate_limiting::RateLimiter + Send + Sync>,
+    pub rate_limiter: Arc<crate::api::rate_limiting::RateLimiterType>,
     /// API server configuration
     pub config: ApiServerConfig,
 }
@@ -332,17 +377,68 @@ pub mod handlers {
     use serde_json::{json, Value};
 
     /// Health check endpoint
-    pub async fn health_check(State(_state): State<AppState>) -> Result<Json<Value>, StatusCode> {
-        // Mock health status since core is stored as Any
-        let health = "healthy"; // TODO: Implement proper health checking when core type is known
+    pub async fn health_check(State(state): State<AppState>) -> Result<Json<Value>, StatusCode> {
+        // Attempt to downcast the core to BearDogCore for proper health checking
+        use beardog_core::core::BearDogCore;
 
-        Ok(Json(json!({
-            "status": "healthy",
-            "timestamp": chrono::Utc::now(),
-            "version": env!("CARGO_PKG_VERSION"),
-            "api_version": API_VERSION,
-            "health": health
-        })))
+        match state.core.downcast_ref::<BearDogCore>() {
+            Some(core) => {
+                // Perform actual health check using the BearDog core
+                match core.health_check().await {
+                    Ok(health_check) => {
+                        // Return detailed health information
+                        Ok(Json(json!({
+                            "status": match health_check.status {
+                                beardog_core::core::HealthStatus::Healthy => "healthy",
+                                beardog_core::core::HealthStatus::Degraded => "degraded",
+                                beardog_core::core::HealthStatus::Unhealthy => "unhealthy",
+                                beardog_core::core::HealthStatus::Starting => "starting",
+                                beardog_core::core::HealthStatus::Stopping => "stopping",
+                            },
+                            "timestamp": chrono::Utc::now(),
+                            "version": env!("CARGO_PKG_VERSION"),
+                            "api_version": API_VERSION,
+                            "uptime_seconds": health_check.uptime.map(|u| u.num_seconds()).unwrap_or(0),
+                            "components": health_check.components.len(),
+                            "component_details": health_check.components.iter().map(|c| json!({
+                                "name": c.name,
+                                "healthy": c.healthy,
+                                "error": c.error_message
+                            })).collect::<Vec<_>>(),
+                            "metrics": {
+                                "memory_usage_bytes": health_check.metrics.memory_usage_bytes,
+                                "cpu_usage_percent": health_check.metrics.cpu_usage_percent,
+                                "active_connections": health_check.metrics.active_connections,
+                                "requests_per_second": health_check.metrics.requests_per_second,
+                                "avg_response_time_ms": health_check.metrics.avg_response_time_ms,
+                                "error_rate_percent": health_check.metrics.error_rate_percent
+                            }
+                        })))
+                    }
+                    Err(e) => {
+                        tracing::error!("Health check failed: {}", e);
+                        Ok(Json(json!({
+                            "status": "unhealthy",
+                            "timestamp": chrono::Utc::now(),
+                            "version": env!("CARGO_PKG_VERSION"),
+                            "api_version": API_VERSION,
+                            "error": format!("Health check failed: {}", e)
+                        })))
+                    }
+                }
+            }
+            None => {
+                // Fallback to basic health check if core type is not BearDogCore
+                tracing::warn!("Core is not BearDogCore type, using basic health check");
+                Ok(Json(json!({
+                    "status": "healthy",
+                    "timestamp": chrono::Utc::now(),
+                    "version": env!("CARGO_PKG_VERSION"),
+                    "api_version": API_VERSION,
+                    "note": "Basic health check - core type not recognized"
+                })))
+            }
+        }
     }
 
     /// Server information endpoint

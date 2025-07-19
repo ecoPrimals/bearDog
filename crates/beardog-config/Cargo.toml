@@ -10,18 +10,54 @@ repository = "https://github.com/ecoPrimals/beardog"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
-chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
-uuid = { version = "1.0", features = ["v4"] }
-thiserror = "1.0"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+num_cpus = "1.16"
+anyhow = "1.0"
 
-# Internal dependencies
-beardog-errors = { path = "../beardog-errors" }
+# Redis and caching dependencies
+redis = { version = "0.24", features = ["tokio-comp", "cluster", "streams"], optional = true }
+tokio = { version = "1.0", features = ["full"] }
+
+# SIMD and crypto dependencies
+aes = { version = "0.8", optional = true }
+chacha20 = { version = "0.9", optional = true }
+sha2 = { version = "0.10", optional = true }
+blake3 = { version = "1.5", optional = true }
+argon2 = { version = "0.5", optional = true }
+rand = "0.8"
+
+# Hardware detection
+raw-cpuid = { version = "11.0", optional = true }
+is-terminal = "0.4"
+
+# Compression
+lz4 = { version = "1.24", optional = true }
+zstd = { version = "0.13", optional = true }
+brotli = { version = "3.4", optional = true }
+
+# Serialization
+rmp-serde = { version = "1.1", optional = true }  # MessagePack
+prost = { version = "0.12", optional = true }     # Protocol Buffers
+
+# SIMD support using built-in std::simd when available
+# Note: We'll use software fallbacks for now to ensure compatibility
+
+[dev-dependencies]
+tempfile = "3.8"
+serial_test = "3.0"
 
 [features]
-default = ["hsm", "genetic-spawning", "compliance"]
+default = ["redis", "simd", "compression"]
+redis = ["dep:redis"]
+simd = ["dep:raw-cpuid"]
+compression = ["dep:lz4", "dep:zstd", "dep:brotli"]
+crypto = ["dep:aes", "dep:chacha20", "dep:sha2", "dep:blake3", "dep:argon2"]
+serialization = ["dep:rmp-serde", "dep:prost"]
 hsm = []
 ml-threat-detection = []
 genetic-spawning = []
 compliance = []
-federation = [] 
+federation = []
+full = ["redis", "simd", "compression", "crypto", "serialization", "hsm", "ml-threat-detection", "genetic-spawning", "compliance", "federation"] 

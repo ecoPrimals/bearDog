@@ -91,6 +91,7 @@ impl Default for SongBirdConfig {
 /// ```
 pub struct SongBirdAdapter<T> {
     config: SongBirdConfig,
+    #[allow(dead_code)]
     core: Arc<T>,
     security_provider: Arc<BearDogSecurityProvider>,
 

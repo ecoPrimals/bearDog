@@ -9,6 +9,24 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use uuid::Uuid;
 
+// Zero-copy optimization: String constants to avoid repeated allocations
+const AUDIT_RETENTION_EXCEEDED: &str = "AuditRetentionExceeded";
+const AUDIT_RETENTION_MSG: &str = "Event timestamp exceeds audit retention period";
+const MISSING_CONSENT: &str = "MissingConsent";
+const MISSING_CONSENT_MSG: &str = "Data access without explicit consent";
+const MISSING_PURPOSE: &str = "MissingPurpose";
+const MISSING_PURPOSE_MSG: &str = "Data access purpose not specified";
+const ILLEGAL_TRANSFER: &str = "IllegalTransfer";
+const ILLEGAL_TRANSFER_MSG: &str = "Data transfer without adequate protection";
+const UNAUTHORIZED_FINANCIAL: &str = "UnauthorizedFinancialAccess";
+const UNAUTHORIZED_FINANCIAL_MSG: &str = "Financial data access without proper authorization";
+const UNENCRYPTED_PAYMENT: &str = "UnencryptedPaymentData";
+const UNENCRYPTED_PAYMENT_MSG: &str = "Payment data processed without encryption";
+const MINIMUM_NECESSARY: &str = "MinimumNecessaryViolation";
+const MINIMUM_NECESSARY_MSG: &str = "PHI access not limited to minimum necessary";
+const MISSING_AUDIT_LOG: &str = "MissingAuditLog";
+const MISSING_AUDIT_LOG_MSG: &str = "PHI access not properly logged";
+
 /// Compliance engine for managing compliance checks and reporting
 pub struct ComplianceEngine {
     config: Arc<ComplianceConfig>,
@@ -32,7 +50,7 @@ impl ComplianceEngine {
         &self,
         event: &ComplianceEvent,
     ) -> BearDogResult<ComplianceResult> {
-        self.evaluate_event(event.clone()).await
+        self.evaluate_event(event).await
     }
 
     /// Analyze event against a specific standard
@@ -41,7 +59,7 @@ impl ComplianceEngine {
         event: &ComplianceEvent,
         standard: ComplianceStandard,
     ) -> BearDogResult<ComplianceResult> {
-        let standard_result = self.evaluate_event(event.clone()).await?;
+        let standard_result = self.evaluate_event(event).await?;
 
         Ok(ComplianceResult {
             event_id: event.id.clone(),
@@ -60,36 +78,36 @@ impl ComplianceEngine {
             cache.push(event.clone());
         }
 
-        self.evaluate_event(event).await
+        self.evaluate_event(&event).await
     }
 
     /// Evaluate event against all enabled standards
-    pub async fn evaluate_event(&self, event: ComplianceEvent) -> BearDogResult<ComplianceResult> {
-        let mut all_violations = Vec::new();
-        let mut all_warnings = Vec::new();
+    pub async fn evaluate_event(&self, event: &ComplianceEvent) -> BearDogResult<ComplianceResult> {
+        // Zero-copy optimization: pre-allocate capacity based on enabled standards
+        let mut all_violations = Vec::with_capacity(self.enabled_standards.len());
+        let mut all_warnings = Vec::with_capacity(self.enabled_standards.len());
         let mut total_score = 0.0;
-        let standards_checked = self.enabled_standards.clone();
 
-        for standard in &standards_checked {
-            let result = self.evaluate_standard(standard, &event).await?;
+        for standard in &self.enabled_standards {
+            let result = self.evaluate_standard(standard, event).await?;
             all_violations.extend(result.violations);
             all_warnings.extend(result.warnings);
             total_score += result.score;
         }
 
-        let compliance_score = if !standards_checked.is_empty() {
-            total_score / standards_checked.len() as f64
+        let compliance_score = if !self.enabled_standards.is_empty() {
+            total_score / self.enabled_standards.len() as f64
         } else {
             1.0
         };
 
         Ok(ComplianceResult {
-            event_id: event.id,
+            event_id: event.id.clone(),
             compliance_score,
             violations: all_violations,
             warnings: all_warnings,
             evaluated_at: Utc::now(),
-            standards_checked,
+            standards_checked: self.enabled_standards.clone(),
         })
     }
 
@@ -142,8 +160,8 @@ impl ComplianceEngine {
             warnings.push(ComplianceWarning {
                 id: Uuid::new_v4().to_string(),
                 standard: ComplianceStandard::GDPR,
-                warning_type: "AuditRetentionExceeded".to_string(),
-                description: "Event timestamp exceeds audit retention period".to_string(),
+                warning_type: AUDIT_RETENTION_EXCEEDED.to_string(),
+                description: AUDIT_RETENTION_MSG.to_string(),
                 timestamp: Utc::now(),
             });
             score -= 0.05;
@@ -157,9 +175,9 @@ impl ComplianceEngine {
                     id: Uuid::new_v4().to_string(),
                     standard: ComplianceStandard::GDPR,
                     event_id: event.id.clone(),
-                    violation_type: "MissingConsent".to_string(),
+                    violation_type: MISSING_CONSENT.to_string(),
                     severity: ComplianceSeverity::Critical,
-                    description: "Data access without explicit consent".to_string(),
+                    description: MISSING_CONSENT_MSG.to_string(),
                     timestamp: Utc::now(),
                     remediation_required: true,
                 });
@@ -171,8 +189,8 @@ impl ComplianceEngine {
                 warnings.push(ComplianceWarning {
                     id: Uuid::new_v4().to_string(),
                     standard: ComplianceStandard::GDPR,
-                    warning_type: "MissingPurpose".to_string(),
-                    description: "Data access purpose not specified".to_string(),
+                    warning_type: MISSING_PURPOSE.to_string(),
+                    description: MISSING_PURPOSE_MSG.to_string(),
                     timestamp: Utc::now(),
                 });
                 score -= 0.1;
@@ -188,9 +206,9 @@ impl ComplianceEngine {
                 id: Uuid::new_v4().to_string(),
                 standard: ComplianceStandard::GDPR,
                 event_id: event.id.clone(),
-                violation_type: "IllegalTransfer".to_string(),
+                violation_type: ILLEGAL_TRANSFER.to_string(),
                 severity: ComplianceSeverity::Critical,
-                description: "Data transfer without adequate protection".to_string(),
+                description: ILLEGAL_TRANSFER_MSG.to_string(),
                 timestamp: Utc::now(),
                 remediation_required: true,
             });
@@ -220,9 +238,9 @@ impl ComplianceEngine {
                 id: Uuid::new_v4().to_string(),
                 standard: ComplianceStandard::SOX,
                 event_id: event.id.clone(),
-                violation_type: "UnauthorizedFinancialAccess".to_string(),
+                violation_type: UNAUTHORIZED_FINANCIAL.to_string(),
                 severity: ComplianceSeverity::Critical,
-                description: "Financial data access without proper authorization".to_string(),
+                description: UNAUTHORIZED_FINANCIAL_MSG.to_string(),
                 timestamp: Utc::now(),
                 remediation_required: true,
             });
@@ -251,9 +269,9 @@ impl ComplianceEngine {
                 id: Uuid::new_v4().to_string(),
                 standard: ComplianceStandard::PCI_DSS,
                 event_id: event.id.clone(),
-                violation_type: "UnencryptedPaymentData".to_string(),
+                violation_type: UNENCRYPTED_PAYMENT.to_string(),
                 severity: ComplianceSeverity::Critical,
-                description: "Payment data processed without encryption".to_string(),
+                description: UNENCRYPTED_PAYMENT_MSG.to_string(),
                 timestamp: Utc::now(),
                 remediation_required: true,
             });
@@ -283,9 +301,9 @@ impl ComplianceEngine {
                     id: Uuid::new_v4().to_string(),
                     standard: ComplianceStandard::HIPAA,
                     event_id: event.id.clone(),
-                    violation_type: "MinimumNecessaryViolation".to_string(),
+                    violation_type: MINIMUM_NECESSARY.to_string(),
                     severity: ComplianceSeverity::Violation,
-                    description: "PHI access not limited to minimum necessary".to_string(),
+                    description: MINIMUM_NECESSARY_MSG.to_string(),
                     timestamp: Utc::now(),
                     remediation_required: true,
                 });
@@ -296,8 +314,8 @@ impl ComplianceEngine {
                 warnings.push(ComplianceWarning {
                     id: Uuid::new_v4().to_string(),
                     standard: ComplianceStandard::HIPAA,
-                    warning_type: "MissingAuditLog".to_string(),
-                    description: "PHI access not properly logged".to_string(),
+                    warning_type: MISSING_AUDIT_LOG.to_string(),
+                    description: MISSING_AUDIT_LOG_MSG.to_string(),
                     timestamp: Utc::now(),
                 });
                 score -= 0.2;
@@ -383,27 +401,27 @@ impl ComplianceEngine {
     ) {
         for violation in violations {
             match violation.violation_type.as_str() {
-                "MissingConsent" => {
+                MISSING_CONSENT => {
                     recommendations.push(
                         "Implement explicit consent collection before data access".to_string(),
                     );
                 }
-                "IllegalTransfer" => {
+                ILLEGAL_TRANSFER => {
                     recommendations.push("Verify adequacy decisions or implement appropriate safeguards for data transfers".to_string());
                 }
-                "UnauthorizedFinancialAccess" => {
+                UNAUTHORIZED_FINANCIAL => {
                     recommendations.push(
                         "Strengthen financial data access controls and authorization procedures"
                             .to_string(),
                     );
                 }
-                "UnencryptedPaymentData" => {
+                UNENCRYPTED_PAYMENT => {
                     recommendations.push(
                         "Implement end-to-end encryption for all payment data processing"
                             .to_string(),
                     );
                 }
-                "MinimumNecessaryViolation" => {
+                MINIMUM_NECESSARY => {
                     recommendations.push(
                         "Review and restrict PHI access to minimum necessary for business purposes"
                             .to_string(),

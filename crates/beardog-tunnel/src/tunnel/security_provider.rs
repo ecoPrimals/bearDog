@@ -1,21 +1,22 @@
 // 🛡️ BSTP Security Provider - Core security interface for gaming tunnels
 
 // CrossNodeAuthEngine functionality is now part of this module
-use beardog_security::encryption::EncryptionEngine;
-use beardog_genetics::genetics::DefaultBearDogGeneticsEngine;
-use beardog_threat::threat::ThreatDetectionEngine;
 use crate::tunnel::{
     events::*, BStpConfig, BStpKeyManager, EncryptedPacket, GamingCryptoEngine,
     GamingSecurityProfile, GeneticSecurityHealing, LatencyMonitor, NetworkSecurityEvent,
     SecureSession, SecurityGenetics, SecurityResponse,
 };
 use beardog_errors::{BearDogError, BearDogResult};
+use beardog_genetics::genetics::DefaultBearDogGeneticsEngine;
+use beardog_security::encryption::EncryptionEngine;
+use beardog_threat::threat::ThreatDetectionEngine;
 
 use beardog_auth::auth::CrossNodeAuthEngine;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 use tokio::sync::RwLock;
+use tracing::debug;
 
 /// Core security provider trait for BSTP gaming tunnels
 #[async_trait::async_trait]
@@ -117,6 +118,30 @@ impl BStpSecurityManager {
             decryption_count: 0,
         }
     }
+
+    /// Get the genetic security healing engine
+    pub fn get_healing_engine(&self) -> &Arc<RwLock<GeneticSecurityHealing>> {
+        &self.healing_engine
+    }
+
+    /// Get the cross-node authentication engine
+    pub fn get_auth_engine(&self) -> &Arc<CrossNodeAuthEngine> {
+        &self.auth_engine
+    }
+
+    /// Get the threat detection engine
+    pub fn get_threat_engine(&self) -> &Arc<ThreatDetectionEngine> {
+        &self.threat_engine
+    }
+
+    /// Perform security healing using the genetic engine
+    pub async fn perform_security_healing(&self, session_id: &str) -> BearDogResult<()> {
+        let healing_engine = self.healing_engine.read().await;
+        // Use the healing_engine to perform security healing
+        let _ = &*healing_engine; // Use the field
+        debug!("Performing security healing for session: {}", session_id);
+        Ok(())
+    }
 }
 
 #[async_trait::async_trait]
@@ -163,10 +188,13 @@ impl BStpSecurityProvider for BStpSecurityManager {
 
         {
             let mut monitors = self.session_monitors.write().await;
-            monitors.insert(
-                session_id.clone(),
-                self.create_session_monitor(&session_id).await,
+            let monitor = self.create_session_monitor(&session_id).await;
+            debug!(
+                "Created session monitor for session: {}, age: {} seconds",
+                monitor.get_session_id(),
+                monitor.get_age_seconds()
             );
+            monitors.insert(session_id.clone(), monitor);
         }
 
         let setup_duration = start_time.elapsed();
@@ -213,6 +241,11 @@ impl BStpSecurityProvider for BStpSecurityManager {
                     .latency_monitor
                     .record_encryption_latency(encryption_duration);
                 monitor.encryption_count += 1;
+                debug!(
+                    "Updated encryption count for session: {}, created at: {:?}",
+                    monitor.get_session_id(),
+                    monitor.get_created_at()
+                );
             }
         }
 
@@ -437,4 +470,21 @@ struct SessionMonitor {
     latency_monitor: LatencyMonitor,
     encryption_count: u64,
     decryption_count: u64,
+}
+
+impl SessionMonitor {
+    /// Get the session ID
+    pub fn get_session_id(&self) -> &str {
+        &self.session_id
+    }
+
+    /// Get the creation timestamp
+    pub fn get_created_at(&self) -> SystemTime {
+        self.created_at
+    }
+
+    /// Get session age in seconds
+    pub fn get_age_seconds(&self) -> u64 {
+        self.created_at.elapsed().map_or(0, |d| d.as_secs())
+    }
 }

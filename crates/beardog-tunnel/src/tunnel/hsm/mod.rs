@@ -31,8 +31,8 @@
 //! └─────┘    └─────┘
 //! ```
 
-use beardog_errors::{BearDogError, BearDogResult};
 use async_trait::async_trait;
+use beardog_errors::{BearDogError, BearDogResult};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -46,20 +46,20 @@ pub mod types;
 // Re-export common types
 pub use android_strongbox::AndroidStrongBoxHsm;
 pub use manager::{
+    config::FailoverConfig,
+    // Re-export all config types
+    config::HealthConfig,
+    config::PerformanceConfig,
     CircuitBreaker,
     CircuitBreakerState,
     DefaultHsmCapabilityDetector,
     DefaultHsmFailoverManager,
     DefaultHsmHealthMonitor,
-    config::FailoverConfig,
-    // Re-export all config types
-    HealthConfig,
     HsmManager,
     HsmManagerConfig,
     HsmPerformanceTracker,
     HsmProviderSelection,
     OperationMetrics,
-    config::PerformanceConfig,
     SimpleHsmTier,
 };
 pub use software_hsm::RustSoftwareHsm;

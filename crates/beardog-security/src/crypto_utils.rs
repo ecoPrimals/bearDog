@@ -6,6 +6,10 @@
 //! - Key derivation functions
 //! - Cryptographic hashing
 
+use aes_gcm::{
+    aead::{Aead, KeyInit},
+    Aes256Gcm, Key, Nonce,
+};
 use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
@@ -356,6 +360,102 @@ impl BearDogCrypto {
 
         Ok(key)
     }
+
+    /// Encrypt data using AES-256-GCM
+    ///
+    /// # Arguments
+    /// * `key` - The 32-byte encryption key
+    /// * `plaintext` - The data to encrypt
+    /// * `nonce` - Optional 12-byte nonce (generated if None)
+    ///
+    /// # Returns
+    /// * `Ok((ciphertext, nonce))` - The encrypted data and nonce used
+    /// * `Err(BearDogError)` if encryption fails
+    pub fn encrypt_aes_gcm(
+        key: &[u8],
+        plaintext: &[u8],
+        nonce: Option<&[u8]>,
+    ) -> BearDogResult<(Vec<u8>, Vec<u8>)> {
+        if key.len() != 32 {
+            return Err(BearDogError::Crypto {
+                message: format!("Invalid key length: expected 32 bytes, got {}", key.len()),
+            });
+        }
+
+        // Convert key to proper type
+        let aes_key = Key::<Aes256Gcm>::from_slice(key);
+        let cipher = Aes256Gcm::new(aes_key);
+
+        // Generate or use provided nonce
+        let nonce_bytes = match nonce {
+            Some(n) => {
+                if n.len() != 12 {
+                    return Err(BearDogError::Crypto {
+                        message: format!(
+                            "Invalid nonce length: expected 12 bytes, got {}",
+                            n.len()
+                        ),
+                    });
+                }
+                n.to_vec()
+            }
+            None => Self::generate_secure_nonce(12)?,
+        };
+
+        let nonce_array = Nonce::from_slice(&nonce_bytes);
+
+        // Encrypt the data
+        let ciphertext =
+            cipher
+                .encrypt(nonce_array, plaintext)
+                .map_err(|e| BearDogError::Crypto {
+                    message: format!("AES-GCM encryption failed: {e}"),
+                })?;
+
+        Ok((ciphertext, nonce_bytes))
+    }
+
+    /// Decrypt data using AES-256-GCM
+    ///
+    /// # Arguments
+    /// * `key` - The 32-byte decryption key
+    /// * `ciphertext` - The encrypted data
+    /// * `nonce` - The 12-byte nonce used for encryption
+    ///
+    /// # Returns
+    /// * `Ok(plaintext)` - The decrypted data
+    /// * `Err(BearDogError)` if decryption fails
+    pub fn decrypt_aes_gcm(key: &[u8], ciphertext: &[u8], nonce: &[u8]) -> BearDogResult<Vec<u8>> {
+        if key.len() != 32 {
+            return Err(BearDogError::Crypto {
+                message: format!("Invalid key length: expected 32 bytes, got {}", key.len()),
+            });
+        }
+
+        if nonce.len() != 12 {
+            return Err(BearDogError::Crypto {
+                message: format!(
+                    "Invalid nonce length: expected 12 bytes, got {}",
+                    nonce.len()
+                ),
+            });
+        }
+
+        // Convert key to proper type
+        let aes_key = Key::<Aes256Gcm>::from_slice(key);
+        let cipher = Aes256Gcm::new(aes_key);
+        let nonce_array = Nonce::from_slice(nonce);
+
+        // Decrypt the data
+        let plaintext =
+            cipher
+                .decrypt(nonce_array, ciphertext)
+                .map_err(|e| BearDogError::Crypto {
+                    message: format!("AES-GCM decryption failed: {e}"),
+                })?;
+
+        Ok(plaintext)
+    }
 }
 
 #[cfg(test)]
@@ -445,6 +545,56 @@ mod tests {
             .expect("Constant time comparison should never fail"));
         assert!(!BearDogCrypto::constant_time_compare(data1, data3)
             .expect("Constant time comparison should never fail"));
+    }
+
+    #[test]
+    fn test_aes_gcm_encryption_decryption() {
+        let key = [0u8; 32]; // Test key
+        let plaintext = b"Hello, World! This is a test message for AES-GCM encryption.";
+
+        // Test encryption with auto-generated nonce
+        let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(&key, plaintext, None).unwrap();
+        assert_eq!(nonce.len(), 12);
+        assert_ne!(ciphertext, plaintext);
+
+        // Test decryption
+        let decrypted = BearDogCrypto::decrypt_aes_gcm(&key, &ciphertext, &nonce).unwrap();
+        assert_eq!(decrypted, plaintext);
+
+        // Test encryption with provided nonce
+        let custom_nonce = [1u8; 12];
+        let (ciphertext2, nonce2) =
+            BearDogCrypto::encrypt_aes_gcm(&key, plaintext, Some(&custom_nonce)).unwrap();
+        assert_eq!(nonce2, custom_nonce);
+
+        // Test decryption with custom nonce
+        let decrypted2 = BearDogCrypto::decrypt_aes_gcm(&key, &ciphertext2, &nonce2).unwrap();
+        assert_eq!(decrypted2, plaintext);
+
+        // Test that different nonces produce different ciphertexts
+        assert_ne!(ciphertext, ciphertext2);
+    }
+
+    #[test]
+    fn test_aes_gcm_invalid_inputs() {
+        let key = [0u8; 32];
+        let plaintext = b"test";
+
+        // Test invalid key length
+        let result = BearDogCrypto::encrypt_aes_gcm(&[0u8; 31], plaintext, None);
+        assert!(result.is_err());
+
+        // Test invalid nonce length for encryption
+        let result = BearDogCrypto::encrypt_aes_gcm(&key, plaintext, Some(&[0u8; 11]));
+        assert!(result.is_err());
+
+        // Test invalid key length for decryption
+        let result = BearDogCrypto::decrypt_aes_gcm(&[0u8; 31], &[0u8; 16], &[0u8; 12]);
+        assert!(result.is_err());
+
+        // Test invalid nonce length for decryption
+        let result = BearDogCrypto::decrypt_aes_gcm(&key, &[0u8; 16], &[0u8; 11]);
+        assert!(result.is_err());
     }
 
     #[test]

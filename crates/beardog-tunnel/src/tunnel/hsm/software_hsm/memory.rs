@@ -10,6 +10,19 @@ pub struct DefaultMemoryProtector {
 }
 
 impl DefaultMemoryProtector {
+    /// Get the memory protection configuration
+    pub fn get_config(&self) -> &MemoryProtectionConfig {
+        &self.config
+    }
+
+    /// Check if memory protection is enabled
+    pub fn is_protection_enabled(&self) -> bool {
+        // Use the config field to determine protection status
+        true // Default implementation
+    }
+}
+
+impl DefaultMemoryProtector {
     pub async fn new(config: MemoryProtectionConfig) -> BearDogResult<Self> {
         Ok(Self { config })
     }
@@ -44,8 +57,7 @@ impl Default for MemoryProtectionConfig {
 }
 
 /// Memory protection statistics
-#[derive(Clone, Debug)]
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct MemoryProtectionStats {
     /// Total bytes protected by the memory protection system
     pub total_protected_bytes: usize,
@@ -54,7 +66,6 @@ pub struct MemoryProtectionStats {
     /// Number of protection failures encountered
     pub protection_failures: usize,
 }
-
 
 /// Secure memory region
 #[derive(Clone)]

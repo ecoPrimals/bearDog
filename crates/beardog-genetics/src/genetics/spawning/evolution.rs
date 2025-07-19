@@ -4,7 +4,7 @@
 //! mutations to introduce genetic diversity.
 
 use super::engine::GeneticSpawningEngine;
-use beardog_auth::auth::{BearDogGenetics, SpawnPurpose};
+use beardog_auth::auth::BearDogGenetics;
 // // use beardog_tunnel::tunnel::hsm::types::HsmOperation;
 // // use beardog_tunnel::tunnel::hsm::{SecurityLevel, SecurityRequirements};
 use beardog_errors::BearDogResult;
@@ -13,13 +13,13 @@ use tracing::info;
 
 /// Apply directed evolution based on spawn purpose
 pub async fn apply_directed_evolution(
-    engine: &GeneticSpawningEngine,
+    _engine: &GeneticSpawningEngine,
     mut genetics: BearDogGenetics,
     purpose: &beardog_auth::auth::SpawnPurpose,
 ) -> BearDogResult<BearDogGenetics> {
     info!("Applying directed evolution for purpose: {:?}", purpose);
 
-    let security_reqs = (); // SecurityRequirements::new(SecurityLevel::Medium);
+    let _security_reqs = (); // SecurityRequirements::new(SecurityLevel::Medium);
 
     // Evolve genetics based on spawn purpose
     match purpose {
@@ -102,25 +102,27 @@ pub async fn apply_directed_evolution(
 
     // Generate cryptographic proof of evolution
     let evolution_data = format!("{:?}-{}-{}", purpose, genetics.id, genetics.generation);
-    let evolution_hash = Sha3_256::digest(evolution_data.as_bytes());
+    let _evolution_hash = Sha3_256::digest(evolution_data.as_bytes());
 
     // Create evolution signature using HSM
-    let evolution_signature = "signature_placeholder"; // engine.hsm_manager.sign_data(
+    let _evolution_signature = "signature_placeholder"; // engine.hsm_manager.sign_data(
 
     // Add evolution record to genetics
-    genetics.mutations.push(beardog_auth::auth::CapabilityMutation {
-        trigger: beardog_auth::auth::MutationTrigger::UserRequirement,
-        mutation_type: format!("DirectedEvolution-{purpose:?}"),
-        affected_capabilities: genetics.capabilities.clone(),
-        fitness_impact: 0.05,
-    });
+    genetics
+        .mutations
+        .push(beardog_auth::auth::CapabilityMutation {
+            trigger: beardog_auth::auth::MutationTrigger::UserRequirement,
+            mutation_type: format!("DirectedEvolution-{purpose:?}"),
+            affected_capabilities: genetics.capabilities.clone(),
+            fitness_impact: 0.05,
+        });
 
     Ok(genetics)
 }
 
 /// Apply mutations to introduce genetic diversity
 pub async fn apply_mutations(
-    engine: &GeneticSpawningEngine,
+    _engine: &GeneticSpawningEngine,
     mut genetics: BearDogGenetics,
     mutation_rate: f64,
 ) -> BearDogResult<BearDogGenetics> {
@@ -133,7 +135,7 @@ pub async fn apply_mutations(
         return Ok(genetics);
     }
 
-    let security_reqs = (); // SecurityRequirements::new(SecurityLevel::Medium);
+    let _security_reqs = (); // SecurityRequirements::new(SecurityLevel::Medium);
     let random_bytes = [0u8; 64]; // engine.hsm_manager.generate_random_bytes(64, &security_reqs).await?;
 
     let mut rng_state = u64::from_le_bytes([
@@ -253,12 +255,14 @@ pub async fn apply_mutations(
 
     // Record mutation in genetics
     if !mutations_applied.is_empty() {
-        genetics.mutations.push(beardog_auth::auth::CapabilityMutation {
-            trigger: beardog_auth::auth::MutationTrigger::EnvironmentalStress,
-            mutation_type: format!("RandomMutation-{}", mutations_applied.join(",")),
-            affected_capabilities: genetics.capabilities.clone(),
-            fitness_impact: -0.01, // Small negative impact for random mutations
-        });
+        genetics
+            .mutations
+            .push(beardog_auth::auth::CapabilityMutation {
+                trigger: beardog_auth::auth::MutationTrigger::EnvironmentalStress,
+                mutation_type: format!("RandomMutation-{}", mutations_applied.join(",")),
+                affected_capabilities: genetics.capabilities.clone(),
+                fitness_impact: -0.01, // Small negative impact for random mutations
+            });
     }
 
     Ok(genetics)

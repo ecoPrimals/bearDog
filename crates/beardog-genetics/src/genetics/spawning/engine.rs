@@ -8,7 +8,7 @@ use super::super::types::*;
 use beardog_auth::auth::BearDogGenetics;
 // use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_errors::{BearDogError, BearDogResult};
-use sha3::Digest;
+
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;

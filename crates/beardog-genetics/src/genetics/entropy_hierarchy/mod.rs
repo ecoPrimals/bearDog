@@ -92,7 +92,7 @@ mod tests {
 
     async fn create_test_manager() -> BearDogResult<EntropyHierarchyManager> {
         let config = EntropyHierarchyConfig::default();
-        let hsm_manager = Arc::new(HsmManager::new()); // Changed from new_for_testing()
+        // let hsm_manager = Arc::new(HsmManager::new()); // Changed from new_for_testing()
         let human_config = human_entropy::create_default_config();
         let human_entropy_collector = Arc::new(
             human_entropy::MultiModalHumanEntropyCollector::new(human_config),
@@ -100,7 +100,6 @@ mod tests {
 
         Ok(EntropyHierarchyManager::new(
             config,
-            hsm_manager,
             human_entropy_collector,
         ))
     }

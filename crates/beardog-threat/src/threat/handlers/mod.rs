@@ -33,13 +33,16 @@ mod tests {
     #[tokio::test]
     async fn test_placeholder_engine() {
         let engine = ThreatDetectionEngine::placeholder();
-        assert!(!engine.blocked_sources.is_empty());
-        assert!(!engine.quarantined_systems.is_empty());
+        // Placeholder engine should start with empty collections
+        assert!(engine.blocked_sources.is_empty());
+        assert!(engine.quarantined_systems.is_empty());
+        assert!(engine.active_threats.is_empty());
+        assert!(engine.detection_rules.is_empty());
     }
 
     #[tokio::test]
     async fn test_basic_event_analysis() {
-        let engine = ThreatDetectionEngine::placeholder();
+        let _engine = ThreatDetectionEngine::placeholder();
         let event = SecurityEvent::new(
             "test_event".to_string(),
             "login".to_string(),

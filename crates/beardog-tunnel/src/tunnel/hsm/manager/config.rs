@@ -19,21 +19,19 @@ pub enum SimpleHsmTier {
     Hybrid,
 }
 
-impl SimpleHsmTier {
-    /// Convert the HSM tier to a string representation
-    pub fn to_string(&self) -> String {
+impl std::fmt::Display for SimpleHsmTier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SimpleHsmTier::Smartphone => "Smartphone".to_string(),
-            SimpleHsmTier::Software => "Software".to_string(),
-            SimpleHsmTier::Hardware => "Hardware".to_string(),
-            SimpleHsmTier::Hybrid => "Hybrid".to_string(),
+            SimpleHsmTier::Smartphone => write!(f, "Smartphone"),
+            SimpleHsmTier::Software => write!(f, "Software"),
+            SimpleHsmTier::Hardware => write!(f, "Hardware"),
+            SimpleHsmTier::Hybrid => write!(f, "Hybrid"),
         }
     }
 }
 
 /// HSM Manager configuration
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct HsmManagerConfig {
     /// List of HSM configurations to manage
     pub hsm_configs: Vec<HsmConfig>,
@@ -119,4 +117,3 @@ impl Default for PerformanceConfig {
         }
     }
 }
-

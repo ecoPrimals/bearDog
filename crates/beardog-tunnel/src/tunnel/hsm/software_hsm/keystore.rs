@@ -4,8 +4,8 @@
 //! It handles encrypted key storage, caching, and key lifecycle management.
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
+use beardog_errors::{BearDogError, BearDogResult};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
@@ -19,21 +19,22 @@ impl SoftwareKeyStore {
         let storage_backend: Arc<dyn StorageBackend> = match config.storage_type {
             KeyStorageType::EncryptedFile => Arc::new(FileStorageBackend::new(config).await?),
             KeyStorageType::Database => Arc::new(DatabaseStorageBackend::new(config).await?),
-            KeyStorageType::Memory => Arc::new(MemoryStorageBackend::new().await?),
+            KeyStorageType::InMemory => Arc::new(MemoryStorageBackend::new().await?),
             KeyStorageType::Custom(_) => {
-                return Err(BearDogError::UnsupportedStorageType {
-                    storage_type: format!("{:?}", config.storage_type),
+                return Err(BearDogError::UnsupportedOperation {
+                    operation: format!("Custom storage type: {:?}", config.storage_type),
                 })
             }
         };
 
-        // Initialize encryption key
-        let encryption_key = Arc::new(DefaultEncryptionKey::new(config).await?);
+        // Initialize encryption key - directly create DefaultEncryptionKey instead of using the Box-returning new method
+        let encryption_key: Arc<dyn EncryptionKey> = Arc::new(DefaultEncryptionKey);
 
-        let cache_size = std::num::NonZeroUsize::new(config.cache_size)
-            .ok_or_else(|| BearDogError::Configuration { 
-                message: "HSM cache size must be non-zero".to_string() 
-            })?;
+        let _cache_size = std::num::NonZeroUsize::new(config.cache_size).ok_or_else(|| {
+            BearDogError::Configuration {
+                message: "HSM cache size must be non-zero".to_string(),
+            }
+        })?;
 
         Ok(Self {
             storage_backend,
@@ -58,8 +59,8 @@ impl SoftwareKeyStore {
         debug!("Storing key: {}", key.id);
 
         // Serialize key
-        let serialized = bincode::serialize(key).map_err(|e| BearDogError::SerializationError {
-            error: e.to_string(),
+        let serialized = bincode::serialize(key).map_err(|e| BearDogError::Serialization {
+            message: e.to_string(),
         })?;
 
         // Encrypt key data
@@ -70,7 +71,7 @@ impl SoftwareKeyStore {
 
         // Cache key
         let mut cache = self.key_cache.write().await;
-        cache.put(key.id.clone(), key.clone());
+        cache.insert(key.id.clone(), key.clone());
 
         info!("Key stored successfully: {}", key.id);
         Ok(())
@@ -82,7 +83,7 @@ impl SoftwareKeyStore {
 
         // Check cache first
         {
-            let mut cache = self.key_cache.write().await;
+            let cache = self.key_cache.write().await;
             if let Some(key) = cache.get(key_id) {
                 debug!("Key found in cache: {}", key_id);
                 return Ok(key.clone());
@@ -98,12 +99,12 @@ impl SoftwareKeyStore {
         // Deserialize key
         let key: SoftwareKey =
             bincode::deserialize(&decrypted).map_err(|e| BearDogError::DeserializationError {
-                error: e.to_string(),
+                message: e.to_string(),
             })?;
 
         // Cache key
         let mut cache = self.key_cache.write().await;
-        cache.put(key_id.to_string(), key.clone());
+        cache.insert(key_id.to_string(), key.clone());
 
         debug!("Key loaded from storage: {}", key_id);
         Ok(key)
@@ -118,7 +119,7 @@ impl SoftwareKeyStore {
 
         // Remove from cache
         let mut cache = self.key_cache.write().await;
-        cache.pop(key_id);
+        cache.remove(key_id);
 
         info!("Key deleted successfully: {}", key_id);
         Ok(())
@@ -184,7 +185,7 @@ impl SoftwareKeyStore {
     /// Check if key exists in cache
     pub async fn is_key_cached(&self, key_id: &str) -> bool {
         let cache = self.key_cache.read().await;
-        cache.contains(key_id)
+        cache.contains_key(key_id)
     }
 }
 

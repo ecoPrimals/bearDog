@@ -532,9 +532,24 @@ impl EncryptionEngine {
         self.decrypt_aes256_gcm(&aes_encrypted).await
     }
 
-    /// Generate master key for default operations
-    pub async fn generate_master_key(&self) -> BearDogResult<String> {
-        self.generate_key("AES256".to_string(), "master".to_string())
+    /// Generate context-specific key (NO master keys - new age crypto principle)
+    pub async fn generate_context_key(
+        &self,
+        context: &str,
+        purpose: &str,
+    ) -> BearDogResult<String> {
+        // New age crypto: Keys are scoped to specific contexts
+        // Losing one key doesn't compromise other contexts
+        let context_specific_type = format!("AES256_{context}_for_{purpose}");
+        let key_id = format!(
+            "{}_{}_{}_{}",
+            context,
+            purpose,
+            "AES256",
+            uuid::Uuid::new_v4()
+        );
+
+        self.generate_key(context_specific_type, key_id)
             .await
             .map(|(id, _)| id)
     }
@@ -722,7 +737,7 @@ mod tests {
             EncryptionAlgorithm::ChaCha20Poly1305,
         ];
 
-        for algorithm in algorithms {
+        for _algorithm in algorithms {
             let key = engine
                 .generate_key("AES256".to_string(), "".to_string())
                 .await

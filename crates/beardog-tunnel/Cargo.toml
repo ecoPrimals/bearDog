@@ -15,14 +15,16 @@ beardog-utils = { workspace = true }
 beardog-threat = { workspace = true }
 beardog-auth = { workspace = true }
 tokio = { workspace = true }
-serde = { workspace = true }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
 chrono = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
 thiserror = { workspace = true }
 async-trait = { workspace = true }
 hkdf = "0.12"
-sha2 = { workspace = true }
+sha2 = "0.10"
 aes-gcm = { workspace = true }
 rand = { workspace = true }
 hex = "0.4"

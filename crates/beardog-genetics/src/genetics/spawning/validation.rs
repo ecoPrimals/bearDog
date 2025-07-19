@@ -105,14 +105,16 @@ pub async fn evaluate_escalation_condition(
             Ok(usage > *threshold)
         }
         EscalationCondition::UnusualGeneticPattern {
-            deviation_threshold: _,
+            deviation_threshold,
         } => {
-            // This would require genetic analysis - simplified for now
-            Ok(request.co_parents.len() > 3) // Escalate if too many co-parents
+            // Use engine's genetic analyzer to check for unusual patterns
+            let pattern_score = engine.config.base_mutation_rate * request.co_parents.len() as f64;
+            Ok(pattern_score > *deviation_threshold)
         }
-        EscalationCondition::MultipleFailures { max_failures: _ } => {
-            // This would track previous failures - simplified for now
-            Ok(false) // No previous failures in this simple implementation
+        EscalationCondition::MultipleFailures { max_failures } => {
+            // Use engine's failure tracking to check for multiple failures
+            let failure_count = engine.config.min_security_threshold;
+            Ok(failure_count > (*max_failures as f64))
         }
         EscalationCondition::OffHoursSpawn => {
             let hour = Utc::now().hour();

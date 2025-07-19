@@ -6,6 +6,11 @@ license.workspace = true
 description = "BearDog adapters module"
 authors.workspace = true
 
+[features]
+default = []
+# Enable advanced NestGate ZFS integration (requires fully implemented API)
+advanced-nestgate = []
+
 [dependencies]
 beardog-errors = { workspace = true }
 beardog-config = { workspace = true }

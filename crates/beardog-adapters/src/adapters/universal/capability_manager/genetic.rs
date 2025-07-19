@@ -145,7 +145,7 @@ impl GeneticCapabilityProfile {
         }
 
         // Clamp fitness score between 0.0 and 1.0
-        self.fitness_score = self.fitness_score.max(0.0).min(1.0);
+        self.fitness_score = self.fitness_score.clamp(0.0, 1.0);
 
         // Record mutation in history
         self.mutation_history.push(mutation);
@@ -182,9 +182,9 @@ impl CapabilityTrait {
         Self {
             trait_id: Uuid::new_v4().to_string(),
             trait_type,
-            expression_level: expression_level.max(0.0).min(1.0),
-            dominance: dominance.max(0.0).min(1.0),
-            heritability: heritability.max(0.0).min(1.0),
+            expression_level: expression_level.clamp(0.0, 1.0),
+            dominance: dominance.clamp(0.0, 1.0),
+            heritability: heritability.clamp(0.0, 1.0),
         }
     }
 
@@ -281,7 +281,7 @@ impl CapabilityMutation {
             mutation_id: Uuid::new_v4().to_string(),
             mutation_type,
             affected_capabilities,
-            mutation_strength: mutation_strength.max(0.0).min(1.0),
+            mutation_strength: mutation_strength.clamp(0.0, 1.0),
             timestamp: Utc::now(),
             trigger,
         }

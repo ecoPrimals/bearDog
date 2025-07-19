@@ -21,6 +21,12 @@ pub struct WorkflowConfig {
     pub notifications: NotificationConfig,
     /// Policy configuration
     pub policies: PolicyConfig,
+    /// User role mappings (user_id -> role)
+    pub role_mappings: Option<HashMap<String, String>>,
+    /// List of admin users
+    pub admin_users: Option<Vec<String>>,
+    /// List of approver users
+    pub approver_users: Option<Vec<String>>,
 }
 
 /// Workflow storage configuration
@@ -82,6 +88,10 @@ pub struct PolicyConfig {
     pub evaluation_timeout: Duration,
     /// Custom policies
     pub custom_policies: HashMap<String, String>,
+    /// Eligible users by workflow type
+    pub eligible_users_by_workflow: Option<HashMap<String, Vec<String>>>,
+    /// Eligible users by role
+    pub eligible_users_by_role: Option<HashMap<String, Vec<String>>>,
 }
 
 /// Adapter configurations
@@ -171,6 +181,9 @@ impl Default for WorkflowConfig {
             storage: WorkflowStorageConfig::default(),
             notifications: NotificationConfig::default(),
             policies: PolicyConfig::default(),
+            role_mappings: None,
+            admin_users: Some(vec!["admin".to_string(), "root".to_string()]),
+            approver_users: Some(vec!["approver".to_string(), "manager".to_string()]),
         }
     }
 }
@@ -214,10 +227,88 @@ impl Default for WebhookConfig {
 
 impl Default for PolicyConfig {
     fn default() -> Self {
+        let mut eligible_by_workflow = HashMap::new();
+        eligible_by_workflow.insert(
+            "key_rotation".to_string(),
+            vec![
+                "admin".to_string(),
+                "security_admin".to_string(),
+                "key_manager".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "key_deletion".to_string(),
+            vec![
+                "admin".to_string(),
+                "security_admin".to_string(),
+                "key_manager".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "policy_change".to_string(),
+            vec![
+                "admin".to_string(),
+                "policy_admin".to_string(),
+                "system_admin".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "configuration_change".to_string(),
+            vec![
+                "admin".to_string(),
+                "policy_admin".to_string(),
+                "system_admin".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "user_provisioning".to_string(),
+            vec![
+                "admin".to_string(),
+                "hr_admin".to_string(),
+                "user_admin".to_string(),
+            ],
+        );
+        eligible_by_workflow.insert(
+            "emergency_access".to_string(),
+            vec![
+                "admin".to_string(),
+                "emergency_contact".to_string(),
+                "security_admin".to_string(),
+            ],
+        );
+
+        let mut eligible_by_role = HashMap::new();
+        eligible_by_role.insert(
+            "admin".to_string(),
+            vec![
+                "admin".to_string(),
+                "root".to_string(),
+                "system.admin".to_string(),
+            ],
+        );
+        eligible_by_role.insert(
+            "security_admin".to_string(),
+            vec![
+                "security.admin".to_string(),
+                "sec.admin".to_string(),
+                "security_officer".to_string(),
+            ],
+        );
+        eligible_by_role.insert(
+            "key_manager".to_string(),
+            vec![
+                "key.manager".to_string(),
+                "crypto.admin".to_string(),
+                "security.key_manager".to_string(),
+            ],
+        );
+
         Self {
             default_policy: "standard".to_string(),
             evaluation_timeout: Duration::from_secs(30),
             custom_policies: HashMap::new(),
+            eligible_users_by_workflow: Some(eligible_by_workflow),
+            eligible_users_by_role: Some(eligible_by_role),
         }
     }
 }

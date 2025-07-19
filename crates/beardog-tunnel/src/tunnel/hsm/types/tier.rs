@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+// use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 /// HSM tier enumeration - defines the different types of HSMs available  
@@ -133,25 +133,25 @@ pub enum StrongBoxImplementation {
         security_level: String,
     },
     /// Qualcomm Secure Processing Unit
-    QualcommSpu { 
+    QualcommSpu {
         /// SPU version
-        version: String, 
+        version: String,
         /// Type of SPU implementation
-        spu_type: String 
+        spu_type: String,
     },
     /// Samsung Knox
-    SamsungKnox { 
+    SamsungKnox {
         /// Knox version
-        version: String, 
+        version: String,
         /// Knox security level
-        security_level: String 
+        security_level: String,
     },
     /// Generic StrongBox implementation
-    Generic { 
+    Generic {
         /// Vendor name
-        vendor: String, 
+        vendor: String,
         /// Implementation version
-        version: String 
+        version: String,
     },
 }
 
@@ -175,6 +175,8 @@ pub enum KeyStorageType {
     InMemory,
     /// Database storage
     Database,
+    /// Custom storage implementation
+    Custom(String),
 }
 
 /// Memory protection levels for key material
@@ -288,4 +290,4 @@ pub enum AttestationLevel {
     Strong,
     /// Certified hardware attestation
     CertifiedHardware,
-} 
+}

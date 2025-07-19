@@ -3,8 +3,8 @@
 //! This module contains all types, structs, and enums specific to the Android StrongBox HSM.
 //! It includes device information, key parameters, error types, and supporting structures.
 
-use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
+use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -14,28 +14,28 @@ use tokio::sync::RwLock;
 #[derive(Debug, Clone)]
 pub enum StrongBoxError {
     /// Android Keystore operation failed
-    KeystoreError { 
+    KeystoreError {
         /// Android Keystore error code
-        code: i32, 
+        code: i32,
         /// Error message description
-        message: String 
+        message: String,
     },
     /// StrongBox hardware not available
-    HardwareUnavailable { 
+    HardwareUnavailable {
         /// Reason why hardware is unavailable
-        reason: String 
+        reason: String,
     },
     /// Attestation verification failed
-    AttestationError { 
+    AttestationError {
         /// Reason for attestation failure
-        reason: String 
+        reason: String,
     },
     /// Invalid key parameters
-    InvalidParameters { 
+    InvalidParameters {
         /// Name of the invalid parameter
-        parameter: String, 
+        parameter: String,
         /// Reason why the parameter is invalid
-        reason: String 
+        reason: String,
     },
     /// Device not supported
     UnsupportedDevice {
@@ -173,13 +173,13 @@ pub struct AndroidEntropySource;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VerifiedBootState {
     /// Verified boot with locked bootloader
-    Green,  // Verified boot with locked bootloader
+    Green, // Verified boot with locked bootloader
     /// Verified boot with unlocked bootloader
     Yellow, // Verified boot with unlocked bootloader
     /// Custom OS
     Orange, // Custom OS
     /// Boot failure
-    Red,    // Boot failure
+    Red, // Boot failure
     /// Unknown boot state
     Unknown,
 }

@@ -4,8 +4,8 @@
 //! functionality for Android StrongBox keys.
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
+use beardog_errors::{BearDogError, BearDogResult};
 use std::sync::Arc;
 use tracing::{debug, info, warn};
 
@@ -245,7 +245,7 @@ impl AndroidAttestationService {
     ///
     /// Loads the trusted root certificates that will be used to verify
     /// attestation certificate chains.
-    async fn load_trusted_certificates(config: &AttestationConfig) -> BearDogResult<Vec<Vec<u8>>> {
+    async fn load_trusted_certificates(_config: &AttestationConfig) -> BearDogResult<Vec<Vec<u8>>> {
         info!("📜 Loading trusted certificates");
 
         // In a real implementation, this would:
@@ -276,7 +276,7 @@ impl AndroidAttestationService {
     }
 
     /// Load certificate from file path
-    async fn load_certificate_from_path(path: &str) -> BearDogResult<Vec<u8>> {
+    pub async fn load_certificate_from_path(path: &str) -> BearDogResult<Vec<u8>> {
         debug!("📜 Loading certificate from: {}", path);
 
         // In a real implementation, this would:

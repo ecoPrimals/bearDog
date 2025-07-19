@@ -5,9 +5,9 @@
 
 use super::config::HealthConfig;
 use super::{HsmHealthMonitor, HsmProvider};
-use beardog_errors::BearDogResult;
 use crate::tunnel::hsm::types::{HsmHealthStatus, PerformanceMetrics};
 use async_trait::async_trait;
+use beardog_errors::BearDogResult;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;

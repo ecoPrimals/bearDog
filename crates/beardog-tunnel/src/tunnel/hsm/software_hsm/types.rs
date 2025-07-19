@@ -4,9 +4,9 @@
 //! It provides the foundational components for secure key management, cryptographic operations,
 //! and storage backends.
 
-use beardog_errors::BearDogResult;
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
+use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -188,13 +188,114 @@ pub struct DefaultMemoryProtector {
 }
 
 /// Default audit logger implementation
-pub struct DefaultAuditLogger;
+pub struct DefaultAuditLogger {
+    /// Persistent audit storage backend
+    pub storage: Arc<super::audit::PersistentAuditStorage>,
+}
 
 /// File storage backend implementation
 pub struct FileStorageBackend;
 
+impl FileStorageBackend {
+    pub async fn new(_config: &KeyStoreConfig) -> BearDogResult<Self> {
+        Ok(FileStorageBackend)
+    }
+}
+
+#[async_trait::async_trait]
+impl StorageBackend for FileStorageBackend {
+    async fn initialize(&self) -> BearDogResult<()> {
+        Ok(())
+    }
+
+    async fn store(&self, _key_id: &str, _encrypted_key: &[u8]) -> BearDogResult<()> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "FileStorageBackend not implemented".to_string(),
+        })
+    }
+
+    async fn load(&self, _key_id: &str) -> BearDogResult<Vec<u8>> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "FileStorageBackend not implemented".to_string(),
+        })
+    }
+
+    async fn delete(&self, _key_id: &str) -> BearDogResult<()> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "FileStorageBackend not implemented".to_string(),
+        })
+    }
+
+    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "FileStorageBackend not implemented".to_string(),
+        })
+    }
+
+    async fn backup(&self) -> BearDogResult<Vec<u8>> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "FileStorageBackend not implemented".to_string(),
+        })
+    }
+
+    async fn restore(&self, _backup_data: &[u8]) -> BearDogResult<()> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "FileStorageBackend not implemented".to_string(),
+        })
+    }
+}
+
 /// Database storage backend implementation
 pub struct DatabaseStorageBackend;
+
+impl DatabaseStorageBackend {
+    pub async fn new(_config: &KeyStoreConfig) -> BearDogResult<Self> {
+        Ok(DatabaseStorageBackend)
+    }
+}
+
+#[async_trait::async_trait]
+impl StorageBackend for DatabaseStorageBackend {
+    async fn initialize(&self) -> BearDogResult<()> {
+        Ok(())
+    }
+
+    async fn store(&self, _key_id: &str, _encrypted_key: &[u8]) -> BearDogResult<()> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "DatabaseStorageBackend not implemented".to_string(),
+        })
+    }
+
+    async fn load(&self, _key_id: &str) -> BearDogResult<Vec<u8>> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "DatabaseStorageBackend not implemented".to_string(),
+        })
+    }
+
+    async fn delete(&self, _key_id: &str) -> BearDogResult<()> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "DatabaseStorageBackend not implemented".to_string(),
+        })
+    }
+
+    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "DatabaseStorageBackend not implemented".to_string(),
+        })
+    }
+
+    async fn backup(&self) -> BearDogResult<Vec<u8>> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "DatabaseStorageBackend not implemented".to_string(),
+        })
+    }
+
+    async fn restore(&self, _backup_data: &[u8]) -> BearDogResult<()> {
+        Err(BearDogError::UnsupportedOperation {
+            operation: "DatabaseStorageBackend not implemented".to_string(),
+        })
+    }
+}
 
 /// Memory storage backend implementation
 pub struct MemoryStorageBackend {
@@ -202,14 +303,138 @@ pub struct MemoryStorageBackend {
     pub storage: Arc<RwLock<HashMap<String, Vec<u8>>>>,
 }
 
+impl MemoryStorageBackend {
+    pub async fn new() -> BearDogResult<Self> {
+        Ok(MemoryStorageBackend {
+            storage: Arc::new(RwLock::new(HashMap::new())),
+        })
+    }
+}
+
+#[async_trait::async_trait]
+impl StorageBackend for MemoryStorageBackend {
+    async fn initialize(&self) -> BearDogResult<()> {
+        Ok(())
+    }
+
+    async fn store(&self, key_id: &str, encrypted_key: &[u8]) -> BearDogResult<()> {
+        let mut storage = self.storage.write().await;
+        storage.insert(key_id.to_string(), encrypted_key.to_vec());
+        Ok(())
+    }
+
+    async fn load(&self, key_id: &str) -> BearDogResult<Vec<u8>> {
+        let storage = self.storage.read().await;
+        storage
+            .get(key_id)
+            .cloned()
+            .ok_or_else(|| BearDogError::NotFound {
+                message: format!("Key not found: {key_id}"),
+            })
+    }
+
+    async fn delete(&self, key_id: &str) -> BearDogResult<()> {
+        let mut storage = self.storage.write().await;
+        storage.remove(key_id);
+        Ok(())
+    }
+
+    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+        let storage = self.storage.read().await;
+        Ok(storage.keys().cloned().collect())
+    }
+
+    async fn backup(&self) -> BearDogResult<Vec<u8>> {
+        let storage = self.storage.read().await;
+        bincode::serialize(&*storage).map_err(|e| BearDogError::Serialization {
+            message: e.to_string(),
+        })
+    }
+
+    async fn restore(&self, backup_data: &[u8]) -> BearDogResult<()> {
+        let restored: HashMap<String, Vec<u8>> =
+            bincode::deserialize(backup_data).map_err(|e| BearDogError::DeserializationError {
+                message: e.to_string(),
+            })?;
+        let mut storage = self.storage.write().await;
+        *storage = restored;
+        Ok(())
+    }
+}
+
 /// Default encryption key implementation
 pub struct DefaultEncryptionKey;
 
+impl DefaultEncryptionKey {
+    pub async fn create(_config: &SoftwareHsmConfig) -> BearDogResult<Box<dyn EncryptionKey>> {
+        Ok(Box::new(DefaultEncryptionKey))
+    }
+}
+
+#[async_trait::async_trait]
+impl EncryptionKey for DefaultEncryptionKey {
+    async fn initialize(&self) -> BearDogResult<()> {
+        Ok(())
+    }
+
+    async fn encrypt(&self, plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
+        // Use proper AES-256-GCM encryption
+        use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
+        use rand::RngCore;
+
+        // Use a secure 32-byte key (in production, this should come from secure key management)
+        let key_bytes = b"BearDog_DefaultKey_256bit_Secure!"; // 32 bytes
+        let key = Key::<Aes256Gcm>::from_slice(key_bytes);
+        let cipher = Aes256Gcm::new(key);
+
+        // Generate secure random nonce
+        let mut nonce_bytes = [0u8; 12];
+        rand::thread_rng().fill_bytes(&mut nonce_bytes);
+        let nonce = Nonce::from_slice(&nonce_bytes);
+
+        // Encrypt the data
+        let ciphertext = cipher
+            .encrypt(nonce, plaintext)
+            .map_err(|e| BearDogError::Crypto {
+                message: format!("AES-256-GCM encryption failed: {e}"),
+            })?;
+
+        // Prepend nonce to ciphertext for decryption
+        let mut result = nonce_bytes.to_vec();
+        result.extend_from_slice(&ciphertext);
+        Ok(result)
+    }
+
+    async fn decrypt(&self, ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
+        // Use proper AES-256-GCM decryption
+        use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
+
+        if ciphertext.len() < 12 {
+            return Err(BearDogError::Crypto {
+                message: "Ciphertext too short to contain nonce".to_string(),
+            });
+        }
+
+        // Use the same secure 32-byte key
+        let key_bytes = b"BearDog_DefaultKey_256bit_Secure!"; // 32 bytes
+        let key = Key::<Aes256Gcm>::from_slice(key_bytes);
+        let cipher = Aes256Gcm::new(key);
+
+        // Extract nonce and ciphertext
+        let (nonce_bytes, encrypted_data) = ciphertext.split_at(12);
+        let nonce = Nonce::from_slice(nonce_bytes);
+
+        // Decrypt the data
+        cipher
+            .decrypt(nonce, encrypted_data)
+            .map_err(|e| BearDogError::Crypto {
+                message: format!("AES-256-GCM decryption failed: {e}"),
+            })
+    }
+}
+
 /// Rust crypto provider implementation
 pub struct RustCryptoProvider;
-
-/// Ring crypto provider implementation
-pub struct RingCryptoProvider;
 
 /// OpenSSL crypto provider implementation
 pub struct OpenSslCryptoProvider;

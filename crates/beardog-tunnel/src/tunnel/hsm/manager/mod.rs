@@ -36,9 +36,9 @@ use super::{
     HsmCapabilityDetector, HsmFailoverManager, HsmHealthMonitor, HsmProvider, SecurityLevel,
     SecurityRequirements,
 };
-use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::{AndroidStrongBoxHsm, RustSoftwareHsm};
+use beardog_errors::{BearDogError, BearDogResult};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -46,7 +46,7 @@ use tracing::{debug, info};
 
 // Re-export types from submodules
 pub use capability::DefaultHsmCapabilityDetector;
-pub use config::*;
+pub use config::{HsmManagerConfig, SimpleHsmTier};
 pub use failover::{CircuitBreaker, CircuitBreakerState, DefaultHsmFailoverManager};
 pub use health::DefaultHsmHealthMonitor;
 pub use performance::{HsmPerformanceTracker, OperationMetrics};
@@ -137,7 +137,9 @@ impl HsmManager {
                 HsmTierConfig::Smartphone(_) => "smartphone_hsm",
                 HsmTierConfig::Hybrid(_) => "hybrid_hsm",
             };
-            manager.hsm_providers.insert(provider_id.to_string(), provider);
+            manager
+                .hsm_providers
+                .insert(provider_id.to_string(), provider);
         }
 
         // Start health monitoring
@@ -198,16 +200,12 @@ impl HsmManager {
                 let android_hsm = AndroidStrongBoxHsm::new(android_config.clone()).await?;
                 Ok(Arc::new(android_hsm))
             }
-            HsmTierConfig::Hardware(_) => {
-                Err(BearDogError::Unimplemented {
-                    message: "Hardware HSM not yet implemented".to_string(),
-                })
-            }
-            HsmTierConfig::Hybrid(_) => {
-                Err(BearDogError::Unimplemented {
-                    message: "Hybrid HSM not yet implemented".to_string(),
-                })
-            }
+            HsmTierConfig::Hardware(_) => Err(BearDogError::Unimplemented {
+                message: "Hardware HSM not yet implemented".to_string(),
+            }),
+            HsmTierConfig::Hybrid(_) => Err(BearDogError::Unimplemented {
+                message: "Hybrid HSM not yet implemented".to_string(),
+            }),
             _ => Err(BearDogError::Configuration {
                 message: "HSM type not supported in this configuration".to_string(),
             }),
@@ -404,7 +402,7 @@ impl HsmManager {
             self.hsm_providers
                 .get(provider_id)
                 .ok_or_else(|| BearDogError::NotFound {
-                    message: format!("Provider not found: {}", provider_id),
+                    message: format!("Provider not found: {provider_id}"),
                 })?;
 
         // Get provider info
@@ -415,20 +413,19 @@ impl HsmManager {
             SecurityLevel::Basic => true, // All providers meet basic
             SecurityLevel::Medium => {
                 // Software HSM and above
-                !matches!(provider_info.hsm_type, HsmTier::SoftwareHsm { .. })
-                    || matches!(provider_info.hsm_type, HsmTier::SmartphoneHsm { .. })
-                    || matches!(provider_info.hsm_type, HsmTier::HardwareHsm { .. })
+                provider_info.hsm_type != "SoftwareHsm"
+                    || provider_info.hsm_type == "SmartphoneHsm"
+                    || provider_info.hsm_type == "HardwareHsm"
             }
             SecurityLevel::High => {
                 // Hardware-backed required
-                matches!(provider_info.hsm_type, HsmTier::SmartphoneHsm { .. })
-                    || matches!(provider_info.hsm_type, HsmTier::HardwareHsm { .. })
-                    || matches!(provider_info.hsm_type, HsmTier::HybridHsm { .. })
+                provider_info.hsm_type == "SmartphoneHsm"
+                    || provider_info.hsm_type == "HardwareHsm"
+                    || provider_info.hsm_type == "HybridHsm"
             }
             SecurityLevel::Maximum => {
                 // Certified hardware required
-                matches!(provider_info.hsm_type, HsmTier::HardwareHsm { .. })
-                    || matches!(provider_info.hsm_type, HsmTier::HybridHsm { .. })
+                provider_info.hsm_type == "HardwareHsm" || provider_info.hsm_type == "HybridHsm"
             }
         };
 
@@ -437,26 +434,25 @@ impl HsmManager {
         }
 
         // Check hardware backing requirement
-        if requirements.hardware_backed_required {
-            match provider_info.hsm_type {
-                HsmTier::SoftwareHsm { .. } => return Ok(false),
-                _ => {} // Hardware-backed or hybrid
-            }
+        if requirements.hardware_backed_required && provider_info.hsm_type.as_str() == "SoftwareHsm"
+        {
+            return Ok(false);
         }
+        // Hardware-backed or hybrid
 
         // Check attestation requirement
         if requirements.attestation_required
             && !provider_info
                 .capabilities
                 .contains(&HsmCapability::KeyAttestation)
-            {
-                return Ok(false);
-            }
+        {
+            return Ok(false);
+        }
 
         // Check user interaction requirement
         if requirements.user_interaction_required {
-            match provider_info.hsm_type {
-                HsmTier::SmartphoneHsm { .. } => {
+            match provider_info.hsm_type.as_str() {
+                "SmartphoneHsm" => {
                     // Smartphone HSMs support user interaction
                     if !provider_info
                         .capabilities
@@ -495,20 +491,11 @@ impl HsmManager {
                 best_selection = Some(HsmProviderSelection {
                     provider: provider.clone(),
                     provider_id,
-                    tier: if provider_info.hsm_type == "SoftwareHsm" {
-                        HsmTier::SoftwareHsm {
-                            implementation: SoftwareHsmType::RustSoftwareHsm,
-                            key_storage: KeyStorageType::EncryptedFile,
-                            encryption_at_rest: true,
-                            memory_protection: MemoryProtectionLevel::Basic,
-                        }
-                    } else {
-                        HsmTier::SoftwareHsm {
-                            implementation: SoftwareHsmType::RustSoftwareHsm,
-                            key_storage: KeyStorageType::EncryptedFile,
-                            encryption_at_rest: true,
-                            memory_protection: MemoryProtectionLevel::Basic,
-                        }
+                    tier: HsmTier::SoftwareHsm {
+                        implementation: SoftwareHsmType::RustSoftwareHsm,
+                        key_storage: KeyStorageType::EncryptedFile,
+                        encryption_at_rest: true,
+                        memory_protection: MemoryProtectionLevel::Basic,
                     },
                     confidence: score,
                     estimated_latency_ms: self.get_estimated_latency(&provider_info).await?,
@@ -530,15 +517,15 @@ impl HsmManager {
         let mut score = 0.0;
 
         // Security level score
-        let security_score = match (&provider_info.hsm_type, requirements.security_level) {
-            (HsmTier::HardwareHsm { .. }, SecurityLevel::Maximum) => 1.0,
-            (HsmTier::HardwareHsm { .. }, SecurityLevel::High) => 0.9,
-            (HsmTier::SmartphoneHsm { .. }, SecurityLevel::High) => 0.8,
-            (HsmTier::SmartphoneHsm { .. }, SecurityLevel::Medium) => 0.7,
-            (HsmTier::SoftwareHsm { .. }, SecurityLevel::Medium) => 0.6,
-            (HsmTier::SoftwareHsm { .. }, SecurityLevel::Basic) => 0.5,
-            (HsmTier::HybridHsm { .. }, _) => 0.9, // Hybrid gets high score
-            _ => 0.3,                              // Partial match
+        let security_score = match (provider_info.hsm_type.as_str(), requirements.security_level) {
+            ("HardwareHsm", SecurityLevel::Maximum) => 1.0,
+            ("HardwareHsm", SecurityLevel::High) => 0.9,
+            ("SmartphoneHsm", SecurityLevel::High) => 0.8,
+            ("SmartphoneHsm", SecurityLevel::Medium) => 0.7,
+            ("SoftwareHsm", SecurityLevel::Medium) => 0.6,
+            ("SoftwareHsm", SecurityLevel::Basic) => 0.5,
+            ("HybridHsm", _) => 0.9, // Hybrid gets high score
+            _ => 0.3,                // Partial match
         };
 
         score += security_score * 0.4; // 40% weight
@@ -635,11 +622,12 @@ impl HsmManager {
         }
 
         // Default estimates based on HSM type
-        match provider_info.hsm_type {
-            HsmTier::SoftwareHsm { .. } => Ok(10.0),   // Fast software
-            HsmTier::SmartphoneHsm { .. } => Ok(50.0), // Moderate smartphone
-            HsmTier::HardwareHsm { .. } => Ok(100.0),  // Slower hardware
-            HsmTier::HybridHsm { .. } => Ok(75.0),     // Mixed performance
+        match provider_info.hsm_type.as_str() {
+            "SoftwareHsm" => Ok(10.0),   // Fast software
+            "SmartphoneHsm" => Ok(50.0), // Moderate smartphone
+            "HardwareHsm" => Ok(100.0),  // Slower hardware
+            "HybridHsm" => Ok(75.0),     // Mixed performance
+            _ => Ok(50.0),               // Default fallback
         }
     }
 
@@ -669,7 +657,7 @@ impl HsmManager {
         length: usize,
         requirements: &SecurityRequirements,
     ) -> BearDogResult<Vec<u8>> {
-        let selection = self.get_best_provider(requirements).await?;
+        let _selection = self.get_best_provider(requirements).await?;
 
         // Use the provider's random generation capability
         // This is a simplified implementation
@@ -685,7 +673,7 @@ impl HsmManager {
         // In a real implementation, we would find the provider that has this key
         // and retrieve the public key from it
         Err(BearDogError::NotFound {
-            message: format!("Key not found: {}", key_id),
+            message: format!("Key not found: {key_id}"),
         })
     }
 

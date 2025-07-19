@@ -1,0 +1,259 @@
+# BearDog Development Configuration
+# This configuration is designed for development environments with
+# relaxed security settings and enhanced debugging capabilities
+
+[app]
+name = "BearDog-Development"
+version = "1.0.0"
+standalone_mode = true  # Enable standalone mode for development
+environment = "development"
+debug = true  # Enable debug mode for development
+
+[database]
+# Use SQLite for development simplicity
+url = "sqlite://./dev-beardog.db"
+max_connections = 10
+connection_timeout = 30
+query_timeout = 30
+ssl = false  # Disable SSL for development
+ssl_cert_path = ""
+ssl_key_path = ""
+ssl_ca_path = ""
+
+[network]
+[network.http]
+enabled = true
+bind_address = "127.0.0.1:8080"  # Bind to localhost only
+port = 8080
+max_request_size = 16777216  # 16MB
+keep_alive_timeout = 300
+
+[network.https]
+enabled = false  # Disable HTTPS for development
+bind_address = "127.0.0.1:8443"
+port = 8443
+cert_path = ""
+key_path = ""
+cert_chain_path = ""
+client_cert_verification = false
+
+[network.rate_limiting]
+enabled = true
+requests_per_minute = 10000  # Very high limit for development
+burst_size = 1000
+window_seconds = 60
+
+[network.cors]
+enabled = true
+allowed_origins = ["http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:3000"]
+allowed_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+allowed_headers = ["*"]  # Allow all headers for development
+
+[network.timeout]
+request_timeout = 60  # Longer timeout for debugging
+connect_timeout = 30
+read_timeout = 60
+write_timeout = 60
+
+[security]
+level = "Standard"  # Use standard security for development
+enable_hsm = false
+token_expiration_seconds = 28800  # 8 hours for development
+max_failed_logins = 10  # More lenient for development
+rate_limit_requests_per_minute = 10000
+max_session_duration = "8h"
+
+[security.password_policy]
+min_length = 8  # Shorter minimum for development
+require_uppercase = false
+require_lowercase = false
+require_numbers = false
+require_special = false
+history_count = 3
+max_age = "365d"  # No password expiration in development
+
+[security.mfa]
+required = false  # Disable MFA for development
+methods = ["TOTP"]
+
+[security.session]
+timeout = "8h"  # Long session timeout for development
+cleanup_interval = "30m"
+secure_cookies = false  # Allow insecure cookies for development
+
+[security.hsm]
+enabled = false  # Disable HSM for development
+provider = "SoftHSM"
+
+[encryption]
+default_algorithm = "aes_256_gcm"
+key_derivation_iterations = 10000  # Lower iterations for faster development
+key_rotation_days = 365  # No rotation in development
+key_rotation_interval = "365d"
+hsm_enabled = false
+
+[encryption.hsm]
+enabled = false
+provider = "SoftHSM"
+
+[encryption.key_derivation.argon2]
+memory_cost = 65536  # 64MB - lower for development
+time_cost = 2
+parallelism = 2
+
+[licensing]
+# License key can be empty for development
+key = ""
+server_url = ""
+check_interval = 86400  # Daily check
+validation_enabled = false  # Disable validation for development
+
+[threat_detection]
+enabled = true
+sensitivity_level = "low"  # Low sensitivity for development
+custom_rules_path = "./threat-rules/"
+model_update_hours = 24
+
+[threat_detection.ml_models]
+update_interval = "24h"
+
+[threat_detection.behavioral_analysis]
+enabled = false  # Disable for development
+analysis_window = "1h"
+anomaly_threshold = 0.5  # Lower threshold for development
+
+[compliance]
+enabled_frameworks = ["GDPR"]  # Minimal compliance for development
+audit_retention_days = 30  # Short retention for development
+notification_threshold = 0.5  # Low threshold for development
+
+[audit]
+enabled = true
+retention_days = 30  # Short retention for development
+enable_alerts = false  # Disable alerts for development
+log_level = "DEBUG"
+
+[audit.storage]
+storage_type = "file"
+config = { path = "./logs/audit.log" }
+
+[monitoring]
+enabled = true
+level = "standard"
+interval = "60s"
+retention = "7d"  # Short retention for development
+
+[monitoring.logging]
+level = "DEBUG"  # Verbose logging for development
+format = "pretty"  # Human-readable format for development
+output = "stdout"  # Output to console for development
+file_path = "./logs/beardog.log"
+rotation = true
+max_file_size = 10  # Smaller files for development
+max_files = 3
+
+[monitoring.metrics]
+enabled = true
+backend = "memory"  # In-memory metrics for development
+interval = "60s"
+retention = "1d"
+
+[monitoring.health]
+enabled = true
+interval = "30s"
+timeout = "10s"
+endpoints = []
+
+[monitoring.performance]
+enabled = true
+interval = "60s"
+cpu_threshold = 95.0  # High threshold for development
+memory_threshold = 95.0
+disk_threshold = 95.0
+
+[monitoring.alerting]
+enabled = false  # Disable alerting for development
+channels = []
+thresholds = { cpu = 95.0, memory = 95.0, disk = 95.0, error_rate = 10.0, response_time = "30s" }
+
+[node_registry]
+url = "http://localhost:8090"
+registration_interval = 600  # Less frequent for development
+health_check_interval = 120
+auto_register = false  # Manual registration for development
+
+[workflows]
+enabled = true
+default_approval_timeout_minutes = 120  # Longer timeout for development
+require_dual_approval = false  # Single approval for development
+max_concurrent_workflows = 10
+
+[workflows.storage]
+storage_type = "memory"  # In-memory storage for development
+config = {}
+
+[adapters]
+[adapters.external_systems]
+[adapters.external_systems.rust_ecosystem]
+[adapters.external_systems.rust_ecosystem.nestgate]
+enabled = true
+endpoint = "http://localhost:8081"  # Local NestGate instance
+timeout_ms = 10000  # Longer timeout for development
+tls = { enabled = false }  # No TLS for development
+# Auth secret can be simple for development: "dev-nestgate-secret"
+
+[adapters.external_systems.rust_ecosystem.songbird]
+enabled = true
+endpoint = "http://localhost:8082"  # Local SongBird instance
+timeout_ms = 10000  # Longer timeout for development
+tls = { enabled = false }  # No TLS for development
+# Auth secret can be simple for development: "dev-songbird-secret"
+
+# Secret Management Configuration - Development
+[secrets]
+primary_source = "Environment"
+cache_secrets = true  # Enable caching for development
+cache_ttl_seconds = 3600
+
+[[secrets.fallback_sources]]
+source_type = "File"
+base_path = "./secrets"  # Local secrets directory
+file_extension = "secret"
+required_permissions = 0o644  # Relaxed permissions for development
+
+# Development Feature Flags
+[features]
+# Core features
+api_server = true
+api_authentication = true
+api_rate_limiting = true
+openapi_docs = true  # Enable API docs for development
+
+# Security features
+threat_detection = true
+file_integrity_monitoring = false  # Disable for development
+rule_based_detection = true
+alert_generation = false  # Disable alerts for development
+ml_threat_detection = false  # Disable ML for development
+
+# Integration features
+nestgate_adapter = true
+songbird_adapter = true
+
+# Advanced features
+hsm_integration = false  # Disable HSM for development
+distributed_consensus = false  # Disable consensus for development
+genetic_spawning = true
+compliance_monitoring = false  # Disable compliance monitoring for development
+
+# Production optimizations (disabled in development)
+performance_monitoring = false
+advanced_caching = false
+connection_pooling = false
+load_balancing = false
+
+# Demo/Development features (enabled in development)
+demo_mode = true
+mock_services = true
+debug_endpoints = true
+test_data_generation = true 

@@ -1,28 +1,33 @@
 # BearDog Configuration Management Specification
 
-**Version:** 1.0  
+**Version:** 2.0  
 **Date:** January 2025  
-**Status:** SPECIFICATION  
+**Status:** ECOSYSTEM ALIGNED  
 **Priority:** HIGH  
+**Compliance:** biomeOS Manifest Standard ⭐⭐⭐ (100% - REFERENCE)
 
 ## 🎯 **Overview**
 
 BearDog's configuration management system provides:
+- **biome.yaml manifest support** - Complete biomeOS integration
 - **Secure-by-default** configuration
 - **Zero hardcoding** - everything configurable
 - **Multi-source configuration** with priority handling
 - **Runtime configuration updates**
 - **Configuration validation** and schema enforcement
 - **Environment-specific configuration**
+- **Ecosystem integration** - Songbird, NestGate, ToadStool, Squirrel compatibility
 
 ## ⚙️ **Configuration Architecture**
 
 ### **Configuration Sources (Priority Order)**
 1. **Command Line Arguments** (highest priority)
-2. **Environment Variables**
-3. **Configuration Files** (TOML/YAML/JSON)
-4. **Consul/etcd** (distributed configuration)
-5. **Secure Defaults** (lowest priority)
+2. **Environment Variables** 
+3. **biome.yaml Manifest** (ecosystem integration)
+4. **Configuration Files** (TOML/YAML/JSON)
+5. **Consul/etcd** (distributed configuration)
+6. **Songbird Service Discovery** (dynamic configuration)
+7. **Secure Defaults** (lowest priority)
 
 ### **Core Configuration Structure**
 ```rust
@@ -48,6 +53,109 @@ pub struct BearDogConfig {
 }
 
 // Secure defaults implementation
+
+## 🌱 **Ecosystem Integration Configuration**
+
+### **biome.yaml Manifest Integration**
+
+BearDog fully supports biome.yaml manifest-driven configuration:
+
+```rust
+/// BearDog configuration from biome.yaml manifest
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BiomeManifestConfig {
+    /// Biome identification
+    pub biome_id: String,
+    pub environment: Environment,
+    
+    /// BearDog service configuration from manifest
+    pub service: BearDogServiceConfig,
+    
+    /// Ecosystem integration configuration
+    pub ecosystem: EcosystemConfig,
+    
+    /// Security context from manifest
+    pub security_context: BiomeSecurityContext,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EcosystemConfig {
+    /// Songbird service mesh configuration
+    pub songbird: SongbirdIntegrationConfig,
+    
+    /// Cross-primal integrations
+    pub integrations: HashMap<PrimalType, IntegrationConfig>,
+    
+    /// Service discovery configuration
+    pub discovery: ServiceDiscoveryConfig,
+    
+    /// Universal primal provider settings
+    pub primal_provider: PrimalProviderConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SongbirdIntegrationConfig {
+    pub enabled: bool,
+    pub discovery_endpoint: String,
+    pub registration_endpoint: String,
+    pub health_reporting_interval: Duration,
+    pub service_mesh_enabled: bool,
+    pub load_balancing_enabled: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PrimalProviderConfig {
+    pub provider_id: String,
+    pub capabilities: Vec<PrimalCapability>,
+    pub resource_requirements: ResourceRequirements,
+    pub health_check: HealthCheckConfig,
+}
+```
+
+### **Environment-Specific Configuration**
+
+```yaml
+# Example biome.yaml configuration for BearDog
+services:
+  security:
+    primal: "beardog"
+    instance_id: "beardog-${ENVIRONMENT}-001"
+    
+    config:
+      # Environment-specific security levels
+      security:
+        level: "${SECURITY_LEVEL:-high}"
+        encryption:
+          algorithm: "${ENCRYPTION_ALGORITHM:-AES-256-GCM}"
+          quantum_resistant: true
+      
+      # Gaming crypto configuration
+      gaming_crypto:
+        enabled: true
+        optimization: "${GAMING_OPTIMIZATION:-maximum}"
+      
+      # Songbird integration
+      songbird:
+        enabled: true
+        discovery_endpoint: "${SONGBIRD_ENDPOINT}"
+        service_mesh: true
+    
+    # Environment overrides
+    environments:
+      development:
+        config:
+          security:
+            level: "standard"
+          logging:
+            level: "debug"
+      
+      production:
+        config:
+          security:
+            level: "maximum"
+          performance:
+            optimization_enabled: true
+```
 impl Default for BearDogConfig {
     fn default() -> Self {
         Self {

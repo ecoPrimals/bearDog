@@ -285,7 +285,7 @@ pub async fn list_ml_models(
             "last_trained": "2024-01-01T00:00:00Z"
         })
         .as_object()
-        .unwrap()
+        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?
         .clone(),
         serde_json::json!({
             "model_id": "behavioral_anomaly_v2",
@@ -296,7 +296,7 @@ pub async fn list_ml_models(
             "last_trained": "2024-01-15T00:00:00Z"
         })
         .as_object()
-        .unwrap()
+        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?
         .clone(),
     ];
 
@@ -331,7 +331,7 @@ pub async fn get_ml_model_stats(
         "last_updated": "2024-01-20T10:30:00Z"
     })
     .as_object()
-    .unwrap()
+    .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?
     .clone();
 
     let stats: HashMap<String, serde_json::Value> = stats.into_iter().collect();

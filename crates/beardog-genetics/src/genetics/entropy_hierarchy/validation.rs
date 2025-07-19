@@ -8,7 +8,7 @@ use super::types::*;
 use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;
 use sha3::{Digest, Sha3_256};
-use std::sync::Arc;
+// use std::sync::Arc;
 
 /// Validates entropy quality and generates cryptographic proofs
 pub struct EntropyValidator {
@@ -337,9 +337,7 @@ impl EntropyValidator {
                 // Quality based on spectral diversity and duration
                 let feature_diversity = spectral_features.len() as f64 / 100.0;
                 let duration_factor = (*duration_ms as f64 / 10000.0).min(1.0); // 10 seconds max
-                (feature_diversity * 0.7 + duration_factor * 0.3)
-                    .min(1.0)
-                    .max(0.5)
+                (feature_diversity * 0.7 + duration_factor * 0.3).clamp(0.5, 1.0)
             }
             HumanEntropySource::Camera {
                 lighting_variations,
@@ -353,9 +351,7 @@ impl EntropyValidator {
                 let variation_score = lighting_variations.iter().sum::<f32>() as f64
                     / lighting_variations.len() as f64;
                 let duration_factor = (*duration_ms as f64 / 5000.0).min(1.0); // 5 seconds max
-                (variation_score * 0.8 + duration_factor * 0.2)
-                    .min(1.0)
-                    .max(0.6)
+                (variation_score * 0.8 + duration_factor * 0.2).clamp(0.6, 1.0)
             }
             HumanEntropySource::Haptic {
                 motion_patterns,
@@ -365,9 +361,7 @@ impl EntropyValidator {
                 // Quality based on motion complexity and touch diversity
                 let motion_complexity = motion_patterns.len() as f64 / 50.0;
                 let touch_diversity = touch_points.len() as f64 / 20.0;
-                (motion_complexity * 0.6 + touch_diversity * 0.4)
-                    .min(1.0)
-                    .max(0.7)
+                (motion_complexity * 0.6 + touch_diversity * 0.4).clamp(0.7, 1.0)
             }
         };
 
@@ -451,10 +445,7 @@ impl EntropyValidator {
     }
 
     /// Check if entropy meets minimum security requirements
-    pub fn check_security_requirements(
-        &self,
-        entropy_class: &EntropyClass,
-    ) -> BearDogResult<u8> {
+    pub fn check_security_requirements(&self, entropy_class: &EntropyClass) -> BearDogResult<u8> {
         let security_level = match entropy_class {
             EntropyClass::HumanLivedExperience { .. } => 100, // SecurityLevel::Maximum,
             EntropyClass::HumanSupervisedMachine { .. } => 80, // SecurityLevel::High,

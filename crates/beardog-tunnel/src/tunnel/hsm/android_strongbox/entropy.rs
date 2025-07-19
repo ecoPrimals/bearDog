@@ -234,7 +234,9 @@ impl EntropySource for AndroidEntropySource {
         let mut entropy = Vec::with_capacity(length);
         let base_time = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|e| AndroidStrongboxError::EntropySources(format!("System time error: {}", e)))?
+            .map_err(|e| BearDogError::Entropy {
+                message: format!("System time error: {e}"),
+            })?
             .as_nanos() as u64;
 
         for i in 0..length {
@@ -248,7 +250,9 @@ impl EntropySource for AndroidEntropySource {
         // Add some variation based on current microseconds
         let micro_var = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|e| AndroidStrongboxError::EntropySources(format!("System time error: {}", e)))?
+            .map_err(|e| BearDogError::Entropy {
+                message: format!("System time error: {e}"),
+            })?
             .subsec_micros() as u8;
 
         for (i, byte) in entropy.iter_mut().enumerate() {

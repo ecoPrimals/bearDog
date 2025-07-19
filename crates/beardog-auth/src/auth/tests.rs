@@ -46,18 +46,32 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_jwt_token_operations() {
-        let claims = TokenClaims {
-            user_id: "user123".to_string(),
-            roles: vec!["user".to_string()],
-            exp: (chrono::Utc::now() + chrono::Duration::hours(1)).timestamp(),
-        };
+    async fn test_decentralized_auth_token_operations() {
+        use beardog_security::DecentralizedAuthManager;
+        use std::collections::HashMap;
 
-        let token = create_jwt_token(&claims).await.unwrap();
-        let decoded = verify_jwt_token(&token).await.unwrap();
+        // Create decentralized auth manager
+        let auth_manager = DecentralizedAuthManager::new(24).unwrap();
 
-        assert_eq!(decoded.user_id, claims.user_id);
-        assert_eq!(decoded.roles, claims.roles);
+        // Create cryptographic auth token
+        let token = auth_manager
+            .create_auth_token(
+                "test_user",
+                "test_service",
+                vec!["read".to_string(), "write".to_string()],
+                HashMap::new(),
+            )
+            .unwrap();
+
+        // Verify token
+        let is_valid = auth_manager.verify_auth_token(&token).unwrap();
+        assert!(is_valid);
+
+        // Check token claims
+        assert_eq!(token.claims.subject, "test_user");
+        assert_eq!(token.claims.audience, "test_service");
+        assert_eq!(token.claims.permissions, vec!["read", "write"]);
+        assert!(!token.signature.is_empty());
     }
 
     #[tokio::test]
@@ -150,31 +164,26 @@ mod tests {
         Ok(token)
     }
 
-    async fn create_jwt_token(claims: &TokenClaims) -> Result<String, Box<dyn std::error::Error>> {
-        // Simplified JWT creation for testing
-        use base64::{engine::general_purpose, Engine};
+    /// Helper function to create a decentralized auth challenge
+    async fn create_auth_challenge(
+        expected_responder: &str,
+    ) -> Result<beardog_security::AuthChallenge, Box<dyn std::error::Error>> {
+        use beardog_security::DecentralizedAuthManager;
 
-        let header = r#"{"alg":"HS256","typ":"JWT"}"#;
-        let payload = serde_json::to_string(claims)?;
-        let token = format!(
-            "{}.{}.signature",
-            general_purpose::STANDARD.encode(header),
-            general_purpose::STANDARD.encode(payload)
-        );
-        Ok(token)
+        let auth_manager = DecentralizedAuthManager::new(24)?;
+        let challenge = auth_manager.create_challenge(expected_responder)?;
+        Ok(challenge)
     }
 
-    async fn verify_jwt_token(token: &str) -> Result<TokenClaims, Box<dyn std::error::Error>> {
-        use base64::{engine::general_purpose, Engine};
+    /// Helper function to respond to auth challenge
+    async fn respond_to_auth_challenge(
+        challenge: &beardog_security::AuthChallenge,
+    ) -> Result<beardog_security::AuthResponse, Box<dyn std::error::Error>> {
+        use beardog_security::DecentralizedAuthManager;
 
-        let parts: Vec<&str> = token.split('.').collect();
-        if parts.len() != 3 {
-            return Err("Invalid token format".into());
-        }
-
-        let payload = general_purpose::STANDARD.decode(parts[1])?;
-        let claims: TokenClaims = serde_json::from_slice(&payload)?;
-        Ok(claims)
+        let auth_manager = DecentralizedAuthManager::new(24)?;
+        let response = auth_manager.respond_to_challenge(challenge)?;
+        Ok(response)
     }
 
     async fn create_test_user(

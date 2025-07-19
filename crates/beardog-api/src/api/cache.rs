@@ -9,11 +9,73 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::{debug, error, warn};
 
-/// Cache provider trait for different implementations
+/// Concrete cache provider enum to avoid trait object issues with async traits
+#[derive(Clone)]
+pub enum CacheProviderType {
+    InMemory(InMemoryCache),
+    Redis(RedisCache),
+}
+
+impl CacheProviderType {
+    /// Create a new cache provider (falls back to in-memory if Redis fails)
+    pub async fn new() -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+        // Try Redis first, fall back to in-memory
+        match RedisCache::new().await {
+            Ok(redis_cache) => Ok(CacheProviderType::Redis(redis_cache)),
+            Err(_) => Ok(CacheProviderType::InMemory(InMemoryCache::new())),
+        }
+    }
+}
+
+#[async_trait]
+impl CacheProvider for CacheProviderType {
+    async fn get(&self, key: &str) -> Option<String> {
+        match self {
+            CacheProviderType::InMemory(cache) => cache.get(key).await,
+            CacheProviderType::Redis(cache) => cache.get(key).await,
+        }
+    }
+
+    async fn set(&self, key: &str, value: &str, ttl: Duration) -> bool {
+        match self {
+            CacheProviderType::InMemory(cache) => cache.set(key, value, ttl).await,
+            CacheProviderType::Redis(cache) => cache.set(key, value, ttl).await,
+        }
+    }
+
+    async fn delete(&self, key: &str) -> bool {
+        match self {
+            CacheProviderType::InMemory(cache) => cache.delete(key).await,
+            CacheProviderType::Redis(cache) => cache.delete(key).await,
+        }
+    }
+
+    async fn exists(&self, key: &str) -> bool {
+        match self {
+            CacheProviderType::InMemory(cache) => cache.exists(key).await,
+            CacheProviderType::Redis(cache) => cache.exists(key).await,
+        }
+    }
+
+    async fn clear(&self) -> bool {
+        match self {
+            CacheProviderType::InMemory(cache) => cache.clear().await,
+            CacheProviderType::Redis(cache) => cache.clear().await,
+        }
+    }
+
+    async fn stats(&self) -> CacheStats {
+        match self {
+            CacheProviderType::InMemory(cache) => cache.stats().await,
+            CacheProviderType::Redis(cache) => cache.stats().await,
+        }
+    }
+}
+
 #[async_trait]
 pub trait CacheProvider {
     /// Get value from cache
@@ -33,6 +95,30 @@ pub trait CacheProvider {
 
     /// Get cache statistics
     async fn stats(&self) -> CacheStats;
+}
+
+/// Cache configuration
+#[derive(Debug, Clone)]
+pub struct CacheConfig {
+    /// Maximum number of entries in cache
+    pub max_entries: usize,
+    /// Default TTL for cache entries
+    pub default_ttl: Duration,
+    /// Enable cache compression
+    pub compression_enabled: bool,
+    /// Cache cleanup interval
+    pub cleanup_interval: Duration,
+}
+
+impl Default for CacheConfig {
+    fn default() -> Self {
+        Self {
+            max_entries: 10000,
+            default_ttl: Duration::from_secs(3600), // 1 hour
+            compression_enabled: false,
+            cleanup_interval: Duration::from_secs(300), // 5 minutes
+        }
+    }
 }
 
 /// Cache statistics
@@ -90,7 +176,19 @@ impl CacheStats {
     }
 }
 
+/// In-memory cache implementation for single-node deployments
+#[derive(Clone)]
+pub struct InMemoryCache {
+    /// Internal cache storage
+    cache: Arc<RwLock<HashMap<String, CacheEntry>>>,
+    /// Cache performance statistics
+    stats: Arc<RwLock<CacheStats>>,
+    /// Cache configuration
+    config: CacheConfig,
+}
+
 /// Redis-based distributed cache
+#[derive(Clone)]
 pub struct RedisCache {
     /// Redis client connection
     client: redis::Client,
@@ -100,9 +198,7 @@ pub struct RedisCache {
 
 impl RedisCache {
     /// Create a new Redis cache instance
-    pub async fn new(
-    ) -> Result<Box<dyn CacheProvider + Send + Sync>, Box<dyn std::error::Error + Send + Sync>>
-    {
+    pub async fn new() -> Result<RedisCache, Box<dyn std::error::Error + Send + Sync>> {
         // For now, return error to fall back to in-memory
         Err("Redis not implemented yet".into())
     }
@@ -246,28 +342,20 @@ impl CacheProvider for RedisCache {
 #[derive(Debug, Clone)]
 struct CacheEntry {
     value: String,
-    expires_at: SystemTime,
+    expires_at: std::time::SystemTime,
 }
 
 impl CacheEntry {
     fn new(value: String, ttl: Duration) -> Self {
         Self {
             value,
-            expires_at: SystemTime::now() + ttl,
+            expires_at: std::time::SystemTime::now() + ttl,
         }
     }
 
     fn is_expired(&self) -> bool {
-        SystemTime::now() > self.expires_at
+        std::time::SystemTime::now() > self.expires_at
     }
-}
-
-/// In-memory cache implementation
-pub struct InMemoryCache {
-    /// Hash map storing cached entries
-    data: Arc<RwLock<HashMap<String, CacheEntry>>>,
-    /// Cache statistics tracking
-    stats: Arc<RwLock<CacheStats>>,
 }
 
 impl Default for InMemoryCache {
@@ -281,14 +369,15 @@ impl InMemoryCache {
     pub fn new() -> Self {
         debug!("🧠 In-memory cache initialized");
         Self {
-            data: Arc::new(RwLock::new(HashMap::new())),
+            cache: Arc::new(RwLock::new(HashMap::new())),
             stats: Arc::new(RwLock::new(CacheStats::new())),
+            config: CacheConfig::default(),
         }
     }
 
     /// Background task to clean up expired entries
     pub async fn cleanup_expired(&self) {
-        let mut data = self.data.write().await;
+        let mut data = self.cache.write().await;
         let initial_count = data.len();
 
         data.retain(|_key, entry| !entry.is_expired());
@@ -308,7 +397,7 @@ impl InMemoryCache {
 #[async_trait]
 impl CacheProvider for InMemoryCache {
     async fn get(&self, key: &str) -> Option<String> {
-        let data = self.data.read().await;
+        let data = self.cache.read().await;
 
         if let Some(entry) = data.get(key) {
             if !entry.is_expired() {
@@ -326,7 +415,7 @@ impl CacheProvider for InMemoryCache {
     async fn set(&self, key: &str, value: &str, ttl: Duration) -> bool {
         let entry = CacheEntry::new(value.to_string(), ttl);
 
-        let mut data = self.data.write().await;
+        let mut data = self.cache.write().await;
         data.insert(key.to_string(), entry);
 
         // Update stats
@@ -339,7 +428,7 @@ impl CacheProvider for InMemoryCache {
     }
 
     async fn delete(&self, key: &str) -> bool {
-        let mut data = self.data.write().await;
+        let mut data = self.cache.write().await;
         let removed = data.remove(key).is_some();
 
         if removed {
@@ -355,7 +444,7 @@ impl CacheProvider for InMemoryCache {
     }
 
     async fn exists(&self, key: &str) -> bool {
-        let data = self.data.read().await;
+        let data = self.cache.read().await;
 
         if let Some(entry) = data.get(key) {
             !entry.is_expired()
@@ -365,7 +454,7 @@ impl CacheProvider for InMemoryCache {
     }
 
     async fn clear(&self) -> bool {
-        let mut data = self.data.write().await;
+        let mut data = self.cache.write().await;
         let cleared_count = data.len();
         data.clear();
 

@@ -19,8 +19,9 @@
 //! - Secure memory wiping on key destruction
 //! - Cryptographically secure random number generation
 
-use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::config::KeyManagementConfig;
+use crate::tunnel::hsm::{PerformanceRequirements, SecurityRequirements};
+use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -50,7 +51,7 @@ pub struct CryptoKey {
 ///
 /// Enumeration of cryptographic algorithms supported by the key manager.
 /// Each algorithm has different performance and security characteristics.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CryptoAlgorithm {
     /// AES-256 with Galois/Counter Mode - High performance, widely supported
     Aes256Gcm,
@@ -77,6 +78,20 @@ pub struct BStpKeyManager {
 }
 
 impl BStpKeyManager {
+    /// Get the number of active rotation handles
+    pub async fn get_rotation_handle_count(&self) -> usize {
+        let handles = self.rotation_handles.read().await;
+        handles.len()
+    }
+
+    /// Stop all rotation handles
+    pub async fn stop_all_rotations(&self) {
+        let mut handles = self.rotation_handles.write().await;
+        for handle in handles.drain(..) {
+            handle.abort();
+        }
+    }
+
     /// Create a new key manager instance
     ///
     /// Initializes the key manager with the provided configuration and starts
@@ -351,15 +366,17 @@ impl BStpKeyManager {
         debug!("🔧 Generating hardware key material using HSM");
 
         // Create security requirements for key generation
-        let security_requirements = crate::tunnel::hsm::SecurityRequirements {
+        let security_requirements = SecurityRequirements {
             security_level: crate::tunnel::hsm::SecurityLevel::Medium,
             hardware_backed_required: true,
-            user_presence_required: false,
+            user_interaction_required: false,
             attestation_required: false,
-            geographic_restrictions: None,
             compliance_requirements: vec![],
-            key_usage_restrictions: None,
-            tamper_resistance_level: crate::tunnel::hsm::TamperResistanceLevel::Hardware,
+            performance_requirements: PerformanceRequirements {
+                max_latency_ms: None,
+                min_throughput_ops_per_sec: None,
+                cost_optimization: false,
+            },
         };
 
         // Determine key type based on length
@@ -374,11 +391,11 @@ impl BStpKeyManager {
         match self.get_hsm_manager().await {
             Ok(hsm_manager) => {
                 debug!("🔐 Using HSM manager for hardware key generation");
-                
+
                 // Create key generation request
                 let request = crate::tunnel::hsm::GenerateKeyRequest {
                     key_id: format!("session_key_{}", uuid::Uuid::new_v4()),
-                    key_type,
+                    key_type: key_type.clone(),
                     usage_policy: crate::tunnel::hsm::KeyUsagePolicy {
                         can_encrypt: true,
                         can_decrypt: true,
@@ -386,9 +403,12 @@ impl BStpKeyManager {
                         can_verify: false,
                         can_wrap: false,
                         can_unwrap: false,
-                        user_presence_required: false,
-                        max_usage_count: None,
-                        allowed_algorithms: vec![],
+                        can_derive: false,
+                        exportable: false,
+                        extractable: false,
+                        min_security_level: 2,
+                        max_operations: None,
+                        allowed_applications: vec![],
                     },
                     metadata: crate::tunnel::hsm::KeyMetadata {
                         key_id: format!("session_key_{}", uuid::Uuid::new_v4()),
@@ -403,9 +423,12 @@ impl BStpKeyManager {
                             can_verify: false,
                             can_wrap: false,
                             can_unwrap: false,
-                            user_presence_required: false,
-                            max_usage_count: None,
-                            allowed_algorithms: vec![],
+                            can_derive: false,
+                            exportable: false,
+                            extractable: false,
+                            min_security_level: 2,
+                            max_operations: None,
+                            allowed_applications: vec![],
                         },
                         tags: std::collections::HashMap::new(),
                     },
@@ -416,26 +439,24 @@ impl BStpKeyManager {
                 };
 
                 // Generate key using HSM
-                match hsm_manager.perform_operation(&security_requirements, |provider| {
-                    Box::pin(async move {
-                        let hsm_key = provider.generate_key(request).await?;
-                        // Extract key material from HSM key
-                        // Note: In a real implementation, this would be done more securely
-                        let key_material = self.extract_key_material_from_hsm_key(&hsm_key).await?;
-                        Ok(key_material)
-                    })
-                }).await {
-                    Ok(key_material) => {
-                        info!("✅ Generated hardware-backed key material ({} bytes) via HSM", length);
-                        return Ok(key_material);
-                    }
-                    Err(e) => {
-                        warn!("⚠️ HSM key generation failed: {}, falling back to software generation", e);
-                    }
-                }
+                let selection = hsm_manager
+                    .get_best_provider(&security_requirements)
+                    .await?;
+                let hsm_key = selection.provider.generate_key(request).await?;
+                // Extract key material from HSM key
+                // Note: In a real implementation, this would be done more securely
+                let key_material = self.extract_key_material_from_hsm_key(&hsm_key).await?;
+                info!(
+                    "✅ Generated hardware-backed key material ({} bytes) via HSM",
+                    length
+                );
+                return Ok(key_material);
             }
             Err(e) => {
-                warn!("⚠️ HSM manager unavailable: {}, falling back to software generation", e);
+                warn!(
+                    "⚠️ HSM manager unavailable: {}, falling back to software generation",
+                    e
+                );
             }
         }
 
@@ -447,7 +468,7 @@ impl BStpKeyManager {
     async fn get_hsm_manager(&self) -> BearDogResult<Arc<crate::tunnel::hsm::manager::HsmManager>> {
         // In a real implementation, this would be initialized during key manager construction
         // For now, create a basic HSM manager configuration
-        let hsm_config = crate::tunnel::hsm::manager::HsmManagerConfig {
+        let _hsm_config = crate::tunnel::hsm::manager::HsmManagerConfig {
             hsm_configs: vec![
                 // Try software HSM first
                 crate::tunnel::hsm::types::HsmConfig {
@@ -457,50 +478,56 @@ impl BStpKeyManager {
                             implementation: "RustSoftwareHsm".to_string(),
                             key_storage: crate::tunnel::hsm::types::KeyStoreConfig {
                                 storage_type: crate::tunnel::hsm::types::KeyStorageType::InMemory,
-                                encryption_key_source: crate::tunnel::hsm::types::KeySource::Derived,
+                                encryption_key_source:
+                                    crate::tunnel::hsm::types::KeySource::Derived,
                                 backup_enabled: false,
                                 cache_size: 100,
                                 file_config: None,
                                 db_config: None,
                             },
-                            memory_protection: crate::tunnel::hsm::types::MemoryProtectionLevel::Basic,
+                            memory_protection:
+                                crate::tunnel::hsm::types::MemoryProtectionLevel::Basic,
                             crypto_backend: crate::tunnel::hsm::types::CryptoBackend::RustCrypto,
                             enable_key_caching: true,
                             max_cached_keys: 1000,
                             key_store_config: crate::tunnel::hsm::types::KeyStoreConfig {
                                 storage_type: crate::tunnel::hsm::types::KeyStorageType::InMemory,
-                                encryption_key_source: crate::tunnel::hsm::types::KeySource::Derived,
+                                encryption_key_source:
+                                    crate::tunnel::hsm::types::KeySource::Derived,
                                 backup_enabled: false,
                                 cache_size: 100,
                                 file_config: None,
                                 db_config: None,
                             },
                             memory_config: crate::tunnel::hsm::types::MemoryConfig::default(),
-                        }
+                        },
                     ),
                     security_config: crate::tunnel::hsm::types::SecurityConfig::default(),
                     performance_config: crate::tunnel::hsm::types::PerformanceConfig::default(),
                     monitoring_config: crate::tunnel::hsm::types::MonitoringConfig::default(),
                 },
             ],
-            health_config: crate::tunnel::hsm::manager::HealthConfig::default(),
+            health_config: crate::tunnel::hsm::manager::config::HealthConfig::default(),
             failover_config: crate::tunnel::hsm::manager::config::FailoverConfig::default(),
             performance_config: crate::tunnel::hsm::manager::config::PerformanceConfig::default(),
         };
 
-        crate::tunnel::hsm::manager::HsmManager::new().await
+        Ok(Arc::new(crate::tunnel::hsm::manager::HsmManager::new()))
     }
 
     /// Extract key material from HSM key (this is a simplified implementation)
-    async fn extract_key_material_from_hsm_key(&self, hsm_key: &crate::tunnel::hsm::HsmKey) -> BearDogResult<Vec<u8>> {
+    async fn extract_key_material_from_hsm_key(
+        &self,
+        hsm_key: &crate::tunnel::hsm::HsmKey,
+    ) -> BearDogResult<Vec<u8>> {
         // In a real implementation, this would securely extract or generate key material
         // For now, we'll use a derived approach based on key ID
-        use sha2::{Sha256, Digest};
+        use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
         hasher.update(hsm_key.id.as_bytes());
         hasher.update(format!("{:?}", hsm_key.key_type).as_bytes());
         hasher.update(format!("{:?}", hsm_key.created_at).as_bytes());
-        
+
         let hash = hasher.finalize();
         Ok(hash.to_vec())
     }
@@ -519,7 +546,7 @@ impl BStpKeyManager {
 
         // Add additional entropy from system sources
         let additional_entropy = self.gather_system_entropy().await?;
-        
+
         // Mix entropy sources using XOR
         for (i, &entropy_byte) in additional_entropy.iter().enumerate() {
             if i < key_material.len() {
@@ -527,28 +554,36 @@ impl BStpKeyManager {
             }
         }
 
-        info!("✅ Generated software fallback key material ({} bytes)", length);
+        info!(
+            "✅ Generated software fallback key material ({} bytes)",
+            length
+        );
         Ok(key_material)
     }
 
     /// Gather additional system entropy
     async fn gather_system_entropy(&self) -> BearDogResult<Vec<u8>> {
-        use sha2::{Sha256, Digest};
+        use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
-        
+
         // Add timestamp
-        hasher.update(chrono::Utc::now().timestamp_nanos().to_le_bytes());
-        
+        hasher.update(
+            chrono::Utc::now()
+                .timestamp_nanos_opt()
+                .unwrap_or(0)
+                .to_le_bytes(),
+        );
+
         // Add process ID
         hasher.update(std::process::id().to_le_bytes());
-        
-        // Add thread ID (approximation)
-        hasher.update(std::thread::current().id().as_u64().get().to_le_bytes());
-        
+
+        // Add thread ID (use stable method)
+        hasher.update(format!("{:?}", std::thread::current().id()).as_bytes());
+
         // Add memory address entropy
         let stack_var = 0u64;
         hasher.update((&stack_var as *const u64 as usize).to_le_bytes());
-        
+
         Ok(hasher.finalize().to_vec())
     }
 }

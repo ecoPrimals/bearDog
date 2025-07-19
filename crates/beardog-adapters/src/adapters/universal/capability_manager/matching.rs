@@ -150,7 +150,7 @@ pub enum ReliabilityType {
 }
 
 /// Resource constraints for capability provision
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ResourceConstraints {
     /// Maximum CPU cores allowed
     pub max_cpu_cores: Option<u32>,
@@ -540,7 +540,7 @@ impl RequiredAttribute {
         Self {
             value,
             operator,
-            weight: weight.max(0.0).min(1.0),
+            weight: weight.clamp(0.0, 1.0),
             required,
         }
     }
@@ -556,9 +556,8 @@ impl RequiredAttribute {
     }
 }
 
-impl QoSRequirements {
-    /// Create default QoS requirements
-    pub fn default() -> Self {
+impl Default for QoSRequirements {
+    fn default() -> Self {
         Self {
             max_response_time_ms: Some(1000),
             min_availability_percent: Some(99.0),
@@ -566,6 +565,13 @@ impl QoSRequirements {
             max_error_rate_percent: Some(1.0),
             reliability_requirements: Vec::new(),
         }
+    }
+}
+
+impl QoSRequirements {
+    /// Create default QoS requirements
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Create high-performance QoS requirements
@@ -590,15 +596,8 @@ impl QoSRequirements {
 
 impl ResourceConstraints {
     /// Create default resource constraints
-    pub fn default() -> Self {
-        Self {
-            max_cpu_cores: None,
-            max_memory_mb: None,
-            max_storage_gb: None,
-            max_network_mbps: None,
-            geographic_restrictions: Vec::new(),
-            compliance_requirements: Vec::new(),
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Create strict resource constraints

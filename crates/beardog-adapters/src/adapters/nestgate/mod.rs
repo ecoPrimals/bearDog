@@ -13,6 +13,9 @@ pub mod audit;
 pub mod core;
 pub mod policy;
 pub mod types;
+
+// Conditionally compile advanced ZFS integration
+#[cfg(feature = "advanced-nestgate")]
 pub mod zfs;
 
 // Re-export main types and structs
@@ -20,6 +23,9 @@ pub use audit::{AuditManager, AuditReport, AuditReportType, AuditStatistics};
 pub use core::{Connection, ConnectionPool, ConnectionStatus, UniversalNestGateAdapter};
 pub use policy::{PolicyEngine, PolicyStatistics};
 pub use types::*;
+
+// Conditionally re-export advanced ZFS integration
+#[cfg(feature = "advanced-nestgate")]
 pub use zfs::{ZfsDataset, ZfsManager, ZfsOperation};
 
 /// Universal NestGate adapter builder
@@ -70,10 +76,9 @@ impl NestGateAdapterBuilder {
             .provider
             .ok_or_else(|| NestGateError::Configuration("Provider is required".to_string()))?;
 
-        let config = self.config.unwrap_or_else(|| {
-            let mut default_config = NestGateConfig::default();
-            default_config.provider_name = provider.name().to_string();
-            default_config
+        let config = self.config.unwrap_or_else(|| NestGateConfig {
+            provider_name: provider.name().to_string(),
+            ..Default::default()
         });
 
         info!(
@@ -102,18 +107,17 @@ impl NestGateAdapterFactory {
     ) -> NestGateResult<UniversalNestGateAdapter> {
         info!("Creating NestGate adapter for BearDog");
 
-        let config = config.unwrap_or_else(|| {
-            let mut config = NestGateConfig::default();
-            config.provider_name = "beardog".to_string();
-            config.capabilities = vec![
+        let config = config.unwrap_or_else(|| NestGateConfig {
+            provider_name: "beardog".to_string(),
+            capabilities: vec![
                 "file_operations".to_string(),
                 "key_management".to_string(),
                 "zfs_integration".to_string(),
                 "policy_enforcement".to_string(),
                 "audit_logging".to_string(),
                 "beardog_specific".to_string(),
-            ];
-            config
+            ],
+            ..Default::default()
         });
 
         NestGateAdapterBuilder::new()
@@ -130,10 +134,9 @@ impl NestGateAdapterFactory {
     ) -> NestGateResult<UniversalNestGateAdapter> {
         info!("Creating NestGate adapter for SongBird");
 
-        let config = config.unwrap_or_else(|| {
-            let mut config = NestGateConfig::default();
-            config.provider_name = "songbird".to_string();
-            config.capabilities = vec![
+        let config = config.unwrap_or_else(|| NestGateConfig {
+            provider_name: "songbird".to_string(),
+            capabilities: vec![
                 "file_operations".to_string(),
                 "key_management".to_string(),
                 "zfs_integration".to_string(),
@@ -141,8 +144,8 @@ impl NestGateAdapterFactory {
                 "audit_logging".to_string(),
                 "service_orchestration".to_string(),
                 "universal_patterns".to_string(),
-            ];
-            config
+            ],
+            ..Default::default()
         });
 
         NestGateAdapterBuilder::new()
@@ -159,10 +162,9 @@ impl NestGateAdapterFactory {
     ) -> NestGateResult<UniversalNestGateAdapter> {
         info!("Creating NestGate adapter for ToadStool");
 
-        let config = config.unwrap_or_else(|| {
-            let mut config = NestGateConfig::default();
-            config.provider_name = "toadstool".to_string();
-            config.capabilities = vec![
+        let config = config.unwrap_or_else(|| NestGateConfig {
+            provider_name: "toadstool".to_string(),
+            capabilities: vec![
                 "file_operations".to_string(),
                 "key_management".to_string(),
                 "zfs_integration".to_string(),
@@ -170,8 +172,8 @@ impl NestGateAdapterFactory {
                 "audit_logging".to_string(),
                 "compute_integration".to_string(),
                 "performance_optimization".to_string(),
-            ];
-            config
+            ],
+            ..Default::default()
         });
 
         NestGateAdapterBuilder::new()
@@ -188,10 +190,9 @@ impl NestGateAdapterFactory {
     ) -> NestGateResult<UniversalNestGateAdapter> {
         info!("Creating NestGate adapter for biomeOS");
 
-        let config = config.unwrap_or_else(|| {
-            let mut config = NestGateConfig::default();
-            config.provider_name = "biomeos".to_string();
-            config.capabilities = vec![
+        let config = config.unwrap_or_else(|| NestGateConfig {
+            provider_name: "biomeos".to_string(),
+            capabilities: vec![
                 "file_operations".to_string(),
                 "key_management".to_string(),
                 "zfs_integration".to_string(),
@@ -199,8 +200,8 @@ impl NestGateAdapterFactory {
                 "audit_logging".to_string(),
                 "ecosystem_integration".to_string(),
                 "biometric_auth".to_string(),
-            ];
-            config
+            ],
+            ..Default::default()
         });
 
         NestGateAdapterBuilder::new()
@@ -218,18 +219,17 @@ impl NestGateAdapterFactory {
     ) -> NestGateResult<UniversalNestGateAdapter> {
         info!("Creating NestGate adapter for primal: {}", primal_name);
 
-        let config = config.unwrap_or_else(|| {
-            let mut config = NestGateConfig::default();
-            config.provider_name = primal_name.to_string();
-            config.capabilities = vec![
+        let config = config.unwrap_or_else(|| NestGateConfig {
+            provider_name: primal_name.to_string(),
+            capabilities: vec![
                 "file_operations".to_string(),
                 "key_management".to_string(),
                 "zfs_integration".to_string(),
                 "policy_enforcement".to_string(),
                 "audit_logging".to_string(),
                 "universal_patterns".to_string(),
-            ];
-            config
+            ],
+            ..Default::default()
         });
 
         NestGateAdapterBuilder::new()
@@ -355,57 +355,55 @@ pub mod utils {
 
     /// Create default configuration for primal
     pub fn create_default_config(primal_name: &str) -> NestGateConfig {
-        let mut config = NestGateConfig::default();
-        config.provider_name = primal_name.to_string();
-
-        // Set primal-specific capabilities
-        config.capabilities = match primal_name {
-            "beardog" => vec![
-                "file_operations".to_string(),
-                "key_management".to_string(),
-                "zfs_integration".to_string(),
-                "policy_enforcement".to_string(),
-                "audit_logging".to_string(),
-                "beardog_specific".to_string(),
-            ],
-            "songbird" => vec![
-                "file_operations".to_string(),
-                "key_management".to_string(),
-                "zfs_integration".to_string(),
-                "policy_enforcement".to_string(),
-                "audit_logging".to_string(),
-                "service_orchestration".to_string(),
-                "universal_patterns".to_string(),
-            ],
-            "toadstool" => vec![
-                "file_operations".to_string(),
-                "key_management".to_string(),
-                "zfs_integration".to_string(),
-                "policy_enforcement".to_string(),
-                "audit_logging".to_string(),
-                "compute_integration".to_string(),
-                "performance_optimization".to_string(),
-            ],
-            "biomeos" => vec![
-                "file_operations".to_string(),
-                "key_management".to_string(),
-                "zfs_integration".to_string(),
-                "policy_enforcement".to_string(),
-                "audit_logging".to_string(),
-                "ecosystem_integration".to_string(),
-                "biometric_auth".to_string(),
-            ],
-            _ => vec![
-                "file_operations".to_string(),
-                "key_management".to_string(),
-                "zfs_integration".to_string(),
-                "policy_enforcement".to_string(),
-                "audit_logging".to_string(),
-                "universal_patterns".to_string(),
-            ],
-        };
-
-        config
+        NestGateConfig {
+            provider_name: primal_name.to_string(),
+            capabilities: match primal_name {
+                "beardog" => vec![
+                    "file_operations".to_string(),
+                    "key_management".to_string(),
+                    "zfs_integration".to_string(),
+                    "policy_enforcement".to_string(),
+                    "audit_logging".to_string(),
+                    "beardog_specific".to_string(),
+                ],
+                "songbird" => vec![
+                    "file_operations".to_string(),
+                    "key_management".to_string(),
+                    "zfs_integration".to_string(),
+                    "policy_enforcement".to_string(),
+                    "audit_logging".to_string(),
+                    "service_orchestration".to_string(),
+                    "universal_patterns".to_string(),
+                ],
+                "toadstool" => vec![
+                    "file_operations".to_string(),
+                    "key_management".to_string(),
+                    "zfs_integration".to_string(),
+                    "policy_enforcement".to_string(),
+                    "audit_logging".to_string(),
+                    "compute_integration".to_string(),
+                    "performance_optimization".to_string(),
+                ],
+                "biomeos" => vec![
+                    "file_operations".to_string(),
+                    "key_management".to_string(),
+                    "zfs_integration".to_string(),
+                    "policy_enforcement".to_string(),
+                    "audit_logging".to_string(),
+                    "ecosystem_integration".to_string(),
+                    "biometric_auth".to_string(),
+                ],
+                _ => vec![
+                    "file_operations".to_string(),
+                    "key_management".to_string(),
+                    "zfs_integration".to_string(),
+                    "policy_enforcement".to_string(),
+                    "audit_logging".to_string(),
+                    "universal_patterns".to_string(),
+                ],
+            },
+            ..Default::default()
+        }
     }
 
     /// Get supported capabilities for primal

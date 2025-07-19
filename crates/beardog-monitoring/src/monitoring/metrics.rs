@@ -17,6 +17,7 @@ pub struct MetricsService<T> {
     /// Native Rust metrics (always free)
     native_metrics: Arc<RwLock<HashMap<String, MetricValue>>>,
     /// License manager for external integrations
+    #[allow(dead_code)]
     license_manager: Arc<T>,
     /// Prometheus exporter (if licensed)
     prometheus_exporter: Option<PrometheusExporter>,
@@ -50,8 +51,10 @@ pub struct PrometheusExporter {
     /// Whether Prometheus export is enabled
     enabled: bool,
     /// Endpoint URL for Prometheus metrics export
+    #[allow(dead_code)]
     endpoint: String,
     /// Port number for Prometheus metrics server
+    #[allow(dead_code)]
     port: u16,
 }
 

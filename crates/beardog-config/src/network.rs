@@ -221,7 +221,7 @@ pub struct NodeCommunicationConfig {
     pub encryption: EncryptionConfig,
     /// Authentication method
     pub auth_method: AuthMethod,
-    /// API key for authentication (when using SharedSecret or JWT)
+    /// API key for authentication (when using SharedSecret or Ed25519)
     pub api_key: Option<String>,
     /// Shared secret for authentication
     pub secret: Option<String>,
@@ -310,8 +310,8 @@ pub struct SyncConfig {
 pub enum AuthMethod {
     /// Shared secret authentication using a pre-configured key
     SharedSecret,
-    /// JSON Web Token based authentication
-    JWT,
+    /// Ed25519 authentication
+    Ed25519,
     /// Mutual TLS authentication where both parties verify certificates
     Mutual,
 }
@@ -335,10 +335,20 @@ impl Default for HttpConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            bind_address: "127.0.0.1:8080".to_string(),
-            port: 8080,
-            max_request_size: 1024 * 1024, // 1MB
-            keep_alive_timeout: 60,        // 60 seconds
+            bind_address: std::env::var("BEARDOG_HTTP_BIND_ADDRESS")
+                .unwrap_or_else(|_| "0.0.0.0:3000".to_string()),
+            port: std::env::var("BEARDOG_HTTP_PORT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(3000),
+            max_request_size: std::env::var("BEARDOG_HTTP_MAX_REQUEST_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(16 * 1024 * 1024), // 16MB - increased from 1MB
+            keep_alive_timeout: std::env::var("BEARDOG_HTTP_KEEP_ALIVE_TIMEOUT")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(60), // 60 seconds
         }
     }
 }

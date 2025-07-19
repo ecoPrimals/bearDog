@@ -13,18 +13,24 @@ pub enum KeyType {
     Aes256,
     /// ChaCha20 symmetric encryption key
     ChaCha20,
-    /// ECDSA P-256 curve key
-    EccP256,
-    /// ECDSA P-384 curve key
-    EccP384,
-    /// ECDSA P-521 curve key
-    EccP521,
     /// RSA key with specified key size
     Rsa { key_size: u32 },
     /// HMAC key
     Hmac { key_size: u32 },
     /// Key derivation key
     KeyDerivation { key_size: u32 },
+    /// ECC P-256 key
+    EccP256,
+    /// ECC P-384 key
+    EccP384,
+    /// ECC P-521 key
+    EccP521,
+    /// Ed25519 signing key
+    Ed25519,
+    /// X25519 key exchange key
+    X25519,
+    /// Custom key type
+    Custom(String),
 }
 
 /// Metadata associated with HSM keys
@@ -418,4 +424,4 @@ pub enum HsmOperation {
         /// Operation parameters
         parameters: std::collections::HashMap<String, String>,
     },
-} 
+}

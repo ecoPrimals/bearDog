@@ -4,8 +4,8 @@
 //! specifically targeting StrongBox-backed operations.
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
+use beardog_errors::{BearDogError, BearDogResult};
 use tracing::{debug, info, warn};
 
 impl AndroidKeystore {

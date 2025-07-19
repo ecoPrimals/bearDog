@@ -5,8 +5,8 @@
 
 use std::collections::HashMap;
 
-use super::super::traits::*;
 use super::super::capability_ids;
+use super::super::traits::*;
 use super::core::BearDogPrimalProvider;
 
 impl<T: Send + Sync> BearDogPrimalProvider<T> {
@@ -36,7 +36,10 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                         "purpose".to_string(),
                         serde_json::json!("Service discovery and registration"),
                     ),
-                    ("fallback".to_string(), serde_json::json!("Local configuration")),
+                    (
+                        "fallback".to_string(),
+                        serde_json::json!("Local configuration"),
+                    ),
                 ])),
             },
             // Optional dependency on NestGate for secure storage
@@ -51,7 +54,10 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                         "purpose".to_string(),
                         serde_json::json!("Secure key and audit storage"),
                     ),
-                    ("fallback".to_string(), serde_json::json!("Local file storage")),
+                    (
+                        "fallback".to_string(),
+                        serde_json::json!("Local file storage"),
+                    ),
                 ])),
             },
         ]

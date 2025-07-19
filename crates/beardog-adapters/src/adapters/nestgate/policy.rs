@@ -14,6 +14,7 @@ use super::types::*;
 /// Universal policy engine
 pub struct PolicyEngine {
     /// Policy configuration
+    #[allow(dead_code)]
     config: PolicyConfig,
     /// Active policies
     policies: Arc<RwLock<HashMap<String, AccessPolicy>>>,

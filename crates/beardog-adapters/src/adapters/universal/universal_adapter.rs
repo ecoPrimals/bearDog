@@ -11,9 +11,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use super::primal_registry::{global_registry, PrimalId, PrimalRegistration};
 use super::traits::*;
-use super::primal_registry::{PrimalId, PrimalRegistration, global_registry};
+use beardog_errors::{BearDogError, BearDogResult};
 
 /// Universal adapter configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -103,7 +103,9 @@ impl UniversalAdapter {
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(config.timeout_seconds))
             .build()
-            .map_err(|e| BearDogError::Network { message: format!("Failed to create HTTP client: {}", e) })?;
+            .map_err(|e| BearDogError::Network {
+                message: format!("Failed to create HTTP client: {e}"),
+            })?;
 
         let connection_state = Arc::new(RwLock::new(ConnectionState {
             connected: false,
@@ -155,7 +157,7 @@ impl UniversalAdapter {
                     Err(BearDogError::Network { message: error })
                 }
                 Err(e) => {
-                    let error = format!("Connection failed: {}", e);
+                    let error = format!("Connection failed: {e}");
                     let mut state = self.connection_state.write().await;
                     state.connected = false;
                     state.last_error = Some(error.clone());
@@ -163,10 +165,12 @@ impl UniversalAdapter {
                 }
             }
         } else {
-            Err(BearDogError::NotFound { message: format!(
-                "Primal '{}' not found in registry",
-                self.config.target_primal.id
-            )})
+            Err(BearDogError::NotFound {
+                message: format!(
+                    "Primal '{}' not found in registry",
+                    self.config.target_primal.id
+                ),
+            })
         }
     }
 
@@ -195,7 +199,7 @@ impl UniversalAdapter {
         };
 
         // Build the request
-        let request_url = format!("{}/api/v1/request", endpoint);
+        let request_url = format!("{endpoint}/api/v1/request");
         let mut http_request = self.client.post(&request_url);
 
         // Add authentication if configured
@@ -209,7 +213,7 @@ impl UniversalAdapter {
                 // TLS client certificate authentication would be handled at the client level
                 // This is a placeholder for demonstration
             }
-            AuthType::Custom(custom_type) => {
+            AuthType::Custom(_custom_type) => {
                 // Handle custom authentication based on the type
                 for (key, value) in &self.config.auth.custom_auth {
                     http_request = http_request.header(key, value);
@@ -229,11 +233,11 @@ impl UniversalAdapter {
         {
             let mut state = self.connection_state.write().await;
             state.metrics.total_requests += 1;
-            
+
             // Update average response time
             let current_avg = state.metrics.avg_response_time_ms;
             let total_requests = state.metrics.total_requests;
-            state.metrics.avg_response_time_ms = 
+            state.metrics.avg_response_time_ms =
                 (current_avg * (total_requests - 1) + response_time) / total_requests;
         }
 
@@ -243,9 +247,11 @@ impl UniversalAdapter {
                 state.metrics.successful_requests += 1;
                 drop(state);
 
-                let service_response: ServiceResponse = resp.json().await
-                    .map_err(|e| BearDogError::Serialization { message: format!("Failed to deserialize response: {}", e) })?;
-                
+                let service_response: ServiceResponse =
+                    resp.json().await.map_err(|e| BearDogError::Serialization {
+                        message: format!("Failed to deserialize response: {e}"),
+                    })?;
+
                 Ok(service_response)
             }
             Ok(resp) => {
@@ -260,7 +266,7 @@ impl UniversalAdapter {
             Err(e) => {
                 let mut state = self.connection_state.write().await;
                 state.metrics.failed_requests += 1;
-                let error = format!("Network error: {}", e);
+                let error = format!("Network error: {e}");
                 state.last_error = Some(error.clone());
                 drop(state);
 
@@ -369,7 +375,8 @@ mod tests {
             PrimalId::songbird(),
             "https://songbird.example.com".to_string(),
             auth,
-        ).await;
+        )
+        .await;
 
         assert!(adapter.is_ok());
     }
@@ -388,8 +395,9 @@ mod tests {
             "MyCustomAI",
             "https://my-custom-ai.example.com".to_string(),
             auth,
-        ).await;
+        )
+        .await;
 
         assert!(adapter.is_ok());
     }
-} 
+}

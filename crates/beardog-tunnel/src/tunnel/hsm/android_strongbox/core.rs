@@ -4,10 +4,10 @@
 //! HsmProvider trait implementation for Android StrongBox functionality.
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::HsmProvider;
 use async_trait::async_trait;
+use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -103,8 +103,7 @@ impl AndroidStrongBoxHsm {
         let key_params = self.configure_strongbox_parameters(request)?;
 
         // Generate key in Android Keystore/StrongBox
-        self
-            .keystore
+        self.keystore
             .generate_key(&request.key_id, &key_params)
             .await?;
 
@@ -185,26 +184,35 @@ impl AndroidStrongBoxHsm {
             }
             KeyType::ChaCha20 => {
                 return Err(BearDogError::UnsupportedKeyType {
-                    key_type: request.key_type.clone(),
-                    hsm_type: "android_strongbox".to_string(),
+                    key_type: format!("{:?}", request.key_type),
                 });
             }
             KeyType::Ed25519 => {
                 return Err(BearDogError::UnsupportedKeyType {
-                    key_type: request.key_type.clone(),
-                    hsm_type: "android_strongbox".to_string(),
+                    key_type: format!("{:?}", request.key_type),
                 });
             }
             KeyType::X25519 => {
                 return Err(BearDogError::UnsupportedKeyType {
-                    key_type: request.key_type.clone(),
-                    hsm_type: "android_strongbox".to_string(),
+                    key_type: format!("{:?}", request.key_type),
+                });
+            }
+            KeyType::Hmac { key_size: _ } => {
+                return Err(BearDogError::UnsupportedKeyType {
+                    key_type: format!(
+                        "HMAC keys are not supported in Android StrongBox: {:?}",
+                        request.key_type
+                    ),
+                });
+            }
+            KeyType::KeyDerivation { key_size: _ } => {
+                return Err(BearDogError::UnsupportedKeyType {
+                    key_type: format!("{:?}", request.key_type),
                 });
             }
             KeyType::Custom(_) => {
                 return Err(BearDogError::UnsupportedKeyType {
-                    key_type: request.key_type.clone(),
-                    hsm_type: "android_strongbox".to_string(),
+                    key_type: format!("{:?}", request.key_type),
                 });
             }
         }
@@ -234,8 +242,8 @@ impl AndroidStrongBoxHsm {
         // Set StrongBox requirement
         params.set_strongbox_required(true);
 
-        // Set user authentication requirement
-        params.set_user_authentication_required(request.usage_policy.user_presence_required);
+        // Set user authentication requirement based on security level
+        params.set_user_authentication_required(request.require_user_presence);
 
         // Set key validity
         if let Some(expires_at) = request.metadata.expires_at {
@@ -366,7 +374,7 @@ impl AndroidStrongBoxHsm {
         let cache = self.key_cache.read().await;
         if !cache.contains_key(key_id) {
             return Err(BearDogError::NotFound {
-                message: format!("Key not found: {}", key_id),
+                message: format!("Key not found: {key_id}"),
             });
         }
         Ok(())
@@ -398,9 +406,7 @@ impl HsmProvider for AndroidStrongBoxHsm {
     async fn import_key(&self, _key_data: &[u8], _metadata: KeyMetadata) -> BearDogResult<HsmKey> {
         // StrongBox keys cannot be imported - they must be generated in hardware
         Err(BearDogError::UnsupportedOperation {
-            operation: "Key import".to_string(),
-            hsm_type: "Android StrongBox".to_string(),
-            reason: "StrongBox keys must be generated in hardware".to_string(),
+            operation: "StrongBox keys must be generated in hardware".to_string(),
         })
     }
 
@@ -451,9 +457,7 @@ impl HsmProvider for AndroidStrongBoxHsm {
     ) -> BearDogResult<HsmKey> {
         // Key derivation not directly supported in Android StrongBox
         Err(BearDogError::UnsupportedOperation {
-            operation: "Key derivation".to_string(),
-            hsm_type: "Android StrongBox".to_string(),
-            reason: "Key derivation not supported in StrongBox".to_string(),
+            operation: "Key derivation not supported in StrongBox".to_string(),
         })
     }
 
@@ -463,50 +467,36 @@ impl HsmProvider for AndroidStrongBoxHsm {
         let device_info = AndroidDeviceInfo::detect().await?;
 
         Ok(HsmInfo {
-            hsm_type: HsmTier::SmartphoneHsm {
-                device_type: SmartphoneType::Android {
-                    manufacturer: device_info.manufacturer.clone(),
-                    model: device_info.model.clone(),
-                    android_version: device_info.android_version.clone(),
-                    strongbox_version: device_info.strongbox_version.clone(),
-                },
-                secure_enclave: SecureEnclaveType::AndroidStrongBox {
-                    implementation: device_info.strongbox_implementation(),
-                    hardware_backed: device_info.hardware_backed(),
-                    key_attestation: device_info.key_attestation_supported(),
-                },
-                attestation_level: AttestationLevel::Hardware,
-                user_presence_required: false,
-            },
+            instance_id: format!(
+                "android-strongbox-{}-{}",
+                device_info.manufacturer, device_info.model
+            ),
+            tier_type: "SmartphoneHsm".to_string(),
             vendor: device_info.manufacturer.clone(),
             model: device_info.model.clone(),
-            version: device_info.android_version.clone(),
+            firmware_version: device_info.android_version.clone(),
+            api_version: "1.0".to_string(),
             capabilities: vec![
                 HsmCapability::KeyGeneration,
                 HsmCapability::Signing,
-                HsmCapability::Verification,
                 HsmCapability::Encryption,
                 HsmCapability::Decryption,
                 HsmCapability::KeyAttestation,
-                HsmCapability::TamperDetection,
-                HsmCapability::BiometricAuthentication,
                 HsmCapability::UserPresenceValidation,
             ],
             supported_algorithms: vec![
-                Algorithm::EccP256,
-                Algorithm::EccP384,
-                Algorithm::EccP521,
-                Algorithm::RsaSha256,
-                Algorithm::RsaSha384,
-                Algorithm::RsaSha512,
-                Algorithm::Aes256Gcm,
-                Algorithm::EcdsaSha256,
-                Algorithm::EcdsaSha384,
-                Algorithm::EcdsaSha512,
+                "ECC_P256".to_string(),
+                "RSA_2048".to_string(),
+                "AES_256".to_string(),
             ],
+            max_key_count: 100,
+            current_key_count: 0,
+            status: HsmOperationalStatus::Operational,
+            hsm_type: "SmartphoneHsm".to_string(),
+            version: device_info.android_version.clone(),
             max_key_size: Some(4096),
-            certification: Some("StrongBox Keymaster".to_string()),
-            tamper_resistance: TamperResistanceLevel::Hardware,
+            certification: Some("Android StrongBox".to_string()),
+            tamper_resistance: crate::tunnel::hsm::types::tier::TamperResistanceLevel::Hardware,
         })
     }
 
@@ -517,14 +507,32 @@ impl HsmProvider for AndroidStrongBoxHsm {
 
         // Get keys from cache
         let cache = self.key_cache.read().await;
-        for (key_id, cache_info) in cache.iter() {
+        for (_key_id, cache_info) in cache.iter() {
             let key_info = HsmKeyInfo {
+                metadata: KeyMetadata {
+                    key_id: cache_info.key_id.clone(),
+                    key_name: cache_info.key_id.clone(),
+                    key_type: cache_info.key_type.clone(),
+                    created_at: cache_info.last_used,
+                    expires_at: None,
+                    usage_policy: cache_info.usage_policy.clone(),
+                    tags: HashMap::new(),
+                },
+                hsm_tier: "SmartphoneHsm".to_string(),
+                health_status: cache_info.health_status.clone(),
+                performance_metrics: KeyPerformanceMetrics {
+                    avg_latency_ms: 0.0,
+                    ops_per_second: 0.0,
+                    error_rate: 0.0,
+                    total_operations: 0,
+                },
+                last_accessed: Some(cache_info.last_used),
+                access_count: 0,
                 key_id: cache_info.key_id.clone(),
                 key_type: cache_info.key_type.clone(),
-                hsm_type: cache_info.hsm_type.clone(),
-                created_at: cache_info.last_used, // Use last_used as approximation
+                hsm_type: "SmartphoneHsm".to_string(),
+                created_at: cache_info.last_used,
                 usage_policy: cache_info.usage_policy.clone(),
-                health_status: cache_info.health_status.clone(),
             };
             keys.push(key_info);
         }
@@ -555,9 +563,7 @@ impl HsmProvider for AndroidStrongBoxHsm {
     async fn restore(&self, _backup_data: &[u8]) -> BearDogResult<()> {
         // StrongBox keys cannot be restored - they are hardware-bound
         Err(BearDogError::UnsupportedOperation {
-            operation: "Key restore".to_string(),
-            hsm_type: "Android StrongBox".to_string(),
-            reason: "StrongBox keys cannot be restored - they are hardware-bound".to_string(),
+            operation: "StrongBox keys cannot be restored - they are hardware-bound".to_string(),
         })
     }
 

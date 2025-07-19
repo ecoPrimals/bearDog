@@ -117,9 +117,7 @@ pub async fn process_human_approval(
         timestamp: Utc::now(),
         actor: "system".to_string(),
         action: "human_approval_requested".to_string(),
-        result: format!(
-            "Requesting {min_approvals} approvals from roles: {approver_roles:?}"
-        ),
+        result: format!("Requesting {min_approvals} approvals from roles: {approver_roles:?}"),
         context: HashMap::new(),
     });
 

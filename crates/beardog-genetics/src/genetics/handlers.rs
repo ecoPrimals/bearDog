@@ -3,12 +3,14 @@
 //! This module provides the core genetics handling functionality for BearDog.
 
 use super::types::*;
-use beardog_errors::{BearDogResult, BearDogError};
-use beardog_auth::auth::{SpawnPurpose, SecurityTraits, CryptoChromosome, NodeCapability, BearDogGenetics, SecurityClearance, NodeSpecialization};
+use beardog_auth::auth::{
+    BearDogGenetics, NodeCapability, NodeSpecialization, SecurityClearance, SecurityTraits,
+    SpawnPurpose,
+};
+use beardog_errors::{BearDogError, BearDogResult};
+
 use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
-use rand::prelude::*;
+use tracing::info;
 
 /// Default genetics engine implementation
 pub struct DefaultBearDogGeneticsEngine {
@@ -18,7 +20,10 @@ pub struct DefaultBearDogGeneticsEngine {
 
 impl DefaultBearDogGeneticsEngine {
     /// Create a new genetics engine
-    pub fn new(genetics_store: Arc<dyn super::spawning::GeneticsStore>, config: GeneticsConfig) -> Self {
+    pub fn new(
+        genetics_store: Arc<dyn super::spawning::GeneticsStore>,
+        config: GeneticsConfig,
+    ) -> Self {
         Self {
             genetics_store,
             config,
@@ -28,8 +33,12 @@ impl DefaultBearDogGeneticsEngine {
     /// Create genesis genetics for a new node
     pub async fn create_genesis_genetics(&self, node_id: &str) -> BearDogResult<BearDogGenetics> {
         info!("Creating genesis genetics for node: {}", node_id);
-        
-        // Create basic genesis genetics with placeholder values
+
+        // Use config to determine genesis parameters
+        let mutation_rate = self.config.base_mutation_rate;
+        let crossover_rate = self.config.trait_blending_factor;
+
+        // Create basic genesis genetics with config-based values
         let genetics = BearDogGenetics {
             id: node_id.to_string(),
             generation: 0,
@@ -39,10 +48,15 @@ impl DefaultBearDogGeneticsEngine {
             capabilities: vec![],
             spawn_restrictions: vec![],
             mutations: vec![],
-            fitness_score: 1.0,
+            fitness_score: (mutation_rate + crossover_rate) / 2.0, // Use config for fitness
             security_clearance: SecurityClearance::Basic,
             specializations: vec![NodeSpecialization::GeneralPurpose],
         };
+
+        // Store genetics in the genetics store
+        self.genetics_store
+            .store_genetics(node_id, &genetics)
+            .await?;
 
         Ok(genetics)
     }
@@ -50,26 +64,32 @@ impl DefaultBearDogGeneticsEngine {
     /// Get genetics for a specific node
     pub async fn get_node_genetics(&self, node_id: &str) -> BearDogResult<BearDogGenetics> {
         info!("Getting genetics for node: {}", node_id);
-        
-        // For now, return a placeholder genetics
-        self.create_genesis_genetics(node_id).await
+
+        // Try to retrieve from genetics store first
+        match self.genetics_store.load_genetics(node_id).await {
+            Ok(Some(genetics)) => Ok(genetics),
+            Ok(None) | Err(_) => {
+                // If not found, create genesis genetics
+                self.create_genesis_genetics(node_id).await
+            }
+        }
     }
 
     /// Perform advanced recombination (placeholder implementation)
     pub async fn perform_advanced_recombination(
         &self,
-        parent_genetics: &[BearDogGenetics],
-        purpose: &SpawnPurpose,
+        _parent_genetics: &[BearDogGenetics],
+        _purpose: &SpawnPurpose,
     ) -> BearDogResult<BearDogGenetics> {
-        if parent_genetics.is_empty() {
+        if _parent_genetics.is_empty() {
             return Err(BearDogError::InvalidGenetics {
                 message: "No parent genetics provided".to_string(),
             });
         }
 
-        let first_parent = &parent_genetics[0];
+        let first_parent = &_parent_genetics[0];
         let mut child_genetics = first_parent.clone();
-        
+
         // Basic recombination logic (placeholder)
         child_genetics.id = format!("child_{}", uuid::Uuid::new_v4());
         child_genetics.generation = first_parent.generation + 1;
@@ -84,13 +104,13 @@ impl DefaultBearDogGeneticsEngine {
     pub async fn apply_purpose_driven_mutations(
         &self,
         genetics: BearDogGenetics,
-        purpose: &SpawnPurpose,
+        _purpose: &SpawnPurpose,
     ) -> BearDogResult<BearDogGenetics> {
         let mut mutated_genetics = genetics;
-        
+
         // Apply mutations based on purpose (placeholder)
         mutated_genetics.fitness_score *= 1.1; // Slight improvement
-        // mutated_genetics.last_updated = chrono::Utc::now();
+                                               // mutated_genetics.last_updated = chrono::Utc::now();
 
         Ok(mutated_genetics)
     }
@@ -114,12 +134,18 @@ impl DefaultBearDogGeneticsEngine {
 
     /// Calculate child generation (placeholder implementation)
     pub fn calculate_child_generation(&self, parent_genetics: &[BearDogGenetics]) -> u32 {
-        parent_genetics.iter().map(|g| g.generation).max().unwrap_or(0) + 1
+        parent_genetics
+            .iter()
+            .map(|g| g.generation)
+            .max()
+            .unwrap_or(0)
+            + 1
     }
 
     /// Inherit security clearance (placeholder implementation)
     pub fn inherit_security_clearance(&self, parent_genetics: &[BearDogGenetics]) -> String {
-        parent_genetics.first()
+        parent_genetics
+            .first()
             .map(|g| g.security_traits.trust_threshold.to_string())
             .unwrap_or_else(|| "Basic".to_string())
     }
@@ -127,8 +153,8 @@ impl DefaultBearDogGeneticsEngine {
     /// Generate spawn restrictions (placeholder implementation)
     pub async fn generate_spawn_restrictions(
         &self,
-        parent_genetics: &[BearDogGenetics],
-        purpose: &SpawnPurpose,
+        _parent_genetics: &[BearDogGenetics],
+        _purpose: &SpawnPurpose,
     ) -> BearDogResult<Vec<SpawnRestriction>> {
         Ok(vec![])
     }
@@ -136,8 +162,8 @@ impl DefaultBearDogGeneticsEngine {
     /// Calculate fitness score (placeholder implementation)
     pub async fn calculate_fitness_score(
         &self,
-        genetics: &BearDogGenetics,
-        purpose: &SpawnPurpose,
+        _genetics: &BearDogGenetics,
+        _purpose: &SpawnPurpose,
     ) -> BearDogResult<f64> {
         Ok(0.8) // Placeholder score
     }
@@ -145,8 +171,8 @@ impl DefaultBearDogGeneticsEngine {
     /// Determine specializations (placeholder implementation)
     pub async fn determine_specializations(
         &self,
-        genetics: &BearDogGenetics,
-        purpose: &SpawnPurpose,
+        _genetics: &BearDogGenetics,
+        _purpose: &SpawnPurpose,
     ) -> BearDogResult<Vec<NodeSpecialization>> {
         Ok(vec![])
     }
@@ -154,8 +180,8 @@ impl DefaultBearDogGeneticsEngine {
     /// Mutate capabilities (placeholder implementation)
     pub async fn mutate_capabilities(
         &self,
-        parent_genetics: &[BearDogGenetics],
-        purpose: &SpawnPurpose,
+        _parent_genetics: &[BearDogGenetics],
+        _purpose: &SpawnPurpose,
     ) -> BearDogResult<Vec<NodeCapability>> {
         Ok(vec![])
     }

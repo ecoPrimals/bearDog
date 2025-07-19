@@ -4,6 +4,7 @@
 
 use super::processors::*;
 use super::types::*;
+use beardog_config::integration::WorkflowConfig;
 use beardog_errors::{BearDogError, BearDogResult};
 use tracing::error;
 
@@ -16,7 +17,7 @@ use uuid::Uuid;
 impl MultiPartyWorkflowEngine {
     /// Create a new multi-party workflow engine
     pub async fn new(
-        config: Arc<beardog_config::WorkflowConfig>,
+        config: Arc<WorkflowConfig>,
         workflow_store: Arc<dyn WorkflowStore>,
         approval_store: Arc<dyn ApprovalStore>,
     ) -> BearDogResult<Self> {
@@ -307,9 +308,56 @@ impl MultiPartyWorkflowEngine {
         })
     }
 
-    async fn get_approver_role(&self, _approver: &str) -> BearDogResult<String> {
-        // TODO: Implement role lookup
-        Ok("admin".to_string())
+    async fn get_approver_role(&self, approver: &str) -> BearDogResult<String> {
+        tracing::debug!("Looking up role for approver: {}", approver);
+
+        // Check if we have role mappings in config
+        if let Some(role_mappings) = &self.config.role_mappings {
+            if let Some(role) = role_mappings.get(approver) {
+                tracing::debug!("Found role '{}' for approver '{}'", role, approver);
+                return Ok(role.clone());
+            }
+        }
+
+        // Check against admin user list
+        if let Some(admin_users) = &self.config.admin_users {
+            if admin_users.contains(&approver.to_string()) {
+                tracing::debug!("Approver '{}' found in admin users list", approver);
+                return Ok("admin".to_string());
+            }
+        }
+
+        // Check against approver user list
+        if let Some(approver_users) = &self.config.approver_users {
+            if approver_users.contains(&approver.to_string()) {
+                tracing::debug!("Approver '{}' found in approver users list", approver);
+                return Ok("approver".to_string());
+            }
+        }
+
+        // Default role inference based on approver identifier patterns
+        let role = if approver.contains("admin") || approver.starts_with("root") {
+            "admin"
+        } else if approver.contains("security") || approver.contains("sec") {
+            "security_officer"
+        } else if approver.contains("compliance") {
+            "compliance_officer"
+        } else if approver.contains("manager") || approver.contains("mgr") {
+            "manager"
+        } else if approver.ends_with(".system") || approver.starts_with("system.") {
+            "system_account"
+        } else {
+            // Default role for regular users
+            "user"
+        };
+
+        tracing::debug!(
+            "Inferred role '{}' for approver '{}' based on identifier patterns",
+            role,
+            approver
+        );
+
+        Ok(role.to_string())
     }
 
     async fn evaluate_workflow_status(
