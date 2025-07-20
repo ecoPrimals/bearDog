@@ -38,7 +38,9 @@ impl EntropyMixingEngine {
         let highest_tier = sources
             .iter()
             .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .unwrap();
+            .ok_or_else(|| beardog_errors::BearDogError::Internal {
+                message: "No entropy sources available for classification".to_string(),
+            })?;
 
         // The mixed result inherits the highest tier classification
         match highest_tier {

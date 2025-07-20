@@ -9,16 +9,29 @@ standalone_mode = true  # Enable standalone mode for development
 environment = "development"
 debug = true  # Enable debug mode for development
 
-[database]
-# Use SQLite for development simplicity
-url = "sqlite://./dev-beardog.db"
-max_connections = 10
-connection_timeout = 30
-query_timeout = 30
-ssl = false  # Disable SSL for development
-ssl_cert_path = ""
-ssl_key_path = ""
-ssl_ca_path = ""
+# Ecosystem-aligned storage configuration for development
+[ecosystem]
+[ecosystem.storage]
+provider_discovery_method = "local" # Use local discovery for development
+fallback_discovery = "memory" # In-memory fallback for development
+capabilities_required = [
+    "database_operations",
+    "secure_storage", 
+    "audit_logging",
+]
+
+# Development retention policies (shorter for testing)
+[ecosystem.storage.retention_policies]
+security = { retention_days = 7, archive_after_retention = false, compliance = ["GDPR"] }
+audit = { retention_days = 7, archive_after_retention = false, compliance = ["GDPR"] }
+sessions = { retention_days = 1, archive_after_retention = false, compliance = ["GDPR"] }
+workflows = { retention_days = 3, archive_after_retention = false, compliance = [] }
+
+# Simplified ZFS configuration for development
+[ecosystem.storage.zfs]
+encryption_enabled = false  # Simplified for development
+compression_enabled = true
+snapshot_enabled = false    # Disable snapshots for development
 
 [network]
 [network.http]

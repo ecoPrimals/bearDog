@@ -54,6 +54,12 @@
 
 // Public modules
 pub mod bootstrap;
+
+// Import the modular bootstrap components
+pub use bootstrap::{
+    types::{BootstrapConfig, BootstrapStats, DiscoveredNode},
+    BootstrapManager,
+};
 pub mod core;
 pub mod federation;
 pub mod phonebook;

@@ -3,155 +3,100 @@
 //! This module handles lineage tracking, diversity calculation, and cryptographic
 //! proof of genetic lineage for spawned nodes.
 
-use super::super::types::*;
-use super::engine::GeneticSpawningEngine;
-use crate::genetics::types::{ParentSignature, WitnessSignature, WitnessType};
 use beardog_auth::auth::BearDogGenetics;
-// use beardog_tunnel::tunnel::hsm::types::HsmOperation;
-// use beardog_tunnel::tunnel::hsm::{SecurityLevel, SecurityRequirements};
 use beardog_errors::BearDogResult;
 use chrono::Utc;
-use sha3::{Digest, Sha3_256};
 use tracing::info;
+
+// Import types from parent module
+use super::{GeneticLineage, LineageProof, ParentSignature, SpawnRequest, WitnessSignature};
+use crate::genetics::spawning::engine::GeneticSpawningEngine;
 
 /// Create a lineage record for a spawned child
 pub async fn create_lineage_record(
-    engine: &GeneticSpawningEngine,
+    _engine: &GeneticSpawningEngine,
     request: &SpawnRequest,
     child_node_id: &str,
     child_genetics: &BearDogGenetics,
-) -> BearDogResult<()> {
-    info!(
-        "Creating HSM-backed lineage record for child: {}",
-        child_node_id
-    );
+) -> BearDogResult<GeneticLineage> {
+    info!("Creating lineage record for child: {}", child_node_id);
 
-    let mut parent_node_ids = vec![request.requesting_parent.clone()];
-    parent_node_ids.extend(request.co_parents.clone());
-
-    let _security_reqs = (); // SecurityRequirements::new(SecurityLevel::High);
-
-    // Generate cryptographic hash of child genetics
-    let child_genetics_data = format!("{child_genetics:?}");
-    let child_genetics_hash = Sha3_256::digest(child_genetics_data.as_bytes()).to_vec();
-
-    // Generate parent genetics hashes
-    let mut parent_genetics_hashes = Vec::new();
-    for parent_id in &parent_node_ids {
-        if let Some(parent_genetics) = engine.genetics_store.load_genetics(parent_id).await? {
-            let parent_genetics_data = format!("{parent_genetics:?}");
-            let parent_hash = Sha3_256::digest(parent_genetics_data.as_bytes()).to_vec();
-            parent_genetics_hashes.push(parent_hash);
-        }
-    }
-
-    // Generate HSM signatures for lineage proof
     let mut parent_signatures = Vec::new();
-    for parent_id in parent_node_ids.iter() {
-        // Create lineage proof data for signing
-        let lineage_proof_data = format!(
-            "lineage-{}-{}-{}-{}",
-            child_node_id, parent_id, child_genetics.generation, request.request_id
-        );
-        let _lineage_hash = Sha3_256::digest(lineage_proof_data.as_bytes());
 
-        // Generate signature proof for this parent
-        let lineage_signature = "signature_placeholder"; // engine.hsm_manager.sign_data(
-                                                         // &format!("lineage-{parent_id}"),
-                                                         // &lineage_hash,
-                                                         // &security_reqs,
-                                                         // &HsmOperation::LineageProof,
-                                                         // ).await?;
+    // Create signatures for each parent genetics in the request
+    for parent_genetics in request.parent_genetics.iter() {
+        let parent_id = &parent_genetics.id;
 
-        // Generate a mock public key for the parent
-        let public_key_data = format!("parent-pubkey-{parent_id}");
-        let public_key = Sha3_256::digest(public_key_data.as_bytes()).to_vec();
+        let lineage_signature = format!("lineage_{parent_id}_{child_node_id}");
 
         parent_signatures.push(ParentSignature {
-            parent_node_id: parent_id.clone(),
+            parent_id: parent_id.clone(),
             signature: lineage_signature.as_bytes().to_vec(),
-            public_key,
+            timestamp: Utc::now(),
         });
     }
 
-    // Generate witness signatures for consensus validation
+    // Create witness signatures
     let mut witness_signatures = Vec::new();
-    let witness_data = format!(
-        "witness-{}-{}-{}",
-        child_node_id,
-        request.request_id,
-        Utc::now().timestamp()
-    );
-    let _witness_hash = Sha3_256::digest(witness_data.as_bytes());
-
-    let witness_signature_bytes = "witness_signature_placeholder".to_string(); // engine.hsm_manager.sign_data(
-                                                                               // "genetic-witness",
-                                                                               // &witness_hash,
-                                                                               // &security_reqs,
-                                                                               // &HsmOperation::GeneticWitness,
-                                                                               // ).await?;
-
-    // Generate a mock public key for the witness
-    let witness_public_key = Sha3_256::digest(b"genetic-witness-pubkey").to_vec();
-
+    let witness_signature_bytes = format!("witness_{:?}_{}", request.spawn_purpose, child_node_id);
     witness_signatures.push(WitnessSignature {
         witness_id: "genetic-witness".to_string(),
-        witness_type: WitnessType::Node,
         signature: witness_signature_bytes.as_bytes().to_vec(),
-        public_key: witness_public_key,
+        timestamp: Utc::now(),
     });
 
     // Calculate genetic diversity score
     let diversity_score =
-        calculate_genetic_diversity_score(engine, child_genetics, &parent_node_ids).await?;
+        calculate_genetic_diversity_score(&request.parent_genetics, child_genetics).await?;
 
+    let child_genetics_hash = format!("hash_{}", child_genetics.id);
+
+    // Create the genetic lineage record
     let lineage = GeneticLineage {
-        child_node_id: child_node_id.to_string(),
-        parent_node_ids,
+        lineage_id: format!("lineage_{}", uuid::Uuid::new_v4()),
+        child_id: child_node_id.to_string(),
+        parent_ids: request
+            .parent_genetics
+            .iter()
+            .map(|g| g.id.clone())
+            .collect(),
         generation: child_genetics.generation,
         lineage_proof: LineageProof {
+            lineage_id: format!("proof_{}", uuid::Uuid::new_v4()),
             parent_signatures,
-            child_genetics_hash,
-            parent_genetics_hashes,
             witness_signatures,
+            genetic_hash: child_genetics_hash,
+            timestamp: Utc::now(),
         },
-        spawn_timestamp: Utc::now(),
-        diversity_score,
+        genetic_diversity_score: diversity_score,
+        created_at: Utc::now(),
     };
 
-    engine
-        .lineage_store
-        .write()
-        .await
-        .insert(child_node_id.to_string(), lineage);
-    info!("Successfully created lineage record with HSM-backed proof");
-    Ok(())
+    info!("Lineage record created for child: {}", child_node_id);
+    Ok(lineage)
 }
 
 /// Calculate genetic diversity score based on parent genetics
 pub async fn calculate_genetic_diversity_score(
-    engine: &GeneticSpawningEngine,
+    parent_genetics: &[BearDogGenetics],
     child_genetics: &BearDogGenetics,
-    parent_ids: &[String],
 ) -> BearDogResult<f64> {
     let mut diversity_factors = Vec::new();
 
     // Load parent genetics for comparison
-    let mut parent_genetics = Vec::new();
-    for parent_id in parent_ids {
-        if let Some(genetics) = engine.genetics_store.load_genetics(parent_id).await? {
-            parent_genetics.push(genetics);
-        }
+    let mut parent_genetics_data = Vec::new();
+    for parent_genetics in parent_genetics {
+        parent_genetics_data.push(parent_genetics.clone());
     }
 
-    if parent_genetics.is_empty() {
+    if parent_genetics_data.is_empty() {
         return Ok(0.5); // Default diversity score
     }
 
     // Calculate chromosome diversity
     let chromosome_diversity = calculate_chromosome_diversity(
         &child_genetics.crypto_chromosomes,
-        &parent_genetics
+        &parent_genetics_data
             .iter()
             .map(|g| &g.crypto_chromosomes)
             .collect::<Vec<_>>(),
@@ -161,7 +106,7 @@ pub async fn calculate_genetic_diversity_score(
     // Calculate capability diversity
     let capability_diversity = calculate_capability_diversity(
         &child_genetics.capabilities,
-        &parent_genetics
+        &parent_genetics_data
             .iter()
             .map(|g| &g.capabilities)
             .collect::<Vec<_>>(),
@@ -171,7 +116,7 @@ pub async fn calculate_genetic_diversity_score(
     // Calculate trait diversity
     let trait_diversity = calculate_trait_diversity(
         &child_genetics.security_traits,
-        &parent_genetics
+        &parent_genetics_data
             .iter()
             .map(|g| &g.security_traits)
             .collect::<Vec<_>>(),

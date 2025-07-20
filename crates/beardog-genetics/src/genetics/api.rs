@@ -6,17 +6,72 @@
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    response::Json,
+    Json,
 };
+use beardog_auth::auth::{BearDogGenetics, BearDogWorkflowType, ResourceLimits, SpawnPurpose};
+use beardog_errors::BearDogResult;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 use tracing::{error, info};
 use uuid::Uuid;
 
-use super::types::{BearDogWorkflowType, GeneticsConfig, InMemoryGeneticsStore, ResourceLimits};
-use super::GeneticsAPI;
-use beardog_auth::auth::SpawnPurpose;
+use super::{spawning::SpawnRequest, GeneticsAPI, GeneticsStore};
+
+// Define missing types locally if they don't exist elsewhere
+#[derive(Debug, Clone, Default)]
+pub struct GeneticsConfig {
+    pub max_population_size: usize,
+    pub mutation_rate: f64,
+    pub crossover_rate: f64,
+    pub fitness_threshold: f64,
+}
+
+#[derive(Debug)]
+pub struct InMemoryGeneticsStore {
+    pub storage: std::collections::HashMap<String, beardog_auth::auth::BearDogGenetics>,
+}
+
+impl InMemoryGeneticsStore {
+    /// Create a new in-memory genetics store
+    pub fn new() -> Self {
+        Self {
+            storage: HashMap::new(),
+        }
+    }
+}
+
+impl Default for InMemoryGeneticsStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl GeneticsStore for InMemoryGeneticsStore {
+    fn store_genetics(&self, _genetics: &BearDogGenetics) -> BearDogResult<()> {
+        // In a real implementation, this would actually store the genetics
+        Ok(())
+    }
+
+    fn get_genetics(&self, _genetics_id: &str) -> BearDogResult<BearDogGenetics> {
+        // In a real implementation, this would retrieve from storage
+        Ok(BearDogGenetics::default())
+    }
+
+    fn delete_genetics(&self, _genetics_id: &str) -> BearDogResult<()> {
+        // In a real implementation, this would delete the genetics
+        Ok(())
+    }
+}
+
+/// Create a default genetics configuration for examples
+pub fn create_default_genetics_config() -> GeneticsConfig {
+    GeneticsConfig {
+        max_population_size: 1000,
+        mutation_rate: 0.05,
+        crossover_rate: 0.6,
+        fitness_threshold: 0.8,
+    }
+}
 
 // ========================================================================================
 // REQUEST/RESPONSE TYPES
@@ -131,7 +186,7 @@ pub async fn create_genesis_node(
 
     // Initialize genetics API (in production, this would be injected or singleton)
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
-    let genetics_config = GeneticsConfig::default();
+    let genetics_config = super::GeneticsConfig::default();
     let genetics_api = GeneticsAPI::new(genetics_store, genetics_config);
 
     match genetics_api.create_genesis_genetics(&request.node_id).await {
@@ -171,33 +226,17 @@ pub async fn spawn_node(
 
     // Initialize genetics API
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
-    let genetics_config = GeneticsConfig::default();
+    let genetics_config = super::GeneticsConfig::default();
     let genetics_api = GeneticsAPI::new(genetics_store, genetics_config);
 
     // Create the internal spawn request
-    let spawn_request = super::SpawnRequest {
-        request_id: Uuid::new_v4().to_string(),
-        requesting_parent: request.requesting_parent.clone(),
-        co_parents: request.co_parents.unwrap_or_default(),
-        purpose: request.purpose,
-        resource_requirements: request
-            .resource_requirements
-            .unwrap_or_else(|| ResourceLimits {
-                max_cpu_percent: 50.0,
-                max_memory_mb: 2048,
-                max_storage_gb: 10,
-                max_network_mbps: 100,
-                allowed_jurisdictions: vec!["US".to_string(), "EU".to_string()],
-                temporal_windows: vec![],
-            }),
-        workflow_type: BearDogWorkflowType::AutomatedConsensus {
-            participating_nodes: vec![request.requesting_parent.clone()],
-            consensus_threshold: 0.67,
-            max_decision_time: chrono::Duration::minutes(5),
-        },
-        created_at: chrono::Utc::now(),
-        expires_at: chrono::Utc::now() + chrono::Duration::hours(24),
-        metadata: request.metadata.unwrap_or_default(),
+    let spawn_request = crate::genetics::spawning::SpawnRequest {
+        purpose: beardog_auth::auth::SpawnPurpose::LoadBalancing,
+        required_capabilities: vec![],
+        resource_requirements: beardog_auth::auth::ResourceLimits::default(),
+        security_clearance: beardog_auth::auth::SecurityClearance::Basic,
+        parent_genetics: vec![],
+        metadata: std::collections::HashMap::new(),
     };
 
     let start_time = std::time::Instant::now();
@@ -207,15 +246,15 @@ pub async fn spawn_node(
             let processing_time = start_time.elapsed().as_millis() as u64;
             info!(
                 "✅ Spawn request processed: approved={}, child_node={:?}",
-                result.approved, result.child_node_id
+                result.success, result.genetics.id
             );
 
             Ok(Json(SpawnNodeResponse {
-                request_id: result.request_id,
-                approved: result.approved,
-                child_node_id: result.child_node_id,
-                decision_reason: result.decision_reason,
-                decided_at: result.decided_at,
+                request_id: "genetics-api".to_string(),
+                approved: result.success,
+                child_node_id: Some(result.genetics.id.clone()),
+                decision_reason: result.messages.join("; "),
+                decided_at: chrono::Utc::now(),
                 processing_time_ms: processing_time,
             }))
         }
@@ -238,7 +277,7 @@ pub async fn get_node_genetics(
 
     // Initialize genetics API
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
-    let genetics_config = GeneticsConfig::default();
+    let genetics_config = super::GeneticsConfig::default();
     let genetics_api = GeneticsAPI::new(genetics_store, genetics_config);
 
     match genetics_api.get_node_genetics(&node_id).await {
@@ -292,14 +331,7 @@ pub async fn get_spawn_status(
 /// Initialize a genetics API instance with proper configuration
 pub fn create_genetics_api() -> GeneticsAPI {
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
-    let genetics_config = GeneticsConfig {
-        base_mutation_rate: 0.05,
-        max_genetic_diversity: 0.8,
-        min_security_threshold: 0.7,
-        capability_inheritance_weight: 0.8,
-        trait_blending_factor: 0.6,
-        enable_directed_evolution: true,
-    };
+    let genetics_config = super::GeneticsConfig::default();
 
     GeneticsAPI::new(genetics_store, genetics_config)
 }
@@ -313,13 +345,13 @@ pub fn validate_spawn_request(request: &SpawnNodeRequest) -> Result<(), String> 
 
     // Validate resource requirements if provided
     if let Some(ref resources) = request.resource_requirements {
-        if resources.max_cpu_percent > 100.0 {
+        if resources.max_cpu_percent > 100 {
             return Err("CPU percentage cannot exceed 100%".to_string());
         }
         if resources.max_memory_mb == 0 {
             return Err("Memory requirement must be greater than 0".to_string());
         }
-        if resources.max_storage_gb == 0 {
+        if resources.max_disk_mb == 0 {
             return Err("Storage requirement must be greater than 0".to_string());
         }
     }
@@ -334,17 +366,16 @@ pub fn create_demo_spawn_request(requesting_parent: &str) -> SpawnNodeRequest {
         co_parents: Some(vec!["demo-node-2".to_string()]),
         purpose: SpawnPurpose::EmergencyResponse,
         resource_requirements: Some(ResourceLimits {
-            max_cpu_percent: 25.0,
+            max_cpu_percent: 25,
             max_memory_mb: 1024,
-            max_storage_gb: 5,
+            max_disk_mb: 5120,
             max_network_mbps: 50,
-            allowed_jurisdictions: vec!["US".to_string(), "EU".to_string()],
-            temporal_windows: vec![],
+            max_concurrent_connections: 500,
         }),
-        workflow_type: Some(BearDogWorkflowType::AutomatedConsensus {
-            participating_nodes: vec!["demo-node-1".to_string(), "demo-node-2".to_string()],
-            consensus_threshold: 0.6,
-            max_decision_time: chrono::Duration::minutes(2),
+        workflow_type: Some(BearDogWorkflowType::GeneticSpawning {
+            parent_genetics: vec!["demo-node-1".to_string(), "demo-node-2".to_string()],
+            spawn_purpose: SpawnPurpose::EmergencyResponse,
+            target_capabilities: vec![],
         }),
         metadata: Some({
             let mut metadata = HashMap::new();
@@ -366,12 +397,11 @@ mod tests {
             co_parents: None,
             purpose: SpawnPurpose::EmergencyResponse,
             resource_requirements: Some(ResourceLimits {
-                max_cpu_percent: 50.0,
+                max_cpu_percent: 50,
                 max_memory_mb: 1024,
-                max_storage_gb: 10,
+                max_disk_mb: 10240,
                 max_network_mbps: 100,
-                allowed_jurisdictions: vec!["US".to_string()],
-                temporal_windows: vec![],
+                max_concurrent_connections: 1000,
             }),
             workflow_type: None,
             metadata: None,
@@ -385,7 +415,7 @@ mod tests {
             .resource_requirements
             .as_mut()
             .unwrap()
-            .max_cpu_percent = 150.0;
+            .max_cpu_percent = 150;
         assert!(validate_spawn_request(&invalid_request).is_err());
 
         // Test empty requesting parent

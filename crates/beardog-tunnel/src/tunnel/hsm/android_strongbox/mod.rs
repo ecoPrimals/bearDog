@@ -206,6 +206,7 @@
 pub use device_info::*;
 pub use entropy::*;
 pub use health::*;
+pub use pixel8_setup::*;
 pub use types::*;
 
 // Import from parent HSM module for configuration types
@@ -218,6 +219,7 @@ pub mod device_info;
 pub mod entropy;
 pub mod health;
 pub mod keystore;
+pub mod pixel8_setup;
 pub mod types;
 
 // Public API constants

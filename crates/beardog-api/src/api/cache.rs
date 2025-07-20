@@ -184,6 +184,7 @@ pub struct InMemoryCache {
     /// Cache performance statistics
     stats: Arc<RwLock<CacheStats>>,
     /// Cache configuration
+    #[allow(dead_code)] // Will be used for advanced cache configuration
     config: CacheConfig,
 }
 

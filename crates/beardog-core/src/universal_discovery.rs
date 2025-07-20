@@ -16,7 +16,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 use uuid::Uuid;
 
 /// Universal capability types that can be requested
@@ -128,19 +128,13 @@ impl CapabilityType {
                 low_latency,
                 simd_acceleration,
             } => {
-                format!(
-                    "gaming.optimization:low_latency={},simd={}",
-                    low_latency, simd_acceleration
-                )
+                format!("gaming.optimization:low_latency={low_latency},simd={simd_acceleration}")
             }
             CapabilityType::GeneticHealing {
                 adaptive,
                 evolutionary,
             } => {
-                format!(
-                    "genetic.healing:adaptive={},evolutionary={}",
-                    adaptive, evolutionary
-                )
+                format!("genetic.healing:adaptive={adaptive},evolutionary={evolutionary}")
             }
             CapabilityType::Custom(name) => format!("custom.{}", name.to_lowercase()),
         }
@@ -299,9 +293,11 @@ pub struct EcosystemCapabilityDiscovery {
     registry_client: Arc<dyn EcosystemRegistryClient>,
 
     /// Cache of discovered modules
+    #[allow(dead_code)] // Will be used for caching discovered capabilities
     module_cache: Arc<tokio::sync::RwLock<HashMap<CapabilityType, Vec<ModuleInstance>>>>,
 
     /// Cache TTL in seconds
+    #[allow(dead_code)] // Will be used for cache TTL management
     cache_ttl_seconds: u64,
 }
 

@@ -58,8 +58,13 @@ pub struct ApiServerConfig {
 impl Default for ApiServerConfig {
     fn default() -> Self {
         Self {
-            bind_address: std::env::var("BEARDOG_API_BIND_ADDRESS")
-                .unwrap_or_else(|_| "0.0.0.0:3000".to_string()),
+            bind_address: std::env::var("BEARDOG_API_BIND_ADDRESS").unwrap_or_else(|_| {
+                format!(
+                    "{}:{}",
+                    beardog_config::constants::network::DEFAULT_BIND_ADDRESS,
+                    beardog_config::constants::network::DEFAULT_API_PORT
+                )
+            }),
             request_timeout_seconds: std::env::var("BEARDOG_API_REQUEST_TIMEOUT")
                 .ok()
                 .and_then(|v| v.parse().ok())
@@ -389,11 +394,11 @@ pub mod handlers {
                         // Return detailed health information
                         Ok(Json(json!({
                             "status": match health_check.status {
-                                beardog_core::core::HealthStatus::Healthy => "healthy",
-                                beardog_core::core::HealthStatus::Degraded => "degraded",
-                                beardog_core::core::HealthStatus::Unhealthy => "unhealthy",
-                                beardog_core::core::HealthStatus::Starting => "starting",
-                                beardog_core::core::HealthStatus::Stopping => "stopping",
+                                                            beardog_core::types::HealthStatus::Healthy => "healthy",
+                            beardog_core::types::HealthStatus::Degraded => "degraded",
+                            beardog_core::types::HealthStatus::Unhealthy => "unhealthy",
+                            beardog_core::types::HealthStatus::Starting => "starting",
+                            beardog_core::types::HealthStatus::Stopping => "stopping",
                             },
                             "timestamp": chrono::Utc::now(),
                             "version": env!("CARGO_PKG_VERSION"),
@@ -406,12 +411,12 @@ pub mod handlers {
                                 "error": c.error_message
                             })).collect::<Vec<_>>(),
                             "metrics": {
-                                "memory_usage_bytes": health_check.metrics.memory_usage_bytes,
-                                "cpu_usage_percent": health_check.metrics.cpu_usage_percent,
+                                                            "memory_usage_bytes": health_check.metrics.memory_usage_mb * 1024 * 1024, // Convert MB to bytes
+                            "cpu_usage_percent": health_check.metrics.cpu_usage,
                                 "active_connections": health_check.metrics.active_connections,
                                 "requests_per_second": health_check.metrics.requests_per_second,
                                 "avg_response_time_ms": health_check.metrics.avg_response_time_ms,
-                                "error_rate_percent": health_check.metrics.error_rate_percent
+                                "error_rate_percent": 0.0 // SystemMetrics doesn't have error_rate_percent
                             }
                         })))
                     }

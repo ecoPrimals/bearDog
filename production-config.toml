@@ -9,17 +9,34 @@ standalone_mode = false
 environment = "production"
 debug = false
 
-[database]
-# Database URL should be set via BEARDOG_DATABASE_URL environment variable
-# Example: postgresql://beardog:${BEARDOG_DATABASE_PASSWORD}@db.production.local:5432/beardog
-url = "postgresql://beardog@db.production.local:5432/beardog"
-max_connections = 50
-connection_timeout = 30
-query_timeout = 30
-ssl = true
-ssl_cert_path = "/etc/ssl/certs/beardog-db.crt"
-ssl_key_path = "/etc/ssl/private/beardog-db.key"
-ssl_ca_path = "/etc/ssl/certs/ca.crt"
+# Ecosystem-aligned storage configuration
+[ecosystem]
+[ecosystem.storage]
+provider_discovery_method = "songbird" # Discover NestGate via SongBird
+fallback_discovery = "local" # Local discovery if SongBird unavailable
+capabilities_required = [
+    "database_operations",
+    "zfs_storage", 
+    "audit_logging",
+    "policy_enforcement",
+    "encryption_at_rest",
+    "snapshot_management",
+]
+
+# Compliance-driven retention policies
+[ecosystem.storage.retention_policies]
+security = { retention_days = 2555, archive_after_retention = true, compliance = ["SOX", "GDPR"] }
+audit = { retention_days = 2555, archive_after_retention = true, compliance = ["SOX", "HIPAA"] }
+sessions = { retention_days = 30, archive_after_retention = false, compliance = ["GDPR"] }
+workflows = { retention_days = 365, archive_after_retention = true, compliance = ["SOX"] }
+
+# ZFS configuration for NestGate integration
+[ecosystem.storage.zfs]
+encryption_enabled = true
+compression_enabled = true
+snapshot_enabled = true
+snapshot_frequency_hours = 24
+snapshot_retention_count = 30
 
 [network]
 [network.http]

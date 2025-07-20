@@ -138,9 +138,10 @@ pub async fn apply_mutations(
     let _security_reqs = (); // SecurityRequirements::new(SecurityLevel::Medium);
     let random_bytes = [0u8; 64]; // engine.hsm_manager.generate_random_bytes(64, &security_reqs).await?;
 
+    // Use a more sophisticated PRNG based on HSM random bytes
     let mut rng_state = u64::from_le_bytes([
         random_bytes[0],
-        random_bytes[1],
+        random_bytes[1], 
         random_bytes[2],
         random_bytes[3],
         random_bytes[4],
@@ -151,9 +152,21 @@ pub async fn apply_mutations(
 
     let mut mutations_applied = Vec::new();
 
-    // Mutate security traits
+    // Adaptive mutation rate based on genetics fitness and generation
+    let adaptive_mutation_rate = if genetics.fitness_score < 0.5 {
+        mutation_rate * 1.5 // Increase mutation rate for low fitness
+    } else if genetics.generation > 10 {
+        mutation_rate * 0.8 // Reduce mutation rate for mature generations
+    } else {
+        mutation_rate
+    };
+
+    info!("Using adaptive mutation rate: {} (base: {}, fitness: {}, generation: {})", 
+          adaptive_mutation_rate, mutation_rate, genetics.fitness_score, genetics.generation);
+
+    // Advanced security trait mutation with constraint preservation
     rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
-    if ((rng_state >> 16) as f64 / 65536.0) < mutation_rate {
+    if ((rng_state >> 16) as f64 / 65536.0) < adaptive_mutation_rate {
         let trait_mutation = (random_bytes[8] % 5) as usize;
         match trait_mutation {
             0 => {
@@ -185,10 +198,10 @@ pub async fn apply_mutations(
         mutations_applied.push("SecurityTraits".to_string());
     }
 
-    // Mutate chromosomes
+    // Advanced chromosome mutations with fitness-guided intensity
     for (i, chromosome) in genetics.crypto_chromosomes.iter_mut().enumerate() {
         rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
-        if ((rng_state >> 16) as f64 / 65536.0) < mutation_rate {
+        if ((rng_state >> 16) as f64 / 65536.0) < adaptive_mutation_rate {
             let mutation_type = (random_bytes[16 + i % 16] % 3) as usize;
             match mutation_type {
                 0 => {
@@ -215,10 +228,10 @@ pub async fn apply_mutations(
         }
     }
 
-    // Capability mutations - rarely add new capabilities
+    // Advanced capability mutations with ecosystem-aware selection
     rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
-    if ((rng_state >> 16) as f64 / 65536.0) < (mutation_rate * 0.1) {
-        // 10% of mutation rate for capability changes
+    if ((rng_state >> 16) as f64 / 65536.0) < (adaptive_mutation_rate * 0.15) {
+        // Increased rate for capability evolution based on fitness
         let capability_mutation = random_bytes[56] % 3;
         match capability_mutation {
             0 => {

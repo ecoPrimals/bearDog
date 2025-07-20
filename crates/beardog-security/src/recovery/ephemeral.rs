@@ -33,7 +33,7 @@ impl EphemeralRecoveryKey {
         Self {
             id,
             user_id,
-            key_value: String::new(), // Would be generated securely
+            key_value: Self::generate_secure_key(), // Securely generated key
             generated_at: now,
             expires_at: now + chrono::Duration::hours(24), // 24 hour expiry
             used: false,
@@ -50,6 +50,61 @@ impl EphemeralRecoveryKey {
     /// Mark the key as used
     pub fn mark_used(&mut self) {
         self.used = true;
+    }
+
+    /// Generate a cryptographically secure ephemeral key
+    fn generate_secure_key() -> String {
+        use rand::{distributions::Alphanumeric, Rng};
+
+        // Generate 32 bytes of random data (256 bits)
+        let random_bytes: Vec<u8> = (0..32).map(|_| rand::thread_rng().gen()).collect();
+
+        // Convert to base64 for storage
+        use base64::Engine as _;
+        base64::engine::general_purpose::STANDARD_NO_PAD.encode(random_bytes)
+    }
+
+    /// Derive a time-bound recovery key with HKDF
+    pub fn derive_time_bound_key(&self, salt: &[u8], info: &[u8]) -> Result<String, String> {
+        use hkdf::Hkdf;
+        use hmac::Hmac;
+        use sha2::Sha256;
+
+        // Decode the master key
+        use base64::Engine as _;
+        let master_key = base64::engine::general_purpose::STANDARD_NO_PAD
+            .decode(&self.key_value)
+            .map_err(|_| "Invalid key format")?;
+
+        // Use HKDF to derive a time-bound key
+        let hk = Hkdf::<Sha256>::new(Some(salt), &master_key);
+        let mut derived_key = [0u8; 32];
+        hk.expand(info, &mut derived_key)
+            .map_err(|_| "Key derivation failed")?;
+
+        // Return derived key as base64
+        Ok(base64::engine::general_purpose::STANDARD_NO_PAD.encode(derived_key))
+    }
+
+    /// Generate proof that the key holder possesses the key without revealing it
+    pub fn generate_possession_proof(&self, challenge: &[u8]) -> Result<String, String> {
+        use hmac::{Hmac, Mac};
+        use sha2::Sha256;
+
+        // Decode the key
+        use base64::Engine as _;
+        let key_bytes = base64::engine::general_purpose::STANDARD_NO_PAD
+            .decode(&self.key_value)
+            .map_err(|_| "Invalid key format")?;
+
+        // Create HMAC proof
+        let mut mac =
+            Hmac::<Sha256>::new_from_slice(&key_bytes).map_err(|_| "HMAC creation failed")?;
+        mac.update(challenge);
+        let proof = mac.finalize().into_bytes();
+
+        // Return proof as hex
+        Ok(hex::encode(proof))
     }
 }
 

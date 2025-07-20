@@ -29,11 +29,16 @@ use serde::{Deserialize, Serialize};
 
 pub mod ai_interface;
 pub mod cache;
+// pub mod error_handling; // TODO: Implement error handling module
 pub mod genetics;
+// pub mod handlers; // TODO: Implement handlers module
 pub mod monitoring;
 pub mod rate_limiting;
 pub mod security;
 pub mod server;
+// pub mod types; // TODO: Implement types module
+// pub mod webhooks; // TODO: Implement webhooks module
+pub mod zero_copy_handlers; // Add zero-copy optimizations
 
 // TODO: Add these modules when they are implemented
 // pub mod routes;

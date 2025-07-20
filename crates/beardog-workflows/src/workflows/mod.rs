@@ -69,6 +69,8 @@ pub mod policy;
 pub mod processors;
 pub mod storage;
 pub mod types;
+// Re-export key types
+pub use types::MultiPartyWorkflowEngine;
 
 #[cfg(test)]
 mod tests;

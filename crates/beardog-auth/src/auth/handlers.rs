@@ -84,6 +84,7 @@ impl CrossNodeAuthEngine {
         if trust_level < min_trust_level {
             return Ok(AuthorizationResult {
                 permitted: false,
+                authorized: false,
                 reason: format!("Insufficient trust level: {trust_level} < {min_trust_level}"),
                 additional_requirements: Vec::new(),
                 risk_level: RiskLevel::High,
@@ -105,6 +106,7 @@ impl CrossNodeAuthEngine {
             .await
             .map(|_auth| AuthorizationResult {
                 permitted: true,
+                authorized: true,
                 reason: "Consensus authorization granted".to_string(),
                 additional_requirements: Vec::new(),
                 risk_level: RiskLevel::Low,
@@ -116,6 +118,7 @@ impl CrossNodeAuthEngine {
         // Create direct authorization result
         Ok(AuthorizationResult {
             permitted: true,
+            authorized: true,
             reason: "Direct authorization granted".to_string(),
             additional_requirements: Vec::new(),
             risk_level: RiskLevel::Low,

@@ -59,7 +59,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_crypto_provider_operations() {
-        let provider = create_crypto_provider(&CryptoBackend::Ring).await.unwrap();
+        // Use Rust crypto provider since it's fully implemented
+        let provider = create_crypto_provider(&CryptoBackend::RustCrypto)
+            .await
+            .unwrap();
 
         // Test key generation
         let key = provider

@@ -322,12 +322,19 @@ struct ClientState {
     daily_reset: SystemTime,
     /// User tier
     user_tier: String,
+    #[allow(dead_code)] // Will be used for rate limiting implementation
     pub requests_per_minute: u32,
+    #[allow(dead_code)] // Will be used for rate limiting implementation
     pub requests_per_hour: u32,
+    #[allow(dead_code)] // Will be used for rate limiting implementation
     pub last_request_time: Instant,
+    #[allow(dead_code)] // Will be used for rate limiting implementation
     pub minute_reset_time: Instant,
+    #[allow(dead_code)] // Will be used for rate limiting implementation
     pub hour_reset_time: Instant,
+    #[allow(dead_code)] // Will be used for rate limiting implementation
     pub is_blocked: bool,
+    #[allow(dead_code)] // Will be used for rate limiting implementation
     pub blocked_until: Option<Instant>,
 }
 
@@ -446,6 +453,7 @@ impl TokenBucketLimiter {
     }
 
     /// Get or create client state
+    #[allow(dead_code)] // Will be used for client state management
     async fn get_or_create_client(&self, client_id: &str) -> ClientState {
         let clients = self.buckets.write().await;
 

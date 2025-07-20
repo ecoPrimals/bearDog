@@ -45,7 +45,7 @@ impl GeneticsEngine {
         Ok(BearDogGenetics {
             id: "child-genetics".to_string(),
             crypto_chromosomes: vec![],
-            security_traits: SecurityTraits::default(),
+            security_traits: beardog::auth::SecurityTraits::default(),
             capabilities: vec![
                 NodeCapability::SecurityAnalysis,
                 NodeCapability::ComputeProvider,
@@ -129,7 +129,7 @@ async fn test_toadstool_compute_integration() -> BearDogResult<()> {
             performance_factor: 0.8,
             security_level: 9,
         }],
-        security_traits: SecurityTraits::default(),
+        security_traits: beardog::auth::SecurityTraits::default(),
         capabilities: vec![NodeCapability::SecurityAnalysis],
         spawn_restrictions: vec![],
         generation: 0,
@@ -163,7 +163,7 @@ async fn test_genetic_spawning_network_effects() -> BearDogResult<()> {
                     performance_factor: 0.8,
                     security_level: 9,
                 }],
-                security_traits: SecurityTraits::default(),
+                security_traits: beardog::auth::SecurityTraits::default(),
                 capabilities: vec![NodeCapability::SecurityAnalysis],
                 spawn_restrictions: vec![SpawnRestriction::ResourceLimits(ResourceLimits {
                     max_memory_mb: 64000,
@@ -190,7 +190,7 @@ async fn test_genetic_spawning_network_effects() -> BearDogResult<()> {
                     performance_factor: 0.8,
                     security_level: 9,
                 }],
-                security_traits: SecurityTraits::default(),
+                security_traits: beardog::auth::SecurityTraits::default(),
                 capabilities: vec![
                     NodeCapability::ComputeProvider,
                     NodeCapability::HighThroughput,

@@ -144,10 +144,10 @@ impl PersistentAuditStorage {
             })?;
 
         let json_line = serde_json::to_string(entry).map_err(|e| BearDogError::Serialization {
-            message: format!("Failed to serialize audit entry: {}", e),
+            message: format!("Failed to serialize audit entry: {e}"),
         })?;
 
-        let line_with_newline = format!("{}\n", json_line);
+        let line_with_newline = format!("{json_line}\n");
         file.write_all(line_with_newline.as_bytes())
             .await
             .map_err(|e| BearDogError::Storage {
@@ -463,7 +463,7 @@ impl PersistentAuditStorage {
 
                 for entry_line in kept_entries {
                     temp_file
-                        .write_all(format!("{}\n", entry_line).as_bytes())
+                        .write_all(format!("{entry_line}\n").as_bytes())
                         .await
                         .map_err(|e| BearDogError::Storage {
                             message: format!(

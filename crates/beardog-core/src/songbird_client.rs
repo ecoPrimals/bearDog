@@ -214,7 +214,7 @@ impl UniversalServiceMeshClient {
             .timeout(Duration::from_secs(30))
             .user_agent("BearDog/1.0")
             .build()
-            .map_err(|e| BearDogError::internal(&format!("Failed to create HTTP client: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Failed to create HTTP client: {e}")))?;
 
         Ok(Self {
             client,
@@ -275,7 +275,7 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
         info!("🔍 Discovering available service mesh primals in ecosystem");
 
         // Universal discovery request - look for primals with service mesh capabilities
-        let discovery_request = serde_json::json!({
+        let _discovery_request = serde_json::json!({
             "capability_type": "service_mesh",
             "required_capabilities": [
                 "service_discovery",
@@ -293,10 +293,10 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
 
         // Try common service mesh discovery patterns
         let discovery_endpoints = vec![
-            "http://localhost:3000",    // Songbird default
-            "http://localhost:8080",    // Alternative port
+            "http://localhost:3000", // Songbird default
+            beardog_config::constants::endpoints::DEFAULT_LOCALHOST_URL, // Alternative port
             "http://service-mesh:3000", // Container name
-            "https://mesh.local",       // Local mesh
+            "https://mesh.local",    // Local mesh
         ];
 
         for endpoint in discovery_endpoints {
@@ -415,19 +415,19 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
             .send()
             .await
             .map_err(|e| {
-                BearDogError::internal(&format!("Failed to send registration request: {}", e))
+                BearDogError::internal(format!("Failed to send registration request: {e}"))
             })?;
 
         if response.status().is_success() {
             let registration_response: serde_json::Value = response.json().await.map_err(|e| {
-                BearDogError::internal(&format!("Failed to parse registration response: {}", e))
+                BearDogError::internal(format!("Failed to parse registration response: {e}"))
             })?;
 
             let registration_info = RegistrationInfo {
                 registration_id: registration_response
                     .get("registration_id")
                     .and_then(|v| v.as_str())
-                    .unwrap_or_else(|| "unknown")
+                    .unwrap_or("unknown")
                     .to_string(),
                 node_id: format!("beardog-{}", Uuid::new_v4()),
                 service_mesh_name: mesh_info.name.clone(),
@@ -450,9 +450,8 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
             error!("Failed to register with Songbird: {}", error_text);
-            Err(BearDogError::internal(&format!(
-                "Registration failed: {}",
-                error_text
+            Err(BearDogError::internal(format!(
+                "Registration failed: {error_text}"
             )))
         }
     }
@@ -484,7 +483,7 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
             .json(&update_request)
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Failed to update services: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Failed to update services: {e}")))?;
 
         if response.status().is_success() {
             info!("Successfully updated BearDog service catalog");
@@ -494,9 +493,8 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            Err(BearDogError::internal(&format!(
-                "Failed to update services: {}",
-                error_text
+            Err(BearDogError::internal(format!(
+                "Failed to update services: {error_text}"
             )))
         }
     }
@@ -536,11 +534,11 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
             .json(&discovery_request)
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Failed to discover services: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Failed to discover services: {e}")))?;
 
         if response.status().is_success() {
             let discovery_response: serde_json::Value = response.json().await.map_err(|e| {
-                BearDogError::internal(&format!("Failed to parse discovery response: {}", e))
+                BearDogError::internal(format!("Failed to parse discovery response: {e}"))
             })?;
 
             let services: Vec<DiscoveredService> = discovery_response
@@ -606,15 +604,13 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
             .json(&routing_request)
             .send()
             .await
-            .map_err(|e| {
-                BearDogError::internal(&format!("Failed to send service request: {}", e))
-            })?;
+            .map_err(|e| BearDogError::internal(format!("Failed to send service request: {e}")))?;
 
         let processing_time = start_time.elapsed().as_millis() as u64;
 
         if response.status().is_success() {
             let response_data: serde_json::Value = response.json().await.map_err(|e| {
-                BearDogError::internal(&format!("Failed to parse service response: {}", e))
+                BearDogError::internal(format!("Failed to parse service response: {e}"))
             })?;
 
             let service_response = ServiceResponse {
@@ -683,7 +679,7 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
             .json(&health_request)
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Failed to report health: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Failed to report health: {e}")))?;
 
         if response.status().is_success() {
             debug!("Successfully reported health status: {:?}", health);
@@ -716,14 +712,18 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
 
         let response = self
             .client
-            .delete(&self.api_url(&format!("primals/{}", reg_info.registration_id)).await?)
+            .delete(
+                &self
+                    .api_url(&format!("primals/{}", reg_info.registration_id))
+                    .await?,
+            )
             .timeout(self.timeout)
             .header("Content-Type", "application/json")
             .header("X-Registration-Id", &reg_info.registration_id)
             .json(&deregister_request)
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Failed to deregister: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Failed to deregister: {e}")))?;
 
         if response.status().is_success() {
             // Clear registration
@@ -786,7 +786,7 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
 impl UniversalServiceMeshClient {
     /// Probe a potential service mesh endpoint to see if it's available
     async fn probe_service_mesh(&self, endpoint: &str) -> BearDogResult<ServiceMeshInfo> {
-        let probe_url = format!("{}/api/v1/mesh/info", endpoint);
+        let probe_url = format!("{endpoint}/api/v1/mesh/info");
 
         let response = self
             .client
@@ -795,11 +795,11 @@ impl UniversalServiceMeshClient {
             .header("X-Probe-Source", "BearDog")
             .send()
             .await
-            .map_err(|e| BearDogError::internal(&format!("Probe failed: {}", e)))?;
+            .map_err(|e| BearDogError::internal(format!("Probe failed: {e}")))?;
 
         if response.status().is_success() {
             let mesh_info: serde_json::Value = response.json().await.map_err(|e| {
-                BearDogError::internal(&format!("Failed to parse probe response: {}", e))
+                BearDogError::internal(format!("Failed to parse probe response: {e}"))
             })?;
 
             let service_mesh = ServiceMeshInfo {
@@ -830,7 +830,7 @@ impl UniversalServiceMeshClient {
 
             Ok(service_mesh)
         } else {
-            Err(BearDogError::internal(&format!(
+            Err(BearDogError::internal(format!(
                 "Service mesh probe returned status: {}",
                 response.status()
             )))

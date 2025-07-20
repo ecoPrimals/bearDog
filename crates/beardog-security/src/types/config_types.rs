@@ -3,7 +3,6 @@
 //! This module contains all types related to security configuration,
 //! policy management, provider settings, and system configuration.
 
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -18,6 +17,10 @@ pub struct SecurityProviderConfig {
     pub mfa_config: super::auth_types::MfaConfig,
     /// Session management settings
     pub session_config: super::auth_types::SessionConfig,
+    /// Maximum failed authentication attempts before lockout
+    pub max_failed_attempts: u32,
+    /// Account lockout duration in minutes
+    pub lockout_duration_minutes: u32,
     /// Audit logging settings
     pub audit_logging_enabled: bool,
     /// Threat detection engine configuration
@@ -107,17 +110,15 @@ pub struct AuditConfig {
     pub real_time_alerts: bool,
 }
 
-/// Security rules and policies engine
+/// Security rules engine configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityRules {
-    /// Collection of security rules
+    /// List of security rules
     pub rules: Vec<SecurityRule>,
-    /// Default policy for unmatched requests
+    /// Default policy when no rules match
     pub default_policy: PolicyDecision,
-    /// Rule evaluation timeout in milliseconds
-    pub timeout_ms: u32,
-    /// Enable rule caching for performance
-    pub enable_caching: bool,
+    /// Security context for rule evaluation
+    pub context: super::auth_types::SecurityContext,
 }
 
 /// Individual security rule
@@ -275,6 +276,8 @@ impl Default for SecurityProviderConfig {
             rate_limit_config: Default::default(),
             mfa_config: Default::default(),
             session_config: Default::default(),
+            max_failed_attempts: 5,
+            lockout_duration_minutes: 15,
             audit_logging_enabled: true,
             threat_detection_enabled: false,
             compliance_enabled: false,
@@ -332,4 +335,4 @@ impl Default for AuditConfig {
             real_time_alerts: true,
         }
     }
-} 
+}

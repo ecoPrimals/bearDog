@@ -12,13 +12,11 @@ pub mod recovery;
 // pub mod recovery_tests; // Temporarily disabled due to API changes
 pub mod tests;
 pub mod types;
+pub mod zero_copy; // New modular zero-copy implementation
+pub mod zero_copy_crypto; // Add zero-copy crypto optimizations (legacy compat)
 
 // Re-export main types for convenience
 pub use crypto_utils::BearDogCrypto;
-pub use decentralized_auth::{
-    AuthChallenge, AuthClaims, AuthResponse, CryptoAuthToken, DecentralizedAuthManager,
-};
-pub use encryption::{EncryptionEngine, EncryptionRequest, EncryptionResponse};
 pub use memory_key_manager::MemoryKeyManager;
-pub use recovery::RecoveryManager;
 pub use types::*;
+pub use zero_copy_crypto::{BufferPool, EncryptionContext, ZeroCopyConfig, ZeroCopyCrypto};

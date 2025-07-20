@@ -31,6 +31,10 @@ pub struct ComponentStatus {
     pub error_message: Option<String>,
     /// Last time this component was checked
     pub last_checked: DateTime<Utc>,
+    /// Alias for last_checked (for compatibility)
+    pub last_check: DateTime<Utc>,
+    /// Component uptime duration
+    pub uptime: Option<chrono::Duration>,
     /// Component-specific metadata
     pub metadata: HashMap<String, String>,
 }
@@ -76,10 +80,20 @@ pub struct HealthCheck {
     pub component_name: String,
     /// Whether the health check passed
     pub healthy: bool,
+    /// Overall health status
+    pub status: HealthStatus,
+    /// System uptime
+    pub uptime: Option<chrono::Duration>,
     /// Optional details about the health check
     pub details: Option<String>,
     /// Time taken to perform the health check (in milliseconds)
     pub check_duration_ms: u64,
+    /// Individual component statuses
+    pub components: Vec<ComponentStatus>,
+    /// Performance metrics
+    pub metrics: SystemMetrics,
+    /// Timestamp when the health check was performed
+    pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
 impl Default for CoreState {
@@ -95,11 +109,14 @@ impl Default for CoreState {
 
 impl Default for ComponentStatus {
     fn default() -> Self {
+        let now = Utc::now();
         Self {
             name: "unknown".to_string(),
             healthy: false,
             error_message: None,
-            last_checked: Utc::now(),
+            last_checked: now,
+            last_check: now,
+            uptime: None,
             metadata: HashMap::new(),
         }
     }
@@ -124,8 +141,13 @@ impl Default for HealthCheck {
         Self {
             component_name: "unknown".to_string(),
             healthy: false,
+            status: HealthStatus::Starting,
+            uptime: None,
             details: None,
             check_duration_ms: 0,
+            components: Vec::new(),
+            metrics: SystemMetrics::default(),
+            timestamp: chrono::Utc::now(),
         }
     }
 }
@@ -133,31 +155,39 @@ impl Default for HealthCheck {
 impl ComponentStatus {
     /// Create a new healthy component status
     pub fn healthy(name: String) -> Self {
+        let now = Utc::now();
         Self {
             name,
             healthy: true,
             error_message: None,
-            last_checked: Utc::now(),
+            last_checked: now,
+            last_check: now,
+            uptime: None,
             metadata: HashMap::new(),
         }
     }
 
     /// Create a new unhealthy component status with error message
     pub fn unhealthy(name: String, error_message: String) -> Self {
+        let now = Utc::now();
         Self {
             name,
             healthy: false,
             error_message: Some(error_message),
-            last_checked: Utc::now(),
+            last_checked: now,
+            last_check: now,
+            uptime: None,
             metadata: HashMap::new(),
         }
     }
 
     /// Update the health status of this component
     pub fn update_health(&mut self, healthy: bool, error_message: Option<String>) {
+        let now = Utc::now();
         self.healthy = healthy;
         self.error_message = error_message;
-        self.last_checked = Utc::now();
+        self.last_checked = now;
+        self.last_check = now;
     }
 }
 
@@ -193,8 +223,13 @@ impl HealthCheck {
         Self {
             component_name,
             healthy: true,
+            status: HealthStatus::Healthy,
+            uptime: None,
             details: None,
             check_duration_ms,
+            components: Vec::new(),
+            metrics: SystemMetrics::default(),
+            timestamp: Utc::now(),
         }
     }
 
@@ -203,8 +238,13 @@ impl HealthCheck {
         Self {
             component_name,
             healthy: false,
+            status: HealthStatus::Unhealthy,
+            uptime: None,
             details: Some(details),
             check_duration_ms,
+            components: Vec::new(),
+            metrics: SystemMetrics::default(),
+            timestamp: Utc::now(),
         }
     }
-} 
+}

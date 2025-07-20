@@ -1,15 +1,12 @@
 //! HTTP handlers for AI interface
 
 use axum::extract::{Path, State};
-use axum::http::StatusCode;
 use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::response::Json;
 use beardog_core::core::BearDogCore;
-use beardog_errors::{BearDogError, BearDogResult};
 use futures::stream;
 use std::convert::Infallible;
 use std::sync::Arc;
-use std::time::Duration;
 use tokio_stream::Stream;
 
 use crate::api::ai_interface::*;

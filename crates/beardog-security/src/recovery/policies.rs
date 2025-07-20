@@ -96,8 +96,6 @@ pub struct ContextTrustRequirements {
     pub allowed_verification_methods: Vec<VerificationMethod>,
 }
 
-
-
 impl Default for UserTrustBoundaries {
     fn default() -> Self {
         Self {

@@ -19,7 +19,7 @@ pub struct AIHealthCheck {
 }
 
 /// AI Metrics Response
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AIMetricsResponse {
     pub system: AISystemMetrics,
     pub security: AISecurityMetrics,
@@ -76,17 +76,6 @@ impl Default for AIHealthStatus {
                     message: "HSM tiers available".to_string(),
                 },
             ],
-        }
-    }
-}
-
-impl Default for AIMetricsResponse {
-    fn default() -> Self {
-        Self {
-            system: AISystemMetrics::default(),
-            security: AISecurityMetrics::default(),
-            genetics: AIGeneticsMetrics::default(),
-            tunnel: AITunnelMetrics::default(),
         }
     }
 }

@@ -98,25 +98,34 @@ impl MultiPartyWorkflowEngine {
             .await?;
 
         // Create workflow
+        let timeout_duration = chrono::Duration::hours(24); // Default timeout
         let workflow = Workflow {
             id: workflow_id.clone(),
             workflow_type: request.workflow_type.clone(),
-            initiator: request.initiator.clone(),
-            target: request.target,
-            parameters: request.parameters,
-            approval_requirements: approval_requirements.clone(),
             status: WorkflowStatus::PendingApprovals,
+            target: request.target,
+            approval_requirements: approval_requirements.clone(),
+            priority: request.priority,
             created_at: Utc::now(),
-            expires_at: Utc::now() + approval_requirements.max_approval_time,
+            expires_at: Utc::now() + timeout_duration,
+            requested_by: request.requested_by.clone(),
+            initiator: request.initiator.clone(),
+            description: request.description.clone(),
+            metadata: HashMap::new(),
+            timeout_duration: Some(timeout_duration),
+            properties: request.properties,
             approvals: Vec::new(),
             audit_trail: vec![WorkflowAuditEntry {
+                id: Uuid::new_v4().to_string(),
+                workflow_id: workflow_id.clone(),
+                event_type: "workflow_initiated".to_string(),
+                user_id: request.initiator.clone(),
                 timestamp: Utc::now(),
-                action: WorkflowAction::Initiated,
-                actor: request.initiator.clone(),
-                details: request.reason,
-                metadata: request.metadata,
+                details: serde_json::json!({
+                    "workflow_type": request.workflow_type,
+                    "description": request.description,
+                }),
             }],
-            metadata: HashMap::new(),
         };
 
         // Store workflow
@@ -140,12 +149,16 @@ impl MultiPartyWorkflowEngine {
         let pending_approvers = self.get_pending_approvers(&workflow_id).await?;
 
         Ok(WorkflowResponse {
-            workflow_id,
+            workflow_id: workflow_id.clone(),
+            success: true,
+            message: "Workflow initiated successfully".to_string(),
             status: WorkflowStatus::PendingApprovals,
-            required_approvals: approval_requirements,
-            pending_approvers,
-            estimated_completion: workflow.expires_at,
-            tracking_url: None,
+            data: Some(serde_json::json!({
+                "required_approvals": approval_requirements,
+                "pending_approvers": pending_approvers,
+                "estimated_completion": workflow.expires_at,
+                "tracking_url": format!("/workflows/{}", workflow_id)
+            })),
         })
     }
 
@@ -171,20 +184,19 @@ impl MultiPartyWorkflowEngine {
         }
 
         // Validate approver is authorized
-        self.validate_approver(&workflow, &submission.approver)
+        self.validate_approver(&workflow, &submission.approver_id)
             .await?;
 
         // Create approval record
         let approval = ApprovalRecord {
             id: Uuid::new_v4().to_string(),
             workflow_id: submission.workflow_id.clone(),
-            approver: submission.approver.clone(),
-            approver_role: self.get_approver_role(&submission.approver).await?,
+            approver_id: submission.approver_id.clone(),
             decision: submission.decision.clone(),
-            reason: submission.reason,
-            timestamp: Utc::now(),
+            reason: submission.reason.clone(),
+            decided_at: Utc::now(),
             signature: submission.signature,
-            metadata: submission.metadata,
+            approver_ip: None, // Could be extracted from request context in real implementation
         };
 
         // Store approval
@@ -193,19 +205,23 @@ impl MultiPartyWorkflowEngine {
         // Update workflow
         workflow.approvals.push(approval.clone());
         workflow.audit_trail.push(WorkflowAuditEntry {
-            timestamp: Utc::now(),
-            action: match submission.decision {
-                ApprovalDecision::Approved => WorkflowAction::Approved,
-                ApprovalDecision::Rejected => WorkflowAction::Rejected,
-                ApprovalDecision::Delegated => WorkflowAction::Delegated,
+            id: Uuid::new_v4().to_string(),
+            workflow_id: workflow.id.clone(),
+            event_type: match submission.decision {
+                ApprovalDecision::Approved => "approval_approved".to_string(),
+                ApprovalDecision::Rejected => "approval_rejected".to_string(),
+                ApprovalDecision::Abstained => "approval_abstained".to_string(),
             },
-            actor: submission.approver,
-            details: format!("Approval decision: {:?}", submission.decision),
-            metadata: HashMap::new(),
+            user_id: submission.approver_id.clone(),
+            timestamp: Utc::now(),
+            details: serde_json::json!({
+                "decision": submission.decision,
+                "reason": submission.reason,
+            }),
         });
 
         // Check if workflow is complete
-        let (new_status, remaining_approvals) = self.evaluate_workflow_status(&workflow).await?;
+        let (new_status, _remaining_approvals) = self.evaluate_workflow_status(&workflow).await?;
         workflow.status = new_status.clone();
 
         // Update workflow
@@ -229,9 +245,8 @@ impl MultiPartyWorkflowEngine {
 
         Ok(ApprovalResponse {
             success: true,
-            workflow_status: new_status,
-            remaining_approvals,
             message: "Approval submitted successfully".to_string(),
+            workflow_status: new_status,
         })
     }
 
@@ -261,17 +276,16 @@ impl MultiPartyWorkflowEngine {
     async fn create_pending_approvals(&self, workflow: &Workflow) -> BearDogResult<()> {
         let mut pending_approvals = Vec::new();
 
-        for tier in &workflow.approval_requirements.approval_hierarchy {
-            for user in &tier.eligible_users {
+        for tier in &workflow.approval_requirements.tiers {
+            for user in &tier.required_approvers {
                 let pending = PendingApproval {
                     id: Uuid::new_v4().to_string(),
                     workflow_id: workflow.id.clone(),
-                    approver: user.clone(),
-                    approver_role: self.get_approver_role(user).await.unwrap_or_default(),
-                    tier_level: tier.tier_level,
-                    created_at: Utc::now(),
-                    expires_at: workflow.expires_at,
-                    notification_sent: false,
+                    approver_id: user.clone(),
+                    tier_name: tier.name.clone(),
+                    requested_at: Utc::now(),
+                    expires_at: Some(workflow.expires_at),
+                    reminder_count: 0,
                 };
                 pending_approvals.push(pending);
             }
@@ -289,7 +303,7 @@ impl MultiPartyWorkflowEngine {
     async fn get_pending_approvers(&self, workflow_id: &str) -> BearDogResult<Vec<String>> {
         let pending = self.pending_approvals.read().await;
         if let Some(approvals) = pending.get(workflow_id) {
-            Ok(approvals.iter().map(|a| a.approver.clone()).collect())
+            Ok(approvals.iter().map(|a| a.approver_id.clone()).collect())
         } else {
             Ok(Vec::new())
         }
@@ -297,8 +311,8 @@ impl MultiPartyWorkflowEngine {
 
     async fn validate_approver(&self, workflow: &Workflow, approver: &str) -> BearDogResult<()> {
         // Check if approver is in the eligible list
-        for tier in &workflow.approval_requirements.approval_hierarchy {
-            if tier.eligible_users.contains(&approver.to_string()) {
+        for tier in &workflow.approval_requirements.tiers {
+            if tier.required_approvers.contains(&approver.to_string()) {
                 return Ok(());
             }
         }
@@ -382,21 +396,20 @@ impl MultiPartyWorkflowEngine {
         }
 
         // Check for approval
-        if approved_count >= workflow.approval_requirements.required_approvals {
+        if approved_count >= workflow.approval_requirements.minimum_approvals {
             return Ok((WorkflowStatus::Approved, 0));
         }
 
         // Still pending
-        let remaining = workflow.approval_requirements.required_approvals - approved_count;
+        let remaining = workflow.approval_requirements.minimum_approvals - approved_count;
         Ok((WorkflowStatus::PendingApprovals, remaining))
     }
 
     async fn queue_workflow_execution(&self, workflow: &Workflow) -> BearDogResult<()> {
         let execution = WorkflowExecution {
-            workflow_id: workflow.id.clone(),
-            workflow_type: workflow.workflow_type.clone(),
-            parameters: workflow.parameters.clone(),
-            created_at: Utc::now(),
+            workflow: workflow.clone(),
+            state: WorkflowExecutionState::NotStarted,
+            started_at: Utc::now(),
         };
 
         let mut queue = self.execution_queue.lock().await;
@@ -417,7 +430,7 @@ impl MultiPartyWorkflowEngine {
             if let Err(e) = self.execute_workflow(&execution).await {
                 error!(
                     "Failed to execute workflow {}: {}",
-                    execution.workflow_id, e
+                    execution.workflow.id, e
                 );
             }
 
@@ -431,30 +444,35 @@ impl MultiPartyWorkflowEngine {
     async fn execute_workflow(&self, execution: &WorkflowExecution) -> BearDogResult<()> {
         // Get processor for workflow type
         let processors = self.workflow_processors.read().await;
-        let processor =
-            processors
-                .get(&execution.workflow_type)
-                .ok_or_else(|| BearDogError::NotFound {
-                    message: format!("Workflow processor not found: {}", execution.workflow_type),
-                })?;
+        let processor = processors
+            .get(&execution.workflow.workflow_type)
+            .ok_or_else(|| BearDogError::NotFound {
+                message: format!(
+                    "Workflow processor not found: {}",
+                    execution.workflow.workflow_type
+                ),
+            })?;
 
         // Get workflow
         let mut workflow = self
             .workflow_store
-            .get_workflow(&execution.workflow_id)
+            .get_workflow(&execution.workflow.id)
             .await?
             .ok_or_else(|| BearDogError::NotFound {
-                message: format!("Workflow not found: {}", execution.workflow_id),
+                message: format!("Workflow not found: {}", execution.workflow.id),
             })?;
 
         // Update status to in progress
         workflow.status = WorkflowStatus::InProgress;
         workflow.audit_trail.push(WorkflowAuditEntry {
+            id: Uuid::new_v4().to_string(),
+            workflow_id: workflow.id.clone(),
+            event_type: "workflow_execution_started".to_string(),
+            user_id: "system".to_string(),
             timestamp: Utc::now(),
-            action: WorkflowAction::Executed,
-            actor: "system".to_string(),
-            details: "Workflow execution started".to_string(),
-            metadata: HashMap::new(),
+            details: serde_json::json!({
+                "message": "Workflow execution started",
+            }),
         });
 
         self.workflow_store.update_workflow(&workflow).await?;
@@ -470,17 +488,20 @@ impl MultiPartyWorkflowEngine {
         };
 
         workflow.audit_trail.push(WorkflowAuditEntry {
-            timestamp: Utc::now(),
-            action: if result.success {
-                WorkflowAction::Completed
+            id: Uuid::new_v4().to_string(),
+            workflow_id: workflow.id.clone(),
+            event_type: if result.success {
+                "workflow_completed".to_string()
             } else {
-                WorkflowAction::Failed
+                "workflow_failed".to_string()
             },
-            actor: "system".to_string(),
-            details: result
-                .error
-                .unwrap_or_else(|| "Workflow completed successfully".to_string()),
-            metadata: HashMap::new(),
+            user_id: "system".to_string(),
+            timestamp: Utc::now(),
+            details: serde_json::json!({
+                "success": result.success,
+                "message": result.message,
+                "execution_duration_ms": result.execution_duration_ms
+            }),
         });
 
         self.workflow_store.update_workflow(&workflow).await?;

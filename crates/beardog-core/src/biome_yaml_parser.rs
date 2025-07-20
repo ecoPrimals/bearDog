@@ -529,7 +529,7 @@ impl BiomeYamlParser {
     /// Parse biome.yaml from file path
     pub async fn parse_file<P: AsRef<Path>>(path: P) -> BearDogResult<BiomeManifest> {
         let content = fs::read_to_string(path.as_ref()).await.map_err(|e| {
-            BearDogError::config(&format!(
+            BearDogError::config(format!(
                 "Failed to read biome.yaml at {}: {}",
                 path.as_ref().display(),
                 e
@@ -542,7 +542,7 @@ impl BiomeYamlParser {
     /// Parse biome.yaml from string content
     pub async fn parse_string(content: &str) -> BearDogResult<BiomeManifest> {
         let manifest: BiomeManifest = serde_yaml::from_str(content)
-            .map_err(|e| BearDogError::config(&format!("Failed to parse biome.yaml: {}", e)))?;
+            .map_err(|e| BearDogError::config(format!("Failed to parse biome.yaml: {e}")))?;
 
         // Validate the manifest
         Self::validate_manifest(&manifest).await?;
@@ -567,7 +567,7 @@ impl BiomeYamlParser {
 
         // Validate semantic versioning
         if !Self::is_valid_semver(&manifest.biome.version) {
-            return Err(BearDogError::validation(&format!(
+            return Err(BearDogError::validation(format!(
                 "Invalid version format: {}. Must follow semantic versioning.",
                 manifest.biome.version
             )));
@@ -591,7 +591,7 @@ impl BiomeYamlParser {
     /// Validate individual primal configuration
     async fn validate_primal_config(name: &str, config: &PrimalConfig) -> BearDogResult<()> {
         // Validate primal type
-        let valid_types = vec![
+        let valid_types = [
             "beardog",
             "songbird",
             "nestgate",
@@ -607,7 +607,7 @@ impl BiomeYamlParser {
 
         // Validate version
         if !Self::is_valid_semver(&config.version) {
-            return Err(BearDogError::validation(&format!(
+            return Err(BearDogError::validation(format!(
                 "Invalid version for primal {}: {}",
                 name, config.version
             )));
@@ -615,31 +615,27 @@ impl BiomeYamlParser {
 
         // Validate resource requirements
         if config.resources.cpu.requests <= 0.0 {
-            return Err(BearDogError::validation(&format!(
-                "CPU requests must be positive for primal: {}",
-                name
+            return Err(BearDogError::validation(format!(
+                "CPU requests must be positive for primal: {name}"
             )));
         }
 
         if config.resources.memory.requests <= 0.0 {
-            return Err(BearDogError::validation(&format!(
-                "Memory requests must be positive for primal: {}",
-                name
+            return Err(BearDogError::validation(format!(
+                "Memory requests must be positive for primal: {name}"
             )));
         }
 
         // Validate scaling configuration
         if config.scaling.min_replicas == 0 {
-            return Err(BearDogError::validation(&format!(
-                "Minimum replicas must be at least 1 for primal: {}",
-                name
+            return Err(BearDogError::validation(format!(
+                "Minimum replicas must be at least 1 for primal: {name}"
             )));
         }
 
         if config.scaling.max_replicas < config.scaling.min_replicas {
-            return Err(BearDogError::validation(&format!(
-                "Max replicas must be >= min replicas for primal: {}",
-                name
+            return Err(BearDogError::validation(format!(
+                "Max replicas must be >= min replicas for primal: {name}"
             )));
         }
 
@@ -664,15 +660,13 @@ impl BiomeYamlParser {
             // Check quotas if specified
             if let Some(quota) = resources.quotas.get(name) {
                 if config.resources.cpu.requests > quota.cpu {
-                    return Err(BearDogError::validation(&format!(
-                        "CPU requests exceed quota for primal: {}",
-                        name
+                    return Err(BearDogError::validation(format!(
+                        "CPU requests exceed quota for primal: {name}"
                     )));
                 }
                 if config.resources.memory.requests > quota.memory {
-                    return Err(BearDogError::validation(&format!(
-                        "Memory requests exceed quota for primal: {}",
-                        name
+                    return Err(BearDogError::validation(format!(
+                        "Memory requests exceed quota for primal: {name}"
                     )));
                 }
             }
@@ -680,14 +674,14 @@ impl BiomeYamlParser {
 
         // Check total resource allocation
         if total_cpu_requests > resources.total_cpu {
-            return Err(BearDogError::validation(&format!(
+            return Err(BearDogError::validation(format!(
                 "Total CPU requests ({:.2}) exceed biome allocation ({:.2})",
                 total_cpu_requests, resources.total_cpu
             )));
         }
 
         if total_memory_requests > resources.total_memory {
-            return Err(BearDogError::validation(&format!(
+            return Err(BearDogError::validation(format!(
                 "Total memory requests ({:.2}GB) exceed biome allocation ({:.2}GB)",
                 total_memory_requests, resources.total_memory
             )));
@@ -794,7 +788,7 @@ impl BiomeYamlParser {
 
         Ok(ServiceEndpoint {
             protocol: protocol.to_string(),
-            host: "localhost".to_string(), // Will be updated during deployment
+            host: beardog_config::constants::network::DEFAULT_HOST.to_string(), // Will be updated during deployment
             port: primary_port.port,
             path,
             security: crate::universal_primal_provider::EndpointSecurity {

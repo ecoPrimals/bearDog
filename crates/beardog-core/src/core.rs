@@ -2,8 +2,7 @@
 //!
 //! Manages the lifecycle and health of all BearDog security components.
 
-use chrono::{DateTime, Duration, Utc};
-use serde::{Deserialize, Serialize};
+use chrono::Utc;
 use serde_json;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -13,23 +12,19 @@ use uuid;
 
 // Import from our refactored modules
 use crate::node_registry::{BasicNodeRegistry, BasicProofVerifier};
-use crate::types::{CoreState, ComponentStatus, HealthStatus, SystemMetrics, HealthCheck};
+use crate::types::{ComponentStatus, CoreState, HealthCheck, HealthStatus, SystemMetrics};
 
 use crate::universal_primal_provider::{
-    EcosystemRole, PrimalCapability, PrimalMetadata, PrimalService, PrimalType, ServiceContext,
-    ServiceEndpoint, ServiceHealth, UniversalPrimalProvider,
-};
-use beardog_adapters::{
-    BearDogEcosystemIntegration, BearDogEcosystemConfig, EcosystemRequest, 
-    UniversalServiceRegistration, HealthStatus as EcosystemHealthStatus, HealthLevel,
+    PrimalCapability, PrimalMetadata, PrimalService, ServiceContext, ServiceEndpoint,
+    ServiceHealth, UniversalPrimalProvider,
 };
 use beardog_auth::auth::{CrossNodeAuthEngine, NodeRegistry, ProofVerifier};
 use beardog_compliance::compliance::ComplianceEngine;
 use beardog_compliance::AuditEngine;
 use beardog_config::BearDogConfig;
 use beardog_errors::{BearDogError, BearDogResult};
+use beardog_security::encryption::EncryptionEngine;
 use beardog_security::BearDogSecurityProvider;
-use beardog_security::EncryptionEngine;
 use beardog_threat::threat::types::engine::ThreatDetectionEngine;
 use beardog_tunnel::tunnel::hsm::manager::HsmManager;
 use beardog_workflows::workflows::InMemoryApprovalStore;
@@ -55,10 +50,6 @@ pub struct BearDogCore {
     primal_metadata: PrimalMetadata,
     primal_capabilities: Vec<PrimalCapability>,
 }
-
-
-
-
 
 impl BearDogCore {
     /// Create a new BearDog core instance
@@ -139,8 +130,9 @@ impl BearDogCore {
             info!("Running in distributed mode");
         }
 
-        let security_provider =
-            Arc::new(beardog_security::BearDogSecurityProvider::new(security_config).await?);
+        let security_provider = Arc::new(
+            beardog_security::BearDogSecurityProvider::new_with_config(security_config).await?,
+        );
 
         // Initialize HSM manager
         let hsm_manager = Arc::new(HsmManager::new());
@@ -239,8 +231,12 @@ impl BearDogCore {
         let components: Vec<ComponentStatus> = state.component_status.values().cloned().collect();
 
         Ok(HealthCheck {
+            component_name: "beardog-core".to_string(),
+            healthy: matches!(state.health_status, HealthStatus::Healthy),
             status: state.health_status.clone(),
             uptime,
+            details: None,
+            check_duration_ms: 0,
             components,
             metrics: state.metrics.clone(),
             timestamp: Utc::now(),
@@ -262,12 +258,15 @@ impl BearDogCore {
         healthy: bool,
         error_message: Option<String>,
     ) {
+        let now = Utc::now();
         let component_status = ComponentStatus {
             name: name.to_string(),
             healthy,
-            last_check: Utc::now(),
             error_message,
-            uptime: state.start_time.map(|start_time| Utc::now() - start_time),
+            last_checked: now,
+            last_check: now,
+            uptime: state.start_time.map(|start_time| now - start_time),
+            metadata: HashMap::new(),
         };
 
         state
@@ -472,7 +471,7 @@ impl BearDogCore {
         // In a production system, we would use a persistent key from HSM
         // For now, we'll use a deterministic key derived from the system configuration
         let key_seed = format!("beardog-{}", self.config.app.name);
-        let key_material = beardog_security::crypto_utils::BearDogCrypto::derive_key_pbkdf2(
+        let _key_material = beardog_security::crypto_utils::BearDogCrypto::derive_key_pbkdf2(
             key_seed.as_bytes(),
             b"beardog-signing-key",
             10000,
@@ -495,7 +494,7 @@ impl BearDogCore {
 
         // Get the public key that corresponds to our signing key
         let key_seed = format!("beardog-{}", self.config.app.name);
-        let key_material = BearDogCrypto::derive_key_pbkdf2(
+        let _key_material = BearDogCrypto::derive_key_pbkdf2(
             key_seed.as_bytes(),
             b"beardog-signing-key",
             10000,
@@ -548,10 +547,9 @@ impl BearDogCore {
 
         // Integrate with genetics engine for actual node creation
         use beardog_auth::auth::SpawnPurpose;
-        use beardog_genetics::genetics::spawning::InMemoryGeneticsStore;
-        use beardog_genetics::genetics::{
-            BearDogWorkflowType, GeneticsAPI, ResourceLimits, SpawnRequest,
-        };
+        // Remove unused import
+        use beardog_genetics::api::InMemoryGeneticsStore;
+        use beardog_genetics::genetics::GeneticsAPI;
 
         // 1. Validate the spawn request
         let spawn_purpose = SpawnPurpose::SecurityResponse; // Default purpose
@@ -561,36 +559,28 @@ impl BearDogCore {
         let genetics_config = beardog_genetics::genetics::GeneticsConfig::default();
         let genetics_api = GeneticsAPI::new(genetics_store, genetics_config);
 
-        // 3. Create a proper spawn request
-        let spawn_request = SpawnRequest {
-            request_id: format!("spawn_{}_{}", parent_id, uuid::Uuid::new_v4()),
-            requesting_parent: parent_id.to_string(),
-            co_parents: vec![], // Extract from config if needed
-            purpose: spawn_purpose,
-            resource_requirements: ResourceLimits::default(),
-            workflow_type: BearDogWorkflowType::AutomatedConsensus {
-                participating_nodes: vec![parent_id.to_string()],
-                consensus_threshold: 0.51,
-                max_decision_time: chrono::Duration::minutes(5),
-            },
-            created_at: chrono::Utc::now(),
-            expires_at: chrono::Utc::now() + chrono::Duration::hours(1),
+        let spawn_request = beardog_genetics::genetics::spawning::SpawnRequest {
+            purpose: spawn_purpose.clone(),
+            required_capabilities: vec![],
+            parent_genetics: vec![],
+            resource_requirements: Default::default(),
             metadata: std::collections::HashMap::new(),
+            security_clearance: beardog_auth::auth::SecurityClearance::Basic,
         };
 
         // 4. Process the spawn request through genetics engine
         match genetics_api.spawn_node(spawn_request).await {
             Ok(spawn_result) => {
-                if spawn_result.approved {
-                    if let Some(child_node_id) = spawn_result.child_node_id {
-                        tracing::info!("✅ Node spawned successfully: {}", child_node_id);
-                        Ok(child_node_id)
-                    } else {
-                        tracing::warn!("Spawn approved but no child node ID generated");
-                        Ok(node_id) // Fallback to generated ID
-                    }
+                if spawn_result.success {
+                    let child_node_id = &spawn_result.genetics.id;
+                    tracing::info!("✅ Node spawned successfully: {}", child_node_id);
+                    Ok(child_node_id.clone())
                 } else {
-                    let reason = spawn_result.decision_reason;
+                    let reason = spawn_result
+                        .messages
+                        .first()
+                        .map(|m| m.as_str())
+                        .unwrap_or("Unknown error");
                     tracing::warn!("Spawn request rejected: {}", reason);
                     Err(BearDogError::Internal {
                         message: format!("Spawn rejected: {reason}"),
@@ -598,10 +588,10 @@ impl BearDogCore {
                 }
             }
             Err(e) => {
-                tracing::error!("Failed to process spawn request: {}", e);
-                // Fallback to basic node creation for backward compatibility
-                tracing::warn!("Falling back to basic node creation");
-                Ok(node_id)
+                tracing::error!("Spawn request failed: {:?}", e);
+                Err(BearDogError::Internal {
+                    message: format!("Spawn failed: {e}"),
+                })
             }
         }
     }
@@ -720,14 +710,14 @@ impl BearDogCore {
 
         // Configure the HSM manager to use the selected tier
         // Convert tier_id to the appropriate HSM tier type
-        let hsm_tier = match tier_id {
+        let _hsm_tier = match tier_id {
             "smartphone_hsm" => beardog_tunnel::tunnel::hsm::manager::SimpleHsmTier::Smartphone,
             "software_hsm" => beardog_tunnel::tunnel::hsm::manager::SimpleHsmTier::Software,
             "hardware_hsm" => beardog_tunnel::tunnel::hsm::manager::SimpleHsmTier::Hardware,
             "hybrid_hsm" => beardog_tunnel::tunnel::hsm::manager::SimpleHsmTier::Hybrid,
             _ => {
                 return Err(BearDogError::Configuration {
-                    message: format!("Unsupported HSM tier: {}", tier_id),
+                    message: format!("Unsupported HSM tier: {tier_id}"),
                 })
             }
         };
@@ -740,14 +730,12 @@ impl BearDogCore {
         );
 
         // Store the selected tier preference in system state
-        let mut state = self.state.write().await;
+        let _state = self.state.write().await;
         // We could store the tier preference in the state for later use
         tracing::debug!("HSM tier preference stored in core state");
         Ok(())
     }
 }
-
-
 
 // Universal Primal Provider implementation for ecosystem integration
 #[async_trait::async_trait]
@@ -763,6 +751,7 @@ impl UniversalPrimalProvider for BearDogCore {
     }
 
     /// Get list of services this primal exposes
+    #[allow(clippy::vec_init_then_push)] // Complex service definitions are clearer with push
     async fn services(&self) -> BearDogResult<Vec<PrimalService>> {
         let mut services = Vec::new();
 
@@ -875,14 +864,14 @@ impl UniversalPrimalProvider for BearDogCore {
         });
 
         let response = client
-            .post(&format!("{}/api/v1/primals/register", songbird_endpoint))
+            .post(format!("{songbird_endpoint}/api/v1/primals/register"))
             .header("Content-Type", "application/json")
             .header("X-Primal-Type", "BearDog")
             .json(&registration_data)
             .send()
             .await
             .map_err(|e| {
-                BearDogError::internal(&format!("Failed to register with Songbird: {}", e))
+                BearDogError::internal(format!("Failed to register with Songbird: {e}"))
             })?;
 
         if response.status().is_success() {
@@ -896,9 +885,8 @@ impl UniversalPrimalProvider for BearDogCore {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            Err(BearDogError::internal(&format!(
-                "Failed to register with Songbird: {}",
-                error_text
+            Err(BearDogError::internal(format!(
+                "Failed to register with Songbird: {error_text}"
             )))
         }
     }
@@ -921,8 +909,8 @@ impl UniversalPrimalProvider for BearDogCore {
             "security" => {
                 // Handle security service requests
                 // This would route to the security provider
-                let context_json = serde_json::to_value(&context).map_err(|e| {
-                    BearDogError::internal(&format!("Failed to serialize context: {}", e))
+                let _context_json = serde_json::to_value(&context).map_err(|e| {
+                    BearDogError::internal(format!("Failed to serialize context: {e}"))
                 })?;
                 // Use universal ecosystem integration instead of direct method calls
                 let response = serde_json::json!({
@@ -932,7 +920,7 @@ impl UniversalPrimalProvider for BearDogCore {
                 });
                 // Convert JSON to bytes as expected by the return type
                 let response_bytes = serde_json::to_vec(&response).map_err(|e| {
-                    BearDogError::internal(&format!("Failed to serialize response: {}", e))
+                    BearDogError::internal(format!("Failed to serialize response: {e}"))
                 })?;
                 Ok(response_bytes)
             }
@@ -965,7 +953,7 @@ impl UniversalPrimalProvider for BearDogCore {
                 Ok(response.to_string().into_bytes())
             }
             _ => Err(BearDogError::NotFound {
-                message: format!("Service '{}' not found", service_id),
+                message: format!("Service '{service_id}' not found"),
             }),
         }
     }

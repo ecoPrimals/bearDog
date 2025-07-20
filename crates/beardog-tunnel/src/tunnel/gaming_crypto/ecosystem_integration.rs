@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Request for ecosystem-based crypto optimization
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EcosystemOptimizationRequest {
     /// Target performance requirements
     pub performance_requirements: PerformanceRequirements,
@@ -96,17 +96,6 @@ pub struct PerformanceImprovements {
     pub cpu_reduction_percent: f64,
     /// Memory usage reduction percentage
     pub memory_reduction_percent: f64,
-}
-
-impl Default for EcosystemOptimizationRequest {
-    fn default() -> Self {
-        Self {
-            performance_requirements: PerformanceRequirements::default(),
-            network_conditions: NetworkConditions::default(),
-            available_resources: ResourceAvailability::default(),
-            preferences: OptimizationPreferences::default(),
-        }
-    }
 }
 
 impl Default for PerformanceRequirements {

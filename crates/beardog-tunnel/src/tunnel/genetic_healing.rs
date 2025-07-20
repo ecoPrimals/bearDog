@@ -5,24 +5,15 @@
 //! on ecosystem feedback and performance metrics. Uses universal capability
 //! discovery to leverage any available optimization modules.
 
-use crate::tunnel::config::BStpConfig;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogResult;
 use beardog_genetics::genetics::DefaultBearDogGeneticsEngine;
-use beardog_security::EncryptionEngine;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime};
-use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
-use uuid::Uuid;
+use std::time::SystemTime;
 
-/// Universal performance optimization module interface
-type PerformanceOptimizationModule = String;
-
-/// Universal genetic algorithm module interface  
-type UniversalGeneticModule = String;
+// Note: Performance optimization and genetic algorithm modules
+// will be implemented in future versions as needed
 
 /// Main genetic security healing system
 ///

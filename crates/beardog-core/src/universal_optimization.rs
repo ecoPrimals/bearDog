@@ -6,19 +6,18 @@
 //! modules and automatically falls back to local implementations when needed.
 
 use async_trait::async_trait;
-use beardog_errors::{BearDogError, BearDogResult};
-use chrono::{DateTime, Utc};
+use beardog_errors::BearDogResult;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tracing::{debug, info, warn};
+use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::universal_discovery::{
-    CapabilityType, ModuleInstance, OperationPriority, PerformanceRequirements,
-    QualityRequirements, UniversalCapabilityDiscovery, UniversalModuleRequest,
-    UniversalModuleResponse,
+    CapabilityType, OperationPriority, PerformanceRequirements, QualityRequirements,
+    UniversalCapabilityDiscovery, UniversalModuleRequest,
 };
 
 /// Universal optimization request types
@@ -422,7 +421,7 @@ impl UniversalOptimizationService for EcosystemOptimizationService {
                         // Parse response into OptimizationResponse
                         Ok(OptimizationResponse {
                             request_id: response.request_id,
-                            optimization_type: format!("{:?}", request),
+                            optimization_type: format!("{request:?}"),
                             success: response.success,
                             improvement_factor: response.actual_performance.resource_efficiency,
                             optimized_parameters: HashMap::new(),
@@ -503,14 +502,14 @@ impl UniversalOptimizationService for EcosystemOptimizationService {
                     for (module_id, health_status) in health_statuses {
                         health_map.insert(
                             format!("{}:{}", capability.as_capability_string(), module_id),
-                            format!("{:?}", health_status),
+                            format!("{health_status:?}"),
                         );
                     }
                 }
                 Err(e) => {
                     health_map.insert(
                         capability.as_capability_string(),
-                        format!("Check failed: {}", e),
+                        format!("Check failed: {e}"),
                     );
                 }
             }

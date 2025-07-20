@@ -27,7 +27,10 @@ impl BearDogSecurityProvider {
             });
 
         // Reset window if needed
-        if now >= user_state.window_start + Duration::seconds(self.rate_limiter.config.window_seconds as i64) {
+        if now
+            >= user_state.window_start
+                + Duration::seconds(self.rate_limiter.config.window_seconds as i64)
+        {
             user_state.count = 0;
             user_state.window_start = now;
         }
@@ -59,14 +62,19 @@ impl BearDogSecurityProvider {
     pub async fn get_rate_limit_status(&self, user_id: &str) -> RateLimitStatus {
         if let Some(user_state) = self.rate_limiter.state.get(user_id) {
             let now = Utc::now();
-            let window_end = user_state.window_start + Duration::seconds(self.rate_limiter.config.window_seconds as i64);
-            
+            let window_end = user_state.window_start
+                + Duration::seconds(self.rate_limiter.config.window_seconds as i64);
+
             RateLimitStatus {
                 current_count: user_state.count,
                 max_operations: self.rate_limiter.config.max_operations,
                 window_start: user_state.window_start,
                 window_end,
-                remaining_operations: self.rate_limiter.config.max_operations.saturating_sub(user_state.count),
+                remaining_operations: self
+                    .rate_limiter
+                    .config
+                    .max_operations
+                    .saturating_sub(user_state.count),
                 reset_time: if now >= window_end { now } else { window_end },
             }
         } else {
@@ -74,9 +82,11 @@ impl BearDogSecurityProvider {
                 current_count: 0,
                 max_operations: self.rate_limiter.config.max_operations,
                 window_start: Utc::now(),
-                window_end: Utc::now() + Duration::seconds(self.rate_limiter.config.window_seconds as i64),
+                window_end: Utc::now()
+                    + Duration::seconds(self.rate_limiter.config.window_seconds as i64),
                 remaining_operations: self.rate_limiter.config.max_operations,
-                reset_time: Utc::now() + Duration::seconds(self.rate_limiter.config.window_seconds as i64),
+                reset_time: Utc::now()
+                    + Duration::seconds(self.rate_limiter.config.window_seconds as i64),
             }
         }
     }
@@ -91,4 +101,4 @@ pub struct RateLimitStatus {
     pub window_end: chrono::DateTime<Utc>,
     pub remaining_operations: u32,
     pub reset_time: chrono::DateTime<Utc>,
-} 
+}

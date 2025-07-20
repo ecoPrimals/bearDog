@@ -77,6 +77,16 @@ pub struct AndroidKeystore {
     pub strongbox_available: bool,
     /// Type of StrongBox implementation
     pub strongbox_implementation: StrongBoxImplementation,
+    /// Native Android keystore handle (Android only)
+    #[cfg(target_os = "android")]
+    pub native_handle: Option<AndroidNativeHandle>,
+}
+
+/// Native Android keystore handle for direct API access
+#[cfg(target_os = "android")]
+pub struct AndroidNativeHandle {
+    /// Device context for Android operations
+    pub device_context: String,
 }
 
 /// Android Attestation Service structure

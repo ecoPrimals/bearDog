@@ -13,10 +13,9 @@ impl BearDogSecurityProvider {
         mfa_method: MfaMethod,
     ) -> BearDogResult<MfaToken> {
         // Check rate limiting for MFA generation
-        if !self.check_rate_limit(&format!("mfa:{}", user_id)).await? {
-            return Err(BearDogError::RateLimited {
+        if !self.check_rate_limit(&format!("mfa:{user_id}")).await? {
+            return Err(BearDogError::RateLimit {
                 message: "Too many MFA token requests".to_string(),
-                retry_after: Some(30),
             });
         }
 
@@ -46,7 +45,7 @@ impl BearDogSecurityProvider {
         let mfa_entry = MfaTokenEntry {
             token: token.clone(),
             user_id: user_id.to_string(),
-            method: mfa_method,
+            method: mfa_method.clone(),
             created_at: Utc::now(),
             expires_at,
             attempts: 0,
@@ -56,7 +55,7 @@ impl BearDogSecurityProvider {
         // Store in session store or dedicated MFA store
         self.session_store.mfa_tokens.insert(
             format!("mfa:{}:{}", user_id, Utc::now().timestamp()),
-            mfa_entry
+            mfa_entry,
         );
 
         // Update metrics
@@ -65,10 +64,11 @@ impl BearDogSecurityProvider {
         // Create audit event
         self.create_audit_event(AuditEvent::MfaTokenGenerated {
             user_id: user_id.to_string(),
-            method: format!("{:?}", mfa_method),
+            method: format!("{mfa_method:?}"),
             generated_at: Utc::now(),
             expires_at,
-        }).await?;
+        })
+        .await?;
 
         Ok(MfaToken {
             token,
@@ -86,7 +86,7 @@ impl BearDogSecurityProvider {
         for (key, entry) in self.session_store.mfa_tokens.iter_mut() {
             if entry.user_id == user_id && Utc::now() <= entry.expires_at {
                 entry.attempts += 1;
-                
+
                 if entry.attempts > entry.max_attempts {
                     token_key = Some(key.clone());
                     break;
@@ -117,7 +117,8 @@ impl BearDogSecurityProvider {
             user_id: user_id.to_string(),
             success: is_valid,
             verified_at: Utc::now(),
-        }).await?;
+        })
+        .await?;
 
         Ok(is_valid)
     }
@@ -126,11 +127,11 @@ impl BearDogSecurityProvider {
     pub async fn cleanup_expired_mfa_tokens(&mut self) -> BearDogResult<u32> {
         let now = Utc::now();
         let initial_count = self.session_store.mfa_tokens.len();
-        
-        self.session_store.mfa_tokens.retain(|_, entry| {
-            now <= entry.expires_at && entry.attempts <= entry.max_attempts
-        });
-        
+
+        self.session_store
+            .mfa_tokens
+            .retain(|_, entry| now <= entry.expires_at && entry.attempts <= entry.max_attempts);
+
         let removed_count = initial_count - self.session_store.mfa_tokens.len();
         Ok(removed_count as u32)
     }
@@ -145,20 +146,14 @@ impl BearDogSecurityProvider {
         let mut hasher = DefaultHasher::new();
         user_id.hash(&mut hasher);
         (Utc::now().timestamp() / 30).hash(&mut hasher); // 30-second window
-        
+
         let hash = hasher.finish();
         let token = format!("{:06}", hash % 1000000);
         Ok(token)
     }
 }
 
-/// MFA method types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum MfaMethod {
-    Totp,  // Time-based One-Time Password
-    Sms,   // SMS token
-    Email, // Email token
-}
+// MfaMethod is now defined in types/auth_types.rs
 
 /// MFA token response
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -168,14 +163,4 @@ pub struct MfaToken {
     pub method: MfaMethod,
 }
 
-/// Internal MFA token storage
-#[derive(Debug, Clone)]
-pub struct MfaTokenEntry {
-    pub token: String,
-    pub user_id: String,
-    pub method: MfaMethod,
-    pub created_at: chrono::DateTime<Utc>,
-    pub expires_at: chrono::DateTime<Utc>,
-    pub attempts: u32,
-    pub max_attempts: u32,
-} 
+// MfaTokenEntry is now defined in types/auth_types.rs

@@ -5,156 +5,187 @@
 //! This module was refactored from a large file to improve maintainability.
 //! The genetics engine enables BearDog nodes to spawn offspring by combining their
 //! cryptographic "genetics" - capabilities, security traits, and cryptographic material.
-//!
-//! ## Key Features
-//!
-//! * **Genetic Recombination**: Combining cryptographic "genetics" from multiple parent nodes
-//! * **Mutation Operations**: Introducing controlled variations to maintain genetic diversity
-//! * **Capability Evolution**: Allowing nodes to adapt their security capabilities over time
-//! * **Spawn Restrictions**: Enforcing genetic lineage rules and security policies
-//! * **Genesis Generation**: Creating foundational genetics for new nodes
-//! * **Multi-party Workflows**: Human approval, automated consensus, and hybrid workflows
-//! * **Cryptographic Lineage**: Verifiable parent-child relationships with Ed25519 signatures
-//! * **RESTful API**: HTTP endpoints for external integration and management
 
-use beardog_auth::auth::{BearDogGenetics, SpawnPurpose};
+use beardog_auth::auth::BearDogGenetics;
 use beardog_errors::BearDogResult;
-// use beardog_tunnel::tunnel::hsm::manager::HsmManager;
-
-// Re-export public types and functions from submodules
-pub use handlers::*;
-pub use spawning::*;
-pub use types::*;
 
 // Module declarations
 pub mod api;
 pub mod entropy_hierarchy;
 pub mod handlers;
 pub mod human_entropy;
+pub mod peer_to_peer_genetics;
 pub mod spawning;
-pub mod types;
 
-#[cfg(test)]
-mod tests;
+pub mod types;
+pub mod zero_copy;
+
+// Legacy support - keep the large file for now but re-export from modular version
+pub mod zero_copy_spawning_legacy;
+
+// Selective re-exports to avoid conflicts and warnings
+pub use spawning::{GeneticSpawningEngine, SpawnRequest, SpawnResult};
+pub use types::InMemoryGeneticsStore;
+// Legacy zero-copy spawning temporarily disabled due to refactor
+// TODO: Re-enable once type definitions are aligned with current auth module
+// pub use zero_copy::{GeneticsPool, LineageStats, LineageTracker};
+// pub use zero_copy_spawning_legacy::{CachedFitnessAnalysis, ZeroCopyGeneticSpawning};
+
+// Configuration and core types
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneticsConfig {
+    pub max_generations: u32,
+    pub mutation_rate: f64,
+    pub crossover_rate: f64,
+    pub population_size: usize,
+    pub selection_pressure: f64,
+    pub diversity_threshold: f64,
+    pub enable_adaptive_mutations: bool,
+    pub parallel_processing: bool,
+}
+
+impl Default for GeneticsConfig {
+    fn default() -> Self {
+        Self {
+            max_generations: 1000,
+            mutation_rate: 0.1,
+            crossover_rate: 0.8,
+            population_size: 100,
+            selection_pressure: 0.7,
+            diversity_threshold: 0.3,
+            enable_adaptive_mutations: true,
+            parallel_processing: true,
+        }
+    }
+}
+
+// Define a simple GeneticsStore trait
+pub trait GeneticsStore: Send + Sync {
+    fn store_genetics(&self, genetics: &BearDogGenetics) -> BearDogResult<()>;
+    fn get_genetics(&self, id: &str) -> BearDogResult<BearDogGenetics>;
+    fn delete_genetics(&self, id: &str) -> BearDogResult<()>;
+}
+
+/// Simple genetics engine implementation
+pub struct DefaultBearDogGeneticsEngine;
+
+impl Default for DefaultBearDogGeneticsEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl DefaultBearDogGeneticsEngine {
+    /// Create a new genetics engine
+    pub fn new() -> Self {
+        Self
+    }
+
+    /// Create genesis genetics for a node
+    pub async fn create_genesis_genetics(&self, node_id: &str) -> BearDogResult<BearDogGenetics> {
+        // Create basic genesis genetics
+        Ok(BearDogGenetics {
+            id: format!("genesis_{node_id}"),
+            crypto_chromosomes: Vec::new(),
+            security_traits: beardog_auth::auth::SecurityTraits::default(),
+            capabilities: Vec::new(),
+            spawn_restrictions: Vec::new(),
+            generation: 0,
+            parent_genetics: None,
+            mutations: Vec::new(),
+            fitness_score: 0.5,
+            security_clearance: beardog_auth::auth::SecurityClearance::Basic,
+            specializations: vec![beardog_auth::auth::NodeSpecialization::GeneralPurpose],
+        })
+    }
+
+    /// Get genetics for a node
+    pub async fn get_node_genetics(&self, _node_id: &str) -> BearDogResult<BearDogGenetics> {
+        // Return default genetics
+        Ok(BearDogGenetics::default())
+    }
+}
+
+// Implement for DefaultBearDogGeneticsEngine instead of non-existent DefaultBearDogGeneticsStore
+impl GeneticsStore for DefaultBearDogGeneticsEngine {
+    fn store_genetics(&self, _genetics: &BearDogGenetics) -> BearDogResult<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+
+    fn get_genetics(&self, _genetics_id: &str) -> BearDogResult<BearDogGenetics> {
+        // Placeholder implementation
+        Ok(BearDogGenetics::default())
+    }
+
+    fn delete_genetics(&self, _genetics_id: &str) -> BearDogResult<()> {
+        // Placeholder implementation
+        Ok(())
+    }
+}
 
 /// Public API for genetic spawning operations
 pub struct GeneticsAPI {
-    spawning_engine: crate::genetics::spawning::GeneticSpawningEngine,
-    genetics_engine: crate::genetics::DefaultBearDogGeneticsEngine,
+    spawning_engine: spawning::GeneticSpawningEngine,
+    genetics_engine: DefaultBearDogGeneticsEngine,
+    genetics_store: std::sync::Arc<dyn GeneticsStore>,
 }
 
 impl GeneticsAPI {
     /// Create a new genetics API instance
-    pub fn new(genetics_store: std::sync::Arc<dyn GeneticsStore>, config: GeneticsConfig) -> Self {
-        // Create a basic HSM manager for testing/development
-        // let hsm_manager = std::sync::Arc::new(HsmManager::new());
-
-        let spawning_engine = spawning::GeneticSpawningEngine::new(
-            genetics_store.clone(),
-            // hsm_manager,
-            config.clone(),
-        );
-
-        let genetics_engine = handlers::DefaultBearDogGeneticsEngine::new(genetics_store, config);
+    pub fn new(genetics_store: std::sync::Arc<dyn GeneticsStore>, _config: GeneticsConfig) -> Self {
+        let spawning_engine = spawning::GeneticSpawningEngine::new();
 
         Self {
             spawning_engine,
-            genetics_engine,
+            genetics_engine: DefaultBearDogGeneticsEngine::new(),
+            genetics_store: genetics_store.clone(),
         }
     }
 
-    /// Spawn a new node with genetic recombination
-    pub async fn spawn_node(&self, request: SpawnRequest) -> BearDogResult<SpawnResult> {
-        self.spawning_engine.process_spawn_request(request).await
-    }
-
-    /// Create genesis genetics for a new node
+    /// Create genesis genetics for a node
     pub async fn create_genesis_genetics(&self, node_id: &str) -> BearDogResult<BearDogGenetics> {
         self.genetics_engine.create_genesis_genetics(node_id).await
     }
 
-    /// Get genetics for a specific node
+    /// Get genetics for a node (alias for get_genetics)
     pub async fn get_node_genetics(&self, node_id: &str) -> BearDogResult<BearDogGenetics> {
         self.genetics_engine.get_node_genetics(node_id).await
     }
 
-    /// Breed genetics from multiple parents
-    pub async fn breed_genetics(
-        _parent_genetics: &[BearDogGenetics],
-        purpose: SpawnPurpose,
-    ) -> BearDogResult<SpawnResult> {
-        // Create a temporary engine for breeding
-        let config = GeneticsConfig::default();
-        let genetics_store = std::sync::Arc::new(spawning::InMemoryGeneticsStore::new());
-        // let hsm_manager = std::sync::Arc::new(HsmManager::new());
-
-        let spawning_engine = spawning::GeneticSpawningEngine::new(
-            genetics_store.clone(),
-            // hsm_manager,
-            config.clone(),
-        );
-
-        let request = SpawnRequest {
-            request_id: format!("spawn_{}", uuid::Uuid::new_v4()),
-            requesting_parent: "breeder".to_string(),
-            co_parents: vec![],
-            purpose,
-            resource_requirements: types::ResourceLimits::default(),
-            workflow_type: types::BearDogWorkflowType::AutomatedConsensus {
-                participating_nodes: vec!["breeder".to_string()],
-                consensus_threshold: 0.5,
-                max_decision_time: chrono::Duration::minutes(5),
-            },
-            created_at: chrono::Utc::now(),
-            expires_at: chrono::Utc::now() + chrono::Duration::hours(24),
-            metadata: std::collections::HashMap::new(),
-        };
-
-        spawning_engine.process_spawn_request(request).await
+    /// Spawn a new node (alias for spawn)
+    pub async fn spawn_node(
+        &self,
+        request: spawning::SpawnRequest,
+    ) -> BearDogResult<spawning::SpawnResult> {
+        self.spawn(request).await
     }
 
-    /// Batch breed genetics from multiple parent sets
-    pub async fn batch_breed_genetics(
-        parent_sets: &[Vec<BearDogGenetics>],
-        purpose: SpawnPurpose,
-    ) -> BearDogResult<SpawnResult> {
-        // Similar to breed_genetics but for multiple sets
-        let config = GeneticsConfig::default();
-        let genetics_store = std::sync::Arc::new(spawning::InMemoryGeneticsStore::new());
-        // let hsm_manager = std::sync::Arc::new(HsmManager::new());
+    /// Spawn a new genetics instance
+    pub async fn spawn(
+        &self,
+        request: spawning::SpawnRequest,
+    ) -> BearDogResult<spawning::SpawnResult> {
+        self.spawning_engine.spawn_genetics(request).await
+    }
 
-        let spawning_engine = spawning::GeneticSpawningEngine::new(
-            genetics_store.clone(),
-            // hsm_manager,
-            config.clone(),
-        );
-
-        // For now, just use the first parent set
-        let _parent_genetics = parent_sets.first().cloned().unwrap_or_default();
-
-        let request = SpawnRequest {
-            request_id: format!("batch_spawn_{}", uuid::Uuid::new_v4()),
-            requesting_parent: "batch_breeder".to_string(),
-            co_parents: vec![],
-            purpose,
-            resource_requirements: types::ResourceLimits::default(),
-            workflow_type: types::BearDogWorkflowType::AutomatedConsensus {
-                participating_nodes: vec!["batch_breeder".to_string()],
-                consensus_threshold: 0.5,
-                max_decision_time: chrono::Duration::minutes(5),
-            },
-            created_at: chrono::Utc::now(),
-            expires_at: chrono::Utc::now() + chrono::Duration::hours(24),
-            metadata: std::collections::HashMap::new(),
-        };
-
-        spawning_engine.process_spawn_request(request).await
+    /// Get genetics by ID
+    pub fn get_genetics(&self, genetics_id: &str) -> BearDogResult<BearDogGenetics> {
+        self.genetics_store.get_genetics(genetics_id)
     }
 }
 
-// Re-export types from submodules for convenience
-pub use handlers::DefaultBearDogGeneticsEngine;
-pub use spawning::{
-    BearDogWorkflowType, GeneticsConfig, GeneticsStore, ResourceLimits, SpawnRequest, SpawnResult,
-};
-// pub use types::*; // Unused re-export
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    use std::sync::Arc;
+
+    #[test]
+    fn test_genetics_api_creation() {
+        let store = Arc::new(api::InMemoryGeneticsStore::new());
+        let config = GeneticsConfig::default();
+        let _api = GeneticsAPI::new(store, config);
+    }
+}

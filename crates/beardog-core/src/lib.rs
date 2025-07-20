@@ -4,21 +4,22 @@
 
 pub mod biome_yaml_parser;
 pub mod core;
-pub mod node_registry;
-pub mod types;
 pub mod ecosystem_integration;
 pub mod ecosystem_simple;
+pub mod ecosystem_storage;
+pub mod external_functions;
+pub mod licensing;
 pub mod local_optimizer;
+pub mod node_registry;
 pub mod songbird_client;
+pub mod types;
 pub mod universal_discovery;
 pub mod universal_optimization;
 pub mod universal_primal_provider;
 
 use async_trait::async_trait;
-use beardog_config::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogResult;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 // Re-export core functionality
 pub use crate::biome_yaml_parser::{
@@ -29,11 +30,12 @@ pub use crate::core::BearDogCore;
 pub use crate::ecosystem_integration::{
     BearDogEcosystemProvider, EcosystemIntegration, EcosystemRequest, EcosystemResponse,
 };
-pub use crate::ecosystem_simple::{
-    BearDogEcosystemProvider as SimpleBearDogEcosystemProvider,
+pub use crate::ecosystem_simple::BearDogEcosystemProvider as SimpleBearDogEcosystemProvider;
+pub use crate::ecosystem_storage::{
+    AuditConfig, EcosystemDataStore, EcosystemStorageConfig, EcosystemStorageService,
+    RetentionPolicy, SnapshotConfig, StorageHealthReport,
 };
 // Use universal ecosystem integration from beardog-adapters
-pub use beardog_adapters::BearDogEcosystemIntegration;
 pub use crate::local_optimizer::BearDogLocalOptimizer;
 pub use crate::songbird_client::{
     DiscoveredService, RegistrationInfo, RegistrationStatus, ResponseStatus, ServiceMeshInfo,
@@ -53,6 +55,7 @@ pub use crate::universal_primal_provider::{
     EcosystemRole, PrimalCapability, PrimalIdentity, PrimalMetadata, PrimalService, PrimalType,
     SecurityContext, ServiceContext, ServiceEndpoint, ServiceHealth, UniversalPrimalProvider,
 };
+pub use beardog_adapters::BearDogEcosystemIntegration;
 
 // Core traits and types
 #[async_trait]

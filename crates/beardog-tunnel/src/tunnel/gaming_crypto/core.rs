@@ -8,11 +8,11 @@ use crate::tunnel::key_manager::{BStpKeyManager, CryptoKey};
 use crate::tunnel::session::SecurityGenetics;
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_genetics::genetics::DefaultBearDogGeneticsEngine;
-use beardog_security::EncryptionEngine;
+use beardog_security::encryption::EncryptionEngine;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime};
-use tracing::{error, info, warn};
+use std::time::{Instant, SystemTime};
+use tracing::{info, warn};
 
 // Universal discovery types (placeholder until beardog-core integration)
 type GeneticAlgorithmModule = String;
@@ -36,6 +36,7 @@ pub struct EncryptedPacket {
 /// Gaming-optimized crypto engine
 pub struct GamingCryptoEngine {
     encryption: Arc<EncryptionEngine>,
+    #[allow(dead_code)] // Will be used in future genetic optimization
     genetics: Arc<DefaultBearDogGeneticsEngine>,
     key_manager: Arc<BStpKeyManager>,
     config: BStpConfig,

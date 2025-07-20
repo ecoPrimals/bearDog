@@ -3,7 +3,7 @@
 //! Contains all test functions for this module's functionality.
 
 #[cfg(test)]
-mod tests {
+mod verification_tests {
 
     // Test functions will be moved here
 }

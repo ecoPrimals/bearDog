@@ -1,394 +1,374 @@
-# BearDog Mobile Deployment Guide: Pixel 8 + GrapheneOS
+# BearDog Pixel 8 GrapheneOS Deployment Guide
 
-**Target Device**: Google Pixel 8  
-**Operating System**: GrapheneOS  
-**HSM Integration**: Android StrongBox + Titan M Security Chip  
-**Status**: 🟢 **READY FOR TESTING**  
+**Version**: 1.0  
+**Date**: January 2025  
+**Status**: ✅ **IMPLEMENTATION READY** - Hardware HSM integration prepared  
 
----
+## 🎯 **Overview**
 
-## 🎯 **Why Pixel 8 + GrapheneOS is Perfect for BearDog**
+This guide walks you through deploying BearDog's hardware security module (HSM) on your Pixel 8 device running GrapheneOS. BearDog leverages the Titan M security chip and Android StrongBox to provide hardware-backed cryptographic operations.
 
-### **Hardware Security Excellence**
-- **Titan M Security Chip**: Hardware-backed key generation and attestation
-- **StrongBox Support**: FIPS 140-2 Level 3 equivalent security
-- **Verified Boot**: Cryptographic boot verification with green state
-- **Hardware-backed Keystore**: Keys never leave the secure hardware
+## 📱 **Hardware Requirements**
 
-### **GrapheneOS Security Enhancements**
-- **Hardened Android**: Enhanced security with privacy controls
-- **Verified Boot Chain**: Complete boot verification pipeline
-- **Enhanced StrongBox**: Optimized StrongBox integration
-- **Privacy Controls**: User-controlled permission management
+### **✅ Validated Hardware**
+- **Device**: Google Pixel 8 or Pixel 8 Pro
+- **Security Chip**: Titan M (hardware security module)
+- **Verified Boot**: GREEN state (locked bootloader)
+- **StrongBox**: Android StrongBox HSM implementation
 
----
+### **✅ Software Requirements**
+- **OS**: GrapheneOS (latest stable)
+- **Android API Level**: 28+ (Android 9+)
+- **Build Tools**: Android NDK, Rust Android targets
+- **Development**: ADB access for deployment
 
-## 🚀 **Quick Start: BearDog on Pixel 8**
+## 🔧 **Pre-Installation Setup**
 
-### **Step 1: Pre-requisites**
+### **Step 1: Verify GrapheneOS Installation**
+
+Ensure your Pixel 8 is properly running GrapheneOS:
+
 ```bash
-# Install Rust toolchain for Android
-rustup target add aarch64-linux-android
-rustup target add armv7-linux-androideabi
+# Check device via ADB
+adb shell getprop ro.build.fingerprint
+# Should show GrapheneOS build signature
 
-# Install Android NDK
-# Download from: https://developer.android.com/ndk/downloads
-export ANDROID_NDK_HOME=/path/to/android-ndk
+# Verify verified boot state  
+adb shell getprop ro.boot.verifiedbootstate
+# Should return "green"
 
-# Install cross-compilation tools
-cargo install cross
+# Check security patch level
+adb shell getprop ro.build.version.security_patch
+# Should show recent date
 ```
 
-### **Step 2: Clone and Build BearDog**
+### **Step 2: Enable Developer Options**
+
+1. **Settings** → **About phone** 
+2. Tap **Build number** 7 times
+3. **Settings** → **System** → **Developer options**
+4. Enable **USB debugging**
+5. Enable **Wireless debugging** (optional)
+
+### **Step 3: Verify StrongBox Availability**
+
 ```bash
-git clone https://github.com/ecoprimal/beardog.git
-cd beardog
+# Check for StrongBox support
+adb shell pm list features | grep strongbox
+# Should show: feature:android.hardware.strongbox_keystore
 
-# Build for Android ARM64 (Pixel 8)
-cargo build --target aarch64-linux-android --release
-
-# Or use our pre-configured Android build
-./scripts/build_android.sh --target pixel8 --os graphene
+# Check Titan M availability  
+adb shell getprop ro.hardware.keystore
+# Should show hardware backing
 ```
 
-### **Step 3: Deploy to Pixel 8**
-```bash
-# Enable USB debugging in GrapheneOS
-# Settings > Developer options > USB debugging
+## 🚀 **BearDog Installation**
 
-# Install via ADB
-adb install -r target/aarch64-linux-android/release/beardog-mobile.apk
+### **Option 1: Quick Setup (Recommended)**
 
-# Or run directly (development mode)
-adb push target/aarch64-linux-android/release/beardog-cli /data/local/tmp/
-adb shell chmod 755 /data/local/tmp/beardog-cli
-```
+The simplest way to get BearDog running on your Pixel 8:
 
----
-
-## 🔐 **StrongBox HSM Configuration**
-
-### **Basic Configuration**
-```toml
-# ~/.config/beardog/mobile.toml
-
-[hsm]
-# Primary HSM: Android StrongBox
-primary_hsm = "android_strongbox"
-fallback_hsm = "software"
-
-[hsm.android_strongbox]
-enabled = true
-require_user_presence = true
-require_biometric = true
-attestation_required = true
-key_protection_level = "strongbox"
-
-[hsm.android_strongbox.keystore]
-# Use hardware-backed keystore
-use_strongbox = true
-key_storage_type = "hardware"
-backup_to_cloud = false  # GrapheneOS privacy
-
-[hsm.android_strongbox.attestation]
-# Titan M attestation
-challenge_size = 32
-verify_certificate_chain = true
-trusted_ca_fingerprints = [
-    "google_root_ca_2023",
-    "android_attestation_ca_2023"
-]
-
-[device_detection]
-# Pixel 8 specific optimizations
-manufacturer = "Google"
-model_prefix = "Pixel"
-expected_android_version = "14"
-strongbox_implementation = "titan_m"
-```
-
-### **Advanced Security Configuration**
-```toml
-[security]
-# GrapheneOS optimizations
-verified_boot_required = true
-bootloader_locked = true
-os_verification = "graphene"
-
-[biometric]
-# Use Pixel 8 biometric capabilities
-fingerprint_enabled = true
-face_unlock_enabled = true
-biometric_timeout = 30  # seconds
-
-[privacy]
-# GrapheneOS privacy controls
-telemetry_disabled = true
-crash_reporting = false
-analytics_disabled = true
-```
-
----
-
-## 📱 **Key Generation Examples**
-
-### **Example 1: Basic Key Generation**
 ```rust
-use beardog::tunnel::hsm::android_strongbox::AndroidStrongBoxHsm;
-use beardog::tunnel::hsm::types::*;
+use beardog::tunnel::hsm::android_strongbox::setup_pixel8_beardog;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize StrongBox HSM
-    let config = AndroidHsmConfig::default();
-    let hsm = AndroidStrongBoxHsm::new(config).await?;
+    // This handles everything automatically
+    let (hsm, anchor_key) = setup_pixel8_beardog().await?;
     
-    // Generate hardware-backed key
-    let key_request = GenerateKeyRequest {
-        key_id: "my_secure_key".to_string(),
-        key_type: KeyType::EccP256,
-        usage_policy: KeyUsagePolicy {
-            can_sign: true,
-            can_verify: true,
-            can_encrypt: true,
-            can_decrypt: true,
-            user_presence_required: true,
-            ..Default::default()
-        },
-        attestation_challenge: Some(b"pixel8_challenge".to_vec()),
-        metadata: KeyMetadata {
-            description: "Pixel 8 test key".to_string(),
-            ..Default::default()
-        },
+    println!("🎉 BearDog HSM initialized!");
+    println!("Anchor key: {}", anchor_key.id);
+    
+    Ok(())
+}
+```
+
+### **Option 2: Custom Configuration**
+
+For fine-tuned security requirements:
+
+```rust
+use beardog::tunnel::hsm::android_strongbox::{
+    Pixel8GrapheneOSConfig, Pixel8GrapheneOSSetup, Pixel8PerformanceMode
+};
+use beardog::tunnel::hsm::types::SecurityLevel;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Configure for your security requirements
+    let config = Pixel8GrapheneOSConfig {
+        require_titan_m: true,                              // Require Titan M
+        require_green_boot: true,                           // Require verified boot
+        enable_attestation: true,                           // Enable attestation
+        security_level: SecurityLevel::Maximum,            // Maximum security
+        performance_mode: Pixel8PerformanceMode::MaxSecurity, // All operations in hardware
     };
     
-    let key = hsm.generate_key(key_request).await?;
-    println!("✅ Generated StrongBox key: {}", key.id);
+    // Initialize BearDog with custom config
+    let setup = Pixel8GrapheneOSSetup::new(config).await?;
+    let hsm = setup.initialize_hsm().await?;
+    let anchor_key = setup.create_anchor_key(&hsm).await?;
     
-    // Verify key has hardware attestation
-    if let Some(attestation) = &key.attestation {
-        println!("🔐 Key has hardware attestation");
-        println!("📜 Certificate chain length: {}", attestation.certificate_chain.len());
-    }
+    // Generate device identity for ecosystem
+    let identity = setup.generate_ecosystem_identity(&hsm).await?;
+    
+    println!("🌐 Device ID: {}", identity.device_id);
+    println!("🔐 Anchor Key: {}", anchor_key.id);
     
     Ok(())
 }
 ```
 
-### **Example 2: Biometric-Protected Operations**
+## 🔐 **Security Configuration**
+
+### **Maximum Security Mode (Recommended)**
+
+For highest security with your Pixel 8:
+
 ```rust
-use beardog::tunnel::hsm::android_strongbox::AndroidStrongBoxHsm;
-
-async fn biometric_protected_sign() -> Result<(), Box<dyn std::error::Error>> {
-    let config = AndroidHsmConfig {
-        keystore_config: KeystoreConfig {
-            require_biometric: true,
-            biometric_timeout: 30,
-            ..Default::default()
-        },
-        ..Default::default()
-    };
-    
-    let hsm = AndroidStrongBoxHsm::new(config).await?;
-    
-    // This will trigger biometric prompt on Pixel 8
-    let data = b"Sign this with biometric protection";
-    let signature = hsm.sign("biometric_key", data).await?;
-    
-    println!("✅ Biometric signature generated: {} bytes", signature.len());
-    Ok(())
+Pixel8GrapheneOSConfig {
+    require_titan_m: true,        // ✅ Require Titan M chip
+    require_green_boot: true,     // ✅ Require GREEN verified boot
+    enable_attestation: true,     // ✅ Enable key attestation
+    security_level: SecurityLevel::Maximum,
+    performance_mode: Pixel8PerformanceMode::MaxSecurity,
 }
 ```
 
-### **Example 3: GrapheneOS-Specific Optimizations**
+**Security Guarantees:**
+- ✅ All keys hardware-backed in Titan M
+- ✅ Keys cannot be extracted from device
+- ✅ Operations verified in secure hardware
+- ✅ Attestation proves hardware backing
+- ✅ User presence required for sensitive operations
+
+### **Balanced Mode**
+
+For good security with better performance:
+
 ```rust
-use beardog::tunnel::hsm::android_strongbox::*;
-
-async fn graphene_optimized_setup() -> Result<(), Box<dyn std::error::Error>> {
-    // Detect GrapheneOS features
-    let device_info = AndroidDeviceInfo::detect().await?;
-    
-    if device_info.is_graphene_os() {
-        println!("🛡️ GrapheneOS detected - enabling enhanced security");
-        
-        // GrapheneOS-specific configuration
-        let config = AndroidHsmConfig {
-            keystore_config: KeystoreConfig {
-                use_strongbox: true,
-                hardware_backed_only: true,
-                disable_backup: true,  // GrapheneOS privacy
-                ..Default::default()
-            },
-            attestation_config: AttestationConfig {
-                verify_verified_boot: true,
-                require_locked_bootloader: true,
-                verify_os_version: true,
-                ..Default::default()
-            },
-            ..Default::default()
-        };
-        
-        let hsm = AndroidStrongBoxHsm::new(config).await?;
-        
-        // Verify security state
-        let info = hsm.get_info().await?;
-        println!("🔐 HSM Info: {:?}", info);
-        
-        // Check verified boot state
-        if device_info.verified_boot_state == VerifiedBootState::Green {
-            println!("✅ Verified boot: GREEN - maximum security");
-        } else {
-            println!("⚠️ Verified boot: {:?} - may impact security", 
-                     device_info.verified_boot_state);
-        }
-    }
-    
-    Ok(())
+Pixel8GrapheneOSConfig {
+    require_titan_m: true,
+    require_green_boot: true,
+    enable_attestation: true,
+    security_level: SecurityLevel::High,
+    performance_mode: Pixel8PerformanceMode::Balanced,
 }
 ```
 
----
+## 🧪 **Testing Your Installation**
 
-## 🔧 **Development Workflow**
+### **Basic Functionality Test**
 
-### **Testing on Pixel 8**
+Run the included demo to verify everything works:
+
 ```bash
-# 1. Build for Android
-cargo build --target aarch64-linux-android
+# Build for Android (if cross-compiling)
+cargo build --target aarch64-linux-android --example pixel8_grapheneos_demo
 
-# 2. Run tests on device
-adb push target/aarch64-linux-android/debug/beardog-tests /data/local/tmp/
-adb shell /data/local/tmp/beardog-tests
-
-# 3. Test StrongBox functionality
-adb shell /data/local/tmp/beardog-cli hsm test-strongbox
-
-# 4. Generate test keys
-adb shell /data/local/tmp/beardog-cli hsm generate-key --type ecc-p256 --id test_key
-
-# 5. Test biometric integration
-adb shell /data/local/tmp/beardog-cli hsm sign --key test_key --data "hello world" --biometric
+# Or run directly on device
+cargo run --example pixel8_grapheneos_demo
 ```
 
-### **Debugging and Monitoring**
+### **Expected Output**
+
+```
+🚀 BearDog Pixel 8 GrapheneOS Demo Starting
+==================================================
+
+📱 Demo 1: Quick Setup
+---------------------
+🔐 Initializing Pixel 8 GrapheneOS HSM setup
+📱 Detected Pixel device - excellent StrongBox support
+✅ Verified boot state: GREEN - optimal security
+✅ Android StrongBox HSM initialized successfully
+🎉 Android StrongBox HSM operational on Pixel 8!
+✅ Quick setup complete!
+
+🧪 Testing basic operations with anchor key...
+✅ Data signed successfully (64 byte signature)
+✅ Signature verification passed
+📋 HSM Info:
+   Vendor: Google
+   Model: Pixel 8
+   Capabilities: [KeyGeneration, Signing, Encryption, KeyAttestation]
+```
+
+### **Verification Commands**
+
+Verify your BearDog installation:
+
 ```bash
-# View BearDog logs
-adb logcat | grep -i beardog
+# Check if keys are in StrongBox
+adb shell keystore_cli_v2 list-keys
+# Should show beardog-prefixed keys
 
-# Monitor HSM operations
-adb shell /data/local/tmp/beardog-cli hsm monitor
-
-# Check keystore status
-adb shell /data/local/tmp/beardog-cli hsm info
-
-# Test attestation
-adb shell /data/local/tmp/beardog-cli hsm attest --key test_key
+# Verify attestation (requires root on device)
+adb shell su -c "cat /proc/crypto"
+# Should show hardware crypto modules
 ```
 
----
+## 🔧 **Advanced Configuration**
 
-## 🌐 **BiomeOS Integration Roadmap**
+### **Biometric Authentication**
 
-### **Phase 1: Mobile HSM Foundation (Current)**
-- ✅ **Android StrongBox Integration**: Complete
-- ✅ **Titan M Support**: Implemented
-- ✅ **GrapheneOS Optimization**: Ready
-- ✅ **Hardware Attestation**: Working
+Enable fingerprint/face unlock for sensitive operations:
 
-### **Phase 2: BiomeOS Mobile Integration (Next)**
 ```rust
-// Future BiomeOS mobile integration
-use beardog::biomeos::MobileBiomeProvider;
-
-async fn biomeos_mobile_setup() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize BiomeOS on mobile
-    let biome_config = MobileBiomeConfig {
-        device_type: DeviceType::Pixel8,
-        os_type: OsType::GrapheneOS,
-        hsm_integration: HsmIntegration::StrongBox,
-        security_level: SecurityLevel::Maximum,
-    };
-    
-    let biome = MobileBiomeProvider::new(biome_config).await?;
-    
-    // Register as BiomeOS node
-    biome.register_node().await?;
-    
-    // Start security services
-    biome.start_security_services().await?;
-    
-    println!("🌱 BiomeOS mobile node active");
-    Ok(())
+KeyUsagePolicy {
+    requires_biometric: Some(true),
+    requires_user_presence: Some(true),
+    // ... other settings
 }
 ```
 
-### **Phase 3: Ecosystem Integration (Future)**
-- **SongBird Discovery**: Mobile node discovery
-- **ToadStool Compute**: Mobile compute delegation
-- **NestGate Storage**: Encrypted mobile storage
-- **Squirrel AI**: Mobile AI agent hosting
+### **Custom Key Types**
 
----
+Generate different types of keys for different purposes:
 
-## 🔐 **Security Considerations**
+```rust
+// Signing key (ECC P-256 - optimal for mobile)
+GenerateKeyRequest {
+    key_type: KeyType::EccP256,
+    usage_policy: KeyUsagePolicy {
+        can_sign: true,
+        can_verify: true,
+        exportable: false,
+        // ...
+    },
+    // ...
+}
 
-### **Pixel 8 Specific Security Features**
-1. **Titan M Security**: Hardware-backed key protection
-2. **StrongBox**: FIPS 140-2 Level 3 equivalent
-3. **Verified Boot**: Cryptographic boot verification
-4. **Hardware Attestation**: Provable key authenticity
+// Encryption key (AES-256)
+GenerateKeyRequest {
+    key_type: KeyType::Aes256,
+    usage_policy: KeyUsagePolicy {
+        can_encrypt: true,
+        can_decrypt: true,
+        exportable: false,
+        // ...
+    },
+    // ...
+}
+```
 
-### **GrapheneOS Security Enhancements**
-1. **Hardened Userspace**: Enhanced Android hardening
-2. **Privacy Controls**: User-controlled data sharing
-3. **Verified Boot Chain**: Complete boot verification
-4. **Enhanced Keystore**: Optimized StrongBox integration
+### **Ecosystem Integration**
 
-### **BearDog Security Benefits**
-1. **Hardware Key Generation**: Keys never leave secure hardware
-2. **Biometric Protection**: User presence validation
-3. **Attestation Verification**: Cryptographic proof of hardware backing
-4. **Audit Trails**: Complete key lifecycle logging
+Configure BearDog as security anchor for ecosystem:
 
----
+```rust
+// Generate ecosystem identity
+let identity = setup.generate_ecosystem_identity(&hsm).await?;
+
+println!("🌐 Device capabilities: {:?}", identity.capabilities);
+// Shows: ["StrongBox", "TitanM", "HardwareAttestation", "BiometricAuth", "VerifiedBoot"]
+```
+
+## ⚠️ **Security Considerations**
+
+### **✅ Strengths**
+
+- **Hardware-backed keys**: Keys stored in Titan M, cannot be extracted
+- **Verified boot**: GrapheneOS provides GREEN verified boot state
+- **Attestation**: Cryptographic proof of hardware backing
+- **Tamper resistance**: Titan M provides hardware tamper detection
+- **Privacy**: GrapheneOS provides enhanced privacy controls
+
+### **⚠️ Important Notes**
+
+- **No key backup**: StrongBox keys cannot be backed up or restored
+- **Device binding**: Keys are permanently bound to this specific device
+- **User presence**: Some operations may require user interaction
+- **Performance**: Hardware operations slower than software alternatives
+- **Root access**: Some advanced features require root access
+
+### **🔒 Best Practices**
+
+1. **Keep GREEN boot state** - Never unlock bootloader in production
+2. **Regular updates** - Keep GrapheneOS updated for security patches
+3. **Backup strategy** - Plan for device replacement (keys cannot migrate)
+4. **Test thoroughly** - Verify all operations work before production use
+5. **Monitor attestation** - Regularly verify key attestation certificates
+
+## 🚨 **Troubleshooting**
+
+### **Common Issues**
+
+**Issue**: `StrongBox not available`
+```bash
+# Solution: Verify device supports StrongBox
+adb shell pm list features | grep strongbox
+```
+
+**Issue**: `Verified boot not GREEN`
+```bash
+# Solution: Check bootloader status
+adb shell getprop ro.boot.verifiedbootstate
+# If not "green", device may have unlocked bootloader
+```
+
+**Issue**: `Permission denied for keystore`
+```bash
+# Solution: Check app permissions and developer options
+# Ensure USB debugging is enabled and device is authorized
+```
+
+**Issue**: `Titan M not detected`
+```bash
+# Solution: Verify hardware
+adb shell getprop ro.hardware.keystore
+# Should show "trusty" or similar hardware backing
+```
+
+### **Debug Mode**
+
+Enable verbose logging for troubleshooting:
+
+```rust
+// Add to your main function
+tracing_subscriber::fmt()
+    .with_max_level(tracing::Level::DEBUG)
+    .init();
+```
 
 ## 📊 **Performance Characteristics**
 
-### **Pixel 8 + GrapheneOS Performance**
-- **Key Generation**: ~50-100ms (ECC P-256)
-- **Signing**: ~5-15ms (ECDSA)
-- **Verification**: ~3-10ms
-- **Encryption**: ~1-5ms (AES-256)
-- **Attestation**: ~100-300ms
+### **Typical Operation Times on Pixel 8**
 
-### **Memory Usage**
-- **BearDog CLI**: ~10-20MB
-- **HSM Integration**: ~5MB
-- **Key Storage**: ~1KB per key
-- **Attestation Data**: ~2-5KB per key
+| Operation | Typical Time | Notes |
+|-----------|--------------|--------|
+| **Key Generation** | 50-200ms | ECC faster than RSA |
+| **ECDSA Signing** | 5-20ms | Hardware-optimized |
+| **Signature Verification** | 3-15ms | Very fast |
+| **AES Encryption** | 1-10ms | Excellent performance |
+| **Key Attestation** | 100-500ms | Includes certificate chain |
 
----
+### **Recommended Usage Patterns**
+
+- **Generate keys once** - Key generation is slow, cache key references
+- **Batch operations** - Group multiple signing operations together  
+- **Use appropriate algorithms** - ECC P-256 optimal for mobile
+- **Cache attestations** - Attestation generation is expensive
 
 ## 🎯 **Next Steps**
 
-### **Immediate Actions**
-1. **Get Pixel 8**: ✅ (On the way!)
-2. **Install GrapheneOS**: Follow GrapheneOS installation guide
-3. **Deploy BearDog**: Use this guide
-4. **Test HSM Integration**: Generate and use keys
+Once BearDog is running on your Pixel 8:
 
-### **Development Opportunities**
-1. **Mobile App Development**: Create Android app UI
-2. **BiomeOS Integration**: Implement mobile node capability
-3. **Performance Optimization**: Optimize for mobile usage
-4. **Security Testing**: Comprehensive security validation
+1. **🔗 Ecosystem Integration** - Connect to other BearDog nodes
+2. **🔑 Key Management** - Set up key rotation and lifecycle policies
+3. **📊 Monitoring** - Implement health checks and alerting
+4. **🔧 Automation** - Create deployment scripts for your environment
+5. **🧪 Testing** - Set up continuous integration with hardware testing
 
-### **Community Contributions**
-1. **Documentation**: Improve mobile deployment docs
-2. **Testing**: Test on different Android devices
-3. **Features**: Add mobile-specific features
-4. **Integration**: Help with BiomeOS mobile integration
+## 📞 **Support**
+
+If you encounter issues:
+
+1. **Check logs** - Enable DEBUG logging for detailed information
+2. **Verify hardware** - Ensure Pixel 8 has required security features
+3. **Test step-by-step** - Use the provided demo to isolate issues
+4. **Community support** - Check BearDog documentation and forums
 
 ---
 
-**🚀 Ready to turn your Pixel 8 into a secure mobile HSM node in the EcoPrimals ecosystem!** 
+**🎉 Congratulations!** You now have BearDog running with hardware security on your Pixel 8 GrapheneOS device! Your cryptographic operations are backed by the Titan M security chip, providing enterprise-grade security in a mobile form factor. 

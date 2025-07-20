@@ -3,31 +3,29 @@
 //! This implements BearDog as a universal ecosystem provider that registers its security
 //! capabilities for discovery by other ecosystem components. No hardcoded integrations.
 
-use std::collections::HashMap;
-use std::sync::Arc;
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use chrono::Utc;
+use std::collections::HashMap;
+use uuid::Uuid;
 
-use crate::{EcosystemResult, EcosystemError, AIFirstResponse};
 use super::*;
+use crate::{AIFirstResponse, EcosystemResult};
 
 /// BearDog Universal Ecosystem Provider
-/// 
+///
 /// Implements BearDog as a capability-based ecosystem participant following
 /// the Universal Primal Architecture Standard
 #[derive(Debug)]
 pub struct BearDogEcosystemProvider {
     /// Service ID for this BearDog instance
     pub service_id: Uuid,
-    
+
     /// Instance identifier
     pub instance_id: String,
-    
+
     /// Service version
     pub version: String,
-    
+
     /// Configuration
     pub config: BearDogEcosystemConfig,
 }
@@ -37,22 +35,22 @@ pub struct BearDogEcosystemProvider {
 pub struct BearDogEcosystemConfig {
     /// Service name
     pub service_name: String,
-    
+
     /// Service description
     pub description: String,
-    
+
     /// Maintainer information
     pub maintainer: String,
-    
+
     /// Base URL for this instance
     pub base_url: String,
-    
+
     /// Enabled capabilities
     pub enabled_capabilities: Vec<String>,
-    
+
     /// Resource allocation
     pub resources: ResourceSpec,
-    
+
     /// Integration preferences
     pub integration: IntegrationPreferences,
 }
@@ -67,13 +65,17 @@ impl BearDogEcosystemProvider {
             config,
         }
     }
-    
+
     /// Get BearDog's security capabilities
     fn get_security_capabilities(&self) -> Vec<ServiceCapability> {
         let mut capabilities = Vec::new();
-        
+
         // Core security capabilities that BearDog provides
-        if self.config.enabled_capabilities.contains(&"encryption".to_string()) {
+        if self
+            .config
+            .enabled_capabilities
+            .contains(&"encryption".to_string())
+        {
             capabilities.push(ServiceCapability {
                 capability_id: "security.encryption.symmetric".to_string(),
                 name: "Symmetric Encryption".to_string(),
@@ -120,14 +122,12 @@ impl BearDogEcosystemProvider {
                         min_instances: 1,
                         max_instances: 10,
                         auto_scaling: true,
-                        scaling_triggers: vec![
-                            ScalingTrigger {
-                                metric: "cpu_usage".to_string(),
-                                threshold: 80.0,
-                                operator: ComparisonOperator::GreaterThan,
-                                action: ScalingAction::ScaleUp { instances: 1 },
-                            }
-                        ],
+                        scaling_triggers: vec![ScalingTrigger {
+                            metric: "cpu_usage".to_string(),
+                            threshold: 80.0,
+                            operator: ComparisonOperator::GreaterThan,
+                            action: ScalingAction::ScaleUp { instances: 1 },
+                        }],
                     },
                 },
                 security_requirements: SecurityRequirements {
@@ -139,8 +139,12 @@ impl BearDogEcosystemProvider {
                 },
             });
         }
-        
-        if self.config.enabled_capabilities.contains(&"authentication".to_string()) {
+
+        if self
+            .config
+            .enabled_capabilities
+            .contains(&"authentication".to_string())
+        {
             capabilities.push(ServiceCapability {
                 capability_id: "security.authentication.multi_factor".to_string(),
                 name: "Multi-Factor Authentication".to_string(),
@@ -187,14 +191,12 @@ impl BearDogEcosystemProvider {
                         min_instances: 1,
                         max_instances: 5,
                         auto_scaling: true,
-                        scaling_triggers: vec![
-                            ScalingTrigger {
-                                metric: "requests_per_second".to_string(),
-                                threshold: 500.0,
-                                operator: ComparisonOperator::GreaterThan,
-                                action: ScalingAction::ScaleUp { instances: 1 },
-                            }
-                        ],
+                        scaling_triggers: vec![ScalingTrigger {
+                            metric: "requests_per_second".to_string(),
+                            threshold: 500.0,
+                            operator: ComparisonOperator::GreaterThan,
+                            action: ScalingAction::ScaleUp { instances: 1 },
+                        }],
                     },
                 },
                 security_requirements: SecurityRequirements {
@@ -206,8 +208,12 @@ impl BearDogEcosystemProvider {
                 },
             });
         }
-        
-        if self.config.enabled_capabilities.contains(&"threat_detection".to_string()) {
+
+        if self
+            .config
+            .enabled_capabilities
+            .contains(&"threat_detection".to_string())
+        {
             capabilities.push(ServiceCapability {
                 capability_id: "security.threat_detection.ml_enhanced".to_string(),
                 name: "ML-Enhanced Threat Detection".to_string(),
@@ -258,14 +264,12 @@ impl BearDogEcosystemProvider {
                         min_instances: 1,
                         max_instances: 8,
                         auto_scaling: true,
-                        scaling_triggers: vec![
-                            ScalingTrigger {
-                                metric: "threat_analysis_queue".to_string(),
-                                threshold: 100.0,
-                                operator: ComparisonOperator::GreaterThan,
-                                action: ScalingAction::ScaleUp { instances: 2 },
-                            }
-                        ],
+                        scaling_triggers: vec![ScalingTrigger {
+                            metric: "threat_analysis_queue".to_string(),
+                            threshold: 100.0,
+                            operator: ComparisonOperator::GreaterThan,
+                            action: ScalingAction::ScaleUp { instances: 2 },
+                        }],
                     },
                 },
                 security_requirements: SecurityRequirements {
@@ -277,8 +281,12 @@ impl BearDogEcosystemProvider {
                 },
             });
         }
-        
-        if self.config.enabled_capabilities.contains(&"compliance".to_string()) {
+
+        if self
+            .config
+            .enabled_capabilities
+            .contains(&"compliance".to_string())
+        {
             capabilities.push(ServiceCapability {
                 capability_id: "security.compliance.multi_standard".to_string(),
                 name: "Multi-Standard Compliance".to_string(),
@@ -338,10 +346,10 @@ impl BearDogEcosystemProvider {
                 },
             });
         }
-        
+
         capabilities
     }
-    
+
     /// Get BearDog's service endpoints
     fn get_service_endpoints(&self) -> Vec<ServiceEndpoint> {
         vec![
@@ -450,7 +458,10 @@ impl EcosystemIntegration for BearDogEcosystemProvider {
             extensions: {
                 let mut ext = HashMap::new();
                 ext.insert("ai_first_score".to_string(), serde_json::json!(0.95));
-                ext.insert("ecosystem_role".to_string(), serde_json::json!("security_provider"));
+                ext.insert(
+                    "ecosystem_role".to_string(),
+                    serde_json::json!("security_provider"),
+                );
                 ext.insert("genetic_spawning".to_string(), serde_json::json!(true));
                 ext
             },
@@ -460,14 +471,17 @@ impl EcosystemIntegration for BearDogEcosystemProvider {
             priority: 10, // High priority for security services
         })
     }
-    
+
     /// Discover other services by capability (for integration)
-    async fn discover_by_capability(&self, _capability: &str) -> EcosystemResult<Vec<UniversalServiceRegistration>> {
+    async fn discover_by_capability(
+        &self,
+        _capability: &str,
+    ) -> EcosystemResult<Vec<UniversalServiceRegistration>> {
         // This would integrate with the ecosystem's service registry
         // For now, return empty - this is where dynamic discovery would happen
         Ok(Vec::new())
     }
-    
+
     /// Get BearDog health status
     async fn health_check(&self) -> EcosystemResult<HealthStatus> {
         // This would check actual BearDog systems
@@ -498,9 +512,12 @@ impl EcosystemIntegration for BearDogEcosystemProvider {
             version: self.version.clone(),
         })
     }
-    
+
     /// Handle ecosystem requests for BearDog capabilities
-    async fn handle_request(&self, request: EcosystemRequest) -> EcosystemResult<AIFirstResponse<serde_json::Value>> {
+    async fn handle_request(
+        &self,
+        request: EcosystemRequest,
+    ) -> EcosystemResult<AIFirstResponse<serde_json::Value>> {
         // This would route to actual BearDog implementations
         // For now, return a placeholder response
         Ok(AIFirstResponse {
@@ -529,14 +546,12 @@ impl EcosystemIntegration for BearDogEcosystemProvider {
                 context: HashMap::new(),
             },
             confidence_score: 0.95,
-            suggested_actions: vec![
-                crate::SuggestedAction {
-                    action_type: "monitor".to_string(),
-                    description: "Continue monitoring security status".to_string(),
-                    priority: 5,
-                    parameters: HashMap::new(),
-                }
-            ],
+            suggested_actions: vec![crate::SuggestedAction {
+                action_type: "monitor".to_string(),
+                description: "Continue monitoring security status".to_string(),
+                priority: 5,
+                parameters: HashMap::new(),
+            }],
         })
     }
 }
@@ -583,4 +598,4 @@ impl Default for BearDogEcosystemConfig {
             },
         }
     }
-} 
+}

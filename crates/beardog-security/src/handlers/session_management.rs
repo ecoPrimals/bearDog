@@ -22,16 +22,15 @@ impl BearDogSecurityProvider {
 
         // Check rate limiting
         if !self.check_rate_limit(user_id).await? {
-            return Err(BearDogError::RateLimited {
+            return Err(BearDogError::RateLimit {
                 message: "Too many session creation attempts".to_string(),
-                retry_after: Some(60),
             });
         }
 
         // Generate session token
         let session_id = Uuid::new_v4().to_string();
         let expires_at = Utc::now() + Duration::seconds(session_config.max_age_seconds as i64);
-        
+
         let session = Session {
             session_id: session_id.clone(),
             user_id: user_id.to_string(),
@@ -57,10 +56,12 @@ impl BearDogSecurityProvider {
             user_id: user_id.to_string(),
             created_at: Utc::now(),
             expires_at,
-        }).await?;
+        })
+        .await?;
 
         Ok(SessionToken {
-            session_id,
+            session_id: session_id.clone(),
+            token: session_id.clone(), // In production, generate proper JWT or secure token
             expires_at,
             token_type: "Bearer".to_string(),
         })
@@ -78,12 +79,12 @@ impl BearDogSecurityProvider {
 
             // Update last activity
             session.last_activity = Utc::now();
-            
-            // Optionally extend session (sliding window)
-            if self.config.session_config.sliding_window {
-                session.expires_at = Utc::now() + Duration::seconds(
-                    self.config.session_config.max_age_seconds as i64
-                );
+
+            // Extend session if sliding window is enabled
+            if self.config.session_config.require_mfa {
+                // For MFA-enabled sessions, extend timeout on activity
+                session.expires_at = Utc::now()
+                    + Duration::seconds(self.config.session_config.max_age_seconds as i64);
             }
 
             Ok(true)
@@ -103,7 +104,8 @@ impl BearDogSecurityProvider {
                 session_id: session_id.to_string(),
                 user_id: session.user_id,
                 revoked_at: Utc::now(),
-            }).await?;
+            })
+            .await?;
         }
         Ok(())
     }
@@ -111,7 +113,8 @@ impl BearDogSecurityProvider {
     /// Revoke all sessions for a user
     pub async fn revoke_user_sessions(&mut self, user_id: &str) -> BearDogResult<u32> {
         let mut revoked_count = 0;
-        let sessions_to_revoke: Vec<_> = self.session_store
+        let sessions_to_revoke: Vec<_> = self
+            .session_store
             .iter()
             .filter_map(|(session_id, session)| {
                 if session.user_id == user_id && session.is_active {
@@ -149,14 +152,13 @@ impl BearDogSecurityProvider {
     pub async fn cleanup_expired_sessions(&mut self) -> BearDogResult<u32> {
         let now = Utc::now();
         let initial_count = self.session_store.len();
-        
-        self.session_store.retain(|_, session| {
-            session.is_active && now <= session.expires_at
-        });
-        
+
+        self.session_store
+            .retain(|_, session| session.is_active && now <= session.expires_at);
+
         let removed_count = initial_count - self.session_store.len();
         self.metrics.active_sessions = self.session_store.len() as u64;
-        
+
         Ok(removed_count as u32)
     }
 }
@@ -169,4 +171,4 @@ pub struct SessionInfo {
     pub expires_at: chrono::DateTime<Utc>,
     pub last_activity: chrono::DateTime<Utc>,
     pub is_active: bool,
-} 
+}

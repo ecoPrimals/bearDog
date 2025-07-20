@@ -36,7 +36,7 @@ impl BearDogSecurityProvider {
 
         // Update metrics
         self.metrics.maintenance_operations += 1;
-        self.metrics.last_cleanup = start_time;
+        self.metrics.last_cleanup = Some(start_time);
 
         Ok(report)
     }
@@ -45,13 +45,13 @@ impl BearDogSecurityProvider {
     async fn cleanup_rate_limit_data(&mut self) -> BearDogResult<u32> {
         let now = Utc::now();
         let cutoff = now - Duration::seconds(self.rate_limiter.config.window_seconds as i64 * 2);
-        
+
         let initial_count = self.rate_limiter.state.len();
-        
+
         // Remove old rate limiter states
-        self.rate_limiter.state.retain(|_, state| {
-            state.last_operation > cutoff
-        });
+        self.rate_limiter
+            .state
+            .retain(|_, state| state.last_operation > cutoff);
 
         let removed_count = initial_count - self.rate_limiter.state.len();
         Ok(removed_count as u32)
@@ -92,7 +92,7 @@ impl BearDogSecurityProvider {
         let initial_capacity = self.session_store.capacity();
         self.session_store.shrink_to_fit();
         let final_capacity = self.session_store.capacity();
-        
+
         Ok((initial_capacity - final_capacity) as u32)
     }
 
@@ -100,12 +100,12 @@ impl BearDogSecurityProvider {
     async fn optimize_rate_limiter(&mut self) -> BearDogResult<u32> {
         // Optimize rate limiter state storage
         let initial_count = self.rate_limiter.state.len();
-        
+
         // Remove inactive users (no operations in the last hour)
         let cutoff = Utc::now() - Duration::hours(1);
-        self.rate_limiter.state.retain(|_, state| {
-            state.last_operation > cutoff
-        });
+        self.rate_limiter
+            .state
+            .retain(|_, state| state.last_operation > cutoff);
 
         let optimized_count = initial_count - self.rate_limiter.state.len();
         Ok(optimized_count as u32)
@@ -131,7 +131,9 @@ impl BearDogSecurityProvider {
             last_optimization: self.metrics.last_optimization,
             maintenance_operations: self.metrics.maintenance_operations,
             scheduled_interval_hours: self.metrics.maintenance_schedule_hours,
-            next_scheduled_maintenance: self.metrics.last_cleanup
+            next_scheduled_maintenance: self
+                .metrics
+                .last_cleanup
                 .map(|last| last + Duration::hours(self.metrics.maintenance_schedule_hours as i64)),
         }
     }
@@ -167,4 +169,4 @@ pub struct MaintenanceStatus {
     pub maintenance_operations: u64,
     pub scheduled_interval_hours: u32,
     pub next_scheduled_maintenance: Option<chrono::DateTime<Utc>>,
-} 
+}

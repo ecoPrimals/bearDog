@@ -4,7 +4,7 @@
 
 use super::types::*;
 use beardog_errors::BearDogResult;
-use chrono::{Datelike, Duration, Utc};
+use chrono::{Datelike, Duration, Timelike, Utc};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -22,17 +22,18 @@ impl WorkflowPolicyEngine {
         workflow_type: &WorkflowType,
         priority: &WorkflowPriority,
     ) -> BearDogResult<ApprovalRequirements> {
-        // Check if there's a specific approval matrix entry
-        if let Some(requirements) = self.config.approval_matrix.get(workflow_type) {
-            return Ok(requirements.clone());
-        }
+        // Use default approval requirements based on workflow type
+        // (approval_matrix field doesn't exist in current PolicyConfig structure)
 
         // Default approval requirements based on priority and type
         let (required_approvals, timeout) = match priority {
-            WorkflowPriority::Emergency => (1, self.config.emergency_approval_timeout),
+            WorkflowPriority::Emergency => (1, Duration::hours(1)),
             WorkflowPriority::Critical => (2, Duration::hours(4)),
             WorkflowPriority::High => (2, Duration::hours(8)),
-            WorkflowPriority::Normal => (1, self.config.default_approval_timeout),
+            WorkflowPriority::Normal => (
+                1,
+                Duration::hours(self.config.default_approval_timeout_hours as i64),
+            ),
             WorkflowPriority::Low => (1, Duration::days(2)),
         };
 
@@ -42,13 +43,11 @@ impl WorkflowPolicyEngine {
             .await?;
 
         Ok(ApprovalRequirements {
-            required_approvals,
-            required_roles: self.get_required_roles(workflow_type),
-            approval_hierarchy,
-            min_approval_time: Duration::minutes(5), // Minimum time to prevent rushed approvals
-            max_approval_time: timeout,
-            delegation_allowed: self.is_delegation_allowed(workflow_type),
-            self_approval_allowed: self.is_self_approval_allowed(workflow_type),
+            tiers: approval_hierarchy,
+            minimum_approvals: required_approvals,
+            require_all_tiers: false,
+            approval_timeout: Some(timeout),
+            allow_delegation: self.is_delegation_allowed(workflow_type),
         })
     }
 
@@ -57,7 +56,7 @@ impl WorkflowPolicyEngine {
         workflow_type: &WorkflowType,
         required_approvals: u32,
     ) -> BearDogResult<Vec<ApprovalTier>> {
-        let workflow_key = match workflow_type {
+        let _workflow_key = match workflow_type {
             WorkflowType::KeyRotation => "key_rotation",
             WorkflowType::KeyDeletion => "key_deletion",
             WorkflowType::PolicyChange => "policy_change",
@@ -69,65 +68,50 @@ impl WorkflowPolicyEngine {
         };
 
         // Get eligible users from configuration
-        let eligible_users =
-            if let Some(ref workflow_users) = self.config.eligible_users_by_workflow {
-                workflow_users
-                    .get(workflow_key)
-                    .cloned()
-                    .unwrap_or_else(|| vec!["admin".to_string()])
-            } else {
-                vec!["admin".to_string()]
-            };
+        // Note: eligible_users_by_workflow field doesn't exist in current PolicyConfig
+        // Using default admin users for now
+        let eligible_users = vec!["admin".to_string(), "security_admin".to_string()];
 
         match workflow_type {
             WorkflowType::KeyRotation | WorkflowType::KeyDeletion => Ok(vec![ApprovalTier {
-                tier_level: 1,
-                required_approvals,
-                eligible_roles: vec!["security_admin".to_string(), "key_manager".to_string()],
-                eligible_users,
-                description: "Security team approval required".to_string(),
+                name: "security_team".to_string(),
+                required_approvers: eligible_users,
+                minimum_approvals: required_approvals,
+                optional: false,
             }]),
             WorkflowType::PolicyChange | WorkflowType::ConfigurationChange => {
                 Ok(vec![ApprovalTier {
-                    tier_level: 1,
-                    required_approvals,
-                    eligible_roles: vec!["policy_admin".to_string(), "system_admin".to_string()],
-                    eligible_users: eligible_users.clone(),
-                    description: "Policy/Config change approval required".to_string(),
+                    name: "policy_admins".to_string(),
+                    required_approvers: eligible_users.clone(),
+                    minimum_approvals: required_approvals,
+                    optional: false,
                 }])
             }
             WorkflowType::UserProvisioning => Ok(vec![ApprovalTier {
-                tier_level: 1,
-                required_approvals,
-                eligible_roles: vec!["hr_admin".to_string(), "user_admin".to_string()],
-                eligible_users: eligible_users.clone(),
-                description: "User provisioning approval required".to_string(),
+                name: "user_admins".to_string(),
+                required_approvers: eligible_users.clone(),
+                minimum_approvals: required_approvals,
+                optional: false,
             }]),
             WorkflowType::EmergencyAccess => {
                 Ok(vec![ApprovalTier {
-                    tier_level: 1,
-                    required_approvals: 1, // Emergency access needs quick approval
-                    eligible_roles: vec![
-                        "emergency_contact".to_string(),
-                        "security_admin".to_string(),
-                    ],
-                    eligible_users: eligible_users.clone(),
-                    description: "Emergency access approval required".to_string(),
+                    name: "emergency_contacts".to_string(),
+                    required_approvers: eligible_users.clone(),
+                    minimum_approvals: 1, // Emergency access needs quick approval
+                    optional: false,
                 }])
             }
             WorkflowType::SystemMaintenance => Ok(vec![ApprovalTier {
-                tier_level: 1,
-                required_approvals,
-                eligible_roles: vec!["system_admin".to_string(), "ops_admin".to_string()],
-                eligible_users: vec!["admin".to_string()],
-                description: "System maintenance approval required".to_string(),
+                name: "system_admins".to_string(),
+                required_approvers: vec!["admin".to_string()],
+                minimum_approvals: required_approvals,
+                optional: false,
             }]),
             WorkflowType::ComplianceAudit => Ok(vec![ApprovalTier {
-                tier_level: 1,
-                required_approvals,
-                eligible_roles: vec!["compliance_officer".to_string(), "audit_admin".to_string()],
-                eligible_users: vec!["admin".to_string()],
-                description: "Compliance audit approval required".to_string(),
+                name: "compliance_officers".to_string(),
+                required_approvers: vec!["admin".to_string()],
+                minimum_approvals: required_approvals,
+                optional: false,
             }]),
         }
     }
@@ -176,27 +160,24 @@ impl WorkflowPolicyEngine {
 
     /// Check if a workflow is within business hours
     pub fn is_within_business_hours(&self) -> bool {
-        if let Some(business_hours) = &self.config.business_hours {
-            let now = Utc::now();
-            let weekday = now.weekday().num_days_from_sunday() as u8;
+        let business_hours = &self.config.business_hours;
+        let now = Utc::now();
+        let weekday = now.weekday().num_days_from_sunday();
 
-            // Check if current day is a business day
-            if !business_hours.days_of_week.contains(&weekday) {
-                return false;
-            }
-
-            // TODO: Implement time check with timezone conversion
-            // For now, assume we're within business hours
-            true
-        } else {
-            // No business hours configured, always within hours
-            true
+        // Check if current day is a business day
+        if !business_hours.days_of_week.contains(&weekday) {
+            return false;
         }
+
+        // Check if current hour is within business hours
+        let current_hour = now.hour();
+        current_hour >= business_hours.start_hour && current_hour < business_hours.end_hour
     }
 
     /// Get escalation intervals for a workflow
     pub fn get_escalation_intervals(&self, _workflow_type: &WorkflowType) -> Vec<Duration> {
-        self.config.escalation_intervals.clone()
+        // Default escalation intervals since escalation_intervals field doesn't exist
+        vec![Duration::hours(2), Duration::hours(8), Duration::hours(24)]
     }
 }
 
@@ -244,7 +225,7 @@ impl WorkflowScheduler {
         policy_config: &Arc<PolicyConfig>,
     ) -> BearDogResult<u32> {
         let now = chrono::Utc::now();
-        let max_age = policy_config.max_workflow_age;
+        let max_age = chrono::Duration::days(policy_config.data_retention_days as i64);
         let mut workflows_guard = workflows.write().await;
         let mut to_remove = Vec::new();
 
@@ -343,11 +324,11 @@ impl WorkflowScheduler {
         }
 
         let now = chrono::Utc::now();
-        let escalation_intervals = &self.policy_config.escalation_intervals;
+        let escalation_intervals = [Duration::hours(2), Duration::hours(8), Duration::hours(24)];
 
         // Calculate reminder times based on workflow approval requirements
         let approval_req = &workflow.approval_requirements;
-        let approval_timeout = approval_req.max_approval_time;
+        let approval_timeout = approval_req.approval_timeout.unwrap_or(Duration::hours(24));
         let workflow_age = now.signed_duration_since(workflow.created_at);
 
         // Schedule reminders at each escalation interval
@@ -466,7 +447,8 @@ impl WorkflowScheduler {
 
             // Check approval timeout expiration
             let approval_req = &workflow.approval_requirements;
-            let approval_deadline = workflow.created_at + approval_req.max_approval_time;
+            let approval_deadline =
+                workflow.created_at + approval_req.approval_timeout.unwrap_or(Duration::hours(24));
             let time_until_deadline = approval_deadline.signed_duration_since(now);
 
             if time_until_deadline <= warning_threshold

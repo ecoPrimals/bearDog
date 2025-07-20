@@ -5,7 +5,7 @@
 use super::types::*;
 use beardog_errors::{BearDogError, BearDogResult};
 
-use chrono::Utc;
+// Removed unused import: use chrono::Utc;
 use futures::future::{BoxFuture, FutureExt};
 use std::collections::HashMap;
 use tracing::{error, info, warn};
@@ -52,14 +52,17 @@ macro_rules! impl_workflow_processor {
                     }
 
                     Ok(WorkflowCompletionResult {
-                        workflow_id,
                         success,
-                        error: if success {
-                            None
+                        message: if success {
+                            format!("{} workflow completed successfully", $name)
                         } else {
-                            Some(format!("Workflow in invalid state: {:?}", workflow_status))
+                            format!("Workflow in invalid state: {:?}", workflow_status)
                         },
-                        completed_at: Utc::now(),
+                        result_data: Some(serde_json::json!({
+                            "workflow_id": success,
+                            "processor": $name
+                        })),
+                        execution_duration_ms: 100, // Placeholder duration
                     })
                 }
                 .boxed()
@@ -82,7 +85,7 @@ impl WorkflowProcessor for KeyRotationProcessor {
     ) -> BoxFuture<'_, BearDogResult<WorkflowCompletionResult>> {
         let workflow_id = workflow.id.clone();
         let workflow_status = workflow.status.clone();
-        let workflow_parameters = workflow.parameters.clone();
+        let workflow_parameters = workflow.properties.clone();
 
         async move {
             info!("Processing key rotation workflow: {}", workflow_id);
@@ -121,14 +124,18 @@ impl WorkflowProcessor for KeyRotationProcessor {
             }
 
             Ok(WorkflowCompletionResult {
-                workflow_id,
                 success,
-                error: if success {
-                    None
+                message: if success {
+                    "Key rotation completed successfully".to_string()
                 } else {
-                    Some("Key rotation failed - workflow not approved".to_string())
+                    "Key rotation failed - workflow not approved".to_string()
                 },
-                completed_at: Utc::now(),
+                result_data: Some(serde_json::json!({
+                    "workflow_id": success,
+                    "key_id": key_id,
+                    "processor": "KeyRotationProcessor"
+                })),
+                execution_duration_ms: 50, // Placeholder duration
             })
         }
         .boxed()
@@ -149,7 +156,7 @@ impl WorkflowProcessor for KeyDeletionProcessor {
     ) -> BoxFuture<'_, BearDogResult<WorkflowCompletionResult>> {
         let workflow_id = workflow.id.clone();
         let workflow_status = workflow.status.clone();
-        let workflow_parameters = workflow.parameters.clone();
+        let workflow_parameters = workflow.properties.clone();
 
         async move {
             info!("Processing key deletion workflow: {}", workflow_id);
@@ -188,14 +195,18 @@ impl WorkflowProcessor for KeyDeletionProcessor {
             }
 
             Ok(WorkflowCompletionResult {
-                workflow_id,
                 success,
-                error: if success {
-                    None
+                message: if success {
+                    "Key deletion completed successfully".to_string()
                 } else {
-                    Some("Key deletion failed - workflow not approved".to_string())
+                    "Key deletion failed - workflow not approved".to_string()
                 },
-                completed_at: Utc::now(),
+                result_data: Some(serde_json::json!({
+                    "workflow_id": workflow_id,
+                    "key_id": key_id,
+                    "processor": "KeyDeletionProcessor"
+                })),
+                execution_duration_ms: 50,
             })
         }
         .boxed()
@@ -216,7 +227,7 @@ impl WorkflowProcessor for PolicyChangeProcessor {
     ) -> BoxFuture<'_, BearDogResult<WorkflowCompletionResult>> {
         let workflow_id = workflow.id.clone();
         let workflow_status = workflow.status.clone();
-        let workflow_parameters = workflow.parameters.clone();
+        let workflow_parameters = workflow.properties.clone();
 
         async move {
             info!("Processing policy change workflow: {}", workflow_id);
@@ -262,14 +273,18 @@ impl WorkflowProcessor for PolicyChangeProcessor {
             }
 
             Ok(WorkflowCompletionResult {
-                workflow_id,
                 success,
-                error: if success {
-                    None
+                message: if success {
+                    "Policy change completed successfully".to_string()
                 } else {
-                    Some("Policy change failed - workflow not approved".to_string())
+                    "Policy change failed - workflow not approved".to_string()
                 },
-                completed_at: Utc::now(),
+                result_data: Some(serde_json::json!({
+                    "workflow_id": workflow_id,
+                    "policy_name": policy_name,
+                    "processor": "PolicyChangeProcessor"
+                })),
+                execution_duration_ms: 50,
             })
         }
         .boxed()
@@ -290,7 +305,7 @@ impl WorkflowProcessor for EmergencyAccessProcessor {
     ) -> BoxFuture<'_, BearDogResult<WorkflowCompletionResult>> {
         let workflow_id = workflow.id.clone();
         let workflow_status = workflow.status.clone();
-        let workflow_parameters = workflow.parameters.clone();
+        let workflow_parameters = workflow.properties.clone();
 
         async move {
             info!("Processing emergency access workflow: {}", workflow_id);
@@ -346,14 +361,19 @@ impl WorkflowProcessor for EmergencyAccessProcessor {
             }
 
             Ok(WorkflowCompletionResult {
-                workflow_id,
                 success,
-                error: if success {
-                    None
+                message: if success {
+                    "Emergency access granted successfully".to_string()
                 } else {
-                    Some("Emergency access failed - workflow not approved".to_string())
+                    "Emergency access failed - workflow not approved".to_string()
                 },
-                completed_at: Utc::now(),
+                result_data: Some(serde_json::json!({
+                    "workflow_id": workflow_id,
+                    "user_id": user_id,
+                    "resource": resource,
+                    "processor": "EmergencyAccessProcessor"
+                })),
+                execution_duration_ms: 50,
             })
         }
         .boxed()

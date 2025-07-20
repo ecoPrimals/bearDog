@@ -506,10 +506,10 @@ pub async fn execute_ai_command(
 
 /// Handle status command
 async fn handle_status_command(
-    format: OutputFormat,
+    _format: OutputFormat,
     detailed: bool,
     watch: bool,
-    interval: u64,
+    _interval: u64,
     core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     if let Some(core) = core {
@@ -541,7 +541,7 @@ async fn handle_status_command(
 /// Handle security command
 async fn handle_security_command(
     operation: SecurityOperation,
-    core: Option<&BearDogCore>,
+    _core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     match operation {
         SecurityOperation::Encrypt {
@@ -643,14 +643,14 @@ async fn handle_security_command(
 /// Handle genetics command
 async fn handle_genetics_command(
     operation: GeneticsOperation,
-    core: Option<&BearDogCore>,
+    _core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     match operation {
         GeneticsOperation::Spawn {
             parent,
             co_parents,
             purpose,
-            resources,
+            resources: _,
             workflow,
         } => {
             // Implementation would go here
@@ -717,7 +717,7 @@ async fn handle_genetics_command(
 /// Handle HSM command
 async fn handle_hsm_command(
     operation: HsmOperation,
-    core: Option<&BearDogCore>,
+    _core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     match operation {
         HsmOperation::Status => {
@@ -795,11 +795,11 @@ async fn handle_batch_command(
     max_parallel: u32,
     continue_on_error: bool,
     output: Option<PathBuf>,
-    core: Option<&BearDogCore>,
+    _core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     // Read batch file
     let batch_content = fs::read_to_string(&file).await?;
-    let batch_operations: serde_json::Value = serde_json::from_str(&batch_content)?;
+    let _batch_operations: serde_json::Value = serde_json::from_str(&batch_content)?;
 
     // Process batch operations
     let results = serde_json::json!({
@@ -834,8 +834,9 @@ async fn handle_batch_command(
 }
 
 /// Handle stream command
+#[allow(dead_code)] // Will be used for streaming functionality
 async fn handle_stream_command(
-    core: Option<&BearDogCore>,
+    _core: Option<&BearDogCore>,
     stream_type: StreamType,
     output: Option<PathBuf>,
     duration: u64,
@@ -853,7 +854,7 @@ async fn handle_stream_command(
 /// Handle config command
 async fn handle_config_command(
     operation: ConfigOperation,
-    core: Option<&BearDogCore>,
+    _core: Option<&BearDogCore>,
 ) -> BearDogResult<serde_json::Value> {
     match operation {
         ConfigOperation::Get { key } => Ok(serde_json::json!({

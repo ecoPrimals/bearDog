@@ -1,69 +1,67 @@
-//! Genetic Spawning Module
+//! Spawning subsystem for BearDog genetics
 //!
-//! This module provides the complete genetic spawning system with multi-party
-//! workflow processing, genetic recombination, and lineage tracking.
-//!
-//! ## Architecture
-//!
-//! The genetic spawning system is composed of several focused modules:
-//!
-//! - `engine`: Core spawning engine and orchestration
-//! - `workflows`: Approval workflow processing (consensus, human, hybrid)
-//! - `recombination`: Genetic recombination algorithms
-//! - `evolution`: Directed evolution and mutation systems
-//! - `validation`: Risk assessment and automated validation
-//! - `lineage`: Genetic lineage tracking and diversity calculation
-//!
-//! ## Usage
-//!
-//! ```rust
-//! use beardog_genetics::genetics::spawning::{GeneticSpawningEngine, GeneticsConfig};
-//! use beardog_genetics::genetics::types::InMemoryGeneticsStore;
-//! // use beardog_tunnel::tunnel::hsm::HsmManager;
-//! use std::sync::Arc;
-//!
-//! // Create the spawning engine
-//! let genetics_store = Arc::new(InMemoryGeneticsStore::new());
-//! let hsm_manager = Arc::new(HsmManager::new());
-//! let config = GeneticsConfig::default();
-//!
-//! let engine = GeneticSpawningEngine::new(genetics_store, hsm_manager, config);
-//!
-//! // Process spawn requests
-//! let result = engine.process_spawn_request(request).await?;
-//! ```
+//! This module contains all functionality related to genetic spawning,
+//! including validation, workflows, recombination, and core engine logic.
 
 pub mod engine;
-pub mod evolution;
-pub mod lineage;
 pub mod recombination;
 pub mod validation;
 pub mod workflows;
 
-// Re-export all types from genetics/types that are needed
-pub use super::types::*;
+// Temporary types module to support compilation during refactor
+pub mod types {
+    use beardog_auth::auth::{
+        BearDogGenetics, NodeCapability, ResourceLimits, SecurityClearance, SpawnPurpose, TaskType,
+    };
+    use beardog_errors::BearDogResult;
+    use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
 
-// Re-export the main engine and key components
+    /// Spawn request for genetic spawning operations
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct SpawnRequest {
+        /// Purpose for this spawn
+        pub purpose: SpawnPurpose,
+        /// Required capabilities
+        pub required_capabilities: Vec<NodeCapability>,
+        /// Resource requirements
+        pub resource_requirements: ResourceLimits,
+        /// Security clearance required
+        pub security_clearance: SecurityClearance,
+        /// Parent genetics (if any)
+        pub parent_genetics: Vec<BearDogGenetics>,
+        /// Metadata for the spawn
+        pub metadata: HashMap<String, serde_json::Value>,
+    }
+
+    /// Result of a genetic spawning operation
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct SpawnResult {
+        /// The spawned genetics
+        pub genetics: BearDogGenetics,
+        /// Success status
+        pub success: bool,
+        /// Any warnings or notes
+        pub messages: Vec<String>,
+        /// Performance metrics
+        pub metrics: HashMap<String, f64>,
+    }
+
+    impl Default for SpawnRequest {
+        fn default() -> Self {
+            Self {
+                purpose: SpawnPurpose::LoadBalancing,
+                required_capabilities: vec![],
+                resource_requirements: ResourceLimits::default(),
+                security_clearance: SecurityClearance::Basic,
+                parent_genetics: vec![],
+                metadata: HashMap::new(),
+            }
+        }
+    }
+}
+
+// Re-export commonly used types
 pub use engine::GeneticSpawningEngine;
-
-// Re-export workflow functions for advanced usage
-pub use workflows::{process_automated_consensus, process_human_approval, process_hybrid_approval};
-
-// Re-export recombination functions for advanced usage
-pub use recombination::{
-    blend_security_traits, merge_capabilities, recombine_chromosomes, recombine_genetics,
-};
-
-// Re-export evolution functions for advanced usage
-pub use evolution::{apply_directed_evolution, apply_mutations};
-
-// Re-export validation functions for advanced usage
-pub use validation::{
-    calculate_spawn_risk_score, evaluate_escalation_condition, run_automated_check,
-};
-
-// Re-export lineage functions for advanced usage
-pub use lineage::{calculate_genetic_diversity_score, create_lineage_record};
-
-/// Main spawning engine - provides the complete genetic spawning system
-pub type SpawningEngine = GeneticSpawningEngine;
+pub use types::{SpawnRequest, SpawnResult};
+pub use validation::SpawnValidation;

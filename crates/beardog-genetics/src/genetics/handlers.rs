@@ -2,74 +2,62 @@
 //!
 //! This module provides the core genetics handling functionality for BearDog.
 
-use super::types::*;
+use crate::{GeneticsConfig, GeneticsStore};
 use beardog_auth::auth::{
-    BearDogGenetics, NodeCapability, NodeSpecialization, SecurityClearance, SecurityTraits,
-    SpawnPurpose,
+    BearDogGenetics, NodeCapability, NodeSpecialization, SecurityClearance, SpawnPurpose,
 };
 use beardog_errors::{BearDogError, BearDogResult};
-
 use std::sync::Arc;
 use tracing::info;
 
 /// Default genetics engine implementation
 pub struct DefaultBearDogGeneticsEngine {
-    genetics_store: Arc<dyn super::spawning::GeneticsStore>,
+    genetics_store: Arc<dyn GeneticsStore>,
     config: GeneticsConfig,
 }
 
 impl DefaultBearDogGeneticsEngine {
     /// Create a new genetics engine
-    pub fn new(
-        genetics_store: Arc<dyn super::spawning::GeneticsStore>,
-        config: GeneticsConfig,
-    ) -> Self {
+    pub fn new(genetics_store: Arc<dyn GeneticsStore>, config: GeneticsConfig) -> Self {
         Self {
             genetics_store,
             config,
         }
     }
 
-    /// Create genesis genetics for a new node
+    /// Create genesis genetics for a node
     pub async fn create_genesis_genetics(&self, node_id: &str) -> BearDogResult<BearDogGenetics> {
         info!("Creating genesis genetics for node: {}", node_id);
 
-        // Use config to determine genesis parameters
-        let mutation_rate = self.config.base_mutation_rate;
-        let crossover_rate = self.config.trait_blending_factor;
+        let _mutation_rate = self.config.mutation_rate;
+        let _crossover_rate = self.config.crossover_rate;
 
-        // Create basic genesis genetics with config-based values
         let genetics = BearDogGenetics {
-            id: node_id.to_string(),
+            id: format!("genesis_{}", uuid::Uuid::new_v4()),
+            crypto_chromosomes: Vec::new(),
+            security_traits: beardog_auth::auth::SecurityTraits::default(),
+            capabilities: Vec::new(),
+            spawn_restrictions: Vec::new(),
             generation: 0,
             parent_genetics: None,
-            crypto_chromosomes: vec![],
-            security_traits: SecurityTraits::default(),
-            capabilities: vec![],
-            spawn_restrictions: vec![],
-            mutations: vec![],
-            fitness_score: (mutation_rate + crossover_rate) / 2.0, // Use config for fitness
+            mutations: Vec::new(),
+            fitness_score: 0.7,
             security_clearance: SecurityClearance::Basic,
             specializations: vec![NodeSpecialization::GeneralPurpose],
         };
 
-        // Store genetics in the genetics store
-        self.genetics_store
-            .store_genetics(node_id, &genetics)
-            .await?;
+        // Store genetics
+        self.genetics_store.store_genetics(&genetics)?;
 
         Ok(genetics)
     }
 
-    /// Get genetics for a specific node
+    /// Get genetics for a node
     pub async fn get_node_genetics(&self, node_id: &str) -> BearDogResult<BearDogGenetics> {
-        info!("Getting genetics for node: {}", node_id);
-
-        // Try to retrieve from genetics store first
-        match self.genetics_store.load_genetics(node_id).await {
-            Ok(Some(genetics)) => Ok(genetics),
-            Ok(None) | Err(_) => {
-                // If not found, create genesis genetics
+        match self.genetics_store.get_genetics(node_id) {
+            Ok(genetics) => Ok(genetics),
+            Err(_) => {
+                // Create genesis genetics if none exist
                 self.create_genesis_genetics(node_id).await
             }
         }
@@ -100,8 +88,8 @@ impl DefaultBearDogGeneticsEngine {
         Ok(child_genetics)
     }
 
-    /// Apply purpose-driven mutations (placeholder implementation)
-    pub async fn apply_purpose_driven_mutations(
+    /// Apply mutations based on spawn purpose
+    pub fn mutate_genetics_for_purpose(
         &self,
         genetics: BearDogGenetics,
         _purpose: &SpawnPurpose,
@@ -110,8 +98,6 @@ impl DefaultBearDogGeneticsEngine {
 
         // Apply mutations based on purpose (placeholder)
         mutated_genetics.fitness_score *= 1.1; // Slight improvement
-                                               // mutated_genetics.last_updated = chrono::Utc::now();
-
         Ok(mutated_genetics)
     }
 

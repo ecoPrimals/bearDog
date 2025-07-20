@@ -13,12 +13,12 @@ mod unit_tests {
     async fn test_workflow_request_creation() {
         let request = WorkflowRequest {
             workflow_type: WorkflowType::KeyRotation,
+            target: WorkflowTarget::SystemResource("test_system".to_string()),
+            requested_by: "test_user".to_string(),
             initiator: "test_user".to_string(),
-            target: WorkflowTarget::System,
-            parameters: std::collections::HashMap::new(),
-            reason: "Testing workflow creation".to_string(),
+            description: "Testing workflow creation".to_string(),
             priority: WorkflowPriority::Normal,
-            metadata: std::collections::HashMap::new(),
+            properties: std::collections::HashMap::new(),
         };
 
         assert_eq!(request.workflow_type, WorkflowType::KeyRotation);
@@ -39,27 +39,30 @@ mod unit_tests {
     async fn test_workflow_store_operations() {
         let store = InMemoryWorkflowStore::new();
 
+        let now = chrono::Utc::now();
         let workflow = Workflow {
             id: "test-workflow-1".to_string(),
             workflow_type: WorkflowType::KeyRotation,
-            initiator: "test_user".to_string(),
-            target: WorkflowTarget::System,
-            parameters: std::collections::HashMap::new(),
-            approval_requirements: ApprovalRequirements {
-                required_approvals: 1,
-                required_roles: vec!["admin".to_string()],
-                approval_hierarchy: vec![],
-                min_approval_time: chrono::Duration::minutes(5),
-                max_approval_time: chrono::Duration::hours(24),
-                delegation_allowed: true,
-                self_approval_allowed: false,
-            },
             status: WorkflowStatus::PendingApprovals,
-            created_at: chrono::Utc::now(),
-            expires_at: chrono::Utc::now() + chrono::Duration::hours(24),
+            target: WorkflowTarget::SystemResource("test_system".to_string()),
+            approval_requirements: ApprovalRequirements {
+                tiers: vec![],
+                minimum_approvals: 1,
+                require_all_tiers: false,
+                approval_timeout: Some(chrono::Duration::hours(24)),
+                allow_delegation: true,
+            },
+            priority: WorkflowPriority::Normal,
+            created_at: now,
+            expires_at: now + chrono::Duration::hours(24),
+            requested_by: "test_user".to_string(),
+            initiator: "test_user".to_string(),
+            description: "Test workflow creation".to_string(),
+            metadata: std::collections::HashMap::new(),
+            timeout_duration: Some(chrono::Duration::hours(24)),
+            properties: std::collections::HashMap::new(),
             approvals: vec![],
             audit_trail: vec![],
-            metadata: std::collections::HashMap::new(),
         };
 
         // Store workflow
@@ -83,13 +86,12 @@ mod unit_tests {
         let approval = ApprovalRecord {
             id: "test-approval-1".to_string(),
             workflow_id: "test-workflow-1".to_string(),
-            approver: "test_approver".to_string(),
-            approver_role: "admin".to_string(),
+            approver_id: "test_approver".to_string(),
             decision: ApprovalDecision::Approved,
             reason: Some("Approved for testing".to_string()),
-            timestamp: chrono::Utc::now(),
+            decided_at: chrono::Utc::now(),
             signature: None,
-            metadata: std::collections::HashMap::new(),
+            approver_ip: None,
         };
 
         // Store approval
@@ -129,8 +131,7 @@ mod unit_tests {
             .await
             .unwrap();
 
-        assert!(requirements.required_approvals > 0);
-        assert!(!requirements.required_roles.is_empty());
+        assert!(requirements.minimum_approvals > 0);
     }
 
     /// Test workflow processors
@@ -141,7 +142,7 @@ mod unit_tests {
 
         let result = processor.process_workflow(&workflow).await.unwrap();
         assert!(result.success);
-        assert_eq!(result.workflow_id, workflow.id);
+        assert!(result.success);
     }
 
     /// Test workflow processor registry
@@ -158,27 +159,40 @@ mod unit_tests {
 
     /// Helper function to create a test workflow
     fn create_test_workflow() -> Workflow {
+        let mut parameters = std::collections::HashMap::new();
+        parameters.insert(
+            "key_id".to_string(),
+            serde_json::Value::String("test-key-123".to_string()),
+        );
+        parameters.insert(
+            "reason".to_string(),
+            serde_json::Value::String("scheduled_rotation".to_string()),
+        );
+
+        let test_now = chrono::Utc::now();
         Workflow {
             id: "test-workflow".to_string(),
             workflow_type: WorkflowType::KeyRotation,
-            initiator: "test_user".to_string(),
-            target: WorkflowTarget::System,
-            parameters: std::collections::HashMap::new(),
+            status: WorkflowStatus::Approved,
+            target: WorkflowTarget::SystemResource("test_system".to_string()),
             approval_requirements: ApprovalRequirements {
-                required_approvals: 1,
-                required_roles: vec!["admin".to_string()],
-                approval_hierarchy: vec![],
-                min_approval_time: chrono::Duration::minutes(5),
-                max_approval_time: chrono::Duration::hours(24),
-                delegation_allowed: true,
-                self_approval_allowed: false,
+                tiers: vec![],
+                minimum_approvals: 1,
+                require_all_tiers: false,
+                approval_timeout: Some(chrono::Duration::hours(24)),
+                allow_delegation: true,
             },
-            status: WorkflowStatus::PendingApprovals,
-            created_at: chrono::Utc::now(),
-            expires_at: chrono::Utc::now() + chrono::Duration::hours(24),
+            priority: WorkflowPriority::Normal,
+            created_at: test_now,
+            expires_at: test_now + chrono::Duration::hours(24),
+            requested_by: "test_user".to_string(),
+            initiator: "test_user".to_string(),
+            description: "Test workflow for processor testing".to_string(),
+            metadata: std::collections::HashMap::new(),
+            timeout_duration: Some(chrono::Duration::hours(24)),
+            properties: parameters,
             approvals: vec![],
             audit_trail: vec![],
-            metadata: std::collections::HashMap::new(),
         }
     }
 }

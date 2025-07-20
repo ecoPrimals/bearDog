@@ -4,7 +4,6 @@
 //! for gaming-optimized cryptographic operations.
 
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
 /// Network performance metrics for gaming optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]

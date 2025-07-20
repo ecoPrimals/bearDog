@@ -7,7 +7,7 @@ use super::super::types::*;
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
-use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
+use ed25519_dalek::{Signature, Signer, SigningKey};
 use tracing::{debug, info};
 
 /// Rust-based crypto provider using standard Rust crypto crates
@@ -31,24 +31,56 @@ impl CryptoProvider for RustCryptoProvider {
     async fn generate_key_material(&self, key_type: &KeyType) -> BearDogResult<Vec<u8>> {
         use rand::RngCore;
 
-        let key_size = match key_type {
-            KeyType::Aes256 => 32,
-            KeyType::EccP256 => 32,
-            KeyType::EccP384 => 48,
-            KeyType::ChaCha20 => 32,
-            KeyType::Rsa { key_size } => key_size / 8,
-            _ => 32,
-        };
-
-        let mut key_material = vec![0u8; key_size as usize];
-        rand::thread_rng().fill_bytes(&mut key_material);
-
-        debug!(
-            "Generated key material for {:?}: {} bytes",
-            key_type,
-            key_material.len()
-        );
-        Ok(key_material)
+        match key_type {
+            KeyType::Aes256 | KeyType::ChaCha20 => {
+                let mut key_material = vec![0u8; 32];
+                rand::thread_rng().fill_bytes(&mut key_material);
+                debug!(
+                    "Generated symmetric key material for {:?}: {} bytes",
+                    key_type,
+                    key_material.len()
+                );
+                Ok(key_material)
+            }
+            KeyType::EccP256 => {
+                // For ECC P256, generate a proper Ed25519 keypair for signing
+                let mut seed = [0u8; 32];
+                rand::thread_rng().fill_bytes(&mut seed);
+                let signing_key = SigningKey::from_bytes(&seed);
+                debug!("Generated Ed25519 signing key for {:?}: 32 bytes", key_type);
+                Ok(signing_key.to_bytes().to_vec())
+            }
+            KeyType::EccP384 => {
+                let mut key_material = vec![0u8; 48];
+                rand::thread_rng().fill_bytes(&mut key_material);
+                debug!(
+                    "Generated key material for {:?}: {} bytes",
+                    key_type,
+                    key_material.len()
+                );
+                Ok(key_material)
+            }
+            KeyType::Rsa { key_size } => {
+                let mut key_material = vec![0u8; (key_size / 8) as usize];
+                rand::thread_rng().fill_bytes(&mut key_material);
+                debug!(
+                    "Generated key material for {:?}: {} bytes",
+                    key_type,
+                    key_material.len()
+                );
+                Ok(key_material)
+            }
+            _ => {
+                let mut key_material = vec![0u8; 32];
+                rand::thread_rng().fill_bytes(&mut key_material);
+                debug!(
+                    "Generated default key material for {:?}: {} bytes",
+                    key_type,
+                    key_material.len()
+                );
+                Ok(key_material)
+            }
+        }
     }
 
     /// Encrypt data with key
@@ -140,8 +172,6 @@ impl CryptoProvider for RustCryptoProvider {
 
     /// Sign data with key
     async fn sign(&self, key_material: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
-        // use ed25519_dalek::{SigningKey, Signer};
-
         debug!(
             "Signing {} bytes with Rust crypto provider (Ed25519)",
             data.len()
@@ -180,8 +210,6 @@ impl CryptoProvider for RustCryptoProvider {
         data: &[u8],
         signature: &[u8],
     ) -> BearDogResult<bool> {
-        // use ed25519_dalek::{VerifyingKey, Verifier, Signature};
-
         debug!(
             "Verifying signature for {} bytes with Rust crypto provider (Ed25519)",
             data.len()
@@ -207,15 +235,14 @@ impl CryptoProvider for RustCryptoProvider {
             });
         }
 
-        // Create verifying key
-        let verifying_key = VerifyingKey::from_bytes(key_material.try_into().map_err(|_| {
-            BearDogError::Crypto {
-                message: "Failed to convert key material to Ed25519 public key".to_string(),
-            }
-        })?)
-        .map_err(|e| BearDogError::Crypto {
-            message: format!("Invalid Ed25519 public key: {e}"),
-        })?;
+        // Create signing key first, then derive verifying key
+        let signing_key =
+            SigningKey::from_bytes(key_material.try_into().map_err(|_| BearDogError::Crypto {
+                message: "Failed to convert key material to Ed25519 signing key".to_string(),
+            })?);
+
+        // Derive the verifying key (public key) from the signing key (private key)
+        let verifying_key = signing_key.verifying_key();
 
         // Create signature
         let signature_obj =

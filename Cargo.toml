@@ -19,6 +19,9 @@ members = [
     "crates/beardog-node-registry",
     "crates/beardog-production",
     "crates/beardog-utils",
+    "crates/beardog-deploy",
+    "benchmarks",
+    "android",
 ]
 
 [workspace.package]
@@ -115,3 +118,4 @@ beardog-utils = { path = "crates/beardog-utils" }
 features = ["hsm", "ml-threat-detection", "genetic-spawning", "compliance", "federation"]
 
  
+

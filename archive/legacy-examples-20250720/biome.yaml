@@ -1,0 +1,388 @@
+# BearDog Security Biome Manifest
+# Example biome.yaml demonstrating BearDog integration with biomeOS
+
+biome:
+  id: "beardog-security-biome"
+  name: "BearDog Security Management Biome"
+  version: "1.0.0"
+  description: "Production security management biome with BearDog, Songbird, and NestGate"
+  maintainer: "BearDog Security Team"
+  environment: production
+  labels:
+    purpose: "security-management"
+    criticality: "high"
+    compliance: "gdpr,hipaa,sox"
+  created: "2025-01-16T10:00:00Z"
+
+primals:
+  beardog-primary:
+    primal_type: "beardog"
+    version: "1.0.0"
+    config:
+      security:
+        encryption:
+          default_algorithm: "aes-256-gcm"
+          key_rotation_days: 30
+        threat_detection:
+          enabled: true
+          ml_enhanced: true
+          real_time: true
+        compliance:
+          standards: ["gdpr", "hipaa", "sox"]
+          audit_retention_days: 2555  # 7 years
+      workflows:
+        multi_party_approval: true
+        human_entropy_required: true
+        genetic_spawning: true
+    services:
+      - name: "security-api"
+        service_type: "api"
+        ports:
+          - port: 8443
+            protocol: "https"
+            external: true
+        endpoints:
+          - path: "/api/v1/security"
+            methods: ["POST", "GET", "PUT"]
+            auth_required: true
+            rate_limit:
+              requests_per_minute: 1000
+              burst: 100
+          - path: "/api/v1/encrypt"
+            methods: ["POST"]
+            auth_required: true
+            rate_limit:
+              requests_per_minute: 5000
+          - path: "/api/v1/threat"
+            methods: ["POST", "GET"]
+            auth_required: true
+        config:
+          max_concurrent_requests: 10000
+          response_timeout: 30
+        capabilities:
+          - "security.encryption"
+          - "security.authentication"
+          - "security.threat_detection"
+          - "compliance.audit"
+      - name: "threat-detection"
+        service_type: "ml_engine"
+        ports:
+          - port: 8444
+            protocol: "grpc"
+            external: false
+        endpoints:
+          - path: "/threat/analyze"
+            methods: ["POST"]
+            auth_required: true
+        capabilities:
+          - "ai.threat_analysis"
+          - "security.real_time_detection"
+    resources:
+      cpu:
+        requests: 4.0
+        limits: 8.0
+      memory:
+        requests: 8192  # 8GB
+        limits: 16384   # 16GB
+      storage:
+        requests: 100   # 100GB
+        limits: 500     # 500GB
+      network:
+        requests: 1000  # 1Gbps
+        limits: 10000   # 10Gbps
+    security:
+      clearance_level: 9  # Maximum security clearance
+      capabilities:
+        - "CAP_NET_ADMIN"
+        - "CAP_SYS_ADMIN"
+      network_policies:
+        - name: "allow-songbird"
+          from:
+            - rule_type: "primal"
+              value: "songbird-mesh"
+          to:
+            - rule_type: "primal"  
+              value: "beardog-primary"
+          ports: [8443, 8444]
+        - name: "allow-nestgate"
+          from:
+            - rule_type: "primal"
+              value: "nestgate-storage"
+          to:
+            - rule_type: "primal"
+              value: "beardog-primary"  
+          ports: [8443]
+      encryption:
+        require_tls: true
+        min_tls_version: "1.3"
+        cipher_suites:
+          - "TLS_AES_256_GCM_SHA384"
+          - "TLS_CHACHA20_POLY1305_SHA256"
+        certificates:
+          ca: "beardog-ca"
+          validity_days: 90
+          auto_renew: true
+      authentication:
+        method: "mtls"
+        provider: "beardog-ca"
+        options:
+          require_client_cert: "true"
+          verify_chain: "true"
+    health_check:
+      endpoint: "/health"
+      interval: 30
+      timeout: 10
+      retries: 3
+      initial_delay: 45
+    depends_on:
+      - "songbird-mesh"
+    scaling:
+      min_replicas: 2  # High availability
+      max_replicas: 10
+      target_cpu: 70.0
+      target_memory: 80.0
+      custom_metrics:
+        - name: "threat_detection_queue"
+          target: 100.0
+          metric_type: "gauge"
+        - name: "encryption_requests_per_second"
+          target: 1000.0
+          metric_type: "counter"
+
+  songbird-mesh:
+    primal_type: "songbird"
+    version: "1.2.0"
+    config:
+      mesh:
+        discovery_enabled: true
+        load_balancing: "round_robin"
+        circuit_breaker: true
+        distributed_tracing: true
+      networking:
+        ingress_enabled: true
+        egress_policies: "strict"
+    services:
+      - name: "service-mesh"
+        service_type: "mesh"
+        ports:
+          - port: 3000
+            protocol: "http"
+            external: true
+          - port: 15001
+            protocol: "tcp"
+            external: false
+        capabilities:
+          - "network.service_discovery"
+          - "network.load_balancing"
+          - "network.routing"
+    resources:
+      cpu:
+        requests: 2.0
+        limits: 4.0
+      memory:
+        requests: 4096  # 4GB
+        limits: 8192    # 8GB
+    security:
+      clearance_level: 7
+      capabilities:
+        - "CAP_NET_ADMIN"
+      encryption:
+        require_tls: true
+        min_tls_version: "1.2"
+        certificates:
+          ca: "songbird-ca"
+          validity_days: 365
+          auto_renew: true
+    health_check:
+      endpoint: "/mesh/health"
+      interval: 15
+      timeout: 5
+      retries: 2
+    scaling:
+      min_replicas: 3  # Mesh resilience
+      max_replicas: 6
+      target_cpu: 60.0
+
+  nestgate-storage:
+    primal_type: "nestgate"
+    version: "2.1.0"
+    config:
+      storage:
+        backend: "zfs"
+        encryption_at_rest: true
+        replication_factor: 3
+        compression: "zstd"
+      backup:
+        enabled: true
+        schedule: "0 2 * * *"  # Daily at 2 AM
+        retention_days: 30
+    services:
+      - name: "storage-api"
+        service_type: "storage"
+        ports:
+          - port: 9000
+            protocol: "https"
+            external: false
+        capabilities:
+          - "storage.distributed"
+          - "storage.encrypted"
+          - "storage.backup"
+    resources:
+      cpu:
+        requests: 1.0
+        limits: 2.0
+      memory:
+        requests: 2048  # 2GB
+        limits: 4096    # 4GB
+      storage:
+        requests: 1000  # 1TB
+        limits: 10000   # 10TB
+    security:
+      clearance_level: 8  # High security for data storage
+      encryption:
+        require_tls: true
+        min_tls_version: "1.3"
+      authentication:
+        method: "jwt"
+        provider: "beardog-primary"
+    health_check:
+      endpoint: "/storage/health"
+      interval: 30
+      timeout: 15
+      retries: 3
+    depends_on:
+      - "beardog-primary"  # Depends on BearDog for auth
+    scaling:
+      min_replicas: 3  # Data redundancy
+      max_replicas: 5
+      target_cpu: 50.0
+
+security:
+  policies:
+    - name: "inter-primal-tls"
+      policy_type: "network"
+      rules:
+        - name: "require-tls"
+          condition: "inter_primal_communication"
+          action: "enforce_tls"
+      enforcement: "enforce"
+    - name: "beardog-auth-required"
+      policy_type: "rbac"
+      rules:
+        - name: "auth-gateway"
+          condition: "external_request"
+          action: "require_beardog_auth"
+      enforcement: "enforce"
+  encryption:
+    default_algorithm: "aes-256-gcm"
+    key_rotation_days: 30
+    encrypt_at_rest: true
+    encrypt_in_transit: true
+  network_security:
+    default_policies:
+      - "deny-all-ingress"
+      - "allow-inter-primal"
+    firewall_rules:
+      - name: "allow-https"
+        source: "0.0.0.0/0"
+        destination: "beardog-primary"
+        port: "8443"
+        protocol: "tcp"
+        action: "allow"
+      - name: "block-admin-external"
+        source: "0.0.0.0/0"
+        destination: "*"
+        port: "22"
+        protocol: "tcp"
+        action: "deny"
+  audit:
+    enabled: true
+    log_level: "info"
+    destinations:
+      - destination_type: "file"
+        endpoint: "/var/log/biome-audit.log"
+      - destination_type: "elasticsearch"
+        endpoint: "https://audit.example.com:9200"
+        auth:
+          username: "audit_user"
+          password_secret: "audit-password-secret"
+    retention_days: 2555  # 7 years
+
+resources:
+  total_cpu: 16.0      # 16 cores total
+  total_memory: 32768  # 32GB total
+  total_storage: 12000 # 12TB total
+  quotas:
+    beardog-primary:
+      cpu: 8.0
+      memory: 16384
+      storage: 500
+    songbird-mesh:
+      cpu: 4.0
+      memory: 8192
+      storage: 100
+    nestgate-storage:
+      cpu: 2.0
+      memory: 4096
+      storage: 10000
+
+networking:
+  mode: "overlay"
+  dns:
+    servers:
+      - "1.1.1.1"
+      - "8.8.8.8"
+    search_domains:
+      - "biome.local"
+      - "security.local"
+    options:
+      timeout: "2"
+      attempts: "3"
+  load_balancer:
+    lb_type: "nginx"
+    algorithm: "least_conn"
+    health_check:
+      endpoint: "/health"
+      interval: 10
+      timeout: 5
+      retries: 2
+  service_mesh:
+    enabled: true
+    provider: "songbird"
+    config:
+      discovery:
+        enabled: true
+        refresh_interval: 30
+      load_balancing:
+        algorithm: "round_robin"
+        health_check_interval: 15
+      security:
+        mtls_enabled: true
+        rbac_enabled: true
+
+deployment:
+  strategy: "rolling"
+  rolling_update:
+    max_unavailable: "25%"
+    max_surge: "25%"
+  hooks:
+    - name: "pre-deploy-security-check"
+      hook_type: "pre_deploy"
+      command: ["beardog-cli", "security", "validate"]
+      timeout: 300
+    - name: "post-deploy-health-check"
+      hook_type: "post_deploy"
+      command: ["curl", "-f", "https://beardog-primary:8443/health"]
+      timeout: 60
+    - name: "post-rollback-cleanup"
+      hook_type: "post_rollback"
+      command: ["beardog-cli", "cleanup", "--failed-deployment"]
+      timeout: 120
+
+environment:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  BEARDOG_COMPLIANCE_MODE: "strict"
+  BEARDOG_THREAT_DETECTION: "enabled"
+  BIOME_ID: "beardog-security-biome"
+  SECURITY_CLEARANCE_REQUIRED: "9" 

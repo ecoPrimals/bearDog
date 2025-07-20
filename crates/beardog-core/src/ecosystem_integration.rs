@@ -472,7 +472,7 @@ impl CapabilityDiscoveryService {
         &self,
         module_id: &str,
         operation: &str,
-        payload: serde_json::Value,
+        _payload: serde_json::Value,
     ) -> BearDogResult<serde_json::Value> {
         info!("📤 Sending operation {} to module {}", operation, module_id);
 

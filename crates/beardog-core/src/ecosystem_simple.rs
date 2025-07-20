@@ -119,6 +119,7 @@ pub trait UniversalPrimalProvider: Send + Sync {
 
 /// BearDog ecosystem provider implementation
 pub struct BearDogEcosystemProvider {
+    #[allow(dead_code)] // Will be used for advanced ecosystem integration
     core: Arc<BearDogCore>,
     instance_id: String,
 }

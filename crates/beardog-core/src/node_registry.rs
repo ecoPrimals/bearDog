@@ -58,18 +58,12 @@ impl NodeRegistry for BasicNodeRegistry {
             .nodes
             .try_read()
             .map_err(|_| BearDogError::internal("Could not read node registry"))?;
-        
-        nodes
-            .get(node_id)
-            .map(|node| {
-                // Basic trust calculation - in practice this would be more sophisticated
-                if node.verified {
-                    0.9
-                } else {
-                    0.5
-                }
-            })
-            .unwrap_or(0.0)
+
+        if let Some(node) = nodes.get(node_id) {
+            Ok(node.trust_level)
+        } else {
+            Ok(0.0)
+        }
     }
 
     fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> BearDogResult<()> {
@@ -78,21 +72,11 @@ impl NodeRegistry for BasicNodeRegistry {
             .nodes
             .try_write()
             .map_err(|_| BearDogError::internal("Could not write to node registry"))?;
-        
+
         if let Some(node) = nodes.get_mut(node_id) {
-            // In a real implementation, we'd store trust level in the NodeInfo
-            // For now, we'll just log it
-            tracing::info!("Updated trust level for node {node_id} to {trust_level}");
+            node.trust_level = trust_level;
         }
         Ok(())
-    }
-
-    fn list_nodes(&self) -> BearDogResult<Vec<beardog_auth::auth::types::NodeInfo>> {
-        let nodes = self
-            .nodes
-            .try_read()
-            .map_err(|_| BearDogError::internal("Could not read node registry"))?;
-        Ok(nodes.values().cloned().collect())
     }
 }
 
@@ -118,52 +102,35 @@ impl BasicProofVerifier {
 }
 
 impl ProofVerifier for BasicProofVerifier {
-    fn verify_proof(
+    fn verify_authorization_proof(
         &self,
-        proof: &[u8],
-        node_id: &str,
+        proof: &beardog_auth::auth::types::AuthorizationProof,
     ) -> BearDogResult<bool> {
         // Basic implementation - in practice this would involve cryptographic verification
-        let trusted_nodes = self
+        let _trusted_nodes = self
             .trusted_nodes
             .try_read()
             .map_err(|_| BearDogError::internal("Could not read trusted nodes"))?;
-        
-        // For now, just check if the node is in our trusted set and the proof is non-empty
-        Ok(trusted_nodes.contains(node_id) && !proof.is_empty())
+
+        // For now, just check if the proof has valid structure and signature
+        Ok(!proof.proof_signature.is_empty() && !proof.authorization_id.is_empty())
     }
 
-    fn generate_challenge(&self) -> BearDogResult<Vec<u8>> {
-        // Generate a simple challenge - in practice this would be cryptographically secure
-        use rand::Rng;
-        let mut rng = rand::thread_rng();
-        let challenge: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
-        Ok(challenge)
-    }
-
-    fn verify_challenge_response(
+    fn generate_proof(
         &self,
-        challenge: &[u8],
-        response: &[u8],
-        node_id: &str,
-    ) -> BearDogResult<bool> {
-        // Basic implementation - in practice this would involve proper cryptographic verification
-        let trusted_nodes = self
-            .trusted_nodes
-            .try_read()
-            .map_err(|_| BearDogError::internal("Could not read trusted nodes"))?;
-        
-        // For now, just verify that the response matches the challenge (insecure, just for structure)
-        Ok(trusted_nodes.contains(node_id) && response.len() == challenge.len())
-    }
+        authorization: &beardog_auth::auth::types::CrossNodeAuthorization,
+        operation: &beardog_auth::auth::types::CrossNodeOperation,
+    ) -> BearDogResult<beardog_auth::auth::types::AuthorizationProof> {
+        use chrono::Utc;
+        use uuid::Uuid;
 
-    fn add_trusted_node(&mut self, node_id: &str) -> BearDogResult<()> {
-        let mut trusted_nodes = self
-            .trusted_nodes
-            .try_write()
-            .map_err(|_| BearDogError::internal("Could not write to trusted nodes"))?;
-        trusted_nodes.insert(node_id.to_string());
-        Ok(())
+        // Generate a basic proof structure - in practice would use cryptography
+        Ok(beardog_auth::auth::types::AuthorizationProof {
+            authorization_id: authorization.id.clone(),
+            operation: operation.clone(),
+            timestamp: Utc::now(),
+            proof_signature: format!("signature_{}", Uuid::new_v4()),
+        })
     }
 }
 
@@ -171,4 +138,4 @@ impl Default for BasicProofVerifier {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

@@ -265,8 +265,8 @@ mod tests {
         let loaded_config = load_config_file(path).unwrap();
 
         // Basic validation that config was loaded
-        assert_eq!(loaded_config.network.http.bind_address, "localhost:8080");
-        assert_eq!(loaded_config.network.http.port, 8080);
+        assert_eq!(loaded_config.network.http.bind_address, "0.0.0.0:3000");
+        assert_eq!(loaded_config.network.http.port, 3000);
     }
 
     #[test]

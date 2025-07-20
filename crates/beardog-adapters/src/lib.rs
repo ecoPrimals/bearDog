@@ -4,19 +4,16 @@
 //! following the Universal Primal Architecture Standard. Instead of hardcoded service
 //! integrations, this uses dynamic capability discovery and universal API patterns.
 
-use std::collections::HashMap;
-use std::sync::Arc;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
-pub mod universal;
 pub mod ecosystem_integration;
+pub mod universal;
 
 // Re-export main universal types
-pub use universal::*;
 pub use ecosystem_integration::*;
+pub use universal::*;
 
 /// Universal Ecosystem Integration Result
 pub type EcosystemResult<T> = Result<T, EcosystemError>;
@@ -26,20 +23,20 @@ pub type EcosystemResult<T> = Result<T, EcosystemError>;
 pub enum EcosystemError {
     #[error("Capability not found: {capability}")]
     CapabilityNotFound { capability: String },
-    
+
     #[error("Service registration failed: {reason}")]
     RegistrationFailed { reason: String },
-    
+
     #[error("Integration error: {message}")]
     IntegrationError { message: String },
-    
+
     #[error("Configuration error: {message}")]
     ConfigurationError { message: String },
-    
+
     #[error("Network error: {source}")]
-    NetworkError { 
-        #[from] 
-        source: reqwest::Error 
+    NetworkError {
+        #[from]
+        source: reqwest::Error,
     },
 }
 
@@ -48,25 +45,25 @@ pub enum EcosystemError {
 pub struct AIFirstResponse<T> {
     /// Operation success status (machine-readable)
     pub success: bool,
-    
+
     /// Strongly-typed response data
     pub data: T,
-    
+
     /// AI-optimized error information
     pub error: Option<AIFirstError>,
-    
+
     /// Unique request identifier for tracing and correlation
     pub request_id: Uuid,
-    
+
     /// Processing time in milliseconds for performance monitoring
     pub processing_time_ms: u64,
-    
+
     /// AI-specific metadata for decision making
     pub ai_metadata: AIResponseMetadata,
-    
+
     /// Confidence score for AI decision making (0.0 - 1.0)
     pub confidence_score: f64,
-    
+
     /// Suggested next actions for AI agents
     pub suggested_actions: Vec<SuggestedAction>,
 }
@@ -138,9 +135,9 @@ pub struct ResourceUsage {
     pub disk_kb: f64,
 }
 
-impl<T> Default for AIFirstResponse<T> 
-where 
-    T: Default 
+impl<T> Default for AIFirstResponse<T>
+where
+    T: Default,
 {
     fn default() -> Self {
         Self {

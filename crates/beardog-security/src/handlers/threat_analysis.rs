@@ -24,6 +24,8 @@ impl BearDogSecurityProvider {
             ActionType::Delete => risk_score += 4,
             ActionType::Admin => risk_score += 5,
             ActionType::Approve => risk_score += 3,
+            ActionType::Create => risk_score += 2,
+            ActionType::Update => risk_score += 2,
         }
 
         // Check resource classification
@@ -41,6 +43,7 @@ impl BearDogSecurityProvider {
             SubjectType::System => risk_score += 1,
             SubjectType::Service => risk_score += 1,
             SubjectType::Device => risk_score += 2,
+            SubjectType::Admin => risk_score += 1,
         }
 
         // Check time-based factors
@@ -68,13 +71,15 @@ impl BearDogSecurityProvider {
     ) -> BearDogResult<AnomalyScore> {
         // Placeholder for behavioral analysis
         // In production, this would analyze user patterns using ML
-        
+
         let base_score = 0.1; // Low baseline anomaly
         let time_factor = self.calculate_time_anomaly(current_action).await?;
-        let frequency_factor = self.calculate_frequency_anomaly(user_id, current_action).await?;
-        
+        let frequency_factor = self
+            .calculate_frequency_anomaly(user_id, current_action)
+            .await?;
+
         let total_score = base_score + time_factor + frequency_factor;
-        
+
         Ok(AnomalyScore {
             score: total_score.min(1.0),
             factors: vec![
@@ -95,7 +100,7 @@ impl BearDogSecurityProvider {
     /// Calculate time-based anomaly score
     async fn calculate_time_anomaly(&self, action: &Action) -> BearDogResult<f64> {
         let hour = action.timestamp.hour();
-        
+
         // Higher anomaly score for unusual hours
         let anomaly = match hour {
             0..=5 => 0.7,   // Late night/early morning
@@ -105,12 +110,16 @@ impl BearDogSecurityProvider {
             23..=24 => 0.5, // Late night
             _ => 0.0,
         };
-        
+
         Ok(anomaly)
     }
 
     /// Calculate frequency-based anomaly score
-    async fn calculate_frequency_anomaly(&self, _user_id: &str, _action: &Action) -> BearDogResult<f64> {
+    async fn calculate_frequency_anomaly(
+        &self,
+        _user_id: &str,
+        _action: &Action,
+    ) -> BearDogResult<f64> {
         // Placeholder: In production, this would analyze historical patterns
         Ok(0.0)
     }
@@ -129,4 +138,4 @@ pub struct AnomalyFactor {
     pub name: String,
     pub weight: f64,
     pub description: String,
-} 
+}

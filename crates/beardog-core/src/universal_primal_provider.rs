@@ -5,11 +5,9 @@
 //! standardized interfaces and communication protocols.
 
 use async_trait::async_trait;
-use beardog_config::BearDogConfig;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogResult;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 use uuid::Uuid;
 
 /// Primal metadata for ecosystem integration
@@ -235,7 +233,7 @@ impl Default for ServiceEndpoint {
     fn default() -> Self {
         Self {
             protocol: "https".to_string(),
-            host: "localhost".to_string(),
+            host: beardog_config::constants::network::DEFAULT_HOST.to_string(),
             port: 8443,
             path: "/api/v1".to_string(),
             security: EndpointSecurity {

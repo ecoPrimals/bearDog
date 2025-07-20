@@ -766,7 +766,7 @@ async fn get_genetics_health(
         "genetic_diversity": 0.847
     })
     .as_object()
-    .unwrap()
+    .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?
     .clone();
     let health: HashMap<String, serde_json::Value> = health.into_iter().collect();
     Ok(Json(success_response(health, request_id, 3, true)))

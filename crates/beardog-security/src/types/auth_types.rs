@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Security subject (user or system) performing actions
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Subject {
     /// Unique identifier for the subject
     pub id: String,
@@ -16,6 +16,10 @@ pub struct Subject {
     pub name: String,
     /// Type of subject (User, Service, etc.)
     pub subject_type: SubjectType,
+    /// Subject roles
+    pub roles: Vec<String>,
+    /// Security clearance level
+    pub clearance_level: Option<u32>,
     /// Additional metadata about the subject
     pub metadata: HashMap<String, String>,
 }
@@ -27,6 +31,10 @@ pub enum SubjectType {
     User,
     /// Service account or system
     Service,
+    /// System account
+    System,
+    /// Device account
+    Device,
     /// Administrative account
     Admin,
 }
@@ -35,6 +43,8 @@ pub enum SubjectType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizationResult {
     /// Whether the authorization was granted
+    pub permitted: bool,
+    /// Whether user is authorized (for compatibility)
     pub authorized: bool,
     /// Reason for the authorization decision
     pub reason: String,
@@ -48,28 +58,40 @@ pub struct AuthorizationResult {
     pub audit_id: String,
 }
 
-/// Authentication result with user information
+/// Authentication result from security provider
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationResult {
     /// Whether authentication was successful
+    pub success: bool,
+    /// Whether user is authenticated (for compatibility)
     pub authenticated: bool,
-    /// User information if authentication succeeded
+    /// Authenticated user ID
+    pub user_id: Option<String>,
+    /// User information (for compatibility)
     pub user: Option<UserInfo>,
-    /// Error message if authentication failed
-    pub error: Option<String>,
-    /// Session token if authentication succeeded
-    pub session_token: Option<String>,
-    /// MFA required status
+    /// Session ID if authentication successful
+    pub session_id: Option<String>,
+    /// Session token if created
+    pub session_token: Option<SessionToken>,
+    /// Whether MFA is required
     pub mfa_required: bool,
     /// Available MFA methods
     pub mfa_methods: Vec<MfaMethod>,
+    /// Reason for authentication result
+    pub reason: String,
+    /// Error message if authentication failed
+    pub error: Option<String>,
+    /// When the authentication expires
+    pub expires_at: Option<DateTime<Utc>>,
 }
 
-/// User information structure
+/// User information structure (updated with needed fields)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserInfo {
     /// Unique user identifier
     pub id: String,
+    /// Unique user identifier (for compatibility)
+    pub user_id: String,
     /// Username
     pub username: String,
     /// User's email address
@@ -78,6 +100,8 @@ pub struct UserInfo {
     pub full_name: String,
     /// User roles
     pub roles: Vec<String>,
+    /// User permissions
+    pub permissions: Vec<String>,
     /// Account status
     pub status: AccountStatus,
     /// Last login timestamp
@@ -111,18 +135,14 @@ pub struct MfaConfig {
 }
 
 /// Multi-factor authentication method types
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MfaMethod {
     /// Time-based One-Time Password (TOTP)
     Totp,
-    /// SMS-based verification
+    /// SMS-based token
     Sms,
-    /// Email-based verification  
+    /// Email-based token
     Email,
-    /// Hardware security key (WebAuthn/FIDO2)
-    HardwareKey,
-    /// Backup codes
-    BackupCodes,
 }
 
 /// MFA token information
@@ -142,33 +162,164 @@ pub struct MfaToken {
     pub user_id: String,
 }
 
-/// Session management configuration
+/// Session configuration for session creation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionConfig {
-    /// Session timeout in minutes
-    pub timeout_minutes: u32,
-    /// Whether to extend session on activity
-    pub extend_on_activity: bool,
-    /// Maximum session duration in hours
-    pub max_duration_hours: u32,
+    /// Maximum session age in seconds
+    pub max_age_seconds: u64,
+    /// Whether MFA is required for this session type
+    pub require_mfa: bool,
+    /// Whether to bind session to IP address
+    pub ip_binding: bool,
+    /// Maximum concurrent sessions allowed
+    pub concurrent_sessions: u32,
 }
 
-/// Security session information
+/// Session token returned after session creation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionToken {
+    /// Unique session identifier
+    pub session_id: String,
+    /// Token value (could be JWT or random string)
+    pub token: String,
+    /// Token expiration time
+    pub expires_at: chrono::DateTime<Utc>,
+    /// Token type (e.g., "Bearer")
+    pub token_type: String,
+}
+
+/// User session information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Session {
+    /// Session identifier
+    pub session_id: String,
+    /// Associated user ID
+    pub user_id: String,
+    /// User information
+    pub user_info: UserInfo,
+    /// Session creation time
+    pub created_at: DateTime<Utc>,
+    /// Session expiration time
+    pub expires_at: DateTime<Utc>,
+    /// Whether the session is active
+    pub is_active: bool,
+    /// Last activity timestamp
+    pub last_activity: DateTime<Utc>,
+    /// User permissions for this session
+    pub permissions: Vec<String>,
+    /// Additional session metadata
+    pub metadata: HashMap<String, String>,
+}
+
+/// Security session (compatibility with existing interfaces)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecuritySession {
     /// Session identifier
-    pub session_id: String,
-    /// User associated with this session
-    pub user: UserInfo,
-    /// When the session was created
+    pub id: String,
+    /// User identifier
+    pub user_id: String,
+    /// Whether session is active
+    pub is_active: bool,
+    /// Session creation time
     pub created_at: DateTime<Utc>,
-    /// When the session expires
+    /// Session expiration time
     pub expires_at: DateTime<Utc>,
-    /// IP address of the client
-    pub client_ip: String,
+    /// Client IP address
+    pub client_ip: Option<String>,
     /// User agent string
-    pub user_agent: String,
-    /// Session metadata
+    pub user_agent: Option<String>,
+    /// User permissions
+    pub permissions: Vec<String>,
+}
+
+/// MFA token entry for internal storage
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MfaTokenEntry {
+    pub token: String,
+    pub user_id: String,
+    pub method: MfaMethod,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
+    pub attempts: u32,
+    pub max_attempts: u32,
+}
+
+/// Session storage for managing active sessions
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct SessionStore {
+    /// Active sessions
+    sessions: HashMap<String, Session>,
+    /// MFA tokens
+    pub mfa_tokens: HashMap<String, MfaTokenEntry>,
+}
+
+impl SessionStore {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn insert(&mut self, session_id: String, session: Session) {
+        self.sessions.insert(session_id, session);
+    }
+
+    pub fn get(&self, session_id: &str) -> Option<&Session> {
+        self.sessions.get(session_id)
+    }
+
+    pub fn get_mut(&mut self, session_id: &str) -> Option<&mut Session> {
+        self.sessions.get_mut(session_id)
+    }
+
+    pub fn remove(&mut self, session_id: &str) -> Option<Session> {
+        self.sessions.remove(session_id)
+    }
+
+    pub fn len(&self) -> usize {
+        self.sessions.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.sessions.is_empty()
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.sessions.capacity()
+    }
+
+    pub fn shrink_to_fit(&mut self) {
+        self.sessions.shrink_to_fit();
+    }
+
+    pub fn retain<F>(&mut self, f: F)
+    where
+        F: FnMut(&String, &mut Session) -> bool,
+    {
+        self.sessions.retain(f);
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &Session)> {
+        self.sessions.iter()
+    }
+
+    pub fn values(&self) -> impl Iterator<Item = &Session> {
+        self.sessions.values()
+    }
+}
+
+/// Security context for authorization decisions
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct SecurityContext {
+    /// Current timestamp
+    pub timestamp: Option<DateTime<Utc>>,
+    /// Client IP address
+    pub client_ip: Option<String>,
+    /// User agent
+    pub user_agent: Option<String>,
+    /// Request method
+    pub method: Option<String>,
+    /// Request path
+    pub path: Option<String>,
+    /// Additional context metadata
     pub metadata: HashMap<String, String>,
 }
 
@@ -185,9 +336,10 @@ impl Default for MfaConfig {
 impl Default for SessionConfig {
     fn default() -> Self {
         Self {
-            timeout_minutes: 30,
-            extend_on_activity: true,
-            max_duration_hours: 8,
+            max_age_seconds: 3600, // 1 hour
+            require_mfa: false,
+            ip_binding: false,
+            concurrent_sessions: 5,
         }
     }
-} 
+}
