@@ -351,13 +351,33 @@ impl EncryptionKey for DefaultEncryptionKey {
 
 impl Default for MemoryHsmStorage {
     fn default() -> Self {
-        Self::new().expect("Failed to create default memory HSM storage")
+        // Create a safe fallback implementation without panicking
+        // Use secure random generation for the master key
+        let master_key_bytes = rand::random::<[u8; 32]>();
+        let master_key = Arc::new(*Key::<Aes256Gcm>::from_slice(&master_key_bytes));
+        
+        Self {
+            storage: Arc::new(RwLock::new(HashMap::new())),
+            master_key,
+            stats: Arc::new(RwLock::new(StorageStats {
+                total_keys: 0,
+                total_size: 0,
+                operations_count: 0,
+                last_operation: None,
+            })),
+        }
     }
 }
 
 impl Default for DefaultEncryptionKey {
     fn default() -> Self {
-        Self::new().expect("Failed to create default encryption key")
+        // Create a safe fallback implementation without panicking
+        // Generate a secure key using the same pattern as new()
+        let key_bytes = rand::random::<[u8; 32]>();
+        let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
+        let cipher = Aes256Gcm::new(key);
+        
+        Self { cipher }
     }
 }
 

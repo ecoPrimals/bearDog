@@ -1,7 +1,21 @@
-# Rust/Cargo
-/target/
+# Rust/Cargo - Updated for better coverage
+**/target/
 **/*.rs.bk
 *.pdb
+Cargo.lock
+# Keep Cargo.lock for applications, but ignore for libraries in subdirectories
+**/Cargo.lock
+
+# Rust build artifacts
+**/.fingerprint/
+**/incremental/
+**/*.rlib
+**/*.rmeta
+**/*.so
+**/*.dylib
+**/*.dll
+**/*.d
+**/*.o
 
 # IDE files
 .vscode/
@@ -43,6 +57,7 @@ config.toml
 # Build artifacts
 /dist/
 /build/
+**/build/
 
 # Documentation build
 /book/
@@ -62,6 +77,7 @@ secrets.json
 tarpaulin-report.html
 cobertura.xml
 lcov.info
+coverage/
 
 # Benchmarking results
 criterion/

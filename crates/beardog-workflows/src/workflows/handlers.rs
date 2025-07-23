@@ -2,7 +2,7 @@
 //!
 //! Contains the main business logic and implementation details for MultiPartyWorkflowEngine.
 
-use super::notification::NotificationEngine;
+use super::notification::{NotificationEngine, NotificationMessage, NotificationPriority, MessageFormat};
 use super::processors::*;
 use super::types::*;
 use beardog_config::integration::WorkflowConfig;
@@ -358,9 +358,89 @@ impl MultiPartyWorkflowEngine {
         Ok(())
     }
 
-    /// Stop the workflow engine
+    /// Stop the workflow engine gracefully
     pub async fn stop(&self) -> BearDogResult<()> {
-        // TODO: Implement graceful shutdown
+        tracing::info!("🛑 Initiating graceful shutdown of workflow engine");
+
+        // 1. Stop the scheduler to prevent new workflows from being processed
+        {
+            let mut scheduler = self.scheduler.workflows.write().await;
+            if let Some(handle) = self.scheduler.cleanup_task_handle.write().await.take() {
+                handle.abort();
+                tracing::debug!("📝 Scheduler cleanup task stopped");
+            }
+        }
+
+        // 2. Wait for active workflows to complete (with timeout)
+        let active_workflows = self.active_workflows.read().await;
+        let active_count = active_workflows.len();
+        
+        if active_count > 0 {
+            tracing::info!("⏳ Waiting for {} active workflows to complete", active_count);
+            
+            // Give workflows up to 30 seconds to complete gracefully
+            let mut attempts = 0;
+            const MAX_ATTEMPTS: u32 = 30;
+            
+            while attempts < MAX_ATTEMPTS {
+                let current_count = self.active_workflows.read().await.len();
+                if current_count == 0 {
+                    break;
+                }
+                tracing::debug!("⏳ {} workflows still active, waiting...", current_count);
+                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                attempts += 1;
+            }
+            
+            let final_count = self.active_workflows.read().await.len();
+            if final_count > 0 {
+                tracing::warn!("⚠️ {} workflows did not complete within timeout", final_count);
+            } else {
+                tracing::info!("✅ All active workflows completed successfully");
+            }
+        }
+
+        // 3. Cancel pending approvals and notify participants
+        {
+            let mut pending = self.pending_approvals.write().await;
+            for (workflow_id, approvals) in pending.drain() {
+                tracing::debug!("📝 Cancelling pending approvals for workflow {}", workflow_id);
+                
+                // Notify participants about shutdown
+                for approval in approvals {
+                    let notification = NotificationMessage {
+                        title: "Workflow System Shutdown".to_string(),
+                        content: format!("Workflow {} has been cancelled due to system shutdown", workflow_id),
+                        priority: NotificationPriority::High,
+                        recipients: vec![approval.approver_id.clone()],
+                        metadata: std::collections::HashMap::new(),
+                        format: MessageFormat::PlainText,
+                        template_name: None,
+                        context: std::collections::HashMap::new(),
+                    };
+                    
+                    if let Err(e) = self.notification_engine.send_universal_notification(notification).await {
+                        tracing::warn!("Failed to send shutdown notification: {}", e);
+                    }
+                }
+            }
+        }
+
+        // 4. Clear remaining resources
+        {
+            self.workflow_processors.write().await.clear();
+            self.execution_queue.lock().await.clear();
+            self.node_registry.write().await.clear();
+        }
+
+        // 5. Update metrics
+        {
+            let mut metrics = self.metrics.write().await;
+            metrics.total_shutdown_count += 1;
+            metrics.last_shutdown = Some(Utc::now());
+        }
+
+        tracing::info!("✅ Workflow engine shutdown completed successfully");
         Ok(())
     }
 }
