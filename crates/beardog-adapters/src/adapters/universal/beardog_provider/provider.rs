@@ -51,11 +51,17 @@ impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
 
     fn endpoints(&self) -> ServiceEndpoints {
         ServiceEndpoints {
-            primary: "http://localhost:8443".to_string(),
-            health: "http://localhost:8443/health".to_string(),
-            metrics: Some("http://localhost:8443/metrics".to_string()),
-            admin: Some("http://localhost:8443/admin".to_string()),
-            events: Some("http://localhost:8443/events".to_string()),
+            // Use runtime configuration for endpoints instead of hardcoded localhost
+            primary: std::env::var("BEARDOG_API_URL")
+                .unwrap_or_else(|_| "https://api.beardog.local:8443".to_string()),
+            health: std::env::var("BEARDOG_HEALTH_URL")
+                .unwrap_or_else(|_| "https://api.beardog.local:8443/health".to_string()),
+            metrics: Some(std::env::var("BEARDOG_METRICS_URL")
+                .unwrap_or_else(|_| "https://api.beardog.local:8443/metrics".to_string())),
+            admin: Some(std::env::var("BEARDOG_ADMIN_URL")
+                .unwrap_or_else(|_| "https://api.beardog.local:8443/admin".to_string())),
+            events: Some(std::env::var("BEARDOG_EVENTS_URL")
+                .unwrap_or_else(|_| "https://api.beardog.local:8443/events".to_string())),
             custom: HashMap::new(),
         }
     }
@@ -84,7 +90,11 @@ impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
                     .and_then(|v| v.as_str())
                     .ok_or_else(|| BearDogError::validation("Missing data field"))?;
 
-                let encrypted_data = data.as_bytes(); // Placeholder for actual encryption
+                // SECURITY: Never return unencrypted data claiming it's encrypted
+                error!("SECURITY VIOLATION: Encryption service requested but not properly implemented");
+                return Err(BearDogError::Configuration {
+                    message: "Encryption service not available - cannot process sensitive data".to_string(),
+                });
 
                 Ok(ServiceResponse {
                     request_id: request.id.clone(),

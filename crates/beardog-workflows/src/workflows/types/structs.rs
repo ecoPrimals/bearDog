@@ -10,6 +10,7 @@ use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock};
 
 use super::enums::*;
+use crate::workflows::processors::WorkflowProcessor;
 use beardog_config::integration::WorkflowConfig;
 use beardog_errors::BearDogResult;
 
@@ -44,6 +45,8 @@ pub struct Workflow {
     pub timeout_duration: Option<Duration>,
     /// Custom properties specific to workflow type
     pub properties: HashMap<String, serde_json::Value>,
+    /// Workflow execution parameters (used by processors)
+    pub parameters: HashMap<String, serde_json::Value>,
     /// Approval records for this workflow
     pub approvals: Vec<ApprovalRecord>,
     /// Audit trail of all events on this workflow
@@ -520,8 +523,8 @@ pub struct MultiPartyWorkflowEngine {
     pub workflow_store: Arc<dyn WorkflowStore>,
     /// Storage backend for approval data
     pub approval_store: Arc<dyn ApprovalStore>,
-    /// Engine for sending notifications
-    pub notification_engine: Arc<NotificationEngine>,
+    /// Engine for sending notifications  
+    pub notification_engine: Arc<crate::workflows::notification::NotificationEngine>,
     /// Policy engine for workflow rules
     pub policy_engine: Arc<WorkflowPolicyEngine>,
     /// Scheduler for workflow management
@@ -545,13 +548,6 @@ pub struct MultiPartyWorkflowEngine {
     pub security_provider: Arc<RwLock<WorkflowSecurityProvider>>,
     /// Metrics for workflow performance
     pub metrics: Arc<RwLock<WorkflowMetrics>>,
-}
-
-/// Notification engine for workflow events
-#[derive(Debug, Clone)]
-pub struct NotificationEngine {
-    /// Configuration for notifications
-    pub config: NotificationConfig,
 }
 
 /// Workflow policy engine
@@ -669,9 +665,9 @@ impl MultiPartyWorkflowEngine {
             approval_store: Arc::new(InMemoryApprovalStore {
                 approvals: RwLock::new(HashMap::new()),
             }),
-            notification_engine: Arc::new(NotificationEngine {
-                config: NotificationConfig::default(),
-            }),
+            notification_engine: Arc::new(crate::workflows::notification::NotificationEngine::new(
+                beardog_config::integration::NotificationConfig::default(),
+            )),
             policy_engine: Arc::new(WorkflowPolicyEngine {
                 config: PolicyConfig::default(),
             }),
@@ -715,15 +711,4 @@ pub trait ApprovalStore: Send + Sync {
         &self,
         approver: &str,
     ) -> BoxFuture<'_, BearDogResult<Vec<PendingApproval>>>;
-}
-
-/// Workflow processor trait
-pub trait WorkflowProcessor: Send + Sync {
-    /// Process a workflow and return completion results
-    fn process_workflow(
-        &self,
-        workflow: &Workflow,
-    ) -> BoxFuture<'_, BearDogResult<WorkflowCompletionResult>>;
-    /// Get the name of this processor
-    fn get_processor_name(&self) -> &'static str;
 }

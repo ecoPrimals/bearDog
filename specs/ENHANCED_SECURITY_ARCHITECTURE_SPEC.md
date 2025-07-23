@@ -31,6 +31,13 @@ globs: ["beardog/src/**/*.rs", "beardog/crates/**/*.rs"]
 - Enable automatic key rotation and lifecycle management
 - Provide secure communication channels
 
+### Security Sentinel Integration
+- Self-aware security monitoring (not surveillance)
+- Continuous security posture assessment
+- Human dignity preservation compliance
+- Environmental threat intelligence gathering
+- Performance optimization for security operations
+
 ## Architecture
 
 ### Universal Security Manager
@@ -42,6 +49,7 @@ pub struct UniversalSecurityManager {
     threat_detector: Arc<ThreatDetector>,
     audit_system: Arc<AuditSystem>,
     key_manager: Arc<KeyManager>,
+    security_sentinel: Arc<SecuritySentinel>, // Self-aware monitoring
 }
 
 impl UniversalSecurityManager {

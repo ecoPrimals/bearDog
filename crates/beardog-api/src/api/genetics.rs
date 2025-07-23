@@ -475,8 +475,14 @@ async fn analyze_node_genetics(
                 "compute".to_string(),
                 "network".to_string(),
             ],
-            security_genes: vec!["encryption".to_string(), "authentication".to_string()],
-            performance_genes: vec!["optimization".to_string(), "caching".to_string()],
+            security_genes: ["encryption", "authentication"]
+                .iter()
+                .map(|&s| s.to_string())
+                .collect(),
+            performance_genes: ["optimization", "caching"]
+                .iter()
+                .map(|&s| s.to_string())
+                .collect(),
             generation: 3,
         },
         lineage: LineageInfo {
@@ -591,7 +597,7 @@ async fn remove_node(
 ) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let mut response = HashMap::new();
-    response.insert("status".to_string(), "removed".to_string());
+    response.insert("status".into(), "removed".into());
     Ok(Json(success_response(response, request_id, 12, false)))
 }
 
@@ -627,7 +633,7 @@ async fn approve_spawn_request(
 ) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let mut response = HashMap::new();
-    response.insert("status".to_string(), "approved".to_string());
+    response.insert("status".into(), "approved".into());
     Ok(Json(success_response(response, request_id, 8, false)))
 }
 
@@ -639,7 +645,7 @@ async fn reject_spawn_request(
 ) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let mut response = HashMap::new();
-    response.insert("status".to_string(), "rejected".to_string());
+    response.insert("status".into(), "rejected".into());
     Ok(Json(success_response(response, request_id, 6, false)))
 }
 
@@ -698,7 +704,7 @@ async fn update_resource_constraints(
 ) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
     let request_id = uuid::Uuid::new_v4().to_string();
     let mut response = HashMap::new();
-    response.insert("status".to_string(), "updated".to_string());
+    response.insert("status".into(), "updated".into());
     Ok(Json(success_response(response, request_id, 8, false)))
 }
 

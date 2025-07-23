@@ -151,29 +151,30 @@ impl UniversalNestGateAdapter {
         &self.config
     }
 
-    /// Generate master key for provider
+    /// Generate context-aware key for provider (NEW AGE CRYPTO)
     pub async fn generate_context_key(
         &self,
         owner_id: &str,
         context: &str,
     ) -> NestGateResult<NestGateContextKey> {
         info!(
-            "Generating master key for owner: {} (provider: {})",
+            "Generating context-aware key for owner: {} context: {} (provider: {})",
             owner_id,
+            context,
             self.provider.name()
         );
 
-        // Check policy
+        // Check policy for context key generation
         let policy_result = self
             .policy_engine
-            .check_access(owner_id, "master_key", &FileOperation::Write)
+            .check_access(owner_id, "context_key", &FileOperation::Write)
             .await?;
 
         if !policy_result.allowed {
             return Err(NestGateError::PolicyViolation(policy_result.reason));
         }
 
-        // Generate master key using ZFS manager
+        // Generate context-aware key using ZFS manager (NEW AGE CRYPTO)
         let context_key = self
             .zfs_manager
             .generate_owner_encryption_key(owner_id, context)
@@ -189,19 +190,23 @@ impl UniversalNestGateAdapter {
         self.audit_manager
             .log_event(NestGateAuditEvent {
                 id: Uuid::new_v4().to_string(),
-                event_type: "master_key_generated".to_string(),
+                event_type: "context_key_generated".to_string(),
                 user_id: owner_id.to_string(),
                 provider_id: self.provider.name().to_string(),
-                resource: "master_key".to_string(),
+                resource: "context_key".to_string(),
                 operation: "generate".to_string(),
                 timestamp: chrono::Utc::now(),
-                metadata: HashMap::new(),
+                metadata: [
+                    ("context".to_string(), context.to_string()),
+                    ("key_scope".to_string(), "context-specific".to_string()),
+                    ("crypto_model".to_string(), "new-age-crypto".to_string()),
+                ].iter().cloned().collect(),
                 result: OperationResult::Success,
                 severity: EventSeverity::Info,
             })
             .await?;
 
-        info!("Master key generated successfully for owner: {}", owner_id);
+        info!("Context-aware key generated successfully for owner: {} context: {}", owner_id, context);
         Ok(context_key)
     }
 

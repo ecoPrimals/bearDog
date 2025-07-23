@@ -1,6 +1,6 @@
-//! # BearDog Pure Rust Android Deployment Tool
+//! # `BearDog` Pure Rust Android Deployment Tool
 //!
-//! A comprehensive deployment tool for BearDog HSM system on Android devices,
+//! A comprehensive deployment tool for `BearDog` HSM system on Android devices,
 //! written entirely in Rust without any shell dependencies.
 
 mod android;
@@ -111,9 +111,13 @@ async fn main() -> Result<()> {
     term.write_line("")?;
 
     // Determine project root
-    let project_root = cli
-        .project_root
-        .unwrap_or_else(|| std::env::current_dir().expect("Failed to get current directory"));
+    let project_root = cli.project_root.unwrap_or_else(|| {
+        let default_dir = std::env::current_dir().unwrap_or_else(|e| {
+            eprintln!("Failed to get current directory: {e}");
+            std::process::exit(1);
+        });
+        default_dir
+    });
 
     // Initialize managers
     let android_manager = AndroidManager::new(project_root.clone());

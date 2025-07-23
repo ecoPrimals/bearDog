@@ -36,45 +36,37 @@ pub struct SecurityEventRequest {
 /// Response containing threat analysis results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatAnalysisResponse {
-    /// Unique identifier for the analyzed event
+    /// Unique event identifier for tracking
     pub event_id: String,
-    /// Number of threats detected in the event
+    /// Number of threats detected for this event
     pub threats_detected: usize,
-    /// Overall risk level assessment (Low, Medium, High, Critical)
+    /// Overall risk level assessment
     pub risk_level: String,
-    /// Detailed information about detected threats
+    /// List of specific threats detected
     pub detected_threats: Vec<ThreatEventResponse>,
-    /// Machine learning predictions for the event
+    /// Machine learning predictions and insights
     pub ml_predictions: Vec<MlPredictionResponse>,
-    /// Security recommendations based on analysis
+    /// Recommended security actions to take
     pub recommendations: Vec<String>,
-    /// Time taken to process the event in milliseconds
+    /// Time taken to process this event in milliseconds
     pub processing_time_ms: u64,
-    /// Optional incident ID if an incident was created
+    /// Incident ID if one was created for this event
     pub incident_created: Option<String>,
 }
 
-/// Individual threat event details
+/// Individual threat event response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatEventResponse {
-    /// Unique identifier for the threat
+    /// Unique threat identifier
     pub threat_id: String,
     /// Type of threat detected
     pub threat_type: String,
     /// Severity level of the threat
     pub severity: String,
-    /// Human-readable description of the threat
+    /// Description of the threat
     pub description: String,
-    /// Method used to detect the threat
-    pub detection_method: String,
-    /// MITRE ATT&CK techniques associated with the threat
-    pub mitre_techniques: Vec<String>,
-    /// Confidence level in the detection (0.0 to 1.0)
-    pub confidence: f64,
-    /// Number of evidence pieces supporting the detection
-    pub evidence_count: usize,
-    /// Recommended response actions
-    pub response_actions: Vec<String>,
+    /// Evidence supporting the threat detection
+    pub evidence: Vec<String>,
 }
 
 /// Machine learning prediction response

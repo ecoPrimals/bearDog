@@ -56,6 +56,7 @@ pub extern "C" fn android_main(_app: &mut NativeActivity) {
 }
 
 /// Main BearDog Android application logic
+#[allow(dead_code)] // Will be used when Android app integration is fully implemented
 async fn run_beardog_android_app() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔐 Starting BearDog HSM operations on Android");
 
@@ -106,6 +107,7 @@ async fn run_beardog_android_app() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test core HSM operations
+#[allow(dead_code)] // Will be used when Android HSM testing is fully implemented
 async fn test_core_operations(
     hsm: &Arc<dyn HsmProvider>,
     anchor_key: &beardog_tunnel::tunnel::hsm::types::HsmKey,
@@ -135,6 +137,7 @@ async fn test_core_operations(
 }
 
 /// Performance test
+#[allow(dead_code)] // Will be used when Android HSM testing is fully implemented
 async fn performance_test(
     hsm: &Arc<dyn HsmProvider>,
     anchor_key: &beardog_tunnel::tunnel::hsm::types::HsmKey,
@@ -144,7 +147,7 @@ async fn performance_test(
     let start_time = std::time::Instant::now();
 
     for i in 0..20 {
-        let data = format!("Performance test iteration {}", i);
+        let data = format!("Performance test iteration {i}");
         let signature = hsm.sign(&anchor_key.id, data.as_bytes()).await?;
         let _valid = hsm
             .verify(&anchor_key.id, data.as_bytes(), &signature)

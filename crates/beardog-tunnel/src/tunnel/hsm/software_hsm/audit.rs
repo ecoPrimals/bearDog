@@ -353,10 +353,10 @@ impl PersistentAuditStorage {
             }
 
             // Track oldest and newest
-            if oldest_entry.is_none() || entry.timestamp < oldest_entry.unwrap() {
+            if oldest_entry.is_none() || entry.timestamp < oldest_entry.unwrap_or(entry.timestamp) {
                 oldest_entry = Some(entry.timestamp);
             }
-            if newest_entry.is_none() || entry.timestamp > newest_entry.unwrap() {
+            if newest_entry.is_none() || entry.timestamp > newest_entry.unwrap_or(entry.timestamp) {
                 newest_entry = Some(entry.timestamp);
             }
         }

@@ -233,7 +233,7 @@ impl Default for ServiceEndpoint {
     fn default() -> Self {
         Self {
             protocol: "https".to_string(),
-            host: beardog_config::constants::network::DEFAULT_HOST.to_string(),
+            host: beardog_config::constants::network::get_default_host(),
             port: 8443,
             path: "/api/v1".to_string(),
             security: EndpointSecurity {

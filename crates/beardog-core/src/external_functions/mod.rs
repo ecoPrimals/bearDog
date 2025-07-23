@@ -24,19 +24,17 @@ pub use prometheus::PrometheusExport;
 
 /// External function handler trait
 #[async_trait]
-pub trait ExternalFunctionHandler: Send + Sync {
-    /// Execute the external function with license validation
+pub trait ExternalFunctionHandler {
+    /// Function name for licensing checks
+    fn function_name(&self) -> &str;
+
+    /// Execute external function with self-aware licensing
     async fn execute(
         &self,
-        payload: Value,
         license_manager: &LicenseManager,
+        operation: &str,
+        payload: Value,
     ) -> BearDogResult<Value>;
-
-    /// Get the function name for license checking
-    fn function_name(&self) -> &'static str;
-
-    /// Get function description
-    fn description(&self) -> &'static str;
 }
 
 /// Registry for managing external function handlers
@@ -73,7 +71,11 @@ impl ExternalFunctionRegistry {
         license_manager: &LicenseManager,
     ) -> BearDogResult<Value> {
         match self.handlers.get(function_name) {
-            Some(handler) => handler.execute(payload, license_manager).await,
+            Some(handler) => {
+                handler
+                    .execute(license_manager, function_name, payload)
+                    .await
+            }
             None => Ok(serde_json::json!({
                 "error": "function_not_found",
                 "message": format!("External function '{}' not found", function_name),

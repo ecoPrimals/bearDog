@@ -788,7 +788,7 @@ impl BiomeYamlParser {
 
         Ok(ServiceEndpoint {
             protocol: protocol.to_string(),
-            host: beardog_config::constants::network::DEFAULT_HOST.to_string(), // Will be updated during deployment
+            host: beardog_config::constants::network::get_default_host(), // Configurable via BEARDOG_DEFAULT_HOST
             port: primary_port.port,
             path,
             security: crate::universal_primal_provider::EndpointSecurity {

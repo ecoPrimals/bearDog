@@ -117,5 +117,6 @@ beardog-utils = { path = "crates/beardog-utils" }
 [workspace.metadata.docs.rs]
 features = ["hsm", "ml-threat-detection", "genetic-spawning", "compliance", "federation"]
 
- 
 
+
+ 

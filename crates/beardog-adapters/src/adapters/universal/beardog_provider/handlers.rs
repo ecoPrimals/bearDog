@@ -42,7 +42,11 @@ impl<T: Send + Sync + 'static> BearDogProviderHandler<T> {
             payload: json!({
                 "encrypted_data": general_purpose::STANDARD.encode(encrypted_data),
                 "algorithm": "AES-256-GCM",
-                "nonce": general_purpose::STANDARD.encode(b"placeholder_nonce")
+                "nonce": {
+                    let secure_nonce = beardog_security::crypto_utils::BearDogCrypto::generate_secure_nonce(12)
+                        .map_err(|e| BearDogError::internal(&format!("Failed to generate nonce: {e}")))?;
+                    general_purpose::STANDARD.encode(&secure_nonce)
+                }
             }),
             metadata: HashMap::new(),
             timestamp: Utc::now(),
@@ -86,8 +90,11 @@ impl<T: Send + Sync + 'static> BearDogProviderHandler<T> {
             .and_then(|v| v.as_str())
             .ok_or_else(|| BearDogError::validation("Missing data field"))?;
 
-        // Simulate signing operation
-        let signature = data.as_bytes(); // Placeholder for actual signing
+        // SECURITY: Never return fake signatures claiming they're real
+        error!("SECURITY VIOLATION: Digital signing service requested but not properly implemented");
+        return Err(BearDogError::Configuration {
+            message: "Digital signing service not available - cannot provide authentic signatures".to_string(),
+        });
 
         Ok(ServiceResponse {
             request_id: request.id.clone(),

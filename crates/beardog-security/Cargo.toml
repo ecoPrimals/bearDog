@@ -33,6 +33,7 @@ rustls = "0.21"
 sha2 = "0.10"
 sha3 = "0.10"
 blake3 = "1.4"
+ripemd = "0.1"
 subtle = "2.4"
 thiserror = "1.0"
 

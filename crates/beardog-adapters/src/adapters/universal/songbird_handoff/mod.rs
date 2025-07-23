@@ -200,22 +200,51 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
     /// Register this ecosystem component with SongBird
     pub async fn register_with_songbird(&self) -> BearDogResult<ServiceRegistrationResult> {
         info!(
-            "🎼 Registering {} with SongBird service mesh",
+            "🎼 Registering {} with SongBird service mesh through universal adapter",
             self.primal_type.as_str()
         );
 
-        // Get current capabilities
+        // Get current capabilities through the universal adapter
         let capabilities = self.get_capabilities().await?;
 
-        // Create service registration
+        // Create service registration using universal patterns
         let service_registration = self.create_service_registration(capabilities).await?;
 
-        // For now, simulate successful registration
-        let result = ServiceRegistrationResult {
-            success: true,
-            service_id: service_registration.service_id.clone(),
-            registration_details: service_registration.clone(),
-            error_message: None,
+        // Use the universal adapter pattern - each primal only knows itself
+        // The capability manager handles the registration through the universal interface
+        let registration_result = self.capability_manager
+            .register_with_songbird()
+            .await;
+
+        let result = match registration_result {
+            Ok(service_id) => {
+                info!(
+                    "✅ Successfully registered {} with SongBird via universal adapter: {}",
+                    self.primal_type.as_str(),
+                    service_id
+                );
+                
+                ServiceRegistrationResult {
+                    success: true,
+                    service_id,
+                    registration_details: service_registration.clone(),
+                    error_message: None,
+                }
+            }
+            Err(error) => {
+                warn!(
+                    "❌ Failed to register {} with SongBird via universal adapter: {}",
+                    self.primal_type.as_str(),
+                    error
+                );
+                
+                ServiceRegistrationResult {
+                    success: false,
+                    service_id: String::new(),
+                    registration_details: service_registration.clone(),
+                    error_message: Some(error.to_string()),
+                }
+            }
         };
 
         // Update registration status
@@ -234,27 +263,10 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
             };
         }
 
-        // Store registration details
-        {
+        // Store registration details if successful
+        if result.success {
             let mut reg = self.service_registration.write().await;
             *reg = Some(service_registration);
-        }
-
-        if result.success {
-            info!(
-                "✅ Successfully registered {} with SongBird: {}",
-                self.primal_type.as_str(),
-                result.service_id
-            );
-        } else {
-            warn!(
-                "❌ Failed to register {} with SongBird: {}",
-                self.primal_type.as_str(),
-                result
-                    .error_message
-                    .clone()
-                    .unwrap_or_else(|| "Unknown error".to_string())
-            );
         }
 
         Ok(result)
@@ -415,11 +427,22 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
 
         // Create service endpoints
         let endpoints = ServiceEndpoints {
-            primary: format!("http://localhost:8080/api/v1/{}", self.primal_type.as_str()),
-            health: "http://localhost:8080/health".to_string(),
-            metrics: "http://localhost:8080/metrics".to_string(),
-            admin: "http://localhost:8080/admin".to_string(),
-            websocket: Some("ws://localhost:8080/ws".to_string()),
+            primary: format!("http://{}:{}/api/v1/{}", 
+                beardog_config::constants::endpoints::get_base_url().replace("https://", "").replace("http://", ""),
+                beardog_config::constants::network::DEFAULT_API_PORT,
+                self.primal_type.as_str()),
+            health: format!("http://{}:{}/health", 
+                beardog_config::constants::network::get_default_host(),
+                beardog_config::constants::network::DEFAULT_API_PORT),
+            metrics: format!("http://{}:{}/metrics", 
+                beardog_config::constants::network::get_default_host(),
+                beardog_config::constants::network::DEFAULT_API_PORT),
+            admin: format!("http://{}:{}/admin", 
+                beardog_config::constants::network::get_default_host(),
+                beardog_config::constants::network::DEFAULT_API_PORT),
+            websocket: Some(format!("ws://{}:{}/ws", 
+                beardog_config::constants::network::get_default_host(),
+                beardog_config::constants::network::DEFAULT_API_PORT)),
         };
 
         // Create resource requirements

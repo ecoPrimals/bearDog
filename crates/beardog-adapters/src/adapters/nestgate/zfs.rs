@@ -472,7 +472,7 @@ impl ZfsManager {
                 OperationResult::Success
             } else {
                 OperationResult::Failed {
-                    error: result.as_ref().err().unwrap().to_string(),
+                    error: result.as_ref().err().map(|e| e.to_string()).unwrap_or_else(|| "Unknown error".to_string()),
                 }
             },
             metadata: request.metadata.clone(),

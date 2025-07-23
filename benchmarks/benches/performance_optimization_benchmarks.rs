@@ -55,7 +55,7 @@ fn benchmark_memory_config(c: &mut Criterion) {
             &config,
             |b, config| {
                 b.iter(|| {
-                    for (_obj_type, pool_config) in &config.object_pooling.pools {
+                    for pool_config in config.object_pooling.pools.values() {
                         let _ = memory::utils::calculate_optimal_pool_size(
                             pool_config.initial_size,
                             0.8, // 80% usage rate
@@ -237,7 +237,7 @@ fn benchmark_cache_config_impact(c: &mut Criterion) {
             &config,
             |b, config| {
                 b.iter(|| {
-                    simulate_cache_operations(&config);
+                    simulate_cache_operations(config);
                 });
             },
         );
@@ -297,7 +297,7 @@ fn benchmark_performance_monitoring_overhead(c: &mut Criterion) {
             &config,
             |b, config| {
                 b.iter(|| {
-                    simulate_monitoring_overhead(&config);
+                    simulate_monitoring_overhead(config);
                 });
             },
         );

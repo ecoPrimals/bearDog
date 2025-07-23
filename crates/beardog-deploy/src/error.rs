@@ -1,4 +1,4 @@
-//! Error types for the BearDog deployment tool
+//! Error types for the `BearDog` deployment tool
 
 use thiserror::Error;
 

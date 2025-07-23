@@ -1,17 +1,16 @@
-//! Zero-Copy API Request/Response Handlers for BearDog
-//!
-//! **High-Performance HTTP Processing with Minimal Allocations**
-//!
-//! This module provides zero-copy HTTP request and response handling that
-//! minimizes memory allocations and data copying in hot API paths.
-//!
-//! Key optimizations:
-//! - Zero-copy request body parsing
-//! - Response streaming with buffer reuse
-//! - HTTP header pooling and reuse
-//! - JSON serialization with buffer pooling
-//! - WebSocket frame processing optimization
-
+/// Zero-Copy API Request/Response Handlers for BearDog
+///
+/// **High-Performance HTTP Processing with Minimal Allocations**
+///
+/// This module provides zero-copy HTTP request and response handling that
+/// minimizes memory allocations and data copying in hot API paths.
+///
+/// Key optimizations:
+/// - Zero-copy request body parsing
+/// - Response streaming with buffer reuse
+/// - HTTP header pooling and reuse
+/// - JSON serialization with buffer pooling
+/// - WebSocket frame processing optimization
 use axum::{
     body::Body,
     extract::State,
@@ -55,6 +54,12 @@ pub struct HttpBufferPoolStats {
     pub large_buffer_misses: AtomicU64,
     pub total_allocations: AtomicU64,
     pub peak_memory_bytes: AtomicU64,
+}
+
+impl Default for HttpBufferPool {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl HttpBufferPool {
@@ -227,7 +232,7 @@ impl ZeroCopyJsonSerializer {
                 Ok(buffer.freeze())
             }
             Err(e) => Err(BearDogError::Serialization {
-                message: format!("JSON serialization failed: {}", e),
+                message: format!("JSON serialization failed: {e}"),
             }),
         }
     }
@@ -250,7 +255,7 @@ impl ZeroCopyJsonSerializer {
                 Ok(value)
             }
             Err(e) => Err(BearDogError::DeserializationError {
-                message: format!("JSON deserialization failed: {}", e),
+                message: format!("JSON deserialization failed: {e}"),
             }),
         }
     }
@@ -275,7 +280,7 @@ impl ZeroCopyJsonSerializer {
             // Serialize each item directly into buffer
             serde_json::to_writer((&mut buffer).writer(), item).map_err(|e| {
                 BearDogError::Serialization {
-                    message: format!("Batch serialization failed: {}", e),
+                    message: format!("Batch serialization failed: {e}"),
                 }
             })?;
         }
@@ -308,6 +313,7 @@ impl ZeroCopyJsonSerializer {
 
 /// Zero-copy HTTP response builder
 pub struct ZeroCopyResponseBuilder {
+    #[allow(dead_code)] // Will be used when zero-copy response optimizations are fully implemented
     buffer_pool: Arc<HttpBufferPool>,
     serializer: Arc<ZeroCopyJsonSerializer>,
     header_cache: Arc<RwLock<HashMap<String, HeaderValue>>>,
@@ -321,6 +327,12 @@ pub struct ZeroCopyResponseStats {
     pub header_cache_misses: AtomicU64,
     pub streaming_responses: AtomicU64,
     pub content_bytes_served: AtomicU64,
+}
+
+impl Default for ZeroCopyResponseBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ZeroCopyResponseBuilder {
@@ -370,7 +382,7 @@ impl ZeroCopyResponseBuilder {
 
         response
             .body(body)
-            .map_err(|e| BearDogError::internal(format!("Response building failed: {}", e)))
+            .map_err(|e| BearDogError::internal(format!("Response building failed: {e}")))
     }
 
     /// Build streaming response for large data
@@ -403,9 +415,9 @@ impl ZeroCopyResponseBuilder {
             .content_bytes_served
             .fetch_add(body_len as u64, Ordering::Relaxed);
 
-        response.body(body).map_err(|e| {
-            BearDogError::internal(format!("Streaming response building failed: {}", e))
-        })
+        response
+            .body(body)
+            .map_err(|e| BearDogError::internal(format!("Streaming response building failed: {e}")))
     }
 
     /// Build binary response with zero-copy
@@ -435,7 +447,7 @@ impl ZeroCopyResponseBuilder {
 
         response
             .body(body)
-            .map_err(|e| BearDogError::internal(format!("Binary response building failed: {}", e)))
+            .map_err(|e| BearDogError::internal(format!("Binary response building failed: {e}")))
     }
 
     /// Build error response with zero-copy
@@ -460,7 +472,7 @@ impl ZeroCopyResponseBuilder {
 
     /// Get cached header value or create new one
     async fn get_cached_header(&self, name: &str, value: &str) -> HeaderValue {
-        let cache_key = format!("{}:{}", name, value);
+        let cache_key = format!("{name}:{value}");
 
         {
             let cache = self.header_cache.read().await;
@@ -512,6 +524,7 @@ impl ZeroCopyResponseBuilder {
 
 /// Zero-copy request parser
 pub struct ZeroCopyRequestParser {
+    #[allow(dead_code)] // Will be used when zero-copy request parsing is fully implemented
     buffer_pool: Arc<HttpBufferPool>,
     serializer: Arc<ZeroCopyJsonSerializer>,
     stats: ZeroCopyRequestStats,
@@ -564,8 +577,7 @@ impl ZeroCopyRequestParser {
                 Ok(params)
             }
             Err(e) => Err(BearDogError::validation(format!(
-                "Query parameter parsing failed: {}",
-                e
+                "Query parameter parsing failed: {e}"
             ))),
         }
     }
@@ -581,8 +593,7 @@ impl ZeroCopyRequestParser {
         match serde_urlencoded::from_str(form_str) {
             Ok(form_data) => Ok(form_data),
             Err(e) => Err(BearDogError::validation(format!(
-                "Form parsing failed: {}",
-                e
+                "Form parsing failed: {e}"
             ))),
         }
     }
@@ -734,8 +745,8 @@ pub async fn bulk_data_handler_zero_copy<T: Serialize>(
     // For demonstration, create mock data based on request
     let mock_data: Vec<BulkDataItem> = (0..request.items.len())
         .map(|i| BulkDataItem {
-            id: format!("item_{}", i),
-            data: format!("bulk_data_{}", i),
+            id: format!("item_{i}"),
+            data: format!("bulk_data_{i}"),
             processed_at: chrono::Utc::now().to_rfc3339(),
         })
         .collect();
@@ -787,7 +798,11 @@ pub struct BulkDataItem {
 
 #[cfg(test)]
 mod tests {
-    use super::HttpBufferPool;
+    use super::*;
+    use axum::http::StatusCode;
+    use serde::{Deserialize, Serialize};
+    use std::sync::atomic::Ordering;
+    use std::sync::Arc;
     use tokio;
 
     #[tokio::test]
@@ -800,7 +815,7 @@ mod tests {
         pool.return_small_buffer(small_buffer).await;
 
         // Test reuse
-        let reused_buffer = pool.get_small_buffer().await;
+        let _reused_buffer = pool.get_small_buffer().await;
         let stats = pool.get_stats();
         assert!(stats.small_buffer_hits.load(Ordering::Relaxed) > 0);
     }
@@ -915,8 +930,8 @@ pub mod header_utils {
 
     /// Parse bearer token from authorization header
     pub fn parse_bearer_token(auth_header: &str) -> Option<&str> {
-        if auth_header.starts_with("Bearer ") {
-            Some(&auth_header[7..])
+        if let Some(stripped) = auth_header.strip_prefix("Bearer ") {
+            Some(stripped)
         } else {
             None
         }

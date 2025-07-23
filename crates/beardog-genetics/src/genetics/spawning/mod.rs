@@ -11,9 +11,9 @@ pub mod workflows;
 // Temporary types module to support compilation during refactor
 pub mod types {
     use beardog_auth::auth::{
-        BearDogGenetics, NodeCapability, ResourceLimits, SecurityClearance, SpawnPurpose, TaskType,
+        BearDogGenetics, NodeCapability, ResourceLimits, SecurityClearance, SpawnPurpose,
     };
-    use beardog_errors::BearDogResult;
+
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
 

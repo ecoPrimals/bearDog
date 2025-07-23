@@ -5,6 +5,15 @@
 use super::*;
 use serde::{Deserialize, Serialize};
 
+/// Request context for audit events
+#[derive(Debug, Clone, Default)]
+pub struct AuditRequestContext {
+    pub ip_address: Option<String>,
+    pub user_agent: Option<String>,
+    pub request_id: Option<String>,
+    pub session_id: Option<String>,
+}
+
 impl BearDogSecurityProvider {
     /// Create a comprehensive audit event
     pub async fn create_audit_event(&mut self, event: AuditEvent) -> BearDogResult<()> {
@@ -49,13 +58,30 @@ impl BearDogSecurityProvider {
         success: bool,
         failure_reason: Option<String>,
     ) -> BearDogResult<()> {
+        self.create_auth_audit_event_with_context(
+            user_id,
+            success,
+            failure_reason,
+            &AuditRequestContext::default(),
+        )
+        .await
+    }
+
+    /// Create audit event for authentication attempts with context
+    pub async fn create_auth_audit_event_with_context(
+        &mut self,
+        user_id: &str,
+        success: bool,
+        failure_reason: Option<String>,
+        context: &AuditRequestContext,
+    ) -> BearDogResult<()> {
         let event = AuditEvent::Authentication {
             user_id: user_id.to_string(),
             success,
             timestamp: Utc::now(),
             failure_reason,
-            ip_address: None, // TODO: Extract from context
-            user_agent: None, // TODO: Extract from context
+            ip_address: context.ip_address.clone(),
+            user_agent: context.user_agent.clone(),
         };
 
         self.create_audit_event(event).await

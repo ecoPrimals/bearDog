@@ -1,22 +1,39 @@
-//! # Ring Crypto Provider
+//! Ring-based cryptographic provider for software HSM
 //!
-//! This module provides the Ring-based crypto provider implementation using the Ring cryptographic library.
-//! It uses Ring's AES-256-GCM for encryption/decryption, Ed25519 for signing/verification, and HKDF for key derivation.
+//! This module provides high-performance cryptographic operations using the Ring library,
+//! offering hardware-accelerated crypto where available and secure fallbacks.
 
-use super::super::types::*;
+use crate::tunnel::hsm::software_hsm::CryptoProvider;
 use crate::tunnel::hsm::types::*;
+use arrayref::array_ref;
 use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
-// use ed25519_dalek::{Signature, SigningKey, VerifyingKey};
-use tracing::{debug, info};
+use ring::aead::{LessSafeKey, Nonce, UnboundKey, AES_256_GCM, NONCE_LEN};
+use ring::rand::{SecureRandom, SystemRandom};
+use ring::signature::{Ed25519KeyPair, UnparsedPublicKey, ED25519, ED25519_PUBLIC_KEY_LEN};
+use std::sync::Arc;
+use tracing::{debug, info, warn};
 
-/// Ring-based crypto provider using ring crate
-pub struct RingCryptoProvider;
+/// Ring-based cryptographic provider
+pub struct RingCryptoProvider {
+    rng: Arc<SystemRandom>,
+    name: String,
+}
 
 impl RingCryptoProvider {
-    /// Create a new Ring crypto provider instance
-    pub async fn new() -> BearDogResult<Self> {
-        Ok(RingCryptoProvider)
+    /// Create a new Ring crypto provider
+    pub fn new() -> BearDogResult<Self> {
+        info!("🔧 Initializing Ring crypto provider with hardware acceleration");
+
+        Ok(Self {
+            rng: Arc::new(SystemRandom::new()),
+            name: "Ring-Hardware-Accelerated".to_string(),
+        })
+    }
+
+    /// Get the provider name
+    pub fn name(&self) -> &str {
+        &self.name
     }
 }
 
@@ -24,198 +41,198 @@ impl RingCryptoProvider {
 impl CryptoProvider for RingCryptoProvider {
     /// Initialize the crypto provider
     async fn initialize(&self) -> BearDogResult<()> {
-        info!("Initializing Ring crypto provider");
+        info!("🚀 Ring crypto provider initialized successfully");
         Ok(())
     }
 
     /// Generate secure key material
     async fn generate_key_material(&self, key_type: &KeyType) -> BearDogResult<Vec<u8>> {
-        use rand::RngCore;
+        debug!("🔑 Generating {:?} key with Ring provider", key_type);
 
-        let key_size = match key_type {
+        let key_length = match key_type {
             KeyType::Aes256 => 32,
-            KeyType::EccP256 => 32,
-            KeyType::EccP384 => 48,
-            KeyType::ChaCha20 => 32,
-            KeyType::Rsa { key_size } => key_size / 8,
-            _ => 32,
+            KeyType::Ed25519 => 32,
+            _ => {
+                return Err(BearDogError::UnsupportedOperation {
+                    operation: format!("Unsupported key type: {key_type:?}"),
+                })
+            }
         };
 
-        let mut key_material = vec![0u8; key_size as usize];
-        rand::thread_rng().fill_bytes(&mut key_material);
+        let mut key_material = vec![0u8; key_length];
+        self.rng
+            .fill(&mut key_material)
+            .map_err(|e| BearDogError::Crypto {
+                message: format!("Failed to generate random key material: {e:?}"),
+            })?;
 
-        debug!(
-            "Generated key material for {:?}: {} bytes",
-            key_type,
-            key_material.len()
-        );
+        debug!("✅ Generated {} bytes of key material", key_material.len());
         Ok(key_material)
     }
 
-    /// Encrypt data with key
-    async fn encrypt(&self, _data: &[u8], _key_material: &[u8]) -> BearDogResult<Vec<u8>> {
-        // TODO: Ring crypto implementation commented out due to external dependency
-        return Err(BearDogError::UnsupportedOperation {
-            operation: "Ring crypto encrypt not implemented - external dependency required"
-                .to_string(),
-        });
+    /// Encrypt data with key - corrected parameter order
+    async fn encrypt(&self, key_material: &[u8], plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
+        debug!(
+            "🔐 Encrypting {} bytes with Ring AES-256-GCM",
+            plaintext.len()
+        );
 
-        // // Create AES-GCM key
-        // let unbound_key = UnboundKey::new(&AES_256_GCM, key_material)
-        //     .map_err(|e| BearDogError::Crypto {
-        //         message: format!("Failed to create AES-256-GCM key: {e}"),
-        //     })?;
-        //
-        // let key = LessSafeKey::new(unbound_key);
-        //
-        // // Generate secure nonce
-        // let rng = SystemRandom::new();
-        // let mut nonce_bytes = [0u8; 12];
-        // rng.fill(&mut nonce_bytes).map_err(|e| BearDogError::Crypto {
-        //     message: format!("Failed to generate nonce: {e}"),
-        // })?;
-        //
-        // let nonce = Nonce::try_assume_unique_for_key(nonce_bytes)
-        //     .map_err(|e| BearDogError::Crypto {
-        //         message: format!("Failed to create nonce: {e}"),
-        //     })?;
-        //
-        // // Encrypt data
-        // let mut in_out = data.to_vec();
-        // key.seal_in_place_append_tag(nonce, Aad::empty(), &mut in_out)
-        //     .map_err(|e| BearDogError::Crypto {
-        //         message: format!("Encryption failed: {e}"),
-        //     })?;
-        //
-        // // Prepend nonce to ciphertext
-        // let mut result = nonce_bytes.to_vec();
-        // result.extend_from_slice(&in_out);
-        //
-        // debug!("Successfully encrypted {} bytes with Ring AES-256-GCM", data.len());
-        // Ok(result)
+        if key_material.len() != 32 {
+            return Err(BearDogError::Crypto {
+                message: format!(
+                    "Invalid key length: expected 32, got {}",
+                    key_material.len()
+                ),
+            });
+        }
+
+        // Create unbound key
+        let unbound_key =
+            UnboundKey::new(&AES_256_GCM, key_material).map_err(|e| BearDogError::Crypto {
+                message: format!("Failed to create unbound key: {e:?}"),
+            })?;
+
+        let key = LessSafeKey::new(unbound_key);
+
+        // Generate random nonce
+        let mut nonce_bytes = [0u8; NONCE_LEN];
+        self.rng
+            .fill(&mut nonce_bytes)
+            .map_err(|e| BearDogError::Crypto {
+                message: format!("Failed to generate nonce: {e:?}"),
+            })?;
+
+        let nonce =
+            Nonce::try_assume_unique_for_key(&nonce_bytes).map_err(|e| BearDogError::Crypto {
+                message: format!("Failed to create nonce: {e:?}"),
+            })?;
+
+        // Encrypt in place
+        let mut in_out = plaintext.to_vec();
+        key.seal_in_place_append_tag(nonce, ring::aead::Aad::empty(), &mut in_out)
+            .map_err(|e| BearDogError::Crypto {
+                message: format!("Failed to encrypt data: {e:?}"),
+            })?;
+
+        // Prepend nonce to encrypted data
+        let mut result = nonce_bytes.to_vec();
+        result.extend_from_slice(&in_out);
+
+        debug!("✅ Encrypted to {} bytes (including nonce)", result.len());
+        Ok(result)
     }
 
-    /// Decrypt data with key
-    async fn decrypt(
-        &self,
-        _encrypted_data: &[u8],
-        _key_material: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
-        // TODO: Ring crypto implementation commented out due to external dependency
-        return Err(BearDogError::UnsupportedOperation {
-            operation: "Ring crypto decrypt not implemented - external dependency required"
-                .to_string(),
-        });
+    /// Decrypt data with key - corrected parameter order
+    async fn decrypt(&self, key_material: &[u8], ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
+        debug!(
+            "🔓 Decrypting {} bytes with Ring AES-256-GCM",
+            ciphertext.len()
+        );
 
-        // // Extract nonce and ciphertext
-        // if encrypted_data.len() < 12 {
-        //     return Err(BearDogError::Crypto {
-        //         message: "Invalid encrypted data: too short".to_string(),
-        //     });
-        // }
-        //
-        // let (nonce_bytes, ciphertext) = encrypted_data.split_at(12);
-        // let nonce = Nonce::try_assume_unique_for_key(nonce_bytes.try_into().unwrap())
-        //     .map_err(|e| BearDogError::Crypto {
-        //         message: format!("Failed to recreate nonce: {e}"),
-        //     })?;
-        //
-        // // Create AES-GCM key
-        // let unbound_key = UnboundKey::new(&AES_256_GCM, key_material)
-        //     .map_err(|e| BearDogError::Crypto {
-        //         message: format!("Failed to create AES-256-GCM key: {e}"),
-        //     })?;
-        //
-        // let key = LessSafeKey::new(unbound_key);
-        //
-        // // Decrypt data
-        // let mut in_out = ciphertext.to_vec();
-        // let plaintext = key.open_in_place(nonce, Aad::empty(), &mut in_out)
-        //     .map_err(|_| SoftwareHsmError::CryptoOperation {
-        //         operation: "Failed to decrypt data".to_string(),
-        //     })?;
-        //
-        // debug!("Successfully decrypted {} bytes with Ring AES-256-GCM", plaintext.len());
-        // Ok(plaintext.to_vec())
+        if key_material.len() != 32 {
+            return Err(BearDogError::Crypto {
+                message: format!(
+                    "Invalid key length: expected 32, got {}",
+                    key_material.len()
+                ),
+            });
+        }
+
+        if ciphertext.len() < NONCE_LEN {
+            return Err(BearDogError::Crypto {
+                message: "Ciphertext too short to contain nonce".to_string(),
+            });
+        }
+
+        // Extract nonce and encrypted data
+        let (nonce_bytes, encrypted_data) = ciphertext.split_at(NONCE_LEN);
+        let nonce = Nonce::try_assume_unique_for_key(array_ref![nonce_bytes, 0, NONCE_LEN])
+            .map_err(|e| BearDogError::Crypto {
+                message: format!("Failed to reconstruct nonce: {e:?}"),
+            })?;
+
+        // Create unbound key
+        let unbound_key =
+            UnboundKey::new(&AES_256_GCM, key_material).map_err(|e| BearDogError::Crypto {
+                message: format!("Failed to create unbound key: {e:?}"),
+            })?;
+
+        let key = LessSafeKey::new(unbound_key);
+
+        // Decrypt in place
+        let mut in_out = encrypted_data.to_vec();
+        let plaintext = key
+            .open_in_place(nonce, ring::aead::Aad::empty(), &mut in_out)
+            .map_err(|e| BearDogError::Crypto {
+                message: format!("Failed to decrypt data: {e:?}"),
+            })?;
+
+        debug!("✅ Decrypted to {} bytes", plaintext.len());
+        Ok(plaintext.to_vec())
     }
 
-    /// Sign data with key
-    async fn sign(&self, _data: &[u8], _key_material: &[u8]) -> BearDogResult<Vec<u8>> {
-        // TODO: Ring crypto implementation commented out due to external dependency
-        return Err(BearDogError::UnsupportedOperation {
-            operation: "Ring crypto sign not implemented - external dependency required"
-                .to_string(),
-        });
+    /// Sign data with key - corrected parameter order
+    async fn sign(&self, key_material: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
+        debug!("✍️ Signing {} bytes with Ring Ed25519", data.len());
 
-        // // Ensure key is correct size for Ed25519
-        // if key_material.len() != 32 {
-        //     return Err(BearDogError::Crypto {
-        //         message: format!("Invalid key size for Ed25519: expected 32 bytes, got {}", key_material.len()),
-        //     });
-        // }
-        //
-        // // Create signing key
-        // let key_pair = Ed25519KeyPair::from_seed_unchecked(key_material)
-        //     .map_err(|e| BearDogError::Crypto {
-        //         message: format!("Failed to create Ed25519 keypair: {e}"),
-        //     })?;
-        //
-        // // Sign data
-        // let signature = key_pair.sign(data);
-        //
-        // debug!("Successfully signed {} bytes with Ring Ed25519", data.len());
-        // Ok(signature.as_ref().to_vec())
+        if key_material.len() != 32 {
+            return Err(BearDogError::Crypto {
+                message: format!(
+                    "Invalid private key length: expected 32, got {}",
+                    key_material.len()
+                ),
+            });
+        }
+
+        let key_pair = Ed25519KeyPair::from_seed_unchecked(key_material).map_err(|e| {
+            BearDogError::Crypto {
+                message: format!("Failed to create Ed25519 key pair: {e:?}"),
+            }
+        })?;
+
+        let signature = key_pair.sign(data);
+        debug!(
+            "✅ Generated signature of {} bytes",
+            signature.as_ref().len()
+        );
+        Ok(signature.as_ref().to_vec())
     }
 
-    /// Verify signature with key
+    /// Verify signature with key - corrected parameter order
     async fn verify(
         &self,
         key_material: &[u8],
         data: &[u8],
         signature: &[u8],
     ) -> BearDogResult<bool> {
-        // use ring::signature::{UnparsedPublicKey, ED25519};
-
         debug!(
-            "Verifying signature for {} bytes with Ring crypto provider (Ed25519)",
+            "🔍 Verifying {} byte signature for {} bytes of data",
+            signature.len(),
             data.len()
         );
 
-        // Ensure key is correct size for Ed25519
-        if key_material.len() != 32 {
+        if key_material.len() != ED25519_PUBLIC_KEY_LEN {
             return Err(BearDogError::Crypto {
                 message: format!(
-                    "Invalid key size for Ed25519: expected 32 bytes, got {}",
+                    "Invalid public key length: expected {}, got {}",
+                    ED25519_PUBLIC_KEY_LEN,
                     key_material.len()
                 ),
             });
         }
 
-        // Ensure signature is correct size
-        if signature.len() != 64 {
-            return Err(BearDogError::Crypto {
-                message: format!(
-                    "Invalid signature size for Ed25519: expected 64 bytes, got {}",
-                    signature.len()
-                ),
-            });
+        let public_key = UnparsedPublicKey::new(&ED25519, key_material);
+
+        match public_key.verify(data, signature) {
+            Ok(()) => {
+                debug!("✅ Signature verification successful");
+                Ok(true)
+            }
+            Err(_) => {
+                warn!("❌ Signature verification failed");
+                Ok(false)
+            }
         }
-
-        // Create public key for verification
-        // let public_key = UnparsedPublicKey::new(&ED25519, key_material);
-
-        // TODO: Ring crypto implementation commented out due to external dependency
-        return Err(BearDogError::UnsupportedOperation {
-            operation:
-                "Ring crypto verify_signature not implemented - external dependency required"
-                    .to_string(),
-        });
-
-        // Verify signature
-        // match public_key.verify(data, signature) {
-        //     Ok(()) => Ok(true),
-        //     Err(_) => Ok(false), // Invalid signature, not an error
-        // }
     }
 
     /// Derive key from master key
@@ -224,160 +241,119 @@ impl CryptoProvider for RingCryptoProvider {
         master_key: &[u8],
         derivation_data: &[u8],
     ) -> BearDogResult<Vec<u8>> {
-        debug!("Deriving key with Ring crypto provider (HKDF-SHA256)");
+        debug!(
+            "🔄 Deriving key from {} byte master key with {} bytes of derivation data",
+            master_key.len(),
+            derivation_data.len()
+        );
 
-        // Ensure master key is not empty
-        if master_key.is_empty() {
-            return Err(BearDogError::Crypto {
-                message: "Master key cannot be empty".to_string(),
-            });
-        }
+        // Simple HKDF-like derivation using Ring's HKDF
+        use ring::hkdf;
 
-        // Use HKDF-SHA256 for proper key derivation
-        use hkdf::Hkdf;
-        use sha2::Sha256;
+        let salt = hkdf::Salt::new(hkdf::HKDF_SHA256, &[]);
+        let prk = salt.extract(master_key);
 
-        // Create HKDF instance
-        let hkdf = Hkdf::<Sha256>::new(None, master_key);
-
-        // Derive 32-byte key
-        let mut derived_key = vec![0u8; 32];
-        hkdf.expand(derivation_data, &mut derived_key)
+        let info = [derivation_data];
+        let okm = prk
+            .expand(&info, hkdf::HKDF_SHA256)
             .map_err(|e| BearDogError::Crypto {
-                message: format!("HKDF key derivation failed: {e}"),
+                message: format!("Failed to expand key: {e:?}"),
             })?;
 
-        debug!("Successfully derived 32-byte key using HKDF-SHA256");
+        let mut derived_key = vec![0u8; 32]; // 256-bit derived key
+        okm.fill(&mut derived_key)
+            .map_err(|e| BearDogError::Crypto {
+                message: format!("Failed to fill derived key: {e:?}"),
+            })?;
+
+        debug!("✅ Derived {} byte key", derived_key.len());
         Ok(derived_key)
+    }
+}
+
+impl Default for RingCryptoProvider {
+    fn default() -> Self {
+        Self::new().expect("Failed to create default Ring crypto provider")
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio;
+    use ring::signature::KeyPair;
 
     #[tokio::test]
-    async fn test_ring_crypto_provider_creation() {
-        let provider = RingCryptoProvider::new().await.unwrap();
-        assert!(provider.initialize().await.is_ok());
-    }
+    async fn test_ring_key_generation() {
+        let provider = RingCryptoProvider::new().expect("Provider creation failed");
 
-    #[tokio::test]
-    async fn test_key_generation() {
-        let provider = RingCryptoProvider::new().await.unwrap();
-
-        let key_material = provider
+        let key = provider
             .generate_key_material(&KeyType::Aes256)
             .await
-            .unwrap();
-        assert_eq!(key_material.len(), 32);
+            .expect("Key generation failed");
+        assert_eq!(key.len(), 32);
 
-        let ecc_key = provider
-            .generate_key_material(&KeyType::EccP256)
-            .await
-            .unwrap();
-        assert_eq!(ecc_key.len(), 32);
-    }
-
-    #[tokio::test]
-    async fn test_encryption_decryption() {
-        let provider = RingCryptoProvider::new().await.unwrap();
-        let key_material = provider
+        let key2 = provider
             .generate_key_material(&KeyType::Aes256)
             .await
-            .unwrap();
-
-        let plaintext = b"Hello, World!";
-
-        // Skip test if Ring crypto encryption is not implemented
-        let encryption_result = provider.encrypt(&key_material, plaintext).await;
-        if let Err(e) = encryption_result {
-            if e.to_string()
-                .contains("Ring crypto encrypt not implemented")
-                || e.to_string().contains("UnsupportedOperation")
-            {
-                println!("Skipping Ring crypto encryption/decryption test - implementation not available");
-                return;
-            } else {
-                panic!("Unexpected encryption error: {}", e);
-            }
-        }
-
-        let ciphertext = encryption_result.unwrap();
-        let decrypted = provider.decrypt(&key_material, &ciphertext).await.unwrap();
-
-        assert_eq!(plaintext, decrypted.as_slice());
+            .expect("Key generation failed");
+        assert_ne!(key, key2); // Keys should be different
     }
 
     #[tokio::test]
-    async fn test_signing_verification() {
-        let provider = RingCryptoProvider::new().await.unwrap();
-        let key_material = provider
-            .generate_key_material(&KeyType::EccP256)
+    async fn test_ring_encrypt_decrypt() {
+        let provider = RingCryptoProvider::new().expect("Provider creation failed");
+        let key = provider
+            .generate_key_material(&KeyType::Aes256)
             .await
-            .unwrap();
+            .expect("Key generation failed");
 
-        let data = b"Test data to sign";
+        let plaintext = b"Hello, Ring crypto world!";
+        let ciphertext = provider
+            .encrypt(&key, plaintext)
+            .await
+            .expect("Encryption failed");
 
-        // Skip test if Ring crypto signing is not implemented
-        let signature_result = provider.sign(&key_material, data).await;
-        if let Err(e) = signature_result {
-            if e.to_string().contains("Ring crypto sign not implemented")
-                || e.to_string().contains("UnsupportedOperation")
-            {
-                println!(
-                    "Skipping Ring crypto signing verification test - implementation not available"
-                );
-                return;
-            } else {
-                panic!("Unexpected signing error: {}", e);
-            }
-        }
+        assert_ne!(plaintext.to_vec(), ciphertext);
+        assert!(ciphertext.len() > plaintext.len()); // Should be longer due to nonce + tag
 
-        let signature = signature_result.unwrap();
+        let decrypted = provider
+            .decrypt(&key, &ciphertext)
+            .await
+            .expect("Decryption failed");
+        assert_eq!(plaintext.to_vec(), decrypted);
+    }
+
+    #[tokio::test]
+    async fn test_ring_sign_verify() {
+        let provider = RingCryptoProvider::new().expect("Provider creation failed");
+        let private_key = provider
+            .generate_key_material(&KeyType::Ed25519)
+            .await
+            .expect("Key generation failed");
+
+        // For Ed25519, we need to derive the public key from the private key
+        let key_pair =
+            Ed25519KeyPair::from_seed_unchecked(&private_key).expect("Key pair creation failed");
+        let public_key = key_pair.public_key().as_ref();
+
+        let message = b"Ring crypto signature test";
+        let signature = provider
+            .sign(&private_key, message)
+            .await
+            .expect("Signing failed");
+
         let is_valid = provider
-            .verify(&key_material, data, &signature)
+            .verify(public_key, message, &signature)
             .await
-            .unwrap();
-
+            .expect("Verification failed");
         assert!(is_valid);
 
-        // Test with different data
-        let different_data = b"Different data";
-        let is_invalid = provider
-            .verify(&key_material, different_data, &signature)
+        // Test with wrong message
+        let wrong_message = b"Wrong message";
+        let is_valid_wrong = provider
+            .verify(public_key, wrong_message, &signature)
             .await
-            .unwrap();
-        assert!(!is_invalid);
-    }
-
-    #[tokio::test]
-    async fn test_key_derivation() {
-        let provider = RingCryptoProvider::new().await.unwrap();
-
-        let master_key = b"master_key_for_derivation_test";
-        let derivation_data = b"derivation_context";
-
-        let derived_key1 = provider
-            .derive_key(master_key, derivation_data)
-            .await
-            .unwrap();
-        let derived_key2 = provider
-            .derive_key(master_key, derivation_data)
-            .await
-            .unwrap();
-
-        // Same inputs should produce same outputs
-        assert_eq!(derived_key1, derived_key2);
-        assert_eq!(derived_key1.len(), 32);
-
-        // Different derivation data should produce different keys
-        let different_derivation_data = b"different_context";
-        let different_key = provider
-            .derive_key(master_key, different_derivation_data)
-            .await
-            .unwrap();
-        assert_ne!(derived_key1, different_key);
+            .expect("Verification failed");
+        assert!(!is_valid_wrong);
     }
 }

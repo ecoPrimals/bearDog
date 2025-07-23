@@ -275,7 +275,7 @@ impl EcosystemStorageService {
 
         match request.operation {
             FileOperation::Read => {
-                if let Some(data) = tokio::fs::read(&request.source_path).await.ok() {
+                if let Ok(data) = tokio::fs::read(&request.source_path).await {
                     Ok(FileOperationResult {
                         success: true,
                         data: Some(data),

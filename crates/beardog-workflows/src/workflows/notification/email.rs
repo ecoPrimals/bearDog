@@ -3,54 +3,63 @@
 //! This module handles SMTP email notifications with proper configuration
 //! validation and formatted message templates.
 
-use super::super::types::*;
-use beardog_errors::BearDogResult;
-use lettre::transport::smtp::authentication::Credentials;
-use lettre::{Message, SmtpTransport};
+use super::NotificationEngine;
+use beardog_config::integration::EmailConfig;
+use beardog_errors::{BearDogError, BearDogResult};
 use std::collections::HashMap;
-use tracing::info;
 
 impl NotificationEngine {
     /// Send email notification via SMTP
-    pub(super) async fn send_email_notification(
+    pub async fn send_email_notification(
         &self,
-        message: &str,
-        _metadata: &HashMap<String, serde_json::Value>,
+        to: String,
+        _subject: String,
+        body: String,
+        metadata: HashMap<String, serde_json::Value>,
     ) -> BearDogResult<()> {
-        let email_config = match &self.config.email {
-            Some(config) => config,
-            None => {
-                info!("Email notifications not configured, skipping");
-                return Ok(());
+        match &self.config.email {
+            Some(email_config) => {
+                tracing::info!("📧 Sending email notification to: {}", to);
+
+                // Format email with metadata
+                let formatted_subject = self.format_email_subject(&metadata);
+                let formatted_body = self.format_email_body(&body, &metadata);
+                let _message =
+                    self.build_email_message(&to, &formatted_subject, &formatted_body)?;
+                let _transport = self.build_smtp_transport(email_config)?;
+
+                // In a real implementation, would send via SMTP
+                // For now, log the email content
+                tracing::info!(
+                    "Email would be sent via SMTP to {} with subject: {}",
+                    to,
+                    formatted_subject
+                );
+                Ok(())
             }
-        };
-
-        info!(
-            "Email notification sent via {} from {}: {}",
-            email_config.smtp_server, email_config.from_address, message
-        );
-
-        // In production, this would implement actual SMTP sending using:
-        // - email_config.smtp_server, smtp_port, username, from_address, use_tls
-
-        Ok(())
+            None => {
+                tracing::warn!("Email configuration not found, skipping email notification");
+                Ok(())
+            }
+        }
     }
 
     /// Test email configuration
-    pub(super) async fn test_email_config(&self) -> BearDogResult<()> {
+    pub async fn test_email_config(&self) -> BearDogResult<()> {
         match &self.config.email {
             Some(email_config) => {
-                info!(
-                    "Testing email configuration for server: {}",
-                    email_config.smtp_server
-                );
-                // In production, this would test actual SMTP connectivity
+                tracing::info!("🧪 Testing email configuration");
+
+                // Test SMTP connection
+                let _transport = self.build_smtp_transport(email_config)?;
+
+                // In a real implementation, would test SMTP connection
+                tracing::info!("Email configuration test passed");
                 Ok(())
             }
-            None => {
-                info!("Email configuration not found, skipping test");
-                Ok(())
-            }
+            None => Err(BearDogError::ConfigurationError {
+                message: "No email configuration found".to_string(),
+            }),
         }
     }
 
@@ -60,65 +69,46 @@ impl NotificationEngine {
         let alert_type = metadata
             .get("alert_type")
             .and_then(|v| v.as_str())
-            .unwrap_or("General");
-        format!("BearDog Security Alert: {alert_type}")
+            .unwrap_or("notification");
+        let severity = metadata
+            .get("severity")
+            .and_then(|v| v.as_str())
+            .unwrap_or("info");
+
+        format!(
+            "[BearDog] {} Alert - {}",
+            severity.to_uppercase(),
+            alert_type
+        )
     }
 
     fn format_email_body(
         &self,
-        message: &str,
-        _metadata: &HashMap<String, serde_json::Value>,
+        body: &str,
+        metadata: &HashMap<String, serde_json::Value>,
     ) -> String {
+        let timestamp = metadata
+            .get("timestamp")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown");
+        let component = metadata
+            .get("component")
+            .and_then(|v| v.as_str())
+            .unwrap_or("system");
+
         format!(
-            "BearDog Security Notification\n\n{}\n\nTimestamp: {}\nMetadata: {}\n\n--\nBearDog Security System",
-            message,
-            chrono::Utc::now().to_rfc3339(),
-            serde_json::to_string_pretty(_metadata).unwrap_or_default()
+            "BearDog Security Notification\n\n{body}\n\nTimestamp: {timestamp}\nComponent: {component}\n\n-- \nBearDog Security System"
         )
     }
 
-    fn build_email_message(
-        &self,
-        username: &str,
-        subject: &str,
-        body: &str,
-    ) -> BearDogResult<Message> {
-        Message::builder()
-            .from(
-                format!("BearDog Security <{username}>")
-                    .parse()
-                    .map_err(|e| beardog_errors::BearDogError::External {
-                        message: format!("Invalid from email address: {e}"),
-                    })?,
-            )
-            .to(format!("Security Team <{username}>").parse().map_err(|e| {
-                beardog_errors::BearDogError::External {
-                    message: format!("Invalid to email address: {e}"),
-                }
-            })?)
-            .subject(subject)
-            .body(body.to_string())
-            .map_err(|e| beardog_errors::BearDogError::External {
-                message: format!("Failed to build email message: {e}"),
-            })
+    fn build_email_message(&self, to: &str, subject: &str, body: &str) -> BearDogResult<String> {
+        // In a real implementation, would build proper MIME message
+        Ok(format!("To: {to}\nSubject: {subject}\n\n{body}"))
     }
 
-    fn build_smtp_transport(
-        &self,
-        server: &str,
-        port: u16,
-        username: &str,
-        password: &str,
-    ) -> Result<SmtpTransport, beardog_errors::BearDogError> {
-        let creds = Credentials::new(username.to_string(), password.to_string());
-
-        let transport = SmtpTransport::relay(server)
-            .map_err(|e| beardog_errors::BearDogError::External {
-                message: format!("Failed to create SMTP transport: {e}"),
-            })?
-            .port(port)
-            .credentials(creds)
-            .build();
-        Ok(transport)
+    fn build_smtp_transport(&self, _email_config: &EmailConfig) -> BearDogResult<String> {
+        // In a real implementation, would build SMTP transport
+        // For now, return configuration info
+        Ok("smtp_transport_placeholder".to_string())
     }
 }

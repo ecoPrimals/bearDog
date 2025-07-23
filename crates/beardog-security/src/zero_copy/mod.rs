@@ -28,8 +28,10 @@ pub struct ZeroCopyCrypto {
     /// Operation statistics
     stats: ZeroCryptoStats,
     /// Configuration
+    #[allow(dead_code)] // Will be used when zero-copy optimizations are implemented
     config: ZeroCopyConfig,
     /// BearDog crypto utility
+    #[allow(dead_code)] // Will be used when zero-copy optimizations are implemented
     crypto: Arc<BearDogCrypto>,
 }
 
@@ -133,7 +135,7 @@ impl ZeroCopyCrypto {
         key_id: &str,
         algorithm: &str,
     ) -> BearDogResult<EncryptionContext> {
-        let cache_key = format!("{}-{}", key_id, algorithm);
+        let cache_key = format!("{key_id}-{algorithm}");
 
         {
             let contexts = self.encryption_contexts.lock().await;
@@ -149,10 +151,7 @@ impl ZeroCopyCrypto {
         let key_material = if key_id.is_empty() {
             // Generate new key material for empty key_id
             crate::crypto_utils::BearDogCrypto::secure_random_bytes(32).map_err(|e| {
-                std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Failed to generate key material: {}", e),
-                )
+                std::io::Error::other(format!("Failed to generate key material: {e}"))
             })?
         } else {
             // Derive key material from key_id using SHA-256 based derivation

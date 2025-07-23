@@ -3,6 +3,7 @@
 //! This crate provides the main BearDog orchestration engine and core functionality.
 
 pub mod biome_yaml_parser;
+pub mod context_aware_licensing;
 pub mod core;
 pub mod ecosystem_integration;
 pub mod ecosystem_simple;
@@ -27,9 +28,7 @@ pub use crate::biome_yaml_parser::{
     PrimalConfig, PrimalResourceRequirements, ServiceDefinition,
 };
 pub use crate::core::BearDogCore;
-pub use crate::ecosystem_integration::{
-    BearDogEcosystemProvider, EcosystemIntegration, EcosystemRequest, EcosystemResponse,
-};
+pub use crate::ecosystem_integration::{EcosystemRequest, EcosystemResponse};
 pub use crate::ecosystem_simple::BearDogEcosystemProvider as SimpleBearDogEcosystemProvider;
 pub use crate::ecosystem_storage::{
     AuditConfig, EcosystemDataStore, EcosystemStorageConfig, EcosystemStorageService,
@@ -55,7 +54,7 @@ pub use crate::universal_primal_provider::{
     EcosystemRole, PrimalCapability, PrimalIdentity, PrimalMetadata, PrimalService, PrimalType,
     SecurityContext, ServiceContext, ServiceEndpoint, ServiceHealth, UniversalPrimalProvider,
 };
-pub use beardog_adapters::BearDogEcosystemIntegration;
+pub use beardog_adapters::EcosystemIntegration;
 
 // Core traits and types
 #[async_trait]

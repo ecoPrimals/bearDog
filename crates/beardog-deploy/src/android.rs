@@ -39,7 +39,7 @@ impl AndroidManager {
         info!("✅ Rust toolchain available");
 
         // Check Android NDK
-        self.check_ndk().await?;
+        self.check_ndk()?;
         info!("✅ Android NDK available");
 
         // Check cargo-ndk
@@ -62,7 +62,7 @@ impl AndroidManager {
         info!("✅ Android target added");
 
         // Setup NDK environment variables
-        self.setup_ndk_environment().await?;
+        self.setup_ndk_environment()?;
         info!("✅ NDK environment configured");
 
         Ok(())
@@ -85,7 +85,7 @@ impl AndroidManager {
         Ok(())
     }
 
-    async fn check_ndk(&self) -> Result<()> {
+    fn check_ndk(&self) -> Result<()> {
         let ndk_home = self
             .ndk_home
             .as_ref()
@@ -209,7 +209,7 @@ impl AndroidManager {
         Ok(())
     }
 
-    async fn setup_ndk_environment(&self) -> Result<()> {
+    fn setup_ndk_environment(&self) -> Result<()> {
         let ndk_home = self
             .ndk_home
             .as_ref()

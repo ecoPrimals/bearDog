@@ -291,26 +291,26 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
         // This would typically use UDP multicast or known discovery endpoints
         let mut discovered_meshes = Vec::new();
 
-        // Try common service mesh discovery patterns
-        let discovery_endpoints = vec![
-            "http://localhost:3000", // Songbird default
-            beardog_config::constants::endpoints::DEFAULT_LOCALHOST_URL, // Alternative port
-            "http://service-mesh:3000", // Container name
-            "https://mesh.local",    // Local mesh
-        ];
+        // Use ecosystem configuration
+        let host: String = std::env::var("BEARDOG_HOST")
+            .unwrap_or_else(|_| "service-mesh.ecosystem.internal".to_string());
+        let port: u16 = std::env::var("BEARDOG_PORT")
+            .unwrap_or_else(|_| beardog_config::constants::network::DEFAULT_HTTPS_PORT.to_string())
+            .parse()
+            .unwrap_or(beardog_config::constants::network::DEFAULT_HTTPS_PORT);
 
-        for endpoint in discovery_endpoints {
-            match self.probe_service_mesh(endpoint).await {
-                Ok(mesh_info) => {
-                    info!(
-                        "✅ Discovered service mesh: {} at {}",
-                        mesh_info.name, endpoint
-                    );
-                    discovered_meshes.push(mesh_info);
-                }
-                Err(e) => {
-                    debug!("⚠️ No service mesh at {}: {}", endpoint, e);
-                }
+        let discovery_endpoint = format!("https://{host}:{port}");
+
+        match self.probe_service_mesh(&discovery_endpoint).await {
+            Ok(mesh_info) => {
+                info!(
+                    "✅ Discovered service mesh: {} at {}",
+                    mesh_info.name, discovery_endpoint
+                );
+                discovered_meshes.push(mesh_info);
+            }
+            Err(e) => {
+                debug!("⚠️ No service mesh at {}: {}", discovery_endpoint, e);
             }
         }
 
@@ -881,8 +881,9 @@ impl Default for ServiceEndpoint {
     fn default() -> Self {
         Self {
             protocol: "https".to_string(),
-            host: "localhost".to_string(),
-            port: 443,
+            // Use internal service mesh naming instead of localhost
+            host: "service.ecosystem.internal".to_string(),
+            port: 8443,
             path: "/".to_string(),
         }
     }

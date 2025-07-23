@@ -44,8 +44,12 @@ pub mod validation;
 
 /// Production deployment and operations manager
 ///
-/// Central manager for production deployments, providing comprehensive
-/// management capabilities for deployment, monitoring, and operations.
+/// **LOCAL NODE COORDINATOR** for production deployments, providing comprehensive
+/// management capabilities for local deployment, monitoring, and operations.
+/// 
+/// **HUMAN SCALE DECENTRALIZED CRYPTO**: This manager coordinates services within
+/// a single BearDog node only. It does not make decisions that affect other nodes
+/// or act as a centralized authority. Each node runs its own ProductionManager.
 pub struct ProductionManager {
     config: ProductionConfig,
     monitoring: Arc<MonitoringService>,

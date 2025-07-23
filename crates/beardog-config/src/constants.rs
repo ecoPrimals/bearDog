@@ -3,6 +3,61 @@
 //! This module contains all hardcoded values extracted into named constants
 //! to make them configurable and maintainable.
 
+/// Default configuration constants for BearDog
+/// These can be overridden via environment variables
+/// Default database hosts (configurable via environment)
+pub const DEFAULT_DATABASE_HOSTS: &[&str] = &[
+    "beardog-db", // Docker/K8s service name
+    "database",   // Alternative service name
+    "localhost",  // Local development fallback
+];
+
+/// Default API bind addresses (configurable via BEARDOG_API_BIND_ADDRESS)
+pub const DEFAULT_API_BIND_ADDRESS: &str = "0.0.0.0:8080";
+
+/// Default metrics bind address (configurable via BEARDOG_METRICS_BIND_ADDRESS)
+pub const DEFAULT_METRICS_BIND_ADDRESS: &str = "0.0.0.0:9090";
+
+/// Default health check bind address (configurable via BEARDOG_HEALTH_BIND_ADDRESS)  
+pub const DEFAULT_HEALTH_BIND_ADDRESS: &str = "0.0.0.0:8088";
+
+/// Default admin bind address (configurable via BEARDOG_ADMIN_BIND_ADDRESS)
+pub const DEFAULT_ADMIN_BIND_ADDRESS: &str = "127.0.0.1:9999";
+
+/// Default peer-to-peer discovery ports
+pub const DEFAULT_P2P_DISCOVERY_PORT: u16 = 7777;
+
+/// Get database host from environment or default
+pub fn get_database_host() -> String {
+    std::env::var("BEARDOG_DATABASE_HOST")
+        .or_else(|_| std::env::var("DATABASE_HOST"))
+        .unwrap_or_else(|_| DEFAULT_DATABASE_HOSTS[0].to_string())
+}
+
+/// Get API bind address from environment or default
+pub fn get_api_bind_address() -> String {
+    std::env::var("BEARDOG_API_BIND_ADDRESS")
+        .unwrap_or_else(|_| DEFAULT_API_BIND_ADDRESS.to_string())
+}
+
+/// Get metrics bind address from environment or default  
+pub fn get_metrics_bind_address() -> String {
+    std::env::var("BEARDOG_METRICS_BIND_ADDRESS")
+        .unwrap_or_else(|_| DEFAULT_METRICS_BIND_ADDRESS.to_string())
+}
+
+/// Get health check bind address from environment or default
+pub fn get_health_bind_address() -> String {
+    std::env::var("BEARDOG_HEALTH_BIND_ADDRESS")
+        .unwrap_or_else(|_| DEFAULT_HEALTH_BIND_ADDRESS.to_string())
+}
+
+/// Get admin bind address from environment or default
+pub fn get_admin_bind_address() -> String {
+    std::env::var("BEARDOG_ADMIN_BIND_ADDRESS")
+        .unwrap_or_else(|_| DEFAULT_ADMIN_BIND_ADDRESS.to_string())
+}
+
 /// Network configuration constants
 pub mod network {
     /// Default SongBird endpoint
@@ -33,11 +88,18 @@ pub mod network {
     /// Default API port for REST API endpoints
     pub const DEFAULT_API_PORT: u16 = 8080;
 
-    /// Default host
+    /// Default host (configurable via BEARDOG_DEFAULT_HOST)
     pub const DEFAULT_HOST: &str = "localhost";
 
     /// Default bind address
     pub const DEFAULT_BIND_ADDRESS: &str = "0.0.0.0";
+
+    /// Get default host from environment or fallback to localhost
+    pub fn get_default_host() -> String {
+        std::env::var("BEARDOG_DEFAULT_HOST")
+            .or_else(|_| std::env::var("DEFAULT_HOST"))
+            .unwrap_or_else(|_| DEFAULT_HOST.to_string())
+    }
 
     /// Trusted IP ranges
     pub const TRUSTED_IP_RANGES: &[&str] = &[
@@ -80,26 +142,44 @@ pub mod endpoints {
     /// Default SMTP port
     pub const DEFAULT_SMTP_PORT: u16 = 587;
 
-    /// Default localhost URL with port
-    pub const DEFAULT_LOCALHOST_URL: &str = "http://localhost:8080";
+    /// Get runtime-configurable base URL
+    pub fn get_base_url() -> String {
+        std::env::var("BEARDOG_BASE_URL")
+            .unwrap_or_else(|_| "https://beardog.ecosystem.internal:8443".to_string())
+    }
 
-    /// Default webhook URL
-    pub const DEFAULT_WEBHOOK_URL: &str = "http://localhost:8080/webhook";
+    /// Get runtime-configurable webhook URL
+    pub fn get_webhook_url() -> String {
+        std::env::var("BEARDOG_WEBHOOK_URL")
+            .unwrap_or_else(|_| format!("{}/webhook", get_base_url()))
+    }
 
-    /// Default health URL
-    pub const DEFAULT_HEALTH_URL: &str = "http://localhost:8080/health";
+    /// Get runtime-configurable health URL
+    pub fn get_health_url() -> String {
+        std::env::var("BEARDOG_HEALTH_URL").unwrap_or_else(|_| format!("{}/health", get_base_url()))
+    }
 
-    /// Default metrics URL
-    pub const DEFAULT_METRICS_URL: &str = "http://localhost:8080/metrics";
+    /// Get runtime-configurable metrics URL
+    pub fn get_metrics_url() -> String {
+        std::env::var("BEARDOG_METRICS_URL")
+            .unwrap_or_else(|_| format!("{}/metrics", get_base_url()))
+    }
 
-    /// Default admin URL
-    pub const DEFAULT_ADMIN_URL: &str = "http://localhost:8080/admin";
+    /// Get runtime-configurable admin URL
+    pub fn get_admin_url() -> String {
+        std::env::var("BEARDOG_ADMIN_URL").unwrap_or_else(|_| format!("{}/admin", get_base_url()))
+    }
 
-    /// Default listen address
-    pub const DEFAULT_LISTEN_ADDRESS: &str = "localhost:8080";
+    /// Get runtime-configurable listen address
+    pub fn get_listen_address() -> String {
+        std::env::var("BEARDOG_LISTEN_ADDRESS").unwrap_or_else(|_| "0.0.0.0:8443".to_string())
+        // Use 0.0.0.0 for container deployments
+    }
 
-    /// Default API endpoint
-    pub const DEFAULT_API_ENDPOINT: &str = "http://localhost:8080";
+    /// Get runtime-configurable API endpoint
+    pub fn get_api_endpoint() -> String {
+        std::env::var("BEARDOG_API_ENDPOINT").unwrap_or_else(|_| get_base_url())
+    }
 
     /// Default SongBird endpoint
     pub const DEFAULT_SONGBIRD_ENDPOINT: &str = "https://songbird.ecosystem.internal";

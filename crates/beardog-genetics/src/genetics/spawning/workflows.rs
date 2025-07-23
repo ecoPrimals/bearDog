@@ -4,13 +4,12 @@
 //! validation and approval processes.
 
 use beardog_errors::BearDogResult;
-use std::collections::HashMap;
+
 use tracing::{debug, info};
 
 // Import types from parent module
 use super::engine::GeneticSpawningEngine;
 use super::types::{SpawnRequest, SpawnResult};
-use beardog_auth::auth::BearDogGenetics;
 
 /// Process automated consensus workflow
 pub async fn process_automated_consensus(

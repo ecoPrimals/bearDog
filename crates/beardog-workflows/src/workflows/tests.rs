@@ -61,6 +61,7 @@ mod unit_tests {
             metadata: std::collections::HashMap::new(),
             timeout_duration: Some(chrono::Duration::hours(24)),
             properties: std::collections::HashMap::new(),
+            parameters: std::collections::HashMap::new(),
             approvals: vec![],
             audit_trail: vec![],
         };
@@ -106,8 +107,10 @@ mod unit_tests {
     /// Test notification engine
     #[tokio::test]
     async fn test_notification_engine() {
-        let config = NotificationConfig::default();
-        let engine = NotificationEngine::new(config);
+        let _config = NotificationConfig::default();
+        let engine = crate::workflows::notification::NotificationEngine::new(
+            beardog_config::integration::NotificationConfig::default(),
+        );
 
         let workflow = create_test_workflow();
 
@@ -190,7 +193,8 @@ mod unit_tests {
             description: "Test workflow for processor testing".to_string(),
             metadata: std::collections::HashMap::new(),
             timeout_duration: Some(chrono::Duration::hours(24)),
-            properties: parameters,
+            properties: parameters.clone(),
+            parameters,
             approvals: vec![],
             audit_trail: vec![],
         }

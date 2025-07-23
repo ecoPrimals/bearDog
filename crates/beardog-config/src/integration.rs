@@ -44,9 +44,11 @@ pub struct NotificationConfig {
     /// Enable notifications
     pub enabled: bool,
     /// Email notification settings
-    pub email: EmailConfig,
+    pub email: Option<EmailConfig>,
     /// Webhook notification settings
-    pub webhook: WebhookConfig,
+    pub webhook: Option<WebhookConfig>,
+    /// Slack notification settings
+    pub slack: Option<SlackNotificationConfig>,
 }
 
 /// Email notification configuration
@@ -64,6 +66,8 @@ pub struct EmailConfig {
     pub password: String,
     /// From address
     pub from_address: String,
+    /// Use TLS
+    pub use_tls: bool,
 }
 
 /// Webhook notification configuration
@@ -76,6 +80,21 @@ pub struct WebhookConfig {
     /// Authentication token
     pub auth_token: Option<String>,
     /// Timeout for webhook requests
+    pub timeout: Duration,
+}
+
+/// Slack notification configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SlackNotificationConfig {
+    /// Enable Slack notifications
+    pub enabled: bool,
+    /// Slack webhook URL
+    pub webhook_url: String,
+    /// Default channel for notifications
+    pub default_channel: String,
+    /// Bot token for Slack API
+    pub bot_token: Option<String>,
+    /// Timeout for Slack requests
     pub timeout: Duration,
 }
 
@@ -210,6 +229,7 @@ impl Default for EmailConfig {
             username: "".to_string(),
             password: "".to_string(),
             from_address: "noreply@beardog.local".to_string(),
+            use_tls: true,
         }
     }
 }
@@ -220,6 +240,18 @@ impl Default for WebhookConfig {
             enabled: false,
             url: "".to_string(),
             auth_token: None,
+            timeout: Duration::from_secs(10),
+        }
+    }
+}
+
+impl Default for SlackNotificationConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            webhook_url: "".to_string(),
+            default_channel: "general".to_string(),
+            bot_token: None,
             timeout: Duration::from_secs(10),
         }
     }

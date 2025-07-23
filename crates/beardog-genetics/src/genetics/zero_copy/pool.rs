@@ -44,7 +44,13 @@ impl GeneticsPool {
 
     /// Get genetics from the reuse pool
     pub async fn get_genetics(&self) -> Option<BearDogGenetics> {
-        let mut pool = self.genetics_pool.write().unwrap();
+        let mut pool = match self.genetics_pool.write() {
+            Ok(pool) => pool,
+            Err(_) => {
+                tracing::error!("Failed to acquire write lock on genetics pool");
+                return None;
+            }
+        };
 
         if let Some(genetics) = pool.pop() {
             self.stats.genetics_reused.fetch_add(1, Ordering::Relaxed);
@@ -65,7 +71,13 @@ impl GeneticsPool {
         genetics.mutations.clear();
 
         // Add genetics back to pool if not full
-        let mut pool = self.genetics_pool.write().unwrap();
+        let mut pool = match self.genetics_pool.write() {
+            Ok(pool) => pool,
+            Err(_) => {
+                tracing::error!("Failed to acquire write lock on genetics pool for recycling");
+                return; // Fail gracefully by not recycling
+            }
+        };
         if pool.len() < self.stats.pool_capacity && pool.len() < 100 {
             pool.push(genetics);
             self.stats.genetics_reused.fetch_add(1, Ordering::Relaxed);
@@ -74,7 +86,13 @@ impl GeneticsPool {
 
     /// Get chromosomes from the reuse pool
     pub async fn get_chromosomes(&self) -> Option<Vec<CryptoChromosome>> {
-        let mut pool = self.chromosome_pool.write().unwrap();
+        let mut pool = match self.chromosome_pool.write() {
+            Ok(pool) => pool,
+            Err(poisoned) => {
+                tracing::warn!("Chromosome pool mutex poisoned, recovering gracefully");
+                poisoned.into_inner()
+            }
+        };
 
         if let Some(chromosomes) = pool.pop() {
             self.stats
@@ -88,7 +106,10 @@ impl GeneticsPool {
 
     /// Get capabilities from the reuse pool
     pub async fn get_capabilities(&self) -> Option<Vec<NodeCapability>> {
-        let mut pool = self.capability_pool.write().unwrap();
+        let mut pool = self
+            .capability_pool
+            .write()
+            .expect("Genetics capability pool lock is poisoned - this indicates a critical bug");
         if let Some(capabilities) = pool.pop() {
             self.stats
                 .capabilities_reused
@@ -105,7 +126,13 @@ impl GeneticsPool {
     /// Return chromosome vector to pool
     pub async fn return_chromosomes(&self, chromosomes: Vec<CryptoChromosome>) {
         if chromosomes.capacity() >= 10 && chromosomes.capacity() <= 1000 {
-            let mut pool = self.chromosome_pool.write().unwrap();
+            let mut pool = match self.chromosome_pool.write() {
+                Ok(pool) => pool,
+                Err(poisoned) => {
+                    tracing::warn!("Chromosome pool mutex poisoned, recovering gracefully");
+                    poisoned.into_inner()
+                }
+            };
             if pool.len() < 20 {
                 pool.push(chromosomes);
             }
@@ -114,7 +141,13 @@ impl GeneticsPool {
 
     /// Get reusable capability vector
     pub async fn get_capability_vector(&self, capacity: usize) -> Vec<NodeCapability> {
-        let mut pool = self.capability_pool.write().unwrap();
+        let mut pool = match self.capability_pool.write() {
+            Ok(pool) => pool,
+            Err(poisoned) => {
+                tracing::warn!("Capability pool mutex poisoned, recovering gracefully");
+                poisoned.into_inner()
+            }
+        };
         if let Some(mut capabilities) = pool.pop() {
             capabilities.clear();
             capabilities.reserve(capacity);
@@ -133,7 +166,9 @@ impl GeneticsPool {
     /// Return capability vector to pool
     pub async fn return_capabilities(&self, capabilities: Vec<NodeCapability>) {
         if capabilities.capacity() >= 5 && capabilities.capacity() <= 100 {
-            let mut pool = self.capability_pool.write().unwrap();
+            let mut pool = self.capability_pool.write().expect(
+                "Genetics capability pool lock is poisoned - this indicates a critical bug",
+            );
             if pool.len() < 20 {
                 pool.push(capabilities);
             }

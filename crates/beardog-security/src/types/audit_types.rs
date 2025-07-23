@@ -123,7 +123,7 @@ pub struct Resource {
 }
 
 /// Resource classification levels for access control
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ResourceClassification {
     /// Public information
     Public,
@@ -172,7 +172,7 @@ pub enum ActionType {
 }
 
 /// Risk level assessment for security actions
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum RiskLevel {
     /// Low risk operation
     Low,
@@ -320,55 +320,233 @@ pub struct SecurityMetrics {
 }
 
 /// Audit manager for security events and compliance
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct AuditManager {
     /// Audit events storage
-    events: Vec<SecurityAuditEvent>,
+    events: std::sync::Arc<tokio::sync::RwLock<Vec<SecurityAuditEvent>>>,
     /// Configuration
+    #[allow(dead_code)] // Configuration for future audit features
     config: super::config_types::AuditConfig,
+}
+
+impl Default for AuditManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AuditManager {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            events: std::sync::Arc::new(tokio::sync::RwLock::new(Vec::new())),
+            config: super::config_types::AuditConfig::default(),
+        }
     }
 
-    pub async fn log_event(&self, event: SecurityAuditEvent) -> beardog_errors::BearDogResult<()> {
-        // In production, this would persist to secure storage
-        // For now, log and return success
-        tracing::info!("Audit Event: {:?}", event);
+    pub async fn log_event(
+        &mut self,
+        event: SecurityAuditEvent,
+    ) -> beardog_errors::BearDogResult<()> {
+        tracing::debug!("Logging audit event: {}", event.event_id);
+
+        let mut events = self.events.write().await;
+        events.push(event);
+
+        // Limit memory usage by keeping only recent events
+        if events.len() > 10_000 {
+            events.drain(0..1_000); // Remove oldest 1k events
+        }
+
         Ok(())
     }
 
     pub async fn get_user_events(
         &self,
-        _user_id: &str,
-        _from_time: Option<chrono::DateTime<chrono::Utc>>,
-        _to_time: Option<chrono::DateTime<chrono::Utc>>,
+        user_id: &str,
+        from_time: Option<chrono::DateTime<chrono::Utc>>,
+        to_time: Option<chrono::DateTime<chrono::Utc>>,
     ) -> beardog_errors::BearDogResult<Vec<SecurityAuditEvent>> {
-        // Placeholder implementation
-        Ok(vec![])
+        tracing::debug!(
+            "Retrieving audit events for user {} from {:?} to {:?}",
+            user_id,
+            from_time,
+            to_time
+        );
+
+        let events = self.events.read().await;
+        let mut filtered_events = Vec::new();
+
+        for event in events.iter() {
+            // Check if event matches user_id
+            if event.subject != user_id {
+                continue;
+            }
+
+            // Apply time filters if specified
+            if let Some(from) = from_time {
+                if event.timestamp < from {
+                    continue;
+                }
+            }
+
+            if let Some(to) = to_time {
+                if event.timestamp > to {
+                    continue;
+                }
+            }
+
+            filtered_events.push(event.clone());
+        }
+
+        // Sort by timestamp (most recent first)
+        filtered_events.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+
+        tracing::debug!(
+            "Retrieved {} audit events for user {}",
+            filtered_events.len(),
+            user_id
+        );
+        Ok(filtered_events)
     }
 
     pub async fn get_events_since(
         &self,
-        _from_time: chrono::DateTime<chrono::Utc>,
+        from_time: chrono::DateTime<chrono::Utc>,
     ) -> beardog_errors::BearDogResult<Vec<SecurityAuditEvent>> {
-        // Placeholder implementation
-        Ok(vec![])
+        tracing::debug!("Retrieving audit events since {:?}", from_time);
+
+        let events = self.events.read().await;
+        let mut filtered_events = Vec::new();
+
+        for event in events.iter() {
+            if event.timestamp >= from_time {
+                filtered_events.push(event.clone());
+            }
+        }
+
+        // Sort by timestamp (most recent first)
+        filtered_events.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+
+        tracing::debug!(
+            "Retrieved {} audit events since {:?}",
+            filtered_events.len(),
+            from_time
+        );
+        Ok(filtered_events)
     }
 
     pub async fn cleanup_old_events(
         &self,
-        _cutoff: chrono::DateTime<chrono::Utc>,
+        cutoff: chrono::DateTime<chrono::Utc>,
     ) -> beardog_errors::BearDogResult<u32> {
-        // Placeholder implementation
-        Ok(0)
+        tracing::info!("Cleaning up audit events before {:?}", cutoff);
+
+        let mut events = self.events.write().await;
+        let initial_count = events.len();
+
+        // Remove events older than cutoff, but preserve critical security events
+        events.retain(|event| {
+            if event.timestamp >= cutoff {
+                return true; // Keep recent events
+            }
+
+            // Preserve critical security events even if old
+            match event.action.action_type {
+                ActionType::Admin | ActionType::Execute => {
+                    // Keep admin/execute events for compliance
+                    event.risk_level == RiskLevel::Critical || event.risk_level == RiskLevel::High
+                }
+                ActionType::Update | ActionType::Delete => {
+                    // Always keep modification/deletion events for audit trail
+                    true
+                }
+                _ => false, // Clean up other old events
+            }
+        });
+
+        let removed_count = initial_count - events.len();
+        tracing::info!(
+            "Cleaned up {} audit events (kept {} critical events)",
+            removed_count,
+            events.len()
+        );
+
+        Ok(removed_count as u32)
     }
 
     pub async fn compact_logs(&self) -> beardog_errors::BearDogResult<u32> {
-        // Placeholder implementation
-        Ok(0)
+        tracing::info!("Starting audit log compaction");
+
+        let mut events = self.events.write().await;
+        let initial_count = events.len();
+
+        if initial_count == 0 {
+            return Ok(0);
+        }
+
+        // Sort events by timestamp and user for efficient compaction
+        events.sort_by(|a, b| {
+            a.subject
+                .cmp(&b.subject)
+                .then_with(|| a.timestamp.cmp(&b.timestamp))
+        });
+
+        let mut compacted_events = Vec::new();
+        let mut i = 0;
+
+        while i < events.len() {
+            let current_event = &events[i];
+
+            // Look for consecutive similar events from the same user
+            let mut consecutive_count = 1;
+            let mut j = i + 1;
+
+            while j < events.len()
+                && events[j].subject == current_event.subject
+                && events[j].action.action_type == current_event.action.action_type
+                && events[j].resource == current_event.resource
+                && (events[j].timestamp - current_event.timestamp).num_minutes() < 5
+            {
+                consecutive_count += 1;
+                j += 1;
+            }
+
+            if consecutive_count > 3 {
+                // Create a compacted summary event
+                let mut summary_event = current_event.clone();
+                summary_event
+                    .metadata
+                    .insert("compacted_count".to_string(), consecutive_count.to_string());
+                summary_event.metadata.insert(
+                    "compacted_timespan".to_string(),
+                    format!(
+                        "{} to {}",
+                        current_event.timestamp.format("%Y-%m-%d %H:%M:%S UTC"),
+                        events[j - 1].timestamp.format("%Y-%m-%d %H:%M:%S UTC")
+                    ),
+                );
+                compacted_events.push(summary_event);
+                i = j; // Skip the compacted events
+            } else {
+                // Keep individual events if not worth compacting
+                for k in i..j {
+                    compacted_events.push(events[k].clone());
+                }
+                i = j;
+            }
+        }
+
+        let compacted_count = initial_count - compacted_events.len();
+        *events = compacted_events;
+
+        tracing::info!(
+            "Audit log compaction complete: {} events compacted from {} to {}",
+            compacted_count,
+            initial_count,
+            events.len()
+        );
+
+        Ok(compacted_count as u32)
     }
 }
 

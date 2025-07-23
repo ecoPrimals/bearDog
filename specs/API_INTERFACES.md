@@ -63,6 +63,60 @@ pub struct HttpBufferPool {
 // - Real-time performance metrics
 ```
 
+## 🛡️ **Security Sentinel API Endpoints**
+
+### **Security Assessment Endpoints**
+**Status:** ✅ Operational with Security Sentinel
+
+```rust
+// GET /api/v1/security/assessment
+// Perform comprehensive security assessment
+pub async fn security_assessment(
+    Query(params): Query<SecurityAssessmentParams>,
+) -> AIFirstResponse<SecurityAssessmentReport> {
+    // Returns 5-component security analysis:
+    // - Security posture score (0.0-1.0)
+    // - Threat landscape intelligence
+    // - Capability health metrics
+    // - Performance sentinel data
+    // - Sovereignty compliance status
+}
+
+// GET /api/v1/security/posture
+// Security posture monitoring data
+pub async fn security_posture() -> AIFirstResponse<SecurityPostureReport>;
+
+// GET /api/v1/security/sovereignty
+// Human dignity and autonomy metrics
+pub async fn sovereignty_health() -> AIFirstResponse<SovereigntyStatusReport>;
+
+// GET /api/v1/security/sentinel/status
+// Security Sentinel operational status
+pub async fn sentinel_status() -> AIFirstResponse<SecuritySentinelStats>;
+```
+
+### **Security Sentinel Configuration**
+
+```rust
+// POST /api/v1/security/sentinel/config
+// Update Security Sentinel configuration
+pub async fn update_sentinel_config(
+    Json(config): Json<SecuritySentinelConfig>,
+) -> AIFirstResponse<ConfigUpdateResult>;
+
+// GET /api/v1/security/sentinel/alerts
+// Retrieve security alerts and recommendations
+pub async fn security_alerts(
+    Query(params): Query<AlertQueryParams>,
+) -> AIFirstResponse<Vec<SecurityAlert>>;
+```
+
+**Key Features:**
+- **Human Dignity Compliance**: All endpoints preserve user privacy
+- **Self-Aware Monitoring**: Internal security posture only
+- **Performance Optimized**: Sub-100ms response times
+- **AI-First Design**: Structured data for automated analysis
+
 ## 🔗 **Enhanced AI-First API Architecture**
 
 ### **Core Response Format (Ecosystem Standard)**

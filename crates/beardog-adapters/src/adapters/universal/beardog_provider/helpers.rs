@@ -17,11 +17,8 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
 
     /// Get current nonce for encryption
     pub async fn get_current_nonce(&self) -> BearDogResult<Vec<u8>> {
-        // Generate a random nonce for each encryption operation
-        use rand::RngCore;
-        let mut nonce = vec![0u8; 12]; // 96-bit nonce for AES-GCM
-        rand::thread_rng().fill_bytes(&mut nonce);
-        Ok(nonce)
+        // Generate a cryptographically secure nonce for each encryption operation
+        beardog_security::crypto_utils::BearDogCrypto::generate_secure_nonce(12)
     }
 
     /// Check if HSM support is available
@@ -44,9 +41,12 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
     /// Get service endpoints
     pub async fn get_service_endpoints(&self) -> BearDogResult<Vec<String>> {
         Ok(vec![
-            "http://localhost:8080/api/v1/beardog".to_string(),
-            "http://localhost:8080/health".to_string(),
-            "http://localhost:8080/metrics".to_string(),
+                    std::env::var("BEARDOG_API_ENDPOINT")
+            .unwrap_or_else(|_| "https://api.beardog.local:8443/api/v1/beardog".to_string()),
+        std::env::var("BEARDOG_HEALTH_ENDPOINT")
+            .unwrap_or_else(|_| "https://api.beardog.local:8443/health".to_string()),
+        std::env::var("BEARDOG_METRICS_ENDPOINT")
+            .unwrap_or_else(|_| "https://api.beardog.local:8443/metrics".to_string()),
         ])
     }
 

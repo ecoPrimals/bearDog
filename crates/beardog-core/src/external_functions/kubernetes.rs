@@ -6,7 +6,7 @@ use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
 use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
-use serde_json::Value;
+use serde_json;
 use std::process::Stdio;
 use tokio::process::Command;
 
@@ -15,19 +15,34 @@ pub struct KubernetesIntegration;
 
 #[async_trait]
 impl ExternalFunctionHandler for KubernetesIntegration {
+    fn function_name(&self) -> &str {
+        "kubernetes_integration"
+    }
+
+    /// Execute Kubernetes operation with licensing check
     async fn execute(
         &self,
-        payload: Value,
         license_manager: &LicenseManager,
-    ) -> BearDogResult<Value> {
-        // Check license first
-        license_manager.verify_external_function_access(self.function_name())?;
+        _operation: &str,
+        payload: serde_json::Value,
+    ) -> BearDogResult<serde_json::Value> {
+        // Check licensing with autonomous decision making
+        if !license_manager
+            .is_function_available(self.function_name())
+            .await?
+        {
+            return Err(BearDogError::Configuration {
+                message: format!(
+                    "🔒 Kubernetes integration '{}' requires licensing or individual/small-team classification.\n\n\
+                    🏠 Individual developers: Automatically granted access\n\
+                    👥 Small teams: Automatically granted access\n\
+                    🏢 Corporate usage: External adapters locked - acquire unlock certificate",
+                    self.function_name()
+                ),
+            });
+        }
 
         // Extract parameters
-        let operation = payload
-            .get("operation")
-            .and_then(|v| v.as_str())
-            .unwrap_or("list");
         let namespace = payload
             .get("namespace")
             .and_then(|v| v.as_str())
@@ -35,25 +50,25 @@ impl ExternalFunctionHandler for KubernetesIntegration {
 
         tracing::info!(
             "🚢 Kubernetes {} operation in namespace {}",
-            operation,
+            _operation,
             namespace
         );
 
         // Implement actual Kubernetes API operations
-        match operation {
+        match _operation {
             "list_pods" => {
                 match self
                     .kubectl_exec(&["get", "pods", "-n", namespace, "-o", "json"])
                     .await
                 {
                     Ok(output) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "namespace": namespace,
                         "status": "success",
                         "data": output
                     })),
                     Err(e) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "namespace": namespace,
                         "status": "error",
                         "error": e.to_string()
@@ -66,13 +81,13 @@ impl ExternalFunctionHandler for KubernetesIntegration {
                     .await
                 {
                     Ok(output) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "namespace": namespace,
                         "status": "success",
                         "data": output
                     })),
                     Err(e) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "namespace": namespace,
                         "status": "error",
                         "error": e.to_string()
@@ -85,13 +100,13 @@ impl ExternalFunctionHandler for KubernetesIntegration {
                     .await
                 {
                     Ok(output) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "namespace": namespace,
                         "status": "success",
                         "data": output
                     })),
                     Err(e) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "namespace": namespace,
                         "status": "error",
                         "error": e.to_string()
@@ -109,13 +124,13 @@ impl ExternalFunctionHandler for KubernetesIntegration {
                     .await
                 {
                     Ok(output) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "namespace": namespace_name,
                         "status": "success",
                         "data": output
                     })),
                     Err(e) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "namespace": namespace_name,
                         "status": "error",
                         "error": e.to_string()
@@ -127,7 +142,7 @@ impl ExternalFunctionHandler for KubernetesIntegration {
 
                 if yaml_content.is_empty() {
                     return Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "status": "error",
                         "error": "yaml content is required for apply operation"
                     }));
@@ -135,13 +150,13 @@ impl ExternalFunctionHandler for KubernetesIntegration {
 
                 match self.kubectl_apply(yaml_content).await {
                     Ok(output) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "namespace": namespace,
                         "status": "success",
                         "data": output
                     })),
                     Err(e) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "namespace": namespace,
                         "status": "error",
                         "error": e.to_string()
@@ -150,46 +165,38 @@ impl ExternalFunctionHandler for KubernetesIntegration {
             }
             "get_cluster_info" => match self.kubectl_exec(&["cluster-info"]).await {
                 Ok(output) => Ok(serde_json::json!({
-                    "operation": operation,
+                    "operation": _operation,
                     "status": "success",
                     "data": output
                 })),
                 Err(e) => Ok(serde_json::json!({
-                    "operation": operation,
+                    "operation": _operation,
                     "status": "error",
                     "error": e.to_string()
                 })),
             },
             "get_nodes" => match self.kubectl_exec(&["get", "nodes", "-o", "json"]).await {
                 Ok(output) => Ok(serde_json::json!({
-                    "operation": operation,
+                    "operation": _operation,
                     "status": "success",
                     "data": output
                 })),
                 Err(e) => Ok(serde_json::json!({
-                    "operation": operation,
+                    "operation": _operation,
                     "status": "error",
                     "error": e.to_string()
                 })),
             },
             _ => Ok(serde_json::json!({
-                "operation": operation,
+                "operation": _operation,
                 "status": "error",
-                "error": format!("Unknown Kubernetes operation: {}", operation),
+                "error": format!("Unknown Kubernetes operation: {}", _operation),
                 "available_operations": [
                     "list_pods", "list_services", "list_deployments",
                     "create_namespace", "apply_yaml", "get_cluster_info", "get_nodes"
                 ]
             })),
         }
-    }
-
-    fn function_name(&self) -> &'static str {
-        "kubernetes"
-    }
-
-    fn description(&self) -> &'static str {
-        "Kubernetes cluster management and orchestration"
     }
 }
 
@@ -203,7 +210,7 @@ impl KubernetesIntegration {
             .output()
             .await
             .map_err(|e| BearDogError::Configuration {
-                message: format!("kubectl command failed: {}", e),
+                message: format!("kubectl command failed: {e}"),
             })?;
 
         if output.status.success() {
@@ -211,7 +218,7 @@ impl KubernetesIntegration {
         } else {
             let error = String::from_utf8_lossy(&output.stderr);
             Err(BearDogError::Configuration {
-                message: format!("kubectl error: {}", error),
+                message: format!("kubectl error: {error}"),
             })
         }
     }
@@ -228,7 +235,7 @@ impl KubernetesIntegration {
             .stderr(Stdio::piped())
             .spawn()
             .map_err(|e| BearDogError::Configuration {
-                message: format!("Failed to start kubectl apply: {}", e),
+                message: format!("Failed to start kubectl apply: {e}"),
             })?;
 
         // Write YAML to stdin
@@ -238,7 +245,7 @@ impl KubernetesIntegration {
                 .write_all(yaml_content.as_bytes())
                 .await
                 .map_err(|e| BearDogError::Configuration {
-                    message: format!("Failed to write to kubectl stdin: {}", e),
+                    message: format!("Failed to write to kubectl stdin: {e}"),
                 })?;
         }
 
@@ -246,7 +253,7 @@ impl KubernetesIntegration {
             .wait_with_output()
             .await
             .map_err(|e| BearDogError::Configuration {
-                message: format!("kubectl apply command failed: {}", e),
+                message: format!("kubectl apply command failed: {e}"),
             })?;
 
         if output.status.success() {
@@ -254,7 +261,7 @@ impl KubernetesIntegration {
         } else {
             let error = String::from_utf8_lossy(&output.stderr);
             Err(BearDogError::Configuration {
-                message: format!("kubectl apply error: {}", error),
+                message: format!("kubectl apply error: {error}"),
             })
         }
     }

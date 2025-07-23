@@ -74,15 +74,6 @@ impl ThreatDetectionEngine {
         }
     }
 
-    /// Create a placeholder instance for testing and initialization
-    ///
-    /// # Deprecated
-    /// This method is deprecated. Use `new(config)` instead.
-    pub fn placeholder() -> Self {
-        tracing::warn!("🚨 Using deprecated ThreatDetectionEngine::placeholder() method. Use ThreatDetectionEngine::new(config) instead.");
-        Self::new(ThreatDetectionConfig::default())
-    }
-
     /// Add a detection rule to the engine
     ///
     /// # Arguments

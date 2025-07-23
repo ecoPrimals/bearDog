@@ -22,6 +22,7 @@ pub mod monitoring;
 pub mod network;
 pub mod performance;
 pub mod production_deployment;
+pub mod runtime;
 pub mod secrets;
 pub mod security;
 pub mod simd_crypto;
@@ -37,8 +38,10 @@ pub use genetic_optimization::GeneticOptimizationConfig;
 pub use load_testing::LoadTestingConfig;
 pub use memory::MemoryOptimizationConfig;
 pub use monitoring::ProductionMonitoringConfig;
+pub use network::NetworkConfig;
 pub use performance::PerformanceConfig;
 pub use production_deployment::ProductionDeploymentConfig;
+pub use runtime::{get_config, init_config, RuntimeConfig};
 pub use simd_crypto::SIMDCryptoConfig;
 
 // Re-export core configuration
@@ -117,3 +120,4 @@ pub struct OptimizedBearDogConfig {
     /// Final validation configuration
     pub validation: FinalValidationConfig,
 }
+pub mod validation;

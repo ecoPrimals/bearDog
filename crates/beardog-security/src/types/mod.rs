@@ -232,7 +232,7 @@ impl BearDogSecurityProvider {
             locked_accounts: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::new())),
             failed_attempts: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::new())),
             session_store: auth_types::SessionStore::default(),
-            audit_manager: audit_types::AuditManager::default(),
+            audit_manager: audit_types::AuditManager::new(),
             metrics: SecurityProviderMetrics {
                 auth_success_rate: 0.0,
                 authz_success_rate: 0.0,

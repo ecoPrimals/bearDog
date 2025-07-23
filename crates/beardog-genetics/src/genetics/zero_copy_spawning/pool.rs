@@ -43,7 +43,13 @@ impl GeneticsPool {
 
     /// Get genetics from the reuse pool
     pub async fn get_genetics(&self) -> Option<BearDogGenetics> {
-        let mut pool = self.genetics_pool.write().unwrap();
+        let mut pool = match self.genetics_pool.write() {
+            Ok(pool) => pool,
+            Err(poisoned) => {
+                tracing::warn!("Genetics pool mutex poisoned, recovering gracefully");
+                poisoned.into_inner()
+            }
+        };
 
         if let Some(genetics) = pool.pop() {
             self.stats.genetics_reused.fetch_add(1, Ordering::Relaxed);
@@ -64,7 +70,13 @@ impl GeneticsPool {
         genetics.mutations.clear();
 
         // Add genetics back to pool if not full
-        let mut pool = self.genetics_pool.write().unwrap();
+        let mut pool = match self.genetics_pool.write() {
+            Ok(pool) => pool,
+            Err(poisoned) => {
+                tracing::warn!("Genetics pool mutex poisoned, recovering gracefully");
+                poisoned.into_inner()
+            }
+        };
         if pool.len() < self.stats.pool_capacity && pool.len() < 100 {
             pool.push(genetics);
             self.stats.genetics_reused.fetch_add(1, Ordering::Relaxed);
@@ -73,7 +85,13 @@ impl GeneticsPool {
 
     /// Get chromosomes from the reuse pool
     pub async fn get_chromosomes(&self) -> Option<Vec<CryptoChromosome>> {
-        let mut pool = self.chromosome_pool.write().unwrap();
+        let mut pool = match self.chromosome_pool.write() {
+            Ok(pool) => pool,
+            Err(poisoned) => {
+                tracing::warn!("Chromosome pool mutex poisoned, recovering gracefully");
+                poisoned.into_inner()
+            }
+        };
 
         if let Some(chromosomes) = pool.pop() {
             self.stats

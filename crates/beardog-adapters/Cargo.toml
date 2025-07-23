@@ -1,7 +1,7 @@
 [package]
 name = "beardog-adapters"
-version.workspace = true
-edition.workspace = true
+version = "0.1.0"
+edition = "2021"
 license.workspace = true
 description = "BearDog adapters module"
 authors.workspace = true
@@ -12,19 +12,27 @@ default = []
 advanced-nestgate = []
 
 [dependencies]
+anyhow = "1.0"
 beardog-errors = { workspace = true }
+beardog-genetics = { workspace = true }
 beardog-config = { workspace = true }
-tokio = { workspace = true }
 serde = { workspace = true }
-chrono = { workspace = true }
+tokio = { workspace = true }
 tracing = { workspace = true }
-uuid = { workspace = true }
+uuid.workspace = true
 thiserror = { workspace = true }
-async-trait = { workspace = true }
+async-trait.workspace = true
 serde_json = "1.0"
 reqwest = { version = "0.11", features = ["json"] }
 rand = "0.8"
 base64 = "0.21"
 beardog-security = { workspace = true }
 beardog-threat = { workspace = true }
-beardog-compliance = { workspace = true }
+sha2 = "0.10"
+chrono = { workspace = true }
+semver = { version = "1.0", features = ["serde"] }
+serde_yaml = "0.9"
+
+# Dev dependencies for testing
+[dev-dependencies]
+tokio-test = "0.4"

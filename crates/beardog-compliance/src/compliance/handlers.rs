@@ -124,23 +124,83 @@ impl ComplianceEngine {
                 self.evaluate_pci_dss(event).await
             }
             ComplianceStandard::HIPAA => self.evaluate_hipaa(event).await,
-            ComplianceStandard::ISO27001 => {
-                // Placeholder implementation
-                Ok(StandardEvaluationResult {
-                    score: 0.8,
-                    violations: vec![],
-                    warnings: vec![],
-                })
-            }
-            ComplianceStandard::FedRAMP => {
-                // Placeholder implementation
-                Ok(StandardEvaluationResult {
-                    score: 0.9,
-                    violations: vec![],
-                    warnings: vec![],
-                })
-            }
+            ComplianceStandard::ISO27001 => self.evaluate_iso27001(event).await,
+            ComplianceStandard::FedRAMP => self.evaluate_fedramp(event).await,
         }
+    }
+
+    /// Evaluate ISO 27001 compliance
+    async fn evaluate_iso27001(
+        &self,
+        event: &ComplianceEvent,
+    ) -> BearDogResult<StandardEvaluationResult> {
+        let mut violations = Vec::new();
+        let warnings = Vec::new();
+        let mut score: f64 = 1.0;
+
+        // Check for information security controls
+        match event.event_type.as_str() {
+            "data_access" | "system_access" | "privileged_operation" => {
+                // Verify access control requirements
+                if !event.metadata.contains_key("access_approved") {
+                    violations.push(ComplianceViolation {
+                        id: Uuid::new_v4().to_string(),
+                        standard: ComplianceStandard::ISO27001,
+                        event_id: event.id.clone(),
+                        violation_type: "access_control_violation".to_string(),
+                        severity: ComplianceSeverity::Violation,
+                        description: "Access control approval not documented".to_string(),
+                        timestamp: Utc::now(),
+                        remediation_required: true,
+                    });
+                    score -= 0.2;
+                }
+            }
+            _ => {}
+        }
+
+        Ok(StandardEvaluationResult {
+            score,
+            violations,
+            warnings,
+        })
+    }
+
+    /// Evaluate FedRAMP compliance
+    async fn evaluate_fedramp(
+        &self,
+        event: &ComplianceEvent,
+    ) -> BearDogResult<StandardEvaluationResult> {
+        let mut violations = Vec::new();
+        let warnings = Vec::new();
+        let mut score: f64 = 1.0;
+
+        // Check for federal security requirements
+        match event.event_type.as_str() {
+            "privileged_operation" | "system_administration" => {
+                // Verify enhanced logging for federal requirements
+                if !event.metadata.contains_key("audit_trail") {
+                    violations.push(ComplianceViolation {
+                        id: Uuid::new_v4().to_string(),
+                        standard: ComplianceStandard::FedRAMP,
+                        event_id: event.id.clone(),
+                        violation_type: "audit_trail_missing".to_string(),
+                        severity: ComplianceSeverity::Critical,
+                        description: "Enhanced audit trail required for FedRAMP".to_string(),
+                        timestamp: Utc::now(),
+                        remediation_required: true,
+                    });
+                    score -= 0.3;
+                }
+            }
+            _ => {}
+        }
+
+        Ok(StandardEvaluationResult {
+            score,
+            violations,
+            warnings,
+        })
     }
 
     /// Evaluate GDPR compliance

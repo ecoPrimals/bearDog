@@ -631,8 +631,11 @@ impl PerformanceConfig {
         config.monitoring.enabled = true;
         config.monitoring.enable_detailed_metrics = true;
         config.monitoring.metrics_interval = Duration::from_secs(5);
+        // Use environment-configurable database URL for metrics storage
+        let metrics_db_url = std::env::var("BEARDOG_METRICS_DATABASE_URL")
+            .unwrap_or_else(|_| "sqlite:///var/lib/beardog/metrics.db".to_string());
         config.monitoring.storage.backend = StorageBackend::Database {
-            url: "postgresql://localhost/beardog_metrics".to_string(),
+            url: metrics_db_url,
         };
         config.monitoring.storage.retention_period = Duration::from_secs(86400 * 30); // 30 days
 

@@ -341,8 +341,7 @@ fn benchmark_concurrent_auth(c: &mut Criterion) {
                                 let provider = provider.clone();
                                 let handle = tokio::spawn(async move {
                                     let mut credentials = HashMap::new();
-                                    credentials
-                                        .insert("username".to_string(), format!("user{}", i));
+                                    credentials.insert("username".to_string(), format!("user{i}"));
                                     credentials
                                         .insert("password".to_string(), "password".to_string());
 

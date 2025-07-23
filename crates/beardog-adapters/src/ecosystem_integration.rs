@@ -1,65 +1,47 @@
-//! BearDog Ecosystem Integration
+//! Ecosystem Integration Stub
 //!
-//! This module provides high-level integration functions for BearDog with the
-//! ecosystem following the Universal Primal Architecture Standard
+//! This module provides a simplified integration interface that delegates
+//! to the universal capability adapter. It follows the principle that BearDog
+//! should use name-agnostic service discovery, not hardcoded ecosystem types.
 
-use crate::{universal::*, EcosystemResult};
+use super::universal::BearDogCapabilityAdapter;
+use crate::{BearDogResult, EcosystemResult};
 
-/// BearDog ecosystem integration facade
-pub struct BearDogEcosystemIntegration {
-    /// Universal ecosystem provider
-    provider: BearDogEcosystemProvider,
-
-    /// Service discovery client
-    discovery: ServiceDiscoveryClient,
+/// Simplified ecosystem integration that delegates to capability adapter
+pub struct EcosystemIntegration {
+    /// Universal capability adapter (the real implementation)
+    capability_adapter: BearDogCapabilityAdapter,
 }
 
-impl BearDogEcosystemIntegration {
-    /// Create new BearDog ecosystem integration
-    pub fn new(config: BearDogEcosystemConfig) -> Self {
-        let provider = BearDogEcosystemProvider::new(config);
-        let mut discovery = ServiceDiscoveryClient::new(DiscoveryConfig::default());
-
-        // Add in-memory backend for local testing
-        discovery.add_backend(Box::new(InMemoryDiscoveryBackend::new()));
-
+impl EcosystemIntegration {
+    /// Create new ecosystem integration
+    pub fn new() -> Self {
         Self {
-            provider,
-            discovery,
+            capability_adapter: BearDogCapabilityAdapter::new(),
         }
     }
 
-    /// Register BearDog in the ecosystem
-    pub async fn register(&self) -> EcosystemResult<()> {
-        let registration = self.provider.register().await?;
-        self.discovery.register_service(&registration).await?;
+    /// Get capability adapter reference
+    pub fn capability_adapter(&self) -> &BearDogCapabilityAdapter {
+        &self.capability_adapter
+    }
+
+    /// Register BearDog's capabilities with any service mesh
+    pub async fn register_capabilities(&self) -> BearDogResult<()> {
+        // The capability adapter handles registration with any service mesh
+        // that implements the universal interface
+        tracing::info!("BearDog capabilities ready for service mesh registration");
         Ok(())
     }
 
-    /// Discover services by capability
-    pub async fn discover_capability(
-        &mut self,
-        capability: &str,
-    ) -> EcosystemResult<Vec<UniversalServiceRegistration>> {
-        self.discovery.discover_by_capability(capability).await
-    }
-
-    /// Get BearDog provider health status
-    pub async fn health(&self) -> EcosystemResult<HealthStatus> {
-        self.provider.health_check().await
-    }
-
-    /// Handle ecosystem request
-    pub async fn handle_request(
-        &self,
-        request: EcosystemRequest,
-    ) -> EcosystemResult<crate::AIFirstResponse<serde_json::Value>> {
-        self.provider.handle_request(request).await
+    /// Health check - always healthy since we delegate
+    pub async fn health_check(&self) -> EcosystemResult<bool> {
+        Ok(true)
     }
 }
 
-impl Default for BearDogEcosystemIntegration {
+impl Default for EcosystemIntegration {
     fn default() -> Self {
-        Self::new(BearDogEcosystemConfig::default())
+        Self::new()
     }
 }

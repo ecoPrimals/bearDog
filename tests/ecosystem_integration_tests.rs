@@ -320,6 +320,140 @@ async fn test_ecosystem_service_discovery() -> BearDogResult<()> {
     Ok(())
 }
 
+#[tokio::test]
+async fn test_comprehensive_toadstool_integration() -> BearDogResult<()> {
+    info!("🚀 Testing Comprehensive ToadStool Ecosystem Integration");
+
+    // Initialize BearDog with production-ready configuration
+    let mut config = BearDogConfig::default();
+    config.security.level = SecurityLevel::High;
+    config.hsm.mobile.enabled = true;
+    config.hsm.software.enabled = true;
+    
+    let core = Arc::new(BearDogCore::new(config).await?);
+    
+    // Test 1: Capability-based ToadStool Discovery
+    info!("🔍 Test 1: Universal ToadStool Discovery");
+    let discovery_request = CapabilityRequest {
+        capability_types: vec![
+            CapabilityType::ComputeOptimization,
+            CapabilityType::GeneticAlgorithms,
+            CapabilityType::PerformanceAcceleration,
+        ],
+        security_requirements: SecurityRequirements {
+            security_level: SecurityLevel::High,
+            user_interaction_required: false,
+        },
+        resource_requirements: ResourceRequirements {
+            cpu_cores: Some(4),
+            memory_gb: Some(8.0),
+            storage_gb: Some(20.0),
+            gpu_required: false,
+            network_access: true,
+        },
+    };
+
+    let discovered_services = core.discover_ecosystem_capabilities(&discovery_request).await?;
+    assert!(!discovered_services.is_empty(), "Should discover ToadStool compute services");
+    
+    info!("✅ Discovered {} compute-capable services", discovered_services.len());
+
+    // Test 2: Security-Enhanced Genetic Spawning Request
+    info!("🧬 Test 2: ToadStool Genetic Spawning Integration");
+    let spawning_request = CrossNodeOperation {
+        operation_type: OperationType::Execute,
+        target_resource: "toadstool-genetic-compute".to_string(),
+        parameters: {
+            let mut params = HashMap::new();
+            params.insert("operation_type".to_string(), "hybrid_genetic_spawning".to_string());
+            params.insert("source_genetics".to_string(), "beardog_security_genetics_v1".to_string());
+            params.insert("target_genetics".to_string(), "toadstool_compute_genetics_v1".to_string());
+            params.insert("hybrid_capabilities".to_string(), serde_json::json!({
+                "security_level": "maximum",
+                "compute_optimization": true,
+                "universal_platform_support": true,
+                "quantum_ready": true
+            }).to_string());
+            params.insert("network_effects_multiplier".to_string(), "2.5".to_string());
+            params
+        },
+        requester_signature: "beardog_cryptographic_proof".to_string(),
+    };
+
+    let spawning_result = core.execute_cross_node_operation(spawning_request).await?;
+    assert!(spawning_result.success, "ToadStool hybrid spawning should succeed");
+    
+    info!("✅ Hybrid BearDog+ToadStool genetic spawning successful");
+    info!("   🧬 Security genetics + Compute genetics = Universal capabilities");
+
+    // Test 3: Universal Platform Security Authorization
+    info!("🔐 Test 3: Universal Platform Authorization");
+    let platform_request = SecurityAuthorizationRequest {
+        operation_id: "toadstool_universal_execution".to_string(),
+        target_platforms: vec![
+            "8bit_microcontroller".to_string(),
+            "quantum_computer".to_string(),
+            "neuromorphic_chip".to_string(),
+            "photonic_processor".to_string(),
+        ],
+        security_context: SecurityContext {
+            classification_level: "restricted".to_string(),
+            sovereignty_required: true,
+            audit_required: true,
+            human_dignity_preserved: true,
+        },
+        resource_bounds: ResourceBounds {
+            max_execution_time: std::time::Duration::from_hours(1),
+            max_memory_usage: 16 * 1024 * 1024 * 1024, // 16GB
+            max_network_bandwidth: 1000, // 1Gbps
+        },
+    };
+
+    let auth_result = core.authorize_universal_compute(&platform_request).await?;
+    assert!(auth_result.authorized, "Universal platform authorization should succeed");
+    assert!(!auth_result.authorization_tokens.is_empty(), "Should provide authorization tokens");
+
+    info!("✅ Universal platform authorization granted for {} platforms", platform_request.target_platforms.len());
+    info!("   🏛️ Sovereignty preserved, human dignity maintained");
+
+    // Test 4: Network Effects Validation
+    info!("📈 Test 4: Network Effects Performance Validation");
+    let standalone_performance = measure_standalone_performance(&core).await?;
+    let ecosystem_performance = measure_ecosystem_performance(&core).await?;
+    
+    let performance_multiplier = ecosystem_performance.operations_per_second / standalone_performance.operations_per_second;
+    assert!(performance_multiplier >= 1.5, "Ecosystem integration should provide 50%+ performance improvement");
+    
+    info!("✅ Network effects validated: {:.2}x performance improvement", performance_multiplier);
+    info!("   🚀 Standalone: {:.0} ops/sec", standalone_performance.operations_per_second);
+    info!("   🌐 Ecosystem: {:.0} ops/sec", ecosystem_performance.operations_per_second);
+
+    // Test 5: Fault Tolerance and Graceful Degradation
+    info!("🛡️ Test 5: Fault Tolerance Testing");
+    
+    // Simulate ToadStool service unavailability
+    let degraded_request = discovery_request.clone();
+    core.simulate_service_unavailability("toadstool").await?;
+    
+    let fallback_services = core.discover_ecosystem_capabilities(&degraded_request).await?;
+    // Should gracefully fall back to local capabilities
+    
+    core.restore_service_availability("toadstool").await?;
+    let restored_services = core.discover_ecosystem_capabilities(&degraded_request).await?;
+    assert!(restored_services.len() >= fallback_services.len(), "Service restoration should maintain or improve capability count");
+    
+    info!("✅ Fault tolerance validated - graceful degradation and recovery");
+
+    info!("🎉 Comprehensive ToadStool Integration Test PASSED");
+    info!("   ✅ Universal discovery working");
+    info!("   ✅ Hybrid genetic spawning successful");
+    info!("   ✅ Universal platform authorization granted");
+    info!("   ✅ Network effects providing {:.1}x improvement", performance_multiplier);
+    info!("   ✅ Fault tolerance and recovery validated");
+
+    Ok(())
+}
+
 // Supporting types for ecosystem integration
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 struct EcosystemServiceRegistration {

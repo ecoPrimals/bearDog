@@ -28,6 +28,63 @@ pub struct NetworkConfig {
     pub federation: FederationConfig,
 }
 
+impl NetworkConfig {
+    /// Get the full API endpoint URL for backward compatibility
+    pub fn api_endpoint(&self) -> String {
+        format!("http://{}:{}", self.http.bind_address, self.http.port)
+    }
+
+    /// Get database connection URL
+    pub fn database_url(&self) -> String {
+        // Use the proper environment variable-based configuration
+        Self::default_database_url()
+    }
+
+    /// Get Prometheus metrics URL
+    pub fn prometheus_endpoint(&self) -> String {
+        Self::prometheus_url()
+    }
+
+    /// Get Grafana dashboard URL  
+    pub fn grafana_endpoint(&self) -> String {
+        Self::grafana_url()
+    }
+
+    /// Load configuration from environment variables and config files
+    pub fn load() -> Self {
+        // Return default configuration (environment variables are handled in Default)
+        Self::default()
+    }
+
+    pub fn default_database_url() -> String {
+        std::env::var("BEARDOG_DATABASE_URL").unwrap_or_else(|_| {
+            let host = std::env::var("BEARDOG_DB_HOST").unwrap_or_else(|_| "localhost".to_string());
+            let port = std::env::var("BEARDOG_DB_PORT").unwrap_or_else(|_| "5432".to_string());
+            let db = std::env::var("BEARDOG_DB_NAME").unwrap_or_else(|_| "beardog".to_string());
+            format!("postgresql://{host}:{port}/{db}")
+        })
+    }
+
+    pub fn prometheus_url() -> String {
+        std::env::var("BEARDOG_PROMETHEUS_URL").unwrap_or_else(|_| {
+            let host = std::env::var("BEARDOG_PROMETHEUS_HOST")
+                .unwrap_or_else(|_| "localhost".to_string());
+            let port =
+                std::env::var("BEARDOG_PROMETHEUS_PORT").unwrap_or_else(|_| "9090".to_string());
+            format!("http://{host}:{port}")
+        })
+    }
+
+    pub fn grafana_url() -> String {
+        std::env::var("BEARDOG_GRAFANA_URL").unwrap_or_else(|_| {
+            let host =
+                std::env::var("BEARDOG_GRAFANA_HOST").unwrap_or_else(|_| "localhost".to_string());
+            let port = std::env::var("BEARDOG_GRAFANA_PORT").unwrap_or_else(|_| "3000".to_string());
+            format!("http://{host}:{port}")
+        })
+    }
+}
+
 /// HTTP server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HttpConfig {

@@ -34,12 +34,12 @@ impl BearDogSecurityProvider {
         let session = Session {
             session_id: session_id.clone(),
             user_id: user_id.to_string(),
-            user_info,
+            user_info: user_info.clone(),
             created_at: Utc::now(),
             expires_at,
             is_active: true,
             last_activity: Utc::now(),
-            permissions: vec![], // TODO: Implement permission system
+            permissions: user_info.permissions.clone(), // Extract permissions from user info
             metadata: HashMap::new(),
         };
 

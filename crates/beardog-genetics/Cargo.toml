@@ -25,3 +25,7 @@ axum = { workspace = true }
 sha2 = { workspace = true }
 sha3 = { workspace = true }
 zeroize = { workspace = true }
+
+[features]
+default = []
+genetics_tests_disabled_during_refactor = []

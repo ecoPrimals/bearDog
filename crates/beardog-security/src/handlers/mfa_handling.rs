@@ -28,14 +28,28 @@ impl BearDogSecurityProvider {
                 (token, expires_at)
             }
             MfaMethod::Sms => {
-                // Generate SMS token (6-digit, 5-minute expiry)
-                let token = format!("{:06}", rand::random::<u32>() % 1000000);
+                // Generate SMS token (6-digit, 5-minute expiry) - CRYPTOGRAPHICALLY SECURE
+                use ring::rand::{SecureRandom, SystemRandom};
+                let rng = SystemRandom::new();
+                let mut token_bytes = [0u8; 4];
+                rng.fill(&mut token_bytes).map_err(|_| {
+                    BearDogError::internal("Failed to generate secure random token")
+                })?;
+                let token_num = u32::from_be_bytes(token_bytes) % 1000000;
+                let token = format!("{token_num:06}");
                 let expires_at = Utc::now() + Duration::minutes(5);
                 (token, expires_at)
             }
             MfaMethod::Email => {
-                // Generate email token (8-digit, 10-minute expiry)
-                let token = format!("{:08}", rand::random::<u32>() % 100000000);
+                // Generate email token (8-digit, 10-minute expiry) - CRYPTOGRAPHICALLY SECURE
+                use ring::rand::{SecureRandom, SystemRandom};
+                let rng = SystemRandom::new();
+                let mut token_bytes = [0u8; 4];
+                rng.fill(&mut token_bytes).map_err(|_| {
+                    BearDogError::internal("Failed to generate secure random token")
+                })?;
+                let token_num = u32::from_be_bytes(token_bytes) % 100000000;
+                let token = format!("{token_num:08}");
                 let expires_at = Utc::now() + Duration::minutes(10);
                 (token, expires_at)
             }

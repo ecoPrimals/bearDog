@@ -438,6 +438,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::const_is_empty)]
     fn test_version_info() {
         assert!(!VERSION.is_empty());
         assert!(!BUILD_INFO.is_empty());

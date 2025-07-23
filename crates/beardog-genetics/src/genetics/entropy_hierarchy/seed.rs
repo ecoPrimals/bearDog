@@ -83,13 +83,13 @@ impl EntropySeed {
             .generate_ownership_proof(&owner_identity, &seed_bytes)
             .await?;
 
-        // Generate biometric signature from event context
+        // Generate biometric signature from event context (clone needed values first)
+        let location_clone = event_context.location.clone();
+        let timestamp = event_context.event_timestamp;
         let biometric_data = format!(
             "{}:{}:{}",
-            event_context.event_timestamp.timestamp(),
-            event_context
-                .location
-                .unwrap_or_else(|| "Unknown".to_string()),
+            timestamp.timestamp(),
+            location_clone.unwrap_or_else(|| "Unknown".to_string()),
             0.5 // Default quality score during refactor
         );
 
@@ -117,6 +117,9 @@ impl EntropySeed {
             .await?;
 
         // Create event-based lifetime policy
+        // Clone event_context before using it
+        let event_context_clone = event_context.clone();
+
         let lifetime_policy = SeedLifetimePolicy::EventBased {
             event_id: format!("event_{seed_id}"),
             event_type: event_context.event_type.clone(),
@@ -146,7 +149,7 @@ impl EntropySeed {
                 requires_approval: sharing_policy.require_permission,
             },
             usage_history: Vec::new(),
-            social_context: None, // Temporarily disabled to fix compilation
+            social_context: Some(event_context_clone), // Use cloned context
         })
     }
 

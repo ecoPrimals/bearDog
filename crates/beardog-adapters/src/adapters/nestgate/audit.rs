@@ -502,7 +502,7 @@ impl AuditManager {
 
                 summary.insert(
                     "unique_event_types".to_string(),
-                    charts.get("events_by_type").unwrap().len() as u64,
+                    charts.get("events_by_type").map(|chart| chart.len()).unwrap_or(0) as u64,
                 );
 
                 recommendations

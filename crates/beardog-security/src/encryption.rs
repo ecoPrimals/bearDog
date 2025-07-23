@@ -466,10 +466,10 @@ impl EncryptionEngine {
 
         // Add metadata about the layered approach
         let mut metadata = HashMap::new();
-        metadata.insert("layers".to_string(), "2".to_string());
-        metadata.insert("layer1".to_string(), "AES-256-GCM".to_string());
-        metadata.insert("layer2".to_string(), "ChaCha20-Poly1305".to_string());
-        metadata.insert("quantum_resistant".to_string(), "true".to_string());
+        metadata.insert("layers".into(), "2".into());
+        metadata.insert("layer1".into(), "AES-256-GCM".into());
+        metadata.insert("layer2".into(), "ChaCha20-Poly1305".into());
+        metadata.insert("quantum_resistant".into(), "true".into());
 
         Ok(EncryptedData {
             algorithm: EncryptionAlgorithm::QuantumResistant,
@@ -802,7 +802,7 @@ mod tests {
         // Test with invalid encrypted data
         let invalid_encrypted = EncryptedData {
             ciphertext: vec![0u8; 10], // Too short
-            nonce: vec![0u8; 12],
+            nonce: vec![0u8; 12],      // Use simple test nonce for this test
             algorithm: EncryptionAlgorithm::Aes256Gcm,
             tag: None,
             metadata: HashMap::new(),

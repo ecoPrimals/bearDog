@@ -28,29 +28,33 @@
 use serde::{Deserialize, Serialize};
 
 pub mod ai_interface;
+pub mod auth; // Authentication and authorization management
 pub mod cache;
-// pub mod error_handling; // TODO: Implement error handling module
+pub mod compliance; // Enterprise compliance and audit management
+pub mod error_handling; // Error handling and response formatting
 pub mod genetics;
 // pub mod handlers; // TODO: Implement handlers module
 pub mod monitoring;
 pub mod rate_limiting;
+pub mod rpc; // Ecosystem RPC integration for sovereign network effects
 pub mod security;
 pub mod server;
-// pub mod types; // TODO: Implement types module
-// pub mod webhooks; // TODO: Implement webhooks module
+pub mod sovereignty; // Individual empowerment and peer-to-peer sharing
+pub mod types; // Common types and constants
+               // pub mod webhooks; // TODO: Implement webhooks module
 pub mod zero_copy_handlers; // Add zero-copy optimizations
 
 // TODO: Add these modules when they are implemented
 // pub mod routes;
 // pub mod middleware;
 // pub mod models;
-// pub mod compliance;
-// pub mod auth;
 // pub mod config;
 // pub mod nodes;
 
 // Re-export main components
+pub use error_handling::*;
 pub use server::*;
+pub use types::*;
 // TODO: Re-export when modules are implemented
 // pub use routes::*;
 // pub use middleware::*;

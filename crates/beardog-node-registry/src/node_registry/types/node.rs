@@ -589,7 +589,7 @@ mod tests {
         assert!(healthy.is_healthy);
         assert_eq!(healthy.response_time_ms, 100);
         
-        let unhealthy = HealthCheckResult::unhealthy("Error".to_string(), 1000);
+        let unhealthy = HealthCheckResult::unhealthy("Connection timeout during health check".to_string(), 1000);
         assert!(!unhealthy.is_healthy);
         assert_eq!(unhealthy.response_time_ms, 1000);
     }
@@ -606,7 +606,7 @@ mod tests {
         assert_eq!(entry.status, NodeStatus::Active);
         assert!(entry.is_healthy()); // No health checks yet, assume healthy
         
-        entry.add_health_check_result(HealthCheckResult::unhealthy("Error".to_string(), 1000));
+        entry.add_health_check_result(HealthCheckResult::unhealthy("Service unavailable - connection refused".to_string(), 1000));
         assert!(!entry.is_healthy());
     }
 } 

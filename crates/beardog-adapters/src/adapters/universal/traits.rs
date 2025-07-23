@@ -578,10 +578,13 @@ pub struct ProviderMetadata {
 /// Default implementations for common patterns
 impl Default for ServiceEndpoints {
     fn default() -> Self {
+        let host = std::env::var("BEARDOG_SERVICE_HOST").unwrap_or_else(|_| "localhost".to_string());
+        let port = std::env::var("BEARDOG_SERVICE_PORT").unwrap_or_else(|_| "8080".to_string());
+        
         Self {
-            primary: "http://localhost:8080".to_string(),
-            health: "http://localhost:8080/health".to_string(),
-            metrics: Some("http://localhost:8080/metrics".to_string()),
+            primary: format!("http://{}:{}", host, port),
+            health: format!("http://{}:{}/health", host, port),
+            metrics: Some(format!("http://{}:{}/metrics", host, port)),
             admin: None,
             events: None,
             custom: HashMap::new(),
@@ -626,6 +629,80 @@ impl Default for MonitoringConfig {
             metrics_enabled: true,
             log_level: "info".to_string(),
             health_check_interval_seconds: 30,
+        }
+    }
+}
+
+/// Comprehensive security context for ecosystem operations
+/// 
+/// Provides detailed context information for security decisions including
+/// user identity, device characteristics, risk assessment, and operational permissions.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityContext {
+    /// Unique context identifier
+    pub context_id: String,
+    
+    /// User identifier
+    pub user_id: String,
+    
+    /// Device identifier
+    pub device_id: String,
+    
+    /// Context creation timestamp
+    pub created_at: String,
+    
+    /// Security clearance level (0-10, higher = more privileged)
+    pub security_clearance_level: u8,
+    
+    /// Risk score (0.0-1.0, higher = more risky)
+    pub risk_score: f64,
+    
+    /// Device trust level (0.0-1.0, higher = more trusted)
+    pub device_trust_level: f64,
+    
+    /// Network zone classification
+    pub network_zone: String,
+    
+    /// Operations allowed for this context
+    pub allowed_operations: Vec<String>,
+    
+    /// Operations explicitly denied for this context
+    pub denied_operations: Vec<String>,
+    
+    /// Additional context metadata
+    pub metadata: HashMap<String, String>,
+    
+    /// Authentication token (optional)
+    pub auth_token: Option<String>,
+    
+    /// Session identifier (optional)
+    pub session_id: Option<String>,
+    
+    /// Client IP address (optional)
+    pub client_ip: Option<String>,
+    
+    /// User agent (optional)
+    pub user_agent: Option<String>,
+}
+
+impl Default for SecurityContext {
+    fn default() -> Self {
+        Self {
+            context_id: String::new(),
+            user_id: String::new(),
+            device_id: String::new(),
+            created_at: String::new(),
+            security_clearance_level: 1,
+            risk_score: 0.5,
+            device_trust_level: 0.5,
+            network_zone: "unknown".to_string(),
+            allowed_operations: vec!["read".to_string()],
+            denied_operations: vec![],
+            metadata: HashMap::new(),
+            auth_token: None,
+            session_id: None,
+            client_ip: None,
+            user_agent: None,
         }
     }
 }

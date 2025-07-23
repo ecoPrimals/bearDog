@@ -47,7 +47,7 @@ impl EntropyHierarchyManager {
         human_entropy_collector: Arc<MultiModalHumanEntropyCollector>,
     ) -> Self {
         let mixing_engine = EntropyMixingEngine::new(config.clone());
-        let validator = EntropyValidator::new(/* hsm_manager.clone(), */ config.clone());
+        let validator = EntropyValidator::new(EntropyHierarchyConfig::default());
         let monitor = EntropyMonitor::new(config.clone());
 
         Self {
@@ -433,8 +433,7 @@ impl EntropyHierarchyManager {
     pub fn update_config(&mut self, new_config: EntropyHierarchyConfig) {
         self.config = new_config.clone();
         self.mixing_engine = EntropyMixingEngine::new(new_config.clone());
-        self.validator =
-            EntropyValidator::new(/* self.hsm_manager.clone(), */ new_config.clone());
+        self.validator = EntropyValidator::new(new_config.clone());
         self.monitor = EntropyMonitor::new(new_config);
     }
 

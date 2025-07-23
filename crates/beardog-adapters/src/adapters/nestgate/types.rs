@@ -352,27 +352,7 @@ pub struct NestGateContextKey {
     pub genetic_renewal: Option<GeneticRenewalConfig>,
 }
 
-/// Universal master key structure (DEPRECATED - use NestGateContextKey)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(
-    note = "Master keys violate new age crypto principles. Use NestGateContextKey instead."
-)]
-pub struct NestGateMasterKey {
-    /// Key ID
-    pub id: String,
-    /// Owner ID (primal provider ID)
-    pub owner_id: String,
-    /// Encryption algorithm
-    pub algorithm: String,
-    /// Key creation timestamp
-    pub created_at: DateTime<Utc>,
-    /// Key material (encrypted)
-    pub key_material: Vec<u8>,
-    /// Key metadata
-    pub metadata: HashMap<String, String>,
-    /// Key derivation information
-    pub derivation_info: KeyDerivationInfo,
-}
+
 
 /// Key derivation information
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -210,6 +210,83 @@ impl DecentralizedAuthManager {
         let identity_bytes = &hash[..16];
         Ok(hex::encode(identity_bytes))
     }
+
+    /// Refresh an existing authentication token
+    pub fn refresh_token(&self, token: &CryptoAuthToken) -> BearDogResult<CryptoAuthToken> {
+        // First verify the existing token is valid
+        if !self.verify_auth_token(token)? {
+            return Err(BearDogError::Authentication {
+                message: "Cannot refresh invalid token".to_string(),
+            });
+        }
+
+        // Check if token is within refresh window (can only refresh if not too close to expiry)
+        let now = Utc::now();
+        let time_until_expiry = token.expires_at - now;
+        let min_refresh_window = Duration::minutes(5); // Don't allow refresh within 5 minutes of expiry
+
+        if time_until_expiry < min_refresh_window {
+            return Err(BearDogError::Authentication {
+                message: "Token too close to expiry for refresh".to_string(),
+            });
+        }
+
+        // Create a new token with the same claims but extended lifetime
+        let new_token_id = Uuid::new_v4();
+        let new_nonce = BearDogCrypto::generate_secure_nonce(16)?;
+        let new_expires_at = now + self.token_lifetime;
+
+        let refreshed_token = CryptoAuthToken {
+            token_id: new_token_id,
+            node_identity: token.node_identity.clone(),
+            public_key: token.public_key.clone(),
+            claims: token.claims.clone(), // Keep same claims
+            issued_at: now,               // New issue time
+            expires_at: new_expires_at,
+            nonce: new_nonce,
+            signature: Vec::new(), // Will be filled after signing
+        };
+
+        // Create signature over new token data
+        let signature_data = self.create_signature_data(&refreshed_token)?;
+        let signature = BearDogCrypto::sign_ed25519(&self.node_keypair.0, &signature_data)?;
+
+        Ok(CryptoAuthToken {
+            signature,
+            ..refreshed_token
+        })
+    }
+
+    /// Check if a token is eligible for refresh
+    pub fn can_refresh_token(&self, token: &CryptoAuthToken) -> BearDogResult<bool> {
+        // Token must be valid
+        if !self.verify_auth_token(token)? {
+            return Ok(false);
+        }
+
+        // Token must not be too close to expiry
+        let now = Utc::now();
+        let time_until_expiry = token.expires_at - now;
+        let min_refresh_window = Duration::minutes(5);
+
+        Ok(time_until_expiry >= min_refresh_window)
+    }
+
+    /// Revoke a token (add to revocation list)
+    pub fn revoke_token(&mut self, token: &CryptoAuthToken) -> BearDogResult<()> {
+        // In a more sophisticated implementation, we would maintain a revocation list
+        // For now, we'll just log the revocation
+        tracing::info!(
+            "Token revoked: {} for subject: {}",
+            token.token_id,
+            token.claims.subject
+        );
+
+        // TODO: Implement actual revocation list storage
+        // self.revoked_tokens.insert(token.token_id, Utc::now());
+
+        Ok(())
+    }
 }
 
 /// Challenge-response authentication for real-time verification

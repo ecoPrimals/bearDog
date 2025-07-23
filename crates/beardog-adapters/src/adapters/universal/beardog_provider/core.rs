@@ -57,12 +57,15 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
         registration_manager: Arc<SongBirdRegistrationManager<T>>,
         health_monitor: Arc<UniversalHealthMonitor>,
     ) -> Self {
+        // Use runtime configuration for service endpoints
+        let runtime_config = beardog_config::get_config();
         let _endpoints = ServiceEndpoints {
-            primary: "http://localhost:8443".to_string(),
-            health: "http://localhost:8443/health".to_string(),
-            metrics: "http://localhost:8443/metrics".to_string(),
-            admin: "http://localhost:8443/admin".to_string(),
-            websocket: Some("ws://localhost:8443/ws".to_string()),
+            primary: runtime_config.endpoints.external_api_base_url.clone(),
+            health: format!("{}/health", runtime_config.endpoints.external_api_base_url),
+            metrics: format!("{}/metrics", runtime_config.endpoints.external_api_base_url),
+            admin: format!("{}/admin", runtime_config.endpoints.external_api_base_url),
+            websocket: Some(format!("wss://{}/ws", 
+                runtime_config.endpoints.external_api_base_url.replace("https://", "").replace("http://", ""))),
         };
 
         let metadata = ProviderMetadata {

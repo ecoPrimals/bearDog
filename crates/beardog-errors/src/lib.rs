@@ -1,13 +1,13 @@
-//! Comprehensive error handling for BearDog
+//! Comprehensive error handling for `BearDog`
 //!
-//! Provides detailed error types for all BearDog operations with proper context.
+//! Provides detailed error types for all `BearDog` operations with proper context.
 
 use thiserror::Error;
 
-/// Result type alias for BearDog operations
+/// Result type alias for `BearDog` operations
 pub type BearDogResult<T> = Result<T, BearDogError>;
 
-/// Comprehensive error types for BearDog operations
+/// Comprehensive error types for `BearDog` operations
 #[derive(Error, Debug)]
 pub enum BearDogError {
     /// Configuration-related errors
@@ -144,6 +144,13 @@ pub enum BearDogError {
     #[error("Resource conflict: {message}")]
     Conflict {
         /// Error message describing the conflict
+        message: String,
+    },
+
+    /// Federation errors (for stub implementations that delegate to service mesh)
+    #[error("Federation error: {message}")]
+    Federation {
+        /// Error message describing the federation issue
         message: String,
     },
 
@@ -387,7 +394,14 @@ pub enum BearDogError {
         message: String,
     },
 
-    /// BSTP (BearDog Secure Tunnel Protocol) related errors
+    /// Notification-related errors
+    #[error("Notification error: {message}")]
+    NotificationError {
+        /// Error message describing the notification issue
+        message: String,
+    },
+
+    /// BSTP (`BearDog` Secure Tunnel Protocol) related errors
     #[error("Session not found")]
     SessionNotFound,
 
@@ -560,6 +574,36 @@ pub enum BearDogError {
     Cryptographic {
         /// The cryptographic operation that failed
         operation: String,
+    },
+
+    /// External system service errors  
+    #[error("External service '{service}' error: {message}")]
+    ExternalServiceError {
+        /// The external service that failed
+        service: String,
+        /// Error message describing the failure
+        message: String,
+    },
+
+    /// Configuration errors (alternative form)
+    #[error("Configuration error: {message}")]
+    ConfigurationError {
+        /// Error message describing the configuration issue
+        message: String,
+    },
+
+    /// System errors
+    #[error("System error: {message}")]
+    SystemError {
+        /// Error message describing the system issue
+        message: String,
+    },
+
+    /// Timeout errors (alternative form)
+    #[error("Timeout: {message}")]
+    TimeoutError {
+        /// Error message describing the timeout
+        message: String,
     },
 }
 

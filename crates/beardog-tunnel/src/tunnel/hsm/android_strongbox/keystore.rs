@@ -150,6 +150,7 @@ impl AndroidKeystore {
     }
 
     /// Convert Android algorithm to BearDog KeyType
+    #[allow(dead_code)] // Will be used when Android Strongbox integration is fully implemented
     fn convert_algorithm_to_keytype(
         &self,
         algorithm: &AndroidKeyAlgorithm,
@@ -161,7 +162,7 @@ impl AndroidKeystore {
                 384 => Ok(KeyType::EccP384),
                 521 => Ok(KeyType::EccP521),
                 _ => Err(BearDogError::UnsupportedKeyType {
-                    key_type: format!("EC-{}", key_size),
+                    key_type: format!("EC-{key_size}"),
                 }),
             },
             AndroidKeyAlgorithm::Rsa => Ok(KeyType::Rsa { key_size }),
@@ -170,7 +171,7 @@ impl AndroidKeystore {
                 192 => Ok(KeyType::Aes192),
                 256 => Ok(KeyType::Aes256),
                 _ => Err(BearDogError::UnsupportedKeyType {
-                    key_type: format!("AES-{}", key_size),
+                    key_type: format!("AES-{key_size}"),
                 }),
             },
         }

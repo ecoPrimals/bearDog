@@ -39,7 +39,7 @@ impl DefaultMemoryProtector {
 }
 
 /// Configuration for memory protection
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MemoryProtectionConfig {
     /// Whether memory protection is enabled
     pub enable_protection: bool,

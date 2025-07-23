@@ -618,11 +618,35 @@ async fn test_api_error_handling() {
         // Should return 404 and not leak information
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
-        // TODO: Check response body doesn't contain sensitive information
-        // let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-        // let body_str = String::from_utf8_lossy(&body);
-        // assert!(!body_str.contains("Internal server path"));
-        // assert!(!body_str.contains("Database error"));
+        // Check response body doesn't contain sensitive information
+        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body_str = String::from_utf8_lossy(&body);
+        
+        // Ensure no internal paths are leaked
+        assert!(!body_str.contains("/home/"));
+        assert!(!body_str.contains("/usr/"));
+        assert!(!body_str.contains("/var/"));
+        assert!(!body_str.contains("src/"));
+        assert!(!body_str.contains("crates/"));
+        assert!(!body_str.contains("Internal server path"));
+        
+        // Ensure no database information is leaked
+        assert!(!body_str.contains("Database error"));
+        assert!(!body_str.contains("SQL"));
+        assert!(!body_str.contains("PostgreSQL"));
+        assert!(!body_str.contains("MongoDB"));
+        assert!(!body_str.contains("Connection failed"));
+        
+        // Ensure no stack traces or debug information are leaked
+        assert!(!body_str.contains("panic"));
+        assert!(!body_str.contains("unwrap"));
+        assert!(!body_str.contains("thread"));
+        assert!(!body_str.contains("backtrace"));
+        
+        // Ensure no environment variables are leaked
+        assert!(!body_str.contains("BEARDOG_"));
+        assert!(!body_str.contains("DATABASE_URL"));
+        assert!(!body_str.contains("SECRET_KEY"));
     }
 
     // Test invalid HTTP methods

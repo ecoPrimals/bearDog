@@ -7,6 +7,7 @@
 //! - Middleware for observability
 //! - Graceful shutdown handling
 
+use super::zero_copy_handlers::ZeroCopyHandlerContext;
 use super::*;
 use axum::{
     extract::{Request, State},
@@ -19,11 +20,8 @@ use axum::{
 use beardog_config::core::BearDogConfig;
 use beardog_errors::{BearDogError, BearDogResult};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::net::TcpListener;
-use tower_http::{
-    compression::CompressionLayer, cors::CorsLayer, timeout::TimeoutLayer, trace::TraceLayer,
-};
 use tracing::{error, info, warn};
 
 use crate::api::rate_limiting::RateLimiter;
@@ -142,14 +140,22 @@ impl BearDogApiServer {
             cache: self.cache.clone(),
             rate_limiter: self.rate_limiter.clone(),
             config: self.config.clone(),
+            zero_copy_context: Arc::new(ZeroCopyHandlerContext::new()),
         };
 
-        let app = Router::new()
-            .route("/health", get(self::handlers::health_check))
+        // Return the configured app
+        Router::new()
+            // Use zero-copy optimized health endpoint for better performance
+            .route("/health", get(zero_copy_health_wrapper))
             .route("/info", get(self::handlers::server_info))
+            // Performance monitoring endpoint for zero-copy statistics
+            .route(
+                "/api/v1/performance/zero-copy-stats",
+                get(zero_copy_stats_handler),
+            )
             // API v1 routes
             .nest("/v1", self.create_v1_routes())
-            // Apply individual middleware layers
+            // Apply basic middleware layers
             .layer(middleware::from_fn(request_id_middleware))
             .layer(middleware::from_fn_with_state(
                 app_state.clone(),
@@ -159,25 +165,7 @@ impl BearDogApiServer {
                 app_state.clone(),
                 performance_middleware,
             ))
-            .layer(TraceLayer::new_for_http())
-            .layer(TimeoutLayer::new(Duration::from_secs(
-                self.config.request_timeout_seconds,
-            )));
-
-        // Apply optional layers based on configuration
-        let app = if self.config.compression_enabled {
-            app.layer(CompressionLayer::new())
-        } else {
-            app
-        };
-
-        let app = if self.config.cors_enabled {
-            app.layer(CorsLayer::permissive())
-        } else {
-            app
-        };
-
-        app.with_state(app_state)
+            .with_state(app_state)
     }
 
     /// Create API v1 routes
@@ -189,9 +177,15 @@ impl BearDogApiServer {
             .nest("/genetics", crate::api::genetics::create_routes())
             // Monitoring API
             .nest("/monitoring", crate::api::monitoring::create_routes())
+            // Individual Sovereignty & Peer-to-Peer Sharing API
+            .nest("/sovereignty", crate::api::sovereignty::create_routes())
+            // Compliance & Audit Management API
+            .nest("/compliance", crate::api::compliance::create_routes())
+            // Authentication & Authorization API
+            .nest("/auth", crate::api::auth::create_routes())
+            // Ecosystem RPC Integration API
+            .nest("/rpc", crate::api::rpc::create_rpc_router())
         // TODO: Add these routes when modules are implemented
-        // .nest("/compliance", crate::api::compliance::create_routes())
-        // .nest("/auth", crate::api::auth::create_routes())
         // .nest("/config", crate::api::config::create_routes())
         // .nest("/nodes", crate::api::nodes::create_routes())
     }
@@ -227,6 +221,69 @@ impl BearDogApiServer {
     }
 }
 
+/// Zero-copy health check wrapper compatible with axum routing
+async fn zero_copy_health_wrapper(State(state): State<AppState>) -> Result<Response, StatusCode> {
+    use serde_json::json;
+
+    let health_data = json!({
+        "success": true,
+        "status": "healthy",
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "version": env!("CARGO_PKG_VERSION"),
+        "performance_mode": "zero-copy-optimized",
+        "components": {
+            "api": "healthy",
+            "crypto": "healthy",
+            "buffer_pool": "active"
+        }
+    });
+
+    state
+        .zero_copy_context
+        .response_builder
+        .json_response(&health_data, StatusCode::OK)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+/// Zero-copy performance statistics endpoint
+async fn zero_copy_stats_handler(State(state): State<AppState>) -> Result<Response, StatusCode> {
+    let stats = state.zero_copy_context.get_comprehensive_stats().await;
+
+    let response_data = serde_json::json!({
+        "success": true,
+        "data": {
+            "buffer_pool": {
+                "small_buffer_hits": stats.buffer_pool_stats.small_buffer_hits.load(std::sync::atomic::Ordering::Relaxed),
+                "medium_buffer_hits": stats.buffer_pool_stats.medium_buffer_hits.load(std::sync::atomic::Ordering::Relaxed),
+                "large_buffer_hits": stats.buffer_pool_stats.large_buffer_hits.load(std::sync::atomic::Ordering::Relaxed),
+                "total_allocations": stats.buffer_pool_stats.total_allocations.load(std::sync::atomic::Ordering::Relaxed),
+            },
+            "response_performance": {
+                "responses_built": stats.response_stats.responses_built.load(std::sync::atomic::Ordering::Relaxed),
+                "header_cache_hits": stats.response_stats.header_cache_hits.load(std::sync::atomic::Ordering::Relaxed),
+                "streaming_responses": stats.response_stats.streaming_responses.load(std::sync::atomic::Ordering::Relaxed),
+                "content_bytes_served": stats.response_stats.content_bytes_served.load(std::sync::atomic::Ordering::Relaxed),
+            },
+            "request_parsing": {
+                "requests_parsed": stats.request_stats.requests_parsed.load(std::sync::atomic::Ordering::Relaxed),
+                "zero_copy_parses": stats.request_stats.zero_copy_parses.load(std::sync::atomic::Ordering::Relaxed),
+            }
+        },
+        "metadata": {
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+            "performance_mode": "zero-copy-optimized"
+        }
+    });
+
+    state
+        .zero_copy_context
+        .response_builder
+        .json_response(&response_data, StatusCode::OK)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+}
+
 /// Application state shared across handlers
 #[derive(Clone)]
 pub struct AppState {
@@ -238,6 +295,8 @@ pub struct AppState {
     pub rate_limiter: Arc<crate::api::rate_limiting::RateLimiterType>,
     /// API server configuration
     pub config: ApiServerConfig,
+    /// Zero-copy handler context for high-performance operations
+    pub zero_copy_context: Arc<ZeroCopyHandlerContext>,
 }
 
 /// Request performance middleware

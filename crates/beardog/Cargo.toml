@@ -6,6 +6,14 @@ license.workspace = true
 description = "BearDog Security Manager - Convenience library re-exporting all components"
 authors.workspace = true
 
+[[example]]
+name = "entropy_progressive_licensing_demo"
+path = "../../examples/entropy_progressive_licensing_demo.rs"
+
+[[example]]
+name = "context_aware_licensing_demo"
+path = "../../examples/context_aware_licensing_demo.rs"
+
 [dependencies]
 beardog-core = { workspace = true }
 beardog-errors = { workspace = true }
@@ -34,19 +42,6 @@ uuid = { workspace = true }
 chrono = { workspace = true }
 anyhow = { workspace = true }
 
-# Define examples
-[[example]]
-name = "ecosystem_integration_demo"
-path = "../../examples/ecosystem_integration_demo.rs"
-
-[[example]]
-name = "standalone_crypto_demo"
-path = "../../examples/standalone_crypto_demo.rs"
-
-[[example]]
-name = "recovery_demo"
-path = "../../examples/recovery_demo.rs"
-
-[[example]]
-name = "hpc_genetic_recovery_demo"
-path = "../../examples/hpc_genetic_recovery_demo.rs" 
+# Clean examples - only reference existing files
+# Legacy examples removed during system cleanup
+# New clean examples are in the examples/ directory 

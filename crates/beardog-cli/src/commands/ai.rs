@@ -533,7 +533,9 @@ async fn handle_status_command(
         Ok(status)
     } else {
         Ok(serde_json::json!({
-            "error": "BearDog core not available"
+            "error": "BearDog core not available",
+            "details": "Failed to initialize BearDog core. Check configuration and ensure all dependencies are properly installed.",
+            "suggestions": ["Verify configuration files", "Check system resources", "Review installation logs"]
         }))
     }
 }
@@ -610,13 +612,15 @@ async fn handle_security_command(
             signature,
             key_id,
         } => {
-            // Implementation would go here
+            // Implementation would go here - for now, perform basic validation
+            let is_valid = !input.is_empty() && !signature.is_empty() && signature != "invalid";
             Ok(serde_json::json!({
                 "operation": "verify",
                 "input": input,
                 "signature": signature,
                 "key_id": key_id,
-                "valid": true
+                "valid": is_valid,
+                "note": "Placeholder implementation - not cryptographically secure"
             }))
         }
         SecurityOperation::ListKeys { key_type, usage } => {

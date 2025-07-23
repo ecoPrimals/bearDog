@@ -22,7 +22,7 @@ impl RustBuilder {
         info!("🔨 Building BearDog Android application...");
 
         // Setup environment
-        self.setup_build_environment(target).await?;
+        self.setup_build_environment(target)?;
 
         // Build the Android library
         self.build_android_library(release, target).await?;
@@ -34,7 +34,7 @@ impl RustBuilder {
         Ok(())
     }
 
-    async fn setup_build_environment(&self, target: &str) -> Result<()> {
+    fn setup_build_environment(&self, target: &str) -> Result<()> {
         debug!("🔧 Setting up build environment for {}", target);
 
         // Determine NDK paths

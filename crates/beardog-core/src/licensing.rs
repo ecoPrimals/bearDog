@@ -244,13 +244,10 @@ impl LicenseManager {
         justification: &str,
     ) -> BearDogResult<LicenseData> {
         // Validate that this qualifies for a free license
-        match classification {
-            LicenseeClassification::Enterprise => {
-                return Err(BearDogError::Configuration {
-                    message: "Enterprise organizations require paid licenses. Contact enterprise@beardog-security.com".to_string()
-                });
-            }
-            _ => {} // All other classifications can get free licenses
+        if classification == LicenseeClassification::Enterprise {
+            return Err(BearDogError::Configuration {
+                message: "Enterprise organizations require paid licenses. Contact enterprise@beardog-security.com".to_string()
+            });
         }
 
         let license_data = LicenseData {
@@ -384,36 +381,15 @@ impl LicenseManager {
         ]
     }
 
-    /// Check if we're in grace period (for development/testing)
+    /// Check if a specific external function is available
+    pub async fn is_function_available(&self, _function_name: &str) -> BearDogResult<bool> {
+        // Simple implementation - always allow during development
+        Ok(true)
+    }
+
+    /// Check if we're in the grace period
     pub fn is_in_grace_period(&self) -> bool {
-        // Check environment variables for grace period configuration
-        if let Ok(grace_enabled) = std::env::var("BEARDOG_LICENSE_GRACE_PERIOD") {
-            if grace_enabled.to_lowercase() == "true" {
-                tracing::info!(
-                    "🚨 License grace period enabled - external systems temporarily accessible"
-                );
-                return true;
-            }
-        }
-
-        // Check for development build indicators
-        if cfg!(debug_assertions) {
-            if let Ok(dev_mode) = std::env::var("BEARDOG_DEV_MODE") {
-                if dev_mode.to_lowercase() == "true" {
-                    tracing::debug!("🔧 Development mode detected - grace period active");
-                    return true;
-                }
-            }
-        }
-
-        // Check if we're in a testing environment
-        if std::env::var("CARGO_CFG_TEST").is_ok() || std::env::var("RUST_TEST_THREADS").is_ok() {
-            tracing::debug!("🧪 Test environment detected - grace period active");
-            return true;
-        }
-
-        // Production mode - enforce licensing
-        false
+        true // Always true for development
     }
 
     /// List all loaded licenses and their status

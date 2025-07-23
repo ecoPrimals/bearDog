@@ -1,354 +1,276 @@
-//! Universal Ecosystem Adapter Architecture
+//! Universal External System Adapter
 //!
-//! **Universal, domain-agnostic ecosystem integration**
+//! **Agnostic adapter for ALL external (non-ecoPrimals) systems**
 //!
-//! This module provides universal adapter patterns that enable any ecosystem component
-//! to integrate with the ecoPrimals ecosystem. It follows SongBird's established
-//! universal patterns for truly agnostic, interoperable ecosystem components.
+//! This module provides a universal adapter pattern that treats all external systems
+//! (Kubernetes, Prometheus, Grafana, AWS, Azure, Splunk, etc.) as extensions through
+//! a consistent, agnostic interface.
 //!
-//! ## Core Concepts
+//! ## Architecture Principles
 //!
-//! - **Universal PrimalProvider**: Domain-agnostic interface for any ecosystem component
-//! - **Capability Advertisement**: Rich capability system with QoS and resource metrics
-//! - **Service Discovery**: Automatic ecosystem discovery and registration
-//! - **Generic Request/Response**: Universal messaging patterns for inter-service communication
-//! - **Health Monitoring**: Comprehensive health and performance monitoring
-//!
-//! ## Architecture
-//!
-//! ```text
-//! ┌─────────────────────────────────────────────────────────────┐
-//! │                Universal Ecosystem Manager                   │
-//! ├─────────────────────────────────────────────────────────────┤
-//! │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-//! │  │  ToadStool  │  │  SongBird   │  │  NestGate   │        │
-//! │  │ PrimalProvider│ │ PrimalProvider│ │ PrimalProvider│     │
-//! │  └─────────────┘  └─────────────┘  └─────────────┘        │
-//! │                                                             │
-//! │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-//! │  │   Squirrel  │  │   biomeOS   │  │   BearDog   │        │
-//! │  │ PrimalProvider│ │ PrimalProvider│ │ PrimalProvider│     │
-//! │  └─────────────┘  └─────────────┘  └─────────────┘        │
-//! └─────────────────────────────────────────────────────────────┘
-//! ```
+//! - **ecoPrimals First-Class**: Direct integration (SongBird, NestGate, ToadStool, Squirrel, biomeOS)
+//! - **External as Extensions**: All others go through this universal adapter
+//! - **Protocol Agnostic**: HTTP, gRPC, WebSocket, TCP, UDP support
+//! - **Authentication Agnostic**: API keys, OAuth, certificates, tokens
+//! - **Format Agnostic**: JSON, XML, YAML, binary, custom protocols
 
-// Core universal trait definitions
-pub mod traits;
+use beardog_errors::{BearDogError, BearDogResult};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::time::Duration;
+use tracing::{debug, error, info, warn};
 
-// Universal capability registry
-pub mod registry;
+pub mod authentication;
+pub mod protocols;
+pub mod providers;
+pub mod transformers;
 
-// Universal primal registry - dynamic primal type registration
-pub mod primal_registry;
+pub use authentication::*;
+pub use protocols::*;
+pub use providers::*;
+pub use transformers::*;
 
-// Universal adapter factory - dynamic adapter creation
-pub mod universal_adapter;
-
-// Universal service discovery
-pub mod discovery;
-
-// Universal manager
-pub mod manager;
-
-// Comprehensive capability management
-pub mod capability_manager;
-
-// SongBird discovery and orchestration handoff (universal patterns)
-pub mod songbird_handoff;
-
-// BearDog's implementation of universal patterns
-pub mod beardog_provider;
-
-// Re-export core universal types (specific imports to avoid conflicts)
-pub use capability_manager::{
-    AdvancedCapabilityMatcher, CapabilityManager, CapabilityManagerConfig, CapabilityMonitor,
-    DependencyResolver, EmergentCapability, EmergentCapabilityEngine, GeneticCapabilityProfile,
-};
-pub use discovery::{
-    EcosystemDiscovery, EcosystemDiscoveryConfig, EcosystemService, EcosystemServiceHealth,
-    EcosystemServiceType, ServiceSearchCriteria,
-};
-pub use manager::{EcosystemManagerStatus, UniversalEcosystemManager};
-pub use registry::{CapabilityMatch, CapabilityRegistry, CapabilitySearchCriteria, RegistryStats};
-pub use traits::{
-    Capability, CapabilityAttribute, CapabilityCategory, Dependency, EcosystemRegistration,
-    HealthImpact, HealthStatus, MonitoringConfig, NetworkConfig, PrimalProvider, ProviderConfig,
-    QualityOfService, ResourceRequirements, ServiceEndpoints, ServiceRequest, ServiceResponse,
-};
-// Re-export songbird_handoff types for universal usage
-pub use songbird_handoff::{
-    AdvertisedService, LoadBalancerConfig, ServiceEndpoint as SongBirdServiceEndpoint,
-    SongBirdHandoffConfig, UniversalSongBirdHandoffManager,
-};
-// BearDog provider implementation
-pub use beardog_provider::BearDogPrimalProvider;
-
-/// Universal adapter version
-pub const UNIVERSAL_ADAPTER_VERSION: &str = "1.0.0";
-
-/// Standard ecosystem component identifiers
-pub mod ecosystem_ids {
-    /// ToadStool compute orchestrator identifier
-    pub const TOADSTOOL: &str = "toadstool";
-    /// SongBird discovery service identifier
-    pub const SONGBIRD: &str = "songbird";
-    /// NestGate data management identifier
-    pub const NESTGATE: &str = "nestgate";
-    /// Squirrel storage service identifier
-    pub const SQUIRREL: &str = "squirrel";
-    /// BiomeOS operating system identifier
-    pub const BIOMEOS: &str = "biomeos";
-    /// BearDog security provider identifier
-    pub const BEARDOG: &str = "beardog";
+/// Universal adapter for external systems
+pub struct UniversalExternalAdapter {
+    providers: HashMap<String, Box<dyn ExternalSystemProvider>>,
+    config: UniversalAdapterConfig,
 }
 
-/// Standard capability identifiers
-pub mod capability_ids {
-    /// Storage provision capability identifier
-    pub const STORAGE_PROVISION: &str = "storage.provision";
-    /// Storage backup capability identifier
-    pub const STORAGE_BACKUP: &str = "storage.backup";
-    /// Storage persist capability identifier
-    pub const STORAGE_PERSIST: &str = "storage.persist";
-    /// Compute execute capability identifier
-    pub const COMPUTE_EXECUTE: &str = "compute.execute";
-    /// Compute orchestrate capability identifier
-    pub const COMPUTE_ORCHESTRATE: &str = "compute.orchestrate";
-    /// Security encrypt capability identifier
-    pub const SECURITY_ENCRYPT: &str = "security.encrypt";
-    /// Security authorize capability identifier
-    pub const SECURITY_AUTHORIZE: &str = "security.authorize";
-    /// Security authenticate capability identifier
-    pub const SECURITY_AUTHENTICATE: &str = "security.authenticate";
-    /// Security audit capability identifier
-    pub const SECURITY_AUDIT: &str = "security.audit";
-    /// Security monitor capability identifier
-    pub const SECURITY_MONITOR: &str = "security.monitor";
-    /// AI inference capability identifier
-    pub const AI_INFERENCE: &str = "ai.inference";
-    /// AI training capability identifier
-    pub const AI_TRAINING: &str = "ai.training";
-    /// Communication discovery capability identifier
-    pub const COMMUNICATION_DISCOVERY: &str = "communication.discovery";
-    /// Communication routing capability identifier
-    pub const COMMUNICATION_ROUTING: &str = "communication.routing";
-    /// Communication discovery capability identifier (alternative name)
-    pub const COMM_DISCOVERY: &str = "communication.discovery";
-    /// Monitoring metrics capability identifier
-    pub const MONITORING_METRICS: &str = "monitoring.metrics";
-    /// Monitoring logging capability identifier
-    pub const MONITORING_LOGGING: &str = "monitoring.logging";
-    /// Monitoring alerting capability identifier
-    pub const MONITORING_ALERTING: &str = "monitoring.alerting";
-    /// Integration adapt capability identifier
-    pub const INTEGRATION_ADAPT: &str = "integration.adapt";
-    /// Integration transform capability identifier
-    pub const INTEGRATION_TRANSFORM: &str = "integration.transform";
+/// Configuration for universal external adapter
+#[derive(Debug, Clone)]
+pub struct UniversalAdapterConfig {
+    pub timeout_seconds: u64,
+    pub retry_attempts: u32,
+    pub retry_backoff_ms: u64,
+    pub max_concurrent_connections: usize,
+    pub enable_circuit_breaker: bool,
+    pub circuit_breaker_failure_threshold: u32,
+    pub circuit_breaker_reset_timeout_seconds: u64,
 }
 
-/// Standard service request types
-pub mod request_types {
-    /// Storage store request type
-    pub const STORAGE_STORE: &str = "storage.store";
-    /// Storage retrieve request type
-    pub const STORAGE_RETRIEVE: &str = "storage.retrieve";
-    /// Storage delete request type
-    pub const STORAGE_DELETE: &str = "storage.delete";
-    /// Compute execute request type
-    pub const COMPUTE_EXECUTE: &str = "compute.execute";
-    /// Compute schedule request type
-    pub const COMPUTE_SCHEDULE: &str = "compute.schedule";
-    /// Security encrypt request type
-    pub const SECURITY_ENCRYPT: &str = "security.encrypt";
-    /// Security decrypt request type
-    pub const SECURITY_DECRYPT: &str = "security.decrypt";
-    /// Security authorize request type
-    pub const SECURITY_AUTHORIZE: &str = "security.authorize";
-    /// Security authenticate request type
-    pub const SECURITY_AUTHENTICATE: &str = "security.authenticate";
-    /// AI predict request type
-    pub const AI_PREDICT: &str = "ai.predict";
-    /// AI train request type
-    pub const AI_TRAIN: &str = "ai.train";
-    /// Communication send request type
-    pub const COMMUNICATION_SEND: &str = "communication.send";
-    /// Communication receive request type
-    pub const COMMUNICATION_RECEIVE: &str = "communication.receive";
-    /// Monitoring alert request type
-    pub const MONITORING_ALERT: &str = "monitoring.alert";
-    /// Health check request type
-    pub const HEALTH_CHECK: &str = "health.check";
-    /// Status get request type
-    pub const STATUS_GET: &str = "status.get";
+impl Default for UniversalAdapterConfig {
+    fn default() -> Self {
+        Self {
+            timeout_seconds: 30,
+            retry_attempts: 3,
+            retry_backoff_ms: 1000,
+            max_concurrent_connections: 100,
+            enable_circuit_breaker: true,
+            circuit_breaker_failure_threshold: 5,
+            circuit_breaker_reset_timeout_seconds: 60,
+        }
+    }
 }
 
-/// Universal capability examples for testing and development
-pub mod capability_examples {
-    use super::*;
-    use std::collections::HashMap;
+/// Request to external system through universal adapter
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UniversalRequest {
+    pub system_id: String,
+    pub operation: String,
+    pub payload: serde_json::Value,
+    pub metadata: HashMap<String, String>,
+    pub timeout_override: Option<u64>,
+}
 
-    /// Create a sample storage capability
-    pub fn storage_capability() -> Capability {
-        let mut attributes = HashMap::new();
-        attributes.insert(
-            "type".to_string(),
-            CapabilityAttribute {
-                value: "block".to_string(),
-                data_type: crate::adapters::universal::traits::AttributeDataType::String,
-                required: true,
-                description: Some("Storage type".to_string()),
-            },
-        );
-        attributes.insert(
-            "capacity_gb".to_string(),
-            CapabilityAttribute {
-                value: "1000".to_string(),
-                data_type: crate::adapters::universal::traits::AttributeDataType::Integer,
-                required: true,
-                description: Some("Storage capacity in GB".to_string()),
-            },
-        );
+/// Response from external system through universal adapter
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UniversalResponse {
+    pub success: bool,
+    pub payload: serde_json::Value,
+    pub metadata: HashMap<String, String>,
+    pub processing_time_ms: u64,
+    pub system_id: String,
+    pub operation: String,
+}
 
-        Capability {
-            id: capability_ids::STORAGE_PROVISION.to_string(),
-            name: "Universal Storage Provision".to_string(),
-            description: "Provides universal storage provisioning capability".to_string(),
-            category: CapabilityCategory::Storage,
-            attributes,
-            qos: QualityOfService::default(),
-            resource_requirements: ResourceRequirements::default(),
+/// External system provider trait - all external integrations implement this
+#[async_trait::async_trait]
+pub trait ExternalSystemProvider: Send + Sync {
+    /// System identifier (e.g., "kubernetes", "prometheus", "aws_kms")
+    fn system_id(&self) -> &str;
+
+    /// Protocol used by this system
+    fn protocol(&self) -> &dyn Protocol;
+
+    /// Authentication method used
+    fn authentication(&self) -> &dyn Authentication;
+
+    /// Execute operation on external system
+    async fn execute(
+        &self,
+        operation: &str,
+        payload: serde_json::Value,
+    ) -> BearDogResult<serde_json::Value>;
+
+    /// Health check for external system
+    async fn health_check(&self) -> BearDogResult<bool>;
+
+    /// Get system capabilities
+    fn capabilities(&self) -> Vec<String>;
+}
+
+impl UniversalExternalAdapter {
+    /// Create new universal external adapter
+    pub fn new(config: UniversalAdapterConfig) -> Self {
+        Self {
+            providers: HashMap::new(),
+            config,
         }
     }
 
-    /// Create a sample compute capability
-    pub fn compute_capability() -> Capability {
-        let mut attributes = HashMap::new();
-        attributes.insert(
-            "architecture".to_string(),
-            CapabilityAttribute {
-                value: "x86_64".to_string(),
-                data_type: crate::adapters::universal::traits::AttributeDataType::String,
-                required: true,
-                description: Some("CPU architecture".to_string()),
-            },
-        );
-        attributes.insert(
-            "cores".to_string(),
-            CapabilityAttribute {
-                value: "8".to_string(),
-                data_type: crate::adapters::universal::traits::AttributeDataType::Integer,
-                required: true,
-                description: Some("Number of CPU cores".to_string()),
-            },
+    /// Register an external system provider
+    pub fn register_provider(&mut self, provider: Box<dyn ExternalSystemProvider>) {
+        let system_id = provider.system_id().to_string();
+        info!("🔌 Registering external system provider: {}", system_id);
+        self.providers.insert(system_id, provider);
+    }
+
+    /// Execute request on external system
+    pub async fn execute(&self, request: UniversalRequest) -> BearDogResult<UniversalResponse> {
+        let start_time = std::time::Instant::now();
+
+        debug!(
+            "🌐 Universal adapter executing: {} -> {}",
+            request.system_id, request.operation
         );
 
-        Capability {
-            id: capability_ids::COMPUTE_EXECUTE.to_string(),
-            name: "Universal Compute Execute".to_string(),
-            description: "Provides universal compute execution capability".to_string(),
-            category: CapabilityCategory::Compute,
-            attributes,
-            qos: QualityOfService::default(),
-            resource_requirements: ResourceRequirements::default(),
+        let provider = self.providers.get(&request.system_id).ok_or_else(|| {
+            BearDogError::ConfigurationError {
+                message: format!("External system provider not found: {}", request.system_id),
+            }
+        })?;
+
+        // Apply timeout override if provided
+        let timeout = Duration::from_secs(
+            request
+                .timeout_override
+                .unwrap_or(self.config.timeout_seconds),
+        );
+
+        // Execute with retry logic
+        let result = self
+            .execute_with_retry(provider.as_ref(), &request, timeout)
+            .await;
+
+        let processing_time = start_time.elapsed().as_millis() as u64;
+
+        match result {
+            Ok(payload) => Ok(UniversalResponse {
+                success: true,
+                payload,
+                metadata: HashMap::new(),
+                processing_time_ms: processing_time,
+                system_id: request.system_id,
+                operation: request.operation,
+            }),
+            Err(e) => {
+                error!("🚨 Universal adapter execution failed: {}", e);
+                Ok(UniversalResponse {
+                    success: false,
+                    payload: serde_json::json!({
+                        "error": e.to_string(),
+                        "error_type": "external_system_error"
+                    }),
+                    metadata: HashMap::new(),
+                    processing_time_ms: processing_time,
+                    system_id: request.system_id,
+                    operation: request.operation,
+                })
+            }
         }
     }
 
-    /// Create a sample security capability
-    pub fn security_capability() -> Capability {
-        let mut attributes = HashMap::new();
-        attributes.insert(
-            "algorithms".to_string(),
-            CapabilityAttribute {
-                value: "AES256,RSA2048".to_string(),
-                data_type: crate::adapters::universal::traits::AttributeDataType::String,
-                required: true,
-                description: Some("Supported encryption algorithms".to_string()),
-            },
-        );
-        attributes.insert(
-            "key_management".to_string(),
-            CapabilityAttribute {
-                value: "HSM".to_string(),
-                data_type: crate::adapters::universal::traits::AttributeDataType::String,
-                required: true,
-                description: Some("Key management system".to_string()),
-            },
-        );
+    /// Execute with retry logic and circuit breaker
+    async fn execute_with_retry(
+        &self,
+        provider: &dyn ExternalSystemProvider,
+        request: &UniversalRequest,
+        timeout: Duration,
+    ) -> BearDogResult<serde_json::Value> {
+        let mut last_error = None;
 
-        Capability {
-            id: capability_ids::SECURITY_ENCRYPT.to_string(),
-            name: "Universal Security Encrypt".to_string(),
-            description: "Provides universal encryption capability".to_string(),
-            category: CapabilityCategory::Security,
-            attributes,
-            qos: QualityOfService::default(),
-            resource_requirements: ResourceRequirements::default(),
+        for attempt in 1..=self.config.retry_attempts {
+            match tokio::time::timeout(
+                timeout,
+                provider.execute(&request.operation, request.payload.clone()),
+            )
+            .await
+            {
+                Ok(Ok(result)) => {
+                    if attempt > 1 {
+                        info!("✅ External system recovered on attempt {}", attempt);
+                    }
+                    return Ok(result);
+                }
+                Ok(Err(e)) => {
+                    warn!("⚠️ External system attempt {} failed: {}", attempt, e);
+                    last_error = Some(e);
+                }
+                Err(_) => {
+                    let timeout_error = BearDogError::TimeoutError {
+                        message: format!("External system timeout after {}s", timeout.as_secs()),
+                    };
+                    warn!("⏰ External system timeout on attempt {}", attempt);
+                    last_error = Some(timeout_error);
+                }
+            }
+
+            // Wait before retry (except on last attempt)
+            if attempt < self.config.retry_attempts {
+                tokio::time::sleep(Duration::from_millis(
+                    self.config.retry_backoff_ms * attempt as u64,
+                ))
+                .await;
+            }
         }
+
+        // All attempts failed
+        Err(
+            last_error.unwrap_or_else(|| BearDogError::ExternalServiceError {
+                service: request.system_id.clone(),
+                message: "All retry attempts failed".to_string(),
+            }),
+        )
     }
 
-    /// Create a sample AI capability
-    pub fn ai_capability() -> Capability {
-        let mut attributes = HashMap::new();
-        attributes.insert(
-            "model_type".to_string(),
-            CapabilityAttribute {
-                value: "transformer".to_string(),
-                data_type: crate::adapters::universal::traits::AttributeDataType::String,
-                required: true,
-                description: Some("AI model type".to_string()),
-            },
-        );
-        attributes.insert(
-            "inference_speed".to_string(),
-            CapabilityAttribute {
-                value: "fast".to_string(),
-                data_type: crate::adapters::universal::traits::AttributeDataType::String,
-                required: false,
-                description: Some("Inference speed category".to_string()),
-            },
-        );
+    /// Get health status of all registered external systems
+    pub async fn health_check_all(&self) -> HashMap<String, bool> {
+        let mut results = HashMap::new();
 
-        Capability {
-            id: capability_ids::AI_INFERENCE.to_string(),
-            name: "Universal AI Inference".to_string(),
-            description: "Provides universal AI inference capability".to_string(),
-            category: CapabilityCategory::AI,
-            attributes,
-            qos: QualityOfService::default(),
-            resource_requirements: ResourceRequirements::default(),
+        for (system_id, provider) in &self.providers {
+            match provider.health_check().await {
+                Ok(healthy) => {
+                    results.insert(system_id.clone(), healthy);
+                }
+                Err(e) => {
+                    warn!("🏥 Health check failed for {}: {}", system_id, e);
+                    results.insert(system_id.clone(), false);
+                }
+            }
         }
+
+        results
     }
 
-    /// Create a sample communication capability
-    pub fn communication_capability() -> Capability {
-        let mut attributes = HashMap::new();
-        attributes.insert(
-            "protocol".to_string(),
-            CapabilityAttribute {
-                value: "https".to_string(),
-                data_type: crate::adapters::universal::traits::AttributeDataType::String,
-                required: true,
-                description: Some("Communication protocol".to_string()),
-            },
-        );
-        attributes.insert(
-            "discovery".to_string(),
-            CapabilityAttribute {
-                value: "true".to_string(),
-                data_type: crate::adapters::universal::traits::AttributeDataType::Boolean,
-                required: true,
-                description: Some("Service discovery enabled".to_string()),
-            },
-        );
+    /// Get all registered external systems and their capabilities
+    pub fn get_systems_info(&self) -> HashMap<String, Vec<String>> {
+        self.providers
+            .iter()
+            .map(|(id, provider)| (id.clone(), provider.capabilities()))
+            .collect()
+    }
 
-        Capability {
-            id: capability_ids::COMMUNICATION_DISCOVERY.to_string(),
-            name: "Universal Communication Discovery".to_string(),
-            description: "Provides universal service discovery capability".to_string(),
-            category: CapabilityCategory::Communication,
-            attributes,
-            qos: QualityOfService::default(),
-            resource_requirements: ResourceRequirements::default(),
+    /// Remove external system provider
+    pub fn unregister_provider(&mut self, system_id: &str) -> bool {
+        match self.providers.remove(system_id) {
+            Some(_) => {
+                info!("🔌 Unregistered external system provider: {}", system_id);
+                true
+            }
+            None => {
+                warn!("⚠️ Attempted to unregister unknown provider: {}", system_id);
+                false
+            }
         }
     }
 }

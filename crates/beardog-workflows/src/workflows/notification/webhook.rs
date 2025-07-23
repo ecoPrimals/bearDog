@@ -1,12 +1,13 @@
 //! Webhook notification functionality - simplified placeholder implementation
 
-use super::super::types::*;
+use super::NotificationEngine;
 use beardog_errors::BearDogResult;
 use std::collections::HashMap;
 use tracing::{debug, info};
 
 impl NotificationEngine {
     /// Send webhook notification
+    #[allow(dead_code)] // Will be used when webhook notifications are fully implemented
     pub(super) async fn send_webhook_notification(
         &self,
         message: &str,
@@ -15,8 +16,8 @@ impl NotificationEngine {
         match &self.config.webhook {
             Some(config) => {
                 info!(
-                    "Sending webhook notification to {} via {}: {}",
-                    config.url, config.method, message
+                    "Sending webhook notification to {}: {}",
+                    config.url, message
                 );
                 Ok(())
             }
@@ -28,6 +29,7 @@ impl NotificationEngine {
     }
 
     /// Test webhook configuration
+    #[allow(dead_code)] // Will be used when webhook notifications are fully implemented
     pub(super) async fn test_webhook_config(&self) -> BearDogResult<()> {
         match &self.config.webhook {
             Some(config) => {

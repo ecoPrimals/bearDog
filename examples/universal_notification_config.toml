@@ -1,0 +1,111 @@
+# Universal Notification Configuration Example
+# Configure only the communication methods you actually have available
+# BearDog will adapt to whatever you provide
+
+[notifications]
+enabled = true
+
+# Example 1: Discord user (most common for developers)
+[[notifications.adapters]]
+type = "discord"
+name = "dev_team_discord"
+config = { webhook_url = "https://discord.com/api/webhooks/123456789/your_webhook_token_here" }
+
+# Example 2: SMS for critical alerts (human phone number)
+[[notifications.adapters]]
+type = "sms"
+name = "critical_sms"
+config = { provider = "twilio", api_key = "your_twilio_key", from_number = "+1234567890" }
+
+# Example 3: Personal email
+[[notifications.adapters]]
+type = "email"
+name = "personal_email"
+config = { 
+    smtp_server = "smtp.gmail.com", 
+    smtp_port = "587",
+    from_address = "beardog@yourdomain.com",
+    username = "your_email@gmail.com",
+    password = "your_app_password",
+    use_tls = "true"
+}
+
+# Example 4: Work Slack (if you have it)
+[[notifications.adapters]]
+type = "slack"
+name = "work_slack"
+config = { webhook_url = "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK" }
+
+# Example 5: Microsoft Teams (if your company uses it)
+[[notifications.adapters]]
+type = "teams"
+name = "company_teams"
+config = { webhook_url = "https://outlook.office.com/webhook/your_teams_webhook" }
+
+# Example 6: Matrix/Element (for privacy-focused users)
+[[notifications.adapters]]
+type = "matrix"
+name = "matrix_home"
+config = { 
+    homeserver = "https://matrix.org",
+    access_token = "your_matrix_access_token"
+}
+
+# Example 7: Signal (if you have Signal API set up)
+[[notifications.adapters]]
+type = "signal"
+name = "signal_messenger"
+config = {
+    api_url = "http://localhost:8080/v1/send",
+    auth_token = "your_signal_api_token"
+}
+
+# Example 8: Custom webhook (any service with webhook support)
+[[notifications.adapters]]
+type = "webhook"
+name = "custom_service"
+config = {
+    url = "https://your-custom-service.com/webhook",
+    auth_token = "Bearer your_custom_token"
+}
+
+# Message routing rules
+[notifications.routing]
+# Critical messages go to ALL available channels
+critical_priority = ["dev_team_discord", "critical_sms", "personal_email"]
+
+# High priority goes to fast channels
+high_priority = ["dev_team_discord", "critical_sms", "work_slack"]
+
+# Normal messages use primary channels
+normal_priority = ["dev_team_discord", "personal_email"]
+
+# Low priority uses email only
+low_priority = ["personal_email"]
+
+# Retry configuration
+[notifications.retry]
+max_retries = 3
+initial_delay_ms = 1000
+max_delay_ms = 30000
+backoff_multiplier = 2.0
+
+# Examples of different user scenarios:
+
+# Scenario 1: Solo developer
+# - Just Discord + SMS
+# - Simple, effective, no corporate overhead
+
+# Scenario 2: Corporate developer
+# - Teams + Slack + Email + SMS
+# - Covers work and personal channels
+
+# Scenario 3: Privacy-focused user
+# - Matrix + Signal + Email
+# - No corporate surveillance platforms
+
+# Scenario 4: Minimal setup
+# - Just email + webhook to personal service
+# - Works with any basic setup
+
+# The system adapts to whatever you configure! 

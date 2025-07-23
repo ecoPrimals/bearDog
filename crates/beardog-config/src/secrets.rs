@@ -10,10 +10,10 @@ use std::env;
 use std::fs;
 use std::path::Path;
 
+use anyhow::Result as BearDogResult;
 use serde::{Deserialize, Serialize};
 use tokio::time::{Duration, Instant};
-
-use crate::core::BearDogResult;
+use tracing::{debug, info, warn};
 
 /// Secret source configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -175,21 +175,12 @@ impl SecretManager {
         match source {
             SecretSource::Environment => self.get_secret_from_env(key).await,
             SecretSource::File(config) => self.get_secret_from_file(config, key).await,
-            SecretSource::Vault(_config) => {
-                // TODO: Implement Vault integration
-                Err(anyhow::anyhow!("Vault integration not yet implemented"))
+            SecretSource::Vault(config) => self.get_secret_from_vault(config, key).await,
+            SecretSource::AwsSecretsManager(config) => {
+                self.get_secret_from_aws_secrets_manager(config, key).await
             }
-            SecretSource::AwsSecretsManager(_config) => {
-                // TODO: Implement AWS Secrets Manager integration
-                Err(anyhow::anyhow!(
-                    "AWS Secrets Manager integration not yet implemented"
-                ))
-            }
-            SecretSource::AzureKeyVault(_config) => {
-                // TODO: Implement Azure Key Vault integration
-                Err(anyhow::anyhow!(
-                    "Azure Key Vault integration not yet implemented"
-                ))
+            SecretSource::AzureKeyVault(config) => {
+                self.get_secret_from_azure_key_vault(config, key).await
             }
         }
     }
@@ -224,6 +215,321 @@ impl SecretManager {
             .map_err(|e| anyhow::anyhow!("Failed to read secret file: {}", e))?;
 
         Ok(content.trim().to_string())
+    }
+
+    /// Get secret from HashiCorp Vault
+    async fn get_secret_from_vault(
+        &self,
+        config: &VaultSecretConfig,
+        key: &str,
+    ) -> BearDogResult<String> {
+        info!("🔐 Retrieving secret from HashiCorp Vault: {}", key);
+
+        // Build Vault API endpoint
+        let endpoint = format!("{}/v1/{}/{}", config.url, config.mount_path, key);
+
+        // Create HTTP client
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(config.timeout_seconds))
+            .build()
+            .map_err(|e| anyhow::anyhow!("Failed to create HTTP client: {}", e))?;
+
+        // Prepare request with authentication
+        let mut request_builder = client.get(&endpoint);
+
+        // Add authentication headers
+        match &config.auth_method {
+            VaultAuthMethod::Token(token) => {
+                request_builder = request_builder.header("X-Vault-Token", token);
+            }
+            VaultAuthMethod::AppRole { role_id, secret_id } => {
+                // For AppRole, we need to first authenticate to get a token
+                let auth_endpoint = format!("{}/v1/auth/approle/login", config.url);
+                let auth_payload = serde_json::json!({
+                    "role_id": role_id,
+                    "secret_id": secret_id
+                });
+
+                let auth_response = client
+                    .post(&auth_endpoint)
+                    .json(&auth_payload)
+                    .send()
+                    .await
+                    .map_err(|e| anyhow::anyhow!("Vault AppRole authentication failed: {}", e))?;
+
+                if !auth_response.status().is_success() {
+                    return Err(anyhow::anyhow!(
+                        "Vault AppRole authentication failed with status: {}",
+                        auth_response.status()
+                    ));
+                }
+
+                let auth_data: serde_json::Value = auth_response
+                    .json()
+                    .await
+                    .map_err(|e| anyhow::anyhow!("Failed to parse Vault auth response: {}", e))?;
+
+                let token = auth_data
+                    .get("auth")
+                    .and_then(|auth| auth.get("client_token"))
+                    .and_then(|token| token.as_str())
+                    .ok_or_else(|| anyhow::anyhow!("No client_token in Vault auth response"))?;
+
+                request_builder = request_builder.header("X-Vault-Token", token);
+            }
+            VaultAuthMethod::Kubernetes {
+                role: _,
+                jwt_path: _,
+            } => {
+                return Err(anyhow::anyhow!(
+                    "Kubernetes authentication not yet implemented"
+                ));
+            }
+        }
+
+        // Make the request
+        let response = request_builder
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to fetch secret from Vault: {}", e))?;
+
+        if !response.status().is_success() {
+            return Err(anyhow::anyhow!(
+                "Vault API request failed with status: {}",
+                response.status()
+            ));
+        }
+
+        // Parse response
+        let vault_data: serde_json::Value = response
+            .json()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to parse Vault response: {}", e))?;
+
+        // Extract secret value (supports both KV v1 and v2)
+        let secret_value = vault_data
+            .get("data")
+            .and_then(|data| {
+                // Try KV v2 format first (nested data)
+                if let Some(nested_data) = data.get("data") {
+                    nested_data.get("value").or_else(|| nested_data.get(key))
+                } else {
+                    // Fall back to KV v1 format (direct data)
+                    data.get("value").or_else(|| data.get(key))
+                }
+            })
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("Secret '{}' not found in Vault response", key))?;
+
+        debug!("✅ Successfully retrieved secret from Vault: {}", key);
+        Ok(secret_value.to_string())
+    }
+
+    /// Get secret from AWS Secrets Manager
+    async fn get_secret_from_aws_secrets_manager(
+        &self,
+        config: &AwsSecretsConfig,
+        key: &str,
+    ) -> BearDogResult<String> {
+        info!("🔐 Retrieving secret from AWS Secrets Manager: {}", key);
+
+        // Build AWS Secrets Manager API endpoint
+        let endpoint = format!(
+            "https://secretsmanager.{}.amazonaws.com",
+            config.region.as_str()
+        );
+
+        // Create HTTP client
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .map_err(|e| anyhow::anyhow!("Failed to create HTTP client: {}", e))?;
+
+        // Prepare AWS API request payload
+        let payload = serde_json::json!({
+            "SecretId": key
+        });
+
+        // Create AWS signature (simplified - in production use aws-sdk-rust or similar)
+        let mut request_builder = client
+            .post(&endpoint)
+            .header("Content-Type", "application/x-amz-json-1.1")
+            .header("X-Amz-Target", "secretsmanager.GetSecretValue");
+
+        // Add authentication headers (simplified implementation)
+        if let (Some(access_key), Some(_secret_key)) =
+            (&config.access_key_id, &config.secret_access_key)
+        {
+            // In a real implementation, you would properly sign the request with AWS Signature V4
+            // For now, we'll use basic authentication approach
+            request_builder = request_builder
+                .header(
+                    "Authorization",
+                    format!("AWS4-HMAC-SHA256 Credential={access_key}"),
+                )
+                .header(
+                    "X-Amz-Date",
+                    chrono::Utc::now().format("%Y%m%dT%H%M%SZ").to_string(),
+                );
+
+            warn!("⚠️ Using simplified AWS authentication - implement proper AWS Signature V4 for production");
+        } else {
+            warn!("⚠️ No AWS credentials provided - IAM role authentication not fully implemented");
+            return Err(anyhow::anyhow!(
+                "AWS authentication requires access keys or full AWS SDK integration"
+            ));
+        }
+
+        // Make the request
+        let response = request_builder.json(&payload).send().await.map_err(|e| {
+            anyhow::anyhow!("Failed to fetch secret from AWS Secrets Manager: {}", e)
+        })?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let error_text = response.text().await.unwrap_or_default();
+            return Err(anyhow::anyhow!(
+                "AWS Secrets Manager API request failed with status {}: {}",
+                status,
+                error_text
+            ));
+        }
+
+        // Parse response
+        let aws_data: serde_json::Value = response
+            .json()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to parse AWS Secrets Manager response: {}", e))?;
+
+        // Extract secret value
+        let secret_value = aws_data
+            .get("SecretString")
+            .and_then(|v| v.as_str())
+            .or_else(|| {
+                // Handle binary secrets (base64 encoded)
+                aws_data.get("SecretBinary").and_then(|v| v.as_str())
+            })
+            .ok_or_else(|| {
+                anyhow::anyhow!("No SecretString or SecretBinary found in AWS response")
+            })?;
+
+        debug!(
+            "✅ Successfully retrieved secret from AWS Secrets Manager: {}",
+            key
+        );
+        Ok(secret_value.to_string())
+    }
+
+    /// Get secret from Azure Key Vault
+    async fn get_secret_from_azure_key_vault(
+        &self,
+        config: &AzureKeyVaultConfig,
+        key: &str,
+    ) -> BearDogResult<String> {
+        info!("🔐 Retrieving secret from Azure Key Vault: {}", key);
+
+        // Build Azure Key Vault API endpoint
+        let endpoint = format!(
+            "https://{}.vault.azure.net/secrets/{}?api-version=7.3",
+            config.vault_url, key
+        );
+
+        // Create HTTP client
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .map_err(|e| anyhow::anyhow!("Failed to create HTTP client: {}", e))?;
+
+        // Prepare request with authentication
+        let mut request_builder = client.get(&endpoint);
+
+        // Add authentication (simplified - in production use azure-identity crate)
+        if !config.client_id.is_empty()
+            && !config.client_secret.is_empty()
+            && !config.tenant_id.is_empty()
+        {
+            let client_id = &config.client_id;
+            let client_secret = &config.client_secret;
+            let tenant_id = &config.tenant_id;
+            // Get OAuth token for service principal authentication
+            let token_endpoint =
+                format!("https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token");
+
+            let token_payload = [
+                ("client_id", client_id.as_str()),
+                ("client_secret", client_secret.as_str()),
+                ("scope", "https://vault.azure.net/.default"),
+                ("grant_type", "client_credentials"),
+            ];
+
+            let token_response = client
+                .post(&token_endpoint)
+                .form(&token_payload)
+                .send()
+                .await
+                .map_err(|e| anyhow::anyhow!("Azure OAuth token request failed: {}", e))?;
+
+            if !token_response.status().is_success() {
+                return Err(anyhow::anyhow!(
+                    "Azure OAuth token request failed with status: {}",
+                    token_response.status()
+                ));
+            }
+
+            let token_data: serde_json::Value = token_response
+                .json()
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to parse Azure OAuth response: {}", e))?;
+
+            let access_token = token_data
+                .get("access_token")
+                .and_then(|token| token.as_str())
+                .ok_or_else(|| anyhow::anyhow!("No access_token in Azure OAuth response"))?;
+
+            request_builder =
+                request_builder.header("Authorization", format!("Bearer {access_token}"));
+        } else {
+            warn!("⚠️ Using managed identity for Azure Key Vault authentication");
+            // For managed identity, we would need to get a token from the Azure Instance Metadata Service
+            // This is a simplified implementation
+            return Err(anyhow::anyhow!(
+                "Managed identity authentication requires full Azure SDK integration"
+            ));
+        }
+
+        // Make the request
+        let response = request_builder
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to fetch secret from Azure Key Vault: {}", e))?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let error_text = response.text().await.unwrap_or_default();
+            return Err(anyhow::anyhow!(
+                "Azure Key Vault API request failed with status {}: {}",
+                status,
+                error_text
+            ));
+        }
+
+        // Parse response
+        let azure_data: serde_json::Value = response
+            .json()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to parse Azure Key Vault response: {}", e))?;
+
+        // Extract secret value
+        let secret_value = azure_data
+            .get("value")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("No 'value' field found in Azure Key Vault response"))?;
+
+        debug!(
+            "✅ Successfully retrieved secret from Azure Key Vault: {}",
+            key
+        );
+        Ok(secret_value.to_string())
     }
 
     /// Cache a secret

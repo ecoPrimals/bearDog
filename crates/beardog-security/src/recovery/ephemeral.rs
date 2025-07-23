@@ -54,7 +54,7 @@ impl EphemeralRecoveryKey {
 
     /// Generate a cryptographically secure ephemeral key
     fn generate_secure_key() -> String {
-        use rand::{distributions::Alphanumeric, Rng};
+        use rand::Rng;
 
         // Generate 32 bytes of random data (256 bits)
         let random_bytes: Vec<u8> = (0..32).map(|_| rand::thread_rng().gen()).collect();
@@ -67,7 +67,7 @@ impl EphemeralRecoveryKey {
     /// Derive a time-bound recovery key with HKDF
     pub fn derive_time_bound_key(&self, salt: &[u8], info: &[u8]) -> Result<String, String> {
         use hkdf::Hkdf;
-        use hmac::Hmac;
+
         use sha2::Sha256;
 
         // Decode the master key

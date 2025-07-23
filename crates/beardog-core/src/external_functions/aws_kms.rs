@@ -15,18 +15,33 @@ pub struct AwsKmsIntegration;
 
 #[async_trait]
 impl ExternalFunctionHandler for AwsKmsIntegration {
+    fn function_name(&self) -> &str {
+        "aws_kms"
+    }
+
+    /// Execute AWS KMS operation with licensing check
     async fn execute(
         &self,
-        payload: Value,
         license_manager: &LicenseManager,
-    ) -> BearDogResult<Value> {
-        // License verification
-        license_manager.verify_external_function_access(self.function_name())?;
+        operation: &str,
+        payload: serde_json::Value,
+    ) -> BearDogResult<serde_json::Value> {
+        // Check licensing with autonomous decision making
+        if !license_manager
+            .is_function_available(self.function_name())
+            .await?
+        {
+            return Err(BearDogError::Configuration {
+                message: format!(
+                    "🔒 AWS KMS integration '{}' requires licensing or individual/small-team classification.\n\n\
+                    🏠 Individual developers: Automatically granted access\n\
+                    👥 Small teams: Automatically granted access\n\
+                    🏢 Corporate usage: External adapters locked - acquire unlock certificate",
+                    self.function_name()
+                ),
+            });
+        }
 
-        let operation = payload
-            .get("operation")
-            .and_then(|v| v.as_str())
-            .unwrap_or("encrypt");
         let key_id = payload
             .get("key_id")
             .and_then(|v| v.as_str())
@@ -122,14 +137,6 @@ impl ExternalFunctionHandler for AwsKmsIntegration {
             })),
         }
     }
-
-    fn function_name(&self) -> &'static str {
-        "aws_kms"
-    }
-
-    fn description(&self) -> &'static str {
-        "AWS Key Management Service integration for enterprise encryption"
-    }
 }
 
 impl AwsKmsIntegration {
@@ -160,13 +167,11 @@ impl AwsKmsIntegration {
                     })
                 }
             }
-            Err(_) => {
-                // Fallback: base64 encode the plaintext as a mock encrypted blob
-                use base64::Engine as _;
-                let mock_encrypted = base64::engine::general_purpose::STANDARD
-                    .encode(format!("MOCK_KMS_ENCRYPTED_{}", plaintext));
-                tracing::warn!("KMS encrypt failed, using mock encryption");
-                Ok(mock_encrypted)
+            Err(parse_err) => {
+                tracing::error!("Failed to parse KMS encrypt response: {}", parse_err);
+                Err(BearDogError::Configuration {
+                    message: format!("Failed to parse KMS encrypt response: {parse_err}"),
+                })
             }
         }
     }
@@ -198,24 +203,11 @@ impl AwsKmsIntegration {
                     })
                 }
             }
-            Err(_) => {
-                // Fallback: decode base64 as mock decryption
-                use base64::Engine as _;
-                match base64::engine::general_purpose::STANDARD.decode(ciphertext_blob) {
-                    Ok(decoded) => {
-                        let mock_decrypted = String::from_utf8_lossy(&decoded);
-                        if mock_decrypted.starts_with("MOCK_KMS_ENCRYPTED_") {
-                            let plaintext = mock_decrypted.replace("MOCK_KMS_ENCRYPTED_", "");
-                            tracing::warn!("KMS decrypt failed, using mock decryption");
-                            Ok(plaintext)
-                        } else {
-                            Ok(mock_decrypted.to_string())
-                        }
-                    }
-                    Err(_) => Err(BearDogError::Configuration {
-                        message: "Failed to decrypt ciphertext".to_string(),
-                    }),
-                }
+            Err(parse_err) => {
+                tracing::error!("Failed to parse KMS decrypt response: {}", parse_err);
+                Err(BearDogError::Configuration {
+                    message: format!("Failed to parse KMS decrypt response: {parse_err}"),
+                })
             }
         }
     }
@@ -302,7 +294,7 @@ impl AwsKmsIntegration {
             .output()
             .await
             .map_err(|e| BearDogError::Configuration {
-                message: format!("AWS CLI command failed: {}", e),
+                message: format!("AWS CLI command failed: {e}"),
             })?;
 
         if output.status.success() {
@@ -310,7 +302,7 @@ impl AwsKmsIntegration {
         } else {
             let error = String::from_utf8_lossy(&output.stderr);
             Err(BearDogError::Configuration {
-                message: format!("AWS CLI error: {}", error),
+                message: format!("AWS CLI error: {error}"),
             })
         }
     }

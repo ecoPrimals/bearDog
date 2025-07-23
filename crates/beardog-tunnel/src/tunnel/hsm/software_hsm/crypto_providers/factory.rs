@@ -23,7 +23,7 @@ pub async fn create_crypto_provider(
             Ok(Box::new(provider))
         }
         CryptoBackend::Ring => {
-            let provider = RingCryptoProvider::new().await?;
+            let provider = RingCryptoProvider::new()?;
             Ok(Box::new(provider))
         }
         CryptoBackend::OpenSsl => {

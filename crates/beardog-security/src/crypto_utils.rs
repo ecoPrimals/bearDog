@@ -148,7 +148,8 @@ impl BearDogCrypto {
         }
 
         let mut nonce = vec![0u8; size];
-        thread_rng().fill_bytes(&mut nonce);
+        // Use cryptographically secure randomness for nonces
+        OsRng.fill_bytes(&mut nonce);
         Ok(nonce)
     }
 

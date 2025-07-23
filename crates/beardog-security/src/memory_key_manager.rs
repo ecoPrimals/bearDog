@@ -908,7 +908,7 @@ impl MemoryKeyManager {
 }
 
 /// Key information for listing
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct KeyInfo {
     pub id: String,
     pub key_type: String,

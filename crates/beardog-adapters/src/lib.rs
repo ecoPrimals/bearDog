@@ -8,12 +8,28 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
+// Import BearDogResult from errors crate
+pub use beardog_errors::{BearDogError, BearDogResult};
+
+pub mod adapters;
 pub mod ecosystem_integration;
 pub mod universal;
 
-// Re-export main universal types
-pub use ecosystem_integration::*;
-pub use universal::*;
+// Re-export key universal types (corrected imports)
+pub use universal::capability_adapter::{
+    BearDogCapabilityAdapter, ServiceCapability, ServiceMeshConnector, UniversalServiceProvider,
+};
+
+// Import ServiceMetadata from service_registration
+pub use universal::service_registration::{ServiceMetadata, UniversalServiceRegistration};
+
+// Import UniversalRequest and UniversalResponse from http_adapter
+pub use universal::http_adapter::{UniversalRequest, UniversalResponse};
+
+pub use ecosystem_integration::EcosystemIntegration;
+pub use universal::{
+    BridgeAdapter, BridgeConfig, HttpAdapter, ProtocolAdapter, SecurityProviderBridge,
+};
 
 /// Universal Ecosystem Integration Result
 pub type EcosystemResult<T> = Result<T, EcosystemError>;

@@ -15,13 +15,32 @@ pub struct GrafanaDashboards;
 
 #[async_trait]
 impl ExternalFunctionHandler for GrafanaDashboards {
+    fn function_name(&self) -> &str {
+        "grafana_dashboards"
+    }
+
+    /// Execute Grafana operation with licensing check
     async fn execute(
         &self,
-        payload: Value,
         license_manager: &LicenseManager,
-    ) -> BearDogResult<Value> {
-        // License verification
-        license_manager.verify_external_function_access(self.function_name())?;
+        _operation: &str,
+        payload: serde_json::Value,
+    ) -> BearDogResult<serde_json::Value> {
+        // Check licensing with autonomous decision making
+        if !license_manager
+            .is_function_available(self.function_name())
+            .await?
+        {
+            return Err(BearDogError::Configuration {
+                message: format!(
+                    "🔒 Grafana integration '{}' requires licensing or individual/small-team classification.\n\n\
+                    🏠 Individual developers: Automatically granted access\n\
+                    👥 Small teams: Automatically granted access\n\
+                    🏢 Corporate usage: External adapters locked - acquire unlock certificate",
+                    self.function_name()
+                ),
+            });
+        }
 
         let dashboard_name = payload
             .get("dashboard")
@@ -30,7 +49,7 @@ impl ExternalFunctionHandler for GrafanaDashboards {
 
         let default_grafana_url = format!(
             "http://{}:3000",
-            beardog_config::constants::network::DEFAULT_HOST
+            beardog_config::constants::network::get_default_host()
         );
         let grafana_url = payload
             .get("grafana_url")
@@ -61,14 +80,6 @@ impl ExternalFunctionHandler for GrafanaDashboards {
             })),
         }
     }
-
-    fn function_name(&self) -> &'static str {
-        "grafana_dashboards"
-    }
-
-    fn description(&self) -> &'static str {
-        "Grafana dashboard creation and management"
-    }
 }
 
 impl GrafanaDashboards {
@@ -82,14 +93,14 @@ impl GrafanaDashboards {
             .timeout(Duration::from_secs(30))
             .build()
             .map_err(|e| BearDogError::Configuration {
-                message: format!("HTTP client error: {}", e),
+                message: format!("HTTP client error: {e}"),
             })?;
 
         // BearDog security dashboard JSON
         let dashboard_json = self.get_beardog_dashboard_json(dashboard_name);
 
         // Create dashboard via Grafana API
-        let api_url = format!("{}/api/dashboards/db", grafana_url);
+        let api_url = format!("{grafana_url}/api/dashboards/db");
 
         let response = client
             .post(&api_url)
@@ -99,7 +110,7 @@ impl GrafanaDashboards {
             .send()
             .await
             .map_err(|e| BearDogError::Configuration {
-                message: format!("Grafana API request failed: {}", e),
+                message: format!("Grafana API request failed: {e}"),
             })?;
 
         if response.status().is_success() {
@@ -107,7 +118,7 @@ impl GrafanaDashboards {
                 .json()
                 .await
                 .map_err(|e| BearDogError::Configuration {
-                    message: format!("Failed to parse Grafana response: {}", e),
+                    message: format!("Failed to parse Grafana response: {e}"),
                 })?;
             Ok(result)
         } else {

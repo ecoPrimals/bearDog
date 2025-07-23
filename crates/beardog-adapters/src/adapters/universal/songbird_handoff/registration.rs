@@ -188,7 +188,12 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
             endpoints
                 .first()
                 .map(|e| e.url.clone())
-                .unwrap_or_else(|| "localhost:8080".to_string())
+                .unwrap_or_else(|| {
+                    std::env::var("BEARDOG_SERVICE_HOST")
+                        .unwrap_or_else(|_| "localhost".to_string())
+                        + ":" + &std::env::var("BEARDOG_SERVICE_PORT")
+                            .unwrap_or_else(|_| "8080".to_string())
+                })
         );
 
         // Create discovery tags (universal ecosystem tags)

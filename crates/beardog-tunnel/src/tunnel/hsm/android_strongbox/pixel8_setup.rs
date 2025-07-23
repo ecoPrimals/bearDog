@@ -61,6 +61,7 @@ impl Default for Pixel8GrapheneOSConfig {
 pub struct Pixel8GrapheneOSSetup {
     config: Pixel8GrapheneOSConfig,
     device_info: Arc<AndroidDeviceInfo>,
+    #[allow(dead_code)] // Will be used when Pixel 8 HSM setup is fully implemented
     hsm_manager: Arc<HsmManager>,
 }
 
@@ -282,15 +283,15 @@ impl Pixel8GrapheneOSSetup {
         // - Security provider
         // - Verified boot state
 
-        if self.config.require_green_boot {
-            if self.device_info.verified_boot_state != VerifiedBootState::Green {
-                return Err(BearDogError::Configuration {
+        if self.config.require_green_boot
+            && self.device_info.verified_boot_state != VerifiedBootState::Green
+        {
+            return Err(BearDogError::Configuration {
                     message: format!(
-                        "GREEN verified boot state required, current: {:?}",
+                        "Green boot state required but device is in {:?} state. This device may be compromised.",
                         self.device_info.verified_boot_state
                     ),
                 });
-            }
         }
 
         info!("✅ GrapheneOS environment validated");
@@ -300,12 +301,10 @@ impl Pixel8GrapheneOSSetup {
     async fn validate_security_requirements(&self) -> BearDogResult<()> {
         info!("🔍 Validating security requirements");
 
-        if self.config.require_titan_m {
-            if self.device_info.titan_m_version.is_none() {
-                return Err(BearDogError::Configuration {
-                    message: "Titan M security chip required but not detected".to_string(),
-                });
-            }
+        if self.config.require_titan_m && self.device_info.titan_m_version.is_none() {
+            return Err(BearDogError::Configuration {
+                message: "Titan M security chip required but not detected".to_string(),
+            });
         }
 
         if !self.device_info.is_strongbox_available() {

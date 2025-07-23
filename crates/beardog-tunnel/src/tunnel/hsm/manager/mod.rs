@@ -6,7 +6,7 @@
 //!
 //! ## Architecture
 //!
-//! ```
+//! ```text
 //! ┌─────────────────────────────────────────────────────────────────┐
 //! │                       HSM Manager                              │
 //! │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
@@ -280,6 +280,202 @@ impl HsmManager {
                 })
             }
         }
+    }
+
+    /// Select appropriate HSM tier based on requirements
+    pub async fn select_hsm_tier(
+        &self,
+        requirements: &SecurityRequirements,
+    ) -> BearDogResult<HsmTier> {
+        info!(
+            "🔍 Selecting HSM tier for requirements: {:?}",
+            requirements.security_level
+        );
+
+        // Smart tier selection based on requirements and availability
+        match requirements.security_level {
+            SecurityLevel::Basic => {
+                // Basic: Use software HSM for simplicity
+                Ok(HsmTier::SoftwareHsm {
+                    implementation: SoftwareHsmType::RustSoftwareHsm,
+                    key_storage: KeyStorageType::InMemory,
+                    encryption_at_rest: true,
+                    memory_protection: MemoryProtectionLevel::Basic,
+                })
+            }
+
+            SecurityLevel::Medium => {
+                // Medium: Prefer smartphone HSM if user interaction is needed
+                if requirements.user_interaction_required {
+                    // Try smartphone HSM first
+                    if self.is_smartphone_hsm_available().await? {
+                        Ok(self.create_optimal_smartphone_hsm().await?)
+                    } else {
+                        // Fallback to high-security software HSM
+                        Ok(HsmTier::SoftwareHsm {
+                            implementation: SoftwareHsmType::RustSoftwareHsm,
+                            key_storage: KeyStorageType::EncryptedFile,
+                            encryption_at_rest: true,
+                            memory_protection: MemoryProtectionLevel::High,
+                        })
+                    }
+                } else {
+                    // Use software HSM for non-interactive operations
+                    Ok(HsmTier::SoftwareHsm {
+                        implementation: SoftwareHsmType::RustSoftwareHsm,
+                        key_storage: KeyStorageType::EncryptedFile,
+                        encryption_at_rest: true,
+                        memory_protection: MemoryProtectionLevel::High,
+                    })
+                }
+            }
+
+            SecurityLevel::High => {
+                // High: Require hardware backing when possible
+                if requirements.hardware_backed_required || requirements.user_interaction_required {
+                    if self.is_smartphone_hsm_available().await? {
+                        Ok(self.create_optimal_smartphone_hsm().await?)
+                    } else if self.is_hardware_hsm_available().await? {
+                        Ok(self.create_optimal_hardware_hsm().await?)
+                    } else {
+                        // High-security software HSM as fallback
+                        Ok(HsmTier::SoftwareHsm {
+                            implementation: SoftwareHsmType::RustSoftwareHsm,
+                            key_storage: KeyStorageType::EncryptedFile,
+                            encryption_at_rest: true,
+                            memory_protection: MemoryProtectionLevel::Maximum,
+                        })
+                    }
+                } else {
+                    // Software HSM with maximum protection
+                    Ok(HsmTier::SoftwareHsm {
+                        implementation: SoftwareHsmType::RustSoftwareHsm,
+                        key_storage: KeyStorageType::EncryptedFile,
+                        encryption_at_rest: true,
+                        memory_protection: MemoryProtectionLevel::Maximum,
+                    })
+                }
+            }
+
+            SecurityLevel::Maximum => {
+                // Maximum: Require the best available hardware
+                if requirements.user_interaction_required {
+                    // Human identity operations - prefer smartphone HSM with user presence
+                    if self.is_smartphone_hsm_available().await? {
+                        let mut smartphone_hsm = self.create_optimal_smartphone_hsm().await?;
+                        // Ensure user presence is required for maximum security
+                        if let HsmTier::SmartphoneHsm {
+                            ref mut user_presence_required,
+                            ..
+                        } = smartphone_hsm
+                        {
+                            *user_presence_required = true;
+                        }
+                        Ok(smartphone_hsm)
+                    } else {
+                        Err(BearDogError::Unavailable {
+                            message:
+                                "Maximum security with user interaction requires smartphone HSM"
+                                    .to_string(),
+                        })
+                    }
+                } else {
+                    // Non-interactive maximum security - prefer certified hardware HSM
+                    if self.is_hardware_hsm_available().await? {
+                        Ok(self.create_optimal_hardware_hsm().await?)
+                    } else if self.is_smartphone_hsm_available().await? {
+                        Ok(self.create_optimal_smartphone_hsm().await?)
+                    } else {
+                        return Err(BearDogError::Unavailable {
+                            message: "Maximum security level requires hardware-backed HSM"
+                                .to_string(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    /// Check if smartphone HSM is available
+    async fn is_smartphone_hsm_available(&self) -> BearDogResult<bool> {
+        // Check for Android StrongBox
+        if cfg!(target_os = "android") {
+            // In a real implementation, would check Android StrongBox availability
+            info!("📱 Checking Android StrongBox availability");
+            Ok(true) // Assume available for now
+        } else if cfg!(target_os = "ios") {
+            // Check for iOS Secure Enclave
+            info!("📱 Checking iOS Secure Enclave availability");
+            Ok(true) // Assume available for now
+        } else {
+            // Desktop/server environment - no smartphone HSM
+            debug!("🖥️ No smartphone HSM available on this platform");
+            Ok(false)
+        }
+    }
+
+    /// Check if hardware HSM is available
+    async fn is_hardware_hsm_available(&self) -> BearDogResult<bool> {
+        // Check for hardware HSM connectivity
+        // This would typically involve checking USB/PCIe devices, network connectivity, etc.
+        debug!("🔐 Hardware HSM support not yet implemented");
+        Ok(false)
+    }
+
+    /// Create optimal smartphone HSM configuration
+    async fn create_optimal_smartphone_hsm(&self) -> BearDogResult<HsmTier> {
+        if cfg!(target_os = "android") {
+            // Android StrongBox configuration
+            Ok(HsmTier::SmartphoneHsm {
+                device_type: SmartphoneType::Android {
+                    manufacturer: "Google".to_string(),
+                    model: "Pixel 8".to_string(),
+                    android_version: "14".to_string(),
+                    strongbox_version: Some("1.0".to_string()),
+                },
+                secure_enclave: SecureEnclaveType::AndroidStrongBox {
+                    implementation: StrongBoxImplementation::TitanM {
+                        version: "1.0".to_string(),
+                        security_level: "EAL4+".to_string(),
+                    },
+                    hardware_backed: true,
+                    key_attestation: true,
+                },
+                attestation_level: AttestationLevel::CertifiedHardware,
+                user_presence_required: false, // Can be set to true by caller
+            })
+        } else if cfg!(target_os = "ios") {
+            // iOS Secure Enclave configuration
+            Ok(HsmTier::SmartphoneHsm {
+                device_type: SmartphoneType::IPhone {
+                    model: "iPhone 15 Pro".to_string(),
+                    ios_version: "17.0".to_string(),
+                    secure_enclave_version: "A17 Pro".to_string(),
+                },
+                secure_enclave: SecureEnclaveType::IosSecureEnclave {
+                    chip_type: "A17 Pro".to_string(),
+                    biometric_support: true,
+                    key_attestation: true,
+                },
+                attestation_level: AttestationLevel::CertifiedHardware,
+                user_presence_required: false, // Can be set to true by caller
+            })
+        } else {
+            Err(BearDogError::Unavailable {
+                message: "Smartphone HSM not available on this platform".to_string(),
+            })
+        }
+    }
+
+    /// Create optimal hardware HSM configuration
+    async fn create_optimal_hardware_hsm(&self) -> BearDogResult<HsmTier> {
+        // This would detect available hardware HSMs and create optimal configuration
+        Ok(HsmTier::HardwareHsm {
+            vendor: HsmVendor::Thales,
+            model: "Luna Network HSM".to_string(),
+            certification: CertificationLevel::Fips140Level3,
+            tamper_resistance: TamperResistanceLevel::HardwareDestruction,
+        })
     }
 
     /// Get performance metrics for all providers

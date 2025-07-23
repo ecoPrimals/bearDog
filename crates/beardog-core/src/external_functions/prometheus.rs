@@ -15,22 +15,36 @@ pub struct PrometheusExport;
 
 #[async_trait]
 impl ExternalFunctionHandler for PrometheusExport {
+    fn function_name(&self) -> &str {
+        "prometheus_export"
+    }
+
+    /// Execute Prometheus operation with licensing check
     async fn execute(
         &self,
-        payload: Value,
         license_manager: &LicenseManager,
-    ) -> BearDogResult<Value> {
-        // Verify license
-        license_manager.verify_external_function_access(self.function_name())?;
-
-        let operation = payload
-            .get("operation")
-            .and_then(|v| v.as_str())
-            .unwrap_or("query");
+        _operation: &str,
+        payload: serde_json::Value,
+    ) -> BearDogResult<serde_json::Value> {
+        // Check licensing with autonomous decision making
+        if !license_manager
+            .is_function_available(self.function_name())
+            .await?
+        {
+            return Err(BearDogError::Configuration {
+                message: format!(
+                    "🔒 Prometheus integration '{}' requires licensing or individual/small-team classification.\n\n\
+                    🏠 Individual developers: Automatically granted access\n\
+                    👥 Small teams: Automatically granted access\n\
+                    🏢 Corporate usage: External adapters locked - acquire unlock certificate",
+                    self.function_name()
+                ),
+            });
+        }
 
         let default_endpoint = format!(
             "http://{}:{}",
-            beardog_config::constants::network::DEFAULT_HOST,
+            beardog_config::constants::network::get_default_host(),
             beardog_config::constants::network::DEFAULT_GRPC_PORT
         );
         let endpoint = payload
@@ -45,11 +59,11 @@ impl ExternalFunctionHandler for PrometheusExport {
 
         tracing::info!(
             "📊 Prometheus {} operation on endpoint: {}",
-            operation,
+            _operation,
             endpoint
         );
 
-        match operation {
+        match _operation {
             "query" => {
                 let query = payload
                     .get("query")
@@ -58,14 +72,14 @@ impl ExternalFunctionHandler for PrometheusExport {
 
                 match self.prometheus_query(endpoint, query).await {
                     Ok(result) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "endpoint": endpoint,
                         "query": query,
                         "status": "success",
                         "data": result
                     })),
                     Err(e) => Ok(serde_json::json!({
-                        "operation": operation,
+                        "operation": _operation,
                         "endpoint": endpoint,
                         "query": query,
                         "status": "error",
@@ -75,13 +89,13 @@ impl ExternalFunctionHandler for PrometheusExport {
             }
             "export_metrics" => match self.export_beardog_metrics(endpoint, &metrics).await {
                 Ok(exported_count) => Ok(serde_json::json!({
-                    "operation": operation,
+                    "operation": _operation,
                     "endpoint": endpoint,
                     "status": "success",
                     "exported_metrics": exported_count
                 })),
                 Err(e) => Ok(serde_json::json!({
-                    "operation": operation,
+                    "operation": _operation,
                     "endpoint": endpoint,
                     "status": "error",
                     "error": e.to_string()
@@ -89,33 +103,25 @@ impl ExternalFunctionHandler for PrometheusExport {
             },
             "health_check" => match self.prometheus_health_check(endpoint).await {
                 Ok(health_status) => Ok(serde_json::json!({
-                    "operation": operation,
+                    "operation": _operation,
                     "endpoint": endpoint,
                     "status": "success",
                     "health": health_status
                 })),
                 Err(e) => Ok(serde_json::json!({
-                    "operation": operation,
+                    "operation": _operation,
                     "endpoint": endpoint,
                     "status": "error",
                     "error": e.to_string()
                 })),
             },
             _ => Ok(serde_json::json!({
-                "operation": operation,
+                "operation": _operation,
                 "status": "error",
-                "error": format!("Unknown Prometheus operation: {}", operation),
+                "error": format!("Unknown Prometheus operation: {}", _operation),
                 "available_operations": ["query", "export_metrics", "health_check"]
             })),
         }
-    }
-
-    fn function_name(&self) -> &'static str {
-        "prometheus_export"
-    }
-
-    fn description(&self) -> &'static str {
-        "Prometheus metrics collection and monitoring"
     }
 }
 
@@ -126,18 +132,18 @@ impl PrometheusExport {
             .timeout(Duration::from_secs(30))
             .build()
             .map_err(|e| BearDogError::Configuration {
-                message: format!("HTTP client error: {}", e),
+                message: format!("HTTP client error: {e}"),
             })?;
 
         let encoded_query = query.replace(" ", "%20").replace("=", "%3D");
-        let url = format!("{}/api/v1/query?query={}", endpoint, encoded_query);
+        let url = format!("{endpoint}/api/v1/query?query={encoded_query}");
 
         let response = client
             .get(&url)
             .send()
             .await
             .map_err(|e| BearDogError::Configuration {
-                message: format!("Prometheus query request failed: {}", e),
+                message: format!("Prometheus query request failed: {e}"),
             })?;
 
         if response.status().is_success() {
@@ -145,7 +151,7 @@ impl PrometheusExport {
                 .json()
                 .await
                 .map_err(|e| BearDogError::Configuration {
-                    message: format!("Failed to parse Prometheus response: {}", e),
+                    message: format!("Failed to parse Prometheus response: {e}"),
                 })?;
             Ok(result)
         } else {
@@ -165,20 +171,20 @@ impl PrometheusExport {
             .timeout(Duration::from_secs(30))
             .build()
             .map_err(|e| BearDogError::Configuration {
-                message: format!("HTTP client error: {}", e),
+                message: format!("HTTP client error: {e}"),
             })?;
 
         // Convert metrics to Prometheus format
         let prometheus_metrics = self.convert_to_prometheus_format(metrics);
 
         let response = client
-            .post(&format!("{}/metrics", endpoint))
+            .post(format!("{endpoint}/metrics"))
             .header("Content-Type", "text/plain")
             .body(prometheus_metrics.clone())
             .send()
             .await
             .map_err(|e| BearDogError::Configuration {
-                message: format!("Prometheus export request failed: {}", e),
+                message: format!("Prometheus export request failed: {e}"),
             })?;
 
         if response.status().is_success() {
@@ -200,10 +206,10 @@ impl PrometheusExport {
             .timeout(Duration::from_secs(10))
             .build()
             .map_err(|e| BearDogError::Configuration {
-                message: format!("HTTP client error: {}", e),
+                message: format!("HTTP client error: {e}"),
             })?;
 
-        let health_url = format!("{}/api/v1/status/runtimeinfo", endpoint);
+        let health_url = format!("{endpoint}/api/v1/status/runtimeinfo");
 
         match client.get(&health_url).send().await {
             Ok(response) => {
@@ -229,7 +235,7 @@ impl PrometheusExport {
                 }
             }
             Err(e) => Err(BearDogError::Configuration {
-                message: format!("Prometheus health check failed: {}", e),
+                message: format!("Prometheus health check failed: {e}"),
             }),
         }
     }
@@ -248,8 +254,8 @@ impl PrometheusExport {
                     .unwrap_or("gauge");
 
                 // Add help and type annotations
-                prometheus_output.push_str(&format!("# HELP {} {}\n", name, help));
-                prometheus_output.push_str(&format!("# TYPE {} {}\n", name, metric_type));
+                prometheus_output.push_str(&format!("# HELP {name} {help}\n"));
+                prometheus_output.push_str(&format!("# TYPE {name} {metric_type}\n"));
 
                 // Add labels if present
                 if let Some(labels) = metric.get("labels").and_then(|v| v.as_object()) {
@@ -264,7 +270,7 @@ impl PrometheusExport {
                         value
                     ));
                 } else {
-                    prometheus_output.push_str(&format!("{} {}\n", name, value));
+                    prometheus_output.push_str(&format!("{name} {value}\n"));
                 }
             }
         }

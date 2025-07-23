@@ -13,9 +13,8 @@ use beardog_errors::BearDogResult;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 use tracing::{error, info};
-use uuid::Uuid;
 
-use super::{spawning::SpawnRequest, GeneticsAPI, GeneticsStore};
+use super::{GeneticsAPI, GeneticsStore};
 
 // Define missing types locally if they don't exist elsewhere
 #[derive(Debug, Clone, Default)]

@@ -5,6 +5,8 @@
 
 use super::types::*;
 use beardog_errors::{BearDogError, BearDogResult};
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 use sha3::{Digest, Sha3_256};
 
 /// Engine for mixing different entropy sources while preserving hierarchy
@@ -28,10 +30,14 @@ impl EntropyMixingEngine {
         }
 
         if sources.len() == 1 {
-            return Ok(sources
-                .into_iter()
-                .next()
-                .expect("Vector length is 1, so next() should return Some"));
+            // Select one entropy source randomly
+            let selected_source = sources
+                .choose(&mut thread_rng())
+                .ok_or_else(|| BearDogError::EntropySourceNotAvailable {
+                    source_name: "No entropy sources available for selection".to_string(),
+                })?
+                .clone();
+            return Ok(selected_source);
         }
 
         // Find the highest tier entropy source (human dominance principle)

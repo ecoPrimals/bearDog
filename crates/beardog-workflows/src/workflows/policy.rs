@@ -116,6 +116,7 @@ impl WorkflowPolicyEngine {
         }
     }
 
+    #[allow(dead_code)] // Will be used when policy engine is fully implemented
     fn get_required_roles(&self, workflow_type: &WorkflowType) -> Vec<String> {
         match workflow_type {
             WorkflowType::KeyRotation | WorkflowType::KeyDeletion => {
@@ -147,6 +148,7 @@ impl WorkflowPolicyEngine {
         }
     }
 
+    #[allow(dead_code)] // Will be used when policy engine is fully implemented
     fn is_self_approval_allowed(&self, workflow_type: &WorkflowType) -> bool {
         !matches!(
             workflow_type,

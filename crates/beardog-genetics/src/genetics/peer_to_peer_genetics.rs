@@ -260,15 +260,25 @@ impl CollaborativeKeyMixer {
             started_at: chrono::Utc::now(),
         };
 
-        let mut active = self.active_mixings.write().unwrap();
+        let mut active = self
+            .active_mixings
+            .write()
+            .map_err(|_| BearDogError::SystemError {
+                message: "Failed to acquire write lock on active mixings".to_string(),
+            })?;
         active.insert(session_id, mixing);
         Ok(())
     }
 
     /// Get active mixing sessions
-    pub fn get_active_sessions(&self) -> Vec<String> {
-        let active = self.active_mixings.read().unwrap();
-        active.keys().cloned().collect()
+    pub fn get_active_sessions(&self) -> BearDogResult<Vec<String>> {
+        let active = self
+            .active_mixings
+            .read()
+            .map_err(|_| BearDogError::SystemError {
+                message: "Failed to acquire read lock on active mixings".to_string(),
+            })?;
+        Ok(active.keys().cloned().collect())
     }
 
     /// Access the key share pool

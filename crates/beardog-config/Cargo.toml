@@ -1,24 +1,30 @@
 [package]
 name = "beardog-config"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 description = "Configuration management for BearDog Security Manager"
-license = "AGPL-3.0"
 repository = "https://github.com/ecoPrimals/beardog"
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-toml = "0.8"
-tracing = "0.1"
-uuid = { version = "1.0", features = ["v4", "serde"] }
-chrono = { version = "0.4", features = ["serde"] }
-num_cpus = "1.16"
 anyhow = "1.0"
+beardog-errors = { workspace = true }
+serde = { workspace = true }
+serde_yaml = "0.9"
+toml = "0.8"
+tokio = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+thiserror = "1.0"
+config = "0.14"
+dirs = "5.0"
+uuid = { workspace = true }
+reqwest = { version = "0.11", features = ["json"] }
+serde_json = "1.0"
+num_cpus = "1.16"
 
 # Redis and caching dependencies
 redis = { version = "0.24", features = ["tokio-comp", "cluster", "streams"], optional = true }
-tokio = { version = "1.0", features = ["full"] }
 
 # SIMD and crypto dependencies
 aes = { version = "0.8", optional = true }
@@ -40,6 +46,7 @@ brotli = { version = "3.4", optional = true }
 # Serialization
 rmp-serde = { version = "1.1", optional = true }  # MessagePack
 prost = { version = "0.12", optional = true }     # Protocol Buffers
+url = "2.5.4"
 
 # SIMD support using built-in std::simd when available
 # Note: We'll use software fallbacks for now to ensure compatibility

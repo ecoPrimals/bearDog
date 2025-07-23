@@ -25,15 +25,15 @@ mod tests {
 
     #[tokio::test]
     async fn test_threat_detection_engine_creation() {
-        let engine = ThreatDetectionEngine::placeholder();
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default());
         assert_eq!(engine.detection_rules.len(), 0);
         assert_eq!(engine.ml_models.len(), 0);
     }
 
     #[tokio::test]
     async fn test_placeholder_engine() {
-        let engine = ThreatDetectionEngine::placeholder();
-        // Placeholder engine should start with empty collections
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default());
+        // Engine should start with empty collections
         assert!(engine.blocked_sources.is_empty());
         assert!(engine.quarantined_systems.is_empty());
         assert!(engine.active_threats.is_empty());
@@ -42,7 +42,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_basic_event_analysis() {
-        let _engine = ThreatDetectionEngine::placeholder();
+        let _engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default());
         let event = SecurityEvent::new(
             "test_event".to_string(),
             "login".to_string(),
@@ -57,7 +57,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_rule_management() {
-        let mut engine = ThreatDetectionEngine::placeholder();
+        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default());
         let initial_count = engine.detection_rules.len();
 
         let rule = DetectionRule {
@@ -85,7 +85,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_statistics_tracking() {
-        let engine = ThreatDetectionEngine::placeholder();
+        let engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default());
         let stats = &engine.stats;
         assert_eq!(stats.total_events_processed, 0);
         assert_eq!(stats.threats_detected, 0);
@@ -93,7 +93,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_ml_model_management() {
-        let mut engine = ThreatDetectionEngine::placeholder();
+        let mut engine = ThreatDetectionEngine::new(ThreatDetectionConfig::default());
         let initial_count = engine.ml_models.len();
 
         let model = MlModel {

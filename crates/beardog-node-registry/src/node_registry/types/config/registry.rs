@@ -65,8 +65,11 @@ impl Default for RegistryConfig {
             registry_id: "beardog-registry".to_string(),
             registry_name: "BearDog Node Registry".to_string(),
             version: "1.0.0".to_string(),
-            bind_address: "0.0.0.0".to_string(),
-            port: 8080,
+            bind_address: std::env::var("BEARDOG_REGISTRY_BIND_ADDRESS")
+                .unwrap_or_else(|_| "0.0.0.0".to_string()),
+            port: std::env::var("BEARDOG_REGISTRY_PORT")
+                .unwrap_or_else(|_| "8443".to_string()) // Use 8443 for TLS by default
+                .parse().unwrap_or(8443),
             max_nodes: 10000,
             node_timeout_seconds: 300, // 5 minutes
             health_check_interval_seconds: 60, // 1 minute

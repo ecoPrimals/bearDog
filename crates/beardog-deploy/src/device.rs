@@ -315,7 +315,11 @@ impl DeviceManager {
             DeployError::device_command_failed(format!("Failed to start logcat: {e}"))
         })?;
 
-        let stdout = child.stdout.take().unwrap();
+        let stdout = child.stdout.take().ok_or_else(|| {
+            DeployError::device_command_failed(
+                "Failed to get stdout from logcat process".to_string(),
+            )
+        })?;
         let reader = BufReader::new(stdout);
         let mut lines = reader.lines();
 
