@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 [dependencies]
 # BearDog core
 beardog = { path = "../crates/beardog" }
-beardog-tunnel = { path = "../crates/beardog-tunnel", features = ["android-hsm"] }
+beardog-tunnel = { path = "../crates/beardog-tunnel", features = ["android_native", "strongbox_hardware"] }
 beardog-errors = { path = "../crates/beardog-errors" }
 
 # Async runtime

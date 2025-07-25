@@ -3,9 +3,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Key types supported by the HSM system
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, Default)]
 pub enum KeyType {
     /// AES 128-bit symmetric encryption key
+    #[default]
     Aes128,
     /// AES 192-bit symmetric encryption key
     Aes192,
@@ -34,7 +35,7 @@ pub enum KeyType {
 }
 
 /// Metadata associated with HSM keys
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct KeyMetadata {
     /// Unique identifier for the key
     pub key_id: String,

@@ -6,6 +6,10 @@
 use super::crypto_providers::ring_crypto::RingCryptoProvider;
 use super::memory::{DefaultMemoryProtector, MemoryProtectionConfig};
 use super::types::*;
+use super::super::types::{
+    KeyType, HsmKey, HsmTier, HsmHealthStatus, HsmCapabilities, HsmCapability,
+    SoftwareHsmConfig, MemoryProtectionLevel
+};
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::HsmProvider;
 use async_trait::async_trait;

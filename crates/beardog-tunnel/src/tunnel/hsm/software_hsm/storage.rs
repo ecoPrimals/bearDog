@@ -355,7 +355,7 @@ impl Default for MemoryHsmStorage {
         // Use secure random generation for the master key
         let master_key_bytes = rand::random::<[u8; 32]>();
         let master_key = Arc::new(*Key::<Aes256Gcm>::from_slice(&master_key_bytes));
-        
+
         Self {
             storage: Arc::new(RwLock::new(HashMap::new())),
             master_key,
@@ -376,7 +376,7 @@ impl Default for DefaultEncryptionKey {
         let key_bytes = rand::random::<[u8; 32]>();
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
         let cipher = Aes256Gcm::new(key);
-        
+
         Self { cipher }
     }
 }

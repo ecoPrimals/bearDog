@@ -87,6 +87,10 @@ pub mod network {
     pub const DEFAULT_ADMIN_PORT: u16 = 9092;
     /// Default API port for REST API endpoints
     pub const DEFAULT_API_PORT: u16 = 8080;
+    /// Default Prometheus port for metrics
+    pub const DEFAULT_PROMETHEUS_PORT: u16 = 9090;
+    /// Default Grafana port for dashboards
+    pub const DEFAULT_GRAFANA_PORT: u16 = 3000;
 
     /// Default host (configurable via BEARDOG_DEFAULT_HOST)
     pub const DEFAULT_HOST: &str = "localhost";
@@ -99,6 +103,11 @@ pub mod network {
         std::env::var("BEARDOG_DEFAULT_HOST")
             .or_else(|_| std::env::var("DEFAULT_HOST"))
             .unwrap_or_else(|_| DEFAULT_HOST.to_string())
+    }
+
+    /// Get host for service connections
+    pub fn get_host() -> String {
+        get_default_host()
     }
 
     /// Trusted IP ranges

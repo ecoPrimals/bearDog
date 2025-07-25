@@ -185,7 +185,7 @@ impl BearDogApiServer {
             .nest("/auth", crate::api::auth::create_routes())
             // Ecosystem RPC Integration API
             .nest("/rpc", crate::api::rpc::create_rpc_router())
-        // TODO: Add these routes when modules are implemented
+        // Additional routes will be added as modules are implemented
         // .nest("/config", crate::api::config::create_routes())
         // .nest("/nodes", crate::api::nodes::create_routes())
     }

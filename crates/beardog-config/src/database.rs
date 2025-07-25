@@ -208,8 +208,12 @@ pub enum CacheEvictionPolicy {
 impl Default for OptimizedDatabaseConfig {
     fn default() -> Self {
         Self {
-            url: std::env::var("BEARDOG_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://localhost/beardog".to_string()),
+            url: std::env::var("BEARDOG_DATABASE_URL").unwrap_or_else(|_| {
+                format!(
+                    "postgresql://{}/beardog",
+                    crate::constants::network::DEFAULT_HOST
+                )
+            }),
             pool: ConnectionPoolConfig::default(),
             query_optimization: QueryOptimizationConfig::default(),
             caching: DatabaseCachingConfig::default(),

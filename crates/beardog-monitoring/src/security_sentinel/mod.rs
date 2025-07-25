@@ -37,7 +37,7 @@ mod tests;
 
 // Re-export main types
 pub use capability_monitor::SecurityCapabilityMonitor;
-pub use performance_sentinel::PerformanceSentinel;
+pub use performance_sentinel::{AlertManager, PerformanceSentinel, PerformanceThresholds, PerformanceTrends};
 pub use posture::SecurityPostureMonitor;
 pub use sovereignty_health::SovereigntyHealthMonitor;
 pub use threat_landscape::ThreatLandscapeIntelligence;
@@ -320,7 +320,12 @@ impl SecuritySentinel {
         let posture_monitor = Arc::new(SecurityPostureMonitor::new());
         let threat_intelligence = Arc::new(ThreatLandscapeIntelligence::new());
         let capability_monitor = Arc::new(SecurityCapabilityMonitor::new());
-        let performance_sentinel = Arc::new(PerformanceSentinel::new());
+        let performance_thresholds = PerformanceThresholds::default();
+        let alert_manager = Arc::new(AlertManager::new());
+        let performance_sentinel = Arc::new(PerformanceSentinel::new(
+            performance_thresholds,
+            alert_manager,
+        ).expect("Failed to create PerformanceSentinel")); // Convert ? to expect for constructor
         let sovereignty_monitor = Arc::new(SovereigntyHealthMonitor::new());
 
         Self {
@@ -390,15 +395,18 @@ impl SecuritySentinel {
         // Gather intelligence from all monitoring components
         let threat_landscape = self.threat_intelligence.assess_threat_landscape().await;
         let capabilities_health = self.capability_monitor.assess_capabilities().await;
-        let performance_metrics = self.performance_sentinel.gather_performance_metrics().await;
+        let performance_trends = self.performance_sentinel.get_performance_trends(30).await?;
         let sovereignty_status = self.sovereignty_monitor.assess_sovereignty().await;
+
+        // Convert performance trends to security metrics
+        let security_performance_metrics = self.convert_trends_to_security_metrics(&performance_trends);
 
         // Calculate overall security score
         let overall_security_score = self
             .calculate_overall_security_score(
                 &threat_landscape,
                 &capabilities_health,
-                &performance_metrics,
+                &security_performance_metrics,
                 &sovereignty_status,
             )
             .await;
@@ -408,14 +416,14 @@ impl SecuritySentinel {
             .generate_security_recommendations(
                 &threat_landscape,
                 &capabilities_health,
-                &performance_metrics,
+                &security_performance_metrics,
                 &sovereignty_status,
             )
             .await;
 
         // Check alert conditions
         let alert_status = self
-            .evaluate_alert_conditions(&capabilities_health, &performance_metrics)
+            .evaluate_alert_conditions(&capabilities_health, &security_performance_metrics)
             .await;
 
         let report = SecurityStatusReport {
@@ -423,7 +431,7 @@ impl SecuritySentinel {
             overall_security_score,
             threat_landscape,
             capabilities_health,
-            performance_metrics,
+            performance_metrics: security_performance_metrics,
             sovereignty_status,
             recommendations,
             alert_status,
@@ -438,6 +446,22 @@ impl SecuritySentinel {
         }
 
         Ok(report)
+    }
+
+    /// Convert PerformanceTrends to SecurityPerformanceMetrics
+    fn convert_trends_to_security_metrics(&self, trends: &PerformanceTrends) -> SecurityPerformanceMetrics {
+        SecurityPerformanceMetrics {
+            avg_response_time_ms: trends.avg_latency_ms as f64,
+            security_ops_per_sec: if trends.sample_count > 0 { 
+                trends.sample_count as f64 / (trends.window_minutes as f64 * 60.0) 
+            } else { 0.0 },
+            security_error_rate: 0.0, // Not available from trends, conservative default
+            security_resource_usage: ResourceUsage {
+                cpu_usage_percent: trends.avg_cpu_percent,
+                memory_usage_bytes: (trends.avg_memory_mb * 1024.0 * 1024.0) as u64,
+                network_usage_bytes_per_sec: 0, // Not available from trends
+            },
+        }
     }
 
     /// Calculate overall security score from all components

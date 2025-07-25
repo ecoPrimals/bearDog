@@ -38,34 +38,60 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-pub mod android_strongbox;
-pub mod manager;
-pub mod software_hsm;
 pub mod types;
+pub mod manager;
+pub mod android_strongbox;
+pub mod ios_secure_enclave;
+pub mod software_hsm;
+pub mod safe_ffi;
+pub mod mobile_setup;
+pub mod key_manager;
+pub mod performance;
+pub mod mobile_ephemeral_integration; // NEW: Core BearDog capability integration
 
-// Re-export common types
-pub use android_strongbox::AndroidStrongBoxHsm;
-pub use manager::{
-    config::FailoverConfig,
-    // Re-export all config types
-    config::HealthConfig,
-    config::PerformanceConfig,
-    CircuitBreaker,
-    CircuitBreakerState,
-    DefaultHsmCapabilityDetector,
-    DefaultHsmFailoverManager,
-    DefaultHsmHealthMonitor,
-    HsmManager,
-    HsmManagerConfig,
-    HsmPerformanceTracker,
-    HsmProviderSelection,
-    OperationMetrics,
-    SimpleHsmTier,
+// Core HSM traits and types (imports already declared above)
+
+// Import the successfully integrated types from beardog-core
+pub use beardog_core::{
+    KeyType, HsmTier, HsmHealthStatus, HsmCapabilities, HsmKey,
+    ComponentStatus, CoreState, HealthStatus, HealthCheck, SystemMetrics
 };
-pub use software_hsm::RustSoftwareHsm;
+
+// Re-export core BearDog ephemeral capability
+pub use mobile_ephemeral_integration::{
+    MobileEphemeralKeyGenerator, 
+    EphemeralMobileKey,
+    LiveInputData,
+    MobileEphemeralConfig,
+    demonstrate_core_beardog_capability,
+};
+
+// Define core HSM error type that modules expect
+#[derive(Debug, thiserror::Error)]
+pub enum HsmError {
+    #[error("HSM operation failed: {message}")]
+    OperationFailed { message: String },
+    #[error("HSM not available: {reason}")]
+    NotAvailable { reason: String },
+    #[error("Key not found: {key_id}")]
+    KeyNotFound { key_id: String },
+    #[error("Invalid key type: {key_type}")]
+    InvalidKeyType { key_type: String },
+}
+
+/// Core synchronous HSM operations for performance-critical paths
+pub trait HsmProviderSync: Send + Sync {
+    fn generate_key_sync(&self, key_id: &str, key_type: &str) -> Result<types::HsmKey, HsmError>;
+    fn sign_data_sync(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, HsmError>;
+    fn verify_signature_sync(&self, key_id: &str, data: &[u8], signature: &[u8]) -> Result<bool, HsmError>;
+    fn get_capabilities_sync(&self) -> Result<types::HsmCapabilities, HsmError>;
+    fn health_check_sync(&self) -> Result<types::HsmHealthStatus, HsmError>;
+}
+
+// Re-export key types
 pub use types::*;
 
-/// Universal HSM interface for all HSM types
+/// Universal async HSM interface for all HSM types - PRIMARY INTERFACE
 #[async_trait]
 pub trait HsmProvider: Send + Sync {
     /// Initialize the HSM connection
@@ -314,6 +340,11 @@ impl Default for PerformanceRequirements {
         }
     }
 }
+
+// Re-export HSM implementations
+pub use android_strongbox::AndroidStrongBoxHsm;
+pub use software_hsm::RustSoftwareHsm;
+pub use manager::HsmManager;
 
 impl Default for OperationContext {
     fn default() -> Self {

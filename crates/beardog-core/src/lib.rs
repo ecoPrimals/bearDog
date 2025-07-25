@@ -1,6 +1,6 @@
-//! Core BearDog Security Manager functionality
+//! BearDog Core Library
 //!
-//! This crate provides the main BearDog orchestration engine and core functionality.
+//! This crate provides the core functionality for the BearDog security platform.
 
 pub mod biome_yaml_parser;
 pub mod context_aware_licensing;
@@ -18,9 +18,19 @@ pub mod universal_discovery;
 pub mod universal_optimization;
 pub mod universal_primal_provider;
 
-use async_trait::async_trait;
-use beardog_errors::BearDogResult;
-use serde::{Deserialize, Serialize};
+// Re-export common types (using local definitions to avoid circular deps)
+pub use beardog_errors::{BearDogError, BearDogResult};
+pub use types::*;
+
+// Re-export key external crate types that modules expect
+pub use beardog_adapters;
+pub use beardog_auth;
+pub use beardog_compliance;
+pub use beardog_workflows;
+
+// Make sure serde macros and async_trait are available everywhere
+pub use async_trait::async_trait;
+pub use serde::{Deserialize, Serialize};
 
 // Re-export core functionality
 pub use crate::biome_yaml_parser::{

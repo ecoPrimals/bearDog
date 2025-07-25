@@ -32,6 +32,45 @@ pub use shards::*;
 pub use social::*;
 pub use types::*;
 
+/// Recovery provider for ephemeral key integration
+#[derive(Debug, Clone)]
+pub struct RecoveryProvider {
+    /// Recovery manager instance
+    manager: Arc<RecoveryManager>,
+}
+
+impl RecoveryProvider {
+    /// Create new recovery provider
+    pub fn new() -> Self {
+        Self {
+            manager: Arc::new(RecoveryManager::new()),
+        }
+    }
+
+    /// Generate ephemeral recovery key
+    pub async fn generate_ephemeral_key(&self, user_id: &str) -> BearDogResult<EphemeralRecoveryKey> {
+        let permissions = EphemeralPermissions::default();
+        let key = EphemeralRecoveryKey::new(
+            uuid::Uuid::new_v4().to_string(),
+            user_id.to_string(),
+            permissions,
+        );
+        Ok(key)
+    }
+
+    /// Validate recovery key
+    pub async fn validate_recovery_key(&self, key_id: &str) -> BearDogResult<bool> {
+        // Placeholder validation - would check against stored keys
+        Ok(!key_id.is_empty())
+    }
+}
+
+impl Default for RecoveryProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Recovery system manager
 #[derive(Debug)]
 pub struct RecoveryManager {
@@ -51,16 +90,16 @@ pub struct RecoveryManager {
 }
 
 impl RecoveryManager {
-    /// Create a new recovery manager
-    pub async fn new() -> BearDogResult<Self> {
-        Ok(Self {
+    /// Create a new recovery manager (synchronous for simple initialization)
+    pub fn new() -> Self {
+        Self {
             recovery_sessions: Arc::new(RwLock::new(HashMap::new())),
             social_configs: Arc::new(RwLock::new(HashMap::new())),
             federation_configs: Arc::new(RwLock::new(HashMap::new())),
             ephemeral_keys: Arc::new(RwLock::new(HashMap::new())),
             challenge_responses: Arc::new(RwLock::new(HashMap::new())),
             audit_log: Arc::new(RwLock::new(Vec::new())),
-        })
+        }
     }
 
     /// Start a new recovery session

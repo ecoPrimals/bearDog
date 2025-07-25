@@ -223,26 +223,18 @@ impl AwsKmsIntegration {
                 if let Some(keys) = json.get("Keys").and_then(|v| v.as_array()) {
                     Ok(keys.clone())
                 } else {
-                    // Fallback: return mock keys
-                    Ok(vec![
-                        serde_json::json!({
-                            "KeyId": "mock-key-1",
-                            "Arn": "arn:aws:kms:us-west-2:123456789012:key/mock-key-1"
-                        }),
-                        serde_json::json!({
-                            "KeyId": "alias/beardog-key",
-                            "Arn": "arn:aws:kms:us-west-2:123456789012:alias/beardog-key"
-                        }),
-                    ])
+                    // SECURITY: Never fall back to mock keys - fail securely
+                    Err(BearDogError::External {
+                        message: "AWS KMS response missing 'Keys' field - refusing to use mock keys for security".to_string(),
+                    })
                 }
             }
-            Err(_) => {
-                // Fallback: return mock keys
-                tracing::warn!("KMS list-keys failed, using mock keys");
-                Ok(vec![serde_json::json!({
-                    "KeyId": "mock-key-1",
-                    "Arn": "arn:aws:kms:us-west-2:123456789012:key/mock-key-1"
-                })])
+            Err(parse_error) => {
+                // SECURITY: Never fall back to mock keys - fail securely
+                tracing::error!("AWS KMS list-keys failed with parse error: {}", parse_error);
+                Err(BearDogError::External {
+                    message: format!("Failed to parse AWS KMS response: {} - refusing to use mock keys for security", parse_error),
+                })
             }
         }
     }
@@ -270,17 +262,15 @@ impl AwsKmsIntegration {
                     })
                 }
             }
-            Err(_) => {
-                // Fallback: return mock key metadata
-                use uuid::Uuid;
-                tracing::warn!("KMS create-key failed, using mock key");
-                Ok(serde_json::json!({
-                    "KeyId": format!("mock-key-{}", Uuid::new_v4()),
-                    "Arn": format!("arn:aws:kms:us-west-2:123456789012:key/mock-key-{}", Uuid::new_v4()),
-                    "Description": description,
-                    "KeyUsage": "ENCRYPT_DECRYPT",
-                    "KeyState": "Enabled"
-                }))
+            Err(parse_error) => {
+                // SECURITY: Never fall back to mock keys - fail securely
+                tracing::error!(
+                    "AWS KMS create-key failed with parse error: {}",
+                    parse_error
+                );
+                Err(BearDogError::External {
+                    message: format!("Failed to parse AWS KMS create-key response: {} - refusing to use mock keys for security", parse_error),
+                })
             }
         }
     }

@@ -352,6 +352,13 @@ pub enum BearDogError {
         reason: String,
     },
 
+    /// Spawning operation errors
+    #[error("Spawning error: {message}")]
+    SpawningError {
+        /// Error message describing the spawning issue
+        message: String,
+    },
+
     #[error("Operation timeout: {operation}")]
     OperationTimeout {
         /// The operation that timed out
@@ -604,6 +611,12 @@ pub enum BearDogError {
     TimeoutError {
         /// Error message describing the timeout
         message: String,
+    },
+
+    #[error("Component not found: {component}")]
+    ComponentNotFound {
+        /// The component that was not found
+        component: String,
     },
 }
 

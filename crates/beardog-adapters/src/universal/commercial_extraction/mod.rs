@@ -6,5 +6,9 @@
 pub mod detector;
 pub mod implementation;
 
-pub use detector::*;
-pub use implementation::*;
+// Re-export specific types to avoid UniversalRequest ambiguity
+pub use detector::{
+    AccessLevel, CommercialClassification, CommercialExtractionDetector, EntropyHistory,
+    ExtractionRisk, GeneticKeyEvolutionEngine, HumanEntropyUsage, UsagePattern,
+};
+// Note: UniversalRequest is intentionally not re-exported to avoid ambiguity

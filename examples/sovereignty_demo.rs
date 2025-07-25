@@ -29,7 +29,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Empowering humans to control their compute, data, and identity\n");
 
     // Simulate API server (in real usage, this would be running separately)
-    let api_base = "http://localhost:3000/api/v1/sovereignty";
+    let api_base = std::env::var("BEARDOG_API_URL")
+        .unwrap_or_else(|_| "http://localhost:3000".to_string()) + "/api/v1/sovereignty";
     
     // Demo 1: Friend-to-Friend Resource Sharing
     println!("🤝 DEMO 1: Lending Compute Resources to a Friend");

@@ -99,12 +99,12 @@ async fn main() -> BearDogResult<()> {
     let core = match &cli.command {
         Commands::Ai(_) => {
             let core = BearDogCore::new(config).await?;
-            core.start().await?;
+            core.startup().await?;
             Some(core)
         }
         Commands::Health { .. } => {
             let core = BearDogCore::new(config).await?;
-            core.start().await?;
+            core.startup().await?;
             Some(core)
         }
         _ => None,
@@ -121,10 +121,11 @@ async fn main() -> BearDogResult<()> {
                 let response = serde_json::json!({
                     "success": true,
                     "data": {
+                        "component_name": health.component_name,
                         "status": format!("{:?}", health.status),
                         "uptime_seconds": health.uptime.map(|d| d.num_seconds()).unwrap_or(0),
-                        "components": health.components,
-                        "metrics": if detailed { Some(health.metrics) } else { None },
+                        "last_check": health.last_check.to_rfc3339(),
+                        "details": if detailed { Some(health.details) } else { None },
                     },
                     "timestamp": chrono::Utc::now().to_rfc3339(),
                 });
@@ -203,7 +204,7 @@ async fn main() -> BearDogResult<()> {
 
     // Graceful shutdown
     if let Some(core) = core {
-        core.stop().await?;
+        core.shutdown().await?;
     }
 
     Ok(())

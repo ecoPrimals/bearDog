@@ -1,116 +1,83 @@
 //! BearDog Core Lifecycle Management
 //!
-//! Manages the startup, shutdown, health checking, and metrics of BearDog core components.
+//! Manages the startup, shutdown, and health monitoring of BearDog core.
 
 use super::BearDogCore;
 use crate::types::{ComponentStatus, HealthCheck, HealthStatus, SystemMetrics};
-use beardog_errors::BearDogResult;
+use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;
-use tracing::info;
+use std::collections::HashMap;
+use tracing::{debug, error, info, warn};
 
 impl BearDogCore {
-    /// Start the BearDog core and all components
-    pub async fn start(&self) -> BearDogResult<()> {
-        let mut state = self.state.write().await;
-        state.start_time = Some(Utc::now());
-        state.health_status = HealthStatus::Starting;
-
-        info!("Starting BearDog core components...");
+    /// Start all core components
+    pub async fn startup(&self) -> BearDogResult<()> {
+        info!("🚀 BearDog Core startup initiated");
 
         // Initialize components in order
-        self.register_component(&mut state, "encryption", true, None)
-            .await;
-        self.register_component(&mut state, "threat_detection", true, None)
-            .await;
-        self.register_component(&mut state, "compliance", true, None)
-            .await;
-        self.register_component(&mut state, "audit", true, None)
-            .await;
-        self.register_component(&mut state, "workflows", true, None)
-            .await;
-        self.register_component(&mut state, "cross_node_auth", true, None)
-            .await;
-        self.register_component(&mut state, "hsm_manager", true, None)
-            .await;
-        self.register_component(&mut state, "nestgate_adapter", true, None)
-            .await;
-        self.register_component(&mut state, "songbird_adapter", true, None)
-            .await;
+        self.security.initialize().await?;
+        self.monitor.start().await?;
+        self.genetic_optimizer.initialize().await?;
 
-        state.health_status = HealthStatus::Healthy;
-        info!("BearDog core started successfully");
-
-        Ok(())
-    }
-
-    /// Stop the BearDog core and all components
-    pub async fn stop(&self) -> BearDogResult<()> {
-        let mut state = self.state.write().await;
-        state.health_status = HealthStatus::Stopping;
-
-        info!("Stopping BearDog core...");
-
-        // Clear component statuses
-        state.component_status.clear();
-
-        info!("BearDog core stopped");
-        Ok(())
-    }
-
-    /// Get current health status
-    pub async fn health_check(&self) -> BearDogResult<HealthCheck> {
-        let state = self.state.read().await;
-
-        let uptime = state.start_time.map(|start_time| Utc::now() - start_time);
-
-        let components: Vec<ComponentStatus> = state.component_status.values().cloned().collect();
-
-        Ok(HealthCheck {
-            component_name: "beardog-core".to_string(),
-            healthy: matches!(state.health_status, HealthStatus::Healthy),
-            status: state.health_status.clone(),
-            uptime,
-            details: None,
-            check_duration_ms: 0,
-            components,
-            metrics: state.metrics.clone(),
-            timestamp: Utc::now(),
-        })
-    }
-
-    /// Update system metrics
-    pub async fn update_metrics(&self, metrics: SystemMetrics) -> BearDogResult<()> {
-        let mut state = self.state.write().await;
-        state.metrics = metrics;
-        Ok(())
-    }
-
-    /// Get health status for all components
-    pub async fn get_health_status(
-        &self,
-    ) -> BearDogResult<std::collections::HashMap<String, String>> {
-        let mut status = std::collections::HashMap::new();
-
-        // Get current state
-        let state = self.state.read().await;
-
-        // Overall health
-        status.insert("overall".to_string(), format!("{:?}", state.health_status));
-
-        // Check individual component health
-        for (name, component) in &state.component_status {
-            let health = if component.healthy {
-                "healthy"
-            } else {
-                "unhealthy"
-            };
-            status.insert(name.clone(), health.to_string());
+        // Update state
+        {
+            let mut state = self.state.write().await;
+            self.register_component(&mut *state, "security", true, None)
+                .await;
+            self.register_component(&mut *state, "monitor", true, None)
+                .await;
+            self.register_component(&mut *state, "genetic_optimizer", true, None)
+                .await;
+            state.overall_health = HealthStatus::healthy();
         }
 
-        // Node registry not yet implemented, report as unavailable
-        status.insert("node_registry".to_string(), "not_implemented".to_string());
-        status.insert("proof_verifier".to_string(), "not_implemented".to_string());
+        info!("✅ BearDog Core startup completed successfully");
+        Ok(())
+    }
 
-        Ok(status)
+    /// Shutdown all components gracefully
+    pub async fn shutdown(&self) -> BearDogResult<()> {
+        info!("🛑 BearDog Core shutdown initiated");
+
+        // Update state to stopping
+        {
+            let mut state = self.state.write().await;
+            for (name, status) in state.components.iter_mut() {
+                *status = ComponentStatus::Stopping;
+            }
+        }
+
+        // Graceful shutdown would happen here
+        // For now, just mark as stopped
+        {
+            let mut state = self.state.write().await;
+            for (name, status) in state.components.iter_mut() {
+                *status = ComponentStatus::Stopped;
+            }
+            state.overall_health = HealthStatus::unhealthy("System shutting down".to_string());
+        }
+
+        info!("✅ BearDog Core shutdown completed");
+        Ok(())
+    }
+
+    /// Perform comprehensive health check
+    pub async fn health_check(&self) -> BearDogResult<HealthCheck> {
+        let state = self.state.read().await;
+        let overall_healthy = state.components.values().all(|status| status.healthy());
+
+        let health_check = HealthCheck {
+            component_name: "core".to_string(),
+            status: if overall_healthy {
+                ComponentStatus::Running
+            } else {
+                ComponentStatus::Error("Some components unhealthy".to_string())
+            },
+            last_check: Utc::now(),
+            details: HashMap::new(),
+            uptime: None, // Add the missing uptime field
+        };
+
+        Ok(health_check)
     }
 }

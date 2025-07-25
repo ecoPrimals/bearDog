@@ -560,7 +560,12 @@ impl EcosystemIntegration {
             let error_text = response
                 .text()
                 .await
-                .unwrap_or_else(|_| "Unknown error".to_string());
+                .map_err(|e| {
+                    warn!("Failed to read Grafana error response: {}", e);
+                    e
+                })
+                .unwrap_or_else(|_| "Failed to read Grafana error response".to_string());
+
             Err(BearDogError::ExternalServiceError {
                 service: "grafana".to_string(),
                 message: format!("Grafana dashboard creation failed: {error_text}"),

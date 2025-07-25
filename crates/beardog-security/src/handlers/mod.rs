@@ -61,7 +61,7 @@ impl BearDogSecurityProvider {
         };
 
         // Initialize recovery system for distributed account recovery
-        let _recovery_manager = Some(crate::recovery::RecoveryManager::new().await?);
+        let _recovery_manager = Some(crate::recovery::RecoveryManager::new());
 
         Ok(Self {
             config,

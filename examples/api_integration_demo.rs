@@ -19,7 +19,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing Individual Sovereignty APIs with real HTTP requests\n");
 
     let client = reqwest::Client::new();
-    let base_url = "http://localhost:3000";
+    let base_url = std::env::var("BEARDOG_API_URL")
+        .unwrap_or_else(|_| "http://localhost:3000".to_string());
     
     // Test 1: Resource Sharing API Integration
     println!("🧪 TEST 1: Resource Sharing API Integration");

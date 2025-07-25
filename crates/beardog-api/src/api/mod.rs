@@ -33,7 +33,7 @@ pub mod cache;
 pub mod compliance; // Enterprise compliance and audit management
 pub mod error_handling; // Error handling and response formatting
 pub mod genetics;
-// pub mod handlers; // TODO: Implement handlers module
+// pub mod handlers; // Generic handlers are implemented in individual modules
 pub mod monitoring;
 pub mod rate_limiting;
 pub mod rpc; // Ecosystem RPC integration for sovereign network effects
@@ -41,21 +41,22 @@ pub mod security;
 pub mod server;
 pub mod sovereignty; // Individual empowerment and peer-to-peer sharing
 pub mod types; // Common types and constants
-               // pub mod webhooks; // TODO: Implement webhooks module
+               // pub mod webhooks; // Webhooks will be implemented based on specific integration needs
+pub mod zero_copy; // Zero-copy optimization modules
 pub mod zero_copy_handlers; // Add zero-copy optimizations
 
-// TODO: Add these modules when they are implemented
-// pub mod routes;
-// pub mod middleware;
-// pub mod models;
-// pub mod config;
-// pub mod nodes;
+// Future modules for specific functionality
+// pub mod routes;     // Route definitions handled per-module
+// pub mod middleware; // Middleware handled per-module
+// pub mod models;     // Models defined per-module
+// pub mod config;     // Configuration handled by beardog-config crate
+// pub mod nodes;      // Node management handled by beardog-node-registry crate
 
 // Re-export main components
 pub use error_handling::*;
 pub use server::*;
 pub use types::*;
-// TODO: Re-export when modules are implemented
+// Additional re-exports will be added as modules are developed
 // pub use routes::*;
 // pub use middleware::*;
 // pub use models::*;

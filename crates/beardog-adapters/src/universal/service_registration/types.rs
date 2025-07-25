@@ -6,7 +6,7 @@ use chrono::{DateTime, Utc};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use uuid::Uuid;
+// UUID generation handled by individual service implementations
 
 /// Universal service registration
 #[derive(Debug, Clone, Serialize, Deserialize)]

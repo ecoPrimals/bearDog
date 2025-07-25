@@ -146,19 +146,28 @@ impl Default for ExternalServicesConfig {
     fn default() -> Self {
         Self {
             prometheus_url: env::var("BEARDOG_PROMETHEUS_URL")
-                .unwrap_or_else(|_| "http://localhost:9090".to_string()),
+                .unwrap_or_else(|_| format!("http://{}:{}", 
+                    crate::constants::network::DEFAULT_HOST, 
+                    crate::constants::network::DEFAULT_PROMETHEUS_PORT)),
             grafana_url: env::var("BEARDOG_GRAFANA_URL")
-                .unwrap_or_else(|_| "http://localhost:3000".to_string()),
+                .unwrap_or_else(|_| format!("http://{}:{}", 
+                    crate::constants::network::DEFAULT_HOST, 
+                    crate::constants::network::DEFAULT_GRAFANA_PORT)),
             grafana_port: env::var("BEARDOG_GRAFANA_PORT")
                 .unwrap_or_else(|_| "3000".to_string())
                 .parse()
                 .unwrap_or(3000),
             songbird_url: env::var("BEARDOG_SONGBIRD_URL")
-                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
+                .unwrap_or_else(|_| format!("http://{}:{}", 
+                    crate::constants::network::DEFAULT_HOST, 
+                    crate::constants::network::DEFAULT_API_PORT)),
             nestgate_url: env::var("BEARDOG_NESTGATE_URL")
-                .unwrap_or_else(|_| "http://localhost:8088".to_string()),
+                .unwrap_or_else(|_| format!("http://{}:8088", 
+                    crate::constants::network::DEFAULT_HOST)),
             toadstool_urls: env::var("BEARDOG_TOADSTOOL_URLS")
-                .unwrap_or_else(|_| "http://localhost:8080".to_string())
+                .unwrap_or_else(|_| format!("http://{}:{}", 
+                    crate::constants::network::DEFAULT_HOST, 
+                    crate::constants::network::DEFAULT_API_PORT))
                 .split(',')
                 .map(|s| s.trim().to_string())
                 .collect(),
@@ -299,7 +308,7 @@ tls_cert_path = "/etc/beardog/tls/cert.pem"
 tls_key_path = "/etc/beardog/tls/key.pem"
 
 [database]
-url = "postgresql://beardog:password@localhost:5432/beardog"
+url = "postgresql://beardog:${BEARDOG_DB_PASSWORD}@localhost:5432/beardog"
 max_connections = 20
 connection_timeout_ms = 5000
 
@@ -330,7 +339,7 @@ api:
   tls_key_path: "/etc/beardog/tls/key.pem"
 
 database:
-  url: "postgresql://beardog:password@localhost:5432/beardog"
+  url: "postgresql://beardog:${BEARDOG_DB_PASSWORD}@localhost:5432/beardog"
   max_connections: 20
   connection_timeout_ms: 5000
 

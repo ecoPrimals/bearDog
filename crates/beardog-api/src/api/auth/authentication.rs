@@ -40,9 +40,15 @@ pub async fn authenticate_user(
         .unwrap_or("127.0.0.1")
         .to_string();
 
-    // Simulate authentication process
-    // In production: verify password, check account status, handle rate limiting
-    let authentication_success = request.username == "admin" && request.password == "password123";
+    // SECURITY: Authentication with environment-configured credentials
+    // In production: verify password hash, check account status, handle rate limiting
+    let admin_username =
+        std::env::var("BEARDOG_ADMIN_USERNAME").unwrap_or_else(|_| "admin".to_string());
+    let admin_password = std::env::var("BEARDOG_ADMIN_PASSWORD")
+        .expect("BEARDOG_ADMIN_PASSWORD environment variable must be set for security");
+
+    let authentication_success =
+        request.username == admin_username && request.password == admin_password;
 
     if !authentication_success {
         warn!("❌ Authentication failed for user: {}", request.username);
@@ -300,7 +306,8 @@ mod tests {
             )),
             rate_limiter: std::sync::Arc::new(crate::api::rate_limiting::RateLimiterType::default()),
             config: crate::api::server::ApiServerConfig {
-                bind_address: "127.0.0.1:8080".to_string(),
+                bind_address: std::env::var("BEARDOG_API_BIND_ADDRESS")
+                    .unwrap_or_else(|_| "127.0.0.1:8080".to_string()),
                 request_timeout_seconds: 30,
                 max_request_size: 1024 * 1024,
                 compression_enabled: true,

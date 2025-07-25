@@ -516,13 +516,14 @@ async fn handle_status_command(
         let health = core.health_check().await?;
 
         let mut status = serde_json::json!({
+            "component_name": health.component_name,
             "health": format!("{:?}", health.status),
             "uptime_seconds": health.uptime.map(|d| d.num_seconds()).unwrap_or(0),
-            "components": health.components,
+            "last_check": health.last_check.to_rfc3339(),
         });
 
         if detailed {
-            status["metrics"] = serde_json::json!(health.metrics);
+            status["details"] = serde_json::json!(health.details);
         }
 
         if watch {

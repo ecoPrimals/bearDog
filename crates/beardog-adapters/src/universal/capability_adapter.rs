@@ -13,7 +13,7 @@ use crate::BearDogResult;
 use chrono::Utc;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::json;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -60,14 +60,15 @@ pub struct ServiceMeshConnector {
 }
 
 /// Universal service provider trait
+#[async_trait::async_trait]
 pub trait UniversalServiceProvider {
     /// Register service with mesh
     async fn register_service(&self) -> BearDogResult<String>;
     /// Handle incoming requests
     async fn handle_request(
         &self,
-        request: crate::adapters::UniversalRequest,
-    ) -> BearDogResult<crate::adapters::UniversalResponse>;
+        request: crate::adapters::universal::UniversalRequest,
+    ) -> BearDogResult<crate::adapters::universal::UniversalResponse>;
     /// Get service capabilities
     fn get_capabilities(&self) -> Vec<ServiceCapability>;
     /// Health check
@@ -167,6 +168,7 @@ impl BearDogCapabilityAdapter {
     }
 }
 
+#[async_trait::async_trait]
 impl UniversalServiceProvider for BearDogCapabilityAdapter {
     async fn register_service(&self) -> BearDogResult<String> {
         let registration = self.create_service_registration().await;
@@ -184,8 +186,8 @@ impl UniversalServiceProvider for BearDogCapabilityAdapter {
 
     async fn handle_request(
         &self,
-        request: crate::adapters::UniversalRequest,
-    ) -> BearDogResult<crate::adapters::UniversalResponse> {
+        request: crate::adapters::universal::UniversalRequest,
+    ) -> BearDogResult<crate::adapters::universal::UniversalResponse> {
         // First, analyze for commercial extraction
         let classification = self.analyze_request_for_extraction(&request).await?;
 
@@ -199,13 +201,12 @@ impl UniversalServiceProvider for BearDogCapabilityAdapter {
                     confidence, risk_level
                 );
                 return Ok(crate::adapters::universal::UniversalResponse {
-                    request_id: request.request_id,
                     success: false,
-                    data: json!({"error": "Commercial extraction detected"}),
-                    error: Some(
-                        "Access restricted due to commercial extraction patterns".to_string(),
-                    ),
-                    timestamp: Utc::now(),
+                    payload: json!({"error": "Commercial extraction detected", "message": "Access restricted due to commercial extraction patterns"}),
+                    metadata: std::collections::HashMap::new(),
+                    processing_time_ms: 0,
+                    system_id: request.system_id.clone(),
+                    operation: request.operation.clone(),
                 });
             }
             CommercialClassification::Human { confidence } => {
@@ -223,7 +224,7 @@ impl UniversalServiceProvider for BearDogCapabilityAdapter {
 
         // Handle the actual request based on capability
         let capability = request
-            .parameters
+            .payload
             .get("capability")
             .and_then(|v| v.as_str())
             .unwrap_or("unknown");
@@ -233,11 +234,12 @@ impl UniversalServiceProvider for BearDogCapabilityAdapter {
             "signature_verification" => self.handle_signature_request(&request).await,
             "key_management" => self.handle_key_management_request(&request).await,
             _ => Ok(crate::adapters::universal::UniversalResponse {
-                request_id: request.request_id,
                 success: false,
-                data: json!({}),
-                error: Some(format!("Unknown capability: {}", capability)),
-                timestamp: Utc::now(),
+                payload: json!({"error": format!("Unknown capability: {}", capability)}),
+                metadata: std::collections::HashMap::new(),
+                processing_time_ms: 0,
+                system_id: request.system_id.clone(),
+                operation: request.operation.clone(),
             }),
         }
     }
@@ -262,11 +264,12 @@ impl BearDogCapabilityAdapter {
     ) -> BearDogResult<crate::adapters::universal::UniversalResponse> {
         // Placeholder for encryption logic
         Ok(crate::adapters::universal::UniversalResponse {
-            request_id: request.request_id.clone(),
             success: true,
-            data: json!({"encrypted": true, "algorithm": "AES-256-GCM"}),
-            error: None,
-            timestamp: Utc::now(),
+            payload: json!({"encrypted": true, "algorithm": "AES-256-GCM"}),
+            metadata: std::collections::HashMap::new(),
+            processing_time_ms: 0,
+            system_id: request.system_id.clone(),
+            operation: request.operation.clone(),
         })
     }
 
@@ -277,11 +280,12 @@ impl BearDogCapabilityAdapter {
     ) -> BearDogResult<crate::adapters::universal::UniversalResponse> {
         // Placeholder for signature verification logic
         Ok(crate::adapters::universal::UniversalResponse {
-            request_id: request.request_id.clone(),
             success: true,
-            data: json!({"verified": true, "algorithm": "Ed25519"}),
-            error: None,
-            timestamp: Utc::now(),
+            payload: json!({"verified": true, "algorithm": "Ed25519"}),
+            metadata: std::collections::HashMap::new(),
+            processing_time_ms: 0,
+            system_id: request.system_id.clone(),
+            operation: request.operation.clone(),
         })
     }
 
@@ -292,11 +296,12 @@ impl BearDogCapabilityAdapter {
     ) -> BearDogResult<crate::adapters::universal::UniversalResponse> {
         // Placeholder for key management logic
         Ok(crate::adapters::universal::UniversalResponse {
-            request_id: request.request_id.clone(),
             success: true,
-            data: json!({"key_operation": "completed"}),
-            error: None,
-            timestamp: Utc::now(),
+            payload: json!({"key_operation": "completed"}),
+            metadata: std::collections::HashMap::new(),
+            processing_time_ms: 0,
+            system_id: request.system_id.clone(),
+            operation: request.operation.clone(),
         })
     }
 }

@@ -1,34 +1,39 @@
-//! Build script for Android NDK integration
-
-use std::env;
-use std::path::PathBuf;
+//! Build script for beardog-tunnel with Android StrongBox support
 
 fn main() {
-    let target = env::var("TARGET").unwrap();
-
-    // Configure for Android targets
-    if target.contains("android") {
-        println!("cargo:rustc-cfg=target_os=\"android\"");
+    // Android-specific build configuration
+    #[cfg(target_os = "android")]
+    {
+        println!("cargo:rerun-if-changed=build.rs");
 
         // Link Android system libraries
         println!("cargo:rustc-link-lib=log"); // Android logging
-        println!("cargo:rustc-link-lib=android"); // Android native API
+        println!("cargo:rustc-link-lib=android"); // Android NDK
+        println!("cargo:rustc-link-lib=keystore"); // Android Keystore
 
-        // Set up JNI
-        if let Ok(ndk_home) = env::var("ANDROID_NDK_HOME") {
-            let ndk_path = PathBuf::from(ndk_home);
-            let toolchain_path = ndk_path.join("toolchains/llvm/prebuilt");
+        // Add Android-specific compiler flags
+        println!("cargo:rustc-link-arg=-Wl,--allow-shlib-undefined");
 
-            // Find the appropriate toolchain
-            if let Ok(host_tag) = env::var("NDK_HOST_TAG") {
-                let include_path = toolchain_path.join(&host_tag).join("sysroot/usr/include");
-                println!("cargo:rustc-link-search={}", include_path.display());
-            }
+        // Set up NDK paths if available
+        if let Ok(ndk_home) = std::env::var("ANDROID_NDK_HOME") {
+            println!("cargo:rustc-link-search=native={}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib", ndk_home);
         }
 
-        println!("cargo:rerun-if-env-changed=ANDROID_NDK_HOME");
-        println!("cargo:rerun-if-env-changed=NDK_HOST_TAG");
+        // Enable Android-specific features
+        println!("cargo:rustc-cfg=feature=\"android_native\"");
+
+        println!("cargo:warning=Building for Android with StrongBox support");
     }
 
-    println!("cargo:rerun-if-changed=build.rs");
+    // Standard build for other platforms
+    #[cfg(not(target_os = "android"))]
+    {
+        println!(
+            "cargo:warning=Building for non-Android platform - using mock StrongBox implementation"
+        );
+    }
+
+    // Common build settings
+    println!("cargo:rerun-if-env-changed=ANDROID_NDK_HOME");
+    println!("cargo:rerun-if-env-changed=CARGO_CFG_TARGET_OS");
 }

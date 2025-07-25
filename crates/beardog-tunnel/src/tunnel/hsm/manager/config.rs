@@ -3,7 +3,10 @@
 //! This module contains all configuration structures for the HSM manager,
 //! including health monitoring, failover, performance, and overall manager config.
 
-use super::super::types::HsmConfig;
+use super::super::types::{HsmTier, HsmCapabilities, HsmHealthStatus, KeyType, AndroidHsmConfig, HsmConfig};
+use beardog_errors::{BearDogError, BearDogResult};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::time::Duration;
 
 /// Simple HSM tier enum for internal tracking

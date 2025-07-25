@@ -3,12 +3,13 @@
 //! This module provides the Rust-based crypto provider implementation using standard Rust crypto crates.
 //! It uses `aes-gcm` for AES-256-GCM encryption/decryption and `ed25519-dalek` for Ed25519 signing/verification.
 
-use super::super::types::*;
+use super::super::super::types::{KeyType, HsmKey, HsmCapabilities};
 use crate::tunnel::hsm::types::*;
 use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 use ed25519_dalek::{Signature, Signer, SigningKey};
 use tracing::{debug, info};
+use std::collections::HashMap;
 
 /// Rust-based crypto provider using standard Rust crypto crates
 impl RustCryptoProvider {

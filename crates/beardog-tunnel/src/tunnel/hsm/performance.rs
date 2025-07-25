@@ -3,12 +3,14 @@
 //! This module provides performance tracking functionality for HSM providers, including
 //! operation metrics, latency tracking, and provider selection based on performance.
 
-use super::{HsmProvider, HsmTier};
+use super::types::{HsmTier, HsmCapabilities, HsmHealthStatus, SystemMetrics};
+use super::HsmProvider;
 use beardog_errors::{BearDogError, BearDogResult};
 use crate::tunnel::hsm::config::PerformanceConfig;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tracing::{debug, error, info, warn};
 
 /// HSM performance tracker
 pub struct HsmPerformanceTracker {

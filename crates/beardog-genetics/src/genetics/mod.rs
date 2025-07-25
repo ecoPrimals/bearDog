@@ -26,10 +26,10 @@ pub mod zero_copy_spawning_legacy;
 // Selective re-exports to avoid conflicts and warnings
 pub use spawning::{GeneticSpawningEngine, SpawnRequest, SpawnResult};
 pub use types::InMemoryGeneticsStore;
-// Legacy zero-copy spawning temporarily disabled due to refactor
-// TODO: Re-enable once type definitions are aligned with current auth module
-// pub use zero_copy::{GeneticsPool, LineageStats, LineageTracker};
-// pub use zero_copy_spawning_legacy::{CachedFitnessAnalysis, ZeroCopyGeneticSpawning};
+
+// Zero-copy spawning re-enabled - types are now aligned with current auth module
+pub use zero_copy::{GeneticsPool, LineageStats, LineageTracker};
+// Note: zero_copy_spawning_legacy remains disabled as it will be replaced by the modular version
 
 // Configuration and core types
 use serde::{Deserialize, Serialize};

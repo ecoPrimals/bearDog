@@ -533,7 +533,8 @@ impl BearDogNodeRegistry {
             operator: "BearDog User".to_string(),
             public_key,
             private_key,
-            endpoints: vec!["https://localhost:8843".to_string()],
+            endpoints: vec![std::env::var("BEARDOG_REGISTRY_ENDPOINT")
+                .unwrap_or_else(|_| "https://localhost:8843".to_string())],
             capabilities: vec![
                 "security".to_string(),
                 "trust-management".to_string(),
@@ -590,35 +591,72 @@ pub enum HealthStatus {
 // Implement NodeRegistry trait for backwards compatibility
 impl NodeRegistry for BearDogNodeRegistry {
     fn get_node_info(&self, node_id: &str) -> BearDogResult<crate::auth::types::NodeInfo> {
-        // This is a sync method but we need async - return a placeholder for now
-        // TODO: Implement proper async trait support
-        Err(BearDogError::config(
-            "Async trait support needed - use async methods instead",
-        ))
+        // Bridge sync trait method to async implementation
+        let rt = tokio::runtime::Handle::try_current()
+            .map_err(|_| BearDogError::config("No tokio runtime available for async operation"))?;
+        
+        rt.block_on(async {
+            // Use the existing async get_node method
+            match self.get_node(node_id).await {
+                Ok(node_data) => {
+                    // Convert our internal node format to the expected auth::types::NodeInfo
+                    Ok(crate::auth::types::NodeInfo {
+                        node_id: node_data.node_id,
+                        address: node_data.address.unwrap_or_default(),
+                        public_key: node_data.public_key.unwrap_or_default(),
+                        capabilities: node_data.capabilities,
+                        trust_level: node_data.trust_level,
+                        last_seen: node_data.last_seen,
+                        status: match node_data.status.as_str() {
+                            "active" => crate::auth::types::NodeStatus::Active,
+                            "inactive" => crate::auth::types::NodeStatus::Inactive,
+                            _ => crate::auth::types::NodeStatus::Unknown,
+                        },
+                    })
+                }
+                Err(e) => Err(e),
+            }
+        })
     }
 
     fn register_node(&mut self, node_info: crate::auth::types::NodeInfo) -> BearDogResult<()> {
-        // This is a sync method but we need async - return a placeholder for now
-        // TODO: Implement proper async trait support
-        Err(BearDogError::config(
-            "Async trait support needed - use async methods instead",
-        ))
+        // Bridge sync trait method to async implementation
+        let rt = tokio::runtime::Handle::try_current()
+            .map_err(|_| BearDogError::config("No tokio runtime available for async operation"))?;
+        
+        rt.block_on(async {
+            // Use the existing async registration method
+            self.register_node_with_key(
+                &node_info.node_id,
+                &node_info.public_key,
+                &node_info.address,
+            ).await
+        })
     }
 
     fn get_trust_level(&self, node_id: &str) -> BearDogResult<f64> {
-        // This is a sync method but we need async - return a placeholder for now
-        // TODO: Implement proper async trait support
-        Err(BearDogError::config(
-            "Async trait support needed - use async methods instead",
-        ))
+        // Bridge sync trait method to async implementation
+        let rt = tokio::runtime::Handle::try_current()
+            .map_err(|_| BearDogError::config("No tokio runtime available for async operation"))?;
+        
+        rt.block_on(async {
+            // Use the existing async get_node method and extract trust level
+            match self.get_node(node_id).await {
+                Ok(node_data) => Ok(node_data.trust_level),
+                Err(e) => Err(e),
+            }
+        })
     }
 
     fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> BearDogResult<()> {
-        // This is a sync method but we need async - return a placeholder for now
-        // TODO: Implement proper async trait support
-        Err(BearDogError::config(
-            "Async trait support needed - use async methods instead",
-        ))
+        // Bridge sync trait method to async implementation  
+        let rt = tokio::runtime::Handle::try_current()
+            .map_err(|_| BearDogError::config("No tokio runtime available for async operation"))?;
+        
+        rt.block_on(async {
+            // Use the existing async update_node_trust method
+            self.update_node_trust(node_id, trust_level).await
+        })
     }
 }
 

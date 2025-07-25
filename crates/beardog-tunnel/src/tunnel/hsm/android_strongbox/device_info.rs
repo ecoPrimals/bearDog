@@ -34,18 +34,8 @@ impl AndroidDeviceInfo {
     pub async fn detect() -> BearDogResult<Self> {
         info!("Detecting Android device configuration");
 
-        // Mock implementation - in a real implementation this would use Android APIs
-        let device_info = AndroidDeviceInfo::new(
-            "Google".to_string(),
-            "Pixel 8a".to_string(),
-            "14".to_string(),
-            Some("1.0".to_string()),
-            Some("2.0".to_string()),
-            "2024-01-01".to_string(),
-            VerifiedBootState::Green,
-        );
-
-        Ok(device_info)
+        // Use native device detection instead of mock data
+        super::native_device_detection::NativeAndroidDeviceDetector::detect_device_info().await
     }
 
     /// Check if StrongBox is available on this device

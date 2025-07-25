@@ -15,10 +15,10 @@ pub struct EcosystemIntegration {
 
 impl EcosystemIntegration {
     /// Create new ecosystem integration
-    pub fn new() -> Self {
-        Self {
-            capability_adapter: BearDogCapabilityAdapter::new(),
-        }
+    pub async fn new() -> BearDogResult<Self> {
+        Ok(Self {
+            capability_adapter: BearDogCapabilityAdapter::new().await?,
+        })
     }
 
     /// Get capability adapter reference
@@ -37,11 +37,5 @@ impl EcosystemIntegration {
     /// Health check - always healthy since we delegate
     pub async fn health_check(&self) -> EcosystemResult<bool> {
         Ok(true)
-    }
-}
-
-impl Default for EcosystemIntegration {
-    fn default() -> Self {
-        Self::new()
     }
 }

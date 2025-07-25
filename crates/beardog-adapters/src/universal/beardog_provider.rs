@@ -562,7 +562,8 @@ impl Default for BearDogEcosystemConfig {
             service_name: "BearDog Security Suite".to_string(),
             description: "Comprehensive security provider with encryption, authentication, threat detection, and compliance capabilities".to_string(),
             maintainer: "BearDog Security Team".to_string(),
-            base_url: "http://localhost:8080".to_string(),
+            base_url: std::env::var("BEARDOG_BASE_URL")
+                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
             enabled_capabilities: vec![
                 "encryption".to_string(),
                 "authentication".to_string(),

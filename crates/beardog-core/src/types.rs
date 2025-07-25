@@ -1,250 +1,249 @@
-//! Type definitions for BearDog Core
+//! Core Types for BearDog
 //!
-//! This module contains the core types, status enums, and data structures
-//! used throughout the BearDog core system.
+//! This module defines the core types used throughout the BearDog system.
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Internal core state structure
-#[derive(Debug)]
-pub struct CoreState {
-    /// When the core was started
-    pub start_time: Option<DateTime<Utc>>,
-    /// Status of individual components
-    pub component_status: HashMap<String, ComponentStatus>,
-    /// Overall system health
-    pub health_status: HealthStatus,
-    /// Performance metrics
-    pub metrics: SystemMetrics,
+// Local type definitions to avoid circular dependencies with beardog-tunnel
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum KeyType {
+    Ed25519,
+    EccP256,
+    Rsa2048,
+    Rsa4096,
 }
 
-/// Status of individual components
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ComponentStatus {
-    /// Component name
-    pub name: String,
-    /// Whether the component is healthy
-    pub healthy: bool,
-    /// Optional error message if not healthy
+pub enum HsmTier {
+    Hardware,
+    Software,
+    SmartCard,
+    CloudHsm,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HsmHealthStatus {
+    pub is_healthy: bool,
+    pub last_check: chrono::DateTime<chrono::Utc>,
     pub error_message: Option<String>,
-    /// Last time this component was checked
-    pub last_checked: DateTime<Utc>,
-    /// Alias for last_checked (for compatibility)
-    pub last_check: DateTime<Utc>,
-    /// Component uptime duration
-    pub uptime: Option<chrono::Duration>,
-    /// Component-specific metadata
-    pub metadata: HashMap<String, String>,
 }
 
-/// Overall health status of the system
+// Core system types
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum HealthStatus {
-    /// All systems operational
-    Healthy,
-    /// Some non-critical issues detected
-    Degraded,
-    /// Critical issues detected
-    Unhealthy,
-    /// System is starting up
+pub struct HealthStatus {
+    pub is_healthy: bool,
+    pub last_check: chrono::DateTime<chrono::Utc>,
+    pub error_message: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ComponentStatus {
+    Running,
+    Stopped,
+    Error(String),
     Starting,
-    /// System is shutting down
     Stopping,
 }
 
-/// System performance metrics
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SystemMetrics {
-    /// CPU usage percentage
-    pub cpu_usage: f64,
-    /// Memory usage in MB
-    pub memory_usage_mb: u64,
-    /// Number of active connections
-    pub active_connections: u32,
-    /// Request processing rate (requests per second)
-    pub requests_per_second: f64,
-    /// Average response time in milliseconds
-    pub avg_response_time_ms: f64,
-    /// Timestamp when these metrics were collected
-    pub collected_at: DateTime<Utc>,
-    /// Custom metrics specific to BearDog operations
-    pub custom_metrics: HashMap<String, f64>,
+impl ComponentStatus {
+    pub fn healthy(&self) -> bool {
+        matches!(self, ComponentStatus::Running)
+    }
 }
 
-/// Health check result for individual components
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoreState {
+    pub components: HashMap<String, ComponentStatus>,
+    pub overall_health: HealthStatus,
+    pub startup_time: chrono::DateTime<chrono::Utc>,
+    // Add fields that are being accessed in the code
+    pub health_status: HealthStatus,
+    pub component_status: HashMap<String, ComponentStatus>,
+    pub start_time: chrono::DateTime<chrono::Utc>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheck {
-    /// Name of the component being checked
     pub component_name: String,
-    /// Whether the health check passed
-    pub healthy: bool,
-    /// Overall health status
-    pub status: HealthStatus,
-    /// System uptime
+    pub status: ComponentStatus,
+    pub last_check: chrono::DateTime<chrono::Utc>,
+    pub details: HashMap<String, String>,
     pub uptime: Option<chrono::Duration>,
-    /// Optional details about the health check
-    pub details: Option<String>,
-    /// Time taken to perform the health check (in milliseconds)
-    pub check_duration_ms: u64,
-    /// Individual component statuses
-    pub components: Vec<ComponentStatus>,
-    /// Performance metrics
-    pub metrics: SystemMetrics,
-    /// Timestamp when the health check was performed
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemMetrics {
+    pub cpu_usage: f64,
+    pub memory_usage: f64,
+    pub disk_usage: f64,
+    pub network_activity: u64,
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
-impl Default for CoreState {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HsmCapabilities {
+    pub supported_key_types: Vec<KeyType>,
+    pub max_key_size: u32,
+    pub supports_attestation: bool,
+    pub hardware_backed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HsmKey {
+    pub id: String,
+    pub key_type: KeyType,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub metadata: HashMap<String, String>,
+}
+
+// Capability types
+#[derive(Debug, Clone)]
+pub struct HsmCapability {
+    pub name: String,
+    pub supported: bool,
+    pub metadata: HashMap<String, String>,
+}
+
+// Additional missing types commonly referenced
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HsmProvider {
+    pub id: String,
+    pub name: String,
+    pub tier: HsmTier,
+    pub capabilities: HsmCapabilities,
+}
+
+// Default implementations
+impl Default for HsmHealthStatus {
     fn default() -> Self {
         Self {
-            start_time: None,
-            component_status: HashMap::new(),
-            health_status: HealthStatus::Starting,
-            metrics: SystemMetrics::default(),
+            is_healthy: true,
+            last_check: chrono::Utc::now(),
+            error_message: None,
+        }
+    }
+}
+
+impl Default for HealthStatus {
+    fn default() -> Self {
+        Self {
+            is_healthy: true,
+            last_check: chrono::Utc::now(),
+            error_message: None,
         }
     }
 }
 
 impl Default for ComponentStatus {
     fn default() -> Self {
-        let now = Utc::now();
+        ComponentStatus::Stopped
+    }
+}
+
+impl Default for CoreState {
+    fn default() -> Self {
+        let now = chrono::Utc::now();
         Self {
-            name: "unknown".to_string(),
-            healthy: false,
-            error_message: None,
-            last_checked: now,
-            last_check: now,
-            uptime: None,
-            metadata: HashMap::new(),
+            components: HashMap::new(),
+            overall_health: HealthStatus::default(),
+            startup_time: now,
+            health_status: HealthStatus::default(),
+            component_status: HashMap::new(),
+            start_time: now,
         }
     }
 }
 
-impl Default for SystemMetrics {
+impl HsmHealthStatus {
+    pub fn healthy() -> Self {
+        Self::default()
+    }
+
+    pub fn unhealthy(error: String) -> Self {
+        Self {
+            is_healthy: false,
+            last_check: chrono::Utc::now(),
+            error_message: Some(error),
+        }
+    }
+}
+
+impl HealthStatus {
+    pub fn healthy() -> Self {
+        Self::default()
+    }
+
+    pub fn unhealthy(error: String) -> Self {
+        Self {
+            is_healthy: false,
+            last_check: chrono::Utc::now(),
+            error_message: Some(error),
+        }
+    }
+
+    pub fn Healthy() -> Self {
+        Self::healthy()
+    }
+}
+
+impl Default for HsmCapabilities {
     fn default() -> Self {
         Self {
-            cpu_usage: 0.0,
-            memory_usage_mb: 0,
-            active_connections: 0,
-            requests_per_second: 0.0,
-            avg_response_time_ms: 0.0,
-            collected_at: Utc::now(),
-            custom_metrics: HashMap::new(),
+            supported_key_types: vec![KeyType::Ed25519, KeyType::EccP256],
+            max_key_size: 4096,
+            supports_attestation: false,
+            hardware_backed: false,
         }
     }
 }
 
-impl Default for HealthCheck {
-    fn default() -> Self {
-        Self {
-            component_name: "unknown".to_string(),
-            healthy: false,
-            status: HealthStatus::Starting,
-            uptime: None,
-            details: None,
-            check_duration_ms: 0,
-            components: Vec::new(),
-            metrics: SystemMetrics::default(),
-            timestamp: chrono::Utc::now(),
-        }
+// Placeholder types for missing dependencies
+#[derive(Debug, Clone)]
+pub struct SystemMonitor {
+    pub active: bool,
+}
+
+impl SystemMonitor {
+    pub fn new() -> Result<Self, BearDogError> {
+        Ok(Self { active: true })
+    }
+
+    pub async fn start(&self) -> Result<(), BearDogError> {
+        Ok(())
     }
 }
 
-impl ComponentStatus {
-    /// Create a new healthy component status
-    pub fn healthy(name: String) -> Self {
-        let now = Utc::now();
-        Self {
-            name,
-            healthy: true,
-            error_message: None,
-            last_checked: now,
-            last_check: now,
-            uptime: None,
-            metadata: HashMap::new(),
-        }
+#[derive(Debug, Clone)]
+pub struct GeneticOptimizer {
+    pub active: bool,
+}
+
+impl GeneticOptimizer {
+    pub fn new() -> Result<Self, BearDogError> {
+        Ok(Self { active: true })
     }
 
-    /// Create a new unhealthy component status with error message
-    pub fn unhealthy(name: String, error_message: String) -> Self {
-        let now = Utc::now();
-        Self {
-            name,
-            healthy: false,
-            error_message: Some(error_message),
-            last_checked: now,
-            last_check: now,
-            uptime: None,
-            metadata: HashMap::new(),
-        }
-    }
-
-    /// Update the health status of this component
-    pub fn update_health(&mut self, healthy: bool, error_message: Option<String>) {
-        let now = Utc::now();
-        self.healthy = healthy;
-        self.error_message = error_message;
-        self.last_checked = now;
-        self.last_check = now;
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
+        Ok(())
     }
 }
 
-impl SystemMetrics {
-    /// Create new system metrics with current timestamp
-    pub fn new() -> Self {
-        Self {
-            cpu_usage: 0.0,
-            memory_usage_mb: 0,
-            active_connections: 0,
-            requests_per_second: 0.0,
-            avg_response_time_ms: 0.0,
-            collected_at: Utc::now(),
-            custom_metrics: HashMap::new(),
-        }
+// Add placeholder for BearDogSecurityProvider since we're using it in core/mod.rs
+#[derive(Debug)]
+pub struct BearDogSecurityProvider {
+    pub active: bool,
+}
+
+impl BearDogSecurityProvider {
+    pub fn new() -> Result<Self, BearDogError> {
+        Ok(Self { active: true })
     }
 
-    /// Update a custom metric
-    pub fn set_custom_metric(&mut self, name: String, value: f64) {
-        self.custom_metrics.insert(name, value);
-        self.collected_at = Utc::now();
-    }
-
-    /// Get a custom metric by name
-    pub fn get_custom_metric(&self, name: &str) -> Option<f64> {
-        self.custom_metrics.get(name).copied()
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
+        Ok(())
     }
 }
 
-impl HealthCheck {
-    /// Create a successful health check
-    pub fn success(component_name: String, check_duration_ms: u64) -> Self {
-        Self {
-            component_name,
-            healthy: true,
-            status: HealthStatus::Healthy,
-            uptime: None,
-            details: None,
-            check_duration_ms,
-            components: Vec::new(),
-            metrics: SystemMetrics::default(),
-            timestamp: Utc::now(),
-        }
-    }
-
-    /// Create a failed health check with details
-    pub fn failure(component_name: String, details: String, check_duration_ms: u64) -> Self {
-        Self {
-            component_name,
-            healthy: false,
-            status: HealthStatus::Unhealthy,
-            uptime: None,
-            details: Some(details),
-            check_duration_ms,
-            components: Vec::new(),
-            metrics: SystemMetrics::default(),
-            timestamp: Utc::now(),
-        }
-    }
-}
+// Re-export BearDogError for the placeholder implementations
+use beardog_errors::BearDogError;

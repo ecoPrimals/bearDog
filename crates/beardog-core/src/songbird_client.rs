@@ -638,7 +638,11 @@ impl UniversalServiceMesh for UniversalServiceMeshClient {
             let error_text = response
                 .text()
                 .await
-                .unwrap_or_else(|_| "Unknown error".to_string());
+                .map_err(|e| {
+                    warn!("Failed to read error response body: {}", e);
+                    e
+                })
+                .unwrap_or_else(|_| "Failed to read error response".to_string());
 
             let service_response = ServiceResponse {
                 request_id: request.request_id,

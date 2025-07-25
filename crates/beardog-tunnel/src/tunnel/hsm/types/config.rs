@@ -1,6 +1,7 @@
 use beardog_config::network::RetryConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::time::Duration;
 
 use super::tier::{
     CertificationLevel, KeyStorageType, MemoryProtectionLevel, StrongBoxImplementation,
@@ -53,6 +54,9 @@ pub struct SoftwareHsmConfig {
     pub memory_config: MemoryConfig,
     /// Implementation type (legacy field for compatibility)
     pub implementation: String,
+    pub key_derivation_rounds: u32,
+    pub encryption_algorithm: String,
+    pub key_storage_path: Option<String>,
 }
 
 /// Memory configuration for HSM
@@ -153,7 +157,7 @@ pub struct SecurityConfig {
 }
 
 /// Performance configuration for HSM operations
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
     /// Maximum operation timeout in milliseconds
     pub max_operation_timeout: u64,
@@ -163,6 +167,7 @@ pub struct PerformanceConfig {
     pub connection_pool_size: u32,
     /// Retry configuration
     pub retry_config: RetryConfig,
+    pub operation_timeout: Duration,
 }
 
 /// Monitoring configuration for HSM operations
@@ -346,6 +351,8 @@ pub struct FailoverConfig {
     pub timeout_seconds: u64,
     /// Health check configuration
     pub health_check: HealthCheckConfig,
+    pub enable_automatic_failover: bool,
+    pub failover_timeout: Duration,
 }
 
 /// Failover strategies
@@ -515,16 +522,11 @@ pub struct KeystoreConfig {
     pub require_strongbox: bool,
 }
 
-/// Attestation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AttestationConfig {
-    pub enabled: bool,
-    pub require_hardware_backed: bool,
-    pub trusted_certificates: Vec<String>,
-    pub challenge_length: usize,
-    pub attestation_challenge: Option<Vec<u8>>,
-    pub enable_key_attestation: bool,
-    pub include_app_id: bool,
+    pub require_hardware_attestation: bool,
+    pub accepted_attestation_levels: Vec<String>,
+    pub attestation_timeout: Duration,
 }
 
 /// Key storage configuration
@@ -600,13 +602,9 @@ pub enum CryptoBackend {
 impl Default for AttestationConfig {
     fn default() -> Self {
         Self {
-            enabled: false,
-            require_hardware_backed: false,
-            trusted_certificates: Vec::new(),
-            challenge_length: 0,
-            attestation_challenge: None,
-            enable_key_attestation: false,
-            include_app_id: true,
+            require_hardware_attestation: false,
+            accepted_attestation_levels: vec!["software".to_string()],
+            attestation_timeout: Duration::from_secs(30),
         }
     }
 }
@@ -622,6 +620,9 @@ impl Default for SoftwareHsmConfig {
             key_store_config: KeyStoreConfig::default(),
             memory_config: MemoryConfig::default(),
             implementation: "SoftwareHSM".to_string(),
+            key_derivation_rounds: 100_000,
+            encryption_algorithm: "AES-256-GCM".to_string(),
+            key_storage_path: None,
         }
     }
 }
@@ -673,6 +674,58 @@ impl Default for KeystoreConfig {
             require_user_authentication: false,
             user_authentication_validity_duration: None,
             require_strongbox: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HsmManagerConfig {
+    pub hsm_configs: Vec<String>,
+    pub health_config: HealthConfig,
+    pub failover_config: FailoverConfig,
+    pub performance_config: PerformanceConfig,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealthConfig {
+    pub check_interval: Duration,
+    pub failure_threshold: u32,
+}
+
+impl Default for HealthConfig {
+    fn default() -> Self {
+        Self {
+            check_interval: Duration::from_secs(60),
+            failure_threshold: 3,
+        }
+    }
+}
+
+impl Default for FailoverConfig {
+    fn default() -> Self {
+        Self {
+            enable_automatic_failover: true,
+            failover_timeout: Duration::from_secs(10),
+            strategy: FailoverStrategy::Automatic,
+            timeout_seconds: 10,
+            health_check: HealthCheckConfig {
+                interval_seconds: 60,
+                timeout_seconds: 10,
+                failure_threshold: 3,
+                success_threshold: 1,
+            },
+        }
+    }
+}
+
+impl Default for PerformanceConfig {
+    fn default() -> Self {
+        Self {
+            max_concurrent_operations: 10,
+            operation_timeout: Duration::from_secs(30),
+            max_operation_timeout: 30000,
+            retry_config: RetryConfig::default(),
+            connection_pool_size: 10,
         }
     }
 }

@@ -732,3 +732,384 @@ async fn ai_performance_metrics(
 - ✅ **Genetic healing AI guidance** active
 
 BearDog maintains its position as the **GOLD STANDARD** (95%) for AI-First design in the ecoPrimals ecosystem! 🏆 
+
+---
+
+## 🔐 **Hardware Security Module (HSM) APIs - NEW ✅**
+
+### **Universal HSM Adapter Interface**
+
+#### **Core HSM Operations API**
+
+**HsmAdapter Trait**
+```rust
+#[async_trait::async_trait]
+pub trait HsmAdapter: Send + Sync + Debug {
+    /// Connect to an HSM and establish a session
+    async fn connect(&self, hsm: &DiscoveredHsm) -> BearDogResult<HsmConnection>;
+    
+    /// Perform a cryptographic operation on the HSM
+    async fn perform_operation(
+        &self, 
+        connection: &HsmConnection, 
+        operation: UniversalOperation
+    ) -> BearDogResult<OperationResult>;
+    
+    /// Check if HSM supports human entropy generation
+    async fn supports_human_entropy(&self) -> BearDogResult<bool>;
+    
+    /// Generate human entropy seed (premium feature)
+    async fn generate_human_entropy_seed(
+        &self, 
+        connection: &HsmConnection, 
+        requirements: HumanEntropyRequirements
+    ) -> BearDogResult<EphemeralSeed>;
+    
+    /// Test HSM connection health
+    async fn test_connection(&self, hsm: &DiscoveredHsm) -> BearDogResult<HealthStatus>;
+}
+```
+
+**Universal Operation Structure**
+```rust
+#[derive(Debug, Clone)]
+pub struct UniversalOperation {
+    pub operation_type: OperationType,
+    pub parameters: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum OperationType {
+    GenerateKey,
+    Sign,
+    Verify,
+    Encrypt,
+    Decrypt,
+    HumanEntropyGeneration,
+}
+```
+
+**Operation Result Structure**
+```rust
+#[derive(Debug, Clone)]
+pub struct OperationResult {
+    pub success: bool,
+    pub result_data: Vec<u8>,
+    pub performance_metrics: PerformanceMetrics,
+    pub error_message: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct PerformanceMetrics {
+    pub duration_ms: f64,
+    pub hsm_latency_ms: f64,
+    pub throughput_bps: Option<f64>,
+    pub error_count: u32,
+}
+```
+
+#### **HSM Discovery & Management APIs**
+
+**HSM Discovery Structure**
+```rust
+#[derive(Debug, Clone)]
+pub struct DiscoveredHsm {
+    pub hsm_id: String,
+    pub vendor: String,
+    pub model: String,
+    pub version: String,
+    pub interface_type: HsmInterfaceType,
+    pub connection_info: HsmConnectionInfo,
+    pub capabilities: HsmCapabilities,
+    pub assigned_tier: HsmTier,
+    pub supports_human_entropy: bool,
+    pub health_status: HsmHealthStatus,
+    pub discovered_at: chrono::DateTime<chrono::Utc>,
+    pub last_health_check: chrono::DateTime<chrono::Utc>,
+    pub integration_status: IntegrationStatus,
+}
+```
+
+**HSM Interface Types**
+```rust
+#[derive(Debug, Clone)]
+pub enum HsmInterfaceType {
+    Pkcs11 { library_path: String },
+    AndroidStrongBox { security_level: String },
+    IosSecureEnclave { enclave_version: String },
+    BearDogNative { instance_id: String },
+    NetworkHsm { endpoint: String },
+}
+```
+
+**HSM Tier Classification**
+```rust
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum HsmTier {
+    Software,              // Software-only crypto (fallback)
+    BasicHardware,         // Basic hardware tokens
+    CertifiedHardware,     // FIPS 140-2 Level 3+ certified HSMs
+    HighSecurity,          // Mobile HSMs (StrongBox, Secure Enclave)
+    HumanEntropyPremium,   // BearDog Native with human entropy support
+}
+```
+
+#### **Security Provider Bridge APIs**
+
+**Multi-Vendor Security Bridge**
+```rust
+pub struct SecurityProviderBridge {
+    vendor_integrations: HashMap<String, Box<dyn VendorHsmIntegration>>,
+    metrics_collector: SecurityMetricsCollector,
+    failover_manager: FailoverManager,
+}
+
+impl SecurityProviderBridge {
+    /// Register a new HSM vendor integration
+    pub fn register_vendor(&mut self, vendor: &str, integration: Box<dyn VendorHsmIntegration>);
+    
+    /// Perform operation with automatic failover
+    pub async fn perform_operation_with_failover(
+        &mut self, 
+        preferred_vendors: Vec<&str>, 
+        operation: OperationType
+    ) -> BearDogResult<Vec<u8>>;
+    
+    /// Get comprehensive security metrics
+    pub fn get_security_metrics(&self) -> SecurityMetrics;
+    
+    /// Update vendor health status
+    pub fn set_vendor_health(&mut self, vendor: &str, is_healthy: bool);
+}
+```
+
+**Security Metrics API**
+```rust
+#[derive(Debug)]
+pub struct SecurityMetrics {
+    pub total_operations: u64,
+    pub avg_latency_ms: f64,
+    pub total_errors: u64,
+    pub vendor_metrics: HashMap<String, VendorMetrics>,
+}
+
+#[derive(Debug)]
+pub struct VendorMetrics {
+    pub operations_count: u64,
+    pub avg_latency_ms: f64,
+    pub error_rate: f64,
+    pub is_healthy: bool,
+}
+```
+
+#### **Mobile HSM Platform APIs**
+
+**Android StrongBox API**
+```rust
+#[cfg(target_os = "android")]
+impl AndroidStrongBoxAdapter {
+    /// Generate hardware-backed key in StrongBox
+    pub async fn generate_strongbox_key(&self, key_spec: &AndroidKeySpec) -> BearDogResult<AndroidKey>;
+    
+    /// Sign data using StrongBox key with biometric authentication
+    pub async fn sign_with_biometric(&self, key: &AndroidKey, data: &[u8]) -> BearDogResult<Vec<u8>>;
+    
+    /// Get key attestation certificate chain
+    pub async fn get_key_attestation(&self, key: &AndroidKey) -> BearDogResult<Vec<Certificate>>;
+}
+
+#[derive(Debug)]
+pub struct AndroidKeySpec {
+    pub alias: String,
+    pub algorithm: AndroidAlgorithm,
+    pub key_size: u32,
+    pub attestation_challenge: Option<Vec<u8>>,
+    pub user_authentication_required: bool,
+}
+```
+
+**iOS Secure Enclave API**
+```rust
+#[cfg(target_os = "ios")]
+impl IosSecureEnclaveAdapter {
+    /// Generate hardware-backed key in Secure Enclave
+    pub async fn generate_secure_enclave_key(&self, key_spec: &IosKeySpec) -> BearDogResult<SecKey>;
+    
+    /// Sign data with Touch ID/Face ID authentication
+    pub async fn sign_with_biometric(&self, key: &SecKey, data: &[u8]) -> BearDogResult<Vec<u8>>;
+    
+    /// Get app attestation for iOS platform
+    pub async fn get_app_attestation(&self) -> BearDogResult<AppAttestation>;
+}
+
+#[derive(Debug)]
+pub struct IosKeySpec {
+    pub algorithm: IosAlgorithm,
+    pub biometric_policy: BiometricPolicy,
+    pub access_control: SecAccessControl,
+}
+```
+
+#### **Enterprise PKCS#11 APIs**
+
+**PKCS#11 Multi-Vendor API**
+```rust
+impl Pkcs11Adapter {
+    /// Load and initialize PKCS#11 library
+    pub async fn load_pkcs11_library(&self, library_path: &str) -> BearDogResult<()>;
+    
+    /// Find available slots with tokens
+    pub async fn find_slots_with_tokens(&self) -> BearDogResult<Vec<u32>>;
+    
+    /// Open session to HSM slot
+    pub async fn open_session(&self, slot_id: u32) -> BearDogResult<u32>;
+    
+    /// Authenticate to token (PIN or certificate)
+    pub async fn login_to_token(&self, session: u32, auth_type: AuthenticationType) -> BearDogResult<()>;
+    
+    /// Generate key pair in hardware
+    pub async fn generate_key_pair(
+        &self, 
+        session: u32, 
+        key_type: KeyType, 
+        key_id: &str
+    ) -> BearDogResult<(u32, u32)>;
+    
+    /// Sign data using hardware key
+    pub async fn sign_data(&self, session: u32, private_key: u32, data: &[u8]) -> BearDogResult<Vec<u8>>;
+    
+    /// Verify signature using hardware key
+    pub async fn verify_signature(
+        &self, 
+        session: u32, 
+        public_key: u32, 
+        data: &[u8], 
+        signature: &[u8]
+    ) -> BearDogResult<bool>;
+}
+```
+
+#### **Human Entropy APIs**
+
+**Human Entropy Generation**
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HumanEntropyRequirements {
+    pub minimum_entropy_bits: u32,
+    pub collection_timeout_seconds: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct EphemeralSeed {
+    pub seed_data: Vec<u8>,
+    pub entropy_estimate: f64,
+    pub creation_timestamp: chrono::DateTime<chrono::Utc>,
+}
+
+impl BearDogNativeAdapter {
+    /// Generate high-quality human entropy seed
+    pub async fn generate_human_entropy_seed(
+        &self, 
+        connection: &HsmConnection, 
+        requirements: HumanEntropyRequirements
+    ) -> BearDogResult<EphemeralSeed>;
+    
+    /// Assess entropy quality
+    pub async fn assess_entropy_quality(&self, data: &[u8]) -> BearDogResult<f64>;
+}
+```
+
+#### **Health Monitoring APIs**
+
+**HSM Health Check**
+```rust
+#[derive(Debug, Clone)]
+pub struct HealthStatus {
+    pub is_healthy: bool,
+    pub response_time_ms: f64,
+    pub error_message: Option<String>,
+    pub last_check: chrono::DateTime<chrono::Utc>,
+}
+
+impl HsmAdapter for T {
+    /// Comprehensive HSM health check
+    async fn test_connection(&self, hsm: &DiscoveredHsm) -> BearDogResult<HealthStatus> {
+        let start_time = std::time::Instant::now();
+        
+        // Perform connection test
+        let connection_result = self.connect(hsm).await;
+        let response_time = start_time.elapsed().as_millis() as f64;
+        
+        match connection_result {
+            Ok(_) => Ok(HealthStatus {
+                is_healthy: true,
+                response_time_ms: response_time,
+                error_message: None,
+                last_check: chrono::Utc::now(),
+            }),
+            Err(error) => Ok(HealthStatus {
+                is_healthy: false,
+                response_time_ms: response_time,
+                error_message: Some(error.to_string()),
+                last_check: chrono::Utc::now(),
+            }),
+        }
+    }
+}
+```
+
+### **🎯 HSM API Usage Examples**
+
+#### **Basic HSM Operation**
+```rust
+// Initialize HSM adapter
+let adapter = Pkcs11Adapter;
+let hsm = discover_hsm("safenet-luna").await?;
+
+// Connect to HSM
+let connection = adapter.connect(&hsm).await?;
+
+// Generate key pair
+let operation = UniversalOperation {
+    operation_type: OperationType::GenerateKey,
+    parameters: HashMap::from([
+        ("key_type".to_string(), "rsa_2048".to_string()),
+        ("key_id".to_string(), "my-test-key".to_string()),
+    ]),
+};
+
+let result = adapter.perform_operation(&connection, operation).await?;
+```
+
+#### **Multi-Vendor Failover**
+```rust
+// Initialize security provider bridge
+let mut bridge = SecurityProviderBridge::new();
+bridge.register_vendor("SafeNet", Box::new(Pkcs11Adapter));
+bridge.register_vendor("BearDog", Box::new(BearDogNativeAdapter::new()?));
+
+// Perform operation with automatic failover
+let preferred_vendors = vec!["SafeNet", "BearDog"];
+let result = bridge.perform_operation_with_failover(
+    preferred_vendors, 
+    OperationType::GenerateKey
+).await?;
+```
+
+#### **Human Entropy Generation**
+```rust
+// BearDog Native with human entropy
+let adapter = BearDogNativeAdapter::new()?;
+let hsm = discover_hsm("beardog-native").await?;
+let connection = adapter.connect(&hsm).await?;
+
+let requirements = HumanEntropyRequirements {
+    minimum_entropy_bits: 256,
+    collection_timeout_seconds: 30,
+};
+
+let seed = adapter.generate_human_entropy_seed(&connection, requirements).await?;
+println!("Generated entropy: {} bits quality", seed.entropy_estimate);
+```
+
+--- 

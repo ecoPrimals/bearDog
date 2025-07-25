@@ -1,5 +1,6 @@
 // use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// HSM tier enumeration - defines the different types of HSMs available  
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -291,3 +292,43 @@ pub enum AttestationLevel {
     /// Certified hardware attestation
     CertifiedHardware,
 }
+
+// Add the missing AndroidKeyAlgorithm type
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum AndroidKeyAlgorithm {
+    Rsa2048,
+    Rsa4096,
+    EcP256,
+    EcP384,
+    EcP521,
+    Ed25519,
+    Aes128,
+    Aes256,
+    Hmac,
+}
+
+impl fmt::Display for AndroidKeyAlgorithm {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AndroidKeyAlgorithm::Rsa2048 => write!(f, "RSA-2048"),
+            AndroidKeyAlgorithm::Rsa4096 => write!(f, "RSA-4096"),
+            AndroidKeyAlgorithm::EcP256 => write!(f, "EC-P256"),
+            AndroidKeyAlgorithm::EcP384 => write!(f, "EC-P384"),
+            AndroidKeyAlgorithm::EcP521 => write!(f, "EC-P521"),
+            AndroidKeyAlgorithm::Ed25519 => write!(f, "Ed25519"),
+            AndroidKeyAlgorithm::Aes128 => write!(f, "AES-128"),
+            AndroidKeyAlgorithm::Aes256 => write!(f, "AES-256"),
+            AndroidKeyAlgorithm::Hmac => write!(f, "HMAC"),
+        }
+    }
+}
+
+impl Default for AndroidKeyAlgorithm {
+    fn default() -> Self {
+        AndroidKeyAlgorithm::EcP256
+    }
+}
+
+// Duplicate HsmTier enum removed - using the detailed version above
+// The simple Hardware/Software/Hybrid/Cloud variants are available 
+// through the detailed enum's pattern matching

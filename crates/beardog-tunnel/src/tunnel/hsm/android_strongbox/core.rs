@@ -3,7 +3,11 @@
 //! This module contains the main AndroidStrongBoxHsm implementation and the
 //! HsmProvider trait implementation for Android StrongBox functionality.
 
-use super::types::*;
+use super::super::types::{
+    KeyType, HsmKey, HsmTier, HsmHealthStatus, HsmCapabilities, HsmCapability,
+    AndroidHsmConfig, StrongBoxCapabilities
+};
+use super::types::AndroidDeviceInfo;
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::HsmProvider;
 use async_trait::async_trait;

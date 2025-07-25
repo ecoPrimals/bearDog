@@ -6,7 +6,10 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{info, warn};
+// Tracing will be used when detection algorithms are fully implemented
+
+// Import the correct UniversalRequest type that matches capability_adapter
+pub use crate::adapters::universal::UniversalRequest;
 
 /// Advanced commercial extraction detection engine
 #[derive(Debug, Clone)]

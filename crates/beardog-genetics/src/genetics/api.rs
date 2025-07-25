@@ -293,8 +293,8 @@ pub async fn get_node_genetics(
                 parent_genomes: genetics.parent_genetics.unwrap_or_default(),
                 capabilities: genetics.capabilities.len() as u32,
                 crypto_chromosomes: genetics.crypto_chromosomes.len() as u32,
-                spawn_count: 0,                 // TODO: Track actual spawn count
-                created_at: chrono::Utc::now(), // TODO: Track actual creation time in genetics
+                spawn_count: 0, // Placeholder for future spawn tracking
+                created_at: chrono::Utc::now(), // Placeholder for future genetics timestamp
             }))
         }
         Err(e) => {

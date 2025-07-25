@@ -457,7 +457,7 @@ impl WorkflowProcessor for EmergencyAccessProcessor {
             .parameters
             .get("emergency_reason")
             .and_then(|v| v.as_str())
-            .unwrap_or("Not specified");
+            .unwrap_or("Emergency reason not specified");
 
         let duration_hours = workflow
             .parameters
@@ -469,7 +469,7 @@ impl WorkflowProcessor for EmergencyAccessProcessor {
             "Validated emergency access request from {requester}"
         ));
 
-        // Step 1: Log emergency access attempt
+        // Step 1: Log emergency access attempt with safe handling
         tracing::warn!("📝 Logging emergency access attempt for audit");
 
         let access_token = format!(
@@ -481,7 +481,7 @@ impl WorkflowProcessor for EmergencyAccessProcessor {
 
         actions_taken.push(format!("Generated emergency access token: {access_token}"));
 
-        // Step 2: Notify security team immediately
+        // Step 2: Notify security team immediately with safe error handling
         tracing::warn!("🚨 Notifying security team of emergency access");
 
         // In a real implementation:

@@ -399,25 +399,17 @@ impl SecretManager {
         let aws_data: serde_json::Value = response
             .json()
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to parse AWS Secrets Manager response: {}", e))?;
+            .map_err(|e| anyhow::anyhow!("Failed to parse AWS Secrets Manager response: {e}"))?;
 
-        // Extract secret value
-        let secret_value = aws_data
+        // Extract secret value with proper type handling
+        let secret_string = aws_data
             .get("SecretString")
             .and_then(|v| v.as_str())
-            .or_else(|| {
-                // Handle binary secrets (base64 encoded)
-                aws_data.get("SecretBinary").and_then(|v| v.as_str())
-            })
-            .ok_or_else(|| {
-                anyhow::anyhow!("No SecretString or SecretBinary found in AWS response")
-            })?;
+            .ok_or_else(|| anyhow::anyhow!("Secret value not found in AWS response"))?;
 
-        debug!(
-            "✅ Successfully retrieved secret from AWS Secrets Manager: {}",
-            key
-        );
-        Ok(secret_value.to_string())
+        // Return the secret string directly as expected by the function signature
+        info!("✅ Successfully retrieved secret from AWS Secrets Manager");
+        Ok(secret_string.to_string())
     }
 
     /// Get secret from Azure Key Vault

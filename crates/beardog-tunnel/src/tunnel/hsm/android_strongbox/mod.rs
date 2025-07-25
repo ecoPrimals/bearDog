@@ -194,23 +194,28 @@
 //! - **WebAuthn**: Native WebAuthn integration
 //! - **Common Criteria**: EAL4+ evaluation (Titan M)
 //! - **FIPS 140-2**: Level 3 equivalent hardware protection
-//!
-//! ### Attestation Standards
-//!
 //! - **Android Key Attestation**: Full support for Android attestation format
 //! - **Certificate Chains**: Proper validation back to Google root CA
 //! - **Challenge-Response**: Secure challenge-based attestation
 //! - **Device Identity**: Hardware-backed device identity
 
-// Re-export all public types and functions
-pub use device_info::*;
-pub use entropy::*;
-pub use health::*;
-pub use pixel8_setup::*;
+// Re-exports - only export what actually exists
 pub use types::*;
+pub use types::AndroidKeystore;
+// Note: pixel8_setup functionality integrated into safe_device_detection
 
-// Import from parent HSM module for configuration types
+// Import traits and types
+use crate::tunnel::hsm::{HsmProvider, HsmError};
+use crate::tunnel::hsm::types::{
+    HsmKey, KeyType, HsmCapabilities, HsmMetrics, 
+    TamperResistance, KeyGenerationCapabilities, HsmHealthStatus
+};
 use beardog_errors::{BearDogError, BearDogResult};
+use async_trait::async_trait;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use tracing::{info, warn, error};
 
 // Module declarations
 pub mod attestation;
@@ -219,8 +224,30 @@ pub mod device_info;
 pub mod entropy;
 pub mod health;
 pub mod keystore;
-pub mod pixel8_setup;
 pub mod types;
+// pub mod tier; // Module doesn't exist - removing declaration
+pub mod safe_device_detection;
+
+// DEPRECATED: Unsafe modules - scheduled for removal after safe replacement
+pub mod native_keystore_ops;
+pub mod native_device_detection;
+
+// NEW: Safe replacement modules (ZERO UNSAFE CODE POLICY)
+pub mod safe_native_wrapper;
+
+// Re-export safe types
+pub use types::*;
+
+// Re-export safe implementations (prioritized)
+pub use safe_native_wrapper::SafeAndroidKeystore;
+pub use safe_device_detection::*;
+
+// DEPRECATED re-exports - use safe alternatives instead
+#[deprecated(note = "Use SafeAndroidKeystore instead - contains unsafe code")]
+pub use native_keystore_ops::NativeKeystoreOperations;
+
+#[deprecated(note = "Use safe_device_detection functions instead - contains unsafe code")]
+pub use native_device_detection::NativeAndroidDeviceDetector;
 
 // Public API constants
 /// Version of the Android StrongBox HSM integration

@@ -7,7 +7,7 @@ use super::detector::*;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{info, warn};
+// Tracing will be used when detection algorithms are fully implemented
 
 impl CommercialExtractionDetector {
     /// Analyze request for commercial extraction patterns
@@ -46,11 +46,7 @@ impl CommercialExtractionDetector {
         let mut hasher = Sha256::new();
 
         // Hash multiple request characteristics
-        if let Some(org) = request
-            .parameters
-            .get("organization")
-            .and_then(|v| v.as_str())
-        {
+        if let Some(org) = request.payload.get("organization").and_then(|v| v.as_str()) {
             hasher.update(org.as_bytes());
         }
         if let Some(email) = request.payload.get("email").and_then(|v| v.as_str()) {
@@ -153,18 +149,20 @@ impl CommercialExtractionDetector {
         }
 
         // Check for human entropy collection patterns
-        if request.payload.contains_key("biometric_data")
-            || request.payload.contains_key("audio_entropy")
-            || request.payload.contains_key("haptic_entropy")
-        {
-            entropy_quality += 0.4; // Human entropy source boost
+        if let Some(payload_obj) = request.payload.as_object() {
+            if payload_obj.contains_key("biometric_data")
+                || payload_obj.contains_key("audio_entropy")
+                || payload_obj.contains_key("haptic_entropy")
+            {
+                entropy_quality += 0.4; // Human entropy source boost
 
-            history.human_entropy_sources.push(HumanEntropyUsage {
-                source_type: "detected".to_string(),
-                usage_frequency: 1.0,
-                quality_indicators: vec![entropy_quality],
-                consistency_score: 0.5,
-            });
+                history.human_entropy_sources.push(HumanEntropyUsage {
+                    source_type: "detected".to_string(),
+                    usage_frequency: 1.0,
+                    quality_indicators: vec![entropy_quality],
+                    consistency_score: 0.5,
+                });
+            }
         }
 
         // Progressive improvement for consistent human users
@@ -239,7 +237,7 @@ impl CommercialExtractionDetector {
                 let latest = history.key_generations.last().unwrap();
                 let age = Utc::now() - latest.created_at;
 
-                if age
+                if age.to_std().unwrap_or_default()
                     > self
                         .key_evolution_engine
                         .evolution_config

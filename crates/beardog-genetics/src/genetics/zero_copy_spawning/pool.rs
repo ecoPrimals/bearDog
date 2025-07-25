@@ -122,7 +122,9 @@ impl GeneticsPool {
     /// Return chromosome vector to pool
     pub async fn return_chromosomes(&self, chromosomes: Vec<CryptoChromosome>) {
         if chromosomes.capacity() >= 10 && chromosomes.capacity() <= 1000 {
-            let mut pool = self.chromosome_pool.write().unwrap();
+            let mut pool = self.chromosome_pool.write().map_err(|_| {
+            BearDogError::internal("Chromosome pool lock poisoned")
+        })?;
             if pool.len() < 20 {
                 pool.push(chromosomes);
             }

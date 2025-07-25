@@ -7,40 +7,28 @@ description = "BearDog core module"
 authors.workspace = true
 
 [dependencies]
-beardog-errors = { workspace = true }
-beardog-config = { workspace = true }
-beardog-security = { workspace = true }
-beardog-threat = { workspace = true }
-beardog-monitoring = { workspace = true }
-beardog-compliance = { workspace = true }
-beardog-genetics = { workspace = true }
-beardog-tunnel = { workspace = true }
-beardog-utils = { workspace = true }
-beardog-auth = { workspace = true }
-beardog-node-registry = { workspace = true }
-beardog-production = { workspace = true }
-beardog-workflows = { workspace = true }
-beardog-adapters = { workspace = true }
-tokio = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
+beardog-errors = { path = "../beardog-errors" }
+beardog-security = { path = "../beardog-security" }
+beardog-genetics = { path = "../beardog-genetics" }
+beardog-config = { path = "../beardog-config" }
+beardog-monitoring = { path = "../beardog-monitoring" }
+beardog-auth = { path = "../beardog-auth" }
+beardog-compliance = { path = "../beardog-compliance" }
+beardog-workflows = { path = "../beardog-workflows" }
+beardog-threat = { path = "../beardog-threat" }
+beardog-adapters = { path = "../beardog-adapters" }
+
+# Core dependencies
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 serde_yaml = "0.9"
-reqwest = { workspace = true, features = ["json"] }
-chrono = { workspace = true }
-base64 = { workspace = true }
-hex = { workspace = true }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-clap = { workspace = true }
-uuid = { workspace = true }
-thiserror = { workspace = true }
-async-trait = { workspace = true }
-axum = { workspace = true }
-tower = { workspace = true }
-tower-http = { workspace = true }
-anyhow = { workspace = true }
-rand = "0.8"
-num_cpus = "1.17.0"
+tracing = "0.1"
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+async-trait = "0.1"
+reqwest = { version = "0.11", features = ["json"] }
+hex = "0.4"
 
 [dev-dependencies]
 tokio-test = "0.4.3"

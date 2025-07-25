@@ -4,7 +4,7 @@
 
 use super::types::{SpawnRequest, SpawnResult};
 use beardog_auth::auth::BearDogGenetics;
-use beardog_errors::BearDogResult;
+use beardog_errors::{BearDogError, BearDogResult};
 use std::collections::HashMap;
 
 use tracing::{debug, info};
@@ -222,7 +222,6 @@ mod tests {
         assert!(engine.is_initialized());
     }
 
-    #[ignore] // TODO: Re-enable after genetics refactor completion
     #[tokio::test]
     async fn test_successful_spawning() {
         let _config = GeneticSpawningConfig::default();

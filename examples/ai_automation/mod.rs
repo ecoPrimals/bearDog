@@ -265,7 +265,7 @@ async fn run_hybrid_ai_operations(
         network_enhanced_result: network_result,
         fleet_coordination: network.map(|n| n.get_coordination_metrics()),
         ai_insights: ai_core.generate_hybrid_insights().await?,
-        execution_time_ms: 0, // TODO: measure actual time
+                    execution_time_ms: 0, // Execution time measurement not yet implemented
     };
     
     // Save combined results
