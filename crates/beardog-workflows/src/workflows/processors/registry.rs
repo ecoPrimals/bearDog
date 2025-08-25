@@ -1,3 +1,4 @@
+// MODERNIZED: Converted Arc<dyn> to zero-cost abstractions
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -49,7 +50,7 @@ impl Default for RegistryProcessorConfig {}
     }
 /// Registry for managing workflow processors
 pub struct WorkflowProcessorRegistry {
-    processors: Arc<RwLock<HashMap<WorkflowType, Arc<dyn WorkflowProcessor>>>>,
+    processors: Arc<RwLock<HashMap<WorkflowType, impl WorkflowProcessor + Send + Sync>>>,
     #[allow(dead_code)]
     config: RegistryProcessorConfig,}
 
@@ -70,7 +71,7 @@ impl WorkflowProcessorRegistry {
     pub async fn register_processor(
         &self,
         workflow_type: WorkflowType,
-        processor: Arc<dyn WorkflowProcessor>,
+        processor: impl WorkflowProcessor + Send + Sync,
     ) -> BearDogResult<()> {
         let mut processors = self.processors.write().await;
         processors.insert(workflow_type, processor);
@@ -80,7 +81,7 @@ impl WorkflowProcessorRegistry {
 
     pub async fn get_processor(
         workflow_type: &WorkflowType,
-    ) -> BearDogResult<Option<Arc<dyn WorkflowProcessor>>> {
+    ) -> BearDogResult<Option<impl WorkflowProcessor + Send + Sync>> {
         let processors = self.processors.read().await;
         Ok(processors.get(workflow_type).cloned())
     /// List all registered processors
