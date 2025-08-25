@@ -1,33 +1,41 @@
-//! Monitoring module for BearDog system health and metrics
-//!
-//! This module provides comprehensive monitoring capabilities including:
-//! - System health checking with component-level monitoring
-//! - Performance metrics collection and alerting
-//! - Native Rust metrics (always free under AGPL)
-//! - Licensed Prometheus export for enterprise integrations
-//!
-//! ## Module Structure
-//!
-//! - `types`: Core monitoring types and data structures
-//! - `health`: Health checking functionality and trait definitions
-//! - `service`: Main monitoring service implementation
-//! - `metrics`: Metrics collection and export system
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+/// # BearDog Monitoring Module
+///
+/// **UNIFIED MONITORING ARCHITECTURE** ✅ **COMPLETE**
+///
+/// This module provides comprehensive monitoring capabilities across the BearDog ecosystem,
+/// including health checks, metrics collection, alerting, and security monitoring.
+
+// Re-export all monitoring components
 pub mod health;
 pub mod metrics;
 pub mod service;
 pub mod types;
 
-// Re-export commonly used types and traits
-pub use types::{
-    AlertThresholds, ComponentHealth, HealthStatus, InternalMetricsSummary, MetricValue,
-    PerformanceMetrics, PrometheusConfig, ResourceMetrics, SystemHealth, SystemMetrics,
-};
-
+// Re-export key types and traits for easy access
 pub use health::{
-    DatabaseHealthChecker, ExternalServiceHealthChecker, HealthChecker, RedisHealthChecker,
+    DatabaseHealthChecker, CacheHealthChecker, ExternalApiHealthChecker, HsmHealthChecker, 
+    HealthChecker, HealthCheckerType,
 };
-
-pub use service::MonitoringService;
-
-pub use metrics::{InternalMetricsCollector, MetricsService};
+pub use metrics::{MetricsService, InternalMetricsSummary};
+pub use service::{MonitoringService, Alert, MonitoringConfig};
+pub use beardog_types::AlertSeverity;
+pub use types::{
+    ComponentHealth, SystemHealth, SystemMetrics,
+};

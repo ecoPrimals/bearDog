@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CPUArchitecture"],"struct":["CacheSizes","FallbackConfig","HardwareCapabilities","HardwareDetectionConfig","MemoryBandwidth","ThermalConstraints"]};

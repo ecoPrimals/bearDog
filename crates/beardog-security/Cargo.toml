@@ -3,13 +3,15 @@ name = "beardog-security"
 version = "0.1.0"
 edition = "2021"
 description = "Security and cryptography for BearDog Security Manager"
-license = "AGPL-3.0"
+license = "AGPL-3.0-only"
 repository = "https://github.com/ecoPrimals/beardog"
 
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
+beardog-errors = { workspace = true }
+beardog-types = { workspace = true }
 chrono = { workspace = true }
 futures = { workspace = true }
 hex = { workspace = true }
@@ -24,18 +26,18 @@ uuid = { workspace = true }
 aes-gcm = "0.10"
 argon2 = "0.5"
 chacha20poly1305 = "0.10"
+chacha20 = "0.9"  # For SIMD ChaCha20 implementation
 ed25519-dalek = "2.0"
 hmac = "0.12"
-hkdf = "0.12"
 pbkdf2 = "0.12"
-ring = "0.16"
-rustls = "0.21"
-sha2 = "0.10"
+ring = "0.17"
+rsa = "0.9"
+sha2 = "0.10"  # For SIMD SHA-256 implementation
 sha3 = "0.10"
-blake3 = "1.4"
-ripemd = "0.1"
-subtle = "2.4"
-thiserror = "1.0"
+
+# SIMD acceleration dependencies
+subtle = "2.5"  # Constant-time operations
+zeroize = "1.7"  # Secure memory clearing
 
 # Zero-copy optimization dependencies
 bytes = "1.5"
@@ -45,8 +47,8 @@ tempfile = "3.8"
 tokio-stream = "0.1"
 
 # Internal dependencies
-beardog-errors = { path = "../beardog-errors" }
-beardog-config = { path = "../beardog-config" }
+# beardog-errors already included above
+# beardog-config removed - use beardog-types::config::complete_unified
 beardog-threat = { path = "../beardog-threat" }
 beardog-workflows = { path = "../beardog-workflows" }
 beardog-compliance = { path = "../beardog-compliance" } 

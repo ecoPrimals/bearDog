@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! BearDog Security Sentinel Integration Demo
 //!
 //! This example demonstrates how to integrate the Security Sentinel
@@ -56,9 +73,8 @@ async fn main() -> BearDogResult<()> {
     if initial_report.overall_security_score < 0.7 {
         error!("🚨 Security score too low for production deployment: {:.2}", 
                initial_report.overall_security_score);
-        return Err(beardog::errors::BearDogError::Configuration {
-            message: "Security posture insufficient for production".to_string(),
-        });
+        return Err(beardog::errors::BearDogError::configuration("Security posture insufficient for production".to_string(),
+        ));
     }
 
     // Verify human dignity compliance
@@ -336,11 +352,23 @@ mod tests {
     #[tokio::test]
     async fn test_security_sentinel_integration() {
         // Test that Security Sentinel integrates properly with BearDog
-        let config = BearDogConfig::load_or_create("test_beardog.toml").await.unwrap();
-        let core = Arc::new(BearDogCore::new(config).await.unwrap());
+        let config = BearDogConfig::load_or_create("test_beardog.toml").await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
+        let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
         
-        let sentinel = integrate_with_existing_services(core).await.unwrap();
-        let report = sentinel.perform_security_assessment().await.unwrap();
+        let sentinel = integrate_with_existing_services(core).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
+        let report = sentinel.perform_security_assessment().await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         
         assert!(report.overall_security_score >= 0.0);
         assert!(report.overall_security_score <= 1.0);

@@ -1,24 +1,43 @@
-//! Grafana Integration Handler
-//!
-//! Provides licensed access to Grafana dashboard operations
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Grafana Integration Handler
+///
+/// Provides licensed access to Grafana dashboard operations
 
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
-use async_trait::async_trait;
+// Removed async_trait - using native async fn for zero-cost abstractions
 use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::idiomatic::SecurityResult;
 use reqwest::Client;
 use serde_json::Value;
 use std::time::Duration;
-
 /// Grafana dashboard integration handler
+/// **GRAFANA DASHBOARD INTEGRATION HANDLER** - Zero-cost implementation
+#[derive(Clone)]
 pub struct GrafanaDashboards;
+// Uses native async fn from trait definition - no async_trait needed
+impl ExternalFunctionHandler for GrafanaDashboards {}
 
-#[async_trait]
-impl ExternalFunctionHandler for GrafanaDashboards {
+
     fn function_name(&self) -> &str {
         "grafana_dashboards"
     }
-
     /// Execute Grafana operation with licensing check
     async fn execute(
         &self,
@@ -31,9 +50,8 @@ impl ExternalFunctionHandler for GrafanaDashboards {
             .is_function_available(self.function_name())
             .await?
         {
-            return Err(BearDogError::Configuration {
-                message: format!(
-                    "🔒 Grafana integration '{}' requires licensing or individual/small-team classification.\n\n\
+            return Err(BearDogError::configuration(format!(
+                    "🔒 Grafana integration '}' requires licensing or individual/small-team classification.\n\n\
                     🏠 Individual developers: Automatically granted access\n\
                     👥 Small teams: Automatically granted access\n\
                     🏢 Corporate usage: External adapters locked - acquire unlock certificate",
@@ -41,27 +59,21 @@ impl ExternalFunctionHandler for GrafanaDashboards {
                 ),
             });
         }
-
         let dashboard_name = payload
             .get("dashboard")
             .and_then(|v| v.as_str())
             .unwrap_or("beardog-security-dashboard");
-
         let default_grafana_url = format!(
             "http://{}:3000",
-            beardog_config::constants::network::get_default_host()
+            beardog_types::config::constants::network::get_default_host()
         );
         let grafana_url = payload
             .get("grafana_url")
-            .and_then(|v| v.as_str())
             .unwrap_or(&default_grafana_url);
-
         tracing::info!(
             "📈 Creating Grafana dashboard '{}' at {}",
             dashboard_name,
             grafana_url
-        );
-
         // Real Grafana dashboard creation
         match self.create_dashboard(grafana_url, dashboard_name).await {
             Ok(dashboard_info) => Ok(serde_json::json!({
@@ -72,36 +84,24 @@ impl ExternalFunctionHandler for GrafanaDashboards {
                 "dashboard_info": dashboard_info
             })),
             Err(e) => Ok(serde_json::json!({
-                "operation": "create_dashboard",
-                "dashboard_name": dashboard_name,
-                "grafana_url": grafana_url,
                 "status": "error",
                 "error": e.to_string()
-            })),
-        }
-    }
 }
-
 impl GrafanaDashboards {
     /// Create BearDog security dashboard in Grafana
     async fn create_dashboard(
-        &self,
         grafana_url: &str,
         dashboard_name: &str,
-    ) -> BearDogResult<Value> {
+    ) -> Result<Value, SecurityError> {
         let client = Client::builder()
             .timeout(Duration::from_secs(30))
             .build()
-            .map_err(|e| BearDogError::Configuration {
-                message: format!("HTTP client error: {e}"),
+            .map_err(|e| BearDogError::configuration(format!("HTTP client error: {e}"),
             })?;
-
         // BearDog security dashboard JSON
         let dashboard_json = self.get_beardog_dashboard_json(dashboard_name);
-
         // Create dashboard via Grafana API
         let api_url = format!("{grafana_url}/api/dashboards/db");
-
         let response = client
             .post(&api_url)
             .header("Content-Type", "application/json")
@@ -109,16 +109,12 @@ impl GrafanaDashboards {
             .json(&dashboard_json)
             .send()
             .await
-            .map_err(|e| BearDogError::Configuration {
-                message: format!("Grafana API request failed: {e}"),
-            })?;
-
+            .map_err(|e| BearDogError::configuration(format!("Grafana API request failed: {e}"),
         if response.status().is_success() {
             let result: Value = response
                 .json()
                 .await
-                .map_err(|e| BearDogError::Configuration {
-                    message: format!("Failed to parse Grafana response: {e}"),
+                .map_err(|e| BearDogError::configuration(format!("Failed to parse Grafana response: {e}"),
                 })?;
             Ok(result)
         } else {
@@ -128,13 +124,9 @@ impl GrafanaDashboards {
                 "id": 1,
                 "uid": format!("beardog-{}", uuid::Uuid::new_v4()),
                 "url": format!("{}/d/beardog-security", grafana_url),
-                "status": "success",
                 "version": 1,
                 "message": "Dashboard created successfully (mock)"
             }))
-        }
-    }
-
     /// Get BearDog security dashboard JSON configuration
     fn get_beardog_dashboard_json(&self, dashboard_name: &str) -> Value {
         serde_json::json!({
@@ -155,16 +147,10 @@ impl GrafanaDashboards {
                             }
                         ],
                         "yAxes": [
-                            {
                                 "label": "Events/sec",
                                 "min": 0
-                            }
-                        ],
                         "xAxes": [
-                            {
                                 "type": "time"
-                            }
-                        ],
                         "gridPos": {
                             "h": 8,
                             "w": 12,
@@ -172,78 +158,32 @@ impl GrafanaDashboards {
                             "y": 0
                         }
                     },
-                    {
                         "id": 2,
                         "title": "Authentication Success Rate",
                         "type": "stat",
-                        "targets": [
-                            {
                                 "expr": "beardog_auth_success_rate",
                                 "refId": "B"
-                            }
-                        ],
                         "fieldConfig": {
                             "defaults": {
                                 "unit": "percent"
-                            }
                         },
-                        "gridPos": {
-                            "h": 8,
-                            "w": 12,
                             "x": 12,
-                            "y": 0
-                        }
-                    },
-                    {
                         "id": 3,
                         "title": "Threat Detection Status",
                         "type": "table",
-                        "targets": [
-                            {
                                 "expr": "beardog_threat_detections",
                                 "refId": "C"
-                            }
-                        ],
-                        "gridPos": {
-                            "h": 8,
                             "w": 24,
-                            "x": 0,
                             "y": 8
-                        }
-                    },
-                    {
                         "id": 4,
                         "title": "HSM Operations",
-                        "type": "graph",
-                        "targets": [
-                            {
                                 "expr": "beardog_hsm_operations_total",
                                 "refId": "D"
-                            }
-                        ],
-                        "gridPos": {
-                            "h": 8,
-                            "w": 12,
-                            "x": 0,
                             "y": 16
-                        }
-                    },
-                    {
                         "id": 5,
                         "title": "Genetic Algorithm Performance",
-                        "type": "graph",
-                        "targets": [
-                            {
                                 "expr": "beardog_genetics_fitness_score",
                                 "refId": "E"
-                            }
-                        ],
-                        "gridPos": {
-                            "h": 8,
-                            "w": 12,
-                            "x": 12,
-                            "y": 16
-                        }
                     }
                 ],
                 "time": {
@@ -252,11 +192,8 @@ impl GrafanaDashboards {
                 },
                 "refresh": "5s",
                 "schemaVersion": 27,
-                "version": 1,
                 "links": []
             },
             "message": "BearDog Security Dashboard created",
             "overwrite": true
         })
-    }
-}

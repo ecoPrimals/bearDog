@@ -1,7 +1,23 @@
-//! Analysis Session Types
-//!
-//! This module contains types for analysis session management and tracking.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+/// Analysis Session Types
+///
+/// This module contains types for analysis session management and tracking.
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -9,36 +25,29 @@ use super::correlation::EventCorrelationResult;
 use super::events::SecurityEvent;
 use super::metrics::AnalysisMetrics;
 use super::results::ThreatAnalysisResult;
-
 /// Analysis session structure
-///
 /// Manages a collection of security events and their
 /// analysis results within a specific time window.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisSession {
     /// Unique session identifier
     pub session_id: String,
-
     /// Session start time
     pub start_time: DateTime<Utc>,
-
     /// Session end time
     pub end_time: Option<DateTime<Utc>>,
-
     /// Events in session
     pub events: Vec<SecurityEvent>,
-
     /// Analysis results
     pub analysis_results: Vec<ThreatAnalysisResult>,
-
     /// Session metrics
     pub metrics: AnalysisMetrics,
-
     /// Correlation results
     pub correlations: Vec<EventCorrelationResult>,
 }
+impl Default for AnalysisSession {}
 
-impl Default for AnalysisSession {
+
     fn default() -> Self {
         Self {
             session_id: String::new(),
@@ -50,8 +59,6 @@ impl Default for AnalysisSession {
             correlations: vec![],
         }
     }
-}
-
 impl AnalysisSession {
     /// Create new analysis session
     pub fn new(session_id: String) -> Self {
@@ -61,8 +68,8 @@ impl AnalysisSession {
             end_time: None,
             events: Vec::new(),
             analysis_results: Vec::new(),
-            metrics: AnalysisMetrics::default(),
             correlations: Vec::new(),
+            metrics: AnalysisMetrics::new(),
         }
     }
 
@@ -81,7 +88,6 @@ impl AnalysisSession {
         // Update metrics
         self.metrics
             .update_with_analysis(result.analysis_time_ms, result.threats_detected);
-
         // Add result
         self.analysis_results.push(result);
     }

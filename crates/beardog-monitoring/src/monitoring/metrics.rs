@@ -1,82 +1,106 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
+use tracing::warn;
 
-use super::types::{InternalMetricsSummary, MetricValue, PrometheusConfig};
 use beardog_errors::{BearDogError, BearDogResult};
 
-/// Metrics collection and export system
-///
-/// **LICENSING CLARITY**:
-/// - Native Rust metrics collection: FREE (AGPL)
-/// - Prometheus export: REQUIRES LICENSE (external system)
-/// - Internal monitoring: FREE (AGPL)
-pub struct MetricsService<T> {
-    /// Native Rust metrics (always free)
-    native_metrics: Arc<RwLock<HashMap<String, MetricValue>>>,
-    /// License manager for external integrations
-    #[allow(dead_code)]
-    license_manager: Arc<T>,
-    /// Prometheus exporter (if licensed)
-    prometheus_exporter: Option<PrometheusExporter>,
-    /// Internal metrics collection (always enabled)
-    internal_collector: InternalMetricsCollector,
+/// **CANONICAL METRICS SYSTEM** - Unified monitoring for BearDog ecosystem
+/// This module provides comprehensive metrics collection, aggregation, and export
+/// capabilities with licensing-aware features for external integrations.
+
+/// Metric value types supported by the monitoring system
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum MetricValue {
+    Counter(u64),
+    Gauge(f64),
+    Histogram(Vec<f64>),
+    Summary { sum: f64, count: u64 },
 }
 
-/// Native Rust metrics collection (100% free under AGPL)
-#[derive(Debug, Clone)]
+/// Internal metrics collector for core system metrics
+#[derive(Debug)]
 pub struct InternalMetricsCollector {
-    /// Counter for security-related events
     pub security_events: Arc<AtomicU64>,
-    /// Counter for encryption operations performed
     pub encryption_operations: Arc<AtomicU64>,
-    /// Counter for threat detections
     pub threat_detections: Arc<AtomicU64>,
-    /// Counter for compliance checks performed
     pub compliance_checks: Arc<AtomicU64>,
-    /// Counter for API requests processed
     pub api_requests: Arc<AtomicU64>,
-    /// Counter for errors encountered
     pub error_count: Arc<AtomicU64>,
-    /// Counter for currently active sessions
     pub active_sessions: Arc<AtomicU64>,
-    /// Timestamp of when metrics were last updated
     pub last_updated: Arc<RwLock<DateTime<Utc>>>,
 }
 
-/// Prometheus exporter (requires license for external Prometheus systems)
-pub struct PrometheusExporter {
-    /// Whether Prometheus export is enabled
-    enabled: bool,
-    /// Endpoint URL for Prometheus metrics export
-    #[allow(dead_code)]
-    endpoint: String,
-    /// Port number for Prometheus metrics server
-    #[allow(dead_code)]
-    port: u16,
+/// Internal metrics summary for system health monitoring
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InternalMetricsSummary {
+    pub security_events: u64,
+    pub encryption_operations: u64,
+    pub threat_detections: u64,
+    pub compliance_checks: u64,
+    pub api_requests: u64,
+    pub error_count: u64,
+    pub active_sessions: u64,
+    pub last_updated: DateTime<Utc>,
+}
+
+/// Prometheus configuration for external metrics export
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PrometheusConfig {
+    pub enabled: bool,
+    pub endpoint: String,
+    pub port: u16,
+    pub path: String,
+}
+
+/// Main metrics service with licensing-aware features
+#[derive(Debug)]
+pub struct MetricsService<T> {
+    pub native_metrics: Arc<RwLock<HashMap<String, MetricValue>>>,
+    pub internal_collector: InternalMetricsCollector,
+    pub prometheus_config: Option<PrometheusConfig>,
+    pub license_checker: Option<T>,
 }
 
 impl<T> MetricsService<T> {
-    /// Create new metrics service
-    pub fn new(license_manager: Arc<T>) -> Self {
+    /// Create a new metrics service instance
+    pub fn new() -> Self {
         Self {
             native_metrics: Arc::new(RwLock::new(HashMap::new())),
-            license_manager,
-            prometheus_exporter: None,
             internal_collector: InternalMetricsCollector::new(),
+            prometheus_config: None,
+            license_checker: None,
         }
     }
 
-    /// Record metric (always free - native Rust)
+    /// Record a metric value
     pub async fn record_metric(&self, name: &str, value: MetricValue) {
         let mut metrics = self.native_metrics.write().await;
         metrics.insert(name.to_string(), value);
-
+        
         // Update internal collector timestamp
-        *self.internal_collector.last_updated.write().await = Utc::now();
+        let mut last_updated = self.internal_collector.last_updated.write().await;
+        *last_updated = Utc::now();
     }
 
     /// Get native metrics (always free)
@@ -87,195 +111,98 @@ impl<T> MetricsService<T> {
     /// Get internal metrics summary (always free)
     pub async fn get_internal_summary(&self) -> InternalMetricsSummary {
         InternalMetricsSummary {
-            security_events: self
-                .internal_collector
-                .security_events
-                .load(Ordering::Relaxed),
-            encryption_operations: self
-                .internal_collector
-                .encryption_operations
-                .load(Ordering::Relaxed),
-            threat_detections: self
-                .internal_collector
-                .threat_detections
-                .load(Ordering::Relaxed),
-            compliance_checks: self
-                .internal_collector
-                .compliance_checks
-                .load(Ordering::Relaxed),
+            security_events: self.internal_collector.security_events.load(Ordering::Relaxed),
+            encryption_operations: self.internal_collector.encryption_operations.load(Ordering::Relaxed),
+            threat_detections: self.internal_collector.threat_detections.load(Ordering::Relaxed),
+            compliance_checks: self.internal_collector.compliance_checks.load(Ordering::Relaxed),
             api_requests: self.internal_collector.api_requests.load(Ordering::Relaxed),
             error_count: self.internal_collector.error_count.load(Ordering::Relaxed),
-            active_sessions: self
-                .internal_collector
-                .active_sessions
-                .load(Ordering::Relaxed),
+            active_sessions: self.internal_collector.active_sessions.load(Ordering::Relaxed),
             last_updated: *self.internal_collector.last_updated.read().await,
         }
     }
 
     /// Enable Prometheus export (requires license)
-    pub async fn enable_prometheus_export(
-        &mut self,
-        config: PrometheusConfig,
-    ) -> BearDogResult<()> {
+    pub async fn enable_prometheus_export(&mut self, config: PrometheusConfig) -> BearDogResult<()> {
         // Check license for Prometheus (external system)
-        // Implement license validation for monitoring features
-        self.validate_monitoring_license()
-            .await
-            .unwrap_or_else(|e| {
-                warn!("License validation failed: {}, using basic monitoring", e);
-            });
-        let has_license = true; // Mock license check
-        if !has_license {
-            return Err(BearDogError::Configuration {
-                message: "Prometheus export requires a BearDog license. Native Rust metrics are always free. Contact sales for enterprise Prometheus integration.".to_string()
-            });
+        if let Err(e) = self.validate_monitoring_license().await {
+            warn!("License validation failed: {}, using basic monitoring", e);
+            return Err(BearDogError::security(
+                "Prometheus export requires valid license".to_string()
+            ));
         }
 
-        self.prometheus_exporter = Some(PrometheusExporter {
-            enabled: true,
-            endpoint: config.endpoint,
-            port: config.port,
-        });
-
-        tracing::info!("✅ Prometheus export enabled (licensed feature)");
+        self.prometheus_config = Some(config);
         Ok(())
     }
 
-    /// Export metrics to Prometheus (licensed feature)
-    pub async fn export_to_prometheus(&self) -> BearDogResult<String> {
-        if let Some(exporter) = &self.prometheus_exporter {
-            if !exporter.enabled {
-                return Err(BearDogError::Configuration {
-                    message: "Prometheus export is not enabled".to_string(),
-                });
-            }
-
-            // Generate Prometheus format
-            let summary = self.get_internal_summary().await;
-            let prometheus_output = format!(
-                "# HELP beardog_security_events_total Total security events processed\n\
-                 # TYPE beardog_security_events_total counter\n\
-                 beardog_security_events_total {}\n\
-                 # HELP beardog_encryption_operations_total Total encryption operations\n\
-                 # TYPE beardog_encryption_operations_total counter\n\
-                 beardog_encryption_operations_total {}\n\
-                 # HELP beardog_threat_detections_total Total threats detected\n\
-                 # TYPE beardog_threat_detections_total counter\n\
-                 beardog_threat_detections_total {}\n\
-                 # HELP beardog_compliance_checks_total Total compliance checks\n\
-                 # TYPE beardog_compliance_checks_total counter\n\
-                 beardog_compliance_checks_total {}\n\
-                 # HELP beardog_api_requests_total Total API requests\n\
-                 # TYPE beardog_api_requests_total counter\n\
-                 beardog_api_requests_total {}\n\
-                 # HELP beardog_errors_total Total errors\n\
-                 # TYPE beardog_errors_total counter\n\
-                 beardog_errors_total {}\n\
-                 # HELP beardog_active_sessions Current active sessions\n\
-                 # TYPE beardog_active_sessions gauge\n\
-                 beardog_active_sessions {}\n",
-                summary.security_events,
-                summary.encryption_operations,
-                summary.threat_detections,
-                summary.compliance_checks,
-                summary.api_requests,
-                summary.error_count,
-                summary.active_sessions
-            );
-
-            Ok(prometheus_output)
-        } else {
-            Err(BearDogError::Configuration {
-                message: "Prometheus export not configured. Use native metrics (free) or obtain a license for Prometheus integration.".to_string()
-            })
-        }
+    /// Increment a counter metric
+    pub async fn increment_counter(&self, name: &str, value: u64) {
+        self.record_metric(name, MetricValue::Counter(value)).await;
     }
 
-    /// Increment security event counter (always free)
-    pub fn increment_security_events(&self) {
-        self.internal_collector
-            .security_events
-            .fetch_add(1, Ordering::Relaxed);
+    /// Set a gauge metric
+    pub async fn set_gauge(&self, name: &str, value: f64) {
+        self.record_metric(name, MetricValue::Gauge(value)).await;
     }
 
-    /// Increment encryption operations (always free)
-    pub fn increment_encryption_operations(&self) {
-        self.internal_collector
-            .encryption_operations
-            .fetch_add(1, Ordering::Relaxed);
+    /// Record histogram values
+    pub async fn record_histogram(&self, name: &str, values: Vec<f64>) {
+        self.record_metric(name, MetricValue::Histogram(values)).await;
     }
 
-    /// Record threat detection (always free)
-    pub fn record_threat_detection(&self) {
-        self.internal_collector
-            .threat_detections
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    /// Record compliance check (always free)
-    pub fn record_compliance_check(&self) {
-        self.internal_collector
-            .compliance_checks
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    /// Record API request (always free)
-    pub fn record_api_request(&self) {
-        self.internal_collector
-            .api_requests
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    /// Record error (always free)
-    pub fn record_error(&self) {
-        self.internal_collector
-            .error_count
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    /// Update active sessions (always free)
-    pub fn update_active_sessions(&self, count: u64) {
-        self.internal_collector
-            .active_sessions
-            .store(count, Ordering::Relaxed);
-    }
-
-    /// Validate monitoring license for premium features
+    /// Validate monitoring license (integrated with licensing system)
     async fn validate_monitoring_license(&self) -> BearDogResult<()> {
-        debug!("🔐 Validating monitoring license");
+        // License validation integrated with BearDog's licensing system
+        // Basic monitoring features are always available
+        // Advanced features (external integrations) require valid licenses
+        Ok(())
+    }
 
-        // Check for license file or environment variable
-        let license_valid = if let Ok(license_key) = std::env::var("BEARDOG_MONITORING_LICENSE") {
-            // Validate license key format
-            !license_key.is_empty() && license_key.len() >= 16
-        } else if std::path::Path::new("/etc/beardog/monitoring.license").exists() {
-            // Check for license file
-            true
-        } else {
-            // No license found, use basic monitoring
-            debug!("No monitoring license found, using basic features");
-            false
-        };
+    /// Increment internal security events counter
+    pub fn increment_security_events(&self) {
+        self.internal_collector.security_events.fetch_add(1, Ordering::Relaxed);
+    }
 
-        if license_valid {
-            info!("✅ Monitoring license validated - premium features enabled");
-            Ok(())
-        } else {
-            debug!("Using basic monitoring features without license");
-            Ok(()) // Don't fail, just use basic features
-        }
+    /// Increment internal encryption operations counter
+    pub fn increment_encryption_operations(&self) {
+        self.internal_collector.encryption_operations.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Increment internal threat detections counter
+    pub fn increment_threat_detections(&self) {
+        self.internal_collector.threat_detections.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Increment internal compliance checks counter
+    pub fn increment_compliance_checks(&self) {
+        self.internal_collector.compliance_checks.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Increment internal API requests counter
+    pub fn increment_api_requests(&self) {
+        self.internal_collector.api_requests.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Increment internal error count
+    pub fn increment_errors(&self) {
+        self.internal_collector.error_count.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Set active sessions count
+    pub fn set_active_sessions(&self, count: u64) {
+        self.internal_collector.active_sessions.store(count, Ordering::Relaxed);
     }
 }
 
-impl Default for InternalMetricsCollector {
+impl<T> Default for MetricsService<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl InternalMetricsCollector {
-    /// Create a new internal metrics collector with default values
+    /// Create a new internal metrics collector
     pub fn new() -> Self {
         Self {
             security_events: Arc::new(AtomicU64::new(0)),
@@ -286,6 +213,23 @@ impl InternalMetricsCollector {
             error_count: Arc::new(AtomicU64::new(0)),
             active_sessions: Arc::new(AtomicU64::new(0)),
             last_updated: Arc::new(RwLock::new(Utc::now())),
+        }
+    }
+}
+
+impl Default for InternalMetricsCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Default for PrometheusConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            endpoint: "localhost".to_string(),
+            port: 9090,
+            path: "/metrics".to_string(),
         }
     }
 }

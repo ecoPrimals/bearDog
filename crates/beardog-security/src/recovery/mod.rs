@@ -1,19 +1,31 @@
-//! Account Recovery System
-//!
-//! **Distributed Recovery - No Single Point of Failure**
-//!
-//! This module implements a comprehensive recovery system that follows the principle:
-//! "Finding the key doesn't mean owning the house" - recovery is distributed,
-//! time-bound, and requires multiple parties without giving full ownership.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use uuid::Uuid;
+
+/// Security Recovery Module
+///
+/// This module provides security recovery mechanisms for key recovery,
+/// account recovery, and security incident response.
 
 use beardog_errors::{BearDogError, BearDogResult};
-
+use beardog_types::canonical::security::{SecurityContext, SecurityLevel};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use uuid::Uuid;
+// Import recovery sub-modules
 pub mod challenges;
 pub mod ephemeral;
 pub mod federation;
@@ -22,309 +34,78 @@ pub mod sessions;
 pub mod shards;
 pub mod social;
 pub mod types;
-
-pub use challenges::*;
-pub use ephemeral::*;
-pub use federation::*;
-pub use policies::*;
-pub use sessions::*;
-pub use shards::*;
-pub use social::*;
+// Re-export recovery types
 pub use types::*;
-
-/// Recovery provider for ephemeral key integration
+/// Recovery Manager - Handles all recovery operations
 #[derive(Debug, Clone)]
-pub struct RecoveryProvider {
-    /// Recovery manager instance
-    manager: Arc<RecoveryManager>,
-}
-
-impl RecoveryProvider {
-    /// Create new recovery provider
-    pub fn new() -> Self {
-        Self {
-            manager: Arc::new(RecoveryManager::new()),
-        }
-    }
-
-    /// Generate ephemeral recovery key
-    pub async fn generate_ephemeral_key(&self, user_id: &str) -> BearDogResult<EphemeralRecoveryKey> {
-        let permissions = EphemeralPermissions::default();
-        let key = EphemeralRecoveryKey::new(
-            uuid::Uuid::new_v4().to_string(),
-            user_id.to_string(),
-            permissions,
-        );
-        Ok(key)
-    }
-
-    /// Validate recovery key
-    pub async fn validate_recovery_key(&self, key_id: &str) -> BearDogResult<bool> {
-        // Placeholder validation - would check against stored keys
-        Ok(!key_id.is_empty())
-    }
-}
-
-impl Default for RecoveryProvider {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// Recovery system manager
-#[derive(Debug)]
 pub struct RecoveryManager {
-    /// Active recovery sessions
-    recovery_sessions: Arc<RwLock<HashMap<String, RecoverySession>>>,
-    /// Social recovery configurations per user
-    social_configs: Arc<RwLock<HashMap<String, SocialRecoveryConfig>>>,
-    /// Federation recovery configurations
-    federation_configs: Arc<RwLock<HashMap<String, FederationRecoveryConfig>>>,
-    /// Ephemeral recovery keys
-    ephemeral_keys: Arc<RwLock<HashMap<String, EphemeralRecoveryKey>>>,
-    /// Recovery challenge responses
-    #[allow(dead_code)]
-    challenge_responses: Arc<RwLock<HashMap<String, ChallengeResponse>>>,
-    /// Recovery audit log
-    audit_log: Arc<RwLock<Vec<RecoveryAuditEntry>>>,
+    pub config: RecoveryConfig,
+    pub active_keys: HashMap<String, EphemeralRecoveryKey>,
 }
-
-impl RecoveryManager {
-    /// Create a new recovery manager (synchronous for simple initialization)
-    pub fn new() -> Self {
-        Self {
-            recovery_sessions: Arc::new(RwLock::new(HashMap::new())),
-            social_configs: Arc::new(RwLock::new(HashMap::new())),
-            federation_configs: Arc::new(RwLock::new(HashMap::new())),
-            ephemeral_keys: Arc::new(RwLock::new(HashMap::new())),
-            challenge_responses: Arc::new(RwLock::new(HashMap::new())),
-            audit_log: Arc::new(RwLock::new(Vec::new())),
-        }
-    }
-
-    /// Start a new recovery session
-    pub async fn start_recovery_session(
-        &self,
-        user_id: String,
-        recovery_type: RecoveryType,
-    ) -> BearDogResult<String> {
-        let session_id = Uuid::new_v4().to_string();
-        let session = RecoverySession::new(session_id.clone(), user_id, recovery_type);
-
-        let mut sessions = self.recovery_sessions.write().await;
-        sessions.insert(session_id.clone(), session);
-
-        Ok(session_id)
-    }
-
-    /// Get recovery session status
-    pub async fn get_session_status(&self, session_id: &str) -> BearDogResult<RecoveryStatus> {
-        let sessions = self.recovery_sessions.read().await;
-        let session = sessions
-            .get(session_id)
-            .ok_or_else(|| BearDogError::not_found("Recovery session not found"))?;
-
-        Ok(session.status.clone())
-    }
-
-    /// Configure social recovery for a user
-    pub async fn configure_social_recovery(
-        &self,
-        user_id: String,
-        config: SocialRecoveryConfig,
-    ) -> BearDogResult<()> {
-        let mut configs = self.social_configs.write().await;
-        configs.insert(user_id, config);
-        Ok(())
-    }
-
-    /// Configure federation recovery for a user
-    pub async fn configure_federation_recovery(
-        &self,
-        user_id: String,
-        config: FederationRecoveryConfig,
-    ) -> BearDogResult<()> {
-        let mut configs = self.federation_configs.write().await;
-        configs.insert(user_id, config);
-        Ok(())
-    }
-
-    /// Generate ephemeral recovery key
-    pub async fn generate_ephemeral_key(
-        &self,
-        user_id: String,
-        permissions: EphemeralPermissions,
-    ) -> BearDogResult<String> {
-        let key_id = Uuid::new_v4().to_string();
-        let key = EphemeralRecoveryKey::new(key_id.clone(), user_id, permissions);
-
-        let mut keys = self.ephemeral_keys.write().await;
-        keys.insert(key_id.clone(), key);
-
-        Ok(key_id)
-    }
-
-    /// Validate ephemeral recovery key
-    pub async fn validate_ephemeral_key(&self, key_id: &str) -> BearDogResult<bool> {
-        let keys = self.ephemeral_keys.read().await;
-        let key = keys
-            .get(key_id)
-            .ok_or_else(|| BearDogError::not_found("Ephemeral key not found"))?;
-
-        Ok(key.is_valid())
-    }
-
-    /// Record recovery audit event
-    pub async fn record_audit_event(
-        &self,
-        event_type: RecoveryEventType,
-        user_id: String,
-        details: HashMap<String, String>,
-    ) -> BearDogResult<()> {
-        let entry = RecoveryAuditEntry::new(event_type, user_id, details);
-        let mut audit_log = self.audit_log.write().await;
-        audit_log.push(entry);
-        Ok(())
-    }
-
-    /// Get recovery audit log for a user
-    pub async fn get_audit_log(&self, user_id: &str) -> BearDogResult<Vec<RecoveryAuditEntry>> {
-        let audit_log = self.audit_log.read().await;
-        let user_events = audit_log
-            .iter()
-            .filter(|entry| entry.user_id == user_id)
-            .cloned()
-            .collect();
-
-        Ok(user_events)
-    }
-
-    /// Clean up expired sessions and keys
-    pub async fn cleanup_expired(&self) -> BearDogResult<()> {
-        // Clean up expired sessions
-        let mut sessions = self.recovery_sessions.write().await;
-        sessions.retain(|_, session| !session.is_expired());
-
-        // Clean up expired ephemeral keys
-        let mut keys = self.ephemeral_keys.write().await;
-        keys.retain(|_, key| key.is_valid());
-
-        Ok(())
-    }
-
-    /// Get recovery statistics
-    pub async fn get_statistics(&self) -> BearDogResult<RecoveryStatistics> {
-        let sessions = self.recovery_sessions.read().await;
-        let social_configs = self.social_configs.read().await;
-        let federation_configs = self.federation_configs.read().await;
-        let ephemeral_keys = self.ephemeral_keys.read().await;
-        let audit_log = self.audit_log.read().await;
-
-        Ok(RecoveryStatistics {
-            active_sessions: sessions.len(),
-            social_configs: social_configs.len(),
-            federation_configs: federation_configs.len(),
-            ephemeral_keys: ephemeral_keys.len(),
-            audit_entries: audit_log.len(),
-        })
-    }
-
-    /// Check if an account can be unlocked for recovery
-    pub async fn can_unlock_account(&self, username: &str) -> BearDogResult<bool> {
-        let social_configs = self.social_configs.read().await;
-        let federation_configs = self.federation_configs.read().await;
-
-        // Check if user has any recovery methods configured
-        Ok(social_configs.contains_key(username) || federation_configs.contains_key(username))
-    }
-
-    /// Setup social recovery for a user (legacy method)
-    pub async fn setup_social_recovery(
-        &self,
-        user_id: &str,
-        trusted_contacts: Vec<TrustedContact>,
-        min_contacts_required: u32,
-        policy: RecoveryPolicy,
-    ) -> BearDogResult<()> {
-        let config = SocialRecoveryConfig {
-            user_id: user_id.to_string(),
-            trusted_contacts,
-            min_contacts_required,
-            recovery_window_hours: 24,
-            enabled: true,
-            policy,
-        };
-
-        self.configure_social_recovery(user_id.to_string(), config)
-            .await
-    }
-
-    /// Setup federation recovery for a user (legacy method)
-    pub async fn setup_federation_recovery(
-        &self,
-        user_id: &str,
-        trusted_instances: Vec<TrustedInstance>,
-        min_instances_required: u32,
-        verification_settings: FederationVerificationSettings,
-    ) -> BearDogResult<()> {
-        let config = FederationRecoveryConfig {
-            user_id: user_id.to_string(),
-            trusted_instances,
-            min_instances_required,
-            enabled: true,
-            verification_settings,
-        };
-
-        self.configure_federation_recovery(user_id.to_string(), config)
-            .await
-    }
-
-    /// Start account recovery (legacy method)
-    pub async fn start_account_recovery(
-        &self,
-        user_id: &str,
-        recovery_type: RecoveryType,
-        metadata: HashMap<String, String>,
-    ) -> BearDogResult<String> {
-        let session_id = self
-            .start_recovery_session(user_id.to_string(), recovery_type)
-            .await?;
-
-        // Add metadata to the session
-        let mut sessions = self.recovery_sessions.write().await;
-        if let Some(session) = sessions.get_mut(&session_id) {
-            for (key, value) in metadata {
-                session.add_metadata(key, value);
-            }
-        }
-
-        Ok(session_id)
-    }
-
-    /// Generate ephemeral recovery key (legacy method)
-    pub async fn generate_ephemeral_recovery_key(
-        &self,
-        user_id: &str,
-        permissions: EphemeralPermissions,
-        _expiry_hours: u32,
-        _max_uses: u32,
-    ) -> BearDogResult<String> {
-        self.generate_ephemeral_key(user_id.to_string(), permissions)
-            .await
-    }
-}
-
-/// Recovery system statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RecoveryStatistics {
-    /// Number of active recovery sessions
-    pub active_sessions: usize,
-    /// Number of social recovery configurations
-    pub social_configs: usize,
-    /// Number of federation recovery configurations
-    pub federation_configs: usize,
-    /// Number of active ephemeral keys
-    pub ephemeral_keys: usize,
-    /// Number of audit log entries
-    pub audit_entries: usize,
-}
+pub struct RecoveryConfig {
+    pub enable_social_recovery: bool,
+    pub enable_shard_recovery: bool,
+    pub enable_federation_recovery: bool,
+    pub key_expiry_hours: u64,}
+
+
+impl Default for RecoveryConfig {}
+
+
+    fn default() -> Self {
+        Self {
+            enable_social_recovery: true,
+            enable_shard_recovery: true,
+            enable_federation_recovery: false,
+            key_expiry_hours: 24,
+        }
+    }
+pub struct EphemeralRecoveryKey {
+    pub key_id: String,
+    pub user_id: String,
+    pub key_data: Vec<u8>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
+    pub is_active: bool,}
+
+
+impl RecoveryManager {}
+
+
+    pub fn new() -> Self {
+            config: RecoveryConfig::default(),
+            active_keys: HashMap::new(),}
+
+
+    pub async fn generate_ephemeral_key(
+        &mut self,
+        user_id: &str,
+        recovery_type: &str,
+    ) -> BearDogResult<EphemeralRecoveryKey> {
+        let key_id = Uuid::new_v4().to_string();
+        let key_data = self.generate_secure_key().await?;
+        let now = chrono::Utc::now();
+        let expires_at = now + chrono::Duration::hours(self.config.key_expiry_hours as i64);
+        let key = EphemeralRecoveryKey {
+            key_id: key_id.clone(),
+            user_id: user_id.to_string(),
+            key_data,
+            created_at: now,
+            expires_at,
+            is_active: true,
+        };
+        self.active_keys.insert(key_id, key.clone());
+        Ok(key)
+    pub async fn validate_recovery_key(&self, key_id: &str) -> BearDogResult<bool> {
+        if let Some(key) = self.active_keys.get(key_id) {
+            let now = chrono::Utc::now();
+            Ok(key.is_active && now < key.expires_at)
+        } else {
+            Ok(false)
+    async fn generate_secure_key(&self) -> BearDogResult<Vec<u8>> {
+        // Generate a secure random key
+        use rand::RngCore;
+        let mut key = vec![0u8; 32];
+        rand::thread_rng().fill_bytes(&mut key);
+// All recovery operations now use BearDogError directly for unified error handling

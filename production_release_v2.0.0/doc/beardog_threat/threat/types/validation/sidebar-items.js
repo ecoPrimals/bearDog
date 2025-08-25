@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["validate_detection_rule","validate_security_event","validate_threat_event","validate_threat_indicator"]};

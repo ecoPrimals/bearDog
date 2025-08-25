@@ -1,20 +1,34 @@
-//! # Universal HSM Discovery System
-//!
-//! This module provides automatic discovery and integration of any HSM type,
-//! with intelligent capability detection and tier classification.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// # Universal HSM Discovery System
+///
+/// This module provides automatic discovery and integration of any HSM type,
+/// with intelligent capability detection and tier classification.
 
 pub mod capability_detector;
 pub mod discovery_engine;
 pub mod human_entropy_classifier;
 pub mod tier_manager;
 pub mod universal_adapter;
-
 use beardog_errors::{BearDogError, BearDogResult};
 use std::collections::HashMap;
 use tracing::{info, warn};
-
 /// Universal HSM Discovery Engine
-///
 /// Automatically discovers and integrates any available HSMs on the system,
 /// regardless of vendor, type, or interface.
 pub struct UniversalHsmDiscovery {
@@ -29,7 +43,6 @@ pub struct UniversalHsmDiscovery {
     /// Discovery configuration
     config: DiscoveryConfig,
 }
-
 /// Discovered HSM information
 #[derive(Debug, Clone)]
 pub struct DiscoveredHsm {
@@ -53,8 +66,6 @@ pub struct DiscoveredHsm {
     pub health_status: HsmHealthStatus,
     /// Discovery timestamp
     pub discovered_at: chrono::DateTime<chrono::Utc>,
-}
-
 /// HSM Interface Types that can be auto-discovered
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HsmInterfaceType {
@@ -76,10 +87,7 @@ pub enum HsmInterfaceType {
     Tpm { version: String },
     /// Smart card interface
     SmartCard { reader: String },
-}
-
 /// HSM Connection Information
-#[derive(Debug, Clone)]
 pub struct HsmConnectionInfo {
     /// Primary connection endpoint
     pub endpoint: String,
@@ -91,10 +99,7 @@ pub struct HsmConnectionInfo {
     pub encrypted: bool,
     /// Additional connection parameters
     pub parameters: HashMap<String, String>,
-}
-
 /// Authentication methods supported by discovered HSMs
-#[derive(Debug, Clone)]
 pub enum AuthenticationMethod {
     /// Username/password authentication
     UsernamePassword { username: String },
@@ -108,10 +113,7 @@ pub enum AuthenticationMethod {
     Biometric { method: String },
     /// No authentication required
     None,
-}
-
 /// Comprehensive HSM capabilities (discovery-specific)
-#[derive(Debug, Clone)]
 pub struct DiscoveryHsmCapabilities {
     /// Key generation capabilities
     pub key_generation: KeyGenerationCapabilities,
@@ -125,10 +127,7 @@ pub struct DiscoveryHsmCapabilities {
     pub security: SecurityCapabilities,
     /// Human entropy capabilities (tier-determining)
     pub human_entropy: HumanEntropyCapabilities,
-}
-
 /// Key generation capabilities
-#[derive(Debug, Clone)]
 pub struct KeyGenerationCapabilities {
     /// Supported key types
     pub supported_key_types: Vec<String>,
@@ -140,10 +139,7 @@ pub struct KeyGenerationCapabilities {
     pub true_rng: bool,
     /// Key derivation functions
     pub key_derivation: Vec<String>,
-}
-
 /// Cryptographic operation capabilities
-#[derive(Debug, Clone)]
 pub struct CryptoOperationCapabilities {
     /// Supported signing algorithms
     pub signing_algorithms: Vec<String>,
@@ -157,10 +153,7 @@ pub struct CryptoOperationCapabilities {
     pub bulk_operations: bool,
     /// Streaming operations
     pub streaming: bool,
-}
-
 /// Advanced feature capabilities
-#[derive(Debug, Clone)]
 pub struct AdvancedFeatureCapabilities {
     /// Key attestation support
     pub key_attestation: bool,
@@ -174,10 +167,7 @@ pub struct AdvancedFeatureCapabilities {
     pub secure_boot: bool,
     /// Hardware tamper resistance
     pub tamper_resistance: TamperResistanceLevel,
-}
-
 /// Performance characteristics
-#[derive(Debug, Clone)]
 pub struct PerformanceCapabilities {
     /// Operations per second (estimated)
     pub operations_per_second: f64,
@@ -187,25 +177,8 @@ pub struct PerformanceCapabilities {
     pub concurrent_operations: u32,
     /// Memory usage characteristics
     pub memory_usage: MemoryUsageLevel,
-}
-
 /// Security capabilities
-#[derive(Debug, Clone)]
-pub struct SecurityCapabilities {
-    /// FIPS 140-2 level (if certified)
-    pub fips_level: Option<u8>,
-    /// Common Criteria evaluation level
-    pub common_criteria_level: Option<String>,
-    /// Hardware security level
-    pub hardware_security_level: HardwareSecurityLevel,
-    /// Key isolation mechanisms
-    pub key_isolation: Vec<String>,
-    /// Audit capabilities
-    pub audit_capabilities: AuditCapabilities,
-}
-
 /// Human entropy capabilities (determines tier elevation)
-#[derive(Debug, Clone)]
 pub struct HumanEntropyCapabilities {
     /// Supports human entropy ephemeral seed creation
     pub ephemeral_seed_creation: bool,
@@ -219,10 +192,7 @@ pub struct HumanEntropyCapabilities {
     pub behavioral_entropy: bool,
     /// Real-time entropy generation
     pub realtime_entropy: bool,
-}
-
 /// Human entropy collection methods
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HumanEntropyMethod {
     /// Mouse movement patterns
     MouseMovement,
@@ -240,13 +210,12 @@ pub enum HumanEntropyMethod {
     CameraEntropy,
     /// Custom human input
     CustomInput,
-}
-
 /// Tamper resistance levels
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]}
+
+
 pub enum TamperResistanceLevel {
     /// No tamper resistance
-    None,
     /// Software-based protection
     Software,
     /// Tamper-evident mechanisms
@@ -255,10 +224,7 @@ pub enum TamperResistanceLevel {
     TamperResistant,
     /// Tamper-responsive (actively responds to attacks)
     TamperResponsive,
-}
-
 /// Memory usage characteristics
-#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MemoryUsageLevel {
     /// Very low memory usage (< 1MB)
     VeryLow,
@@ -270,13 +236,11 @@ pub enum MemoryUsageLevel {
     High,
     /// Very high memory usage (> 1GB)
     VeryHigh,
-}
+/// Hardware security levels}
 
-/// Hardware security levels
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+
 pub enum HardwareSecurityLevel {
     /// Software-only implementation
-    Software,
     /// Trusted Execution Environment
     TrustedEnvironment,
     /// Hardware Security Module
@@ -285,10 +249,7 @@ pub enum HardwareSecurityLevel {
     SecureElement,
     /// StrongBox (highest level)
     StrongBox,
-}
-
 /// Audit capabilities
-#[derive(Debug, Clone)]
 pub struct AuditCapabilities {
     /// Comprehensive audit logging
     pub comprehensive_logging: bool,
@@ -298,10 +259,9 @@ pub struct AuditCapabilities {
     pub realtime_monitoring: bool,
     /// Compliance reporting
     pub compliance_reporting: Vec<String>,
-}
+/// HSM Health Status (discovery-specific, renamed to avoid conflict)}
 
-/// HSM Health Status (discovery-specific, renamed to avoid conflict)
-#[derive(Debug, Clone, PartialEq, Eq)]
+
 pub enum DiscoveryHsmHealthStatus {
     /// HSM is healthy and operational
     Healthy,
@@ -313,10 +273,9 @@ pub enum DiscoveryHsmHealthStatus {
     Unavailable,
     /// HSM status unknown
     Unknown,
-}
+/// Discovery configuration}
 
-/// Discovery configuration
-#[derive(Debug, Clone)]
+
 pub struct DiscoveryConfig {
     /// Enable PKCS#11 discovery
     pub enable_pkcs11: bool,
@@ -337,10 +296,12 @@ pub struct DiscoveryConfig {
     /// Human entropy tier elevation enabled
     pub enable_human_entropy_elevation: bool,
     /// Minimum entropy quality for tier elevation
-    pub minimum_entropy_quality: f64,
-}
+    pub minimum_entropy_quality: f64,}
 
-impl Default for DiscoveryConfig {
+
+impl Default for DiscoveryConfig {}
+
+
     fn default() -> Self {
         Self {
             enable_pkcs11: true,
@@ -355,17 +316,13 @@ impl Default for DiscoveryConfig {
             minimum_entropy_quality: 0.8,
         }
     }
-}
-
 impl UniversalHsmDiscovery {
     /// Create a new universal HSM discovery engine
     pub async fn new(config: DiscoveryConfig) -> BearDogResult<Self> {
         info!("🔍 Initializing Universal HSM Discovery Engine");
-
         let capability_detector = capability_detector::CapabilityDetector::new().await?;
         let entropy_classifier = human_entropy_classifier::HumanEntropyClassifier::new().await?;
         let tier_manager = tier_manager::TierManager::new().await?;
-
         Ok(Self {
             discovered_hsms: HashMap::new(),
             capability_detector,
@@ -373,56 +330,38 @@ impl UniversalHsmDiscovery {
             tier_manager,
             config,
         })
-    }
-
     /// Discover all available HSMs on the system
     pub async fn discover_all_hsms(&mut self) -> BearDogResult<Vec<DiscoveredHsm>> {
         info!("🔍 Starting universal HSM discovery process");
-
         let mut all_discovered = Vec::new();
-
         // Discover PKCS#11 HSMs
         if self.config.enable_pkcs11 {
             let pkcs11_hsms = self.discover_pkcs11_hsms().await?;
             all_discovered.extend(pkcs11_hsms);
-        }
-
         // Discover Cloud KMS instances
         if self.config.enable_cloud_kms {
             let cloud_hsms = self.discover_cloud_kms_hsms().await?;
             all_discovered.extend(cloud_hsms);
-        }
-
         // Discover Network HSMs
         if self.config.enable_network_hsm {
             let network_hsms = self.discover_network_hsms().await?;
             all_discovered.extend(network_hsms);
-        }
-
         // Discover USB HSMs
         if self.config.enable_usb_hsm {
             let usb_hsms = self.discover_usb_hsms().await?;
             all_discovered.extend(usb_hsms);
-        }
-
         // Discover Software HSMs
         if self.config.enable_software_hsm {
             let software_hsms = self.discover_software_hsms().await?;
             all_discovered.extend(software_hsms);
-        }
-
         // Discover Mobile HSMs (Android StrongBox, iOS Secure Enclave)
         if self.config.enable_mobile_hsm {
             let mobile_hsms = self.discover_mobile_hsms().await?;
             all_discovered.extend(mobile_hsms);
-        }
-
         // Discover TPMs
         if self.config.enable_tpm {
             let tpm_hsms = self.discover_tpm_hsms().await?;
             all_discovered.extend(tpm_hsms);
-        }
-
         // Detect capabilities for all discovered HSMs
         for hsm in &mut all_discovered {
             hsm.capabilities = self.capability_detector.detect_capabilities(&hsm.interface_type).await?;
@@ -430,59 +369,40 @@ impl UniversalHsmDiscovery {
             // Classify human entropy capabilities
             hsm.supports_human_entropy = self.entropy_classifier
                 .classify_human_entropy_support(&hsm.capabilities).await?;
-            
             // Assign tier based on capabilities (with human entropy elevation)
             hsm.assigned_tier = self.tier_manager
                 .assign_tier(&hsm.capabilities, hsm.supports_human_entropy).await?;
-        }
-
         // Store discovered HSMs
         for hsm in &all_discovered {
             self.discovered_hsms.insert(hsm.hsm_id.clone(), hsm.clone());
-        }
-
         info!("✅ Universal HSM discovery completed: {} HSMs found", all_discovered.len());
         
         // Log human entropy capable HSMs
         let human_entropy_count = all_discovered.iter()
             .filter(|h| h.supports_human_entropy)
             .count();
-        
         if human_entropy_count > 0 {
             info!("🧠 {} HSMs support human entropy ephemeral seeds (tier elevated)", human_entropy_count);
-        }
-
         Ok(all_discovered)
-    }
-
     /// Get all HSMs that support human entropy ephemeral seeds
     pub fn get_human_entropy_hsms(&self) -> Vec<&DiscoveredHsm> {
         self.discovered_hsms
             .values()
             .filter(|hsm| hsm.supports_human_entropy)
             .collect()
-    }
+    /// Get HSMs by tier}
 
-    /// Get HSMs by tier
+
     pub fn get_hsms_by_tier(&self, tier: &HsmTier) -> Vec<&DiscoveredHsm> {
-        self.discovered_hsms
-            .values()
             .filter(|hsm| &hsm.assigned_tier == tier)
-            .collect()
-    }
-
     /// Get the best HSM for a specific operation type
     pub async fn get_best_hsm_for_operation(&self, operation_type: &str) -> BearDogResult<Option<&DiscoveredHsm>> {
         self.tier_manager.select_best_hsm_for_operation(
             &self.discovered_hsms.values().collect::<Vec<_>>(),
             operation_type
         ).await
-    }
-}
-
 /// Import HSM tier type from main types module
 use crate::tunnel::hsm::types::HsmTier;
-
 /// Re-export discovery components
 pub use capability_detector::CapabilityDetector;
 pub use discovery_engine::DiscoveryEngine;

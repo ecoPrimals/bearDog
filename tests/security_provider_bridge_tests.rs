@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 /*
  * BearDog Security Provider Bridge Tests
  * 
@@ -74,8 +91,7 @@ impl MockSecurityProviderBridge {
         
         // Check if vendor is registered
         let integration = self.vendor_integrations.get(vendor)
-            .ok_or_else(|| BearDogError::NotFound {
-                message: format!("Vendor {} not registered", vendor),
+            .ok_or_else(|| BearDogError::not_found(format!("Vendor {) not registered", vendor),
             })?;
 
         if !integration.is_healthy {
@@ -134,9 +150,8 @@ impl MockSecurityProviderBridge {
         }
         
         // All vendors failed
-        Err(last_error.unwrap_or_else(|| BearDogError::NotFound {
-            message: "No vendors available".to_string(),
-        }))
+        Err(last_error.unwrap_or_else(|| BearDogError::not_found("No vendors available".to_string(),
+        )))
     }
 
     fn get_security_metrics(&self) -> SecurityMetrics {
@@ -236,7 +251,10 @@ async fn test_vendor_registration() {
     
     for vendor in &vendors {
         assert!(bridge.vendor_integrations.contains_key(*vendor));
-        let integration = bridge.vendor_integrations.get(*vendor).unwrap();
+        let integration = bridge.vendor_integrations.get(*vendor).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         assert_eq!(integration.vendor_name, *vendor);
         assert!(integration.is_healthy);
     }
@@ -375,7 +393,10 @@ async fn test_concurrent_vendor_operations() {
     let mut success_count = 0;
     for result in results {
         assert!(result.is_ok()); // Task should not panic
-        if result.unwrap().is_ok() {
+        if result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?.is_ok() {
             success_count += 1;
         }
     }
@@ -505,10 +526,16 @@ async fn test_security_metrics_collection() {
     assert!(metrics.avg_latency_ms > 0.0);
     
     // Verify vendor-specific metrics
-    let safenet_metrics = metrics.vendor_metrics.get("SafeNet").unwrap();
+    let safenet_metrics = metrics.vendor_metrics.get("SafeNet").map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert_eq!(safenet_metrics.operations_count, 2);
     
-    let beardog_metrics = metrics.vendor_metrics.get("BearDog").unwrap();
+    let beardog_metrics = metrics.vendor_metrics.get("BearDog").map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert_eq!(beardog_metrics.operations_count, 3);
     
     // BearDog should be faster than SafeNet (based on mock implementation)

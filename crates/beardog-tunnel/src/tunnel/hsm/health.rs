@@ -1,7 +1,24 @@
-//! # HSM Health Monitoring Module
-//!
-//! This module provides health monitoring functionality for HSM providers, including
-//! automated health checks, status tracking, and provider filtering based on health.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// # HSM Health Monitoring Module
+///
+/// This module provides health monitoring functionality for HSM providers, including
+/// automated health checks, status tracking, and provider filtering based on health.
 
 use super::{
     HsmHealthMonitor, HsmProvider, HsmHealthStatus, HsmInfo, HsmTier, SoftwareHsmType,
@@ -15,14 +32,12 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::time::{interval, timeout};
 use tracing::info;
-
 /// Default HSM health monitor implementation
 pub struct DefaultHsmHealthMonitor {
     provider_health: Arc<RwLock<HashMap<String, HsmHealthStatus>>>,
     health_config: HealthConfig,
     monitoring_active: Arc<RwLock<bool>>,
 }
-
 impl DefaultHsmHealthMonitor {
     pub async fn new(config: HealthConfig) -> BearDogResult<Self> {
         Ok(Self {
@@ -31,40 +46,33 @@ impl DefaultHsmHealthMonitor {
             monitoring_active: Arc::new(RwLock::new(false)),
         })
     }
-
     pub async fn get_provider_health(
         &self,
         provider_id: &str,
     ) -> BearDogResult<Option<HsmHealthStatus>> {
         let health_map = self.provider_health.read().await;
         Ok(health_map.get(provider_id).cloned())
-    }
-}
 
-#[async_trait]
-impl HsmHealthMonitor for DefaultHsmHealthMonitor {
+impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
+
+
     async fn start_monitoring(&self, providers: Vec<Arc<dyn HsmProvider>>) -> BearDogResult<()> {
         info!(
             "🏥 Starting health monitoring for {} providers",
             providers.len()
         );
-
         let mut monitoring_active = self.monitoring_active.write().await;
         *monitoring_active = true;
-
         // Start health check tasks for each provider
         for provider in providers {
             let provider_clone = provider.clone();
             let health_map = self.provider_health.clone();
             let config = self.health_config.clone();
             let monitoring_active = self.monitoring_active.clone();
-
             tokio::spawn(async move {
                 let mut check_interval = interval(config.check_interval);
-
                 loop {
                     check_interval.tick().await;
-
                     // Check if monitoring is still active
                     {
                         let active = monitoring_active.read().await;
@@ -72,11 +80,9 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {
                             break;
                         }
                     }
-
                     // Perform health check
                     let health_result =
                         timeout(config.timeout, provider_clone.health_check()).await;
-
                     let health_status = match health_result {
                         Ok(Ok(status)) => status,
                         Ok(Err(error)) => HsmHealthStatus {
@@ -86,15 +92,9 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {
                             performance_metrics: PerformanceMetrics::default(),
                         },
                         Err(_) => HsmHealthStatus {
-                            healthy: false,
-                            last_check: chrono::Utc::now(),
                             error_message: Some("Health check timed out".to_string()),
-                            performance_metrics: PerformanceMetrics::default(),
-                        },
                     };
-
                     // Update health status
-                    {
                         let provider_info =
                             provider_clone.get_info().await.unwrap_or_else(|_| HsmInfo {
                                 hsm_type: HsmTier::SoftwareHsm {
@@ -112,46 +112,31 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {
                                 certification: None,
                                 tamper_resistance: TamperResistanceLevel::None,
                             });
-
                         let provider_id =
                             format!("{}_{}", provider_info.vendor, provider_info.model);
-
                         let mut health_map = health_map.write().await;
                         health_map.insert(provider_id, health_status);
-                    }
                 }
             });
         }
-
         Ok(())
-    }
-
     async fn get_health_status(&self) -> BearDogResult<HashMap<String, HsmHealthStatus>> {
-        let health_map = self.provider_health.read().await;
-        Ok(health_map.clone())
-    }
+        Ok(health_map.clone())}
+
 
     async fn filter_healthy_providers(
-        &self,
         providers: Vec<Arc<dyn HsmProvider>>,
     ) -> BearDogResult<Vec<Arc<dyn HsmProvider>>> {
         let mut healthy_providers = Vec::new();
-
-        for provider in providers {
             let provider_info = provider.get_info().await?;
             let provider_id = format!("{}_{}", provider_info.vendor, provider_info.model);
-
             let health_map = self.provider_health.read().await;
             if let Some(health_status) = health_map.get(&provider_id) {
                 if health_status.healthy {
                     healthy_providers.push(provider);
-                }
             } else {
                 // If we don't have health info, assume healthy
                 healthy_providers.push(provider);
             }
-        }
-
         Ok(healthy_providers)
-    }
 } 

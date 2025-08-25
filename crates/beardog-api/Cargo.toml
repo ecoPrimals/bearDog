@@ -27,7 +27,7 @@ redis = { workspace = true }
 ipnet = { workspace = true }
 
 beardog-auth = { workspace = true }
-beardog-config = { workspace = true }
+# beardog-config removed - use beardog-types::config::complete_unified
 beardog-core = { workspace = true }
 beardog-errors = { workspace = true }
 beardog-genetics = { workspace = true }
@@ -36,7 +36,7 @@ beardog-security = { workspace = true }
 beardog-tunnel = { workspace = true }
 beardog-utils = { workspace = true }
 beardog-threat = { workspace = true }
-beardog-workflows = { workspace = true }
+# beardog-workflows = { path = "../beardog-workflows" } # Disabled
 rand.workspace = true
 lazy_static = "1.4"
 num_cpus = "1.0"

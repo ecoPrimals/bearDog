@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["bridge_adapter","capability_adapter","commercial_extraction","http_adapter","protocol_adapter","security_provider_bridge","service_registration"]};

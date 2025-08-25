@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ActionType","ConditionType","ConsentAuditEventType","ConsentStatus","DelegationType","PrivacyLevel","ResourceType","TemplateCategory","UrgencyLevel"]};

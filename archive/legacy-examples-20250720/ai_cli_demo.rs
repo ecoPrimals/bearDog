@@ -121,7 +121,10 @@ async fn main() -> BearDogResult<()> {
     // Demo 1: System Status (Machine-readable)
     println!("=== SYSTEM STATUS ===");
     let status_response = get_system_status(&core).await;
-    println!("{}", serde_json::to_string_pretty(&status_response).unwrap());
+    println!("{}", serde_json::to_string_pretty(&status_response).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     
     // Demo 2: Batch Security Operations
     println!("\n=== BATCH SECURITY OPERATIONS ===");
@@ -151,7 +154,10 @@ async fn main() -> BearDogResult<()> {
     };
     
     let batch_response = process_batch_security(&core, batch_request).await;
-    println!("{}", serde_json::to_string_pretty(&batch_response).unwrap());
+    println!("{}", serde_json::to_string_pretty(&batch_response).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     
     // Demo 3: Genetic Spawning
     println!("\n=== GENETIC SPAWNING ===");
@@ -168,17 +174,26 @@ async fn main() -> BearDogResult<()> {
     };
     
     let spawn_response = process_genetic_spawn(&core, spawn_request).await;
-    println!("{}", serde_json::to_string_pretty(&spawn_response).unwrap());
+    println!("{}", serde_json::to_string_pretty(&spawn_response).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     
     // Demo 4: HSM Operations
     println!("\n=== HSM OPERATIONS ===");
     let hsm_response = get_hsm_status(&core).await;
-    println!("{}", serde_json::to_string_pretty(&hsm_response).unwrap());
+    println!("{}", serde_json::to_string_pretty(&hsm_response).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     
     // Demo 5: Performance Benchmark
     println!("\n=== PERFORMANCE BENCHMARK ===");
     let benchmark_response = run_performance_benchmark(&core).await;
-    println!("{}", serde_json::to_string_pretty(&benchmark_response).unwrap());
+    println!("{}", serde_json::to_string_pretty(&benchmark_response).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     
     // Graceful shutdown
     core.stop().await?;
@@ -444,14 +459,26 @@ async fn run_performance_benchmark(core: &BearDogCore) -> AiResponse<serde_json:
         "results": {
             "encryption": {
                 "avg_time_ms": encryption_times.iter().sum::<u64>() as f64 / encryption_times.len() as f64,
-                "min_time_ms": *encryption_times.iter().min().unwrap(),
-                "max_time_ms": *encryption_times.iter().max().unwrap(),
+                "min_time_ms": *encryption_times.iter().min().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
+                "max_time_ms": *encryption_times.iter().max().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
                 "operations_per_second": 1000.0 / (encryption_times.iter().sum::<u64>() as f64 / encryption_times.len() as f64),
             },
             "signing": {
                 "avg_time_ms": signing_times.iter().sum::<u64>() as f64 / signing_times.len() as f64,
-                "min_time_ms": *signing_times.iter().min().unwrap(),
-                "max_time_ms": *signing_times.iter().max().unwrap(),
+                "min_time_ms": *signing_times.iter().min().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
+                "max_time_ms": *signing_times.iter().max().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
                 "operations_per_second": 1000.0 / (signing_times.iter().sum::<u64>() as f64 / signing_times.len() as f64),
             }
         },

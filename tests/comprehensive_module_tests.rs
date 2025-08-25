@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Comprehensive Module Tests for BearDog
 //!
 //! Final test coverage push to reach 40% target with comprehensive module testing
@@ -258,9 +275,8 @@ async fn test_production_readiness() -> BearDogResult<()> {
 #[test]
 fn test_error_propagation() -> BearDogResult<()> {
     // Test error propagation through the system
-    let test_error = BearDogError::Configuration {
-        message: "Test configuration error".to_string(),
-    };
+    let test_error = BearDogError::configuration("Test configuration error".to_string(),
+    );
 
     // Test error formatting
     let error_string = format!("{test_error}");
@@ -292,7 +308,10 @@ async fn test_concurrent_system_operations() -> BearDogResult<()> {
 
     // Wait for all operations to complete
     for handle in handles {
-        let result = handle.await.unwrap();
+        let result = handle.await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         assert!(result.is_ok(), "Health check should succeed");
     }
 

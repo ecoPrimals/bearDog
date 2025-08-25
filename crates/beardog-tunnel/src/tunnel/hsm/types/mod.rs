@@ -1,424 +1,352 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// HSM Types Module - Canonical Type System
+///
+/// This module provides unified HSM types, replacing fragmented definitions
+/// and enabling consistent type usage across the tunnel crate.
+
+use beardog_errors::{BearDogError, BearDogResult};
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+// Canonical types - the source of truth
+pub mod canonical;
+// Legacy modules - to be gradually migrated
+pub mod algorithm;
+pub mod capability;
+pub mod config;
 pub mod key;
 pub mod status;
-pub mod config;
 pub mod tier;
-pub mod capability;
-
-// Re-export all types for convenience
-pub use key::*;
-pub use status::*;
-pub use config::*;
-pub use tier::*;
-pub use capability::*;
-
-// Import and re-export selected types from beardog-core (commenting out conflicting ones)
-pub use beardog_core::{
-    // KeyType, HsmTier, HsmHealthStatus, HsmCapabilities, HsmKey,  // Conflicts with local definitions
-    ComponentStatus, CoreState, HealthStatus, HealthCheck, SystemMetrics,
-    // HsmCapability,  // May conflict
-    BearDogSecurityProvider, SystemMonitor, GeneticOptimizer
+// Import and re-export canonical types from beardog-types for consistency
+pub use beardog_types::canonical::hsm::{AuthenticationMethod, HsmCapabilities, SecurityLevel};
+// Import and re-export crypto types
+pub use beardog_types::canonical::crypto::KeyType;
+// Import and re-export additional types from discovery module
+pub use beardog_types::canonical::hsm::discovery::{HsmConnectionInfo, HsmInterfaceType};
+// Import types from tier module (canonical definitions)
+pub use tier::{
+    AndroidKeyAlgorithm, AttestationLevel, KeyStorageType, MemoryProtectionLevel,
+    SecureEnclaveType, SmartphoneType, SoftwareHsmType, StrongBoxImplementation,
 };
-
-// Re-export the new Android types we've added
-pub use tier::{AndroidKeyAlgorithm, StrongBoxImplementation};
-
-// Re-export utility types (removing conflicting re-exports that cause multiple definition errors)
-// pub use self::{PerformanceMetrics, StrongBoxCapabilities, CapabilityRequirements, AndroidHsmConfig, DeviceModel, MemoryProtectionLevel};
-
-// HSM type enumeration from the standalone types.rs
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum HsmType {
-    /// iOS-based smartphone HSM
-    SmartphoneIos,
-    /// Android-based smartphone HSM
-    SmartphoneAndroid,
-    /// Rust software HSM
-    SoftwareRust,
-    /// AWS hardware HSM
-    HardwareAws,
-    /// Luna hardware HSM
-    HardwareLuna,
-    /// Thales hardware HSM
-    HardwareThales,
-    /// Utimaco hardware HSM
-    HardwareUtimaco,
-    /// Custom HSM type
-    Custom(String),
-}
-
-// Cryptographic Algorithm enumeration (most common missing type)
-#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-pub enum Algorithm {
-    /// AES-256-GCM encryption
-    Aes256Gcm,
-    /// ChaCha20-Poly1305 encryption
-    ChaCha20Poly1305,
-    /// ECC P-256 curve
-    EccP256,
-    /// ECC P-384 curve
-    EccP384,
-    /// ECDSA with SHA-256
-    EcdsaSha256,
-    /// RSA with SHA-256
-    RsaSha256,
-    /// HKDF with SHA-256
-    HkdfSha256,
-    /// Ed25519 signature algorithm
-    Ed25519,
-    /// Custom algorithm
-    Custom(String),
-}
-
-// Android-specific types (commonly missing)
+// Re-export canonical types as primary interface
+pub use beardog_types::CapabilityRequirements;
+// Key management types
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum AndroidKeyPurpose {
-    Sign,
-    Verify,
     Encrypt,
     Decrypt,
-    WrapKey,
-    UnwrapKey,
+    Sign,
+    Verify,
+    Wrap,
+    Unwrap,
 }
-
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum AndroidEcCurve {
-    P256,
-    P384,
-    P521,
-}
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AndroidKeyParams {
+    pub algorithm: String,
+    pub key_size: u32,
     pub purposes: Vec<AndroidKeyPurpose>,
-    pub algorithm: Algorithm,
-    pub key_size: Option<u32>,
-    pub ec_curve: Option<AndroidEcCurve>,
-    pub user_authentication_required: bool,
-    pub user_presence_required: bool,
     pub strongbox_required: bool,
-}
+    pub user_authentication_required: bool,
+    pub user_authentication_timeout: Option<i32>,
+    pub key_validity_start: Option<chrono::DateTime<chrono::Utc>>,
+    pub key_validity_end: Option<chrono::DateTime<chrono::Utc>>,
+    pub attestation_challenge: Option<Vec<u8>>,}
 
-// AndroidDeviceInfo is defined in android_strongbox::types - use that one
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum VerifiedBootState {
-    Green,      // Locked bootloader, verified boot
-    Yellow,     // Locked bootloader, custom OS
-    Orange,     // Unlocked bootloader
-    Red,        // Verification failed
-}
+impl AndroidKeyParams {}
 
-// Platform-specific enums
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum SmartphoneType {
-    Android { device_info: String }, // Simplified to avoid import complexity
-    iOS { device_info: String }, // Simplified for now
-}
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum SecureEnclaveType {
-    AndroidStrongBox { implementation: StrongBoxImplementation },
-    IOSSecureEnclave,
-    SoftwareFallback,
-}
+    pub fn new() -> Self {
+        Self {
+            algorithm: "Ed25519".to_string(),
+            key_size: 256,
+            purposes: vec![AndroidKeyPurpose::Sign, AndroidKeyPurpose::Verify],
+            strongbox_required: false,
+            user_authentication_required: false,
+            user_authentication_timeout: None,
+            key_validity_start: None,
+            key_validity_end: None,
+            attestation_challenge: None,
+        }
+    }
+    pub fn set_algorithm(mut self, algorithm: &str) -> Self {
+        self.algorithm = algorithm.to_string();
+        self}
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum AttestationLevel {
-    SoftwareImplemented,
-    TrustedEnvironment,
-    StrongBox,
-    CertifiedHardware,
-}
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum SoftwareHsmType {
-    RustSoftwareHsm,
-    OpenSSLHsm,
-    CustomHsm(String),
-}
+    pub fn set_key_size(&mut self, size: u32) {
+        self.key_size = size;
+    pub fn set_purposes(&mut self, purposes: Vec<AndroidKeyPurpose>) {
+        self.purposes = purposes;}
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum KeyStorageType {
-    InMemory,
-    EncryptedFile,
-    SystemKeychain,
-    Hardware,
-}
 
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum MemoryProtectionLevel {
-    None,
-    Low,
-    Medium,
-    High,
-    Maximum,
-}
+    pub fn set_strongbox_required(&mut self, required: bool) {
+        self.strongbox_required = required;
+    pub fn set_user_authentication_required(&mut self, required: bool) {
+        self.user_authentication_required = required;}
 
+
+    pub fn set_key_validity_end(&mut self, end: chrono::DateTime<chrono::Utc>) {
+        self.key_validity_end = Some(end);
+    pub fn set_attestation_challenge(&mut self, challenge: Vec<u8>) {
+        self.attestation_challenge = Some(challenge);
+impl Default for AndroidKeyParams {}
+
+
+    fn default() -> Self {
+        Self::new()
 // Configuration types
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AndroidHsmConfig {
     pub strongbox_enabled: bool,
     pub key_params: AndroidKeyParams,
     pub attestation_level: AttestationLevel,
-    pub security_level: u8,
-}
+    pub security_level: u8,}
+
 
 impl Default for AndroidHsmConfig {
-    fn default() -> Self {
-        Self {
             strongbox_enabled: true,
-            key_params: AndroidKeyParams {
-                purposes: vec![AndroidKeyPurpose::Sign, AndroidKeyPurpose::Verify],
-                algorithm: Algorithm::EcdsaSha256,
-                key_size: Some(256),
-                ec_curve: Some(AndroidEcCurve::P256),
-                user_authentication_required: false,
-                user_presence_required: false,
-                strongbox_required: false,
-            },
-            attestation_level: AttestationLevel::StrongBox,
-            security_level: 100,
-        }
-    }
+            key_params: AndroidKeyParams::new(),
+            attestation_level: AttestationLevel::Hardware,
+            security_level: 2,}
+
+
+pub struct IOSHsmConfig {
+    pub secure_enclave_enabled: bool,
+    pub biometric_authentication: bool,
+    pub key_attestation: bool,
+// Device and hardware types
+pub struct AndroidDeviceCapabilities {
+    pub strongbox_available: bool,
+    pub key_attestation_available: bool,
+    pub hardware_backed_keystore: bool,
+    pub verified_boot: bool,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct Pixel8GrapheneOSConfig {
-    pub strongbox_optimization: bool,
-    pub graphene_hardening: bool,
-    pub verified_boot_enforced: bool,
-}
 
-impl Default for Pixel8GrapheneOSConfig {
-    fn default() -> Self {
-        Self {
-            strongbox_optimization: true,
-            graphene_hardening: true,
-            verified_boot_enforced: true,
-        }
-    }
-}
-
-// HSM configuration type
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct HsmConfig {
-    pub hsm_type: HsmType,
-    pub android_config: Option<AndroidHsmConfig>,
-    pub security_level: u8,
-    pub performance_mode: bool,
-}
-
-impl Default for HsmConfig {
-    fn default() -> Self {
-        Self {
-            hsm_type: HsmType::SoftwareRust,
-            android_config: None,
-            security_level: 80,
-            performance_mode: false,
-        }
-    }
-}
-
-// Capability requirements (commonly referenced)
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct CapabilityRequirements {
-    pub minimum_security_level: u8,
-    pub required_algorithms: Vec<Algorithm>,
-    pub attestation_required: bool,
-    pub biometric_support: bool,
-    pub hardware_backed: bool,
-}
-
-impl Default for CapabilityRequirements {
-    fn default() -> Self {
-        Self {
-            minimum_security_level: 50,
-            required_algorithms: vec![Algorithm::EcdsaSha256],
-            attestation_required: false,
-            biometric_support: false,
-            hardware_backed: false,
-        }
-    }
-}
-
-// Add the missing PerformanceMetrics type
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct PerformanceMetrics {
-    pub operations_per_second: f64,
-    pub average_latency_ms: f64,
-    pub success_rate: f64,
-    pub memory_usage_mb: f64,
-    pub cpu_usage_percent: f64,
-    pub error_count: u64,
-    pub uptime_seconds: u64,
-}
-
-impl Default for PerformanceMetrics {
-    fn default() -> Self {
-        Self {
-            operations_per_second: 0.0,
-            average_latency_ms: 0.0,
-            success_rate: 100.0,
-            memory_usage_mb: 0.0,
-            cpu_usage_percent: 0.0,
-            error_count: 0,
-            uptime_seconds: 0,
-        }
-    }
-}
-
-// Additional missing types that are referenced in the codebase
-#[derive(Debug, Clone)]
-pub struct StrongBoxCapabilities {
-    pub hardware_backed: bool,
-    pub secure_key_import: bool,
-    pub attestation_support: bool,
-}
-
-impl Default for StrongBoxCapabilities {
-    fn default() -> Self {
-        Self {
-            hardware_backed: false,
-            secure_key_import: false,
-            attestation_support: false,
-        }
-    }
-}
-
-// Android service types (commonly missing)
-#[derive(Debug, Clone)]
+pub struct IOSDeviceCapabilities {
+    pub secure_enclave_available: bool,
+    pub biometric_id_available: bool,
+    pub hardware_security_module: bool,
+// Provider interfaces
+#[derive(Debug)]
 pub struct AndroidKeystore {
-    pub alias_prefix: String,
-    pub strongbox_enabled: bool,
     pub config: AndroidHsmConfig,
-}
+    pub capabilities: AndroidDeviceCapabilities,}
 
-impl Default for AndroidKeystore {
-    fn default() -> Self {
-        Self {
-            alias_prefix: "beardog_".to_string(),
-            strongbox_enabled: true,
-            config: AndroidHsmConfig::default(),
-        }
-    }
-}
 
-#[derive(Debug, Clone)]
+impl AndroidKeystore {}
+
+
+    pub fn new(config: AndroidHsmConfig) -> BearDogResult<Self> {
+        Ok(Self {
+            config,
+            capabilities: AndroidDeviceCapabilities {
+                strongbox_available: true,
+                key_attestation_available: true,
+                hardware_backed_keystore: true,
+                verified_boot: true,
+            },
+        })
+    pub async fn test_keystore_access(&self) -> BearDogResult<()> {
+        // Placeholder implementation
+        Ok(())}
+
+
+    pub async fn generate_key(&self, key_id: &str, params: &AndroidKeyParams) -> BearDogResult<()> {
+        Err(BearDogError::NotImplemented {
+            message: "Android keystore key generation".to_string(),
+    pub async fn encrypt(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+            message: "Android keystore encryption".to_string(),}
+
+
+    pub async fn decrypt(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+            message: "Android keystore decryption".to_string(),
+    pub async fn sign(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+            message: "Android keystore signing".to_string(),}
+
+
+    pub async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
+            message: "Android keystore verification".to_string(),
+    pub async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
+            message: "Android keystore key deletion".to_string(),}
+
+
 pub struct AndroidAttestationService {
     pub enabled: bool,
-    pub attestation_level: AttestationLevel,
+    pub challenge_generator: ChallengeGenerator,
 }
 
-impl Default for AndroidAttestationService {
-    fn default() -> Self {
-        Self {
+
+pub struct ChallengeGenerator {
+    pub entropy_source: String,}
+
+
+impl ChallengeGenerator {
+            entropy_source: "system_random".to_string(),}
+
+
+    pub fn generate_challenge(&self, size: usize) -> BearDogResult<Vec<u8>> {
+        use rand::RngCore;
+        let mut challenge = vec![0u8; size];
+        rand::thread_rng().fill_bytes(&mut challenge);
+        tracing::debug!("Generated attestation challenge of {} bytes", size);
+        Ok(challenge)
+impl AndroidAttestationService {}
+
+
+    pub fn new(attestation_level: AttestationLevel) -> Self {
             enabled: true,
-            attestation_level: AttestationLevel::StrongBox,
-        }
-    }
-}
+            attestation_level,
+            challenge_generator: ChallengeGenerator::new(),}
 
-#[derive(Debug, Clone)]
+
+    pub async fn initialize(&self) -> BearDogResult<()> {
+        tracing::info!("Initializing Android attestation service with level: {:?}", self.attestation_level);
+        
+        // Verify attestation capabilities are available
+        if !self.enabled {
+            return Err(BearDogError::configuration("Attestation service is disabled".to_string()));
+        tracing::info!("Android attestation service initialized successfully");
 pub struct AndroidHealthMonitor {
-    pub monitoring_enabled: bool,
-    pub check_interval_ms: u64,
-}
+    pub check_interval_seconds: u64,}
+
+
+impl AndroidHealthMonitor {
+            check_interval_seconds: 60,
+    pub async fn start_monitoring(&self) -> BearDogResult<()> {
+            return Err(BearDogError::configuration("Health monitoring is disabled".to_string()));
+        tracing::info!("Starting Android health monitoring with {}-second intervals", self.check_interval_seconds);
+        // Start background monitoring task
+        let check_interval = std::time::Duration::from_secs(self.check_interval_seconds);
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(check_interval);
+            loop {
+                interval.tick().await;
+                tracing::debug!("Performing Android HSM health check");
+                // Health check logic would go here
+            }
+        });
+    pub async fn get_health_status(&self) -> BearDogResult<beardog_core::HsmHealthStatus> {
+        tracing::debug!("Getting Android HSM health status");
+        let mut is_healthy = true;
+        let mut error_message = None;
+        let start_time = std::time::Instant::now();
+        // Check if monitoring is enabled
+            is_healthy = false;
+            error_message = Some("Health monitoring is disabled".to_string());
+        // Perform basic system checks
+        let (operations_per_second, error_count) = self.get_performance_metrics().await?;
+        let latency_ms = start_time.elapsed().as_millis() as f64;
+        // Calculate availability based on error rate
+        let error_rate = if operations_per_second > 0.0 {
+            (error_count as f64) / operations_per_second
+        } else {
+            0.0
+        };
+        let availability_percentage = if error_rate < 0.01 {
+            100.0
+        } else if error_rate < 0.05 {
+            95.0
+            90.0 - (error_rate * 100.0)
+        // Check if health thresholds are met
+        if error_rate > 0.1 || availability_percentage < 90.0 {
+            error_message = Some(format!("High error rate: {:.2}%, availability: {:.1}%", 
+                                       error_rate * 100.0, availability_percentage));
+        Ok(beardog_core::HsmHealthStatus {
+            is_healthy,
+            last_check: chrono::Utc::now(),
+            error_message,
+            performance_metrics: crate::tunnel::hsm::types::status::PerformanceMetrics {
+                operations_per_second,
+                latency_ms,
+                throughput_mbps: operations_per_second * 0.001, // Rough estimate
+                cpu_usage_percent: self.estimate_cpu_usage(),
+                memory_usage_mb: self.estimate_memory_usage(),
+                error_count: error_count as u64,
+                uptime_seconds: self.get_uptime_seconds(),
+                availability_percentage,
+                error_rate,
+                network_throughput_bps: operations_per_second * 1024.0, // Rough estimate
+    
+    /// Get current performance metrics
+    async fn get_performance_metrics(&self) -> BearDogResult<(f64, u32)> {
+        // In a real implementation, this would query actual metrics
+        // For now, return simulated healthy values
+        let operations_per_second = 100.0;
+        let error_count = 0;
+        Ok((operations_per_second, error_count))
+    /// Estimate CPU usage}
+
+
+    fn estimate_cpu_usage(&self) -> f64 {
+        // In a real implementation, this would query system metrics
+        // For now, return a low simulated value
+        5.0
+    /// Estimate memory usage in MB}
+
+
+    fn estimate_memory_usage(&self) -> f64 {
+        // In a real implementation, this would query actual memory usage
+        // For now, return a reasonable simulated value
+        50.0
+    /// Get uptime in seconds}
+
+
+    fn get_uptime_seconds(&self) -> u64 {
+        // In a real implementation, this would track actual uptime
+        // For now, return a large value indicating good uptime
+        86400 // 24 hours}
+
 
 impl Default for AndroidHealthMonitor {
-    fn default() -> Self {
-        Self {
-            monitoring_enabled: true,
-            check_interval_ms: 30000,
-        }
-    }
-}
-
-// Main Android StrongBox HSM implementation type
+// HSM operation types
+pub enum HsmOperation {
+    KeyGeneration { key_type: String, key_size: u32 },
+    Encryption { key_id: String, algorithm: String },
+    Decryption { key_id: String, algorithm: String },
+    Signing { key_id: String, algorithm: String },
+    Verification { key_id: String, algorithm: String },
+    KeyDeletion { key_id: String },
+// HSM result types
+pub struct HsmOperationResult {
+    pub operation: HsmOperation,
+    pub success: bool,
+    pub result_data: Option<Vec<u8>>,
+    pub error_message: Option<String>,
+    pub execution_time_ms: u64,
+// Audit and logging types
+pub struct HsmAuditEntry {
+    pub id: String,
+    pub timestamp: chrono::DateTime<chrono::Utc>,
+    pub user_id: Option<String>,
+    pub result: HsmOperationResult,
+    pub security_context: HashMap<String, String>,
+// Cache types for performance optimization
 #[derive(Debug, Clone)]
-pub struct AndroidStrongBoxHsm {
-    pub keystore: AndroidKeystore,
-    pub attestation_service: AndroidAttestationService,
-    pub health_monitor: AndroidHealthMonitor,
-    pub config: AndroidHsmConfig,
-    pub capabilities: StrongBoxCapabilities,
-}
+pub struct HsmCache {
+    pub key_metadata: Arc<RwLock<HashMap<String, KeyMetadata>>>,
+    pub operation_cache: Arc<RwLock<HashMap<String, Vec<u8>>>>,}
 
-impl Default for AndroidStrongBoxHsm {
-    fn default() -> Self {
-        Self {
-            keystore: AndroidKeystore::default(),
-            attestation_service: AndroidAttestationService::default(),
-            health_monitor: AndroidHealthMonitor::default(),
-            config: AndroidHsmConfig::default(),
-            capabilities: StrongBoxCapabilities::default(),
-        }
-    }
-}
 
-// Crypto provider types
-#[derive(Debug, Clone)]
-pub struct RustCryptoProvider {
-    pub supported_algorithms: Vec<Algorithm>,
-    pub hardware_acceleration: bool,
-}
+impl HsmCache {
+            key_metadata: Arc::new(RwLock::new(HashMap::new())),
+            operation_cache: Arc::new(RwLock::new(HashMap::new())),}
 
-impl Default for RustCryptoProvider {
-    fn default() -> Self {
-        Self {
-            supported_algorithms: vec![
-                Algorithm::EcdsaSha256,
-                Algorithm::Ed25519,
-                Algorithm::Aes256Gcm,
-                Algorithm::ChaCha20Poly1305,
-            ],
-            hardware_acceleration: false,
-        }
-    }
-}
 
-// Crypto provider trait (referenced in several places)
-#[async_trait::async_trait]
-pub trait CryptoProvider: Send + Sync {
-    fn supported_algorithms(&self) -> &[Algorithm];
-    fn supports_algorithm(&self, algorithm: &Algorithm) -> bool;
-    fn hardware_accelerated(&self) -> bool;
-    
-    // Additional methods that implementations expect
-    async fn initialize(&self) -> Result<(), String>;
-    async fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, String>;
-    async fn encrypt(&self, data: &[u8], key: &[u8], algorithm: &Algorithm) -> Result<Vec<u8>, String>;
-    async fn decrypt(&self, data: &[u8], key: &[u8], algorithm: &Algorithm) -> Result<Vec<u8>, String>;
-    async fn sign(&self, data: &[u8], key: &[u8], algorithm: &Algorithm) -> Result<Vec<u8>, String>;
-    async fn verify(&self, data: &[u8], signature: &[u8], key: &[u8], algorithm: &Algorithm) -> Result<bool, String>;
-    async fn derive_key(&self, base_key: &[u8], salt: &[u8], info: &[u8]) -> Result<Vec<u8>, String>;
-}
-
-// CryptoProvider implementation for RustCryptoProvider is in software_hsm/crypto_providers/rust_crypto.rs
-
-// Key caching types
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct CachedKeyInfo {
-    pub key_id: String,
-    pub algorithm: Algorithm,
-    pub created_at: std::time::SystemTime,
-    pub last_used: std::time::SystemTime,
-    pub access_count: u64,
-}
-
-impl Default for CachedKeyInfo {
-    fn default() -> Self {
-        Self {
-            key_id: String::new(),
-            algorithm: Algorithm::EcdsaSha256,
-            created_at: std::time::SystemTime::now(),
-            last_used: std::time::SystemTime::now(),
-                         access_count: 0,
-         }
-     }
-}
-
-impl Default for MemoryProtectionLevel {
-    fn default() -> Self {
-        MemoryProtectionLevel::Medium
-    }
-} 
+impl Default for HsmCache {

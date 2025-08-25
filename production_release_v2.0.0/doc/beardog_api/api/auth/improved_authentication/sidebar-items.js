@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AuthenticationFactor"],"fn":["authenticate_user_improved","logout_user_improved","refresh_token_improved","validate_session_improved"],"struct":["ClientInfo","LogoutResult","SessionInfo","SessionValidationOutcome","TokenRefreshOutcome"]};

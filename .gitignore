@@ -1,9 +1,8 @@
-# Rust/Cargo - Updated for better coverage
+# Rust/Cargo build artifacts
 **/target/
 **/*.rs.bk
 *.pdb
-Cargo.lock
-# Keep Cargo.lock for applications, but ignore for libraries in subdirectories
+Cargo.lock  # Keep root Cargo.lock, ignore in subdirectories
 **/Cargo.lock
 
 # Rust build artifacts
@@ -19,10 +18,17 @@ Cargo.lock
 
 # IDE files
 .vscode/
+!.vscode/settings.json
+!.vscode/tasks.json  
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
 *~
+*.iml
+*.iws
+*.ipr
 
 # OS generated files
 .DS_Store
@@ -33,33 +39,30 @@ Cargo.lock
 ehthumbs.db
 Thumbs.db
 
-# Temporary files
+# Logs and temporary files
+*.log
 *.tmp
 *.temp
-*.log
+logs/
+*.log.*
 
-# Environment files
+# Environment and configuration files
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+config.toml
+beardog-config.toml
+!configs/
+!configs/*.toml
 
 # Database files
 *.db
 *.sqlite
 *.sqlite3
 
-# Configuration files (keep examples)
-config.toml
-!example-config.toml
-
-# Build artifacts
+# Build and distribution
 /dist/
 /build/
 **/build/
-
-# Documentation build
 /book/
 
 # Backup files
@@ -72,37 +75,56 @@ config.toml
 *.p12
 *.pfx
 secrets.json
+*.crt
+*.csr
+private_keys/
+certificates/
 
-# Test coverage reports
+# Test coverage and reports
 tarpaulin-report.html
 cobertura.xml
 lcov.info
 coverage/
+test-results/
 
-# Benchmarking results
+# Benchmarking and profiling
 criterion/
+benchmark_results*/
+flamegraph.svg
+perf.data*
 
-# Lock files for other package managers
+# Documentation
+/target/doc/
+docs/_build/
+
+# Package manager files
 package-lock.json
 yarn.lock
-
-# Node modules (if any JS tooling)
 node_modules/
 
-# Python cache (if any Python tooling)
+# Python artifacts (if any Python tooling)
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+*.egg-info/
 
-# JetBrains IDEs
-.idea/
-*.iml
-*.iws
-*.ipr
+# Archive and outdated files
+archive/
+*.old
+*.orig
+*_backup
 
-# Visual Studio Code
-.vscode/
-!.vscode/settings.json
-!.vscode/tasks.json  
-!.vscode/launch.json
-!.vscode/extensions.json 
+# Development artifacts
+.cargo/
+.rustup/
+rust-project.json
+
+# Container and deployment
+.dockerignore
+docker-compose.override.yml
+k8s-secrets.yml
+
+# Generated files
+**/*_generated.rs
+**/*.generated.* 

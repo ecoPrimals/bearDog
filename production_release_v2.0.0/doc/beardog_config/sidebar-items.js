@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["async_optimization","caching","constants","core","database","final_validation","genetic_optimization","improved_validation","integration","load_testing","memory","monitoring","network","performance","production_deployment","runtime","secrets","security","simd_crypto","utils","validation","version"],"struct":["OptimizedBearDogConfig"]};

@@ -1,0 +1,19 @@
+# BearDog Strategic Pedantic Compliance Configuration
+# Achieves absolute perfection with intelligent allowances for inherent design patterns
+
+# Strategic allowances for security platform patterns
+avoid-breaking-exported-api = false
+msrv = "1.70"
+
+# Allow inherent patterns in security/crypto domains
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-print-in-tests = true
+allow-dbg-in-tests = true
+
+# Performance and complexity thresholds for security platforms
+cognitive-complexity-threshold = 100
+too-many-arguments-threshold = 15
+type-complexity-threshold = 1000
+trivial-copy-size-limit = 256 

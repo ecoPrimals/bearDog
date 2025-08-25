@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["calculate_risk_level","generate_batch_id","generate_event_id","generate_feed_id","generate_incident_id","generate_request_id","generate_rule_id","get_secure_model_accuracy","is_private_ip","secure_behavioral_analysis","secure_threat_detection","should_create_incident"]};

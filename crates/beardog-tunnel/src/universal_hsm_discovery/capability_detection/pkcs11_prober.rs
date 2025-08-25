@@ -1,137 +1,140 @@
-//! PKCS#11 Capability Prober
-//!
-//! Probes PKCS#11 HSM libraries to determine their capabilities
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// PKCS#11 Capability Prober
+///
+/// Probes PKCS#11 HSM libraries to determine their capabilities
 
 use super::super::*;
 use beardog_errors::BearDogResult;
 use tracing::debug;
-
+// Import canonical types from beardog-types
+use beardog_types::canonical::capabilities::*;
+use beardog_types::canonical::hsm::capabilities::*;
+use beardog_types::SecurityLevel as TamperResistanceLevel;
 #[derive(Debug)]
 pub struct Pkcs11CapabilityProber;
+impl Pkcs11CapabilityProber {}
 
-impl Pkcs11CapabilityProber {
+
     pub fn new() -> BearDogResult<Self> {
         Ok(Self)
     }
-
     pub async fn probe_capabilities(&self, library_path: &str) -> BearDogResult<HsmCapabilities> {
         debug!("🔍 Probing PKCS#11 library: {}", library_path);
-
         // In a real implementation, this would load the PKCS#11 library
         // and query its capabilities using C_GetInfo, C_GetSlotList, etc.
-
         Ok(HsmCapabilities {
+            vendor: "PKCS#11 HSM".to_string(),}
+
+
+            model: "Generic PKCS#11 Device".to_string(),
+            firmware_version: "1.0.0".to_string(),
+            supported_algorithms: vec!["RSA".to_string(), "ECDSA".to_string(), "AES".to_string()],
+            supported_key_types: vec!["RSA".to_string(), "ECDSA".to_string()],
+            max_keys: Some(1000),
+            supported_operations: vec![
+                "sign".to_string(),
+                "verify".to_string(),
+                "encrypt".to_string(),
+                "decrypt".to_string(),
+            ],
+            security_features: vec![
+                "Hardware-backed".to_string(),
+                "Tamper-resistant".to_string(),
+            performance_metrics: std::collections::HashMap::new(),
+            certifications: vec![
+                "FIPS 140-2 Level 3".to_string(),
+                "Common Criteria EAL4+".to_string(),
+                "PCI DSS".to_string(),
             key_generation: KeyGenerationCapabilities {
-                supported_algorithms: vec![
-                    "RSA".to_string(),
-                    "ECDSA".to_string(),
-                    "AES".to_string(),
-                    "RSA-PSS".to_string(),
-                    "Ed25519".to_string(),
-                ],
-                key_sizes: vec![2048, 3072, 4096, 256, 384, 521],
-                can_generate_in_hardware: true,
-                supports_key_derivation: true,
-                supports_secure_key_import: true,
-                supports_key_wrapping: true,
-                entropy_sources: vec!["Hardware RNG".to_string()],
-                fips_compliant_generation: true,
-            },
-            crypto_operations: CryptoOperationCapabilities {
-                encryption_algorithms: vec![
-                    "AES-GCM".to_string(),
-                    "AES-CBC".to_string(),
-                    "RSA-OAEP".to_string(),
-                ],
-                signing_algorithms: vec![
-                    "RSA-PSS".to_string(),
-                    "ECDSA".to_string(),
-                    "Ed25519".to_string(),
-                ],
-                hashing_algorithms: vec![
-                    "SHA-256".to_string(),
-                    "SHA-384".to_string(),
-                    "SHA-512".to_string(),
-                ],
-                key_agreement_algorithms: vec!["ECDH".to_string(), "RSA-KEM".to_string()],
-                supports_streaming: true,
-                supports_batch_operations: true,
-                max_data_size: Some(1024 * 1024), // 1MB
-                hardware_acceleration: true,
+                hardware_generation: true,
+                supported_key_sizes: vec![2048, 3072, 4096],
+                generation_speed: Some(100), // ops per second
             },
             key_management: KeyManagementCapabilities {
-                supports_key_backup: true,
-                supports_key_recovery: true,
-                supports_key_escrow: true,
-                supports_key_rotation: true,
-                supports_key_versioning: true,
-                supports_key_attestation: true,
-                key_storage_types: vec!["Hardware".to_string(), "Token".to_string()],
+                backup_recovery: true,
+                key_migration: false,
+                key_versioning: false,
+                lifecycle_management: true,
                 max_keys: Some(1000),
-            },
             advanced_features: AdvancedFeatureCapabilities {
-                supports_secure_boot: false,
-                supports_remote_attestation: false,
-                supports_secure_channels: false,
-                supports_multi_tenancy: true,
-                supports_role_based_access: true,
-                supports_audit_logging: true,
-                supports_clustering: false,
-                supports_load_balancing: false,
-            },
+                physical_security_level: "Hardware".to_string(),
+                tamper_resistance: true,
+                secure_boot: false,
+                attestation: false,
+                hardware_rng: true,
+                side_channel_resistance: true,
             performance: PerformanceCapabilities::default(),
             security: SecurityCapabilities {
-                fips_140_level: Some(3),
-                common_criteria_level: Some("EAL4+".to_string()),
-                tamper_resistance: TamperResistance::TamperResponsive,
-                secure_key_storage: true,
-                side_channel_resistance: true,
-                fault_injection_resistance: true,
-                certified_algorithms: vec![
-                    "AES".to_string(),
-                    "RSA".to_string(),
-                    "ECDSA".to_string(),
-                ],
-                security_certifications: vec![
+                authentication_methods: vec!["PIN".to_string(), "Certificate".to_string()],
+                rbac: true,
+                audit_logging: true,
+                secure_protocols: vec!["TLS".to_string(), "PKCS#11".to_string()],
+                compliance_certifications: vec![
                     "FIPS 140-2 Level 3".to_string(),
                     "Common Criteria EAL4+".to_string(),
                 ],
-            },
+                security_level: "Hardware".to_string(),
             human_entropy: HumanEntropyCapabilities {
                 supports_human_entropy: false, // Most PKCS#11 HSMs don't support this
                 supports_ephemeral_seeds: false,
-                entropy_collection_methods: vec![],
-                entropy_quality_assessment: false,
-                real_time_entropy_generation: false,
-                biometric_entropy_integration: false,
-                user_interaction_entropy: false,
-                temporal_entropy_collection: false,
-                entropy_verification: false,
-                ephemeral_seed_lifetime: None,
-            },
+                available_methods: vec![],
+                entropy_quality_score: 0.0,
+                touch_capabilities: TouchCapabilities {
+                    available: false,
+                    pressure_sensitive: false,
+                    multi_touch: false,
+                    max_touch_points: 0,
+                    resolution: None,
+                },
+                motion_capabilities: MotionCapabilities {
+                    accelerometer: false,
+                    gyroscope: false,
+                    magnetometer: false,
+                    precision_level: 0,
+                biometric_capabilities: BiometricCapabilities {
+                    fingerprint: false,
+                    face_recognition: false,
+                    voice_recognition: false,
+                    iris_scanning: false,
+                    security_level: 0,
+                environmental_capabilities: EnvironmentalCapabilities {
+                    ambient_light: false,
+                    proximity: false,
+                    temperature: false,
+                    humidity: false,
+                    pressure: false,
             api_support: ApiSupportCapabilities {
-                pkcs11_support: true,
-                jce_support: false,
-                cng_support: false,
-                openssl_engine: true,
+                pkcs11: true,
+                crypto_api: false,
+                jca: false,
+                openssl: false,
                 rest_api: false,
                 grpc_api: false,
-                graphql_api: false,
-                custom_sdks: vec!["PKCS#11".to_string()],
-            },
+                websocket: false,
             compliance: ComplianceCapabilities {
-                fips_140_certified: true,
-                common_criteria_certified: true,
-                pci_dss_compliant: true,
-                hipaa_compliant: true,
-                gdpr_compliant: true,
-                sox_compliant: true,
-                compliance_certifications: vec![
-                    "FIPS 140-2".to_string(),
-                    "Common Criteria".to_string(),
-                ],
-                audit_trail_support: true,
-            },
+                certifications: vec![
+                    "PCI DSS".to_string(),
+                data_residency_control: false,
+                encryption_at_rest: true,
+                encryption_in_transit: true,
+                access_control: true,
+            vendor_capabilities: std::collections::HashMap::new(),
+            custom_capabilities: std::collections::HashMap::new(),
         })
-    }
 }

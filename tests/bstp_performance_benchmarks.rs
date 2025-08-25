@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 // 🚀 BSTP Performance Benchmarks - Krogan-Grade Gaming Performance
 
 use beardog::config::EncryptionConfig;
@@ -86,11 +103,23 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
         let avg_encryption = encryption_times.iter().sum::<Duration>() / iterations as u32;
         let avg_decryption = decryption_times.iter().sum::<Duration>() / iterations as u32;
 
-        let max_encryption = encryption_times.iter().max().unwrap();
-        let max_decryption = decryption_times.iter().max().unwrap();
+        let max_encryption = encryption_times.iter().max().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
+        let max_decryption = decryption_times.iter().max().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
-        let min_encryption = encryption_times.iter().min().unwrap();
-        let min_decryption = decryption_times.iter().min().unwrap();
+        let min_encryption = encryption_times.iter().min().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
+        let min_decryption = decryption_times.iter().min().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         println!("📊 {packet_type} Performance:");
         println!(
@@ -201,7 +230,10 @@ async fn benchmark_age_of_empires2_scenario() -> BearDogResult<()> {
     let p50 = all_latencies[all_latencies.len() / 2];
     let p95 = all_latencies[(all_latencies.len() * 95) / 100];
     let p99 = all_latencies[(all_latencies.len() * 99) / 100];
-    let max_latency = all_latencies.last().unwrap();
+    let max_latency = all_latencies.last().ok_or_else(|| {
+    tracing::error!("Collection is empty when accessing last element");
+    beardog_errors::BearDogError::validation("Collection is empty")
+})?;
 
     println!("📊 Age of Empires 2 Latency Percentiles:");
     println!("   P50 (Median): {}μs", p50.as_micros());
@@ -345,7 +377,10 @@ async fn benchmark_genetic_healing_performance() -> BearDogResult<()> {
         }
 
         let avg_healing_time = healing_times.iter().sum::<Duration>() / iterations as u32;
-        let max_healing_time = healing_times.iter().max().unwrap();
+        let max_healing_time = healing_times.iter().max().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         println!("🧬 {threat_type:?} Healing Performance:");
         println!("   Average: {}ms", avg_healing_time.as_millis());

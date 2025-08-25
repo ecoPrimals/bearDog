@@ -1,14 +1,30 @@
-//! Social Recovery
-//!
-//! This module handles social recovery configurations and trusted contacts.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Social Recovery
+///
+/// This module handles social recovery configurations and trusted contacts.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 use super::policies::*;
 use super::types::*;
-
+use beardog_errors::{BearDogError, BearDogResult};
 /// Social recovery configuration for a user
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SocialRecoveryConfig {
@@ -25,9 +41,7 @@ pub struct SocialRecoveryConfig {
     /// Recovery policy settings
     pub policy: RecoveryPolicy,
 }
-
 /// Trusted contact for social recovery
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrustedContact {
     /// Contact ID
     pub id: String,
@@ -48,11 +62,13 @@ pub struct TrustedContact {
     /// Last verification timestamp
     pub last_verified: Option<DateTime<Utc>>,
     /// Contact metadata
-    pub metadata: HashMap<String, String>,
-}
+    pub metadata: HashMap<String, String>,}
+
 
 impl TrustedContact {
-    /// Create a new trusted contact
+    /// Create a new trusted contact}
+
+
     pub fn new(id: String, name: String, email: String, contact_type: ContactType) -> Self {
         Self {
             id,
@@ -67,27 +83,21 @@ impl TrustedContact {
             metadata: HashMap::new(),
         }
     }
-
     /// Update the trust level
     pub fn update_trust_level(&mut self, level: u8) {
         self.trust_level = level.min(100);
-    }
+    /// Mark contact as verified}
 
-    /// Mark contact as verified
+
     pub fn mark_verified(&mut self) {
         self.last_verified = Some(Utc::now());
-    }
-}
+impl Default for SocialRecoveryConfig {}
 
-impl Default for SocialRecoveryConfig {
+
     fn default() -> Self {
-        Self {
             user_id: String::new(),
             trusted_contacts: Vec::new(),
             min_contacts_required: 2,
             recovery_window_hours: 24,
             enabled: false,
             policy: RecoveryPolicy::default(),
-        }
-    }
-}

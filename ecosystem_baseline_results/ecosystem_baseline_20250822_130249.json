@@ -1,0 +1,115 @@
+{
+  "beardog": {
+    "project": "beardog",
+    "status": "modernized",
+    "priority": "reference",
+    "expected_improvement": "15-30%",
+    "modernization_complete": true,
+    "timestamp": "2025-08-22T13:01:19.140892",
+    "compilation_time": null,
+    "async_trait_count": 126,
+    "arc_dyn_count": 34,
+    "provider_trait_count": 38,
+    "benchmark_results": {
+      "status": "failed",
+      "error": "warning: unused variable: `event`\n   --> crates/beardog-compliance/src/compliance/handlers.rs:387:9\n    |\n387 |         event: &ComplianceEvent,\n    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_event`\n    |\n    = note: `#[warn(unused_variables)]` on by default\n\nwarning: variable does not need to be mutable\n   --> crates/beardog-compliance/src/compliance/handlers.rs:390:13\n    |\n390 |         let mut violations = Vec::new();\n    |             ----^^^^^^^^^^\n    | "
+    },
+    "file_count": 778,
+    "line_count": 149970,
+    "crate_count": 20
+  },
+  "songbird": {
+    "project": "songbird",
+    "status": "in_progress",
+    "priority": "critical",
+    "expected_improvement": "50-60%",
+    "modernization_complete": false,
+    "timestamp": "2025-08-22T13:01:20.137639",
+    "compilation_time": null,
+    "async_trait_count": 100,
+    "arc_dyn_count": 41,
+    "provider_trait_count": 33,
+    "benchmark_results": {
+      "status": "failed",
+      "error": "error[E0252]: the name `IpAddr` is defined multiple times\n  --> crates/songbird-canonical/src/config/network.rs:22:16\n   |\n18 | use std::net::IpAddr;\n   |     ---------------- previous import of the type `IpAddr` here\n...\n22 | use std::net::{IpAddr, SocketAddr};\n   |                ^^^^^^--\n   |                |\n   |                `IpAddr` reimported here\n   |                help: remove unnecessary import\n   |\n   = note: `IpAddr` must be defined only once in the type namespace of this module\n\n"
+    },
+    "file_count": 776,
+    "line_count": 205802,
+    "crate_count": 18
+  },
+  "nestgate": {
+    "project": "nestgate",
+    "status": "pending",
+    "priority": "high",
+    "expected_improvement": "40-50%",
+    "modernization_complete": false,
+    "timestamp": "2025-08-22T13:01:23.459330",
+    "compilation_time": null,
+    "async_trait_count": 0,
+    "arc_dyn_count": 0,
+    "provider_trait_count": 0,
+    "benchmark_results": {
+      "status": "failed",
+      "error": "error[E0761]: file for module `canonical_modernization` found at both \"code/crates/nestgate-core/src/canonical_modernization.rs\" and \"code/crates/nestgate-core/src/canonical_modernization/mod.rs\"\n  --> code/crates/nestgate-core/src/lib.rs:14:1\n   |\n14 | pub mod canonical_modernization;\n   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n   |\n   = help: delete or rename one of them to remove the ambiguity\n\nwarning: unused import: `std::simd::*`\n  --> code/crates/nestgate-core/src/simd_optimizations.rs:18:5\n   "
+    },
+    "file_count": 0,
+    "line_count": 0,
+    "crate_count": 0
+  },
+  "biomeOS": {
+    "project": "biomeOS",
+    "status": "pending",
+    "priority": "medium",
+    "expected_improvement": "25-35%",
+    "modernization_complete": false,
+    "timestamp": "2025-08-22T13:01:58.926451",
+    "compilation_time": null,
+    "async_trait_count": 3,
+    "arc_dyn_count": 0,
+    "provider_trait_count": 1,
+    "benchmark_results": {
+      "status": "not_found"
+    },
+    "file_count": 36,
+    "line_count": 8735,
+    "crate_count": 6
+  },
+  "squirrel": {
+    "project": "squirrel",
+    "status": "pending",
+    "priority": "medium",
+    "expected_improvement": "30-40%",
+    "modernization_complete": false,
+    "timestamp": "2025-08-22T13:02:21.887361",
+    "compilation_time": null,
+    "async_trait_count": 225,
+    "arc_dyn_count": 140,
+    "provider_trait_count": 38,
+    "benchmark_results": {
+      "status": "failed",
+      "error": "error[E0433]: failed to resolve: use of unresolved module or unlinked crate `ecosystem_api`\n --> crates/integration/toadstool/src/errors.rs:7:9\n  |\n7 | pub use ecosystem_api::types::results::UniversalResult as ComputeResult;\n  |         ^^^^^^^^^^^^^ use of unresolved module or unlinked crate `ecosystem_api`\n  |\n  = help: if you wanted to use a crate named `ecosystem_api`, use `cargo add ecosystem_api` to add it to your `Cargo.toml`\n\nerror[E0432]: unresolved imports `crate::errors::ComputeResult"
+    },
+    "file_count": 1018,
+    "line_count": 346407,
+    "crate_count": 17
+  },
+  "toadstool": {
+    "project": "toadstool",
+    "status": "pending",
+    "priority": "medium",
+    "expected_improvement": "25-35%",
+    "modernization_complete": false,
+    "timestamp": "2025-08-22T13:02:30.399292",
+    "compilation_time": null,
+    "async_trait_count": 94,
+    "arc_dyn_count": 40,
+    "provider_trait_count": 17,
+    "benchmark_results": {
+      "status": "failed",
+      "error": "error[E0560]: struct `execution::ExecutionResponse` has no field named `workload_id`\n   --> crates/core/toadstool-types/src/zero_cost_runtime.rs:513:17\n    |\n513 |                 workload_id: uuid::Uuid::new_v4(),\n    |                 ^^^^^^^^^^^ `execution::ExecutionResponse` does not have this field\n    |\n    = note: available fields are: `request_id`, `output`, `started_at`, `completed_at`, `node_id`, `metadata`\n\nerror[E0560]: struct `execution::ExecutionResponse` has no field named `result"
+    },
+    "file_count": 990,
+    "line_count": 256226,
+    "crate_count": 16
+  }
+}

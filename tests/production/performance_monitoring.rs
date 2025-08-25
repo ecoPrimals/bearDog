@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Production Performance Monitoring Tests
 //!
 //! Tests for performance monitoring, metrics collection,
@@ -13,7 +30,10 @@ pub async fn test_performance_monitoring(prod_manager: &mut ProductionManager) {
     let performance_metrics = prod_manager
         .get_performance_metrics()
         .await
-        .expect("Performance metrics should be available");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Performance metrics should be available", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Performance metrics should be available", e))
+})?;
 
     assert!(
         performance_metrics.response_time_ms > 0.0,
@@ -32,7 +52,10 @@ pub async fn test_performance_monitoring(prod_manager: &mut ProductionManager) {
     let benchmark_results = prod_manager
         .run_performance_benchmarks()
         .await
-        .expect("Performance benchmarks should succeed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Performance benchmarks should succeed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Performance benchmarks should succeed", e))
+})?;
 
     assert!(
         benchmark_results.encryption_performance_acceptable,
@@ -59,12 +82,18 @@ async fn test_performance_monitoring_standalone() {
     let core = Arc::new(
         BearDogCore::new(config)
             .await
-            .expect("Core initialization failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+})?,
     );
 
     let mut production_manager = ProductionManager::new(core.clone())
         .await
-        .expect("Production manager creation failed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Production manager creation failed", e))
+})?;
         
     test_performance_monitoring(&mut production_manager).await;
 } 

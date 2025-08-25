@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 use beardog_security::*;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use std::collections::HashMap;
@@ -8,7 +25,10 @@ use tokio::runtime::Runtime;
 fn benchmark_security_provider_init(c: &mut Criterion) {
     let mut group = c.benchmark_group("security_provider_init");
 
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+})?;
 
     // Test different security configurations
     let configs = vec![
@@ -34,7 +54,10 @@ fn benchmark_security_provider_init(c: &mut Criterion) {
                     rt.block_on(async {
                         let _provider = BearDogSecurityProvider::new_with_config(config.clone())
                             .await
-                            .unwrap();
+                            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                     })
                 });
             },
@@ -49,12 +72,18 @@ fn benchmark_authentication(c: &mut Criterion) {
     let mut group = c.benchmark_group("authentication");
     group.throughput(Throughput::Elements(1));
 
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+})?;
     let config = SecurityProviderConfig::default();
     let provider = rt.block_on(async {
         BearDogSecurityProvider::new_with_config(config)
             .await
-            .unwrap()
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?
     });
 
     // Test authentication with different credential types
@@ -75,7 +104,10 @@ fn benchmark_authentication(c: &mut Criterion) {
             |b, creds| {
                 b.iter(|| {
                     rt.block_on(async {
-                        let _result = provider.authenticate(creds).await.unwrap();
+                        let _result = provider.authenticate(creds).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                     })
                 });
             },
@@ -90,12 +122,18 @@ fn benchmark_authorization(c: &mut Criterion) {
     let mut group = c.benchmark_group("authorization");
     group.throughput(Throughput::Elements(1));
 
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+})?;
     let config = SecurityProviderConfig::default();
     let provider = rt.block_on(async {
         BearDogSecurityProvider::new_with_config(config)
             .await
-            .unwrap()
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?
     });
 
     let subject = Subject {
@@ -127,7 +165,10 @@ fn benchmark_authorization(c: &mut Criterion) {
                 let _result = provider
                     .authorize(&subject, &action, &resource)
                     .await
-                    .unwrap();
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
             })
         });
     });
@@ -140,20 +181,29 @@ fn benchmark_rate_limiting(c: &mut Criterion) {
     let mut group = c.benchmark_group("rate_limiting");
     group.throughput(Throughput::Elements(1));
 
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+})?;
     let mut config = SecurityProviderConfig::default();
     config.rate_limit_config.max_operations = 1000; // High limit for benchmarking
 
     let mut provider = rt.block_on(async {
         BearDogSecurityProvider::new_with_config(config)
             .await
-            .unwrap()
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?
     });
 
     group.bench_function("rate_limit_check", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let _result = provider.check_rate_limit("benchmark_user").await.unwrap();
+                let _result = provider.check_rate_limit("benchmark_user").await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
             })
         });
     });
@@ -180,14 +230,26 @@ fn benchmark_crypto_operations(c: &mut Criterion) {
         // Benchmark Ed25519 signature generation
         group.bench_with_input(BenchmarkId::new("ed25519_sign", name), &data, |b, data| {
             b.iter(|| {
-                let (private_key, _) = BearDogCrypto::generate_ed25519_keypair().unwrap();
-                let _signature = BearDogCrypto::sign_ed25519(&private_key, data).unwrap();
+                let (private_key, _) = BearDogCrypto::generate_ed25519_keypair().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
+                let _signature = BearDogCrypto::sign_ed25519(&private_key, data).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
             });
         });
 
         // Benchmark Ed25519 signature verification
-        let (private_key, public_key) = BearDogCrypto::generate_ed25519_keypair().unwrap();
-        let signature = BearDogCrypto::sign_ed25519(&private_key, &data).unwrap();
+        let (private_key, public_key) = BearDogCrypto::generate_ed25519_keypair().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
+        let signature = BearDogCrypto::sign_ed25519(&private_key, &data).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         group.bench_with_input(
             BenchmarkId::new("ed25519_verify", name),
@@ -195,7 +257,10 @@ fn benchmark_crypto_operations(c: &mut Criterion) {
             |b, (data, pub_key, sig)| {
                 b.iter(|| {
                     let _valid =
-                        BearDogCrypto::verify_ed25519_signature(pub_key, data, sig).unwrap();
+                        BearDogCrypto::verify_ed25519_signature(pub_key, data, sig).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                 });
             },
         );
@@ -203,7 +268,10 @@ fn benchmark_crypto_operations(c: &mut Criterion) {
         // Benchmark SHA256 hashing
         group.bench_with_input(BenchmarkId::new("sha256_hash", name), &data, |b, data| {
             b.iter(|| {
-                let _hash = BearDogCrypto::sha256_hash(data).unwrap();
+                let _hash = BearDogCrypto::sha256_hash(data).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
             });
         });
     }
@@ -227,19 +295,28 @@ fn benchmark_password_operations(c: &mut Criterion) {
             password,
             |b, pwd| {
                 b.iter(|| {
-                    let _hash = BearDogCrypto::hash_password_argon2(pwd).unwrap();
+                    let _hash = BearDogCrypto::hash_password_argon2(pwd).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                 });
             },
         );
 
         // Benchmark password verification
-        let hash = BearDogCrypto::hash_password_argon2(password).unwrap();
+        let hash = BearDogCrypto::hash_password_argon2(password).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         group.bench_with_input(
             BenchmarkId::new("argon2_verify", password.len()),
             &(password, &hash),
             |b, (pwd, hash)| {
                 b.iter(|| {
-                    let _valid = BearDogCrypto::verify_password_argon2(pwd, hash).unwrap();
+                    let _valid = BearDogCrypto::verify_password_argon2(pwd, hash).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                 });
             },
         );
@@ -252,12 +329,18 @@ fn benchmark_password_operations(c: &mut Criterion) {
 fn benchmark_session_management(c: &mut Criterion) {
     let mut group = c.benchmark_group("session_management");
 
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+})?;
     let config = SecurityProviderConfig::default();
     let provider = rt.block_on(async {
         BearDogSecurityProvider::new_with_config(config)
             .await
-            .unwrap()
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?
     });
 
     let user_info = UserInfo {
@@ -282,7 +365,10 @@ fn benchmark_session_management(c: &mut Criterion) {
                         "benchmark/1.0".to_string(),
                     )
                     .await
-                    .unwrap();
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
             })
         });
     });
@@ -296,13 +382,19 @@ fn benchmark_session_management(c: &mut Criterion) {
                 "benchmark/1.0".to_string(),
             )
             .await
-            .unwrap()
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?
     });
 
     group.bench_function("validate_session", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let _result = provider.validate_session(&session.id).await.unwrap();
+                let _result = provider.validate_session(&session.id).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
             })
         });
     });
@@ -314,12 +406,18 @@ fn benchmark_session_management(c: &mut Criterion) {
 fn benchmark_concurrent_auth(c: &mut Criterion) {
     let mut group = c.benchmark_group("concurrent_auth");
 
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+})?;
     let config = SecurityProviderConfig::default();
     let provider = std::sync::Arc::new(rt.block_on(async {
         BearDogSecurityProvider::new_with_config(config)
             .await
-            .unwrap()
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?
     }));
 
     let concurrency_levels = vec![1, 5, 10, 25, 50];
@@ -346,13 +444,19 @@ fn benchmark_concurrent_auth(c: &mut Criterion) {
                                         .insert("password".to_string(), "password".to_string());
 
                                     let _result =
-                                        provider.authenticate(&credentials).await.unwrap();
+                                        provider.authenticate(&credentials).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                                 });
                                 handles.push(handle);
                             }
 
                             for handle in handles {
-                                handle.await.unwrap();
+                                handle.await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                             }
                         }
                     })

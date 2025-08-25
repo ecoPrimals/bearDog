@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["Alert","AlertRule","ComponentStatus","Dashboard","DashboardWidget","GenerateReportRequest","LogEntry","LogSearchRequest","MetricsResponse","PerformanceOverview","Report","SpanInfo","SystemHealthResponse","TraceInfo","WidgetPosition"]};

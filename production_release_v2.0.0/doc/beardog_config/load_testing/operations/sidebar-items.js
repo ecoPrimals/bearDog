@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CacheOperationType","CryptoOperationType","DatabaseOperationType","GeneticOperationType","MemoryOperationType","ScalabilityOperationType","StressOperationType","SystemOperationType"],"struct":["CacheOperation","CryptoOperation","DatabaseOperation","GeneticOperation","MemoryOperation","ScalabilityOperation","StressOperation","SystemOperation"]};

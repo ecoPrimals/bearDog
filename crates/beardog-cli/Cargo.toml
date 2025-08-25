@@ -12,7 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 beardog-core = { workspace = true }
-beardog-config = { workspace = true }
+# beardog-config removed - use beardog-types::config::complete_unified
 beardog-errors = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

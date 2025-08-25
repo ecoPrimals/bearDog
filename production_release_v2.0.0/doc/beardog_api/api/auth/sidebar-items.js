@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["create_routes"],"mod":["authentication","authorization","improved_authentication","mfa","models","users"]};

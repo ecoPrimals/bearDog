@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_compliance_health","get_compliance_overview","get_compliance_status"]};

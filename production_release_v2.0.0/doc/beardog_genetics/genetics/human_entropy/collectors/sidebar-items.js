@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["CameraEntropyCollector","HapticEntropyCollector","MicrophoneEntropyCollector","MultiModalHumanEntropyCollector"]};

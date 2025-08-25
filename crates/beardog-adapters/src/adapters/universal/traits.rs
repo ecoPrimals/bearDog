@@ -1,65 +1,33 @@
-//! Universal Ecosystem Adapter Traits
-//!
-//! **Universal, domain-agnostic traits for ecosystem integration**
-//!
-//! This module provides truly universal patterns that any ecosystem component
-//! can implement, regardless of their domain (security, compute, storage, AI, etc.).
-//! It follows SongBird's established universal patterns rather than creating
-//! BearDog-centric interfaces.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use async_trait::async_trait;
+
+/// Universal Ecosystem Adapter Traits
+///
+/// **Universal, domain-agnostic traits for ecosystem integration**
+/// This module provides truly universal patterns that any ecosystem component
+/// can implement, regardless of their domain (security, compute, storage, AI, etc.).
+/// It follows SongBird's established universal patterns rather than creating
+/// BearDog-centric interfaces.
+
+// Removed async_trait - using native async fn for zero-cost abstractions
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 use beardog_errors::BearDogResult;
-
-/// Universal trait that any ecosystem component can implement
-/// Based on SongBird's PrimalProvider pattern
-#[async_trait]
-pub trait PrimalProvider: Send + Sync {
-    /// Unique ecosystem identifier (toadstool, songbird, nestgate, beardog, squirrel, biomeos)
-    fn ecosystem_id(&self) -> &str;
-
-    /// Instance identifier for multi-instance support
-    fn instance_id(&self) -> &str;
-
-    /// Human-readable service name
-    fn service_name(&self) -> &str;
-
-    /// Service version
-    fn service_version(&self) -> &str;
-
-    /// Capabilities this provider offers to the ecosystem
-    fn capabilities(&self) -> Vec<Capability>;
-
-    /// Dependencies this provider requires from other ecosystem components
-    fn dependencies(&self) -> Vec<Dependency>;
-
-    /// Service endpoints for communication
-    fn endpoints(&self) -> ServiceEndpoints;
-
-    /// Current health status
-    async fn health_check(&self) -> HealthStatus;
-
-    /// Handle a generic service request
-    async fn handle_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse>;
-
-    /// Register with ecosystem discovery (SongBird)
-    async fn register_with_ecosystem(&self) -> BearDogResult<EcosystemRegistration>;
-
-    /// Initialize the provider with configuration
-    async fn initialize(&mut self, config: ProviderConfig) -> BearDogResult<()>;
-
-    /// Graceful shutdown
-    async fn shutdown(&mut self) -> BearDogResult<()>;
-
-    /// Check if this provider can handle the given request
-    fn can_handle_request(&self, request: &ServiceRequest) -> bool;
-
-    /// Get metadata about this provider
-    fn metadata(&self) -> ProviderMetadata;
-}
 
 /// Universal capability that any ecosystem component can advertise
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -79,9 +47,10 @@ pub struct Capability {
     /// Resource requirements
     pub resource_requirements: ResourceRequirements,
 }
-
 impl Capability {
-    /// Create a new capability
+    /// Create a new capability}
+
+
     pub fn new(
         id: String,
         name: String,
@@ -98,45 +67,22 @@ impl Capability {
             resource_requirements: ResourceRequirements::default(),
         }
     }
-
     /// Create a new capability with attributes
     pub fn with_attributes(
-        id: String,
-        name: String,
-        description: String,
-        category: CapabilityCategory,
         attributes: HashMap<String, CapabilityAttribute>,
-    ) -> Self {
-        Self {
-            id,
-            name,
-            description,
-            category,
             attributes,
-            qos: QualityOfService::default(),
-            resource_requirements: ResourceRequirements::default(),
-        }
-    }
-
     /// Add an attribute to this capability
     pub fn add_attribute(mut self, key: String, value: CapabilityAttribute) -> Self {
         self.attributes.insert(key, value);
         self
-    }
+    /// Set quality of service metrics}
 
-    /// Set quality of service metrics
+
     pub fn with_qos(mut self, qos: QualityOfService) -> Self {
         self.qos = qos;
-        self
-    }
-
     /// Set resource requirements
     pub fn with_resource_requirements(mut self, requirements: ResourceRequirements) -> Self {
         self.resource_requirements = requirements;
-        self
-    }
-}
-
 /// Universal capability categories
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CapabilityCategory {
@@ -156,10 +102,9 @@ pub enum CapabilityCategory {
     Integration,
     /// Custom domain-specific capability
     Custom(String),
-}
+/// Capability attribute with type information}
 
-/// Capability attribute with type information
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+
 pub struct CapabilityAttribute {
     /// Attribute value
     pub value: String,
@@ -169,10 +114,7 @@ pub struct CapabilityAttribute {
     pub required: bool,
     /// Human-readable description
     pub description: Option<String>,
-}
-
 /// Data types for capability attributes
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AttributeDataType {
     /// String data type
     String,
@@ -190,10 +132,9 @@ pub enum AttributeDataType {
     Duration,
     /// Bytes data type
     Bytes,
-}
+/// Quality of service metrics}
 
-/// Quality of service metrics
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+
 pub struct QualityOfService {
     /// Average response time in milliseconds
     pub avg_response_time_ms: u64,
@@ -203,19 +144,13 @@ pub struct QualityOfService {
     pub throughput: Option<ThroughputMetric>,
     /// Scalability information
     pub scalability: ScalabilityInfo,
-}
-
 /// Throughput measurement
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ThroughputMetric {
     /// Throughput value
     pub value: u64,
     /// Throughput unit (requests/sec, MB/sec, etc.)
     pub unit: String,
-}
-
 /// Scalability information
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ScalabilityInfo {
     /// Minimum instances
     pub min_instances: u32,
@@ -223,8 +158,6 @@ pub struct ScalabilityInfo {
     pub max_instances: u32,
     /// Auto-scaling supported
     pub auto_scaling: bool,
-}
-
 /// Resource requirements for a capability
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct ResourceRequirements {
@@ -238,38 +171,25 @@ pub struct ResourceRequirements {
     pub network: Option<ResourceRequirement>,
     /// Custom resource requirements
     pub custom: HashMap<String, ResourceRequirement>,
-}
-
 /// Individual resource requirement
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ResourceRequirement {
     /// Minimum required amount
     pub min: u64,
     /// Maximum required amount
     pub max: Option<u64>,
     /// Unit of measurement (cores, MB, GB/sec, etc.)
-    pub unit: String,
-}
-
 /// Service dependency
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Dependency {
     /// Dependency identifier
-    pub id: String,
     /// Dependency name
-    pub name: String,
     /// Dependency version or version range
     pub version: String,
     /// Whether this dependency is required
-    pub required: bool,
     /// Dependency category
     pub category: DependencyCategory,
     /// Configuration for this dependency
     pub config: Option<HashMap<String, serde_json::Value>>,
-}
-
 /// Types of dependencies
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DependencyCategory {
     /// Database dependency
     Database,
@@ -286,11 +206,9 @@ pub enum DependencyCategory {
     /// Another primal dependency
     Primal,
     /// Custom dependency type
-    Custom(String),
-}
+/// Service endpoints}
 
-/// Service endpoints
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+
 pub struct ServiceEndpoints {
     /// Primary service endpoint
     pub primary: String,
@@ -304,10 +222,7 @@ pub struct ServiceEndpoints {
     pub events: Option<String>,
     /// Custom endpoints
     pub custom: HashMap<String, String>,
-}
-
 /// Health status of a provider
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HealthStatus {
     /// Provider is healthy and operational
     Healthy,
@@ -324,7 +239,6 @@ pub enum HealthStatus {
         reason: String,
         /// Estimated recovery time
         recovery_time: Option<DateTime<Utc>>,
-    },
     /// Provider is starting up
     Starting,
     /// Provider is shutting down
@@ -333,10 +247,7 @@ pub enum HealthStatus {
     Warning,
     /// Provider is in critical state
     Critical,
-}
-
 /// Health impact level
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HealthImpact {
     /// Low impact - minor performance degradation
     Low,
@@ -344,13 +255,12 @@ pub enum HealthImpact {
     Medium,
     /// High impact - significant functionality affected
     High,
-}
-
 /// Service request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]}
+
+
 pub struct ServiceRequest {
     /// Request ID for tracking
-    pub id: String,
     /// Request type
     pub request_type: String,
     /// Source ecosystem component
@@ -365,68 +275,51 @@ pub struct ServiceRequest {
     pub timestamp: DateTime<Utc>,
     /// Request priority
     pub priority: RequestPriority,
-}
-
 /// Request priority levels
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RequestPriority {
     /// Low priority request
-    Low,
     /// Normal priority request
     Normal,
     /// High priority request
-    High,
     /// Critical priority request
-    Critical,
-}
+/// Service response}
 
-/// Service response
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct ServiceResponse {
     /// Original request ID
     pub request_id: String,
     /// Response success status
     pub success: bool,
     /// Response payload
-    pub payload: serde_json::Value,
     /// Response metadata
-    pub metadata: HashMap<String, String>,
     /// Response timestamp
-    pub timestamp: DateTime<Utc>,
     /// Error details (if any)
-    pub error: Option<ServiceError>,
-}
+    pub error: Option<ServiceError>,}
+
 
 impl ServiceResponse {
-    /// Create a successful response
+    /// Create a successful response}
+
+
     pub fn success(request_id: String, payload: serde_json::Value) -> Self {
-        Self {
             request_id,
             success: true,
             payload,
             metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
             error: None,
-        }
-    }
+    /// Create an error response}
 
-    /// Create an error response
+
     pub fn error(request_id: String, code: String, message: String) -> Self {
-        Self {
-            request_id,
             success: false,
             payload: serde_json::json!({}),
-            metadata: HashMap::new(),
-            timestamp: chrono::Utc::now(),
             error: Some(ServiceError {
                 code,
                 message,
                 details: None,
                 retryable: false,
             }),
-        }
-    }
-
     /// Create an error response with details
     pub fn error_with_details(
         request_id: String,
@@ -434,25 +327,9 @@ impl ServiceResponse {
         message: String,
         details: HashMap<String, serde_json::Value>,
         retryable: bool,
-    ) -> Self {
-        Self {
-            request_id,
-            success: false,
-            payload: serde_json::json!({}),
-            metadata: HashMap::new(),
-            timestamp: chrono::Utc::now(),
-            error: Some(ServiceError {
-                code,
-                message,
                 details: Some(details),
                 retryable,
-            }),
-        }
-    }
-}
-
 /// Service error
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceError {
     /// Error code
     pub code: String,
@@ -462,10 +339,7 @@ pub struct ServiceError {
     pub details: Option<HashMap<String, serde_json::Value>>,
     /// Whether this error is retryable
     pub retryable: bool,
-}
-
 /// Ecosystem registration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemRegistration {
     /// Registration ID
     pub registration_id: String,
@@ -483,10 +357,7 @@ pub struct EcosystemRegistration {
     pub capabilities: Vec<Capability>,
     /// Service endpoints
     pub endpoints: ServiceEndpoints,
-}
-
 /// Registration status
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum RegistrationStatus {
     /// Registration is pending approval
     Pending,
@@ -502,99 +373,40 @@ pub enum RegistrationStatus {
     Registered,
     /// Running in standalone mode (no ecosystem integration)
     Standalone,
-}
+/// Network configuration - CONSOLIDATED TO CANONICAL SYSTEM
+/// REPLACED: Local NetworkConfig definition  
+/// NOW USES: beardog_types::config::network::NetworkSecurityConfig
+/// This eliminates duplication and uses the unified network configuration system.
+pub use beardog_types::config::network::NetworkSecurityConfig as NetworkConfig;
+/// Connection pool configuration - CONSOLIDATED TO CANONICAL SYSTEM
+/// REPLACED: Local ConnectionPoolConfig definition
+/// NOW USES: beardog_types::config::network::ConnectionPoolConfig
+pub use beardog_types::config::network::ConnectionPoolConfig;
+/// Monitoring configuration - CONSOLIDATED TO CANONICAL SYSTEM
+/// REPLACED: Local MonitoringConfig definition
+/// NOW USES: beardog_types::config::monitoring::MonitoringConfig
+pub use beardog_types::config::monitoring::MonitoringConfig;
+/// Provider metadata - CONSOLIDATED TO CANONICAL SYSTEM
+/// REPLACED: Local ProviderMetadata definition  
+/// NOW USES: beardog_types::canonical::providers::ProviderMetadata
+pub use beardog_types::canonical::providers::ProviderMetadata;
+/// Default implementations for common patterns}
 
-/// Provider configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProviderConfig {
-    /// Provider-specific configuration
-    pub provider_config: HashMap<String, serde_json::Value>,
-    /// Ecosystem-wide configuration
-    pub ecosystem_config: HashMap<String, serde_json::Value>,
-    /// Network configuration
-    pub network_config: NetworkConfig,
-    /// Monitoring configuration
-    pub monitoring_config: MonitoringConfig,
-}
 
-/// Network configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NetworkConfig {
-    /// Listen address
-    pub listen_address: String,
-    /// Port number
-    pub port: u16,
-    /// TLS enabled
-    pub tls_enabled: bool,
-    /// Timeout settings
-    pub timeout_seconds: u64,
-    /// Connection pool settings
-    pub connection_pool: ConnectionPoolConfig,
-}
+impl Default for ServiceEndpoints {}
 
-/// Connection pool configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConnectionPoolConfig {
-    /// Maximum connections
-    pub max_connections: u32,
-    /// Connection timeout
-    pub connection_timeout_seconds: u64,
-    /// Idle timeout
-    pub idle_timeout_seconds: u64,
-}
 
-/// Monitoring configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MonitoringConfig {
-    /// Metrics collection enabled
-    pub metrics_enabled: bool,
-    /// Logging level
-    pub log_level: String,
-    /// Health check interval
-    pub health_check_interval_seconds: u64,
-}
-
-/// Provider metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProviderMetadata {
-    /// Provider name
-    pub name: String,
-    /// Provider version
-    pub version: String,
-    /// Provider description
-    pub description: String,
-    /// Provider author/maintainer
-    pub author: String,
-    /// Provider website
-    pub website: Option<String>,
-    /// Provider license
-    pub license: String,
-    /// Provider tags
-    pub tags: Vec<String>,
-    /// Custom metadata
-    pub custom: HashMap<String, String>,
-}
-
-/// Default implementations for common patterns
-impl Default for ServiceEndpoints {
     fn default() -> Self {
         let host = std::env::var("BEARDOG_SERVICE_HOST").unwrap_or_else(|_| "localhost".to_string());
         let port = std::env::var("BEARDOG_SERVICE_PORT").unwrap_or_else(|_| "8080".to_string());
         
-        Self {
             primary: format!("http://{}:{}", host, port),
             health: format!("http://{}:{}/health", host, port),
             metrics: Some(format!("http://{}:{}/metrics", host, port)),
             admin: None,
             events: None,
             custom: HashMap::new(),
-        }
-    }
-}
-
 impl Default for QualityOfService {
-    fn default() -> Self {
-        Self {
             avg_response_time_ms: 100,
             availability_percent: 99.9,
             throughput: None,
@@ -603,91 +415,45 @@ impl Default for QualityOfService {
                 max_instances: 10,
                 auto_scaling: false,
             },
-        }
-    }
-}
-
-impl Default for NetworkConfig {
-    fn default() -> Self {
-        Self {
-            listen_address: "0.0.0.0".to_string(),
-            port: 8080,
-            tls_enabled: false,
-            timeout_seconds: 30,
-            connection_pool: ConnectionPoolConfig {
-                max_connections: 100,
-                connection_timeout_seconds: 10,
-                idle_timeout_seconds: 60,
-            },
-        }
-    }
-}
-
-impl Default for MonitoringConfig {
-    fn default() -> Self {
-        Self {
-            metrics_enabled: true,
-            log_level: "info".to_string(),
-            health_check_interval_seconds: 30,
-        }
-    }
-}
-
+// Now using canonical MonitoringConfig::default() from beardog_types
 /// Comprehensive security context for ecosystem operations
 /// 
 /// Provides detailed context information for security decisions including
 /// user identity, device characteristics, risk assessment, and operational permissions.
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityContext {
     /// Unique context identifier
     pub context_id: String,
     
     /// User identifier
     pub user_id: String,
-    
     /// Device identifier
     pub device_id: String,
-    
     /// Context creation timestamp
     pub created_at: String,
-    
     /// Security clearance level (0-10, higher = more privileged)
     pub security_clearance_level: u8,
-    
     /// Risk score (0.0-1.0, higher = more risky)
     pub risk_score: f64,
-    
     /// Device trust level (0.0-1.0, higher = more trusted)
     pub device_trust_level: f64,
-    
     /// Network zone classification
     pub network_zone: String,
-    
     /// Operations allowed for this context
     pub allowed_operations: Vec<String>,
-    
     /// Operations explicitly denied for this context
     pub denied_operations: Vec<String>,
-    
     /// Additional context metadata
-    pub metadata: HashMap<String, String>,
-    
     /// Authentication token (optional)
     pub auth_token: Option<String>,
-    
     /// Session identifier (optional)
     pub session_id: Option<String>,
-    
     /// Client IP address (optional)
     pub client_ip: Option<String>,
-    
     /// User agent (optional)
-    pub user_agent: Option<String>,
-}
+    pub user_agent: Option<String>,}
+
 
 impl Default for SecurityContext {
-    fn default() -> Self {
-        Self {
             context_id: String::new(),
             user_id: String::new(),
             device_id: String::new(),
@@ -698,11 +464,7 @@ impl Default for SecurityContext {
             network_zone: "unknown".to_string(),
             allowed_operations: vec!["read".to_string()],
             denied_operations: vec![],
-            metadata: HashMap::new(),
             auth_token: None,
             session_id: None,
             client_ip: None,
             user_agent: None,
-        }
-    }
-}

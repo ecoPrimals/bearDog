@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 use std::time::Duration;
 use tokio::time::sleep;
 use serde_json::json;
@@ -8,7 +25,7 @@ use beardog_adapters::adapters::universal::songbird_handoff::{
     health::UniversalHealthMonitor,
 };
 use beardog_adapters::adapters::universal::beardog_provider::BearDogProvider;
-use beardog_config::BearDogConfig;
+use beardog_types::config::BearDogConfig;
 use beardog_errors::BearDogResult;
 
 /// Mock SongBird server for testing
@@ -148,7 +165,10 @@ async fn test_health_monitoring_comprehensive() -> BearDogResult<()> {
     let health_check_result = health_monitor.perform_health_check().await;
     assert!(health_check_result.is_ok());
     
-    let health_result = health_check_result.unwrap();
+    let health_result = health_check_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(health_result.response_time_ms >= 0.0);
     assert!(health_result.metrics.cpu_utilization >= 0.0);
     assert!(health_result.metrics.memory_utilization >= 0.0);
@@ -247,7 +267,10 @@ async fn test_concurrent_operations() -> BearDogResult<()> {
 
     // Wait for all concurrent operations to complete
     for handle in handles {
-        handle.await.unwrap();
+        handle.await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     }
 
     println!("✅ Concurrent operations completed successfully");

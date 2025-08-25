@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["TestStatus","ValidationSuiteType"],"fn":["execute_validation_suite_improved","validate_beardog_config_improved"],"struct":["TestCaseResult","TestMetrics","ValidationSuiteOutcome"]};

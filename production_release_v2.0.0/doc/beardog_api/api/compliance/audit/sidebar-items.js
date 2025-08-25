@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["export_audit_trail","get_audit_trail","log_audit_event","search_audit_trail"]};

@@ -1,16 +1,35 @@
-//! BearDog Universal Ecosystem Integration Adapters
-//!
-//! This module provides capability-based integration with the ecoPrimals ecosystem,
-//! following the Universal Primal Architecture Standard. Instead of hardcoded service
-//! integrations, this uses dynamic capability discovery and universal API patterns.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// # BearDog Universal Adapters
+///
+/// **CANONICAL ADAPTER SYSTEM** - Universal integration patterns for all primals
+/// This crate provides the unified adapter architecture that enables BearDog to
+/// integrate with any primal ecosystem through capability-based discovery and
+/// universal provider patterns.
+
+// Core re-exports for adapter implementations
+pub use beardog_types::canonical::providers::*;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
 // Import BearDogResult from errors crate
-pub use beardog_errors::{BearDogError, BearDogResult};
-
 pub mod adapters;
 pub mod ecosystem_integration;
 pub mod universal;
@@ -25,35 +44,43 @@ pub use universal::service_registration::{ServiceMetadata, UniversalServiceRegis
 
 // Import UniversalRequest and UniversalResponse from http_adapter
 pub use universal::http_adapter::{UniversalRequest, UniversalResponse};
-
 pub use ecosystem_integration::EcosystemIntegration;
+
 pub use universal::{
     BridgeAdapter, BridgeConfig, HttpAdapter, ProtocolAdapter, SecurityProviderBridge,
 };
 
-/// Universal Ecosystem Integration Result
-pub type EcosystemResult<T> = Result<T, EcosystemError>;
+// Use canonical BearDogResult instead of custom EcosystemResult
+pub use beardog_errors::BearDogResult;
 
-/// Universal ecosystem integration errors
-#[derive(Debug, thiserror::Error)]
-pub enum EcosystemError {
-    #[error("Capability not found: {capability}")]
-    CapabilityNotFound { capability: String },
+// Convert EcosystemError variants to use BearDogError instead
+pub use beardog_errors::BearDogError;
 
-    #[error("Service registration failed: {reason}")]
-    RegistrationFailed { reason: String },
-
-    #[error("Integration error: {message}")]
-    IntegrationError { message: String },
-
-    #[error("Configuration error: {message}")]
-    ConfigurationError { message: String },
-
-    #[error("Network error: {source}")]
-    NetworkError {
-        #[from]
-        source: reqwest::Error,
-    },
+// Helper functions to convert from EcosystemError patterns to BearDogError
+impl BearDogError {
+    pub fn capability_not_found(capability: impl Into<String>) -> Self {
+        Self::NotFound {
+            message: format!("Capability not found: {}", capability.into()),
+        }
+    }
+    
+    pub fn registration_failed(reason: impl Into<String>) -> Self {
+        Self::External {
+            message: format!("Service registration failed: {}", reason.into()),
+        }
+    }
+    
+    pub fn integration_failed(reason: impl Into<String>) -> Self {
+        Self::External {
+            message: format!("Integration failed: {}", reason.into()),
+        }
+    }
+    
+    pub fn protocol_error(message: impl Into<String>) -> Self {
+        Self::Protocol {
+            message: message.into(),
+        }
+    }
 }
 
 /// Universal AI-First response format following ecosystem standard
@@ -61,25 +88,18 @@ pub enum EcosystemError {
 pub struct AIFirstResponse<T> {
     /// Operation success status (machine-readable)
     pub success: bool,
-
     /// Strongly-typed response data
     pub data: T,
-
     /// AI-optimized error information
     pub error: Option<AIFirstError>,
-
     /// Unique request identifier for tracing and correlation
     pub request_id: Uuid,
-
     /// Processing time in milliseconds for performance monitoring
     pub processing_time_ms: u64,
-
     /// AI-specific metadata for decision making
     pub ai_metadata: AIResponseMetadata,
-
     /// Confidence score for AI decision making (0.0 - 1.0)
     pub confidence_score: f64,
-
     /// Suggested next actions for AI agents
     pub suggested_actions: Vec<SuggestedAction>,
 }
@@ -154,7 +174,9 @@ pub struct ResourceUsage {
 impl<T> Default for AIFirstResponse<T>
 where
     T: Default,
-{
+{}
+
+
     fn default() -> Self {
         Self {
             success: true,
@@ -180,7 +202,9 @@ impl Default for AIResponseMetadata {
     }
 }
 
-impl Default for ResourceUsage {
+impl Default for ResourceUsage {}
+
+
     fn default() -> Self {
         Self {
             cpu_percent: 0.0,

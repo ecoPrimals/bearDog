@@ -1,75 +1,33 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 // use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
 /// HSM tier enumeration - defines the different types of HSMs available  
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-pub enum HsmTier {
-    /// Tier 1: Smartphone HSM (Most Accessible)
-    /// - iOS Secure Enclave, Android StrongBox
-    /// - Always available, user-controlled
-    /// - Good for personal keys, authentication
-    SmartphoneHsm {
-        /// Type of smartphone device (iPhone or Android)
-        device_type: SmartphoneType,
-        /// Secure enclave implementation type
-        secure_enclave: SecureEnclaveType,
-        /// Level of attestation provided by the device
-        attestation_level: AttestationLevel,
-        /// Whether user presence is required for operations
-        user_presence_required: bool,
-    },
-
-    /// Tier 2: Software HSM (Scalable)
-    /// - Rust-based implementation
-    /// - Encrypted key storage
-    /// - Good for development, testing, light production
-    SoftwareHsm {
-        /// Software HSM implementation type
-        implementation: SoftwareHsmType,
-        /// Key storage backend configuration
-        key_storage: KeyStorageType,
-        /// Whether encryption at rest is enabled
-        encryption_at_rest: bool,
-        /// Memory protection level for key material
-        memory_protection: MemoryProtectionLevel,
-    },
-
-    /// Tier 3: Hardware HSM (Highest Security)
-    /// - FIPS 140-2 Level 3+ certified
-    /// - Tamper-resistant hardware
-    /// - Good for root keys, high-value operations
-    HardwareHsm {
-        /// Hardware HSM vendor
-        vendor: HsmVendor,
-        /// HSM model identifier
-        model: String,
-        /// Security certification level
-        certification: CertificationLevel,
-        /// Tamper resistance capabilities
-        tamper_resistance: TamperResistanceLevel,
-    },
-
-    /// Tier 4: Hybrid HSM (Best of All Worlds)
-    /// - Combines multiple HSM types
-    /// - Hierarchical key management
-    /// - Optimal security and performance
-    HybridHsm {
-        /// List of HSM tiers in the hybrid configuration
-        tiers: Vec<Box<HsmTier>>,
-        /// Key hierarchy management strategy
-        key_hierarchy: KeyHierarchy,
-        /// Fallback strategy for HSM failures
-        fallback_strategy: Box<FallbackStrategy>,
-    },
-}
-
 /// Smartphone device types
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum SmartphoneType {
     /// iPhone device with iOS and Secure Enclave
     IPhone {
-        /// iPhone model (e.g., "iPhone 14 Pro")
+        /// iPhone model (e.g., "iPhone 14 Pro")}
+
+
         model: String,
         /// iOS version (e.g., "16.0")
         ios_version: String,
@@ -81,16 +39,12 @@ pub enum SmartphoneType {
         /// Device manufacturer (e.g., "Google", "Samsung")
         manufacturer: String,
         /// Device model (e.g., "Pixel 7", "Galaxy S23")
-        model: String,
         /// Android version (e.g., "13", "14")
         android_version: String,
         /// Optional StrongBox version identifier
         strongbox_version: Option<String>,
-    },
 }
-
 /// Secure enclave types for smartphone HSMs
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum SecureEnclaveType {
     /// iOS Secure Enclave
     IosSecureEnclave {
@@ -100,18 +54,14 @@ pub enum SecureEnclaveType {
         biometric_support: bool,
         /// Whether key attestation is supported
         key_attestation: bool,
-    },
-
     /// Android StrongBox
     AndroidStrongBox {
-        /// StrongBox implementation type
+        /// StrongBox implementation type}
+
+
         implementation: StrongBoxImplementation,
         /// Whether the implementation is hardware-backed
         hardware_backed: bool,
-        /// Whether key attestation is supported
-        key_attestation: bool,
-    },
-
     /// Generic trusted execution environment
     TrustedExecutionEnvironment {
         /// TEE vendor name
@@ -120,11 +70,9 @@ pub enum SecureEnclaveType {
         tee_type: String,
         /// Optional security certification
         certification: Option<String>,
-    },
-}
+/// StrongBox implementation types}
 
-/// StrongBox implementation types
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+
 pub enum StrongBoxImplementation {
     /// Google Titan M chip
     TitanM {
@@ -132,32 +80,29 @@ pub enum StrongBoxImplementation {
         version: String,
         /// Security level provided by the chip
         security_level: String,
-    },
     /// Qualcomm Secure Processing Unit
     QualcommSpu {
         /// SPU version
-        version: String,
         /// Type of SPU implementation
         spu_type: String,
-    },
     /// Samsung Knox
     SamsungKnox {
         /// Knox version
-        version: String,
         /// Knox security level
-        security_level: String,
-    },
     /// Generic StrongBox implementation
     Generic {
         /// Vendor name
-        vendor: String,
-        /// Implementation version
-        version: String,
-    },
-}
+        /// Implementation version}
 
+
+impl Default for StrongBoxImplementation {
+    fn default() -> Self {
+        Self::Generic {
+            vendor: "Generic".to_string(),
+            version: "1.0".to_string(),
+        }
+    }
 /// Software HSM implementation types
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum SoftwareHsmType {
     /// Rust-based implementation (default)
     RustSoftwareHsm,
@@ -165,40 +110,32 @@ pub enum SoftwareHsmType {
     OpenSslSoftwareHsm,
     /// Custom implementation
     Custom(String),
-}
+/// Key storage backend types}
 
-/// Key storage backend types
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+
 pub enum KeyStorageType {
+    /// In-memory storage (not persistent)
+    InMemory,
     /// Encrypted file storage
     EncryptedFile,
-    /// In-memory storage (temporary)
-    InMemory,
     /// Database storage
     Database,
-    /// Custom storage implementation
-    Custom(String),
-}
+    /// Custom storage backend
+/// Memory protection level for key material}
 
-/// Memory protection levels for key material
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+
 pub enum MemoryProtectionLevel {
     /// No special memory protection
     None,
-    /// Basic memory protection (encrypted)
+    /// Basic memory protection
     Basic,
-    /// Advanced memory protection (encrypted + locked)
-    Advanced,
-    /// High memory protection (encrypted + locked + isolated)
+    /// High memory protection with secure allocation
     High,
-    /// Maximum memory protection (encrypted + locked + isolated + hardware)
+    /// Enhanced memory protection with encryption
+    Enhanced,
+    /// Maximum security with hardware-backed protection
     Maximum,
-    /// Hardware-backed memory protection
-    Hardware,
-}
-
 /// HSM vendor enumeration
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum HsmVendor {
     /// Thales (formerly SafeNet)
     Thales,
@@ -211,14 +148,11 @@ pub enum HsmVendor {
     /// Entrust
     Entrust,
     /// Custom vendor
-    Custom(String),
-}
+/// Security certification levels}
 
-/// Security certification levels
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+
 pub enum CertificationLevel {
     /// No formal certification
-    None,
     /// FIPS 140-2 Level 1
     Fips140Level1,
     /// FIPS 140-2 Level 2
@@ -230,14 +164,9 @@ pub enum CertificationLevel {
     /// Common Criteria EAL4+
     CommonCriteriaEal4Plus,
     /// Custom certification
-    Custom(String),
-}
-
 /// Tamper resistance levels
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum TamperResistanceLevel {
     /// No tamper resistance
-    None,
     /// Tamper evident (detects tampering)
     TamperEvident,
     /// Tamper resistant (resists tampering)
@@ -250,10 +179,9 @@ pub enum TamperResistanceLevel {
     Software,
     /// Hardware destruction on tampering
     HardwareDestruction,
-}
+/// Key hierarchy management strategies}
 
-/// Key hierarchy management strategies
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+
 pub enum KeyHierarchy {
     /// Flat key hierarchy (all keys at same level)
     Flat,
@@ -262,11 +190,7 @@ pub enum KeyHierarchy {
     /// Tree-based key hierarchy
     Tree,
     /// Custom hierarchy strategy
-    Custom(String),
-}
-
 /// Fallback strategies for HSM failures
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum FallbackStrategy {
     /// Fail immediately on HSM failure
     FailFast,
@@ -275,24 +199,17 @@ pub enum FallbackStrategy {
     /// Fallback to software HSM
     FallbackToSoftware,
     /// Custom fallback strategy
-    Custom(String),
-}
+/// Attestation levels for device security}
 
-/// Attestation levels for device security
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+
 pub enum AttestationLevel {
     /// No attestation available
-    None,
     /// Basic attestation (software-based)
-    Basic,
     /// Hardware-backed attestation
-    Hardware,
     /// Strong attestation with remote verification
     Strong,
     /// Certified hardware attestation
     CertifiedHardware,
-}
-
 // Add the missing AndroidKeyAlgorithm type
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum AndroidKeyAlgorithm {
@@ -304,10 +221,12 @@ pub enum AndroidKeyAlgorithm {
     Ed25519,
     Aes128,
     Aes256,
-    Hmac,
-}
+    Hmac,}
 
-impl fmt::Display for AndroidKeyAlgorithm {
+
+impl fmt::Display for AndroidKeyAlgorithm {}
+
+
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AndroidKeyAlgorithm::Rsa2048 => write!(f, "RSA-2048"),
@@ -318,17 +237,11 @@ impl fmt::Display for AndroidKeyAlgorithm {
             AndroidKeyAlgorithm::Ed25519 => write!(f, "Ed25519"),
             AndroidKeyAlgorithm::Aes128 => write!(f, "AES-128"),
             AndroidKeyAlgorithm::Aes256 => write!(f, "AES-256"),
-            AndroidKeyAlgorithm::Hmac => write!(f, "HMAC"),
-        }
-    }
-}
+            AndroidKeyAlgorithm::Hmac => write!(f, "HMAC"),}
+
 
 impl Default for AndroidKeyAlgorithm {
-    fn default() -> Self {
         AndroidKeyAlgorithm::EcP256
-    }
-}
-
 // Duplicate HsmTier enum removed - using the detailed version above
-// The simple Hardware/Software/Hybrid/Cloud variants are available 
+// The simple Hardware/Software/Hybrid/Cloud variants are available
 // through the detailed enum's pattern matching

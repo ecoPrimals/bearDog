@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 use beardog::compliance::types::ComplianceEvent;
 use beardog::config::EncryptionConfig;
 use beardog::node_registry::TrustLevel;
@@ -31,7 +48,10 @@ async fn test_beardog_core_initialization() {
 
     assert!(result.is_ok(), "Core initialization should not timeout");
     assert!(
-        result.unwrap().is_ok(),
+        result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?.is_ok(),
         "Core initialization should succeed"
     );
     println!("✅ Core initialization: PASS");
@@ -99,7 +119,10 @@ async fn test_crypto_operations_reliability() {
     .await;
 
     assert!(result.is_ok(), "Crypto operations should not timeout");
-    assert!(result.unwrap().is_ok(), "Crypto operations should succeed");
+    assert!(result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?.is_ok(), "Crypto operations should succeed");
     println!("✅ Cryptographic reliability: PASS");
 }
 
@@ -196,7 +219,10 @@ async fn test_concurrent_operations_stability() {
 
     assert!(result.is_ok(), "Concurrent operations should not timeout");
     assert!(
-        result.unwrap().is_ok(),
+        result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?.is_ok(),
         "All concurrent operations should succeed"
     );
     println!("✅ Concurrent operations stability: PASS");
@@ -237,7 +263,10 @@ async fn test_memory_safety_under_load() {
 
     assert!(result.is_ok(), "Memory safety test should not timeout");
     assert!(
-        result.unwrap().is_ok(),
+        result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?.is_ok(),
         "Memory safety should be maintained under load"
     );
     println!("✅ Memory safety under load: PASS");
@@ -290,7 +319,10 @@ async fn test_graceful_degradation() {
         "Graceful degradation test should not timeout"
     );
     assert!(
-        result.unwrap().is_ok(),
+        result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?.is_ok(),
         "System should handle increasing load gracefully"
     );
     println!("✅ Graceful degradation: PASS");
@@ -397,7 +429,10 @@ async fn test_forest_protection_integrity() {
         "Forest protection integrity test should not timeout"
     );
     assert!(
-        result.unwrap().is_ok(),
+        result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?.is_ok(),
         "Complete forest protection should be validated"
     );
 

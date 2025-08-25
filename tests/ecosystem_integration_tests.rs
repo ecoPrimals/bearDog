@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Ecosystem Integration Tests
 //!
 //! Tests for BearDog integration with ToadStool compute orchestration
@@ -304,7 +321,10 @@ async fn test_ecosystem_service_discovery() -> BearDogResult<()> {
 
     // Test that BearDog can format service registration for ecosystem
     let registration_json = serde_json::to_string(&service_registration)
-        .expect("Should serialize service registration");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Should serialize service registration", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Should serialize service registration", e))
+})?;
 
     assert!(registration_json.contains("SecurityProvider"));
     assert!(registration_json.contains("beardog-security-node-001"));

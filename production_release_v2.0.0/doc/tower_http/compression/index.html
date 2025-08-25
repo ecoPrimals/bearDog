@@ -1,0 +1,56 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Middleware that compresses response bodies."><title>tower_http::compression - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tower_http" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-4e99c027.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../tower_http/index.html">tower_<wbr>http</a><span class="version">0.4.4</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module compression</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#example" title="Example">Example</a></li></ul><h3><a href="#modules">Module Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#structs" title="Structs">Structs</a></li><li><a href="#enums" title="Enums">Enums</a></li><li><a href="#traits" title="Traits">Traits</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="../index.html">In crate tower_<wbr>http</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">tower_http</a></div><h1>Module <span>compression</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/tower_http/compression/mod.rs.html#1-419">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Middleware that compresses response bodies.</p>
+<h2 id="example"><a class="doc-anchor" href="#example">§</a>Example</h2>
+<p>Example showing how to respond with the compressed contents of a file.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>bytes::{Bytes, BytesMut};
+<span class="kw">use </span>http::{Request, Response, header::ACCEPT_ENCODING};
+<span class="kw">use </span>http_body::Body <span class="kw">as _</span>; <span class="comment">// for Body::data
+</span><span class="kw">use </span>hyper::Body;
+<span class="kw">use </span>std::convert::Infallible;
+<span class="kw">use </span>tokio::fs::{<span class="self">self</span>, File};
+<span class="kw">use </span>tokio_util::io::ReaderStream;
+<span class="kw">use </span>tower::{Service, ServiceExt, ServiceBuilder, service_fn};
+<span class="kw">use </span>tower_http::{compression::CompressionLayer, BoxError};
+
+<span class="kw">async fn </span>handle(req: Request&lt;Body&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Response&lt;Body&gt;, Infallible&gt; {
+    <span class="comment">// Open the file.
+    </span><span class="kw">let </span>file = File::open(<span class="string">"Cargo.toml"</span>).<span class="kw">await</span>.expect(<span class="string">"file missing"</span>);
+    <span class="comment">// Convert the file into a `Stream`.
+    </span><span class="kw">let </span>stream = ReaderStream::new(file);
+    <span class="comment">// Convert the `Stream` into a `Body`.
+    </span><span class="kw">let </span>body = Body::wrap_stream(stream);
+    <span class="comment">// Create response.
+    </span><span class="prelude-val">Ok</span>(Response::new(body))
+}
+
+<span class="kw">let </span><span class="kw-2">mut </span>service = ServiceBuilder::new()
+    <span class="comment">// Compress responses based on the `Accept-Encoding` header.
+    </span>.layer(CompressionLayer::new())
+    .service_fn(handle);
+
+<span class="comment">// Call the service.
+</span><span class="kw">let </span>request = Request::builder()
+    .header(ACCEPT_ENCODING, <span class="string">"gzip"</span>)
+    .body(Body::empty())<span class="question-mark">?</span>;
+
+<span class="kw">let </span>response = service
+    .ready()
+    .<span class="kw">await</span><span class="question-mark">?
+    </span>.call(request)
+    .<span class="kw">await</span><span class="question-mark">?</span>;
+
+<span class="macro">assert_eq!</span>(response.headers()[<span class="string">"content-encoding"</span>], <span class="string">"gzip"</span>);
+
+<span class="comment">// Read the body
+</span><span class="kw">let </span><span class="kw-2">mut </span>body = response.into_body();
+<span class="kw">let </span><span class="kw-2">mut </span>bytes = BytesMut::new();
+<span class="kw">while let </span><span class="prelude-val">Some</span>(chunk) = body.data().<span class="kw">await </span>{
+    <span class="kw">let </span>chunk = chunk<span class="question-mark">?</span>;
+    bytes.extend_from_slice(<span class="kw-2">&amp;</span>chunk[..]);
+}
+<span class="kw">let </span>bytes: Bytes = bytes.freeze();
+
+<span class="comment">// The compressed body should be smaller 🤞
+</span><span class="kw">let </span>uncompressed_len = fs::read_to_string(<span class="string">"Cargo.toml"</span>).<span class="kw">await</span><span class="question-mark">?</span>.len();
+<span class="macro">assert!</span>(bytes.len() &lt; uncompressed_len);</code></pre></div>
+</div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="predicate/index.html" title="mod tower_http::compression::predicate">predicate</a></dt><dd>Predicates for disabling compression of responses.</dd></dl><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.Compression.html" title="struct tower_http::compression::Compression">Compression</a></dt><dd>Compress response bodies of the underlying service.</dd><dt><a class="struct" href="struct.CompressionBody.html" title="struct tower_http::compression::CompressionBody">Compression<wbr>Body</a></dt><dd>Response body of <a href="struct.Compression.html" title="struct tower_http::compression::Compression"><code>Compression</code></a>.</dd><dt><a class="struct" href="struct.CompressionLayer.html" title="struct tower_http::compression::CompressionLayer">Compression<wbr>Layer</a></dt><dd>Compress response bodies of the underlying service.</dd><dt><a class="struct" href="struct.DefaultPredicate.html" title="struct tower_http::compression::DefaultPredicate">Default<wbr>Predicate</a></dt><dd>The default predicate used by <a href="struct.Compression.html" title="struct tower_http::compression::Compression"><code>Compression</code></a> and <a href="struct.CompressionLayer.html" title="struct tower_http::compression::CompressionLayer"><code>CompressionLayer</code></a>.</dd><dt><a class="struct" href="struct.ResponseFuture.html" title="struct tower_http::compression::ResponseFuture">Response<wbr>Future</a></dt><dd>Response future of <a href="struct.Compression.html" title="struct tower_http::compression::Compression"><code>Compression</code></a>.</dd></dl><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><dl class="item-table"><dt><a class="enum" href="enum.CompressionLevel.html" title="enum tower_http::compression::CompressionLevel">Compression<wbr>Level</a></dt><dd>Level of compression data should be compressed with.</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.Predicate.html" title="trait tower_http::compression::Predicate">Predicate</a></dt><dd>Predicate used to determine if a response should be compressed or not.</dd></dl></section></div></main></body></html>

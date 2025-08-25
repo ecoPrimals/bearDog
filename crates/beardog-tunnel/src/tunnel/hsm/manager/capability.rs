@@ -1,25 +1,37 @@
-//! # HSM Capability Detection
-//!
-//! This module provides capability detection and recommendation for HSM providers,
-//! including tier recommendation based on security requirements.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// # HSM Capability Detection
+///
+/// This module provides capability detection and recommendation for HSM providers,
+/// including tier recommendation based on security requirements.
 
 use super::{HsmCapabilityDetector, SecurityLevel, SecurityRequirements};
-use crate::tunnel::hsm::types::{
-    AttestationLevel, CertificationLevel, HsmCapability, HsmTier, HsmVendor, KeyStorageType,
-    MemoryProtectionLevel, SecureEnclaveType, SmartphoneType, SoftwareHsmType,
-    StrongBoxImplementation, TamperResistanceLevel,
-};
+use crate::tunnel::hsm::types::HsmCapability;
 use async_trait::async_trait;
+use beardog_core::HsmTier; // Use the core HsmTier instead of local one
 use beardog_errors::BearDogResult;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-
 /// Default HSM capability detector
 pub struct DefaultHsmCapabilityDetector {
     pub(crate) provider_capabilities: Arc<RwLock<HashMap<String, Vec<HsmCapability>>>>,
 }
-
 impl DefaultHsmCapabilityDetector {
     /// Create a new HSM capability detector with default settings
     pub async fn new() -> BearDogResult<Self> {
@@ -27,9 +39,7 @@ impl DefaultHsmCapabilityDetector {
             provider_capabilities: Arc::new(RwLock::new(HashMap::new())),
         })
     }
-}
 
-#[async_trait]
 impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
     async fn detect_capabilities(&self) -> BearDogResult<Vec<HsmCapability>> {
         // Return common capabilities that most HSMs support
@@ -39,31 +49,26 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
             HsmCapability::Encryption,
             HsmCapability::Decryption,
         ];
+        Ok(capabilities)}
 
-        Ok(capabilities)
-    }
 
     async fn is_hsm_available(&self, hsm_type: &HsmTier) -> BearDogResult<bool> {
         match hsm_type {
-            HsmTier::SoftwareHsm { .. } => Ok(true), // Software HSM always available
-            HsmTier::SmartphoneHsm { .. } => {
-                // Check if smartphone HSM is available
-                // For now, assume it's available if we're on a mobile platform
-                Ok(true)
-            }
-            HsmTier::HardwareHsm { .. } => {
+            HsmTier::Software => Ok(true), // Software HSM always available
+            HsmTier::Hardware => {
                 // Check if hardware HSM is available
-                // For now, assume it's not available unless explicitly configured
-                Ok(false)
+                Ok(self
+                    .check_hardware_hsm_availability()
+                    .await
+                    .unwrap_or(false))
             }
-            HsmTier::HybridHsm { .. } => {
-                // Check if hybrid HSM is available
-                // For now, assume it's not available unless explicitly configured
-                Ok(false)
-            }
+            HsmTier::SmartCard => {
+                // Check if smart card HSM is available
+                Ok(self.check_smartcard_availability().await.unwrap_or(false))
+            HsmTier::CloudHsm => {
+                // Check if cloud HSM is available
+                Ok(self.check_cloud_hsm_availability().await.unwrap_or(false))
         }
-    }
-
     async fn recommend_hsm_tier(
         &self,
         requirements: &SecurityRequirements,
@@ -72,125 +77,29 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
         match requirements.security_level {
             SecurityLevel::Basic => {
                 // Basic security - software HSM is sufficient
-                Ok(HsmTier::SoftwareHsm {
-                    implementation: SoftwareHsmType::RustSoftwareHsm,
-                    key_storage: KeyStorageType::EncryptedFile,
-                    encryption_at_rest: true,
-                    memory_protection: MemoryProtectionLevel::Basic,
-                })
-            }
+                Ok(HsmTier::Software)
             SecurityLevel::Medium => {
-                // Medium security - prefer smartphone HSM if available
-                if requirements.hardware_backed_required {
-                    Ok(HsmTier::SmartphoneHsm {
-                        device_type: SmartphoneType::Android {
-                            manufacturer: "Google".to_string(),
-                            model: "Pixel".to_string(),
-                            android_version: "13".to_string(),
-                            strongbox_version: Some("1.0".to_string()),
-                        },
-                        secure_enclave: SecureEnclaveType::AndroidStrongBox {
-                            implementation: StrongBoxImplementation::TitanM {
-                                version: "1.0".to_string(),
-                                security_level: "StrongBox".to_string(),
-                            },
-                            hardware_backed: true,
-                            key_attestation: true,
-                        },
-                        attestation_level: AttestationLevel::Hardware,
-                        user_presence_required: false,
-                    })
-                } else {
-                    Ok(HsmTier::SoftwareHsm {
-                        implementation: SoftwareHsmType::RustSoftwareHsm,
-                        key_storage: KeyStorageType::EncryptedFile,
-                        encryption_at_rest: true,
-                        memory_protection: MemoryProtectionLevel::High,
-                    })
-                }
-            }
+                // Medium security - smart card HSM recommended
+                Ok(HsmTier::SmartCard)
             SecurityLevel::High => {
-                // High security - require hardware-backed HSM
-                if requirements.user_interaction_required {
-                    Ok(HsmTier::SmartphoneHsm {
-                        device_type: SmartphoneType::Android {
-                            manufacturer: "Google".to_string(),
-                            model: "Pixel".to_string(),
-                            android_version: "13".to_string(),
-                            strongbox_version: Some("1.0".to_string()),
-                        },
-                        secure_enclave: SecureEnclaveType::AndroidStrongBox {
-                            implementation: StrongBoxImplementation::TitanM {
-                                version: "1.0".to_string(),
-                                security_level: "StrongBox".to_string(),
-                            },
-                            hardware_backed: true,
-                            key_attestation: true,
-                        },
-                        attestation_level: AttestationLevel::Hardware,
-                        user_presence_required: true,
-                    })
-                } else {
-                    Ok(HsmTier::HardwareHsm {
-                        vendor: HsmVendor::Custom("YubiKey".to_string()),
-                        model: "YubiHSM2".to_string(),
-                        certification: CertificationLevel::Fips140Level2,
-                        tamper_resistance: TamperResistanceLevel::Hardware,
-                    })
-                }
-            }
-            SecurityLevel::Maximum => {
-                // Maximum security - require certified hardware HSM
-                if requirements.user_interaction_required {
-                    Ok(HsmTier::SmartphoneHsm {
-                        device_type: SmartphoneType::Android {
-                            manufacturer: "Google".to_string(),
-                            model: "Pixel".to_string(),
-                            android_version: "13".to_string(),
-                            strongbox_version: Some("1.0".to_string()),
-                        },
-                        secure_enclave: SecureEnclaveType::AndroidStrongBox {
-                            implementation: StrongBoxImplementation::TitanM {
-                                version: "1.0".to_string(),
-                                security_level: "StrongBox".to_string(),
-                            },
-                            hardware_backed: true,
-                            key_attestation: true,
-                        },
-                        attestation_level: AttestationLevel::CertifiedHardware,
-                        user_presence_required: true,
-                    })
-                } else {
-                    Ok(HsmTier::HardwareHsm {
-                        vendor: HsmVendor::Thales,
-                        model: "Luna".to_string(),
-                        certification: CertificationLevel::Fips140Level3,
-                        tamper_resistance: TamperResistanceLevel::HardwareDestruction,
-                    })
-                }
-            }
-        }
-    }
-}
+                // High security - hardware HSM recommended
+                Ok(HsmTier::Hardware)
+            SecurityLevel::Critical => {
+                // Critical security - cloud HSM with hardware backing
+                Ok(HsmTier::CloudHsm)
+    /// Get cached provider capabilities}
 
-impl DefaultHsmCapabilityDetector {
-    /// Get cached provider capabilities
+
     pub async fn get_provider_capabilities(
-        &self,
         provider_id: &str,
     ) -> BearDogResult<Vec<HsmCapability>> {
         let capabilities = self.provider_capabilities.read().await;
         Ok(capabilities.get(provider_id).cloned().unwrap_or_default())
-    }
-
     /// Update provider capabilities cache
     pub async fn update_provider_capabilities(
-        &self,
         provider_id: String,
         capabilities: Vec<HsmCapability>,
     ) -> BearDogResult<()> {
         let mut provider_capabilities = self.provider_capabilities.write().await;
         provider_capabilities.insert(provider_id, capabilities);
         Ok(())
-    }
-}

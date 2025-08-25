@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AutomatedCheck","EscalationCondition"],"fn":["process_automated_consensus","process_emergency_spawn","process_human_approval","process_hybrid_approval"]};

@@ -8,7 +8,8 @@ authors.workspace = true
 
 [dependencies]
 beardog-errors = { workspace = true }
-beardog-config = { workspace = true }
+# beardog-config removed - use beardog-types::config::complete_unified
+beardog-types = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -19,6 +20,7 @@ thiserror = { workspace = true }
 async-trait = { workspace = true }
 futures = { workspace = true }
 rand = { workspace = true }
+parking_lot = "0.12"
 
 # Dependencies for notification system
 reqwest = { workspace = true }

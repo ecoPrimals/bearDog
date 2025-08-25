@@ -35,7 +35,7 @@ use beardog_core::BearDogCore;
 use beardog_errors::BearDogResult;
 use beardog_tunnel::hsm::android_strongbox::AndroidStrongBoxHsm;
 use beardog_tunnel::hsm::types::*;
-use beardog_tunnel::hsm::HsmProvider;
+use beardog_traits::canonical::HsmProvider;
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

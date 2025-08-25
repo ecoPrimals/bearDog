@@ -1,0 +1,2 @@
+Target: <50ms per threat analysis operation
+Expected throughput: >20 operations/second

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BearDogError","EcosystemError"],"mod":["adapters","ecosystem_integration","universal"],"struct":["AIFirstError","AIFirstResponse","AIResponseMetadata","ResourceUsage","RetryStrategy","SuggestedAction"],"type":["BearDogResult","EcosystemResult"]};

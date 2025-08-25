@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["create_compliance_policy","delete_compliance_policy","get_compliance_policy","list_compliance_policies","update_compliance_policy"]};

@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Benchmark utilities and helpers
 
 use std::time::Duration;
@@ -25,8 +42,8 @@ pub fn calculate_stats(measurements: &[Duration]) -> BenchmarkStats {
     BenchmarkStats {
         mean_ns: mean,
         std_dev_ns: std_dev,
-        min_ns: measurements.iter().min().unwrap().as_nanos() as f64,
-        max_ns: measurements.iter().max().unwrap().as_nanos() as f64,
+        min_ns: measurements.iter().min().map(|d| d.as_nanos() as f64).unwrap_or(0.0),
+        max_ns: measurements.iter().max().map(|d| d.as_nanos() as f64).unwrap_or(0.0),
         count: measurements.len(),
     }
 }

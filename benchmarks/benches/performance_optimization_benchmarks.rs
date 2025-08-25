@@ -1,4 +1,21 @@
-use beardog_config::*;
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+use beardog_types::config::*;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use std::time::Duration;
 use tokio::runtime::Runtime;
@@ -20,7 +37,10 @@ fn benchmark_database_config(c: &mut Criterion) {
             &config,
             |b, config| {
                 b.iter(|| {
-                    config.validate().unwrap();
+                    config.validate().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                 });
             },
         );
@@ -30,7 +50,10 @@ fn benchmark_database_config(c: &mut Criterion) {
             &config,
             |b, config| {
                 b.iter(|| {
-                    toml::to_string(&config).unwrap();
+                    toml::to_string(&config).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                 });
             },
         );
@@ -141,7 +164,10 @@ fn benchmark_unified_config(c: &mut Criterion) {
             &config,
             |b, config| {
                 b.iter(|| {
-                    config.validate().unwrap();
+                    config.validate().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                 });
             },
         );
@@ -174,7 +200,10 @@ fn benchmark_unified_config(c: &mut Criterion) {
 fn benchmark_parallel_processing_simulation(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_processing");
 
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+})?;
     let configs = vec![
         ("default", AsyncOptimizationConfig::default()),
         ("production", AsyncOptimizationConfig::production()),

@@ -1,8 +1,24 @@
-//! Commercial Extraction Detection Engine
-//!
-//! Revolutionary system for distinguishing human users from commercial extraction attempts.
-//! Core principle: "Open gates for humans, locked tight for commercial extraction"
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+/// Commercial Extraction Detection Engine
+///
+/// Revolutionary system for distinguishing human users from commercial extraction attempts.
+/// Core principle: "Open gates for humans, locked tight for commercial extraction"
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,7 +26,6 @@ use std::collections::HashMap;
 
 // Import the correct UniversalRequest type that matches capability_adapter
 pub use crate::adapters::universal::UniversalRequest;
-
 /// Advanced commercial extraction detection engine
 #[derive(Debug, Clone)]
 pub struct CommercialExtractionDetector {
@@ -21,7 +36,6 @@ pub struct CommercialExtractionDetector {
     /// Genetic key evolution engine
     pub key_evolution_engine: GeneticKeyEvolutionEngine,
 }
-
 /// Usage pattern analysis for detecting commercial vs human behavior
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsagePattern {
@@ -37,10 +51,7 @@ pub struct UsagePattern {
     pub data_volume_analysis: DataVolumePattern,
     /// Classification confidence
     pub classification_confidence: f64,
-}
-
 /// Network behavior pattern analysis
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkBehaviorPattern {
     /// Connection patterns (persistent vs intermittent)
     pub connection_persistence: f64,
@@ -50,10 +61,7 @@ pub struct NetworkBehaviorPattern {
     pub geographic_consistency: f64,
     /// User agent consistency
     pub user_agent_patterns: Vec<String>,
-}
-
 /// Data volume pattern analysis
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataVolumePattern {
     /// Total data processed
     pub total_volume: u64,
@@ -63,10 +71,7 @@ pub struct DataVolumePattern {
     pub volume_variance: f64,
     /// Bulk operation detection
     pub bulk_operation_score: f64,
-}
-
 /// Entropy quality history for genetic key evolution
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyHistory {
     /// Entropy tier progression (humans get better over time)
     pub entropy_tier_history: Vec<(DateTime<Utc>, u8)>,
@@ -76,10 +81,7 @@ pub struct EntropyHistory {
     pub human_entropy_sources: Vec<HumanEntropyUsage>,
     /// Key evolution generations
     pub key_generations: Vec<KeyGeneration>,
-}
-
 /// Human entropy usage tracking
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanEntropyUsage {
     /// Source type (microphone, camera, haptic)
     pub source_type: String,
@@ -89,10 +91,7 @@ pub struct HumanEntropyUsage {
     pub quality_indicators: Vec<f64>,
     /// Consistency (lower = more human-like)
     pub consistency_score: f64,
-}
-
 /// Key generation in genetic evolution
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyGeneration {
     /// Generation number
     pub generation: u32,
@@ -104,19 +103,13 @@ pub struct KeyGeneration {
     pub mutations: Vec<String>,
     /// Creation timestamp
     pub created_at: DateTime<Utc>,
-}
-
 /// Genetic key evolution engine
-#[derive(Debug, Clone)]
 pub struct GeneticKeyEvolutionEngine {
     /// Active genetic lineages
     genetic_lineages: HashMap<String, Vec<KeyGeneration>>,
     /// Evolution configuration
     pub evolution_config: EvolutionConfig,
-}
-
 /// Evolution configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EvolutionConfig {
     /// Mutation rate
     pub mutation_rate: f64,
@@ -125,11 +118,13 @@ pub struct EvolutionConfig {
     /// Generation lifespan
     pub generation_lifespan: std::time::Duration,
     /// Fitness threshold
-    pub fitness_threshold: f64,
-}
+    pub fitness_threshold: f64,}
+
 
 impl CommercialExtractionDetector {
-    /// Create new commercial extraction detector
+    /// Create new commercial extraction detector}
+
+
     pub fn new() -> Self {
         Self {
             usage_patterns: HashMap::new(),
@@ -137,31 +132,19 @@ impl CommercialExtractionDetector {
             key_evolution_engine: GeneticKeyEvolutionEngine::new(),
         }
     }
-}
-
 impl GeneticKeyEvolutionEngine {
     /// Create new genetic key evolution engine
-    pub fn new() -> Self {
-        Self {
             genetic_lineages: HashMap::new(),
-            evolution_config: EvolutionConfig::default(),
-        }
-    }
-}
+            evolution_config: EvolutionConfig::default(),}
+
 
 impl Default for EvolutionConfig {
     fn default() -> Self {
-        Self {
             mutation_rate: 0.01,
             selection_pressure: 0.8,
             generation_lifespan: std::time::Duration::from_secs(86400), // 24 hours
             fitness_threshold: 0.75,
-        }
-    }
-}
-
 /// Commercial vs Human classification
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CommercialClassification {
     /// Confirmed human user
     Human { confidence: f64 },
@@ -172,21 +155,16 @@ pub enum CommercialClassification {
     },
     /// Uncertain classification
     Uncertain { human_probability: f64 },
-}
-
 /// Access level based on classification
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AccessLevel {
     Open,       // Full human access
     Restricted, // Limited access with monitoring
     Blocked,    // Commercial extraction blocked
-}
+/// Commercial extraction risk level}
 
-/// Commercial extraction risk level
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum ExtractionRisk {
     Low,
     Medium,
     High,
     Critical,
-}

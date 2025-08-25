@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["WorkflowStepType"],"struct":["ApprovalCondition","AutoApprovalRule","ConsentRequestProcessor","EscalationAction","EscalationRule","EscalationTrigger","RequestWorkflow","ScopeLimitation","StepCondition","WorkflowStep"]};

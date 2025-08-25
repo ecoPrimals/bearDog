@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AggregateOp","LogicalAggregateOp","MultipleNodeRoutingInfo","ResponsePolicy","RoutingInfo","SingleNodeRoutingInfo","SlotAddr"],"fn":["command_for_multi_slot_indices","get_slot"],"struct":["Route"],"trait":["Routable"]};

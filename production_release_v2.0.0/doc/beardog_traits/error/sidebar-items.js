@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BearDogError"],"trait":["ErrorContext","IntoBearDogError","RecoverableError"],"type":["BearDogResult"]};

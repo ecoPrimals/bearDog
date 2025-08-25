@@ -1,0 +1,126 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Path Dedot"><title>path_dedot - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="path_dedot" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../static.files/storage-4e99c027.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../path_dedot/index.html">path_<wbr>dedot</a><span class="version">3.1.1</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#path-dedot" title="Path Dedot">Path Dedot</a><ul><li><a href="#examples" title="Examples">Examples</a></li><li><a href="#caching" title="Caching">Caching</a></li><li><a href="#benchmark" title="Benchmark">Benchmark</a></li></ul></li></ul><h3><a href="#statics">Crate Items</a></h3><ul class="block"><li><a href="#statics" title="Statics">Statics</a></li><li><a href="#traits" title="Traits">Traits</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>path_dedot</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/path_dedot/lib.rs.html#1-347">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="path-dedot"><a class="doc-anchor" href="#path-dedot">§</a>Path Dedot</h2>
+<p>This is a library for extending <code>Path</code> and <code>PathBuf</code> in order to parse the path which contains dots.</p>
+<p>Please read the following examples to know the parsing rules.</p>
+<h3 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h3>
+<p>If a path starts with a single dot, the dot means your program’s <strong>current working directory</strong> (CWD).</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::path::Path;
+<span class="kw">use </span>std::env;
+
+<span class="kw">use </span>path_dedot::<span class="kw-2">*</span>;
+
+<span class="kw">let </span>p = Path::new(<span class="string">"./path/to/123/456"</span>);
+<span class="macro">assert_eq!</span>(Path::join(env::current_dir().unwrap().as_path(), Path::new(<span class="string">"path/to/123/456"</span>)).to_str().unwrap(), p.parse_dot().unwrap().to_str().unwrap());</code></pre></div>
+<p>If a path starts with a pair of dots, the dots means the parent of the CWD. If the CWD is <strong>root</strong>, the parent is still <strong>root</strong>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::path::Path;
+<span class="kw">use </span>std::env;
+
+<span class="kw">use </span>path_dedot::<span class="kw-2">*</span>;
+
+<span class="kw">let </span>p = Path::new(<span class="string">"../path/to/123/456"</span>);
+
+<span class="kw">let </span>cwd = env::current_dir().unwrap();
+
+<span class="kw">let </span>cwd_parent = cwd.parent();
+
+<span class="kw">match </span>cwd_parent {
+   <span class="prelude-val">Some</span>(cwd_parent) =&gt; {
+      <span class="macro">assert_eq!</span>(Path::join(<span class="kw-2">&amp;</span>cwd_parent, Path::new(<span class="string">"path/to/123/456"</span>)).to_str().unwrap(), p.parse_dot().unwrap().to_str().unwrap());
+   }
+   <span class="prelude-val">None </span>=&gt; {
+      <span class="macro">assert_eq!</span>(Path::join(Path::new(<span class="string">"/"</span>), Path::new(<span class="string">"path/to/123/456"</span>)).to_str().unwrap(), p.parse_dot().unwrap().to_str().unwrap());
+   }
+}</code></pre></div>
+<p>In addition to starting with, the <strong>Single Dot</strong> and <strong>Double Dots</strong> can also be placed to other positions. <strong>Single Dot</strong> means noting and will be ignored. <strong>Double Dots</strong> means the parent.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::path::Path;
+
+<span class="kw">use </span>path_dedot::<span class="kw-2">*</span>;
+
+<span class="kw">let </span>p = Path::new(<span class="string">"/path/to/../123/456/./777"</span>);
+
+<span class="macro">assert_eq!</span>(<span class="string">"/path/123/456/777"</span>, p.parse_dot().unwrap().to_str().unwrap());</code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::path::Path;
+
+<span class="kw">use </span>path_dedot::<span class="kw-2">*</span>;
+
+<span class="kw">let </span>p = Path::new(<span class="string">"/path/to/../123/456/./777/.."</span>);
+
+<span class="macro">assert_eq!</span>(<span class="string">"/path/123/456"</span>, p.parse_dot().unwrap().to_str().unwrap());</code></pre></div>
+<p>You should notice that <code>parse_dot</code> method does <strong>not</strong> aim to get an <strong>absolute path</strong>. A path which does not start with a <code>MAIN_SEPARATOR</code>, <strong>Single Dot</strong> and <strong>Double Dots</strong>, will not have each of them after the <code>parse_dot</code> method is used.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::path::Path;
+
+<span class="kw">use </span>path_dedot::<span class="kw-2">*</span>;
+
+<span class="kw">let </span>p = Path::new(<span class="string">"path/to/../123/456/./777/.."</span>);
+
+<span class="macro">assert_eq!</span>(<span class="string">"path/123/456"</span>, p.parse_dot().unwrap().to_str().unwrap());</code></pre></div>
+<p><strong>Double Dots</strong> which is not placed at the start cannot get the parent beyond the original path. Why not? With this constraint, you can insert an absolute path to the start as a virtual root in order to protect your file system from being exposed.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::path::Path;
+
+<span class="kw">use </span>path_dedot::<span class="kw-2">*</span>;
+
+<span class="kw">let </span>p = Path::new(<span class="string">"path/to/../../../../123/456/./777/.."</span>);
+
+<span class="macro">assert_eq!</span>(<span class="string">"123/456"</span>, p.parse_dot().unwrap().to_str().unwrap());</code></pre></div>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::path::Path;
+
+<span class="kw">use </span>path_dedot::<span class="kw-2">*</span>;
+
+<span class="kw">let </span>p = Path::new(<span class="string">"/path/to/../../../../123/456/./777/.."</span>);
+
+<span class="macro">assert_eq!</span>(<span class="string">"/123/456"</span>, p.parse_dot().unwrap().to_str().unwrap());</code></pre></div>
+<h4 id="starting-from-a-given-current-working-directory"><a class="doc-anchor" href="#starting-from-a-given-current-working-directory">§</a>Starting from a given current working directory</h4>
+<p>With the <code>parse_dot_from</code> function, you can provide the current working directory that the relative paths should be resolved from.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::env;
+<span class="kw">use </span>std::path::Path;
+
+<span class="kw">use </span>path_dedot::<span class="kw-2">*</span>;
+
+<span class="kw">let </span>p = Path::new(<span class="string">"../path/to/123/456"</span>);
+<span class="kw">let </span>cwd = env::current_dir().unwrap();
+
+<span class="macro">println!</span>(<span class="string">"{}"</span>, p.parse_dot_from(cwd).unwrap().to_str().unwrap());</code></pre></div>
+<h3 id="caching"><a class="doc-anchor" href="#caching">§</a>Caching</h3>
+<p>By default, the <code>parse_dot</code> method creates a new <code>PathBuf</code> instance of the CWD every time in its operation. The overhead is obvious. Although it allows us to safely change the CWD at runtime by the program itself (e.g. using the <code>std::env::set_current_dir</code> function) or outside controls (e.g. using gdb to call <code>chdir</code>), we don’t need that in most cases.</p>
+<p>In order to parse paths with better performance, this crate provides three ways to cache the CWD.</p>
+<h4 id="once_cell_cache"><a class="doc-anchor" href="#once_cell_cache">§</a>once_cell_cache</h4>
+<p>Enabling the <code>once_cell_cache</code> feature can let this crate use <code>once_cell</code> to cache the CWD. It’s thread-safe and does not need to modify any code, but once the CWD is cached, it cannot be changed anymore at runtime.</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies.path-dedot]
+version = &quot;*&quot;
+features = [&quot;once_cell_cache&quot;]</code></pre></div><h4 id="lazy_static_cache"><a class="doc-anchor" href="#lazy_static_cache">§</a>lazy_static_cache</h4>
+<p>Enabling the <code>lazy_static_cache</code> feature can let this crate use <code>lazy_static</code> to cache the CWD. It’s thread-safe and does not need to modify any code, but once the CWD is cached, it cannot be changed anymore at runtime.</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies.path-dedot]
+version = &quot;*&quot;
+features = [&quot;lazy_static_cache&quot;]</code></pre></div><h4 id="unsafe_cache"><a class="doc-anchor" href="#unsafe_cache">§</a>unsafe_cache</h4>
+<p>Enabling the <code>unsafe_cache</code> feature can let this crate use a mutable static variable to cache the CWD. It allows the program to change the CWD at runtime by the program itself, but it’s not thread-safe.</p>
+<p>You need to use the <code>update_cwd</code> function to initialize the CWD first. The function should also be used to update the CWD after the CWD is changed.</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies.path-dedot]
+version = &quot;*&quot;
+features = [&quot;unsafe_cache&quot;]</code></pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::path::Path;
+
+<span class="kw">use </span>path_dedot::<span class="kw-2">*</span>;
+
+<span class="kw">unsafe </span>{
+    update_cwd();
+}
+
+<span class="kw">let </span>p = Path::new(<span class="string">"./path/to/123/456"</span>);
+
+<span class="macro">println!</span>(<span class="string">"{}"</span>, p.parse_dot().unwrap().to_str().unwrap());
+
+std::env::set_current_dir(<span class="string">"/"</span>).unwrap();
+
+<span class="kw">unsafe </span>{
+    update_cwd();
+}
+
+<span class="macro">println!</span>(<span class="string">"{}"</span>, p.parse_dot().unwrap().to_str().unwrap());</code></pre></div>
+<h3 id="benchmark"><a class="doc-anchor" href="#benchmark">§</a>Benchmark</h3><h5 id="no-cache"><a class="doc-anchor" href="#no-cache">§</a>No-cache</h5><div class="example-wrap"><pre class="language-bash"><code>cargo bench</code></pre></div><h5 id="once_cell_cache-1"><a class="doc-anchor" href="#once_cell_cache-1">§</a>once_cell_cache</h5><div class="example-wrap"><pre class="language-bash"><code>cargo bench --features once_cell_cache</code></pre></div><h5 id="lazy_static_cache-1"><a class="doc-anchor" href="#lazy_static_cache-1">§</a>lazy_static_cache</h5><div class="example-wrap"><pre class="language-bash"><code>cargo bench --features lazy_static_cache</code></pre></div><h5 id="unsafe_cache-1"><a class="doc-anchor" href="#unsafe_cache-1">§</a>unsafe_cache</h5><div class="example-wrap"><pre class="language-bash"><code>cargo bench --features unsafe_cache</code></pre></div></div></details><h2 id="statics" class="section-header">Statics<a href="#statics" class="anchor">§</a></h2><dl class="item-table"><dt><a class="static" href="static.MAIN_SEPARATOR.html" title="static path_dedot::MAIN_SEPARATOR">MAIN_<wbr>SEPARATOR</a></dt><dd>The main separator for the target OS.</dd></dl><h2 id="traits" class="section-header">Traits<a href="#traits" class="anchor">§</a></h2><dl class="item-table"><dt><a class="trait" href="trait.ParseDot.html" title="trait path_dedot::ParseDot">Parse<wbr>Dot</a></dt><dd>Let <code>Path</code> and <code>PathBuf</code> have <code>parse_dot</code> method.</dd></dl></section></div></main></body></html>

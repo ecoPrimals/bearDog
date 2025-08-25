@@ -1,9 +1,26 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Test the memory key manager directly
 //!
 //! This is a simple test that demonstrates the standalone BearDog
 //! memory key manager without complex dependencies.
 
-use beardog_config::BearDogConfig;
+use beardog_types::config::BearDogConfig;
 use beardog_security::memory_key_manager::{MemoryKeyManager, MemoryKeyManagerConfig};
 use beardog_security::types::KeyStatus;
 use std::time::Duration;

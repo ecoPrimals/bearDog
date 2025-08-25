@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Distributed BearDog Demo
 //!
 //! This example demonstrates:
@@ -16,7 +33,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{error, info, warn};
 
-use beardog_config::{BearDogConfig, AppConfig};
+use beardog_types::config::{BearDogConfig, AppConfig};
 use beardog_core::BearDogCore;
 use beardog_tunnel::tunnel::hsm::{
     HsmManager, HsmManagerConfig, SecurityRequirements, SecurityLevel,

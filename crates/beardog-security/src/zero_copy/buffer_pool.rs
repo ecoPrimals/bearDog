@@ -1,15 +1,31 @@
-//! Buffer Pool for Zero-Copy Operations
-//!
-//! Provides buffer pooling to reduce memory allocations in hot code paths.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Buffer Pool for Zero-Copy Operations
+///
+/// Provides buffer pooling to reduce memory allocations in hot code paths.
 
 use bytes::BytesMut;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::sync::RwLock;
 use tracing::trace;
-
 use super::types::ZeroCopyConfig;
-
+use beardog_errors::{BearDogError, BearDogResult};
 /// Buffer pool for reusing memory allocations
 pub struct BufferPool {
     /// Pool of reusable buffers by size class
@@ -19,7 +35,6 @@ pub struct BufferPool {
     /// Configuration
     config: ZeroCopyConfig,
 }
-
 /// Statistics for buffer pool performance monitoring
 #[derive(Debug, Default)]
 pub struct BufferPoolStats {
@@ -27,11 +42,13 @@ pub struct BufferPoolStats {
     pub deallocations: AtomicU64,
     pub cache_hits: AtomicU64,
     pub cache_misses: AtomicU64,
-    pub peak_buffers: AtomicU64,
-}
+    pub peak_buffers: AtomicU64,}
+
 
 impl BufferPool {
-    /// Create a new buffer pool
+    /// Create a new buffer pool}
+
+
     pub fn new(config: ZeroCopyConfig) -> Self {
         Self {
             pools: RwLock::new(HashMap::new()),
@@ -39,11 +56,9 @@ impl BufferPool {
             config,
         }
     }
-
     /// Get a buffer of at least the specified size
     pub async fn get_buffer(&self, size: usize) -> BytesMut {
         let size_class = self.size_class(size);
-
         {
             let mut pools = self.pools.write().await;
             if let Some(pool) = pools.get_mut(&size_class) {
@@ -55,37 +70,25 @@ impl BufferPool {
                     return buffer;
                 }
             }
-        }
-
         // Cache miss - create new buffer
         self.stats.cache_misses.fetch_add(1, Ordering::Relaxed);
         self.stats.allocations.fetch_add(1, Ordering::Relaxed);
         trace!("Buffer pool miss for size {}, allocating new", size);
         BytesMut::with_capacity(size_class)
-    }
-
     /// Return a buffer to the pool
     pub async fn return_buffer(&self, buffer: BytesMut) {
         let capacity = buffer.capacity();
         let size_class = self.size_class(capacity);
-
         if capacity > 1024 * 1024 * 4 {
             // Don't pool very large buffers to prevent excessive memory usage
             self.stats.deallocations.fetch_add(1, Ordering::Relaxed);
             return;
-        }
-
         let mut pools = self.pools.write().await;
         let pool = pools.entry(size_class).or_insert_with(Vec::new);
-
         if pool.len() < self.config.buffer_pool_size {
             pool.push(buffer);
             trace!("Returned buffer to pool for size class {}", size_class);
         } else {
-            self.stats.deallocations.fetch_add(1, Ordering::Relaxed);
-        }
-    }
-
     /// Determine size class for buffer pooling
     fn size_class(&self, size: usize) -> usize {
         match size {
@@ -96,10 +99,9 @@ impl BufferPool {
             65537..=262144 => 262144,
             262145..=1048576 => 1048576,
             _ => size.div_ceil(1048576) * 1048576, // Round up to MB
-        }
-    }
+    /// Get buffer pool statistics}
 
-    /// Get buffer pool statistics
+
     pub fn get_stats(&self) -> BufferPoolStats {
         BufferPoolStats {
             allocations: AtomicU64::new(self.stats.allocations.load(Ordering::Relaxed)),
@@ -107,12 +109,8 @@ impl BufferPool {
             cache_hits: AtomicU64::new(self.stats.cache_hits.load(Ordering::Relaxed)),
             cache_misses: AtomicU64::new(self.stats.cache_misses.load(Ordering::Relaxed)),
             peak_buffers: AtomicU64::new(self.stats.peak_buffers.load(Ordering::Relaxed)),
-        }
-    }
-}
+impl Default for BufferPool {}
 
-impl Default for BufferPool {
+
     fn default() -> Self {
         Self::new(ZeroCopyConfig::default())
-    }
-}

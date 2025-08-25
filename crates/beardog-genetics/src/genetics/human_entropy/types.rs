@@ -1,51 +1,60 @@
-//! Data structures and types for human entropy collection
-//!
-//! This module contains all the data structures used to represent different
-//! types of collected entropy and their associated features.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Data structures and types for human entropy collection
+///
+/// This module contains all the data structures used to represent different
+/// types of collected entropy and their associated features.
 
 use super::ethics::{DigitalSignature, PrivacyMetadata};
 use chrono::{DateTime, Utc};
 use std::time::Duration;
 use zeroize::Zeroize;
-
 /// Secret bytes that are automatically zeroed on drop
-///
 /// This type provides secure handling of sensitive entropy data by automatically
 /// zeroing the underlying bytes when the instance is dropped, preventing
 /// sensitive data from remaining in memory.
 #[derive(Debug, Clone)]
 pub struct SecretBytes(Vec<u8>);
-
 impl SecretBytes {
-    /// Create a new SecretBytes instance
+    /// Create a new SecretBytes instance}
+
+
     pub fn new(bytes: Vec<u8>) -> Self {
         Self(bytes)
     }
-
     /// Get a reference to the underlying bytes
     pub fn as_bytes(&self) -> &[u8] {
         &self.0
-    }
+    /// Get the length of the underlying bytes}
 
-    /// Get the length of the underlying bytes
+
     pub fn len(&self) -> usize {
         self.0.len()
-    }
-
     /// Check if the bytes are empty
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
-    }
 }
+impl Drop for SecretBytes {}
 
-impl Drop for SecretBytes {
+
     fn drop(&mut self) {
         self.0.zeroize();
-    }
-}
-
 /// Audio entropy data with extracted features
-#[derive(Debug, Clone)]
 pub struct AudioEntropy {
     /// Raw entropy bytes extracted from audio
     pub entropy_bytes: SecretBytes,
@@ -63,10 +72,7 @@ pub struct AudioEntropy {
     pub privacy_metadata: PrivacyMetadata,
     /// Reference to the user's consent
     pub consent_reference: DigitalSignature,
-}
-
 /// Features extracted from audio entropy
-#[derive(Debug, Clone)]
 pub struct AudioEntropyFeatures {
     /// Spectral analysis features
     pub spectral_features: SpectralFeatures,
@@ -80,10 +86,7 @@ pub struct AudioEntropyFeatures {
     pub uniqueness_score: f64,
     /// Irreproducibility score of the audio sample
     pub irreproducibility_score: f64,
-}
-
 /// Spectral analysis features
-#[derive(Debug, Clone)]
 pub struct SpectralFeatures {
     /// Frequency distribution across the spectrum
     pub frequency_distribution: Vec<f64>,
@@ -95,10 +98,7 @@ pub struct SpectralFeatures {
     pub spectral_rolloff: f64,
     /// Spectral entropy (measure of spectral complexity)
     pub spectral_entropy: f64,
-}
-
 /// Temporal analysis features
-#[derive(Debug, Clone)]
 pub struct TemporalFeatures {
     /// Zero crossing rate (measure of signal changes)
     pub zero_crossing_rate: f64,
@@ -108,10 +108,7 @@ pub struct TemporalFeatures {
     pub temporal_patterns: Vec<f64>,
     /// Rhythm detection results
     pub rhythm_detection: Vec<f64>,
-}
-
 /// Ambient environment features
-#[derive(Debug, Clone)]
 pub struct AmbientFeatures {
     /// Background noise level
     pub background_noise_level: f64,
@@ -119,10 +116,7 @@ pub struct AmbientFeatures {
     pub environmental_sounds: Vec<String>,
     /// Acoustic signature of the environment
     pub acoustic_signature: Vec<f64>,
-}
-
 /// Human-specific audio features
-#[derive(Debug, Clone)]
 pub struct HumanAudioFeatures {
     /// Voice activity detection results
     pub voice_activity: VoiceActivity,
@@ -136,10 +130,7 @@ pub struct HumanAudioFeatures {
     pub human_presence_confidence: f64,
     /// Indicators of uniqueness in human behavior
     pub uniqueness_indicators: Vec<String>,
-}
-
 /// Voice activity detection results
-#[derive(Debug, Clone)]
 pub struct VoiceActivity {
     /// Whether voice activity was detected
     pub detected: bool,
@@ -149,10 +140,7 @@ pub struct VoiceActivity {
     pub speech_segments: Vec<TimeInterval>,
     /// Vocal characteristics analysis
     pub vocal_characteristics: VocalCharacteristics,
-}
-
 /// Vocal characteristics analysis
-#[derive(Debug, Clone)]
 pub struct VocalCharacteristics {
     /// Fundamental frequency of voice
     pub fundamental_frequency: f64,
@@ -162,34 +150,23 @@ pub struct VocalCharacteristics {
     pub spectral_tilt: f64,
     /// Harmonic richness measure
     pub harmonic_richness: f64,
-}
-
 /// Breathing pattern analysis
-#[derive(Debug, Clone)]
 pub struct BreathingPattern {
     /// Whether breathing was detected
-    pub detected: bool,
     /// Breathing rate (breaths per minute)
     pub rate: f64,
     /// Regularity of breathing rhythm
     pub rhythm_regularity: f64,
     /// Variation in breathing depth
     pub depth_variation: f64,
-}
-
 /// Micro-movement detection
-#[derive(Debug, Clone)]
 pub struct MicroMovements {
     /// Device handling sounds
     pub device_handling_sounds: Vec<f64>,
     /// Clothing rustling sounds
     pub clothing_rustling: Vec<f64>,
-    /// Environmental interaction sounds
     pub environmental_interactions: Vec<f64>,
-}
-
 /// Environmental interaction sounds
-#[derive(Debug, Clone)]
 pub struct EnvironmentalInteractions {
     /// Keyboard typing detected
     pub keyboard_typing: bool,
@@ -201,40 +178,23 @@ pub struct EnvironmentalInteractions {
     pub footsteps: bool,
     /// Other detected sounds
     pub other_sounds: Vec<String>,
-}
-
 /// Time interval representation
-#[derive(Debug, Clone)]
 pub struct TimeInterval {
     /// Start time in milliseconds
     pub start_ms: u32,
     /// End time in milliseconds
     pub end_ms: u32,
-}
-
 /// Visual entropy data with extracted features
-#[derive(Debug, Clone)]
 pub struct VisualEntropy {
     /// Raw entropy bytes extracted from visual data
-    pub entropy_bytes: SecretBytes,
-    /// Timestamp when entropy was collected
-    pub collection_timestamp: DateTime<Utc>,
     /// Duration of visual collection in milliseconds
-    pub duration_ms: u32,
     /// Resolution used for collection
     pub resolution: (u32, u32),
     /// Frames per second used for collection
     pub fps: u32,
     /// Extracted visual features
     pub entropy_features: VisualEntropyFeatures,
-    /// Privacy protection metadata
-    pub privacy_metadata: PrivacyMetadata,
-    /// Reference to the user's consent
-    pub consent_reference: DigitalSignature,
-}
-
 /// Features extracted from visual entropy
-#[derive(Debug, Clone)]
 pub struct VisualEntropyFeatures {
     /// Lighting condition features
     pub lighting_features: LightingFeatures,
@@ -245,13 +205,8 @@ pub struct VisualEntropyFeatures {
     /// Human-specific visual features
     pub human_features: HumanVisualFeatures,
     /// Uniqueness score of the visual sample
-    pub uniqueness_score: f64,
     /// Irreproducibility score of the visual sample
-    pub irreproducibility_score: f64,
-}
-
 /// Lighting condition features
-#[derive(Debug, Clone)]
 pub struct LightingFeatures {
     /// Brightness variation across the image
     pub brightness_variation: f64,
@@ -261,10 +216,7 @@ pub struct LightingFeatures {
     pub shadow_patterns: Vec<f64>,
     /// Lighting changes over time
     pub lighting_changes: Vec<f64>,
-}
-
 /// Motion detection features
-#[derive(Debug, Clone)]
 pub struct MotionFeatures {
     /// Optical flow vectors
     pub optical_flow: Vec<f64>,
@@ -274,10 +226,7 @@ pub struct MotionFeatures {
     pub motion_intensity: f64,
     /// Directional patterns in motion
     pub directional_patterns: Vec<f64>,
-}
-
 /// Texture analysis features
-#[derive(Debug, Clone)]
 pub struct TextureFeatures {
     /// Texture complexity measure
     pub texture_complexity: f64,
@@ -287,10 +236,7 @@ pub struct TextureFeatures {
     pub edge_density: f64,
     /// Surface characteristics
     pub surface_characteristics: Vec<f64>,
-}
-
 /// Human-specific visual features
-#[derive(Debug, Clone)]
 pub struct HumanVisualFeatures {
     /// Entropy from eye movements
     pub eye_movement_entropy: f64,
@@ -300,29 +246,13 @@ pub struct HumanVisualFeatures {
     pub hand_movement_entropy: f64,
     /// Entropy from head/body orientation
     pub orientation_entropy: f64,
-    /// Confidence that human is present
-    pub human_presence_confidence: f64,
-    /// Indicators of uniqueness in human behavior
-    pub uniqueness_indicators: Vec<String>,
-}
-
 /// Haptic entropy data with extracted features
-#[derive(Debug, Clone)]
 pub struct HapticEntropy {
     /// Raw entropy bytes extracted from haptic data
-    pub entropy_bytes: SecretBytes,
-    /// Timestamp when entropy was collected
-    pub collection_timestamp: DateTime<Utc>,
     /// Duration of haptic collection in milliseconds
-    pub duration_ms: u32,
     /// Extracted haptic features
     pub entropy_features: HapticEntropyFeatures,
-    /// Reference to the user's consent
-    pub consent_reference: DigitalSignature,
-}
-
 /// Features extracted from haptic entropy
-#[derive(Debug, Clone)]
 pub struct HapticEntropyFeatures {
     /// Touch interaction patterns
     pub touch_patterns: TouchPatterns,
@@ -333,13 +263,8 @@ pub struct HapticEntropyFeatures {
     /// Human-specific haptic features
     pub human_features: HumanHapticFeatures,
     /// Uniqueness score of the haptic sample
-    pub uniqueness_score: f64,
     /// Irreproducibility score of the haptic sample
-    pub irreproducibility_score: f64,
-}
-
 /// Touch interaction patterns
-#[derive(Debug, Clone)]
 pub struct TouchPatterns {
     /// Individual touch points recorded
     pub touch_points: Vec<TouchPoint>,
@@ -349,10 +274,7 @@ pub struct TouchPatterns {
     pub touch_pressure: Vec<f64>,
     /// Frequency of touch interactions
     pub touch_frequency: f64,
-}
-
 /// Individual touch point data
-#[derive(Debug, Clone)]
 pub struct TouchPoint {
     /// X coordinate of touch
     pub x: f64,
@@ -362,10 +284,7 @@ pub struct TouchPoint {
     pub pressure: f64,
     /// Timestamp of this touch
     pub timestamp: DateTime<Utc>,
-}
-
 /// Device motion patterns
-#[derive(Debug, Clone)]
 pub struct MotionPatterns {
     /// Acceleration data (x, y, z)
     pub acceleration: Vec<(f64, f64, f64)>,
@@ -375,10 +294,7 @@ pub struct MotionPatterns {
     pub magnetometer: Vec<(f64, f64, f64)>,
     /// Device orientation changes
     pub device_orientation: Vec<f64>,
-}
-
 /// Pressure application patterns
-#[derive(Debug, Clone)]
 pub struct PressurePatterns {
     /// Distribution of pressure across touches
     pub pressure_distribution: Vec<f64>,
@@ -386,10 +302,7 @@ pub struct PressurePatterns {
     pub pressure_changes: Vec<f64>,
     /// Force patterns during interaction
     pub force_patterns: Vec<f64>,
-}
-
 /// Human-specific haptic features
-#[derive(Debug, Clone)]
 pub struct HumanHapticFeatures {
     /// Natural hand tremor patterns
     pub tremor_patterns: TremorPatterns,
@@ -397,16 +310,10 @@ pub struct HumanHapticFeatures {
     pub rhythm_patterns: RhythmPatterns,
     /// Device handling characteristics
     pub handling_patterns: HandlingPatterns,
-    /// Pressure application patterns
     pub pressure_patterns: Vec<f64>,
     /// Consistency of human behavior
     pub human_consistency: f64,
-    /// Indicators of uniqueness in human behavior
-    pub uniqueness_indicators: Vec<String>,
-}
-
 /// Tremor pattern analysis
-#[derive(Debug, Clone)]
 pub struct TremorPatterns {
     /// Frequency of tremor oscillations
     pub tremor_frequency: f64,
@@ -414,10 +321,7 @@ pub struct TremorPatterns {
     pub tremor_amplitude: f64,
     /// Regularity of tremor patterns
     pub tremor_regularity: f64,
-}
-
 /// Rhythm pattern analysis
-#[derive(Debug, Clone)]
 pub struct RhythmPatterns {
     /// Typing rhythm patterns
     pub typing_rhythm: Vec<f64>,
@@ -425,10 +329,7 @@ pub struct RhythmPatterns {
     pub tapping_rhythm: Vec<f64>,
     /// Gesture rhythm patterns
     pub gesture_rhythm: Vec<f64>,
-}
-
 /// Device handling patterns
-#[derive(Debug, Clone)]
 pub struct HandlingPatterns {
     /// How the device is gripped
     pub grip_patterns: Vec<f64>,
@@ -436,25 +337,14 @@ pub struct HandlingPatterns {
     pub movement_patterns: Vec<f64>,
     /// Orientation changes during handling
     pub orientation_changes: Vec<f64>,
-}
-
 /// Biometric entropy data with extracted features
-#[derive(Debug, Clone)]
 pub struct BiometricEntropy {
     /// Raw entropy bytes extracted from biometric data
-    pub entropy_bytes: SecretBytes,
     /// Type of biometric data collected
     pub biometric_type: BiometricType,
-    /// Timestamp when entropy was collected
-    pub collection_timestamp: DateTime<Utc>,
     /// Privacy-protected feature extraction
     pub privacy_protected_features: PrivacyProtectedFeatures,
-    /// Reference to the user's consent
-    pub consent_reference: DigitalSignature,
-}
-
 /// Types of biometric data
-#[derive(Debug, Clone)]
 pub enum BiometricType {
     /// Fingerprint biometric data
     Fingerprint,
@@ -468,10 +358,9 @@ pub enum BiometricType {
     HeartRateVariability,
     /// Gait pattern biometric data
     GaitPattern,
-}
+/// Privacy-protected features from biometric data}
 
-/// Privacy-protected features from biometric data
-#[derive(Debug, Clone)]
+
 pub enum PrivacyProtectedFeatures {
     /// Fingerprint features with privacy protection
     Fingerprint {
@@ -494,7 +383,6 @@ pub enum PrivacyProtectedFeatures {
         pitch_uniqueness: f64,
         /// Vocal tract characteristics
         vocal_tract_characteristics: Vec<f64>,
-    },
     /// Heart rate features with privacy protection
     HeartRate {
         /// Heart rate variability patterns
@@ -503,30 +391,20 @@ pub enum PrivacyProtectedFeatures {
         rhythm_complexity: f64,
         /// Variability score
         variability_score: f64,
-    },
-}
-
 /// Entropy quality assessment
-#[derive(Debug, Clone)]
 pub struct EntropyQualityAssessment {
     /// Overall quality score (0.0 to 1.0)
     pub overall_score: f64,
     /// Uniqueness score (0.0 to 1.0)
-    pub uniqueness_score: f64,
     /// Irreproducibility score (0.0 to 1.0)
-    pub irreproducibility_score: f64,
     /// Multimodal fusion score (0.0 to 1.0)
     pub multimodal_score: f64,
     /// Confidence that human is present (0.0 to 1.0)
-    pub human_presence_confidence: f64,
     /// Quality classification
     pub quality_classification: QualityClassification,
     /// Recommendations for improvement
     pub recommendations: Vec<String>,
-}
-
 /// Quality classification levels
-#[derive(Debug, Clone)]
 pub enum QualityClassification {
     /// Excellent quality (>= 0.9)
     Excellent,
@@ -538,13 +416,11 @@ pub enum QualityClassification {
     Poor,
     /// Insufficient quality (< 0.3)
     Insufficient,
-}
+/// Result of fused entropy from multiple sources}
 
-/// Result of fused entropy from multiple sources
-#[derive(Debug, Clone)]
+
 pub struct FusedEntropyResult {
     /// Final fused entropy bytes
-    pub entropy_bytes: SecretBytes,
     /// Number of entropy sources used
     pub component_count: usize,
     /// When the fusion was performed
@@ -553,4 +429,3 @@ pub struct FusedEntropyResult {
     pub source_types: Vec<String>,
     /// Quality of the fusion result
     pub fusion_quality: f64,
-}

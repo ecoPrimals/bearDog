@@ -1,0 +1,149 @@
+name: Test Coverage
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  coverage:
+    name: Test Coverage Report
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: llvm-tools-preview
+        
+    - name: Install cargo-llvm-cov
+      uses: taiki-e/install-action@cargo-llvm-cov
+      
+    - name: Cache Cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+          
+    - name: Run tests with coverage
+      run: |
+        cargo llvm-cov clean --workspace
+        cargo llvm-cov --workspace --lcov --output-path coverage.lcov
+        
+    - name: Generate HTML coverage report
+      run: |
+        cargo llvm-cov --workspace --html --output-dir coverage/html
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: coverage.lcov
+        fail_ci_if_error: true
+        verbose: true
+        
+    - name: Upload coverage reports as artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: |
+          coverage/
+          coverage.lcov
+          
+    - name: Coverage threshold check
+      run: |
+        # Extract coverage percentage from lcov file
+        COVERAGE=$(cargo llvm-cov --workspace --summary-only | grep -o '[0-9.]*%' | head -1 | sed 's/%//')
+        echo "Coverage: ${COVERAGE}%"
+        
+        # Check if coverage meets threshold (85%)
+        if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+          echo "❌ Coverage ${COVERAGE}% is below threshold of 85%"
+          exit 1
+        else
+          echo "✅ Coverage ${COVERAGE}% meets threshold"
+        fi
+        
+    - name: Comment coverage on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const coverage = fs.readFileSync('coverage.lcov', 'utf8');
+          const lines = coverage.split('\n');
+          const summary = lines.filter(line => line.startsWith('LF:') || line.startsWith('LH:'));
+          
+          let totalLines = 0;
+          let hitLines = 0;
+          
+          for (const line of summary) {
+            if (line.startsWith('LF:')) {
+              totalLines += parseInt(line.split(':')[1]);
+            } else if (line.startsWith('LH:')) {
+              hitLines += parseInt(line.split(':')[1]);
+            }
+          }
+          
+          const percentage = ((hitLines / totalLines) * 100).toFixed(2);
+          
+          const comment = `## 📊 Test Coverage Report
+          
+          **Coverage:** ${percentage}%
+          **Lines Covered:** ${hitLines}/${totalLines}
+          
+          ${percentage >= 85 ? '✅ Coverage meets threshold (85%)' : '❌ Coverage below threshold (85%)'}
+          
+          [View detailed coverage report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+  tarpaulin-coverage:
+    name: Alternative Coverage (Tarpaulin)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Install cargo-tarpaulin
+      run: cargo install cargo-tarpaulin
+      
+    - name: Cache Cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-tarpaulin-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Run tarpaulin coverage
+      run: |
+        cargo tarpaulin --workspace --timeout 600 --out Html --out Lcov --output-dir coverage-tarpaulin/
+        
+    - name: Upload tarpaulin coverage
+      uses: actions/upload-artifact@v3
+      with:
+        name: tarpaulin-coverage-report
+        path: coverage-tarpaulin/ 

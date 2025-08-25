@@ -1,81 +1,44 @@
-//! Security Handlers - Modular Organization
-//!
-//! Refactored security handlers with focused responsibilities for maintainability.
-//!
-//! ## Architecture
-//! - `rate_limiting` - Request rate limiting and throttling
-//! - `session_management` - User session creation and validation
-//! - `mfa_handling` - Multi-factor authentication operations
-//! - `threat_analysis` - Security threat detection and analysis
-//! - `audit_management` - Security audit events and compliance
-//! - `account_management` - Account locking and security policies
-//! - `metrics_collection` - Security metrics and monitoring
-//! - `maintenance` - Cleanup and maintenance operations
-//! - `trait_implementation` - SecurityProvider trait implementation
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::*;
+
+/// Security Handlers Module
+///
+/// **CANONICAL SECURITY HANDLERS** - Unified security operation handlers
+/// This module provides the core security handlers that implement the canonical
+/// security traits and provide unified security operations across BearDog.
+
 use beardog_errors::{BearDogError, BearDogResult};
-
-use chrono::{Duration, Timelike, Utc};
+use chrono::{Duration, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-use uuid::Uuid;
-
-// Use our local AuditEvent instead of the compliance crate one
-use super::types::audit_types::AuditEvent;
-
-// Import Argon2 for secure password verification
-use argon2::{Argon2, PasswordHash, PasswordVerifier};
-
-// Import memory key manager
-use crate::memory_key_manager::{MemoryKeyConfig, MemoryKeyManager};
-
-pub mod account_management;
-pub mod audit_management;
-pub mod maintenance;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+// Import security types
+use super::types::*;
+// Core handler modules that exist
 pub mod metrics_collection;
-pub mod mfa_handling;
-pub mod rate_limiting;
-pub mod session_management;
-pub mod threat_analysis;
 pub mod trait_implementation;
-
-impl BearDogSecurityProvider {
-    /// Create a new security provider instance with configuration
-    pub async fn new_with_config(config: SecurityProviderConfig) -> BearDogResult<Self> {
-        let rate_limiter = RateLimiter {
-            config: config.rate_limit_config.clone(),
-            state: HashMap::new(),
-        };
-
-        // Initialize standalone memory key manager for "crypto in your pocket"
-        let _memory_key_manager = if config.memory_key_manager.is_some() {
-            let key_config = MemoryKeyConfig {
-                max_keys: 1000,              // Default value
-                enable_vault_sharing: false, // Default value
-                ..Default::default()
-            };
-            Some(MemoryKeyManager::new(key_config).await?)
-        } else {
-            None
-        };
-
-        // Initialize recovery system for distributed account recovery
-        let _recovery_manager = Some(crate::recovery::RecoveryManager::new());
-
-        Ok(Self {
-            config,
-            rate_limiter,
-            security_rules: SecurityRules {
-                rules: Vec::new(),
-                default_policy: PolicyDecision::Deny,
-                context: SecurityContext::default(),
-            },
-            locked_accounts: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::new())),
-            failed_attempts: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::new())),
-            metrics: SecurityProviderMetrics::default(),
-            session_store: SessionStore::new(),
-            audit_manager: AuditManager::new(),
-        })
-    }
-}
+// MIGRATION COMPLETE: Removed references to deleted modules
+// - account_management: Functionality moved to canonical types
+// - audit_management: Functionality moved to canonical types
+// - maintenance: Functionality moved to canonical types
+// - mfa_handling: Functionality moved to canonical types
+// - rate_limiting: Functionality moved to canonical types
+// - session_management: Functionality moved to canonical types
+// - threat_analysis: Functionality moved to canonical types
+// Re-exports
+pub use trait_implementation::*;

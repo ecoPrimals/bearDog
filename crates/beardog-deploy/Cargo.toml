@@ -19,6 +19,12 @@ tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "process", "fs",
 tracing = "0.1"
 tracing-subscriber = "0.3"
 
+# BearDog dependencies
+beardog-errors = { path = "../beardog-errors" }
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
 # Error handling
 anyhow = "1.0"
 thiserror = "1.0"

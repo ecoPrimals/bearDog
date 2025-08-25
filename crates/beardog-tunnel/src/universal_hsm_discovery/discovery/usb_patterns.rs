@@ -1,0 +1,135 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Common USB Discovery Patterns
+///
+/// This module contains common patterns extracted from the USB discoverer
+/// to reduce code duplication and improve maintainability.
+
+use beardog_errors::{BearDogError, BearDogResult};
+use beardog_utils::utils::error_patterns::with_operation_context;
+use tracing::{debug, info, warn};
+use std::collections::HashMap;
+/// Common USB device detection pattern
+pub async fn detect_usb_device(
+    vendor_id: u16,
+    product_id: u16,
+    device_name: &str,
+) -> BearDogResult<Option<UsbDeviceInfo>> {
+    with_operation_context(&format!("detect_usb_{}", device_name), || async {
+        debug!("Scanning for USB device: {} ({:04x}:{:04x})", device_name, vendor_id, product_id);
+        
+        // USB device detection logic would go here
+        // This is a simplified pattern extraction
+        Ok(Some(UsbDeviceInfo {
+            vendor_id,
+            product_id,
+            device_name: device_name.to_string(),
+            serial_number: None,
+            firmware_version: None,
+        }))
+    }).await
+}
+/// Common HSM capability detection pattern
+pub async fn detect_hsm_capabilities(
+    device_info: &UsbDeviceInfo,
+) -> BearDogResult<Vec<HsmCapability>> {
+    with_operation_context("detect_hsm_capabilities", || async {
+        debug!("Detecting HSM capabilities for device: {}", device_info.device_name);
+        let mut capabilities = Vec::new();
+        // Add common HSM capabilities based on device type
+        match device_info.device_name.as_str() {
+            name if name.contains("YubiKey") => {
+                capabilities.extend(vec![
+                    HsmCapability::Ed25519Signing,
+                    HsmCapability::RsaSigning,
+                    HsmCapability::EcdsaSigning,
+                    HsmCapability::KeyGeneration,
+                ]);
+            }
+            name if name.contains("Solo") => {
+                    HsmCapability::UserPresenceRequired,
+            _ => {
+                capabilities.push(HsmCapability::BasicCrypto);
+        }
+        Ok(capabilities)
+/// Common USB device connection pattern
+pub async fn establish_usb_connection(
+) -> BearDogResult<UsbConnection> {
+    with_operation_context("establish_usb_connection", || async {
+        info!("Establishing connection to USB device: {}", device_info.device_name);
+        // Connection establishment logic would go here
+        // This is a pattern extraction
+        Ok(UsbConnection {
+            device_info: device_info.clone(),
+            connection_id: uuid::Uuid::new_v4().to_string(),
+            connected_at: std::time::SystemTime::now(),
+        })
+/// USB device information structure
+#[derive(Debug, Clone)]
+pub struct UsbDeviceInfo {
+    pub vendor_id: u16,
+    pub product_id: u16,
+    pub device_name: String,
+    pub serial_number: Option<String>,
+    pub firmware_version: Option<String>,
+/// HSM capability enumeration
+pub enum HsmCapability {
+    Ed25519Signing,
+    RsaSigning,
+    EcdsaSigning,
+    KeyGeneration,
+    UserPresenceRequired,
+    BasicCrypto,
+/// USB connection structure}
+
+
+pub struct UsbConnection {
+    pub device_info: UsbDeviceInfo,
+    pub connection_id: String,
+    pub connected_at: std::time::SystemTime,
+/// Common device registry pattern
+pub struct UsbDeviceRegistry {
+    devices: HashMap<String, UsbDeviceInfo>,
+    connections: HashMap<String, UsbConnection>,}
+
+
+impl UsbDeviceRegistry {}
+
+
+    pub fn new() -> Self {
+        Self {
+            devices: HashMap::new(),
+            connections: HashMap::new(),
+    }
+    
+    pub async fn register_device(&mut self, device: UsbDeviceInfo) -> BearDogResult<()> {
+        with_operation_context("register_usb_device", || async {
+            let device_key = format!("{:04x}:{:04x}", device.vendor_id, device.product_id);
+            self.devices.insert(device_key, device);
+            Ok(())
+        }).await
+    pub fn get_registered_devices(&self) -> Vec<&UsbDeviceInfo> {
+        self.devices.values().collect()}
+
+
+    pub async fn cleanup_connections(&mut self) -> BearDogResult<()> {
+        with_operation_context("cleanup_usb_connections", || async {
+            let connection_count = self.connections.len();
+            self.connections.clear();
+            debug!("Cleaned up {} USB connections", connection_count);
+} 

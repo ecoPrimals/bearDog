@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LoadBalancingAlgorithm","RecoveryStrategy"],"mod":["execution","monitoring","operations","profiles","scenarios","validation"],"struct":["FailoverConfig","LoadBalancingConfig","LoadGenerationConfig","LoadTestingConfig","RecoveryConfig","ResourceEstimate"]};

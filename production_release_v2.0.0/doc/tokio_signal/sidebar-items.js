@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["ctrl_c","ctrl_c_handle"],"mod":["unix"],"type":["IoFuture","IoStream"]};

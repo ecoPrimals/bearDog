@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["AudioProcessor","EntropyExtractor","EntropyWhitener","HapticEntropyExtractor","HumanPreservingFusion","ImageProcessor","KeyDerivationFunction","MotionProcessor","PrivacyFilter","TouchProcessor","VisualEntropyExtractor","VisualPrivacyFilter"]};

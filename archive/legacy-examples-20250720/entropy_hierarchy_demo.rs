@@ -520,11 +520,17 @@ mod tests {
 
     #[test]
     fn test_demo_helper_functions() {
-        let identity = create_demo_human_identity("test", "Test User").unwrap();
+        let identity = create_demo_human_identity("test", "Test User").map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         assert!(identity.identity_id.starts_with("test_"));
         assert_eq!(identity.public_key.len(), 32);
 
-        let entropy = create_demo_human_entropy().unwrap();
+        let entropy = create_demo_human_entropy().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         assert!(matches!(entropy, EntropyClass::HumanLivedExperience { .. }));
     }
 }

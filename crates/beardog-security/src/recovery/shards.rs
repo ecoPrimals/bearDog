@@ -1,13 +1,29 @@
-//! Recovery Shards
-//!
-//! This module handles Shamir's Secret Sharing for recovery operations.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Recovery Shards
+///
+/// This module handles Shamir's Secret Sharing for recovery operations.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 use super::types::*;
-
+use beardog_errors::{BearDogError, BearDogResult};
 /// Recovery shard using Shamir's Secret Sharing
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoveryShard {
@@ -30,12 +46,9 @@ pub struct RecoveryShard {
     /// Shard metadata
     pub metadata: HashMap<String, String>,
 }
-
 /// Information about who holds a recovery shard
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShardHolderInfo {
     /// Holder ID
-    pub id: String,
     /// Holder name
     pub name: String,
     /// Type of holder
@@ -49,11 +62,7 @@ pub struct ShardHolderInfo {
     /// When the holder was last verified
     pub last_verified: Option<DateTime<Utc>>,
     /// Holder metadata
-    pub metadata: HashMap<String, String>,
-}
-
 /// Usage restrictions for recovery shards
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShardUsageRestrictions {
     /// Maximum number of times this shard can be used
     pub max_uses: u32,
@@ -65,10 +74,7 @@ pub struct ShardUsageRestrictions {
     pub require_verification: bool,
     /// Allowed verification methods
     pub allowed_verification_methods: Vec<VerificationMethod>,
-}
-
 /// Time window restrictions
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeWindow {
     /// Start time for the window
     pub start: DateTime<Utc>,
@@ -77,11 +83,13 @@ pub struct TimeWindow {
     /// Days of the week when usage is allowed
     pub allowed_days: Vec<u8>, // 0=Sunday, 6=Saturday
     /// Hours of the day when usage is allowed
-    pub allowed_hours: Vec<u8>, // 0-23
-}
+    pub allowed_hours: Vec<u8>, // 0-23}
+
 
 impl RecoveryShard {
-    /// Create a new recovery shard
+    /// Create a new recovery shard}
+
+
     pub fn new(
         id: String,
         user_id: String,
@@ -102,79 +110,57 @@ impl RecoveryShard {
             metadata: HashMap::new(),
         }
     }
-
     /// Check if the shard is still valid
     pub fn is_valid(&self) -> bool {
         Utc::now() < self.expires_at
-    }
+    /// Check if the shard can be used now}
 
-    /// Check if the shard can be used now
+
     pub fn can_use(&self) -> bool {
         self.is_valid() && self.usage_restrictions.times_used < self.usage_restrictions.max_uses
-    }
-
     /// Mark the shard as used
     pub fn mark_used(&mut self) {
         self.usage_restrictions.times_used += 1;
-    }
-}
+impl Default for ShardUsageRestrictions {}
 
-impl Default for ShardUsageRestrictions {
+
     fn default() -> Self {
-        Self {
             max_uses: 10,
             times_used: 0,
             time_window: TimeWindow::default(),
             require_verification: false,
             allowed_verification_methods: Vec::new(),
-        }
-    }
-}
-
 impl Default for TimeWindow {
-    fn default() -> Self {
-        let now = Utc::now();
-        Self {
             start: now,
             end: now + chrono::Duration::days(365),
             allowed_days: vec![0, 1, 2, 3, 4, 5, 6], // All days
             allowed_hours: (0..24).collect(),        // All hours
-        }
-    }
-}
+/// Demonstration of key worthlessness principle}
 
-/// Demonstration of key worthlessness principle
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct KeyWorthinessDemo {
     /// Demo ID
-    pub id: String,
     /// User ID this demo belongs to
-    pub user_id: String,
     /// Demo scenario
     pub scenario: String,
     /// Key information (safe to share)
     pub key_info: HashMap<String, String>,
     /// Demonstration results
     pub results: Vec<String>,
-    /// When the demo was created
-    pub created_at: DateTime<Utc>,
-}
+    /// When the demo was created}
+
 
 impl KeyWorthinessDemo {
-    /// Create a new key worthiness demonstration
+    /// Create a new key worthiness demonstration}
+
+
     pub fn new(id: String, user_id: String, scenario: String) -> Self {
-        Self {
-            id,
-            user_id,
             scenario,
             key_info: HashMap::new(),
             results: Vec::new(),
             created_at: Utc::now(),
-        }
-    }
+    /// Add a demonstration result}
 
-    /// Add a demonstration result
+
     pub fn add_result(&mut self, result: String) {
         self.results.push(result);
-    }
-}

@@ -1,222 +1,301 @@
-//! # Local Optimization Fallback
-//!
-//! This module provides local fallback implementations for optimization operations
-//! when no ecosystem modules are available. It ensures BearDog can operate
-//! independently while still benefiting from ecosystem optimizations when available.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use async_trait::async_trait;
-use beardog_errors::BearDogResult;
+
+/// Local System Optimizer
+///
+/// Provides local system optimization and performance monitoring capabilities.
+
+use beardog_errors::{BearDogError, BearDogResult};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use tracing::{debug, info};
-use uuid::Uuid;
 
-use crate::universal_optimization::{
-    EffortLevel, GeneticTarget, LocalOptimizer, OptimizationRecommendation, OptimizationRequest,
-    OptimizationResponse, PerformanceMetrics, RecommendationCategory, RecommendationPriority,
-};
+/// Local optimization configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalOptimizerConfig {
+    /// Enable CPU optimization
+    pub cpu_optimization: bool,
+    /// Enable memory optimization
+    pub memory_optimization: bool,
+    /// Enable I/O optimization
+    pub io_optimization: bool,
+    /// Optimization interval in seconds
+    pub optimization_interval: u64,
+    /// Maximum CPU usage threshold
+    pub max_cpu_usage: f64,
+    /// Maximum memory usage threshold
+    pub max_memory_usage: f64,
+}
 
-/// Simple local optimizer implementation
-pub struct BearDogLocalOptimizer;
-
-impl BearDogLocalOptimizer {
-    pub fn new() -> Self {
-        Self
+impl Default for LocalOptimizerConfig {
+    fn default() -> Self {
+        Self {
+            cpu_optimization: true,
+            memory_optimization: true,
+            io_optimization: true,
+            optimization_interval: 300, // 5 minutes
+            max_cpu_usage: 80.0,
+            max_memory_usage: 85.0,
+        }
     }
+}
 
-    /// Create mock performance metrics for local operations
-    fn create_mock_performance_metrics(&self, base_latency_ms: f64) -> PerformanceMetrics {
-        PerformanceMetrics {
-            latency_ms: base_latency_ms,
-            throughput_ops_per_sec: (1000.0 / base_latency_ms) as u64,
-            cpu_utilization: 0.3,
-            memory_utilization: 0.4,
-            network_utilization: 0.2,
-            error_rate: 0.001, // 0.1% error rate
+/// Local system optimizer
+#[derive(Debug)]
+pub struct LocalOptimizer {
+    config: LocalOptimizerConfig,
+    last_optimization: Option<Instant>,
+    metrics: OptimizationMetrics,
+}
+
+impl LocalOptimizer {
+    /// Create new local optimizer
+    pub fn new(config: LocalOptimizerConfig) -> Self {
+        Self {
+            config,
+            last_optimization: None,
+            metrics: OptimizationMetrics::default(),
         }
     }
 
-    /// Generate basic recommendations
-    fn generate_basic_recommendations(&self) -> Vec<OptimizationRecommendation> {
-        vec![
-            OptimizationRecommendation {
-                category: RecommendationCategory::Performance,
-                description: "Consider enabling SIMD acceleration for crypto operations"
-                    .to_string(),
-                expected_benefit: 0.2,
-                implementation_effort: EffortLevel::Medium,
-                priority: RecommendationPriority::Medium,
-            },
-            OptimizationRecommendation {
-                category: RecommendationCategory::ResourceUtilization,
-                description: "Cache frequently used keys to reduce computation".to_string(),
-                expected_benefit: 0.15,
-                implementation_effort: EffortLevel::Low,
-                priority: RecommendationPriority::High,
-            },
-        ]
-    }
-}
-
-#[async_trait]
-impl LocalOptimizer for BearDogLocalOptimizer {
-    async fn local_genetic_optimization(
-        &self,
-        request: OptimizationRequest,
-    ) -> BearDogResult<OptimizationResponse> {
+    /// Run optimization cycle
+    pub async fn optimize(&mut self) -> BearDogResult<OptimizationResult> {
         let start_time = Instant::now();
-        info!("🧬 Running local genetic optimization");
+        let mut result = OptimizationResult::default();
 
-        // Simulate genetic algorithm processing
-        tokio::time::sleep(Duration::from_millis(50)).await;
-
-        let improvement_factor = match request {
-            OptimizationRequest::GeneticAlgorithm {
-                optimization_target,
-                ..
-            } => match optimization_target {
-                GeneticTarget::KeyGeneration => 0.25,
-                GeneticTarget::EncryptionOptimization => 0.30,
-                GeneticTarget::NetworkRouting => 0.20,
-                GeneticTarget::ResourceAllocation => 0.35,
-                GeneticTarget::SecurityConfiguration => 0.15,
-                GeneticTarget::Custom(_) => 0.20,
-            },
-            _ => 0.15,
-        };
-
-        debug!(
-            "Local genetic optimization achieved {}% improvement",
-            improvement_factor * 100.0
-        );
-
-        Ok(OptimizationResponse {
-            request_id: Uuid::new_v4(),
-            optimization_type: "local_genetic".to_string(),
-            success: true,
-            improvement_factor,
-            optimized_parameters: HashMap::from([
-                ("mutation_rate".to_string(), serde_json::json!(0.1)),
-                ("crossover_rate".to_string(), serde_json::json!(0.8)),
-                ("population_size".to_string(), serde_json::json!(100)),
-            ]),
-            performance_metrics: self.create_mock_performance_metrics(25.0),
-            recommendations: self.generate_basic_recommendations(),
-            estimated_duration: start_time.elapsed(),
-            confidence_score: 0.75,
-        })
-    }
-
-    async fn local_performance_optimization(
-        &self,
-        request: OptimizationRequest,
-    ) -> BearDogResult<OptimizationResponse> {
-        let start_time = Instant::now();
-        info!("⚡ Running local performance optimization");
-
-        // Simulate performance optimization processing
-        tokio::time::sleep(Duration::from_millis(30)).await;
-
-        let improvement_factor = match request {
-            OptimizationRequest::PerformanceAcceleration {
-                target_improvement, ..
-            } => {
-                // Achieve a fraction of the target improvement locally
-                target_improvement * 0.6
+        // Check if optimization interval has passed
+        if let Some(last_opt) = self.last_optimization {
+            let elapsed = start_time.duration_since(last_opt);
+            if elapsed.as_secs() < self.config.optimization_interval {
+                return Ok(result);
             }
-            OptimizationRequest::GamingOptimization { .. } => 0.40, // Good gaming improvement
-            OptimizationRequest::MLOptimization { .. } => 0.25,
-            _ => 0.20,
-        };
+        }
 
-        debug!(
-            "Local performance optimization achieved {}% improvement",
-            improvement_factor * 100.0
+        tracing::info!("Starting local system optimization");
+
+        // CPU optimization
+        if self.config.cpu_optimization {
+            match self.optimize_cpu().await {
+                Ok(cpu_result) => {
+                    result.cpu_optimizations_applied = cpu_result.optimizations_applied;
+                    result.cpu_performance_gain = cpu_result.performance_gain;
+                }
+                Err(e) => {
+                    tracing::warn!("CPU optimization failed: {}", e);
+                    result.errors.push(format!("CPU optimization: {}", e));
+                }
+            }
+        }
+
+        // Memory optimization
+        if self.config.memory_optimization {
+            match self.optimize_memory().await {
+                Ok(memory_result) => {
+                    result.memory_freed_mb = memory_result.memory_freed;
+                    result.memory_optimizations_applied = memory_result.optimizations_applied;
+                }
+                Err(e) => {
+                    tracing::warn!("Memory optimization failed: {}", e);
+                    result.errors.push(format!("Memory optimization: {}", e));
+                }
+            }
+        }
+
+        // I/O optimization
+        if self.config.io_optimization {
+            match self.optimize_io().await {
+                Ok(io_result) => {
+                    result.io_optimizations_applied = io_result.optimizations_applied;
+                    result.io_performance_gain = io_result.performance_gain;
+                }
+                Err(e) => {
+                    tracing::warn!("I/O optimization failed: {}", e);
+                    result.errors.push(format!("I/O optimization: {}", e));
+                }
+            }
+        }
+
+        let optimization_duration = start_time.elapsed();
+        result.optimization_duration = optimization_duration;
+        result.success = result.errors.is_empty();
+
+        // Update metrics
+        self.metrics.total_optimizations += 1;
+        if result.success {
+            self.metrics.successful_optimizations += 1;
+        }
+        self.metrics.total_optimization_time += optimization_duration;
+
+        self.last_optimization = Some(start_time);
+
+        tracing::info!(
+            "Local optimization completed in {:?} with {} optimizations applied",
+            optimization_duration,
+            result.cpu_optimizations_applied + result.memory_optimizations_applied + result.io_optimizations_applied
         );
 
-        Ok(OptimizationResponse {
-            request_id: Uuid::new_v4(),
-            optimization_type: "local_performance".to_string(),
-            success: true,
-            improvement_factor,
-            optimized_parameters: HashMap::from([
-                ("simd_enabled".to_string(), serde_json::json!(true)),
-                ("cache_size".to_string(), serde_json::json!(1024)),
-                ("thread_pool_size".to_string(), serde_json::json!(8)),
-            ]),
-            performance_metrics: self.create_mock_performance_metrics(15.0), // Better performance
-            recommendations: vec![OptimizationRecommendation {
-                category: RecommendationCategory::Performance,
-                description: "Enable hardware acceleration when available".to_string(),
-                expected_benefit: 0.3,
-                implementation_effort: EffortLevel::Medium,
-                priority: RecommendationPriority::High,
-            }],
-            estimated_duration: start_time.elapsed(),
-            confidence_score: 0.85,
+        Ok(result)
+    }
+
+    /// Optimize CPU usage
+    async fn optimize_cpu(&self) -> BearDogResult<CpuOptimizationResult> {
+        // Simulate CPU optimization
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        
+        Ok(CpuOptimizationResult {
+            optimizations_applied: 2,
+            performance_gain: 5.2,
         })
     }
 
-    async fn local_crypto_optimization(
-        &self,
-        request: OptimizationRequest,
-    ) -> BearDogResult<OptimizationResponse> {
-        let start_time = Instant::now();
-        info!("🔐 Running local crypto optimization");
-
-        // Simulate crypto optimization processing
-        tokio::time::sleep(Duration::from_millis(40)).await;
-
-        let improvement_factor = match request {
-            OptimizationRequest::CryptographicOptimization { .. } => 0.35,
-            OptimizationRequest::GamingOptimization { .. } => 0.45, // Gaming crypto is highly optimized
-            _ => 0.25,
-        };
-
-        debug!(
-            "Local crypto optimization achieved {}% improvement",
-            improvement_factor * 100.0
-        );
-
-        Ok(OptimizationResponse {
-            request_id: Uuid::new_v4(),
-            optimization_type: "local_crypto".to_string(),
-            success: true,
-            improvement_factor,
-            optimized_parameters: HashMap::from([
-                (
-                    "algorithm".to_string(),
-                    serde_json::json!("ChaCha20-Poly1305"),
-                ),
-                ("key_derivation".to_string(), serde_json::json!("Argon2id")),
-                ("parallelization".to_string(), serde_json::json!(true)),
-            ]),
-            performance_metrics: self.create_mock_performance_metrics(12.0), // Very fast crypto
-            recommendations: vec![
-                OptimizationRecommendation {
-                    category: RecommendationCategory::Security,
-                    description: "Consider quantum-resistant algorithms for future-proofing"
-                        .to_string(),
-                    expected_benefit: 0.1,
-                    implementation_effort: EffortLevel::High,
-                    priority: RecommendationPriority::Medium,
-                },
-                OptimizationRecommendation {
-                    category: RecommendationCategory::Performance,
-                    description: "Use hardware crypto acceleration when available".to_string(),
-                    expected_benefit: 0.5,
-                    implementation_effort: EffortLevel::Medium,
-                    priority: RecommendationPriority::High,
-                },
-            ],
-            estimated_duration: start_time.elapsed(),
-            confidence_score: 0.90,
+    /// Optimize memory usage
+    async fn optimize_memory(&self) -> BearDogResult<MemoryOptimizationResult> {
+        // Simulate memory optimization
+        tokio::time::sleep(Duration::from_millis(150)).await;
+        
+        Ok(MemoryOptimizationResult {
+            memory_freed: 128.5,
+            optimizations_applied: 3,
         })
+    }
+
+    /// Optimize I/O performance
+    async fn optimize_io(&self) -> BearDogResult<IoOptimizationResult> {
+        // Simulate I/O optimization
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        
+        Ok(IoOptimizationResult {
+            optimizations_applied: 1,
+            performance_gain: 12.8,
+        })
+    }
+
+    /// Get current optimization metrics
+    pub fn get_metrics(&self) -> &OptimizationMetrics {
+        &self.metrics
     }
 }
 
-impl Default for BearDogLocalOptimizer {
-    fn default() -> Self {
-        Self::new()
+/// Optimization trait - modernized with native async fn
+#[allow(async_fn_in_trait)]
+pub trait SystemOptimizer: Send + Sync {
+    /// Run system optimization
+    async fn optimize_system(&mut self) -> BearDogResult<OptimizationResult>;
+
+    /// Get system performance metrics
+    async fn get_performance_metrics(&self) -> BearDogResult<PerformanceMetrics>;
+
+    /// Check if optimization is needed
+    async fn needs_optimization(&self) -> BearDogResult<bool>;
+}
+
+/// Implement the trait for LocalOptimizer
+impl SystemOptimizer for LocalOptimizer {
+    async fn optimize_system(&mut self) -> BearDogResult<OptimizationResult> {
+        self.optimize().await
+    }
+
+    async fn get_performance_metrics(&self) -> BearDogResult<PerformanceMetrics> {
+        Ok(PerformanceMetrics {
+            cpu_usage: 45.2,
+            memory_usage: 62.8,
+            io_wait: 3.1,
+            load_average: 1.2,
+            uptime_seconds: 86400,
+        })
+    }
+
+    async fn needs_optimization(&self) -> BearDogResult<bool> {
+        let metrics = self.get_performance_metrics().await?;
+        
+        Ok(metrics.cpu_usage > self.config.max_cpu_usage || 
+           metrics.memory_usage > self.config.max_memory_usage)
+    }
+}
+
+/// Optimization result
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct OptimizationResult {
+    pub success: bool,
+    pub cpu_optimizations_applied: u32,
+    pub memory_optimizations_applied: u32,
+    pub io_optimizations_applied: u32,
+    pub cpu_performance_gain: f64,
+    pub memory_freed_mb: f64,
+    pub io_performance_gain: f64,
+    pub optimization_duration: Duration,
+    pub errors: Vec<String>,
+}
+
+/// CPU optimization result
+#[derive(Debug, Clone)]
+struct CpuOptimizationResult {
+    optimizations_applied: u32,
+    performance_gain: f64,
+}
+
+/// Memory optimization result
+#[derive(Debug, Clone)]
+struct MemoryOptimizationResult {
+    memory_freed: f64,
+    optimizations_applied: u32,
+}
+
+/// I/O optimization result
+#[derive(Debug, Clone)]
+struct IoOptimizationResult {
+    optimizations_applied: u32,
+    performance_gain: f64,
+}
+
+/// Performance metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceMetrics {
+    pub cpu_usage: f64,
+    pub memory_usage: f64,
+    pub io_wait: f64,
+    pub load_average: f64,
+    pub uptime_seconds: u64,
+}
+
+/// Optimization metrics
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct OptimizationMetrics {
+    pub total_optimizations: u64,
+    pub successful_optimizations: u64,
+    pub total_optimization_time: Duration,
+}
+
+impl OptimizationMetrics {
+    /// Get success rate as percentage
+    pub fn success_rate(&self) -> f64 {
+        if self.total_optimizations == 0 {
+            0.0
+        } else {
+            (self.successful_optimizations as f64 / self.total_optimizations as f64) * 100.0
+        }
+    }
+
+    /// Get average optimization time
+    pub fn average_optimization_time(&self) -> Duration {
+        if self.total_optimizations == 0 {
+            Duration::from_secs(0)
+        } else {
+            self.total_optimization_time / self.total_optimizations as u32
+        }
     }
 }

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AdapterAuthMethod"],"struct":["AdapterConfig","AdapterConnectionPooling","AdapterPerformanceConfig","AdapterSecurityPolicy","AdapterTimeoutConfig"]};

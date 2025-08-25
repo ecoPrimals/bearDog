@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AlertSeverity","HealthStatus"],"struct":["AlertConfig","HealthCheckConfig","HealthCheckResult","MonitoringMetrics","NetworkUsage","RequestMetrics","ServiceHealthMonitor"]};

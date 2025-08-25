@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["capabilities","config","keys","manager","status","traits"]};

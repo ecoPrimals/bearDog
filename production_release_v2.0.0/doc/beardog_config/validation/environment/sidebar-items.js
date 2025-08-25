@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["EnvironmentType","ServiceAuth","ServiceType"],"fn":["create_basic_requirements","create_local_environment"],"struct":["EnvironmentSetup","EnvironmentStatus","HealthCheckConfig","ResourceRequirements","ResourceStatus","ServiceConnection","ServiceRequirement","ServiceStatus","TlsConfig"]};

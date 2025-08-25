@@ -115,7 +115,10 @@ pub async fn run_ai_genetics(
         
         // Execute genetic operation
         let result = if network.is_some() && request.network_enhancement {
-            execute_network_enhanced_genetics(ai_core, network.unwrap(), &request, ai_optimize).await?
+            execute_network_enhanced_genetics(ai_core, network.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?, &request, ai_optimize).await?
         } else {
             execute_standalone_genetics(ai_core, &request, ai_optimize).await?
         };
@@ -332,8 +335,14 @@ async fn combine_distributed_genetic_results(
 ) -> BearDogResult<EvolutionaryResult> {
     // Find the best result from distributed evolution
     let best_result = results.into_iter()
-        .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).unwrap())
-        .unwrap();
+        .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?)
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     
     Ok(best_result)
 }

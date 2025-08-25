@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Comprehensive Licensing System Tests
 //!
 //! Tests all aspects of BearDog's licensing system including validation,
@@ -18,7 +35,10 @@ async fn test_licensing_system_comprehensive() {
     let core = Arc::new(
         BearDogCore::new(config)
             .await
-            .expect("Core initialization failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+})?,
     );
 
     let mut license_manager = LicenseManager::new();
@@ -133,7 +153,10 @@ async fn test_licensing_edge_cases() {
     let _core = Arc::new(
         BearDogCore::new(config)
             .await
-            .expect("Core initialization failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+})?,
     );
 
     let license_manager = LicenseManager::new();
@@ -168,7 +191,10 @@ async fn test_concurrent_license_operations() {
     let _core = Arc::new(
         BearDogCore::new(config)
             .await
-            .expect("Core initialization failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+})?,
     );
 
     // Create multiple license managers for concurrent testing
@@ -195,7 +221,10 @@ async fn test_concurrent_license_operations() {
 
     // Wait for all concurrent operations to complete
     for handle in handles {
-        handle.await.expect("Concurrent operation should complete");
+        handle.await.map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Concurrent operation should complete", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Concurrent operation should complete", e))
+})?;
     }
 
     println!("✅ Concurrent license operations completed successfully");
@@ -209,7 +238,10 @@ async fn test_license_integration_scenarios() {
     let core = Arc::new(
         BearDogCore::new(config)
             .await
-            .expect("Core initialization failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+})?,
     );
 
     let license_manager = LicenseManager::new();
@@ -232,7 +264,10 @@ async fn test_license_integration_scenarios() {
     }
 
     // Test system health impact
-    let health = core.health_check().await.expect("Health check should work");
+    let health = core.health_check().await.map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Health check should work", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Health check should work", e))
+})?;
     assert!(
         matches!(health.status, beardog::core::HealthStatus::Healthy),
         "Licensing should not impact system health"
@@ -249,7 +284,10 @@ async fn test_license_tiers_and_classification() {
     let _core = Arc::new(
         BearDogCore::new(config)
             .await
-            .expect("Core initialization failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+})?,
     );
 
     let mut license_manager = LicenseManager::new();

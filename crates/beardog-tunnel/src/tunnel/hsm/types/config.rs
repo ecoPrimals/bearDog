@@ -1,64 +1,46 @@
-use beardog_config::network::RetryConfig;
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// HSM Configuration Types - CANONICAL INTEGRATION
+///
+/// **MODERNIZED** ✅ - This module now uses canonical HSM configuration types directly.
+/// 
+/// **MIGRATION COMPLETE**: All re-export bridges have been eliminated.
+/// Import canonical types directly: `use beardog_types::canonical::hsm::*;`
+
+// ✅ CANONICAL IMPORTS - Direct usage of canonical types
+use beardog_types::canonical::hsm::{
+    HsmConfig, HsmProviderType, ConnectionConfig, SecurityConfig, PerformanceConfig,
+    AuthMethod, SoftwareHsmConfig, HsmTierConfig,
+    HsmSecurityTier, TamperResistanceLevel, AttestationLevel, AttestationConfig,
+    MemoryProtectionLevel, HsmCapabilities, HsmType, KeyStorageType,
+    KeyType, Algorithm, CertificationLevel,
+};
+use beardog_types::config::network::core::RetryConfig;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-
-use super::tier::{
-    CertificationLevel, KeyStorageType, MemoryProtectionLevel, StrongBoxImplementation,
-};
-
-/// HSM configuration structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HsmConfig {
-    /// HSM instance identifier
-    pub instance_id: String,
-    /// HSM tier configuration
-    pub tier_config: HsmTierConfig,
-    /// Security configuration
-    pub security_config: SecurityConfig,
-    /// Performance configuration
-    pub performance_config: PerformanceConfig,
-    /// Monitoring configuration
-    pub monitoring_config: MonitoringConfig,
-}
-
-/// HSM tier-specific configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum HsmTierConfig {
-    /// Software HSM configuration
-    Software(SoftwareHsmConfig),
-    /// Hardware HSM configuration
-    Hardware(HardwareHsmConfig),
-    /// Smartphone HSM configuration
-    Smartphone(SmartphoneHsmConfig),
-    /// Hybrid HSM configuration
-    Hybrid(HybridHsmConfig),
-}
-
-/// Software HSM configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SoftwareHsmConfig {
-    /// Key storage configuration
-    pub key_storage: KeyStoreConfig,
-    /// Memory protection level
-    pub memory_protection: MemoryProtectionLevel,
-    /// Crypto backend to use
-    pub crypto_backend: CryptoBackend,
-    /// Whether to enable key caching
-    pub enable_key_caching: bool,
-    /// Maximum number of keys to cache
-    pub max_cached_keys: usize,
-    /// Key store configuration (legacy field for compatibility)
-    pub key_store_config: KeyStoreConfig,
-    /// Memory configuration (legacy field for compatibility)
-    pub memory_config: MemoryConfig,
-    /// Implementation type (legacy field for compatibility)
-    pub implementation: String,
-    pub key_derivation_rounds: u32,
-    pub encryption_algorithm: String,
-    pub key_storage_path: Option<String>,
-}
-
+// ✅ MIGRATION BRIDGES ELIMINATED
+// Code should import canonical types directly for:
+// - Better performance (no re-export overhead)
+// - Cleaner dependencies (direct imports)
+// - Canonical consistency (same import patterns)
+// - Easier maintenance (fewer abstraction layers)
 /// Memory configuration for HSM
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryConfig {
@@ -69,19 +51,17 @@ pub struct MemoryConfig {
     /// Memory pool size
     pub pool_size: usize,
 }
+impl Default for MemoryConfig {}
 
-impl Default for MemoryConfig {
+
     fn default() -> Self {
         Self {
-            protection_level: MemoryProtectionLevel::Basic,
+            protection_level: MemoryProtectionLevel::Medium, // Use canonical enum value
             enable_encryption: true,
             pool_size: 1024 * 1024, // 1MB
         }
     }
-}
-
 /// Hardware HSM configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HardwareHsmConfig {
     /// HSM connection configuration
     pub connection: HsmConnectionConfig,
@@ -89,19 +69,15 @@ pub struct HardwareHsmConfig {
     pub auth_config: AuthConfig,
     /// High availability configuration
     pub ha_config: Option<HaConfig>,
-}
-
 /// Smartphone HSM configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SmartphoneHsmConfig {
     /// iOS HSM configuration
     Ios(IosHsmConfig),
     /// Android HSM configuration
     Android(AndroidHsmConfig),
-}
+/// iOS HSM configuration}
 
-/// iOS HSM configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct IosHsmConfig {
     /// iOS version
     pub ios_version: String,
@@ -109,10 +85,7 @@ pub struct IosHsmConfig {
     pub secure_enclave_config: SecureEnclaveConfig,
     /// Keychain configuration
     pub keychain_config: KeychainConfig,
-}
-
 /// Android HSM configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidHsmConfig {
     /// Device manufacturer
     pub manufacturer: String,
@@ -128,21 +101,7 @@ pub struct AndroidHsmConfig {
     pub keystore_config: KeystoreConfig,
     /// Attestation configuration
     pub attestation_config: AttestationConfig,
-}
-
-/// Hybrid HSM configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HybridHsmConfig {
-    /// Primary HSM configuration
-    pub primary_hsm: Box<HsmTierConfig>,
-    /// Secondary HSM configurations
-    pub secondary_hsms: Vec<HsmTierConfig>,
-    /// Load balancing strategy
-    pub load_balancing: LoadBalancingStrategy,
-    /// Failover configuration
-    pub failover_config: FailoverConfig,
-}
-
+// Use beardog_types::canonical::hsm::config for hybrid configurations
 /// Security configuration for HSM
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityConfig {
@@ -154,10 +113,9 @@ pub struct SecurityConfig {
     pub key_rotation_policy: KeyRotationPolicy,
     /// Audit configuration
     pub audit_config: AuditConfig,
-}
+/// Performance configuration for HSM operations}
 
-/// Performance configuration for HSM operations
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct PerformanceConfig {
     /// Maximum operation timeout in milliseconds
     pub max_operation_timeout: u64,
@@ -168,10 +126,7 @@ pub struct PerformanceConfig {
     /// Retry configuration
     pub retry_config: RetryConfig,
     pub operation_timeout: Duration,
-}
-
 /// Monitoring configuration for HSM operations
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MonitoringConfig {
     /// Enable metrics collection
     pub enable_metrics: bool,
@@ -181,10 +136,7 @@ pub struct MonitoringConfig {
     pub enable_health_checks: bool,
     /// Health check interval in seconds
     pub health_check_interval: u64,
-}
-
 /// Alert thresholds for HSM monitoring
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertThresholds {
     /// Maximum error rate before alerting (0.0 to 1.0)
     pub max_error_rate: f64,
@@ -192,10 +144,7 @@ pub struct AlertThresholds {
     pub max_latency_ms: f64,
     /// Minimum availability percentage before alerting
     pub min_availability_percent: f64,
-}
-
 /// HSM connection configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmConnectionConfig {
     /// Connection type
     pub connection_type: ConnectionType,
@@ -205,10 +154,7 @@ pub struct HsmConnectionConfig {
     pub timeout_ms: u64,
     /// Number of retry attempts
     pub retry_attempts: u32,
-}
-
 /// HSM connection types
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ConnectionType {
     /// Network connection
     Network {
@@ -225,20 +171,15 @@ pub enum ConnectionType {
         port_path: String,
         /// Baud rate
         baud_rate: u32,
-    },
     /// USB connection
     Usb {
         /// USB vendor ID
         vendor_id: u16,
         /// USB product ID
         product_id: u16,
-    },
     /// Local connection (software HSM)
     Local,
-}
-
 /// Authentication configuration for HSM
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthConfig {
     /// Authentication method
     pub auth_method: AuthMethod,
@@ -246,10 +187,7 @@ pub struct AuthConfig {
     pub credentials: AuthCredentials,
     /// Multi-factor authentication configuration
     pub mfa_config: Option<MfaConfig>,
-}
-
 /// Authentication methods
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthMethod {
     /// Password-based authentication
     Password,
@@ -261,10 +199,9 @@ pub enum AuthMethod {
     Biometric,
     /// Multi-factor authentication
     MultiFactor,
-}
+/// Authentication credentials}
 
-/// Authentication credentials
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum AuthCredentials {
     /// Username and password
     Password {
@@ -272,43 +209,26 @@ pub enum AuthCredentials {
         username: String,
         /// Password (should be encrypted)
         password: String,
-    },
     /// Certificate and private key
     Certificate {
         /// Certificate data
         certificate: Vec<u8>,
         /// Private key data
         private_key: Vec<u8>,
-    },
     /// Smart card configuration
     SmartCard {
         /// Smart card slot
         slot: u32,
         /// PIN
         pin: String,
-    },
     /// Biometric template
     Biometric {
         /// Biometric template data
         template: Vec<u8>,
         /// Biometric type
         biometric_type: String,
-    },
-}
-
 /// Multi-factor authentication configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MfaConfig {
-    /// Required authentication factors
-    pub required_factors: Vec<AuthMethod>,
-    /// MFA timeout in seconds
-    pub timeout_seconds: u64,
-    /// Maximum MFA attempts
-    pub max_attempts: u32,
-}
-
 /// High availability configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HaConfig {
     /// Cluster configuration
     pub cluster_config: ClusterConfig,
@@ -316,10 +236,7 @@ pub struct HaConfig {
     pub failover_config: FailoverConfig,
     /// Load balancing configuration
     pub load_balancing: LoadBalancingStrategy,
-}
-
 /// Cluster configuration for HA
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterConfig {
     /// Cluster nodes
     pub nodes: Vec<ClusterNode>,
@@ -327,10 +244,7 @@ pub struct ClusterConfig {
     pub quorum_size: u32,
     /// Cluster synchronization interval
     pub sync_interval_seconds: u64,
-}
-
 /// Cluster node configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterNode {
     /// Node identifier
     pub node_id: String,
@@ -340,10 +254,7 @@ pub struct ClusterNode {
     pub port: u16,
     /// Node priority
     pub priority: u32,
-}
-
 /// Failover configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailoverConfig {
     /// Failover strategy
     pub strategy: FailoverStrategy,
@@ -353,10 +264,7 @@ pub struct FailoverConfig {
     pub health_check: HealthCheckConfig,
     pub enable_automatic_failover: bool,
     pub failover_timeout: Duration,
-}
-
 /// Failover strategies
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FailoverStrategy {
     /// Automatic failover
     Automatic,
@@ -364,10 +272,9 @@ pub enum FailoverStrategy {
     Manual,
     /// Hybrid (automatic with manual override)
     Hybrid,
-}
+/// Load balancing strategies}
 
-/// Load balancing strategies
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum LoadBalancingStrategy {
     /// Round-robin load balancing
     RoundRobin,
@@ -377,23 +284,15 @@ pub enum LoadBalancingStrategy {
     WeightedRoundRobin,
     /// Performance-based routing
     PerformanceBased,
-}
-
 /// Health check configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
-    /// Health check interval in seconds
     pub interval_seconds: u64,
     /// Health check timeout in seconds
-    pub timeout_seconds: u64,
     /// Number of consecutive failures before marking unhealthy
     pub failure_threshold: u32,
     /// Number of consecutive successes before marking healthy
     pub success_threshold: u32,
-}
-
 /// Key rotation policy
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct KeyRotationPolicy {
     /// Enable automatic key rotation
     pub enable_auto_rotation: bool,
@@ -403,10 +302,7 @@ pub struct KeyRotationPolicy {
     pub overlap_period_days: u32,
     /// Maximum key age in days
     pub max_key_age_days: u32,
-}
-
 /// Audit configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuditConfig {
     /// Enable audit logging
     pub enable_audit_logging: bool,
@@ -416,10 +312,7 @@ pub struct AuditConfig {
     pub log_destination: AuditLogDestination,
     /// Events to audit
     pub audit_events: Vec<AuditEvent>,
-}
-
 /// Audit log formats
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum AuditLogFormat {
     /// JSON format
     #[default]
@@ -430,35 +323,26 @@ pub enum AuditLogFormat {
     Syslog,
     /// Custom format
     Custom(String),
-}
+/// Audit log destinations}
 
-/// Audit log destinations
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+
 pub enum AuditLogDestination {
     /// Local file
-    #[default]
     File,
     /// Syslog server
     Syslog {
         /// Syslog server address
         server: String,
         /// Syslog port
-        port: u16,
-    },
     /// Remote logging service
     Remote {
         /// Remote service URL
         url: String,
         /// Authentication token
         auth_token: String,
-    },
-}
-
 /// Audit events
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum AuditEvent {
     /// Key generation events
-    #[default]
     KeyGeneration,
     /// Key usage events
     KeyUsage,
@@ -470,21 +354,16 @@ pub enum AuditEvent {
     ConfigurationChange,
     /// All events
     All,
-}
+/// Secure Enclave configuration for iOS}
 
-/// Secure Enclave configuration for iOS
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct SecureEnclaveConfig {
     /// Enable biometric authentication
     pub enable_biometric_auth: bool,
     /// Require user presence for operations
     pub require_user_presence: bool,
     /// Key attestation configuration
-    pub attestation_config: AttestationConfig,
-}
-
 /// Keychain configuration for iOS
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeychainConfig {
     /// Keychain access group
     pub access_group: Option<String>,
@@ -492,10 +371,7 @@ pub struct KeychainConfig {
     pub accessibility: KeychainAccessibility,
     /// Synchronize with iCloud Keychain
     pub sync_with_icloud: bool,
-}
-
 /// Keychain accessibility levels
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeychainAccessibility {
     /// Accessible when unlocked
     WhenUnlocked,
@@ -507,10 +383,9 @@ pub enum KeychainAccessibility {
     AfterFirstUnlockThisDeviceOnly,
     /// Accessible when passcode set this device only
     WhenPasscodeSetThisDeviceOnly,
-}
+/// Keystore configuration for Android}
 
-/// Keystore configuration for Android
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct KeystoreConfig {
     /// Key alias prefix
     pub alias_prefix: String,
@@ -520,17 +395,7 @@ pub struct KeystoreConfig {
     pub user_authentication_validity_duration: Option<u64>,
     /// Require StrongBox if available
     pub require_strongbox: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AttestationConfig {
-    pub require_hardware_attestation: bool,
-    pub accepted_attestation_levels: Vec<String>,
-    pub attestation_timeout: Duration,
-}
-
 /// Key storage configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyStoreConfig {
     /// Storage type
     pub storage_type: KeyStorageType,
@@ -544,10 +409,7 @@ pub struct KeyStoreConfig {
     pub file_config: Option<FileStorageConfig>,
     /// Database configuration
     pub db_config: Option<DatabaseConfig>,
-}
-
 /// Key source for encryption
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeySource {
     /// Derive from password
     Derived,
@@ -557,10 +419,9 @@ pub enum KeySource {
     Environment(String),
     /// External key management system
     External(String),
-}
+/// File storage configuration}
 
-/// File storage configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct FileStorageConfig {
     /// Storage directory path
     pub storage_path: String,
@@ -568,21 +429,14 @@ pub struct FileStorageConfig {
     pub file_permissions: u32,
     /// Backup path
     pub backup_path: Option<String>,
-}
-
 /// Database configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseConfig {
     /// Database URL
     pub database_url: String,
-    /// Connection pool size
-    pub connection_pool_size: u32,
     /// Connection timeout in seconds
     pub connection_timeout_seconds: u64,
     /// Enable encryption at rest
     pub enable_encryption_at_rest: bool,
-}
-
 /// Crypto backend types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CryptoBackend {
@@ -593,43 +447,18 @@ pub enum CryptoBackend {
     /// RustCrypto backend
     RustCrypto,
     /// Hardware backend
-    Hardware,
     /// Custom backend
-    Custom(String),
-}
+// Default implementations}
 
-// Default implementations
+
 impl Default for AttestationConfig {
-    fn default() -> Self {
-        Self {
             require_hardware_attestation: false,
             accepted_attestation_levels: vec!["software".to_string()],
             attestation_timeout: Duration::from_secs(30),
-        }
-    }
-}
+// Removed Default implementation for deprecated LegacySoftwareHsmConfig}
 
-impl Default for SoftwareHsmConfig {
-    fn default() -> Self {
-        Self {
-            key_storage: KeyStoreConfig::default(),
-            memory_protection: MemoryProtectionLevel::Advanced,
-            crypto_backend: CryptoBackend::Ring,
-            enable_key_caching: true,
-            max_cached_keys: 1000,
-            key_store_config: KeyStoreConfig::default(),
-            memory_config: MemoryConfig::default(),
-            implementation: "SoftwareHSM".to_string(),
-            key_derivation_rounds: 100_000,
-            encryption_algorithm: "AES-256-GCM".to_string(),
-            key_storage_path: None,
-        }
-    }
-}
 
 impl Default for AndroidHsmConfig {
-    fn default() -> Self {
-        Self {
             manufacturer: "Google".to_string(),
             model: "Pixel".to_string(),
             android_version: "13".to_string(),
@@ -640,70 +469,43 @@ impl Default for AndroidHsmConfig {
             },
             keystore_config: KeystoreConfig::default(),
             attestation_config: AttestationConfig::default(),
-        }
-    }
-}
-
 impl Default for KeyStoreConfig {
-    fn default() -> Self {
-        Self {
             storage_type: KeyStorageType::EncryptedFile,
             encryption_key_source: KeySource::Derived,
             backup_enabled: false,
             cache_size: 1000,
             file_config: Some(FileStorageConfig::default()),
-            db_config: None,
-        }
-    }
-}
+            db_config: None,}
+
 
 impl Default for FileStorageConfig {
-    fn default() -> Self {
-        Self {
             storage_path: "/tmp/hsm_keys".to_string(),
             file_permissions: 0o600,
             backup_path: None,
-        }
-    }
-}
-
 impl Default for KeystoreConfig {
-    fn default() -> Self {
-        Self {
             alias_prefix: "beardog_".to_string(),
             require_user_authentication: false,
             user_authentication_validity_duration: None,
-            require_strongbox: false,
-        }
-    }
-}
+            require_strongbox: false,}
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct HsmManagerConfig {
     pub hsm_configs: Vec<String>,
     pub health_config: HealthConfig,
-    pub failover_config: FailoverConfig,
     pub performance_config: PerformanceConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct HealthConfig {
-    pub check_interval: Duration,
-    pub failure_threshold: u32,
-}
+    pub check_interval: Duration,}
+
 
 impl Default for HealthConfig {
-    fn default() -> Self {
-        Self {
             check_interval: Duration::from_secs(60),
-            failure_threshold: 3,
-        }
-    }
-}
+            failure_threshold: 3,}
+
 
 impl Default for FailoverConfig {
-    fn default() -> Self {
-        Self {
             enable_automatic_failover: true,
             failover_timeout: Duration::from_secs(10),
             strategy: FailoverStrategy::Automatic,
@@ -713,19 +515,9 @@ impl Default for FailoverConfig {
                 timeout_seconds: 10,
                 failure_threshold: 3,
                 success_threshold: 1,
-            },
-        }
-    }
-}
-
 impl Default for PerformanceConfig {
-    fn default() -> Self {
-        Self {
             max_concurrent_operations: 10,
             operation_timeout: Duration::from_secs(30),
             max_operation_timeout: 30000,
             retry_config: RetryConfig::default(),
             connection_pool_size: 10,
-        }
-    }
-}

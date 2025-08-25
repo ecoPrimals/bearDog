@@ -1,17 +1,31 @@
-//! Workflow system types for cross-node operations
-//!
-//! This module contains all types related to workflow management,
-//! including workflow requests, definitions, automated checks, and escalation conditions.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Workflow system types for cross-node operations
+///
+/// This module contains all types related to workflow management,
+/// including workflow requests, definitions, automated checks, and escalation conditions.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-
 use super::authorization::ResourcePermission;
 use super::genetics::NodeCapability;
 use super::spawning::SpawnPurpose;
-
 /// Cross-node workflow request
-///
 /// Represents a request to execute a workflow across multiple nodes,
 /// including automation checks and escalation conditions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,9 +49,7 @@ pub struct CrossNodeWorkflowRequest {
     /// When the request expires
     pub expires_at: DateTime<Utc>,
 }
-
 /// Workflow types for cross-node operations
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BearDogWorkflowType {
     /// Data backup workflow
     DataBackup {
@@ -56,7 +68,6 @@ pub enum BearDogWorkflowType {
         standards: Vec<String>,
         /// Whether automated remediation is enabled
         automated_remediation: bool,
-    },
     /// Security incident response workflow
     SecurityIncidentResponse {
         /// Threat level (1-10)
@@ -65,7 +76,6 @@ pub enum BearDogWorkflowType {
         affected_resources: Vec<String>,
         /// Response team members
         response_team: Vec<String>,
-    },
     /// Genetic spawning workflow
     GeneticSpawning {
         /// Parent genetics to use
@@ -74,11 +84,7 @@ pub enum BearDogWorkflowType {
         spawn_purpose: SpawnPurpose,
         /// Target capabilities for spawned instance
         target_capabilities: Vec<NodeCapability>,
-    },
-}
-
 /// Automated checks for workflow approval
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AutomatedCheck {
     /// Check resource availability
     ResourceAvailability,
@@ -90,10 +96,9 @@ pub enum AutomatedCheck {
     TrustVerification,
     /// Match capabilities
     CapabilityMatch,
-}
+/// Conditions that trigger escalation to human approval}
 
-/// Conditions that trigger escalation to human approval
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum EscalationCondition {
     /// High risk operation detected
     HighRiskOperation,
@@ -105,10 +110,7 @@ pub enum EscalationCondition {
     ResourceExhaustion,
     /// Security threat detected
     SecurityThreat,
-}
-
 /// Workflow status enumeration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WorkflowStatus {
     /// Workflow is pending
     Pending,
@@ -120,4 +122,3 @@ pub enum WorkflowStatus {
     Failed(String),
     /// Workflow requires human approval
     RequiresApproval,
-}

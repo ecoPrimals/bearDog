@@ -1,14 +1,28 @@
-//! Ethical framework for human entropy collection
-//!
-//! This module defines comprehensive ethical guidelines and policies for
-//! collecting human-generated entropy, ensuring privacy, consent, and user
-//! control at all times.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 
 /// Ethical framework for human entropy collection
 ///
+/// This module defines comprehensive ethical guidelines and policies for
+/// collecting human-generated entropy, ensuring privacy, consent, and user
+/// control at all times.
+
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 /// Defines the comprehensive ethical guidelines and policies that must be
 /// followed during human entropy collection, ensuring privacy, consent,
 /// and user control at all times.
@@ -27,13 +41,10 @@ pub struct EntropyCollectionEthics {
     /// Transparency policies and reporting
     pub transparency: TransparencyPolicy,
 }
-
 /// Informed consent for entropy collection
-///
 /// Represents the legally binding informed consent given by a user for
 /// entropy collection activities. Includes full disclosure of collection
 /// methods, usage, and retention policies.
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InformedConsent {
     /// Detailed description of what data is collected and how
     pub collection_description: String,
@@ -47,10 +58,7 @@ pub struct InformedConsent {
     pub consent_timestamp: DateTime<Utc>,
     /// Digital signature validating the consent
     pub consent_signature: DigitalSignature,
-}
-
 /// User withdrawal rights and procedures
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WithdrawalRights {
     /// Whether the user can withdraw consent
     pub can_withdraw: bool,
@@ -58,10 +66,7 @@ pub struct WithdrawalRights {
     pub withdrawal_process: String,
     /// Timeline for data deletion after withdrawal
     pub data_deletion_timeline: chrono::Duration,
-}
-
 /// Digital signature for consent validation
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DigitalSignature {
     /// Raw signature bytes
     pub signature_bytes: Vec<u8>,
@@ -69,10 +74,7 @@ pub struct DigitalSignature {
     pub algorithm: String,
     /// Identifier of the signing key
     pub key_id: String,
-}
-
 /// Privacy protection policies
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyProtection {
     /// Whether data minimization is applied
     pub data_minimization: bool,
@@ -82,10 +84,7 @@ pub struct PrivacyProtection {
     pub anonymization_level: AnonymizationLevel,
     /// Whether data is encrypted at rest
     pub encryption_at_rest: bool,
-}
-
 /// Levels of data anonymization
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AnonymizationLevel {
     /// No anonymization applied
     None,
@@ -97,10 +96,9 @@ pub enum AnonymizationLevel {
     High,
     /// Maximum anonymization (only aggregate patterns preserved)
     Maximum,
-}
+/// Data minimization principles}
 
-/// Data minimization principles
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct DataMinimization {
     /// Only collect data that is strictly necessary
     pub collect_only_necessary: bool,
@@ -108,10 +106,7 @@ pub struct DataMinimization {
     pub feature_extraction_only: bool,
     /// How long raw data is retained (should be minimal)
     pub raw_data_retention: chrono::Duration,
-}
-
 /// User control capabilities
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserControl {
     /// User can pause data collection at any time
     pub can_pause_collection: bool,
@@ -121,10 +116,7 @@ pub struct UserControl {
     pub can_delete_data: bool,
     /// User has granular control over what is collected
     pub granular_permissions: bool,
-}
-
 /// Purpose limitation for data collection
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PurposeLimitation {
     /// Primary purpose for data collection
     pub primary_purpose: String,
@@ -132,10 +124,7 @@ pub struct PurposeLimitation {
     pub secondary_purposes: Vec<String>,
     /// Whether users are notified of purpose changes
     pub purpose_change_notification: bool,
-}
-
 /// Transparency policies
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransparencyPolicy {
     /// Description of algorithms used for processing
     pub algorithm_description: String,
@@ -145,17 +134,12 @@ pub struct TransparencyPolicy {
     pub security_measures: String,
     /// Whether users can access audit logs
     pub audit_log_access: bool,
-}
-
 /// Privacy metadata for collected data
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyMetadata {
     /// Whether data minimization was applied
     pub data_minimization_applied: bool,
     /// Whether raw data was deleted
     pub raw_data_deleted: bool,
     /// Level of anonymization applied
-    pub anonymization_level: AnonymizationLevel,
     /// When the data was processed
     pub processing_timestamp: DateTime<Utc>,
-}

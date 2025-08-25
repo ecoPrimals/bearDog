@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AttestationLevel","BootStateColor"],"struct":["AttestationData","AttestationVerificationDetails","AttestationVerificationResult","BootState","HardwareInfo","OsInfo","SecurityChipInfo","SoftwareInfo"]};

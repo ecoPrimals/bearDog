@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["BootstrapConfig","FederationConfig","NodeRegistryConfig","P2PConfig","PhonebookConfig","TrustConfig"]};

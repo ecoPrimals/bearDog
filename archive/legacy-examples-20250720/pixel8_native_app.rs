@@ -46,7 +46,10 @@ pub extern "C" fn android_main(app: *mut std::os::raw::c_void) {
     info!("🚀 BearDog Pure Rust Android App Starting");
     
     // Initialize async runtime
-    let rt = tokio::runtime::Runtime::new().unwrap();
+    let rt = tokio::runtime::Runtime::new().map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+})?;
     
     // Run BearDog HSM system
     match rt.block_on(run_beardog_hsm()) {

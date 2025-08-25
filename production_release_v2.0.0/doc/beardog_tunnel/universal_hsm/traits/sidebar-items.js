@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AuthenticationMethod","Platform","ProviderType"],"mod":["attestation","entropy","provider"],"struct":["AuthenticationContext","KeyGenerationRequest","OperationMetadata","OperationResult","ProviderHealth","ProviderInfo","SigningRequest","VerificationRequest"]};

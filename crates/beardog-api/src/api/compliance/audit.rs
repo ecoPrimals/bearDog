@@ -1,6 +1,23 @@
-//! Audit Trail Management Handlers
-//!
-//! Handlers for audit trail retrieval, logging, searching, and exporting.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Audit Trail Management Handlers
+///
+/// Handlers for audit trail retrieval, logging, searching, and exporting.
 
 use super::models::*;
 use crate::api::*;
@@ -12,7 +29,6 @@ use axum::{
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::info;
-
 /// Get audit trail with filtering and pagination
 pub async fn get_audit_trail(
     State(_state): State<AppState>,
@@ -20,9 +36,7 @@ pub async fn get_audit_trail(
 ) -> Result<Json<ApiResponse<AuditTrailResponse>>, StatusCode> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
-
     info!("🔍 Retrieving audit trail with filters: {:?}", params);
-
     // Mock audit events - in production this would query the audit database
     let audit_events = vec![
         AuditEvent {
@@ -44,28 +58,18 @@ pub async fn get_audit_trail(
                 map
             },
         },
-        AuditEvent {
-            id: uuid::Uuid::new_v4().to_string(),
             timestamp: (chrono::Utc::now() - chrono::Duration::minutes(15)).to_rfc3339(),
             event_type: "DATA_ACCESS".to_string(),
-            severity: "INFO".to_string(),
             actor: "admin@example.com".to_string(),
             resource: "sensitive_database".to_string(),
             action: "query_execution".to_string(),
-            outcome: "SUCCESS".to_string(),
             ip_address: Some("192.168.1.101".to_string()),
             user_agent: Some("DataTool/1.0".to_string()),
             session_id: Some("session_67890".to_string()),
-            metadata: {
-                let mut map = HashMap::new();
                 map.insert("query_type".to_string(), "SELECT".to_string());
                 map.insert("records_returned".to_string(), "42".to_string());
                 map.insert("compliance_framework".to_string(), "GDPR".to_string());
-                map
-            },
-        },
     ];
-
     let response = AuditTrailResponse {
         events: audit_events,
         total_count: 1247,
@@ -79,9 +83,7 @@ pub async fn get_audit_trail(
             event_type: params.event_type.clone(),
             severity: params.severity.clone(),
             actor: params.actor.clone(),
-        },
     };
-
     let processing_time = start_time.elapsed().as_millis() as u64;
     Ok(Json(success_response(
         response,
@@ -90,21 +92,14 @@ pub async fn get_audit_trail(
         true,
     )))
 }
-
 /// Log new audit event
 pub async fn log_audit_event(
-    State(_state): State<AppState>,
     Json(request): Json<LogAuditEventRequest>,
 ) -> Result<Json<ApiResponse<LogAuditEventResponse>>, StatusCode> {
-    let start_time = Instant::now();
-    let request_id = uuid::Uuid::new_v4().to_string();
-
     info!("📝 Logging audit event: {}", request.event_type);
-
     // In production, this would save to the audit database
     let event_id = uuid::Uuid::new_v4().to_string();
     let timestamp = chrono::Utc::now().to_rfc3339();
-
     let response = LogAuditEventResponse {
         event_id,
         timestamp,
@@ -113,40 +108,15 @@ pub async fn log_audit_event(
         compliance_frameworks: vec!["GDPR".to_string(), "HIPAA".to_string(), "SOX".to_string()],
         encrypted: true,
         tamper_proof: true,
-    };
-
-    let processing_time = start_time.elapsed().as_millis() as u64;
-    Ok(Json(success_response(
-        response,
-        request_id,
-        processing_time,
         false,
-    )))
-}
-
 /// Search audit trail
 pub async fn search_audit_trail(
     State(_): State<AppState>,
     Json(_): Json<serde_json::Value>,
 ) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
-    let request_id = uuid::Uuid::new_v4().to_string();
-    Ok(Json(success_response(
         serde_json::json!({"message": "Audit search functionality"}),
-        request_id,
         25,
-        false,
-    )))
-}
-
 /// Export audit trail
 pub async fn export_audit_trail(
-    State(_): State<AppState>,
-) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
-    let request_id = uuid::Uuid::new_v4().to_string();
-    Ok(Json(success_response(
         serde_json::json!({"export_url": "https://api.beardog.com/exports/audit_12345.csv"}),
-        request_id,
         150,
-        false,
-    )))
-}
