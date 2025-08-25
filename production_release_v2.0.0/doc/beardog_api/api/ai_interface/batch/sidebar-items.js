@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["AIBatchSecurityOperation","AIBatchSecurityRequest","AIBatchSecurityResponse","AIBatchSecurityResult","AIBatchSpawnRequest","AIBatchSpawnResponse","AIBatchSpawnResult","BatchFailure","BatchOptions","BatchRequest","BatchResponse","BatchResult","BatchSummary"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BootstrapStrategy","CacheStrategy","DiscoveryFilterType","DiscoveryMethod","HttpAuth","TrustComputationMethod","TrustLevel","VerificationMethod"],"struct":["BootstrapNode","DiscoveryConfig","DiscoveryFilter","HsmDiscoveryFilters","StaticServiceEntry"]};

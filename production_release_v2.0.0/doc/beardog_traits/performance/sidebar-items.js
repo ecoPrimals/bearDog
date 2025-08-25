@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PrefetchHint"],"struct":["PoolStats","PooledItem"],"trait":["BatchProcessor","LockFree","MemoryPool","Prefetchable","SimdOptimized","StreamProcessor","TaskPool","ZeroCopy"]};

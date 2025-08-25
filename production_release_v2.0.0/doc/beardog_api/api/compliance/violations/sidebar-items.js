@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_violation_details","list_compliance_violations","remediate_violation"]};

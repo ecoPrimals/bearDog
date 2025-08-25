@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["EmailAdapter","NotificationAdapterBuilder","SlackAdapter","SmsAdapter","WebhookAdapter"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AuthFactor","MfaCombinationStrategy","MfaMethod","TotpAlgorithm"],"struct":["AuthenticationConfig","EncryptionConfig","MfaConfig","PasswordPolicyConfig","RateLimitConfig","SecurityConfig","SessionConfig","TotpConfig"]};

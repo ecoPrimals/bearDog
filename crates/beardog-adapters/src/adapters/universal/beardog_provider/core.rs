@@ -1,16 +1,30 @@
-//! Core BearDog PrimalProvider implementation
-//!
-//! This module contains the main BearDogPrimalProvider struct and its constructor.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Core BearDog PrimalProvider implementation
+///
+/// This module contains the main BearDogPrimalProvider struct and its constructor.
 
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
-
 use super::super::songbird_handoff::health::UniversalHealthMonitor;
 use super::super::songbird_handoff::registration::SongBirdRegistrationManager;
-
-use beardog_config::BearDogConfig;
-
+use beardog_types::config::BearDogConfig;
 /// Metadata for the BearDog provider
 #[derive(Debug, Clone)]
 pub struct ProviderMetadata {
@@ -23,33 +37,26 @@ pub struct ProviderMetadata {
     /// Provider capabilities
     pub capabilities: Vec<String>,
 }
-
 /// BearDog PrimalProvider core structure
 pub struct BearDogPrimalProvider<T: Send + Sync> {
     /// Core instance
     pub(crate) core: Arc<RwLock<Option<T>>>,
-
     /// Instance ID
     pub(crate) instance_id: String,
-
     /// Provider metadata
     pub(crate) metadata: ProviderMetadata,
-
     /// Configuration
     pub(crate) config: Arc<BearDogConfig>,
-
     /// Registration manager for SongBird integration
     pub(crate) registration_manager: Arc<SongBirdRegistrationManager<T>>,
-
     /// Health monitor
     pub(crate) health_monitor: Arc<UniversalHealthMonitor>,
-
     /// Background tasks
     pub(crate) background_tasks: Arc<RwLock<Vec<JoinHandle<()>>>>,
-}
-
 impl<T: Send + Sync> BearDogPrimalProvider<T> {
-    /// Create a new BearDog PrimalProvider
+    /// Create a new BearDog PrimalProvider}
+
+
     pub fn new(
         core: Arc<RwLock<Option<T>>>,
         instance_id: String,
@@ -58,7 +65,7 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
         health_monitor: Arc<UniversalHealthMonitor>,
     ) -> Self {
         // Use runtime configuration for service endpoints
-        let runtime_config = beardog_config::get_config();
+        let runtime_config = beardog_types::config::get_config();
         let _endpoints = ServiceEndpoints {
             primary: runtime_config.endpoints.external_api_base_url.clone(),
             health: format!("{}/health", runtime_config.endpoints.external_api_base_url),
@@ -67,7 +74,6 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
             websocket: Some(format!("wss://{}/ws", 
                 runtime_config.endpoints.external_api_base_url.replace("https://", "").replace("http://", ""))),
         };
-
         let metadata = ProviderMetadata {
             name: "BearDog Security Provider".to_string(),
             version: "1.0.0".to_string(),
@@ -81,8 +87,6 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                 "audit_logging".to_string(),
                 "threat_detection".to_string(),
             ],
-        };
-
         Self {
             core,
             instance_id,
@@ -93,21 +97,15 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
             background_tasks: Arc::new(RwLock::new(Vec::new())),
         }
     }
-
     /// Get the provider metadata
     pub fn metadata(&self) -> &ProviderMetadata {
         &self.metadata
-    }
+    /// Get the instance ID}
 
-    /// Get the instance ID
+
     pub fn instance_id(&self) -> &str {
         &self.instance_id
-    }
-
     /// Get the configuration
     pub fn config(&self) -> &Arc<BearDogConfig> {
         &self.config
-    }
-}
-
 use super::super::songbird_handoff::types::ServiceEndpoints;

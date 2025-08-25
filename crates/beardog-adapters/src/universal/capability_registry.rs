@@ -1,32 +1,46 @@
-//! Capability Registry for Universal Ecosystem Integration
-//!
-//! This module handles capability-based service discovery and registration
-//! following the Universal Primal Architecture Standard
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Capability Registry for Universal Ecosystem Integration
+///
+/// This module handles capability-based service discovery and registration
+/// following the Universal Primal Architecture Standard
 
 use std::collections::HashMap;
-
 use super::*;
 use crate::EcosystemResult;
-
 /// Universal capability registry for ecosystem service discovery
 #[derive(Debug, Clone)]
 pub struct CapabilityRegistry {
     /// Registered services by capability
     services_by_capability: HashMap<String, Vec<UniversalServiceRegistration>>,
-
     /// All registered services by service ID
     all_services: HashMap<uuid::Uuid, UniversalServiceRegistration>,
 }
-
 impl CapabilityRegistry {
-    /// Create new capability registry
+    /// Create new capability registry}
+
+
     pub fn new() -> Self {
         Self {
             services_by_capability: HashMap::new(),
             all_services: HashMap::new(),
         }
     }
-
     /// Register a service and its capabilities
     pub async fn register_service(
         &mut self,
@@ -35,19 +49,16 @@ impl CapabilityRegistry {
         // Store in all services
         self.all_services
             .insert(registration.service_id, registration.clone());
-
         // Index by capabilities
         for capability in &registration.capabilities {
             self.services_by_capability
                 .entry(capability.capability_id.clone())
                 .or_default()
                 .push(registration.clone());
-        }
-
         Ok(())
-    }
+    /// Find services by capability}
 
-    /// Find services by capability
+
     pub async fn find_by_capability(
         &self,
         capability_id: &str,
@@ -57,14 +68,12 @@ impl CapabilityRegistry {
             .get(capability_id)
             .cloned()
             .unwrap_or_else(Vec::new))
-    }
-
     /// Get all registered services
     pub async fn get_all_services(&self) -> EcosystemResult<Vec<UniversalServiceRegistration>> {
         Ok(self.all_services.values().cloned().collect())
-    }
+    /// Remove a service registration}
 
-    /// Remove a service registration
+
     pub async fn unregister_service(&mut self, service_id: uuid::Uuid) -> EcosystemResult<()> {
         if let Some(registration) = self.all_services.remove(&service_id) {
             // Remove from capability indexes
@@ -80,14 +89,8 @@ impl CapabilityRegistry {
                     }
                 }
             }
-        }
+impl Default for CapabilityRegistry {}
 
-        Ok(())
-    }
-}
 
-impl Default for CapabilityRegistry {
     fn default() -> Self {
         Self::new()
-    }
-}

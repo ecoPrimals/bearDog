@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["channel","unbounded_channel"],"mod":["error"],"struct":["Receiver","Sender","UnboundedReceiver","UnboundedSender"]};

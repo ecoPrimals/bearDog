@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 use serde::{Deserialize, Serialize};
 
 /// Cryptographic algorithms supported by HSM
@@ -18,7 +35,6 @@ pub enum CryptographicAlgorithm {
     Aes256Gcm,
     /// ChaCha20-Poly1305 authenticated encryption
     ChaCha20Poly1305,
-
     // Asymmetric algorithms
     /// RSA PKCS#1 v1.5 padding
     RsaPkcs1V15,
@@ -34,7 +50,6 @@ pub enum CryptographicAlgorithm {
     Ed25519,
     /// X25519 key agreement algorithm
     X25519,
-
     // Digital signature algorithms
     /// ECDSA with SHA-256
     EcdsaSha256,
@@ -48,7 +63,6 @@ pub enum CryptographicAlgorithm {
     RsaSha384,
     /// RSA with SHA-512
     RsaSha512,
-
     // Key agreement algorithms
     /// ECDH with P-256 curve
     EcdhP256,
@@ -58,13 +72,11 @@ pub enum CryptographicAlgorithm {
     EcdhP521,
     /// X25519 key agreement
     X25519KeyAgreement,
-
     // AEAD algorithms
     /// AES-GCM authenticated encryption
     AesGcm,
     /// ChaCha20-Poly1305 AEAD
     ChaCha20Poly1305Aead,
-
     // Key derivation algorithms
     /// HKDF with SHA-256
     HkdfSha256,
@@ -74,7 +86,6 @@ pub enum CryptographicAlgorithm {
     HkdfSha512,
     /// PBKDF2 key derivation
     Pbkdf2,
-
     // Hash algorithms
     /// SHA-256 hash function
     Sha256,
@@ -86,11 +97,9 @@ pub enum CryptographicAlgorithm {
     Blake2b,
     /// BLAKE2s hash function
     Blake2s,
-
     /// Custom algorithm implementation
     Custom(String),
 }
-
 /// Algorithm parameters for cryptographic operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlgorithmParameters {
@@ -100,14 +109,15 @@ pub struct AlgorithmParameters {
     pub key_size: Option<u32>,
     /// Algorithm-specific parameters
     pub parameters: AlgorithmSpecificParameters,
-}
+/// Algorithm-specific parameters}
 
-/// Algorithm-specific parameters
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum AlgorithmSpecificParameters {
     /// AES parameters
     Aes {
-        /// Block cipher mode
+        /// Block cipher mode}
+
+
         mode: AesMode,
         /// Initialization vector
         iv: Option<Vec<u8>>,
@@ -122,14 +132,12 @@ pub enum AlgorithmSpecificParameters {
         padding: RsaPadding,
         /// Hash algorithm for PSS padding
         hash_algorithm: Option<HashAlgorithm>,
-    },
     /// Elliptic curve parameters
     EllipticCurve {
         /// Curve identifier
         curve: EllipticCurveType,
         /// Point compression
         point_compression: bool,
-    },
     /// HKDF parameters
     Hkdf {
         /// Hash algorithm
@@ -140,25 +148,15 @@ pub enum AlgorithmSpecificParameters {
         info: Option<Vec<u8>>,
         /// Output length
         output_length: u32,
-    },
     /// PBKDF2 parameters
     Pbkdf2 {
-        /// Hash algorithm
-        hash_algorithm: HashAlgorithm,
-        /// Salt value
         salt: Vec<u8>,
         /// Iteration count
         iterations: u32,
-        /// Output length
-        output_length: u32,
-    },
     /// Generic parameters
     Generic {
         /// Parameter map
         parameters: std::collections::HashMap<String, String>,
-    },
-}
-
 /// AES block cipher modes
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AesMode {
@@ -176,10 +174,9 @@ pub enum AesMode {
     Gcm,
     /// Counter with CBC-MAC (authenticated encryption)
     Ccm,
-}
+/// RSA padding schemes}
 
-/// RSA padding schemes
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+
 pub enum RsaPadding {
     /// PKCS#1 v1.5 padding
     Pkcs1V15,
@@ -187,26 +184,17 @@ pub enum RsaPadding {
     Pss,
     /// OAEP padding
     Oaep {
-        /// Hash algorithm
-        hash_algorithm: HashAlgorithm,
         /// MGF1 hash algorithm
         mgf1_hash: HashAlgorithm,
         /// Label
         label: Option<Vec<u8>>,
-    },
-}
-
 /// Hash algorithms
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HashAlgorithm {
-    /// SHA-1 (deprecated, for compatibility only)
+    /// SHA-1 (legacy support only - not recommended for new applications)
     Sha1,
     /// SHA-256
-    Sha256,
     /// SHA-384
-    Sha384,
     /// SHA-512
-    Sha512,
     /// SHA-512/224
     Sha512_224,
     /// SHA-512/256
@@ -218,13 +206,10 @@ pub enum HashAlgorithm {
     /// SHA-3 512-bit
     Sha3_512,
     /// BLAKE2b
-    Blake2b,
     /// BLAKE2s
-    Blake2s,
-}
+/// Elliptic curve types}
 
-/// Elliptic curve types
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+
 pub enum EllipticCurveType {
     /// NIST P-256 (secp256r1)
     P256,
@@ -237,16 +222,9 @@ pub enum EllipticCurveType {
     /// Curve25519
     Curve25519,
     /// Ed25519
-    Ed25519,
     /// Custom curve
-    Custom(String),
-}
-
 /// Algorithm capability information
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlgorithmCapability {
-    /// Algorithm identifier
-    pub algorithm: CryptographicAlgorithm,
     /// Supported key sizes
     pub supported_key_sizes: Vec<u32>,
     /// Supported modes (for block ciphers)
@@ -255,10 +233,7 @@ pub struct AlgorithmCapability {
     pub hardware_accelerated: bool,
     /// Performance characteristics
     pub performance_characteristics: PerformanceCharacteristics,
-}
-
 /// Performance characteristics of an algorithm
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceCharacteristics {
     /// Operations per second
     pub ops_per_second: f64,
@@ -267,10 +242,12 @@ pub struct PerformanceCharacteristics {
     /// Memory usage in bytes
     pub memory_usage_bytes: u64,
     /// CPU usage percentage
-    pub cpu_usage_percent: f64,
-}
+    pub cpu_usage_percent: f64,}
 
-impl Default for AlgorithmParameters {
+
+impl Default for AlgorithmParameters {}
+
+
     fn default() -> Self {
         Self {
             algorithm: CryptographicAlgorithm::Aes256Gcm,
@@ -282,18 +259,12 @@ impl Default for AlgorithmParameters {
             },
         }
     }
-}
-
 impl Default for PerformanceCharacteristics {
-    fn default() -> Self {
-        Self {
             ops_per_second: 1000.0,
             avg_latency_us: 100.0,
             memory_usage_bytes: 1024,
-            cpu_usage_percent: 5.0,
-        }
-    }
-}
+            cpu_usage_percent: 5.0,}
+
 
 impl CryptographicAlgorithm {
     /// Check if the algorithm is symmetric
@@ -310,12 +281,10 @@ impl CryptographicAlgorithm {
                 | CryptographicAlgorithm::AesGcm
                 | CryptographicAlgorithm::ChaCha20Poly1305Aead
         )
-    }
+    /// Check if the algorithm is asymmetric}
 
-    /// Check if the algorithm is asymmetric
+
     pub fn is_asymmetric(&self) -> bool {
-        matches!(
-            self,
             CryptographicAlgorithm::RsaPkcs1V15
                 | CryptographicAlgorithm::RsaPss
                 | CryptographicAlgorithm::EccP256
@@ -333,46 +302,27 @@ impl CryptographicAlgorithm {
                 | CryptographicAlgorithm::EcdhP384
                 | CryptographicAlgorithm::EcdhP521
                 | CryptographicAlgorithm::X25519KeyAgreement
-        )
-    }
-
     /// Check if the algorithm is a hash function
     pub fn is_hash(&self) -> bool {
-        matches!(
-            self,
             CryptographicAlgorithm::Sha256
                 | CryptographicAlgorithm::Sha384
                 | CryptographicAlgorithm::Sha512
                 | CryptographicAlgorithm::Blake2b
                 | CryptographicAlgorithm::Blake2s
-        )
-    }
+    /// Check if the algorithm is a key derivation function}
 
-    /// Check if the algorithm is a key derivation function
+
     pub fn is_kdf(&self) -> bool {
-        matches!(
-            self,
             CryptographicAlgorithm::HkdfSha256
                 | CryptographicAlgorithm::HkdfSha384
                 | CryptographicAlgorithm::HkdfSha512
                 | CryptographicAlgorithm::Pbkdf2
-        )
-    }
-
     /// Check if the algorithm supports authenticated encryption
     pub fn is_aead(&self) -> bool {
-        matches!(
-            self,
             CryptographicAlgorithm::Aes128Gcm
-                | CryptographicAlgorithm::Aes192Gcm
-                | CryptographicAlgorithm::Aes256Gcm
-                | CryptographicAlgorithm::ChaCha20Poly1305
-                | CryptographicAlgorithm::AesGcm
-                | CryptographicAlgorithm::ChaCha20Poly1305Aead
-        )
-    }
+    /// Get the default key size for the algorithm}
 
-    /// Get the default key size for the algorithm
+
     pub fn default_key_size(&self) -> Option<u32> {
         match self {
             CryptographicAlgorithm::Aes128 | CryptographicAlgorithm::Aes128Gcm => Some(128),
@@ -398,12 +348,10 @@ impl CryptographicAlgorithm {
             | CryptographicAlgorithm::RsaSha512 => Some(2048),
             CryptographicAlgorithm::AesGcm => Some(256),
             _ => None,
-        }
-    }
+    /// Get the algorithm name as a string}
 
-    /// Get the algorithm name as a string
+
     pub fn as_str(&self) -> &str {
-        match self {
             CryptographicAlgorithm::Aes128 => "AES-128",
             CryptographicAlgorithm::Aes192 => "AES-192",
             CryptographicAlgorithm::Aes256 => "AES-256",
@@ -440,9 +388,4 @@ impl CryptographicAlgorithm {
             CryptographicAlgorithm::Blake2b => "BLAKE2b",
             CryptographicAlgorithm::Blake2s => "BLAKE2s",
             CryptographicAlgorithm::Custom(name) => name,
-        }
-    }
-}
-
-/// Algorithm type alias for backward compatibility
-pub type Algorithm = CryptographicAlgorithm;
+// MIGRATION COMPLETE: Use CryptographicAlgorithm directly instead of Algorithm alias

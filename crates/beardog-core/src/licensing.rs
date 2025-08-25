@@ -1,11 +1,28 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
 use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::idiomatic::SecurityResult;
 use beardog_security::crypto_utils::BearDogCrypto;
-
 /// BearDog license manager for crypto-locked external functions
 ///
 /// **REFINED LICENSING PHILOSOPHY**:
@@ -22,7 +39,6 @@ pub struct LicenseManager {
     /// Grace period for license validation (development/testing)
     grace_period_hours: u64,
 }
-
 /// Cryptographically signed license for external system functions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignedLicense {
@@ -32,10 +48,7 @@ pub struct SignedLicense {
     pub signature: String,
     /// License format version
     pub version: u32,
-}
-
 /// License data that gets cryptographically signed
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LicenseData {
     /// Unique license ID
     pub license_id: String,
@@ -55,10 +68,7 @@ pub struct LicenseData {
     pub limits: Option<UsageLimits>,
     /// License conditions
     pub conditions: Vec<String>,
-}
-
 /// Information about the license holder
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LicenseeInfo {
     /// Organization name
     pub organization: String,
@@ -68,8 +78,6 @@ pub struct LicenseeInfo {
     pub classification: LicenseeClassification,
     /// Optional: research contribution details
     pub research_contribution: Option<String>,
-}
-
 /// Classification determines pricing and terms
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum LicenseeClassification {
@@ -87,10 +95,9 @@ pub enum LicenseeClassification {
     OpenSource,
     /// Enterprise (>= 50 employees)
     Enterprise,
-}
+/// License tiers with different access levels}
 
-/// License tiers with different access levels
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+
 pub enum LicenseTier {
     /// Free tier for individuals, education, research
     Community {
@@ -103,16 +110,11 @@ pub enum LicenseTier {
         annual_fee_usd: u32,
         /// Support level included
         support_level: SupportLevel,
-    },
     /// Trial license (30 days)
     Trial {
         /// Trial expiration
         trial_ends: DateTime<Utc>,
-    },
-}
-
 /// Support levels for different license tiers
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum SupportLevel {
     /// Community support (forums, GitHub issues)
     Community,
@@ -120,75 +122,61 @@ pub enum SupportLevel {
     Business,
     /// 24/7 premium support with SLA
     Premium,
-}
+/// Usage limits for specific license types}
 
-/// Usage limits for specific license types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct UsageLimits {
     /// Maximum API calls per month
     pub max_api_calls: Option<u64>,
     /// Maximum data processed per month (GB)
     pub max_data_gb: Option<u64>,
     /// Maximum concurrent instances
-    pub max_instances: Option<u32>,
-}
+    pub max_instances: Option<u32>,}
 
-impl Default for LicenseManager {
+
+impl Default for LicenseManager {}
+
+
     fn default() -> Self {
         Self::new()
     }
-}
-
 impl LicenseManager {
-    /// Create new license manager
+    /// Create new license manager}
+
+
     pub fn new() -> Self {
         Self {
             signed_licenses: HashMap::new(),
             verification_key: Self::get_verification_key(),
             grace_period_hours: 72, // 3 days grace period for development
         }
-    }
-
     /// Load a BearDog-signed license
     pub fn load_signed_license(&mut self, license_json: &str) -> BearDogResult<()> {
         let signed_license: SignedLicense =
-            serde_json::from_str(license_json).map_err(|e| BearDogError::Configuration {
-                message: format!("Invalid license format: {e}"),
+            serde_json::from_str(license_json).map_err(|e| BearDogError::configuration(format!("Invalid license format: {e}"),
             })?;
-
         // Verify the cryptographic signature
         if !self.verify_license_signature(&signed_license)? {
-            return Err(BearDogError::Configuration {
-                message: "Invalid license signature - license may be tampered with".to_string(),
-            });
-        }
-
+            return Err(BearDogError::configuration("Invalid license signature - license may be tampered with".to_string(),
+            ));
         // Check license validity period
         let now = Utc::now();
         if now < signed_license.license.valid_from || now > signed_license.license.valid_until {
-            return Err(BearDogError::Configuration {
-                message: format!(
-                    "License is not valid at current time. Valid from {} to {}",
+            return Err(BearDogError::configuration(format!(
+                    "License is not valid at current time. Valid from } to {}",
                     signed_license.license.valid_from, signed_license.license.valid_until
                 ),
             });
-        }
-
         // Store the valid license
         for function_name in &signed_license.license.enabled_functions {
             self.signed_licenses
                 .insert(function_name.clone(), signed_license.clone());
-        }
-
         tracing::info!(
             "✅ Loaded signed license for {} (tier: {:?})",
             signed_license.license.licensee.organization,
             signed_license.license.tier
         );
-
         Ok(())
-    }
-
     /// Check if external function is licensed and available
     pub fn verify_external_function_access(&self, function_name: &str) -> BearDogResult<bool> {
         // Check if this is a Rust ecosystem function (always free)
@@ -196,34 +184,24 @@ impl LicenseManager {
             if category == "rust_ecosystem" {
                 return Ok(true);
             }
-        }
-
         // Check if we have a valid signed license for this function
         if let Some(license) = self.signed_licenses.get(function_name) {
             // Double-check license is still valid
             let now = Utc::now();
             if now >= license.license.valid_from && now <= license.license.valid_until {
-                return Ok(true);
             } else {
-                return Err(BearDogError::Configuration {
-                    message: format!(
-                        "License for {function_name} has expired. Please renew your BearDog license."
+                return Err(BearDogError::configuration(format!(
+                        "License for {function_name) has expired. Please renew your BearDog license."
                     ),
                 });
-            }
-        }
-
         // No license found - check if we're in grace period (for development)
         if self.is_in_grace_period() {
             tracing::warn!("⚠️  No license found for {}, but grace period is active. External function will work for {} more hours.", 
                 function_name, self.grace_period_hours);
             return Ok(true);
-        }
-
         // No license and no grace period
-        Err(BearDogError::Configuration {
-            message: format!(
-                "🔒 External function '{function_name}' requires a BearDog-signed license.\n\n\
+        Err(BearDogError::configuration(format!(
+                "🔒 External function '{function_name)' requires a BearDog-signed license.\n\n\
                 📚 For FREE licenses (individuals, universities, research):\n\
                    Contact: free-licenses@beardog-security.com\n\n\
                 🏢 For Enterprise licenses:\n\
@@ -232,8 +210,6 @@ impl LicenseManager {
                    Basic users, universities, and research get FREE signed licenses."
             ),
         })
-    }
-
     /// Generate a free community license (for signing by BearDog)
     pub fn generate_community_license_request(
         &self,
@@ -245,11 +221,7 @@ impl LicenseManager {
     ) -> BearDogResult<LicenseData> {
         // Validate that this qualifies for a free license
         if classification == LicenseeClassification::Enterprise {
-            return Err(BearDogError::Configuration {
-                message: "Enterprise organizations require paid licenses. Contact enterprise@beardog-security.com".to_string()
-            });
-        }
-
+            return Err(BearDogError::configuration("Enterprise organizations require paid licenses. Contact enterprise@beardog-security.com".to_string()
         let license_data = LicenseData {
             license_id: Uuid::new_v4().to_string(),
             function_name: functions.join(","),
@@ -265,7 +237,6 @@ impl LicenseManager {
             },
             tier: LicenseTier::Community {
                 justification: justification.to_string(),
-            },
             valid_from: Utc::now(),
             valid_until: Utc::now() + chrono::Duration::days(365 * 5), // 5 year free license
             enabled_functions: functions,
@@ -276,10 +247,7 @@ impl LicenseManager {
                 "Commercial use by enterprises requires paid license".to_string(),
             ],
         };
-
         Ok(license_data)
-    }
-
     /// Get appropriate limits for community licenses
     fn get_community_limits(&self, classification: &LicenseeClassification) -> Option<UsageLimits> {
         match classification {
@@ -292,46 +260,31 @@ impl LicenseManager {
                 max_api_calls: Some(100_000), // 100K calls/month
                 max_data_gb: Some(100),       // 100GB/month
                 max_instances: Some(10),      // 10 instances
-            }),
             LicenseeClassification::Educational
             | LicenseeClassification::Research
             | LicenseeClassification::NonProfit
             | LicenseeClassification::OpenSource => None, // No limits for education/research
             LicenseeClassification::Enterprise => unreachable!(), // Should not reach here
-        }
-    }
-
     /// Verify cryptographic signature of license
     fn verify_license_signature(&self, signed_license: &SignedLicense) -> BearDogResult<bool> {
         tracing::debug!(
             "Verifying license signature for {}",
             signed_license.license.licensee.organization
-        );
-
         // Serialize license data to canonical JSON for signature verification
         let license_json = serde_json::to_string(&signed_license.license).map_err(|e| {
-            BearDogError::Configuration {
-                message: format!("License serialization error: {e}"),
-            }
+            BearDogError::configuration(format!("License serialization error: {e}"),
         })?;
-
         // Get BearDog's public key for verification
         let public_key = Self::get_verification_key();
-
         // Decode the signature from hex string
         let signature_bytes =
-            hex::decode(&signed_license.signature).map_err(|e| BearDogError::Encryption {
-                operation: "signature_decode".to_string(),
-                message: format!("Invalid signature format: {e}"),
-            })?;
-
+            hex::decode(&signed_license.signature).map_err(|e| BearDogError::encryption("signature_decode".to_string(), format!("Invalid signature format: {e)"),
         // Use our crypto utilities to verify the Ed25519 signature
         let is_valid = BearDogCrypto::verify_ed25519_signature(
             &public_key,
             license_json.as_bytes(),
             &signature_bytes,
         )?;
-
         if is_valid {
             tracing::info!(
                 "✅ License signature verified for {}",
@@ -340,24 +293,16 @@ impl LicenseManager {
         } else {
             tracing::warn!(
                 "❌ Invalid license signature for {}",
-                signed_license.license.licensee.organization
-            );
-        }
-
         Ok(is_valid)
-    }
-
     /// Get BearDog's public key for license verification
     fn get_verification_key() -> Vec<u8> {
         // BearDog's Ed25519 public key for license verification
         // This is the sovereign public key that validates all external system licenses
         // Generated with: ed25519-dalek keypair for BearDog license authority
-
         // In a real deployment, this would be loaded from:
         // 1. Environment variable (BEARDOG_LICENSE_PUBLIC_KEY)
         // 2. Secure configuration file
         // 3. Hardware Security Module (HSM)
-
         if let Ok(key_hex) = std::env::var("BEARDOG_LICENSE_PUBLIC_KEY") {
             match hex::decode(&key_hex) {
                 Ok(key_bytes) if key_bytes.len() == 32 => return key_bytes,
@@ -367,10 +312,6 @@ impl LicenseManager {
                 Err(e) => tracing::warn!(
                     "Failed to decode BEARDOG_LICENSE_PUBLIC_KEY: {}, using default",
                     e
-                ),
-            }
-        }
-
         // Default BearDog license verification key (for development/testing)
         // This key is used to verify community and educational licenses
         // Production deployments should override via environment variable
@@ -379,28 +320,23 @@ impl LicenseManager {
             0xf8, 0x09, 0x0a, 0x1b, 0x2c, 0x3d, 0x4e, 0x5f, 0x60, 0x71, 0x82, 0x93, 0xa4, 0xb5,
             0xc6, 0xd7, 0xe8, 0xf9,
         ]
-    }
-
     /// Check if a specific external function is available
-    pub async fn is_function_available(&self, _function_name: &str) -> BearDogResult<bool> {
+    pub async fn is_function_available(&self, _function_name: &str) -> Result<bool, SecurityError> {
         // Simple implementation - always allow during development
         Ok(true)
-    }
+    /// Check if we're in the grace period}
 
-    /// Check if we're in the grace period
+
     pub fn is_in_grace_period(&self) -> bool {
         true // Always true for development
-    }
+    /// List all loaded licenses and their status}
 
-    /// List all loaded licenses and their status
+
     pub fn list_licenses(&self) -> Vec<LicenseStatus> {
         let mut statuses = Vec::new();
-        let now = Utc::now();
-
         for (function_name, signed_license) in &self.signed_licenses {
             let is_valid = now >= signed_license.license.valid_from
                 && now <= signed_license.license.valid_until;
-
             statuses.push(LicenseStatus {
                 function_name: function_name.clone(),
                 organization: signed_license.license.licensee.organization.clone(),
@@ -409,108 +345,70 @@ impl LicenseManager {
                 is_valid,
                 days_remaining: if is_valid {
                     (signed_license.license.valid_until - now).num_days()
-                } else {
                     0
-                },
-            });
-        }
-
         statuses
-    }
+    /// Get the verification key used for license signature verification}
 
-    /// Get the verification key used for license signature verification
+
     pub fn get_current_verification_key(&self) -> &[u8] {
         &self.verification_key
-    }
-
     /// Check if the verification key is properly configured
     pub fn is_verification_key_valid(&self) -> bool {
         // Ed25519 public keys should be exactly 32 bytes
         self.verification_key.len() == 32
-    }
+    /// Get verification key fingerprint for debugging}
 
-    /// Get verification key fingerprint for debugging
+
     pub fn get_verification_key_fingerprint(&self) -> String {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-
         let mut hasher = DefaultHasher::new();
         self.verification_key.hash(&mut hasher);
         format!("{:x}", hasher.finish())
-    }
-}
-
 /// Status information for a loaded license
 #[derive(Debug, Clone)]
 pub struct LicenseStatus {
     /// Name of the licensed function
-    pub function_name: String,
     /// Organization that owns the license
-    pub organization: String,
     /// License tier level
-    pub tier: LicenseTier,
-    /// License expiration date
-    pub valid_until: DateTime<Utc>,
     /// Whether the license is currently valid
     pub is_valid: bool,
     /// Days remaining before expiration
     pub days_remaining: i64,
-}
-
 /// Known external functions that require signed licenses
-pub struct ExternalFunctions;
+pub struct ExternalFunctions;}
+
 
 impl ExternalFunctions {
-    /// List of all external functions that require BearDog-signed licenses
-    pub fn all_functions() -> Vec<(&'static str, &'static str, &'static str)> {
-        vec![
-            // Format: (function_name, description, category)
+    /// List of all external functions that require BearDog-signed licenses}
 
+
+    pub fn all_functions() -> Vec<(&'static str, &'static str, &'static str)> {
+            // Format: (function_name, description, category)
             // Rust Ecosystem (Always Free)
             (
                 "nestgate",
                 "Nestgate Rust crate integration",
                 "rust_ecosystem",
-            ),
-            (
                 "songbird",
                 "Songbird Discord voice library",
-                "rust_ecosystem",
-            ),
-            (
                 "tokio_integration",
                 "Tokio async runtime features",
-                "rust_ecosystem",
-            ),
-            (
                 "serde_helpers",
                 "Serde serialization utilities",
-                "rust_ecosystem",
-            ),
             ("clap_cli", "Clap command line interface", "rust_ecosystem"),
             // Monitoring & Observability
-            (
                 "prometheus_export",
                 "Export metrics to Prometheus",
                 "monitoring",
-            ),
-            (
                 "grafana_dashboards",
                 "Create Grafana dashboards",
-                "monitoring",
-            ),
-            (
                 "splunk_integration",
                 "Send data to Splunk SIEM",
-                "monitoring",
-            ),
             ("datadog_metrics", "Send metrics to DataDog", "monitoring"),
             ("newrelic_apm", "New Relic APM integration", "monitoring"),
-            (
                 "elasticsearch_logs",
                 "Send logs to Elasticsearch",
-                "monitoring",
-            ),
             // Cloud Provider Services
             ("aws_kms_integration", "AWS Key Management Service", "cloud"),
             ("azure_keyvault", "Azure Key Vault integration", "cloud"),
@@ -539,52 +437,41 @@ impl ExternalFunctions {
             ("servicenow_itsm", "ServiceNow ITSM", "compliance"),
             ("jira_integration", "Atlassian Jira", "compliance"),
             ("sharepoint_docs", "Microsoft SharePoint", "compliance"),
-        ]
-    }
+    /// Check if a function name is a known external function}
 
-    /// Check if a function name is a known external function
+
     pub fn is_external_function(name: &str) -> bool {
         Self::all_functions()
             .iter()
             .any(|(func_name, _, _)| *func_name == name)
-    }
-
     /// Get category for external function
     pub fn get_category(name: &str) -> Option<&'static str> {
-        Self::all_functions()
-            .iter()
             .find(|(func_name, _, _)| *func_name == name)
             .map(|(_, _, category)| *category)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]}
 
-    #[test]
-    fn test_rust_ecosystem_always_free() {
+
+    fn test_rust_ecosystem_always_free() -> beardog_errors::BearDogResult<()> {
         let manager = LicenseManager::new();
-
         // Rust ecosystem projects should always be enabled
-        assert!(manager.verify_external_function_access("nestgate").unwrap());
-        assert!(manager.verify_external_function_access("songbird").unwrap());
-
+        assert!(manager
+            .verify_external_function_access("nestgate")
+            .map_err(|e| {
+                tracing::error!("Operation failed: {:?}", e);
+                beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+            })?);
+            .verify_external_function_access("songbird")
         // External HSM should not be accessible without proper license
         // When grace period is active (test environment), it returns Ok(true)
         // When grace period is not active (production), it returns Err
         let oracle_result = manager.verify_external_function_access("oracle_hsm");
         if manager.is_in_grace_period() {
             assert!(oracle_result.is_ok());
-        } else {
             assert!(oracle_result.is_err());
-        }
-    }
-
-    #[test]
-    fn test_educational_license_generation() {
-        let manager = LicenseManager::new();
-
+    fn test_educational_license_generation() -> beardog_errors::BearDogResult<()> {
         let edu_license = manager
             .generate_community_license_request(
                 "University of Example",
@@ -593,26 +480,16 @@ mod tests {
                 vec!["basic_encryption".to_string()],
                 "Educational use for computer science research",
             )
-            .unwrap();
         assert_eq!(
-            edu_license.licensee.classification,
-            LicenseeClassification::Educational
-        );
-    }
+            edu_license.licensee.classification,}
 
-    #[test]
+
     fn test_integration_type_detection() {
         // Set grace period for testing
         std::env::set_var("BEARDOG_LICENSE_GRACE_PERIOD", "true");
-
-        let manager = LicenseManager::new();
-
         // Test different integration categories - simplified test
         // Rust ecosystem integrations should be available during grace period
-        assert!(manager
-            .verify_external_function_access("nestgate")
             .unwrap_or(true));
-
         // External systems typically require explicit licensing or grace period
         // During development/testing, grace period should be active
         assert!(
@@ -620,9 +497,5 @@ mod tests {
                 || manager
                     .verify_external_function_access("oracle_hsm")
                     .unwrap_or(false)
-        );
-
         // Clean up environment variable
         std::env::remove_var("BEARDOG_LICENSE_GRACE_PERIOD");
-    }
-}

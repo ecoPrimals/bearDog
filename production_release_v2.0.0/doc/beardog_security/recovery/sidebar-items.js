@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["challenges","ephemeral","federation","policies","sessions","shards","social","types"],"struct":["RecoveryManager","RecoveryProvider","RecoveryStatistics"]};

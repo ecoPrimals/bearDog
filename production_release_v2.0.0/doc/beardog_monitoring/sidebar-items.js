@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["improved_monitoring","monitoring","security_sentinel","security_sentinel_example"]};

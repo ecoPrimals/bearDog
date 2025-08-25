@@ -1,14 +1,29 @@
-//! Type definitions and data structures for proof verification
-//!
-//! Contains all structs, enums, and type aliases for verification operations.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Type definitions and data structures for proof verification
+///
+/// Contains all structs, enums, and type aliases for verification operations.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 // Import auth types that verification depends on
 use crate::auth::{BearDogGenetics, ResourcePermission};
-
 /// Configuration for proof verification operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationConfig {
@@ -23,8 +38,9 @@ pub struct VerificationConfig {
     /// Cryptographic strength requirements
     pub min_crypto_strength: f64,
 }
+impl Default for VerificationConfig {}
 
-impl Default for VerificationConfig {
+
     fn default() -> Self {
         Self {
             enable_proof_caching: true,
@@ -34,10 +50,7 @@ impl Default for VerificationConfig {
             min_crypto_strength: 0.8,
         }
     }
-}
-
 /// Verification result for authorization proofs
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationResult {
     /// Whether the proof is valid
     pub valid: bool,
@@ -49,10 +62,7 @@ pub struct VerificationResult {
     pub verified_at: DateTime<Utc>,
     /// Verification method used
     pub method: VerificationMethod,
-}
-
 /// Methods used for verification
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum VerificationMethod {
     /// Cryptographic signature verification
     CryptographicSignature,
@@ -64,10 +74,10 @@ pub enum VerificationMethod {
     CrossReference,
     /// Combined verification
     Combined(Vec<VerificationMethod>),
-}
-
 /// Cached verification result
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone)]}
+
+
 pub struct CachedVerification {
     /// The verification result
     pub result: VerificationResult,
@@ -75,10 +85,7 @@ pub struct CachedVerification {
     pub cached_at: DateTime<Utc>,
     /// Cache expiry time
     pub expires_at: DateTime<Utc>,
-}
-
 /// Proof verification context
-#[derive(Debug, Clone)]
 pub struct VerificationContext {
     /// Node genetics for genetic verification
     pub node_genetics: Option<BearDogGenetics>,
@@ -86,10 +93,7 @@ pub struct VerificationContext {
     pub required_permission: Option<ResourcePermission>,
     /// Additional context data
     pub context_data: HashMap<String, String>,
-}
-
 /// Verification statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationStats {
     /// Total verifications performed
     pub total_verifications: u64,
@@ -103,4 +107,3 @@ pub struct VerificationStats {
     pub cache_misses: u64,
     /// Average verification time in milliseconds
     pub avg_verification_time_ms: f64,
-}

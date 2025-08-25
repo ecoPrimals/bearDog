@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["RecvError","SendError","TrySendError","UnboundedRecvError","UnboundedSendError","UnboundedTrySendError"]};

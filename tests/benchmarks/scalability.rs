@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Scalability and Concurrency Benchmarking
 //!
 //! Benchmarks for concurrent operations, load testing, and scalability analysis.
@@ -49,7 +66,10 @@ async fn benchmark_concurrent_operations(suite: &PerformanceBenchmarkSuite, conc
                     Ok(_) => {
                         ops_counter.fetch_add(1, Ordering::SeqCst);
                         let latency = op_start.elapsed().as_nanos() as f64 / 1_000_000.0;
-                        latencies_vec.lock().unwrap().push(latency);
+                        latencies_vec.lock().unwrap_or_else(|poisoned| {
+        tracing::warn!("Mutex poisoned, recovering");
+        poisoned.into_inner()
+    }).push(latency);
                     }
                     Err(_) => {
                         // Record failed operation
@@ -70,11 +90,14 @@ async fn benchmark_concurrent_operations(suite: &PerformanceBenchmarkSuite, conc
     let successful_ops = successful_ops.load(Ordering::SeqCst);
     let ops_per_second = successful_ops as f64 / total_time.as_secs_f64();
 
-    let latencies_vec = latencies.lock().unwrap().clone();
+    let latencies_vec = latencies.lock().unwrap_or_else(|poisoned| {
+        tracing::warn!("Mutex poisoned, recovering");
+        poisoned.into_inner()
+    }).clone();
     let average_latency = latencies_vec.iter().sum::<f64>() / latencies_vec.len() as f64;
 
     let mut sorted_latencies = latencies_vec;
-    sorted_latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    sorted_latencies.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let p50_latency = sorted_latencies[sorted_latencies.len() / 2];
     let p95_latency = sorted_latencies[sorted_latencies.len() * 95 / 100];
     let p99_latency = sorted_latencies[sorted_latencies.len() * 99 / 100];

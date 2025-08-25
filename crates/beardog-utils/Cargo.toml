@@ -3,24 +3,25 @@ name = "beardog-utils"
 version = "0.1.0"
 edition = "2021"
 description = "Utility functions for BearDog Security Manager"
-license = "AGPL-3.0"
+license = "AGPL-3.0-only"
 repository = "https://github.com/ecoPrimals/beardog"
 
 [dependencies]
-anyhow = "1.0"
-beardog-config = { path = "../beardog-config" }
 beardog-errors = { path = "../beardog-errors" }
-serde = { version = "1.0", features = ["derive"] }
-tokio = { version = "1.0", features = ["full"] }
-serde_json = "1.0"
-toml = "0.8"
-tracing = "0.1"
-uuid = { version = "1.0", features = ["v4", "serde"] }
-chrono = { version = "0.4", features = ["serde"] }
-rand = "0.8"
-ring = "0.16"
-hmac = "0.12"
-sha2 = "0.10"
+beardog-types = { path = "../beardog-types" }
 
-[dev-dependencies]
-tempfile = "3.0"
+# Async runtime - optimized features for utilities
+tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "time", "fs", "macros"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+
+# Logging and tracing
+tracing = "0.1"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# High-performance locking
+parking_lot = "0.12"
+rand.workspace = true

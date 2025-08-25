@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ResponseAction","ThreatAction","ThreatStatus"],"struct":["MitigationStep"]};

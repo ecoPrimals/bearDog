@@ -1,11 +1,26 @@
-//! HTTP Adapter for Universal Service Integration
-//!
-//! Provides HTTP-based connectivity to service meshes.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+/// HTTP Adapter for Universal Service Integration
+///
+/// Provides HTTP-based connectivity to service meshes.
 // HTTP adapter implementation
-
 use super::service_registration::UniversalServiceRegistration;
-use crate::{BearDogError, BearDogResult};
+use beardog_errors::{BearDogError, BearDogResult};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -19,32 +34,22 @@ pub struct UniversalRequest {
     pub metadata: HashMap<String, String>,
     pub timestamp: DateTime<Utc>,
 }
-
 /// Universal response structure  
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalResponse {
-    pub request_id: String,
     pub status: ResponseStatus,
     pub data: Option<serde_json::Value>,
     pub error: Option<ErrorInfo>,
-    pub timestamp: DateTime<Utc>,
-}
-
 /// Response status enumeration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ResponseStatus {
     Success,
     Error,
-}
+/// Error information structure}
 
-/// Error information structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct ErrorInfo {
     pub code: String,
     pub message: String,
     pub details: Option<serde_json::Value>,
-}
-
 /// Service mesh connector trait
 #[async_trait::async_trait]
 pub trait ServiceMeshConnector {
@@ -53,66 +58,46 @@ pub trait ServiceMeshConnector {
         &self,
         registration: &UniversalServiceRegistration,
     ) -> BearDogResult<()>;
-
     /// Send request through the mesh
     async fn send_request(&self, request: &UniversalRequest) -> BearDogResult<UniversalResponse>;
-
     /// Handle mesh request
     async fn handle_mesh_request(&self, request: UniversalRequest) -> UniversalResponse;
-
     /// Health check
     async fn health_check(&self) -> bool;
-
     /// Deregister service
     async fn deregister(&self, service_id: &str) -> BearDogResult<()>;
-}
-
 /// HTTP adapter for service mesh connectivity
 pub struct HttpAdapter {
     base_url: String,
-    client: reqwest::Client,
-}
+    client: reqwest::Client,}
+
 
 impl HttpAdapter {
-    /// Create new HTTP adapter
+    /// Create new HTTP adapter}
+
+
     pub fn new(base_url: String) -> Self {
         Self {
             base_url,
             client: reqwest::Client::new(),
         }
     }
-}
-
-#[async_trait::async_trait]
 impl ServiceMeshConnector for HttpAdapter {
-    async fn register_service(
-        &self,
-        registration: &UniversalServiceRegistration,
     ) -> BearDogResult<()> {
         let url = format!("{}/api/v1/services/register", self.base_url);
-
         let response = self
             .client
             .post(&url)
             .json(registration)
             .send()
             .await
-            .map_err(|e| BearDogError::Network {
-                message: format!("Failed to register service: {e}"),
-            })?;
-
+            .map_err(|e| BearDogError::network(format!("Failed to register service: {e}")))?;
         if response.status().is_success() {
             Ok(())
         } else {
-            Err(BearDogError::Federation {
-                message: format!("Service registration failed: {}", response.status()),
-            })
-        }
-    }
-
+            Err(BearDogError::network(format!("Service registration failed: {}", response.status())))
     async fn handle_mesh_request(&self, request: UniversalRequest) -> UniversalResponse {
         tracing::debug!("Handling HTTP mesh request: {}", request.request_id);
-
         // Build the service mesh API endpoint based on operation
         let endpoint = match request.operation.as_str() {
             "sign" | "verify" | "encrypt" | "decrypt" | "generate_key" => "/api/v1/crypto",
@@ -121,9 +106,7 @@ impl ServiceMeshConnector for HttpAdapter {
             "generate_address" | "verify_address" => "/api/v1/address",
             _ => "/api/v1/generic",
         };
-
         let url = format!("{}{}/{}", self.base_url, endpoint, request.operation);
-
         // Create HTTP request body
         let body = serde_json::json!({
             "request_id": request.request_id,
@@ -132,15 +115,10 @@ impl ServiceMeshConnector for HttpAdapter {
             "metadata": request.metadata,
             "timestamp": request.timestamp
         });
-
         // Make HTTP request to service mesh
         match self
-            .client
-            .post(&url)
             .json(&body)
             .timeout(std::time::Duration::from_secs(30))
-            .send()
-            .await
         {
             Ok(response) => {
                 if response.status().is_success() {
@@ -154,7 +132,6 @@ impl ServiceMeshConnector for HttpAdapter {
                             timestamp: Utc::now(),
                         },
                         Err(e) => UniversalResponse {
-                            request_id: request.request_id,
                             status: ResponseStatus::Error,
                             data: None,
                             error: Some(ErrorInfo {
@@ -162,8 +139,6 @@ impl ServiceMeshConnector for HttpAdapter {
                                 message: format!("Failed to parse response: {e}"),
                                 details: None,
                             }),
-                            timestamp: Utc::now(),
-                        },
                     }
                 } else {
                     // Handle HTTP error response
@@ -185,7 +160,6 @@ impl ServiceMeshConnector for HttpAdapter {
                             })),
                         }),
                         timestamp: Utc::now(),
-                    }
                 }
             }
             Err(e) => {
@@ -200,47 +174,17 @@ impl ServiceMeshConnector for HttpAdapter {
                         details: Some(serde_json::json!({"url": url})),
                     }),
                     timestamp: Utc::now(),
-                }
-            }
-        }
-    }
-
     async fn health_check(&self) -> bool {
         let url = format!("{}/health", self.base_url);
-
         match self.client.get(&url).send().await {
             Ok(response) => response.status().is_success(),
             Err(_) => false,
-        }
-    }
-
     async fn deregister(&self, service_id: &str) -> BearDogResult<()> {
         let url = format!("{}/api/v1/services/deregister", self.base_url);
-
         let deregister_request = serde_json::json!({
             "service_id": service_id
-        });
-
-        let response = self
-            .client
-            .post(&url)
             .json(&deregister_request)
-            .send()
-            .await
-            .map_err(|e| BearDogError::Network {
-                message: format!("Failed to deregister service: {e}"),
-            })?;
-
-        if response.status().is_success() {
-            Ok(())
-        } else {
-            Err(BearDogError::Federation {
-                message: format!("Service deregistration failed: {}", response.status()),
-            })
-        }
-    }
-
+            .map_err(|e| BearDogError::network(format!("Failed to deregister service: {e}")))?;
+            Err(BearDogError::network(format!("Service deregistration failed: {}", response.status())))
     async fn send_request(&self, request: &UniversalRequest) -> BearDogResult<UniversalResponse> {
         Ok(self.handle_mesh_request(request.clone()).await)
-    }
-}

@@ -1,11 +1,28 @@
-//! Core Recovery Types
-//!
-//! This module defines the fundamental types and enums used throughout the recovery system.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Core Recovery Types
+///
+/// This module defines the fundamental types and enums used throughout the recovery system.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
+use beardog_errors::{BearDogError, BearDogResult};
 /// Types of recovery
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RecoveryType {
@@ -18,7 +35,6 @@ pub enum RecoveryType {
     /// Multi-party recovery combining multiple methods
     MultiPartyRecovery,
 }
-
 /// Recovery session status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum RecoveryStatus {
@@ -34,10 +50,9 @@ pub enum RecoveryStatus {
     Cancelled,
     /// Session expired
     Expired,
-}
+/// Types of recovery events}
 
-/// Types of recovery events
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum RecoveryEventType {
     /// Recovery session started
     SessionStarted,
@@ -65,10 +80,7 @@ pub enum RecoveryEventType {
     SuspiciousActivity,
     /// Recovery audit requested
     AuditRequested,
-}
-
 /// Types of trusted contacts
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ContactType {
     /// Family member
     Family,
@@ -86,10 +98,9 @@ pub enum ContactType {
     Financial,
     /// Other trusted individual
     Other,
-}
+/// Types of additional verification}
 
-/// Types of additional verification
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum VerificationType {
     /// Knowledge-based questions
     KnowledgeBased,
@@ -101,10 +112,7 @@ pub enum VerificationType {
     GeolocationVerification,
     /// Device fingerprinting
     DeviceFingerprinting,
-}
-
 /// Types of recovery challenges
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ChallengeType {
     /// Social verification challenge
     SocialVerification {
@@ -119,23 +127,17 @@ pub enum ChallengeType {
         instance_id: String,
         /// Verification token
         token: String,
-    },
     /// Knowledge-based challenge
     KnowledgeBased {
         /// Question to answer
         question: String,
         /// Expected answer hash
         answer_hash: String,
-    },
     /// Time-lock challenge
     TimeLock {
         /// When the challenge can be answered
         unlock_time: DateTime<Utc>,
-    },
-}
-
 /// Recovery audit entry
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoveryAuditEntry {
     /// Unique entry ID
     pub id: String,
@@ -152,11 +154,13 @@ pub struct RecoveryAuditEntry {
     /// User agent of the request (if applicable)
     pub user_agent: Option<String>,
     /// Session ID associated with the event (if applicable)
-    pub session_id: Option<String>,
-}
+    pub session_id: Option<String>,}
+
 
 impl RecoveryAuditEntry {
-    /// Create a new recovery audit entry
+    /// Create a new recovery audit entry}
+
+
     pub fn new(
         event_type: RecoveryEventType,
         user_id: String,
@@ -173,28 +177,19 @@ impl RecoveryAuditEntry {
             session_id: None,
         }
     }
-
     /// Set the IP address for this audit entry
     pub fn with_ip_address(mut self, ip_address: String) -> Self {
         self.ip_address = Some(ip_address);
         self
-    }
+    /// Set the user agent for this audit entry}
 
-    /// Set the user agent for this audit entry
+
     pub fn with_user_agent(mut self, user_agent: String) -> Self {
         self.user_agent = Some(user_agent);
-        self
-    }
-
     /// Set the session ID for this audit entry
     pub fn with_session_id(mut self, session_id: String) -> Self {
         self.session_id = Some(session_id);
-        self
-    }
-}
-
 /// Verification methods for recovery
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum VerificationMethod {
     /// Email verification
     Email {
@@ -202,37 +197,27 @@ pub enum VerificationMethod {
         email: String,
         /// Verification code
         code: String,
-    },
     /// SMS verification
     Sms {
         /// Phone number to verify
         phone: String,
-        /// Verification code
-        code: String,
-    },
     /// TOTP verification
     Totp {
         /// TOTP token
-        token: String,
-    },
     /// Hardware token verification
     HardwareToken {
         /// Token serial number
         serial: String,
         /// Token value
         value: String,
-    },
-    /// Biometric verification
     Biometric {
         /// Biometric data type
         data_type: String,
         /// Biometric template hash
         template_hash: String,
-    },
-}
+/// Backup strategies for shard allocation}
 
-/// Backup strategies for shard allocation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum BackupStrategy {
     /// Distributed across multiple trusted parties
     Distributed,
@@ -244,10 +229,7 @@ pub enum BackupStrategy {
     PhysicalStorage,
     /// Stored in hardware security modules
     HardwareModule,
-}
-
 /// Types of shard holders
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ShardHolderType {
     /// Individual person
     Individual,
@@ -259,66 +241,41 @@ pub enum ShardHolderType {
     Hardware,
     /// Geographic location
     Location,
-}
+/// Verification status of shard holders}
 
-/// Verification status of shard holders
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum HolderVerificationStatus {
     /// Verified and trusted
     Verified,
     /// Pending verification
     Pending,
     /// Verification failed
-    Failed,
     /// Verification expired
-    Expired,
     /// Temporarily disabled
     Disabled,
-}
-
 /// Status of a recovery method
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MethodStatus {
     /// Method is active and can be used
-    Active,
     /// Method is pending initialization
-    Pending,
     /// Method completed successfully
-    Completed,
     /// Method failed
-    Failed,
     /// Method was cancelled
-    Cancelled,
-}
+/// Verification status of collected shards}
 
-/// Verification status of collected shards
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum ShardVerificationStatus {
     /// Shard is valid and verified
     Valid,
     /// Shard is pending verification
-    Pending,
     /// Shard verification failed
     Invalid,
     /// Shard has expired
-    Expired,
-}
-
 /// Mixed recovery session status
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MixedRecoveryStatus {
     /// Session is initializing
     Initializing,
     /// Session is active and collecting responses
-    Active,
     /// Session is verifying collected responses
     Verifying,
-    /// Session completed successfully
-    Completed,
     /// Session failed
-    Failed,
     /// Session was cancelled
-    Cancelled,
-    /// Session expired
-    Expired,
-}

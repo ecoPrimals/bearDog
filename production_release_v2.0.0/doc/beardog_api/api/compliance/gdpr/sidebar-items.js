@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_consent_tracking","get_gdpr_compliance","handle_data_subject_request","handle_right_to_be_forgotten"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MessageFormat","NotificationPriority"],"mod":["adapters","universal"],"struct":["AdapterCapabilities","NotificationEngine","NotificationMessage","NotificationResult","RetryConfig"],"trait":["NotificationAdapter"]};

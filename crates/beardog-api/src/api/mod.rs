@@ -1,32 +1,43 @@
-//! # BearDog Comprehensive API System
-//!
-//! **AI-First Headless API Design**
-//!
-//! This module provides a complete REST API for all BearDog functionality,
-//! designed primarily for AI/programmatic consumption with human-friendly
-//! responses. All APIs follow consistent patterns for easy integration.
-//!
-//! ## API Organization
-//!
-//! * **`/api/v1/security/*`** - Security provider and threat detection
-//! * **`/api/v1/genetics/*`** - Genetic spawning and node management  
-//! * **`/api/v1/compliance/*`** - Audit and compliance workflows
-//! * **`/api/v1/auth/*`** - Authentication and authorization
-//! * **`/api/v1/monitoring/*`** - Health, metrics, and observability
-//! * **`/api/v1/config/*`** - Configuration management
-//! * **`/api/v1/nodes/*`** - Node registry and cross-node operations
-//!
-//! ## Performance Features
-//!
-//! * **Request/Response Caching** - Redis-backed intelligent caching
-//! * **Rate Limiting** - Per-endpoint and per-user limits
-//! * **Connection Pooling** - Optimized database connections
-//! * **Async Processing** - Non-blocking operations throughout
-//! * **Compression** - Automatic gzip/deflate for large responses
-//! * **Pagination** - Efficient large dataset handling
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// # BearDog Comprehensive API System
+///
+/// **AI-First Headless API Design**
+/// This module provides a complete REST API for all BearDog functionality,
+/// designed primarily for AI/programmatic consumption with human-friendly
+/// responses. All APIs follow consistent patterns for easy integration.
+/// ## API Organization
+/// * **`/api/v1/security/*`** - Security provider and threat detection
+/// * **`/api/v1/genetics/*`** - Genetic spawning and node management  
+/// * **`/api/v1/compliance/*`** - Audit and compliance workflows
+/// * **`/api/v1/auth/*`** - Authentication and authorization
+/// * **`/api/v1/monitoring/*`** - Health, metrics, and observability
+/// * **`/api/v1/config/*`** - Configuration management
+/// * **`/api/v1/nodes/*`** - Node registry and cross-node operations
+/// ## Performance Features
+/// * **Request/Response Caching** - Redis-backed intelligent caching
+/// * **Rate Limiting** - Per-endpoint and per-user limits
+/// * **Connection Pooling** - Optimized database connections
+/// * **Async Processing** - Non-blocking operations throughout
+/// * **Compression** - Automatic gzip/deflate for large responses
+/// * **Pagination** - Efficient large dataset handling
 
 use serde::{Deserialize, Serialize};
-
 pub mod ai_interface;
 pub mod auth; // Authentication and authorization management
 pub mod cache;
@@ -44,14 +55,12 @@ pub mod types; // Common types and constants
                // pub mod webhooks; // Webhooks will be implemented based on specific integration needs
 pub mod zero_copy; // Zero-copy optimization modules
 pub mod zero_copy_handlers; // Add zero-copy optimizations
-
 // Future modules for specific functionality
 // pub mod routes;     // Route definitions handled per-module
 // pub mod middleware; // Middleware handled per-module
 // pub mod models;     // Models defined per-module
 // pub mod config;     // Configuration handled by beardog-config crate
 // pub mod nodes;      // Node management handled by beardog-node-registry crate
-
 // Re-export main components
 pub use error_handling::*;
 pub use server::*;
@@ -60,10 +69,8 @@ pub use types::*;
 // pub use routes::*;
 // pub use middleware::*;
 // pub use models::*;
-
 /// API version constant
-pub const API_VERSION: &str = "v1";
-
+pub use beardog_types::constants::unified::api::VERSION as API_VERSION;
 /// Standard API response wrapper for all endpoints
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiResponse<T> {
@@ -80,9 +87,7 @@ pub struct ApiResponse<T> {
     /// Performance metadata
     pub meta: ResponseMetadata,
 }
-
 /// Metadata included with API responses
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseMetadata {
     /// Processing time in milliseconds
     pub processing_time_ms: u64,
@@ -92,10 +97,7 @@ pub struct ResponseMetadata {
     pub version: String,
     /// Pagination info (if applicable)
     pub pagination: Option<PaginationMeta>,
-}
-
 /// Pagination metadata for paginated responses
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PaginationMeta {
     /// Current page number
     pub page: u32,
@@ -109,35 +111,29 @@ pub struct PaginationMeta {
     pub has_next: bool,
     /// Whether there's a previous page
     pub has_prev: bool,
-}
-
 /// Standard pagination parameters
 #[derive(Debug, Clone, Deserialize)]
 pub struct PaginationParams {
     /// Page number (1-based)
     #[serde(default = "default_page")]
-    pub page: u32,
-    /// Items per page
     #[serde(default = "default_per_page")]
-    pub per_page: u32,
-}
-
 fn default_page() -> u32 {
-    1
-}
-fn default_per_page() -> u32 {
-    50
-}
+    1}
 
-impl Default for PaginationParams {
+
+fn default_per_page() -> u32 {
+    50}
+
+
+impl Default for PaginationParams {}
+
+
     fn default() -> Self {
         Self {
             page: 1,
             per_page: 50,
         }
     }
-}
-
 /// Helper function to create success response
 pub fn success_response<T>(
     data: T,
@@ -157,49 +153,14 @@ pub fn success_response<T>(
             version: API_VERSION.to_string(),
             pagination: None,
         },
-    }
-}
-
 /// Helper function to create error response
 pub fn error_response<T>(
     error: String,
-    request_id: String,
-    processing_time_ms: u64,
-) -> ApiResponse<T> {
-    ApiResponse {
         success: false,
         data: None,
         error: Some(error),
-        request_id,
-        timestamp: chrono::Utc::now(),
-        meta: ResponseMetadata {
-            processing_time_ms,
             cached: false,
-            version: API_VERSION.to_string(),
-            pagination: None,
-        },
-    }
-}
-
 /// Helper function to create paginated response
 pub fn paginated_response<T>(
-    data: T,
-    request_id: String,
-    processing_time_ms: u64,
-    cached: bool,
     pagination: PaginationMeta,
-) -> ApiResponse<T> {
-    ApiResponse {
-        success: true,
-        data: Some(data),
-        error: None,
-        request_id,
-        timestamp: chrono::Utc::now(),
-        meta: ResponseMetadata {
-            processing_time_ms,
-            cached,
-            version: API_VERSION.to_string(),
             pagination: Some(pagination),
-        },
-    }
-}

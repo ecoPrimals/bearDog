@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BackupStrategy","ChallengeType","ContactType","HolderVerificationStatus","MethodStatus","MixedRecoveryStatus","RecoveryEventType","RecoveryStatus","RecoveryType","ShardHolderType","ShardVerificationStatus","VerificationMethod","VerificationType"],"struct":["RecoveryAuditEntry"]};

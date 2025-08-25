@@ -1,85 +1,100 @@
-//! Error types for the `BearDog` deployment tool
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use thiserror::Error;
 
-#[derive(Error, Debug)]
-pub enum DeployError {
-    #[error("Android NDK not found: {message}")]
-    NdkNotFound { message: String },
+/// **CANONICAL DEPLOYMENT ERROR HANDLING** ✅ **COMPLETE**
+/// 
+/// This module now uses the unified BearDogError system exclusively.
+/// All deployment errors are handled through BearDogError::Deployment variant.
+/// 
+/// **Usage Pattern**:
+/// ```rust
+/// use beardog_errors::{BearDogError, BearDogResult};
+/// 
+/// // NDK not found error
+/// BearDogError::deployment("Android NDK not found", Some("ndk_setup"))
+/// 
+/// // Build failed error
+/// BearDogError::deployment("Build process failed", Some("compilation"))
+/// 
+/// // Device connection error
+/// BearDogError::deployment("Target device not found", Some("device_connection"))
+/// ```
+use beardog_errors::BearDogError;
 
-    #[error("Rust toolchain error: {message}")]
-    RustToolchain { message: String },
+/// **CANONICAL DEPLOYMENT ERROR HANDLING** ✅
+/// Modern error handling using the unified BearDogError system
+pub struct DeploymentErrorHandler;
 
-    #[error("Device not found or not connected")]
-    DeviceNotFound,
-
-    #[error("Multiple devices connected - specify target device")]
-    MultipleDevices,
-
-    #[error("Build failed: {message}")]
-    BuildFailed { message: String },
-
-    #[error("Deployment failed: {message}")]
-    DeploymentFailed { message: String },
-
-    #[error("Device command failed: {message}")]
-    DeviceCommandFailed { message: String },
-
-    #[error("Unsupported target architecture: {target}")]
-    UnsupportedTarget { target: String },
-
-    #[error("Prerequisites not met: {message}")]
-    PrerequisitesNotMet { message: String },
-
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
-
-    #[allow(dead_code)] // Future deployment functionality
-    #[error("Process execution failed: {message}")]
-    ProcessFailed { message: String },
-}
-
-impl DeployError {
-    pub fn ndk_not_found(message: impl Into<String>) -> Self {
-        Self::NdkNotFound {
-            message: message.into(),
-        }
+impl DeploymentErrorHandler {
+    /// Create NDK not found error
+    pub fn ndk_not_found(message: impl Into<String>) -> BearDogError {
+        BearDogError::deployment_with_stage(message.into(), "ndk_detection")
     }
 
-    pub fn rust_toolchain(message: impl Into<String>) -> Self {
-        Self::RustToolchain {
-            message: message.into(),
-        }
+    /// Create Rust toolchain error
+    pub fn rust_toolchain(message: impl Into<String>) -> BearDogError {
+        BearDogError::deployment_with_stage(message.into(), "toolchain_setup")
     }
 
-    pub fn build_failed(message: impl Into<String>) -> Self {
-        Self::BuildFailed {
-            message: message.into(),
-        }
+    /// Create device not found error
+    pub fn device_not_found() -> BearDogError {
+        BearDogError::deployment_with_stage("Device not found or not connected", "device_detection")
     }
 
-    pub fn deployment_failed(message: impl Into<String>) -> Self {
-        Self::DeploymentFailed {
-            message: message.into(),
-        }
+    /// Create multiple devices error
+    pub fn multiple_devices() -> BearDogError {
+        BearDogError::deployment_with_stage("Multiple devices connected - specify target device", "device_selection")
     }
 
-    pub fn device_command_failed(message: impl Into<String>) -> Self {
-        Self::DeviceCommandFailed {
-            message: message.into(),
-        }
+    /// Create build failed error
+    pub fn build_failed(message: impl Into<String>) -> BearDogError {
+        BearDogError::deployment_with_stage(message.into(), "build")
     }
 
-    pub fn prerequisites_not_met(message: impl Into<String>) -> Self {
-        Self::PrerequisitesNotMet {
-            message: message.into(),
-        }
+    /// Create deployment failed error
+    pub fn deployment_failed(message: impl Into<String>) -> BearDogError {
+        BearDogError::deployment_with_stage(message.into(), "deployment")
     }
 
-    #[allow(dead_code)] // Future deployment functionality
-    pub fn process_failed(message: impl Into<String>) -> Self {
-        Self::ProcessFailed {
-            message: message.into(),
-        }
+    /// Create device command failed error
+    pub fn device_command_failed(message: impl Into<String>) -> BearDogError {
+        BearDogError::deployment_with_stage(message.into(), "device_command")
+    }
+
+    /// Create unsupported target error
+    pub fn unsupported_target(target: impl Into<String>) -> BearDogError {
+        BearDogError::deployment_with_stage(
+            format!("Unsupported target architecture: {}", target.into()),
+            "target_validation"
+        )
+    }
+
+    /// Create prerequisites not met error
+    pub fn prerequisites_not_met(message: impl Into<String>) -> BearDogError {
+        BearDogError::deployment_with_stage(message.into(), "prerequisites")
+    }
+
+    /// Create process failed error
+    pub fn process_failed(message: impl Into<String>) -> BearDogError {
+        BearDogError::deployment_with_stage(message.into(), "process_execution")
+    }
+
+    /// Create IO error
+    pub fn io_error(error: std::io::Error) -> BearDogError {
+        BearDogError::deployment_with_stage(format!("IO error: {error}"), "io_operation")
     }
 }

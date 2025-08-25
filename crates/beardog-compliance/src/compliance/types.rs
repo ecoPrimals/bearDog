@@ -1,276 +1,246 @@
-//! Type definitions and data structures for compliance monitoring
-//!
-//! Contains all structs, enums, and type aliases for compliance operations.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use chrono::{DateTime, Duration, Utc};
+
+/// # Compliance Types - Canonical System
+///
+/// This module provides unified compliance types and standards for regulatory
+/// compliance across different jurisdictions and frameworks.
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use chrono::{DateTime, Utc};
+use uuid::Uuid;
 
-/// Compliance configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ComplianceConfig {
-    /// List of enabled compliance standards
-    pub enabled_standards: Vec<ComplianceStandard>,
-    /// Monitoring interval for compliance checks
-    pub monitoring_interval: Duration,
-    /// Audit log retention period
-    pub audit_retention: Duration,
-    /// Dashboard refresh interval
-    pub dashboard_refresh_interval: Duration,
-    /// Reporting configuration
-    pub reporting: ReportingConfig,
-}
+/// **CANONICAL MIGRATION COMPLETE** ✅
+/// All compliance types now use canonical definitions from beardog-types
+pub use beardog_types::canonical::configuration::{
+    ComplianceConfig, ComplianceStandard, ReportingConfig,
+    PrivacyAuditConfig, DataSovereigntyConfig
+};
 
-impl Default for ComplianceConfig {
-    fn default() -> Self {
-        Self {
-            enabled_standards: vec![
-                ComplianceStandard::GDPR,
-                ComplianceStandard::SOX,
-                ComplianceStandard::PCI_DSS,
-            ],
-            monitoring_interval: Duration::minutes(5),
-            audit_retention: Duration::days(365),
-            dashboard_refresh_interval: Duration::minutes(1),
-            reporting: ReportingConfig::default(),
-        }
-    }
-}
+// Re-export specific types from compliance module
+pub use beardog_types::canonical::configuration::compliance::{
+    ReportFormat, ReportFrequency
+};
 
-/// Reporting configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ReportingConfig {
-    /// Automatically generate reports
-    pub auto_generate: bool,
-    /// Report generation interval
-    pub generation_interval: Duration,
-    /// Storage path for reports
-    pub storage_path: String,
-    /// Report formats to generate
-    pub formats: Vec<ReportFormat>,
-}
-
-impl Default for ReportingConfig {
-    fn default() -> Self {
-        Self {
-            auto_generate: true,
-            generation_interval: Duration::days(1),
-            storage_path: "./reports".to_string(),
-            formats: vec![ReportFormat::JSON, ReportFormat::PDF],
-        }
-    }
-}
-
-/// Report format options
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum ReportFormat {
-    /// PDF format
-    PDF,
-    /// JSON format
-    JSON,
-    /// CSV format
-    CSV,
-    /// HTML format
-    HTML,
-}
-
-/// Compliance standards supported by BearDog
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-pub enum ComplianceStandard {
-    /// GDPR (General Data Protection Regulation)
-    GDPR,
-    /// SOX (Sarbanes-Oxley Act)
-    SOX,
-    /// PCI DSS (Payment Card Industry Data Security Standard)
-    PciDss,
-    /// PCI DSS (Payment Card Industry Data Security Standard) - alternative name
-    #[allow(non_camel_case_types)]
-    PCI_DSS,
-    /// HIPAA (Health Insurance Portability and Accountability Act)
-    HIPAA,
-    /// ISO 27001 (Information Security Management)
-    ISO27001,
-    /// FedRAMP (Federal Risk and Authorization Management Program)
-    FedRAMP,
-}
-
-/// Compliance event for monitoring
+/// Compliance event for audit trail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceEvent {
-    /// Unique event identifier
-    pub id: String,
-    /// Type of event (e.g., "DataAccess", "PolicyViolation")
-    pub event_type: String,
-    /// Event timestamp
+    pub id: Uuid,
     pub timestamp: DateTime<Utc>,
-    /// User who triggered the event
-    pub user_id: Option<String>,
-    /// Resource affected by the event
-    pub resource: Option<String>,
-    /// Additional event data
-    pub data: HashMap<String, String>,
-    /// Additional metadata about the event
-    pub metadata: HashMap<String, String>,
+    pub event_type: ComplianceEventType,
+    pub standard: ComplianceStandard,
+    pub description: String,
+    pub severity: ComplianceSeverity,
+    pub metadata: serde_json::Value,
+}
+
+/// Types of compliance events
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ComplianceEventType {
+    PolicyViolation,
+    AuditCheck,
+    DataAccess,
+    DataModification,
+    ConsentUpdate,
+    SecurityIncident,
+    ComplianceCheck,
+    ReportGeneration,
+}
+
+/// Severity levels for compliance events
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ComplianceSeverity {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
+/// Compliance check result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComplianceResult {
+    pub standard: ComplianceStandard,
+    pub passed: bool,
+    pub score: f64,
+    pub violations: Vec<ComplianceViolation>,
+    pub recommendations: Vec<String>,
+    pub timestamp: DateTime<Utc>,
 }
 
 /// Compliance violation details
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceViolation {
-    /// Unique violation identifier
-    pub id: String,
-    /// Compliance standard that was violated
-    pub standard: ComplianceStandard,
-    /// Event ID that triggered the violation
-    pub event_id: String,
-    /// Type of violation
-    pub violation_type: String,
-    /// Severity level of the violation
+    pub id: Uuid,
+    pub rule: String,
+    pub description: String,
     pub severity: ComplianceSeverity,
-    /// Human-readable description of the violation
-    pub description: String,
-    /// Timestamp when the violation was detected
-    pub timestamp: DateTime<Utc>,
-    /// Whether remediation is required
-    pub remediation_required: bool,
+    pub remediation: String,
+    pub affected_data: Option<String>,
 }
 
-/// Compliance warning details
+/// Audit trail entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ComplianceWarning {
-    /// Unique warning identifier
-    pub id: String,
-    /// Compliance standard that triggered the warning
-    pub standard: ComplianceStandard,
-    /// Type of warning
-    pub warning_type: String,
-    /// Human-readable description of the warning
-    pub description: String,
-    /// Timestamp when the warning was issued
+pub struct AuditEntry {
+    pub id: Uuid,
+    pub timestamp: DateTime<Utc>,
+    pub user_id: Option<String>,
+    pub action: String,
+    pub resource: String,
+    pub outcome: AuditOutcome,
+    pub details: serde_json::Value,
+}
+
+/// Audit outcome
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum AuditOutcome {
+    Success,
+    Failure,
+    Partial,
+    Denied,
+}
+
+/// Data processing record for GDPR compliance
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DataProcessingRecord {
+    pub id: Uuid,
+    pub data_subject_id: String,
+    pub processing_purpose: String,
+    pub legal_basis: String,
+    pub data_categories: Vec<String>,
+    pub recipients: Vec<String>,
+    pub retention_period: Option<chrono::Duration>,
+    pub cross_border_transfers: Vec<String>,
     pub timestamp: DateTime<Utc>,
 }
 
-/// Compliance severity levels
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Hash)]
-pub enum ComplianceSeverity {
-    /// Information level
-    Info,
-    /// Warning level
-    Warning,
-    /// Violation level
-    Violation,
-    /// Critical level
+/// Consent record for privacy compliance
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConsentRecord {
+    pub id: Uuid,
+    pub data_subject_id: String,
+    pub purpose: String,
+    pub consent_given: bool,
+    pub consent_date: DateTime<Utc>,
+    pub withdrawal_date: Option<DateTime<Utc>>,
+    pub consent_method: ConsentMethod,
+    pub evidence: String,
+}
+
+/// Method of consent collection
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ConsentMethod {
+    ExplicitConsent,
+    ImpliedConsent,
+    OptIn,
+    OptOut,
+    LegitimateInterest,
+}
+
+/// Privacy impact assessment
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PrivacyImpactAssessment {
+    pub id: Uuid,
+    pub project_name: String,
+    pub assessment_date: DateTime<Utc>,
+    pub data_types: Vec<String>,
+    pub risks_identified: Vec<PrivacyRisk>,
+    pub mitigation_measures: Vec<String>,
+    pub residual_risk_level: RiskLevel,
+    pub approval_status: ApprovalStatus,
+}
+
+/// Privacy risk assessment
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PrivacyRisk {
+    pub description: String,
+    pub likelihood: RiskLevel,
+    pub impact: RiskLevel,
+    pub overall_risk: RiskLevel,
+}
+
+/// Risk level enumeration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum RiskLevel {
+    Low,
+    Medium,
+    High,
     Critical,
 }
 
-/// Result of compliance evaluation for a single event
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ComplianceResult {
-    /// Event ID that was evaluated
-    pub event_id: String,
-    /// Compliance score (0.0 to 100.0)
-    pub compliance_score: f64,
-    /// List of violations found
-    pub violations: Vec<ComplianceViolation>,
-    /// List of warnings issued
-    pub warnings: Vec<ComplianceWarning>,
-    /// Timestamp when evaluation was performed
-    pub evaluated_at: DateTime<Utc>,
-    /// List of standards that were checked
-    pub standards_checked: Vec<ComplianceStandard>,
+/// Approval status for assessments
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ApprovalStatus {
+    Pending,
+    Approved,
+    Rejected,
+    RequiresRevision,
 }
 
-/// Compliance evaluation for a standard
+/// Data breach incident record
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StandardEvaluationResult {
-    /// Compliance score for this standard (0.0 to 100.0)
-    pub score: f64,
-    /// List of violations found for this standard
-    pub violations: Vec<ComplianceViolation>,
-    /// List of warnings issued for this standard
-    pub warnings: Vec<ComplianceWarning>,
+pub struct DataBreachIncident {
+    pub id: Uuid,
+    pub incident_date: DateTime<Utc>,
+    pub discovery_date: DateTime<Utc>,
+    pub incident_type: BreachType,
+    pub affected_records: u64,
+    pub data_types_affected: Vec<String>,
+    pub cause: String,
+    pub containment_measures: Vec<String>,
+    pub notification_required: bool,
+    pub notification_date: Option<DateTime<Utc>>,
+    pub regulatory_reported: bool,
+    pub status: IncidentStatus,
 }
 
-/// Date range for reports
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DateRange {
-    /// Start date of the range
-    pub start_date: DateTime<Utc>,
-    /// End date of the range
-    pub end_date: DateTime<Utc>,
+/// Types of data breaches
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum BreachType {
+    UnauthorizedAccess,
+    DataTheft,
+    AccidentalDisclosure,
+    SystemCompromise,
+    PhysicalLoss,
+    Other(String),
 }
 
-/// Compliance report
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ComplianceReport {
-    /// Unique report identifier
-    pub id: String,
-    /// Report title
-    pub title: String,
-    /// Compliance standard covered by the report
-    pub standard: ComplianceStandard,
-    /// Time period covered by the report
-    pub period: String,
-    /// Timestamp when the report was generated
-    pub generated_at: DateTime<Utc>,
-    /// Overall compliance score (0.0 to 100.0)
-    pub overall_score: f64,
-    /// Total number of events processed
-    pub total_events: u64,
-    /// Number of violations found
-    pub violations_found: u64,
-    /// Number of warnings issued
-    pub warnings_issued: u64,
-    /// List of recommendations
-    pub recommendations: Vec<String>,
-    /// Detailed findings
-    pub detailed_findings: Vec<String>,
-    /// Executive summary
-    pub summary: String,
+/// Incident status tracking
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum IncidentStatus {
+    Open,
+    InvestigationInProgress,
+    ContainmentInProgress,
+    Resolved,
+    Closed,
 }
 
-/// Compliance dashboard data
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ComplianceDashboard {
-    /// Current compliance status
-    pub compliance_status: ComplianceStatus,
-    /// Recent compliance events
-    pub recent_events: Vec<ComplianceEvent>,
-    /// Active violations requiring attention
-    pub active_violations: Vec<ComplianceViolation>,
-    /// Recent warnings issued
-    pub recent_warnings: Vec<ComplianceWarning>,
-    /// Recommendations for improvement
-    pub recommendations: Vec<String>,
-    /// Compliance metrics
-    pub metrics: ComplianceMetrics,
-}
-
-/// Overall compliance status
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ComplianceStatus {
-    /// Overall status description
-    pub overall_status: String,
-    /// Compliance percentage (0.0 to 100.0)
-    pub compliance_percentage: f64,
-    /// Number of active violations
-    pub active_violations: u64,
-    /// Total events processed today
-    pub total_events_today: u64,
-    /// Timestamp of last update
-    pub last_updated: DateTime<Utc>,
-}
-
-/// Compliance metrics
+/// Compliance dashboard metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceMetrics {
-    /// Number of events processed today
-    pub events_processed_today: u64,
-    /// Number of violations detected today
-    pub violations_detected_today: u64,
-    /// Number of warnings issued today
-    pub warnings_issued_today: u64,
-    /// Average compliance score across all standards
-    pub average_compliance_score: f64,
-    /// List of standards being monitored
-    pub standards_monitored: Vec<ComplianceStandard>,
+    pub overall_score: f64,
+    pub standards_compliance: HashMap<ComplianceStandard, f64>,
+    pub recent_violations: Vec<ComplianceViolation>,
+    pub audit_trail_size: u64,
+    pub last_assessment_date: Option<DateTime<Utc>>,
+    pub next_assessment_due: Option<DateTime<Utc>>,
+}
+
+// Legacy framework enum for backward compatibility
+pub enum ComplianceFramework {
+    Ccpa,
 }

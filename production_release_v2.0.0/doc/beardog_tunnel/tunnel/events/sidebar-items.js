@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["capabilities","compliance","network","security","threat","types"]};

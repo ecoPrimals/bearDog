@@ -1,0 +1,28 @@
+[package]
+name = "beardog-traits"
+version = "0.1.0"
+edition = "2021"
+authors = ["BearDog Team <team@beardog.dev>"]
+description = "Unified trait system for BearDog ecosystem - provides common abstractions for security, genetics, monitoring, and performance"
+license = "AGPL-3.0-only"
+repository = "https://github.com/beardog/beardog"
+keywords = ["beardog", "traits", "security", "genetics", "abstraction"]
+categories = ["cryptography", "security", "data-structures"]
+
+[dependencies]
+beardog-errors = { path = "../beardog-errors" }
+beardog-types = { path = "../beardog-types" }
+
+# Core async runtime - minimal features for traits
+tokio = { version = "1.0", features = ["rt", "macros"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+
+# Logging
+tracing = "0.1"
+chrono.workspace = true
+
+# Documentation and testing
+[dev-dependencies]
+tokio-test = "0.4" 

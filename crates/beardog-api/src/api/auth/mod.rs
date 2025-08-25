@@ -1,28 +1,42 @@
-//! Authentication & Authorization API Module
-//!
-//! Comprehensive REST API for BearDog's authentication, authorization, and user
-//! management capabilities supporting multiple authentication methods, MFA, and RBAC.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Authentication & Authorization API Module
+///
+/// Comprehensive REST API for BearDog's authentication, authorization, and user
+/// management capabilities supporting multiple authentication methods, MFA, and RBAC.
 
 use super::*;
 use axum::{
     routing::{delete, get, post, put},
     Router,
 };
-
 // Re-export types and handlers from sub-modules
 pub use authentication::*;
 pub use authorization::*;
 pub use mfa::*;
 pub use models::*;
 pub use users::*;
-
 // Sub-modules with focused responsibilities
 pub mod authentication; // Core auth: login, logout, tokens, sessions
 pub mod authorization; // Roles, permissions, API keys
 pub mod mfa; // Multi-factor authentication
 pub mod models; // All request/response models
 pub mod users; // User management CRUD operations
-
 /// Create authentication API routes
 pub fn create_routes() -> Router<AppState> {
     Router::new()

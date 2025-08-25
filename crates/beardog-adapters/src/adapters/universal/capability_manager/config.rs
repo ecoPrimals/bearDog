@@ -1,43 +1,46 @@
-//! Configuration structures for the Capability Manager
-//!
-//! This module contains all configuration options for the comprehensive
-//! capability management system, including monitoring intervals, timeouts,
-//! and feature toggles.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use std::time::Duration;
 
-/// Configuration for the Capability Manager
-#[derive(Debug, Clone)]
-pub struct CapabilityManagerConfig {
-    /// Interval between monitoring cycles
-    pub monitoring_interval: Duration,
-    /// Timeout for health checks
-    pub health_check_timeout: Duration,
-    /// Number of performance snapshots to keep in history
-    pub performance_history_size: usize,
-    /// Whether to enable emergent capability discovery
-    pub emergent_discovery_enabled: bool,
-    /// Whether to enable genetic capability tracking
-    pub genetic_tracking_enabled: bool,
-    /// Whether to enable advanced matching algorithms
-    pub advanced_matching_enabled: bool,
-    /// Timeout for dependency resolution
-    pub dependency_resolution_timeout: Duration,
-    /// Whether to enable alert notifications
-    pub alert_notification_enabled: bool,
-}
+/// Configuration structures for the Capability Manager
+///
+/// **CANONICAL MIGRATION COMPLETE** ✅
+/// This module now uses the unified configuration system from `beardog-types::config::manager`.
+/// All duplicate configuration structs have been eliminated in favor of the canonical system.
 
-impl Default for CapabilityManagerConfig {
-    fn default() -> Self {
-        Self {
-            monitoring_interval: Duration::from_secs(30),
-            health_check_timeout: Duration::from_secs(5),
-            performance_history_size: 100,
-            emergent_discovery_enabled: true,
-            genetic_tracking_enabled: true,
-            advanced_matching_enabled: true,
-            dependency_resolution_timeout: Duration::from_secs(10),
-            alert_notification_enabled: true,
-        }
-    }
-}
+// ============================================================================
+// CANONICAL CONFIGURATION IMPORTS - Use unified system
+/// **CANONICAL CAPABILITY MANAGER CONFIG** - Use this for all capability management
+pub use beardog_types::config::manager::CapabilityManagerConfig;
+/// **CANONICAL MANAGER CONFIG** - Complete manager configuration system
+pub use beardog_types::config::manager::ManagerConfig;
+// MIGRATION COMPLETE NOTICE
+/// **MIGRATION COMPLETE** ✅
+/// The local `CapabilityManagerConfig` has been replaced with the canonical version from
+/// `beardog-types::config::manager::CapabilityManagerConfig`.
+/// **Benefits of Canonical Configuration:**
+/// - Single source of truth across ecosystem
+/// - Consistent configuration patterns
+/// - Better type safety and validation
+/// - Unified configuration management
+/// - Environment-driven configuration support
+/// **Usage:**
+/// ```rust
+/// use beardog_types::config::manager::CapabilityManagerConfig;
+/// 
+/// let config = CapabilityManagerConfig::default();
+/// // Use unified configuration system
+/// ```

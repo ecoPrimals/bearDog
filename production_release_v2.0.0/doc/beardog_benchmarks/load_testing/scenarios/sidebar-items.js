@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AuthenticationType","LoadTestType"],"struct":["ResourceLimits","SuccessCriteria","TestAuthentication","TestScenario","TestTarget"]};

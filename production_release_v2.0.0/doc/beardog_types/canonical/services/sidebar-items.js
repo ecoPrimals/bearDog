@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["RequestPriority","ResponseStatus","ServiceHealthStatus","ServiceType"],"struct":["ServiceEndpoint","UniversalRequest","UniversalResponse","UniversalServiceMetadata"]};

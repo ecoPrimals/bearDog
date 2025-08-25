@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["android","capabilities","config","discovery","keys","status","tiers"]};

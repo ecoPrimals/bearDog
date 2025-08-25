@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["RedisNodeRole"],"struct":["ClusterConfig","RedisClusterConfig","RedisNodeConfig"]};

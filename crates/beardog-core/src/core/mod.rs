@@ -1,26 +1,37 @@
-//! BearDog Core Module
-//!
-//! Central coordination for all BearDog core functionality
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// BearDog Core Module
+///
+/// Central coordination for all BearDog core functionality
 
 pub mod components;
 pub mod lifecycle;
-
-use crate::types::{
-    BearDogSecurityProvider, ComponentStatus, CoreState, GeneticOptimizer, HealthStatus,
-    SystemMonitor,
-};
-use async_trait::async_trait;
-use beardog_config::BearDogConfig;
 use beardog_errors::{BearDogError, BearDogResult};
-use beardog_security::encryption::EncryptionEngine;
-use beardog_workflows::workflows::InMemoryApprovalStore;
-use beardog_workflows::workflows::InMemoryWorkflowStore;
-use beardog_workflows::workflows::MultiPartyWorkflowEngine;
-use std::collections::HashMap;
+use beardog_types::canonical::HealthStatus;
+use beardog_types::config::unified::BearDogConfig; // Use canonical unified config
+use beardog_errors::idiomatic::SystemResult;
+// Workflow imports removed - workflows crate disabled for canonical modernization
+// use beardog_workflows::workflows::InMemoryApprovalStore;
+// use beardog_workflows::workflows::InMemoryWorkflowStore;
+// use beardog_workflows::workflows::MultiPartyWorkflowEngine;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
-
+use tracing::{error, info, warn};
 /// Core BearDog system coordinator
 pub struct BearDogCore {
     pub state: Arc<RwLock<CoreState>>,
@@ -29,7 +40,6 @@ pub struct BearDogCore {
     pub monitor: Arc<SystemMonitor>,
     pub genetic_optimizer: Arc<GeneticOptimizer>,
 }
-
 impl BearDogCore {
     /// Create new BearDog core instance
     pub async fn new(config: BearDogConfig) -> BearDogResult<Self> {
@@ -37,7 +47,6 @@ impl BearDogCore {
         let security = Arc::new(BearDogSecurityProvider::new()?);
         let monitor = Arc::new(SystemMonitor::new()?);
         let genetic_optimizer = Arc::new(GeneticOptimizer::new()?);
-
         Ok(Self {
             state,
             config,
@@ -46,11 +55,9 @@ impl BearDogCore {
             genetic_optimizer,
         })
     }
-
     /// Initialize all core components
-    pub async fn initialize(&self) -> BearDogResult<()> {
+    pub async fn initialize(&self) -> Result<(), SystemError> {
         info!("🚀 Initializing BearDog Core");
-
         // Update state to show initialization
         {
             let mut state = self.state.write().await;
@@ -58,26 +65,13 @@ impl BearDogCore {
                 .components
                 .insert("core".to_string(), ComponentStatus::Starting);
         }
-
         // Initialize components
         self.security.initialize().await?;
         self.monitor.start().await?;
         self.genetic_optimizer.initialize().await?;
-
         // Update state to show running
-        {
-            let mut state = self.state.write().await;
-            state
-                .components
                 .insert("core".to_string(), ComponentStatus::Running);
             state.overall_health = HealthStatus::healthy();
-        }
-
         info!("✅ BearDog Core initialized successfully");
         Ok(())
-    }
-}
-
 // Re-export core types
-pub use components::*;
-pub use lifecycle::*;

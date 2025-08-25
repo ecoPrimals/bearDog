@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 use beardog::audit::*;
 use beardog::compliance::*;
 use beardog::config::EncryptionConfig;
@@ -17,7 +34,10 @@ async fn test_beardog_core_security_comprehensive() {
     // Test core initialization and basic operations
     let core = BearDogCore::new(BearDogConfig::default())
         .await
-        .expect("Core initialization failed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+})?;
 
     // Test all core security methods
     test_core_security_methods(&core).await;
@@ -48,7 +68,10 @@ async fn test_core_security_methods(core: &BearDogCore) {
         let decrypted = engine.decrypt(&encrypted_data).await;
         assert!(decrypted.is_ok(), "Decryption should succeed");
         assert_eq!(
-            decrypted.unwrap(),
+            decrypted.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             test_data,
             "Decrypted data should match original"
         );
@@ -97,7 +120,7 @@ async fn test_core_error_handling(core: &BearDogCore) {
     let invalid_encrypted = EncryptedData {
         algorithm: EncryptionAlgorithm::Aes256Gcm,
         ciphertext: b"invalid_data".to_vec(),
-        nonce: vec![0u8; 12],
+        nonce: beardog_security::crypto_utils::BearDogCrypto::generate_secure_nonce(12)?,
         tag: None,
         metadata: HashMap::new(),
         key_id: None,
@@ -123,7 +146,10 @@ async fn test_core_concurrent_access(core: &BearDogCore) {
             // Create a new core instance for testing instead of sharing
             let test_core = BearDogCore::new(BearDogConfig::default())
                 .await
-                .expect("Core creation failed");
+                .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core creation failed", e))
+})?;
             let test_provider = test_core.security_provider();
             let user_id = format!("user_{}", i);
             let token = format!("token_{}", i);
@@ -134,7 +160,10 @@ async fn test_core_concurrent_access(core: &BearDogCore) {
 
     // Wait for all tasks to complete
     for handle in handles {
-        handle.await.expect("Concurrent task should complete");
+        handle.await.map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Concurrent task should complete", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Concurrent task should complete", e))
+})?;
     }
 }
 
@@ -255,7 +284,10 @@ async fn test_audit_performance_under_load(audit: &AuditEngine) {
 
     // Wait for all tasks to complete
     for handle in handles {
-        let result = handle.await.expect("Load test task should complete");
+        let result = handle.await.map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Load test task should complete", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Load test task should complete", e))
+})?;
         assert!(result.is_ok(), "Load test event should succeed");
     }
 }
@@ -286,7 +318,10 @@ async fn test_audit_tampering_detection(audit: &AuditEngine) {
         "Recent events retrieval should succeed"
     );
 
-    let events = recent_events.unwrap();
+    let events = recent_events.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(!events.is_empty(), "Should have at least one event");
 }
 
@@ -296,7 +331,10 @@ async fn test_compliance_engine_comprehensive() {
     let config = ComplianceConfig::default();
     let compliance = ComplianceEngine::new(config)
         .await
-        .expect("Compliance engine creation failed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Compliance engine creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Compliance engine creation failed", e))
+})?;
 
     // Test all compliance standards
     test_compliance_standards(&compliance).await;
@@ -352,7 +390,10 @@ async fn test_compliance_violations(compliance: &ComplianceEngine) {
     let result = compliance.evaluate_event(violation_event).await;
     assert!(result.is_ok(), "Compliance evaluation should succeed");
 
-    let evaluation = result.unwrap();
+    let evaluation = result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(
         evaluation.compliance_score < 1.0,
         "Compliance score should be less than perfect for violation"
@@ -372,7 +413,10 @@ async fn test_compliance_reporting(compliance: &ComplianceEngine) {
         "Compliance report generation should succeed"
     );
 
-    let report = report.unwrap();
+    let report = report.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert_eq!(report.standard, ComplianceStandard::GDPR);
     assert!(report.overall_score >= 0.0 && report.overall_score <= 1.0);
 }
@@ -412,7 +456,10 @@ async fn test_threat_detection_comprehensive() {
     let config = ThreatDetectionConfig::default();
     let mut detector = ThreatDetectionEngine::new(config)
         .await
-        .expect("Threat detection engine creation failed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Threat detection engine creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Threat detection engine creation failed", e))
+})?;
 
     // Test all threat detection capabilities
     test_threat_types(&mut detector).await;
@@ -522,7 +569,10 @@ async fn test_encryption_engine_comprehensive() {
     let config = EncryptionConfig::default();
     let engine = EncryptionEngine::new(config)
         .await
-        .expect("Encryption engine creation failed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Encryption engine creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Encryption engine creation failed", e))
+})?;
 
     // Test all encryption capabilities
     test_encryption_algorithms(&engine).await;
@@ -556,7 +606,10 @@ async fn test_encryption_algorithms(engine: &EncryptionEngine) {
                 algorithm
             );
             assert_eq!(
-                decrypted.unwrap(),
+                decrypted.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
                 test_data,
                 "Decrypted data should match original for {:?}",
                 algorithm
@@ -608,7 +661,10 @@ async fn test_encryption_performance(engine: &EncryptionEngine) {
                 size
             );
             assert_eq!(
-                decrypted.unwrap(),
+                decrypted.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
                 test_data,
                 "Decrypted data should match original"
             );
@@ -637,8 +693,14 @@ async fn test_encryption_attack_resistance(engine: &EncryptionEngine) {
         "Both encryptions should succeed"
     );
 
-    let enc1 = encrypted1.unwrap();
-    let enc2 = encrypted2.unwrap();
+    let enc1 = encrypted1.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
+    let enc2 = encrypted2.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Ciphertexts should be different (due to different nonces)
     assert_ne!(
@@ -655,12 +717,18 @@ async fn test_encryption_attack_resistance(engine: &EncryptionEngine) {
         "Both decryptions should succeed"
     );
     assert_eq!(
-        dec1.unwrap(),
+        dec1.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         test_data,
         "First decryption should match original"
     );
     assert_eq!(
-        dec2.unwrap(),
+        dec2.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         test_data,
         "Second decryption should match original"
     );
@@ -676,15 +744,24 @@ async fn test_integrated_security_workflow() {
     let compliance = Arc::new(
         ComplianceEngine::new(compliance_config)
             .await
-            .expect("Compliance engine creation failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Compliance engine creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Compliance engine creation failed", e))
+})?,
     );
     let mut threat_detector = ThreatDetectionEngine::new(threat_config)
         .await
-        .expect("Threat detection engine creation failed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Threat detection engine creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Threat detection engine creation failed", e))
+})?;
     let encryption = Arc::new(
         EncryptionEngine::new(encryption_config)
             .await
-            .expect("Encryption engine creation failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Encryption engine creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Encryption engine creation failed", e))
+})?,
     );
 
     // Test integrated workflow
@@ -747,7 +824,10 @@ async fn test_security_incident_workflow(
         "Compliance evaluation should succeed"
     );
 
-    let evaluation = compliance_result.unwrap();
+    let evaluation = compliance_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(
         evaluation.compliance_score < 1.0,
         "Security incident should affect compliance score"
@@ -806,7 +886,10 @@ async fn test_data_protection_workflow(
         "Data protection compliance should succeed"
     );
 
-    let evaluation = compliance_result.unwrap();
+    let evaluation = compliance_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(
         evaluation.compliance_score >= 0.8,
         "Data protection should have high compliance score"

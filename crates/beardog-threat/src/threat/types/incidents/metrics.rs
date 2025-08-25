@@ -1,93 +1,79 @@
-//! Incident metrics and performance tracking
-//!
-//! This module contains types and functionality for tracking incident response
-//! metrics and performance indicators.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+/// Incident metrics and performance tracking
+///
+/// This module contains types and functionality for tracking incident response
+/// metrics and performance indicators.
 use serde::{Deserialize, Serialize};
 
 /// Incident metrics
-///
 /// Tracks key metrics for incident response
 /// performance and effectiveness.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct IncidentMetrics {
     /// Time to detection (minutes)
     pub time_to_detection: Option<i64>,
-
     /// Time to containment (minutes)
     pub time_to_containment: Option<i64>,
-
     /// Time to resolution (minutes)
     pub time_to_resolution: Option<i64>,
-
     /// Total incident duration (minutes)
     pub total_duration: Option<i64>,
-
     /// Number of systems affected
     pub systems_affected: u32,
-
     /// Number of users affected
     pub users_affected: u32,
-
     /// Estimated business impact cost
     pub estimated_cost: Option<f64>,
-
     /// Number of team members involved
     pub team_members_involved: u32,
 }
-
 impl IncidentMetrics {
     /// Create new incident metrics
     ///
     /// # Returns
     /// A new `IncidentMetrics` instance
-    ///
     /// # Example
     /// ```rust
     /// use beardog::threat::types::IncidentMetrics;
-    ///
     /// let metrics = IncidentMetrics::new();
     /// assert_eq!(metrics.systems_affected, 0);
-    /// ```
+    /// ```}
+
+
     pub fn new() -> Self {
         Self::default()
     }
-
     /// Calculate total incident cost
-    ///
-    /// # Returns
     /// Total estimated cost including business impact
-    ///
-    /// # Example
-    /// ```rust
-    /// use beardog::threat::types::IncidentMetrics;
-    ///
     /// let mut metrics = IncidentMetrics::new();
     /// metrics.estimated_cost = Some(10000.0);
-    ///
     /// let total = metrics.calculate_total_cost();
     /// assert_eq!(total, 10000.0);
-    /// ```
     pub fn calculate_total_cost(&self) -> f64 {
         self.estimated_cost.unwrap_or(0.0)
-    }
-
     /// Check if metrics are complete
-    ///
-    /// # Returns
     /// `true` if all key metrics are available
-    ///
-    /// # Example
-    /// ```rust
-    /// use beardog::threat::types::IncidentMetrics;
-    ///
-    /// let metrics = IncidentMetrics::new();
-    /// assert!(!metrics.is_complete());
-    /// ```
+    /// assert!(!metrics.is_complete());}
+
+
     pub fn is_complete(&self) -> bool {
         self.time_to_detection.is_some()
             && self.time_to_containment.is_some()
             && self.time_to_resolution.is_some()
             && self.total_duration.is_some()
-    }
-}

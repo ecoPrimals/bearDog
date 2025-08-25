@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CacheReplacementPolicy","WarmingStrategy"],"mod":["utils"],"struct":["AllocationStrategiesConfig","CacheWarmingConfig","GcTuningConfig","GlobalPoolSettings","L1CacheConfig","L2CacheConfig","LeakDetectionConfig","MemoryCacheConfig","MemoryMonitoringConfig","MemoryOptimizationConfig","ObjectPoolingConfig","PoolConfig","PreAllocationConfig"]};

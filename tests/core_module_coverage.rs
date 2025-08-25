@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Core Module Coverage Tests for BearDog
 //!
 //! Comprehensive tests to increase coverage of core modules
@@ -70,28 +87,20 @@ async fn test_beardog_core_lifecycle() -> BearDogResult<()> {
 fn test_error_type_coverage() {
     // Test all error variants for coverage
     let errors = vec![
-        BearDogError::Configuration {
-            message: "test config error".to_string(),
-        },
-        BearDogError::Configuration {
-            message: "test db error".to_string(),
-        },
-        BearDogError::Encryption {
-            operation: "test_operation".to_string(),
-            message: "test encryption error".to_string(),
-        },
-        BearDogError::Authentication {
-            message: "test auth error".to_string(),
-        },
-        BearDogError::Authorization {
-            message: "test authz error".to_string(),
-        },
-        BearDogError::Network {
-            message: "test network error".to_string(),
-        },
-        BearDogError::InvalidGenetics {
-            message: "test genetics error".to_string(),
-        },
+        BearDogError::configuration("test config error".to_string(),
+        ),
+        BearDogError::configuration("test db error".to_string(),
+        ),
+        BearDogError::encryption("test_operation".to_string(), "test encryption error".to_string(),
+        ),
+        BearDogError::authentication("test auth error".to_string(),
+        ),
+        BearDogError::invalid_input("test authz error".to_string(),
+        ),
+        BearDogError::network("test network error".to_string(),
+        ),
+        BearDogError::validation("test genetics error".to_string(),
+        ),
         BearDogError::SpawnRejected {
             reason: "test spawn rejection".to_string(),
         },
@@ -105,9 +114,8 @@ fn test_error_type_coverage() {
             standard: "test-violation".to_string(),
             message: "test details".to_string(),
         },
-        BearDogError::ThreatDetection {
-            message: "test threat detection error".to_string(),
-        },
+        BearDogError::internal("test threat detection error".to_string(),
+        ),
     ];
 
     // Test that all errors can be formatted and displayed
@@ -184,9 +192,15 @@ fn test_config_serialization() {
     let config = BearDogConfig::default();
 
     // Test JSON serialization
-    let json = serde_json::to_string(&config).expect("Should serialize to JSON");
+    let json = serde_json::to_string(&config).map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Should serialize to JSON", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Should serialize to JSON", e))
+})?;
     let deserialized: BearDogConfig =
-        serde_json::from_str(&json).expect("Should deserialize from JSON");
+        serde_json::from_str(&json).map_err(|e| {
+    tracing::error!("JSON parsing failed ({}): {}", "Should deserialize from JSON", e);
+    beardog_errors::BearDogError::ValidationError(format!("JSON parsing error ({}): {}", "Should deserialize from JSON", e))
+})?;
 
     // Basic validation that serialization works
     assert_eq!(config.security.level, deserialized.security.level);
@@ -259,7 +273,10 @@ async fn test_timeout_handling() -> BearDogResult<()> {
     let result = timeout(Duration::from_secs(10), BearDogCore::new(config)).await;
     assert!(result.is_ok(), "Core initialization should not timeout");
 
-    let core = result.unwrap()?;
+    let core = result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})??;
 
     // Test health check doesn't timeout
     let health_result = timeout(Duration::from_secs(5), core.health_check()).await;

@@ -1,14 +1,29 @@
-//! Common Types for BearDog API
-//!
-//! Shared data types and constants used across the API layer.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Common Types for BearDog API
+///
+/// Shared data types and constants used across the API layer.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// API version information
-pub const API_VERSION: &str = "1.0.0";
-pub const API_VERSION_HEADER: &str = "X-BearDog-API-Version";
-
+pub use beardog_types::constants::unified::api::VERSION as API_VERSION;
+pub use beardog_types::constants::unified::api::VERSION_HEADER as API_VERSION_HEADER;
 /// Common pagination parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PaginationParams {
@@ -21,8 +36,9 @@ pub struct PaginationParams {
     /// Sort order (asc/desc)
     pub sort_order: Option<String>,
 }
+impl Default for PaginationParams {}
 
-impl Default for PaginationParams {
+
     fn default() -> Self {
         Self {
             page: Some(1),
@@ -31,10 +47,7 @@ impl Default for PaginationParams {
             sort_order: Some("asc".to_string()),
         }
     }
-}
-
 /// Common filter parameters
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FilterParams {
     /// Date range start
     pub start_date: Option<String>,
@@ -48,10 +61,7 @@ pub struct FilterParams {
     pub search: Option<String>,
     /// Additional filters
     pub filters: Option<HashMap<String, String>>,
-}
-
 /// Common response metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseMetadata {
     /// Request ID for tracing
     pub request_id: String,
@@ -62,22 +72,19 @@ pub struct ResponseMetadata {
     /// API version
     pub api_version: String,
     /// Whether the response was cached
-    pub cached: bool,
-}
+    pub cached: bool,}
+
 
 impl ResponseMetadata {
-    /// Create new response metadata
+    /// Create new response metadata}
+
+
     pub fn new(request_id: String, processing_time_ms: u64, cached: bool) -> Self {
-        Self {
             request_id,
             processing_time_ms,
             timestamp: chrono::Utc::now().to_rfc3339(),
             api_version: API_VERSION.to_string(),
             cached,
-        }
-    }
-}
-
 /// Health check status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum HealthStatus {
@@ -87,10 +94,9 @@ pub enum HealthStatus {
     Degraded,
     /// Service unavailable
     Unhealthy,
-}
+/// Service component health}
 
-/// Service component health
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct ComponentHealth {
     /// Component name
     pub name: String,
@@ -104,10 +110,7 @@ pub struct ComponentHealth {
     pub issues: Vec<String>,
     /// Additional metadata
     pub metadata: Option<HashMap<String, String>>,
-}
-
 /// Rate limiting information
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitInfo {
     /// Maximum requests per window
     pub limit: u32,
@@ -117,15 +120,11 @@ pub struct RateLimitInfo {
     pub reset_time: String,
     /// Window duration in seconds
     pub window_seconds: u32,
-}
-
 /// Audit trail entry
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEntry {
     /// Entry ID
     pub id: String,
     /// Timestamp
-    pub timestamp: String,
     /// User or system performing the action
     pub actor: String,
     /// Action performed
@@ -136,23 +135,16 @@ pub struct AuditEntry {
     pub outcome: String,
     /// Additional context
     pub context: Option<HashMap<String, String>>,
-}
-
 /// Feature flag status
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeatureFlag {
     /// Feature name
-    pub name: String,
     /// Whether the feature is enabled
     pub enabled: bool,
     /// Feature description
     pub description: Option<String>,
     /// Rollout percentage (0-100)
     pub rollout_percentage: Option<f64>,
-}
-
 /// API endpoint information
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EndpointInfo {
     /// HTTP method
     pub method: String,
@@ -166,4 +158,3 @@ pub struct EndpointInfo {
     pub permissions: Vec<String>,
     /// Rate limit tier
     pub rate_limit_tier: Option<String>,
-}

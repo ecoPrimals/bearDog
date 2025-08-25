@@ -26,6 +26,14 @@ path = "rpc_ecosystem_demo.rs"
 name = "simple_rpc_test"
 path = "simple_rpc_test.rs"
 
+[[bin]]
+name = "production_hsm_integration"
+path = "production_hsm_integration.rs"
+
+[[bin]]
+name = "universal_hsm_demo"
+path = "universal_hsm_demo.rs"
+
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
 serde_json = "1.0"
@@ -36,9 +44,10 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 beardog-api = { path = "../crates/beardog-api" }
 beardog-core = { path = "../crates/beardog-core" }
-beardog-workflows = { path = "../crates/beardog-workflows" }
-beardog-config = { path = "../crates/beardog-config" }
+# beardog-config removed - use beardog-types::config::complete_unified
 beardog-genetics = { path = "../crates/beardog-genetics" }
+beardog-errors = { path = "../crates/beardog-errors" }
+beardog-types = { path = "../crates/beardog-types" }
 axum = "0.7"
 tower = "0.4"
 serde = { version = "1.0", features = ["derive"] }

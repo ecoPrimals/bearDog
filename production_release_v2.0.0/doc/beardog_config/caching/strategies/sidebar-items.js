@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ConflictResolutionStrategy","EvictionStrategy","NormalizationMethod","SynchronizationStrategy","WarmingStrategy"]};

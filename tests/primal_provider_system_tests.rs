@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Comprehensive Tests for PrimalProvider Trait System
 //!
 //! **Integration tests validating the universal adapter architecture**
@@ -252,7 +269,10 @@ async fn test_universal_ecosystem_manager() -> BearDogResult<()> {
         .find(|p| p.ecosystem_id == ecosystem_ids::BEARDOG);
     assert!(beardog_provider.is_some());
 
-    let beardog_provider = beardog_provider.unwrap();
+    let beardog_provider = beardog_provider.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert_eq!(beardog_provider.instance_id, instance_id);
     assert!(!beardog_provider.capabilities.is_empty());
 
@@ -589,7 +609,7 @@ mod test_helpers {
         }
     }
 
-    #[async_trait::async_trait]
+    #[allow(async_fn_in_trait)]
     impl PrimalProvider for MockToadStoolProvider {
         fn ecosystem_id(&self) -> &str {
             ecosystem_ids::TOADSTOOL

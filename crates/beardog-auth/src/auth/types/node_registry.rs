@@ -1,19 +1,33 @@
-//! Node registry types and traits for cross-node authentication
-//!
-//! This module contains all types and traits related to node registration,
-//! verification, and the main authentication engine.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Node registry types and traits for cross-node authentication
+///
+/// This module contains all types and traits related to node registration,
+/// verification, and the main authentication engine.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 use beardog_errors::BearDogResult;
-
 use super::authorization::{AuthorizationProof, CrossNodeAuthorization, CrossNodeOperation};
 use super::genetics::{BearDogGenetics, NodeCapability};
 use super::spawning::SpawnedBearDog;
 use super::workflow::{CrossNodeWorkflowRequest, WorkflowStatus};
-
 /// Node information structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeInfo {
@@ -30,7 +44,6 @@ pub struct NodeInfo {
     /// Optional genetics information for the node
     pub genetics: Option<BearDogGenetics>,
 }
-
 /// Trait for node registry operations
 pub trait NodeRegistry: Send + Sync {
     /// Get node information by node ID
@@ -41,11 +54,11 @@ pub trait NodeRegistry: Send + Sync {
     fn get_trust_level(&self, node_id: &str) -> BearDogResult<f64>;
     /// Update the trust level for a node
     fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> BearDogResult<()>;
-}
-
 /// Trait for proof verification
 pub trait ProofVerifier: Send + Sync {
-    /// Verify an authorization proof
+    /// Verify an authorization proof}
+
+
     fn verify_authorization_proof(&self, proof: &AuthorizationProof) -> BearDogResult<bool>;
     /// Generate a proof for an authorization and operation
     fn generate_proof(
@@ -53,16 +66,17 @@ pub trait ProofVerifier: Send + Sync {
         authorization: &CrossNodeAuthorization,
         operation: &CrossNodeOperation,
     ) -> BearDogResult<AuthorizationProof>;
-}
-
 /// Trait for workflow engine integration
-pub trait WorkflowEngine: Send + Sync {
-    /// Submit a workflow request for execution
+// Use canonical WorkflowProvider from beardog-traits
+pub use beardog_traits::WorkflowProvider;
+
+// Compatibility layer removed - use WorkflowProvider directly
+    /// Submit a workflow request for execution}
+
+
     fn submit_workflow(&mut self, request: CrossNodeWorkflowRequest) -> BearDogResult<String>;
     /// Get the status of a workflow by ID
     fn get_workflow_status(&self, workflow_id: &str) -> BearDogResult<WorkflowStatus>;
-}
-
 /// Main cross-node authorization engine
 pub struct CrossNodeAuthEngine {
     /// Configuration for the authorization engine
@@ -79,4 +93,3 @@ pub struct CrossNodeAuthEngine {
     pub proof_verifier: Box<dyn ProofVerifier + Send + Sync>,
     /// Optional workflow engine for automated workflows
     pub workflow_engine: Option<Box<dyn WorkflowEngine + Send + Sync>>,
-}

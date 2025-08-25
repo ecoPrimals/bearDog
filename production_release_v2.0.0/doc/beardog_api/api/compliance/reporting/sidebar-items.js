@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["generate_custom_report","generate_detailed_report","generate_executive_report","get_compliance_metrics","get_compliance_trends"]};

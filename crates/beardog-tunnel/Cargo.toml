@@ -10,12 +10,13 @@ authors.workspace = true
 beardog-errors = { path = "../beardog-errors" }
 beardog-security = { path = "../beardog-security" }
 beardog-genetics = { path = "../beardog-genetics" }
-beardog-config = { path = "../beardog-config" }
+# beardog-config removed - use beardog-types::config::complete_unified
 beardog-monitoring = { path = "../beardog-monitoring" }
 beardog-auth = { path = "../beardog-auth" }
 beardog-threat = { path = "../beardog-threat" }
 beardog-core = { path = "../beardog-core" }
 beardog-utils = { path = "../beardog-utils" }
+beardog-types = { path = "../beardog-types" }
 
 # Core dependencies
 tokio = { version = "1.0", features = ["full"] }
@@ -72,14 +73,6 @@ core-foundation-sys = "0.8"
 tokio-test = "0.4"
 futures = "0.3"
 rand = "0.8"
-
-[[example]]
-name = "mobile_hsm_demo"
-path = "../../examples/mobile_hsm_demo.rs"
-
-[[example]]
-name = "universal_hsm_discovery_demo"
-path = "../../examples/universal_hsm_discovery_demo.rs"
 
 [features]
 default = []

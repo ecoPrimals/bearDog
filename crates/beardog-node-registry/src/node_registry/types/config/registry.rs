@@ -1,25 +1,37 @@
-//! Registry configuration types
-//!
-//! This module contains the main registry configuration structure and its
-//! associated builder methods and validation logic.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Registry configuration types
+///
+/// This module contains the main registry configuration structure and its
+/// associated builder methods and validation logic.
 
 use std::collections::HashMap;
 use std::time::Duration;
-
 use crate::node_registry::types::trust::TrustPropagationConfig;
 use super::{FederationConfig, PhonebookConfig, P2PConfig};
-
 /// Registry configuration
 /// 
 /// The main configuration structure for the BearDog node registry.
 /// This contains all the core settings needed to operate a registry instance,
 /// including network settings, capacity limits, and trust requirements.
-/// 
 /// # Example
-/// 
 /// ```rust
 /// use beardog::node_registry::types::config::RegistryConfig;
-/// 
 /// let config = RegistryConfig::new("my-registry".to_string(), "My Registry".to_string())
 ///     .with_port(9090)
 ///     .with_max_nodes(5000)
@@ -58,8 +70,9 @@ pub struct RegistryConfig {
     /// P2P settings
     pub p2p: P2PConfig,
 }
+impl Default for RegistryConfig {}
 
-impl Default for RegistryConfig {
+
     fn default() -> Self {
         Self {
             registry_id: "beardog-registry".to_string(),
@@ -82,199 +95,113 @@ impl Default for RegistryConfig {
             p2p: P2PConfig::default(),
         }
     }
-}
-
 impl RegistryConfig {
     /// Create a new registry configuration
     /// 
     /// # Arguments
-    /// 
     /// * `registry_id` - Unique identifier for the registry
     /// * `registry_name` - Human-readable name for the registry
-    /// 
     /// # Returns
-    /// 
     /// A new RegistryConfig with the specified ID and name, and default values
-    /// for all other settings.
+    /// for all other settings.}
+
+
     pub fn new(registry_id: String, registry_name: String) -> Self {
-        Self {
             registry_id,
             registry_name,
             ..Default::default()
-        }
-    }
-
     /// Set bind address
-    /// 
-    /// # Arguments
-    /// 
-    /// * `address` - The IP address to bind the registry to
+    /// * `address` - The IP address to bind the registry to}
+
+
     pub fn with_bind_address(mut self, address: String) -> Self {
         self.bind_address = address;
         self
-    }
-
     /// Set port
-    /// 
-    /// # Arguments
-    /// 
     /// * `port` - The port number to listen on
     pub fn with_port(mut self, port: u16) -> Self {
         self.port = port;
-        self
-    }
-
     /// Set maximum nodes
-    /// 
-    /// # Arguments
-    /// 
-    /// * `max_nodes` - Maximum number of nodes that can register
+    /// * `max_nodes` - Maximum number of nodes that can register}
+
+
     pub fn with_max_nodes(mut self, max_nodes: usize) -> Self {
         self.max_nodes = max_nodes;
-        self
-    }
-
     /// Set node timeout
-    /// 
-    /// # Arguments
-    /// 
     /// * `timeout_seconds` - Timeout in seconds for node registration
     pub fn with_node_timeout(mut self, timeout_seconds: u64) -> Self {
         self.node_timeout_seconds = timeout_seconds;
-        self
-    }
-
     /// Set health check interval
-    /// 
-    /// # Arguments
-    /// 
-    /// * `interval_seconds` - Health check interval in seconds
+    /// * `interval_seconds` - Health check interval in seconds}
+
+
     pub fn with_health_check_interval(mut self, interval_seconds: u64) -> Self {
         self.health_check_interval_seconds = interval_seconds;
-        self
-    }
-
     /// Set trust propagation configuration
-    /// 
-    /// # Arguments
-    /// 
     /// * `config` - Trust propagation configuration
     pub fn with_trust_propagation(mut self, config: TrustPropagationConfig) -> Self {
         self.trust_propagation = config;
-        self
-    }
-
     /// Add metadata
-    /// 
-    /// # Arguments
-    /// 
     /// * `key` - Metadata key
-    /// * `value` - Metadata value
+    /// * `value` - Metadata value}
+
+
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
-        self
-    }
-
     /// Enable or disable federation
-    /// 
-    /// # Arguments
-    /// 
     /// * `enabled` - Whether federation should be enabled
     pub fn with_federation(mut self, enabled: bool) -> Self {
         self.enable_federation = enabled;
-        self
-    }
-
     /// Set federation configuration
-    /// 
-    /// # Arguments
-    /// 
-    /// * `config` - Federation configuration
+    /// * `config` - Federation configuration}
+
+
     pub fn with_federation_config(mut self, config: FederationConfig) -> Self {
         self.federation = config;
-        self
-    }
-
     /// Set phonebook configuration
-    /// 
-    /// # Arguments
-    /// 
     /// * `config` - Phonebook configuration
     pub fn with_phonebook_config(mut self, config: PhonebookConfig) -> Self {
         self.phonebook = config;
-        self
-    }
-
     /// Set P2P configuration
-    /// 
-    /// # Arguments
-    /// 
-    /// * `config` - P2P configuration
+    /// * `config` - P2P configuration}
+
+
     pub fn with_p2p_config(mut self, config: P2PConfig) -> Self {
         self.p2p = config;
-        self
-    }
-
     /// Get node timeout as Duration
-    /// 
-    /// # Returns
-    /// 
     /// The node timeout as a Duration object
     pub fn node_timeout(&self) -> Duration {
         Duration::from_secs(self.node_timeout_seconds)
-    }
-
     /// Get health check interval as Duration
-    /// 
-    /// # Returns
-    /// 
-    /// The health check interval as a Duration object
+    /// The health check interval as a Duration object}
+
+
     pub fn health_check_interval(&self) -> Duration {
         Duration::from_secs(self.health_check_interval_seconds)
-    }
-
     /// Validate the configuration
-    /// 
     /// Checks that all required fields are set and that values are within
     /// acceptable ranges.
-    /// 
-    /// # Returns
-    /// 
     /// Ok(()) if the configuration is valid, or an error describing what's wrong
     pub fn validate(&self) -> crate::BearDogResult<()> {
         if self.registry_id.is_empty() {
             return Err(crate::error::BearDogError::validation("registry_id", "Registry ID cannot be empty"));
-        }
-
         if self.registry_name.is_empty() {
             return Err(crate::error::BearDogError::validation("registry_name", "Registry name cannot be empty"));
-        }
-
         if self.port == 0 {
             return Err(crate::error::BearDogError::validation("port", "Port cannot be zero"));
-        }
-
         if self.max_nodes == 0 {
             return Err(crate::error::BearDogError::validation("max_nodes", "Max nodes cannot be zero"));
-        }
-
         if self.node_timeout_seconds == 0 {
             return Err(crate::error::BearDogError::validation("node_timeout_seconds", "Node timeout cannot be zero"));
-        }
-
         if self.health_check_interval_seconds == 0 {
             return Err(crate::error::BearDogError::validation("health_check_interval_seconds", "Health check interval cannot be zero"));
-        }
-
         Ok(())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]}
 
-    #[test]
+
     fn test_registry_config_default() {
         let config = RegistryConfig::default();
         assert_eq!(config.registry_id, "beardog-registry");
@@ -283,41 +210,27 @@ mod tests {
         assert_eq!(config.max_nodes, 10000);
         assert!(config.enable_federation);
         assert!(config.validate().is_ok());
-    }
-
-    #[test]
     fn test_registry_config_builder() {
         let config = RegistryConfig::new("test-registry".to_string(), "Test Registry".to_string())
             .with_port(9090)
             .with_max_nodes(5000)
             .with_metadata("key".to_string(), "value".to_string());
-
         assert_eq!(config.registry_id, "test-registry");
         assert_eq!(config.registry_name, "Test Registry");
         assert_eq!(config.port, 9090);
         assert_eq!(config.max_nodes, 5000);
-        assert_eq!(config.metadata.get("key"), Some(&"value".to_string()));
-    }
+        assert_eq!(config.metadata.get("key"), Some(&"value".to_string()));}
 
-    #[test]
+
     fn test_config_validation() {
         let mut config = RegistryConfig::default();
         config.registry_id = "".to_string();
         assert!(config.validate().is_err());
-
         config.registry_id = "valid-id".to_string();
         config.port = 0;
-        assert!(config.validate().is_err());
-
         config.port = 8080;
         config.max_nodes = 0;
-        assert!(config.validate().is_err());
-    }
-
-    #[test]
     fn test_duration_helpers() {
-        let config = RegistryConfig::default();
         assert_eq!(config.node_timeout(), Duration::from_secs(300));
         assert_eq!(config.health_check_interval(), Duration::from_secs(60));
-    }
 } 

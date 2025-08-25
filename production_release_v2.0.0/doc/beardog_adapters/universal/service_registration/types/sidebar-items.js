@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["SecurityDomain","ServiceCategory"],"struct":["ContactInfo","ServiceMetadata","UniversalRequest","UniversalResponse","UniversalServiceRegistration"]};

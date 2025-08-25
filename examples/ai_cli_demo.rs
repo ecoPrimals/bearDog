@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! AI-First CLI Demo
 //!
 //! Pure Rust demonstration of AI-optimized BearDog operations:
@@ -16,7 +33,7 @@ use std::collections::HashMap;
 use std::time::Instant;
 use tracing::{info, error};
 
-use beardog_config::BearDogConfig;
+use beardog_types::config::BearDogConfig;
 use beardog_core::BearDogCore;
 use beardog_errors::{BearDogError, BearDogResult};
 
@@ -121,7 +138,10 @@ async fn main() -> BearDogResult<()> {
     // Demo 1: System Status (Machine-readable)
     println!("=== SYSTEM STATUS ===");
     let status_response = get_system_status(&core).await;
-    println!("{}", serde_json::to_string_pretty(&status_response).unwrap());
+    println!("{}", serde_json::to_string_pretty(&status_response).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     
     // Demo 2: Batch Security Operations
     println!("\n=== BATCH SECURITY OPERATIONS ===");
@@ -151,7 +171,10 @@ async fn main() -> BearDogResult<()> {
     };
     
     let batch_response = process_batch_security(&core, batch_request).await;
-    println!("{}", serde_json::to_string_pretty(&batch_response).unwrap());
+    println!("{}", serde_json::to_string_pretty(&batch_response).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     
     // Demo 3: Genetic Spawning
     println!("\n=== GENETIC SPAWNING ===");
@@ -168,17 +191,26 @@ async fn main() -> BearDogResult<()> {
     };
     
     let spawn_response = process_genetic_spawn(&core, spawn_request).await;
-    println!("{}", serde_json::to_string_pretty(&spawn_response).unwrap());
+    println!("{}", serde_json::to_string_pretty(&spawn_response).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     
     // Demo 4: HSM Operations
     println!("\n=== HSM OPERATIONS ===");
     let hsm_response = get_hsm_status(&core).await;
-    println!("{}", serde_json::to_string_pretty(&hsm_response).unwrap());
+    println!("{}", serde_json::to_string_pretty(&hsm_response).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     
     // Demo 5: Performance Benchmark
     println!("\n=== PERFORMANCE BENCHMARK ===");
     let benchmark_response = run_performance_benchmark(&core).await;
-    println!("{}", serde_json::to_string_pretty(&benchmark_response).unwrap());
+    println!("{}", serde_json::to_string_pretty(&benchmark_response).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     
     // Graceful shutdown
     core.stop().await?;
@@ -444,14 +476,26 @@ async fn run_performance_benchmark(core: &BearDogCore) -> AiResponse<serde_json:
         "results": {
             "encryption": {
                 "avg_time_ms": encryption_times.iter().sum::<u64>() as f64 / encryption_times.len() as f64,
-                "min_time_ms": *encryption_times.iter().min().unwrap(),
-                "max_time_ms": *encryption_times.iter().max().unwrap(),
+                "min_time_ms": *encryption_times.iter().min().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
+                "max_time_ms": *encryption_times.iter().max().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
                 "operations_per_second": 1000.0 / (encryption_times.iter().sum::<u64>() as f64 / encryption_times.len() as f64),
             },
             "signing": {
                 "avg_time_ms": signing_times.iter().sum::<u64>() as f64 / signing_times.len() as f64,
-                "min_time_ms": *signing_times.iter().min().unwrap(),
-                "max_time_ms": *signing_times.iter().max().unwrap(),
+                "min_time_ms": *signing_times.iter().min().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
+                "max_time_ms": *signing_times.iter().max().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
                 "operations_per_second": 1000.0 / (signing_times.iter().sum::<u64>() as f64 / signing_times.len() as f64),
             }
         },
@@ -498,8 +542,7 @@ async fn simulate_security_operation(op: &SecurityOpRequest) -> BearDogResult<se
             "algorithm": op.algorithm.as_ref().unwrap_or(&"Ed25519".to_string()),
             "key_id": op.key_id,
         })),
-        _ => Err(BearDogError::Configuration {
-            message: format!("Unknown operation: {}", op.operation),
+        _ => Err(BearDogError::configuration(format!("Unknown operation: {)", op.operation),
         }),
     }
 }

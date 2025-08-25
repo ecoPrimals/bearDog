@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["StreamingCommand","StreamingPhase"],"mod":["buffer_pool","types"],"struct":["BufferPool","BufferPoolStats","EncryptionContext","StreamingProgress","ZeroCopyConfig","ZeroCopyCrypto","ZeroCryptoStats"],"type":["CommandReceiver","CommandSender","ProgressSender","ProgressStream"]};

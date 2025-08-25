@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Production Deployment Validation Tests
 //!
 //! Tests for production deployment readiness, environment validation,
@@ -13,7 +30,10 @@ pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
     let readiness_check = prod_manager
         .check_deployment_readiness()
         .await
-        .expect("Deployment readiness check should succeed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Deployment readiness check should succeed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Deployment readiness check should succeed", e))
+})?;
 
     assert!(
         readiness_check.configuration_valid,
@@ -40,7 +60,10 @@ pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
     let environment_validation = prod_manager
         .validate_production_environment()
         .await
-        .expect("Environment validation should succeed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Environment validation should succeed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Environment validation should succeed", e))
+})?;
 
     assert!(
         environment_validation.os_compatibility,
@@ -67,7 +90,10 @@ pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
     let dependency_check = prod_manager
         .validate_dependencies()
         .await
-        .expect("Dependency validation should succeed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Dependency validation should succeed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Dependency validation should succeed", e))
+})?;
 
     assert!(
         dependency_check.system_libraries_present,
@@ -90,7 +116,10 @@ pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
     let config_validation = prod_manager
         .validate_production_configuration()
         .await
-        .expect("Configuration validation should succeed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Configuration validation should succeed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Configuration validation should succeed", e))
+})?;
 
     assert!(
         config_validation.security_settings_optimal,
@@ -113,7 +142,10 @@ pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
     let safety_checks = prod_manager
         .run_pre_deployment_safety_checks()
         .await
-        .expect("Safety checks should succeed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Safety checks should succeed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Safety checks should succeed", e))
+})?;
 
     assert!(
         safety_checks.data_integrity_verified,
@@ -145,12 +177,18 @@ async fn test_deployment_readiness_standalone() {
     let core = Arc::new(
         BearDogCore::new(config)
             .await
-            .expect("Core initialization failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+})?,
     );
 
     let mut production_manager = ProductionManager::new(core.clone())
         .await
-        .expect("Production manager creation failed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Production manager creation failed", e))
+})?;
         
     test_deployment_validation(&mut production_manager).await;
 } 

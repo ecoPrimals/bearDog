@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 // 🛡️ BSTP Security Validation Tests - Krogan-Grade Defense Testing
 
 use beardog::config::EncryptionConfig;
@@ -426,7 +443,10 @@ async fn test_key_rotation_security() -> BearDogResult<()> {
     let current_key = key_manager
         .get_session_key(session_id)
         .await
-        .expect("Session key should exist after rotation");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Session key should exist after rotation", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Session key should exist after rotation", e))
+})?;
     assert_eq!(current_key.key, key4.key);
     assert_eq!(current_key.key_id, key4.key_id);
 

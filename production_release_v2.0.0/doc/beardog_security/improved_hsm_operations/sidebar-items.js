@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["HsmKeyType","HsmProvisioningStatus","HsmSecurityLevel"],"fn":["perform_hsm_attestation_improved","perform_hsm_secure_storage_improved","provision_hsm_key_improved"],"struct":["HsmAttestationRequest","HsmKeyProvisioningResult","HsmKeySpec","HsmStorageOperation","HsmStorageResult","SecurityPolicy"]};

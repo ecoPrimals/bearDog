@@ -482,9 +482,18 @@ impl Default for BearDogHookConfig {
 impl BearDogHookConfig {
     pub fn to_settings(&self) -> HashMap<String, serde_json::Value> {
         let mut settings = HashMap::new();
-        settings.insert("enabled".to_string(), serde_json::to_value(self.enabled).unwrap());
-        settings.insert("endpoint".to_string(), serde_json::to_value(&self.beardog_endpoint).unwrap());
-        settings.insert("threat_threshold".to_string(), serde_json::to_value(self.threat_confidence_threshold).unwrap());
+        settings.insert("enabled".to_string(), serde_json::to_value(self.enabled).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
+        settings.insert("endpoint".to_string(), serde_json::to_value(&self.beardog_endpoint).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
+        settings.insert("threat_threshold".to_string(), serde_json::to_value(self.threat_confidence_threshold).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
         settings
     }
 }
@@ -721,9 +730,18 @@ impl SecurityAssessment {
 
     pub fn to_details(&self) -> HashMap<String, serde_json::Value> {
         let mut details = HashMap::new();
-        details.insert("compliant".to_string(), serde_json::to_value(self.compliant).unwrap());
-        details.insert("violations".to_string(), serde_json::to_value(&self.violations).unwrap());
-        details.insert("risk_score".to_string(), serde_json::to_value(self.risk_score).unwrap());
+        details.insert("compliant".to_string(), serde_json::to_value(self.compliant).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
+        details.insert("violations".to_string(), serde_json::to_value(&self.violations).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
+        details.insert("risk_score".to_string(), serde_json::to_value(self.risk_score).map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
         details
     }
 }

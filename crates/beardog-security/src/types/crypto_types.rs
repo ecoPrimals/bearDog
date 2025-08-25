@@ -1,10 +1,27 @@
-//! Cryptographic Types
-//!
-//! This module contains all types related to cryptographic operations,
-//! key management, entropy handling, and security-related configurations.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Cryptographic Types
+///
+/// This module contains all types related to cryptographic operations,
+/// key management, entropy handling, and security-related configurations.
 
 use serde::{Deserialize, Serialize};
-
+use beardog_errors::{BearDogError, BearDogResult};
 /// Key lifecycle status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum KeyStatus {
@@ -17,38 +34,26 @@ pub enum KeyStatus {
     /// Key has expired
     Expired,
 }
-
-/// Configuration for entropy-based adjustments
+// Fix the derive macro issue by defining the struct properly
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyAdjustmentConfig {
-    /// Enable entropy adjustments
     pub enabled: bool,
-    /// Minimum entropy quality threshold
-    pub min_quality: f64,
-}
-
+    pub adjustment_factor: f64,
+    pub minimum_entropy: u32,
+    pub maximum_entropy: u32,
 /// Entropy-based expiry configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyBasedExpiry {
     /// Enable entropy-based expiry
-    pub enabled: bool,
     /// Base expiry time in seconds
     pub base_expiry_seconds: u64,
     /// Entropy quality threshold for expiry adjustment
     pub quality_threshold: f64,
-}
-
 /// Configuration for genetic renewal of keys
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticRenewalConfig {
     /// Enable genetic renewal
-    pub enabled: bool,
     /// Generation limit before forced renewal
     pub max_generations: u32,
-}
-
 /// Key expiry policy configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeyExpiryPolicy {
     /// Fixed time expiry
     Fixed {
@@ -59,12 +64,10 @@ pub enum KeyExpiryPolicy {
     EntropyBased {
         /// Entropy configuration
         config: EntropyBasedExpiry,
-    },
     /// Genetic algorithm-based renewal
     Genetic {
         /// Genetic renewal configuration
         config: GeneticRenewalConfig,
-    },
     /// Never expires (use with caution)
     Never,
     /// Usage-based expiry
@@ -73,40 +76,28 @@ pub enum KeyExpiryPolicy {
         max_uses: u32,
         /// Time window in seconds
         time_window_seconds: Option<u64>,
-    },
-}
-
 /// Current status of key expiry
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeyExpiryStatus {
     /// Key is valid and not expired
     Valid {
         /// Time until expiry
         expires_in_seconds: u64,
-    },
     /// Key is expired
     Expired {
         /// Time since expiry
         expired_seconds_ago: u64,
-    },
     /// Key is expiring soon
     ExpiringSoon {
-        /// Time until expiry
-        expires_in_seconds: u64,
         /// Warning threshold that was exceeded
         warning_threshold_seconds: u64,
-    },
     /// Key has unlimited usage
     Unlimited,
     /// Usage-based expiry status
-    UsageBased {
         /// Remaining uses
         remaining_uses: Option<u32>,
-    },
-}
+/// Context-aware key configuration}
 
-/// Context-aware key configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct ContextAwareKeyConfig {
     /// Key context identifier
     pub context: String,
@@ -116,82 +107,46 @@ pub struct ContextAwareKeyConfig {
     pub security_tier: u8,
     /// Expiry policy
     pub expiry_policy: KeyExpiryPolicy,
-}
-
-/// Rate limiting configuration for cryptographic operations
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RateLimitConfig {
-    /// Maximum operations per window
-    pub max_operations: u32,
-    /// Time window in seconds
-    pub window_seconds: u64,
-    /// Whether to enable rate limiting
-    pub enabled: bool,
-}
-
+/// Rate limiting configuration for cryptographic operations - USE CANONICAL VERSION
+// Re-export from canonical security configuration
+pub use beardog_types::canonical::configuration::security::RateLimitConfig;
 // Default implementations
 
-impl Default for EntropyAdjustmentConfig {
+
+impl Default for EntropyAdjustmentConfig {}
+
+
     fn default() -> Self {
         Self {
             enabled: true,
-            min_quality: 0.8,
+            adjustment_factor: 1.0,
+            minimum_entropy: 128,
+            maximum_entropy: 256,
         }
     }
-}
-
 impl Default for EntropyBasedExpiry {
-    fn default() -> Self {
-        Self {
             enabled: false,
             base_expiry_seconds: 86400, // 24 hours
-            quality_threshold: 0.9,
-        }
-    }
-}
+            quality_threshold: 0.9,}
+
 
 impl Default for GeneticRenewalConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
             max_generations: 10,
-        }
-    }
-}
-
 impl Default for KeyExpiryPolicy {
-    fn default() -> Self {
         Self::Fixed {
-            duration_seconds: 86400, // 24 hours
-        }
-    }
-}
+            duration_seconds: 86400, // 24 hours}
+
 
 impl Default for KeyExpiryStatus {
-    fn default() -> Self {
         Self::UsageBased {
             remaining_uses: None,
-        }
-    }
-}
-
 impl Default for ContextAwareKeyConfig {
-    fn default() -> Self {
-        Self {
             context: "default".to_string(),
             purpose: "general".to_string(),
             security_tier: 1,
-            expiry_policy: KeyExpiryPolicy::default(),
-        }
-    }
-}
+            expiry_policy: KeyExpiryPolicy::default(),}
+
 
 impl Default for RateLimitConfig {
-    fn default() -> Self {
-        Self {
-            max_operations: 100,
-            window_seconds: 60,
-            enabled: true,
-        }
-    }
-}
+            max_requests_per_minute: 60,
+            burst_capacity: 10,

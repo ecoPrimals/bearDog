@@ -1,0 +1,168 @@
+# BearDog Configuration File
+# This file demonstrates how to eliminate hardcoding throughout the BearDog codebase
+# by using a centralized configuration system.
+
+[network]
+# API server bind addresses - no more hardcoded "0.0.0.0:8080"
+api_bind_address = "0.0.0.0:8080"
+metrics_bind_address = "0.0.0.0:9090"
+health_bind_address = "0.0.0.0:8088"
+admin_bind_address = "127.0.0.1:9999"
+
+# Network security configuration
+trusted_hosts = [
+    "localhost",
+    "127.0.0.1",
+    "beardog.local",
+    "songbird.beardog.local",
+    "nestgate.beardog.local",
+    "squirrel.beardog.local",
+    "toadstool.beardog.local",
+    "biomeos.beardog.local"
+]
+
+cors_origins = [
+    "https://beardog.local",
+    "https://songbird.beardog.local",
+    "https://nestgate.beardog.local"
+]
+
+trusted_ip_ranges = [
+    "127.0.0.0/8",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16"
+]
+
+[network.ports]
+# Service ports - configurable instead of hardcoded
+api = 8080
+metrics = 9090
+health = 8088
+admin = 9999
+p2p_discovery = 7777
+grpc = 9092
+prometheus = 9090
+grafana = 3000
+
+[security]
+# Authentication and session configuration
+session_timeout_secs = 3600      # 1 hour
+auth_timeout_secs = 300          # 5 minutes
+max_failed_attempts = 5
+lockout_duration_secs = 1800     # 30 minutes
+token_expiry_secs = 3600         # 1 hour
+key_rotation_interval_secs = 86400  # 24 hours
+
+# Cryptographic parameters
+encryption_key_size = 32         # 256 bits
+nonce_size = 12                  # 96 bits for AES-GCM
+signature_size = 64              # Ed25519 signature size
+public_key_size = 32             # Ed25519 public key size
+private_key_size = 32            # Ed25519 private key size
+hash_size = 32                   # SHA-256 hash size
+
+# HSM configuration
+hsm_library_path = "/usr/lib/pkcs11/opensc-pkcs11.so"
+hsm_slot = 0
+hsm_pin = "1234"  # Should come from environment in production
+key_cache_size = 1000
+key_cache_ttl_secs = 300         # 5 minutes
+
+[performance]
+# Network performance settings
+request_timeout_secs = 30
+connection_timeout_secs = 10
+keepalive_timeout_secs = 75
+max_connections = 100
+max_request_size = 1048576       # 1MB
+max_response_size = 1048576      # 1MB
+
+# Threading and concurrency
+worker_threads = 4
+queue_size = 1000
+buffer_size = 4096
+batch_size = 100
+
+# Rate limiting
+rate_limit_per_minute = 60
+rate_limit_window_secs = 60
+cache_size = 1000
+response_time_threshold_ms = 1000
+
+# Genetic algorithm parameters
+mutation_rate = 0.01
+crossover_rate = 0.8
+population_size = 100
+max_generations = 1000
+fitness_threshold = 0.95
+
+# Threat detection thresholds
+threat_threshold = 0.8
+anomaly_threshold = 0.9
+
+[database]
+# Database connection settings
+max_connections = 10
+connection_timeout_secs = 30
+idle_timeout_secs = 300          # 5 minutes
+max_lifetime_secs = 3600         # 1 hour
+
+[external_services]
+# External service endpoints - configurable instead of hardcoded
+songbird_endpoint = "https://songbird.beardog.local:8443"
+nestgate_endpoint = "https://nestgate.beardog.local:8443"
+squirrel_endpoint = "https://squirrel.beardog.local:8443"
+toadstool_endpoint = "https://toadstool.beardog.local:8443"
+biomeos_endpoint = "https://biomeos.beardog.local:8443"
+
+# Email configuration
+smtp_server = "localhost"
+smtp_port = 587
+
+[monitoring]
+# Health check and monitoring settings
+health_check_interval_secs = 30
+health_check_timeout_secs = 5
+failure_threshold = 3
+recovery_threshold = 2
+heartbeat_interval_secs = 60
+metrics_interval_secs = 60
+metrics_retention_secs = 86400   # 24 hours
+
+# Logging configuration
+max_log_files = 10
+max_log_file_size = 10485760     # 10MB
+
+[features]
+# Feature flags - eliminate hardcoded feature switches
+enable_genetic_optimization = true
+enable_threat_detection = true
+enable_real_time_monitoring = true
+enable_advanced_caching = true
+enable_distributed_mode = false
+
+# Environment-specific configurations
+# Production Configuration Example:
+# [network]
+# api_bind_address = "0.0.0.0:80"
+# [security]
+# session_timeout_secs = 1800
+# [features]
+# enable_distributed_mode = true
+
+# Development Configuration Example:
+# [network]
+# api_bind_address = "127.0.0.1:8080"
+# [security]
+# session_timeout_secs = 7200
+# [features]
+# enable_genetic_optimization = false
+
+# Test Configuration Example:
+# [performance]
+# max_connections = 5
+# [monitoring]
+# health_check_interval_secs = 5
+# [features]
+# enable_threat_detection = false 

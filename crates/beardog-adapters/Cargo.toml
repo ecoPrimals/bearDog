@@ -14,8 +14,8 @@ advanced-nestgate = []
 [dependencies]
 anyhow = "1.0"
 beardog-errors = { workspace = true }
-beardog-genetics = { workspace = true }
-beardog-config = { workspace = true }
+# beardog-config removed - use beardog-types::config::complete_unified
+beardog-types = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

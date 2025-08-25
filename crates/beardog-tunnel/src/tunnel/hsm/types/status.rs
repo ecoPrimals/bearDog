@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -13,20 +30,30 @@ pub struct HsmHealthStatus {
     /// Performance metrics for this HSM
     pub performance_metrics: PerformanceMetrics,
 }
-
 /// Performance metrics for HSM operations
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
-    /// Operations performed per second
+    /// Operations processed per second
     pub operations_per_second: f64,
     /// Average latency in milliseconds
     pub average_latency_ms: f64,
-    /// Error rate as a percentage (0.0 to 1.0)
+    /// Success rate percentage (0.0 to 100.0)
+    pub success_rate: f64,
+    /// Memory usage in megabytes
+    pub memory_usage_mb: f64,
+    /// CPU usage percentage
+    pub cpu_usage_percent: f64,
+    /// Network throughput in bytes per second
+    pub network_throughput_bps: f64,
+    /// Total operations processed
+    pub total_operations: u64,
+    /// Error rate (0.0 to 1.0)
     pub error_rate: f64,
     /// Availability percentage (0.0 to 100.0)
     pub availability_percentage: f64,
-}
-
+    /// Total error count
+    pub error_count: u64,
+    /// System uptime in seconds
+    pub uptime_seconds: u64,
 /// HSM operational status
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HsmOperationalStatus {
@@ -48,16 +75,11 @@ pub enum HsmOperationalStatus {
     /// HSM is offline or unreachable
     Offline {
         /// Reason for being offline
-        reason: String,
         /// Timestamp when HSM went offline
         offline_since: DateTime<Utc>,
-    },
     /// HSM status is unknown
     Unknown,
-}
-
 /// Degradation severity levels
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DegradationSeverity {
     /// Low severity - minor performance impact
     Low,
@@ -67,10 +89,9 @@ pub enum DegradationSeverity {
     High,
     /// Critical severity - major functionality affected
     Critical,
-}
+/// HSM resource utilization metrics}
 
-/// HSM resource utilization metrics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct ResourceUtilization {
     /// CPU utilization percentage (0.0 to 100.0)
     pub cpu_utilization: f64,
@@ -84,10 +105,7 @@ pub struct ResourceUtilization {
     pub active_connections: u32,
     /// Maximum supported connections
     pub max_connections: u32,
-}
-
 /// HSM capacity information
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmCapacity {
     /// Maximum number of keys that can be stored
     pub max_keys: u32,
@@ -101,10 +119,7 @@ pub struct HsmCapacity {
     pub available_storage_bytes: u64,
     /// Total storage space in bytes
     pub total_storage_bytes: u64,
-}
-
 /// HSM error information
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmError {
     /// Error code
     pub error_code: String,
@@ -116,25 +131,12 @@ pub struct HsmError {
     pub timestamp: DateTime<Utc>,
     /// Additional error context
     pub context: Option<ErrorContext>,
-}
+// **MODERNIZED ERROR HANDLING** - Use canonical error categories
+// ErrorSeverity consolidated into BearDogError system
+pub use beardog_errors::ErrorSeverity;
+/// Error context information}
 
-/// Error severity levels
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum ErrorSeverity {
-    /// Informational message
-    Info,
-    /// Warning message
-    Warning,
-    /// Error message
-    Error,
-    /// Critical error
-    Critical,
-    /// Fatal error
-    Fatal,
-}
 
-/// Error context information
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorContext {
     /// Operation that caused the error
     pub operation: String,
@@ -144,29 +146,21 @@ pub struct ErrorContext {
     pub user_id: Option<String>,
     /// Additional context data
     pub additional_data: std::collections::HashMap<String, String>,
-}
-
 /// HSM statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmStatistics {
     /// Total operations performed
-    pub total_operations: u64,
     /// Successful operations
     pub successful_operations: u64,
     /// Failed operations
     pub failed_operations: u64,
     /// Average operation latency in milliseconds
-    pub average_latency_ms: f64,
     /// Peak operations per second
     pub peak_ops_per_second: f64,
     /// Uptime in seconds
-    pub uptime_seconds: u64,
     /// Last restart time
     pub last_restart: DateTime<Utc>,
     /// Error statistics
     pub error_statistics: ErrorStatistics,
-}
-
 /// Error statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ErrorStatistics {
@@ -178,33 +172,24 @@ pub struct ErrorStatistics {
     pub errors_by_code: std::collections::HashMap<String, u64>,
     /// Recent errors (last 100)
     pub recent_errors: Vec<HsmError>,
-}
-
 /// HSM audit log entry
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmAuditLogEntry {
     /// Unique audit entry ID
     pub entry_id: String,
     /// Timestamp of the event
-    pub timestamp: DateTime<Utc>,
     /// Event type
     pub event_type: AuditEventType,
     /// User ID (if applicable)
-    pub user_id: Option<String>,
     /// Session ID (if applicable)
     pub session_id: Option<String>,
     /// Operation performed
-    pub operation: String,
     /// Resource affected (e.g., key ID)
     pub resource: Option<String>,
     /// Operation result
     pub result: OperationResult,
     /// Additional event data
     pub event_data: std::collections::HashMap<String, String>,
-}
-
 /// Audit event types
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AuditEventType {
     /// Authentication event
     Authentication,
@@ -222,10 +207,9 @@ pub enum AuditEventType {
     Security,
     /// Administrative event
     Administrative,
-}
+/// Operation result}
 
-/// Operation result
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+
 pub enum OperationResult {
     /// Operation succeeded
     Success,
@@ -235,20 +219,14 @@ pub enum OperationResult {
         error_code: String,
         /// Error message
         error_message: String,
-    },
     /// Operation was denied
     Denied {
         /// Reason for denial
-        reason: String,
-    },
     /// Operation timed out
     Timeout,
     /// Operation was cancelled
     Cancelled,
-}
-
 /// HSM status summary
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmStatusSummary {
     /// HSM instance identifier
     pub instance_id: String,
@@ -268,10 +246,7 @@ pub struct HsmStatusSummary {
     pub config_version: String,
     /// Last status update
     pub last_updated: DateTime<Utc>,
-}
-
 /// HSM cluster status
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmClusterStatus {
     /// Cluster identifier
     pub cluster_id: String,
@@ -283,10 +258,7 @@ pub struct HsmClusterStatus {
     pub load_balancing_status: LoadBalancingStatus,
     /// Failover status
     pub failover_status: FailoverStatus,
-}
-
 /// HSM node status in a cluster
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmNodeStatus {
     /// Node identifier
     pub node_id: String,
@@ -298,10 +270,7 @@ pub struct HsmNodeStatus {
     pub role: NodeRole,
     /// Last heartbeat
     pub last_heartbeat: DateTime<Utc>,
-}
-
 /// Node role in cluster
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NodeRole {
     /// Primary node
     Primary,
@@ -311,10 +280,9 @@ pub enum NodeRole {
     Backup,
     /// Witness node
     Witness,
-}
+/// Cluster health status}
 
-/// Cluster health status
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+
 pub enum ClusterHealth {
     /// All nodes healthy
     Healthy,
@@ -324,10 +292,7 @@ pub enum ClusterHealth {
     PartiallyAvailable,
     /// Cluster unavailable
     Unavailable,
-}
-
 /// Load balancing status
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancingStatus {
     /// Load balancing strategy
     pub strategy: String,
@@ -337,14 +302,10 @@ pub struct LoadBalancingStatus {
     pub request_distribution: std::collections::HashMap<String, u64>,
     /// Load balancer health
     pub load_balancer_health: bool,
-}
-
 /// Failover status
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailoverStatus {
     /// Failover enabled
     pub enabled: bool,
-    /// Primary node
     pub primary_node: Option<String>,
     /// Backup nodes
     pub backup_nodes: Vec<String>,
@@ -352,13 +313,9 @@ pub struct FailoverStatus {
     pub last_failover: Option<FailoverEvent>,
     /// Failover health
     pub failover_health: bool,
-}
-
 /// Failover event
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailoverEvent {
     /// Event timestamp
-    pub timestamp: DateTime<Utc>,
     /// Previous primary node
     pub previous_primary: String,
     /// New primary node
@@ -367,107 +324,89 @@ pub struct FailoverEvent {
     pub reason: String,
     /// Failover duration in seconds
     pub duration_seconds: u64,
-}
+// Default implementations}
 
-// Default implementations
-impl Default for PerformanceMetrics {
+
+impl Default for PerformanceMetrics {}
+
+
     fn default() -> Self {
         Self {
             operations_per_second: 0.0,
             average_latency_ms: 0.0,
             error_rate: 0.0,
             availability_percentage: 100.0,
+            success_rate: 0.0,
+            memory_usage_mb: 0.0,
+            cpu_usage_percent: 0.0,
+            network_throughput_bps: 0.0,
+            total_operations: 0,
+            error_count: 0,
+            uptime_seconds: 0,
         }
     }
-}
-
 impl Default for ResourceUtilization {
-    fn default() -> Self {
-        Self {
             cpu_utilization: 0.0,
             memory_utilization: 0.0,
             storage_utilization: 0.0,
             network_utilization: 0.0,
             active_connections: 0,
-            max_connections: 1000,
-        }
-    }
-}
+            max_connections: 1000,}
+
 
 impl Default for HsmCapacity {
-    fn default() -> Self {
-        Self {
             max_keys: 10000,
             current_keys: 0,
             max_concurrent_operations: 100,
             current_concurrent_operations: 0,
             available_storage_bytes: 1024 * 1024 * 1024, // 1GB
             total_storage_bytes: 1024 * 1024 * 1024,     // 1GB
-        }
-    }
-}
-
 impl Default for HsmStatistics {
-    fn default() -> Self {
-        Self {
-            total_operations: 0,
             successful_operations: 0,
             failed_operations: 0,
-            average_latency_ms: 0.0,
             peak_ops_per_second: 0.0,
-            uptime_seconds: 0,
             last_restart: Utc::now(),
             error_statistics: ErrorStatistics::default(),
-        }
-    }
-}
+// Default implementation is now derived}
 
-// Default implementation is now derived
 
 impl HsmHealthStatus {
-    /// Create a new healthy status
+    /// Create a healthy status
     pub fn healthy() -> Self {
-        Self {
             healthy: true,
             last_check: Utc::now(),
             error_message: None,
             performance_metrics: PerformanceMetrics::default(),
-        }
-    }
+    /// Create a new unhealthy status}
 
-    /// Create a new unhealthy status
+
     pub fn unhealthy(error_message: String) -> Self {
-        Self {
             healthy: false,
-            last_check: Utc::now(),
             error_message: Some(error_message),
-            performance_metrics: PerformanceMetrics::default(),
-        }
-    }
-}
-
+    /// Healthy status constant for compatibility
+    pub const Healthy: Self = Self {
+        healthy: true,
+        last_check: chrono::DateTime::UNIX_EPOCH,
+        error_message: None,
+        performance_metrics: PerformanceMetrics::default(),
+    };
+    /// Unknown status constant for compatibility  
+    pub const Unknown: Self = Self {
+        healthy: false,
 impl HsmOperationalStatus {
-    /// Check if the HSM is available for operations
+    /// Check if the HSM is available for operations}
+
+
     pub fn is_available(&self) -> bool {
         matches!(
             self,
             HsmOperationalStatus::Operational | HsmOperationalStatus::Degraded { .. }
         )
-    }
-
     /// Check if the HSM is offline
     pub fn is_offline(&self) -> bool {
         matches!(self, HsmOperationalStatus::Offline { .. })
-    }
-}
-
 /// HSM information structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmInfo {
-    /// HSM instance identifier
-    pub instance_id: String,
-    /// HSM tier type
-    pub tier_type: String,
     /// HSM vendor information
     pub vendor: String,
     /// HSM model
@@ -496,10 +435,7 @@ pub struct HsmInfo {
     pub certification: Option<String>,
     /// Tamper resistance level
     pub tamper_resistance: crate::tunnel::hsm::types::tier::TamperResistanceLevel,
-}
-
 /// HSM capability enumeration
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum HsmCapability {
     /// Key generation capability
     KeyGeneration,
@@ -557,4 +493,3 @@ pub enum HsmCapability {
     BiometricAuthentication,
     /// Custom capability
     Custom(String),
-}

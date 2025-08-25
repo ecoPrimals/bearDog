@@ -94,7 +94,10 @@ impl BearDogHttpClient {
         let http_client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(config.timeout_seconds))
             .build()
-            .expect("Failed to create HTTP client");
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Failed to create HTTP client", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Failed to create HTTP client", e))
+})?;
 
         Self { config, http_client }
     }

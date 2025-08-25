@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! AI-Driven Performance Optimization
 //!
 //! BearDog's AI-enhanced performance optimization capabilities,
@@ -117,7 +134,10 @@ pub async fn run_performance_optimization(
         
         // Execute performance optimization
         let result = if network.is_some() && request.network_distributed {
-            execute_network_distributed_optimization(ai_core, network.unwrap(), &request, ai_optimize).await?
+            execute_network_distributed_optimization(ai_core, network.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?, &request, ai_optimize).await?
         } else {
             execute_standalone_optimization(ai_core, &request, ai_optimize).await?
         };
@@ -457,7 +477,7 @@ async fn combine_distributed_optimizations(
     }
     
     // Remove duplicates and select best actions
-    combined_actions.sort_by(|a, b| b.expected_impact.partial_cmp(&a.expected_impact).unwrap());
+    combined_actions.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     combined_actions.truncate(5); // Keep top 5 optimization actions
     
     Ok(combined_actions)

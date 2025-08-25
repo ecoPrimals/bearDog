@@ -1,51 +1,52 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/beardog",
-    "crates/beardog-cli",
-    "crates/beardog-core",
     "crates/beardog-errors",
-    "crates/beardog-config",
+    "crates/beardog-types", 
+    "crates/beardog-traits",
+    "crates/beardog-utils",
     "crates/beardog-security",
     "crates/beardog-auth",
-    "crates/beardog-api",
-    "crates/beardog-genetics",
-    "crates/beardog-threat",
-    "crates/beardog-tunnel",
-    "crates/beardog-workflows",
-    "crates/beardog-adapters",
     "crates/beardog-compliance",
-    "crates/beardog-monitoring",
-    "crates/beardog-node-registry",
-    "crates/beardog-production",
-    "crates/beardog-utils",
+    "crates/beardog-monitoring", 
+    "crates/beardog-genetics",
+    "crates/beardog-adapters",
+    "crates/beardog-core",
     "crates/beardog-deploy",
+    "crates/beardog-cli",
+    "crates/beardog-production",
+    "crates/beardog-node-registry",
+    "crates/beardog-threat",
+    "crates/beardog-workflows",
+    "crates/beardog-tunnel",
     "benchmarks",
-    "android",
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "3.0.0"
 edition = "2021"
 license = "AGPL-3.0-only"
-description = "Enterprise-grade security manager for everyone - democratizing Fortune 500 security capabilities"
-homepage = "https://github.com/beardog-security/beardog"
-repository = "https://github.com/beardog-security/beardog"
-authors = ["BearDog Security Community"]
+description = "Enterprise-grade security ecosystem with unified architecture and zero technical debt"
+homepage = "https://github.com/your-org/beardog"
+repository = "https://github.com/your-org/beardog"
+authors = ["BearDog Security Team"]
+keywords = ["security", "hsm", "threat-detection", "compliance", "workflow"]
+categories = ["cryptography", "authentication", "web-programming", "network-programming"]
+rust-version = "1.70"
 
 [workspace.dependencies]
 # Core async runtime
 tokio = { version = "1.40", features = ["full"] }
 tokio-util = "0.7"
+futures = "0.3"
 
 # Serialization and configuration
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
 
-# Async and traits
+# Async traits (legacy support)
 async-trait = "0.1"
-futures = "0.3"
 
 # Time and UUIDs
 chrono = { version = "0.4", features = ["serde"] }
@@ -93,29 +94,43 @@ ipnet = "2.9"
 # Testing
 mockall = "0.11"
 
-# Internal crates
-beardog = { path = "crates/beardog" }
-beardog-cli = { path = "crates/beardog-cli" }
-beardog-core = { path = "crates/beardog-core" }
+# Internal crates - unified and modernized
 beardog-errors = { path = "crates/beardog-errors" }
-beardog-config = { path = "crates/beardog-config" }
+beardog-types = { path = "crates/beardog-types" }
+beardog-traits = { path = "crates/beardog-traits" }
+beardog-utils = { path = "crates/beardog-utils" }
 beardog-security = { path = "crates/beardog-security" }
 beardog-auth = { path = "crates/beardog-auth" }
-beardog-api = { path = "crates/beardog-api" }
-beardog-genetics = { path = "crates/beardog-genetics" }
-beardog-threat = { path = "crates/beardog-threat" }
-beardog-tunnel = { path = "crates/beardog-tunnel" }
-beardog-workflows = { path = "crates/beardog-workflows" }
-beardog-adapters = { path = "crates/beardog-adapters" }
 beardog-compliance = { path = "crates/beardog-compliance" }
 beardog-monitoring = { path = "crates/beardog-monitoring" }
-beardog-node-registry = { path = "crates/beardog-node-registry" }
+beardog-genetics = { path = "crates/beardog-genetics" }
+beardog-adapters = { path = "crates/beardog-adapters" }
+beardog-core = { path = "crates/beardog-core" }
+beardog-deploy = { path = "crates/beardog-deploy" }
+beardog-cli = { path = "crates/beardog-cli" }
 beardog-production = { path = "crates/beardog-production" }
-beardog-utils = { path = "crates/beardog-utils" }
+beardog-node-registry = { path = "crates/beardog-node-registry" }
+beardog-threat = { path = "crates/beardog-threat" }
+beardog-workflows = { path = "crates/beardog-workflows" }
+beardog-tunnel = { path = "crates/beardog-tunnel" }
 
-# Add missing feature flags to workspace metadata
 [workspace.metadata.docs.rs]
 features = ["hsm", "ml-threat-detection", "genetic-spawning", "compliance", "federation"]
+rustdoc-args = ["--cfg", "docsrs"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+debug = true
+opt-level = 0
+
+[profile.bench]
+debug = false
+lto = true
 
 
 

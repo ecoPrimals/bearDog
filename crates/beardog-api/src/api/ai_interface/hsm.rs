@@ -1,7 +1,23 @@
-//! HSM operations for AI interface
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// HSM operations for AI interface
 
 use serde::{Deserialize, Serialize};
-
 /// AI HSM Status Response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIHsmStatusResponse {
@@ -9,27 +25,20 @@ pub struct AIHsmStatusResponse {
     pub available_tiers: Vec<String>,
     pub active_tier: String,
 }
-
 /// AI HSM Tiers Response
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIHsmTiersResponse {
     pub tiers: Vec<String>,
-}
-
 /// AI Select HSM Tier Request
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AISelectHsmTierRequest {
     pub tier: String,
-}
-
 /// AI Select HSM Tier Response
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AISelectHsmTierResponse {
-    pub success: bool,
-    pub active_tier: String,
-}
+    pub success: bool,}
 
-impl Default for AIHsmStatusResponse {
+
+impl Default for AIHsmStatusResponse {}
+
+
     fn default() -> Self {
         Self {
             status: "active".to_string(),
@@ -37,21 +46,9 @@ impl Default for AIHsmStatusResponse {
             active_tier: "software".to_string(),
         }
     }
-}
-
 impl Default for AIHsmTiersResponse {
-    fn default() -> Self {
-        Self {
-            tiers: vec!["software".to_string(), "hardware".to_string()],
-        }
-    }
-}
+            tiers: vec!["software".to_string(), "hardware".to_string()],}
+
 
 impl Default for AISelectHsmTierResponse {
-    fn default() -> Self {
-        Self {
             success: false,
-            active_tier: "software".to_string(),
-        }
-    }
-}

@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 /*
  * BearDog HSM Unit Tests
  * 
@@ -26,7 +43,10 @@ async fn test_android_strongbox_adapter_creation() {
     let adapter_result = AndroidStrongBoxAdapter::new();
     assert!(adapter_result.is_ok());
     
-    let adapter = adapter_result.unwrap();
+    let adapter = adapter_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     println!("Android StrongBox Adapter: {:?}", adapter);
 }
 
@@ -35,7 +55,10 @@ async fn test_beardog_native_adapter_creation() {
     let adapter_result = BearDogNativeAdapter::new();
     assert!(adapter_result.is_ok());
     
-    let adapter = adapter_result.unwrap();
+    let adapter = adapter_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     println!("BearDog Native Adapter: {:?}", adapter);
 }
 
@@ -136,7 +159,10 @@ async fn test_universal_operation() {
     
     assert_eq!(operation.operation_type, OperationType::GenerateKey);
     assert_eq!(operation.parameters.len(), 2);
-    assert_eq!(operation.parameters.get("key_type").unwrap(), "rsa_2048");
+    assert_eq!(operation.parameters.get("key_type").map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?, "rsa_2048");
 }
 
 #[tokio::test]
@@ -145,14 +171,23 @@ async fn test_pkcs11_human_entropy_not_supported() {
     
     let supports_result = adapter.supports_human_entropy().await;
     assert!(supports_result.is_ok());
-    assert!(!supports_result.unwrap());
+    assert!(!supports_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
 }
 
 #[tokio::test]
 async fn test_beardog_native_human_entropy_supported() {
-    let adapter = BearDogNativeAdapter::new().unwrap();
+    let adapter = BearDogNativeAdapter::new().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     
     let supports_result = adapter.supports_human_entropy().await;
     assert!(supports_result.is_ok());
-    assert!(supports_result.unwrap());
+    assert!(supports_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
 } 

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["core","ecosystem_integration","genetic_optimization","performance"]};

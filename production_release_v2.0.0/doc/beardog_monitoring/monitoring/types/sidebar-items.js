@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["HealthStatus","MetricValue"],"struct":["AlertThresholds","ComponentHealth","InternalMetricsSummary","PerformanceMetrics","PrometheusConfig","ResourceMetrics","SystemHealth","SystemMetrics"]};

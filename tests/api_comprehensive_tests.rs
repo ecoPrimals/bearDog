@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 use axum::body::Body;
 use axum::http::{Method, StatusCode};
 use beardog::core::*;
@@ -26,12 +43,18 @@ async fn create_test_app() -> axum::Router {
     let core = std::sync::Arc::new(
         BearDogCore::new(config)
             .await
-            .expect("Core creation failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core creation failed", e))
+})?,
     );
 
     let api_server = beardog::api::BearDogApiServer::new(core)
         .await
-        .expect("API server creation failed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "API server creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "API server creation failed", e))
+})?;
 
     api_server.create_router()
 }
@@ -45,10 +68,16 @@ async fn test_health_endpoints_security(app: &axum::Router) {
                 .method(Method::GET)
                 .uri("/health")
                 .body(Body::empty())
-                .unwrap(),
+                .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         )
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     assert_eq!(response.status(), StatusCode::OK);
 
@@ -63,10 +92,16 @@ async fn test_health_endpoints_security(app: &axum::Router) {
                     .method(method)
                     .uri("/health")
                     .body(Body::empty())
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should return method not allowed or not found
         assert!(
@@ -93,10 +128,16 @@ async fn test_health_endpoints_security(app: &axum::Router) {
                     .uri("/health")
                     .header(header_name, header_value)
                     .body(Body::empty())
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should still work but not be affected by malicious headers
         assert_eq!(response.status(), StatusCode::OK);
@@ -119,10 +160,16 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
                 .uri("/api/v1/encrypt")
                 .header("Content-Type", "application/json")
                 .body(Body::from(valid_payload.to_string()))
-                .unwrap(),
+                .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         )
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Should succeed or return appropriate error
     assert!(
@@ -147,10 +194,16 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
                     .uri("/api/v1/encrypt")
                     .header("Content-Type", "application/json")
                     .body(Body::from(payload.to_string()))
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should reject malicious input
         assert!(
@@ -176,10 +229,16 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
                     .uri("/api/v1/encrypt")
                     .header("Content-Type", "application/json")
                     .body(Body::from(payload.to_string()))
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should safely handle XSS attempts
         assert!(response.status().is_client_error() || response.status().is_server_error());
@@ -200,10 +259,16 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
                 .uri("/api/v1/encrypt")
                 .header("Content-Type", "application/json")
                 .body(Body::from(oversized_payload.to_string()))
-                .unwrap(),
+                .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         )
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Should reject oversized payload
     assert!(
@@ -230,10 +295,16 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
                     .uri("/api/v1/encrypt")
                     .header("Content-Type", "application/json")
                     .body(Body::from(payload))
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should reject malformed JSON
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
@@ -266,10 +337,16 @@ async fn test_workflow_endpoints_security(app: &axum::Router) {
                 .uri("/api/v1/workflows")
                 .header("Content-Type", "application/json")
                 .body(Body::from(valid_workflow.to_string()))
-                .unwrap(),
+                .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         )
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Should succeed or return appropriate error
     assert!(
@@ -299,10 +376,16 @@ async fn test_workflow_endpoints_security(app: &axum::Router) {
                 .uri("/api/v1/workflows")
                 .header("Content-Type", "application/json")
                 .body(Body::from(malicious_workflow.to_string()))
-                .unwrap(),
+                .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         )
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Should reject malicious workflow
     assert!(response.status().is_client_error() || response.status().is_server_error());
@@ -322,10 +405,16 @@ async fn test_workflow_endpoints_security(app: &axum::Router) {
                 .uri("/api/v1/workflows")
                 .header("Content-Type", "application/json")
                 .body(Body::from(path_traversal_workflow.to_string()))
-                .unwrap(),
+                .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         )
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Should reject path traversal attempt
     assert!(response.status().is_client_error());
@@ -340,10 +429,16 @@ async fn test_audit_endpoints_security(app: &axum::Router) {
                 .method(Method::GET)
                 .uri("/api/v1/audit/logs?start_time=2024-01-01T00:00:00Z&end_time=2024-12-31T23:59:59Z")
                 .body(Body::empty())
-                .unwrap(),
+                .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         )
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Should succeed or return appropriate error
     assert!(
@@ -367,10 +462,16 @@ async fn test_audit_endpoints_security(app: &axum::Router) {
                     .method(Method::GET)
                     .uri(query)
                     .body(Body::empty())
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should safely handle SQL injection attempts
         assert!(response.status().is_client_error() || response.status().is_server_error());
@@ -392,10 +493,16 @@ async fn test_audit_endpoints_security(app: &axum::Router) {
                     .method(Method::GET)
                     .uri(endpoint)
                     .body(Body::empty())
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should require authentication or return error
         assert!(
@@ -424,10 +531,16 @@ async fn test_compliance_endpoints_security(app: &axum::Router) {
                 .uri("/api/v1/compliance/reports")
                 .header("Content-Type", "application/json")
                 .body(Body::from(valid_report_request.to_string()))
-                .unwrap(),
+                .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         )
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Should succeed or return appropriate error
     assert!(
@@ -452,10 +565,16 @@ async fn test_compliance_endpoints_security(app: &axum::Router) {
                     .uri("/api/v1/compliance/reports")
                     .header("Content-Type", "application/json")
                     .body(Body::from(payload.to_string()))
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should reject malicious input
         assert!(response.status().is_client_error() || response.status().is_server_error());
@@ -479,10 +598,16 @@ async fn test_api_rate_limiting_and_dos_protection() {
                     .uri("/health")
                     .header("X-Forwarded-For", "192.168.1.100") // Same IP
                     .body(Body::empty())
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         responses.push(response.status());
 
@@ -512,10 +637,16 @@ async fn test_api_rate_limiting_and_dos_protection() {
                         .uri("/health")
                         .header("X-Request-ID", format!("concurrent_{}", i))
                         .body(Body::empty())
-                        .unwrap(),
+                        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
                 )
                 .await
-                .unwrap();
+                .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
             response.status()
         });
@@ -525,7 +656,10 @@ async fn test_api_rate_limiting_and_dos_protection() {
     // Wait for all concurrent requests
     let mut concurrent_results = Vec::new();
     for handle in handles {
-        let status = handle.await.expect("Concurrent request should complete");
+        let status = handle.await.map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Concurrent request should complete", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Concurrent request should complete", e))
+})?;
         concurrent_results.push(status);
     }
 
@@ -574,10 +708,16 @@ async fn test_api_input_validation() {
                     .uri("/api/v1/encrypt")
                     .header("Content-Type", "application/json")
                     .body(Body::from(input.to_string()))
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should handle invalid input gracefully
         assert!(
@@ -610,16 +750,25 @@ async fn test_api_error_handling() {
                     .method(Method::GET)
                     .uri(endpoint)
                     .body(Body::empty())
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should return 404 and not leak information
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
         // Check response body doesn't contain sensitive information
-        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+        let body = hyper::body::to_bytes(response.into_body()).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         let body_str = String::from_utf8_lossy(&body);
         
         // Ensure no internal paths are leaked
@@ -664,10 +813,16 @@ async fn test_api_error_handling() {
                     .method(method)
                     .uri(uri)
                     .body(Body::empty())
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should reject with appropriate status
         assert!(
@@ -688,10 +843,16 @@ async fn test_api_security_headers() {
                 .method(Method::GET)
                 .uri("/health")
                 .body(Body::empty())
-                .unwrap(),
+                .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
         )
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     let headers = response.headers();
 
@@ -757,10 +918,16 @@ async fn test_api_authentication_authorization() {
                     .method(Method::GET)
                     .uri(endpoint)
                     .body(Body::empty())
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should require authentication
         assert!(
@@ -789,10 +956,16 @@ async fn test_api_authentication_authorization() {
                     .uri("/api/v1/encrypt")
                     .header("Authorization", token)
                     .body(Body::empty())
-                    .unwrap(),
+                    .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?,
             )
             .await
-            .unwrap();
+            .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
         // Should reject invalid tokens
         assert!(

@@ -1,0 +1,367 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Universal `HSM` Provider Trait - Canonical Interface"><title>UniversalHsmProvider in beardog_tunnel::universal_hsm::traits::provider - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="beardog_tunnel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../../static.files/storage-4e99c027.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../../beardog_tunnel/index.html">beardog_<wbr>tunnel</a><span class="version">0.1.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Universal<wbr>HsmProvider</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#design-principles" title="Design Principles">Design Principles</a></li><li><a href="#usage-example" title="Usage Example">Usage Example</a></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.collect_human_entropy" title="collect_human_entropy">collect_human_entropy</a></li><li><a href="#tymethod.create_ephemeral_seed" title="create_ephemeral_seed">create_ephemeral_seed</a></li><li><a href="#tymethod.generate_key" title="generate_key">generate_key</a></li><li><a href="#tymethod.get_hardware_attestation" title="get_hardware_attestation">get_hardware_attestation</a></li><li><a href="#tymethod.get_human_entropy_capabilities" title="get_human_entropy_capabilities">get_human_entropy_capabilities</a></li><li><a href="#tymethod.get_provider_info" title="get_provider_info">get_provider_info</a></li><li><a href="#tymethod.health_check" title="health_check">health_check</a></li><li><a href="#tymethod.sign_data" title="sign_data">sign_data</a></li><li><a href="#tymethod.verify_signature" title="verify_signature">verify_signature</a></li></ul><h3><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.delete_key" title="delete_key">delete_key</a></li><li><a href="#method.get_key_metadata" title="get_key_metadata">get_key_metadata</a></li><li><a href="#method.list_keys" title="list_keys">list_keys</a></li></ul><h3><a href="#implementations">Methods</a></h3><ul class="block method"><li><a href="#method.get_security_level" title="get_security_level">get_security_level</a></li><li><a href="#method.is_hardware_backed" title="is_hardware_backed">is_hardware_backed</a></li><li><a href="#method.supports_attestation" title="supports_attestation">supports_attestation</a></li><li><a href="#method.supports_human_entropy" title="supports_human_entropy">supports_human_entropy</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><div id="rustdoc-modnav"><h2><a href="index.html">In beardog_<wbr>tunnel::<wbr>universal_<wbr>hsm::<wbr>traits::<wbr>provider</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../../index.html">beardog_tunnel</a>::<wbr><a href="../../index.html">universal_hsm</a>::<wbr><a href="../index.html">traits</a>::<wbr><a href="index.html">provider</a></div><h1>Trait <span class="trait">UniversalHsmProvider</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#54-287">Source</a> </span></div><pre class="rust item-decl"><code>pub trait UniversalHsmProvider: <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Sync.html" title="trait core::marker::Sync">Sync</a> {
+    // Required methods
+    fn <a href="#tymethod.generate_key" class="fn">generate_key</a>&lt;'life0, 'async_trait&gt;(
+        &amp;'life0 self,
+        key_type: <a class="enum" href="../../../enum.KeyType.html" title="enum beardog_tunnel::KeyType">KeyType</a>,
+        metadata: <a class="struct" href="../../../struct.KeyMetadata.html" title="struct beardog_tunnel::KeyMetadata">KeyMetadata</a>,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../../../../beardog_types/canonical/hsm/keys/struct.HsmKey.html" title="struct beardog_types::canonical::hsm::keys::HsmKey">HsmKey</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait</span>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.sign_data" class="fn">sign_data</a>&lt;'life0, 'life1, 'life2, 'async_trait&gt;(
+        &amp;'life0 self,
+        key_id: &amp;'life1 <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.str.html">str</a>,
+        data: &amp;'life2 [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u8.html">u8</a>],
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u8.html">u8</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait,
+             'life1: 'async_trait,
+             'life2: 'async_trait</span>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.verify_signature" class="fn">verify_signature</a>&lt;'life0, 'life1, 'life2, 'life3, 'async_trait&gt;(
+        &amp;'life0 self,
+        key_id: &amp;'life1 <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.str.html">str</a>,
+        data: &amp;'life2 [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u8.html">u8</a>],
+        signature: &amp;'life3 [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u8.html">u8</a>],
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.bool.html">bool</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait,
+             'life1: 'async_trait,
+             'life2: 'async_trait,
+             'life3: 'async_trait</span>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.get_human_entropy_capabilities" class="fn">get_human_entropy_capabilities</a>&lt;'life0, 'async_trait&gt;(
+        &amp;'life0 self,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../entropy/struct.HumanEntropyCapabilities.html" title="struct beardog_tunnel::universal_hsm::traits::entropy::HumanEntropyCapabilities">HumanEntropyCapabilities</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait</span>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.collect_human_entropy" class="fn">collect_human_entropy</a>&lt;'life0, 'life1, 'async_trait&gt;(
+        &amp;'life0 self,
+        method: &amp;'life1 <a class="enum" href="../entropy/enum.HumanEntropyMethod.html" title="enum beardog_tunnel::universal_hsm::traits::entropy::HumanEntropyMethod">HumanEntropyMethod</a>,
+        bits: <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u32.html">u32</a>,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../entropy/struct.HumanEntropyData.html" title="struct beardog_tunnel::universal_hsm::traits::entropy::HumanEntropyData">HumanEntropyData</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait,
+             'life1: 'async_trait</span>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.create_ephemeral_seed" class="fn">create_ephemeral_seed</a>&lt;'life0, 'life1, 'async_trait&gt;(
+        &amp;'life0 self,
+        entropy: &amp;'life1 <a class="struct" href="../entropy/struct.HumanEntropyData.html" title="struct beardog_tunnel::universal_hsm::traits::entropy::HumanEntropyData">HumanEntropyData</a>,
+        seed_size: <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u32.html">u32</a>,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../entropy/struct.EphemeralSeed.html" title="struct beardog_tunnel::universal_hsm::traits::entropy::EphemeralSeed">EphemeralSeed</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait,
+             'life1: 'async_trait</span>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.get_provider_info" class="fn">get_provider_info</a>(&amp;self) -&gt; <a class="struct" href="../struct.ProviderInfo.html" title="struct beardog_tunnel::universal_hsm::traits::ProviderInfo">ProviderInfo</a>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.health_check" class="fn">health_check</a>&lt;'life0, 'async_trait&gt;(
+        &amp;'life0 self,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../struct.ProviderHealth.html" title="struct beardog_tunnel::universal_hsm::traits::ProviderHealth">ProviderHealth</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait</span>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.get_hardware_attestation" class="fn">get_hardware_attestation</a>&lt;'life0, 'async_trait&gt;(
+        &amp;'life0 self,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.88.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../attestation/struct.AttestationData.html" title="struct beardog_tunnel::universal_hsm::traits::attestation::AttestationData">AttestationData</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait</span>;
+
+    // Provided methods
+    fn <a href="#method.list_keys" class="fn">list_keys</a>&lt;'life0, 'async_trait&gt;(
+        &amp;'life0 self,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait</span> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.delete_key" class="fn">delete_key</a>&lt;'life0, 'life1, 'async_trait&gt;(
+        &amp;'life0 self,
+        _key_id: &amp;'life1 <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.str.html">str</a>,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.unit.html">()</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait,
+             'life1: 'async_trait</span> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.get_key_metadata" class="fn">get_key_metadata</a>&lt;'life0, 'life1, 'async_trait&gt;(
+        &amp;'life0 self,
+        _key_id: &amp;'life1 <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.str.html">str</a>,
+    ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../../../struct.KeyMetadata.html" title="struct beardog_tunnel::KeyMetadata">KeyMetadata</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
+       <span class="where">where Self: 'async_trait,
+             'life0: 'async_trait,
+             'life1: 'async_trait</span> { ... }
+}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p><strong>Universal <code>HSM</code> Provider Trait - Canonical Interface</strong></p>
+<p>This is THE definitive <code>HSM</code> provider interface for <code>BearDog</code>. All <code>HSM</code> providers
+(<code>Android</code> StrongBox, <code>iOS</code> Secure Enclave, Software HSM, PKCS#11, TPM, etc.)
+must implement this trait.</p>
+<h3 id="design-principles"><a class="doc-anchor" href="#design-principles">§</a>Design Principles</h3>
+<ul>
+<li><strong>Vendor Agnostic</strong>: Works with any <code>HSM</code> vendor without lock-in</li>
+<li><strong>Capability Driven</strong>: Providers expose their capabilities for intelligent selection</li>
+<li><strong>Human Entropy First</strong>: Built-in support for human entropy collection</li>
+<li><strong>Hardware Attestation</strong>: Native support for hardware attestation</li>
+<li><strong>Performance Optimized</strong>: Async operations with minimal overhead</li>
+<li><strong>Comprehensive Monitoring</strong>: Built-in health checks and metrics</li>
+</ul>
+<h3 id="usage-example"><a class="doc-anchor" href="#usage-example">§</a>Usage Example</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>beardog_tunnel::universal_hsm::traits::UniversalHsmProvider;
+<span class="kw">use </span>beardog_types::canonical::{KeyType, KeyMetadata};
+
+<span class="kw">async fn </span>example_usage(provider: <span class="kw-2">&amp;</span><span class="kw">dyn </span>UniversalHsmProvider) -&gt; beardog_errors::BearDogResult&lt;()&gt; {
+    <span class="comment">// Check provider capabilities
+    </span><span class="kw">let </span>info = provider.get_provider_info();
+    <span class="macro">println!</span>(<span class="string">"Using provider: {} ({})"</span>, info.name, info.provider_type);
+
+    <span class="comment">// Generate a key
+    </span><span class="kw">let </span>metadata = KeyMetadata::default();
+    <span class="kw">let </span>key = provider.generate_key(KeyType::Ed25519, metadata).<span class="kw">await</span><span class="question-mark">?</span>;
+
+    <span class="comment">// Sign some data
+    </span><span class="kw">let </span>data = <span class="string">b"Hello, `BearDog`!"</span>;
+    <span class="kw">let </span>signature = provider.sign_data(<span class="kw-2">&amp;</span>key.key_id, data).<span class="kw">await</span><span class="question-mark">?</span>;
+
+    <span class="comment">// Verify the signature
+    </span><span class="kw">let </span>is_valid = provider.verify_signature(<span class="kw-2">&amp;</span>key.key_id, data, <span class="kw-2">&amp;</span>signature).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="macro">assert!</span>(is_valid);
+
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div>
+</div></details><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.generate_key" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#75-79">Source</a><h4 class="code-header">fn <a href="#tymethod.generate_key" class="fn">generate_key</a>&lt;'life0, 'async_trait&gt;(
+    &amp;'life0 self,
+    key_type: <a class="enum" href="../../../enum.KeyType.html" title="enum beardog_tunnel::KeyType">KeyType</a>,
+    metadata: <a class="struct" href="../../../struct.KeyMetadata.html" title="struct beardog_tunnel::KeyMetadata">KeyMetadata</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../../../../beardog_types/canonical/hsm/keys/struct.HsmKey.html" title="struct beardog_types::canonical::hsm::keys::HsmKey">HsmKey</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>Generate a cryptographic key</strong></p>
+<p>Creates a new cryptographic key of the specified type with the given metadata.
+The key is stored securely within the <code>HSM</code> and can be referenced by its ID.</p>
+<h5 id="arguments"><a class="doc-anchor" href="#arguments">§</a>Arguments</h5>
+<ul>
+<li><code>key_type</code> - The type of key to generate (Ed25519, ECDSA P-256, RSA, etc.)</li>
+<li><code>metadata</code> - Key metadata including usage policies, tags, and compliance info</li>
+</ul>
+<h5 id="returns"><a class="doc-anchor" href="#returns">§</a>Returns</h5>
+<ul>
+<li><code>Ok(HsmKey)</code> - The generated key with its unique identifier</li>
+<li><code>Err(BearDogError)</code> - If key generation fails</li>
+</ul>
+<h5 id="implementation-notes"><a class="doc-anchor" href="#implementation-notes">§</a>Implementation Notes</h5>
+<ul>
+<li>Keys should be generated using the <code>HSM</code>’s secure random number generator</li>
+<li>If human entropy is available and metadata requests it, use human entropy</li>
+<li>Key metadata should be stored securely alongside the key</li>
+<li>The key ID should be unique and cryptographically secure</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.sign_data" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#98">Source</a><h4 class="code-header">fn <a href="#tymethod.sign_data" class="fn">sign_data</a>&lt;'life0, 'life1, 'life2, 'async_trait&gt;(
+    &amp;'life0 self,
+    key_id: &amp;'life1 <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.str.html">str</a>,
+    data: &amp;'life2 [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u8.html">u8</a>],
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u8.html">u8</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,
+    'life2: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>Sign data with a stored key</strong></p>
+<p>Signs the provided data using the key identified by key_id. The signing
+operation is performed securely within the <code>HSM</code>.</p>
+<h5 id="arguments-1"><a class="doc-anchor" href="#arguments-1">§</a>Arguments</h5>
+<ul>
+<li><code>key_id</code> - Unique identifier of the key to use for signing</li>
+<li><code>data</code> - The data to be signed</li>
+</ul>
+<h5 id="returns-1"><a class="doc-anchor" href="#returns-1">§</a>Returns</h5>
+<ul>
+<li><code>Ok(Vec&lt;u8&gt;)</code> - The digital signature</li>
+<li><code>Err(BearDogError)</code> - If signing fails (key not found, <code>HSM</code> error, etc.)</li>
+</ul>
+<h5 id="implementation-notes-1"><a class="doc-anchor" href="#implementation-notes-1">§</a>Implementation Notes</h5>
+<ul>
+<li>The signing algorithm should match the key type</li>
+<li>If the key requires user presence, prompt for authentication</li>
+<li>All signing operations should be audited</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.verify_signature" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#114-119">Source</a><h4 class="code-header">fn <a href="#tymethod.verify_signature" class="fn">verify_signature</a>&lt;'life0, 'life1, 'life2, 'life3, 'async_trait&gt;(
+    &amp;'life0 self,
+    key_id: &amp;'life1 <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.str.html">str</a>,
+    data: &amp;'life2 [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u8.html">u8</a>],
+    signature: &amp;'life3 [<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u8.html">u8</a>],
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.bool.html">bool</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,
+    'life2: 'async_trait,
+    'life3: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>Verify a digital signature</strong></p>
+<p>Verifies that the provided signature is valid for the given data using
+the specified key.</p>
+<h5 id="arguments-2"><a class="doc-anchor" href="#arguments-2">§</a>Arguments</h5>
+<ul>
+<li><code>key_id</code> - Unique identifier of the key to use for verification</li>
+<li><code>data</code> - The original data that was signed</li>
+<li><code>signature</code> - The signature to verify</li>
+</ul>
+<h5 id="returns-2"><a class="doc-anchor" href="#returns-2">§</a>Returns</h5>
+<ul>
+<li><code>Ok(true)</code> - If the signature is valid</li>
+<li><code>Ok(false)</code> - If the signature is invalid</li>
+<li><code>Err(BearDogError)</code> - If verification fails due to an error</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.get_human_entropy_capabilities" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#131">Source</a><h4 class="code-header">fn <a href="#tymethod.get_human_entropy_capabilities" class="fn">get_human_entropy_capabilities</a>&lt;'life0, 'async_trait&gt;(
+    &amp;'life0 self,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../entropy/struct.HumanEntropyCapabilities.html" title="struct beardog_tunnel::universal_hsm::traits::entropy::HumanEntropyCapabilities">HumanEntropyCapabilities</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>Get human entropy capabilities</strong></p>
+<p>Returns information about this provider’s human entropy collection
+capabilities. This is used for tier elevation and provider selection.</p>
+<h5 id="returns-3"><a class="doc-anchor" href="#returns-3">§</a>Returns</h5>
+<ul>
+<li><code>Ok(</code>HumanEntropyCapabilities<code>)</code> - Detailed capability information</li>
+<li><code>Err(BearDogError)</code> - If capability detection fails</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.collect_human_entropy" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#150-154">Source</a><h4 class="code-header">fn <a href="#tymethod.collect_human_entropy" class="fn">collect_human_entropy</a>&lt;'life0, 'life1, 'async_trait&gt;(
+    &amp;'life0 self,
+    method: &amp;'life1 <a class="enum" href="../entropy/enum.HumanEntropyMethod.html" title="enum beardog_tunnel::universal_hsm::traits::entropy::HumanEntropyMethod">HumanEntropyMethod</a>,
+    bits: <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u32.html">u32</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../entropy/struct.HumanEntropyData.html" title="struct beardog_tunnel::universal_hsm::traits::entropy::HumanEntropyData">HumanEntropyData</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>Collect human entropy</strong></p>
+<p>Collects high-quality entropy from human interaction using the specified
+method. This is used for creating ephemeral seeds and enhancing key generation.</p>
+<h5 id="arguments-3"><a class="doc-anchor" href="#arguments-3">§</a>Arguments</h5>
+<ul>
+<li><code>method</code> - The entropy collection method to use</li>
+<li><code>bits</code> - Number of entropy bits to collect</li>
+</ul>
+<h5 id="returns-4"><a class="doc-anchor" href="#returns-4">§</a>Returns</h5>
+<ul>
+<li><code>Ok(HumanEntropyData)</code> - The collected entropy data with quality metrics</li>
+<li><code>Err(BearDogError)</code> - If entropy collection fails</li>
+</ul>
+<h5 id="implementation-notes-2"><a class="doc-anchor" href="#implementation-notes-2">§</a>Implementation Notes</h5>
+<ul>
+<li>Only collect entropy if the provider supports the specified method</li>
+<li>Ensure entropy quality meets minimum standards</li>
+<li>Provide real-time feedback to the user during collection</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.create_ephemeral_seed" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#168-172">Source</a><h4 class="code-header">fn <a href="#tymethod.create_ephemeral_seed" class="fn">create_ephemeral_seed</a>&lt;'life0, 'life1, 'async_trait&gt;(
+    &amp;'life0 self,
+    entropy: &amp;'life1 <a class="struct" href="../entropy/struct.HumanEntropyData.html" title="struct beardog_tunnel::universal_hsm::traits::entropy::HumanEntropyData">HumanEntropyData</a>,
+    seed_size: <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.u32.html">u32</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../entropy/struct.EphemeralSeed.html" title="struct beardog_tunnel::universal_hsm::traits::entropy::EphemeralSeed">EphemeralSeed</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>Create ephemeral seed from human entropy</strong></p>
+<p>Creates a high-quality ephemeral seed from collected human entropy.
+This is used for primal sovereignty and enhanced security operations.</p>
+<h5 id="arguments-4"><a class="doc-anchor" href="#arguments-4">§</a>Arguments</h5>
+<ul>
+<li><code>entropy</code> - The collected human entropy data</li>
+<li><code>seed_size</code> - Size of the seed to create in bytes</li>
+</ul>
+<h5 id="returns-5"><a class="doc-anchor" href="#returns-5">§</a>Returns</h5>
+<ul>
+<li><code>Ok(EphemeralSeed)</code> - The created seed with quality assessment</li>
+<li><code>Err(BearDogError)</code> - If seed creation fails</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.get_provider_info" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#188">Source</a><h4 class="code-header">fn <a href="#tymethod.get_provider_info" class="fn">get_provider_info</a>(&amp;self) -&gt; <a class="struct" href="../struct.ProviderInfo.html" title="struct beardog_tunnel::universal_hsm::traits::ProviderInfo">ProviderInfo</a></h4></section></summary><div class="docblock"><p><strong>Get provider information</strong></p>
+<p>Returns comprehensive information about this <code>HSM</code> provider including
+capabilities, vendor info, and supported features.</p>
+<h5 id="returns-6"><a class="doc-anchor" href="#returns-6">§</a>Returns</h5>
+<ul>
+<li><code>ProviderInfo</code> - Complete provider information</li>
+</ul>
+<h5 id="implementation-notes-3"><a class="doc-anchor" href="#implementation-notes-3">§</a>Implementation Notes</h5>
+<ul>
+<li>This should be a fast, synchronous operation</li>
+<li>Information should be cached and updated only when necessary</li>
+<li>Capabilities should be detected at provider initialization</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.health_check" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#203">Source</a><h4 class="code-header">fn <a href="#tymethod.health_check" class="fn">health_check</a>&lt;'life0, 'async_trait&gt;(
+    &amp;'life0 self,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../struct.ProviderHealth.html" title="struct beardog_tunnel::universal_hsm::traits::ProviderHealth">ProviderHealth</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>Perform health check</strong></p>
+<p>Checks the current health and availability of the <code>HSM</code> provider.
+This is used for provider selection and failover decisions.</p>
+<h5 id="returns-7"><a class="doc-anchor" href="#returns-7">§</a>Returns</h5>
+<ul>
+<li><code>Ok(ProviderHealth)</code> - Current health status</li>
+<li><code>Err(BearDogError)</code> - If health check fails</li>
+</ul>
+<h5 id="implementation-notes-4"><a class="doc-anchor" href="#implementation-notes-4">§</a>Implementation Notes</h5>
+<ul>
+<li>Should perform actual connectivity/functionality tests</li>
+<li>Include response time measurements</li>
+<li>Verify that all advertised capabilities are still available</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.get_hardware_attestation" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#222">Source</a><h4 class="code-header">fn <a href="#tymethod.get_hardware_attestation" class="fn">get_hardware_attestation</a>&lt;'life0, 'async_trait&gt;(
+    &amp;'life0 self,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.88.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../attestation/struct.AttestationData.html" title="struct beardog_tunnel::universal_hsm::traits::attestation::AttestationData">AttestationData</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>Get hardware attestation data</strong></p>
+<p>Retrieves hardware attestation data proving the authenticity and
+integrity of the <code>HSM</code> hardware. This is optional and only supported
+by hardware-based providers.</p>
+<h5 id="returns-8"><a class="doc-anchor" href="#returns-8">§</a>Returns</h5>
+<ul>
+<li><code>Ok(Some(AttestationData))</code> - If attestation is supported and available</li>
+<li><code>Ok(None)</code> - If attestation is not supported by this provider</li>
+<li><code>Err(BearDogError)</code> - If attestation fails</li>
+</ul>
+<h5 id="implementation-notes-5"><a class="doc-anchor" href="#implementation-notes-5">§</a>Implementation Notes</h5>
+<ul>
+<li>Software providers should return Ok(None)</li>
+<li>Hardware providers should return actual attestation data</li>
+<li>Attestation should include certificate chains when available</li>
+</ul>
+</div></details></div><h2 id="provided-methods" class="section-header">Provided Methods<a href="#provided-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="method.list_keys" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#238-240">Source</a><h4 class="code-header">fn <a href="#method.list_keys" class="fn">list_keys</a>&lt;'life0, 'async_trait&gt;(
+    &amp;'life0 self,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>&gt;&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>List available keys</strong></p>
+<p>Returns a list of all keys stored in this <code>HSM</code> provider.
+This is an optional advanced feature.</p>
+<h5 id="returns-9"><a class="doc-anchor" href="#returns-9">§</a>Returns</h5>
+<ul>
+<li><code>Ok(Vec&lt;String&gt;)</code> - List of key IDs</li>
+<li><code>Err(BearDogError)</code> - If listing fails</li>
+</ul>
+<h5 id="default-implementation"><a class="doc-anchor" href="#default-implementation">§</a>Default Implementation</h5>
+<p>The default implementation returns an empty list, indicating that
+key listing is not supported by this provider.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.delete_key" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#256-263">Source</a><h4 class="code-header">fn <a href="#method.delete_key" class="fn">delete_key</a>&lt;'life0, 'life1, 'async_trait&gt;(
+    &amp;'life0 self,
+    _key_id: &amp;'life1 <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.str.html">str</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.unit.html">()</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>Delete a key</strong></p>
+<p>Securely deletes a key from the <code>HSM</code>. This is an optional advanced feature.</p>
+<h5 id="arguments-5"><a class="doc-anchor" href="#arguments-5">§</a>Arguments</h5>
+<ul>
+<li><code>key_id</code> - Unique identifier of the key to delete</li>
+</ul>
+<h5 id="returns-10"><a class="doc-anchor" href="#returns-10">§</a>Returns</h5>
+<ul>
+<li><code>Ok(())</code> - If deletion succeeds</li>
+<li><code>Err(BearDogError)</code> - If deletion fails</li>
+</ul>
+<h5 id="default-implementation-1"><a class="doc-anchor" href="#default-implementation-1">§</a>Default Implementation</h5>
+<p>The default implementation returns an error indicating that key deletion
+is not supported by this provider.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_key_metadata" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#279-286">Source</a><h4 class="code-header">fn <a href="#method.get_key_metadata" class="fn">get_key_metadata</a>&lt;'life0, 'life1, 'async_trait&gt;(
+    &amp;'life0 self,
+    _key_id: &amp;'life1 <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.str.html">str</a>,
+) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.88.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.88.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="../../../type.BearDogResult.html" title="type beardog_tunnel::BearDogResult">BearDogResult</a>&lt;<a class="struct" href="../../../struct.KeyMetadata.html" title="struct beardog_tunnel::KeyMetadata">KeyMetadata</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.88.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
+    Self: 'async_trait,
+    'life0: 'async_trait,
+    'life1: 'async_trait,</div></h4></section></summary><div class="docblock"><p><strong>Get key metadata</strong></p>
+<p>Retrieves metadata for a specific key. This is an optional advanced feature.</p>
+<h5 id="arguments-6"><a class="doc-anchor" href="#arguments-6">§</a>Arguments</h5>
+<ul>
+<li><code>key_id</code> - Unique identifier of the key</li>
+</ul>
+<h5 id="returns-11"><a class="doc-anchor" href="#returns-11">§</a>Returns</h5>
+<ul>
+<li><code>Ok(KeyMetadata)</code> - The key’s metadata</li>
+<li><code>Err(BearDogError)</code> - If retrieval fails</li>
+</ul>
+<h5 id="default-implementation-2"><a class="doc-anchor" href="#default-implementation-2">§</a>Default Implementation</h5>
+<p>The default implementation returns an error indicating that metadata
+retrieval is not supported by this provider.</p>
+</div></details></div><h2 id="implementations" class="section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-dyn+UniversalHsmProvider" class="impl"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#292-322">Source</a><a href="#impl-dyn+UniversalHsmProvider" class="anchor">§</a><h3 class="code-header">impl dyn <a class="trait" href="trait.UniversalHsmProvider.html" title="trait beardog_tunnel::universal_hsm::traits::provider::UniversalHsmProvider">UniversalHsmProvider</a></h3><div class="docblock"><p><strong>Provider Capability Assessment</strong></p>
+</div></section></summary><div class="docblock"><p>Helper functions for assessing provider capabilities.</p>
+</div><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.supports_human_entropy" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#294-299">Source</a><h4 class="code-header">pub async fn <a href="#method.supports_human_entropy" class="fn">supports_human_entropy</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Check if provider supports human entropy collection</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.supports_attestation" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#302-308">Source</a><h4 class="code-header">pub async fn <a href="#method.supports_attestation" class="fn">supports_attestation</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Check if provider supports hardware attestation</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_security_level" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#311-313">Source</a><h4 class="code-header">pub fn <a href="#method.get_security_level" class="fn">get_security_level</a>(&amp;self) -&gt; <a class="enum" href="../../../enum.SecurityLevel.html" title="enum beardog_tunnel::SecurityLevel">SecurityLevel</a></h4></section></summary><div class="docblock"><p>Get provider security level</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.is_hardware_backed" class="method"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/traits/provider.rs.html#316-321">Source</a><h4 class="code-header">pub fn <a href="#method.is_hardware_backed" class="fn">is_hardware_backed</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.88.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Check if provider is hardware-backed</p>
+</div></details></div></details></div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-UniversalHsmProvider-for-SoftwareHsmProvider" class="impl"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/providers/software/core.rs.html#98-262">Source</a><a href="#impl-UniversalHsmProvider-for-SoftwareHsmProvider" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.UniversalHsmProvider.html" title="trait beardog_tunnel::universal_hsm::traits::provider::UniversalHsmProvider">UniversalHsmProvider</a> for <a class="struct" href="../../providers/software/core/struct.SoftwareHsmProvider.html" title="struct beardog_tunnel::universal_hsm::providers::software::core::SoftwareHsmProvider">SoftwareHsmProvider</a></h3></section><section id="impl-UniversalHsmProvider-for-AndroidStrongBoxProvider" class="impl"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/providers/android.rs.html#436-580">Source</a><a href="#impl-UniversalHsmProvider-for-AndroidStrongBoxProvider" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.UniversalHsmProvider.html" title="trait beardog_tunnel::universal_hsm::traits::provider::UniversalHsmProvider">UniversalHsmProvider</a> for <a class="struct" href="../../providers/struct.AndroidStrongBoxProvider.html" title="struct beardog_tunnel::universal_hsm::providers::AndroidStrongBoxProvider">AndroidStrongBoxProvider</a></h3></section><section id="impl-UniversalHsmProvider-for-IosSecureEnclaveProvider" class="impl"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/providers/ios.rs.html#383-523">Source</a><a href="#impl-UniversalHsmProvider-for-IosSecureEnclaveProvider" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.UniversalHsmProvider.html" title="trait beardog_tunnel::universal_hsm::traits::provider::UniversalHsmProvider">UniversalHsmProvider</a> for <a class="struct" href="../../providers/struct.IosSecureEnclaveProvider.html" title="struct beardog_tunnel::universal_hsm::providers::IosSecureEnclaveProvider">IosSecureEnclaveProvider</a></h3></section><section id="impl-UniversalHsmProvider-for-Pkcs11Provider" class="impl"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/providers/pkcs11.rs.html#60-182">Source</a><a href="#impl-UniversalHsmProvider-for-Pkcs11Provider" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.UniversalHsmProvider.html" title="trait beardog_tunnel::universal_hsm::traits::provider::UniversalHsmProvider">UniversalHsmProvider</a> for <a class="struct" href="../../providers/struct.Pkcs11Provider.html" title="struct beardog_tunnel::universal_hsm::providers::Pkcs11Provider">Pkcs11Provider</a></h3></section><section id="impl-UniversalHsmProvider-for-TpmProvider" class="impl"><a class="src rightside" href="../../../../src/beardog_tunnel/universal_hsm/providers/tpm.rs.html#56-178">Source</a><a href="#impl-UniversalHsmProvider-for-TpmProvider" class="anchor">§</a><h3 class="code-header">impl <a class="trait" href="trait.UniversalHsmProvider.html" title="trait beardog_tunnel::universal_hsm::traits::provider::UniversalHsmProvider">UniversalHsmProvider</a> for <a class="struct" href="../../providers/struct.TpmProvider.html" title="struct beardog_tunnel::universal_hsm::providers::TpmProvider">TpmProvider</a></h3></section></div><script src="../../../../trait.impl/beardog_tunnel/universal_hsm/traits/provider/trait.UniversalHsmProvider.js" async></script></section></div></main></body></html>

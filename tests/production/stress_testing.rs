@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Production Stress Testing
 //!
 //! Tests for production environment under stress conditions,
@@ -16,12 +33,18 @@ async fn test_production_stress_conditions() {
     let core = Arc::new(
         BearDogCore::new(config)
             .await
-            .expect("Core initialization failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+})?,
     );
 
     let mut production_manager = ProductionManager::new(core.clone())
         .await
-        .expect("Production manager creation failed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Production manager creation failed", e))
+})?;
 
     // Test high load conditions
     let stress_test_config = StressTestConfiguration {
@@ -35,7 +58,10 @@ async fn test_production_stress_conditions() {
     let stress_test_results = production_manager
         .run_stress_test(&stress_test_config)
         .await
-        .expect("Stress test should succeed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Stress test should succeed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Stress test should succeed", e))
+})?;
 
     assert!(
         stress_test_results.system_remained_stable,
@@ -58,7 +84,10 @@ async fn test_production_stress_conditions() {
     let resource_exhaustion_test = production_manager
         .test_resource_exhaustion_handling()
         .await
-        .expect("Resource exhaustion test should succeed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Resource exhaustion test should succeed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Resource exhaustion test should succeed", e))
+})?;
 
     assert!(
         resource_exhaustion_test.graceful_degradation_functional,
@@ -77,7 +106,10 @@ async fn test_production_stress_conditions() {
     let cascade_prevention_test = production_manager
         .test_cascade_failure_prevention()
         .await
-        .expect("Cascade failure test should succeed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Cascade failure test should succeed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Cascade failure test should succeed", e))
+})?;
 
     assert!(
         cascade_prevention_test.circuit_breakers_functional,

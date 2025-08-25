@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AlgorithmFamily","EncryptionFamily","HashingFamily","KdfFamily","MutationTrigger","NodeCapability","NodeSpecialization","SecurityClearance","SigningFamily","SpawnRestriction","ZkFamily"],"struct":["BearDogGenetics","CapabilityGene","CapabilityMutation","CryptoChromosome","SecurityTraits"]};

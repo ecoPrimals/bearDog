@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Fault Injection Components
 //!
 //! Fault injector trait and implementations for different subsystems
@@ -11,7 +28,8 @@ use tracing::{error, info};
 use uuid::Uuid;
 
 /// Fault injector trait for different subsystems
-#[async_trait::async_trait]
+/// **MODERNIZED** - Uses native async fn instead of async_trait for zero-cost abstractions
+#[allow(async_fn_in_trait)]
 pub trait FaultInjector: Send + Sync {
     /// Inject a fault into the target system
     async fn inject_fault(&self, fault: FaultType) -> BearDogResult<String>;
@@ -132,7 +150,7 @@ impl NetworkFaultInjector {
     }
 }
 
-#[async_trait::async_trait]
+#[allow(async_fn_in_trait)]
 impl FaultInjector for NetworkFaultInjector {
     async fn inject_fault(&self, fault: FaultType) -> BearDogResult<String> {
         match fault {
@@ -172,7 +190,7 @@ impl SecurityFaultInjector {
     }
 }
 
-#[async_trait::async_trait]
+#[allow(async_fn_in_trait)]
 impl FaultInjector for SecurityFaultInjector {
     async fn inject_fault(&self, fault: FaultType) -> BearDogResult<String> {
         match fault {
@@ -210,7 +228,7 @@ impl DatabaseFaultInjector {
     }
 }
 
-#[async_trait::async_trait]
+#[allow(async_fn_in_trait)]
 impl FaultInjector for DatabaseFaultInjector {
     async fn inject_fault(&self, fault: FaultType) -> BearDogResult<String> {
         match fault {
@@ -248,7 +266,7 @@ impl ResourceFaultInjector {
     }
 }
 
-#[async_trait::async_trait]
+#[allow(async_fn_in_trait)]
 impl FaultInjector for ResourceFaultInjector {
     async fn inject_fault(&self, fault: FaultType) -> BearDogResult<String> {
         match fault {

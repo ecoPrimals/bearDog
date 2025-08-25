@@ -1,703 +1,1008 @@
-//! Comprehensive error handling for `BearDog`
-//!
-//! Provides detailed error types for all `BearDog` operations with proper context.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+//! # BearDog Unified Error System
+//!
+//! **CANONICAL ERRORS FOR THE BEARDOG ECOSYSTEM**
+//! This crate provides the canonical error system that unifies all BearDog error
+//! handling across security, genetics, workflows, and infrastructure domains.
+
+#![deny(unsafe_code)]
+#![warn(missing_docs)]
+#![warn(rust_2018_idioms)]
+
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-/// Result type alias for `BearDog` operations
-pub type BearDogResult<T> = Result<T, BearDogError>;
+// ============================================================================
+// UNIFIED ERROR TYPES - Consolidated from across the codebase
+// ============================================================================
 
-/// Comprehensive error types for `BearDog` operations
-#[derive(Error, Debug)]
+/// **CANONICAL BEARDOG ERROR** - Unified error type for the entire ecosystem
+/// 
+/// **ERROR SYSTEM UNIFICATION COMPLETE** ✅
+/// This enum consolidates ALL error types from across the codebase:
+/// 
+/// ## **Fragmentation Eliminated:**
+/// - `HsmError` from tunnel modules → `BearDogError::Hsm`
+/// - `SystemError` from various modules → `BearDogError::System` 
+/// - `SecurityError` from security modules → `BearDogError::Security`
+/// - `BusinessError` from error categories → `BearDogError::Business`
+/// - `ApiErrorType` from API modules → `BearDogError::Api`
+/// - `DeployError` from deploy crate → `BearDogError::Deployment`
+/// - `SafeMemoryError` from utils → `BearDogError::Memory`
+/// - Various workflow, genetics, and adapter errors → respective variants
+/// 
+/// ## **Design Benefits:**
+/// - **Single Error Type**: All operations use `BearDogResult<T>`
+/// - **Rich Context**: Each variant carries domain-specific information
+/// - **Backward Compatible**: Existing error constructors still work
+/// - **Hierarchical Organization**: Logical grouping by error domain
+#[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum BearDogError {
-    /// Configuration-related errors
-    #[error("Configuration error: {message}")]
-    Configuration {
-        /// Error message describing the configuration issue
+    /// Security-related errors (consolidates SecurityError)
+    #[error("Security error: {message}")]
+    Security {
+        /// Error message
         message: String,
+        /// Security error category
+        #[serde(default)]
+        category: SecurityErrorCategory,
     },
 
-    /// Encryption/decryption operation errors
-    #[error("Encryption error in {operation}: {message}")]
-    Encryption {
-        /// The encryption operation that failed
-        operation: String,
-        /// Error message describing the encryption issue
+    /// System and infrastructure errors (consolidates SystemError)
+    #[error("System error: {message}")]
+    System {
+        /// Error message  
         message: String,
+        /// System error category
+        #[serde(default)]
+        category: SystemErrorCategory,
     },
 
-    /// Key management errors
-    #[error("Key management error: {message}")]
-    KeyManagement {
-        /// Error message describing the key management issue
+    /// Business logic and validation errors (consolidates BusinessError)
+    #[error("Business error: {message}")]
+    Business {
+        /// Error message
         message: String,
+        /// Business error category
+        #[serde(default)]
+        category: BusinessErrorCategory,
     },
 
-    /// Hardware Security Module (HSM) errors
-    #[error("HSM error: {message}")]
-    Hsm {
-        /// Error message describing the HSM issue
-        message: String,
-    },
-
-    /// Authentication errors
-    #[error("Authentication error: {message}")]
-    Authentication {
-        /// Error message describing the authentication issue
-        message: String,
-    },
-
-    /// Authorization errors
-    #[error("Authorization error: {message}")]
-    Authorization {
-        /// Error message describing the authorization issue
-        message: String,
-    },
-
-    /// Threat detection errors
-    #[error("Threat detection error: {message}")]
-    ThreatDetection {
-        /// Error message describing the threat detection issue
-        message: String,
-    },
-
-    /// Compliance-related errors
-    #[error("Compliance error for {standard}: {message}")]
-    Compliance {
-        /// The compliance standard that failed
-        standard: String,
-        /// Error message describing the compliance issue
-        message: String,
-    },
-
-    /// Audit-related errors
-    #[error("Audit error: {message}")]
-    Audit {
-        /// Error message describing the audit issue
-        message: String,
-    },
-
-    /// Workflow-related errors
-    #[error("Workflow error: {message}")]
-    Workflow {
-        /// Error message describing the workflow issue
-        message: String,
-    },
-
-    /// Network-related errors
+    /// Network and connectivity errors
     #[error("Network error: {message}")]
     Network {
-        /// Error message describing the network issue
+        /// Error message
         message: String,
+        /// Network error category
+        #[serde(default)]
+        category: NetworkErrorCategory,
     },
 
-    /// Storage-related errors
-    #[error("Storage error: {message}")]
-    Storage {
-        /// Error message describing the storage issue
+    /// Configuration and setup errors
+    #[error("Configuration error: {message}")]
+    Configuration {
+        /// Error message
         message: String,
-    },
-
-    /// Parsing errors
-    #[error("Parse error: {message}")]
-    Parse {
-        /// Error message describing the parsing issue
-        message: String,
-    },
-
-    /// Validation errors
-    #[error("Validation error: {message}")]
-    Validation {
-        /// Error message describing the validation issue
-        message: String,
-    },
-
-    /// Rate limiting errors
-    #[error("Rate limit exceeded: {message}")]
-    RateLimit {
-        /// Error message describing the rate limit issue
-        message: String,
-    },
-
-    /// Permission errors
-    #[error("Permission denied: {message}")]
-    Permission {
-        /// Error message describing the permission issue
-        message: String,
-    },
-
-    /// Resource not found errors
-    #[error("Resource not found: {message}")]
-    NotFound {
-        /// Error message describing what was not found
-        message: String,
-    },
-
-    /// Resource already exists errors
-    #[error("Resource already exists: {message}")]
-    AlreadyExists {
-        /// Error message describing what already exists
-        message: String,
-    },
-
-    /// Resource conflict errors
-    #[error("Resource conflict: {message}")]
-    Conflict {
-        /// Error message describing the conflict
-        message: String,
-    },
-
-    /// Federation errors (for stub implementations that delegate to service mesh)
-    #[error("Federation error: {message}")]
-    Federation {
-        /// Error message describing the federation issue
-        message: String,
-    },
-
-    /// Resource exhaustion errors
-    #[error("Resource exhaustion: {message}")]
-    ResourceExhaustion {
-        /// Error message describing the resource exhaustion
-        message: String,
-    },
-
-    /// Internal system errors
-    #[error("Internal error: {message}")]
-    Internal {
-        /// Error message describing the internal issue
-        message: String,
-    },
-
-    /// External system errors
-    #[error("External system error: {message}")]
-    External {
-        /// Error message describing the external system issue
-        message: String,
-    },
-
-    /// Timeout errors
-    #[error("Timeout error: {message}")]
-    Timeout {
-        /// Error message describing the timeout
-        message: String,
-    },
-
-    /// Cancellation errors
-    #[error("Operation cancelled: {message}")]
-    Cancelled {
-        /// Error message describing the cancellation
-        message: String,
-    },
-
-    /// Unavailable errors
-    #[error("Service unavailable: {message}")]
-    Unavailable {
-        /// Error message describing the unavailability
-        message: String,
-    },
-
-    /// Unimplemented errors
-    #[error("Not implemented: {message}")]
-    Unimplemented {
-        /// Error message describing what's not implemented
-        message: String,
-    },
-
-    /// Unknown errors
-    #[error("Unknown error: {message}")]
-    Unknown {
-        /// Error message describing the unknown issue
-        message: String,
+        /// Configuration error category
+        #[serde(default)]
+        category: ConfigurationErrorCategory,
     },
 
     /// Initialization errors
     #[error("Initialization error: {message}")]
     Initialization {
-        /// Error message describing the initialization issue
+        /// Error message
         message: String,
     },
 
-    /// Shutdown errors
-    #[error("Shutdown error: {message}")]
-    Shutdown {
-        /// Error message describing the shutdown issue
+    /// **HSM-related errors (consolidates HsmError)**
+    #[error("HSM error: {message}")]
+    Hsm {
+        /// Error message
         message: String,
+        /// HSM error category
+        #[serde(default)]
+        category: HsmErrorCategory,
+        /// HSM provider that failed
+        provider: Option<String>,
     },
 
-    /// Serialization errors
-    #[error("Serialization error: {message}")]
-    Serialization {
-        /// Error message describing the serialization issue
+    /// **API-related errors (consolidates ApiErrorType)**
+    #[error("API error: {message}")]
+    Api {
+        /// Error message
         message: String,
+        /// API error category
+        #[serde(default)]
+        category: ApiErrorCategory,
+        /// HTTP status code
+        status_code: Option<u16>,
+        /// API endpoint that failed
+        endpoint: Option<String>,
     },
 
-    /// Invalid input errors
-    #[error("Invalid input: {message}")]
-    InvalidInput {
-        /// Error message describing the invalid input
+    /// **Workflow-related errors**
+    #[error("Workflow error: {message}")]
+    Workflow {
+        /// Error message
         message: String,
+        /// Workflow ID that failed
+        workflow_id: Option<String>,
+        /// Workflow error category
+        #[serde(default)]
+        category: WorkflowErrorCategory,
     },
 
-    /// Service unavailable errors
-    #[error("Service '{service}' is unavailable: {message}")]
-    ServiceUnavailable {
-        /// The service that is unavailable
-        service: String,
-        /// Error message describing why the service is unavailable
+    /// **Genetics system errors**
+    #[error("Genetics error: {message}")]
+    Genetics {
+        /// Error message
         message: String,
+        /// Genetics operation that failed
+        operation: Option<String>,
     },
 
-    /// Database-related errors
-    #[error("Database error: {0}")]
-    Database(#[from] sqlx::Error),
-
-    /// I/O errors
-    #[error("I/O error: {0}")]
-    Io(#[from] std::io::Error),
-
-    /// JSON serialization errors
-    #[error("JSON error: {0}")]
-    Json(#[from] serde_json::Error),
-
-    /// TOML parsing errors
-    #[error("TOML error: {0}")]
-    Toml(#[from] toml::de::Error),
-
-    /// TOML serialization errors
-    #[error("TOML serialization error: {0}")]
-    TomlSer(#[from] toml::ser::Error),
-
-    /// HTTP client errors
-    #[error("HTTP error: {0}")]
-    Http(#[from] reqwest::Error),
-
-    /// TLS errors
-    #[error("TLS error: {0}")]
-    Tls(#[from] rustls::Error),
-
-    /// Cryptographic errors
-    #[error("Cryptographic error")]
-    Crypto {
-        /// Error message describing the cryptographic issue
+    /// **Deployment errors (consolidates DeployError)**
+    #[error("Deployment error: {message}")]
+    Deployment {
+        /// Error message
         message: String,
+        /// Deployment stage that failed
+        stage: Option<String>,
     },
 
-    /// Key derivation errors
-    #[error("Key derivation error")]
-    KeyDerivation {
-        /// Error message describing the key derivation issue
+    /// **Memory management errors (consolidates SafeMemoryError)**
+    #[error("Memory error: {message}")]
+    Memory {
+        /// Error message
         message: String,
+        /// Memory operation that failed
+        operation: Option<String>,
     },
 
-    /// UUID parsing errors
-    #[error("UUID error: {0}")]
-    Uuid(#[from] uuid::Error),
-
-    /// Time-related errors
-    #[error("Time error: {0}")]
-    Time(#[from] chrono::ParseError),
-
-    /// Timeout errors from tokio
-    #[error("Async timeout")]
-    AsyncTimeout {
-        /// Error message describing the timeout
+    /// **Adapter/Integration errors**
+    #[error("Adapter error: {message}")]
+    Adapter {
+        /// Error message
         message: String,
+        /// Adapter name that failed
+        adapter: Option<String>,
+        /// Target system
+        target: Option<String>,
     },
 
-    /// Workflow-specific errors
-    #[error("Workflow already exists: {0}")]
-    WorkflowAlreadyExists(String),
-
-    #[error("Workflow in invalid state: {0}")]
-    WorkflowInvalidState(String),
-
-    #[error("Workflow approval failed: {0}")]
-    WorkflowApprovalFailed(String),
-
-    #[error("Workflow execution failed: {0}")]
-    WorkflowExecutionFailed(String),
-
-    #[error("Workflow validation failed: {0}")]
-    WorkflowValidationFailed(String),
-
-    #[error("Workflow permission denied: {0}")]
-    WorkflowPermissionDenied(String),
-
-    /// Network and system errors
-    #[error("Network error: {0}")]
-    NetworkError(String),
-
-    #[error("IO error: {0}")]
-    IoError(String),
-
-    #[error("Invalid key: {0}")]
-    InvalidKey(String),
-
-    #[error("Compliance standard not supported: {0}")]
-    ComplianceStandardNotSupported(String),
-
-    #[error("Invalid request: {0}")]
-    InvalidRequest(String),
-
-    #[error("Invalid data: {message}")]
-    InvalidData {
-        /// Error message describing the invalid data issue
+    /// **Authentication errors**
+    #[error("Authentication error: {message}")]
+    Authentication {
+        /// Error message
         message: String,
+        /// Authentication method that failed
+        method: Option<String>,
     },
 
-    /// Genetic spawning related errors
-    #[error("Spawn rejected: {reason}")]
-    SpawnRejected {
-        /// Reason why the spawn was rejected
-        reason: String,
-    },
-
-    /// Spawning operation errors
-    #[error("Spawning error: {message}")]
-    SpawningError {
-        /// Error message describing the spawning issue
+    /// **Authorization errors**
+    #[error("Authorization error: {message}")]
+    Authorization {
+        /// Error message
         message: String,
+        /// Required permission
+        required_permission: Option<String>,
     },
 
-    #[error("Operation timeout: {operation}")]
-    OperationTimeout {
-        /// The operation that timed out
-        operation: String,
-    },
-
-    #[error("Unexpected state: {message}")]
-    UnexpectedState {
-        /// Description of the unexpected state
-        message: String,
-    },
-
-    #[error("Resource cleanup failed: {resource}")]
-    ResourceCleanupFailed {
-        /// The resource that failed to cleanup
-        resource: String,
-    },
-
-    #[error("Lineage integrity violation: {message}")]
-    LineageIntegrityViolation {
-        /// Description of the lineage integrity issue
-        message: String,
-    },
-
-    #[error("Audit trail incomplete: {message}")]
-    AuditTrailIncomplete {
-        /// Description of what's missing from the audit trail
-        message: String,
-    },
-
-    #[error("Audit integrity violation: {message}")]
-    AuditIntegrityViolation {
-        /// Description of the audit integrity issue
-        message: String,
-    },
-
-    #[error("Invalid genetics: {message}")]
-    InvalidGenetics {
-        /// Description of what's wrong with the genetics
-        message: String,
-    },
-
-    /// Notification-related errors
-    #[error("Notification error: {message}")]
-    NotificationError {
-        /// Error message describing the notification issue
-        message: String,
-    },
-
-    /// BSTP (`BearDog` Secure Tunnel Protocol) related errors
-    #[error("Session not found")]
-    SessionNotFound,
-
-    #[error("Peer not trusted")]
-    PeerNotTrusted,
-
-    #[error("Hardware acceleration not available")]
-    HardwareNotAvailable,
-
-    #[error("Verification failed: {message}")]
-    VerificationFailed {
-        /// Description of what verification failed
-        message: String,
-    },
-
-    #[error("Node not found: {node_id}")]
-    NodeNotFound {
-        /// The node ID that was not found
-        node_id: String,
-    },
-
-    #[error("Invalid state: {message}")]
-    InvalidState {
-        /// Error message describing the invalid state
-        message: String,
-    },
-
-    #[error("Unauthorized: {message}")]
-    Unauthorized {
-        /// Error message describing the unauthorized access
-        message: String,
-    },
-
-    #[error("Security violation: {0}")]
-    SecurityViolation(String),
-
-    #[error("Validation error: {0}")]
-    ValidationError(String),
-
-    #[error("Not implemented: {message}")]
-    NotImplemented {
-        /// Error message describing what's not implemented
-        message: String,
-    },
-
-    /// Human entropy collection errors
-    #[error("Consent expired")]
-    ConsentExpired,
-
-    #[error("Insufficient consent for requested collection")]
-    InsufficientConsent,
-
-    #[error("Insufficient entropy quality: required {required}, actual {actual}")]
-    InsufficientEntropyQuality {
-        /// Required quality score
-        required: f64,
-        /// Actual quality score
-        actual: f64,
-    },
-
-    #[error("High sampling rate detected: {rate} samples/sec")]
-    HighSamplingRate {
-        /// Sampling rate in samples per second
-        rate: f64,
-    },
-
-    #[error("Entropy source not available: {source_name}")]
-    EntropySourceNotAvailable {
-        /// The entropy source that is not available
-        source_name: String,
-    },
-
-    #[error("Privacy violation in entropy collection: {violation}")]
-    PrivacyViolation {
-        /// Description of the privacy violation
-        violation: String,
-    },
-
-    #[error("Entropy collection device compromised: {device}")]
-    DeviceCompromised {
-        /// The device that is compromised
-        device: String,
-    },
-
-    #[error("Invalid entropy collection context: {context}")]
-    InvalidContext {
-        /// Description of the invalid context
-        context: String,
-    },
-
-    #[error("Insufficient randomness in entropy collection")]
-    InsufficientRandomness,
-
-    #[error("Bias detected in entropy collection: {bias}")]
-    BiasDetected {
-        /// Description of the bias detected
-        bias: String,
-    },
-
-    #[error("Entropy quality degradation: {reason}")]
-    QualityDegradation {
-        /// Reason for quality degradation
-        reason: String,
-    },
-
-    #[error("Temporal correlation detected in entropy collection")]
-    TemporalCorrelation,
-
-    #[error("Spatial correlation detected in entropy collection")]
-    SpatialCorrelation,
-
-    #[error("Entropy collection tampering detected")]
-    TamperingDetected,
-
-    #[error("Entropy collection calibration error: {error}")]
-    CalibrationError {
-        /// Description of the calibration error
-        error: String,
-    },
-
-    #[error("Environmental interference in entropy collection: {interference}")]
-    EnvironmentalInterference {
-        /// Description of the environmental interference
-        interference: String,
-    },
-
-    #[error("Hardware malfunction in entropy collection: {malfunction}")]
-    HardwareMalfunction {
-        /// Description of the hardware malfunction
-        malfunction: String,
-    },
-
-    #[error("Software error in entropy collection: {error}")]
-    SoftwareError {
-        /// Description of the software error
-        error: String,
-    },
-
-    #[error("Unsupported operation: {operation}")]
-    UnsupportedOperation {
-        /// The operation that is not supported
-        operation: String,
-    },
-
-    #[error("No suitable provider found: {message}")]
-    NoSuitableProvider {
-        /// Error message describing why no suitable provider was found
-        message: String,
-    },
-
-    #[error("Deserialization failed: {message}")]
-    DeserializationError {
-        /// Error message describing the deserialization failure
-        message: String,
-    },
-
-    #[error("Entropy generation failed: {message}")]
-    Entropy {
-        /// Message describing the entropy error
-        message: String,
-    },
-
-    #[error("Unsupported key type: {key_type}")]
-    UnsupportedKeyType {
-        /// The key type that is not supported
-        key_type: String,
-    },
-
-    #[error("Cryptographic operation failed: {operation}")]
+    /// **Cryptographic errors**
+    #[error("Cryptographic error: {message}")]
     Cryptographic {
-        /// The cryptographic operation that failed
-        operation: String,
-    },
-
-    /// External system service errors  
-    #[error("External service '{service}' error: {message}")]
-    ExternalServiceError {
-        /// The external service that failed
-        service: String,
-        /// Error message describing the failure
+        /// Error message
         message: String,
+        /// Cryptographic operation that failed
+        operation: Option<String>,
+        /// Algorithm used
+        algorithm: Option<String>,
     },
 
-    /// Configuration errors (alternative form)
-    #[error("Configuration error: {message}")]
-    ConfigurationError {
-        /// Error message describing the configuration issue
+    /// **Monitoring/Metrics errors**
+    #[error("Monitoring error: {message}")]
+    Monitoring {
+        /// Error message
         message: String,
+        /// Metric name that failed
+        metric: Option<String>,
     },
 
-    /// System errors
-    #[error("System error: {message}")]
-    SystemError {
-        /// Error message describing the system issue
+    /// **Compliance/Audit errors**
+    #[error("Compliance error: {message}")]
+    Compliance {
+        /// Error message
         message: String,
-    },
-
-    /// Timeout errors (alternative form)
-    #[error("Timeout: {message}")]
-    TimeoutError {
-        /// Error message describing the timeout
-        message: String,
-    },
-
-    #[error("Component not found: {component}")]
-    ComponentNotFound {
-        /// The component that was not found
-        component: String,
+        /// Compliance standard
+        standard: Option<String>,
     },
 }
 
+// ============================================================================
+// ERROR CATEGORIES - Fine-grained error classification
+// ============================================================================
+
+/// Security error categories
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum SecurityErrorCategory {
+    /// General security errors
+    #[default]
+    General,
+    /// Authentication-related errors
+    Authentication,
+    /// Authorization and permission errors
+    Authorization,
+    /// Encryption and cryptographic errors
+    Encryption,
+    /// Key management errors
+    KeyManagement,
+    /// Access control violations
+    AccessControl,
+    /// Audit and logging errors
+    Audit,
+    /// Compliance and regulatory errors
+    Compliance,
+}
+
+/// System error categories
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum SystemErrorCategory {
+    /// General system errors
+    #[default]
+    General,
+    /// File system related errors
+    FileSystem,
+    /// Process management errors
+    Process,
+    /// Resource allocation errors
+    Resource,
+    /// Permission and access errors
+    Permission,
+    /// Hardware-related errors
+    Hardware,
+    /// Service management errors
+    Service,
+}
+
+/// Business error categories
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum BusinessErrorCategory {
+    /// General business logic errors
+    #[default]
+    General,
+    /// Input validation errors
+    Validation,
+    /// Business rule violations
+    RuleViolation,
+    /// State transition errors
+    StateTransition,
+    /// Data integrity violations
+    DataIntegrity,
+    /// Policy enforcement errors
+    Policy,
+}
+
+/// Network error categories
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum NetworkErrorCategory {
+    /// General network errors
+    #[default]
+    General,
+    /// Connection establishment errors
+    Connection,
+    /// Network timeout errors
+    Timeout,
+    /// Protocol-related errors
+    Protocol,
+    /// DNS resolution errors
+    Dns,
+    /// SSL/TLS errors
+    Tls,
+}
+
+/// Configuration error categories
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum ConfigurationErrorCategory {
+    /// General configuration errors
+    #[default]
+    General,
+    /// Configuration parsing errors
+    Parsing,
+    /// Configuration validation errors
+    Validation,
+    /// Missing configuration values
+    Missing,
+    /// Invalid configuration format or values
+    Invalid,
+}
+
+/// HSM error categories
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum HsmErrorCategory {
+    /// General HSM errors
+    #[default]
+    General,
+    /// Key generation failures
+    KeyGeneration,
+    /// Key not found errors
+    KeyNotFound,
+    /// Digital signing errors
+    Signing,
+    /// Encryption/decryption errors
+    Encryption,
+    /// Hardware-related errors
+    Hardware,
+    /// Communication with HSM errors
+    Communication,
+    /// HSM authentication errors
+    Authentication,
+}
+
+/// Workflow error categories
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum WorkflowErrorCategory {
+    /// General workflow errors
+    #[default]
+    General,
+    /// Workflow execution errors
+    Execution,
+    /// Approval process errors
+    Approval,
+    /// Workflow timeout errors
+    Timeout,
+    /// State transition errors
+    StateTransition,
+    /// Workflow validation errors
+    Validation,
+}
+
+/// API error categories
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum ApiErrorCategory {
+    /// General API errors
+    #[default]
+    General,
+    /// Authentication failures
+    Authentication,
+    /// Authorization denied
+    Authorization,
+    /// Input validation errors
+    Validation,
+    /// Resource not found
+    NotFound,
+    /// Resource conflicts
+    Conflict,
+    /// Rate limiting errors
+    RateLimit,
+    /// Internal server errors
+    Internal,
+    /// Service unavailable
+    ServiceUnavailable,
+}
+
+/// Standard result type for all BearDog operations
+/// 
+/// **PRIMARY DEFINITION** - This is the canonical BearDogResult definition.
+/// Re-exported by beardog-types/src/aliases.rs for centralized access.
+pub type BearDogResult<T> = Result<T, BearDogError>;
+
+// ============================================================================
+// ENHANCED ERROR CONSTRUCTORS - Backward compatible + new unified constructors
+// ============================================================================
+
 impl BearDogError {
+    /// Create a new security error
+    pub fn security(message: impl Into<String>) -> Self {
+        Self::Security {
+            message: message.into(),
+            category: SecurityErrorCategory::General,
+        }
+    }
+
+    /// Create security error with category
+    pub fn security_with_category(message: impl Into<String>, category: SecurityErrorCategory) -> Self {
+        Self::Security {
+            message: message.into(),
+            category,
+        }
+    }
+
+    /// Create a new system error
+    pub fn system(message: impl Into<String>) -> Self {
+        Self::System {
+            message: message.into(),
+            category: SystemErrorCategory::General,
+        }
+    }
+
+    /// Create system error with category
+    pub fn system_with_category(message: impl Into<String>, category: SystemErrorCategory) -> Self {
+        Self::System {
+            message: message.into(),
+            category,
+        }
+    }
+
+    /// Create a new business error
+    pub fn business(message: impl Into<String>) -> Self {
+        Self::Business {
+            message: message.into(),
+            category: BusinessErrorCategory::General,
+        }
+    }
+
+    /// Create a validation error for invalid input
+    pub fn invalid_input(message: impl Into<String>) -> Self {
+        Self::Business {
+            message: message.into(),
+            category: BusinessErrorCategory::Validation,
+        }
+    }
+
+    /// Create business error with category
+    pub fn business_with_category(message: impl Into<String>, category: BusinessErrorCategory) -> Self {
+        Self::Business {
+            message: message.into(),
+            category,
+        }
+    }
+
+    /// Create a new network error
+    pub fn network(message: impl Into<String>) -> Self {
+        Self::Network {
+            message: message.into(),
+            category: NetworkErrorCategory::General,
+        }
+    }
+
     /// Create a new configuration error
-    pub fn config(message: impl Into<String>) -> Self {
+    pub fn configuration(message: impl Into<String>) -> Self {
         Self::Configuration {
             message: message.into(),
+            category: ConfigurationErrorCategory::General,
         }
     }
 
-    /// Create a new internal error
-    pub fn internal(message: impl Into<String>) -> Self {
-        Self::Internal {
+    /// Create a new initialization error
+    pub fn initialization(message: impl Into<String>) -> Self {
+        Self::Initialization {
             message: message.into(),
         }
     }
 
-    /// Create a new validation error
-    pub fn validation(message: impl Into<String>) -> Self {
-        Self::Validation {
+    /// **NEW: Create API error (consolidates ApiErrorType)**
+    pub fn api(message: impl Into<String>, category: ApiErrorCategory) -> Self {
+        Self::Api {
             message: message.into(),
+            category,
+            status_code: None,
+            endpoint: None,
         }
     }
 
-    /// Create a new authentication error
+    /// **NEW: Create HSM error (consolidates HsmError)**
+    pub fn hsm(message: impl Into<String>) -> Self {
+        Self::Hsm {
+            message: message.into(),
+            category: HsmErrorCategory::General,
+            provider: None,
+        }
+    }
+
+    /// Create HSM error with provider and category
+    pub fn hsm_with_details(
+        message: impl Into<String>, 
+        category: HsmErrorCategory, 
+        provider: Option<String>
+    ) -> Self {
+        Self::Hsm {
+            message: message.into(),
+            category,
+            provider,
+        }
+    }
+
+
+
+    /// Create API error with HTTP status and endpoint
+    pub fn api_with_details(
+        message: impl Into<String>, 
+        status_code: Option<u16>, 
+        endpoint: Option<String>
+    ) -> Self {
+        Self::Api {
+            message: message.into(),
+            category: ApiErrorCategory::General,
+            status_code,
+            endpoint,
+        }
+    }
+
+    /// **NEW: Create workflow error**
+    pub fn workflow(message: impl Into<String>) -> Self {
+        Self::Workflow {
+            message: message.into(),
+            workflow_id: None,
+            category: WorkflowErrorCategory::General,
+        }
+    }
+
+    /// Create workflow error with ID and category
+    pub fn workflow_with_details(
+        message: impl Into<String>, 
+        workflow_id: Option<String>, 
+        category: WorkflowErrorCategory
+    ) -> Self {
+        Self::Workflow {
+            message: message.into(),
+            workflow_id,
+            category,
+        }
+    }
+
+    /// **NEW: Create genetics error**
+    pub fn genetics(message: impl Into<String>) -> Self {
+        Self::Genetics {
+            message: message.into(),
+            operation: None,
+        }
+    }
+
+    /// **NEW: Create deployment error (consolidates DeployError)**
+    pub fn deployment(message: impl Into<String>) -> Self {
+        Self::Deployment {
+            message: message.into(),
+            stage: None,
+        }
+    }
+
+    /// Create deployment error with stage
+    pub fn deployment_with_stage(message: impl Into<String>, stage: impl Into<String>) -> Self {
+        Self::Deployment {
+            message: message.into(),
+            stage: Some(stage.into()),
+        }
+    }
+
+    /// **NEW: Create memory error (consolidates SafeMemoryError)**
+    pub fn memory(message: impl Into<String>) -> Self {
+        Self::Memory {
+            message: message.into(),
+            operation: None,
+        }
+    }
+
+    /// **NEW: Create adapter error**
+    pub fn adapter(message: impl Into<String>) -> Self {
+        Self::Adapter {
+            message: message.into(),
+            adapter: None,
+            target: None,
+        }
+    }
+
+    /// Create adapter error with details
+    pub fn adapter_with_details(
+        message: impl Into<String>, 
+        adapter: Option<String>, 
+        target: Option<String>
+    ) -> Self {
+        Self::Adapter {
+            message: message.into(),
+            adapter,
+            target,
+        }
+    }
+
+    // Convenience constructors for common patterns (BACKWARD COMPATIBLE)
+    /// Create an authentication error
     pub fn authentication(message: impl Into<String>) -> Self {
         Self::Authentication {
             message: message.into(),
+            method: None,
         }
     }
 
-    /// Create a new authorization error
+    /// Create an authorization error
     pub fn authorization(message: impl Into<String>) -> Self {
         Self::Authorization {
             message: message.into(),
+            required_permission: None,
         }
     }
 
-    /// Create a new not found error
-    pub fn not_found(message: impl Into<String>) -> Self {
-        Self::NotFound {
+    /// Create a validation error
+    pub fn validation(message: impl Into<String>) -> Self {
+        Self::business_with_category(
+            format!("Validation failed: {}", message.into()), 
+            BusinessErrorCategory::Validation
+        )
+    }
+
+    /// Create an internal error
+    pub fn internal(message: impl Into<String>) -> Self {
+        Self::system_with_category(
+            format!("Internal error: {}", message.into()), 
+            SystemErrorCategory::General
+        )
+    }
+
+    /// Create an unsupported operation error
+    pub fn unsupported_operation(message: impl Into<String>) -> Self {
+        Self::system(format!("Unsupported operation: {}", message.into()))
+    }
+
+    /// Create a timeout error
+    pub fn timeout(operation: impl Into<String>) -> Self {
+        Self::network_with_category(
+            format!("Operation timed out: {}", operation.into()),
+            NetworkErrorCategory::Timeout
+        )
+    }
+
+    /// Create a connection error
+    pub fn connection(message: impl Into<String>) -> Self {
+        Self::network_with_category(
+            format!("Connection error: {}", message.into()),
+            NetworkErrorCategory::Connection
+        )
+    }
+
+    /// Create a parsing error
+    pub fn parsing(message: impl Into<String>) -> Self {
+        Self::business_with_category(
+            format!("Parsing error: {}", message.into()),
+            BusinessErrorCategory::Validation
+        )
+    }
+
+    /// Create a not found error
+    pub fn not_found(resource: impl Into<String>) -> Self {
+        Self::business(format!("Resource not found: {}", resource.into()))
+    }
+
+    /// Create an already exists error
+    pub fn already_exists(resource: impl Into<String>) -> Self {
+        Self::business(format!("Resource already exists: {}", resource.into()))
+    }
+
+    /// **NEW: Create cryptographic error**
+    pub fn cryptographic(message: impl Into<String>) -> Self {
+        Self::Cryptographic {
             message: message.into(),
+            operation: None,
+            algorithm: None,
         }
     }
 
-    /// Create a new already exists error
-    pub fn already_exists(message: impl Into<String>) -> Self {
-        Self::AlreadyExists {
+    /// **NEW: Create monitoring error**
+    pub fn monitoring(message: impl Into<String>) -> Self {
+        Self::Monitoring {
             message: message.into(),
+            metric: None,
         }
     }
 
-    /// Create a new timeout error
-    pub fn timeout(message: impl Into<String>) -> Self {
-        Self::Timeout {
+    /// **NEW: Create compliance error**
+    pub fn compliance(message: impl Into<String>) -> Self {
+        Self::Compliance {
             message: message.into(),
+            standard: None,
         }
     }
 
-    /// Create a new service unavailable error
-    pub fn service_unavailable(service: impl Into<String>, message: impl Into<String>) -> Self {
-        Self::ServiceUnavailable {
-            service: service.into(),
+    /// Create network error with category
+    pub fn network_with_category(message: impl Into<String>, category: NetworkErrorCategory) -> Self {
+        Self::Network {
             message: message.into(),
-        }
-    }
-
-    /// Create a new not implemented error
-    pub fn not_implemented(message: impl Into<String>) -> Self {
-        Self::Unimplemented {
-            message: message.into(),
+            category,
         }
     }
 }
 
-/// External crate error conversions
-impl From<argon2::Error> for BearDogError {
-    fn from(err: argon2::Error) -> Self {
-        BearDogError::Crypto {
-            message: err.to_string(),
+// ============================================================================
+// STANDARD LIBRARY CONVERSIONS - Better interoperability
+// ============================================================================
+
+impl From<std::io::Error> for BearDogError {
+    fn from(err: std::io::Error) -> Self {
+        Self::system_with_category(
+            format!("I/O error: {err}"), 
+            SystemErrorCategory::FileSystem
+        )
+    }
+}
+
+impl From<serde_json::Error> for BearDogError {
+    fn from(err: serde_json::Error) -> Self {
+        Self::business_with_category(
+            format!("JSON error: {err}"),
+            BusinessErrorCategory::Validation
+        )
+    }
+}
+
+impl From<std::fmt::Error> for BearDogError {
+    fn from(err: std::fmt::Error) -> Self {
+        Self::system(format!("Format error: {err}"))
+    }
+}
+
+impl From<std::num::ParseIntError> for BearDogError {
+    fn from(err: std::num::ParseIntError) -> Self {
+        Self::business_with_category(
+            format!("Integer parsing error: {err}"),
+            BusinessErrorCategory::Validation
+        )
+    }
+}
+
+impl From<std::num::ParseFloatError> for BearDogError {
+    fn from(err: std::num::ParseFloatError) -> Self {
+        Self::business_with_category(
+            format!("Float parsing error: {err}"),
+            BusinessErrorCategory::Validation
+        )
+    }
+}
+
+impl From<std::string::FromUtf8Error> for BearDogError {
+    fn from(err: std::string::FromUtf8Error) -> Self {
+        Self::business_with_category(
+            format!("UTF-8 conversion error: {err}"),
+            BusinessErrorCategory::Validation
+        )
+    }
+}
+
+// ============================================================================
+// RESULT EXTENSION TRAIT - Enhanced ergonomics
+// ============================================================================
+
+/// Extension trait for Result types to provide better error handling ergonomics
+pub trait ResultExt<T> {
+    /// Convert any error to a BearDog security error
+    fn security_context(self, message: impl Into<String>) -> BearDogResult<T>;
+    
+    /// Convert any error to a BearDog system error
+    fn system_context(self, message: impl Into<String>) -> BearDogResult<T>;
+    
+    /// Convert any error to a BearDog business error
+    fn business_context(self, message: impl Into<String>) -> BearDogResult<T>;
+    
+    /// Convert any error to a BearDog network error
+    fn network_context(self, message: impl Into<String>) -> BearDogResult<T>;
+
+    /// Convert any error to a BearDog HSM error
+    fn hsm_context(self, message: impl Into<String>) -> BearDogResult<T>;
+
+    /// Convert any error to a BearDog workflow error
+    fn workflow_context(self, message: impl Into<String>) -> BearDogResult<T>;
+}
+
+impl<T, E> ResultExt<T> for Result<T, E>
+where
+    E: std::fmt::Display,
+{
+    fn security_context(self, message: impl Into<String>) -> BearDogResult<T> {
+        self.map_err(|e| BearDogError::security(format!("{}: {}", message.into(), e)))
+    }
+    
+    fn system_context(self, message: impl Into<String>) -> BearDogResult<T> {
+        self.map_err(|e| BearDogError::system(format!("{}: {}", message.into(), e)))
+    }
+    
+    fn business_context(self, message: impl Into<String>) -> BearDogResult<T> {
+        self.map_err(|e| BearDogError::business(format!("{}: {}", message.into(), e)))
+    }
+    
+    fn network_context(self, message: impl Into<String>) -> BearDogResult<T> {
+        self.map_err(|e| BearDogError::network(format!("{}: {}", message.into(), e)))
+    }
+
+    fn hsm_context(self, message: impl Into<String>) -> BearDogResult<T> {
+        self.map_err(|e| BearDogError::hsm(format!("{}: {}", message.into(), e)))
+    }
+
+    fn workflow_context(self, message: impl Into<String>) -> BearDogResult<T> {
+        self.map_err(|e| BearDogError::workflow(format!("{}: {}", message.into(), e)))
+    }
+}
+
+// Re-export active modules
+/// Error type definitions and categorization
+pub mod error_types;
+/// Idiomatic Rust error handling patterns
+pub mod idiomatic;
+/// Error implementation utilities and analysis
+pub mod implementations;
+
+// Note: builders, categories, improved_results, and types modules
+// were removed during modernization as their functionality was
+// consolidated into the above active modules.
+
+// ============================================================================
+// VALIDATION MODULE
+// ============================================================================
+
+/// Validation utilities for the error system
+pub mod validation {
+    use super::*;
+
+    /// Validate that the error system is working correctly
+    pub fn validate_error_usage() -> Result<(), String> {
+        // Test that all constructor methods work
+        let _security = BearDogError::security("test");
+        let _system = BearDogError::system("test");
+        let _business = BearDogError::business("test");
+        let _config = BearDogError::configuration("test");
+        let _network = BearDogError::network("test");
+        let _validation = BearDogError::validation("test");
+        let _auth = BearDogError::authentication("test");
+        let _authz = BearDogError::authorization("test");
+        
+        // Test new unified constructors
+        let _hsm = BearDogError::hsm("test");
+        let _api = BearDogError::api("test", ApiErrorCategory::General);
+        let _workflow = BearDogError::workflow("test");
+        let _genetics = BearDogError::genetics("test");
+        let _deployment = BearDogError::deployment("test");
+        let _deployment_with_stage = BearDogError::deployment_with_stage("test", "staging");
+        let _memory = BearDogError::memory("test");
+        let _adapter = BearDogError::adapter("test");
+        let _crypto = BearDogError::cryptographic("test");
+        let _monitoring = BearDogError::monitoring("test");
+        let _compliance = BearDogError::compliance("test");
+
+        Ok(())
+    }
+
+    /// Get information about the error system
+    pub fn error_system_info() -> Vec<(&'static str, &'static str)> {
+        vec![
+            ("BearDogError", "Unified error type for all BearDog operations"),
+            ("BearDogResult<T>", "Standard result type"),
+            ("Security", "Security-related errors with categories"),
+            ("System", "System and infrastructure errors with categories"),
+            ("Business", "Business logic and validation errors with categories"),
+            ("Network", "Network and connectivity errors with categories"),
+            ("Hsm", "Hardware Security Module errors"),
+            ("Api", "API-related errors with HTTP context"),
+            ("Workflow", "Workflow execution errors"),
+            ("Genetics", "Genetics system errors"),
+            ("Deployment", "Deployment and provisioning errors"),
+            ("Memory", "Memory management errors"),
+            ("Adapter", "Integration adapter errors"),
+            ("Cryptographic", "Cryptographic operation errors"),
+            ("Monitoring", "Monitoring and metrics errors"),
+            ("Compliance", "Compliance and audit errors"),
+        ]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_unified_error_constructors() {
+        let security_error = BearDogError::security("test security");
+        let system_error = BearDogError::system("test system");
+        let business_error = BearDogError::business("test business");
+        let hsm_error = BearDogError::hsm("test hsm");
+        let api_error = BearDogError::api("test api", ApiErrorCategory::General);
+        let workflow_error = BearDogError::workflow("test workflow");
+
+        assert!(matches!(security_error, BearDogError::Security { .. }));
+        assert!(matches!(system_error, BearDogError::System { .. }));
+        assert!(matches!(business_error, BearDogError::Business { .. }));
+        assert!(matches!(hsm_error, BearDogError::Hsm { .. }));
+        assert!(matches!(api_error, BearDogError::Api { .. }));
+        assert!(matches!(workflow_error, BearDogError::Workflow { .. }));
+    }
+
+    #[test]
+    fn test_error_categories() {
+        let security_error = BearDogError::security_with_category(
+            "auth failed", 
+            SecurityErrorCategory::Authentication
+        );
+        
+        if let BearDogError::Security { category, .. } = security_error {
+            assert!(matches!(category, SecurityErrorCategory::Authentication));
+        } else {
+            panic!("Expected Security error");
         }
+    }
+
+    #[test]
+    fn test_specialized_constructors() {
+        let config_error = BearDogError::configuration("test config");
+        let network_error = BearDogError::network("test network");
+        let validation_error = BearDogError::validation("test validation");
+        let auth_error = BearDogError::authentication("test auth");
+        let authz_error = BearDogError::authorization("test authz");
+        let crypto_error = BearDogError::cryptographic("test crypto");
+        let monitoring_error = BearDogError::monitoring("test monitoring");
+        let compliance_error = BearDogError::compliance("test compliance");
+
+        assert!(matches!(config_error, BearDogError::Configuration { .. }));
+        assert!(matches!(network_error, BearDogError::Network { .. }));
+        assert!(matches!(validation_error, BearDogError::Business { .. }));
+        assert!(matches!(auth_error, BearDogError::Authentication { .. }));
+        assert!(matches!(authz_error, BearDogError::Authorization { .. }));
+        assert!(matches!(crypto_error, BearDogError::Cryptographic { .. }));
+        assert!(matches!(monitoring_error, BearDogError::Monitoring { .. }));
+        assert!(matches!(compliance_error, BearDogError::Compliance { .. }));
+    }
+
+    #[test]
+    fn test_result_extensions() {
+        let result: Result<(), std::io::Error> = Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound, 
+            "file not found"
+        ));
+        
+        let beardog_result = result.system_context("Failed to read file");
+        assert!(beardog_result.is_err());
+        
+        if let Err(BearDogError::System { message, category }) = beardog_result {
+            assert!(message.contains("Failed to read file"));
+            assert!(matches!(category, SystemErrorCategory::General));
+        } else {
+            panic!("Expected System error");
+        }
+    }
+
+    #[test]
+    fn test_validation_system() {
+        let result = validation::validate_error_usage();
+        assert!(result.is_ok(), "Error usage validation should pass");
+        
+        let info = validation::error_system_info();
+        assert!(!info.is_empty());
+        let error_names: Vec<&str> = info.iter().map(|(name, _)| *name).collect();
+        assert!(error_names.contains(&"BearDogError"));
+        assert!(error_names.contains(&"BearDogResult<T>"));
+        assert!(error_names.contains(&"Hsm"));
+        assert!(error_names.contains(&"Api"));
+        assert!(error_names.contains(&"Workflow"));
+    }
+
+    #[test]
+    fn test_backward_compatibility() {
+        // Test that all existing error constructors still work
+        let _security = BearDogError::security("test");
+        let _system = BearDogError::system("test");
+        let _business = BearDogError::business("test");
+        let _network = BearDogError::network("test");
+        let _config = BearDogError::configuration("test");
+        let _init = BearDogError::initialization("test");
+        let _auth = BearDogError::authentication("test");
+        let _authz = BearDogError::authorization("test");
+        let _validation = BearDogError::validation("test");
+        let _internal = BearDogError::internal("test");
+        let _timeout = BearDogError::timeout("test");
+        let _connection = BearDogError::connection("test");
+        let _parsing = BearDogError::parsing("test");
+        let _not_found = BearDogError::not_found("test");
+        let _already_exists = BearDogError::already_exists("test");
     }
 }

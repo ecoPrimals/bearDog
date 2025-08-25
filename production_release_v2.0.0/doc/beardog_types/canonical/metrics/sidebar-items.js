@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["CpuMetrics","DiskMetrics","LoadAverage","MemoryMetrics","MetricValue","NetworkMetrics","PerformanceMetrics","ProcessMetrics","ResourceUsageMetrics","SystemMetrics"],"type":["ResourceMetrics"]};

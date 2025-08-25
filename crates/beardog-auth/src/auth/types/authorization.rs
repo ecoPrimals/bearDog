@@ -1,14 +1,29 @@
-//! Core authorization types for cross-node authentication and permissions
-//!
-//! This module contains the fundamental types for cross-node authorization,
-//! including authorization grants, permissions, conditions, and operations.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Core authorization types for cross-node authentication and permissions
+///
+/// This module contains the fundamental types for cross-node authorization,
+/// including authorization grants, permissions, conditions, and operations.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// Configuration for cross-node authorization
-///
 /// Central configuration for the cross-node authorization system, defining
 /// policies for proof verification, genetic spawning, consensus requirements,
 /// and workflow automation.
@@ -29,8 +44,9 @@ pub struct CrossNodeAuthConfig {
     /// Enable automated workflow approval
     pub automated_approval_enabled: bool,
 }
+impl Default for CrossNodeAuthConfig {}
 
-impl Default for CrossNodeAuthConfig {
+
     fn default() -> Self {
         Self {
             proof_verification_enabled: true,
@@ -42,13 +58,9 @@ impl Default for CrossNodeAuthConfig {
             automated_approval_enabled: true,
         }
     }
-}
-
 /// Cross-node authorization structure
-///
 /// Represents an authorization grant from one node to another, including
 /// permissions, conditions, expiration, and cryptographic validation.
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossNodeAuthorization {
     /// Unique authorization ID
     pub id: String,
@@ -69,23 +81,21 @@ pub struct CrossNodeAuthorization {
     /// Cryptographic signature
     pub signature: String,
     /// Whether the authorization is currently active
-    pub is_active: bool,
-}
+    pub is_active: bool,}
+
 
 impl CrossNodeAuthorization {
-    /// Check if authorization is currently valid
+    /// Check if authorization is currently valid}
+
+
     pub fn is_valid(&self) -> bool {
         self.is_active && Utc::now() < self.expires_at
-    }
+    /// Check if authorization grants specific permission}
 
-    /// Check if authorization grants specific permission
+
     pub fn has_permission(&self, permission: &ResourcePermission) -> bool {
         self.permissions.iter().any(|p| p.implies(permission))
-    }
-}
-
 /// Resource permission levels
-///
 /// Defines the different types of permissions that can be granted
 /// for accessing resources across nodes.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -119,8 +129,8 @@ pub enum ResourcePermission {
     /// Permission to participate in consensus
     Consensus,
     /// Permission to perform compliance operations
-    Compliance,
-}
+    Compliance,}
+
 
 impl ResourcePermission {
     /// Check if permission implies another permission
@@ -131,10 +141,9 @@ impl ResourcePermission {
             (ResourcePermission::Delete, ResourcePermission::Write) => true,
             (ResourcePermission::Spawn, ResourcePermission::Create) => true,
             (a, b) => a == b,
-        }
-    }
+    /// Get the security level of the permission (higher = more sensitive)}
 
-    /// Get the security level of the permission (higher = more sensitive)
+
     pub fn security_level(&self) -> u8 {
         match self {
             ResourcePermission::Read => 1,
@@ -152,15 +161,11 @@ impl ResourcePermission {
             ResourcePermission::Spawn => 13,
             ResourcePermission::Delete => 14,
             ResourcePermission::Admin => 15,
-        }
-    }
-}
-
 /// Access condition modifiers
-///
 /// Defines conditions that must be met for an authorization to be valid,
-/// such as time windows, IP restrictions, and usage limits.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// such as time windows, IP restrictions, and usage limits.}
+
+
 pub enum AccessCondition {
     /// Time-based access window
     TimeWindow {
@@ -181,21 +186,15 @@ pub enum AccessCondition {
         max_requests: u32,
         /// Time window in seconds
         window_seconds: u32,
-    },
     /// Require consensus from other nodes
     RequireConsensus {
         /// Required consensus threshold (0.0 to 1.0)
         threshold: f64,
         /// List of nodes that must participate
         nodes: Vec<String>,
-    },
-}
-
 /// Authentication method types
-///
 /// Defines the different methods that can be used for authentication
 /// in cross-node communications.
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AuthMethod {
     /// Digital signature authentication
     Signature,
@@ -205,13 +204,11 @@ pub enum AuthMethod {
     BiometricHash,
     /// Mutual TLS authentication
     MutualTls,
-}
-
 /// Cross-node operation descriptor
-///
 /// Describes a specific operation being performed across nodes,
-/// including the operation type, target resource, and parameters.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// including the operation type, target resource, and parameters.}
+
+
 pub struct CrossNodeOperation {
     /// Type of operation being performed
     pub operation_type: OperationType,
@@ -221,37 +218,23 @@ pub struct CrossNodeOperation {
     pub parameters: HashMap<String, String>,
     /// Signature of the requester
     pub requester_signature: String,
-}
-
 /// Operation types for cross-node operations
-///
 /// Defines the different types of operations that can be performed
 /// across nodes in the BearDog network.
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OperationType {
     /// Read operation
-    Read,
     /// Write operation
-    Write,
     /// Delete operation
-    Delete,
     /// Execute operation
-    Execute,
     /// Backup operation
-    Backup,
     /// Restore operation
-    Restore,
     /// Spawn operation
-    Spawn,
     /// Consensus operation
-    Consensus,
-}
-
 /// Authorization proof structure
-///
 /// Cryptographic proof that an authorization is valid and can be used
-/// for a specific operation.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// for a specific operation.}
+
+
 pub struct AuthorizationProof {
     /// ID of the authorization being proven
     pub authorization_id: String,
@@ -261,8 +244,6 @@ pub struct AuthorizationProof {
     pub timestamp: DateTime<Utc>,
     /// Cryptographic signature of the proof
     pub proof_signature: String,
-}
-
 /// Consensus result for multi-party decisions
 #[derive(Debug, Clone)]
 pub struct ConsensusResult {
@@ -271,9 +252,7 @@ pub struct ConsensusResult {
     /// Individual votes from participating nodes
     pub votes: HashMap<String, bool>,
     /// Minimum threshold required for consensus
-    pub consensus_threshold: f64,
     /// Final calculated consensus score
     pub final_score: f64,
     /// List of nodes that participated in the consensus
     pub participating_nodes: Vec<String>,
-}

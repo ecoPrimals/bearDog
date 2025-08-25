@@ -1,208 +1,150 @@
-//! # BearDog HSM Integration Module
-//!
-//! This module provides Hardware Security Module (HSM) integration with support for:
-//! - Smartphone HSMs (iOS Secure Enclave, Android StrongBox)
-//! - Software HSMs (Rust-based with memory protection)
-//! - Hardware HSMs (PKCS#11 compatible)
-//! - Hybrid HSMs (Multi-tier orchestration)
-//!
-//! ## Design Philosophy
-//!
-//! The HSM system is designed with a multi-tier approach where different HSM types
-//! are used based on security requirements, availability, and user interaction needs.
-//!
-//! ## Architecture
-//!
-//! ```
-//! ┌─────────────────┐
-//! │   HSM Manager   │  ← Intelligent tier selection
-//! └─────────────────┘
-//!          │
-//!    ┌─────┴─────┐
-//!    │           │
-//! ┌──▼──┐    ┌──▼──┐
-//! │ T1  │    │ T2  │    T1: Smartphone HSM (Always available)
-//! │ 📱  │    │ 💻  │    T2: Software HSM (Scalable)
-//! └─────┘    └─────┘    T3: Hardware HSM (Maximum security)
-//!    │           │      T4: Hybrid HSM (Best of all worlds)
-//! ┌──▼──┐    ┌──▼──┐
-//! │ T3  │    │ T4  │
-//! │ 🔒  │    │ 🔄  │
-//! └─────┘    └─────┘
-//! ```
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use async_trait::async_trait;
+
+/// # BearDog HSM Integration Module
+///
+/// This module provides Hardware Security Module (HSM) integration with support for:
+/// - Smartphone HSMs (iOS Secure Enclave, Android StrongBox)
+/// - Software HSMs (Rust-based with memory protection)
+/// - Hardware HSMs (PKCS#11 compatible)
+/// - Hybrid HSMs (Multi-tier orchestration)
+/// ## Design Philosophy
+/// The HSM system is designed with a multi-tier approach where different HSM types
+/// are used based on security requirements, availability, and user interaction needs.
+/// ## Architecture
+/// ```
+/// ┌─────────────────┐
+/// │   HSM Manager   │  ← Intelligent tier selection
+/// └─────────────────┘
+///          │
+///    ┌─────┴─────┐
+///    │           │
+/// ┌──▼──┐    ┌──▼──┐
+/// │ T1  │    │ T2  │    T1: Smartphone HSM (Always available)
+/// │ 📱  │    │ 💻  │    T2: Software HSM (Scalable)
+/// └─────┘    └─────┘    T3: Hardware HSM (Maximum security)
+///    │           │      T4: Hybrid HSM (Best of all worlds)
+/// │ T3  │    │ T4  │
+/// │ 🔒  │    │ 🔄  │
+/// └─────┘    └─────┘
+
+// MODERNIZED: Using canonical types instead of duplicates
 use beardog_errors::{BearDogError, BearDogResult};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-pub mod types;
-pub mod manager;
-pub mod android_strongbox;
-pub mod ios_secure_enclave;
-pub mod software_hsm;
-pub mod safe_ffi;
-pub mod mobile_setup;
-pub mod key_manager;
-pub mod performance;
-pub mod mobile_ephemeral_integration; // NEW: Core BearDog capability integration
-
-// Core HSM traits and types (imports already declared above)
-
-// Import the successfully integrated types from beardog-core
-pub use beardog_core::{
-    KeyType, HsmTier, HsmHealthStatus, HsmCapabilities, HsmKey,
-    ComponentStatus, CoreState, HealthStatus, HealthCheck, SystemMetrics
+// CANONICAL IMPORTS - Single source of truth
+pub use beardog_types::canonical::hsm::{
+    HsmCapabilities, HsmConfig, HsmKey, HsmProviderType as HsmType, 
+    KeyMetadata, HsmTier, HsmHealth, HsmHealthStatus
+};
+pub use beardog_types::canonical::crypto::{KeyType, KeyUsage};
+pub use beardog_types::canonical::configuration::{
+    ConnectionConfig, PerformanceConfig
 };
 
-// Re-export core BearDog ephemeral capability
-pub use mobile_ephemeral_integration::{
-    MobileEphemeralKeyGenerator, 
-    EphemeralMobileKey,
-    LiveInputData,
-    MobileEphemeralConfig,
-    demonstrate_core_beardog_capability,
-};
-
-// Define core HSM error type that modules expect
-#[derive(Debug, thiserror::Error)]
-pub enum HsmError {
-    #[error("HSM operation failed: {message}")]
-    OperationFailed { message: String },
-    #[error("HSM not available: {reason}")]
-    NotAvailable { reason: String },
-    #[error("Key not found: {key_id}")]
-    KeyNotFound { key_id: String },
-    #[error("Invalid key type: {key_type}")]
-    InvalidKeyType { key_type: String },
-}
-
-/// Core synchronous HSM operations for performance-critical paths
-pub trait HsmProviderSync: Send + Sync {
-    fn generate_key_sync(&self, key_id: &str, key_type: &str) -> Result<types::HsmKey, HsmError>;
-    fn sign_data_sync(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, HsmError>;
-    fn verify_signature_sync(&self, key_id: &str, data: &[u8], signature: &[u8]) -> Result<bool, HsmError>;
-    fn get_capabilities_sync(&self) -> Result<types::HsmCapabilities, HsmError>;
-    fn health_check_sync(&self) -> Result<types::HsmHealthStatus, HsmError>;
-}
+// This eliminates duplicate trait definitions and ensures single source of truth
 
 // Re-export key types
 pub use types::*;
+// HsmProvider trait moved to beardog-traits::canonical - use that instead
+pub use beardog_traits::canonical::HsmProvider;
 
-/// Universal async HSM interface for all HSM types - PRIMARY INTERFACE
-#[async_trait]
-pub trait HsmProvider: Send + Sync {
-    /// Initialize the HSM connection
-    async fn initialize(&self, config: HsmConfig) -> BearDogResult<()>;
-
-    /// Generate a new key in the HSM
-    async fn generate_key(&self, request: GenerateKeyRequest) -> BearDogResult<HsmKey>;
-
-    /// Import an existing key into the HSM
-    async fn import_key(&self, key_data: &[u8], metadata: KeyMetadata) -> BearDogResult<HsmKey>;
-
-    /// Encrypt data using HSM key
-    async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> BearDogResult<Vec<u8>>;
-
-    /// Decrypt data using HSM key
-    async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> BearDogResult<Vec<u8>>;
-
-    /// Sign data using HSM key
-    async fn sign(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>>;
-
-    /// Verify signature using HSM key
-    async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> BearDogResult<bool>;
-
-    /// Derive key using HSM-based KDF
-    async fn derive_key(
-        &self,
-        master_key_id: &str,
-        derivation_data: &[u8],
-    ) -> BearDogResult<HsmKey>;
-
-    /// Get HSM information and capabilities
-    async fn get_info(&self) -> BearDogResult<HsmInfo>;
-
-    /// List keys stored in HSM
-    async fn list_keys(&self) -> BearDogResult<Vec<HsmKeyInfo>>;
-
-    /// Delete key from HSM
-    async fn delete_key(&self, key_id: &str) -> BearDogResult<()>;
-
-    /// Backup HSM state (if supported)
-    async fn backup(&self) -> BearDogResult<Option<Vec<u8>>>;
-
-    /// Restore HSM state (if supported)
-    async fn restore(&self, backup_data: &[u8]) -> BearDogResult<()>;
-
-    /// Get HSM health status
-    async fn health_check(&self) -> BearDogResult<HsmHealthStatus>;
+/// **CANONICAL** Key generation request
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GenerateKeyRequest {
+    pub key_size: Option<u32>,
+    pub usage_policy: KeyUsagePolicy,
+    pub key_type: KeyType,
 }
+
+/// **CANONICAL** Key usage policy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct KeyUsagePolicy {
+    pub can_encrypt: bool,
+    pub can_decrypt: bool,
+    pub can_sign: bool,
+    pub can_verify: bool,
+    pub exportable: bool,
+}
+
+impl Default for KeyUsagePolicy {
+    fn default() -> Self {
+        Self {
+            can_encrypt: true,
+            can_decrypt: true,
+            can_sign: true,
+            can_verify: true,
+            exportable: false,
+        }
+    }
+}
+
 
 /// HSM capability detection and management
-#[async_trait]
 pub trait HsmCapabilityDetector: Send + Sync {
-    /// Detect available HSM capabilities on the current system
-    async fn detect_capabilities(&self) -> BearDogResult<Vec<HsmCapability>>;
+    /// Detect available HSM capabilities on the current system}
 
+
+    async fn detect_capabilities(&self) -> BearDogResult<Vec<HsmCapability>>;
     /// Check if a specific HSM type is available
     async fn is_hsm_available(&self, hsm_type: &HsmTier) -> BearDogResult<bool>;
-
     /// Get recommended HSM tier for given requirements
     async fn recommend_hsm_tier(
-        &self,
         requirements: &SecurityRequirements,
     ) -> BearDogResult<HsmTier>;
-}
-
 /// HSM health monitoring and management
-#[async_trait]
 pub trait HsmHealthMonitor: Send + Sync {
-    /// Start health monitoring for HSM providers
-    async fn start_monitoring(&self, providers: Vec<Arc<dyn HsmProvider>>) -> BearDogResult<()>;
+    /// Start health monitoring for HSM providers}
 
+
+    async fn start_monitoring(&self, providers: Vec<Arc<dyn HsmProvider>>) -> BearDogResult<()>;
     /// Get current health status for all monitored HSMs
     async fn get_health_status(&self) -> BearDogResult<HashMap<String, HsmHealthStatus>>;
-
     /// Filter providers to only return healthy ones
     async fn filter_healthy_providers(
-        &self,
         providers: Vec<Arc<dyn HsmProvider>>,
     ) -> BearDogResult<Vec<Arc<dyn HsmProvider>>>;
-}
-
 /// HSM failover and retry logic
-#[async_trait]
 pub trait HsmFailoverManager: Send + Sync {
-    /// Handle HSM provider failure
+    /// Handle HSM provider failure}
+
+
     async fn handle_provider_failure(
-        &self,
         provider: &Arc<dyn HsmProvider>,
         error: &BearDogError,
     ) -> BearDogResult<()>;
-
     /// Get failover provider for failed primary
     async fn get_failover_provider(
-        &self,
         failed_provider: &Arc<dyn HsmProvider>,
-        requirements: &SecurityRequirements,
     ) -> BearDogResult<Arc<dyn HsmProvider>>;
-
     /// Perform operation with automatic failover
     async fn perform_with_failover<T, F>(
-        &self,
         operation: F,
-        requirements: &SecurityRequirements,
     ) -> BearDogResult<T>
     where
         F: Fn(Arc<dyn HsmProvider>) -> Result<T, BearDogError> + Send + Sync + 'static,
         T: Send + 'static;
-}
-
 /// Security requirements for HSM operations
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]};
+
+
 pub struct SecurityRequirements {
     /// The required security level for the operation
     pub security_level: SecurityLevel,
@@ -216,10 +158,7 @@ pub struct SecurityRequirements {
     pub compliance_requirements: Vec<ComplianceStandard>,
     /// Performance requirements for this operation
     pub performance_requirements: PerformanceRequirements,
-}
-
 /// Performance requirements for HSM operations
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceRequirements {
     /// Maximum acceptable latency in milliseconds
     pub max_latency_ms: Option<u64>,
@@ -227,23 +166,27 @@ pub struct PerformanceRequirements {
     pub min_throughput_ops_per_sec: Option<u64>,
     /// Whether to optimize for cost over performance
     pub cost_optimization: bool,
-}
-
 /// Security levels for HSM operations
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum SecurityLevel {
     /// Basic security - software-based acceptable
     Basic,
+    /// Software implementation (lowest security)
     /// Medium security - hardware-backed preferred
     Medium,
+    /// Trusted Execution Environment
+    Tee,
     /// High security - hardware-backed required
     High,
+    /// StrongBox security level
+    StrongBox,
+    /// Critical security level
+    Critical,
     /// Maximum security - certified hardware required
     Maximum,
-}
+/// Compliance standards}
 
-/// Compliance standards
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum ComplianceStandard {
     /// General Data Protection Regulation (European Union)
     Gdpr,
@@ -261,10 +204,9 @@ pub enum ComplianceStandard {
     Fips140Level3,
     /// Common Criteria evaluation standard
     CommonCriteria,
-}
+/// Operation context for HSM operations}
 
-/// Operation context for HSM operations
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct OperationContext {
     /// The user ID associated with this operation
     pub user_id: Option<String>,
@@ -272,18 +214,12 @@ pub struct OperationContext {
     pub session_id: Option<String>,
     /// The type of operation being performed
     pub operation_type: OperationType,
-    /// Whether user interaction is required for this operation
-    pub user_interaction_required: bool,
     /// When this operation was initiated
     pub timestamp: DateTime<Utc>,
-}
-
 /// Types of HSM operations
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OperationType {
     /// Generate a new cryptographic key
     KeyGeneration,
-    /// Import an existing key into the HSM
     KeyImport,
     /// Encrypt data using a key
     Encryption,
@@ -298,11 +234,13 @@ pub enum OperationType {
     /// Backup HSM keys or state
     KeyBackup,
     /// Restore HSM keys or state from backup
-    KeyRestoration,
-}
+    KeyRestoration,}
+
 
 impl SecurityRequirements {
-    /// Create new SecurityRequirements with specified security level
+    /// Create new SecurityRequirements with specified security level}
+
+
     pub fn new(security_level: SecurityLevel) -> Self {
         Self {
             security_level,
@@ -316,44 +254,26 @@ impl SecurityRequirements {
             performance_requirements: PerformanceRequirements::default(),
         }
     }
-}
+impl Default for SecurityRequirements {}
 
-impl Default for SecurityRequirements {
+
     fn default() -> Self {
-        Self {
             security_level: SecurityLevel::Medium,
-            user_interaction_required: false,
-            attestation_required: false,
             hardware_backed_required: false,
-            compliance_requirements: vec![],
-            performance_requirements: PerformanceRequirements::default(),
-        }
-    }
-}
-
 impl Default for PerformanceRequirements {
-    fn default() -> Self {
-        Self {
             max_latency_ms: Some(1000),           // 1 second default
             min_throughput_ops_per_sec: Some(10), // 10 ops/sec default
             cost_optimization: false,
-        }
-    }
-}
-
 // Re-export HSM implementations
 pub use android_strongbox::AndroidStrongBoxHsm;
-pub use software_hsm::RustSoftwareHsm;
 pub use manager::HsmManager;
+pub use software_hsm::RustSoftwareHsm;}
 
-impl Default for OperationContext {
-    fn default() -> Self {
-        Self {
+
+impl Default for OperationContext {};
+
+
             user_id: None,
             session_id: None,
             operation_type: OperationType::KeyGeneration,
-            user_interaction_required: false,
             timestamp: Utc::now(),
-        }
-    }
-}

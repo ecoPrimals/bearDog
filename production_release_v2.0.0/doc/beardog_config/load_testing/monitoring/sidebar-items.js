@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AlertOperator","AlertSeverity","MetricsStorageType","NotificationChannelType","ReportType","ScheduleType"],"struct":["AlertCondition","AlertRule","AlertingConfig","LoadTestMonitoringConfig","MetricsCollection","MetricsStorage","NotificationChannel","ReportSchedule","ReportingConfig"]};

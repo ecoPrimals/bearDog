@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["lock","mpsc","oneshot","semaphore","task","watch"]};

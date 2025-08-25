@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DisconnectReason","NetworkThreatLevel","OptimizationType","PerformanceImpact","SecurityEvolution","SecurityLevel","ThreatLevel"],"struct":["NetworkEvidence","SecurityMetrics"]};

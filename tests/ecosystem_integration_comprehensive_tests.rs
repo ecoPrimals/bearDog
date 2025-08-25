@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Comprehensive Ecosystem Integration Tests
 //!
 //! Tests for BearDog's ecosystem integration following the standardization guide
@@ -17,7 +34,10 @@ use uuid::Uuid;
 #[tokio::test]
 async fn test_ecosystem_provider_creation() {
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await.unwrap());
+    let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
 
     let provider = BearDogEcosystemFactory::create_provider(core);
 
@@ -40,14 +60,20 @@ async fn test_ecosystem_provider_creation() {
 #[tokio::test]
 async fn test_songbird_registration() {
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await.unwrap());
+    let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     // Test Songbird registration
     let registration_result = provider.register_with_songbird().await;
     assert!(registration_result.is_ok());
 
-    let registration_id = registration_result.unwrap();
+    let registration_id = registration_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(!registration_id.is_empty());
 
     // Should be a valid UUID format
@@ -57,7 +83,10 @@ async fn test_songbird_registration() {
 #[tokio::test]
 async fn test_authentication_request_handling() {
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await.unwrap());
+    let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let request = EcosystemRequest {
@@ -82,7 +111,10 @@ async fn test_authentication_request_handling() {
     let response = provider
         .handle_ecosystem_request(request.clone())
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Verify response structure
     assert_eq!(response.request_id, request.request_id);
@@ -90,7 +122,10 @@ async fn test_authentication_request_handling() {
     assert!(response.payload.is_object());
 
     // Verify authentication response payload
-    let payload = response.payload.as_object().unwrap();
+    let payload = response.payload.as_object().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(payload.contains_key("authenticated"));
     assert!(payload.contains_key("user_id"));
     assert!(payload.contains_key("permissions"));
@@ -99,7 +134,10 @@ async fn test_authentication_request_handling() {
 #[tokio::test]
 async fn test_encryption_request_handling() {
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await.unwrap());
+    let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let request = EcosystemRequest {
@@ -124,14 +162,20 @@ async fn test_encryption_request_handling() {
     let response = provider
         .handle_ecosystem_request(request.clone())
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Verify response structure
     assert_eq!(response.request_id, request.request_id);
     assert!(matches!(response.status, ResponseStatus::Success));
 
     // Verify encryption response payload
-    let payload = response.payload.as_object().unwrap();
+    let payload = response.payload.as_object().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(payload.contains_key("encrypted"));
     assert!(payload.contains_key("algorithm"));
     assert!(payload.contains_key("data"));
@@ -140,7 +184,10 @@ async fn test_encryption_request_handling() {
 #[tokio::test]
 async fn test_compliance_request_handling() {
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await.unwrap());
+    let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let request = EcosystemRequest {
@@ -165,14 +212,20 @@ async fn test_compliance_request_handling() {
     let response = provider
         .handle_ecosystem_request(request.clone())
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Verify response structure
     assert_eq!(response.request_id, request.request_id);
     assert!(matches!(response.status, ResponseStatus::Success));
 
     // Verify compliance response payload
-    let payload = response.payload.as_object().unwrap();
+    let payload = response.payload.as_object().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(payload.contains_key("compliant"));
     assert!(payload.contains_key("frameworks"));
     assert!(payload.contains_key("checks_passed"));
@@ -182,7 +235,10 @@ async fn test_compliance_request_handling() {
 #[tokio::test]
 async fn test_unsupported_operation_handling() {
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await.unwrap());
+    let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let request = EcosystemRequest {
@@ -204,7 +260,10 @@ async fn test_unsupported_operation_handling() {
     let response = provider
         .handle_ecosystem_request(request.clone())
         .await
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
 
     // Verify error response
     assert_eq!(response.request_id, request.request_id);
@@ -219,11 +278,17 @@ async fn test_unsupported_operation_handling() {
 #[tokio::test]
 async fn test_health_status_reporting() {
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await.unwrap());
+    let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     // Test health status retrieval
-    let health_status = provider.get_health_status().await.unwrap();
+    let health_status = provider.get_health_status().await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(!health_status.version.is_empty());
     assert!(health_status.uptime_seconds > 0);
     assert!(!health_status.capabilities_online.is_empty());
@@ -236,7 +301,10 @@ async fn test_health_status_reporting() {
 #[tokio::test]
 async fn test_capability_updates() {
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await.unwrap());
+    let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let capabilities = beardog::ecosystem_integration::ServiceCapabilities {
@@ -252,7 +320,10 @@ async fn test_capability_updates() {
 #[tokio::test]
 async fn test_ecosystem_deregistration() {
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await.unwrap());
+    let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     // Register first
@@ -277,7 +348,10 @@ async fn test_primal_type_conversion() {
 #[tokio::test]
 async fn test_security_context_validation() {
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await.unwrap());
+    let core = Arc::new(BearDogCore::new(config).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     // Test request with different security levels
@@ -305,7 +379,10 @@ async fn test_security_context_validation() {
             timestamp: chrono::Utc::now(),
         };
 
-        let response = provider.handle_ecosystem_request(request).await.unwrap();
+        let response = provider.handle_ecosystem_request(request).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         assert!(matches!(response.status, ResponseStatus::Success));
     }
 }

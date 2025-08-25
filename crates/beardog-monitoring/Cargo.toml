@@ -8,7 +8,8 @@ authors.workspace = true
 
 [dependencies]
 beardog-errors = { workspace = true }
-beardog-config = { workspace = true }
+# beardog-config removed - use beardog-types::config::complete_unified
+beardog-types = { workspace = true }
 beardog-utils = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }

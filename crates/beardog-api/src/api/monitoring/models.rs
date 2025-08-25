@@ -1,10 +1,26 @@
-//! Monitoring API Models
-//!
-//! Response types for monitoring API endpoints
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Monitoring API Models
+///
+/// Response types for monitoring API endpoints
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 /// System health response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemHealthResponse {
@@ -21,22 +37,16 @@ pub struct SystemHealthResponse {
     /// Performance overview
     pub performance: PerformanceOverview,
 }
-
 /// Individual component status
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentStatus {
     /// Component name
     pub name: String,
     /// Component status
-    pub status: String,
     /// Response time in milliseconds
     pub response_time_ms: u64,
     /// Last check timestamp
     pub last_check: String,
-}
-
 /// Performance overview
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceOverview {
     /// CPU usage percentage
     pub cpu_usage_percent: f64,
@@ -48,23 +58,17 @@ pub struct PerformanceOverview {
     pub active_connections: u32,
     /// Request rate (per minute)
     pub request_rate: f64,
-}
-
 /// Metrics response structure for system performance data
 #[derive(Debug, Serialize)]
 pub struct MetricsResponse {
     /// Timestamp of the metrics collection
-    pub timestamp: String,
     /// Performance metrics
     pub performance: beardog_monitoring::PerformanceMetrics,
     /// Resource usage metrics
     pub resources: beardog_monitoring::ResourceMetrics,
     /// Custom metrics
     pub custom: HashMap<String, f64>,
-}
-
 /// Alert information structure
-#[derive(Debug, Serialize)]
 pub struct Alert {
     /// Unique alert identifier
     pub id: String,
@@ -77,49 +81,34 @@ pub struct Alert {
     /// Timestamp when alert was created
     pub created_at: String,
     /// Current alert status
-    pub status: String,
     /// Source component that triggered the alert
     pub source: String,
     /// Alert tags for categorization
     pub tags: Vec<String>,
-}
-
 /// Alert rule configuration
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AlertRule {
     /// Rule identifier
-    pub id: String,
     /// Rule name
-    pub name: String,
     /// Rule condition expression
     pub condition: String,
     /// Alert severity when triggered
-    pub severity: String,
     /// Rule description
-    pub description: String,
     /// Whether the rule is enabled
     pub enabled: bool,
     /// Notification channels
     pub notifications: Vec<String>,
-}
-
 /// Log entry structure
-#[derive(Debug, Serialize)]
 pub struct LogEntry {
     /// Log entry timestamp
-    pub timestamp: String,
     /// Log level
     pub level: String,
     /// Source component
-    pub source: String,
     /// Log message
     pub message: String,
     /// Additional structured data
     pub fields: HashMap<String, String>,
-}
-
 /// Trace information structure
-#[derive(Debug, Serialize)]
 pub struct TraceInfo {
     /// Trace identifier
     pub trace_id: String,
@@ -128,11 +117,7 @@ pub struct TraceInfo {
     /// Trace duration in microseconds
     pub duration_us: u64,
     /// Trace status
-    pub status: String,
-}
-
 /// Individual span information
-#[derive(Debug, Serialize)]
 pub struct SpanInfo {
     /// Span identifier
     pub span_id: String,
@@ -143,43 +128,28 @@ pub struct SpanInfo {
     /// Span start time
     pub start_time: String,
     /// Span duration in microseconds
-    pub duration_us: u64,
     /// Span tags
     pub tags: HashMap<String, String>,
-}
-
 /// Dashboard configuration
-#[derive(Debug, Serialize)]
 pub struct Dashboard {
     /// Dashboard identifier
-    pub id: String,
     /// Dashboard title
-    pub title: String,
     /// Dashboard description
-    pub description: String,
     /// Dashboard widgets configuration
     pub widgets: Vec<DashboardWidget>,
     /// Dashboard refresh interval in seconds
     pub refresh_interval: u32,
-}
-
 /// Dashboard widget configuration
-#[derive(Debug, Serialize)]
 pub struct DashboardWidget {
     /// Widget identifier
-    pub id: String,
     /// Widget type
     pub widget_type: String,
     /// Widget title
-    pub title: String,
     /// Widget configuration
     pub config: HashMap<String, serde_json::Value>,
     /// Widget position
     pub position: WidgetPosition,
-}
-
 /// Widget position on dashboard
-#[derive(Debug, Serialize)]
 pub struct WidgetPosition {
     /// X coordinate
     pub x: u32,
@@ -189,31 +159,21 @@ pub struct WidgetPosition {
     pub width: u32,
     /// Widget height
     pub height: u32,
-}
-
 /// Report configuration and metadata
-#[derive(Debug, Serialize)]
 pub struct Report {
     /// Report identifier
-    pub id: String,
     /// Report title
-    pub title: String,
     /// Report type
     pub report_type: String,
     /// Report status
-    pub status: String,
     /// Report creation timestamp
-    pub created_at: String,
     /// Report completion timestamp
     pub completed_at: Option<String>,
     /// Report file URL (if available)
     pub file_url: Option<String>,
     /// Report parameters
     pub parameters: HashMap<String, serde_json::Value>,
-}
-
 // Request models for various operations
-
 /// Request structure for log search
 #[derive(Debug, Deserialize)]
 pub struct LogSearchRequest {
@@ -229,21 +189,9 @@ pub struct LogSearchRequest {
     pub levels: Option<Vec<String>>,
     /// Components to include
     pub sources: Option<Vec<String>>,
-}
-
 /// Request structure for report generation
-#[derive(Debug, Deserialize)]
 pub struct GenerateReportRequest {
-    /// Report type
-    pub report_type: String,
-    /// Report title
-    pub title: String,
-    /// Report parameters
-    pub parameters: HashMap<String, serde_json::Value>,
     /// Report format (pdf, html, json, etc.)
     pub format: String,
     /// Start time for report data
-    pub start_time: Option<String>,
     /// End time for report data
-    pub end_time: Option<String>,
-}

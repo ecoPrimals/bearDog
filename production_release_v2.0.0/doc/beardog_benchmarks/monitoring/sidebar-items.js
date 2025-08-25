@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["alerting","dashboards","integration","metrics","observability"],"struct":["AlertingConfig","DashboardConfig","IntegrationConfig","MetricsConfig","ObservabilityConfig","ProductionMonitoringConfig"]};

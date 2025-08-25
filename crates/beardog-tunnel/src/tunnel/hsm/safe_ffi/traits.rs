@@ -1,23 +1,28 @@
-//! Safe Hardware Provider Traits
-//!
-//! Defines common traits for safe hardware security providers
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use async_trait::async_trait;
-use beardog_errors::BearDogResult;
-use crate::tunnel::hsm::types::{KeyType, HsmKey};
 
-/// Safe hardware security provider trait
-#[async_trait]
-pub trait SafeHardwareProvider: Send + Sync {
-    /// Generate a key safely
-    async fn generate_key(&self, key_id: &str, key_type: &KeyType) -> BearDogResult<HsmKey>;
+/// Safe Hardware Provider Traits - Canonical System
+///
+/// This module provides the canonical HSM provider traits for safe hardware operations.
+/// All HSM providers should implement the unified HsmProvider trait for consistency.
 
-    /// Sign data safely
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>>;
+// Re-export the canonical HsmProvider trait
+pub use beardog_traits::canonical::HsmProvider as SafeHardwareProvider;
 
-    /// Verify signature safely
-    async fn verify_signature(&self, key_id: &str, data: &[u8], signature: &[u8]) -> BearDogResult<bool>;
-
-    /// Check if this provider is hardware-backed
-    fn is_hardware_backed(&self) -> bool;
-} 
+// Re-export necessary types for backward compatibility
+pub use beardog_types::canonical::hsm::{HsmKey, KeyType};
+pub use beardog_errors::BearDogResult;

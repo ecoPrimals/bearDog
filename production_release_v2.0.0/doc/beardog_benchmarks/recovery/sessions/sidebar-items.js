@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["ActiveRecoveryMethod","CollectedShard","MixedRecoverySession","RecoveryProgress","RecoverySession"]};

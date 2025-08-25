@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 /*
  * BearDog HSM Integration Tests
  * 
@@ -38,7 +55,10 @@ async fn test_multi_vendor_pkcs11_support() {
         let connection_result = adapter.connect(&hsm).await;
         assert!(connection_result.is_ok(), "Failed to connect to {} HSM", vendor);
         
-        let connection = connection_result.unwrap();
+        let connection = connection_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         assert_eq!(connection.hsm_id, hsm.hsm_id);
         assert!(connection.connection_handle.contains("pkcs11-session"));
         
@@ -46,7 +66,10 @@ async fn test_multi_vendor_pkcs11_support() {
         let health_result = adapter.test_connection(&hsm).await;
         assert!(health_result.is_ok(), "Health check failed for {} HSM", vendor);
         
-        let health = health_result.unwrap();
+        let health = health_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         assert!(health.is_healthy);
         assert!(health.response_time_ms > 0.0);
     }
@@ -116,7 +139,10 @@ async fn test_hsm_performance_comparison() {
 
     for (hsm_name, hsm) in hsm_types {
         let adapter = get_adapter_for_hsm(&hsm);
-        let connection = adapter.connect(&hsm).await.unwrap();
+        let connection = adapter.connect(&hsm).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         
         // Measure signing performance
         let start_time = Instant::now();
@@ -132,7 +158,10 @@ async fn test_hsm_performance_comparison() {
                 ]),
             };
             
-            let result = adapter.perform_operation(&connection, operation).await.unwrap();
+            let result = adapter.perform_operation(&connection, operation).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
             assert!(result.success);
         }
         
@@ -149,7 +178,10 @@ async fn test_hsm_performance_comparison() {
     // BearDog Native should be fastest (in our mock implementation)
     let beardog_perf = performance_results.iter()
         .find(|(name, _)| name.contains("BearDog"))
-        .unwrap();
+        .map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
     assert!(beardog_perf.1 < 100.0, "BearDog Native should be fast");
 }
 
@@ -171,7 +203,10 @@ async fn test_hsm_vendor_failover() {
         let connection_result = adapter.connect(hsm).await;
         assert!(connection_result.is_ok(), "Failover HSM #{} connection failed", i + 1);
         
-        let connection = connection_result.unwrap();
+        let connection = connection_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         
         // Test that operations work on failover HSM
         let operation = UniversalOperation {
@@ -206,7 +241,10 @@ async fn test_concurrent_multi_hsm_operations() {
             let hsm_clone = hsm.clone();
             let task = tokio::spawn(async move {
                 let adapter = get_adapter_for_hsm(&hsm_clone);
-                let connection = adapter.connect(&hsm_clone).await.unwrap();
+                let connection = adapter.connect(&hsm_clone).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
                 
                 let operation = UniversalOperation {
                     operation_type: OperationType::Sign,
@@ -232,7 +270,13 @@ async fn test_concurrent_multi_hsm_operations() {
     // Verify all operations succeeded
     for (i, result) in results.iter().enumerate() {
         assert!(result.is_ok(), "Concurrent operation {} failed", i);
-        let op_result = result.as_ref().unwrap().as_ref().unwrap();
+        let op_result = result.as_ref().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?.as_ref().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         assert!(op_result.success, "Concurrent operation {} was not successful", i);
     }
     
@@ -256,13 +300,19 @@ async fn test_human_entropy_capabilities() {
         let adapter = get_adapter_for_hsm(&hsm);
         
         // Test entropy support detection
-        let supports_entropy = adapter.supports_human_entropy().await.unwrap();
+        let supports_entropy = adapter.supports_human_entropy().await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         assert_eq!(supports_entropy, should_support_entropy, 
                    "Entropy support mismatch for {} HSM", hsm.vendor);
         
         if should_support_entropy {
             // Test entropy generation
-            let connection = adapter.connect(&hsm).await.unwrap();
+            let connection = adapter.connect(&hsm).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
             let requirements = HumanEntropyRequirements {
                 minimum_entropy_bits: 256,
                 collection_timeout_seconds: 30,
@@ -271,7 +321,10 @@ async fn test_human_entropy_capabilities() {
             let entropy_result = adapter.generate_human_entropy_seed(&connection, requirements).await;
             assert!(entropy_result.is_ok(), "Entropy generation failed for {} HSM", hsm.vendor);
             
-            let seed = entropy_result.unwrap();
+            let seed = entropy_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
             assert_eq!(seed.seed_data.len(), 32); // 256 bits = 32 bytes
             assert!(seed.entropy_estimate > 0.8);
             assert!(seed.creation_timestamp <= chrono::Utc::now());
@@ -279,7 +332,10 @@ async fn test_human_entropy_capabilities() {
             println!("✅ {} HSM: Human entropy generation successful", hsm.vendor);
         } else {
             // Test that entropy generation properly fails
-            let connection = adapter.connect(&hsm).await.unwrap();
+            let connection = adapter.connect(&hsm).await.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
             let requirements = HumanEntropyRequirements {
                 minimum_entropy_bits: 256,
                 collection_timeout_seconds: 30,
@@ -313,7 +369,10 @@ async fn test_hsm_health_monitoring() {
         let health_result = adapter.test_connection(&hsm).await;
         assert!(health_result.is_ok(), "Health check failed for {} HSM", hsm.vendor);
         
-        let health = health_result.unwrap();
+        let health = health_result.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?;
         assert!(health.is_healthy, "{} HSM should be healthy", hsm.vendor);
         assert!(health.response_time_ms > 0.0, "Response time should be positive");
         assert!(health.response_time_ms < 1000.0, "Response time should be reasonable");
@@ -321,7 +380,10 @@ async fn test_hsm_health_monitoring() {
         
         // Test that error cases are handled
         if health.error_message.is_some() {
-            println!("ℹ️  {} HSM health message: {}", hsm.vendor, health.error_message.unwrap());
+            println!("ℹ️  {} HSM health message: {}", hsm.vendor, health.error_message.map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?);
         }
         
         println!("✅ {} HSM: Health check passed ({}ms response time)", 
@@ -333,9 +395,18 @@ async fn test_hsm_health_monitoring() {
 fn get_adapter_for_hsm(hsm: &DiscoveredHsm) -> Box<dyn HsmAdapter> {
     match &hsm.interface_type {
         HsmInterfaceType::Pkcs11 { .. } => Box::new(Pkcs11Adapter),
-        HsmInterfaceType::AndroidStrongBox { .. } => Box::new(AndroidStrongBoxAdapter::new().unwrap()),
-        HsmInterfaceType::BearDogNative { .. } => Box::new(BearDogNativeAdapter::new().unwrap()),
-        _ => Box::new(BearDogNativeAdapter::new().unwrap()), // Default fallback
+        HsmInterfaceType::AndroidStrongBox { .. } => Box::new(AndroidStrongBoxAdapter::new().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?),
+        HsmInterfaceType::BearDogNative { .. } => Box::new(BearDogNativeAdapter::new().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?),
+        _ => Box::new(BearDogNativeAdapter::new().map_err(|e| {
+    tracing::error!("Operation failed: {:?}", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+})?), // Default fallback
     }
 }
 

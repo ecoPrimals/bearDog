@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["calculate_optimal_batch_size","calculate_optimal_concurrency","estimate_parallelism_benefit"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["WorkflowExecutionStatus"],"fn":["process_workflow_improved","process_workflows_batch_improved"],"struct":["BatchWorkflowResult","WorkflowMetrics","WorkflowProcessingResult"]};

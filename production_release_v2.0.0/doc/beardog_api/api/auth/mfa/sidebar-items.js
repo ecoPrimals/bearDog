@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["generate_backup_codes","get_backup_codes","get_mfa_status","setup_mfa","verify_mfa"]};

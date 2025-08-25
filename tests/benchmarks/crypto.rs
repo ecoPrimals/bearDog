@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Cryptographic Operations Benchmarking
 //!
 //! Benchmarks for encryption, signing, hashing, and other cryptographic operations.
@@ -68,7 +85,7 @@ async fn benchmark_encryption(suite: &PerformanceBenchmarkSuite, data_size: usiz
     let ops_per_second = successful_ops as f64 / total_time.as_secs_f64();
     let average_latency = latencies.iter().sum::<f64>() / latencies.len() as f64;
     
-    latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    latencies.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let p50_latency = latencies[latencies.len() / 2];
     let p95_latency = latencies[latencies.len() * 95 / 100];
     let p99_latency = latencies[latencies.len() * 99 / 100];
@@ -127,7 +144,7 @@ async fn benchmark_signing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
     let ops_per_second = successful_ops as f64 / total_time.as_secs_f64();
     let average_latency = latencies.iter().sum::<f64>() / latencies.len() as f64 / 1000.0; // Convert to ms
     
-    latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    latencies.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let p50_latency = latencies[latencies.len() / 2] / 1000.0;
     let p95_latency = latencies[latencies.len() * 95 / 100] / 1000.0;
     let p99_latency = latencies[latencies.len() * 99 / 100] / 1000.0;
@@ -185,7 +202,7 @@ async fn benchmark_hashing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
     let ops_per_second = successful_ops as f64 / total_time.as_secs_f64();
     let average_latency = latencies.iter().sum::<f64>() / latencies.len() as f64;
     
-    latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    latencies.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let p50_latency = latencies[latencies.len() / 2];
     let p95_latency = latencies[latencies.len() * 95 / 100];
     let p99_latency = latencies[latencies.len() * 99 / 100];

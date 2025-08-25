@@ -1,33 +1,46 @@
-//! Ecosystem RPC Integration - Dynamic Primal Discovery
-//!
-//! Rust RPC integration that enables sovereign participation in the
-//! ecoPrimals ecosystem while maintaining complete independence and human dignity.
-//!
-//! ## Core Principles
-//! - **Sovereignty First**: Primal remains fully functional standalone
-//! - **Dynamic Discovery**: Discover other primals through capabilities, not hardcoded names
-//! - **Capability-Based**: Discovery and integration based on what services can do
-//! - **Human-Centered**: All RPC operations serve individual human dignity
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Ecosystem RPC Integration - Dynamic Primal Discovery
+///
+/// Rust RPC integration that enables sovereign participation in the
+/// ecoPrimals ecosystem while maintaining complete independence and human dignity.
+/// ## Core Principles
+/// - **Sovereignty First**: Primal remains fully functional standalone
+/// - **Dynamic Discovery**: Discover other primals through capabilities, not hardcoded names
+/// - **Capability-Based**: Discovery and integration based on what services can do
+/// - **Human-Centered**: All RPC operations serve individual human dignity
 
 use super::AppState;
 use axum::{
     routing::{get, post},
     Router,
 };
-
 pub mod cross_primal_operations;
 pub mod ecosystem_collaboration;
 pub mod models;
 pub mod placeholder_handlers;
 pub mod primal_registration;
-
 // Re-export commonly used types
 pub use cross_primal_operations::*;
 pub use ecosystem_collaboration::*;
 pub use models::*;
 pub use placeholder_handlers::*;
 pub use primal_registration::*;
-
 /// Create the RPC router with all ecosystem integration endpoints
 pub fn create_rpc_router() -> Router<AppState> {
     Router::new()
@@ -44,10 +57,8 @@ pub fn create_rpc_router() -> Router<AppState> {
         )
         .route("/rpc/network-effects", get(get_network_effects))
         // Cross-Primal Operations
-        .route(
             "/rpc/operations/execute",
             post(execute_cross_primal_operation),
-        )
         .route("/rpc/resources/compute", post(request_compute_resources))
         .route("/rpc/resources/storage", post(request_storage_resources))
         .route("/rpc/operations/call", post(call_ecosystem_service))

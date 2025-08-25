@@ -1,15 +1,29 @@
-//! Individual Sovereignty API Models
-//!
-//! Data structures for empowering individuals through peer-to-peer
-//! resource sharing with explicit consent mechanisms.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Individual Sovereignty API Models
+///
+/// Data structures for empowering individuals through peer-to-peer
+/// resource sharing with explicit consent mechanisms.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 // ============================================================================
 // PEER-TO-PEER RESOURCE SHARING MODELS
-// ============================================================================
-
 /// Request to share resources with a friend
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceSharingRequest {
@@ -26,9 +40,7 @@ pub struct ResourceSharingRequest {
     /// Consent requirements
     pub consent_requirements: ConsentRequirements,
 }
-
 /// Types of resources that can be shared between friends
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ResourceType {
     Compute {
         cpu_cores: Option<u32>,
@@ -37,14 +49,9 @@ pub enum ResourceType {
     Storage {
         encrypted: bool,
         backup_only: bool,
-    },
     Network {
         bandwidth_mbps: Option<u32>,
-    },
-}
-
 /// Amount/limits for resource sharing
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceAmount {
     /// Maximum amount available
     pub maximum: u64,
@@ -52,10 +59,7 @@ pub struct ResourceAmount {
     pub current_usage: u64,
     /// Unit of measurement
     pub unit: String,
-}
-
 /// Sharing offer from a friend
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SharingOffer {
     /// Unique offer identifier
     pub offer_id: String,
@@ -64,75 +68,53 @@ pub struct SharingOffer {
     /// Friend's display name
     pub from_display_name: String,
     /// Resources being offered
-    pub resource_type: ResourceType,
     /// Resource limits
-    pub resource_amount: ResourceAmount,
     /// Personal message from friend
-    pub personal_message: String,
     /// When offer was made
     pub created_at: String,
     /// When offer expires
     pub expires_at: Option<String>,
     /// Terms and conditions
     pub terms: Vec<String>,
-}
-
 /// Active resource sharing arrangement
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ActiveShare {
     /// Unique sharing arrangement ID
     pub share_id: String,
     /// Friend you're sharing with
-    pub friend_node_id: String,
-    /// Friend's display name
     pub friend_display_name: String,
     /// Resource being shared
-    pub resource_type: ResourceType,
     /// Usage statistics
     pub usage_stats: ResourceUsageStats,
     /// When sharing started
     pub started_at: String,
     /// When sharing expires
-    pub expires_at: Option<String>,
     /// Whether either party can revoke
     pub revocable: bool,
-}
-
 /// Resource usage statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceUsageStats {
     /// Total allocated
     pub allocated: u64,
     /// Currently in use
-    pub current_usage: u64,
     /// Peak usage recorded
     pub peak_usage: u64,
     /// Usage over time
     pub usage_history: Vec<UsageDataPoint>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct UsageDataPoint {
     pub timestamp: String,
     pub usage: u64,
     pub usage_amount: u64,
-}
-
-// ============================================================================
 // FRIEND-BASED RECOVERY MODELS
-// ============================================================================
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShardAssignment {
     pub friend_id: String,
-    pub friend_display_name: String,
-    pub friend_node_id: String,
     pub encrypted_shard: Vec<u8>,
     pub verification_hash: Vec<u8>,
     pub accepted: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct FriendRecoveryRequest {
     pub request_id: String,
     pub requester_display_name: String,
@@ -141,26 +123,20 @@ pub struct FriendRecoveryRequest {
     pub required_approvals: u32,
     pub current_approvals: u32,
     pub expires_at: String,
-    pub personal_message: String,
     pub recovery_friends: Vec<String>,
     pub emergency_contact: Option<String>,
     pub reason: String,
     pub identity_proof: IdentityProof,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RecoveryMethod {
     ShamirSecretSharing {
         total_shards: u8,
         required_shards: u8,
-    },
     FriendVerification,
     BiometricBackup,
     MultiFactorRecovery,
-}
+/// Recovery shard distribution}
 
-/// Recovery shard distribution
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct RecoveryShardDistribution {
     /// Unique distribution ID
     pub distribution_id: String,
@@ -169,15 +145,8 @@ pub struct RecoveryShardDistribution {
     /// Recovery threshold
     pub threshold: u32,
     /// Expiration time
-    pub expires_at: Option<String>,
-}
-
-// ============================================================================
 // IDENTITY MANAGEMENT MODELS
-// ============================================================================
-
 /// Self-sovereign identity key
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IdentityKey {
     /// Key identifier
     pub key_id: String,
@@ -186,15 +155,10 @@ pub struct IdentityKey {
     /// Public key data
     pub public_key: String,
     /// Key creation time
-    pub created_at: String,
     /// Key expiration
-    pub expires_at: Option<String>,
     /// Key status
     pub status: IdentityKeyStatus,
-}
-
 /// Purpose of identity key
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum IdentityKeyPurpose {
     /// Primary identity key
     Primary,
@@ -206,9 +170,9 @@ pub enum IdentityKeyPurpose {
     FriendAttestation,
     /// Privacy protection
     PrivacyProtection,
-}
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]}
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+
 pub enum IdentityKeyStatus {
     /// Key is active and usable
     Active,
@@ -218,10 +182,7 @@ pub enum IdentityKeyStatus {
     Expired,
     /// Key is suspended temporarily
     Suspended,
-}
-
 /// Identity verification claim
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IdentityClaim {
     /// Type of claim
     pub claim_type: IdentityClaimType,
@@ -231,10 +192,7 @@ pub struct IdentityClaim {
     pub proof: IdentityProof,
     /// Verification requirements
     pub verification_requirements: Vec<String>,
-}
-
 /// Types of identity claims
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum IdentityClaimType {
     /// Ownership of resource
     ResourceOwnership,
@@ -246,10 +204,9 @@ pub enum IdentityClaimType {
     IdentityAttestation,
     /// Custom claim
     Custom(String),
-}
+/// Proof supporting identity claim}
 
-/// Proof supporting identity claim
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct IdentityProof {
     /// Type of proof
     pub proof_type: IdentityProofType,
@@ -258,37 +215,25 @@ pub struct IdentityProof {
     /// Cryptographic signature
     pub signature: Option<String>,
     /// Timestamp
-    pub timestamp: String,
-}
-
 /// Types of identity proof
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum IdentityProofType {
     Ed25519Signature,
     BiometricHash,
     ZeroKnowledgeProof,
     DigitalSignature,
-}
-
-// ============================================================================
 // CONSENT MANAGEMENT MODELS
-// ============================================================================
+/// Consent requirements for resource sharing}
 
-/// Consent requirements for resource sharing
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct ConsentRequirements {
     /// Explicit consent required
     pub explicit_consent: bool,
     /// Consent expiration
     pub consent_duration_hours: Option<u32>,
     /// Revocation rights
-    pub revocable: bool,
     /// Additional consent terms
     pub additional_terms: Vec<String>,
-}
-
 /// Active consent record
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsentRecord {
     /// Consent identifier
     pub consent_id: String,
@@ -301,15 +246,9 @@ pub struct ConsentRecord {
     /// When consent was granted
     pub granted_at: String,
     /// When consent expires
-    pub expires_at: Option<String>,
     /// Consent status
     pub status: ConsentStatus,
-    /// Revocation rights
-    pub revocable: bool,
-}
-
 /// Scope of consent
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsentScope {
     /// Resource types covered
     pub resource_types: Vec<ResourceType>,
@@ -319,10 +258,7 @@ pub struct ConsentScope {
     pub usage_limits: HashMap<String, u64>,
     /// Privacy settings
     pub privacy_level: PrivacyLevel,
-}
-
 /// Privacy protection level
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PrivacyLevel {
     /// Full transparency
     Transparent,
@@ -334,26 +270,18 @@ pub enum PrivacyLevel {
     MaximumPrivacy,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+
 pub enum ConsentStatus {
     /// Consent is active
-    Active,
     /// Consent is revoked
-    Revoked,
     /// Consent has expired
-    Expired,
     /// Consent is suspended
-    Suspended,
     /// Consent is pending
     Pending,
-}
-
-// ============================================================================
 // PRIVACY PROTECTION MODELS
-// ============================================================================
+/// Privacy status overview}
 
-/// Privacy status overview
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub struct PrivacyStatus {
     /// Overall privacy score
     pub privacy_score: f64,
@@ -365,10 +293,7 @@ pub struct PrivacyStatus {
     pub surveillance_detection: SurveillanceDetection,
     /// Privacy recommendations
     pub recommendations: Vec<String>,
-}
-
 /// Privacy protection mechanism
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyProtection {
     pub protection_type: String,
     pub description: String,
@@ -376,23 +301,15 @@ pub struct PrivacyProtection {
     pub effectiveness: f64,
     pub enabled: bool,
     pub active: bool,
-}
-
 /// Privacy vulnerability
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyVulnerability {
     pub vulnerability_type: String,
     pub severity: String,
-    pub description: String,
     pub remediation_available: bool,
     pub mitigation: String,
-}
-
 /// Surveillance detection results
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SurveillanceDetection {
     pub risk_level: String,
     pub indicators: Vec<String>,
     pub countermeasures: Vec<String>,
     pub last_scan: String,
-}

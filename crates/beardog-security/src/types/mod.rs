@@ -1,274 +1,218 @@
-//! BearDog Security Types
-//!
-//! This module provides a clean, modular type system for security operations.
-//! Types are organized by concern to reduce complexity and improve maintainability.
-//!
-//! ## Module Organization
-//! - `auth_types` - Authentication, authorization, and session management
-//! - `crypto_types` - Cryptographic operations and key management
-//! - `audit_types` - Security auditing, monitoring, and metrics
-//! - `config_types` - Security configuration and policy management
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+/// Security Types Module
+///
+/// **CANONICAL SECURITY TYPES** - Unified security types for all BearDog operations
+/// This module provides the core security types that form the foundation of
+/// BearDog's security system, including configurations, providers, and data structures.
+
+use beardog_errors::{BearDogError, BearDogResult, SecurityError};
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+// Import sub-modules
 pub mod audit_types;
 pub mod auth_types;
 pub mod config_types;
 pub mod crypto_types;
-
-// Re-export commonly used types for backward compatibility and convenience
+// Re-export types from sub-modules - avoid duplicates
 pub use audit_types::*;
-pub use auth_types::*;
-pub use config_types::*;
 pub use crypto_types::*;
+// Only use specific items from auth_types and config_types to avoid conflicts
+pub use auth_types::{UserInfo};
+pub use config_types::{UnifiedSecurityConfig, BasicSecurityConfig, CryptoOptimizationConfig, AuthenticationConfig, AuthorizationConfig, HsmSettingsConfig, RateLimitConfig as ConfigRateLimitConfig, EncryptionConfig};
+// Core security types
+// SecurityProviderConfig moved to beardog-types::security - use that instead
+pub use beardog_types::security::SecurityProviderConfig;
 
-// Additional types that don't fit cleanly into the above categories
 
-use async_trait::async_trait;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-/// Rate limiter implementation for controlling operation frequency
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct RateLimiter {
-    /// Rate limiting configuration
-    pub config: RateLimitConfig,
-    /// Internal state tracking (not serialized in production)
-    #[serde(skip)]
-    pub state: HashMap<String, RateLimiterState>,
-}
-
-/// Internal rate limiter state
-#[derive(Debug, Clone)]
-pub struct RateLimiterState {
-    /// Number of operations in current window
-    pub count: u32,
-    /// Window start time
-    pub window_start: DateTime<Utc>,
-    /// Last operation time
-    pub last_operation: DateTime<Utc>,
-}
-
-/// Main BearDog Security Provider implementation
-#[derive(Debug)]
-pub struct BearDogSecurityProvider {
-    /// Security provider configuration
-    pub config: SecurityProviderConfig,
-    /// Rate limiter for security operations
-    pub rate_limiter: RateLimiter,
-    /// Security rules engine
-    pub security_rules: SecurityRules,
-    /// Locked accounts storage
-    pub locked_accounts:
-        std::sync::Arc<tokio::sync::RwLock<HashMap<String, chrono::DateTime<chrono::Utc>>>>,
-    /// Failed authentication attempts tracking
-    pub failed_attempts:
-        std::sync::Arc<tokio::sync::RwLock<HashMap<String, Vec<chrono::DateTime<chrono::Utc>>>>>,
-    /// Security session store
-    pub session_store: auth_types::SessionStore,
-    /// Audit manager
-    pub audit_manager: audit_types::AuditManager,
-    /// Security metrics collector
-    pub metrics: SecurityProviderMetrics,
-}
-
-/// Audit logging system for security events
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AuditLogger {
-    /// Whether audit logging is enabled
-    pub enabled: bool,
-    /// Audit configuration
-    pub config: AuditConfig,
-    /// Log entries buffer
-    pub entries: Vec<AuditLogEntry>,
-    /// Maximum entries before flush
-    pub max_buffer_size: usize,
-}
-
-/// Rate limiting system for security operations
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct SecurityRateLimiter {
-    /// Rate limiting configuration
-    pub config: RateLimitConfig,
-    /// Current rate limiting state
-    pub state: HashMap<String, u32>,
-    /// Window start times
-    pub windows: HashMap<String, DateTime<Utc>>,
-}
-
-/// Main security provider trait definition
-#[async_trait]
-pub trait SecurityProvider: Send + Sync {
-    /// Authenticate a user with the given credentials
-    async fn authenticate(
-        &self,
-        credentials: &HashMap<String, String>,
-    ) -> Result<AuthenticationResult, SecurityError>;
-
-    /// Authorize a subject to perform an action on a resource
-    async fn authorize(
-        &self,
-        subject: &Subject,
-        action: &Action,
-        resource: &Resource,
-    ) -> Result<AuthorizationResult, SecurityError>;
-
-    /// Create a new security session
-    async fn create_session(
-        &self,
-        user: &UserInfo,
-        client_ip: String,
-        user_agent: String,
-    ) -> Result<SecuritySession, SecurityError>;
-
-    /// Validate an existing session
-    async fn validate_session(
-        &self,
-        session_id: &str,
-    ) -> Result<Option<SecuritySession>, SecurityError>;
-
-    /// Revoke a security session
-    async fn revoke_session(&self, session_id: &str) -> Result<(), SecurityError>;
-
-    /// Log a security audit event
-    async fn audit(&self, event: SecurityAuditEvent) -> Result<(), SecurityError>;
-
-    /// Get current health status
-    async fn health_check(&self) -> Result<SecurityProviderHealth, SecurityError>;
-
-    /// Get current metrics
-    async fn get_metrics(&self) -> Result<SecurityProviderMetrics, SecurityError>;
-}
-
-/// Security provider error types
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum SecurityError {
-    /// Authentication failed
-    AuthenticationFailed {
-        /// Error message
-        message: String,
-    },
-    /// Authorization failed
-    AuthorizationFailed {
-        /// Error message
-        message: String,
-    },
-    /// Rate limiting error
-    RateLimit {
-        /// Error message
-        message: String,
-    },
-    /// Configuration error
-    ConfigurationError {
-        /// Error message
-        message: String,
-    },
-    /// Cryptographic operation error
-    CryptographicError {
-        /// Error message
-        message: String,
-    },
-    /// Unknown error
-    Unknown {
-        /// Error message
-        message: String,
-    },
-}
-
-// Conversion from BearDogError to SecurityError
-impl From<beardog_errors::BearDogError> for SecurityError {
-    fn from(error: beardog_errors::BearDogError) -> Self {
-        match error {
-            beardog_errors::BearDogError::Authentication { message } => {
-                SecurityError::AuthenticationFailed { message }
-            }
-            beardog_errors::BearDogError::Authorization { message } => {
-                SecurityError::AuthorizationFailed { message }
-            }
-            beardog_errors::BearDogError::RateLimit { message } => {
-                SecurityError::RateLimit { message }
-            }
-            beardog_errors::BearDogError::Configuration { message } => {
-                SecurityError::ConfigurationError { message }
-            }
-            beardog_errors::BearDogError::Cryptographic { operation } => {
-                SecurityError::CryptographicError {
-                    message: format!("Cryptographic operation failed: {operation}"),
-                }
-            }
-            _ => SecurityError::Unknown {
-                message: format!("Unknown error: {error}"),
-            },
-        }
-    }
-}
-
-// Default implementations
-
-impl Default for AuditLogger {
     fn default() -> Self {
         Self {
-            enabled: true,
-            config: AuditConfig::default(),
-            entries: Vec::new(),
-            max_buffer_size: 1000,
+            max_failed_attempts: 5,
+            lockout_duration_minutes: 30,
+            session_timeout_minutes: 60,
+            enable_audit_logging: true,
+            require_mfa: false,
         }
     }
+// Rate limiting configuration - USE CANONICAL VERSION
+// Re-export from canonical security configuration
+pub use beardog_types::canonical::configuration::security::RateLimitConfig;
+
+
+// Default implementation now provided by canonical type
+// Security provider implementation
+
+
+#[derive(Debug, Clone)]
+pub struct BearDogSecurityProvider {
+    pub config: SecurityProviderConfig,
+    pub rate_limiter: RateLimiter,
+    pub security_rules: SecurityRules,
+    pub locked_accounts: Arc<RwLock<HashMap<String, DateTime<Utc>>>>,
+    pub failed_attempts: Arc<RwLock<HashMap<String, u32>>>,
+    pub metrics: SecurityProviderMetrics,
+    pub session_store: SessionStore,
+    pub audit_manager: AuditManager,
 }
 
-impl BearDogSecurityProvider {
-    /// Create a new security provider with default configuration
-    pub fn new() -> Self {
-        Self {
-            config: SecurityProviderConfig::default(),
-            rate_limiter: RateLimiter {
-                config: RateLimitConfig::default(),
-                state: HashMap::new(),
-            },
-            security_rules: SecurityRules {
-                rules: Vec::new(),
-                default_policy: PolicyDecision::Deny,
-                context: auth_types::SecurityContext::default(),
-            },
-            locked_accounts: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::new())),
-            failed_attempts: std::sync::Arc::new(tokio::sync::RwLock::new(HashMap::new())),
-            session_store: auth_types::SessionStore::default(),
-            audit_manager: audit_types::AuditManager::new(),
-            metrics: SecurityProviderMetrics {
-                auth_success_rate: 0.0,
-                authz_success_rate: 0.0,
-                avg_response_time_ms: 0.0,
-                requests_per_second: 0.0,
-                error_rate: 0.0,
-                active_sessions: 0,
-                total_sessions_created: 0,
-                successful_authentications: 0,
-                failed_authentications: 0,
-                successful_authorizations: 0,
-                failed_authorizations: 0,
-                rate_limited_requests: 0,
-                rate_limit_violations: 0,
-                rate_limit_violations_per_user: std::collections::HashMap::new(),
-                mfa_tokens_generated: 0,
-                mfa_verifications_successful: 0,
-                mfa_verifications_failed: 0,
-                audit_events_generated: 0,
-                low_risk_operations: 0,
-                medium_risk_operations: 0,
-                high_risk_operations: 0,
-                critical_risk_operations: 0,
-                maintenance_operations: 0,
-                maintenance_schedule_hours: 24,
-                last_cleanup: None,
-                last_optimization: None,
-                uptime_seconds: 0,
-                collected_at: chrono::Utc::now(),
-            },
-        }
-    }
+
+pub struct RateLimiter {
+    pub config: RateLimitConfig,
+    pub state: HashMap<String, RateLimiterState>,
+pub struct RateLimiterState {
+    pub requests: u32,
+    pub last_reset: DateTime<Utc>,
 }
+
+
+pub struct SecurityRules {
+    pub rules: Vec<SecurityRule>,
+    pub default_policy: PolicyDecision,
+    pub context: SecurityContext,
+pub struct SecurityRule {
+    pub id: String,
+    pub condition: String,
+    pub action: PolicyDecision,
+}
+
+
+pub enum PolicyDecision {
+    Allow,
+    Deny,
+    RequireAdditionalAuth,}
+
+
+pub struct SecurityContext {
+    pub user_id: Option<String>,
+    pub ip_address: Option<String>,
+    pub user_agent: Option<String>,
+    pub timestamp: DateTime<Utc>,}
+
+
+impl Default for SecurityContext {
+            user_id: None,
+            ip_address: None,
+            user_agent: None,
+            timestamp: Utc::now(),}
+
+
+#[derive(Debug, Clone, Default)]
+pub struct SecurityProviderMetrics {
+    pub successful_authentications: u64,
+    pub failed_authentications: u64,
+    pub active_sessions: u64,
+    pub blocked_requests: u64,
+    pub total_authentications: u64,
+    pub successful_authorizations: u64,
+    pub failed_authorizations: u64,
+    pub auth_success_rate: f64,
+    pub authz_success_rate: f64,
+    pub avg_response_time_ms: f64,
+    pub requests_per_second: f64,
+    pub error_rate: f64,
+    pub total_sessions_created: u64,
+    pub mfa_tokens_generated: u64,
+    pub mfa_verifications_successful: u64,
+    pub mfa_verifications_failed: u64,
+    pub uptime_seconds: u64,
+    pub low_risk_operations: u64,
+    pub medium_risk_operations: u64,
+    pub high_risk_operations: u64,
+    pub critical_risk_operations: u64,
+    pub collected_at: DateTime<Utc>,
+}
+
+
+pub struct SessionStore {
+    pub sessions: Arc<RwLock<HashMap<String, SecuritySession>>>,}
+
+
+impl SessionStore {}
+
+
+    pub fn new() -> Self {
+            sessions: Arc::new(RwLock::new(HashMap::new())),}
+
+
+    pub async fn len(&self) -> usize {
+        let sessions = self.sessions.read().await;
+        sessions.len()
+impl Default for SessionStore {
+        Self::new()}
+
+
+pub struct AuditManager {
+    pub events: Arc<RwLock<Vec<SecurityAuditEvent>>>,}
+
+
+impl AuditManager {
+            events: Arc::new(RwLock::new(Vec::new())),}
+
+
+impl Default for AuditManager {
+pub struct SecuritySession {
+    pub session_id: String,
+    pub user_id: String,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub is_active: bool,
+}
+
+
+pub struct SecurityAuditEvent {
+    pub event_id: String,
+    pub event_type: String,
+    pub details: HashMap<String, String>,
+pub struct AuthenticationResult {
+    pub success: bool,
+    pub session_id: Option<String>,
+    pub message: String,
+}
+
+
+pub struct AuthorizationResult {
+    pub authorized: bool,
+    pub permissions: Vec<String>,
+pub struct SecurityProviderHealth {
+    pub status: String,
+    pub last_check: DateTime<Utc>,}
+
 
 impl Default for BearDogSecurityProvider {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+            config: SecurityProviderConfig::default(),
+            rate_limiter: RateLimiter::default(),
+            security_rules: SecurityRules::default(),
+            locked_accounts: Arc::new(RwLock::new(HashMap::new())),
+            failed_attempts: Arc::new(RwLock::new(HashMap::new())),
+            metrics: SecurityProviderMetrics::default(),
+            session_store: SessionStore::default(),
+            audit_manager: AuditManager::default(),}
+
+
+impl Default for RateLimiter {
+            config: RateLimitConfig::default(),
+            state: HashMap::new(),
+impl Default for SecurityRules {
+            rules: Vec::new(),
+            default_policy: PolicyDecision::Deny,
+            context: SecurityContext::default(),
+// MIGRATION COMPLETE: Removed conversion from BearDogError to SecurityError
+// All functions now use BearDogError directly for unified error handling

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["FileOperation","StorageHealthStatus"],"struct":["AuditConfig","EcosystemStorageConfig","EcosystemStorageService","FileOperationRequest","FileOperationResult","InMemoryDataStore","RetentionPolicy","SnapshotConfig","StorageHealthReport"],"trait":["EcosystemDataStore"]};

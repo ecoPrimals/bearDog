@@ -1,8 +1,28 @@
-//! Workflow enumeration types
-//!
-//! Contains all enum definitions for the workflows module.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+/// Workflow enumeration types
+///
+/// Contains all enum definitions for the workflows module.
+/// WorkflowStatus and AuditAction are now imported from canonical types.
 use serde::{Deserialize, Serialize};
+
+// Import canonical types instead of defining duplicates
+pub use beardog_types::canonical::workflow::{WorkflowStatus, AuditAction};
 
 /// Workflow types supported by the engine
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -24,51 +44,33 @@ pub enum WorkflowType {
     /// Compliance audit workflow
     ComplianceAudit,
 }
-
-/// Workflow status enumeration
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum WorkflowStatus {
-    /// Workflow is waiting for required approvals
-    PendingApprovals,
-    /// Workflow has been approved and ready for execution
-    Approved,
-    /// Workflow has been rejected by approvers
-    Rejected,
-    /// Workflow has expired due to timeout
-    Expired,
-    /// Workflow has been cancelled by initiator or system
-    Cancelled,
-    /// Workflow is currently being executed
-    InProgress,
-    /// Workflow execution completed successfully
-    Completed,
-    /// Workflow execution failed with error
-    Failed,
-}
+// WorkflowStatus is now imported from beardog_types::canonical::workflow
+// (removed duplicate definition)
 
 /// Approval decision enumeration
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ApprovalDecision {
     /// Approval granted
-    Approved,
+    Granted,
     /// Approval rejected with reason
-    Rejected,
+    Rejected(String),
     /// Approval abstained
     Abstained,
+    /// Approval pending review
+    Pending,
 }
 
 impl std::fmt::Display for ApprovalDecision {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ApprovalDecision::Approved => write!(f, "Approved"),
-            ApprovalDecision::Rejected => write!(f, "Rejected"),
+            ApprovalDecision::Granted => write!(f, "Granted"),
+            ApprovalDecision::Rejected(reason) => write!(f, "Rejected: {reason}"),
             ApprovalDecision::Abstained => write!(f, "Abstained"),
+            ApprovalDecision::Pending => write!(f, "Pending"),
         }
     }
 }
-
 /// Workflow action types
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum WorkflowAction {
     /// Create or initiate action
     Create,
@@ -106,9 +108,7 @@ pub enum WorkflowPriority {
     /// Emergency priority (immediate action required)
     Emergency,
 }
-
 /// Workflow execution state
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum WorkflowExecutionState {
     /// Not started yet
     NotStarted,
@@ -133,6 +133,7 @@ pub enum WorkflowExecutionState {
 /// Workflow target types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WorkflowTarget {
+    System,
     /// Target is a user account
     User(String),
     /// Target is a system resource
@@ -157,7 +158,7 @@ pub enum WorkflowTarget {
 }
 
 /// Notification delivery status
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum NotificationStatus {
     /// Pending delivery
     Pending,
@@ -186,17 +187,93 @@ impl std::fmt::Display for WorkflowType {
     }
 }
 
-impl std::fmt::Display for WorkflowStatus {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            WorkflowStatus::PendingApprovals => write!(f, "Pending Approvals"),
-            WorkflowStatus::Approved => write!(f, "Approved"),
-            WorkflowStatus::Rejected => write!(f, "Rejected"),
-            WorkflowStatus::Expired => write!(f, "Expired"),
-            WorkflowStatus::Cancelled => write!(f, "Cancelled"),
-            WorkflowStatus::InProgress => write!(f, "In Progress"),
-            WorkflowStatus::Completed => write!(f, "Completed"),
-            WorkflowStatus::Failed => write!(f, "Failed"),
-        }
-    }
+// Display implementation is now in canonical WorkflowStatus
+// (removed duplicate implementation)
+
+/// Execution status for workflow processing
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ExecutionStatus {
+    /// Execution pending
+    Pending,
+    /// Execution running
+    Running,
+    /// Execution completed successfully
+    Success,
+    /// Execution failed
+    Failed,
+    /// Execution cancelled
+    Cancelled,
 }
+
+/// Execution result structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionResult {
+    pub success: bool,
+    pub message: String,
+    pub execution_duration_ms: u64,
+    pub data: Option<serde_json::Value>,
+}
+
+/// Processing result for workflow processors
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessingResult {
+    pub status: ExecutionStatus,
+    pub result: ExecutionResult,
+}
+
+/// Workflow result for processor implementations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkflowResult {
+    pub metrics: ExecutionMetrics,
+    pub result: ExecutionResult,
+}
+
+/// Execution metrics for workflow processing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionMetrics {
+    pub start_time: chrono::DateTime<chrono::Utc>,
+    pub end_time: Option<chrono::DateTime<chrono::Utc>>,
+    pub duration_ms: u64,
+    pub memory_used: u64,
+    pub cpu_time_ms: u64,
+}
+
+/// Approval submission from users
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApprovalSubmission {
+    pub workflow_id: String,
+    pub approver_id: String,
+    pub decision: ApprovalDecision,
+    pub signature: String,
+    pub comments: Option<String>,
+    // Additional fields for compatibility
+    pub reason: String,
+}
+
+/// Pending approval tracking
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PendingApproval {
+    pub approval_id: String,
+    pub tier_level: u32,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
+    pub notification_sent: bool,
+}
+
+/// Approval status enumeration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum ApprovalStatus {
+    /// Approval is pending
+    Pending,
+    /// Approval has been submitted
+    Submitted,
+    /// Approval has been granted
+    Granted,
+    /// Approval has been denied
+    Denied,
+    /// Approval has expired
+    Expired,
+}
+
+// AuditAction is now imported from beardog_types::canonical::workflow
+// (removed duplicate definition)
+

@@ -1,12 +1,32 @@
-//! Universal notification adapters
-//!
-//! These adapters can work with any service that supports standard protocols
-//! Users can configure whatever communication methods they actually have
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+/// Universal notification adapters
+///
+/// These adapters can work with any service that supports standard protocols
+/// Users can configure whatever communication methods they actually have
 use super::*;
-use beardog_config::integration::{EmailConfig, SlackNotificationConfig, WebhookConfig};
 use beardog_errors::{BearDogError, BearDogResult};
+use beardog_types::config::integration::workflows::{
+    EmailNotificationConfig as EmailConfig, WebhookNotificationConfig as WebhookConfig,
+    WorkflowNotificationConfig as NotificationConfig,
+};
 use tracing::debug;
+use std::collections::HashMap;
 
 /// Universal webhook adapter - works with Discord, Slack, Teams, or any webhook service
 pub struct WebhookAdapter {
@@ -28,9 +48,9 @@ impl WebhookAdapter {
     pub fn discord(webhook_url: String) -> Self {
         Self::new(WebhookConfig {
             enabled: true,
-            url: webhook_url,
-            auth_token: None,
-            timeout: std::time::Duration::from_secs(10),
+            urls: vec![webhook_url],
+            auth_headers: HashMap::new(),
+            max_retries: 3,
         })
     }
 
@@ -38,9 +58,9 @@ impl WebhookAdapter {
     pub fn slack(webhook_url: String) -> Self {
         Self::new(WebhookConfig {
             enabled: true,
-            url: webhook_url,
-            auth_token: None,
-            timeout: std::time::Duration::from_secs(10),
+            urls: vec![webhook_url],
+            auth_headers: HashMap::new(),
+            max_retries: 3,
         })
     }
 
@@ -48,14 +68,14 @@ impl WebhookAdapter {
     pub fn teams(webhook_url: String) -> Self {
         Self::new(WebhookConfig {
             enabled: true,
-            url: webhook_url,
-            auth_token: None,
-            timeout: std::time::Duration::from_secs(10),
+            urls: vec![webhook_url],
+            auth_headers: HashMap::new(),
+            max_retries: 3,
         })
     }
 }
 
-#[async_trait]
+// MODERNIZED: Native async fn implementation - no async_trait overhead
 impl NotificationAdapter for WebhookAdapter {
     fn name(&self) -> &str {
         &self.name
@@ -63,9 +83,9 @@ impl NotificationAdapter for WebhookAdapter {
 
     async fn test_connection(&self) -> BearDogResult<()> {
         if !self.config.enabled {
-            return Err(BearDogError::ConfigurationError {
-                message: "Webhook adapter is disabled".to_string(),
-            });
+            return Err(BearDogError::configuration(
+                "Webhook adapter is disabled".to_string(),
+            ));
         }
 
         // Test with a simple ping message
@@ -76,11 +96,11 @@ impl NotificationAdapter for WebhookAdapter {
 
         let mut request = self
             .client
-            .post(&self.config.url)
-            .timeout(self.config.timeout)
+            .post(&self.config.urls[0])
+            .timeout(std::time::Duration::from_secs(10))
             .json(&test_payload);
 
-        if let Some(token) = &self.config.auth_token {
+        if let Some(token) = self.config.auth_headers.get("Authorization") {
             request = request.bearer_auth(token);
         }
 
@@ -89,14 +109,15 @@ impl NotificationAdapter for WebhookAdapter {
                 if response.status().is_success() {
                     Ok(())
                 } else {
-                    Err(BearDogError::NotificationError {
-                        message: format!("Webhook test failed: {}", response.status()),
-                    })
+                    Err(BearDogError::network(format!(
+                        "Webhook test failed: {}",
+                        response.status()
+                    )))
                 }
             }
-            Err(e) => Err(BearDogError::NotificationError {
-                message: format!("Webhook connection failed: {e}"),
-            }),
+            Err(e) => Err(BearDogError::network(format!(
+                "Webhook connection failed: {e}"
+            ))),
         }
     }
 
@@ -104,40 +125,69 @@ impl NotificationAdapter for WebhookAdapter {
         &self,
         message: &NotificationMessage,
     ) -> BearDogResult<NotificationResult> {
-        let delivery_id = uuid::Uuid::new_v4().to_string();
-
-        // Create payload that works with most webhook services
-        let payload = self.create_webhook_payload(message)?;
-
-        let mut request = self
-            .client
-            .post(&self.config.url)
-            .timeout(self.config.timeout)
-            .json(&payload);
-
-        if let Some(token) = &self.config.auth_token {
-            request = request.bearer_auth(token);
+        if !self.config.enabled {
+            return Ok(NotificationResult::skipped("Webhook adapter disabled"));
         }
 
-        match request.send().await {
-            Ok(response) => {
-                if response.status().is_success() {
-                    Ok(NotificationResult {
-                        delivery_id,
-                        success: true,
-                        message: "Webhook notification sent successfully".to_string(),
-                        timestamp: chrono::Utc::now(),
-                        retry_count: 0,
-                    })
-                } else {
-                    Err(BearDogError::NotificationError {
-                        message: format!("Webhook failed: {}", response.status()),
-                    })
+        let payload = match message.format {
+            MessageFormat::PlainText => serde_json::json!({
+                "content": message.content,
+                "text": message.content
+            }),
+            MessageFormat::Markdown => serde_json::json!({
+                "content": message.content,
+                "text": message.content
+            }),
+            MessageFormat::Html => serde_json::json!({
+                "content": message.content,
+                "text": message.content
+            }),
+        };
+
+        let mut successful_sends = 0;
+        let mut last_error = None;
+
+        for url in &self.config.urls {
+            let mut request = self
+                .client
+                .post(url)
+                .timeout(std::time::Duration::from_secs(30))
+                .json(&payload);
+
+            if let Some(token) = self.config.auth_headers.get("Authorization") {
+                request = request.bearer_auth(token);
+            }
+
+            match request.send().await {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        successful_sends += 1;
+                        debug!("Successfully sent notification to webhook: {}", url);
+                    } else {
+                        last_error = Some(BearDogError::network(format!(
+                            "Webhook failed with status: {}",
+                            response.status()
+                        )));
+                    }
+                }
+                Err(e) => {
+                    last_error = Some(BearDogError::network(format!(
+                        "Webhook request failed: {e}"
+                    )));
                 }
             }
-            Err(e) => Err(BearDogError::NotificationError {
-                message: format!("Webhook error: {e}"),
-            }),
+        }
+
+        if successful_sends > 0 {
+            Ok(NotificationResult::success(format!(
+                "Sent to {}/{} webhooks",
+                successful_sends,
+                self.config.urls.len()
+            )))
+        } else {
+            Err(last_error.unwrap_or_else(|| {
+                BearDogError::network("No webhooks configured".to_string())
+            }))
         }
     }
 
@@ -145,7 +195,7 @@ impl NotificationAdapter for WebhookAdapter {
         vec![
             MessageFormat::PlainText,
             MessageFormat::Markdown,
-            MessageFormat::Json,
+            MessageFormat::Html,
         ]
     }
 
@@ -158,28 +208,23 @@ impl NotificationAdapter for WebhookAdapter {
             rate_limit: Some(50), // Conservative rate limit
         }
     }
-}
 
-impl WebhookAdapter {
     fn create_webhook_payload(
         &self,
         message: &NotificationMessage,
     ) -> BearDogResult<serde_json::Value> {
         // Create a payload that works with most services
         let mut payload = serde_json::Map::new();
-
         // Standard fields that work across services
         payload.insert(
             "content".to_string(),
             serde_json::Value::String(format!("**{}**\n{}", message.title, message.content)),
         );
-
         // Discord/Slack compatibility
         payload.insert(
             "text".to_string(),
             serde_json::Value::String(format!("{}: {}", message.title, message.content)),
         );
-
         // Teams compatibility
         payload.insert(
             "title".to_string(),
@@ -189,7 +234,6 @@ impl WebhookAdapter {
             "summary".to_string(),
             serde_json::Value::String(message.content.clone()),
         );
-
         // Rich formatting if supported
         if message.format == MessageFormat::Markdown {
             payload.insert(
@@ -202,7 +246,6 @@ impl WebhookAdapter {
                 }]),
             );
         }
-
         Ok(serde_json::Value::Object(payload))
     }
 
@@ -227,34 +270,17 @@ impl EmailAdapter {
     }
 }
 
-#[async_trait]
 impl NotificationAdapter for EmailAdapter {
     fn name(&self) -> &str {
         "email"
     }
 
     async fn test_connection(&self) -> BearDogResult<()> {
-        if !self.config.enabled {
-            return Err(BearDogError::ConfigurationError {
-                message: "Email adapter is disabled".to_string(),
-            });
-        }
-
-        // Test SMTP connection
-        tracing::info!(
-            "Testing SMTP connection to {}:{}",
-            self.config.smtp_server,
-            self.config.smtp_port
-        );
-
-        // In a real implementation, would test actual SMTP connection
-        // For now, validate configuration
         if self.config.smtp_server.is_empty() || self.config.from_address.is_empty() {
-            return Err(BearDogError::ConfigurationError {
-                message: "Invalid email configuration".to_string(),
-            });
+            return Err(BearDogError::configuration(
+                "Invalid email configuration".to_string(),
+            ));
         }
-
         Ok(())
     }
 
@@ -263,9 +289,7 @@ impl NotificationAdapter for EmailAdapter {
         message: &NotificationMessage,
     ) -> BearDogResult<NotificationResult> {
         let delivery_id = uuid::Uuid::new_v4().to_string();
-
         tracing::info!("📧 Sending email notification: {}", message.title);
-
         // In a real implementation, would use lettre or similar to send actual email
         // For now, log the email details
         for recipient in &message.recipients {
@@ -276,7 +300,6 @@ impl NotificationAdapter for EmailAdapter {
                 message.content
             );
         }
-
         Ok(NotificationResult {
             delivery_id,
             success: true,
@@ -310,7 +333,6 @@ pub struct SmsAdapter {
     provider: String,
     api_key: String,
     from_number: String,
-    client: reqwest::Client,
 }
 
 impl SmsAdapter {
@@ -319,7 +341,6 @@ impl SmsAdapter {
             provider: "twilio".to_string(),
             api_key,
             from_number,
-            client: reqwest::Client::new(),
         }
     }
 
@@ -328,7 +349,6 @@ impl SmsAdapter {
             provider: "aws_sns".to_string(),
             api_key,
             from_number: String::new(),
-            client: reqwest::Client::new(),
         }
     }
 
@@ -337,12 +357,10 @@ impl SmsAdapter {
             provider,
             api_key,
             from_number,
-            client: reqwest::Client::new(),
         }
     }
 }
 
-#[async_trait]
 impl NotificationAdapter for SmsAdapter {
     fn name(&self) -> &str {
         "sms"
@@ -350,14 +368,12 @@ impl NotificationAdapter for SmsAdapter {
 
     async fn test_connection(&self) -> BearDogResult<()> {
         tracing::info!("Testing SMS connection via {}", self.provider);
-
         // In a real implementation, would test the actual SMS API
         if self.api_key.is_empty() {
-            return Err(BearDogError::ConfigurationError {
-                message: "SMS API key not configured".to_string(),
-            });
+            return Err(BearDogError::configuration(
+                "SMS API key not configured".to_string(),
+            ));
         }
-
         Ok(())
     }
 
@@ -370,10 +386,7 @@ impl NotificationAdapter for SmsAdapter {
             "Sending SMS notification via {} from {}",
             self.provider, self.from_number
         );
-
-        let delivery_id = uuid::Uuid::new_v4().to_string();
         let mut success_count = 0;
-
         // Send to all recipients
         for recipient in &message.recipients {
             // Build the SMS payload based on provider
@@ -392,7 +405,7 @@ impl NotificationAdapter for SmsAdapter {
                         ])
                         .send()
                         .await
-                }
+                },
                 "aws_sns" => {
                     // For AWS SNS, we'd use different API structure
                     self.client
@@ -409,7 +422,7 @@ impl NotificationAdapter for SmsAdapter {
                         ])
                         .send()
                         .await
-                }
+                },
                 _ => {
                     // Generic/custom provider
                     self.client
@@ -422,18 +435,30 @@ impl NotificationAdapter for SmsAdapter {
                         .send()
                         .await
                 }
-            }
-            .map_err(|e| BearDogError::NotificationError {
-                message: format!("SMS send failed via {}: {}", self.provider, e),
-            })?;
-
-            if response.status().is_success() {
-                success_count += 1;
+            };
+            match response {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        success_count += 1;
+                    } else {
+                        debug!(
+                            "SMS send failed via {}: {}",
+                            self.provider,
+                            response.status()
+                        );
+                    }
+                },
+                Err(e) => {
+                    debug!(
+                        "SMS send failed via {}: {}",
+                        self.provider,
+                        e
+                    );
+                }
             }
         }
-
         Ok(NotificationResult {
-            delivery_id,
+            delivery_id: uuid::Uuid::new_v4().to_string(),
             success: success_count > 0,
             message: format!(
                 "SMS sent to {}/{} recipients via {}",
@@ -454,7 +479,6 @@ impl NotificationAdapter for SmsAdapter {
         AdapterCapabilities {
             max_message_length: Some(160), // SMS character limit
             supports_rich_formatting: false,
-            supports_attachments: false,
             supports_groups: false,
             rate_limit: Some(10), // Conservative SMS rate limit
         }
@@ -467,21 +491,13 @@ pub struct SlackAdapter {
 }
 
 impl SlackAdapter {
-    pub fn new(config: SlackNotificationConfig) -> Self {
-        let webhook_config = WebhookConfig {
-            enabled: config.enabled,
-            url: config.webhook_url,
-            auth_token: config.bot_token,
-            timeout: config.timeout,
-        };
-
+    pub fn new(config: WebhookConfig) -> Self {
         Self {
-            webhook_adapter: WebhookAdapter::new(webhook_config),
+            webhook_adapter: WebhookAdapter::new(config),
         }
     }
 }
 
-#[async_trait]
 impl NotificationAdapter for SlackAdapter {
     fn name(&self) -> &str {
         "slack"
@@ -507,9 +523,19 @@ impl NotificationAdapter for SlackAdapter {
     }
 }
 
-/// Configuration builder for easy adapter setup
+/// **MODERNIZED** - Zero-cost notification adapter registry
+/// Uses enum dispatch instead of Vec<Box<dyn>> for better performance
+#[derive(Debug)]
+pub enum NotificationAdapterType {
+    Discord(DiscordNotificationAdapter),
+    Slack(SlackNotificationAdapter),
+    Email(EmailNotificationAdapter),
+    Webhook(WebhookNotificationAdapter),
+}
+
+/// **ZERO-COST** - Configuration builder with enum-based dispatch
 pub struct NotificationAdapterBuilder {
-    adapters: Vec<Box<dyn NotificationAdapter>>,
+    adapters: Vec<NotificationAdapterType>,
 }
 
 impl Default for NotificationAdapterBuilder {
@@ -524,61 +550,58 @@ impl NotificationAdapterBuilder {
             adapters: Vec::new(),
         }
     }
-
     /// Add Discord webhook
     pub fn discord(mut self, webhook_url: String) -> Self {
         self.adapters
             .push(Box::new(WebhookAdapter::discord(webhook_url)));
         self
     }
-
     /// Add Slack webhook
     pub fn slack(mut self, webhook_url: String) -> Self {
         self.adapters
             .push(Box::new(WebhookAdapter::slack(webhook_url)));
         self
     }
-
     /// Add Teams webhook
     pub fn teams(mut self, webhook_url: String) -> Self {
         self.adapters
             .push(Box::new(WebhookAdapter::teams(webhook_url)));
         self
     }
-
     /// Add SMS via Twilio
     pub fn sms_twilio(mut self, api_key: String, from_number: String) -> Self {
         self.adapters
             .push(Box::new(SmsAdapter::twilio(api_key, from_number)));
         self
     }
-
     /// Add email via SMTP
     pub fn email(mut self, config: EmailConfig) -> Self {
         self.adapters.push(Box::new(EmailAdapter::new(config)));
         self
     }
-
     /// Add custom webhook
     pub fn custom_webhook(mut self, url: String, auth_token: Option<String>) -> Self {
         let config = WebhookConfig {
+            urls: vec![url],
+            auth_headers: if let Some(token) = auth_token {
+                let mut headers = HashMap::new();
+                headers.insert("Authorization".to_string(), format!("Bearer {}", token));
+                headers
+            } else {
+                HashMap::new()
+            },
             enabled: true,
-            url,
-            auth_token,
-            timeout: std::time::Duration::from_secs(10),
+            max_retries: 3,
         };
         self.adapters.push(Box::new(WebhookAdapter::new(config)));
         self
     }
-
     /// Build notification engine with configured adapters
     pub fn build(self, config: NotificationConfig) -> NotificationEngine {
         let mut engine = NotificationEngine::new(config);
-
         for adapter in self.adapters {
             engine.register_adapter(adapter);
         }
-
         engine
     }
 }

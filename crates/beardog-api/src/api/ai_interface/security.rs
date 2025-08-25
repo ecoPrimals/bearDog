@@ -1,74 +1,54 @@
-//! Security operations for AI interface
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Security operations for AI interface
 
 use serde::{Deserialize, Serialize};
-
 /// AI Encryption Request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIEncryptRequest {
     pub data: String,
 }
-
 /// AI Encryption Response
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIEncryptResponse {
     pub encrypted_data: String,
     pub success: bool,
-}
-
 /// AI Decryption Request
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIDecryptRequest {
-    pub encrypted_data: String,
-}
-
 /// AI Decryption Response
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIDecryptResponse {
     pub decrypted_data: String,
-    pub success: bool,
-}
-
 /// AI Signature Request
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AISignRequest {
-    pub data: String,
-}
-
 /// AI Signature Response
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AISignResponse {
     pub signature: String,
-    pub success: bool,
-}
-
 /// AI Verification Request
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIVerifyRequest {
-    pub data: String,
-    pub signature: String,
-}
-
 /// AI Verification Response
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIVerifyResponse {
     pub valid: bool,
-}
-
 /// AI Key Generation Request
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIGenerateKeyRequest {
     pub key_type: String,
-}
-
 /// AI Key Generation Response
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIGenerateKeyResponse {
     pub public_key: String,
-    pub success: bool,
-}
-
 /// Security operation types for AI
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AISecurityOperation {
     /// Encrypt data
     Encrypt { data: String },
@@ -90,4 +70,3 @@ pub enum AISecurityOperation {
     ValidateCertificate { certificate: String },
     /// Create certificate
     CreateCertificate { subject: String },
-}

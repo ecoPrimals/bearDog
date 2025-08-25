@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_dashboard_overview","get_genetics_dashboard_data","get_network_dashboard_data","get_performance_dashboard_data","get_security_dashboard_data"]};

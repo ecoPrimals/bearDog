@@ -1,28 +1,39 @@
-//! # BearDog Tunnel Configuration
-//!
-//! This module provides configuration structures for the BearDog tunnel system.
-//! It includes performance tuning, key management, gaming optimizations, genetic healing,
-//! monitoring, and alerting configurations.
-//!
-//! ## Configuration Profiles
-//!
-//! - **Competitive Gaming**: Ultra-low latency for competitive gaming
-//! - **Maximum Security**: High security with hardware key requirements
-//! - **Default**: Balanced performance and security
-//!
-//! ## Key Features
-//!
-//! - Performance optimization settings
-//! - Key management and rotation policies
-//! - Gaming-specific configurations
-//! - Genetic healing parameters
-//! - Monitoring and alerting thresholds
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// # BearDog Tunnel Configuration
+///
+/// This module provides configuration structures for the BearDog tunnel system.
+/// It includes performance tuning, key management, gaming optimizations, genetic healing,
+/// monitoring, and alerting configurations.
+/// ## Configuration Profiles
+/// - **Competitive Gaming**: Ultra-low latency for competitive gaming
+/// - **Maximum Security**: High security with hardware key requirements
+/// - **Default**: Balanced performance and security
+/// ## Key Features
+/// - Performance optimization settings
+/// - Key management and rotation policies
+/// - Gaming-specific configurations
+/// - Genetic healing parameters
+/// - Monitoring and alerting thresholds
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-
 /// Main BearDog Tunnel Protocol (BSTP) configuration
-///
 /// Root configuration structure that contains all subsystem configurations.
 /// This is the primary configuration entry point for the entire tunnel system.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -40,9 +51,7 @@ pub struct BStpConfig {
     /// Alert threshold configuration
     pub alert_thresholds: AlertThresholds,
 }
-
 /// Performance optimization configuration
-///
 /// Controls performance-related settings including latency targets, throughput requirements,
 /// and session setup time limits. These settings directly impact the user experience.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -83,13 +92,9 @@ pub struct PerformanceConfig {
     pub cache_size_mb: usize,
     /// Cache TTL for entries
     pub cache_ttl: Duration,
-}
-
 /// Key management configuration
-///
 /// Controls cryptographic key generation, rotation, storage, and lifecycle management.
 /// These settings are critical for maintaining security and compliance.
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyManagementConfig {
     /// Use hardware security modules for key generation
     pub use_hardware_keys: bool,
@@ -125,13 +130,9 @@ pub struct KeyManagementConfig {
     pub enable_integrity_check: bool,
     /// Key integrity check interval
     pub integrity_check_interval: Duration,
-}
-
 /// Gaming-specific configuration
-///
 /// Optimizations specifically designed for gaming workloads including ultra-low latency,
 /// jitter elimination, and gaming-specific crypto optimizations.
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GamingConfig {
     /// Gaming profile name
     pub profile_name: String,
@@ -167,13 +168,9 @@ pub struct GamingConfig {
     pub enable_spectator_mode: bool,
     /// Maximum spectators per session
     pub max_spectators: u32,
-}
-
 /// Genetic healing system configuration
-///
 /// Controls the autonomous healing system that uses genetic algorithms to optimize
 /// security and performance based on network conditions and threats.
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticHealingConfig {
     /// Enable genetic healing system
     pub enable_healing: bool,
@@ -210,20 +207,13 @@ pub struct GeneticHealingConfig {
     /// Maximum healing history entries
     pub max_history_entries: usize,
     /// Enable predictive healing
-    pub enable_prediction: bool,
     /// Prediction confidence threshold
     pub prediction_threshold: f64,
-}
-
 /// Monitoring and metrics configuration
-///
 /// Controls system monitoring, metrics collection, and observability features.
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringConfig {
     /// Enable comprehensive monitoring
-    pub enable_monitoring: bool,
     /// Metrics collection interval
-    pub metrics_interval: Duration,
     /// Enable distributed tracing
     pub enable_tracing: bool,
     /// Tracing sample rate (0.0 to 1.0)
@@ -244,12 +234,8 @@ pub struct MonitoringConfig {
     pub enable_aggregation: bool,
     /// Metric aggregation window
     pub aggregation_window: Duration,
-}
-
 /// Alert threshold configuration
-///
 /// Defines thresholds for various system metrics that trigger alerts when exceeded.
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertThresholds {
     /// Maximum CPU usage before alert (percentage)
     pub max_cpu_usage: f64,
@@ -270,10 +256,12 @@ pub struct AlertThresholds {
     /// Maximum response time before alert (ms)
     pub max_response_time: u64,
     /// Minimum availability before alert (percentage)
-    pub min_availability: f64,
-}
+    pub min_availability: f64,}
 
-impl Default for PerformanceConfig {
+
+impl Default for PerformanceConfig {}
+
+
     fn default() -> Self {
         Self {
             max_encryption_latency: Duration::from_micros(100),
@@ -296,11 +284,7 @@ impl Default for PerformanceConfig {
             cache_ttl: Duration::from_secs(3600), // 1 hour
         }
     }
-}
-
 impl Default for KeyManagementConfig {
-    fn default() -> Self {
-        Self {
             use_hardware_keys: true,
             key_derivation_rounds: 100_000,
             session_key_length: 32,                           // 256 bits
@@ -317,14 +301,10 @@ impl Default for KeyManagementConfig {
             recovery_shares: 0,
             storage_algorithm: String::from("AES-256"),
             enable_integrity_check: true,
-            integrity_check_interval: Duration::from_secs(3600), // 1 hour
-        }
-    }
-}
+            integrity_check_interval: Duration::from_secs(3600), // 1 hour}
+
 
 impl Default for GamingConfig {
-    fn default() -> Self {
-        Self {
             profile_name: String::from("Default"),
             ultra_low_latency: true,
             predictive_keying: true,
@@ -342,13 +322,7 @@ impl Default for GamingConfig {
             state_sync_interval_ms: 100,
             enable_spectator_mode: false,
             max_spectators: 100,
-        }
-    }
-}
-
 impl Default for GeneticHealingConfig {
-    fn default() -> Self {
-        Self {
             enable_healing: true,
             generation_interval: Duration::from_secs(3600), // 1 hour
             population_size: 100,
@@ -367,16 +341,11 @@ impl Default for GeneticHealingConfig {
             track_history: true,
             max_history_entries: 100,
             enable_prediction: true,
-            prediction_threshold: 0.9,
-        }
-    }
-}
+            prediction_threshold: 0.9,}
+
 
 impl Default for MonitoringConfig {
-    fn default() -> Self {
-        Self {
             enable_monitoring: true,
-            metrics_interval: Duration::from_millis(100),
             enable_tracing: false,
             trace_sample_rate: 0.1,
             enable_audit_logging: false,
@@ -387,13 +356,7 @@ impl Default for MonitoringConfig {
             alert_interval: Duration::from_millis(100),
             enable_aggregation: true,
             aggregation_window: Duration::from_secs(5 * 60), // 5 minutes
-        }
-    }
-}
-
 impl Default for AlertThresholds {
-    fn default() -> Self {
-        Self {
             max_cpu_usage: 0.9,
             max_memory_usage: 0.9,
             max_network_latency: 100,
@@ -403,10 +366,8 @@ impl Default for AlertThresholds {
             max_connections: 1000,
             max_queue_depth: 100,
             max_response_time: 500,
-            min_availability: 0.95,
-        }
-    }
-}
+            min_availability: 0.95,}
+
 
 impl BStpConfig {
     /// Load configuration from environment variables
@@ -414,27 +375,21 @@ impl BStpConfig {
         // In production, this would read from environment variables
         // For now, return optimized defaults
         let mut config = Self::default();
-
         // Override with environment-specific optimizations
         if std::env::var("BEARDOG_GAMING_MODE").is_ok() {
             config.gaming.ultra_low_latency = true;
             config.performance.max_encryption_latency = Duration::from_micros(50);
             config.performance.max_decryption_latency = Duration::from_micros(50);
-        }
-
         if std::env::var("BEARDOG_SECURITY_MODE").is_ok() {
             config.genetic_healing.enable_healing = true;
             config.key_management.use_hardware_keys = true;
             config.key_management.key_rotation_interval = Duration::from_secs(1800);
             // 30 min
-        }
-
         config
-    }
+    /// Create configuration optimized for competitive gaming}
 
-    /// Create configuration optimized for competitive gaming
+
     pub fn competitive_gaming() -> Self {
-        let mut config = Self::default();
         config.performance.max_encryption_latency = Duration::from_micros(50);
         config.performance.max_decryption_latency = Duration::from_micros(50);
         config.gaming.ultra_low_latency = true;
@@ -443,126 +398,73 @@ impl BStpConfig {
         config.genetic_healing.enable_healing = true;
         config.genetic_healing.enable_prediction = true;
         config.genetic_healing.prediction_threshold = 0.9;
-        config
-    }
-
     /// Create configuration optimized for maximum security
     pub fn maximum_security() -> Self {
-        let mut config = Self::default();
         config.key_management.use_hardware_keys = true;
         config.key_management.key_rotation_interval = Duration::from_secs(900); // 15 min
         config.key_management.key_derivation_rounds = 200_000;
-        config.genetic_healing.enable_healing = true;
-        config.genetic_healing.enable_prediction = true;
-        config.genetic_healing.prediction_threshold = 0.9;
-        config
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::time::Duration;
+    #[test]}
 
-    #[test]
-    fn test_default_configuration() {
+
+    fn test_default_configuration() -> beardog_errors::BearDogResult<()> {
         let config = BStpConfig::default();
-
         // Verify performance defaults
         assert_eq!(
             config.performance.max_encryption_latency,
             Duration::from_micros(100)
         );
-        assert_eq!(
             config.performance.max_decryption_latency,
-            Duration::from_micros(100)
-        );
         assert_eq!(config.performance.min_gaming_throughput, 1_000_000_000);
-
         // Verify key management defaults
         assert!(config.key_management.use_hardware_keys);
         assert_eq!(config.key_management.session_key_length, 32);
-        assert_eq!(
             config.key_management.key_rotation_interval,
             Duration::from_secs(3600)
-        );
-
         // Verify gaming defaults
         assert!(config.gaming.ultra_low_latency);
         assert!(config.gaming.predictive_keying);
         assert!(config.gaming.prefer_hardware_crypto);
-
         // Verify genetic healing defaults
         assert!(config.genetic_healing.enable_healing);
         assert_eq!(config.genetic_healing.prediction_threshold, 0.9);
-    }
-
-    #[test]
-    fn test_competitive_gaming_configuration() {
+        Ok(())
+    fn test_competitive_gaming_configuration() -> beardog_errors::BearDogResult<()> {
         let config = BStpConfig::competitive_gaming();
-
         // Should have ultra-low latency targets
-        assert_eq!(
-            config.performance.max_encryption_latency,
             Duration::from_micros(50)
-        );
-        assert_eq!(
-            config.performance.max_decryption_latency,
-            Duration::from_micros(50)
-        );
-
         // Should prioritize performance over security
-        assert_eq!(config.genetic_healing.prediction_threshold, 0.9);
-
         // Gaming optimizations should be enabled
-        assert!(config.gaming.ultra_low_latency);
-        assert!(config.gaming.predictive_keying);
-        assert!(config.gaming.jitter_elimination);
-    }
+        assert!(config.gaming.jitter_elimination);}
 
-    #[test]
-    fn test_maximum_security_configuration() {
+
+    fn test_maximum_security_configuration() -> beardog_errors::BearDogResult<()> {
         let config = BStpConfig::maximum_security();
-
         // Should have frequent key rotation
-        assert_eq!(
-            config.key_management.key_rotation_interval,
             Duration::from_secs(900)
-        );
         assert_eq!(config.key_management.key_derivation_rounds, 200_000);
-
         // Should prioritize security over performance
-        assert_eq!(config.genetic_healing.prediction_threshold, 0.9);
-    }
-
-    #[test]
-    fn test_environment_based_configuration() {
+    fn test_environment_based_configuration() -> beardog_errors::BearDogResult<()> {
         // Test gaming mode environment variable
         std::env::set_var("BEARDOG_GAMING_MODE", "1");
         let gaming_config = BStpConfig::from_env();
         assert!(gaming_config.gaming.ultra_low_latency);
-        assert_eq!(
             gaming_config.performance.max_encryption_latency,
-            Duration::from_micros(50)
-        );
         std::env::remove_var("BEARDOG_GAMING_MODE");
-
         // Test security mode environment variable
         std::env::set_var("BEARDOG_SECURITY_MODE", "1");
         let security_config = BStpConfig::from_env();
         assert!(security_config.key_management.use_hardware_keys);
-        assert_eq!(
             security_config.key_management.key_rotation_interval,
             Duration::from_secs(1800)
-        );
-        std::env::remove_var("BEARDOG_SECURITY_MODE");
-    }
+        std::env::remove_var("BEARDOG_SECURITY_MODE");}
 
-    #[test]
-    fn test_alert_thresholds() {
-        let config = BStpConfig::default();
+
+    fn test_alert_thresholds() -> beardog_errors::BearDogResult<()> {
         let alerts = &config.alert_thresholds;
-
         assert_eq!(alerts.max_cpu_usage, 0.9);
         assert_eq!(alerts.max_memory_usage, 0.9);
         assert_eq!(alerts.max_network_latency, 100);
@@ -573,29 +475,23 @@ mod tests {
         assert_eq!(alerts.max_queue_depth, 100);
         assert_eq!(alerts.max_response_time, 500);
         assert_eq!(alerts.min_availability, 0.95);
-    }
-
-    #[test]
-    fn test_configuration_serialization() {
-        let config = BStpConfig::competitive_gaming();
-
+    fn test_configuration_serialization() -> beardog_errors::BearDogResult<()> {
         // Test that configuration can be serialized and deserialized
-        let serialized = serde_json::to_string(&config).expect("Should serialize");
-        let deserialized: BStpConfig =
-            serde_json::from_str(&serialized).expect("Should deserialize");
-
+        let serialized = serde_json::to_string(&config).map_err(|e| {
+            tracing::error!("Operation failed ({}): {:?}", "Should serialize", e);
+            beardog_errors::BearDogError::internal(format!(
+                "Operation failed ({}): {:?}",
+                "Should serialize", e
+            ))
+        })?;
+        let deserialized: BStpConfig = serde_json::from_str(&serialized).map_err(|e| {
+            tracing::error!("JSON parsing failed ({}): {}", "Should deserialize", e);
+            beardog_errors::BearDogError::ValidationError(format!(
+                "JSON parsing error ({}): {}",
+                "Should deserialize", e
         // Verify key fields match
-        assert_eq!(
-            config.performance.max_encryption_latency,
             deserialized.performance.max_encryption_latency
-        );
-        assert_eq!(
             config.gaming.ultra_low_latency,
             deserialized.gaming.ultra_low_latency
-        );
-        assert_eq!(
             config.genetic_healing.prediction_threshold,
             deserialized.genetic_healing.prediction_threshold
-        );
-    }
-}

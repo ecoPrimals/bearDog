@@ -1,7 +1,23 @@
-//! Service Registration Types
-//!
-//! Universal service registration types for ecosystem integration
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+/// Service Registration Types
+///
+/// Universal service registration types for ecosystem integration
 use chrono::{DateTime, Utc};
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -30,9 +46,7 @@ pub struct UniversalServiceRegistration {
     /// Security domain
     pub security_domain: SecurityDomain,
 }
-
 /// Service metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMetadata {
     /// Human-readable name
     pub name: String,
@@ -48,10 +62,7 @@ pub struct ServiceMetadata {
     pub properties: HashMap<String, String>,
     /// Dependencies
     pub dependencies: Vec<String>,
-}
-
 /// Contact information
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContactInfo {
     /// Maintainer email
     pub email: Option<String>,
@@ -59,10 +70,7 @@ pub struct ContactInfo {
     pub support_url: Option<String>,
     /// Repository URL
     pub repository: Option<String>,
-}
-
 /// Service category
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ServiceCategory {
     Security,
     Storage,
@@ -72,27 +80,22 @@ pub enum ServiceCategory {
     Compliance,
     Monitoring,
     Other(String),
-}
+/// Security domain classification}
 
-/// Security domain classification
-#[derive(Debug, Clone, Serialize, Deserialize)]
+
 pub enum SecurityDomain {
     /// Cryptographic operations
     Cryptography,
     /// Identity and access management
     IAM,
     /// Compliance and audit
-    Compliance,
     /// Threat detection
     ThreatDetection,
     /// Data protection
     DataProtection,
     /// General security
     General,
-}
-
 /// Universal request structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalRequest {
     /// Request identifier
     pub request_id: String,
@@ -104,31 +107,23 @@ pub struct UniversalRequest {
     pub source: Option<String>,
     /// Target service
     pub target: Option<String>,
-}
-
 /// Universal response structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalResponse {
     /// Response to request ID
-    pub request_id: String,
     /// Success indicator
     pub success: bool,
     /// Response data
     pub data: serde_json::Value,
     /// Error message if failed
     pub error: Option<String>,
-    /// Response timestamp
-    pub timestamp: DateTime<Utc>,
-}
+    /// Response timestamp}
 
-impl Default for ServiceCategory {
+
+impl Default for ServiceCategory {}
+
+
     fn default() -> Self {
         Self::Other("unknown".to_string())
     }
-}
-
 impl Default for SecurityDomain {
-    fn default() -> Self {
         Self::General
-    }
-}

@@ -1,10 +1,26 @@
-//! Configuration structures for human entropy collection
-//!
-//! This module defines all the configuration structures needed for different
-//! types of entropy collection including audio, visual, haptic, and biometric.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Configuration structures for human entropy collection
+///
+/// This module defines all the configuration structures needed for different
+/// types of entropy collection including audio, visual, haptic, and biometric.
 
 use std::time::Duration;
-
 /// Main configuration for human entropy collection
 #[derive(Debug, Clone)]
 pub struct HumanEntropyConfig {
@@ -25,9 +41,7 @@ pub struct HumanEntropyConfig {
     /// Biometric collection configuration
     pub biometric_config: BiometricConfig,
 }
-
 /// Audio collection configuration
-#[derive(Debug, Clone)]
 pub struct AudioConfig {
     /// Whether audio collection is enabled
     pub enabled: bool,
@@ -37,39 +51,25 @@ pub struct AudioConfig {
     pub bit_depth: u8,
     /// Privacy filter to apply to audio data
     pub privacy_filter: String,
-}
-
 /// Visual collection configuration
-#[derive(Debug, Clone)]
 pub struct VisualConfig {
     /// Whether visual collection is enabled
-    pub enabled: bool,
     /// Video resolution (width, height)
     pub resolution: (u32, u32),
     /// Video frames per second
     pub fps: u32,
     /// Privacy filter to apply to visual data
-    pub privacy_filter: String,
-}
-
 /// Haptic collection configuration
-#[derive(Debug, Clone)]
 pub struct HapticConfig {
     /// Whether haptic collection is enabled
-    pub enabled: bool,
     /// Touch sensitivity settings
     pub touch_sensitivity: String,
     /// Motion sensitivity settings
     pub motion_sensitivity: String,
-}
-
 /// Biometric collection configuration
-#[derive(Debug, Clone)]
 pub struct BiometricConfig {
     /// Whether biometric collection is enabled
-    pub enabled: bool,
     /// Whether explicit consent is required for biometric data
     pub require_explicit_consent: bool,
     /// Privacy protection level for biometric data
     pub privacy_protection: String,
-}

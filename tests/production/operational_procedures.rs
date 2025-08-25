@@ -1,3 +1,20 @@
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
 //! Production Operational Procedures Tests
 //!
 //! Tests for operational procedures, maintenance operations,
@@ -13,7 +30,10 @@ pub async fn test_operational_procedures(prod_manager: &mut ProductionManager) {
     let backup_test = prod_manager
         .test_backup_procedures()
         .await
-        .expect("Backup procedures should work");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Backup procedures should work", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Backup procedures should work", e))
+})?;
 
     assert!(
         backup_test.backup_creation_successful,
@@ -28,7 +48,10 @@ pub async fn test_operational_procedures(prod_manager: &mut ProductionManager) {
     let maintenance_test = prod_manager
         .test_maintenance_procedures()
         .await
-        .expect("Maintenance procedures should work");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Maintenance procedures should work", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Maintenance procedures should work", e))
+})?;
 
     assert!(
         maintenance_test.graceful_shutdown_functional,
@@ -51,12 +74,18 @@ async fn test_operational_procedures_standalone() {
     let core = Arc::new(
         BearDogCore::new(config)
             .await
-            .expect("Core initialization failed"),
+            .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+})?,
     );
 
     let mut production_manager = ProductionManager::new(core.clone())
         .await
-        .expect("Production manager creation failed");
+        .map_err(|e| {
+    tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
+    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Production manager creation failed", e))
+})?;
         
     test_operational_procedures(&mut production_manager).await;
 } 

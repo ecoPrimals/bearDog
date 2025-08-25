@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="`BearDog` Secure Tunnel Protocol (BSTP) Security Layer"><title>beardog_tunnel::tunnel::config - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1a91846b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="beardog_tunnel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.88.0 (6b00bc388 2025-06-23)" data-channel="1.88.0" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../sidebar-items.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../beardog_tunnel/index.html">beardog_<wbr>tunnel</a><span class="version">0.1.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Module config</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#beardog-secure-tunnel-protocol-bstp-security-layer" title="`BearDog` Secure Tunnel Protocol (BSTP) Security Layer"><code>BearDog</code> Secure Tunnel Protocol (BSTP) Security Layer</a><ul><li><a href="#core-security-features" title="Core Security Features">Core Security Features</a></li><li><a href="#unified-architecture---post-modernization" title="Unified Architecture - Post-Modernization">Unified Architecture - Post-Modernization</a></li><li><a href="#module-overview---unified" title="Module Overview - Unified">Module Overview - Unified</a></li><li><a href="#example-usage---unified-architecture" title="Example Usage - Unified Architecture">Example Usage - Unified Architecture</a></li></ul></li><li><a href="#beardog-tunnel-configuration" title="`BearDog` Tunnel Configuration"><code>BearDog</code> Tunnel Configuration</a><ul><li><a href="#configuration-profiles" title="Configuration Profiles">Configuration Profiles</a></li><li><a href="#key-features" title="Key Features">Key Features</a></li></ul></li></ul><h3><a href="#structs">Module Items</a></h3><ul class="block"><li><a href="#structs" title="Structs">Structs</a></li></ul></section><div id="rustdoc-modnav"><h2><a href="../index.html">In beardog_<wbr>tunnel::<wbr>tunnel</a></h2></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../../index.html">beardog_tunnel</a>::<wbr><a href="../index.html">tunnel</a></div><h1>Module <span>config</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../../src/beardog_tunnel/tunnel/config.rs.html#1-614">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="beardog-secure-tunnel-protocol-bstp-security-layer"><a class="doc-anchor" href="#beardog-secure-tunnel-protocol-bstp-security-layer">§</a><code>BearDog</code> Secure Tunnel Protocol (BSTP) Security Layer</h2>
+<p><strong>MODERNIZATION COMPLETE - UNIFIED ARCHITECTURE</strong></p>
+<p>The BSTP security layer provides ultra-fast encryption and security management
+for gaming tunnels with sub-100μs latency targets. This module implements:</p>
+<h3 id="core-security-features"><a class="doc-anchor" href="#core-security-features">§</a>Core Security Features</h3>
+<ul>
+<li><strong>Ultra-Fast Gaming Encryption</strong>: Sub-100μs encryption/decryption for competitive gaming</li>
+<li><strong>Unified Human Entropy</strong>: Single source of truth for human entropy collection</li>
+<li><strong>Unified <code>HSM</code> Management</strong>: Consolidated <code>HSM</code> provider interface</li>
+<li><strong>Genetic Security Adaptation</strong>: Self-evolving security based on threat landscape</li>
+<li><strong>Session Management</strong>: Secure session lifecycle with automatic key rotation</li>
+<li><strong>Performance Monitoring</strong>: Real-time latency and throughput tracking</li>
+<li><strong>Threat Response</strong>: Automated security adaptation to detected threats</li>
+</ul>
+<h3 id="unified-architecture---post-modernization"><a class="doc-anchor" href="#unified-architecture---post-modernization">§</a>Unified Architecture - Post-Modernization</h3><div class="example-wrap"><pre class="language-text"><code>┌─────────────────────────────────────────┐
+│             SONGBIRD                    │ ← Network orchestration
+│    (Network/Discovery/Load Balancing)  │
+├─────────────────────────────────────────┤
+│          BSTP INTERFACE                 │ ← Clean API boundary
+├─────────────────────────────────────────┤
+│             BEARDOG TUNNEL              │ ← Security &amp; encryption
+│     UNIFIED ARCHITECTURE:               │
+│  ┌─────────────────────────────────────┐│
+│  │ Unified `HSM` Manager                 ││
+│  │ - Human Entropy (Unified)           ││
+│  │ - Provider Registry (Unified)       ││
+│  │ - Canonical Types (beardog-types)   ││
+│  └─────────────────────────────────────┘│
+└─────────────────────────────────────────┘</code></pre></div><h3 id="module-overview---unified"><a class="doc-anchor" href="#module-overview---unified">§</a>Module Overview - Unified</h3>
+<ul>
+<li><a href="../hsm/index.html" title="mod beardog_tunnel::tunnel::hsm"><code>hsm</code></a>: <strong>UNIFIED</strong> <code>HSM</code> integration with human entropy tier elevation</li>
+<li><a href="../security_provider/index.html" title="mod beardog_tunnel::tunnel::security_provider"><code>security_provider</code></a>: Core security provider interface and implementation</li>
+<li><a href="../session/index.html" title="mod beardog_tunnel::tunnel::session"><code>session</code></a>: Secure session management with genetic evolution</li>
+<li><a href="../gaming_crypto/index.html" title="mod beardog_tunnel::tunnel::gaming_crypto"><code>gaming_crypto</code></a>: Gaming-optimized encryption engine</li>
+<li><a href="../genetic_healing/index.html" title="mod beardog_tunnel::tunnel::genetic_healing"><code>genetic_healing</code></a>: Self-healing security with genetic algorithms</li>
+<li><a href="../performance/index.html" title="mod beardog_tunnel::tunnel::performance"><code>performance</code></a>: Performance monitoring and optimization</li>
+<li><a href="../events/index.html" title="mod beardog_tunnel::tunnel::events"><code>events</code></a>: Event system for BSTP security communications</li>
+<li><a href="index.html" title="mod beardog_tunnel::tunnel::config"><code>config</code></a>: Configuration management for all BSTP components</li>
+<li><a href="../key_manager/index.html" title="mod beardog_tunnel::tunnel::key_manager"><code>key_manager</code></a>: Secure key generation, rotation, and management</li>
+</ul>
+<h3 id="example-usage---unified-architecture"><a class="doc-anchor" href="#example-usage---unified-architecture">§</a>Example Usage - Unified Architecture</h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>beardog_tunnel::tunnel::{UnifiedHsmManager, BStpSecurityManager, BStpConfig};
+<span class="kw">use </span>std::sync::Arc;
+
+<span class="attr">#[tokio::main]
+</span><span class="kw">async fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;(), Box&lt;<span class="kw">dyn </span>std::error::Error&gt;&gt; {
+    <span class="comment">// Initialize unified `HSM` manager
+    </span><span class="kw">let </span>hsm_manager = Arc::new(UnifiedHsmManager::new().<span class="kw">await</span><span class="question-mark">?</span>);
+     
+    <span class="comment">// Initialize configuration
+    </span><span class="kw">let </span>config = BStpConfig::competitive_gaming();
+     
+    <span class="comment">// Initialize BSTP security manager with unified architecture
+    </span><span class="kw">let </span>security_manager = BStpSecurityManager::new(
+        config,
+        hsm_manager,
+    ).<span class="kw">await</span><span class="question-mark">?</span>;
+     
+    <span class="macro">println!</span>(<span class="string">"🛡️ BSTP Security Layer initialized with unified architecture!"</span>);
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div>
+<h2 id="beardog-tunnel-configuration"><a class="doc-anchor" href="#beardog-tunnel-configuration">§</a><code>BearDog</code> Tunnel Configuration</h2>
+<p>This module provides configuration structures for the <code>BearDog</code> tunnel system.
+It includes performance tuning, key management, gaming optimizations, genetic healing,
+monitoring, and alerting configurations.</p>
+<h3 id="configuration-profiles"><a class="doc-anchor" href="#configuration-profiles">§</a>Configuration Profiles</h3>
+<ul>
+<li><strong>Competitive Gaming</strong>: Ultra-low latency for competitive gaming</li>
+<li><strong>Maximum Security</strong>: High security with hardware key requirements</li>
+<li><strong>Default</strong>: Balanced performance and security</li>
+</ul>
+<h3 id="key-features"><a class="doc-anchor" href="#key-features">§</a>Key Features</h3>
+<ul>
+<li>Performance optimization settings</li>
+<li>Key management and rotation policies</li>
+<li>Gaming-specific configurations</li>
+<li>Genetic healing parameters</li>
+<li>Monitoring and alerting thresholds</li>
+</ul>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><dl class="item-table"><dt><a class="struct" href="struct.AlertThresholds.html" title="struct beardog_tunnel::tunnel::config::AlertThresholds">Alert<wbr>Thresholds</a></dt><dd>Alert threshold configuration</dd><dt><a class="struct" href="struct.BStpConfig.html" title="struct beardog_tunnel::tunnel::config::BStpConfig">BStp<wbr>Config</a></dt><dd>Main <code>BearDog</code> Tunnel Protocol (BSTP) configuration</dd><dt><a class="struct" href="struct.GamingConfig.html" title="struct beardog_tunnel::tunnel::config::GamingConfig">Gaming<wbr>Config</a></dt><dd>Gaming-specific configuration</dd><dt><a class="struct" href="struct.GeneticHealingConfig.html" title="struct beardog_tunnel::tunnel::config::GeneticHealingConfig">Genetic<wbr>Healing<wbr>Config</a></dt><dd>Genetic healing system configuration</dd><dt><a class="struct" href="struct.KeyManagementConfig.html" title="struct beardog_tunnel::tunnel::config::KeyManagementConfig">KeyManagement<wbr>Config</a></dt><dd>Key management configuration</dd><dt><a class="struct" href="struct.MonitoringConfig.html" title="struct beardog_tunnel::tunnel::config::MonitoringConfig">Monitoring<wbr>Config</a></dt><dd>Monitoring and metrics configuration</dd><dt><a class="struct" href="struct.PerformanceConfig.html" title="struct beardog_tunnel::tunnel::config::PerformanceConfig">Performance<wbr>Config</a></dt><dd>Performance optimization configuration</dd></dl></section></div></main></body></html>

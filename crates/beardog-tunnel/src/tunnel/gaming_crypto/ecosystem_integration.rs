@@ -1,10 +1,26 @@
-//! Ecosystem Integration for Gaming Crypto
-//!
-//! Provides integration with the broader BearDog ecosystem for
-//! distributed crypto optimization and capability discovery.
+// BearDog - Enterprise Security Ecosystem
+// Copyright (C) 2025 EcoPrimals
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+
+/// Ecosystem Integration for Gaming Crypto
+///
+/// Provides integration with the broader BearDog ecosystem for
+/// distributed crypto optimization and capability discovery.
 
 use serde::{Deserialize, Serialize};
-
 /// Request for ecosystem-based crypto optimization
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EcosystemOptimizationRequest {
@@ -17,7 +33,6 @@ pub struct EcosystemOptimizationRequest {
     /// Optimization preferences
     pub preferences: OptimizationPreferences,
 }
-
 /// Performance requirements for optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceRequirements {
@@ -29,10 +44,7 @@ pub struct PerformanceRequirements {
     pub max_cpu_utilization: f64,
     /// Maximum memory usage in bytes
     pub max_memory_bytes: u64,
-}
-
 /// Current network conditions
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConditions {
     /// Current latency in microseconds
     pub current_latency_us: f64,
@@ -42,10 +54,7 @@ pub struct NetworkConditions {
     pub packet_loss_rate: f64,
     /// Network stability score (0.0 to 1.0)
     pub stability_score: f64,
-}
-
 /// Available computational resources
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceAvailability {
     /// Available CPU cores
     pub available_cores: usize,
@@ -55,10 +64,7 @@ pub struct ResourceAvailability {
     pub hardware_acceleration: Vec<String>,
     /// SIMD instruction sets available
     pub simd_support: Vec<String>,
-}
-
 /// Optimization preferences
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationPreferences {
     /// Prefer low latency over throughput
     pub prioritize_latency: bool,
@@ -68,10 +74,7 @@ pub struct OptimizationPreferences {
     pub use_hardware_acceleration: bool,
     /// Enable adaptive algorithm selection
     pub adaptive_selection: bool,
-}
-
 /// Result from ecosystem optimization
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemOptimizationResult {
     /// Recommended crypto algorithm
     pub recommended_algorithm: String,
@@ -83,10 +86,7 @@ pub struct EcosystemOptimizationResult {
     pub contributing_modules: Vec<String>,
     /// Confidence in recommendations (0.0 to 1.0)
     pub confidence_score: f64,
-}
-
 /// Expected performance improvements
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceImprovements {
     /// Latency reduction percentage
     pub latency_reduction_percent: f64,
@@ -95,10 +95,12 @@ pub struct PerformanceImprovements {
     /// CPU usage reduction percentage
     pub cpu_reduction_percent: f64,
     /// Memory usage reduction percentage
-    pub memory_reduction_percent: f64,
-}
+    pub memory_reduction_percent: f64,}
 
-impl Default for PerformanceRequirements {
+
+impl Default for PerformanceRequirements {}
+
+
     fn default() -> Self {
         Self {
             max_latency_us: 100.0,
@@ -107,60 +109,33 @@ impl Default for PerformanceRequirements {
             max_memory_bytes: 64 * 1024 * 1024, // 64MB
         }
     }
-}
-
 impl Default for NetworkConditions {
-    fn default() -> Self {
-        Self {
             current_latency_us: 50.0,
             current_bandwidth_mbps: 1000.0,
             packet_loss_rate: 0.001,
-            stability_score: 0.9,
-        }
-    }
-}
+            stability_score: 0.9,}
+
 
 impl Default for ResourceAvailability {
-    fn default() -> Self {
-        Self {
             available_cores: 8,
             available_memory_bytes: 16 * 1024 * 1024 * 1024, // 16GB
             hardware_acceleration: vec!["AES-NI".to_string()],
             simd_support: vec!["SSE4.2".to_string(), "AVX2".to_string()],
-        }
-    }
-}
-
 impl Default for OptimizationPreferences {
-    fn default() -> Self {
-        Self {
             prioritize_latency: true,
             enable_genetic_optimization: true,
             use_hardware_acceleration: true,
-            adaptive_selection: true,
-        }
-    }
-}
+            adaptive_selection: true,}
+
 
 impl Default for EcosystemOptimizationResult {
-    fn default() -> Self {
-        Self {
             recommended_algorithm: "ChaCha20Poly1305".to_string(),
             optimized_parameters: vec![],
             expected_improvements: PerformanceImprovements::default(),
             contributing_modules: vec!["GeneticOptimizer".to_string()],
             confidence_score: 0.85,
-        }
-    }
-}
-
 impl Default for PerformanceImprovements {
-    fn default() -> Self {
-        Self {
             latency_reduction_percent: 15.0,
             throughput_increase_percent: 25.0,
             cpu_reduction_percent: 10.0,
             memory_reduction_percent: 5.0,
-        }
-    }
-}
