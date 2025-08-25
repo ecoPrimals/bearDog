@@ -87,7 +87,7 @@ impl BearDogWorkflowSystem {
     }
     
     /// Create workflow system with custom configuration
-    pub async fn with_config(config: WorkflowEngineConfig) -> beardog_errors::BearDogResult<Self> {
+    pub async fn with_config(_config: WorkflowEngineConfig) -> beardog_errors::BearDogResult<Self> {
         let engine = workflows::zero_cost_engine::create_development_engine().await?;
         Ok(Self {
             engine: Box::new(engine),
@@ -107,14 +107,14 @@ impl BearDogWorkflowSystem {
 
 /// **WORKFLOW SYSTEM BUILDER** - Fluent API for system configuration
 pub struct WorkflowSystemBuilder {
-    config: WorkflowEngineConfig,
+    _config: WorkflowEngineConfig,
 }
 
 impl WorkflowSystemBuilder {
     /// Create new builder with default configuration
     pub fn new() -> Self {
         Self {
-            config: WorkflowEngineConfig::default(),
+            _config: WorkflowEngineConfig::default(),
         }
     }
     
@@ -125,7 +125,7 @@ impl WorkflowSystemBuilder {
     }
     
     /// Enable approval requirements
-    pub fn with_approvals(self, enabled: bool) -> Self {
+    pub fn with_approvals(self, _enabled: bool) -> Self {
         // Approval is always enabled in the unified system
         self
     }

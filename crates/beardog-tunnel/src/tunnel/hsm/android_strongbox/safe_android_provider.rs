@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -124,7 +126,6 @@ impl<C: AndroidCapability> SafeMobileHardwareProvider<C> {
 
     pub fn supports_algorithm(&self, algorithm: Algorithm) -> bool {
         C::supported_algorithms().contains(&algorithm)
-#[async_trait::async_trait]
 impl<C: AndroidCapability> SafeHardwareProvider for SafeMobileHardwareProvider<C> {
     async fn generate_key_safe(
         &self,

@@ -24,6 +24,7 @@ use serde_json;
 use std::process::Stdio;
 use tokio::process::Command;
 use tracing::debug;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedMonitoringConfig;
 
 // ============================================================================
 // KUBERNETES PROVIDER - External System
@@ -211,8 +212,7 @@ pub struct PrometheusProvider {
 }
 
 
-pub struct PrometheusConfig {
-    pub endpoint: String,}
+// MIGRATED: PrometheusConfig -> use beardog_types::config::UnifiedMonitoringConfig;
 
 
 impl Default for PrometheusConfig {

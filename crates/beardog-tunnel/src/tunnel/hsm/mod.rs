@@ -43,6 +43,15 @@
 /// └─────┘    └─────┘
 
 // MODERNIZED: Using canonical types instead of duplicates
+/// **PHASE 3 MODERNIZATION** - Zero-cost HSM provider abstractions
+pub mod zero_cost_provider;
+
+// Re-export zero-cost abstractions
+pub use zero_cost_provider::{
+    ZeroCostHsmProvider, ZeroCostHsmManager,
+    HsmProviderTrait, migrate_to_zero_cost,
+};
+
 use beardog_errors::{BearDogError, BearDogResult};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

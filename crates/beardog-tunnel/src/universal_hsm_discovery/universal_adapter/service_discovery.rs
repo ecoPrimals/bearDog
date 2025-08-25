@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -30,6 +32,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedDiscoveryConfig;
 /// **CANONICAL SERVICE DISCOVERY CLIENT**
 /// Unified service discovery client that consolidates DNS, mDNS, HTTP, and custom discovery methods.
 #[derive(Debug)]
@@ -47,21 +50,7 @@ pub struct ServiceDiscoveryClient {
 }
 /// **SERVICE DISCOVERY CONFIGURATION**
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DiscoveryConfig {
-    /// Cache TTL in seconds
-    pub cache_ttl_secs: u64,
-    /// Discovery timeout in milliseconds
-    pub timeout_ms: u64,
-    /// Maximum retries for discovery operations
-    pub max_retries: u32,
-    /// Preferred discovery backends
-    pub preferred_backends: Vec<String>,
-    /// Discovery endpoints
-    pub discovery_endpoints: Vec<String>,
-    /// Enable DNS-SD discovery
-    pub enable_dns_discovery: bool,
-    /// Enable mDNS discovery
-    pub enable_mdns_discovery: bool,}
+// MIGRATED: DiscoveryConfig -> use beardog_types::config::UnifiedDiscoveryConfig;
 
 
 impl Default for DiscoveryConfig {}
@@ -141,7 +130,6 @@ pub struct NetworkService {
     /// Service protocol
     pub protocol: String,
 /// **DISCOVERY BACKEND TRAIT**
-#[async_trait::async_trait]
 pub trait DiscoveryBackend: Send + Sync {
     /// Discover services by capability
     async fn discover_by_capability(&self, capability: &str) -> BearDogResult<Vec<BearDogServiceRegistration>>;

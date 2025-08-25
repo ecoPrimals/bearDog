@@ -42,6 +42,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn};
 use uuid::Uuid;
+// CANONICAL IMPORT: use beardog_types::config::CanonicalAdapterConfig;
 // Type alias for complex capability handlers map
 /// **MODERNIZED** - Capability handler types using enum dispatch  
 #[derive(Debug)]
@@ -73,21 +74,7 @@ pub struct UniversalVendorAdapter {
 }
 /// Configuration for the universal adapter
 #[derive(Debug, Clone)]
-pub struct UniversalAdapterConfig {
-    /// Enable automatic capability discovery
-    pub auto_discovery: bool,
-    /// Discovery interval in seconds
-    pub discovery_interval_seconds: u64,
-    /// Maximum concurrent operations
-    pub max_concurrent_operations: usize,
-    /// Default timeout for operations
-    pub default_timeout_seconds: u64,
-    /// Enable performance monitoring
-    pub enable_monitoring: bool,
-    /// Enable health checks
-    pub enable_health_checks: bool,
-    /// Health check interval in seconds
-    pub health_check_interval_seconds: u64,}
+// MIGRATED: UniversalAdapterConfig -> use beardog_types::config::CanonicalAdapterConfig;
 
 
 impl Default for UniversalAdapterConfig {}

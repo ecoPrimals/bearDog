@@ -139,7 +139,7 @@ impl ComplianceHandler {
     }
 
     /// GDPR compliance evaluation
-    async fn evaluate_gdpr_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_gdpr_compliance(&self, _event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
         let mut violations = Vec::new();
 
         match event.event_type {
@@ -167,7 +167,7 @@ impl ComplianceHandler {
     }
 
     /// SOX compliance evaluation
-    async fn evaluate_sox_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_sox_compliance(&self, _event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
         let mut violations = Vec::new();
 
         if event.event_type == ComplianceEventType::SecurityIncident {
@@ -186,7 +186,7 @@ impl ComplianceHandler {
     }
 
     /// PCI DSS compliance evaluation
-    async fn evaluate_pci_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_pci_compliance(&self, _event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
         let mut violations = Vec::new();
 
         if event.event_type == ComplianceEventType::DataAccess {
@@ -207,7 +207,7 @@ impl ComplianceHandler {
     }
 
     /// HIPAA compliance evaluation
-    async fn evaluate_hipaa_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_hipaa_compliance(&self, _event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
         let mut violations = Vec::new();
 
         if event.event_type == ComplianceEventType::DataAccess {
@@ -228,7 +228,7 @@ impl ComplianceHandler {
     }
 
     /// ISO 27001 compliance evaluation
-    async fn evaluate_iso27001_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_iso27001_compliance(&self, _event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
         let mut violations = Vec::new();
 
         if event.event_type == ComplianceEventType::SecurityIncident {
@@ -246,14 +246,14 @@ impl ComplianceHandler {
     }
 
     /// SOC 2 compliance evaluation
-    async fn evaluate_soc2_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_soc2_compliance(&self, _event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
         let violations = Vec::new();
         // SOC 2 evaluation logic would go here
         Ok(violations)
     }
 
     /// CCPA compliance evaluation
-    async fn evaluate_ccpa_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_ccpa_compliance(&self, _event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
         let violations = Vec::new();
         // CCPA evaluation logic would go here
         Ok(violations)

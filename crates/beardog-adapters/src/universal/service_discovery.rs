@@ -25,6 +25,7 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use super::*;
 use crate::{EcosystemError, EcosystemResult};
+// CANONICAL IMPORT: use beardog_types::config::UnifiedDiscoveryConfig;
 /// **MODERNIZED** - Discovery backend types using enum dispatch
 #[derive(Debug)]
 pub enum DiscoveryBackendType {
@@ -46,27 +47,7 @@ pub struct ServiceDiscoveryClient {
 }
 /// Service discovery configuration
 #[derive(Debug, Clone)]
-pub struct DiscoveryConfig {
-    /// Cache TTL in seconds
-    pub cache_ttl_secs: u64,
-    /// Discovery timeout in milliseconds
-    pub timeout_ms: u64,
-    /// Maximum retries for discovery operations
-    pub max_retries: u32,
-    /// Preferred discovery backends
-    pub preferred_backends: Vec<String>,
-/// Service cache for performance optimization
-struct ServiceCache {
-    /// Cached registrations by capability
-    by_capability: HashMap<String, CachedEntry<Vec<UniversalServiceRegistration>>>,
-    /// Cached individual services
-    by_service_id: HashMap<uuid::Uuid, CachedEntry<UniversalServiceRegistration>>,
-/// Cached entry with expiration
-struct CachedEntry<T> {
-    /// Cached data
-    data: T,
-    /// Expiration time
-    expires_at: Instant,}
+// MIGRATED: DiscoveryConfig -> use beardog_types::config::UnifiedDiscoveryConfig;
 
 
 impl ServiceDiscoveryClient {

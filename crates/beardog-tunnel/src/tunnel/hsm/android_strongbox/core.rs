@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -24,7 +26,6 @@ use super::super::types::{AndroidHsmConfig, HsmCapability, HsmTier, KeyType};
 use super::types::AndroidDeviceInfo;
 use crate::tunnel::hsm::types::*;
 use beardog_traits::canonical::HsmProvider;
-use async_trait::async_trait;
 use beardog_core::{HsmHealthStatus, HsmKey}; // Use canonical types for trait compatibility
 use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;

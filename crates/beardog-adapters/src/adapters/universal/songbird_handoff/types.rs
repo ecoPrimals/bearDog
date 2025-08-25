@@ -26,6 +26,9 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedMonitoringConfig;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedNetworkConfig;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedSecurityConfig;
 /// Universal primal types for ecosystem standardization
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PrimalType {
@@ -113,99 +116,7 @@ pub struct ResourceSpec {
     /// GPU requirements (if applicable)
     pub gpu_units: Option<u32>,
 /// Universal security configuration
-pub struct SecurityConfig {
-    /// Authentication method
-    pub auth_method: AuthMethod,
-    /// Encryption requirements
-    pub encryption_required: bool,
-    /// Security level
-    pub security_level: SecurityLevel,
-    /// Compliance requirements
-    pub compliance: Vec<String>,
-/// Universal health check configuration
-pub struct HealthCheckConfig {
-    /// Health check endpoint path
-    pub path: String,
-    /// Check interval in seconds
-    pub interval_seconds: u64,
-    /// Timeout in seconds
-    pub timeout_seconds: u64,
-    /// Failure threshold
-    pub failure_threshold: u32,
-/// Universal performance capabilities
-pub struct PerformanceCapabilities {
-    /// Latency characteristics (milliseconds)
-    pub latency_ms: Option<u64>,
-    /// Throughput characteristics (requests per second)
-    pub throughput_rps: Option<u64>,
-    /// Concurrency support
-    pub max_concurrent_requests: Option<u32>,
-/// Universal authentication methods
-pub enum AuthMethod {
-    /// No authentication required
-    None,
-    /// API key authentication
-    ApiKey,
-    /// Bearer token authentication
-    Bearer,
-    /// OAuth2 authentication
-    OAuth2,
-    /// Mutual TLS authentication
-    MutualTLS,
-    /// Custom authentication method
-    Custom(String),
-/// Universal security levels}
-
-
-pub enum SecurityLevel {
-    /// Low security level
-    Low,
-    /// Medium security level
-    Medium,
-    /// High security level
-    High,
-    /// Ultimate security level
-    Ultimate,
-    /// Adaptive security level
-    Adaptive,
-    /// Optimized security level
-    Optimized,
-/// Universal request format for all ecosystem communication
-pub struct EcosystemRequest {
-    /// Unique request identifier
-    pub request_id: Uuid,
-    /// Source service identifier
-    pub source_service: String,
-    /// Target service identifier
-    pub target_service: String,
-    /// Request operation
-    pub operation: String,
-    /// Request payload
-    pub payload: serde_json::Value,
-    /// Security context
-    pub security_context: SecurityContext,
-    /// Request metadata
-    /// Request timestamp
-    pub timestamp: DateTime<Utc>,
-/// Universal response format
-pub struct EcosystemResponse {
-    /// Request ID this response is for
-    /// Response status
-    pub status: ResponseStatus,
-    /// Response payload
-    /// Response metadata
-    /// Response timestamp
-/// Universal response status
-pub enum ResponseStatus {
-    /// Operation completed successfully
-    Success,
-    /// Operation failed with error
-    Error {
-        /// Error code
-        code: String,
-        /// Error message
-        message: String,
-    },
+// MIGRATED: SecurityConfig -> use beardog_types::config::UnifiedSecurityConfig;,
     /// Operation timed out
     Timeout,
     /// Service is unavailable
@@ -367,53 +278,7 @@ pub struct PerformanceMetrics {
     /// Error rate percentage
     pub error_rate_percent: f64,
 /// Universal load balancer configuration
-pub struct LoadBalancerConfig {
-    /// Load balancing algorithm
-    pub algorithm: LoadBalancingAlgorithm,
-    /// Service weight for weighted algorithms
-    pub weight: u32,
-    /// Maximum concurrent requests
-    pub max_requests: u32,
-    /// Circuit breaker settings
-    pub circuit_breaker: CircuitBreakerConfig,
-/// Universal circuit breaker configuration
-pub struct CircuitBreakerConfig {
-    /// Failure threshold to open circuit
-    /// Timeout before trying to close circuit
-    /// Success threshold to close circuit
-    pub success_threshold: u32,
-/// Universal orchestration metadata
-pub struct OrchestrationMetadata {
-    /// Routing rules
-    pub routing_rules: Vec<RoutingRule>,
-    /// Scaling policies
-    pub scaling_policies: Vec<ScalingPolicy>,
-    /// Affinity rules
-    pub affinity_rules: Vec<AffinityRule>,
-/// Universal routing rule
-pub struct RoutingRule {
-    /// Rule condition
-    pub condition: String,
-    /// Target service
-    pub target: String,
-    /// Rule weight
-/// Universal scaling policy
-pub struct ScalingPolicy {
-    /// Metric to scale on
-    pub metric: String,
-    /// Threshold value
-    pub threshold: f64,
-    /// Scaling action
-    pub action: ScalingAction,
-/// Universal scaling action
-pub enum ScalingAction {
-    /// Scale up by specified number of instances
-    ScaleUp(u32),
-    /// Scale down by specified number of instances
-    ScaleDown(u32),
-    /// Scale to zero instances
-    ScaleToZero,
-/// Universal affinity rule}
+// MIGRATED: LoadBalancerConfig -> use beardog_types::config::UnifiedNetworkConfig;
 
 
 pub struct AffinityRule {
@@ -467,12 +332,7 @@ pub struct ComponentHealth {
     pub details: Option<String>,
     /// Last check timestamp
 /// Universal health monitor configuration
-pub struct HealthMonitorConfig {
-    /// Health check interval
-    pub check_interval_seconds: u64,
-    /// Health check timeout
-    /// Recovery threshold
-    pub recovery_threshold: u32,}
+// MIGRATED: HealthMonitorConfig -> use beardog_types::config::UnifiedMonitoringConfig;
 
 
 impl Default for HealthMonitorConfig {

@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -24,7 +26,6 @@ use crate::tunnel::hsm::software_hsm::CryptoProvider;
 use crate::tunnel::hsm::types::KeyType; // Explicit KeyType import
 use crate::tunnel::hsm::types::*;
 use arrayref::array_ref;
-use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 use ring::aead::{LessSafeKey, Nonce, UnboundKey, AES_256_GCM, NONCE_LEN};
 use ring::rand::{SecureRandom, SystemRandom};

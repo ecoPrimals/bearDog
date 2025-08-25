@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -36,7 +38,6 @@ use crate::tunnel::hsm::types::config::SoftwareHsmConfig as CanonicalSoftwareHsm
 use crate::tunnel::hsm::types::*;
 use beardog_traits::canonical::HsmProvider;
 use crate::tunnel::hsm::{GenerateKeyRequest, HsmConfig, HsmInfo, HsmKeyInfo};
-use async_trait::async_trait;
 use beardog_core::HsmKey; // Use core HsmKey to match trait expectation
 use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;

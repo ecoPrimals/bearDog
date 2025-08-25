@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -23,7 +25,6 @@
 
 use super::core_types::*;
 use super::external_primal_service::*;
-use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -32,6 +33,7 @@ use std::time::{Duration, Instant, SystemTime};
 use tokio::sync::{RwLock, Mutex};
 use tracing::{debug, info, warn, error};
 use uuid::Uuid;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedMonitoringConfig;
 /// **CANONICAL EXTERNAL PRIMAL CLIENT** - Main client for external primal communication
 #[derive(Debug)]
 pub struct ExternalPrimalClient {
@@ -184,12 +186,7 @@ pub struct HealthResult {
     /// Error message (if any)
     pub error: Option<String>,
 /// **HEALTH CHECK CONFIGURATION**
-pub struct HealthCheckConfig {
-    /// Health check timeout
-    pub timeout: Duration,
-    /// Maximum consecutive failures before marking unhealthy
-    pub max_failures: u32,
-    pub interval: Duration,}
+// MIGRATED: HealthCheckConfig -> use beardog_types::config::UnifiedMonitoringConfig;
 
 
 impl Default for HealthCheckConfig {

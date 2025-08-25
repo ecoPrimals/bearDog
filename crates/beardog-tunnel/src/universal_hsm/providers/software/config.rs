@@ -21,6 +21,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedSecurityConfig;
 /// Configuration for the software HSM provider
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SoftwareHsmConfig {
@@ -55,15 +56,7 @@ pub enum OptimizationLevel {
 /// Security level configuration}
 
 
-pub struct SecurityLevelConfig {
-    /// Enable constant-time operations
-    pub constant_time: bool,
-    /// Enable memory protection
-    pub memory_protection: bool,
-    /// Enable side-channel protection
-    pub side_channel_protection: bool,
-    /// Enable timing attack protection
-    pub timing_attack_protection: bool,}
+// MIGRATED: SecurityLevelConfig -> use beardog_types::config::UnifiedSecurityConfig;
 
 
 impl Default for SoftwareHsmConfig {}

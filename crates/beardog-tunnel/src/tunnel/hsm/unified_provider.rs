@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -24,7 +26,6 @@
 /// - ❌ Various scattered provider fragments (REPLACED)
 /// - ✅ This unified system (CANONICAL)
 
-use async_trait::async_trait;
 use beardog_errors::BearDogResult;
 use beardog_traits::canonical::HsmProvider;
 use chrono::{DateTime, Utc};

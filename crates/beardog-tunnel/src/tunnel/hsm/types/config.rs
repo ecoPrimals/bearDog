@@ -35,6 +35,10 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedSecurityConfig;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedMonitoringConfig;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedPerformanceConfig;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedDatabaseConfig;
 // ✅ MIGRATION BRIDGES ELIMINATED
 // Code should import canonical types directly for:
 // - Better performance (no re-export overhead)
@@ -104,175 +108,10 @@ pub struct AndroidHsmConfig {
 // Use beardog_types::canonical::hsm::config for hybrid configurations
 /// Security configuration for HSM
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct SecurityConfig {
-    /// Minimum security level required
-    pub min_security_level: u32,
-    /// Required certifications
-    pub required_certifications: Vec<CertificationLevel>,
-    /// Key rotation policy
-    pub key_rotation_policy: KeyRotationPolicy,
-    /// Audit configuration
-    pub audit_config: AuditConfig,
-/// Performance configuration for HSM operations}
+// MIGRATED: SecurityConfig -> use beardog_types::config::UnifiedSecurityConfig;
 
 
-pub struct PerformanceConfig {
-    /// Maximum operation timeout in milliseconds
-    pub max_operation_timeout: u64,
-    /// Maximum concurrent operations
-    pub max_concurrent_operations: u32,
-    /// Connection pool size
-    pub connection_pool_size: u32,
-    /// Retry configuration
-    pub retry_config: RetryConfig,
-    pub operation_timeout: Duration,
-/// Monitoring configuration for HSM operations
-pub struct MonitoringConfig {
-    /// Enable metrics collection
-    pub enable_metrics: bool,
-    /// Metrics collection interval in seconds
-    pub metrics_interval: u64,
-    /// Enable health checks
-    pub enable_health_checks: bool,
-    /// Health check interval in seconds
-    pub health_check_interval: u64,
-/// Alert thresholds for HSM monitoring
-pub struct AlertThresholds {
-    /// Maximum error rate before alerting (0.0 to 1.0)
-    pub max_error_rate: f64,
-    /// Maximum latency in milliseconds before alerting
-    pub max_latency_ms: f64,
-    /// Minimum availability percentage before alerting
-    pub min_availability_percent: f64,
-/// HSM connection configuration
-pub struct HsmConnectionConfig {
-    /// Connection type
-    pub connection_type: ConnectionType,
-    /// Connection parameters
-    pub connection_params: HashMap<String, String>,
-    /// Connection timeout in milliseconds
-    pub timeout_ms: u64,
-    /// Number of retry attempts
-    pub retry_attempts: u32,
-/// HSM connection types
-pub enum ConnectionType {
-    /// Network connection
-    Network {
-        /// Host address
-        host: String,
-        /// Port number
-        port: u16,
-        /// Use TLS encryption
-        use_tls: bool,
-    },
-    /// Serial connection
-    Serial {
-        /// Serial port path
-        port_path: String,
-        /// Baud rate
-        baud_rate: u32,
-    /// USB connection
-    Usb {
-        /// USB vendor ID
-        vendor_id: u16,
-        /// USB product ID
-        product_id: u16,
-    /// Local connection (software HSM)
-    Local,
-/// Authentication configuration for HSM
-pub struct AuthConfig {
-    /// Authentication method
-    pub auth_method: AuthMethod,
-    /// Authentication credentials
-    pub credentials: AuthCredentials,
-    /// Multi-factor authentication configuration
-    pub mfa_config: Option<MfaConfig>,
-/// Authentication methods
-pub enum AuthMethod {
-    /// Password-based authentication
-    Password,
-    /// Certificate-based authentication
-    Certificate,
-    /// Smart card authentication
-    SmartCard,
-    /// Biometric authentication
-    Biometric,
-    /// Multi-factor authentication
-    MultiFactor,
-/// Authentication credentials}
-
-
-pub enum AuthCredentials {
-    /// Username and password
-    Password {
-        /// Username
-        username: String,
-        /// Password (should be encrypted)
-        password: String,
-    /// Certificate and private key
-    Certificate {
-        /// Certificate data
-        certificate: Vec<u8>,
-        /// Private key data
-        private_key: Vec<u8>,
-    /// Smart card configuration
-    SmartCard {
-        /// Smart card slot
-        slot: u32,
-        /// PIN
-        pin: String,
-    /// Biometric template
-    Biometric {
-        /// Biometric template data
-        template: Vec<u8>,
-        /// Biometric type
-        biometric_type: String,
-/// Multi-factor authentication configuration
-/// High availability configuration
-pub struct HaConfig {
-    /// Cluster configuration
-    pub cluster_config: ClusterConfig,
-    /// Failover configuration
-    pub failover_config: FailoverConfig,
-    /// Load balancing configuration
-    pub load_balancing: LoadBalancingStrategy,
-/// Cluster configuration for HA
-pub struct ClusterConfig {
-    /// Cluster nodes
-    pub nodes: Vec<ClusterNode>,
-    /// Quorum size
-    pub quorum_size: u32,
-    /// Cluster synchronization interval
-    pub sync_interval_seconds: u64,
-/// Cluster node configuration
-pub struct ClusterNode {
-    /// Node identifier
-    pub node_id: String,
-    /// Node address
-    pub address: String,
-    /// Node port
-    pub port: u16,
-    /// Node priority
-    pub priority: u32,
-/// Failover configuration
-pub struct FailoverConfig {
-    /// Failover strategy
-    pub strategy: FailoverStrategy,
-    /// Failover timeout in seconds
-    pub timeout_seconds: u64,
-    /// Health check configuration
-    pub health_check: HealthCheckConfig,
-    pub enable_automatic_failover: bool,
-    pub failover_timeout: Duration,
-/// Failover strategies
-pub enum FailoverStrategy {
-    /// Automatic failover
-    Automatic,
-    /// Manual failover
-    Manual,
-    /// Hybrid (automatic with manual override)
-    Hybrid,
-/// Load balancing strategies}
+// MIGRATED: PerformanceConfig -> use beardog_types::config::UnifiedPerformanceConfig;
 
 
 pub enum LoadBalancingStrategy {
@@ -285,45 +124,7 @@ pub enum LoadBalancingStrategy {
     /// Performance-based routing
     PerformanceBased,
 /// Health check configuration
-pub struct HealthCheckConfig {
-    pub interval_seconds: u64,
-    /// Health check timeout in seconds
-    /// Number of consecutive failures before marking unhealthy
-    pub failure_threshold: u32,
-    /// Number of consecutive successes before marking healthy
-    pub success_threshold: u32,
-/// Key rotation policy
-pub struct KeyRotationPolicy {
-    /// Enable automatic key rotation
-    pub enable_auto_rotation: bool,
-    /// Rotation interval in days
-    pub rotation_interval_days: u32,
-    /// Key overlap period in days
-    pub overlap_period_days: u32,
-    /// Maximum key age in days
-    pub max_key_age_days: u32,
-/// Audit configuration
-pub struct AuditConfig {
-    /// Enable audit logging
-    pub enable_audit_logging: bool,
-    /// Audit log format
-    pub log_format: AuditLogFormat,
-    /// Audit log destination
-    pub log_destination: AuditLogDestination,
-    /// Events to audit
-    pub audit_events: Vec<AuditEvent>,
-/// Audit log formats
-pub enum AuditLogFormat {
-    /// JSON format
-    #[default]
-    Json,
-    /// CEF (Common Event Format)
-    Cef,
-    /// Syslog format
-    Syslog,
-    /// Custom format
-    Custom(String),
-/// Audit log destinations}
+// MIGRATED: HealthCheckConfig -> use beardog_types::config::UnifiedMonitoringConfig;
 
 
 pub enum AuditLogDestination {
@@ -430,25 +231,7 @@ pub struct FileStorageConfig {
     /// Backup path
     pub backup_path: Option<String>,
 /// Database configuration
-pub struct DatabaseConfig {
-    /// Database URL
-    pub database_url: String,
-    /// Connection timeout in seconds
-    pub connection_timeout_seconds: u64,
-    /// Enable encryption at rest
-    pub enable_encryption_at_rest: bool,
-/// Crypto backend types
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum CryptoBackend {
-    /// OpenSSL backend
-    OpenSsl,
-    /// Ring backend
-    Ring,
-    /// RustCrypto backend
-    RustCrypto,
-    /// Hardware backend
-    /// Custom backend
-// Default implementations}
+// MIGRATED: DatabaseConfig -> use beardog_types::config::UnifiedDatabaseConfig;
 
 
 impl Default for AttestationConfig {

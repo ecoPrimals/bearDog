@@ -180,7 +180,7 @@ where
 
         // Get processor
         let processors = self.workflow_processors.read().await;
-        let processor = processors.get(&workflow.workflow_type).ok_or_else(|| {
+        let _processor = processors.get(&workflow.workflow_type).ok_or_else(|| {
             BearDogError::internal(format!(
                 "No processor available for workflow type: {:?}",
                 workflow.workflow_type
@@ -222,7 +222,7 @@ where
         );
         
         // Get workflow
-        let workflow = self
+        let _workflow = self
             .workflow_store
             .get_workflow(workflow_id)
             .await?

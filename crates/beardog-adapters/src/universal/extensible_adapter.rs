@@ -28,6 +28,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+// CANONICAL IMPORT: use beardog_types::config::CanonicalAdapterConfig;
 
 /// **ZERO-COST EXTENSIBLE UNIVERSAL ADAPTER**
 /// 
@@ -55,18 +56,7 @@ where
 
 /// Configuration for the extensible adapter
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExtensibleAdapterConfig {
-    /// Default timeout for operations
-    pub default_timeout_seconds: u64,
-    /// Maximum concurrent operations
-    pub max_concurrent_operations: usize,
-    /// Enable automatic type discovery
-    pub auto_discover_types: bool,
-    /// Custom configuration per type system
-    pub type_system_configs: HashMap<String, serde_json::Value>,
-    /// Protocol-specific configurations
-    pub protocol_configs: HashMap<String, serde_json::Value>,
-}
+// MIGRATED: ExtensibleAdapterConfig -> use beardog_types::config::CanonicalAdapterConfig;
 
 impl Default for ExtensibleAdapterConfig {
     fn default() -> Self {

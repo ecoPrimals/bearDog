@@ -31,41 +31,9 @@ use super::traits::*;
 use beardog_errors::{BearDogError, BearDogResult};
 /// Universal adapter configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UniversalAdapterConfig {
-    /// Target primal identifier
-    pub target_primal: PrimalId,
-    /// Connection endpoint
-    pub endpoint: String,
-    /// Authentication configuration
-    pub auth: AuthConfig,
-    /// Connection timeout in seconds
-    pub timeout_seconds: u64,
-    /// Maximum retry attempts
-    pub max_retries: u32,
-    /// Custom configuration parameters
-    pub custom_config: HashMap<String, String>,
-}
+// MIGRATED: UniversalAdapterConfig -> use beardog_types::config::CanonicalAdapterConfig;
 /// Authentication configuration for universal adapters
-pub struct AuthConfig {
-    /// Authentication type
-    pub auth_type: AuthType,
-    /// API key (if using API key auth)
-    pub api_key: Option<String>,
-    /// Certificate path (if using TLS client cert)
-    pub cert_path: Option<String>,
-    /// Custom auth parameters
-    pub custom_auth: HashMap<String, String>,
-/// Authentication types supported by universal adapters
-pub enum AuthType {
-    /// No authentication
-    None,
-    /// API key authentication
-    ApiKey,
-    /// TLS client certificate
-    TlsCert,
-    /// Custom authentication
-    Custom(String),
-/// Universal adapter that can communicate with any primal type}
+// MIGRATED: AuthConfig -> use beardog_types::config::UnifiedSecurityConfig;
 
 
 pub struct UniversalAdapter {
@@ -282,6 +250,8 @@ impl UniversalAdapterFactory {
 #[cfg(test)]
 mod tests {
     use super::*;
+// CANONICAL IMPORT: use beardog_types::config::CanonicalAdapterConfig;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedSecurityConfig;
     #[tokio::test]}
 
 

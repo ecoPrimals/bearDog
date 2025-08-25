@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -23,7 +25,6 @@
 use super::super::types::*;
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::types::{Algorithm, KeyType}; // Explicit imports for missing types
-use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;

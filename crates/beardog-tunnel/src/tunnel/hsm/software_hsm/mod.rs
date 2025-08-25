@@ -156,11 +156,7 @@ pub enum KeySource {
     External,}
 
 
-pub struct DatabaseConfig {
-    pub connection_string: String,
-    pub table_name: String,
-    pub connection_pool_size: u32,
-}
+// MIGRATED: DatabaseConfig -> use beardog_types::config::UnifiedDatabaseConfig;
 
 
 pub struct MemoryConfig {
@@ -176,14 +172,7 @@ pub struct FileConfig {
 }
 
 
-pub struct PerformanceConfig {
-    pub max_operations_per_second: Option<u64>,
-    pub timeout_seconds: Option<u64>,
-    pub retry_attempts: Option<u32>,
-pub enum SoftwareHsmType {
-    RustSoftwareHsm,
-    OpenSslSoftwareHsm,
-    BoringSSLSoftwareHsm,}
+// MIGRATED: PerformanceConfig -> use beardog_types::config::UnifiedPerformanceConfig;
 
 
 pub struct SoftwareHsmConfig {
@@ -363,6 +352,8 @@ pub struct SoftwareHsmCapabilities {
 mod tests {
     use super::*;
     use *;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedPerformanceConfig;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedDatabaseConfig;
     #[tokio::test]
     async fn test_create_default_software_hsm() -> beardog_errors::BearDogResult<()> {
         let hsm = create_default_software_hsm().await;

@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -22,7 +24,6 @@
 /// primals in the ecosystem (Songbird, ToadStool, NestGate, BiomeOS, Squirrel).
 
 use super::core_types::*;
-use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

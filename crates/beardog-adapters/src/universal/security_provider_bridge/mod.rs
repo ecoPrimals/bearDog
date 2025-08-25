@@ -37,6 +37,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
+// CANONICAL IMPORT: use beardog_types::config::CanonicalAdapterConfig;
 // UUID generation is handled in the implementation
 
 /// Zero-cost security provider bridge using generic composition
@@ -226,24 +227,7 @@ pub struct SecurityProviderMetrics {
     pub error_counters: HashMap<String, u64>,
     pub uptime_seconds: u64,
 /// Configuration for the security provider bridge
-pub struct BridgeConfig {
-    /// Enable authentication services
-    pub enable_authentication: bool,
-    /// Enable authorization services
-    pub enable_authorization: bool,
-    /// Enable audit logging
-    pub enable_audit_logging: bool,
-    /// Enable cryptographic operations
-    pub enable_crypto_operations: bool,
-    /// Enable key management
-    pub enable_key_management: bool,
-    /// Maximum concurrent sessions
-    pub max_concurrent_sessions: usize,
-    /// Vendor HSM configurations
-    pub vendor_hsm_configs: HashMap<String, VendorHsmConfig>,
-    /// Performance monitoring settings
-    pub enable_performance_monitoring: bool,
-    pub metrics_retention_hours: u64,}
+// MIGRATED: BridgeConfig -> use beardog_types::config::CanonicalAdapterConfig;
 
 
 impl Default for BridgeConfig {}

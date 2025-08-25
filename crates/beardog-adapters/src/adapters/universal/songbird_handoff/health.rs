@@ -32,6 +32,7 @@ use super::super::traits::{HealthImpact, HealthStatus};
 use super::client::SongBirdDiscoveryClient;
 use super::types::*;
 use beardog_errors::BearDogResult;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedMonitoringConfig;
 /// Universal Health Monitor
 /// Monitors the health of any ecosystem component and reports status to SongBird.
 pub struct UniversalHealthMonitor {
@@ -50,17 +51,7 @@ pub struct UniversalHealthMonitor {
 }
 /// Universal health monitor configuration
 #[derive(Debug, Clone)]
-pub struct HealthMonitorConfig {
-    /// Health check interval in seconds
-    pub check_interval_seconds: u64,
-    /// Health check timeout in seconds
-    pub check_timeout_seconds: u64,
-    /// Maximum consecutive failures before marking unhealthy
-    pub max_consecutive_failures: u32,
-    /// Health history retention count
-    pub history_retention_count: usize,
-    /// Enable performance metrics collection
-    pub enable_performance_metrics: bool,}
+// MIGRATED: HealthMonitorConfig -> use beardog_types::config::UnifiedMonitoringConfig;
 
 
 impl Default for HealthMonitorConfig {}
