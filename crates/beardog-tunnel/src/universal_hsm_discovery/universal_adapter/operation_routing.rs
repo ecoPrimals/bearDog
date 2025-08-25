@@ -30,6 +30,7 @@ use std::time::{Duration, Instant, SystemTime};
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn, error};
 use uuid::Uuid;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedMonitoringConfig;
 /// **CANONICAL OPERATION ROUTER** - Main routing engine for HSM operations
 #[derive(Debug)]
 pub struct OperationRouter {
@@ -427,14 +428,7 @@ pub struct RetryConfig {
     /// Jitter enabled
     pub jitter: bool,
 /// **HEALTH CHECK CONFIG** - Health check configuration
-pub struct HealthCheckConfig {
-    pub interval: Duration,
-    /// Health check timeout
-    pub timeout: Duration,
-    /// Healthy threshold
-    pub healthy_threshold: u32,
-    /// Unhealthy threshold
-    pub unhealthy_threshold: u32,}
+// MIGRATED: HealthCheckConfig -> use beardog_types::config::UnifiedMonitoringConfig;
 
 
 impl OperationRouter {

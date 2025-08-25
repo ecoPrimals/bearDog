@@ -276,27 +276,7 @@ pub enum DiscoveryHsmHealthStatus {
 /// Discovery configuration}
 
 
-pub struct DiscoveryConfig {
-    /// Enable PKCS#11 discovery
-    pub enable_pkcs11: bool,
-    /// Enable cloud KMS discovery
-    pub enable_cloud_kms: bool,
-    /// Enable network HSM discovery
-    pub enable_network_hsm: bool,
-    /// Enable USB HSM discovery
-    pub enable_usb_hsm: bool,
-    /// Enable software HSM discovery
-    pub enable_software_hsm: bool,
-    /// Enable mobile HSM discovery
-    pub enable_mobile_hsm: bool,
-    /// Enable TPM discovery
-    pub enable_tpm: bool,
-    /// Discovery timeout in seconds
-    pub discovery_timeout_seconds: u32,
-    /// Human entropy tier elevation enabled
-    pub enable_human_entropy_elevation: bool,
-    /// Minimum entropy quality for tier elevation
-    pub minimum_entropy_quality: f64,}
+// MIGRATED: DiscoveryConfig -> use beardog_types::config::UnifiedDiscoveryConfig;
 
 
 impl Default for DiscoveryConfig {}
@@ -403,6 +383,7 @@ impl UniversalHsmDiscovery {
         ).await
 /// Import HSM tier type from main types module
 use crate::tunnel::hsm::types::HsmTier;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedDiscoveryConfig;
 /// Re-export discovery components
 pub use capability_detector::CapabilityDetector;
 pub use discovery_engine::DiscoveryEngine;

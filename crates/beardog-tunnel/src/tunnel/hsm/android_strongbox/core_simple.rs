@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -20,7 +22,6 @@
 /// **UNIFIED ARCHITECTURE COMPATIBLE**
 /// This is a simplified, working implementation that integrates with the unified tunnel architecture.
 
-use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 // Removed unused KeyUsagePolicy import
 // Helper function for creating NotFound errors

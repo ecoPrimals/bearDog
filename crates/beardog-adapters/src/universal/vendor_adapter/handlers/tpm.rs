@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -20,7 +22,6 @@
 /// Framework implementation for TPM hardware integration within the canonical architecture.
 /// Ready for future TPM hardware integration when required.
 
-use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 use serde_json::json;
 

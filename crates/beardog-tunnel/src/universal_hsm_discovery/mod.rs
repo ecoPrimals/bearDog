@@ -26,6 +26,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
+// CANONICAL IMPORT: use beardog_types::config::UnifiedDiscoveryConfig;
 // Re-export canonical types from tunnel::hsm::types
 pub use crate::tunnel::hsm::types::capability::{
     AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
@@ -128,17 +129,7 @@ pub struct UniversalHsmDiscovery {
     /// Discovery configuration
     pub config: DiscoveryConfig,
 /// Discovery configuration
-pub struct DiscoveryConfig {
-    /// Whether to enable cloud HSM discovery
-    pub enable_cloud_discovery: bool,
-    /// Whether to enable PKCS#11 discovery
-    pub enable_pkcs11_discovery: bool,
-    /// Whether to enable smartphone HSM discovery
-    pub enable_smartphone_discovery: bool,
-    /// Discovery timeout in seconds
-    pub discovery_timeout_seconds: u64,
-    /// Whether to perform capability detection
-    pub enable_capability_detection: bool,}
+// MIGRATED: DiscoveryConfig -> use beardog_types::config::UnifiedDiscoveryConfig;
 
 
 impl Default for DiscoveryConfig {}

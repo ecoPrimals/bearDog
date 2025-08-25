@@ -75,12 +75,12 @@ impl Default for WorkflowHandler {
     fn default() -> WorkflowHandler {
         let config = WorkflowEngineConfig::default();
         let workflow_store = Arc::new(InMemoryWorkflowStore::new());
-        let approval_store = Arc::new(InMemoryApprovalStore::new());
+        let _approval_store = Arc::new(InMemoryApprovalStore::new());
         let notification_engine = Arc::new(
             crate::workflows::notification::NotificationEngine::new(NotificationConfig::default()),
         );
         // Create async channels for structured concurrency
-        let (execution_tx, _execution_rx) = tokio::sync::mpsc::unbounded_channel::<crate::workflows::canonical::execution::WorkflowExecutionCommand>();
+        let (execution_tx, __execution_rx) = tokio::sync::mpsc::unbounded_channel::<crate::workflows::canonical::execution::WorkflowExecutionCommand>();
         let (shutdown_tx, _shutdown_rx) = tokio::sync::broadcast::channel(1);
         WorkflowHandler {
             policy_engine: crate::workflows::canonical::WorkflowPolicyConfig::default(),
@@ -138,7 +138,7 @@ impl WorkflowHandler {
     /// Register default workflow processors
     #[allow(dead_code)] // Will be used when workflow processing is fully implemented
     async fn register_default_processors(&self) -> BearDogResult<()> {
-        let processors = self.workflow_processors.write().await;
+        let _processors = self.workflow_processors.write().await;
         // Use existing zero-cost processors
         // processors.insert(
         //     WorkflowType::KeyRotation,
@@ -431,8 +431,8 @@ impl WorkflowHandler {
         // Start scheduler
         self.scheduler.start().await?;
         // Create execution service with proper channel setup
-        let (_execution_tx, execution_rx) = tokio::sync::mpsc::unbounded_channel::<crate::workflows::canonical::execution::WorkflowExecutionCommand>();
-        let shutdown_rx = self.shutdown_tx.subscribe();
+        let (_execution_tx, _execution_rx) = tokio::sync::mpsc::unbounded_channel::<crate::workflows::canonical::execution::WorkflowExecutionCommand>();
+        let _shutdown_rx = self.shutdown_tx.subscribe();
         // Create execution service with proper type constraints
         let execution_service = crate::workflows::canonical::execution::engine::SimpleWorkflowExecutionService::new(
             Arc::clone(&self.workflow_store),

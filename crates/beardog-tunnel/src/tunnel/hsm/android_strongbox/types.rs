@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -22,7 +24,6 @@
 
 use crate::tunnel::hsm::types::*;
 use beardog_traits::canonical::HsmProvider;
-use async_trait::async_trait;
 use beardog_core::{HsmHealthStatus, HsmKey};
 use beardog_errors::{BearDogError, BearDogResult};
 use std::collections::HashMap;
@@ -118,7 +119,6 @@ impl AndroidStrongBoxHsm {
         // Start health monitoring
         self.health_monitor.start_monitoring().await?;
         Ok(())
-#[async_trait]
 impl HsmProvider for AndroidStrongBoxHsm {}
 
 

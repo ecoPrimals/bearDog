@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -25,8 +27,7 @@ use super::rust_crypto::RustCryptoProvider; // Import from actual implementation
 use crate::tunnel::hsm::software_hsm::types::{CryptoProvider, OpenSslCryptoProvider};
 use crate::tunnel::hsm::types::config::CryptoBackend;
 use crate::tunnel::hsm::types::tier::KeyStorageType;
-// use async_trait::async_trait;
-use beardog_errors::{BearDogError, BearDogResult};
+// use beardog_errors::{BearDogError, BearDogResult};
 // use std::sync::Arc;
 /// Create a crypto provider based on the specified backend
 pub async fn create_crypto_provider(

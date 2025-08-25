@@ -32,6 +32,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 use tracing::{debug, error, info, warn};
+// CANONICAL IMPORT: use beardog_types::config::CanonicalAdapterConfig;
 
 pub mod authentication;
 pub mod protocols;
@@ -48,14 +49,7 @@ pub struct UniversalExternalAdapter {
 }
 /// Configuration for universal external adapter
 #[derive(Debug, Clone)]
-pub struct UniversalAdapterConfig {
-    pub timeout_seconds: u64,
-    pub retry_attempts: u32,
-    pub retry_backoff_ms: u64,
-    pub max_concurrent_connections: usize,
-    pub enable_circuit_breaker: bool,
-    pub circuit_breaker_failure_threshold: u32,
-    pub circuit_breaker_reset_timeout_seconds: u64,}
+// MIGRATED: UniversalAdapterConfig -> use beardog_types::config::CanonicalAdapterConfig;
 
 
 impl Default for UniversalAdapterConfig {}

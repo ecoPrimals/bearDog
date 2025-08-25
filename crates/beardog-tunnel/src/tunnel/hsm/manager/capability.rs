@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -22,7 +24,6 @@
 
 use super::{HsmCapabilityDetector, SecurityLevel, SecurityRequirements};
 use crate::tunnel::hsm::types::HsmCapability;
-use async_trait::async_trait;
 use beardog_core::HsmTier; // Use the core HsmTier instead of local one
 use beardog_errors::BearDogResult;
 use std::collections::HashMap;

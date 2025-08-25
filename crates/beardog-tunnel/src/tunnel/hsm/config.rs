@@ -22,6 +22,7 @@
 
 use crate::tunnel::hsm::types::*;
 use std::time::Duration;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedPerformanceConfig;
 /// Simple HSM tier enum for internal tracking
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SimpleHsmTier {
@@ -64,12 +65,7 @@ pub struct FailoverConfig {
     pub circuit_breaker_threshold: u32,
     pub circuit_breaker_timeout: Duration,
 /// Performance configuration
-pub struct PerformanceConfig {
-    pub enable_load_balancing: bool,
-    pub enable_caching: bool,
-    pub max_concurrent_operations: usize,
-    pub operation_timeout: Duration,
-// Default implementations}
+// MIGRATED: PerformanceConfig -> use beardog_types::config::UnifiedPerformanceConfig;
 
 
 impl Default for HealthConfig {}

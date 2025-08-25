@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -25,7 +27,6 @@
 /// - Always available as a fallback option
 /// - Production-ready for non-hardware-critical use cases
 
-use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::{
     crypto::KeyType,

@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -20,11 +22,11 @@
 /// This module provides the canonical, modernized HSM types that replace
 /// the fragmented type definitions across the tunnel crate.
 
-use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedDiscoveryConfig;
 /// Canonical memory protection level - unified definition
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MemoryProtectionLevel {
@@ -256,21 +258,7 @@ pub struct DiscoveredHsm {
     /// Connection information
     pub connection_info: Option<HsmConnectionInfo>,
 /// Canonical discovery config - unified definition
-pub struct DiscoveryConfig {
-    /// Enable cloud HSM discovery
-    pub enable_cloud_discovery: bool,
-    /// Enable PKCS#11 discovery
-    pub enable_pkcs11_discovery: bool,
-    /// Enable smartphone HSM discovery
-    pub enable_smartphone_discovery: bool,
-    /// Discovery timeout in seconds
-    pub discovery_timeout_seconds: u64,
-    /// Enable capability detection
-    pub enable_capability_detection: bool,
-    /// Auto discovery enabled (legacy field)
-    pub auto_discovery_enabled: bool,
-    /// General timeout (legacy field)
-    pub timeout: Option<u64>,}
+// MIGRATED: DiscoveryConfig -> use beardog_types::config::UnifiedDiscoveryConfig;
 
 
 impl Default for DiscoveryConfig {

@@ -423,3 +423,5 @@ impl RuleCondition {
             } => *count > 0 && *window_minutes > 0,
                 !conditions.is_empty() && conditions.iter().all(|c| c.is_valid())
             RuleCondition::Not { condition } => condition.is_valid(),
+
+}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}

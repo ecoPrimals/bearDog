@@ -96,32 +96,7 @@ pub struct SmartCardDiscoverer {
     readers: Vec<String>,
 /// Network scanning configuration
 #[derive(Debug, Clone)]
-pub struct NetworkScanConfig {
-    /// IP address ranges to scan
-    pub ip_ranges: Vec<String>,
-    /// Connection timeout in milliseconds
-    pub timeout_ms: u32,
-    /// Maximum concurrent connections
-    pub max_concurrent: usize,
-/// USB enumeration configuration
-pub struct UsbEnumerationConfig {
-    /// Enable device enumeration
-    pub enable_enumeration: bool,
-    /// Enumeration timeout
-/// Software HSM implementations
-pub enum SoftwareHsmImplementation {
-    /// OpenSSL-based software HSM
-    OpenSsl,
-    /// SoftHSM (PKCS#11 software implementation)
-    SoftHsm,
-    /// BearDog native software HSM
-    BearDogNative,
-    /// Microsoft CNG (Windows)
-    MicrosoftCng,
-    /// macOS Keychain
-    MacOsKeychain,
-    /// Custom implementation
-    Custom { name: String, path: String },
+// MIGRATED: NetworkScanConfig -> use beardog_types::config::UnifiedNetworkConfig;,
 /// TPM interface types
 pub enum TpmInterfaceType {
     /// TPM 1.2
@@ -571,3 +546,4 @@ impl Default for super::DiscoveryHsmCapabilities {}
                 behavioral_entropy: false,
                 realtime_entropy: false,
 use uuid; 
+// CANONICAL IMPORT: use beardog_types::config::UnifiedNetworkConfig;

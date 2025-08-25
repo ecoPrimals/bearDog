@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -20,7 +22,6 @@
 /// Defines the core trait that any vendor capability must implement
 /// to work with the Universal Vendor Adapter.
 
-use async_trait::async_trait;
 use beardog_errors::BearDogResult;
 use beardog_types::canonical::capabilities::CapabilityType;
 use chrono::{DateTime, Utc};

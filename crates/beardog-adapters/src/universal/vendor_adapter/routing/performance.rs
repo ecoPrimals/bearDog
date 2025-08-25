@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -22,13 +24,13 @@
 
 use super::traits::{AlternativeHandler, RoutingStrategy};
 use crate::universal::vendor_adapter::{CapabilityHandler, UniversalVendorRequest};
-use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 use chrono::{DateTime, Utc};
 use serde_json::json;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use uuid::Uuid;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedPerformanceConfig;
 /// **PERFORMANCE FIRST ROUTING** - Select based on fastest response time
 #[derive(Debug)]
 pub struct PerformanceFirstRouting {
@@ -207,14 +209,7 @@ impl RoutingStrategy for PerformanceFirstRouting {}
 ) -> PerformanceFirstRouting {
     PerformanceFirstRouting::with_config(name, window_size, min_samples)
 /// Performance routing configuration
-pub struct PerformanceRoutingConfig {
-    /// Strategy name
-    /// Number of recent metrics to consider
-    /// Minimum samples needed for reliable metrics
-    /// Weight for response time vs success rate
-    pub response_time_weight: f64,
-    /// Weight for success rate vs response time
-    pub success_rate_weight: f64,}
+// MIGRATED: PerformanceRoutingConfig -> use beardog_types::config::UnifiedPerformanceConfig;
 
 
 impl Default for PerformanceRoutingConfig {

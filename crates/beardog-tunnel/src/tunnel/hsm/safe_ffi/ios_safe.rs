@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -22,7 +24,6 @@
 
 use super::traits::SafeHardwareProvider;
 use crate::tunnel::hsm::types::{HsmKey, KeyType};
-use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 use tracing::{debug, info, warn};
 /// Safe iOS Secure Enclave provider

@@ -78,7 +78,7 @@ where
     }
     
     /// Submit workflow for processing - zero-cost dispatch
-    pub async fn submit_workflow(&self, workflow: CanonicalWorkflow) -> BearDogResult<WorkflowId> {
+    pub async fn submit_workflow(&self, _workflow: CanonicalWorkflow) -> BearDogResult<WorkflowId> {
         let start = Instant::now();
         self.operations.fetch_add(1, Ordering::Relaxed);
         
@@ -90,7 +90,7 @@ where
         //     .map_err(|e| BearDogError::workflow(format!("Failed to store workflow {}: {}", workflow_id, e)))?;
         
         // Create processing context
-        let context = WorkflowProcessingContext::default();
+        let _context = WorkflowProcessingContext::default();
         
         // Process using zero-cost processor (simplified for compilation)
         // In a full implementation, this would use the actual processor interface
@@ -102,7 +102,7 @@ where
     }
     
     /// Get workflow status
-    pub async fn get_workflow_status(&self, workflow_id: &WorkflowId) -> BearDogResult<WorkflowStatus> {
+    pub async fn get_workflow_status(&self, _workflow_id: &WorkflowId) -> BearDogResult<WorkflowStatus> {
         // Check if workflow exists and get its status
         // Simplified implementation for type compatibility - return default status
         // In a full implementation, this would properly query the workflow store
@@ -136,10 +136,10 @@ where
 #[allow(async_fn_in_trait)]
 pub trait WorkflowEngine: Send + Sync {
     /// Submit a workflow for processing
-    fn submit_workflow(&self, workflow: CanonicalWorkflow) -> impl std::future::Future<Output = BearDogResult<WorkflowId>> + Send;
+    fn submit_workflow(&self, _workflow: CanonicalWorkflow) -> impl std::future::Future<Output = BearDogResult<WorkflowId>> + Send;
     
     /// Get workflow status
-    fn get_workflow_status(&self, workflow_id: &WorkflowId) -> impl std::future::Future<Output = BearDogResult<WorkflowStatus>> + Send;
+    fn get_workflow_status(&self, _workflow_id: &WorkflowId) -> impl std::future::Future<Output = BearDogResult<WorkflowStatus>> + Send;
     
     /// Get engine statistics
     fn get_engine_stats(&self) -> ZeroCostEngineStats;
@@ -149,7 +149,7 @@ pub trait WorkflowEngine: Send + Sync {
 /// This interface provides dyn-compatible methods by returning boxed futures
 pub trait WorkflowEngineInterface: Send + Sync {
     /// Submit a workflow for processing
-    fn submit_workflow_boxed(&self, workflow: CanonicalWorkflow) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<WorkflowId>> + Send + '_>>;
+    fn submit_workflow_boxed(&self, _workflow: CanonicalWorkflow) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<WorkflowId>> + Send + '_>>;
     
     /// Get workflow status
     fn get_workflow_status_boxed<'a>(&'a self, workflow_id: &'a WorkflowId) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<WorkflowStatus>> + Send + 'a>>;
@@ -160,7 +160,7 @@ pub trait WorkflowEngineInterface: Send + Sync {
 
 // Blanket implementation to make any WorkflowEngine also implement WorkflowEngineInterface
 impl<T: WorkflowEngine> WorkflowEngineInterface for T {
-    fn submit_workflow_boxed(&self, workflow: CanonicalWorkflow) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<WorkflowId>> + Send + '_>> {
+    fn submit_workflow_boxed(&self, _workflow: CanonicalWorkflow) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<WorkflowId>> + Send + '_>> {
         Box::pin(self.submit_workflow(workflow))
     }
     
@@ -179,14 +179,14 @@ where
     A: ZeroCostApprovalStore<APPROVAL_CAPACITY>,
     P: ZeroCostWorkflowProcessor,
 {
-    async fn submit_workflow(&self, workflow: CanonicalWorkflow) -> BearDogResult<WorkflowId> {
+    async fn submit_workflow(&self, _workflow: CanonicalWorkflow) -> BearDogResult<WorkflowId> {
         // Implementation would go here - for now return a placeholder
         let workflow_id = WorkflowId::new();
         // Store workflow and return ID
         Ok(workflow_id)
     }
     
-    async fn get_workflow_status(&self, workflow_id: &WorkflowId) -> BearDogResult<WorkflowStatus> {
+    async fn get_workflow_status(&self, _workflow_id: &WorkflowId) -> BearDogResult<WorkflowStatus> {
         // Implementation would go here - for now return a placeholder
         Ok(beardog_types::canonical::workflow::WorkflowStatus::Pending)
     }

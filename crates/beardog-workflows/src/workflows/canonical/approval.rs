@@ -260,11 +260,6 @@ impl Default for WorkflowApprovalEngine {
 }
 
 
-impl Default for WorkflowApprovalEngine {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl WorkflowApprovalEngine {
     /// Create a new approval engine with optional config

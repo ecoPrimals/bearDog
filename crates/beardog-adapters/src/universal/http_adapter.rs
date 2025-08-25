@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -51,7 +53,6 @@ pub struct ErrorInfo {
     pub message: String,
     pub details: Option<serde_json::Value>,
 /// Service mesh connector trait
-#[async_trait::async_trait]
 pub trait ServiceMeshConnector {
     /// Register service with the mesh
     async fn register_service(

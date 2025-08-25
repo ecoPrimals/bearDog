@@ -24,6 +24,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 use super::{
+// CANONICAL IMPORT: use beardog_types::config::UnifiedDiscoveryConfig;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedNetworkConfig;
     strategies::{
         CloudDiscoveryStrategy, EnvironmentDiscoveryStrategy, HardwareDiscoveryStrategy,
         NetworkDiscoveryStrategy,
@@ -50,17 +52,7 @@ pub struct VendorDiscoveryEngine {
 }
 /// Configuration for the discovery engine
 #[derive(Debug, Clone)]
-pub struct DiscoveryEngineConfig {
-    /// Enable automatic discovery
-    pub auto_discovery: bool,
-    /// Discovery interval in seconds
-    pub discovery_interval_seconds: u64,
-    /// Maximum discovery timeout
-    pub discovery_timeout_seconds: u64,
-    /// Cache discovered capabilities
-    pub enable_caching: bool,
-    /// Cache TTL in seconds
-    pub cache_ttl_seconds: u64,}
+// MIGRATED: DiscoveryEngineConfig -> use beardog_types::config::UnifiedDiscoveryConfig;
 
 
 impl Default for DiscoveryEngineConfig {}
@@ -135,23 +127,7 @@ pub enum AuthSpec {
 /// TLS configuration}
 
 
-pub struct TlsConfig {
-    pub cert_path: Option<String>,
-    pub key_path: Option<String>,
-    pub ca_path: Option<String>,
-    pub verify_cert: bool,
-/// Library initialization specification
-pub struct LibraryInitSpec {
-    pub init_function: String,
-    pub init_params: HashMap<String, serde_json::Value>,
-/// Hardware interface type
-pub enum HardwareInterface {
-    Tpm,
-    Hsm,
-    SmartCard,
-    UsbToken,
-    NetworkDevice,
-/// Message protocol}
+// MIGRATED: TlsConfig -> use beardog_types::config::UnifiedNetworkConfig;
 
 
 pub enum MessageProtocol {

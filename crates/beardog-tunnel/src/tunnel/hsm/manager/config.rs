@@ -24,6 +24,7 @@ use super::super::types::HsmConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
+// CANONICAL IMPORT: use beardog_types::config::UnifiedPerformanceConfig;
 /// Simple HSM tier enum for internal tracking
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SimpleHsmTier {
@@ -84,15 +85,7 @@ pub struct FailoverConfig {
     /// Timeout for circuit breaker reset
     pub circuit_breaker_timeout: Duration,
 /// Performance configuration
-pub struct PerformanceConfig {
-    /// Whether load balancing is enabled
-    pub enable_load_balancing: bool,
-    /// Whether caching is enabled
-    pub enable_caching: bool,
-    /// Maximum number of concurrent operations
-    pub max_concurrent_operations: usize,
-    /// Timeout for individual operations
-    pub operation_timeout: Duration,}
+// MIGRATED: PerformanceConfig -> use beardog_types::config::UnifiedPerformanceConfig;
 
 
 impl Default for HealthConfig {}

@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -335,7 +337,6 @@ impl SecurityHealingChromosome {
 /// This provides the interface for distributed genetic healing across any ecosystem services}
 
 
-#[async_trait::async_trait]
 pub trait EcosystemComputeExtension: Send + Sync {
     /// Network-wide genetic healing coordination
     async fn coordinate_network_healing(

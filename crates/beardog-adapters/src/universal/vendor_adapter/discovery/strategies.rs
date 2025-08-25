@@ -1,3 +1,5 @@
+// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -17,7 +19,6 @@
 
 /// Discovery Strategy Trait and Implementations
 
-use async_trait::async_trait;
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::capabilities::CapabilityType;
 use chrono::Utc;
