@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -132,7 +133,7 @@ impl BearDogCore {
             required_capabilities: vec![],
             parent_genetics: vec![],
             resource_requirements: Default::default(),
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::ahash::HashMap::default(),
             security_clearance: beardog_auth::auth::SecurityClearance::Basic,
         };
         // 4. Process the spawn request through genetics engine

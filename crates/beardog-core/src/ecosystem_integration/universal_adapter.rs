@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -61,7 +62,7 @@ impl Default for UniversalAdapterConfig {}
 
     fn default() -> Self {
         Self {
-            service_endpoints: HashMap::new(),
+            service_endpoints: ahash::HashMap::default(),
             default_timeout_ms: 30000,
         }
     }
@@ -81,7 +82,7 @@ impl ProductionUniversalAdapter {}
     pub fn new(config: UniversalAdapterConfig) -> Self {
             config,
             http_client: reqwest::Client::new(),
-            discovered_services: HashMap::new(),
+            discovered_services: ahash::HashMap::default(),
             service_discovery_cache_ttl: Duration::from_secs(300), // 5 minute cache
     /// Discover available services for a given capability}
 

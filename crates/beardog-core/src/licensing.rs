@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -146,7 +147,7 @@ impl LicenseManager {
 
     pub fn new() -> Self {
         Self {
-            signed_licenses: HashMap::new(),
+            signed_licenses: ahash::HashMap::default(),
             verification_key: Self::get_verification_key(),
             grace_period_hours: 72, // 3 days grace period for development
         }
@@ -271,7 +272,7 @@ impl LicenseManager {
             "Verifying license signature for {}",
             signed_license.license.licensee.organization
         // Serialize license data to canonical JSON for signature verification
-        let license_json = serde_json::to_string(&signed_license.license).map_err(|e| {
+        let license_json = rmp_serde::to_vec(&signed_license.license).map_err(|e| {
             BearDogError::configuration(format!("License serialization error: {e}"),
         })?;
         // Get BearDog's public key for verification

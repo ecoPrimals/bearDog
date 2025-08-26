@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -101,7 +102,7 @@ pub async fn example_vendor_agnostic_operations() -> BearDogResult<()> {
         key_size: Some(256),
         created_at: chrono::Utc::now(),
         expires_at: None,
-        tags: HashMap::new(),
+        tags: ahash::HashMap::default(),
     };
 
     let hsm_key = universal_hsm.generate_key(KeyType::EcdsaP256, key_metadata).await?;
@@ -212,7 +213,7 @@ pub async fn example_failover_and_high_availability() -> BearDogResult<()> {
         key_size: Some(256),
         created_at: chrono::Utc::now(),
         expires_at: None,
-        tags: HashMap::new(),
+        tags: ahash::HashMap::default(),
     };
 
     // Attempt multiple key generations to demonstrate failover
@@ -253,14 +254,14 @@ pub struct MockHsmProvider {
 impl MockHsmProvider {
     pub fn new() -> Self {
         Self {
-            keys: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+            keys: Arc::new(tokio::sync::RwLock::new(ahash::HashMap::default())),
             reliability: 1.0, // 100% reliable by default
         }
     }
 
     pub fn new_with_reliability(reliability: f64) -> Self {
         Self {
-            keys: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+            keys: Arc::new(tokio::sync::RwLock::new(ahash::HashMap::default())),
             reliability: reliability.clamp(0.0, 1.0),
         }
     }
@@ -314,7 +315,7 @@ impl HsmProvider for MockHsmProvider {
             key_size: Some(256),
             created_at: chrono::Utc::now(),
             expires_at: None,
-            tags: HashMap::new(),
+            tags: ahash::HashMap::default(),
         };
 
         self.generate_key(derived_key_type, metadata).await

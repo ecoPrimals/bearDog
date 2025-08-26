@@ -1,3 +1,4 @@
+// PHASE 5 OPTIMIZED: Performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -37,7 +38,7 @@ pub fn create_hsm_provider(
     use super::software::SoftwareHsmProvider;
     let available_providers = vec!["Software"];
     match provider_type {
-        HsmProviderType::Software => Ok(Box::new(SoftwareHsmProvider::new())),
+        HsmProviderType::Software => Ok(SoftwareHsmProvider::new()),
         _ => Err(BearDogError::not_found(format!(
                 "Provider '{provider_type:?)' not found. Available: {available_providers:?}"
             ),

@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Advanced async_trait elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -32,7 +33,6 @@ use beardog_types::canonical::{
 use beardog_types::providers::ProviderConfig;
 // MODERNIZED: Use canonical configuration types
 use crate::hsm_foundation::CoreCapabilities;
-use async_trait::async_trait;
 use beardog_core::UniversalPerformanceMetrics;
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::providers::{BaseProvider, HsmHardwareStatus, HsmInfo, HsmKeyInfo, HsmProvider};

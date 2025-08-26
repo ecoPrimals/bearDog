@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -249,7 +250,7 @@ impl UniversalServiceRegistry {
                     domain: "hsm".to_string(),
                     capability: "universal_hsm_abstraction".to_string(),
                     parameters: {
-                        let mut params = HashMap::new();
+                        let mut params = ahash::HashMap::default();
                         params.insert("supported_platforms".to_string(),
                             serde_json::json!(["android", "ios", "windows", "linux", "macos"]));
                         params.insert("hsm_tiers".to_string(),
@@ -313,7 +314,7 @@ impl UniversalServiceRegistry {
                 health_check_interval: Duration::seconds(30),
                 graceful_shutdown_timeout: Duration::seconds(60),
             extensions: {
-                let mut extensions = HashMap::new();
+                let mut extensions = ahash::HashMap::default();
                 extensions.insert("beardog_specific".to_string(), serde_json::json!({
                     "genetics_integration": true,
                     "quantum_resistance": true,
@@ -520,7 +521,7 @@ mod tests {
         assert!(!registration.endpoints.is_empty());
         assert!(registration.priority > 0);
     fn test_registration_serialization() {
-        let json = serde_json::to_string(&registration).unwrap_or_else(|e| {
+        let json = rmp_serde::to_vec(&registration).unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Should serialize to JSON", e);
     format!("Should serialize to JSON: {:?}", e)
         let deserialized: UniversalServiceRegistration =
@@ -562,7 +563,7 @@ mod tests {
             "service1",
             "Test service",
             vec!["cap1".to_string()],
-        let json = serde_json::to_string(&registration)
+        let json = rmp_serde::to_vec(&registration)
             .map_err(|e| BearDogError::serialize_error("ecosystem registration", e))
     tracing::error!("Expect failed ({}): {:?}", "Should serialize to JSON for test purposes", e);
     format!("Should serialize to JSON for test purposes: {:?}", e)

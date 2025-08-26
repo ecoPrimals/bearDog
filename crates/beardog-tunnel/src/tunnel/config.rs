@@ -1,3 +1,4 @@
+// PHASE 5 OPTIMIZED: Performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -91,17 +92,17 @@ impl Default for KeyManagementConfig {
             hardware_backup_path: None,
             enable_versioning: true,
             max_key_versions: 5,
-            audit_level: String::from("High"),
+            audit_level: "High",
             enable_recovery: false,
             recovery_threshold: 0,
             recovery_shares: 0,
-            storage_algorithm: String::from("AES-256"),
+            storage_algorithm: "AES-256",
             enable_integrity_check: true,
             integrity_check_interval: Duration::from_secs(3600), // 1 hour}
 
 
 impl Default for GamingConfig {
-            profile_name: String::from("Default"),
+            profile_name: "Default",
             ultra_low_latency: true,
             predictive_keying: true,
             jitter_elimination: true,

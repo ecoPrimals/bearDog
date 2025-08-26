@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // MODERNIZED: Removed async_trait - now uses native async fn in trait
 
 // BearDog - Enterprise Security Ecosystem
@@ -57,7 +58,7 @@ impl DefaultHsmHealthMonitor {
 impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
 
 
-    async fn start_monitoring(&self, providers: Vec<Arc<dyn HsmProvider>>) -> BearDogResult<()> {
+    async fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> BearDogResult<()> {
         info!(
             "🏥 Starting health monitoring for {} providers",
             providers.len()
@@ -126,8 +127,8 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
 
 
     async fn filter_healthy_providers(
-        providers: Vec<Arc<dyn HsmProvider>>,
-    ) -> BearDogResult<Vec<Arc<dyn HsmProvider>>> {
+        providers: Vec<impl HsmProvider + Send + Sync + 'static>,
+    ) -> BearDogResult<Vec<impl HsmProvider + Send + Sync + 'static>> {
         let mut healthy_providers = Vec::new();
             let provider_info = provider.get_info().await?;
             let provider_id = format!("{}_{}", provider_info.vendor, provider_info.model);

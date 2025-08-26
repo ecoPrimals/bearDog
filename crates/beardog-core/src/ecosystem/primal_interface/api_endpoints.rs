@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -110,7 +111,7 @@ impl `BearDog`Core {
         }
     /// Get API metrics
     pub(crate) fn get_api_metrics(&self) -> HashMap<String, serde_json::Value> {
-        let mut metrics = HashMap::new();
+        let mut metrics = ahash::HashMap::default();
         metrics.insert("total_requests".to_string(), serde_json::json!(1024));
         metrics.insert("active_connections".to_string(), serde_json::json!(8));
         metrics.insert("avg_response_time_ms".to_string(), serde_json::json!(45));

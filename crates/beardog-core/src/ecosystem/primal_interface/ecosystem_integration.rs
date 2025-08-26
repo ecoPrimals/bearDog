@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -371,7 +372,7 @@ impl `BearDog`Core {
         // Mock implementation - would actually check AI coordination channels
     /// Get ecosystem integration metrics
     pub(crate) fn get_ecosystem_metrics(&self) -> std::collections::HashMap<String, serde_json::Value> {
-        let mut metrics = std::collections::HashMap::new();
+        let mut metrics = std::collections::ahash::HashMap::default();
         metrics.insert("toadstool_registered".to_string(), serde_json::json!(true));
         metrics.insert("songbird_registered".to_string(), serde_json::json!(true));
         metrics.insert("squirrel_registered".to_string(), serde_json::json!(true));

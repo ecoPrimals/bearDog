@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -165,7 +166,7 @@ impl Default for ServiceMeshInfo {}
                 error_message: Some("Unknown status".to_string()),
             },
             last_health_check: None,
-            metadata: HashMap::new(),
+            metadata: ahash::HashMap::default(),
             priority: 0,
         }
     }

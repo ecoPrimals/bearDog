@@ -1,3 +1,4 @@
+// PHASE 5 OPTIMIZED: Performance patterns applied
 // MODERNIZED: Removed async_trait - now uses native async fn in trait
 
 // BearDog - Enterprise Security Ecosystem
@@ -436,16 +437,16 @@ impl SafeAndroidProviderFactory {
             SafeMobileHardwareProvider::<StrongBoxAvailable>::detect_strongbox().await?
         {
             info!("🛡️ Using StrongBox provider (highest security)");
-            return Ok(Box::new(strongbox_provider));
+            return Ok(strongbox_provider);
         // Fall back to TEE
         if let Some(tee_provider) = SafeMobileHardwareProvider::<TeeAvailable>::detect_tee().await?
             info!("🔐 Using TEE provider (hardware security)");
-            return Ok(Box::new(tee_provider));
+            return Ok(tee_provider);
         // Final fallback to software
         info!("💻 Using software provider (fallback)");
         let software_provider =
             SafeMobileHardwareProvider::<SoftwareFallback>::new(SoftwareFallback).await?;
-        Ok(Box::new(software_provider))
+        Ok(software_provider)
 /// Safe key handle for Android StrongBox operations}
 
 

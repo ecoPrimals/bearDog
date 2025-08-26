@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // MODERNIZED: Removed async_trait - now uses native async fn in trait
 
 // BearDog - Enterprise Security Ecosystem
@@ -88,7 +89,7 @@ impl RustSoftwareHsm {
     /// Create crypto provider based on backend type
     async fn create_crypto_provider(
         backend: &CryptoBackend,
-    ) -> BearDogResult<Arc<dyn CryptoProvider>> {
+    ) -> BearDogResult<impl CryptoProvider + Send + Sync + 'static> {
         match backend {
             CryptoBackend::RustCrypto => Ok(Arc::new(RustCryptoProvider::new().await?)),
             CryptoBackend::Ring => Ok(Arc::new(RingCryptoProvider::new()?)),

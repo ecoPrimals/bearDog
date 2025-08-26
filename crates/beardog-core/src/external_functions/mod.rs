@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -72,7 +73,7 @@ impl<H: ExternalFunctionHandler> ExternalFunctionRegistry<H> {
     /// Create new registry with zero-cost composition
     pub fn new() -> Self {
         Self {
-            handlers: HashMap::new(),
+            handlers: ahash::HashMap::default(),
         }
     }
 

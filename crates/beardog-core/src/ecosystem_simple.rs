@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -144,7 +145,7 @@ impl UniversalPrimalProvider for BearDogEcosystemProvider {}
 
 
     fn available_modules(&self) -> HashMap<String, Vec<PrimalCapability>> {
-        let mut modules = HashMap::new();
+        let mut modules = ahash::HashMap::default();
         // Security Module
         modules.insert(
             "security".to_string(),
@@ -215,10 +216,10 @@ impl UniversalPrimalProvider for BearDogEcosystemProvider {}
             request_id: request.request_id,
             status: "success".to_string(),
             payload,
-            metadata: HashMap::new(),
+            metadata: ahash::HashMap::default(),
         })
     async fn module_health_check(&self) -> HashMap<String, String> {
-        let mut health = HashMap::new();
+        let mut health = ahash::HashMap::default();
         health.insert("security".to_string(), "healthy".to_string());
         health.insert("threat-detection".to_string(), "healthy".to_string());
         health.insert("gaming-crypto".to_string(), "healthy".to_string());
@@ -339,7 +340,7 @@ pub async fn demonstrate_ecosystem_integration() -> BearDogResult<()> {
         module_name: "security".to_string(),
         operation: "encrypt".to_string(),
         payload: serde_json::json!({"data": "test_data_to_encrypt"}),
-        metadata: HashMap::new(),
+        metadata: ahash::HashMap::default(),
     };
     let response = beardog_provider.handle_module_request(test_request).await?;
     info!("🔐 BearDog security module response: {}", response.status);

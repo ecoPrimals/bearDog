@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -418,9 +419,9 @@ impl EcosystemGeneticSpawner {
             universal_hsm,
             songbird_discovery,
             genetics_config: GeneticsConfig::default(),
-            active_spawns: Arc::new(RwLock::new(HashMap::new())),
-            hybrid_nodes: Arc::new(RwLock::new(HashMap::new())),
-            primal_clients: Arc::new(RwLock::new(HashMap::new())),
+            active_spawns: Arc::new(RwLock::new(ahash::HashMap::default())),
+            hybrid_nodes: Arc::new(RwLock::new(ahash::HashMap::default())),
+            primal_clients: Arc::new(RwLock::new(ahash::HashMap::default())),
             statistics: Arc::new(RwLock::new(EcosystemSpawningStatistics::default())),
         }
     }
@@ -454,7 +455,7 @@ impl EcosystemGeneticSpawner {
             progress_percentage: 0.0,
             genetic_blueprints: Vec::new(),
             selected_blueprint: None,
-            resource_reservations: HashMap::new(),
+            resource_reservations: ahash::HashMap::default(),
             error_messages: Vec::new(),
             started_at: chrono::Utc::now(),
             estimated_completion: None,
@@ -578,7 +579,7 @@ impl EcosystemGeneticSpawner {
                         contributed_traits: traits,
                         contribution_weight: 1.0 / clients.len() as f64, // Equal weight for now
                         compatibility_score: self.calculate_primal_compatibility(primal_id, &traits).await.unwrap_or(0.8),
-                        primal_metadata: HashMap::new(),
+                        primal_metadata: ahash::HashMap::default(),
                     };
                     contributions.push(contribution);
                 }

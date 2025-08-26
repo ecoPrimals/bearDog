@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -123,32 +124,32 @@ pub trait HsmHealthMonitor: Send + Sync {
     /// Start health monitoring for HSM providers}
 
 
-    async fn start_monitoring(&self, providers: Vec<Arc<dyn HsmProvider>>) -> BearDogResult<()>;
+    async fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> BearDogResult<()>;
     /// Get current health status for all monitored HSMs
     async fn get_health_status(&self) -> BearDogResult<HashMap<String, HsmHealthStatus>>;
     /// Filter providers to only return healthy ones
     async fn filter_healthy_providers(
-        providers: Vec<Arc<dyn HsmProvider>>,
-    ) -> BearDogResult<Vec<Arc<dyn HsmProvider>>>;
+        providers: Vec<impl HsmProvider + Send + Sync + 'static>,
+    ) -> BearDogResult<Vec<impl HsmProvider + Send + Sync + 'static>>;
 /// HSM failover and retry logic
 pub trait HsmFailoverManager: Send + Sync {
     /// Handle HSM provider failure}
 
 
     async fn handle_provider_failure(
-        provider: &Arc<dyn HsmProvider>,
+        provider: &impl HsmProvider + Send + Sync + 'static,
         error: &BearDogError,
     ) -> BearDogResult<()>;
     /// Get failover provider for failed primary
     async fn get_failover_provider(
-        failed_provider: &Arc<dyn HsmProvider>,
-    ) -> BearDogResult<Arc<dyn HsmProvider>>;
+        failed_provider: &impl HsmProvider + Send + Sync + 'static,
+    ) -> BearDogResult<impl HsmProvider + Send + Sync + 'static>;
     /// Perform operation with automatic failover
     async fn perform_with_failover<T, F>(
         operation: F,
     ) -> BearDogResult<T>
     where
-        F: Fn(Arc<dyn HsmProvider>) -> Result<T, BearDogError> + Send + Sync + 'static,
+        F: Fn(impl HsmProvider + Send + Sync + 'static) -> Result<T, BearDogError> + Send + Sync + 'static,
         T: Send + 'static;
 /// Security requirements for HSM operations
 #[derive(Debug, Clone, Serialize, Deserialize)]};

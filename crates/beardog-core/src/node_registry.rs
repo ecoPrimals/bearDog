@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -36,7 +37,7 @@ impl BasicNodeRegistry {}
 
     pub fn new() -> Self {
         Self {
-            nodes: Arc::new(RwLock::new(HashMap::new())),
+            nodes: Arc::new(RwLock::new(ahash::HashMap::default())),
         }
     }
 impl NodeRegistry for BasicNodeRegistry {}

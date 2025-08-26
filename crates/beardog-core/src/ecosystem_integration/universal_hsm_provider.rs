@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -106,7 +107,7 @@ impl Default for IntelligentProviderSelector {
         Self {
             strategy: ProviderSelectionStrategy::Priority,
             health_check_interval_secs: 30,
-            performance_metrics: HashMap::new(),
+            performance_metrics: ahash::HashMap::default(),
         }
     }
 }
@@ -144,8 +145,8 @@ impl UniversalHsmProvider {
     /// Create a new Universal HSM Provider
     pub fn new() -> Self {
         Self {
-            active_providers: Arc::new(RwLock::new(HashMap::new())),
-            ecosystem_providers: Arc::new(RwLock::new(HashMap::new())),
+            active_providers: Arc::new(RwLock::new(ahash::HashMap::default())),
+            ecosystem_providers: Arc::new(RwLock::new(ahash::HashMap::default())),
             provider_selector: IntelligentProviderSelector::default(),
             failover_manager: HsmFailoverManager::default(),
             service_discovery: None,
