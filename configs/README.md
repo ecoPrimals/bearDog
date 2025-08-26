@@ -1,41 +1,43 @@
-# BearDog Configuration Files
+# BearDog Unified Configuration System
 
-This directory contains configuration templates and examples for BearDog deployment.
+This directory contains the unified configuration system for BearDog deployment, eliminating configuration duplication through environment-driven configuration.
 
-## Configuration Files
+## 🎯 Unified Configuration Architecture
 
-### Production Configurations
-- **`production-config.toml`** - Production deployment configuration with security hardening
-- **`distributed_beardog_config.toml`** - Multi-node distributed deployment configuration
+### Core Configuration
+- **`beardog-config-template.toml`** - Single unified configuration template with environment variable substitution
+- **`environments/development.env`** - Development environment variables
+- **`environments/production.env`** - Production environment variables
 
-### Development Configurations  
-- **`development-config.toml`** - Development environment with debug settings
-- **`example-config.toml`** - Comprehensive example showing all available options
-
-### Base Configurations
-- **`beardog-config.toml`** - Base configuration template
-- **`network-defaults.toml`** - Default network settings and security policies
+### Legacy Configurations (Deprecated)
+- **`development-config.toml`** - ⚠️ **DEPRECATED** - Use `environments/development.env` instead
+- **`production-config.toml`** - ⚠️ **DEPRECATED** - Use `environments/production.env` instead
+- **`distributed_beardog_config.toml`** - ⚠️ **DEPRECATED** - Use environment variables instead
 
 ## Usage
 
 ### Development
 ```bash
-# Copy development config
-cp configs/development-config.toml beardog-config.toml
+# Source development environment
+source configs/environments/development.env
 
-# Or use environment variable
-export BEARDOG_CONFIG=configs/development-config.toml
+# Use unified template
+export BEARDOG_CONFIG=configs/beardog-config-template.toml
 cargo run
 ```
 
 ### Production
 ```bash
-# Copy and customize production config
-cp configs/production-config.toml /etc/beardog/config.toml
-# Edit /etc/beardog/config.toml for your environment
+# Source production environment (customize first!)
+source configs/environments/production.env
 
-# Run with production config
-beardog-server --config /etc/beardog/config.toml
+# Set any additional environment-specific variables
+export BEARDOG_HSM_PIN="your-secure-pin"
+export BEARDOG_SMTP_SERVER="your-smtp-server"
+
+# Use unified template
+export BEARDOG_CONFIG=configs/beardog-config-template.toml
+beardog-server
 ```
 
 ### Docker

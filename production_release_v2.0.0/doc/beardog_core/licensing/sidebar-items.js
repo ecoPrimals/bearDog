@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["LicenseTier","LicenseeClassification","SupportLevel"],"struct":["ExternalFunctions","LicenseData","LicenseManager","LicenseStatus","LicenseeInfo","SignedLicense","UsageLimits"]};

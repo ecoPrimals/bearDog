@@ -1,36 +1,9 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Modern BearDog Test Examples
-//!
-//! **Demonstration of Unified Testing Infrastructure**
-//!
-//! This file showcases the new testing capabilities:
-//! - Unified error handling with BearDogError
-//! - Rich test fixtures and mock data
-//! - Advanced matchers for comprehensive validation
-//! - Performance monitoring and metrics collection
-//! - Production-grade test harness
 
 use beardog::{BearDogConfig, BearDogCore};
 use std::{sync::Arc, time::Duration};
 use tracing::info;
 
-// Import our new testing infrastructure
 mod common;
 use common::{
     TestResult, TestContext, TestHarnessConfig, TestEnvironment, BearDogTestHarness,
@@ -39,14 +12,10 @@ use common::{
     assert_success, assert_error_contains, assert_duration_within, assert_in_range,
 };
 
-// Modern test examples using the new infrastructure
-
-/// Example 1: Unit test with unified error handling and performance monitoring
 #[tokio::test]
 async fn modern_unit_test_example() -> TestResult<()> {
     info!("🧪 Starting modern unit test example");
-    
-    // Create test harness for unit testing environment
+
     let mut harness = BearDogTestHarness::with_config(TestHarnessConfig {
         environment: TestEnvironment::Unit,
         enable_performance_monitoring: true,
@@ -55,19 +24,16 @@ async fn modern_unit_test_example() -> TestResult<()> {
     });
     
     harness.initialize().await?;
-    
-    // Run test with comprehensive environment management
+
     let result = harness.run_test("config_parsing_validation", |context, core| async move {
-        // Use test fixtures for consistent data
+
         let fixtures = global_fixtures();
         let config_data = fixtures.get_dataset("test_config")
             .ok_or_else(|| beardog_errors::BearDogError::not_found("test_config dataset"))?;
-        
-        // Demonstrate safe operations with proper error handling
+
         let config_str = serde_json::to_string_pretty(config_data)
-            .map_err(|e| beardog_errors::BearDogError::serialization(&format!("Config serialization failed: {}", e)))?;
-        
-        // Use advanced matchers for validation
+            .map_err(|e| beardog_errors::BearDogError::serialization(&format_args!("Config serialization failed: {}", e).to_string()))?;
+
         let matcher = TestMatcher::new("config_validation")
             .with_description("Validate configuration parsing and structure")
             .performance(PerformanceMatcher::new()
@@ -75,8 +41,7 @@ async fn modern_unit_test_example() -> TestResult<()> {
                 .max_memory_mb(10.0));
         
         let validation_result = matcher.validate(&context, config_data);
-        
-        // Use unified assertions
+
         assert_success(&Ok(validation_result.success), None)?;
         assert_duration_within(&context.start_time.elapsed(), Duration::from_millis(50), Duration::from_millis(200))?;
         
@@ -88,7 +53,6 @@ async fn modern_unit_test_example() -> TestResult<()> {
     result
 }
 
-/// Example 2: Integration test with mock services and comprehensive validation
 #[tokio::test]
 async fn modern_integration_test_example() -> TestResult<()> {
     info!("🔗 Starting modern integration test example");
@@ -105,8 +69,7 @@ async fn modern_integration_test_example() -> TestResult<()> {
     
     let result = harness.run_test("crypto_security_integration", |mut context, core| async move {
         context.start_phase(common::TestPhase::Setup);
-        
-        // Get cryptographic test fixtures
+
         let fixtures = global_fixtures();
         let crypto_fixtures = fixtures.crypto();
         let sample_keypair = crypto_fixtures.get_ed25519_keypair(0)
@@ -114,8 +77,7 @@ async fn modern_integration_test_example() -> TestResult<()> {
         
         context.complete_phase(common::TestPhase::Setup);
         context.start_phase(common::TestPhase::Execution);
-        
-        // Test Ed25519 signature operations
+
         let test_message = "BearDog cryptographic security test";
         let signature_result = beardog_security::crypto_utils::BearDogCrypto::sign_ed25519(
             &sample_keypair.private_key,
@@ -124,26 +86,24 @@ async fn modern_integration_test_example() -> TestResult<()> {
         
         context.complete_phase(common::TestPhase::Execution);
         context.start_phase(common::TestPhase::Validation);
-        
-        // Advanced validation with multiple matchers
+
         let crypto_matcher = TestMatcher::new("crypto_security_validation")
             .with_description("Comprehensive cryptographic security validation")
             .performance(PerformanceMatcher::new()
                 .max_duration(Duration::from_millis(500))
                 .max_memory_mb(25.0))
             .add_matcher(|ctx, _value| {
-                // Custom validation logic
+
                 common::MatchResult {
                     success: ctx.performance_metrics.errors_encountered == 0,
                     message: "No cryptographic errors detected".to_string(),
-                    details: std::collections::HashMap::new(),
+                    details: std::collections::HashMap::with_capacity(16),
                     suggestions: vec!["Continue with current crypto implementation".to_string()],
                 }
             });
         
         let signature = assert_success(&signature_result, None)?;
-        
-        // Verify signature
+
         let verification_result = beardog_security::crypto_utils::BearDogCrypto::verify_ed25519_signature(
             &sample_keypair.public_key,
             test_message.as_bytes(),
@@ -151,8 +111,7 @@ async fn modern_integration_test_example() -> TestResult<()> {
         );
         
         let is_valid = assert_success(&verification_result, None)?;
-        
-        // Validate using unified assertions
+
         assert_success(&Ok(is_valid), None)?;
         
         if !is_valid {
@@ -169,7 +128,6 @@ async fn modern_integration_test_example() -> TestResult<()> {
     result
 }
 
-/// Example 3: End-to-end test with full system validation
 #[tokio::test]
 async fn modern_e2e_test_example() -> TestResult<()> {
     info!("🌐 Starting modern E2E test example");
@@ -186,38 +144,30 @@ async fn modern_e2e_test_example() -> TestResult<()> {
     harness.initialize().await?;
     
     let result = harness.run_test("full_system_workflow", |mut context, core| async move {
-        // Generate test data using utilities
+
         let test_users = create_test_data("users", 5)?;
         let test_genetics = create_test_data("genetics", 3)?;
         
         context.add_metadata("test_users_count", serde_json::json!(5));
         context.add_metadata("test_genetics_count", serde_json::json!(3));
-        
-        // Simulate full system workflow
+
         context.start_phase(common::TestPhase::Execution);
-        
-        // Phase 1: User management
+
         info!("Phase 1: Testing user management workflow");
-        // ... user creation, authentication, authorization logic would go here
-        
-        // Phase 2: Genetic operations
+
         info!("Phase 2: Testing genetic spawning workflow");
-        // ... genetic spawning, fitness calculation logic would go here
-        
-        // Phase 3: Security validation
+
         info!("Phase 3: Testing security subsystem");
-        // ... comprehensive security checks would go here
-        
+
         context.complete_phase(common::TestPhase::Execution);
-        
-        // Comprehensive E2E validation
+
         let e2e_matcher = TestMatcher::new("full_system_validation")
             .with_description("End-to-end system workflow validation")
             .performance(PerformanceMatcher::new()
                 .max_duration(Duration::from_secs(45))
                 .max_memory_mb(200.0))
             .add_matcher(|ctx, _value| {
-                // Validate system health after full workflow
+
                 let performance_ok = ctx.performance_metrics.total_duration
                     .map_or(true, |d| d < Duration::from_secs(30));
                 
@@ -258,7 +208,6 @@ async fn modern_e2e_test_example() -> TestResult<()> {
     result
 }
 
-/// Example 4: Error handling validation test
 #[tokio::test]
 async fn modern_error_handling_test_example() -> TestResult<()> {
     info!("⚠️ Starting modern error handling test example");
@@ -273,9 +222,7 @@ async fn modern_error_handling_test_example() -> TestResult<()> {
     harness.initialize().await?;
     
     let result = harness.run_test("error_handling_validation", |context, core| async move {
-        // Test various error scenarios with proper validation
-        
-        // Test 1: Invalid input error
+
         let invalid_result: Result<(), beardog_errors::BearDogError> = Err(
             beardog_errors::BearDogError::invalid_input("Test invalid input scenario")
         );
@@ -283,8 +230,7 @@ async fn modern_error_handling_test_example() -> TestResult<()> {
         let error_matcher = ErrorMatcher::new()
             .error_type("InvalidInput")
             .message_contains("invalid input");
-        
-        // Validate error with advanced matcher
+
         if let Err(ref error) = invalid_result {
             let error_json = serde_json::json!({
                 "error_type": "InvalidInput",
@@ -295,15 +241,12 @@ async fn modern_error_handling_test_example() -> TestResult<()> {
             let match_result = error_matcher.matches(&context, &error_json);
             assert_success(&Ok(match_result.success), None)?;
         }
-        
-        // Test 2: Network timeout simulation
+
         let timeout_error = beardog_errors::BearDogError::timeout("Network operation timed out after 5 seconds");
-        
-        // Use error assertion macro
+
         let timeout_result: Result<String, beardog_errors::BearDogError> = Err(timeout_error);
         assert_error_contains(&timeout_result, "timed out", None)?;
-        
-        // Test 3: Configuration error scenario
+
         let config_error = beardog_errors::BearDogError::configuration("Missing required configuration parameter 'api_key'");
         let config_result: Result<(), beardog_errors::BearDogError> = Err(config_error);
         assert_error_contains(&config_result, "Missing required configuration", None)?;
@@ -316,7 +259,6 @@ async fn modern_error_handling_test_example() -> TestResult<()> {
     result
 }
 
-/// Example 5: Performance benchmark test with detailed metrics
 #[tokio::test]
 async fn modern_performance_benchmark_example() -> TestResult<()> {
     info!("⚡ Starting modern performance benchmark example");
@@ -336,26 +278,25 @@ async fn modern_performance_benchmark_example() -> TestResult<()> {
         context.add_metadata("iterations", serde_json::json!(100));
         
         let start_time = std::time::Instant::now();
-        
-        // Perform 100 cryptographic operations for benchmarking
+
         for i in 0..100 {
             let keypair = beardog_security::crypto_utils::BearDogCrypto::generate_ed25519_keypair()
-                .map_err(|e| beardog_errors::BearDogError::crypto(&format!("Keypair generation failed at iteration {}: {}", i, e)))?;
+                .map_err(|e| beardog_errors::BearDogError::crypto(&format_args!("Keypair generation failed at iteration {}: {}", i, e).to_string()))?;
             
-            let test_data = format!("benchmark_message_{}", i);
+            let test_data = format_args!("benchmark_message_{}", i).to_string();
             let signature = beardog_security::crypto_utils::BearDogCrypto::sign_ed25519(
                 &keypair.secret.to_bytes(),
                 test_data.as_bytes()
-            ).map_err(|e| beardog_errors::BearDogError::crypto(&format!("Signing failed at iteration {}: {}", i, e)))?;
+            ).map_err(|e| beardog_errors::BearDogError::crypto(&format_args!("Signing failed at iteration {}: {}", i, e).to_string()))?;
             
             let is_valid = beardog_security::crypto_utils::BearDogCrypto::verify_ed25519_signature(
                 &keypair.verifying_key.to_bytes(),
                 test_data.as_bytes(),
                 &signature,
-            ).map_err(|e| beardog_errors::BearDogError::crypto(&format!("Verification failed at iteration {}: {}", i, e)))?;
+            ).map_err(|e| beardog_errors::BearDogError::crypto(&format_args!("Verification failed at iteration {}: {}", i, e).to_string()))?;
             
             if !is_valid {
-                return Err(beardog_errors::BearDogError::authentication(&format!("Signature verification failed at iteration {}", i)));
+                return Err(beardog_errors::BearDogError::authentication(&format_args!("Signature verification failed at iteration {}", i).to_string()));
             }
         }
         
@@ -364,8 +305,7 @@ async fn modern_performance_benchmark_example() -> TestResult<()> {
         
         context.add_metadata("benchmark_duration", serde_json::json!(elapsed.as_millis()));
         context.add_metadata("operations_per_second", serde_json::json!(ops_per_second));
-        
-        // Performance validation
+
         let perf_matcher = PerformanceMatcher::new()
             .max_duration(Duration::from_secs(20))
             .max_memory_mb(50.0);
@@ -376,8 +316,7 @@ async fn modern_performance_benchmark_example() -> TestResult<()> {
         }));
         
         assert_success(&Ok(perf_result.success), None)?;
-        
-        // Validate operations per second
+
         assert_in_range(&ops_per_second, 5.0, 1000.0, "operations per second")?;
         
         info!("✅ Crypto performance benchmark completed: {:.2} ops/sec", ops_per_second);
@@ -388,46 +327,41 @@ async fn modern_performance_benchmark_example() -> TestResult<()> {
     result
 }
 
-/// Example 6: Test suite demonstration
 #[tokio::test]
 async fn modern_test_suite_example() -> TestResult<()> {
     info!("📊 Starting modern test suite example");
     
     let mut suite_runner = common::TestSuiteRunner::new("BearDog Core Functionality Suite");
-    
-    // Run multiple related tests
+
     suite_runner.run_test("basic_initialization", |context, core| async move {
-        // Test basic system initialization
+
         info!("Testing basic system initialization");
-        // Simulate initialization checks
+
         tokio::time::sleep(Duration::from_millis(100)).await;
         Ok(())
     }).await?;
     
     suite_runner.run_test("configuration_loading", |context, core| async move {
-        // Test configuration loading
+
         info!("Testing configuration loading");
         let fixtures = global_fixtures();
         let config = fixtures.get_config("unit")
             .ok_or_else(|| beardog_errors::BearDogError::not_found("Unit test configuration"))?;
-        
-        // Simulate configuration validation
+
         tokio::time::sleep(Duration::from_millis(150)).await;
         Ok(())
     }).await?;
     
     suite_runner.run_test("security_subsystem", |context, core| async move {
-        // Test security subsystem
+
         info!("Testing security subsystem");
-        // Simulate security checks
+
         tokio::time::sleep(Duration::from_millis(200)).await;
         Ok(())
     }).await?;
-    
-    // Generate comprehensive report
+
     let report = suite_runner.generate_report();
-    
-    // Validate suite results
+
     let success_rate = suite_runner.get_success_rate();
     assert_in_range(&success_rate, 95.0, 100.0, "test suite success rate")?;
     
@@ -445,9 +379,6 @@ async fn modern_test_suite_example() -> TestResult<()> {
     Ok(())
 }
 
-// Utility functions for test examples
-
-/// Helper function to simulate API responses for testing
 async fn simulate_api_response(endpoint: &str, delay_ms: u64) -> TestResult<serde_json::Value> {
     tokio::time::sleep(Duration::from_millis(delay_ms)).await;
     
@@ -462,21 +393,20 @@ async fn simulate_api_response(endpoint: &str, delay_ms: u64) -> TestResult<serd
             "total_requests": 1500,
             "average_response_time_ms": 45
         }),
-        _ => return Err(beardog_errors::BearDogError::not_found(&format!("API endpoint '{}' not found", endpoint)))
+        _ => return Err(beardog_errors::BearDogError::not_found(&format_args!("API endpoint '{}' not found", endpoint).to_string()))
     };
     
     Ok(response)
 }
 
-/// Helper function to create test genetic data
 fn create_test_genetics(generation: u32, fitness_score: f64) -> serde_json::Value {
     serde_json::json!({
-        "genetics_id": format!("test_gen_{:03}", generation),
+        "genetics_id": format_args!("test_gen_{:03}", generation).to_string(),
         "generation": generation,
         "fitness_score": fitness_score.clamp(0.0, 1.0),
         "capabilities": ["crypto", "networking", "compute"],
         "parent_ids": if generation > 1 { 
-            vec![format!("test_gen_{:03}", generation - 1)] 
+            vec![format_args!("test_gen_{:03}", generation - 1).to_string()] 
         } else { 
             vec![] 
         },
@@ -488,7 +418,6 @@ fn create_test_genetics(generation: u32, fitness_score: f64) -> serde_json::Valu
     })
 }
 
-/// Convenience macro for modern test patterns
 macro_rules! modern_test_assert {
     ($context:expr, $condition:expr, $message:expr) => {
         if !$condition {

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ConfigFieldType"],"struct":["AdapterConfigTemplate","AdapterRegistry","ConfigField","DiscordFactory","EmailFactory","GenericWebhookFactory","MatrixFactory","SignalFactory","SlackFactory","SmsFactory","TeamsFactory"],"trait":["AdapterFactory"]};

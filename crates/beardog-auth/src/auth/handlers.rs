@@ -1,28 +1,14 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-//! Authentication handlers for BearDog
 use beardog_errors::BearDogResult;
 
 pub struct CrossNodeAuthEngine {
-    config: AuthConfig,
+    config: UnifiedAuthConfig,
 }
 
 #[derive(Default)]
+#[deprecated(since = "3.1.0", note = "Use UnifiedAuthConfig instead")]
+#[deprecated(since = "3.1.0", note = "Use UnifiedAuthConfig instead")]
 pub struct AuthConfig {
     pub require_consensus: bool,
 }
@@ -30,16 +16,16 @@ pub struct AuthConfig {
 impl CrossNodeAuthEngine {
     pub fn new() -> Self {
         Self {
-            config: AuthConfig::default(),
+            config: UnifiedAuthConfig::default(),
         }
     }
     
-    pub fn with_config(config: AuthConfig) -> Self {
+    pub fn with_config(config: UnifiedAuthConfig) -> Self {
         Self { config }
     }
     
     pub fn set_workflow_engine(&mut self, _workflow_engine: Box<dyn WorkflowEngine + Send + Sync>) {
-        // Implementation placeholder
+
     }
     
     pub async fn authorize_operation(
@@ -51,7 +37,6 @@ impl CrossNodeAuthEngine {
     }
 }
 
-// Use canonical WorkflowProvider from beardog-traits
 pub use beardog_traits::WorkflowProvider;
 
 #[derive(Debug)]

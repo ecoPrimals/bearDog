@@ -1,60 +1,33 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BearDog Idiomatic Error Evolution Demo
-//!
-//! **WEEK 1 FOUNDATION WORK COMPLETE** - Demonstration of our enhanced error system
-//!
-//! This demo shows how our idiomatic evolution preserves and enhances our rich
-//! canonical error system while providing better type safety and developer experience.
 
 use beardog_errors::{
-    // Legacy system (still available)
+
     BearDogError, BearDogResult,
-    
-    // NEW: Idiomatic domain-specific types
+
     SecurityError, SecurityResult, SecurityMetadata, RemediationStep, ThreatLevel,
     GeneticsError, GeneticsResult, LineageMetadata, DiversityImprovement,
     NetworkError, NetworkResult,
     WorkflowError, WorkflowResult,
-    
-    // Migration helpers
+
     migrate_security_result, migrate_genetics_result,
-    
-    // Rich context types
+
     OperationContext,
 };
 use chrono::Utc;
 use std::collections::HashMap;
 
-/// **BEFORE**: Generic error handling (still works!)
 fn authenticate_user_legacy(user_id: &str) -> BearDogResult<String> {
     if user_id.is_empty() {
         return Err(BearDogError::authentication("User ID cannot be empty"));
     }
     
     if user_id == "invalid_user" {
-        return Err(BearDogError::authentication(format!("Authentication failed for user: {}", user_id)));
+        return Err(BearDogError::authentication(format_args!("Authentication failed for user: {}", user_id).to_string()));
     }
     
-    Ok(format!("session_token_for_{}", user_id))
+    Ok(format_args!("session_token_for_{}", user_id).to_string())
 }
 
-/// **AFTER**: Rich, domain-specific error handling
 fn authenticate_user_idiomatic(user_id: &str) -> SecurityResult<String> {
     if user_id.is_empty() {
         return Err(SecurityError::AuthenticationFailed {
@@ -67,7 +40,7 @@ fn authenticate_user_idiomatic(user_id: &str) -> SecurityResult<String> {
                 component: "beardog-security".to_string(),
                 initiator: "demo".to_string(),
                 request_id: Some("req_123".to_string()),
-                metadata: HashMap::new(),
+                metadata: HashMap::with_capacity(16),
             },
             metadata: SecurityMetadata {
                 security_level: beardog_errors::SecurityLevel::High,
@@ -78,7 +51,7 @@ fn authenticate_user_idiomatic(user_id: &str) -> SecurityResult<String> {
                 audit_trail: vec![],
                 failed_attempt_count: 1,
                 lockout_remaining: None,
-                additional_context: HashMap::new(),
+                additional_context: HashMap::with_capacity(16),
             },
             remediation: vec![
                 RemediationStep::PasswordReset { user_id: user_id.to_string() },
@@ -98,11 +71,10 @@ fn authenticate_user_idiomatic(user_id: &str) -> SecurityResult<String> {
         });
     }
     
-    Ok(format!("secure_session_token_for_{}", user_id))
+    Ok(format_args!("secure_session_token_for_{}", user_id).to_string())
 }
 
-/// **GENETICS**: Domain-specific error handling
-fn perform_genetic_spawning(parent_ids: &[String]) -> GeneticsResult<String> {
+fn perform_genetic_spawning(parent_ids: &[&str]) -> GeneticsResult<String> {
     if parent_ids.len() < 2 {
         return Err(GeneticsError::SpawningFailed {
             parent_ids: parent_ids.to_vec(),
@@ -114,7 +86,7 @@ fn perform_genetic_spawning(parent_ids: &[String]) -> GeneticsResult<String> {
                 component: "beardog-genetics".to_string(),
                 initiator: "demo".to_string(),
                 request_id: None,
-                metadata: HashMap::new(),
+                metadata: HashMap::with_capacity(16),
             },
             lineage_metadata: LineageMetadata {
                 diversity_metrics: beardog_errors::DiversityMetrics {
@@ -147,19 +119,16 @@ fn perform_genetic_spawning(parent_ids: &[String]) -> GeneticsResult<String> {
     Ok("new_genetic_variant_id".to_string())
 }
 
-/// **MIGRATION**: Smooth transition from legacy to idiomatic
 fn demonstrate_migration() {
     println!("🚀 BearDog Idiomatic Error Evolution Demo");
     println!("==========================================\n");
-    
-    // 1. Legacy system still works
+
     println!("📊 LEGACY SYSTEM (still supported):");
     match authenticate_user_legacy("test_user") {
         Ok(token) => println!("✅ Legacy auth success: {}", token),
         Err(e) => println!("❌ Legacy auth error: {}", e),
     }
-    
-    // 2. New idiomatic system provides rich context
+
     println!("\n🎯 NEW IDIOMATIC SYSTEM (enhanced):");
     match authenticate_user_idiomatic("") {
         Ok(token) => println!("✅ Idiomatic auth success: {}", token),
@@ -185,8 +154,7 @@ fn demonstrate_migration() {
         }
         _ => unreachable!(),
     }
-    
-    // 3. Migration helper for smooth transition
+
     println!("\n🔄 MIGRATION HELPER (backward compatibility):");
     let legacy_result: BearDogResult<String> = authenticate_user_legacy("invalid_user");
     let migrated_result: SecurityResult<String> = migrate_security_result(legacy_result);
@@ -195,8 +163,7 @@ fn demonstrate_migration() {
         Ok(token) => println!("✅ Migrated auth success: {}", token),
         Err(e) => println!("🔄 Migrated error with rich context: {:?}", e),
     }
-    
-    // 4. Domain-specific genetics errors
+
     println!("\n🧬 GENETICS DOMAIN ERRORS:");
     match perform_genetic_spawning(&["parent1".to_string()]) {
         Ok(variant) => println!("✅ Genetic spawning success: {}", variant),

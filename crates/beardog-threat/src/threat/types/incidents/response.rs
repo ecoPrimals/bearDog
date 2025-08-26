@@ -1,190 +1,182 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Incident response management
-///
-/// This module contains the main IncidentResponse struct and related functionality
-/// for managing security incidents throughout their lifecycle.
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use uuid::Uuid;
 
-use super::status::IncidentStatus;
-use crate::threat::types::core::ThreatSeverity;
-/// Incident response structure
-/// Represents a security incident with full lifecycle tracking,
-/// from detection through resolution and lessons learned.
+use super::super::core::{ThreatSeverity};
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum ResponseType {
+    Investigation,
+    Containment,
+    Eradication,
+    Recovery,
+    LessonsLearned,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum IncidentStatus {
+    Open,
+    InProgress,
+    Escalated, // Add missing variant
+    Contained,
+    Resolved,
+    Closed,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum IncidentType {
+    Security,
+    Performance,
+    Availability,
+    Compliance,
+    DataBreach,
+    Malware,
+    Phishing,
+    DenialOfService,
+}
+
+impl Default for IncidentType {
+    fn default() -> Self {
+        Self::Security
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IncidentResponse {
-    /// Unique incident identifier
+    pub response_id: String,
     pub incident_id: String,
-    /// Associated threat identifier
-    pub threat_id: String,
-    /// Current incident severity
-    pub severity: ThreatSeverity,
-    /// Current incident status
+    pub response_type: ResponseType,
     pub status: IncidentStatus,
-    /// Incident creation timestamp
+    pub assigned_team: Vec<String>,
+    pub actions_taken: Vec<String>,
     pub created_at: DateTime<Utc>,
-    /// Last update timestamp
     pub updated_at: DateTime<Utc>,
-    /// Assigned team member or system
-    pub assigned_to: Option<String>,
-    /// Incident description
-    pub description: String,
-    /// Containment actions taken
-    pub containment_actions: Vec<String>,
-    /// Remediation actions taken
-    pub remediation_actions: Vec<String>,
-    /// Lessons learned from incident
-    pub lessons_learned: Vec<String>,
+    pub metadata: HashMap<String, String>,
+    // Add missing fields
+    pub incident_type: IncidentType,
+    pub estimated_cost: Option<f64>,
+    pub actual_cost: Option<f64>,
 }
-impl Default for IncidentResponse {}
-
-
+impl Default for IncidentResponse {
     fn default() -> Self {
         Self {
+            response_id: uuid::Uuid::new_v4().to_string(),
             incident_id: String::new(),
-            threat_id: String::new(),
-            severity: ThreatSeverity::Medium,
+            response_type: ResponseType::Investigation,
             status: IncidentStatus::Open,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            assigned_to: None,
-            description: String::new(),
-            containment_actions: vec![],
-            remediation_actions: vec![],
-            lessons_learned: vec![],
+            assigned_team: Vec::new(),
+            actions_taken: Vec::new(),
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            metadata: HashMap::new(),
+            incident_type: IncidentType::Security,
+            estimated_cost: None,
+            actual_cost: None,
         }
     }
+}
 impl IncidentResponse {
-    /// Create a new incident response
-    ///
-    /// # Arguments
-    /// * `incident_id` - Unique incident identifier
-    /// * `threat_id` - Associated threat identifier
-    /// * `severity` - Incident severity
-    /// * `description` - Incident description
-    /// # Returns
-    /// A new `IncidentResponse` instance
-    /// # Example
-    /// ```rust
-    /// use beardog::threat::types::{IncidentResponse, ThreatSeverity};
-    /// let incident = IncidentResponse::new(
-    ///     "INC-2024-001".to_string(),
-    ///     "threat-001".to_string(),
-    ///     ThreatSeverity::High,
-    ///     "Malware detected".to_string()
-    /// );
-    /// ```
-    pub fn new(
-        incident_id: String,
-        threat_id: String,
-        severity: ThreatSeverity,
-        description: String,
-    ) -> Self {
-            incident_id,
-            threat_id,
-            severity,
-            description,
-    /// Update incident status
-    /// * `status` - New incident status
-    /// use beardog::threat::types::{IncidentResponse, IncidentStatus};
-    /// let mut incident = IncidentResponse::default();
-    /// incident.update_status(IncidentStatus::InProgress);
-    /// assert_eq!(incident.status, IncidentStatus::InProgress);
+
+    pub fn new(incident_id: &str, severity: ThreatSeverity, description: &str) -> Self {
+        Self {
+            response_id: Uuid::new_v4().to_string(),
+            incident_id: incident_id.to_string(),
+            response_type: ResponseType::Investigation,
+            status: IncidentStatus::Open,
+            assigned_team: Vec::new(), // Fixed: should be Vec<String>, not Option
+            actions_taken: Vec::new(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            metadata: HashMap::new(),
+            // Add missing required fields
+            incident_type: IncidentType::Security,
+            estimated_cost: None,
+            actual_cost: None,
+        }
+    }
+
     pub fn update_status(&mut self, status: IncidentStatus) {
         self.status = status;
         self.updated_at = Utc::now();
-    /// Assign incident to team member
-    /// * `assignee` - Team member to assign incident to
-    /// use beardog::threat::types::IncidentResponse;
-    /// incident.assign_to("analyst-001".to_string());
-    /// assert_eq!(incident.assigned_to, Some("analyst-001".to_string()));}
+    }
 
+    pub fn assign_to(&mut self, assignee: &str) {
+        self.assigned_team.push(assignee.to_string());
+    }
 
-    pub fn assign_to(&mut self, assignee: String) {
-        self.assigned_to = Some(assignee);
-    /// Add containment action
-    /// * `action` - Containment action taken
-    /// incident.add_containment_action("Isolated infected system".to_string());
-    /// assert_eq!(incident.containment_actions.len(), 1);
-    pub fn add_containment_action(&mut self, action: String) {
+    pub fn add_containment_action(&mut self, action: &str) {
         self.containment_actions.push(action);
-    /// Add remediation action
-    /// * `action` - Remediation action taken
-    /// incident.add_remediation_action("Malware removed".to_string());
-    /// assert_eq!(incident.remediation_actions.len(), 1);}
+        self.updated_at = Utc::now();
+    }
 
-
-    pub fn add_remediation_action(&mut self, action: String) {
+    pub fn add_remediation_action(&mut self, action: &str) {
         self.remediation_actions.push(action);
-    /// Add lesson learned
-    /// * `lesson` - Lesson learned from incident
-    /// incident.add_lesson_learned("Update antivirus signatures more frequently".to_string());
-    /// assert_eq!(incident.lessons_learned.len(), 1);
-    pub fn add_lesson_learned(&mut self, lesson: String) {
+        self.updated_at = Utc::now();
+    }
+
+    pub fn add_lesson_learned(&mut self, lesson: &str) {
         self.lessons_learned.push(lesson);
-    /// Get incident age in minutes
-    /// Minutes since incident creation
-    /// let incident = IncidentResponse::default();
-    /// let age = incident.age_minutes();
-    /// assert!(age >= 0);}
+        self.updated_at = Utc::now();
+    }
 
+    pub fn set_estimated_cost(&mut self, cost: f64) {
+        self.estimated_cost = Some(cost);
+        self.updated_at = Utc::now();
+    }
 
-    pub fn age_minutes(&self) -> i64 {
-        let now = Utc::now();
-        (now - self.created_at).num_minutes()
-    /// Check if incident is active
-    /// `true` if incident is not closed or resolved
-    /// assert!(incident.is_active());
-    /// incident.update_status(IncidentStatus::Closed);
-    /// assert!(!incident.is_active());
+    pub fn set_actual_cost(&mut self, cost: f64) {
+        self.actual_cost = Some(cost);
+        self.updated_at = Utc::now();
+    }
+
     pub fn is_active(&self) -> bool {
-        !matches!(
-            self.status,
-            IncidentStatus::Resolved | IncidentStatus::Closed
-        )
-    /// Check if incident is high priority
-    /// `true` if severity is high or critical
-    /// incident.severity = ThreatSeverity::High;
-    /// assert!(incident.is_high_priority());}
+        matches!(self.status, IncidentStatus::Open | IncidentStatus::InProgress)
+    }
 
+    pub fn is_resolved(&self) -> bool {
+        matches!(self.status, IncidentStatus::Resolved | IncidentStatus::Closed)
+    }
 
-    pub fn is_high_priority(&self) -> bool {
-        matches!(
-            self.severity,
-            ThreatSeverity::High | ThreatSeverity::Critical
-    /// Get incident duration in minutes
-    /// Minutes from creation to last update
-    /// let duration = incident.duration_minutes();
-    /// assert!(duration >= 0);
-    pub fn duration_minutes(&self) -> i64 {
-        (self.updated_at - self.created_at).num_minutes()
-    /// Check if incident is overdue
-    /// `true` if incident has been open too long based on severity
-    /// incident.severity = ThreatSeverity::Critical;
-    /// // Check if overdue based on severity thresholds}
+    pub fn get_age_minutes(&self) -> i64 {
+        let now = Utc::now();
+        now.signed_duration_since(self.created_at).num_minutes()
+    }
 
-
-    pub fn is_overdue(&self) -> bool {
-        let age = self.age_minutes();
+    pub fn is_stale(&self) -> bool {
+        let age = self.get_age_minutes();
         match self.severity {
-            ThreatSeverity::Critical => age > 60, // 1 hour
-            ThreatSeverity::High => age > 240,    // 4 hours
-            ThreatSeverity::Medium => age > 1440, // 24 hours
-            ThreatSeverity::Low => age > 4320,    // 72 hours
-            ThreatSeverity::Info => age > 10080,  // 1 week
+            ThreatSeverity::Critical => age > 60,    // 1 hour
+            ThreatSeverity::High => age > 240,       // 4 hours
+            ThreatSeverity::Medium => age > 1440,    // 24 hours
+            ThreatSeverity::Low => age > 4320,       // 3 days
+            ThreatSeverity::Info => age > 10080,     // 1 week
+        }
+    }
+
+    pub fn get_response_metrics(&self) -> ResponseMetrics {
+        let age_minutes = self.get_age_minutes();
+        ResponseMetrics {
+            incident_id: self.incident_id.clone(),
+            time_to_detection: Some(age_minutes),
+            time_to_response: if self.assigned_to.is_some() { Some(age_minutes) } else { None },
+            time_to_containment: if !self.containment_actions.is_empty() { Some(age_minutes) } else { None },
+            time_to_resolution: if self.is_resolved() { Some(age_minutes) } else { None },
+            total_actions: self.containment_actions.len() + self.remediation_actions.len(),
+            lessons_learned_count: self.lessons_learned.len(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ResponseMetrics {
+    pub incident_id: String,
+    pub time_to_detection: Option<i64>,
+    pub time_to_response: Option<i64>,
+    pub time_to_containment: Option<i64>,
+    pub time_to_resolution: Option<i64>,
+    pub total_actions: usize,
+    pub lessons_learned_count: usize,
+}

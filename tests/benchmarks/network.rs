@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Network Performance Benchmarking
-//!
-//! Benchmarks for network latency, throughput, and data processing operations.
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
 use beardog::BearDogResult;
@@ -25,15 +6,12 @@ use rand::{thread_rng, RngCore};
 use std::time::Instant;
 use tracing::info;
 
-/// Benchmark network operations
 pub async fn benchmark_network_operations(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
-    // Network latency benchmark
     let latency_result = benchmark_network_latency(suite).await?;
     results.push(latency_result);
 
-    // Network throughput benchmark
     for &data_size in &suite.config.data_sizes {
         let throughput_result = benchmark_network_throughput(suite, data_size).await?;
         results.push(throughput_result);
@@ -42,7 +20,6 @@ pub async fn benchmark_network_operations(suite: &mut PerformanceBenchmarkSuite)
     Ok(results)
 }
 
-/// Benchmark network latency
 async fn benchmark_network_latency(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
     info!("  🌐 Benchmarking network latency");
 
@@ -52,15 +29,14 @@ async fn benchmark_network_latency(suite: &PerformanceBenchmarkSuite) -> BearDog
     let benchmark_start = Instant::now();
     for _ in 0..suite.config.iterations {
         let op_start = Instant::now();
-        
-        // Simulate network latency via core health check
+
         match suite.core.health_check().await {
             Ok(_) => {
                 successful_ops += 1;
                 latencies.push(op_start.elapsed().as_nanos() as f64 / 1_000_000.0);
             }
             Err(_) => {
-                // Record failed operation
+
             }
         }
     }
@@ -90,11 +66,9 @@ async fn benchmark_network_latency(suite: &PerformanceBenchmarkSuite) -> BearDog
     })
 }
 
-/// Benchmark network throughput
 async fn benchmark_network_throughput(suite: &PerformanceBenchmarkSuite, data_size: usize) -> BearDogResult<BenchmarkResult> {
     info!("  🌐 Benchmarking network throughput for {} bytes", data_size);
 
-    // Simulate network throughput by creating and processing data
     let mut data = vec![0u8; data_size];
     thread_rng().fill_bytes(&mut data);
 
@@ -105,8 +79,7 @@ async fn benchmark_network_throughput(suite: &PerformanceBenchmarkSuite, data_si
     let benchmark_start = Instant::now();
     for _ in 0..suite.config.iterations {
         let op_start = Instant::now();
-        
-        // Simulate network data processing
+
         let processed_successfully = simulate_network_data_processing(suite, &data).await?;
         
         if processed_successfully {
@@ -127,7 +100,7 @@ async fn benchmark_network_throughput(suite: &PerformanceBenchmarkSuite, data_si
     let p99_latency = latencies[latencies.len() * 99 / 100];
 
     Ok(BenchmarkResult {
-        name: format!("Network Throughput ({}B)", data_size),
+        name: format_args!("Network Throughput ({}B)", data_size).to_string(),
         operations_per_second: ops_per_second,
         average_latency_ms: average_latency,
         p50_latency_ms: p50_latency,
@@ -142,9 +115,8 @@ async fn benchmark_network_throughput(suite: &PerformanceBenchmarkSuite, data_si
     })
 }
 
-/// Simulate network data processing
 async fn simulate_network_data_processing(suite: &PerformanceBenchmarkSuite, data: &[u8]) -> BearDogResult<bool> {
-    // Simulate network data processing by hashing the data
+
     let _hash = suite.security_provider.hash_data(data).await?;
     Ok(true)
 } 

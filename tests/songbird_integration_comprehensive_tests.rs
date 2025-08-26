@@ -1,18 +1,3 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 use std::time::Duration;
@@ -28,7 +13,6 @@ use beardog_adapters::adapters::universal::beardog_provider::BearDogProvider;
 use beardog_types::config::BearDogConfig;
 use beardog_errors::BearDogResult;
 
-/// Mock SongBird server for testing
 struct MockSongBirdServer {
     registration_success: bool,
     health_endpoint_active: bool,
@@ -63,7 +47,7 @@ impl MockSongBirdServer {
 
 #[tokio::test]
 async fn test_songbird_registration_success() -> BearDogResult<()> {
-    // Setup test environment
+
     let config = create_test_config();
     let client = SongBirdClient::new(config.clone());
     let registration_manager = UniversalRegistrationManager::new(
@@ -71,7 +55,6 @@ async fn test_songbird_registration_success() -> BearDogResult<()> {
         std::sync::Arc::new(client),
     );
 
-    // Test successful registration
     let result = registration_manager.register_with_songbird().await;
     
     match result {
@@ -82,8 +65,7 @@ async fn test_songbird_registration_success() -> BearDogResult<()> {
             println!("✅ SongBird registration successful: {}", registration.registration_id);
         }
         Err(e) => {
-            // In test environment, this might fail due to no actual SongBird server
-            // This is expected behavior for standalone fallback
+
             println!("⚠️  SongBird registration failed (expected in test): {}", e);
         }
     }
@@ -93,7 +75,7 @@ async fn test_songbird_registration_success() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_songbird_registration_fallback() -> BearDogResult<()> {
-    // Test fallback behavior when SongBird is unavailable
+
     let config = create_test_config_with_invalid_songbird();
     let client = SongBirdClient::new(config.clone());
     let registration_manager = UniversalRegistrationManager::new(
@@ -101,17 +83,15 @@ async fn test_songbird_registration_fallback() -> BearDogResult<()> {
         std::sync::Arc::new(client),
     );
 
-    // This should fail to connect to SongBird but not crash
     let result = registration_manager.register_with_songbird().await;
-    
-    // The system should handle this gracefully
+
     match result {
         Ok(_) => {
             println!("✅ Unexpected success - test environment might have SongBird running");
         }
         Err(e) => {
             println!("✅ Expected failure handled gracefully: {}", e);
-            // Verify the error is properly structured
+
             assert!(e.to_string().contains("SongBird") || e.to_string().contains("connection"));
         }
     }
@@ -128,12 +108,10 @@ async fn test_heartbeat_task_functionality() -> BearDogResult<()> {
         std::sync::Arc::new(client),
     );
 
-    // Test heartbeat task startup
     let result = registration_manager.start_heartbeat_task().await;
     assert!(result.is_ok());
     println!("✅ Heartbeat task started successfully");
 
-    // Test direct heartbeat sending
     let heartbeat_result = registration_manager.send_heartbeat().await;
     match heartbeat_result {
         Ok(_) => {
@@ -156,18 +134,16 @@ async fn test_health_monitoring_comprehensive() -> BearDogResult<()> {
         std::sync::Arc::new(client),
     );
 
-    // Test health monitoring startup
     let result = health_monitor.start_monitoring().await;
     assert!(result.is_ok());
     println!("✅ Health monitoring started successfully");
 
-    // Test health check execution
     let health_check_result = health_monitor.perform_health_check().await;
     assert!(health_check_result.is_ok());
     
     let health_result = health_check_result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert!(health_result.response_time_ms >= 0.0);
     assert!(health_result.metrics.cpu_utilization >= 0.0);
@@ -190,7 +166,6 @@ async fn test_capability_advertisement_updates() -> BearDogResult<()> {
         std::sync::Arc::new(client),
     );
 
-    // Test capability advertisement
     let result = registration_manager.update_capability_advertisement().await;
     
     match result {
@@ -211,7 +186,6 @@ async fn test_beardog_provider_full_lifecycle() -> BearDogResult<()> {
     let primal_id = "test-primal-006".to_string();
     let mut provider = BearDogProvider::new(primal_id.clone(), config.clone());
 
-    // Test initialization
     let init_result = provider.initialize(beardog_adapters::adapters::universal::beardog_provider::ProviderConfig::default()).await;
     match init_result {
         Ok(_) => {
@@ -222,7 +196,6 @@ async fn test_beardog_provider_full_lifecycle() -> BearDogResult<()> {
         }
     }
 
-    // Test ecosystem registration
     let registration_result = provider.register_with_ecosystem().await;
     match registration_result {
         Ok(registration) => {
@@ -234,7 +207,6 @@ async fn test_beardog_provider_full_lifecycle() -> BearDogResult<()> {
         }
     }
 
-    // Test graceful shutdown
     let shutdown_result = provider.shutdown().await;
     assert!(shutdown_result.is_ok());
     println!("✅ BearDog provider shutdown completed");
@@ -246,16 +218,14 @@ async fn test_beardog_provider_full_lifecycle() -> BearDogResult<()> {
 async fn test_concurrent_operations() -> BearDogResult<()> {
     let config = create_test_config();
     let client = std::sync::Arc::new(SongBirdClient::new(config.clone()));
-    
-    // Create multiple registration managers
+
     let managers: Vec<_> = (0..5)
         .map(|i| UniversalRegistrationManager::new(
-            format!("test-primal-concurrent-{}", i),
+            format_args!("test-primal-concurrent-{}", i).to_string(),
             std::sync::Arc::clone(&client),
         ))
         .collect();
 
-    // Test concurrent operations
     let mut handles = Vec::new();
     for manager in managers {
         handles.push(tokio::spawn(async move {
@@ -265,11 +235,10 @@ async fn test_concurrent_operations() -> BearDogResult<()> {
         }));
     }
 
-    // Wait for all concurrent operations to complete
     for handle in handles {
         handle.await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     }
 
@@ -283,16 +252,12 @@ async fn test_background_task_lifecycle() -> BearDogResult<()> {
     let primal_id = "test-primal-background".to_string();
     let mut provider = BearDogProvider::new(primal_id.clone(), config.clone());
 
-    // Initialize provider (this starts background tasks)
     let _ = provider.initialize(beardog_adapters::adapters::universal::beardog_provider::ProviderConfig::default()).await;
 
-    // Let background tasks run for a short time
     sleep(Duration::from_millis(100)).await;
 
-    // Test that background tasks are running by checking logs
     println!("✅ Background tasks running for 100ms");
 
-    // Shutdown (this should stop background tasks)
     let shutdown_result = provider.shutdown().await;
     assert!(shutdown_result.is_ok());
     println!("✅ Background tasks stopped during shutdown");
@@ -309,17 +274,14 @@ async fn test_error_handling_and_recovery() -> BearDogResult<()> {
         std::sync::Arc::new(client),
     );
 
-    // Test error handling in registration
     let registration_result = registration_manager.register_with_songbird().await;
     assert!(registration_result.is_err());
     println!("✅ Registration error handled properly");
 
-    // Test error handling in heartbeat
     let heartbeat_result = registration_manager.send_heartbeat().await;
     assert!(heartbeat_result.is_err());
     println!("✅ Heartbeat error handled properly");
 
-    // Test error handling in capability advertisement
     let capability_result = registration_manager.update_capability_advertisement().await;
     assert!(capability_result.is_err());
     println!("✅ Capability advertisement error handled properly");
@@ -336,10 +298,8 @@ async fn test_metrics_and_monitoring() -> BearDogResult<()> {
         std::sync::Arc::new(client),
     );
 
-    // Test metrics collection
     let health_result = health_monitor.perform_health_check().await?;
-    
-    // Verify metrics are within expected ranges
+
     assert!(health_result.metrics.cpu_utilization >= 0.0);
     assert!(health_result.metrics.cpu_utilization <= 100.0);
     assert!(health_result.metrics.memory_utilization >= 0.0);
@@ -356,7 +316,6 @@ async fn test_metrics_and_monitoring() -> BearDogResult<()> {
     Ok(())
 }
 
-// Helper functions for test setup
 fn create_test_config() -> BearDogConfig {
     BearDogConfig {
         songbird_endpoint: Some("http://localhost:8080".to_string()),
@@ -379,8 +338,7 @@ fn create_test_config_with_invalid_songbird() -> BearDogConfig {
 async fn test_primal_discovery_integration() -> BearDogResult<()> {
     let config = create_test_config();
     let client = SongBirdClient::new(config.clone());
-    
-    // Test primal discovery functionality
+
     let discovery_result = client.discover_primals().await;
     
     match discovery_result {
@@ -404,14 +362,12 @@ async fn test_security_provider_registration() -> BearDogResult<()> {
     let primal_id = "beardog-security-provider".to_string();
     let mut provider = BearDogProvider::new(primal_id.clone(), config.clone());
 
-    // Test security provider specific registration
     let init_result = provider.initialize(beardog_adapters::adapters::universal::beardog_provider::ProviderConfig::default()).await;
     
     match init_result {
         Ok(_) => {
             println!("✅ Security provider initialized successfully");
-            
-            // Verify security capabilities are advertised
+
             let capabilities = provider.capabilities();
             assert!(capabilities.iter().any(|c| c.name.contains("security")));
             println!("✅ Security capabilities advertised: {}", capabilities.len());
@@ -430,10 +386,8 @@ async fn test_ecosystem_resilience() -> BearDogResult<()> {
     let primal_id = "test-primal-resilience".to_string();
     let mut provider = BearDogProvider::new(primal_id.clone(), config.clone());
 
-    // Test initialization with SongBird potentially unavailable
     let init_result = provider.initialize(beardog_adapters::adapters::universal::beardog_provider::ProviderConfig::default()).await;
-    
-    // Provider should initialize regardless of SongBird availability
+
     match init_result {
         Ok(_) => {
             println!("✅ Provider initialized successfully");
@@ -443,10 +397,8 @@ async fn test_ecosystem_resilience() -> BearDogResult<()> {
         }
     }
 
-    // Test ecosystem registration with fallback
     let registration_result = provider.register_with_ecosystem().await;
-    
-    // Should get either successful registration or fallback
+
     match registration_result {
         Ok(registration) => {
             println!("✅ Ecosystem registration: {}", registration.status);

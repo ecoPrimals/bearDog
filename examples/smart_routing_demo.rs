@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Smart Routing Strategies Demo
-//!
-//! Demonstrates intelligent routing strategies for distributing operations
-//! across different providers and backends based on various criteria.
 
 use beardog_errors::BearDogResult;
 use std::collections::HashMap;
@@ -43,7 +23,6 @@ struct Provider {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 struct RoutingDecision {
     selected_provider: String,
     reason: String,
@@ -58,19 +37,16 @@ struct SmartRouter {
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Initialize tracing
+
     tracing_subscriber::fmt::init();
 
     info!("🧠 BearDog Smart Routing Strategies Demo");
     info!("========================================");
 
-    // Demonstrate different routing strategies
     demonstrate_routing_strategies().await?;
 
-    // Show adaptive routing based on performance
     demonstrate_adaptive_routing().await?;
 
-    // Demonstrate circuit breaker patterns
     demonstrate_circuit_breaker().await?;
 
     info!("✅ Smart Routing Demo Complete!");
@@ -81,7 +57,6 @@ async fn demonstrate_routing_strategies() -> BearDogResult<()> {
     info!("🎯 Routing Strategy Demonstrations");
     info!("----------------------------------");
 
-    // Create sample providers
     let providers = create_sample_providers();
 
     for provider in &providers {
@@ -92,7 +67,6 @@ async fn demonstrate_routing_strategies() -> BearDogResult<()> {
         info!("   Load: {:.1}%", provider.current_load * 100.0);
     }
 
-    // Demonstrate different routing strategies
     let strategies = vec![
         RoutingStrategy::RoundRobin,
         RoutingStrategy::PerformanceBased,
@@ -104,7 +78,6 @@ async fn demonstrate_routing_strategies() -> BearDogResult<()> {
         info!("\n📊 Strategy: {:?}", strategy);
         let router = SmartRouter::new(providers.clone(), strategy);
 
-        // Make several routing decisions
         for i in 1..=3 {
             let decision = router.route_request(&format!("request_{i}")).await;
             info!(
@@ -123,7 +96,6 @@ async fn demonstrate_adaptive_routing() -> BearDogResult<()> {
 
     let mut router = SmartRouter::new(create_sample_providers(), RoutingStrategy::PerformanceBased);
 
-    // Simulate requests and performance feedback
     for round in 1..=3 {
         info!("📈 Round {}: Learning from performance", round);
 
@@ -131,7 +103,6 @@ async fn demonstrate_adaptive_routing() -> BearDogResult<()> {
             let request_name = format!("adaptive_request_{round}_{request_id}");
             let decision = router.route_request(&request_name).await;
 
-            // Simulate performance feedback
             let simulated_response_time = simulate_request_performance(&decision.selected_provider);
             router.record_performance(&request_name, simulated_response_time);
 
@@ -141,7 +112,6 @@ async fn demonstrate_adaptive_routing() -> BearDogResult<()> {
             );
         }
 
-        // Show how the router adapts
         router.update_provider_scores().await;
         info!("   📊 Provider scores updated based on performance");
     }
@@ -161,7 +131,6 @@ async fn demonstrate_circuit_breaker() -> BearDogResult<()> {
         info!("   Request {}: {}", i, decision.selected_provider);
     }
 
-    // Simulate provider failure
     info!("\n⚠️  Simulating provider failure:");
     router.simulate_provider_failure("primary-provider").await;
 
@@ -173,7 +142,6 @@ async fn demonstrate_circuit_breaker() -> BearDogResult<()> {
         );
     }
 
-    // Simulate recovery
     info!("\n✅ Simulating provider recovery:");
     router.simulate_provider_recovery("primary-provider").await;
 
@@ -191,7 +159,7 @@ impl SmartRouter {
         Self {
             providers,
             strategy,
-            request_history: HashMap::new(),
+            request_history: HashMap::with_capacity(16),
         }
     }
 
@@ -266,7 +234,7 @@ impl SmartRouter {
     }
 
     async fn route_failover_primary(&self) -> RoutingDecision {
-        // Try primary provider first
+
         let primary = self.providers.iter().find(|p| p.id == "primary-provider");
 
         if let Some(provider) = primary {
@@ -279,7 +247,6 @@ impl SmartRouter {
             }
         }
 
-        // Fallback to best available provider
         let fallback = self
             .providers
             .iter()
@@ -306,9 +273,9 @@ impl SmartRouter {
     }
 
     async fn update_provider_scores(&mut self) {
-        // Simulate updating provider scores based on historical performance
+
         for provider in &mut self.providers {
-            // Add some randomness to simulate real-world performance changes
+
             let performance_delta = (rand::random::<f64>() - 0.5) * 0.1;
             provider.performance_score =
                 (provider.performance_score + performance_delta).clamp(0.1, 1.0);
@@ -368,7 +335,7 @@ fn create_sample_providers() -> Vec<Provider> {
 }
 
 fn simulate_request_performance(provider_name: &str) -> f64 {
-    // Simulate different performance characteristics for different providers
+
     match provider_name {
         "Primary HSM Provider" => 10.0 + rand::random::<f64>() * 5.0,
         "Backup Cloud Provider" => 25.0 + rand::random::<f64>() * 10.0,

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["HumanEntropyMethod"],"struct":["EntropyCollectionConfig","EntropyQualityAssessment","EphemeralSeed","HumanEntropyCapabilities","HumanEntropyData"]};

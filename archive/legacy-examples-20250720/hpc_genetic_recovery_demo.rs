@@ -1,9 +1,4 @@
-//! HPC Genetic Recovery Demo
-//!
-//! **BearDog HPC Basement + Genetic Spawning + Tower Recovery**
-//!
-//! This demo shows how to set up a federated HPC system that spawns genetic
-//! derivatives while maintaining recovery capabilities through other towers.
+
 
 use beardog_security::recovery::*;
 use beardog_security::*;
@@ -14,7 +9,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("==============================================");
     println!();
 
-    // Step 1: Initialize your main BearDog instance
     println!("🖥️  Step 1: Initialize Main BearDog Instance");
     let main_config = SecurityProviderConfig::default();
     let main_beardog = BearDogSecurityProvider::new(main_config).await?;
@@ -23,7 +17,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✅ Main BearDog instance initialized for user: {main_user}");
     println!();
 
-    // Step 2: Set up your other towers as recovery points
     println!("🏗️  Step 2: Set up Recovery Towers");
     let tower_instances = vec![
         TrustedInstance {
@@ -52,7 +45,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
     ];
 
-    // Configure federation recovery (only need 1 tower to recover)
     main_beardog
         .setup_federation_recovery(main_user, tower_instances, 1)
         .await?;
@@ -63,11 +55,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - Recovery threshold: 1 of 3 towers");
     println!();
 
-    // Step 3: Initialize basement HPC with genetic spawning
     println!("🏭 Step 3: Initialize Basement HPC with Genetic Spawning");
     println!("Setting up genetic spawning capabilities...");
 
-    // Simulate genetic spawning system - each derivative represents a different HPC task
     let genetic_derivatives = vec![
         ("ml_training", "Machine Learning Training", "AES-256"),
         ("crypto_mining", "Cryptocurrency Mining", "ChaCha20"),
@@ -85,13 +75,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - All connected to recovery system");
     println!();
 
-    // Step 4: Spawn genetic derivatives for different HPC tasks
     println!("🧬 Step 4: Spawn Genetic Derivatives for HPC Tasks");
 
     for (task_id, task_name, crypto_type) in genetic_derivatives {
         println!("   🧬 Spawning derivative: {task_name} ({crypto_type})");
 
-        // Each derivative gets its own ephemeral recovery key
         let ephemeral_key = main_beardog
             .generate_ephemeral_recovery_key(
                 &format!("{main_user}_{task_id}"),
@@ -102,7 +90,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("      🔑 Ephemeral recovery key: {ephemeral_key}");
 
-        // Generate actual crypto keys for each derivative
         let crypto_key = main_beardog
             .generate_key(crypto_type, "encryption", &format!("{main_user}_{task_id}"))
             .await?;
@@ -110,7 +97,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     println!();
 
-    // Step 5: Simulate basement HPC device failure
     println!("💥 Step 5: Simulate HPC Device Failure");
     println!("Simulating basement HPC system failure...");
     println!("❌ Basement HPC system is offline");
@@ -118,11 +104,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("❌ Main authentication keys inaccessible");
     println!();
 
-    // Step 6: Demonstrate tower-based recovery
     println!("🏗️  Step 6: Tower-Based Recovery Process");
     println!("Initiating recovery from office tower...");
 
-    // Start federation recovery session
     let recovery_session = main_beardog
         .start_account_recovery(main_user, RecoveryType::FederationRecovery)
         .await?;
@@ -133,10 +117,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - Cryptographic proof of identity verified");
     println!();
 
-    // Step 7: Demonstrate system recovery without bricking
     println!("🔄 Step 7: System Recovery - No Bricking!");
 
-    // Check if recovery is possible
     let can_recover = main_beardog.unlock_account_with_recovery(main_user).await?;
     println!(
         "✅ Account recovery status: {}",
@@ -151,11 +133,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     println!();
 
-    // Step 8: Demonstrate genetic system continuity
     println!("🧬 Step 8: Genetic System Continuity");
     println!("Demonstrating that genetic derivatives can continue operating...");
 
-    // Show that genetic derivatives can survive independently
     let surviving_derivatives = vec![
         ("ml_training_derivative_1", "Machine Learning Training"),
         ("crypto_mining_derivative_2", "Cryptocurrency Mining"),
@@ -170,7 +150,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     println!();
 
-    // Step 9: Demonstrate key philosophy
     println!("🎯 Step 9: Key Recovery Philosophy");
     println!("'Finding the key ≠ owning the house' - Applied to HPC:");
     println!();
@@ -189,12 +168,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - Each derivative has its own crypto keys");
     println!();
 
-    // Step 10: Advanced recovery features
     println!("🚀 Step 10: Advanced Recovery Features");
     println!("Additional recovery capabilities for HPC environments:");
     println!();
 
-    // Time-based recovery keys for scheduled maintenance
     let maintenance_key = main_beardog
         .generate_ephemeral_recovery_key(
             &format!("{main_user}_maintenance"),
@@ -209,7 +186,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("      - Limited to system maintenance permissions");
     println!();
 
-    // Social recovery for emergency situations
     let emergency_contacts = vec![
         TrustedContact {
             id: "datacenter_admin".to_string(),

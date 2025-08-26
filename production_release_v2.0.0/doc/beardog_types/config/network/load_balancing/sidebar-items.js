@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["LoadBalancingAlgorithm","SessionAffinityMethod"],"struct":["HealthCheckConfig","LoadBalancingConfig","SessionAffinityConfig","UpstreamServer"]};

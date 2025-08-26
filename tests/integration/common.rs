@@ -1,39 +1,18 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Common test utilities and helpers for integration tests
 
 use std::sync::Arc;
 use beardog::config::core::BearDogConfig;
 use beardog::core::BearDogCore;
 use beardog::errors::BearDogResult;
 
-/// Test helper to create a test configuration
 pub fn create_test_config() -> BearDogConfig {
     let mut config = BearDogConfig::default();
 
-    // API configuration for testing
     config.api.bind_address = "127.0.0.1:0".to_string(); // Random port
     config.api.auth.auth_method = beardog_types::config::network::AuthMethod::Ed25519;
 
-    // Enable all Sprint 2 features
     config.threat_detection.enabled = true;
-    
-    // Configure Rust ecosystem adapters
+
     config.adapters.external_systems.rust_ecosystem.nestgate =
         Some(beardog::config::RustProjectConfig {
             enabled: true,
@@ -44,13 +23,11 @@ pub fn create_test_config() -> BearDogConfig {
         });
     config.compliance.enabled_standards = vec!["GDPR".to_string(), "HIPAA".to_string()];
 
-    // Use in-memory storage for tests
     config.database.url = ":memory:".to_string();
 
     config
 }
 
-/// Test helper to initialize BearDog core
 pub async fn create_test_core() -> BearDogResult<Arc<BearDogCore>> {
     let config = create_test_config();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -58,7 +35,6 @@ pub async fn create_test_core() -> BearDogResult<Arc<BearDogCore>> {
     Ok(core)
 }
 
-/// Test helper to create minimal test configuration
 pub fn create_minimal_test_config() -> BearDogConfig {
     let mut config = BearDogConfig::default();
     config.database.url = ":memory:".to_string();
@@ -66,7 +42,6 @@ pub fn create_minimal_test_config() -> BearDogConfig {
     config
 }
 
-/// Test helper to create configuration with specific features enabled
 pub fn create_test_config_with_features(features: TestFeatures) -> BearDogConfig {
     let mut config = create_test_config();
     
@@ -92,7 +67,6 @@ pub fn create_test_config_with_features(features: TestFeatures) -> BearDogConfig
     config
 }
 
-/// Configuration for enabling specific test features
 #[derive(Default)]
 pub struct TestFeatures {
     pub threat_detection: bool,
@@ -104,7 +78,7 @@ pub struct TestFeatures {
 }
 
 impl TestFeatures {
-    /// Create configuration with all features enabled
+
     pub fn all_enabled() -> Self {
         Self {
             threat_detection: true,
@@ -115,8 +89,7 @@ impl TestFeatures {
             api_server: true,
         }
     }
-    
-    /// Create configuration with only essential features
+
     pub fn essential_only() -> Self {
         Self {
             threat_detection: true,
@@ -129,23 +102,20 @@ impl TestFeatures {
     }
 }
 
-/// Test assertion helpers
 pub mod assertions {
     use beardog::errors::BearDogResult;
-    
-    /// Assert that a result is successful
+
     pub fn assert_success<T>(result: &BearDogResult<T>) {
         if let Err(e) = result {
             panic!("Expected success but got error: {:?}", e);
         }
     }
-    
-    /// Assert that a result contains a specific error pattern
+
     pub fn assert_error_contains<T>(result: &BearDogResult<T>, expected_error: &str) {
         match result {
             Ok(_) => panic!("Expected error containing '{}' but got success", expected_error),
             Err(e) => {
-                let error_str = format!("{:?}", e);
+                let error_str = format_args!("{:?}", e).to_string();
                 if !error_str.contains(expected_error) {
                     panic!(
                         "Expected error containing '{}' but got: {}", 
@@ -157,12 +127,10 @@ pub mod assertions {
     }
 }
 
-/// Test data generators
 pub mod test_data {
     use beardog::security::{Subject, SubjectType, Action, ActionType, Resource};
     use std::collections::HashMap;
-    
-    /// Generate a test security subject
+
     pub fn create_test_subject(id: &str, subject_type: SubjectType) -> Subject {
         Subject {
             id: id.to_string(),
@@ -175,8 +143,7 @@ pub mod test_data {
             clearance_level: 3,
         }
     }
-    
-    /// Generate a test action
+
     pub fn create_test_action(action_type: ActionType, details: &str) -> Action {
         Action {
             action_type,
@@ -185,8 +152,7 @@ pub mod test_data {
             timestamp: chrono::Utc::now(),
         }
     }
-    
-    /// Generate a test resource
+
     pub fn create_test_resource(id: &str) -> Resource {
         Resource {
             id: id.to_string(),
@@ -198,8 +164,7 @@ pub mod test_data {
             ]),
         }
     }
-    
-    /// Generate test compliance event data
+
     pub fn create_test_compliance_data() -> serde_json::Value {
         serde_json::json!({
             "data_processing": {
@@ -217,12 +182,10 @@ pub mod test_data {
     }
 }
 
-/// Test timing utilities
 pub mod timing {
     use std::time::{Duration, Instant};
     use tokio::time::timeout;
-    
-    /// Wait for a condition to become true with a timeout
+
     pub async fn wait_for_condition<F, Fut>(
         condition: F, 
         timeout_duration: Duration, 
@@ -243,8 +206,7 @@ pub mod timing {
         
         false
     }
-    
-    /// Execute a function with a timeout
+
     pub async fn with_timeout<F, Fut, T>(
         future: F,
         timeout_duration: Duration

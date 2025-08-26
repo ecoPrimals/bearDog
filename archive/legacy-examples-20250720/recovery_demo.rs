@@ -1,9 +1,4 @@
-//! BearDog Recovery System Demo
-//!
-//! **"Finding the key ≠ owning the house"**
-//!
-//! This demo showcases the distributed recovery system that prevents
-//! single points of failure while maintaining security.
+
 
 use beardog_security::recovery::*;
 use beardog_security::*;
@@ -15,10 +10,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("================================");
     println!();
 
-    // Initialize security provider with recovery system
     let provider = BearDogSecurityProvider::new(SecurityProviderConfig::default()).await?;
 
-    // Demo 1: Social Recovery Setup
     println!("📞 Demo 1: Social Recovery Setup");
     println!("Setting up trusted contacts for user 'alice'...");
 
@@ -61,7 +54,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✅ Social recovery configured: requires 2 of 3 trusted contacts");
     println!();
 
-    // Demo 2: Federation Recovery Setup
     println!("🌐 Demo 2: Federation Recovery Setup");
     println!("Setting up trusted BearDog instances for cross-instance recovery...");
 
@@ -90,7 +82,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✅ Federation recovery configured: requires 1 of 2 trusted instances");
     println!();
 
-    // Demo 3: Ephemeral Recovery Keys
     println!("🔑 Demo 3: Ephemeral Recovery Keys");
     println!("Generating time-bound, limited-use recovery keys...");
 
@@ -104,7 +95,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - Can reset password: No (limited scope)");
     println!();
 
-    // Demo 4: Account Lockout and Recovery
     println!("🔒 Demo 4: Account Lockout Scenario");
     println!("Simulating account lockout due to failed attempts...");
 
@@ -114,7 +104,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let lockout_provider = BearDogSecurityProvider::new(lockout_config).await?;
 
-    // Setup recovery for the locked account
     let recovery_contacts = vec![TrustedContact {
         id: "emergency_contact".to_string(),
         identifier: "emergency@example.com".to_string(),
@@ -130,7 +119,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .setup_social_recovery("locked_user", recovery_contacts, 1)
         .await?;
 
-    // Generate failed attempts
     for i in 1..=3 {
         let result = lockout_provider
             .authenticate("locked_user", "wrong_password")
@@ -142,7 +130,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    // Try to authenticate with correct password (should be locked)
     let result = lockout_provider
         .authenticate("locked_user", "correct_password")
         .await?;
@@ -152,20 +139,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!("   Reason: {}", result.reason);
 
-    // Start recovery process
     let recovery_session = lockout_provider
         .start_account_recovery("locked_user", RecoveryType::SocialRecovery)
         .await?;
     println!("   Recovery session started: {recovery_session}");
     println!();
 
-    // Demo 5: Key Philosophy - Limited Scope
     println!("🏠 Demo 5: 'Finding the key ≠ owning the house' Philosophy");
     println!("Demonstrating limited-scope recovery keys...");
 
     let recovery_manager = RecoveryManager::new().await?;
 
-    // Create a key that can only unlock, not reset password
     let mut unlock_permissions = EphemeralPermissions::default();
     unlock_permissions.can_unlock_account = true;
     unlock_permissions.can_reset_password = false;
@@ -174,13 +158,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .generate_ephemeral_recovery_key("demo_user", unlock_permissions, 1, 1)
         .await?;
 
-    // This key can unlock the account
     let unlock_result = recovery_manager
         .use_ephemeral_recovery_key(&unlock_key, "demo_user", "unlock_account")
         .await?;
     println!("   ✅ Key can unlock account: {unlock_result}");
 
-    // But it cannot reset the password
     let reset_result = recovery_manager
         .use_ephemeral_recovery_key(&unlock_key, "demo_user", "reset_password")
         .await;
@@ -229,7 +211,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     let multi_session = recovery_manager
-        .start_account_recovery("secure_user", RecoveryType::SocialRecovery, HashMap::new())
+        .start_account_recovery("secure_user", RecoveryType::SocialRecovery, HashMap::with_capacity(16))
         .await?;
     println!("   Multi-party recovery session: {multi_session}");
     println!("   Requires 2 of 3 contacts to complete recovery");

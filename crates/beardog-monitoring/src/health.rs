@@ -1,32 +1,13 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// System Health Monitoring
-///
-/// This module provides improved system health monitoring using ProcessingOutcome patterns.
 
 use beardog_errors::{improved_results::*, BearDogError, BearDogResult};
 use std::time::Instant;
 use tracing::{debug, info};
 use uuid::Uuid;
 use crate::types::{MonitoringConfig, SystemHealthResult, ComponentHealthResult};
-/// Improved system health monitoring using ProcessingOutcome
+
 pub async fn monitor_system_health_improved(
-    components: Vec<String>,
+    components: Vec<&str>,
     monitoring_config: &MonitoringConfig,
 ) -> BearDogResult<ProcessingOutcome<SystemHealthResult>> {
     let _start_time = Instant::now();
@@ -34,7 +15,7 @@ pub async fn monitor_system_health_improved(
         "🔍 Monitoring {} system components with improved patterns",
         components.len()
     );
-    // Validate monitoring configuration
+
     let validation_result = crate::validation::validate_monitoring_config_improved(monitoring_config).await?;
     if validation_result.status != ValidationStatus::Passed {
         return Err(BearDogError::invalid_input(format!(
@@ -51,7 +32,7 @@ pub async fn monitor_system_health_improved(
     let mut health_results = Vec::new();
     let mut failed_items = Vec::new();
     let mut successful_count = 0;
-    // Monitor each component
+
     for component in components {
         match monitor_component_health(&component, monitoring_config).await {
             Ok(health_result) => {
@@ -73,7 +54,7 @@ pub async fn monitor_system_health_improved(
                     failed_at: now,
                 });
         }
-    // Calculate overall health metrics
+
     let total_components = health_results.len() + failed_items.len();
     let health_percentage = if total_components > 0 {
         (successful_count as f64 / total_components as f64) * 100.0
@@ -112,7 +93,7 @@ pub async fn monitor_system_health_improved(
             component: "beardog-monitoring".to_string(),
             initiator: "system".to_string(),
             request_id: None,
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::with_capacity(16),
         metrics: OperationMetrics::default(),
         warnings: vec![],
         items: health_results,
@@ -131,15 +112,15 @@ pub async fn monitor_system_health_improved(
         failed_items.len()
     Ok(outcome)
 }
-/// Monitor individual component health
+
 pub async fn monitor_component_health(
     component: &str,
     config: &MonitoringConfig,
 ) -> BearDogResult<ComponentHealthResult> {
     debug!("🔍 Checking health for component: {}", component);
-    // Simulate component health check with realistic timing
+
     tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-    // In a real implementation, this would check actual component status
+
     let is_healthy = !component.contains("failing");
     let response_time = if is_healthy { 15.0 } else { 1000.0 };
     let status = if is_healthy {

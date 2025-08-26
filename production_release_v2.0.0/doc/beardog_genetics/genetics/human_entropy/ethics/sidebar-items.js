@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AnonymizationLevel"],"struct":["DataMinimization","DigitalSignature","EntropyCollectionEthics","InformedConsent","PrivacyMetadata","PrivacyProtection","PurposeLimitation","TransparencyPolicy","UserControl","WithdrawalRights"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["buffer_pool","json_serializer","request_parser","response_builder","types"]};

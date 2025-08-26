@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["VerificationMethod"],"struct":["CachedVerification","VerificationConfig","VerificationContext","VerificationResult","VerificationStats"]};

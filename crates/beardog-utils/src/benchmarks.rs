@@ -1,35 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Comprehensive Benchmarking Framework
-///
-/// **PERFORMANCE MEASUREMENT & OPTIMIZATION** - Comprehensive benchmarking tools
-/// 
-/// This module provides a complete benchmarking framework for measuring and optimizing
-/// performance across all BearDog components. It includes micro-benchmarks, system-level
-/// benchmarks, and continuous performance monitoring.
-///
-/// ## Features
-/// - **Micro-benchmarks** - Individual function performance measurement
-/// - **System benchmarks** - End-to-end performance testing
-/// - **Memory profiling** - Allocation and memory usage tracking
-/// - **Throughput analysis** - Operations per second measurement
-/// - **Latency distribution** - P50, P95, P99 latency tracking
-/// - **Regression detection** - Automatic performance regression alerts
 
 use beardog_errors::BearDogResult;
 use std::collections::HashMap;
@@ -37,54 +6,50 @@ use std::time::{Duration, Instant};
 use tracing::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 
-/// Comprehensive benchmark suite
 #[derive(Debug)]
 pub struct BenchmarkSuite {
-    /// Individual benchmark results
+
     benchmarks: HashMap<String, BenchmarkResult>,
-    /// Suite configuration
+
     config: BenchmarkConfig,
-    /// Global suite statistics
+
     suite_stats: SuiteStats,
 }
 
-/// Configuration for benchmark execution
 #[derive(Debug, Clone)]
 pub struct BenchmarkConfig {
-    /// Number of warmup iterations
+
     pub warmup_iterations: u32,
-    /// Number of measurement iterations
+
     pub measurement_iterations: u32,
-    /// Maximum time per benchmark
+
     pub max_time: Duration,
-    /// Enable memory profiling
+
     pub enable_memory_profiling: bool,
-    /// Enable detailed latency analysis
+
     pub enable_latency_analysis: bool,
 }
 
-/// Result of a single benchmark
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkResult {
-    /// Benchmark name
+
     pub name: String,
-    /// Total execution time
+
     pub total_time: Duration,
-    /// Number of iterations completed
+
     pub iterations: u64,
-    /// Operations per second
+
     pub ops_per_second: f64,
-    /// Average latency per operation
+
     pub avg_latency: Duration,
-    /// Latency percentiles
+
     pub latency_percentiles: LatencyPercentiles,
-    /// Memory usage statistics
+
     pub memory_stats: MemoryStats,
-    /// Performance classification
+
     pub performance_grade: PerformanceGrade,
 }
 
-/// Latency percentile measurements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LatencyPercentiles {
     pub p50: Duration,
@@ -94,20 +59,18 @@ pub struct LatencyPercentiles {
     pub p99_9: Duration,
 }
 
-/// Memory usage statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryStats {
-    /// Peak memory usage in bytes
+
     pub peak_memory: u64,
-    /// Total allocations
+
     pub total_allocations: u64,
-    /// Memory allocation rate (allocations/sec)
+
     pub allocation_rate: f64,
-    /// Average allocation size
+
     pub avg_allocation_size: u64,
 }
 
-/// Performance grade classification
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum PerformanceGrade {
     Excellent,  // > 1M ops/sec
@@ -117,7 +80,6 @@ pub enum PerformanceGrade {
     Critical,   // < 1K ops/sec
 }
 
-/// Suite-level statistics
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SuiteStats {
     pub total_benchmarks: u32,
@@ -140,16 +102,15 @@ impl Default for BenchmarkConfig {
 }
 
 impl BenchmarkSuite {
-    /// Create a new benchmark suite
+
     pub fn new(config: BenchmarkConfig) -> Self {
         Self {
-            benchmarks: HashMap::new(),
+            benchmarks: HashMap::with_capacity(16),
             config,
             suite_stats: SuiteStats::default(),
         }
     }
-    
-    /// Run a benchmark function
+
     pub fn benchmark<F, R>(&mut self, name: &str, mut benchmark_fn: F) -> BearDogResult<()>
     where
         F: FnMut() -> R,
@@ -157,14 +118,12 @@ impl BenchmarkSuite {
         info!("🏁 Running benchmark: {}", name);
         
         let start_time = Instant::now();
-        
-        // Warmup phase
+
         debug!("🔥 Warmup phase: {} iterations", self.config.warmup_iterations);
         for _ in 0..self.config.warmup_iterations {
             let _ = benchmark_fn();
         }
-        
-        // Measurement phase
+
         debug!("📊 Measurement phase: {} iterations", self.config.measurement_iterations);
         let mut latencies = Vec::with_capacity(self.config.measurement_iterations as usize);
         let measurement_start = Instant::now();
@@ -174,8 +133,7 @@ impl BenchmarkSuite {
             let _ = benchmark_fn();
             let iter_duration = iter_start.elapsed();
             latencies.push(iter_duration);
-            
-            // Check timeout
+
             if measurement_start.elapsed() > self.config.max_time {
                 warn!("⏰ Benchmark timeout reached for: {}", name);
                 break;
@@ -184,15 +142,13 @@ impl BenchmarkSuite {
         
         let total_time = start_time.elapsed();
         let measurement_time = measurement_start.elapsed();
-        
-        // Calculate statistics
+
         let iterations = latencies.len() as u64;
         let ops_per_second = iterations as f64 / measurement_time.as_secs_f64();
         let avg_latency = Duration::from_nanos(
             latencies.iter().map(|d| d.as_nanos() as u64).sum::<u64>() / iterations
         );
-        
-        // Calculate percentiles
+
         let mut sorted_latencies = latencies.clone();
         sorted_latencies.sort();
         
@@ -203,16 +159,14 @@ impl BenchmarkSuite {
             p99: sorted_latencies[sorted_latencies.len() * 99 / 100],
             p99_9: sorted_latencies[sorted_latencies.len() * 999 / 1000],
         };
-        
-        // Mock memory stats (would integrate with actual profiler)
+
         let memory_stats = MemoryStats {
             peak_memory: 1024 * 1024, // 1MB mock
             total_allocations: iterations * 2,
             allocation_rate: (iterations * 2) as f64 / measurement_time.as_secs_f64(),
             avg_allocation_size: 512,
         };
-        
-        // Determine performance grade
+
         let performance_grade = if ops_per_second > 1_000_000.0 {
             PerformanceGrade::Excellent
         } else if ops_per_second > 100_000.0 {
@@ -235,8 +189,7 @@ impl BenchmarkSuite {
             memory_stats,
             performance_grade: performance_grade.clone(),
         };
-        
-        // Log results
+
         info!(
             "✅ Benchmark complete: {} - {:.0} ops/sec ({:?})",
             name, ops_per_second, performance_grade
@@ -247,8 +200,7 @@ impl BenchmarkSuite {
             result.latency_percentiles.p95,
             result.latency_percentiles.p99
         );
-        
-        // Update suite stats
+
         self.suite_stats.total_benchmarks += 1;
         if matches!(performance_grade, PerformanceGrade::Critical) {
             self.suite_stats.failed_benchmarks += 1;
@@ -260,8 +212,7 @@ impl BenchmarkSuite {
         self.benchmarks.insert(name.to_string(), result);
         Ok(())
     }
-    
-    /// Run a throughput benchmark (operations per second)
+
     pub fn benchmark_throughput<F, R>(&mut self, name: &str, benchmark_fn: F) -> BearDogResult<f64>
     where
         F: Fn() -> R + Clone,
@@ -270,8 +221,7 @@ impl BenchmarkSuite {
         let result = &self.benchmarks[name];
         Ok(result.ops_per_second)
     }
-    
-    /// Run a latency benchmark (time per operation)
+
     pub fn benchmark_latency<F, R>(&mut self, name: &str, benchmark_fn: F) -> BearDogResult<Duration>
     where
         F: Fn() -> R + Clone,
@@ -280,18 +230,15 @@ impl BenchmarkSuite {
         let result = &self.benchmarks[name];
         Ok(result.avg_latency)
     }
-    
-    /// Get benchmark result by name
+
     pub fn get_result(&self, name: &str) -> Option<&BenchmarkResult> {
         self.benchmarks.get(name)
     }
-    
-    /// Get all benchmark results
+
     pub fn get_all_results(&self) -> &HashMap<String, BenchmarkResult> {
         &self.benchmarks
     }
-    
-    /// Generate performance report
+
     pub fn generate_report(&self) -> PerformanceReport {
         let mut excellent_count = 0;
         let mut good_count = 0;
@@ -333,8 +280,7 @@ impl BenchmarkSuite {
             benchmarks: self.benchmarks.clone(),
         }
     }
-    
-    /// Print performance summary
+
     pub fn print_summary(&self) {
         let report = self.generate_report();
         
@@ -374,7 +320,6 @@ impl BenchmarkSuite {
     }
 }
 
-/// Complete performance report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceReport {
     pub suite_stats: SuiteStats,
@@ -384,7 +329,6 @@ pub struct PerformanceReport {
     pub benchmarks: HashMap<String, BenchmarkResult>,
 }
 
-/// Performance grade distribution
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GradeDistribution {
     pub excellent: u32,
@@ -394,7 +338,6 @@ pub struct GradeDistribution {
     pub critical: u32,
 }
 
-/// Macro for easy benchmark creation
 #[macro_export]
 macro_rules! benchmark {
     ($suite:expr, $name:expr, $code:block) => {
@@ -419,13 +362,12 @@ mod tests {
             measurement_iterations: 100,
             ..BenchmarkConfig::default()
         });
-        
-        // Benchmark a simple operation
+
         suite.benchmark("simple_add", || {
             let _result = 1 + 1;
         }).map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark should succeed", e).to_string())
 })?;
         
         let result = suite.get_result("simple_add").ok_or_else(|| {
@@ -444,20 +386,19 @@ mod tests {
             measurement_iterations: 10,
             ..BenchmarkConfig::default()
         });
-        
-        // Fast operation should get a good grade
+
         suite.benchmark("fast_op", || {
-            // Very fast operation
+
         }).map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark should succeed", e).to_string())
 })?;
         
         let result = suite.get_result("fast_op").ok_or_else(|| {
     tracing::error!("Operation failed ({})", "Result should exist");
     beardog_errors::BearDogError::internal("Operation failed: Result should exist".to_string())
 })?;
-        // Fast operations should get excellent or good grade
+
         assert!(matches!(result.performance_grade, 
                         PerformanceGrade::Excellent | PerformanceGrade::Good));
         Ok(())

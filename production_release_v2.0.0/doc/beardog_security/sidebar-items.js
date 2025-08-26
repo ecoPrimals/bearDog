@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["address_management","crypto_utils","decentralized_auth","encryption","handlers","improved_hsm_operations","improved_key_management","memory_key_manager","recovery","tests","types","zero_copy"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["workflows"],"struct":["EmailConfig","SlackNotificationConfig","WebhookConfig","WorkflowConfig","WorkflowNotificationConfig","WorkflowPolicyConfig"]};

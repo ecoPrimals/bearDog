@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["DetectionMethod","EvidenceData","EvidenceType"],"struct":["FileMetadataData","LogEntryData","NetworkPacketData","ThreatEvidence"]};

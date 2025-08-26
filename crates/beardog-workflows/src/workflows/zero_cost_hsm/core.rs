@@ -1,26 +1,5 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// # Zero-Cost HSM Core Implementation
-///
-/// **MODERNIZED** - Zero-cost HSM implementation with native async traits
-/// This module contains the main ZeroCostSoftwareHsm struct using canonical types.
-
-// MODERNIZED: Using native async fn in traits instead of async_trait
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::{
     canonical::{
@@ -40,7 +19,6 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 pub use beardog_types::canonical::hsm::config::SoftwareHsmConfig;
 
-/// HSM statistics structure
 #[derive(Debug, Clone)]
 pub struct HsmStats {
     pub total_keys: usize,
@@ -48,9 +26,6 @@ pub struct HsmStats {
     pub storage_utilization: f64,
 }
 
-/// Zero-Cost Software HSM Implementation
-/// High-performance software HSM that eliminates boxing overhead through
-/// const generic specialization and zero-cost abstractions.
 pub struct ZeroCostSoftwareHsm<
     const MAX_KEYS: usize = 1000,
     const KEY_SIZE_LIMIT: usize = 4096,
@@ -67,7 +42,7 @@ impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize>
     #[must_use] 
     pub fn new(config: SoftwareHsmConfig) -> Self {
         Self {
-            keys: RwLock::new(HashMap::new()),
+            keys: RwLock::new(HashMap::with_capacity(16)),
             operations_count: AtomicU64::new(0),
             config,
             _phantom: PhantomData,
@@ -84,7 +59,6 @@ impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize>
     }
 }
 
-// MODERNIZED: Native async fn implementation - no async_trait needed
 impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize> BaseProvider
     for ZeroCostSoftwareHsm<MAX_KEYS, KEY_SIZE_LIMIT>
 {
@@ -103,7 +77,7 @@ impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize> BaseProvider
     }
 
     async fn initialize(&mut self, _config: ProviderConfig) -> BearDogResult<()> {
-        // Already initialized in new()
+
         Ok(())
     }
 
@@ -117,13 +91,12 @@ impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize> BaseProvider
     }
 
     async fn shutdown(&mut self) -> BearDogResult<()> {
-        // Clear keys for security
+
         self.keys.write().clear();
         Ok(())
     }
 }
 
-// MODERNIZED: Native async fn implementation for HSM operations
 impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize> HsmProvider
     for ZeroCostSoftwareHsm<MAX_KEYS, KEY_SIZE_LIMIT>
 {
@@ -137,17 +110,17 @@ impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize> HsmProvider
         
         if keys.len() >= MAX_KEYS {
             return Err(BearDogError::System {
-                message: format!("HSM key slots exhausted: {}/{}", keys.len(), MAX_KEYS),
+                message: format_args!("HSM key slots exhausted: {}/{}", keys.len().to_string(), MAX_KEYS),
             });
         }
 
-        let key_id = format!("key_{}", uuid::Uuid::new_v4());
+        let key_id = format_args!("key_{}", uuid::Uuid::new_v4().to_string());
         let key = HsmKey {
             id: key_id.clone(),
             key_type,
             material: KeyMaterial::SoftwareHandle {
                 handle: key_id.clone(),
-                metadata: HashMap::new(),
+                metadata: HashMap::with_capacity(16),
             },
             metadata,
             created_at: chrono::Utc::now(),
@@ -167,8 +140,7 @@ impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize> HsmProvider
         let _key = keys.get(key_id).ok_or_else(|| BearDogError::System {
             message: format!("Key not found for signing: {key_id}"),
         })?;
-        
-        // Simplified signing for zero-cost demo
+
         Ok(data.to_vec())
     }
 
@@ -182,8 +154,7 @@ impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize> HsmProvider
         let _key = keys.get(key_id).ok_or_else(|| BearDogError::System {
             message: format!("Key not found for verification: {key_id}"),
         })?;
-        
-        // Simplified verification for zero-cost demo
+
         Ok(signature == data)
     }
 
@@ -192,8 +163,7 @@ impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize> HsmProvider
         let _key = keys.get(key_id).ok_or_else(|| BearDogError::System {
             message: format!("Key not found for encryption: {key_id}"),
         })?;
-        
-        // Simplified encryption for zero-cost demo
+
         Ok(data.to_vec())
     }
 
@@ -206,8 +176,7 @@ impl<const MAX_KEYS: usize, const KEY_SIZE_LIMIT: usize> HsmProvider
         let _key = keys.get(key_id).ok_or_else(|| BearDogError::System {
             message: format!("Key not found for decryption: {key_id}"),
         })?;
-        
-        // Simplified decryption for zero-cost demo
+
         Ok(encrypted_data.to_vec())
     }
 

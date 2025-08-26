@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["discover_capabilities","execute_cross_primal_operation","get_primal_status","get_self_primal_capabilities","register_with_ecosystem"]};

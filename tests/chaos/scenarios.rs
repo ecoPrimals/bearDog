@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Chaos Testing Scenarios
-//!
-//! Default chaos scenarios and scenario execution logic
-//! for comprehensive system resilience testing.
 
 use super::models::*;
 use super::ChaosTestFramework;
@@ -27,7 +7,6 @@ use std::time::Instant;
 use tokio::time::sleep;
 use tracing::info;
 
-/// Create default chaos testing scenarios
 pub fn create_default_scenarios() -> Vec<ChaosScenario> {
     vec![
         ChaosScenario {
@@ -112,38 +91,30 @@ pub fn create_default_scenarios() -> Vec<ChaosScenario> {
     ]
 }
 
-/// Run a specific chaos scenario
 pub async fn run_chaos_scenario(framework: &mut ChaosTestFramework, scenario: &ChaosScenario) -> BearDogResult<ScenarioResult> {
     info!("🎬 Executing scenario: {} - {}", scenario.name, scenario.description);
     
     let start_time = Instant::now();
     let mut fault_results = Vec::new();
-    
-    // Baseline metrics before chaos
+
     let baseline_metrics = framework.collect_baseline_metrics().await?;
-    
-    // Inject faults sequentially or concurrently based on scenario
+
     for fault in &scenario.faults {
         let fault_result = framework.inject_and_monitor_fault(fault.clone()).await?;
         fault_results.push(fault_result);
-        
-        // Brief pause between faults
+
         sleep(std::time::Duration::from_millis(500)).await;
     }
-    
-    // Wait for scenario duration
+
     let remaining_time = scenario.duration_ms.saturating_sub(start_time.elapsed().as_millis() as u64);
     if remaining_time > 0 {
         sleep(std::time::Duration::from_millis(remaining_time)).await;
     }
-    
-    // Validate recovery
+
     let recovery_results = framework.validate_all_recoveries().await?;
-    
-    // Collect post-chaos metrics
+
     let post_chaos_metrics = framework.collect_current_metrics().await?;
-    
-    // Calculate scenario success
+
     let scenario_success = evaluate_scenario_success(
         scenario,
         &baseline_metrics,
@@ -162,14 +133,13 @@ pub async fn run_chaos_scenario(framework: &mut ChaosTestFramework, scenario: &C
     })
 }
 
-/// Evaluate scenario success based on criteria
 pub async fn evaluate_scenario_success(
     scenario: &ChaosScenario,
     baseline: &SystemImpact,
     post_chaos: &SystemImpact,
     recovery_results: &[RecoveryResult],
 ) -> BearDogResult<bool> {
-    // Evaluate based on success criteria
+
     let response_time_degradation = post_chaos.response_time_increase / baseline.response_time_increase.max(1.0);
     let error_rate = post_chaos.error_rate_increase;
     let availability = 1.0 - post_chaos.availability_decrease;

@@ -1,43 +1,23 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Local System Optimizer
-///
-/// Provides local system optimization and performance monitoring capabilities.
 
 use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-/// Local optimization configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocalOptimizerConfig {
-    /// Enable CPU optimization
+
     pub cpu_optimization: bool,
-    /// Enable memory optimization
+
     pub memory_optimization: bool,
-    /// Enable I/O optimization
+
     pub io_optimization: bool,
-    /// Optimization interval in seconds
+
     pub optimization_interval: u64,
-    /// Maximum CPU usage threshold
+
     pub max_cpu_usage: f64,
-    /// Maximum memory usage threshold
+
     pub max_memory_usage: f64,
 }
 
@@ -54,7 +34,6 @@ impl Default for LocalOptimizerConfig {
     }
 }
 
-/// Local system optimizer
 #[derive(Debug)]
 pub struct LocalOptimizer {
     config: LocalOptimizerConfig,
@@ -63,7 +42,7 @@ pub struct LocalOptimizer {
 }
 
 impl LocalOptimizer {
-    /// Create new local optimizer
+
     pub fn new(config: LocalOptimizerConfig) -> Self {
         Self {
             config,
@@ -72,12 +51,10 @@ impl LocalOptimizer {
         }
     }
 
-    /// Run optimization cycle
     pub async fn optimize(&mut self) -> BearDogResult<OptimizationResult> {
         let start_time = Instant::now();
         let mut result = OptimizationResult::default();
 
-        // Check if optimization interval has passed
         if let Some(last_opt) = self.last_optimization {
             let elapsed = start_time.duration_since(last_opt);
             if elapsed.as_secs() < self.config.optimization_interval {
@@ -87,7 +64,6 @@ impl LocalOptimizer {
 
         tracing::info!("Starting local system optimization");
 
-        // CPU optimization
         if self.config.cpu_optimization {
             match self.optimize_cpu().await {
                 Ok(cpu_result) => {
@@ -96,12 +72,11 @@ impl LocalOptimizer {
                 }
                 Err(e) => {
                     tracing::warn!("CPU optimization failed: {}", e);
-                    result.errors.push(format!("CPU optimization: {}", e));
+                    result.errors.push(format_args!("CPU optimization: {}", e).to_string());
                 }
             }
         }
 
-        // Memory optimization
         if self.config.memory_optimization {
             match self.optimize_memory().await {
                 Ok(memory_result) => {
@@ -110,12 +85,11 @@ impl LocalOptimizer {
                 }
                 Err(e) => {
                     tracing::warn!("Memory optimization failed: {}", e);
-                    result.errors.push(format!("Memory optimization: {}", e));
+                    result.errors.push(format_args!("Memory optimization: {}", e).to_string());
                 }
             }
         }
 
-        // I/O optimization
         if self.config.io_optimization {
             match self.optimize_io().await {
                 Ok(io_result) => {
@@ -124,7 +98,7 @@ impl LocalOptimizer {
                 }
                 Err(e) => {
                     tracing::warn!("I/O optimization failed: {}", e);
-                    result.errors.push(format!("I/O optimization: {}", e));
+                    result.errors.push(format_args!("I/O optimization: {}", e).to_string());
                 }
             }
         }
@@ -133,7 +107,6 @@ impl LocalOptimizer {
         result.optimization_duration = optimization_duration;
         result.success = result.errors.is_empty();
 
-        // Update metrics
         self.metrics.total_optimizations += 1;
         if result.success {
             self.metrics.successful_optimizations += 1;
@@ -151,9 +124,8 @@ impl LocalOptimizer {
         Ok(result)
     }
 
-    /// Optimize CPU usage
     async fn optimize_cpu(&self) -> BearDogResult<CpuOptimizationResult> {
-        // Simulate CPU optimization
+
         tokio::time::sleep(Duration::from_millis(100)).await;
         
         Ok(CpuOptimizationResult {
@@ -162,9 +134,8 @@ impl LocalOptimizer {
         })
     }
 
-    /// Optimize memory usage
     async fn optimize_memory(&self) -> BearDogResult<MemoryOptimizationResult> {
-        // Simulate memory optimization
+
         tokio::time::sleep(Duration::from_millis(150)).await;
         
         Ok(MemoryOptimizationResult {
@@ -173,9 +144,8 @@ impl LocalOptimizer {
         })
     }
 
-    /// Optimize I/O performance
     async fn optimize_io(&self) -> BearDogResult<IoOptimizationResult> {
-        // Simulate I/O optimization
+
         tokio::time::sleep(Duration::from_millis(200)).await;
         
         Ok(IoOptimizationResult {
@@ -184,26 +154,21 @@ impl LocalOptimizer {
         })
     }
 
-    /// Get current optimization metrics
     pub fn get_metrics(&self) -> &OptimizationMetrics {
         &self.metrics
     }
 }
 
-/// Optimization trait - modernized with native async fn
 #[allow(async_fn_in_trait)]
 pub trait SystemOptimizer: Send + Sync {
-    /// Run system optimization
+
     async fn optimize_system(&mut self) -> BearDogResult<OptimizationResult>;
 
-    /// Get system performance metrics
     async fn get_performance_metrics(&self) -> BearDogResult<PerformanceMetrics>;
 
-    /// Check if optimization is needed
     async fn needs_optimization(&self) -> BearDogResult<bool>;
 }
 
-/// Implement the trait for LocalOptimizer
 impl SystemOptimizer for LocalOptimizer {
     async fn optimize_system(&mut self) -> BearDogResult<OptimizationResult> {
         self.optimize().await
@@ -227,7 +192,6 @@ impl SystemOptimizer for LocalOptimizer {
     }
 }
 
-/// Optimization result
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct OptimizationResult {
     pub success: bool,
@@ -241,28 +205,24 @@ pub struct OptimizationResult {
     pub errors: Vec<String>,
 }
 
-/// CPU optimization result
 #[derive(Debug, Clone)]
 struct CpuOptimizationResult {
     optimizations_applied: u32,
     performance_gain: f64,
 }
 
-/// Memory optimization result
 #[derive(Debug, Clone)]
 struct MemoryOptimizationResult {
     memory_freed: f64,
     optimizations_applied: u32,
 }
 
-/// I/O optimization result
 #[derive(Debug, Clone)]
 struct IoOptimizationResult {
     optimizations_applied: u32,
     performance_gain: f64,
 }
 
-/// Performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
     pub cpu_usage: f64,
@@ -272,7 +232,6 @@ pub struct PerformanceMetrics {
     pub uptime_seconds: u64,
 }
 
-/// Optimization metrics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct OptimizationMetrics {
     pub total_optimizations: u64,
@@ -281,7 +240,7 @@ pub struct OptimizationMetrics {
 }
 
 impl OptimizationMetrics {
-    /// Get success rate as percentage
+
     pub fn success_rate(&self) -> f64 {
         if self.total_optimizations == 0 {
             0.0
@@ -290,7 +249,6 @@ impl OptimizationMetrics {
         }
     }
 
-    /// Get average optimization time
     pub fn average_optimization_time(&self) -> Duration {
         if self.total_optimizations == 0 {
             Duration::from_secs(0)

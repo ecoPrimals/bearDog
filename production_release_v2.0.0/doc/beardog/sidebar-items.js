@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["MISSION","VERSION"],"enum":["BearDogError"],"struct":["BearDogConfig","BearDogCore"],"type":["BearDogResult"]};

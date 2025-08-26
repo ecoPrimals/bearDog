@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Resource Chaos Testing Module
-//!
-//! Focused chaos engineering tests for resource resilience including:
-//! - Resource exhaustion scenarios
-//! - CPU starvation testing
-//! - Disk I/O failure simulation
 
 use super::{ChaosConfig, TestMetrics, TestResult};
 use beardog_errors::{BearDogError, BearDogResult};
@@ -28,7 +6,6 @@ use std::time::{Duration, Instant};
 use tokio::sync::Semaphore;
 use tracing::{info, warn};
 
-/// Resource chaos testing controller
 #[derive(Debug)]
 pub struct ResourceChaosController {
     config: ChaosConfig,
@@ -43,7 +20,6 @@ impl ResourceChaosController {
         }
     }
 
-    /// Test resource exhaustion scenarios
     pub async fn test_resource_exhaustion(&self) -> BearDogResult<TestResult> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
@@ -54,12 +30,11 @@ impl ResourceChaosController {
         while start_time.elapsed() < self.config.test_duration {
             operations_attempted += 1;
 
-            // Try to acquire resource permit
             let permit_result = self.semaphore.try_acquire();
 
             match permit_result {
                 Ok(permit) => {
-                    // Simulate resource-intensive operation
+
                     let resource_result = self.simulate_resource_intensive_operation().await;
                     drop(permit); // Release resource
 
@@ -69,7 +44,7 @@ impl ResourceChaosController {
                     }
                 }
                 Err(_) => {
-                    // Resource exhausted - this is expected under chaos
+
                     warn!("Resource exhausted (expected under chaos)");
                 }
             }
@@ -101,25 +76,21 @@ impl ResourceChaosController {
         })
     }
 
-    /// Simulate resource-intensive operation
     async fn simulate_resource_intensive_operation(&self) -> BearDogResult<()> {
-        // Simulate CPU-intensive work
+
         tokio::task::yield_now().await;
 
-        // Inject random failures
         if fastrand::f64() < self.config.failure_rate {
             return Err(BearDogError::Resource {
                 message: "Simulated resource failure".to_string(),
             });
         }
 
-        // Simulate successful resource operation
         tokio::time::sleep(Duration::from_millis(1)).await;
         Ok(())
     }
 }
 
-/// Resource exhaustion test implementation
 pub struct ResourceExhaustionTest;
 
 impl ResourceExhaustionTest {

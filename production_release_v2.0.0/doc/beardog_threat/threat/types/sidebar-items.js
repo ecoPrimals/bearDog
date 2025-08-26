@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["actions","analysis","config","core","detection","engine","incidents","intelligence","sources","statistics","validation"],"type":["ResponseActionType"]};

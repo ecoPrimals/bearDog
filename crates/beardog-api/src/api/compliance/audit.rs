@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Audit Trail Management Handlers
-///
-/// Handlers for audit trail retrieval, logging, searching, and exporting.
 
 use super::models::*;
 use crate::api::*;
@@ -29,7 +10,7 @@ use axum::{
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::info;
-/// Get audit trail with filtering and pagination
+
 pub async fn get_audit_trail(
     State(_state): State<AppState>,
     Query(params): Query<AuditTrailQuery>,
@@ -37,7 +18,7 @@ pub async fn get_audit_trail(
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
     info!("🔍 Retrieving audit trail with filters: {:?}", params);
-    // Mock audit events - in production this would query the audit database
+
     let audit_events = vec![
         AuditEvent {
             id: uuid::Uuid::new_v4().to_string(),
@@ -52,7 +33,7 @@ pub async fn get_audit_trail(
             user_agent: Some("Mozilla/5.0".to_string()),
             session_id: Some("session_12345".to_string()),
             metadata: {
-                let mut map = HashMap::new();
+                let mut map = HashMap::with_capacity(16);
                 map.insert("login_method".to_string(), "password".to_string());
                 map.insert("mfa_used".to_string(), "true".to_string());
                 map
@@ -92,12 +73,12 @@ pub async fn get_audit_trail(
         true,
     )))
 }
-/// Log new audit event
+
 pub async fn log_audit_event(
     Json(request): Json<LogAuditEventRequest>,
 ) -> Result<Json<ApiResponse<LogAuditEventResponse>>, StatusCode> {
     info!("📝 Logging audit event: {}", request.event_type);
-    // In production, this would save to the audit database
+
     let event_id = uuid::Uuid::new_v4().to_string();
     let timestamp = chrono::Utc::now().to_rfc3339();
     let response = LogAuditEventResponse {
@@ -109,14 +90,14 @@ pub async fn log_audit_event(
         encrypted: true,
         tamper_proof: true,
         false,
-/// Search audit trail
+
 pub async fn search_audit_trail(
     State(_): State<AppState>,
     Json(_): Json<serde_json::Value>,
 ) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
         serde_json::json!({"message": "Audit search functionality"}),
         25,
-/// Export audit trail
+
 pub async fn export_audit_trail(
         serde_json::json!({"export_url": "https://api.beardog.com/exports/audit_12345.csv"}),
         150,

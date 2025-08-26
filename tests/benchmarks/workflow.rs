@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Workflow Operations Benchmarking  
-//!
-//! Benchmarks for workflow initiation, processing, and approval workflows.
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
 use beardog::BearDogResult;
@@ -26,18 +7,15 @@ use std::collections::HashMap;
 use std::time::Instant;
 use tracing::info;
 
-/// Benchmark workflow operations
 pub async fn benchmark_workflow_operations(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
-    // Workflow initiation benchmark
     let initiation_result = benchmark_workflow_initiation(suite).await?;
     results.push(initiation_result);
 
     Ok(results)
 }
 
-/// Benchmark workflow initiation
 async fn benchmark_workflow_initiation(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
     info!("  🔄 Benchmarking workflow initiation");
 
@@ -50,12 +28,12 @@ async fn benchmark_workflow_initiation(suite: &PerformanceBenchmarkSuite) -> Bea
         
         let workflow_request = WorkflowRequest {
             workflow_type: WorkflowType::SystemMaintenance,
-            initiator: format!("benchmark_user_{}", i),
+            initiator: format_args!("benchmark_user_{}", i).to_string(),
             target: WorkflowTarget::System,
-            parameters: HashMap::new(),
+            parameters: HashMap::with_capacity(16),
             reason: "Performance benchmark workflow".to_string(),
             priority: WorkflowPriority::Normal,
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         };
 
         match suite.workflow_engine.initiate_workflow(workflow_request).await {
@@ -64,7 +42,7 @@ async fn benchmark_workflow_initiation(suite: &PerformanceBenchmarkSuite) -> Bea
                 latencies.push(op_start.elapsed().as_nanos() as f64 / 1_000_000.0);
             }
             Err(_) => {
-                // Record failed operation
+
             }
         }
     }

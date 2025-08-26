@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["BatchAnalysisRequest","BatchAnalysisResponse","BehavioralAnalysisRequest","BehavioralAnalysisResponse","CreateDetectionRuleRequest","MlPredictionResponse","RuleConditionRequest","SecurityEventRequest","SecurityStatisticsResponse","ThreatAnalysisResponse","ThreatEventResponse","ThreatIndicatorMatch","ThreatIntelRequest","ThreatIntelResponse"]};

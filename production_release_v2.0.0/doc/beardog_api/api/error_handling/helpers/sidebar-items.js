@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["authentication_error","authorization_error","internal_error","not_found_error","rate_limit_error","validation_error"]};

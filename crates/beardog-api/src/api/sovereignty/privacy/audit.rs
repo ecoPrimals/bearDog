@@ -1,25 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Privacy Audit System
-///
-/// **EXTRACTED FROM LARGE FILE** - Privacy audit trails and compliance (~150 lines)
-/// This module implements privacy audit trails, compliance checking, and
-/// privacy impact assessments to ensure regulatory compliance.
 
 use super::models::PrivacyAuditEvent;
 use beardog_types::canonical::AuditEventType;
@@ -30,14 +9,14 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
-/// Privacy audit and compliance system
+
 pub struct PrivacyAuditSystem {
-    /// Audit event trail
+
     audit_trail: Arc<RwLock<Vec<PrivacyAuditEvent>>>,
-    /// Compliance configuration
+
     compliance_config: ComplianceConfig,
 }
-/// Configuration for compliance monitoring
+
 #[derive(Debug, Clone)]
 pub struct ComplianceConfig {
     pub gdpr_enabled: bool,
@@ -47,9 +26,7 @@ pub struct ComplianceConfig {
     pub auto_purge: bool,
     pub notification_threshold: u64,}
 
-
 impl Default for ComplianceConfig {}
-
 
     fn default() -> Self {
         Self {
@@ -64,27 +41,24 @@ impl Default for ComplianceConfig {}
 impl Default for PrivacyAuditSystem {
         Self::new()}
 
-
 impl PrivacyAuditSystem {
-    /// Create new privacy audit system
+
     pub fn new() -> Self {
         info!("📋 Initializing privacy audit and compliance system");
             audit_trail: Arc::new(RwLock::new(Vec::new())),
             compliance_config: ComplianceConfig::default(),
-    /// Create audit system with custom compliance configuration}
-
 
     pub fn with_config(config: ComplianceConfig) -> Self {
         info!("📋 Initializing privacy audit system with custom compliance config");
             compliance_config: config,
-    /// Log privacy audit event
+
     pub async fn log_audit_event(
         &self,
         event_type: AuditEventType,
-        user_action: Option<String>,
-        data_accessed: Option<String>,
+        user_action: Option<&str>,
+        data_accessed: Option<&str>,
         privacy_impact: PrivacyImpactLevel,
-        metadata: HashMap<String, String>,
+        metadata: HashMap<&str, &str>,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         let event_id = Uuid::new_v4().to_string();
         let event = PrivacyAuditEvent {
@@ -100,20 +74,20 @@ impl PrivacyAuditSystem {
             metadata,
         };
         debug!("📝 Logging privacy audit event: {:?}", event_type);
-        // Store audit event
+
         {
             let mut trail = self.audit_trail.write().await;
             trail.push(event);
-            // Auto-purge old events if enabled
+
             if self.compliance_config.auto_purge {
                 let cutoff = Utc::now()
                     - chrono::Duration::days(self.compliance_config.retention_days as i64);
                 trail.retain(|e| e.timestamp > cutoff);
             }
-        // Check if we need to send compliance notifications
+
         self.check_notification_threshold().await?;
         Ok(event_id)
-    /// Get audit trail with optional filtering
+
     pub async fn get_audit_trail(
         event_type: Option<AuditEventType>,
         start_date: Option<DateTime<Utc>>,
@@ -124,13 +98,13 @@ impl PrivacyAuditSystem {
         let filtered: Vec<PrivacyAuditEvent> = trail
             .iter()
             .filter(|event| {
-                // Filter by event type
+
                 if let Some(ref filter_type) = event_type {
                     if event.event_type != *filter_type {
                         return false;
                     }
                 }
-                // Filter by date range
+
                 if let Some(start) = start_date {
                     if event.timestamp < start {
                 if let Some(end) = end_date {
@@ -142,14 +116,14 @@ impl PrivacyAuditSystem {
             .collect();
         debug!("📊 Retrieved {} audit events", filtered.len());
         filtered
-    /// Generate compliance report
+
     pub async fn generate_compliance_report(
     ) -> Result<ComplianceReport, Box<dyn std::error::Error + Send + Sync>> {
         info!("📊 Generating privacy compliance report");
         let now = Utc::now();
         let last_30_days = now - chrono::Duration::days(30);
-        // Count events by type in last 30 days
-        let mut event_counts = HashMap::new();
+
+        let mut event_counts = HashMap::with_capacity(16);
         let mut violation_count = 0;
         let mut compliance_issues = Vec::new();
         for event in trail.iter() {
@@ -177,7 +151,7 @@ impl PrivacyAuditSystem {
             report.total_events
         );
         Ok(report)
-    /// Export audit trail for regulatory purposes
+
     pub async fn export_audit_trail(
         format: &str,
     ) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
@@ -201,8 +175,7 @@ impl PrivacyAuditSystem {
                     ));
                 Ok(csv.into_bytes())
             _ => Err("Unsupported export format".into()),
-    // Private helper methods
-    /// Determine compliance status for an event
+
     async fn determine_compliance_status(
         event_type: &AuditEventType,
         privacy_impact: &PrivacyImpactLevel,
@@ -212,8 +185,6 @@ impl PrivacyAuditSystem {
             (_, PrivacyImpactLevel::Critical) => ComplianceStatus::UnderReview,
             (_, PrivacyImpactLevel::High) => ComplianceStatus::UnderReview,
             _ => ComplianceStatus::Compliant,
-    /// Check if notification threshold is reached}
-
 
     async fn check_notification_threshold(
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -227,25 +198,25 @@ impl PrivacyAuditSystem {
                 "🚨 Privacy violation threshold exceeded: {} violations in 24h",
                 recent_violations
             );
-            // Would send notification to compliance team
+
         Ok(())
-    /// Assess GDPR compliance
+
     async fn assess_gdpr_compliance(&self, trail: &[PrivacyAuditEvent]) -> bool {
         debug!("🇪🇺 Assessing GDPR compliance for {} events", trail.len());
-        // Basic GDPR compliance checks
+
         for event in trail {
-            // Check for data processing without consent
+
             if event.event_type == AuditEventType::DataAccess
                 && !event.metadata.contains_key("consent_id")
             {
                 compliance_issues.push("Data processing without explicit consent");
-            // Check for data retention beyond reasonable periods
+
             let event_age = chrono::Utc::now()
                 .signed_duration_since(event.timestamp)
                 .num_days();
             if event_age > 365 && event.event_type == AuditEventType::DataAccess {
                 compliance_issues.push("Data retained beyond reasonable period");
-            // Check for cross-border data transfers without safeguards
+
             if event.event_type == AuditEventType::DataSharing
                 && !event.metadata.contains_key("adequacy_decision")
                 compliance_issues.push("Cross-border transfer without adequate safeguards");
@@ -255,17 +226,16 @@ impl PrivacyAuditSystem {
         } else {
             debug!("⚠️ GDPR compliance issues found: {:?}", compliance_issues);
         is_compliant
-    /// Assess CCPA compliance
+
     async fn assess_ccpa_compliance(&self, trail: &[PrivacyAuditEvent]) -> bool {
         debug!("🇺🇸 Assessing CCPA compliance for {} events", trail.len());
-        // Basic CCPA compliance checks
-            // Check for personal information collection disclosure
+
                 && !event.metadata.contains_key("collection_notice")
                 compliance_issues.push("Personal information collection without proper notice");
-            // Check for opt-out rights implementation
+
                 && !event.metadata.contains_key("opt_out_available")
                 compliance_issues.push("Data sale without opt-out mechanism");
-            // Check for deletion rights compliance
+
             if event.event_type == AuditEventType::DataPurge {
                 let response_time = event
                     .metadata
@@ -276,7 +246,7 @@ impl PrivacyAuditSystem {
                     compliance_issues.push("Deletion request not processed within 45 days");
             debug!("✅ CCPA compliance assessment passed");
             debug!("⚠️ CCPA compliance issues found: {:?}", compliance_issues);
-    /// Generate compliance recommendations
+
     async fn generate_recommendations(&self, issues: &[PrivacyAuditEvent]) -> Vec<String> {
         let mut recommendations = Vec::new();
         if !issues.is_empty() {
@@ -284,7 +254,7 @@ impl PrivacyAuditSystem {
             recommendations.push("Enhance privacy protection mechanisms".to_string());
             recommendations.push("Conduct privacy impact assessment".to_string());
         recommendations
-/// Compliance report structure
+
 pub struct ComplianceReport {
     pub report_id: String,
     pub generated_at: DateTime<Utc>,

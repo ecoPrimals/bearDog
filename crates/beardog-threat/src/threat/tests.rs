@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Threat detection tests
-///
-/// Comprehensive tests for the threat detection and response system.
 
 #[cfg(test)]
 mod threat_tests {
@@ -39,8 +20,7 @@ mod threat_tests {
             ..Default::default()
         };
         let engine = ThreatDetectionEngine::new(config).await;
-        // Verify engine has initialized properly
-        // Note: Engine fields are private, so we'll just verify creation succeeded
+
         drop(engine); // This line ensures the engine was created successfully
     }
     async fn test_security_event_creation() {
@@ -60,12 +40,12 @@ mod threat_tests {
 
     #[test]
     fn test_threat_severity_ordering() {
-        // Test severity ordering (higher severity > lower severity)
+
         assert!(ThreatSeverity::Critical > ThreatSeverity::High);
         assert!(ThreatSeverity::High > ThreatSeverity::Medium);
         assert!(ThreatSeverity::Medium > ThreatSeverity::Low);
         assert!(ThreatSeverity::Low > ThreatSeverity::Info);
-        // Test specific values
+
         let severities = [
             ThreatSeverity::Info,
             ThreatSeverity::Low,
@@ -73,7 +53,7 @@ mod threat_tests {
             ThreatSeverity::High,
             ThreatSeverity::Critical,
         ];
-        // Verify they're in ascending order
+
         for i in 1..severities.len() {
             assert!(severities[i] > severities[i - 1]);
         }
@@ -90,7 +70,7 @@ mod threat_tests {
         ];
         
         assert_eq!(statuses.len(), 5);
-        // Test that each status can be pattern matched
+
         for status in statuses {
             match status {
                 ThreatStatus::Active => {}
@@ -111,7 +91,7 @@ mod threat_tests {
         ];
         
         assert_eq!(threat_types.len(), 4);
-        // Verify each type can be pattern matched
+
         for threat_type in threat_types {
             match threat_type {
                 ThreatType::BruteForceAttack => {}
@@ -131,15 +111,14 @@ mod threat_tests {
             "10.0.0.100".to_string(),
             "user1".to_string(),
         );
-        
-        // Test setting additional data
+
         event.user_agent = Some("Mozilla/5.0 Test".to_string());
         event.data_size = 1024.0; // This is f64, not Option<i32>
-        let mut additional_data = HashMap::new();
+        let mut additional_data = HashMap::with_capacity(16);
         additional_data.insert("request_path".to_string(), "/login".to_string());
         additional_data.insert("method".to_string(), "POST".to_string());
         event.additional_data = additional_data;
-        // Verify the modifications
+
         assert_eq!(event.user_agent, Some("Mozilla/5.0 Test".to_string()));
         assert_eq!(event.data_size, 1024.0);
         assert_eq!(event.additional_data.len(), 2);
@@ -153,13 +132,12 @@ mod threat_tests {
         );
     }
 
-
     #[test]
     fn test_threat_detection_config() {
-        // Test default configuration
+
         let default_config = ThreatDetectionConfig::default();
         assert!(default_config.enabled); // Should be enabled by default
-        // Test custom configuration
+
         let custom_config = ThreatDetectionConfig {
             enabled: true,
             real_time_detection: true,
@@ -179,7 +157,7 @@ mod threat_tests {
 
     #[tokio::test]
     async fn test_multiple_engine_configurations() {
-        // Test minimal configuration
+
         let minimal_config = ThreatDetectionConfig {
             enabled: false,
             real_time_detection: false,
@@ -190,8 +168,7 @@ mod threat_tests {
         };
         
         let _engine1 = ThreatDetectionEngine::new(minimal_config).await;
-        
-        // Test full configuration
+
         let full_config = ThreatDetectionConfig {
             enabled: true,
             real_time_detection: true,
@@ -201,11 +178,10 @@ mod threat_tests {
             max_alerts_per_minute: 200,
         };
         let _engine2 = ThreatDetectionEngine::new(full_config).await;
-        // Both engines should be created successfully
+
         drop(_engine1);
         drop(_engine2);
     }
-
 
     #[tokio::test]
     async fn test_security_event_timing() {
@@ -219,14 +195,14 @@ mod threat_tests {
         );
         
         let after = Utc::now();
-        // Event timestamp should be between before and after
+
         assert!(event.timestamp >= before);
         assert!(event.timestamp <= after);
     }
 
     #[tokio::test]
     async fn test_basic_threat_detection_flow() {
-        // Create a suspicious event
+
         let suspicious_event = SecurityEvent::new(
             "event_004".to_string(),
             "failed_login".to_string(),
@@ -234,16 +210,13 @@ mod threat_tests {
             "192.168.1.1".to_string(),
             "api_user".to_string(),
         );
-        
-        // Verify event creation is working
+
         assert_eq!(suspicious_event.event_type, "failed_login");
         assert_eq!(suspicious_event.user_id, "admin");
         assert_eq!(suspicious_event.source_ip, "192.168.1.1");
-        
-        // Create a basic threat detection engine (placeholder)
+
         let engine = ();
-        
-        // Engine should be ready to process events
+
         drop(engine); // Successfully created and can be dropped
     }
 }

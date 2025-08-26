@@ -1,51 +1,30 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// AWS KMS Integration Handler
-///
-/// Provides licensed access to AWS Key Management Service operations
 
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
-// Removed async_trait - using native async fn for zero-cost abstractions
+
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_errors::idiomatic::SecurityResult;
 use serde_json::Value;
 use std::process::Stdio;
 use tokio::process::Command;
-/// AWS KMS integration handler
-/// **AWS KMS INTEGRATION HANDLER** - Zero-cost implementation
+
 #[derive(Clone)]
 pub struct AwsKmsIntegration;
-// Uses native async fn from trait definition - no async_trait needed
-impl ExternalFunctionHandler for AwsKmsIntegration {}
 
+impl ExternalFunctionHandler for AwsKmsIntegration {}
 
     fn function_name(&self) -> &str {
         "aws_kms"
     }
-    /// Execute AWS KMS operation with licensing check
+
     async fn execute(
         &self,
         license_manager: &LicenseManager,
         operation: &str,
         payload: serde_json::Value,
     ) -> BearDogResult<serde_json::Value> {
-        // Check licensing with autonomous decision making
+
         if !license_manager
             .is_function_available(self.function_name())
             .await?
@@ -113,14 +92,14 @@ impl ExternalFunctionHandler for AwsKmsIntegration {}
             _ => Ok(serde_json::json!({
                 "operation": operation,
                 "status": "error",
-                "error": format!("Unknown KMS operation: {}", operation),
+                "error": format_args!("Unknown KMS operation: {}", operation).to_string(),
                 "available_operations": ["encrypt", "decrypt", "list_keys", "create_key"]
             })),
 }
 impl AwsKmsIntegration {
-    /// Encrypt plaintext using AWS KMS
+
     async fn kms_encrypt(&self, key_id: &str, plaintext: &str) -> BearDogResult<String> {
-        // Use AWS CLI for KMS operations (in production, would use AWS SDK)
+
         let output = self
             .aws_cli_exec(&[
                 "kms",
@@ -133,7 +112,7 @@ impl AwsKmsIntegration {
                 "json",
             ])
             .await?;
-        // Parse the CLI output to extract ciphertext blob
+
         match serde_json::from_str::<Value>(&output) {
             Ok(json) => {
                 if let Some(ciphertext_blob) = json.get("CiphertextBlob").and_then(|v| v.as_str()) {
@@ -145,33 +124,33 @@ impl AwsKmsIntegration {
                 tracing::error!("Failed to parse KMS encrypt response: {}", parse_err);
                 Err(BearDogError::configuration(format!("Failed to parse KMS encrypt response: {parse_err)"},
                 })
-    /// Decrypt ciphertext using AWS KMS
+
     async fn kms_decrypt(&self, key_id: &str, ciphertext_blob: &str) -> BearDogResult<String> {
-        // Use AWS CLI for KMS operations
+
                 "decrypt",
                 "--ciphertext-blob",
                 ciphertext_blob,
-        // Parse CLI output to extract plaintext
+
                 if let Some(plaintext) = json.get("Plaintext").and_then(|v| v.as_str()) {
                     Ok(plaintext.to_string())
                     Err(BearDogError::configuration("No Plaintext in KMS decrypt response".to_string(),
                 tracing::error!("Failed to parse KMS decrypt response: {}", parse_err);
                 Err(BearDogError::configuration(format!("Failed to parse KMS decrypt response: {parse_err)"},
-    /// List AWS KMS keys
+
     async fn kms_list_keys(&self) -> BearDogResult<Vec<Value>> {
             .aws_cli_exec(&["kms", "list-keys", "--output", "json"])
                 if let Some(keys) = json.get("Keys").and_then(|v| v.as_array()) {
                     Ok(keys.clone())
-                    // SECURITY: Never fall back to mock keys - fail securely
+
                     Err(BearDogError::External {
                         message: "AWS KMS response missing 'Keys' field - refusing to use mock keys for security".to_string(),
                     })
             Err(parse_error) => {
-                // SECURITY: Never fall back to mock keys - fail securely
+
                 tracing::error!("AWS KMS list-keys failed with parse error: {}", parse_error);
                 Err(BearDogError::External {
-                    message: format!("Failed to parse AWS KMS response: {} - refusing to use mock keys for security", parse_error),
-    /// Create new AWS KMS key
+                    message: format_args!("Failed to parse AWS KMS response: {} - refusing to use mock keys for security", parse_error).to_string(),
+
     async fn kms_create_key(&self, description: &str) -> BearDogResult<Value> {
                 "create-key",
                 "--description",
@@ -183,8 +162,8 @@ impl AwsKmsIntegration {
                     "AWS KMS create-key failed with parse error: {}",
                     parse_error
                 );
-                    message: format!("Failed to parse AWS KMS create-key response: {} - refusing to use mock keys for security", parse_error),
-    /// Execute AWS CLI command
+                    message: format_args!("Failed to parse AWS KMS create-key response: {} - refusing to use mock keys for security", parse_error).to_string(),
+
     async fn aws_cli_exec(&self, args: &[&str]) -> Result<String, SecurityError> {
         let output = Command::new("aws")
             .args(args)

@@ -1,28 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Database Configuration - Canonical
-///
-/// **UNIFIED DATABASE CONFIGURATION** for the BearDog ecosystem
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// **CANONICAL** Unified Database Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct UnifiedDatabaseConfig {
@@ -32,8 +12,6 @@ pub struct UnifiedDatabaseConfig {
     pub performance: DatabasePerformanceConfig,
 }
 
-
-/// **CANONICAL** Database Connection Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseConnectionConfig {
     pub url: String,
@@ -57,7 +35,6 @@ impl Default for DatabaseConnectionConfig {
     }
 }
 
-/// **CANONICAL** Database Pool Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabasePoolConfig {
     pub min_connections: u32,
@@ -77,7 +54,6 @@ impl Default for DatabasePoolConfig {
     }
 }
 
-/// **CANONICAL** Database SSL Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabaseSslConfig {
     pub enabled: bool,
@@ -99,7 +75,6 @@ impl Default for DatabaseSslConfig {
     }
 }
 
-/// **CANONICAL** Database Performance Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DatabasePerformanceConfig {
     pub statement_cache_size: usize,

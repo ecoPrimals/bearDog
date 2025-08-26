@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AssetCriticality","ProtectionLevel","SourceClassification"],"struct":["GeoLocation","ThreatSource","ThreatTarget"]};

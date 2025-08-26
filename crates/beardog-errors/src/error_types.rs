@@ -1,122 +1,107 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Basic error types and enums for `BearDog` error handling
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Error severity levels for AI decision making
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Represents the severity level of an error
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ErrorSeverity {
-    /// Critical: System unusable, immediate intervention required
+    /// Critical errors that require immediate attention and may cause system failure
     Critical,
-    /// High: Major functionality impaired, urgent attention needed
+    /// High priority errors that significantly impact functionality
     High,
-    /// Medium: Some functionality impaired, should be addressed
+    /// Medium priority errors that may affect some functionality
     Medium,
-    /// Low: Minor issues, can be deferred
+    /// Low priority errors that have minimal impact
     Low,
-    /// Info: Informational, no action required
+    /// Informational errors for logging and debugging purposes
     Info,
 }
-/// Error categories for AI pattern recognition and handling
+
+/// Categorizes errors by their functional domain
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ErrorCategory {
-    /// Authentication and authorization errors
+    /// Security-related errors including authentication and authorization
     Security,
-    /// Network and connectivity issues
+    /// Network connectivity and communication errors
     Network,
-    /// Data persistence and storage issues
+    /// Data storage and persistence errors
     Storage,
-    /// Configuration and setup problems
+    /// Configuration and setup errors
     Configuration,
-    /// Resource exhaustion (memory, CPU, disk)
+    /// System resource and infrastructure errors
     Resource,
-    /// External service dependencies
+    /// External service and dependency errors
     External,
-    /// User input validation
+    /// Input validation and data format errors
     Validation,
-    /// Internal system logic errors
+    /// Internal system and logic errors
     Internal,
-    /// Temporary conditions that may resolve
+    /// Temporary errors that may resolve automatically
     Transient,
     /// System initialization and startup errors
     Initialization,
 }
 
-/// AI-actionable remediation suggestions
+/// Represents a specific remediation action for an error
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RemediationAction {
-    /// Action type identifier for AI recognition
+    /// The type of remediation action to take
     pub action_type: String,
-    /// Human-readable description
+    /// Human-readable description of the action
     pub description: String,
-    /// Specific parameters for the action
+    /// Parameters needed to execute the action
     pub parameters: HashMap<String, serde_json::Value>,
-    /// Estimated time to resolve (in seconds)
+    /// Estimated time in seconds to complete the action
     pub estimated_time_seconds: Option<u64>,
     /// Whether this action can be automated
     pub automatable: bool,
-    /// Prerequisites for this action
+    /// Prerequisites that must be met before executing this action
     pub prerequisites: Vec<String>,
 }
 
-/// Rich error context for AI understanding
+/// Contextual information about when and where an error occurred
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorContext {
-    /// Unique error occurrence ID for tracking
+    /// Unique identifier for this error instance
     pub error_id: String,
-    /// Timestamp when error occurred
+    /// Timestamp when the error occurred
     pub timestamp: chrono::DateTime<chrono::Utc>,
-    /// Component where error originated
+    /// Component or module where the error originated
     pub component: String,
-    /// Operation that was being performed
+    /// Operation that was being performed when the error occurred
     pub operation: String,
-    /// User ID if applicable
+    /// User ID associated with the operation, if applicable
     pub user_id: Option<String>,
-    /// Request ID for tracing
+    /// Request ID for tracing, if applicable
     pub request_id: Option<String>,
-    /// Additional metadata
+    /// Additional metadata about the error context
     pub metadata: HashMap<String, serde_json::Value>,
-    /// Stack trace if available
+    /// Stack trace information, if available
     pub stack_trace: Option<String>,
 }
 
-/// Enhanced error context for AI understanding
+/// Enhanced error information with rich context and remediation guidance
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnhancedErrorInfo {
-    /// Structured error code (e.g., "AUTH_001", "NET_502")
+    /// Unique error code for this type of error
     pub error_code: String,
-    /// Severity level
+    /// Severity level of the error
     pub severity: ErrorSeverity,
-    /// Error category
+    /// Functional category of the error
     pub category: ErrorCategory,
-    /// Human-readable message
+    /// Human-readable error message
     pub message: String,
     /// Technical details for debugging
     pub technical_details: Option<String>,
-    /// Rich context information
+    /// Contextual information about the error
     pub context: ErrorContext,
     /// Suggested remediation actions
     pub remediation_actions: Vec<RemediationAction>,
-    /// Whether error is retryable
+    /// Whether this error condition can be retried
     pub retryable: bool,
-    /// Retry strategy if retryable
+    /// Suggested delay before retry, if retryable
     pub retry_after_seconds: Option<u64>,
-    /// Related error codes for pattern analysis
+    /// Related error IDs for correlation
     pub related_errors: Vec<String>,
 }

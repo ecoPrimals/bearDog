@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Result Type Evolution Demonstration
-//!
-//! This example demonstrates the evolution from `Result<(), E>` patterns
-//! to rich, idiomatic return types with operational context.
 
 use beardog_errors::{improved_results::*, migration_helpers::*, BearDogError, BearDogResult};
 use chrono::Utc;
@@ -26,13 +6,8 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::time::Duration;
 
-// ============================================================================
-// BEFORE: Non-idiomatic patterns
-// ============================================================================
-
-/// ❌ OLD: Non-idiomatic authentication - provides no useful information
 async fn authenticate_user_old(username: &str, password: &str) -> BearDogResult<()> {
-    // Simulate authentication logic
+
     if username == "admin" && password == "secure123" {
         println!("✅ Authentication successful for {}", username);
         Ok(()) // What session ID? Security level? Expiry time?
@@ -43,21 +18,19 @@ async fn authenticate_user_old(username: &str, password: &str) -> BearDogResult<
     }
 }
 
-/// ❌ OLD: All-or-nothing processing - loses context on partial failures
-async fn process_items_old(items: Vec<String>) -> BearDogResult<()> {
+async fn process_items_old(items: Vec<&str>) -> BearDogResult<()> {
     for item in items {
         if item.is_empty() {
             return Err(BearDogError::invalid_input("Empty item found".to_string()));
         }
-        // Process item...
+
         println!("Processing: {}", item);
     }
     Ok(()) // How many succeeded? Which ones failed? Performance metrics?
 }
 
-/// ❌ OLD: Configuration loading with minimal context
 async fn load_config_old(path: &str) -> BearDogResult<()> {
-    // Simulate config loading
+
     if path.ends_with(".toml") {
         println!("✅ Configuration loaded from {}", path);
         Ok(()) // No validation results, timing, or metadata
@@ -68,20 +41,14 @@ async fn load_config_old(path: &str) -> BearDogResult<()> {
     }
 }
 
-// ============================================================================
-// AFTER: Rich, idiomatic patterns
-// ============================================================================
-
-/// ✅ NEW: Rich authentication outcome with comprehensive context
 async fn authenticate_user_rich(
     username: &str,
     password: &str,
 ) -> BearDogResult<AuthenticationOutcome> {
     let start_time = Utc::now();
 
-    // Simulate authentication logic
     if username == "admin" && password == "secure123" {
-        let session_id = format!("session_{}", uuid::Uuid::new_v4());
+        let session_id = format_args!("session_{}", uuid::Uuid::new_v4().to_string());
 
         Ok(create_auth_outcome(
             session_id,
@@ -98,8 +65,7 @@ async fn authenticate_user_rich(
     }
 }
 
-/// ✅ NEW: Graceful processing with partial success handling
-async fn process_items_rich(items: Vec<String>) -> BearDogResult<ProcessingOutcome<Vec<String>>> {
+async fn process_items_rich(items: Vec<&str>) -> BearDogResult<ProcessingOutcome<Vec<String>>> {
     let start_time = Utc::now();
     let mut successful = Vec::new();
     let mut failures = Vec::new();
@@ -112,8 +78,8 @@ async fn process_items_rich(items: Vec<String>) -> BearDogResult<ProcessingOutco
                 "Empty item not allowed",
             ));
         } else {
-            // Process item successfully
-            successful.push(format!("processed_{}", item));
+
+            successful.push(format_args!("processed_{}", item).to_string());
             println!("✅ Processed: {}", item);
         }
     }
@@ -127,11 +93,9 @@ async fn process_items_rich(items: Vec<String>) -> BearDogResult<ProcessingOutco
     )
 }
 
-/// ✅ NEW: Configuration loading with validation and rich context
 async fn load_config_rich(path: &str) -> BearDogResult<ConfigurationOutcome<AppConfig>> {
     let start_time = Utc::now();
 
-    // Simulate config loading and validation
     if path.ends_with(".toml") {
         let config = AppConfig {
             database_url: "postgresql://localhost/beardog".to_string(),
@@ -139,7 +103,6 @@ async fn load_config_rich(path: &str) -> BearDogResult<ConfigurationOutcome<AppC
             log_level: "info".to_string(),
         };
 
-        // Simulate validation
         let mut findings = Vec::new();
         if config.api_port == 8080 {
             findings.push(create_validation_finding(
@@ -177,10 +140,6 @@ async fn load_config_rich(path: &str) -> BearDogResult<ConfigurationOutcome<AppC
     }
 }
 
-// ============================================================================
-// DEMONSTRATION CONFIGURATION
-// ============================================================================
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 struct AppConfig {
     database_url: String,
@@ -188,22 +147,16 @@ struct AppConfig {
     log_level: String,
 }
 
-// ============================================================================
-// DEMONSTRATION FUNCTIONS
-// ============================================================================
-
 async fn demonstrate_authentication() {
     println!("🔐 Authentication Demonstration");
     println!("================================");
 
-    // Old pattern
     println!("\n❌ OLD PATTERN:");
     match authenticate_user_old("admin", "secure123").await {
         Ok(()) => println!("   Authentication succeeded (but no context!)"),
         Err(e) => println!("   Authentication failed: {}", e),
     }
 
-    // New pattern
     println!("\n✅ NEW PATTERN:");
     match authenticate_user_rich("admin", "secure123").await {
         Ok(outcome) => {
@@ -233,14 +186,12 @@ async fn demonstrate_processing() {
         "item4".to_string(),
     ];
 
-    // Old pattern
     println!("\n❌ OLD PATTERN:");
     match process_items_old(items.clone()).await {
         Ok(()) => println!("   All items processed (but no details!)"),
         Err(e) => println!("   Processing failed: {} (lost all progress!)", e),
     }
 
-    // New pattern
     println!("\n✅ NEW PATTERN:");
     match process_items_rich(items).await {
         Ok(outcome) => {
@@ -268,14 +219,12 @@ async fn demonstrate_configuration() {
     println!("\n⚙️ Configuration Demonstration");
     println!("===============================");
 
-    // Old pattern
     println!("\n❌ OLD PATTERN:");
     match load_config_old("app.toml").await {
         Ok(()) => println!("   Config loaded (but no validation info!)"),
         Err(e) => println!("   Config loading failed: {}", e),
     }
 
-    // New pattern
     println!("\n✅ NEW PATTERN:");
     match load_config_rich("app.toml").await {
         Ok(outcome) => {
@@ -305,15 +254,10 @@ async fn demonstrate_configuration() {
     }
 }
 
-// ============================================================================
-// MIGRATION HELPERS DEMONSTRATION
-// ============================================================================
-
 async fn demonstrate_migration_helpers() {
     println!("\n🔧 Migration Helpers Demonstration");
     println!("===================================");
 
-    // Using the UnitResultExt trait to convert existing Result<(), E>
     let legacy_result: Result<(), BearDogError> = Ok(());
     let converted_outcome =
         legacy_result.to_operation_outcome("demo-component", "legacy-operation");
@@ -328,7 +272,6 @@ async fn demonstrate_migration_helpers() {
         Err(e) => println!("❌ Conversion failed: {}", e),
     }
 
-    // Using helper macros
     let summary = create_operation_summary("demo-operation", "completed successfully", 5);
     let outcome = operation_outcome!(summary, "demo-component");
 
@@ -337,10 +280,6 @@ async fn demonstrate_migration_helpers() {
     println!("   Outcome: {}", outcome.result.outcome);
     println!("   Component: {}", outcome.context.component);
 }
-
-// ============================================================================
-// MAIN DEMONSTRATION
-// ============================================================================
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -369,11 +308,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-// Helper macro for creating hashmaps
 #[macro_export]
 macro_rules! hashmap {
     ($($key:expr => $val:expr),* $(,)?) => {{
-        let mut map = std::collections::HashMap::new();
+        let mut map = std::collections::HashMap::with_capacity(16);
         $(map.insert($key.to_string(), $val);)*
         map
     }};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["WorkflowExecutionState","WorkflowPriority","WorkflowType"],"struct":["WorkflowExecutionContext","WorkflowRetryConfig","WorkflowStepStatus"]};

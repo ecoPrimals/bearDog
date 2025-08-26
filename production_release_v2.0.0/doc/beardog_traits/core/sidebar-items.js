@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["HealthStatus","SerializationFormat"],"struct":["CacheStats","ResourceHandle","ResourceStats","Version"],"trait":["Cacheable","Configurable","Identifiable","Lifecycle","ResourceManager","SerializableEntity","Versioned"]};

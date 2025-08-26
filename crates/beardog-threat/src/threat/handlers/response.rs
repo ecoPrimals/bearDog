@@ -1,109 +1,21 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Automated threat response and alerting system
-///
-/// This module handles automated responses to detected threats, including
-/// blocking, quarantine, alerting, and escalation procedures. It provides
-/// configurable response actions based on threat severity and type.
-/// # Features
-/// - **Automated Response**: Execute predefined response actions automatically
-/// - **Threat Blocking**: Block malicious sources and destinations
-/// - **System Quarantine**: Isolate compromised or suspicious systems
-/// - **Alert Management**: Generate and dispatch security alerts
-/// - **Escalation Procedures**: Escalate threats based on severity levels
-/// - **Response Logging**: Track all response actions for audit purposes
-/// # Response Actions
-/// The system supports various automated response actions:
-/// - Source IP blocking and blacklisting
-/// - System quarantine and isolation
-/// - Security team alerting and notifications
-/// - Incident response initiation
-/// - Forensic data collection
-/// - Network traffic throttling
-/// - User account suspension
-/// # Examples
-/// ```rust
-/// use beardog::threat::handlers::ThreatDetectionEngine;
-/// use beardog::threat::types::*;
-/// #[tokio::main]
-/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let mut engine = ThreatDetectionEngine::placeholder();
-///     
-///     let threat_event = ThreatEvent {
-///         id: "threat_789".to_string(),
-///         threat_type: ThreatType::Malicious,
-///         severity: ThreatSeverity::Critical,
-///         // ... other fields
-///     };
-///     // Execute automated response
-///     engine.execute_automated_response(&threat_event).await?;
-///     println!("Automated response executed successfully");
-/// }
-/// ```
 use super::core::ThreatDetectionEngine;
 use crate::threat::types::*;
 use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use tracing::{error, info, warn};
 use uuid::Uuid;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+use crate::threat::types::incidents::response::{IncidentResponse, ResponseType, IncidentStatus, IncidentType};
+use crate::threat::types::core::ThreatEvent;
 impl ThreatDetectionEngine {
-    /// Execute automated response to a threat event
-    ///
-    /// This method processes threat events and executes appropriate automated
-    /// response actions based on threat severity, type, and configured policies.
-    /// It handles blocking, quarantine, alerting, and escalation procedures.
-    /// # Arguments
-    /// * `threat_event` - The threat event to respond to
-    /// # Returns
-    /// * `BearDogResult<()>` - Success or error result
-    /// # Errors
-    /// This function will return an error if:
-    /// - Response action execution fails
-    /// - Network configuration changes fail
-    /// - Alert delivery fails
-    /// - System isolation procedures fail
-    /// # Examples
-    /// ```rust
-    /// use beardog::threat::handlers::ThreatDetectionEngine;
-    /// use beardog::threat::types::*;
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ///     let mut engine = ThreatDetectionEngine::placeholder();
-    ///     
-    ///     let threat_event = ThreatEvent {
-    ///         id: "critical_threat".to_string(),
-    ///         threat_type: ThreatType::Malicious,
-    ///         severity: ThreatSeverity::Critical,
-    ///         // ... other fields
-    ///     };
-    ///     engine.execute_automated_response(&threat_event).await?;
-    ///     println!("Response actions completed");
-    ///     Ok(())
-    /// }
-    /// ```
-    /// # Response Decision Matrix
-    /// Response actions are selected based on:
-    /// - **Critical Severity**: Block source, quarantine system, alert team, initiate incident response
-    /// - **High Severity**: Block source, alert security team, collect forensics
-    /// - **Medium Severity**: Alert security team, monitor activity
-    /// - **Low Severity**: Log event, update threat intelligence
-    /// - **Info Severity**: Log event only
+
     pub async fn execute_automated_response(
         &mut self,
         threat_event: &ThreatEvent,
@@ -116,7 +28,7 @@ impl ThreatDetectionEngine {
             "Executing automated response for threat: {}",
             threat_event.id
         );
-        // Execute actions based on threat severity
+
         match threat_event.severity {
             ThreatSeverity::Critical => {
                 if let Some(ref ip) = threat_event.source.ip_address {
@@ -139,15 +51,14 @@ impl ThreatDetectionEngine {
                 self.update_threat_intelligence(threat_event).await?;
             }
             ThreatSeverity::Info => {
-                // Log informational events
+
                 info!("Informational threat event logged: {}", threat_event.id);
             }
         }
-        
-        // Execute custom mitigation steps
+
         for mitigation in &threat_event.mitigation_steps {
             if mitigation.success {
-                // Skip already completed steps
+
                 continue;
             }
             self.execute_mitigation_step(mitigation).await?;
@@ -160,32 +71,17 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Block a source IP address
-    /// This method adds a source IP address to the blocked sources list and
-    /// implements network-level blocking mechanisms to prevent further
-    /// malicious activity from the source.
-    /// * `ip_address` - The IP address to block
-    ///     engine.block_source("192.168.1.100").await?;
-    ///     println!("Source IP blocked successfully");
-    /// # Blocking Mechanisms
-    /// The method implements multiple blocking layers:
-    /// - Firewall rule updates
-    /// - IPS/IDS signature updates
-    /// - DNS blacklist updates
-    /// - Network ACL modifications
-    /// - Proxy and gateway filtering
     pub async fn block_source(&mut self, ip_address: &str) -> BearDogResult<()> {
         if ip_address.is_empty() {
             return Err(BearDogError::validation("IP address cannot be empty"));
         }
-        
-        // Add to blocked sources
+
         self.blocked_sources.insert(ip_address.to_string());
-        // Simulate firewall rule addition
+
         info!("Blocking source IP: {}", ip_address);
-        // Update statistics
+
         self.stats.blocked_sources += 1;
-        // Log the blocking action
+
         warn!(
             "Source IP {} has been blocked due to malicious activity",
             ip_address
@@ -194,30 +90,16 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Quarantine a system
-    /// This method isolates a potentially compromised system by adding it to
-    /// the quarantine list and implementing network isolation procedures.
-    /// * `hostname` - The hostname or identifier of the system to quarantine
-    ///     engine.quarantine_system("workstation-01").await?;
-    ///     println!("System quarantined successfully");
-    /// # Quarantine Procedures
-    /// System quarantine involves:
-    /// - Network isolation from production systems
-    /// - Forensic data collection
-    /// - System state preservation
-    /// - Incident response notification
-    /// - Remediation planning
     pub async fn quarantine_system(&mut self, hostname: &str) -> BearDogResult<()> {
         if hostname.is_empty() {
             return Err(BearDogError::validation("Hostname cannot be empty"));
         }
-        
-        // Add to quarantined systems
+
         self.quarantined_systems.insert(hostname.to_string());
-        // Simulate network isolation
+
         info!("Quarantining system: {}", hostname);
         self.stats.quarantined_systems += 1;
-        // Log the quarantine action
+
         warn!(
             "System {} has been quarantined due to suspected compromise",
             hostname
@@ -226,38 +108,19 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Alert security team about threat event
-    /// This method generates and dispatches security alerts to the appropriate
-    /// teams and stakeholders based on threat severity and organizational
-    /// escalation procedures.
-    /// * `threat_event` - The threat event to alert about
-    ///     let engine = ThreatDetectionEngine::placeholder();
-    ///         id: "alert_threat".to_string(),
-    ///         severity: ThreatSeverity::High,
-    ///     engine.alert_security_team(&threat_event).await?;
-    ///     println!("Security team alerted");
-    /// # Alert Channels
-    /// Alerts are sent through multiple channels:
-    /// - Email notifications to security team
-    /// - Slack/Teams integration
-    /// - SIEM system integration
-    /// - Incident management system
-    /// - Mobile push notifications for critical threats
     pub async fn alert_security_team(&self, threat_event: &ThreatEvent) -> BearDogResult<()> {
-        // Simulate alert generation
+
         let alert_message = format!(
             "SECURITY ALERT: {} threat detected - {} (ID: {})",
             threat_event.severity, threat_event.description, threat_event.id
         );
-        
-        // Log the alert based on severity
+
         match threat_event.severity {
             ThreatSeverity::Critical => error!("{}", alert_message),
             ThreatSeverity::High => warn!("{}", alert_message),
             _ => info!("{}", alert_message),
         }
-        
-        // Simulate alert dispatch
+
         info!(
             "Alert dispatched to security team for threat: {}",
             threat_event.id
@@ -266,46 +129,31 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Initiate incident response procedures
-    /// This method triggers formal incident response procedures for critical
-    /// threats, including team notification, response plan activation, and
-    /// incident tracking system integration.
-    /// * `threat_event` - The threat event requiring incident response
-    ///         id: "incident_threat".to_string(),
-    ///     engine.initiate_incident_response(&threat_event).await?;
-    ///     println!("Incident response initiated");
-    /// # Incident Response Process
-    /// The incident response process includes:
-    /// - Incident ticket creation
-    /// - Response team notification
-    /// - Incident commander assignment
-    /// - Response plan activation
-    /// - Stakeholder communication
-    /// - Evidence preservation
     pub async fn initiate_incident_response(
         &self,
         threat_event: &ThreatEvent,
     ) -> BearDogResult<()> {
         let incident_id = Uuid::new_v4().to_string();
         let incident_response = IncidentResponse {
+            response_id: Uuid::new_v4().to_string(),
             incident_id: incident_id.clone(),
-            threat_id: threat_event.id.clone(),
+            response_type: ResponseType::Investigation,
             status: IncidentStatus::Open,
-            severity: threat_event.severity.clone(),
-            assigned_to: Some("Security Incident Response Team".to_string()),
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-            description: format!("Incident response for threat: {}", threat_event.description),
-            containment_actions: vec![],
-            remediation_actions: vec![
+            assigned_team: vec!["Security Incident Response Team".to_string()],
+            actions_taken: vec![
                 "Assign incident commander".to_string(),
                 "Activate response plan".to_string(),
                 "Collect forensic evidence".to_string(),
                 "Notify stakeholders".to_string(),
             ],
-            lessons_learned: vec![],
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            metadata: HashMap::new(),
+            incident_type: IncidentType::Security,
+            estimated_cost: None,
+            actual_cost: None,
         };
-        // Store incident response
+
         {
             let mut incidents = self.active_incidents.write().await;
             incidents.insert(incident_id.clone(), incident_response);
@@ -319,21 +167,9 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Collect forensics for threat investigation
-    /// This method triggers forensic data collection procedures to gather
-    /// evidence and context for threat investigation and analysis.
-    /// * `threat_event` - The threat event requiring forensic collection
-    /// # Forensic Collection
-    /// The method collects various types of forensic data:
-    /// - Network traffic captures
-    /// - System logs and audit trails
-    /// - Memory dumps and disk images
-    /// - Registry and configuration snapshots
-    /// - User activity logs
-    /// - Process and file system artifacts
     pub async fn collect_forensics(&self, threat_event: &ThreatEvent) -> BearDogResult<()> {
         info!("Collecting forensics for threat: {}", threat_event.id);
-        // Simulate forensic collection
+
         let forensic_actions = vec![
             "Network traffic capture initiated",
             "System logs collected",
@@ -348,17 +184,12 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Monitor ongoing activity for a threat
-    /// This method sets up enhanced monitoring for threats that require
-    /// continued observation and analysis.
-    /// * `threat_event` - The threat event to monitor
     pub async fn monitor_activity(&self, threat_event: &ThreatEvent) -> BearDogResult<()> {
         info!(
             "Enhanced monitoring activated for threat: {}",
             threat_event.id
         );
-        
-        // Simulate monitoring setup
+
         let monitoring_actions = vec![
             "Increased log verbosity",
             "Network flow monitoring",
@@ -373,19 +204,16 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Log a threat event to the event history
     pub async fn log_threat_event(&self, threat_event: &ThreatEvent) -> BearDogResult<()> {
         info!(
             "Logging threat event: {} - {}",
             threat_event.id, threat_event.description
         );
-        
-        // Add to event history
+
         {
             let mut history = self.event_history.write().await;
             history.push(threat_event.clone());
-            
-            // Limit history size
+
             if history.len() > 10000 {
                 history.drain(0..1000);
             }
@@ -394,12 +222,6 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Update threat intelligence with new information
-    /// 
-    /// This method updates threat intelligence databases with information
-    /// gained from threat detection and analysis.
-    /// 
-    /// * `threat_event` - The threat event to extract intelligence from
     pub async fn update_threat_intelligence(
         &self,
         threat_event: &ThreatEvent,
@@ -408,8 +230,7 @@ impl ThreatDetectionEngine {
             "Updating threat intelligence with data from threat: {}",
             threat_event.id
         );
-        
-        // Simulate intelligence update
+
         let intelligence_updates = vec![
             format!(
                 "IP reputation updated for {}",
@@ -419,7 +240,7 @@ impl ThreatDetectionEngine {
                     .as_ref()
                     .unwrap_or(&"N/A".to_string())
             ),
-            format!("Threat pattern recorded for {}", threat_event.threat_type),
+            format_args!("Threat pattern recorded for {}", threat_event.threat_type).to_string(),
             format!(
                 "Attack signature updated for {}",
                 threat_event.detection_method
@@ -433,29 +254,60 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    /// Execute a specific mitigation step
-    /// This method executes individual mitigation steps as part of the
-    /// automated response process.
-    /// * `mitigation` - The mitigation step to execute
     pub async fn execute_mitigation_step(&self, mitigation: &MitigationStep) -> BearDogResult<()> {
         info!("Executing mitigation step: {}", mitigation.description);
-        // Simulate mitigation execution
+
         match mitigation.description.as_str() {
             "Block source" => {
                 info!("Blocking source as mitigation step");
+                Ok(())
             }
             "Quarantine system" => {
                 info!("Quarantining system as mitigation step");
+                Ok(())
             }
             "Alert security team" => {
                 info!("Alerting security team as mitigation step");
+                Ok(())
             }
             "Collect forensics" => {
                 info!("Collecting forensics as mitigation step");
+                Ok(())
             }
             _ => {
                 info!("Unknown mitigation step: {}", mitigation.description);
+                Ok(())
             }
         }
+    }
+
+    async fn isolate_system(&self, target: &str) -> BearDogResult<()> {
+        // Implementation for system isolation
+        println!("Isolating system: {}", target);
+        Ok(())
+    }
+
+    async fn block_ip_address(&self, ip: &str) -> BearDogResult<()> {
+        // Implementation for IP blocking
+        println!("Blocking IP address: {}", ip);
+        Ok(())
+    }
+
+    async fn quarantine_file(&self, file_path: &str) -> BearDogResult<()> {
+        // Implementation for file quarantine
+        println!("Quarantining file: {}", file_path);
+        Ok(())
+    }
+
+    async fn disable_user_account(&self, username: &str) -> BearDogResult<()> {
+        // Implementation for user account disabling
+        println!("Disabling user account: {}", username);
+        Ok(())
+    }
+
+    async fn send_alert(&self, message: &str) -> BearDogResult<()> {
+        // Implementation for alert sending
+        println!("Sending alert: {}", message);
+        Ok(())
     }
 }

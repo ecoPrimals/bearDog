@@ -1,25 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Workflow Notification System
-///
-/// **MODERNIZED NOTIFICATION ARCHITECTURE** ✅
-/// This module provides unified notification capabilities for workflow events
-/// with support for multiple channels and formats.
 
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::configuration::workflows::WorkflowNotificationConfig;
@@ -28,135 +7,122 @@ use std::collections::HashMap;
 use std::pin::Pin;
 use tracing::{debug, info, warn};
 
-/// Notification message structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationMessage {
-    /// Unique message identifier
+
     pub id: String,
-    /// Message title
+
     pub title: String,
-    /// Message subject (for email-like notifications)
+
     pub subject: String,
-    /// Message content/body
+
     pub content: String,
-    /// Recipients list
+
     pub recipients: Vec<String>,
-    /// Message priority
+
     pub priority: NotificationPriority,
-    /// Message format
+
     pub format: MessageFormat,
-    /// Additional metadata
+
     pub metadata: HashMap<String, String>,
 }
 
-/// Supported message formats
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub enum MessageFormat {
-    /// Plain text format
+
     #[default]
     Text,
-    /// HTML format
+
     Html,
-    /// Markdown format
+
     Markdown,
-    /// JSON format
+
     Json,
 }
 
-/// Notification priority levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub enum NotificationPriority {
-    /// Low priority notifications
+
     Low,
-    /// Normal priority notifications
+
     #[default]
     Normal,
-    /// High priority notifications
+
     High,
-    /// Critical priority notifications
+
     Critical,
 }
 
-/// Notification delivery result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NotificationResult {
-    /// Whether the notification was sent successfully
+
     pub success: bool,
-    /// Delivery status message
+
     pub message: String,
-    /// Delivery timestamp
+
     pub timestamp: u64,
-    /// Delivery channel used
+
     pub channel: String,
 }
 
-/// Adapter capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdapterCapabilities {
-    /// Supported message formats
+
     pub formats: Vec<MessageFormat>,
-    /// Maximum message size
+
     pub max_size: usize,
-    /// Whether attachments are supported
+
     pub supports_attachments: bool,
-    /// Rate limiting information
+
     pub rate_limits: HashMap<String, u64>,
 }
 
-/// Main notification engine
 pub struct NotificationEngine {
-    /// Engine configuration
+
     config: WorkflowNotificationConfig,
-    /// Active adapters
+
     adapters: HashMap<String, Box<dyn NotificationAdapter>>,
-    /// Message queue for async processing
+
     message_queue: tokio::sync::mpsc::UnboundedSender<NotificationMessage>,
 }
 
-/// Notification adapter trait
 pub trait NotificationAdapter: Send + Sync {
-    /// Send a notification message
+
     fn send_notification(
         &self,
         message: &NotificationMessage,
     ) -> Pin<Box<dyn std::future::Future<Output = BearDogResult<NotificationResult>> + Send>>;
-    
-    /// Get adapter capabilities
+
     fn get_capabilities(&self) -> AdapterCapabilities;
-    
-    /// Get adapter name
+
     fn name(&self) -> &str;
 }
 
 impl NotificationEngine {
-    /// Create a new notification engine
+
     pub fn new(config: WorkflowNotificationConfig) -> Self {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<NotificationMessage>();
-        
-        // Spawn background task for message processing
+
         tokio::spawn(async move {
             while let Some(message) = rx.recv().await {
                 debug!("Processing notification message: {}", message.id);
-                // Process message in background
+
             }
         });
         
         Self {
             config,
-            adapters: HashMap::new(),
+            adapters: HashMap::with_capacity(16),
             message_queue: tx,
         }
     }
-    
-    /// Add a notification adapter
-    pub fn add_adapter(&mut self, name: String, adapter: Box<dyn NotificationAdapter>) {
-        info!("Adding notification adapter: {}", name);
-        self.adapters.insert(name, adapter);
+
+    pub fn add_adapter(&mut self, name: &str, adapter: Box<dyn NotificationAdapter>) {
+        self.adapters.insert(name.to_string(), adapter);
     }
-    
-    /// Send a notification
+
     pub async fn send_notification(&self, message: NotificationMessage) -> BearDogResult<Vec<NotificationResult>> {
         let mut results = Vec::new();
         
@@ -183,8 +149,7 @@ impl NotificationEngine {
         
         Ok(results)
     }
-    
-    /// Queue a notification for async processing
+
     pub fn queue_notification(&self, message: NotificationMessage) -> BearDogResult<()> {
         self.message_queue.send(message)
             .map_err(|e| BearDogError::system(format!("Failed to queue notification: {e}")))?;
@@ -192,17 +157,14 @@ impl NotificationEngine {
     }
 }
 
-
-
-/// Convenience functions for common notification scenarios
 impl NotificationEngine {
-    /// Notify about workflow completion
+
     pub async fn notify_workflow_completed(
         &self,
         workflow: &crate::workflows::canonical::Workflow,
     ) -> BearDogResult<Vec<NotificationResult>> {
         let message = NotificationMessage {
-            id: format!("workflow_completed_{}", workflow.id),
+            id: format_args!("workflow_completed_{}", workflow.id).to_string(),
             title: "Workflow Completed".to_string(),
             subject: "Workflow Completed".to_string(),
             content: format!(
@@ -212,20 +174,19 @@ impl NotificationEngine {
             recipients: vec![],
             priority: NotificationPriority::Normal,
             format: MessageFormat::Text,
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         };
         
         self.send_notification(message).await
     }
-    
-    /// Notify about approval submission
+
     pub async fn notify_approval_submitted(
         &self,
         approval: &crate::workflows::canonical::ApprovalRecord,
         workflow: &crate::workflows::canonical::Workflow,
     ) -> BearDogResult<Vec<NotificationResult>> {
         let message = NotificationMessage {
-            id: format!("approval_submitted_{}", approval.id),
+            id: format_args!("approval_submitted_{}", approval.id).to_string(),
             title: "Approval Submitted".to_string(),
             subject: "Approval Submitted".to_string(),
             content: format!(
@@ -235,25 +196,24 @@ impl NotificationEngine {
             recipients: vec![],
             priority: NotificationPriority::High,
             format: MessageFormat::Text,
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         };
         
         self.send_notification(message).await
     }
 }
 
-// Implement WorkflowNotificationEngine for NotificationEngine
 impl crate::workflows::canonical::execution::traits::WorkflowNotificationEngine for NotificationEngine {
     async fn notify_workflow_created(&self, workflow: &crate::workflows::canonical::CanonicalWorkflow) -> beardog_errors::BearDogResult<()> {
         let message = NotificationMessage {
             id: uuid::Uuid::new_v4().to_string(),
             title: "Workflow Created".to_string(),
-            subject: format!("Workflow {} Created", workflow.id),
-            content: format!("Workflow {} has been created successfully", workflow.id),
+            subject: format_args!("Workflow {} Created", workflow.id).to_string(),
+            content: format_args!("Workflow {} has been created successfully", workflow.id).to_string(),
             recipients: vec![], // Would be populated based on workflow configuration
             priority: NotificationPriority::Normal,
             format: MessageFormat::Text,
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::with_capacity(16),
         };
         
         self.message_queue.send(message).map_err(|e| {
@@ -267,12 +227,12 @@ impl crate::workflows::canonical::execution::traits::WorkflowNotificationEngine 
         let message = NotificationMessage {
             id: uuid::Uuid::new_v4().to_string(),
             title: "Workflow Completed".to_string(),
-            subject: format!("Workflow {} Completed", workflow.id),
-            content: format!("Workflow {} has been completed successfully", workflow.id),
+            subject: format_args!("Workflow {} Completed", workflow.id).to_string(),
+            content: format_args!("Workflow {} has been completed successfully", workflow.id).to_string(),
             recipients: vec![], // Would be populated based on workflow configuration
             priority: NotificationPriority::Normal,
             format: MessageFormat::Text,
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::with_capacity(16),
         };
         
         self.message_queue.send(message).map_err(|e| {
@@ -286,12 +246,12 @@ impl crate::workflows::canonical::execution::traits::WorkflowNotificationEngine 
         let message = NotificationMessage {
             id: uuid::Uuid::new_v4().to_string(),
             title: "Workflow Failed".to_string(),
-            subject: format!("Workflow {} Failed", workflow.id),
-            content: format!("Workflow {} has failed: {}", workflow.id, error),
+            subject: format_args!("Workflow {} Failed", workflow.id).to_string(),
+            content: format_args!("Workflow {} has failed: {}", workflow.id, error).to_string(),
             recipients: vec![], // Would be populated based on workflow configuration
             priority: NotificationPriority::High,
             format: MessageFormat::Text,
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::with_capacity(16),
         };
         
         self.message_queue.send(message).map_err(|e| {
@@ -305,12 +265,12 @@ impl crate::workflows::canonical::execution::traits::WorkflowNotificationEngine 
         let message = NotificationMessage {
             id: uuid::Uuid::new_v4().to_string(),
             title: "Approval Required".to_string(),
-            subject: format!("Approval Required for Workflow {}", workflow.id),
-            content: format!("Workflow {} requires approval to proceed", workflow.id),
+            subject: format_args!("Approval Required for Workflow {}", workflow.id).to_string(),
+            content: format_args!("Workflow {} requires approval to proceed", workflow.id).to_string(),
             recipients: vec![], // Would be populated based on approval requirements
             priority: NotificationPriority::High,
             format: MessageFormat::Text,
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::with_capacity(16),
         };
         
         self.message_queue.send(message).map_err(|e| {
@@ -324,12 +284,12 @@ impl crate::workflows::canonical::execution::traits::WorkflowNotificationEngine 
         let message = NotificationMessage {
             id: uuid::Uuid::new_v4().to_string(),
             title: "Approval Granted".to_string(),
-            subject: format!("Workflow {} Approved", workflow.id),
-            content: format!("Workflow {} has been approved by {}", workflow.id, approver),
+            subject: format_args!("Workflow {} Approved", workflow.id).to_string(),
+            content: format_args!("Workflow {} has been approved by {}", workflow.id, approver).to_string(),
             recipients: vec![], // Would be populated based on workflow configuration
             priority: NotificationPriority::Normal,
             format: MessageFormat::Text,
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::with_capacity(16),
         };
         
         self.message_queue.send(message).map_err(|e| {
@@ -340,7 +300,6 @@ impl crate::workflows::canonical::execution::traits::WorkflowNotificationEngine 
     }
 }
 
-// Implement WorkflowNotificationEngine for Arc<NotificationEngine> to enable shared ownership
 impl crate::workflows::canonical::execution::traits::WorkflowNotificationEngine for std::sync::Arc<NotificationEngine> {
     async fn notify_workflow_created(&self, workflow: &crate::workflows::canonical::CanonicalWorkflow) -> beardog_errors::BearDogResult<()> {
         (**self).notify_workflow_created(workflow).await

@@ -1,28 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Authentication API Models
-///
-/// All request and response models for authentication, authorization,
-/// multi-factor authentication, and user management APIs.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-// ====== AUTHENTICATION MODELS ======
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoginRequest {
     pub username: String,
@@ -38,7 +18,6 @@ pub struct AuthenticationResponse {
     pub mfa_required: bool,
     pub security_notices: Vec<String>,
 }
-
 
 pub struct AuthenticatedUser {
     pub user_id: String,
@@ -56,7 +35,6 @@ pub struct AuthTokens {
     pub token_type: String,
 }
 
-
 pub struct SessionInfo {
     pub session_id: String,
     pub created_at: String,
@@ -68,7 +46,6 @@ pub struct LogoutRequest {
     pub logout_all_devices: Option<bool>,
 }
 
-
 pub struct LogoutResponse {
     pub logged_out_at: String,
     pub message: String,
@@ -79,7 +56,6 @@ pub struct RefreshTokenResponse {
     pub scope: Vec<String>,
 }
 
-
 pub struct TokenValidationRequest {
     pub token: String,
 pub struct TokenValidationResponse {
@@ -87,14 +63,13 @@ pub struct TokenValidationResponse {
     pub warnings: Vec<String>,
 }
 
-
 pub struct CurrentSessionResponse {
     pub last_activity: String,
     pub active_permissions: Vec<String>,
     pub session_status: String,
     pub concurrent_sessions: u32,
     pub session_metadata: HashMap<String, String>,
-// ====== MFA MODELS ======
+
 pub struct SetupMfaRequest {
     pub mfa_method: String, // "totp", "sms", "email"
 pub struct SetupMfaResponse {
@@ -105,7 +80,6 @@ pub struct SetupMfaResponse {
     pub supported_methods: Vec<String>,
     pub verification_required: bool,
 }
-
 
 pub struct VerifyMfaRequest {
     pub mfa_method: String,
@@ -118,7 +92,6 @@ pub struct VerifyMfaResponse {
     pub trust_device_token: Option<String>,
 }
 
-
 pub struct MfaStatusResponse {
     pub enabled_methods: Vec<String>,
     pub primary_method: String,
@@ -126,7 +99,7 @@ pub struct MfaStatusResponse {
     pub trusted_devices: u32,
     pub last_mfa_verification: String,
     pub enforcement_policy: String,
-// ====== USER MANAGEMENT MODELS ======
+
 pub struct UserListQuery {
     pub page: Option<u32>,
     pub per_page: Option<u32>,
@@ -134,7 +107,6 @@ pub struct UserListQuery {
     pub role: Option<String>,
     pub search: Option<String>,
 }
-
 
 pub struct UserListResponse {
     pub users: Vec<UserSummary>,
@@ -150,7 +122,6 @@ pub struct UserSummary {
     pub last_login: Option<String>,
 }
 
-
 pub struct CreateUserRequest {
     pub temporary_password: Option<String>,
     pub roles: Option<Vec<String>>,
@@ -160,7 +131,6 @@ pub struct CreateUserResponse {
     pub default_roles: Vec<String>,
     pub password_reset_required: bool,
 }
-
 
 pub struct UserDetailsResponse {
     pub profile: UserProfile,
@@ -177,7 +147,6 @@ pub struct UserProfile {
     pub locale: Option<String>,
 }
 
-
 pub struct UserSecurityInfo {
     pub password_last_changed: String,
     pub failed_login_attempts: u32,
@@ -188,11 +157,10 @@ pub struct UserActivity {
     pub last_password_change: String,
     pub login_count: u32,
     pub password_change_count: u32,
-// ====== AUTHORIZATION MODELS ======
+
 pub struct RoleListResponse {
     pub roles: Vec<RoleSummary>,
 }
-
 
 pub struct RoleSummary {
     pub role_id: String,
@@ -206,7 +174,6 @@ pub struct PermissionListQuery {
     pub resource: Option<String>,
 }
 
-
 pub struct PermissionListResponse {
     pub permissions: Vec<PermissionSummary>,
     pub categories: Vec<String>,
@@ -219,7 +186,6 @@ pub struct PermissionSummary {
     pub category: String,
 }
 
-
 pub struct PermissionCheckRequest {
     pub permission: String,
     pub context: Option<HashMap<String, String>>,
@@ -229,11 +195,10 @@ pub struct PermissionCheckResponse {
     pub source: Option<String>,
     pub expires_at: Option<String>,
     pub context_restrictions: HashMap<String, String>,
-// ====== API KEY MODELS ======
+
 pub struct ApiKeyListResponse {
     pub api_keys: Vec<ApiKeySummary>,
 }
-
 
 pub struct ApiKeySummary {
     pub key_id: String,
@@ -244,7 +209,6 @@ pub struct ApiKeySummary {
 pub struct CreateApiKeyRequest {
     pub description: Option<String>,
 }
-
 
 pub struct CreateApiKeyResponse {
     pub api_key: String,

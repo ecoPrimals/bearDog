@@ -1,18 +1,3 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 use chrono::{DateTime, Utc};
@@ -25,11 +10,6 @@ use tracing::{error, info, warn};
 use super::metrics::{MetricsService, InternalMetricsSummary};
 use beardog_errors::BearDogResult;
 
-/// **CANONICAL MONITORING SERVICE** - Unified system monitoring for BearDog
-/// This service provides comprehensive system monitoring, alerting, and health checks
-/// with licensing-aware features for enterprise integrations.
-
-/// Monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitoringConfig {
     pub cpu_alert_threshold: f64,
@@ -53,7 +33,6 @@ impl Default for MonitoringConfig {
     }
 }
 
-/// System metrics collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
     pub timestamp: DateTime<Utc>,
@@ -61,7 +40,6 @@ pub struct SystemMetrics {
     pub internal_summary: InternalMetricsSummary,
 }
 
-/// Performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
     pub cpu_usage_percent: f64,
@@ -89,7 +67,6 @@ impl Default for PerformanceMetrics {
     }
 }
 
-/// Alert levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AlertLevel {
     Info,
@@ -98,7 +75,6 @@ pub enum AlertLevel {
     Emergency,
 }
 
-/// System alert
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Alert {
     pub id: String,
@@ -109,7 +85,6 @@ pub struct Alert {
     pub metadata: std::collections::HashMap<String, String>,
 }
 
-/// Main monitoring service
 pub struct MonitoringService {
     config: MonitoringConfig,
     metrics_service: MetricsService<()>,
@@ -117,7 +92,7 @@ pub struct MonitoringService {
 }
 
 impl MonitoringService {
-    /// Create a new monitoring service
+
     pub fn new(config: MonitoringConfig) -> Self {
         Self {
             config,
@@ -126,11 +101,9 @@ impl MonitoringService {
         }
     }
 
-    /// Start the monitoring service
     pub async fn start(&self) -> BearDogResult<()> {
         info!("Starting BearDog monitoring service");
-        
-        // Start periodic monitoring
+
         let service_clone = self.clone_for_background();
         tokio::spawn(async move {
             loop {
@@ -144,7 +117,6 @@ impl MonitoringService {
         Ok(())
     }
 
-    /// Collect current system metrics
     pub async fn collect_metrics(&self) -> BearDogResult<SystemMetrics> {
         let performance = self.collect_performance_metrics().await?;
         let internal_summary = self.metrics_service.get_internal_summary().await;
@@ -156,7 +128,6 @@ impl MonitoringService {
         })
     }
 
-    /// Check for alerts based on current metrics
     pub async fn check_alerts(&self, metrics: &SystemMetrics) -> BearDogResult<()> {
         if !self.config.enable_alerts {
             return Ok(());
@@ -164,39 +135,35 @@ impl MonitoringService {
 
         let mut new_alerts = Vec::new();
 
-        // Check CPU usage
         if metrics.performance.cpu_usage_percent > self.config.cpu_alert_threshold {
             new_alerts.push(Alert {
                 id: uuid::Uuid::new_v4().to_string(),
                 level: AlertLevel::Warning,
-                message: format!("High CPU usage: {:.1}%", metrics.performance.cpu_usage_percent),
+                message: format_args!("High CPU usage: {:.1}%", metrics.performance.cpu_usage_percent).to_string(),
                 timestamp: Utc::now(),
                 resolved: false,
-                metadata: std::collections::HashMap::new(),
+                metadata: std::collections::HashMap::with_capacity(16),
             });
         }
 
-        // Check memory usage
         let memory_usage_percent = (metrics.performance.memory_usage_bytes as f64 
             / metrics.performance.memory_total_bytes as f64) * 100.0;
         if memory_usage_percent > self.config.memory_alert_threshold {
             new_alerts.push(Alert {
                 id: uuid::Uuid::new_v4().to_string(),
                 level: AlertLevel::Warning,
-                message: format!("High memory usage: {:.1}%", memory_usage_percent),
+                message: format_args!("High memory usage: {:.1}%", memory_usage_percent).to_string(),
                 timestamp: Utc::now(),
                 resolved: false,
-                metadata: std::collections::HashMap::new(),
+                metadata: std::collections::HashMap::with_capacity(16),
             });
         }
 
-        // Add alerts to the queue
         let mut alerts = self.alerts.write().await;
         for alert in new_alerts {
             warn!("New alert: {:?} - {}", alert.level, alert.message);
             alerts.push_back(alert);
-            
-            // Keep alert history within configured size
+
             while alerts.len() > self.config.alert_history_size {
                 alerts.pop_front();
             }
@@ -205,13 +172,11 @@ impl MonitoringService {
         Ok(())
     }
 
-    /// Get recent alerts
     pub async fn get_recent_alerts(&self, limit: usize) -> BearDogResult<Vec<Alert>> {
         let alerts = self.alerts.read().await;
         Ok(alerts.iter().rev().take(limit).cloned().collect())
     }
 
-    /// Get current system health status
     pub async fn get_health_status(&self) -> BearDogResult<String> {
         let _metrics = self.collect_metrics().await?;
         let alerts = self.get_recent_alerts(10).await?;
@@ -229,21 +194,17 @@ impl MonitoringService {
         }
     }
 
-    /// Internal monitoring loop
     async fn monitoring_loop(&self) -> BearDogResult<()> {
         let _metrics = self.collect_metrics().await?;
         self.check_alerts(&_metrics).await?;
-        
-        // Update internal metrics
+
         self.metrics_service.increment_api_requests();
         
         Ok(())
     }
 
-    /// Collect performance metrics from the system
     async fn collect_performance_metrics(&self) -> BearDogResult<PerformanceMetrics> {
-        // In a real implementation, these would collect actual system metrics
-        // For now, return mock data to ensure compilation
+
         Ok(PerformanceMetrics {
             cpu_usage_percent: 25.0,
             memory_usage_bytes: 1024 * 1024 * 512, // 512MB
@@ -256,7 +217,6 @@ impl MonitoringService {
         })
     }
 
-    /// Clone service for background tasks
     fn clone_for_background(&self) -> MonitoringServiceClone {
         MonitoringServiceClone {
             config: self.config.clone(),
@@ -265,7 +225,6 @@ impl MonitoringService {
     }
 }
 
-/// Lightweight clone for background tasks
 #[derive(Clone)]
 struct MonitoringServiceClone {
     config: MonitoringConfig,
@@ -274,7 +233,7 @@ struct MonitoringServiceClone {
 
 impl MonitoringServiceClone {
     async fn monitoring_loop(&self) -> BearDogResult<()> {
-        // Simplified monitoring loop for background tasks
+
         Ok(())
     }
 }
@@ -307,8 +266,7 @@ mod tests {
         
         service.check_alerts(&metrics).await?;
         let alerts = service.get_recent_alerts(10).await?;
-        
-        // Should have at least one alert due to low threshold
+
         assert!(!alerts.is_empty());
         
         Ok(())

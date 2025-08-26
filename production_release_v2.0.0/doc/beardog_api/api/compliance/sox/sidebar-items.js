@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["get_financial_reporting_compliance","get_sox_compliance","get_sox_controls"]};

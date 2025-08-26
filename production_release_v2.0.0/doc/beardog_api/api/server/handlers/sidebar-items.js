@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["health_check","server_info"]};

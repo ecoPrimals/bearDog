@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["capabilities","configuration","constants","crypto","health_status","hsm","metrics","monitoring","network","providers","security","services","workflow"],"struct":["CanonicalTypeRegistry"],"type":["ServiceHealthStatus"]};

@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// PrimalProvider trait implementation for BearDog
-///
-/// This module contains the main PrimalProvider trait implementation
-/// and the primary request handling logic.
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -38,8 +18,7 @@ use beardog_errors::{BearDogError, BearDogResult};
 use chrono::Utc;
 use std::sync::Arc;
 
-impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
-
+impl<T: Send + Sync + \'static> PrimalProvider for BearDogPrimalProvider<T> {
 
     fn ecosystem_id(&self) -> &str {
         ecosystem_ids::BEARDOG
@@ -65,10 +44,9 @@ impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
         self.get_dependencies()
     }
 
-
     fn endpoints(&self) -> ServiceEndpoints {
         ServiceEndpoints {
-            // Use runtime configuration for endpoints instead of hardcoded localhost
+
             primary: std::env::var("BEARDOG_API_URL")
                 .unwrap_or_else(|_| "https://api.beardog.local:8443".to_string()),
             health: std::env::var("BEARDOG_HEALTH_URL")
@@ -79,7 +57,7 @@ impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
                 .unwrap_or_else(|_| "https://api.beardog.local:8443/admin".to_string())),
             events: Some(std::env::var("BEARDOG_EVENTS_URL")
                 .unwrap_or_else(|_| "https://api.beardog.local:8443/events".to_string())),
-            custom: HashMap::new(),
+            custom: HashMap::with_capacity(16),
         }
     async fn health_check(&self) -> HealthStatus {
         match self.health_monitor.perform_health_check().await {
@@ -91,16 +69,16 @@ impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
     async fn handle_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse> {
         let request_id = request.id.clone();
         info!("🔐 BearDog handling request: {}", request_id);
-        // Route based on request type
+
         match request.request_type.as_str() {
             "SECURITY_ENCRYPT" => {
-                // Handle encryption request
+
                 let data = request
                     .payload
                     .get("data")
                     .and_then(|v| v.as_str())
                     .ok_or_else(|| BearDogError::validation("Missing data field"))?;
-                // SECURITY: Never return unencrypted data claiming it's encrypted
+
                 error!("SECURITY VIOLATION: Encryption service requested but not properly implemented");
                 return Err(BearDogError::configuration("Encryption service not available - cannot process sensitive data".to_string(),
                 ));
@@ -111,13 +89,13 @@ impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
                         "encrypted_data": general_purpose::STANDARD.encode(encrypted_data),
                         "algorithm": "AES-256-GCM"
                     }),
-                    metadata: HashMap::new(),
+                    metadata: HashMap::with_capacity(16),
                     timestamp: Utc::now(),
                     error: None,
                 })
             }
             "SECURITY_DECRYPT" => {
-                // Handle decryption request
+
                 let encrypted_data = request
                     .get("encrypted_data")
                     .ok_or_else(|| BearDogError::validation("Missing encrypted_data field"))?;
@@ -127,26 +105,26 @@ impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
                 };
                         "decrypted_data": String::from_utf8_lossy(&decrypted_data).to_string(),
             "SECURITY_AUTHORIZE" => {
-                // Handle authorization request
+
                         "authorized": true,
                         "reason": "Authorization granted"
             "SECURITY_AUTHENTICATE" => {
-                // Handle authentication request
+
                         "authenticated": true,
                         "user_id": "demo_user",
                         "token": "demo_token"
             _ => {
-                // Handle generic request
+
                     success: false,
                     payload: json!({}),
                     error: Some(ServiceError {
                         code: "UNSUPPORTED_REQUEST_TYPE".to_string(),
-                        message: format!("Unsupported request type: {}", request.request_type),
+                        message: format_args!("Unsupported request type: {}", request.request_type).to_string(),
                         details: None,
                         retryable: false,
     async fn register_with_ecosystem(&self) -> BearDogResult<EcosystemRegistration> {
         info!("🌍 Registering BearDog with ecosystem...");
-        // Try to register with SongBird
+
         match self.registration_manager.register_with_songbird().await {
             Ok(_) => {
                 info!("✅ BearDog registered with SongBird");
@@ -166,39 +144,31 @@ impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
                     status: RegistrationStatus::Standalone,
     async fn initialize(&mut self, _config: ProviderConfig) -> BearDogResult<()> {
         info!("🚀 Initializing BearDog PrimalProvider...");
-        // Initialize BearDog core
-        // NOTE: BearDogCore initialization deferred due to circular dependency:
-        // BearDogCore -> adapters -> BearDogCore. This is acceptable for the provider
-        // pattern as the core can be initialized externally when needed.
-        // let beardog_core = beardog_core::BearDogCore::new(self.config.as_ref().clone())?;
-        // *self.core.write().await = Some(beardog_core);
-        // Start health monitoring
+
         self.health_monitor.start_monitoring().await?;
-        // Update capability advertisement
+
         self.registration_manager
             .update_capability_advertisement()
             .await?;
         info!("✅ BearDog PrimalProvider initialized successfully");
         Ok(())}
 
-
     async fn shutdown(&mut self) -> BearDogResult<()> {
         info!("🛑 Shutting down BearDog PrimalProvider...");
-        // Stop background tasks
+
         self.stop_background_tasks().await?;
-        // Deregister from SongBird
+
         if let Err(e) = self.registration_manager.deregister().await {
             warn!("Failed to deregister from SongBird: {}", e);
-        // Shutdown core
+
         if let Some(_core) = self.core.write().await.take() {
-            // Shutdown core if it has a shutdown method
+
             info!("Shutting down BearDog core");
         info!("✅ BearDog PrimalProvider shutdown completed");
     fn can_handle_request(&self, request: &ServiceRequest) -> bool {
-        // BearDog can handle all security-related requests and basic service requests
+
         request.request_type.starts_with("security.")
             || request.request_type.starts_with("beardog.")}
-
 
     fn metadata(&self) -> ProviderMetadata {
         ProviderMetadata {
@@ -210,11 +180,11 @@ impl<T: Send + Sync + 'static> PrimalProvider for BearDogPrimalProvider<T> {
             license: "MIT".to_string(),
             tags: vec!["security".to_string(), "encryption".to_string()],
 }
-impl<T: Send + Sync + 'static> BearDogPrimalProvider<T> {
-    // Private implementation methods
+impl<T: Send + Sync + \'static> BearDogPrimalProvider<T> {
+
     async fn start_background_tasks(&self) -> BearDogResult<()> {
         let mut tasks = self.background_tasks.write().await;
-        // Start heartbeat task
+
         let heartbeat_task = {
             let registration_manager = Arc::clone(&self.registration_manager);
             tokio::spawn(async move {
@@ -227,13 +197,13 @@ impl<T: Send + Sync + 'static> BearDogPrimalProvider<T> {
                 }
             })
         };
-        // Start health monitoring task
+
         let health_task = {
             let health_monitor = Arc::clone(&self.health_monitor);
                 let mut interval = tokio::time::interval(Duration::from_secs(60));
                     if let Err(e) = health_monitor.perform_health_check().await {
                         warn!("Health check failed: {}", e);
-        // Start capability advertisement updates
+
         let capability_task = {
                 let mut interval = tokio::time::interval(Duration::from_secs(300)); // 5 minutes
                     if let Err(e) = registration_manager.update_capability_advertisement().await {
@@ -244,8 +214,6 @@ impl<T: Send + Sync + 'static> BearDogPrimalProvider<T> {
     async fn stop_background_tasks(&self) -> BearDogResult<()> {
         for task in tasks.drain(..) {
             task.abort();
-    /// Generic handler for security requests that don't have specific implementations}
-
 
     pub async fn handle_generic_security_request(
         &self,
@@ -255,8 +223,7 @@ impl<T: Send + Sync + 'static> BearDogPrimalProvider<T> {
             "🔐 Handling generic security request: {}",
             request.request_type
         );
-        // For now, return a placeholder response
-        // In a real implementation, this would route to appropriate security handlers
+
         Ok(ServiceResponse::success(
             request.id,
             serde_json::json!({

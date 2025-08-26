@@ -1,30 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Zero-Cost API Architecture
-///
-/// This module provides zero-cost abstractions for the `BearDog` API layer,
-/// eliminating runtime overhead from dependency injection while maintaining
-/// full flexibility and type safety.
-/// ## Key Benefits:
-/// - **No async_trait boxing** - Native async methods with zero overhead
-/// - **No runtime dispatch** - All calls monomorphized at compile time  
-/// - **No type erasure** - Full compile-time type safety
-/// - **Perfect performance** - Direct function calls in release builds
 
 use beardog_core::zero_cost_architecture::{ZeroCostBearDog, ZeroCostCache, ZeroCostSecurity};
 use beardog_errors::BearDogResult;
@@ -35,38 +9,35 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant, SystemTime};
 use parking_lot::RwLock;
-/// Zero-cost cache abstraction for API responses
+
 pub trait ZeroCostApiCache {
     type Key: Hash + Eq + Clone;
     type Value: Clone;
-    
-    /// Get cached API response - native async, no boxing
+
     async fn get_response(&self, key: &Self::Key) -> Option<Self::Value>;
-    /// Cache API response with TTL - native async, no boxing
+
     async fn set_response(&self, key: Self::Key, value: Self::Value, ttl: Duration) -> BearDogResult<()>;
-    /// Remove cached response - native async, no boxing
+
     async fn remove_response(&self, key: &Self::Key) -> BearDogResult<bool>;
-    /// Check if response is cached - native async, no boxing
+
     async fn response_exists(&self, key: &Self::Key) -> bool;
-    /// Get cache statistics - native async, no boxing
+
     async fn cache_stats(&self) -> ApiCacheStats;
 }
-/// Zero-cost rate limiting abstraction
+
 pub trait ZeroCostRateLimit {
     type ClientId: Hash + Eq + Clone;
-    /// Check if request is within rate limit - native async, no boxing}
-
 
     async fn check_limit(&self, client_id: &Self::ClientId) -> bool;
-    /// Check endpoint-specific rate limit - native async, no boxing
+
     async fn check_endpoint_limit(&self, client_id: &Self::ClientId, endpoint: &str) -> bool;
-    /// Get remaining quota - native async, no boxing
+
     async fn get_quota(&self, client_id: &Self::ClientId) -> RateQuota;
-    /// Reset client limits - native async, no boxing
+
     async fn reset_client(&self, client_id: &Self::ClientId) -> BearDogResult<bool>;
-    /// Get rate limiting statistics - native async, no boxing
+
     async fn rate_limit_stats(&self) -> RateLimitStats;
-/// API cache statistics
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiCacheStats {
     pub hits: u64,
@@ -75,18 +46,18 @@ pub struct ApiCacheStats {
     pub hit_rate: f64,
     pub cache_size: usize,
     pub memory_usage_bytes: u64,
-/// Rate limiting quota information
+
 pub struct RateQuota {
     pub remaining: u32,
     pub limit: u32,
     pub reset_time_seconds: u64,
     pub throttled: bool,
-/// Rate limiting statistics
+
 pub struct RateLimitStats {
     pub blocked_requests: u64,
     pub active_clients: usize,
     pub average_quota_usage: f64,
-/// High-performance in-memory API cache
+
 pub struct ZeroCostApiMemoryCache<K, V, const SIZE: usize = { beardog_types::constants::cache::STANDARD_CACHE_SIZE }, const TTL_SECONDS: u64 = { beardog_types::constants::cache::STANDARD_TTL.as_secs() }>
 where
     K: Hash + Eq + Clone,
@@ -97,7 +68,7 @@ where
     hits: AtomicU64,
     misses: AtomicU64,
     _phantom: PhantomData<(K, V)>,
-/// Cached API response with metadata
+
 #[derive(Debug, Clone)]
 struct CachedApiResponse<V> {
     value: V,
@@ -105,7 +76,6 @@ struct CachedApiResponse<V> {
     ttl: Duration,
     access_count: u64,
 impl<V> CachedApiResponse<V> {}
-
 
     fn new(value: V, ttl: Duration) -> Self {
         Self {
@@ -119,18 +89,16 @@ impl<V> CachedApiResponse<V> {}
         self.cached_at.elapsed() > self.ttl
 impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> ZeroCostApiMemoryCache<K, V, SIZE, TTL_SECONDS>
     pub const fn new() -> Self {
-            data: RwLock::new(HashMap::new()),
+            data: RwLock::new(HashMap::with_capacity(16)),
             access_order: RwLock::new(Vec::new()),
             hits: AtomicU64::new(0),
             misses: AtomicU64::new(0),
             _phantom: PhantomData,}
 
-
     fn evict_if_needed(&self) {
         let mut data = self.data.write();
         let mut access_order = self.access_order.write();
-        
-        // Remove expired entries
+
         data.retain(|k, entry| {
             if entry.is_expired() {
                 access_order.retain(|access_k| access_k != k);
@@ -139,7 +107,7 @@ impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> ZeroCostApiMemoryCache<K, 
                 true
             }
         });
-        // LRU eviction if over capacity
+
         while data.len() >= SIZE && !access_order.is_empty() {
             if let Some(oldest_key) = access_order.remove(0) {
                 data.remove(&oldest_key);
@@ -150,12 +118,11 @@ impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> ZeroCostApiCache for ZeroC
     type Key = K;
     type Value = V;}
 
-
     async fn get_response(&self, key: &Self::Key) -> Option<Self::Value> {
         let data = self.data.read();
         if let Some(entry) = data.get(key) {
                 drop(data);
-                // Clean up expired entry
+
                 let mut data = self.data.write();
                 data.remove(key);
                 self.misses.fetch_add(1, Ordering::Relaxed);
@@ -175,7 +142,6 @@ impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> ZeroCostApiCache for ZeroC
         self.update_access_order(&key);
         Ok(())}
 
-
     async fn remove_response(&self, key: &Self::Key) -> BearDogResult<bool> {
         let removed = data.remove(key).is_some();
         if removed {
@@ -186,13 +152,12 @@ impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> ZeroCostApiCache for ZeroC
             !entry.is_expired()
             false}
 
-
     async fn cache_stats(&self) -> ApiCacheStats {
         let hits = self.hits.load(Ordering::Relaxed);
         let misses = self.misses.load(Ordering::Relaxed);
         let total = hits + misses;
         let cache_size = data.len();
-        // Rough memory usage estimate
+
         let memory_usage = cache_size * std::mem::size_of::<K>() + cache_size * 64; // Rough estimate
         ApiCacheStats {
             hits,
@@ -201,7 +166,7 @@ impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> ZeroCostApiCache for ZeroC
             hit_rate: if total == 0 { 0.0 } else { hits as f64 / total as f64 },
             cache_size,
             memory_usage_bytes: memory_usage as u64,
-/// High-performance token bucket rate limiter
+
 pub struct ZeroCostTokenBucketLimiter<C, const RATE_PER_MINUTE: u32 = 100, const BURST_SIZE: u32 = 20>
     C: Hash + Eq + Clone,
     buckets: RwLock<HashMap<C, TokenBucket>>,
@@ -209,7 +174,7 @@ pub struct ZeroCostTokenBucketLimiter<C, const RATE_PER_MINUTE: u32 = 100, const
     total_requests: AtomicU64,
     blocked_requests: AtomicU64,
     _phantom: PhantomData<C>,
-/// Token bucket for rate limiting
+
 struct TokenBucket {
     tokens: f64,
     last_refill: Instant,
@@ -217,13 +182,11 @@ struct TokenBucket {
     refill_rate: f64, // tokens per second
 impl TokenBucket {}
 
-
     fn new(max_tokens: f64, refill_rate: f64) -> Self {
             tokens: max_tokens,
             last_refill: Instant::now(),
             max_tokens,
             refill_rate,}
-
 
     fn try_consume(&mut self, tokens: f64) -> bool {
         self.refill();
@@ -236,12 +199,11 @@ impl TokenBucket {}
         self.tokens = (self.tokens + elapsed * self.refill_rate).min(self.max_tokens);
         self.last_refill = now;}
 
-
     fn remaining(&mut self) -> u32 {
         self.tokens as u32
 impl<C, const RATE: u32, const BURST: u32> ZeroCostTokenBucketLimiter<C, RATE, BURST>
-            buckets: RwLock::new(HashMap::new()),
-            endpoint_buckets: RwLock::new(HashMap::new()),
+            buckets: RwLock::new(HashMap::with_capacity(16)),
+            endpoint_buckets: RwLock::new(HashMap::with_capacity(16)),
             total_requests: AtomicU64::new(0),
             blocked_requests: AtomicU64::new(0),
 impl<C, const RATE: u32, const BURST: u32> ZeroCostRateLimit for ZeroCostTokenBucketLimiter<C, RATE, BURST>
@@ -256,12 +218,11 @@ impl<C, const RATE: u32, const BURST: u32> ZeroCostRateLimit for ZeroCostTokenBu
             self.blocked_requests.fetch_add(1, Ordering::Relaxed);
         allowed}
 
-
     async fn check_endpoint_limit(&self, client_id: &Self::ClientId, endpoint: &str) -> bool {
         let key = (client_id.clone(), endpoint.to_string());
         let mut buckets = self.endpoint_buckets.write();
         let bucket = buckets.entry(key).or_insert_with(|| {
-            // More restrictive limits for specific endpoints
+
             TokenBucket::new((BURST / 2) as f64, (RATE / 2) as f64 / 60.0)
         bucket.try_consume(1.0)
     async fn get_quota(&self, client_id: &Self::ClientId) -> RateQuota {
@@ -274,10 +235,9 @@ impl<C, const RATE: u32, const BURST: u32> ZeroCostRateLimit for ZeroCostTokenBu
             reset_time_seconds: 60, // Reset window is 1 minute based on RATE_PER_MINUTE
             throttled,}
 
-
     async fn reset_client(&self, client_id: &Self::ClientId) -> BearDogResult<bool> {
         let removed = buckets.remove(client_id).is_some();
-        // Also remove endpoint-specific buckets for this client
+
         let mut endpoint_buckets = self.endpoint_buckets.write();
         endpoint_buckets.retain(|(c, _), _| c != client_id);
     async fn rate_limit_stats(&self) -> RateLimitStats {
@@ -297,35 +257,32 @@ impl<C, const RATE: u32, const BURST: u32> ZeroCostRateLimit for ZeroCostTokenBu
             blocked_requests,
             active_clients,
             average_quota_usage,
-/// Zero-cost API application state
+
 pub struct ZeroCostApiState<Core, Cache, RateLimit>
     Cache: ZeroCostApiCache,
     RateLimit: ZeroCostRateLimit,
-    /// Core `BearDog` system - direct generic type, no type erasure
+
     pub core: Core,
-    /// API response cache - monomorphized, no runtime dispatch
+
     pub cache: Cache,
-    /// Rate limiter - monomorphized, no runtime dispatch
+
     pub rate_limiter: RateLimit,
-    /// API configuration - direct field access
+
     pub config: ApiConfig,
-// Const generic ApiConfig moved to canonical beardog-types::config::ApiConfig
-// Zero-cost optimizations are now handled through the canonical configuration system
+
 impl<Core, Cache, RateLimit> ZeroCostApiState<Core, Cache, RateLimit>
     pub const fn new(core: Core, cache: Cache, rate_limiter: RateLimit, config: ApiConfig) -> Self {
             core,
             cache,
             rate_limiter,
             config,
-    /// Get cache performance - completely monomorphized}
-
 
     pub async fn get_cache_performance(&self) -> ApiCacheStats {
         self.cache.cache_stats().await
-    /// Get rate limiting performance - completely monomorphized
+
     pub async fn get_rate_limit_performance(&self) -> RateLimitStats {
         self.rate_limiter.rate_limit_stats().await
-/// Type aliases for common API configurations
+
 pub type ProductionApiState<Core> = ZeroCostApiState<
     Core,
     ZeroCostApiMemoryCache<String, String, 100000, 7200>, // 100k entries, 2 hour TTL
@@ -334,8 +291,6 @@ pub type ProductionApiState<Core> = ZeroCostApiState<
 pub type DevelopmentApiState<Core> = ZeroCostApiState<
     ZeroCostApiMemoryCache<String, String, 1000, 3600>,   // 1k entries, 1 hour TTL
     ZeroCostTokenBucketLimiter<String, 100, 10>,          // 100/min, 10 burst
-/// Zero-cost API builder}
-
 
 pub struct ZeroCostApiBuilder<Core, Cache, RateLimit> {
     core: Option<Core>,
@@ -348,7 +303,6 @@ impl ZeroCostApiBuilder<(), (), ()> {
             rate_limiter: None,
             config: None,}
 
-
 impl<Core, Cache, RateLimit> ZeroCostApiBuilder<Core, Cache, RateLimit> {
     pub fn with_core<NewCore>(self, core: NewCore) -> ZeroCostApiBuilder<NewCore, Cache, RateLimit> {
         ZeroCostApiBuilder {
@@ -357,13 +311,11 @@ impl<Core, Cache, RateLimit> ZeroCostApiBuilder<Core, Cache, RateLimit> {
             rate_limiter: self.rate_limiter,
             config: self.config,}
 
-
     pub fn with_cache<NewCache: ZeroCostApiCache>(self, cache: NewCache) -> ZeroCostApiBuilder<Core, NewCache, RateLimit> {
             core: self.core,
             cache: Some(cache),
     pub fn with_rate_limiter<NewRateLimit: ZeroCostRateLimit>(self, rate_limiter: NewRateLimit) -> ZeroCostApiBuilder<Core, Cache, NewRateLimit> {
             rate_limiter: Some(rate_limiter),}
-
 
     pub fn with_config(self, config: ApiConfig) -> Self {
             config: Some(config),
@@ -374,18 +326,18 @@ impl<Core, Cache, RateLimit> ZeroCostApiBuilder<Core, Cache, RateLimit>
     tracing::error!("Expect failed ({}): {:?}", "Core must be configured", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Core must be configured: {:?}", e)
+    format_args!("Core must be configured: {:?}", e).to_string()
 ).into())
 }),
             self.cache.unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Cache must be configured", e);
-    format!("Cache must be configured: {:?}", e)
+    format_args!("Cache must be configured: {:?}", e).to_string()
             self.rate_limiter.unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Rate limiter must be configured", e);
-    format!("Rate limiter must be configured: {:?}", e)
+    format_args!("Rate limiter must be configured: {:?}", e).to_string()
             self.config.unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Config must be configured", e);
-    format!("Config must be configured: {:?}", e)
+    format_args!("Config must be configured: {:?}", e).to_string()
         )
 #[cfg(test)]
 mod tests {
@@ -393,12 +345,12 @@ mod tests {
     #[tokio::test]
     async fn test_zero_cost_api_cache() {
         let cache: ZeroCostApiMemoryCache<String, String, 100> = ZeroCostApiMemoryCache::new();
-        // Test basic operations
+
         assert!(!cache.response_exists(&"key1".to_string()).await);
         cache.set_response("key1".to_string(), "value1".to_string(), Duration::from_secs(60)).await
             .unwrap_or_else(|e| {
                 tracing::warn!("Cache set operation failed: {}. Continuing without cache.", e);
-                // Graceful degradation - continue without cache rather than crash
+
             });
         assert!(cache.response_exists(&"key1".to_string()).await);
         let value = cache.get_response(&"key1".to_string()).await;
@@ -410,14 +362,13 @@ mod tests {
     async fn test_zero_cost_rate_limiter() {
         let limiter: ZeroCostTokenBucketLimiter<String, 60, 10> = ZeroCostTokenBucketLimiter::new();
         let client_id = "test_client".to_string();
-        // Should allow initial requests
+
         assert!(limiter.check_limit(&client_id).await);
-        // Check quota
+
         let quota = limiter.get_quota(&client_id).await;
         assert!(quota.remaining > 0);
         assert_eq!(quota.limit, 60);
     #[test]}
-
 
     fn test_compile_time_api_config() {
         const CONFIG: ApiConfig<5000, 2097152, false, true> = ApiConfig::new(beardog_types::canonical::constants::default_api_bind_address());

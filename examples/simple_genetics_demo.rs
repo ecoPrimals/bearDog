@@ -1,33 +1,12 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Simple Genetics Migration Demonstration
-//!
-//! A standalone demonstration of the genetics result type evolution.
 
 use std::collections::HashMap;
 
-// Simple demonstration without external dependencies
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 BearDog Genetics Migration - Standalone Demo");
     println!("===============================================");
     println!();
 
-    // Show the conceptual difference
     println!("❌ OLD PATTERN - Result<(), E>:");
     println!("   fn register_genetics(genetics: Genetics) -> Result<(), Error>");
     println!("   Returns: Ok(()) - No context, metrics, or validation info");

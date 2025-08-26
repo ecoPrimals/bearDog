@@ -1,34 +1,14 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Genetic Lineage Tracking
-///
-/// This module handles lineage tracking, diversity calculation, and cryptographic
-/// proof of genetic lineage for spawned nodes.
 
 use beardog_auth::auth::BearDogGenetics;
 use beardog_errors::BearDogResult;
 use chrono::Utc;
 use tracing::info;
-// Import types from parent module
+
 use super::{GeneticLineage, LineageProof, ParentSignature, SpawnRequest, WitnessSignature};
 use crate::genetics::spawning::engine::GeneticSpawningEngine;
 use beardog_errors::{BearDogError, BearDogResult};
-/// Create a lineage record for a spawned child
+
 pub async fn create_lineage_record(
     _engine: &GeneticSpawningEngine,
     request: &SpawnRequest,
@@ -37,7 +17,7 @@ pub async fn create_lineage_record(
 ) -> GeneticsResult<GeneticLineage> {
     info!("Creating lineage record for child: {}", child_node_id);
     let mut parent_signatures = Vec::new();
-    // Create signatures for each parent genetics in the request
+
     for parent_genetics in request.parent_genetics.iter() {
         let parent_id = &parent_genetics.id;
         let lineage_signature = format!("lineage_{parent_id}_{child_node_id}");
@@ -47,21 +27,21 @@ pub async fn create_lineage_record(
             timestamp: Utc::now(),
         });
     }
-    // Create witness signatures
+
     let mut witness_signatures = Vec::new();
-    let witness_signature_bytes = format!("witness_{:?}_{}", request.spawn_purpose, child_node_id);
+    let witness_signature_bytes = format_args!("witness_{:?}_{}", request.spawn_purpose, child_node_id).to_string();
     witness_signatures.push(WitnessSignature {
         witness_id: "genetic-witness".to_string(),
         signature: witness_signature_bytes.as_bytes().to_vec(),
         timestamp: Utc::now(),
     });
-    // Calculate genetic diversity score
+
     let diversity_score =
         calculate_genetic_diversity_score(&request.parent_genetics, child_genetics).await?;
-    let child_genetics_hash = format!("hash_{}", child_genetics.id);
-    // Create the genetic lineage record
+    let child_genetics_hash = format_args!("hash_{}", child_genetics.id).to_string();
+
     let lineage = GeneticLineage {
-        lineage_id: format!("lineage_{}", uuid::Uuid::new_v4()),
+        lineage_id: format_args!("lineage_{}", uuid::Uuid::new_v4().to_string()),
         child_id: child_node_id.to_string(),
         parent_ids: request
             .parent_genetics
@@ -70,7 +50,7 @@ pub async fn create_lineage_record(
             .collect(),
         generation: child_genetics.generation,
         lineage_proof: LineageProof {
-            lineage_id: format!("proof_{}", uuid::Uuid::new_v4()),
+            lineage_id: format_args!("proof_{}", uuid::Uuid::new_v4().to_string()),
             parent_signatures,
             witness_signatures,
             genetic_hash: child_genetics_hash,
@@ -81,18 +61,18 @@ pub async fn create_lineage_record(
     info!("Lineage record created for child: {}", child_node_id);
     Ok(lineage)
 }
-/// Calculate genetic diversity score based on parent genetics
+
 pub async fn calculate_genetic_diversity_score(
     parent_genetics: &[BearDogGenetics],
 ) -> GeneticsResult<f64> {
     let mut diversity_factors = Vec::new();
-    // Load parent genetics for comparison
+
     let mut parent_genetics_data = Vec::new();
     for parent_genetics in parent_genetics {
         parent_genetics_data.push(parent_genetics.clone());
     if parent_genetics_data.is_empty() {
         return Ok(0.5); // Default diversity score
-    // Calculate chromosome diversity
+
     let chromosome_diversity = calculate_chromosome_diversity(
         &child_genetics.crypto_chromosomes,
         &parent_genetics_data
@@ -100,24 +80,22 @@ pub async fn calculate_genetic_diversity_score(
             .collect::<Vec<_>>(),
     );
     diversity_factors.push(chromosome_diversity);
-    // Calculate capability diversity
+
     let capability_diversity = calculate_capability_diversity(
         &child_genetics.capabilities,
             .map(|g| &g.capabilities)
     diversity_factors.push(capability_diversity);
-    // Calculate trait diversity
+
     let trait_diversity = calculate_trait_diversity(
         &child_genetics.security_traits,
             .map(|g| &g.security_traits)
     diversity_factors.push(trait_diversity);
-    // Calculate generation diversity (higher generation = more diverse)
+
     let generation_diversity = (child_genetics.generation as f64 / 10.0).min(1.0);
     diversity_factors.push(generation_diversity);
-    // Calculate weighted average
+
     let total_diversity = diversity_factors.iter().sum::<f64>() / diversity_factors.len() as f64;
     Ok(total_diversity.clamp(0.0, 1.0))
-/// Calculate chromosome diversity between child and parents}
-
 
 fn calculate_chromosome_diversity(
     child_chromosomes: &[beardog_auth::auth::CryptoChromosome],
@@ -133,7 +111,7 @@ fn calculate_chromosome_diversity(
                 if std::mem::discriminant(&child_chromosome.algorithm_family)
                     == std::mem::discriminant(&parent_chromosome.algorithm_family)
                 {
-                    // Compare similar algorithm families
+
                     let strength_diff = (child_chromosome.strength_bits as f64
                         - parent_chromosome.strength_bits as f64)
                         .abs()
@@ -154,7 +132,7 @@ fn calculate_chromosome_diversity(
         (diversity_score / comparisons as f64).clamp(0.0, 1.0)
     } else {
         0.8 // High diversity if no comparable chromosomes
-/// Calculate capability diversity between child and parents
+
 fn calculate_capability_diversity(
     child_capabilities: &[beardog_auth::auth::NodeCapability],
     parent_capabilities: &[&Vec<beardog_auth::auth::NodeCapability>],
@@ -164,7 +142,7 @@ fn calculate_capability_diversity(
         for cap in parent_cap_set.iter() {
             total_parent_capabilities.insert(cap.clone());
     let child_cap_set: std::collections::HashSet<_> = child_capabilities.iter().cloned().collect();
-    // Calculate Jaccard diversity index
+
     let intersection_size = child_cap_set
         .intersection(&total_parent_capabilities)
         .count();
@@ -172,8 +150,6 @@ fn calculate_capability_diversity(
     if union_size == 0 {
         0.5
         1.0 - (intersection_size as f64 / union_size as f64)
-/// Calculate trait diversity between child and parents}
-
 
 fn calculate_trait_diversity(
     child_traits: &beardog_auth::auth::SecurityTraits,

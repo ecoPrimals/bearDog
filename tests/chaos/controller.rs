@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Chaos Controller
-//!
-//! Main chaos controller for orchestrating fault injection,
-//! tracking active faults, and managing fault history.
 
 use super::models::*;
 use std::{
@@ -30,7 +10,6 @@ use std::{
 };
 use tokio::sync::RwLock;
 
-/// Main chaos controller for orchestrating fault injection
 pub struct ChaosController {
     active_faults: Arc<RwLock<HashMap<String, ActiveFault>>>,
     fault_history: Arc<Mutex<VecDeque<FaultEvent>>>,
@@ -41,7 +20,7 @@ pub struct ChaosController {
 impl ChaosController {
     pub fn new(config: ChaosTestConfig) -> Self {
         Self {
-            active_faults: Arc::new(RwLock::new(HashMap::new())),
+            active_faults: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             fault_history: Arc::new(Mutex::new(VecDeque::new())),
             is_running: Arc::new(AtomicBool::new(false)),
             config,
@@ -69,8 +48,7 @@ impl ChaosController {
         poisoned.into_inner()
     });
         history.push_back(fault_event);
-        
-        // Keep history size manageable
+
         if history.len() > 1000 {
             history.pop_front();
         }

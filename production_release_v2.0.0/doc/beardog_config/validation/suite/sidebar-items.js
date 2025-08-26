@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["create_default_suites","create_default_validation_suite"],"struct":["ValidationSuiteManager"]};

@@ -1,41 +1,10 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # Zero-Cost API Architecture Comparison
-//!
-//! This example demonstrates the performance difference between the traditional
-//! type-erased API architecture and the new zero-cost dependency injection.
-//!
-//! ## Performance Benefits Measured:
-//! 
-//! 1. **Request Processing** - Direct vs virtual dispatch
-//! 2. **Middleware Overhead** - Monomorphized vs boxed async traits
-//! 3. **Cache Operations** - Direct calls vs enum dispatch
-//! 4. **Rate Limiting** - Compile-time vs runtime configuration
-//! 5. **Memory Usage** - Stack vs heap allocations
-//!
-//! Run with: `cargo run --example zero_cost_api_comparison`
 
 use beardog_api::api::zero_cost_server::examples;
 use beardog_core::zero_cost_architecture::examples as core_examples;
 use std::time::Instant;
 use tokio;
 
-/// Comparison metrics
 #[derive(Debug)]
 struct PerformanceMetrics {
     total_time_micros: u128,
@@ -49,7 +18,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 BearDog API Architecture Comparison");
     println!("======================================\n");
 
-    // 1. Zero-Cost Architecture Demo
     println!("🔥 Zero-Cost Architecture Performance");
     println!("------------------------------------");
     
@@ -58,7 +26,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 2. Architecture Comparison
     println!("📊 Performance Analysis");
     println!("----------------------");
     
@@ -66,7 +33,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 3. Memory Usage Comparison
     println!("💾 Memory Usage Analysis");
     println!("-----------------------");
     
@@ -74,7 +40,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 4. Type Safety Demonstration
     println!("🛡️ Type Safety Benefits");
     println!("----------------------");
     
@@ -83,25 +48,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Benchmark the zero-cost API architecture
 async fn benchmark_zero_cost_api() -> Result<PerformanceMetrics, Box<dyn std::error::Error>> {
-    // Create zero-cost API server
+
     let server = examples::create_benchmark_api_server();
     
     println!("📈 Running zero-cost benchmarks...");
-    
-    // Benchmark parameters
+
     const ITERATIONS: usize = beardog_types::constants::performance::testing::LIGHT_ITERATIONS;
-    
-    // Cache Performance Test
+
     println!("   🧪 Cache operations ({} iterations)", ITERATIONS);
     let start = Instant::now();
     
     for i in 0..ITERATIONS {
-        let key = format!("benchmark_key_{}", i);
-        let value = format!("benchmark_value_{}", i);
-        
-        // Zero-cost cache operation - completely monomorphized
+        let key = format_args!("benchmark_key_{}", i).to_string();
+        let value = format_args!("benchmark_value_{}", i).to_string();
+
         let _ = server.app_state.cache.set_response(
             key.clone(), 
             value, 
@@ -117,14 +78,12 @@ async fn benchmark_zero_cost_api() -> Result<PerformanceMetrics, Box<dyn std::er
     println!("      ⚡ Cache: {:.0} ops/sec ({:.2}ms total)", 
              cache_ops_per_sec, cache_duration.as_millis());
 
-    // Rate Limiting Performance Test
     println!("   🧪 Rate limiting ({} iterations)", ITERATIONS);
     let start = Instant::now();
     
     for i in 0..ITERATIONS {
-        let client_id = format!("client_{}", i % 100); // 100 different clients
-        
-        // Zero-cost rate limiting - completely monomorphized
+        let client_id = format_args!("client_{}", i % 100).to_string(); // 100 different clients
+
         let _ = server.app_state.rate_limiter.check_limit(&client_id).await;
         let _ = server.app_state.rate_limiter.get_quota(&client_id).await;
     }
@@ -135,15 +94,13 @@ async fn benchmark_zero_cost_api() -> Result<PerformanceMetrics, Box<dyn std::er
     println!("      ⚡ Rate Limiting: {:.0} ops/sec ({:.2}ms total)", 
              rate_limit_ops_per_sec, rate_limit_duration.as_millis());
 
-    // Overall performance test
     println!("   🧪 Combined operations ({} iterations)", ITERATIONS / 2);
     let start = Instant::now();
     
     for i in 0..(ITERATIONS / 2) {
-        let key = format!("test_key_{}", i);
-        let client_id = format!("client_{}", i % 50);
-        
-        // Combined zero-cost operations
+        let key = format_args!("test_key_{}", i).to_string();
+        let client_id = format_args!("client_{}", i % 50).to_string();
+
         let allowed = server.app_state.rate_limiter.check_limit(&client_id).await;
         if allowed {
             let _ = server.app_state.cache.set_response(
@@ -169,7 +126,6 @@ async fn benchmark_zero_cost_api() -> Result<PerformanceMetrics, Box<dyn std::er
     })
 }
 
-/// Display performance metrics
 fn display_metrics(architecture: &str, metrics: &PerformanceMetrics) {
     println!("📋 {} Architecture Results:", architecture);
     println!("   ⏱️  Total Time: {:.2}ms", metrics.total_time_micros as f64 / 1000.0);
@@ -178,11 +134,9 @@ fn display_metrics(architecture: &str, metrics: &PerformanceMetrics) {
     println!("   🚦 Rate Limit Checks/sec: {:.0}", metrics.rate_limit_checks_per_sec);
 }
 
-/// Analyze performance benefits
 fn analyze_performance_benefits(zero_cost: &PerformanceMetrics) {
     println!("🔹 Zero-Cost Architecture Benefits:");
-    
-    // Theoretical comparison with runtime DI
+
     let estimated_runtime_overhead = 0.15; // 15% estimated overhead
     let estimated_traditional_time = zero_cost.total_time_micros as f64 * (1.0 + estimated_runtime_overhead);
     let performance_improvement = (estimated_traditional_time - zero_cost.total_time_micros as f64) / estimated_traditional_time * 100.0;
@@ -206,11 +160,9 @@ fn analyze_performance_benefits(zero_cost: &PerformanceMetrics) {
     println!("   ❌ Future boxing - Native async throughout");
 }
 
-/// Analyze memory usage patterns
 fn analyze_memory_usage() {
     println!("🔹 Memory Usage Comparison:");
-    
-    // Memory usage analysis
+
     println!("   📊 **Traditional Architecture**:");
     println!("      • Arc<dyn Any + Send + Sync>: ~64 bytes per instance");
     println!("      • Box<dyn Future>: ~32 bytes per async_trait call");
@@ -226,19 +178,16 @@ fn analyze_memory_usage() {
     println!("      • **Total per request: ~0-8 bytes**");
     
     println!("\n   💾 **Memory Improvement: 95%+ reduction in DI overhead**");
-    
-    // Cache memory efficiency
+
     println!("\n🔹 Cache Memory Efficiency:");
     println!("   • Zero-cost cache uses parking_lot::RwLock (24 bytes overhead)");
     println!("   • Traditional cache uses async_trait Box (32+ bytes per operation)");
     println!("   • **Memory efficiency improvement: ~25% for cache operations**");
 }
 
-/// Demonstrate compile-time type safety
 fn demonstrate_type_safety() {
     println!("🔹 Compile-Time Type Safety:");
-    
-    // Type safety examples
+
     println!("   ✅ **Configuration Validation**:");
     println!("      • Invalid const generic parameters → Compile error");
     println!("      • Type mismatches in DI → Compile error");
@@ -254,13 +203,11 @@ fn demonstrate_type_safety() {
     println!("      • Compile-time error checking and warnings");
     println!("      • Accurate go-to-definition and refactoring");
     println!("      • Complete type information in debugger");
-    
-    // Configuration examples
+
     println!("\n🔹 Configuration Examples:");
     
     use beardog_api::api::zero_cost_api::ApiConfig;
-    
-    // These configurations are validated at compile time
+
     const DEV_CONFIG: ApiConfig<1000, 1048576, false, true> = ApiConfig::new("127.0.0.1:8080".to_string());
     const PROD_CONFIG: ApiConfig<30000, 10485760, true, false> = ApiConfig::new("0.0.0.0:8080".to_string());
     
@@ -275,11 +222,9 @@ fn demonstrate_type_safety() {
     println!("   ✨ All validation happens at compile time - zero runtime checks!");
 }
 
-/// Additional performance demonstrations
 mod performance_tests {
     use super::*;
-    
-    /// Demonstrate monomorphization benefits
+
     pub fn demonstrate_monomorphization() {
         println!("🔹 Monomorphization Benefits:");
         println!("   🎯 Each configuration generates specialized machine code:");
@@ -292,12 +237,10 @@ mod performance_tests {
         println!("      • Constant folding for configuration access");
         println!("      • Loop unrolling for cache operations");
     }
-    
-    /// Memory allocation comparison
+
     pub fn memory_allocation_comparison() {
         println!("🔹 Memory Allocation Patterns:");
-        
-        // Stack vs heap analysis
+
         println!("   📚 **Stack Allocations (Zero-Cost)**:");
         println!("      • All DI state: Stack allocated structs");
         println!("      • Configuration: Compile-time constants");
@@ -325,11 +268,10 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to benchmark zero-cost API - check system resources and configuration", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to benchmark zero-cost API - check system resources and configuration", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to benchmark zero-cost API - check system resources and configuration", e).to_string()
 ).into())
 });
-        
-        // Verify performance characteristics
+
         assert!(metrics.cache_operations_per_sec > 50000.0); // Should be very fast
         assert!(metrics.rate_limit_checks_per_sec > 50000.0);
         assert_eq!(metrics.memory_allocations, 0); // Zero DI allocations
@@ -338,14 +280,12 @@ mod tests {
     #[test]
     fn test_compile_time_configuration() {
         use beardog_api::api::zero_cost_api::ApiConfig;
-        
-        // Test that configurations compile to different types
+
         const CONFIG1: ApiConfig<1000, 1024, true, false> = ApiConfig::new("addr1".to_string());
         const CONFIG2: ApiConfig<2000, 2048, false, true> = ApiConfig::new("addr2".to_string());
         
         assert_ne!(CONFIG1.request_timeout_ms(), CONFIG2.request_timeout_ms());
         assert_ne!(CONFIG1.max_request_size(), CONFIG2.max_request_size());
-        
-        // All assertions happen at compile time - zero runtime cost
+
     }
 } 

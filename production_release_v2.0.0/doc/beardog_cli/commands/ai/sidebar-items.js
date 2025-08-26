@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["commands","config","genetics","handlers","hsm","security","types"]};

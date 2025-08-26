@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Integration engine for ecosystem coordination
-/// 
-/// Enhanced for Phase 4: Universal HSM Architecture with full ecosystem integration
 
 use super::{UniversalHsmProvider, SongbirdServiceDiscovery, SongbirdServiceDiscoveryFactory};
 use beardog_types::config::monitoring::IntegrationConfig;
@@ -27,15 +8,14 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn, error};
 
-/// Enhanced Integration Engine with Universal HSM Architecture
 #[derive(Debug)]
 pub struct IntegrationEngine {
     config: IntegrationConfig,
-    /// Universal HSM Provider for vendor-agnostic HSM operations
+
     universal_hsm: Option<Arc<UniversalHsmProvider>>,
-    /// Songbird service discovery for ecosystem integration
+
     songbird_discovery: Option<Arc<RwLock<SongbirdServiceDiscovery>>>,
-    /// Integration status
+
     ecosystem_integrated: bool,
 }
 
@@ -46,7 +26,7 @@ impl Default for IntegrationEngine {
 }
 
 impl IntegrationEngine {
-    /// Create a new integration engine
+
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -57,7 +37,6 @@ impl IntegrationEngine {
         }
     }
 
-    /// Create integration engine from configuration
     pub fn from_config(config: IntegrationConfig) -> Self {
         Self {
             config,
@@ -67,20 +46,16 @@ impl IntegrationEngine {
         }
     }
 
-    /// Initialize Universal HSM Architecture
     pub async fn initialize_universal_hsm(&mut self) -> BearDogResult<()> {
         info!("🔐 Initializing Universal HSM Architecture");
 
-        // Create Songbird service discovery
         let songbird_discovery = SongbirdServiceDiscoveryFactory::create_default();
         let songbird_arc = Arc::new(RwLock::new(songbird_discovery));
 
-        // Create Universal HSM Provider with Songbird integration
         let universal_hsm = UniversalHsmProvider::with_service_discovery(
             songbird_arc.clone() as Arc<dyn super::EcosystemServiceDiscovery + Send + Sync>
         );
 
-        // Store components
         self.universal_hsm = Some(Arc::new(universal_hsm));
         self.songbird_discovery = Some(songbird_arc);
 
@@ -88,16 +63,13 @@ impl IntegrationEngine {
         Ok(())
     }
 
-    /// Integrate with the ecosystem through Songbird service mesh
     pub async fn integrate_with_ecosystem(&mut self) -> BearDogResult<()> {
         info!("🌐 Starting Phase 4: Ecosystem Integration");
 
-        // Initialize Universal HSM if not already done
         if self.universal_hsm.is_none() {
             self.initialize_universal_hsm().await?;
         }
 
-        // Register BearDog with Songbird service mesh
         if let Some(songbird_discovery) = &self.songbird_discovery {
             let mut discovery = songbird_discovery.write().await;
             match discovery.register_beardog_service().await {
@@ -106,12 +78,11 @@ impl IntegrationEngine {
                 }
                 Err(e) => {
                     warn!("Failed to register with Songbird (will retry later): {}", e);
-                    // Don't fail completely - we can operate without Songbird
+
                 }
             }
         }
 
-        // Discover ecosystem HSM providers
         if let Some(universal_hsm) = &self.universal_hsm {
             match universal_hsm.discover_ecosystem_providers().await {
                 Ok(providers) => {
@@ -131,26 +102,21 @@ impl IntegrationEngine {
         Ok(())
     }
 
-    /// Get Universal HSM Provider
     pub fn get_universal_hsm(&self) -> Option<Arc<UniversalHsmProvider>> {
         self.universal_hsm.clone()
     }
 
-    /// Get Songbird service discovery client
     pub fn get_songbird_discovery(&self) -> Option<Arc<RwLock<SongbirdServiceDiscovery>>> {
         self.songbird_discovery.clone()
     }
 
-    /// Check if ecosystem integration is active
     pub fn is_ecosystem_integrated(&self) -> bool {
         self.ecosystem_integrated
     }
 
-    /// Get comprehensive service health status including Universal HSM
     pub async fn get_service_health(&self) -> SystemResult<serde_json::Value> {
         let mut health_status = serde_json::Map::new();
-        
-        // Basic integration engine status
+
         health_status.insert("integration_engine".to_string(), serde_json::json!({
             "status": "healthy",
             "timestamp": chrono::Utc::now().to_rfc3339(),
@@ -158,7 +124,6 @@ impl IntegrationEngine {
             "ecosystem_integrated": self.ecosystem_integrated
         }));
 
-        // Universal HSM status
         if let Some(universal_hsm) = &self.universal_hsm {
             match universal_hsm.get_ecosystem_status().await {
                 Ok(hsm_status) => {
@@ -177,7 +142,6 @@ impl IntegrationEngine {
             }));
         }
 
-        // Songbird connectivity status
         if let Some(songbird_discovery) = &self.songbird_discovery {
             let discovery = songbird_discovery.read().await;
             match discovery.health_check().await {
@@ -204,7 +168,6 @@ impl IntegrationEngine {
             }));
         }
 
-        // Overall ecosystem connectivity
         let ecosystem_status = if self.ecosystem_integrated {
             "operational"
         } else {
@@ -221,7 +184,6 @@ impl IntegrationEngine {
         Ok(serde_json::Value::Object(health_status))
     }
 
-    /// Refresh ecosystem providers and services
     pub async fn refresh_ecosystem_services(&self) -> BearDogResult<()> {
         info!("🔄 Refreshing ecosystem services");
 
@@ -238,8 +200,7 @@ impl IntegrationEngine {
 
         Ok(())
     }
-    
-    /// Get the count of discovered services
+
     async fn get_discovered_services_count(&self) -> BearDogResult<u32> {
         if let Some(universal_hsm) = &self.universal_hsm {
             match universal_hsm.discover_ecosystem_providers().await {

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["EcosystemOptimizationRequest","EcosystemOptimizationResult","NetworkConditions","OptimizationPreferences","PerformanceImprovements","PerformanceRequirements","ResourceAvailability"]};

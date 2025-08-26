@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["adapters","external_systems","monitoring","policies","workflows"],"struct":["IntegrationConfig"]};

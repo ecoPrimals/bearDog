@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["account_management","audit_management","maintenance","metrics_collection","mfa_handling","rate_limiting","session_management","threat_analysis","trait_implementation"]};

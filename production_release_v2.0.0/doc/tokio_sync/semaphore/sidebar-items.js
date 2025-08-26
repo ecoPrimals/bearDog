@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["AcquireError","Permit","Semaphore","TryAcquireError"]};

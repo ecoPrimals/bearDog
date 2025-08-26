@@ -1,28 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Performance Configuration - Canonical
-///
-/// **UNIFIED PERFORMANCE CONFIGURATION** for the BearDog ecosystem
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// **CANONICAL** Async Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AsyncConfig {
     pub max_concurrent_tasks: usize,
@@ -44,7 +24,6 @@ impl Default for AsyncConfig {
     }
 }
 
-/// **CANONICAL** Memory Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryConfig {
     pub initial_heap_size: Option<usize>,
@@ -66,7 +45,6 @@ impl Default for MemoryConfig {
     }
 }
 
-/// **CANONICAL** General Performance Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct GeneralPerformanceConfig {
@@ -77,8 +55,6 @@ pub struct GeneralPerformanceConfig {
     pub timeout_config: TimeoutConfig,
 }
 
-
-/// **CANONICAL** IO Optimization Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IoOptimizationConfig {
     pub enable_async_io: bool,
@@ -98,7 +74,6 @@ impl Default for IoOptimizationConfig {
     }
 }
 
-/// **CANONICAL** Concurrency Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConcurrencyConfig {
     pub max_connections: usize,
@@ -118,7 +93,6 @@ impl Default for ConcurrencyConfig {
     }
 }
 
-/// **CANONICAL** Timeout Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeoutConfig {
     pub connection_timeout: Duration,

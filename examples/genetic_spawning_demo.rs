@@ -1,25 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Genetic Spawning with HSM Integration Demo
-//!
-//! This demo showcases BearDog's genetic spawning capabilities with HSM-backed
-//! cryptographic operations, demonstrating how nodes can securely reproduce
-//! and evolve their genetic profiles.
 
 use beardog::auth::{BearDogGenetics, SpawnPurpose, TaskType};
 use beardog::genetics::{
@@ -43,10 +22,8 @@ async fn main() -> BearDogResult<()> {
     println!("🧬 BearDog Genetic Spawning with HSM Integration Demo");
     println!("=====================================================");
 
-    // Initialize HSM manager with multi-tier configuration
     let hsm_manager = setup_hsm_manager()?;
 
-    // Create genetics store and API
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
     let genetics_config = GeneticsConfig {
         base_mutation_rate: 0.08,
@@ -60,7 +37,6 @@ async fn main() -> BearDogResult<()> {
     let genetics_api =
         GeneticsAPI::with_hsm_manager(genetics_store.clone(), hsm_manager.clone(), genetics_config);
 
-    // Demo 1: Create Genesis Node with HSM-backed genetics
     println!("\n📱 Demo 1: Genesis Node Creation with HSM");
     println!("==========================================");
 
@@ -75,7 +51,6 @@ async fn main() -> BearDogResult<()> {
     );
     println!("   Fitness Score: {:.3}", genesis_genetics.fitness_score);
 
-    // Demo 2: Security Response Spawn
     println!("\n🔒 Demo 2: Security Response Spawning");
     println!("=====================================");
 
@@ -136,7 +111,6 @@ async fn main() -> BearDogResult<()> {
         );
     }
 
-    // Demo 3: Specialized Task Spawning
     println!("\n⚡ Demo 3: Specialized Task Spawning");
     println!("===================================");
 
@@ -207,11 +181,9 @@ async fn main() -> BearDogResult<()> {
         );
     }
 
-    // Demo 4: Multi-Parent Genetic Recombination
     println!("\n👥 Demo 4: Multi-Parent Genetic Recombination");
     println!("===============================================");
 
-    // Create additional parent nodes
     let parent_a_id = "beardog-parent-a";
     let parent_a_genetics = genetics_api.create_genesis_node(parent_a_id).await?;
 
@@ -284,14 +256,11 @@ async fn main() -> BearDogResult<()> {
         );
     }
 
-    // Demo 5: HSM-Backed Cryptographic Operations
     println!("\n🔐 Demo 5: HSM-Backed Cryptographic Operations");
     println!("==============================================");
 
-    // Test HSM operations used in genetic spawning
     println!("Testing HSM operations for genetic spawning:");
 
-    // Test random generation for mutations
     let security_reqs = SecurityRequirements::new(SecurityLevel::Medium);
 
     let random_bytes = hsm_manager
@@ -302,7 +271,6 @@ async fn main() -> BearDogResult<()> {
         random_bytes.len()
     );
 
-    // Test signing for lineage proofs
     let test_data = b"genetic-lineage-proof-test-data";
     let lineage_signature = hsm_manager
         .sign_data(
@@ -317,7 +285,6 @@ async fn main() -> BearDogResult<()> {
         lineage_signature.len()
     );
 
-    // Demo 6: Genetic Diversity Analysis
     println!("\n📊 Demo 6: Genetic Diversity Analysis");
     println!("=====================================");
 
@@ -343,7 +310,6 @@ async fn main() -> BearDogResult<()> {
         diversity_metrics.security_variance
     );
 
-    // Demo 7: HSM Health Status
     println!("\n🏥 Demo 7: HSM Health Status");
     println!("============================");
 
@@ -393,11 +359,9 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Setup HSM manager with multi-tier configuration
 fn setup_hsm_manager() -> BearDogResult<Arc<HsmManager>> {
     let hsm_manager = HsmManager::new();
 
-    // Configure primary tier: Android StrongBox (GrapheneOS/Pixel 8a)
     let primary_tier = HsmTier::SmartphoneHsm {
         device_type: SmartphoneType::Android {
             manufacturer: "Google".to_string(),
@@ -417,7 +381,6 @@ fn setup_hsm_manager() -> BearDogResult<Arc<HsmManager>> {
         user_presence_required: true,
     };
 
-    // Configure fallback tier: Software HSM
     let fallback_tier = HsmTier::SoftwareHsm {
         implementation: beardog::tunnel::hsm::types::SoftwareHsmType::RustSoftwareHsm,
         key_storage: beardog::tunnel::hsm::types::KeyStorageType::EncryptedFile,
@@ -428,7 +391,6 @@ fn setup_hsm_manager() -> BearDogResult<Arc<HsmManager>> {
     Ok(Arc::new(hsm_manager))
 }
 
-/// Genetic diversity analysis metrics
 struct GeneticDiversityMetrics {
     average_fitness: f64,
     min_generation: u32,
@@ -437,7 +399,6 @@ struct GeneticDiversityMetrics {
     security_variance: f64,
 }
 
-/// Analyze genetic diversity across multiple nodes
 async fn analyze_genetic_diversity(
     genetics_api: &GeneticsAPI,
     node_ids: &[&str],
@@ -467,7 +428,6 @@ async fn analyze_genetic_diversity(
         .max()
         .unwrap_or(0);
 
-    // Calculate capability diversity (unique capabilities / total capabilities)
     let mut all_capabilities = std::collections::HashSet::new();
     let mut total_capabilities = 0;
 
@@ -484,7 +444,6 @@ async fn analyze_genetic_diversity(
         0.0
     };
 
-    // Calculate security trait variance
     let trust_levels: Vec<f64> = genetics_samples
         .iter()
         .map(|g| g.security_traits.trust_threshold)

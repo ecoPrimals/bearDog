@@ -1,27 +1,6 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 #!/usr/bin/env rust-script
-//! BearDog Specialized Unwrap Migrator
-//!
-//! This tool systematically migrates unwrap/expect calls in the BearDog codebase
-//! to use the existing BearDogError system with proper error handling patterns.
-//!
-//! Usage: cargo run --bin beardog-unwrap-migrator -- [OPTIONS]
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -29,41 +8,36 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::fs;
 use regex::Regex;
 
-/// BearDog-specific unwrap migrator
 pub struct BearDogUnwrapMigrator {
-    /// Migration patterns specific to BearDog's error system
+
     error_patterns: HashMap<String, MigrationPattern>,
-    /// Files processed counter
+
     files_processed: AtomicU64,
-    /// Migrations applied counter
+
     migrations_applied: AtomicU64,
-    /// Dry run mode
+
     dry_run: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct MigrationPattern {
-    /// Regex pattern to match
+
     pub pattern: String,
-    /// Replacement template using BearDogError
+
     pub replacement: String,
-    /// BearDog error category
+
     pub error_category: String,
-    /// Context description
+
     pub context: String,
-    /// Priority level (higher = more critical)
+
     pub priority: u8,
 }
 
 impl BearDogUnwrapMigrator {
-    /// Create new BearDog-specific migrator
+
     pub fn new(dry_run: bool) -> Self {
-        let mut error_patterns = HashMap::new();
-        
-        // ===============================================================
-        // CRITICAL SECURITY PATTERNS (Priority 10 - Highest)
-        // ===============================================================
-        
+        let mut error_patterns = HashMap::with_capacity(16);
+
         error_patterns.insert(
             "crypto_unwrap".to_string(),
             MigrationPattern {
@@ -103,10 +77,6 @@ impl BearDogUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // HSM & HARDWARE PATTERNS (Priority 9)
-        // ===============================================================
-        
         error_patterns.insert(
             "hsm_unwrap".to_string(),
             MigrationPattern {
@@ -120,10 +90,6 @@ impl BearDogUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // LOCK & CONCURRENCY PATTERNS (Priority 8)
-        // ===============================================================
-        
         error_patterns.insert(
             "lock_unwrap".to_string(),
             MigrationPattern {
@@ -166,10 +132,6 @@ impl BearDogUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // JSON & SERIALIZATION PATTERNS (Priority 7)
-        // ===============================================================
-        
         error_patterns.insert(
             "json_to_string_unwrap".to_string(),
             MigrationPattern {
@@ -209,16 +171,12 @@ impl BearDogUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // CONFIGURATION & ENVIRONMENT PATTERNS (Priority 6)
-        // ===============================================================
-        
         error_patterns.insert(
             "env_var_unwrap".to_string(),
             MigrationPattern {
                 pattern: r#"std::env::var\("([^"]+)"\)\.unwrap\(\)"#.to_string(),
                 replacement: r#"std::env::var("$1").map_err(|_| BearDogError::Configuration { 
-                    message: format!("Missing required environment variable: {}", "$1") 
+                    message: format_args!("Missing required environment variable: {}", "$1").to_string() 
                 })?"#.to_string(),
                 error_category: "BearDogError::Configuration".to_string(),
                 context: "Environment variable access".to_string(),
@@ -231,7 +189,7 @@ impl BearDogUnwrapMigrator {
             MigrationPattern {
                 pattern: r#"std::env::var\("([^"]+)"\)\.expect\("([^"]+)"\)"#.to_string(),
                 replacement: r#"std::env::var("$1").map_err(|_| BearDogError::Configuration { 
-                    message: format!("Missing environment variable {}: {}", "$1", "$2") 
+                    message: format_args!("Missing environment variable {}: {}", "$1", "$2").to_string() 
                 })?"#.to_string(),
                 error_category: "BearDogError::Configuration".to_string(),
                 context: "Environment variable access with message".to_string(),
@@ -239,10 +197,6 @@ impl BearDogUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // NETWORK & HTTP PATTERNS (Priority 5)
-        // ===============================================================
-        
         error_patterns.insert(
             "http_send_unwrap".to_string(),
             MigrationPattern {
@@ -256,10 +210,6 @@ impl BearDogUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // FILE I/O PATTERNS (Priority 4)
-        // ===============================================================
-        
         error_patterns.insert(
             "file_read_unwrap".to_string(),
             MigrationPattern {
@@ -286,10 +236,6 @@ impl BearDogUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // COLLECTION & PARSING PATTERNS (Priority 3)
-        // ===============================================================
-        
         error_patterns.insert(
             "parse_unwrap".to_string(),
             MigrationPattern {
@@ -316,10 +262,6 @@ impl BearDogUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // GENERAL PATTERNS (Priority 1-2)
-        // ===============================================================
-        
         error_patterns.insert(
             "general_unwrap".to_string(),
             MigrationPattern {
@@ -338,7 +280,7 @@ impl BearDogUnwrapMigrator {
             MigrationPattern {
                 pattern: r#"\.expect\("([^"]+)"\)"#.to_string(),
                 replacement: r#".map_err(|e| BearDogError::Internal { 
-                    message: format!("{}: {:?}", "$1", e) 
+                    message: format_args!("{}: {:?}", "$1", e).to_string() 
                 })?"#.to_string(),
                 error_category: "BearDogError::Internal".to_string(),
                 context: "General expect patterns".to_string(),
@@ -354,7 +296,6 @@ impl BearDogUnwrapMigrator {
         }
     }
 
-    /// Migrate entire BearDog codebase
     pub fn migrate_codebase(&self, root_path: &Path) -> Result<MigrationReport, Box<dyn std::error::Error>> {
         println!("🚀 Starting BearDog Unwrap Migration");
         println!("📁 Target path: {}", root_path.display());
@@ -368,11 +309,10 @@ impl BearDogUnwrapMigrator {
         let mut report = MigrationReport {
             files_processed: 0,
             total_changes: 0,
-            file_changes: HashMap::new(),
+            file_changes: HashMap::with_capacity(16),
             patterns_used: Vec::new(),
         };
-        
-        // Sort patterns by priority (highest first)
+
         let mut sorted_patterns: Vec<_> = self.error_patterns.iter().collect();
         sorted_patterns.sort_by(|a, b| b.1.priority.cmp(&a.1.priority));
         
@@ -403,8 +343,7 @@ impl BearDogUnwrapMigrator {
         Ok(report)
     }
 
-    /// Migrate a single file
-    fn migrate_file(&self, file_path: &Path, patterns: &[(&String, &MigrationPattern)]) -> Result<usize, Box<dyn std::error::Error>> {
+    fn migrate_file(&self, file_path: &Path, patterns: &[(&&str, &MigrationPattern)]) -> Result<usize, Box<dyn std::error::Error>> {
         let content = fs::read_to_string(file_path)?;
         let mut modified_content = content.clone();
         let mut changes_made = 0;
@@ -423,8 +362,7 @@ impl BearDogUnwrapMigrator {
                 }
             }
         }
-        
-        // Write back if changes were made and not in dry run mode
+
         if changes_made > 0 && !self.dry_run {
             fs::write(file_path, modified_content)?;
         }
@@ -432,7 +370,6 @@ impl BearDogUnwrapMigrator {
         Ok(changes_made)
     }
 
-    /// Discover all Rust files in the codebase
     fn discover_rust_files(&self, root_path: &Path) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
         let mut rust_files = Vec::new();
         
@@ -442,7 +379,7 @@ impl BearDogUnwrapMigrator {
                 let path = entry.path();
                 
                 if path.is_dir() {
-                    // Skip target directories, .git, and other non-source directories
+
                     if let Some(dir_name) = path.file_name() {
                         if dir_name == "target" || dir_name == ".git" || dir_name == "node_modules" {
                             continue;
@@ -450,7 +387,7 @@ impl BearDogUnwrapMigrator {
                     }
                     visit_dir(&path, rust_files)?;
                 } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
-                    // Skip test files and examples for production migration
+
                     if let Some(path_str) = path.to_str() {
                         if !path_str.contains("/tests/") && !path_str.contains("/examples/") {
                             rust_files.push(path);
@@ -465,7 +402,6 @@ impl BearDogUnwrapMigrator {
         Ok(rust_files)
     }
 
-    /// Get migration statistics
     pub fn get_statistics(&self) -> MigrationStatistics {
         MigrationStatistics {
             files_processed: self.files_processed.load(Ordering::SeqCst),
@@ -492,15 +428,15 @@ pub struct MigrationStatistics {
 
 impl MigrationReport {
     pub fn generate_summary(&self) -> String {
-        let mut summary = String::new();
+        let mut summary = String::with_capacity(64);
         
         summary.push_str("🎉 BEARDOG UNWRAP MIGRATION REPORT\n");
         summary.push_str("==================================\n\n");
         
         summary.push_str(&format!("📊 Statistics:\n"));
-        summary.push_str(&format!("  • Files Processed: {}\n", self.files_processed));
-        summary.push_str(&format!("  • Total Changes: {}\n", self.total_changes));
-        summary.push_str(&format!("  • Files Modified: {}\n", self.file_changes.len()));
+        summary.push_str(&format_args!("  • Files Processed: {}\n", self.files_processed).to_string());
+        summary.push_str(&format_args!("  • Total Changes: {}\n", self.total_changes).to_string());
+        summary.push_str(&format_args!("  • Files Modified: {}\n", self.file_changes.len().to_string()));
         
         if !self.file_changes.is_empty() {
             summary.push_str("\n📝 Modified Files (Top 10):\n");
@@ -508,8 +444,8 @@ impl MigrationReport {
             sorted_files.sort_by(|a, b| b.1.cmp(a.1));
             
             for (file, changes) in sorted_files.iter().take(10) {
-                summary.push_str(&format!("  • {} ({} changes)\n", 
-                    file.file_name().unwrap_or_default().to_string_lossy(), changes));
+                summary.push_str(&format_args!("  • {} ({} changes)\n", 
+                    file.file_name().to_string().unwrap_or_default().to_string_lossy(), changes));
             }
         }
         

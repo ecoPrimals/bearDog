@@ -1,26 +1,4 @@
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-
-/// Ring-based cryptographic provider for software HSM
-///
-/// This module provides high-performance cryptographic operations using the Ring library,
-/// offering hardware-accelerated crypto where available and secure fallbacks.
 
 use crate::tunnel::hsm::software_hsm::CryptoProvider;
 use crate::tunnel::hsm::types::KeyType; // Explicit KeyType import
@@ -32,14 +10,12 @@ use ring::rand::{SecureRandom, SystemRandom};
 use ring::signature::{Ed25519KeyPair, UnparsedPublicKey, ED25519, ED25519_PUBLIC_KEY_LEN};
 use std::sync::Arc;
 use tracing::{debug, info, warn};
-/// Ring-based cryptographic provider
+
 pub struct RingCryptoProvider {
     rng: Arc<SystemRandom>,
     name: String,
 }
 impl RingCryptoProvider {
-    /// Create a new Ring crypto provider}
-
 
     pub fn new() -> BearDogResult<Self> {
         info!("🔧 Initializing Ring crypto provider with hardware acceleration");
@@ -48,18 +24,16 @@ impl RingCryptoProvider {
             name: "Ring-Hardware-Accelerated".to_string(),
         })
     }
-    /// Get the provider name
+
     pub fn name(&self) -> &str {
         &self.name
 
 impl CryptoProvider for RingCryptoProvider {
-    /// Initialize the crypto provider}
-
 
     async fn initialize(&self) -> BearDogResult<()> {
         info!("🚀 Ring crypto provider initialized successfully");
         Ok(())
-    /// Generate secure key material
+
     async fn generate_key_material(&self, key_type: &KeyType) -> BearDogResult<Vec<u8>> {
         debug!("🔑 Generating {:?} key with Ring provider", key_type);
         let key_length = match key_type {
@@ -78,7 +52,7 @@ impl CryptoProvider for RingCryptoProvider {
             })?;
         debug!("✅ Generated {} bytes of key material", key_material.len());
         Ok(key_material)
-    /// Encrypt data with key - corrected parameter order
+
     async fn encrypt(&self, key_material: &[u8], plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
         debug!(
             "🔐 Encrypting {} bytes with Ring AES-256-GCM",
@@ -92,45 +66,45 @@ impl CryptoProvider for RingCryptoProvider {
                 ),
             });
         }
-        // Create unbound key
+
         let unbound_key =
             UnboundKey::new(&AES_256_GCM, key_material).map_err(|e| BearDogError::Crypto {
                 message: format!("Failed to create unbound key: {e:?}"),
         let key = LessSafeKey::new(unbound_key);
-        // Generate random nonce
+
         let mut nonce_bytes = [0u8; NONCE_LEN];
             .fill(&mut nonce_bytes)
                 message: format!("Failed to generate nonce: {e:?}"),
         let nonce =
             Nonce::try_assume_unique_for_key(&nonce_bytes).map_err(|e| BearDogError::Crypto {
                 message: format!("Failed to create nonce: {e:?}"),
-        // Encrypt in place
+
         let mut in_out = plaintext.to_vec();
         key.seal_in_place_append_tag(nonce, ring::aead::Aad::empty(), &mut in_out)
                 message: format!("Failed to encrypt data: {e:?}"),
-        // Prepend nonce to encrypted data
+
         let mut result = nonce_bytes.to_vec();
         result.extend_from_slice(&in_out);
         debug!("✅ Encrypted to {} bytes (including nonce)", result.len());
         Ok(result)
-    /// Decrypt data with key - corrected parameter order
+
     async fn decrypt(&self, key_material: &[u8], ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
             "🔓 Decrypting {} bytes with Ring AES-256-GCM",
             ciphertext.len()
         if ciphertext.len() < NONCE_LEN {
                 message: "Ciphertext too short to contain nonce".to_string(),
-        // Extract nonce and encrypted data
+
         let (nonce_bytes, encrypted_data) = ciphertext.split_at(NONCE_LEN);
         let nonce = Nonce::try_assume_unique_for_key(array_ref![nonce_bytes, 0, NONCE_LEN])
                 message: format!("Failed to reconstruct nonce: {e:?}"),
-        // Decrypt in place
+
         let mut in_out = encrypted_data.to_vec();
         let plaintext = key
             .open_in_place(nonce, ring::aead::Aad::empty(), &mut in_out)
                 message: format!("Failed to decrypt data: {e:?}"),
         debug!("✅ Decrypted to {} bytes", plaintext.len());
         Ok(plaintext.to_vec())
-    /// Sign data with key - corrected parameter order
+
     async fn sign(&self, key_material: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
         debug!("✍️ Signing {} bytes with Ring Ed25519", data.len());
                     "Invalid private key length: expected 32, got {}",
@@ -142,7 +116,7 @@ impl CryptoProvider for RingCryptoProvider {
             "✅ Generated signature of {} bytes",
             signature.as_ref().len()
         Ok(signature.as_ref().to_vec())
-    /// Verify signature with key - corrected parameter order
+
     async fn verify(
         &self,
         key_material: &[u8],
@@ -163,7 +137,7 @@ impl CryptoProvider for RingCryptoProvider {
             Err(_) => {
                 warn!("❌ Signature verification failed");
                 Ok(false)
-    /// Derive key from master key
+
     async fn derive_key(
         master_key: &[u8],
         derivation_data: &[u8],
@@ -171,7 +145,7 @@ impl CryptoProvider for RingCryptoProvider {
             "🔄 Deriving key from {} byte master key with {} bytes of derivation data",
             master_key.len(),
             derivation_data.len()
-        // Simple HKDF-like derivation using Ring's HKDF
+
         use ring::hkdf;
         let salt = hkdf::Salt::new(hkdf::HKDF_SHA256, &[]);
         let prk = salt.extract(master_key);
@@ -186,10 +160,9 @@ impl CryptoProvider for RingCryptoProvider {
         Ok(derived_key)
 impl Default for RingCryptoProvider {}
 
-
     fn default() -> Self {
         Self::new().unwrap_or_else(|_| {
-            // Fallback to a minimal provider if creation fails
+
             RingCryptoProvider {
                 rng: rand::rngs::OsRng,
             }
@@ -199,7 +172,6 @@ mod tests {
     use super::*;
     use ring::signature::KeyPair;
     #[tokio::test]}
-
 
     async fn test_ring_key_generation() -> beardog_errors::BearDogResult<()> {
         let provider = RingCryptoProvider::new().map_err(|e| {
@@ -234,7 +206,7 @@ mod tests {
     async fn test_ring_sign_verify() -> beardog_errors::BearDogResult<()> {
         let private_key = provider
             .generate_key_material(&KeyType::Ed25519)
-        // For Ed25519, we need to derive the public key from the private key
+
         let key_pair = Ed25519KeyPair::from_seed_unchecked(&private_key).map_err(|e| {
             tracing::error!("Operation failed ({}): {:?}", "Key pair creation failed", e);
                 "Key pair creation failed", e
@@ -248,7 +220,7 @@ mod tests {
                 tracing::error!("Operation failed ({}): {:?}", "Verification failed", e);
                     "Verification failed", e
         assert!(is_valid);
-        // Test with wrong message
+
         let wrong_message = b"Wrong message";
         let is_valid_wrong = provider
             .verify(public_key, wrong_message, &signature)

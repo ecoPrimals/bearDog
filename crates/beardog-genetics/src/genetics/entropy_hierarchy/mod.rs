@@ -1,74 +1,12 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Entropy Hierarchy System for Self-Sovereign Cryptographic Seeds
-///
-/// **Revolutionary entropy hierarchy that recognizes human-lived experience
-/// entropy as fundamentally superior to "store-bought compute random"**
-/// This module implements the core concepts from the updated specification:
-/// - Self-sovereign entropy seeds with configurable lifetimes
-/// - Event-based seed sharing for concerts, conferences, communities
-/// - Ownership transfer and expiration with downstream effects
-/// - Generative crypto capabilities for creative and social purposes
-/// ## Architecture
-/// The entropy hierarchy system is composed of several focused modules:
-/// - `types`: All type definitions, enums, and data structures
-/// - `seed`: EntropySeed implementation with lifecycle management
-/// - `engine`: Core EntropyHierarchyManager orchestration
-/// - `sources`: Entropy source management and mixing engine
-/// - `validation`: Quality validation and cryptographic proof generation
-/// - `monitoring`: Statistics, health monitoring, and cleanup operations
-/// ## Usage
-/// ```rust
-/// use beardog_genetics::genetics::entropy_hierarchy::{
-///     EntropyHierarchyManager, EntropyHierarchyConfig, EntropyClass, HumanIdentity
-/// };
-/// // Create manager with configuration
-/// let config = EntropyHierarchyConfig::default();
-/// let manager = EntropyHierarchyManager::new(config, hsm_manager, human_entropy_collector);
-/// // Create human entropy seed
-/// let seed_id = manager.create_human_seed(
-///     entropy_class,
-///     lifetime_policy,
-///     owner_identity,
-///     seed_bytes
-/// ).await?;
-/// ```
-/// ## Three-Tier Hierarchy
-/// 1. **Human-Lived Experience Entropy** (Highest Tier)
-///    - From microphone, camera, haptic sensors
-///    - Irreproducible and uniquely owned
-///    - Cannot be replicated by machines
-/// 2. **Human-Supervised Machine Entropy** (Mid Tier)
-///    - Machine-generated but human-validated
-///    - Reproducible but authenticated
-/// 3. **Store-Bought Machine Entropy** (Lowest Tier)
-///    - Standard CSPRNG, hardware RNG
-///    - Reproducible and "store-bought compute random"
-///    - Default for all-machine operations
-
-// Public module declarations
 pub mod engine;
 pub mod monitoring;
 pub mod seed;
 pub mod sources;
 pub mod types;
 pub mod validation;
-// Re-export commonly used types and structures
+
 pub use engine::{EntropyHierarchyManager, EntropyQualityAssessment};
 pub use monitoring::{EntropyAnalytics, EntropyHealthStatus, HealthLevel, PerformanceMetrics};
 pub use sources::EntropyMixingEngine;
@@ -81,22 +19,21 @@ pub use types::{
     TransferPermissions, VerificationLevel,
 };
 pub use validation::EntropyValidator;
-// Re-export seed implementation
+
 #[cfg(test)]
 mod tests {};
 
-
     use super::*;
     use crate::genetics::human_entropy;
-    // use beardog_tunnel::tunnel::hsm::manager::HsmManager;
+
     use beardog_errors::BearDogResult;
     use chrono::Utc;
     use std::sync::Arc;
 use beardog_errors::{BearDogError, BearDogResult};
-    // use beardog_tunnel::tunnel::hsm::android_strongbox::EntropySource;
+
     async fn create_test_manager() -> BearDogResult<EntropyHierarchyManager> {
         let config = EntropyHierarchyConfig::default();
-        // let hsm_manager = Arc::new(HsmManager::new()); // Changed from new_for_testing()
+
         let human_config = human_entropy::create_default_config();
         let human_entropy_collector = Arc::new(
             human_entropy::MultiModalHumanEntropyCollector::new(human_config),
@@ -109,18 +46,17 @@ use beardog_errors::{BearDogError, BearDogResult};
     #[tokio::test]
     async fn test_entropy_hierarchy_creation() -> BearDogResult<()> {
         let manager = create_test_manager().await?;
-        // Verify initial state
+
         let stats = manager.get_statistics();
         assert_eq!(stats.total_seeds, 0);
         assert_eq!(stats.human_entropy_seeds, 0);
-        // Verify health status - empty system should have some warnings but not necessarily "Good"
+
         let health = manager.get_health_status();
         assert!(matches!(
             health.overall_health,
             HealthLevel::Good | HealthLevel::Warning | HealthLevel::Poor
         ));
         Ok(())}
-
 
     async fn test_human_entropy_seed_creation() -> BearDogResult<()> {
         let mut manager = create_test_manager().await?;
@@ -148,7 +84,7 @@ use beardog_errors::{BearDogError, BearDogResult};
         let seed_id = manager
             .create_human_seed(entropy_class, lifetime_policy, owner, vec![1, 2, 3, 4, 5])
             .await?;
-        // Verify seed was created
+
         let seed = manager.get_seed(&seed_id).ok_or_else(|| {
             tracing::error!("Operation failed: seed not found");
             beardog_errors::GeneticsError::InternalError { reason: "Operation failed: seed not found".to_string(), context: create_genetics_context(), metadata: GeneticsMetadata::default(), improvement: None }
@@ -178,7 +114,6 @@ use beardog_errors::{BearDogError, BearDogResult};
         assert_eq!(manager.get_statistics().event_seeds, 1);
     #[test]}
 
-
     fn test_entropy_hierarchy_precedence() -> beardog_errors::BearDogResult<()> {
         let mixer = EntropyMixingEngine::new(config);
         let human_entropy = EntropyClass::HumanLivedExperience {
@@ -195,9 +130,9 @@ use beardog_errors::{BearDogError, BearDogResult};
             .mix_entropy_sources(vec![machine_entropy, human_entropy.clone()])
             .map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
-                beardog_errors::GeneticsError::InternalError { reason: format!("Operation failed: {:?}", e), context: create_genetics_context(), metadata: GeneticsMetadata::default(), improvement: None }
+                beardog_errors::GeneticsError::InternalError { reason: format_args!("Operation failed: {:?}", e).to_string(), context: create_genetics_context(), metadata: GeneticsMetadata::default(), improvement: None }
             })?;
-        // Human entropy should dominate
+
         assert!(matches!(mixed, EntropyClass::HumanLivedExperience { .. }));
     async fn test_seed_usage_and_lifecycle() -> BearDogResult<()> {
             verification_level: VerificationLevel::CryptographicProof,
@@ -222,13 +157,13 @@ use beardog_errors::{BearDogError, BearDogResult};
                 owner.clone(),
                 vec![5, 4, 3, 2, 1],
             )
-        // Test seed usage
+
         let result = manager.use_seed(&seed_id, "key_derivation")?;
         assert!(!result.is_empty());
-        // Test seed information retrieval
+
         assert_eq!(seed.usage_history.len(), 1);
         assert_eq!(seed.get_entropy_tier(), 3); // Human-lived experience
-        // Test ownership verification
+
         if let Some(current_owner) = seed.get_current_owner() {
             assert_eq!(current_owner.identity_id, "test_user");
         }
@@ -239,12 +174,11 @@ use beardog_errors::{BearDogError, BearDogResult};
         assert!(assessment.quality_score > 0.7);
         assert!(!assessment.recommendations.is_empty());}
 
-
     async fn test_health_monitoring() -> BearDogResult<()> {
-        // Create a few different types of seeds
+
             identity_id: "health_test_user".to_string(),
             verification_level: VerificationLevel::MultiFactorBiometric,
-        // Human entropy seed
+
             source_type: HumanEntropySource::Haptic {
                 duration_ms: 3000,
                 touch_points: vec![(0.1, 0.2), (0.3, 0.4), (0.5, 0.6)],
@@ -256,7 +190,7 @@ use beardog_errors::{BearDogError, BearDogResult};
                     ownership_expiration: None,
                 },
                 vec![1, 2, 3],
-        // Event entropy seed to improve diversity
+
         let social_context = SocialContext {
             event_type: EventType::Community {
                 group_name: "BearDog Test Community".to_string(),
@@ -270,13 +204,12 @@ use beardog_errors::{BearDogError, BearDogResult};
             allowed_operations: vec!["read".to_string(), "derive".to_string()],
         let _seed2 = manager
             .create_event_seed(social_context, sharing_policy, owner.clone(), vec![4, 5, 6])
-        // Check health status - system should be healthy after creating multiple entropy sources
-        // Accept all health levels except Poor since we've created diverse entropy sources
+
         assert!(!matches!(health.overall_health, HealthLevel::Poor));
-        // Get performance metrics
+
         let metrics = manager.get_performance_metrics();
         assert_eq!(metrics.total_operations, 0); // No operations performed yet
-        // Get detailed analytics
+
         let analytics = manager.get_detailed_analytics();
         assert!(analytics.human_entropy_count > 0);
 }

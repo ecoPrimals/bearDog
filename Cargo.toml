@@ -7,6 +7,7 @@ members = [
     "crates/beardog-utils",
     "crates/beardog-security",
     "crates/beardog-auth",
+    "crates/beardog-api",
     "crates/beardog-compliance",
     "crates/beardog-monitoring", 
     "crates/beardog-genetics",
@@ -45,8 +46,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
 
-# Async traits (legacy support)
-async-trait = "0.1"
+# Async traits (legacy support) - REMOVED: Modernized to native async fn
+# async-trait = "0.1"
 
 # Time and UUIDs
 chrono = { version = "0.4", features = ["serde"] }
@@ -101,6 +102,7 @@ beardog-traits = { path = "crates/beardog-traits" }
 beardog-utils = { path = "crates/beardog-utils" }
 beardog-security = { path = "crates/beardog-security" }
 beardog-auth = { path = "crates/beardog-auth" }
+beardog-api = { path = "crates/beardog-api" }
 beardog-compliance = { path = "crates/beardog-compliance" }
 beardog-monitoring = { path = "crates/beardog-monitoring" }
 beardog-genetics = { path = "crates/beardog-genetics" }

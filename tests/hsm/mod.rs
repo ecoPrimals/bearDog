@@ -1,28 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! HSM Comprehensive Test Suite
-//!
-//! Modular test organization for Hardware Security Module testing:
-//! - HSM provider implementations (Android StrongBox, Software HSM)
-//! - HSM manager tier selection and failover
-//! - HSM integration with genetic spawning
-//! - Security validation and error handling
-//! - Performance benchmarks for GrapheneOS deployment
 
 use beardog::genetics::entropy_hierarchy::EntropyHierarchy;
 use beardog::genetics::spawning::GeneticSpawningEngine;
@@ -58,7 +34,6 @@ pub mod security_validation_tests;
 pub mod performance_tests;
 pub mod integration_tests;
 
-/// Comprehensive HSM test harness
 pub struct HsmTestHarness {
     pub hsm_manager: Arc<HsmManager>,
     pub android_strongbox: Arc<AndroidStrongBoxHsm>,
@@ -81,14 +56,12 @@ pub struct HsmTestMetrics {
 }
 
 impl HsmTestHarness {
-    /// Initialize comprehensive HSM test harness
+
     pub async fn new() -> BearDogResult<Self> {
         println!("🔐 Initializing HSM Test Harness");
 
-        // Create HSM Manager
         let hsm_manager = Arc::new(HsmManager::new());
 
-        // Create Android StrongBox HSM (for Pixel 8a testing)
         let android_config = AndroidHsmConfig {
             manufacturer: "Google".to_string(),
             model: "Pixel 8a".to_string(),
@@ -111,7 +84,6 @@ impl HsmTestHarness {
 
         let android_strongbox = Arc::new(AndroidStrongBoxHsm::new(android_config).await?);
 
-        // Create Software HSM
         let software_config = SoftwareHsmConfig {
             implementation: SoftwareHsmType::RustCrypto,
             key_store_config: KeyStoreConfig {
@@ -133,7 +105,6 @@ impl HsmTestHarness {
 
         let software_hsm = Arc::new(RustSoftwareHsm::new(software_config).await?);
 
-        // Create Genetics API for testing genetic spawning integration
         let genetics_store = Arc::new(InMemoryGeneticsStore::new());
         let hsm_manager_for_genetics = hsm_manager.clone();
         let genetics_config = GeneticsConfig::default();
@@ -148,12 +119,10 @@ impl HsmTestHarness {
         })
     }
 
-    /// Run comprehensive HSM test suite
     pub async fn run_comprehensive_tests(&mut self) -> BearDogResult<()> {
         println!("🚀 Running Comprehensive HSM Test Suite");
         println!("════════════════════════════════════════");
 
-        // Run all test modules
         provider_tests::test_hsm_providers(self).await?;
         manager_tests::test_hsm_manager(self).await?;
         genetic_integration_tests::test_genetic_spawning_integration(self).await?;
@@ -166,7 +135,6 @@ impl HsmTestHarness {
         Ok(())
     }
 
-    /// Record operation timing for metrics
     pub fn record_operation(&mut self, latency_ms: f64, hsm_type: &str, success: bool) {
         self.test_metrics.total_operations += 1;
         
@@ -176,7 +144,6 @@ impl HsmTestHarness {
             self.test_metrics.failed_operations += 1;
         }
 
-        // Update latency statistics
         if self.test_metrics.total_operations == 1 {
             self.test_metrics.min_latency_ms = latency_ms;
             self.test_metrics.max_latency_ms = latency_ms;
@@ -184,14 +151,12 @@ impl HsmTestHarness {
         } else {
             self.test_metrics.min_latency_ms = self.test_metrics.min_latency_ms.min(latency_ms);
             self.test_metrics.max_latency_ms = self.test_metrics.max_latency_ms.max(latency_ms);
-            
-            // Running average
+
             let n = self.test_metrics.total_operations as f64;
             self.test_metrics.average_latency_ms = 
                 (self.test_metrics.average_latency_ms * (n - 1.0) + latency_ms) / n;
         }
 
-        // Track HSM type usage
         match hsm_type {
             "strongbox" => self.test_metrics.strongbox_operations += 1,
             "software" => self.test_metrics.software_operations += 1,
@@ -199,7 +164,6 @@ impl HsmTestHarness {
         }
     }
 
-    /// Generate comprehensive test report
     pub fn generate_test_report(&self) {
         println!("📊 HSM Test Report");
         println!("═══════════════════");
@@ -237,7 +201,6 @@ impl HsmTestHarness {
     }
 }
 
-/// Main HSM comprehensive test entry point
 #[tokio::test]
 async fn test_hsm_comprehensive_suite() -> BearDogResult<()> {
     println!("🔐 Starting HSM Comprehensive Test Suite");

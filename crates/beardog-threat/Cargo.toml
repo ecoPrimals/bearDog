@@ -7,14 +7,13 @@ description = "BearDog threat module"
 authors.workspace = true
 
 [dependencies]
-beardog-errors = { workspace = true }
-# beardog-config removed - use beardog-types::config::complete_unified
-beardog-types = { workspace = true }
-tokio = { workspace = true }
+anyhow = { workspace = true }
+# async-trait = { workspace = true }  # REMOVED: Modernized to native async fn
+beardog-errors = { path = "../beardog-errors" }
+beardog-types = { path = "../beardog-types" }
+chrono = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-chrono = { workspace = true }
+tokio = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
-# Removed unused dependencies: async-trait, futures, rand, thiserror
-ipnet = "2.9"

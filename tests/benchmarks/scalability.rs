@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Scalability and Concurrency Benchmarking
-//!
-//! Benchmarks for concurrent operations, load testing, and scalability analysis.
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
 use beardog::BearDogResult;
@@ -28,11 +9,9 @@ use std::sync::{
 use std::time::Instant;
 use tracing::info;
 
-/// Benchmark scalability and concurrency
 pub async fn benchmark_scalability(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
-    // Concurrent operations benchmarks
     for &concurrency in &suite.config.concurrency_levels {
         let result = benchmark_concurrent_operations(suite, concurrency).await?;
         results.push(result);
@@ -41,7 +20,6 @@ pub async fn benchmark_scalability(suite: &mut PerformanceBenchmarkSuite) -> Bea
     Ok(results)
 }
 
-/// Benchmark concurrent operations
 async fn benchmark_concurrent_operations(suite: &PerformanceBenchmarkSuite, concurrency: usize) -> BearDogResult<BenchmarkResult> {
     info!("  📈 Benchmarking concurrent operations with {} threads", concurrency);
 
@@ -51,7 +29,6 @@ async fn benchmark_concurrent_operations(suite: &PerformanceBenchmarkSuite, conc
     let mut tasks = Vec::new();
     let benchmark_start = Instant::now();
 
-    // Create concurrent tasks
     for _i in 0..concurrency {
         let core = Arc::clone(&suite.core);
         let ops_counter = Arc::clone(&successful_ops);
@@ -72,7 +49,7 @@ async fn benchmark_concurrent_operations(suite: &PerformanceBenchmarkSuite, conc
     }).push(latency);
                     }
                     Err(_) => {
-                        // Record failed operation
+
                     }
                 }
             }
@@ -81,7 +58,6 @@ async fn benchmark_concurrent_operations(suite: &PerformanceBenchmarkSuite, conc
         tasks.push(task);
     }
 
-    // Wait for all tasks to complete
     for task in tasks {
         let _ = task.await;
     }
@@ -105,7 +81,7 @@ async fn benchmark_concurrent_operations(suite: &PerformanceBenchmarkSuite, conc
     let meets_threshold = ops_per_second >= suite.config.thresholds.min_throughput_ops_per_sec;
 
     Ok(BenchmarkResult {
-        name: format!("Concurrent Operations ({})", concurrency),
+        name: format_args!("Concurrent Operations ({})", concurrency).to_string(),
         operations_per_second: ops_per_second,
         average_latency_ms: average_latency,
         p50_latency_ms: p50_latency,

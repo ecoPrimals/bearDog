@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ExternalAuthType","ExternalLoadBalancingAlgorithm","ServiceDiscoveryMethod"],"struct":["ExternalCircuitBreakerConfig","ExternalLoadBalancingConfig","ExternalRetryConfig","ExternalServiceAuth","ExternalServiceConfig","ExternalServicesConfig","ServiceDiscoveryConfig","ServiceHealthConfig","ServiceMetadata","ServiceRegistrationConfig"]};

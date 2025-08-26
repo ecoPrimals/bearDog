@@ -1,71 +1,44 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Event Correlation Types
-///
-/// This module contains types for event correlation analysis and results.
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-/// Event correlation result structure
-/// Contains the results of correlating security events
-/// to identify related activities or attack patterns.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventCorrelationResult {
-    /// Primary event ID
-    pub primary_event_id: String,
-    /// Related event IDs
-    pub related_event_ids: Vec<String>,
-    /// Correlation confidence score (0.0 to 1.0)
-    pub correlation_confidence: f64,
-    /// Type of correlation
-    pub correlation_type: CorrelationType,
-    /// Time window for correlation in minutes
-    pub time_window_minutes: u64,
-    /// Correlation timestamp
-    pub correlation_timestamp: DateTime<Utc>,
+    pub event_id: String,
+    pub correlation_type: String,
+    pub confidence: f64,
+    pub related_events: Vec<String>,
+    pub timestamp: DateTime<Utc>,
+    pub metadata: HashMap<String, String>,
+    pub confidence_score: f64, // Add missing field
 }
-/// Correlation type enumeration
-/// Defines the different types of correlations
-/// that can be identified between events.
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CorrelationType {
-    /// Temporal correlation (events close in time)
+
     Temporal,
-    /// Spatial correlation (events from same location/IP)
+
     Spatial,
-    /// Behavioral correlation (similar user behavior)
+
     Behavioral,
-    /// Causal correlation (one event causes another)
+
     Causal,
-    /// Attack pattern correlation
+
     AttackPattern,
-    /// User behavior correlation
+
     UserBehavior,
-    /// Network correlation
+
     Network,
-    /// Custom correlation type
+
     Custom(String),
 }
 
 impl Default for EventCorrelationResult {
     fn default() -> Self {
         Self {
-            primary_event_id: String::new(),
+            primary_event_id: String::with_capacity(64),
             correlation_type: CorrelationType::Temporal,
             related_event_ids: Vec::new(),
             confidence_score: 0.0,
@@ -74,81 +47,71 @@ impl Default for EventCorrelationResult {
     }
 }
 
-
-    fn default() -> Self {
-        Self {
-            primary_event_id: String::new(),
-            related_event_ids: vec![],
-            correlation_confidence: 0.0,
-            correlation_type: CorrelationType::Temporal,
-            time_window_minutes: 60,
-            correlation_timestamp: Utc::now(),
-        }
-    }
 impl EventCorrelationResult {
-    /// Create new correlation result
-    pub fn new(primary_event_id: String, correlation_type: CorrelationType) -> Self {
-        Self {
-            primary_event_id,
-            related_event_ids: Vec::new(),
+    pub fn new(event_id: String, correlation_type: String) -> EventCorrelationResult {
+        EventCorrelationResult {
+            event_id,
+            related_events: Vec::new(),
             correlation_type,
+            confidence: 0.0,
+            timestamp: Utc::now(),
+            metadata: HashMap::new(),
             confidence_score: 0.0,
-            time_window_minutes: 60,
         }
     }
 
-    /// Add related event
-    pub fn add_related_event(&mut self, event_id: String) {
-        if !self.related_event_ids.contains(&event_id) {
-            self.related_event_ids.push(event_id);
+    pub fn with_capacity(capacity: usize) -> EventCorrelationResult {
+        EventCorrelationResult {
+            event_id: String::with_capacity(64),
+            correlation_type: CorrelationType::Temporal.to_string(),
+            related_events: Vec::with_capacity(capacity),
+            confidence: 0.0,
+            timestamp: Utc::now(),
+            metadata: HashMap::new(),
+            confidence_score: 0.0,
         }
     }
 
-    /// Set correlation confidence
+    pub fn add_related_event(&mut self, event_id: &str) {
+        if !self.related_events.contains(&event_id.to_string()) {
+            self.related_events.push(event_id.to_string());
+        }
+    }
+
     pub fn set_confidence(&mut self, confidence: f64) {
         self.confidence_score = confidence.clamp(0.0, 1.0);
+        self.confidence = confidence.clamp(0.0, 1.0);
     }
 
-    /// Set time window
     pub fn set_time_window(&mut self, minutes: u64) {
-        self.time_window_minutes = minutes;
+        // Store time window in metadata since it's not a direct field
+        self.metadata.insert("time_window_minutes".to_string(), minutes.to_string());
     }
 
-    /// Get correlation strength
-    pub fn correlation_strength(&self) -> &str {
-        match self.confidence_score {
-            x if x >= 0.8 => "Strong",
-            x if x >= 0.6 => "Moderate",
-            x if x >= 0.4 => "Weak",
-            _ => "Very Weak",
-        }
+    pub fn get_correlation_strength(&self) -> f64 {
+        // Use confidence_score for correlation strength
+        self.confidence_score
     }
 
-    /// Get number of related events
-
-
-    pub fn related_event_count(&self) -> usize {
-        self.related_event_ids.len()
+    pub fn get_related_event_count(&self) -> usize {
+        self.related_events.len()
     }
 
-    /// Check if correlation is significant
     pub fn is_significant(&self) -> bool {
-        self.confidence_score >= 0.5 && !self.related_event_ids.is_empty()
+        self.confidence_score >= 0.5 && !self.related_events.is_empty()
     }
 
-    /// Get correlation summary
     pub fn summary(&self) -> String {
         format!(
             "{} correlation: {} related events with {:.2}% confidence",
             self.correlation_type,
-            self.related_event_count(),
+            self.get_related_event_count(),
             self.confidence_score * 100.0
         )
     }
 }
 
 impl std::fmt::Display for CorrelationType {
-
 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

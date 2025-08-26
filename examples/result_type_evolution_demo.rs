@@ -1,30 +1,9 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Result Type Evolution Demonstration
-//!
-//! This example demonstrates the evolution from `Result<(), E>` patterns
-//! to rich, idiomatic return types with operational context.
 
 use beardog_errors::{improved_results::*, migration_helpers::*, BearDogError, BearDogResult};
 
-/// ❌ OLD: Non-idiomatic authentication - provides no useful information
 fn authenticate_user_old(username: &str, password: &str) -> BearDogResult<()> {
-    // Simulate authentication logic
+
     if username == "admin" && password == "secure123" {
         println!("✅ Authentication successful for {}", username);
         Ok(()) // What session ID? Security level? Expiry time?
@@ -35,11 +14,10 @@ fn authenticate_user_old(username: &str, password: &str) -> BearDogResult<()> {
     }
 }
 
-/// ✅ NEW: Rich authentication outcome with comprehensive context
 fn authenticate_user_rich(username: &str, password: &str) -> BearDogResult<AuthenticationOutcome> {
-    // Simulate authentication logic
+
     if username == "admin" && password == "secure123" {
-        let session_id = format!("session_{}", uuid::Uuid::new_v4());
+        let session_id = format_args!("session_{}", uuid::Uuid::new_v4().to_string());
 
         Ok(create_auth_outcome(
             session_id,
@@ -55,20 +33,18 @@ fn authenticate_user_rich(username: &str, password: &str) -> BearDogResult<Authe
     }
 }
 
-/// ❌ OLD: All-or-nothing processing - loses context on partial failures
-fn process_items_old(items: Vec<String>) -> BearDogResult<()> {
+fn process_items_old(items: Vec<&str>) -> BearDogResult<()> {
     for item in items {
         if item.is_empty() {
             return Err(BearDogError::invalid_input("Empty item found".to_string()));
         }
-        // Process item...
+
         println!("Processing: {}", item);
     }
     Ok(()) // How many succeeded? Which ones failed? Performance metrics?
 }
 
-/// ✅ NEW: Graceful processing with partial success handling
-fn process_items_rich(items: Vec<String>) -> BearDogResult<ProcessingOutcome<Vec<String>>> {
+fn process_items_rich(items: Vec<&str>) -> BearDogResult<ProcessingOutcome<Vec<String>>> {
     let mut successful = Vec::new();
     let mut failures = Vec::new();
 
@@ -80,8 +56,8 @@ fn process_items_rich(items: Vec<String>) -> BearDogResult<ProcessingOutcome<Vec
                 "Empty item not allowed",
             ));
         } else {
-            // Process item successfully
-            successful.push(format!("processed_{}", item));
+
+            successful.push(format_args!("processed_{}", item).to_string());
             println!("✅ Processed: {}", item);
         }
     }
@@ -100,14 +76,12 @@ fn demonstrate_authentication() {
     println!("🔐 Authentication Demonstration");
     println!("================================");
 
-    // Old pattern
     println!("\n❌ OLD PATTERN:");
     match authenticate_user_old("admin", "secure123") {
         Ok(()) => println!("   Authentication succeeded (but no context!)"),
         Err(e) => println!("   Authentication failed: {}", e),
     }
 
-    // New pattern
     println!("\n✅ NEW PATTERN:");
     match authenticate_user_rich("admin", "secure123") {
         Ok(outcome) => {
@@ -137,14 +111,12 @@ fn demonstrate_processing() {
         "item4".to_string(),
     ];
 
-    // Old pattern
     println!("\n❌ OLD PATTERN:");
     match process_items_old(items.clone()) {
         Ok(()) => println!("   All items processed (but no details!)"),
         Err(e) => println!("   Processing failed: {} (lost all progress!)", e),
     }
 
-    // New pattern
     println!("\n✅ NEW PATTERN:");
     match process_items_rich(items) {
         Ok(outcome) => {
@@ -172,7 +144,6 @@ fn demonstrate_migration_helpers() {
     println!("\n🔧 Migration Helpers Demonstration");
     println!("===================================");
 
-    // Using the UnitResultExt trait to convert existing Result<(), E>
     let legacy_result: Result<(), BearDogError> = Ok(());
     let converted_outcome =
         legacy_result.to_operation_outcome("demo-component", "legacy-operation");
@@ -187,7 +158,6 @@ fn demonstrate_migration_helpers() {
         Err(e) => println!("❌ Conversion failed: {}", e),
     }
 
-    // Using helper functions
     let summary = create_operation_summary("demo-operation", "completed successfully", 5);
     let outcome = OperationOutcome::success(summary, "demo-component");
 

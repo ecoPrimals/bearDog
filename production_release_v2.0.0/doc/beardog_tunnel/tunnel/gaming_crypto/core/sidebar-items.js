@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["EncryptedPacket","GamingCryptoEngine"],"type":["GeneticAlgorithmModule"]};

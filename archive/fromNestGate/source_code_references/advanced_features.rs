@@ -1,12 +1,4 @@
-//! Advanced ZFS Features with Ecosystem Integration
-//!
-//! This module implements sophisticated ZFS management features that leverage
-//! the heterogeneous ecosystem for AI/ML capabilities:
-//! - Predictive Analytics Engine for capacity planning and performance forecasting
-//! - Intelligent Replication Management across ecosystem nodes
-//! - Advanced Snapshot Management with ML-powered retention policies
-//! - Real-time Performance Optimization Engine
-//! - Security and Compliance Engine with automated policy enforcement
+
 
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
@@ -27,23 +19,17 @@ use crate::{
     error::ZfsError,
 };
 
-/// Advanced Predictive Analytics Engine
-/// 
-/// Uses ecosystem AI services to provide sophisticated capacity planning,
-/// performance forecasting, and predictive maintenance capabilities.
 #[derive(Debug)]
 pub struct PredictiveAnalyticsEngine {
     config: ZfsConfig,
     pool_manager: Arc<ZfsPoolManager>,
     dataset_manager: Arc<ZfsDatasetManager>,
-    
-    // Ecosystem integration
+
     #[cfg(feature = "network-integration")]
     ecosystem_discovery: Arc<EcosystemDiscovery>,
     #[cfg(feature = "network-integration")]
     service_connections: Arc<RwLock<ServiceConnectionPool>>,
-    
-    // Analytics state
+
     historical_metrics: Arc<RwLock<HistoricalMetrics>>,
     prediction_cache: Arc<RwLock<HashMap<String, crate::automation::AiPredictionResult>>>,
     analytics_config: AnalyticsConfig,
@@ -68,24 +54,22 @@ impl PredictiveAnalyticsEngine {
             #[cfg(feature = "network-integration")]
             service_connections,
             historical_metrics: Arc::new(RwLock::new(HistoricalMetrics::default())),
-            prediction_cache: Arc::new(RwLock::new(HashMap::new())),
+            prediction_cache: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             analytics_config: AnalyticsConfig::default(),
         }
     }
 
-    /// Generate comprehensive capacity planning forecast
     pub async fn generate_capacity_forecast(&self, days_ahead: u32) -> Result<CapacityForecast> {
         info!("🔮 Generating capacity forecast for {} days ahead", days_ahead);
-        
-        // Collect current metrics
+
         let current_metrics = self.collect_current_metrics().await?;
         let historical_data = self.historical_metrics.read().await;
         
         #[cfg(feature = "network-integration")]
         {
-            // Use ecosystem AI for sophisticated forecasting
+
             if let Some(squirrel_endpoint) = self.service_connections.read().await.get_best_squirrel() {
-                // Create SquirrelConnection from endpoint
+
                 let squirrel = crate::automation::SquirrelConnection::new(
                     "best_squirrel".to_string(), 
                     squirrel_endpoint
@@ -110,12 +94,10 @@ impl PredictiveAnalyticsEngine {
                 }
             }
         }
-        
-        // Fallback to local statistical forecasting
+
         self.generate_local_capacity_forecast(&current_metrics, &historical_data, days_ahead).await
     }
 
-    /// Predict performance bottlenecks before they occur
     pub async fn predict_performance_bottlenecks(&self) -> Result<Vec<PerformanceBottleneck>> {
         info!("🎯 Analyzing potential performance bottlenecks");
         
@@ -124,7 +106,7 @@ impl PredictiveAnalyticsEngine {
         
         #[cfg(feature = "network-integration")]
         {
-            // Use ecosystem AI for advanced bottleneck prediction
+
             if let Some(squirrel_endpoint) = self.service_connections.read().await.get_best_squirrel() {
                 let squirrel = crate::automation::SquirrelConnection::new(
                     "best_squirrel".to_string(), 
@@ -147,14 +129,12 @@ impl PredictiveAnalyticsEngine {
                 }
             }
         }
-        
-        // Add local heuristic-based bottleneck detection
+
         bottlenecks.extend(self.detect_local_bottlenecks(&current_metrics).await?);
         
         Ok(bottlenecks)
     }
 
-    /// Generate predictive maintenance recommendations
     pub async fn generate_maintenance_recommendations(&self) -> Result<Vec<MaintenanceRecommendation>> {
         info!("🔧 Generating predictive maintenance recommendations");
         
@@ -166,7 +146,7 @@ impl PredictiveAnalyticsEngine {
         
         #[cfg(feature = "network-integration")]
         {
-            // Use ecosystem AI for predictive maintenance
+
             if let Some(squirrel_endpoint) = self.service_connections.read().await.get_best_squirrel() {
                 let squirrel = crate::automation::SquirrelConnection::new(
                     "best_squirrel".to_string(), 
@@ -190,15 +170,14 @@ impl PredictiveAnalyticsEngine {
                 }
             }
         }
-        
-        // Add local maintenance heuristics
+
         recommendations.extend(self.generate_local_maintenance_recommendations().await?);
         
         Ok(recommendations)
     }
 
     async fn collect_current_metrics(&self) -> Result<SystemMetrics> {
-        // Implementation would collect comprehensive system metrics
+
         Ok(SystemMetrics::default())
     }
 
@@ -208,27 +187,27 @@ impl PredictiveAnalyticsEngine {
         _historical_data: &HistoricalMetrics,
         _days_ahead: u32,
     ) -> Result<CapacityForecast> {
-        // Local statistical forecasting implementation
+
         Ok(CapacityForecast::default())
     }
 
     async fn detect_local_bottlenecks(&self, _metrics: &SystemMetrics) -> Result<Vec<PerformanceBottleneck>> {
-        // Local bottleneck detection heuristics
+
         Ok(Vec::new())
     }
 
     async fn analyze_pool_health(&self) -> Result<PoolHealthAnalysis> {
-        // Pool health analysis implementation
+
         Ok(PoolHealthAnalysis::default())
     }
 
     async fn analyze_dataset_health(&self) -> Result<DatasetHealthAnalysis> {
-        // Dataset health analysis implementation
+
         Ok(DatasetHealthAnalysis::default())
     }
 
     async fn generate_local_maintenance_recommendations(&self) -> Result<Vec<MaintenanceRecommendation>> {
-        // Local maintenance recommendation logic
+
         Ok(Vec::new())
     }
 
@@ -238,7 +217,7 @@ impl PredictiveAnalyticsEngine {
         _squirrel: &crate::automation::SquirrelConnection,
         _request: CapacityForecastRequest,
     ) -> Result<CapacityForecast> {
-        // AI-powered capacity forecasting via ecosystem
+
         Err(ZfsError::Internal("Not implemented".to_string()).into())
     }
 
@@ -248,7 +227,7 @@ impl PredictiveAnalyticsEngine {
         _squirrel: &crate::automation::SquirrelConnection,
         _request: BottleneckAnalysisRequest,
     ) -> Result<Vec<PerformanceBottleneck>> {
-        // AI-powered bottleneck analysis via ecosystem
+
         Err(ZfsError::Internal("Not implemented".to_string()).into())
     }
 
@@ -258,27 +237,21 @@ impl PredictiveAnalyticsEngine {
         _squirrel: &crate::automation::SquirrelConnection,
         _request: MaintenanceAnalysisRequest,
     ) -> Result<Vec<MaintenanceRecommendation>> {
-        // AI-powered maintenance analysis via ecosystem
+
         Err(ZfsError::Internal("Not implemented".to_string()).into())
     }
 }
 
-/// Intelligent Replication Management
-/// 
-/// Manages ZFS replication across ecosystem nodes with AI-powered optimization
-/// for bandwidth usage, timing, and destination selection.
 #[derive(Debug)]
 pub struct IntelligentReplicationManager {
     config: ZfsConfig,
     dataset_manager: Arc<ZfsDatasetManager>,
-    
-    // Ecosystem integration
+
     #[cfg(feature = "network-integration")]
     ecosystem_discovery: Arc<EcosystemDiscovery>,
     #[cfg(feature = "network-integration")]
     service_connections: Arc<RwLock<ServiceConnectionPool>>,
-    
-    // Replication state
+
     replication_policies: Arc<RwLock<HashMap<String, ReplicationPolicy>>>,
     active_replications: Arc<RwLock<HashMap<String, ReplicationTask>>>,
     replication_history: Arc<RwLock<VecDeque<ReplicationEvent>>>,
@@ -300,13 +273,12 @@ impl IntelligentReplicationManager {
             ecosystem_discovery,
             #[cfg(feature = "network-integration")]
             service_connections,
-            replication_policies: Arc::new(RwLock::new(HashMap::new())),
-            active_replications: Arc::new(RwLock::new(HashMap::new())),
+            replication_policies: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            active_replications: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             replication_history: Arc::new(RwLock::new(VecDeque::new())),
         }
     }
 
-    /// Create intelligent replication policy with AI-powered optimization
     pub async fn create_intelligent_replication_policy(
         &self,
         dataset_name: &str,
@@ -316,7 +288,7 @@ impl IntelligentReplicationManager {
         
         #[cfg(feature = "network-integration")]
         {
-            // Use ecosystem AI to optimize replication strategy
+
             if let Some(squirrel_endpoint) = self.service_connections.read().await.get_best_squirrel() {
                 let squirrel = crate::automation::SquirrelConnection::new(
                     "best_squirrel".to_string(), 
@@ -343,23 +315,20 @@ impl IntelligentReplicationManager {
                 }
             }
         }
-        
-        // Fallback to local replication policy creation
+
         let policy = self.create_local_replication_policy(dataset_name, requirements).await?;
         let mut policies = self.replication_policies.write().await;
         policies.insert(dataset_name.to_string(), policy.clone());
         Ok(policy)
     }
 
-    /// Execute intelligent replication with dynamic optimization
     pub async fn execute_intelligent_replication(&self, dataset_name: &str) -> Result<ReplicationResult> {
         info!("🚀 Executing intelligent replication for dataset: {}", dataset_name);
         
         let policies = self.replication_policies.read().await;
         let policy = policies.get(dataset_name)
-            .ok_or_else(|| ZfsError::Internal(format!("No replication policy found for dataset: {}", dataset_name)))?;
-        
-        // Create replication task
+            .ok_or_else(|| ZfsError::Internal(format_args!("No replication policy found for dataset: {}", dataset_name).to_string()))?;
+
         let task = ReplicationTask {
             id: Uuid::new_v4().to_string(),
             dataset_name: dataset_name.to_string(),
@@ -368,17 +337,14 @@ impl IntelligentReplicationManager {
             status: ReplicationStatus::Running,
             progress: 0.0,
         };
-        
-        // Register active replication
+
         {
             let mut active = self.active_replications.write().await;
             active.insert(task.id.clone(), task.clone());
         }
-        
-        // Execute replication with monitoring
+
         let result = self.execute_replication_task(task).await?;
-        
-        // Record replication event
+
         let event = ReplicationEvent {
             dataset_name: dataset_name.to_string(),
             timestamp: SystemTime::now(),
@@ -400,7 +366,7 @@ impl IntelligentReplicationManager {
     async fn discover_replication_targets(&self) -> Result<Vec<ReplicationTarget>> {
         #[cfg(feature = "network-integration")]
         {
-            // Discover NestGate peers in ecosystem
+
             let connections = self.service_connections.read().await;
             let targets = connections.nestgate_peers.iter()
                 .map(|(peer_id, endpoint)| ReplicationTarget {
@@ -425,12 +391,12 @@ impl IntelligentReplicationManager {
         _dataset_name: &str,
         _requirements: ReplicationRequirements,
     ) -> Result<ReplicationPolicy> {
-        // Local replication policy creation logic
+
         Ok(ReplicationPolicy::default())
     }
 
     async fn execute_replication_task(&self, _task: ReplicationTask) -> Result<ReplicationResult> {
-        // Replication execution logic
+
         Ok(ReplicationResult::default())
     }
 
@@ -440,27 +406,21 @@ impl IntelligentReplicationManager {
         _squirrel: &crate::automation::SquirrelConnection,
         _request: ReplicationOptimizationRequest,
     ) -> Result<ReplicationPolicy> {
-        // AI-powered replication optimization
+
         Err(ZfsError::Internal("Not implemented".to_string()).into())
     }
 }
 
-/// Advanced Snapshot Management
-/// 
-/// Intelligent snapshot scheduling, retention, and lifecycle management
-/// with ML-powered optimization for storage efficiency and recovery objectives.
 #[derive(Debug)]
 pub struct AdvancedSnapshotManager {
     config: ZfsConfig,
     dataset_manager: Arc<ZfsDatasetManager>,
-    
-    // Ecosystem integration
+
     #[cfg(feature = "network-integration")]
     ecosystem_discovery: Arc<EcosystemDiscovery>,
     #[cfg(feature = "network-integration")]
     service_connections: Arc<RwLock<ServiceConnectionPool>>,
-    
-    // Snapshot state
+
     snapshot_policies: Arc<RwLock<HashMap<String, SnapshotPolicy>>>,
     snapshot_schedules: Arc<RwLock<HashMap<String, SnapshotSchedule>>>,
     retention_analyzer: Arc<RetentionAnalyzer>,
@@ -482,13 +442,12 @@ impl AdvancedSnapshotManager {
             ecosystem_discovery,
             #[cfg(feature = "network-integration")]
             service_connections,
-            snapshot_policies: Arc::new(RwLock::new(HashMap::new())),
-            snapshot_schedules: Arc::new(RwLock::new(HashMap::new())),
+            snapshot_policies: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            snapshot_schedules: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             retention_analyzer: Arc::new(RetentionAnalyzer::new()),
         }
     }
 
-    /// Create intelligent snapshot policy with ML-powered optimization
     pub async fn create_intelligent_snapshot_policy(
         &self,
         dataset_name: &str,
@@ -498,7 +457,7 @@ impl AdvancedSnapshotManager {
         
         #[cfg(feature = "network-integration")]
         {
-            // Use ecosystem AI for snapshot policy optimization
+
             if let Some(squirrel_endpoint) = self.service_connections.read().await.get_best_squirrel() {
                 let squirrel = crate::automation::SquirrelConnection::new(
                     "best_squirrel".to_string(), 
@@ -525,15 +484,13 @@ impl AdvancedSnapshotManager {
                 }
             }
         }
-        
-        // Fallback to local snapshot policy creation
+
         let policy = self.create_local_snapshot_policy(dataset_name, requirements).await?;
         let mut policies = self.snapshot_policies.write().await;
         policies.insert(dataset_name.to_string(), policy.clone());
         Ok(policy)
     }
 
-    /// Execute intelligent snapshot retention with ML-powered cleanup
     pub async fn execute_intelligent_retention(&self, dataset_name: &str) -> Result<RetentionResult> {
         info!("🧹 Executing intelligent snapshot retention for dataset: {}", dataset_name);
         
@@ -542,7 +499,7 @@ impl AdvancedSnapshotManager {
         
         #[cfg(feature = "network-integration")]
         {
-            // Use ecosystem AI for retention optimization
+
             if let Some(squirrel_endpoint) = self.service_connections.read().await.get_best_squirrel() {
                 let squirrel = crate::automation::SquirrelConnection::new(
                     "best_squirrel".to_string(), 
@@ -567,13 +524,12 @@ impl AdvancedSnapshotManager {
                 }
             }
         }
-        
-        // Fallback to local retention logic
+
         self.execute_local_retention(dataset_name, &snapshots).await
     }
 
     async fn analyze_dataset_usage_patterns(&self, _dataset_name: &str) -> Result<UsagePatterns> {
-        // Dataset usage pattern analysis
+
         Ok(UsagePatterns::default())
     }
 
@@ -582,12 +538,12 @@ impl AdvancedSnapshotManager {
         _dataset_name: &str,
         _requirements: SnapshotRequirements,
     ) -> Result<SnapshotPolicy> {
-        // Local snapshot policy creation
+
         Ok(SnapshotPolicy::default())
     }
 
     async fn execute_retention_plan(&self, _plan: RetentionPlan) -> Result<RetentionResult> {
-        // Execute retention plan
+
         Ok(RetentionResult::default())
     }
 
@@ -596,7 +552,7 @@ impl AdvancedSnapshotManager {
         _dataset_name: &str,
         _snapshots: &[SnapshotInfo],
     ) -> Result<RetentionResult> {
-        // Local retention execution
+
         Ok(RetentionResult::default())
     }
 
@@ -606,7 +562,7 @@ impl AdvancedSnapshotManager {
         _squirrel: &crate::automation::SquirrelConnection,
         _request: SnapshotOptimizationRequest,
     ) -> Result<SnapshotPolicy> {
-        // AI-powered snapshot optimization
+
         Err(ZfsError::Internal("Not implemented".to_string()).into())
     }
 
@@ -616,24 +572,20 @@ impl AdvancedSnapshotManager {
         _squirrel: &crate::automation::SquirrelConnection,
         _request: RetentionOptimizationRequest,
     ) -> Result<RetentionPlan> {
-        // AI-powered retention optimization
+
         Err(ZfsError::Internal("Not implemented".to_string()).into())
     }
 
-    /// Get dataset usage patterns for intelligent optimization
     async fn get_dataset_usage_patterns(&self, _dataset_name: &str) -> Result<UsagePatterns> {
-        // TODO: Implement pattern analysis
+
         Err(ZfsError::Internal("Not implemented".to_string()).into())
     }
 
-    /// Apply retention plan to snapshots
     async fn apply_retention_plan(&self, _plan: RetentionPlan) -> Result<RetentionResult> {
-        // TODO: Implement retention logic
+
         Err(ZfsError::Internal("Not implemented".to_string()).into())
     }
 }
-
-// Data structures for advanced features
 
 #[derive(Debug, Clone, Default)]
 pub struct AnalyticsConfig {
@@ -774,7 +726,6 @@ pub enum MaintenancePriority {
     Urgent,
 }
 
-// Replication types
 #[derive(Debug, Clone)]
 pub struct ReplicationRequirements {
     pub rpo_minutes: u32, // Recovery Point Objective
@@ -861,7 +812,6 @@ pub struct ReplicationEvent {
     pub duration: Duration,
 }
 
-// Snapshot types
 #[derive(Debug, Clone)]
 pub struct SnapshotRequirements {
     pub frequency: SnapshotFrequency,
@@ -950,7 +900,7 @@ pub struct RetentionPlan {
 
 #[derive(Debug)]
 pub struct RetentionAnalyzer {
-    // Retention analysis state
+
 }
 
 impl RetentionAnalyzer {
@@ -959,7 +909,7 @@ impl RetentionAnalyzer {
     }
 
     pub async fn analyze_snapshots(&self, _snapshots: &[SnapshotInfo]) -> Result<RetentionAnalysis> {
-        // Snapshot retention analysis
+
         Ok(RetentionAnalysis::default())
     }
 }
@@ -973,7 +923,6 @@ pub struct RetentionAnalysis {
     pub size_distribution: HashMap<String, u64>,
 }
 
-// Request/Response types for ecosystem integration
 #[derive(Debug, Clone)]
 pub struct CapacityForecastRequest {
     pub request_id: String,

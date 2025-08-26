@@ -1,27 +1,4 @@
-// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-
-/// # HSM Failover Management Module
-///
-/// This module provides failover management functionality for HSM providers, including
-/// circuit breakers, retry logic, and fallback provider selection.
 
 use super::{
     HsmFailoverManager, HsmProvider, SecurityRequirements, SoftwareHsmConfig, SoftwareHsmType,
@@ -34,13 +11,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::warn;
-/// Default HSM failover manager implementation
+
 pub struct DefaultHsmFailoverManager {
     circuit_breakers: Arc<RwLock<HashMap<String, CircuitBreaker>>>,
     failover_config: FailoverConfig,
     retry_counts: Arc<RwLock<HashMap<String, u32>>>,
 }
-/// Circuit breaker for HSM providers
+
 #[derive(Debug, Clone)]
 pub struct CircuitBreaker {
     state: CircuitBreakerState,
@@ -48,20 +25,19 @@ pub struct CircuitBreaker {
     success_count: u32,
     last_failure_time: Option<chrono::DateTime<chrono::Utc>>,
     threshold: u32,
-/// Circuit breaker states
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum CircuitBreakerState {
     Closed,   // Normal operation
     Open,     // Failing - reject requests
     HalfOpen, // Testing - allow limited requests}
 
-
 impl DefaultHsmFailoverManager {
     pub async fn new(config: FailoverConfig) -> BearDogResult<Self> {
         Ok(Self {
-            circuit_breakers: Arc::new(RwLock::new(HashMap::new())),
+            circuit_breakers: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             failover_config: config,
-            retry_counts: Arc::new(RwLock::new(HashMap::new())),
+            retry_counts: Arc::new(RwLock::new(HashMap::with_capacity(16))),
         })
     }
 
@@ -72,12 +48,12 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
         error: &BearDogError,
     ) -> BearDogResult<()> {
         let provider_info = provider.get_info().await?;
-        let provider_id = format!("{}_{}", provider_info.vendor, provider_info.model);
+        let provider_id = format_args!("{}_{}", provider_info.vendor, provider_info.model).to_string();
         warn!(
             "🔄 Handling provider failure: {} - {:?}",
             provider_id, error
         );
-        // Update circuit breaker
+
         {
             let mut circuit_breakers = self.circuit_breakers.write().await;
             let circuit_breaker =
@@ -88,7 +64,7 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
                     });
             circuit_breaker.record_failure();
         }
-        // Update retry count
+
             let mut retry_counts = self.retry_counts.write().await;
             let count = retry_counts.entry(provider_id.clone()).or_insert(0);
             *count += 1;
@@ -97,10 +73,8 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
         _failed_provider: &impl HsmProvider + Send + Sync + 'static,
         requirements: &SecurityRequirements,
     ) -> BearDogResult<impl HsmProvider + Send + Sync + 'static> {
-        // For now, return a simple software HSM as fallback
-        // In a real implementation, this would select the best available alternative
-        let software_config = SoftwareHsmConfig {}
 
+        let software_config = SoftwareHsmConfig {}
 
             implementation: SoftwareHsmType::RustSoftwareHsm,
             key_store_config: KeyStoreConfig {
@@ -123,14 +97,12 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
         F: Fn(impl HsmProvider + Send + Sync + 'static) -> Result<T, BearDogError> + Send + Sync + 'static,
         T: Send + 'static,
     {
-        // This is a simplified implementation
-        // In a real implementation, this would coordinate with the HSM manager
+
         Err(BearDogError::unsupported_operation("Failover operation".to_string(),
             hsm_type: "Generic".to_string(),
             reason: "Not implemented in this simplified version".to_string(),
         ))
 impl CircuitBreaker {}
-
 
     pub fn new(threshold: u32) -> Self {
         Self {
@@ -139,7 +111,6 @@ impl CircuitBreaker {}
             success_count: 0,
             last_failure_time: None,
             threshold,}
-
 
     pub fn record_failure(&mut self) {
         self.failure_count += 1;
@@ -152,12 +123,11 @@ impl CircuitBreaker {}
             self.state = CircuitBreakerState::Closed;
             self.failure_count = 0;}
 
-
     pub fn can_execute(&self) -> bool {
         match self.state {
             CircuitBreakerState::Closed => true,
             CircuitBreakerState::Open => {
-                // Check if enough time has passed to try again
+
                 if let Some(last_failure) = self.last_failure_time {
                     let elapsed = chrono::Utc::now().signed_duration_since(last_failure);
                     elapsed.num_minutes() >= 5 // 5 minute recovery period

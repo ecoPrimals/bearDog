@@ -1,31 +1,10 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Advanced Vendor Discovery Demo
-//!
-//! This example demonstrates BearDog's ability to automatically discover
-//! vendors through environment variables, hardware scanning, and cloud detection.
 
 use beardog_errors::BearDogResult;
 use std::collections::HashMap;
 use std::env;
 use tracing::{info, warn};
 
-// Local definitions for demo purposes
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CapabilityOperation {
     KeyGeneration,
@@ -58,7 +37,6 @@ pub struct UniversalVendorRequest {
     pub parameters: HashMap<String, String>,
 }
 
-// Use canonical VendorInfo instead of duplicate
 pub use beardog_types::canonical::hsm::traits::VendorInfo;
 
 pub struct UniversalVendorAdapter {
@@ -98,7 +76,6 @@ impl UniversalVendorAdapter {
 
         let mut vendors = Vec::new();
 
-        // Check for common HSM environment variables
         if env::var("PKCS11_LIBRARY").is_ok() {
             vendors.push(VendorInfo {
                 name: "PKCS#11 Provider".to_string(),
@@ -157,7 +134,6 @@ impl UniversalVendorAdapter {
 
         let mut vendors = Vec::new();
 
-        // Simulate hardware detection (in real implementation, this would use platform-specific APIs)
         #[cfg(target_os = "android")]
         {
             vendors.push(VendorInfo {
@@ -189,7 +165,6 @@ impl UniversalVendorAdapter {
             });
         }
 
-        // Always available software fallback
         vendors.push(VendorInfo {
             name: "Rust Crypto Provider".to_string(),
             version: "software".to_string(),
@@ -216,7 +191,6 @@ impl UniversalVendorAdapter {
 
         let mut vendors = Vec::new();
 
-        // Simulate cloud service detection
         if self.check_aws_availability().await {
             vendors.push(VendorInfo {
                 name: "AWS CloudHSM".to_string(),
@@ -257,12 +231,12 @@ impl UniversalVendorAdapter {
     }
 
     async fn check_aws_availability(&self) -> bool {
-        // Simulate AWS availability check
+
         env::var("AWS_ACCESS_KEY_ID").is_ok() && env::var("AWS_SECRET_ACCESS_KEY").is_ok()
     }
 
     async fn check_azure_availability(&self) -> bool {
-        // Simulate Azure availability check
+
         env::var("AZURE_CLIENT_ID").is_ok() && env::var("AZURE_TENANT_ID").is_ok()
     }
 
@@ -283,13 +257,12 @@ impl UniversalVendorAdapter {
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Simple logging setup (no external dependencies)
+
     println!("🔧 Initializing BearDog Advanced Vendor Discovery Demo...");
 
     info!("🚀 BearDog Advanced Vendor Discovery Demo");
     info!("==========================================");
 
-    // Create adapter configuration
     let config = UniversalAdapterConfig {
         scan_environment: true,
         scan_hardware: true,
@@ -299,16 +272,12 @@ async fn main() -> BearDogResult<()> {
 
     let mut adapter = UniversalVendorAdapter::new(config);
 
-    // Demonstrate comprehensive vendor discovery
     demonstrate_comprehensive_discovery(&mut adapter).await?;
 
-    // Demonstrate capability-based filtering
     demonstrate_capability_filtering(&adapter).await?;
 
-    // Demonstrate crypto-type filtering
     demonstrate_crypto_type_filtering(&adapter).await?;
 
-    // Demonstrate vendor selection strategies
     demonstrate_vendor_selection(&adapter).await?;
 
     info!("✅ Advanced Vendor Discovery Demo completed successfully!");
@@ -394,7 +363,6 @@ async fn demonstrate_vendor_selection(adapter: &UniversalVendorAdapter) -> BearD
     info!("\n⚡ Phase 4: Intelligent Vendor Selection");
     info!("---------------------------------------");
 
-    // Demonstrate selection for different scenarios
     let scenarios = vec![
         (
             "High Security Key Generation",
@@ -417,7 +385,6 @@ async fn demonstrate_vendor_selection(adapter: &UniversalVendorAdapter) -> BearD
             continue;
         }
 
-        // Simple selection strategy: prefer hardware > cloud > software
         let selected = select_best_vendor(&candidates)?;
         info!(
             "   ✅ Selected: {} ({})",
@@ -432,7 +399,7 @@ async fn demonstrate_vendor_selection(adapter: &UniversalVendorAdapter) -> BearD
 fn select_best_vendor<'a>(
     candidates: &'a [&'a VendorInfo],
 ) -> Result<&'a VendorInfo, beardog_errors::BearDogError> {
-    // Priority: hardware > cloud > software
+
     candidates
         .iter()
         .min_by_key(|vendor| match vendor.detection_method.as_str() {

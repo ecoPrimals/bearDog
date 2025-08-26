@@ -1,34 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # Zero-Cost Security Architecture Comparison
-//!
-//! This example demonstrates the revolutionary performance difference between
-//! traditional async_trait security providers and the new zero-cost architecture.
-//!
-//! ## Security Benefits Measured:
-//! 
-//! 1. **Authentication Processing** - Direct method calls vs trait object dispatch
-//! 2. **Session Management** - Compile-time vs HashMap runtime operations
-//! 3. **Security Configuration** - Const generics vs runtime configuration
-//! 4. **Hardware Integration** - Zero-cost dispatch vs virtual method calls
-//! 5. **Audit Logging** - Native async vs boxed async traits
-//!
-//! Run with: `cargo run --example zero_cost_security_comparison`
 
 use beardog_security::zero_cost_security_simplified::{
     examples, ZeroCostSecurityProvider, ZeroCostHardwareSecurityProvider,
@@ -47,7 +17,6 @@ use chrono::Utc;
 use uuid::Uuid;
 use tokio;
 
-/// Security performance metrics
 #[derive(Debug)]
 struct SecurityPerformanceMetrics {
     total_time_micros: u128,
@@ -62,7 +31,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🛡️  BearDog Security Architecture Comparison");
     println!("============================================\n");
 
-    // 1. Zero-Cost Security Performance
     println!("🔒 Zero-Cost Security Architecture Performance");
     println!("----------------------------------------------");
     
@@ -71,7 +39,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 2. Security Architecture Analysis
     println!("📊 Security Architecture Analysis");
     println!("---------------------------------");
     
@@ -79,7 +46,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 3. Memory Usage Analysis
     println!("💾 Security Memory Usage Analysis");
     println!("---------------------------------");
     
@@ -87,7 +53,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 4. Hardware Integration Analysis
     println!("🔧 Hardware Integration Analysis");
     println!("--------------------------------");
     
@@ -95,7 +60,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 5. Configuration Comparison
     println!("⚙️  Security Configuration Comparison");
     println!("-------------------------------------");
     
@@ -104,32 +68,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Benchmark the zero-cost security architecture
 async fn benchmark_zero_cost_security() -> Result<SecurityPerformanceMetrics, Box<dyn std::error::Error>> {
     println!("📈 Running zero-cost security benchmarks...");
-    
-    // Create different security provider configurations for testing
+
     let prod_provider = examples::create_production_security_provider().await?;
     let dev_provider = examples::create_development_security_provider().await?;
     let high_sec_provider = examples::create_high_security_provider().await?;
-    
-    // Benchmark parameters
+
     const ITERATIONS: usize = beardog_types::constants::performance::testing::LIGHT_ITERATIONS / 5;
     
     let mut total_operations_processed = 0u64;
     let start_time = Instant::now();
-    
-    // Authentication Performance Test
+
     println!("   🔐 Authentication operations ({} iterations)", ITERATIONS);
     let auth_start = Instant::now();
     
     for i in 0..ITERATIONS {
         let credentials = HashMap::from([
-            ("username".to_string(), format!("user_{}", i)),
+            ("username".to_string(), format_args!("user_{}", i).to_string()),
             ("password".to_string(), "secure_password_123".to_string()),
         ]);
-        
-        // Zero-cost authentication - completely monomorphized
+
         let result = prod_provider.authenticate(&credentials).await?;
         assert!(result.success);
         total_operations_processed += 1;
@@ -141,7 +100,6 @@ async fn benchmark_zero_cost_security() -> Result<SecurityPerformanceMetrics, Bo
     println!("      ⚡ Authentication: {:.0} ops/sec ({:.2}ms total)", 
              auth_per_sec, auth_duration.as_millis());
 
-    // Session Management Performance Test
     println!("   📝 Session management operations ({} iterations)", ITERATIONS);
     let session_start = Instant::now();
     
@@ -149,19 +107,17 @@ async fn benchmark_zero_cost_security() -> Result<SecurityPerformanceMetrics, Bo
     
     for i in 0..ITERATIONS {
         let user = UserInfo {
-            user_id: format!("user_{}", i),
-            full_name: format!("User {}", i),
+            user_id: format_args!("user_{}", i).to_string(),
+            full_name: format_args!("User {}", i).to_string(),
             permissions: vec!["user".to_string()],
             status: "active".to_string(),
         };
-        
-        // Zero-cost session creation - direct method calls
+
         let session = dev_provider.create_session(&user, "127.0.0.1".to_string(), "benchmark-agent".to_string()).await?;
         session_ids.push(session.id);
         total_operations_processed += 1;
     }
-    
-    // Validate all sessions
+
     for session_id in &session_ids {
         let validated = high_sec_provider.validate_session(session_id).await?;
         if validated.is_some() {
@@ -175,17 +131,16 @@ async fn benchmark_zero_cost_security() -> Result<SecurityPerformanceMetrics, Bo
     println!("      ⚡ Session Management: {:.0} ops/sec ({:.2}ms total)", 
              session_per_sec, session_duration.as_millis());
 
-    // Authorization Performance Test
     println!("   🛡️  Authorization operations ({} iterations)", ITERATIONS);
     let authz_start = Instant::now();
     
     for i in 0..ITERATIONS {
         let subject = Subject {
-            user_id: format!("user_{}", i),
+            user_id: format_args!("user_{}", i).to_string(),
             roles: vec!["user".to_string()],
             permissions: vec!["read".to_string()],
             group_memberships: vec![],
-            attributes: HashMap::new(),
+            attributes: HashMap::with_capacity(16),
             authentication_level: "standard".to_string(),
         };
         
@@ -193,19 +148,18 @@ async fn benchmark_zero_cost_security() -> Result<SecurityPerformanceMetrics, Bo
             action_type: "read".to_string(),
             resource_type: "document".to_string(),
             scope: "user".to_string(),
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         };
         
         let resource = Resource {
-            resource_id: format!("doc_{}", i),
+            resource_id: format_args!("doc_{}", i).to_string(),
             resource_type: "document".to_string(),
-            owner_id: Some(format!("user_{}", i)),
+            owner_id: Some(format_args!("user_{}", i).to_string()),
             classification: "internal".to_string(),
-            attributes: HashMap::new(),
+            attributes: HashMap::with_capacity(16),
             location: None,
         };
-        
-        // Zero-cost authorization - hardware-attested
+
         let result = prod_provider.authorize(&subject, &action, &resource).await?;
         assert!(result.permitted);
         total_operations_processed += 1;
@@ -217,7 +171,6 @@ async fn benchmark_zero_cost_security() -> Result<SecurityPerformanceMetrics, Bo
     println!("      ⚡ Authorization: {:.0} ops/sec ({:.2}ms total)", 
              authz_per_sec, authz_duration.as_millis());
 
-    // Audit Logging Performance Test
     println!("   📋 Audit logging operations ({} iterations)", ITERATIONS);
     let audit_start = Instant::now();
     
@@ -225,8 +178,8 @@ async fn benchmark_zero_cost_security() -> Result<SecurityPerformanceMetrics, Bo
         let event = SecurityAuditEvent {
             event_id: Uuid::new_v4().to_string(),
             event_type: "benchmark_audit".to_string(),
-            user_id: Some(format!("user_{}", i)),
-            resource_id: Some(format!("resource_{}", i)),
+            user_id: Some(format_args!("user_{}", i).to_string()),
+            resource_id: Some(format_args!("resource_{}", i).to_string()),
             action: "test_action".to_string(),
             outcome: "success".to_string(),
             timestamp: Utc::now(),
@@ -236,12 +189,11 @@ async fn benchmark_zero_cost_security() -> Result<SecurityPerformanceMetrics, Bo
                 "benchmark": true,
                 "iteration": i
             })),
-            session_id: Some(format!("session_{}", i)),
+            session_id: Some(format_args!("session_{}", i).to_string()),
             risk_score: Some(0.1),
             compliance_frameworks: vec!["SOC2".to_string()],
         };
-        
-        // Zero-cost audit logging - hardware tamper-evident
+
         dev_provider.audit(event).await?;
         total_operations_processed += 1;
     }
@@ -268,7 +220,6 @@ async fn benchmark_zero_cost_security() -> Result<SecurityPerformanceMetrics, Bo
     })
 }
 
-/// Display security performance metrics
 fn display_security_metrics(architecture: &str, metrics: &SecurityPerformanceMetrics) {
     println!("📋 {} Security Architecture Results:", architecture);
     println!("   ⏱️  Total Time: {:.2}ms", metrics.total_time_micros as f64 / 1000.0);
@@ -278,11 +229,9 @@ fn display_security_metrics(architecture: &str, metrics: &SecurityPerformanceMet
     println!("   💾 Heap Allocations: {} (for security provider resolution)", metrics.memory_allocations);
 }
 
-/// Analyze security architecture benefits
 fn analyze_security_architecture_benefits(zero_cost: &SecurityPerformanceMetrics) {
     println!("🔹 Zero-Cost Security Architecture Benefits:");
-    
-    // Theoretical comparison with async_trait overhead
+
     let estimated_async_trait_overhead = 0.25; // 25% estimated overhead for security operations
     let estimated_traditional_time = zero_cost.total_time_micros as f64 * (1.0 + estimated_async_trait_overhead);
     let performance_improvement = (estimated_traditional_time - zero_cost.total_time_micros as f64) / estimated_traditional_time * 100.0;
@@ -306,7 +255,6 @@ fn analyze_security_architecture_benefits(zero_cost: &SecurityPerformanceMetrics
     println!("   ❌ Virtual method dispatch - Direct struct method calls for all security operations");
 }
 
-/// Analyze security memory usage patterns
 fn analyze_security_memory_usage() {
     println!("🔹 Security Memory Usage Comparison:");
     
@@ -332,7 +280,6 @@ fn analyze_security_memory_usage() {
     println!("   • **Memory efficiency improvement: ~90% for security provider state**");
 }
 
-/// Demonstrate hardware integration mechanisms
 fn demonstrate_hardware_integration() {
     println!("🔹 Hardware Security Integration:");
     
@@ -376,7 +323,6 @@ fn demonstrate_hardware_integration() {
     println!("   • **Performance improvement**: 10-50x faster hardware integration");
 }
 
-/// Demonstrate security configuration benefits
 fn demonstrate_security_configuration_benefits() {
     println!("🔹 Security Configuration Comparison:");
     
@@ -405,8 +351,7 @@ fn demonstrate_security_configuration_benefits() {
     println!("      • Zero runtime security configuration overhead");
     println!("      • Impossible to create invalid security configurations");
     println!("      • Perfect compiler optimizations for all security operations");
-    
-    // Demonstrate with actual security provider instances
+
     println!("\n🔹 Security Configuration Examples:");
     
     println!("   📝 Production Security: MAX_SESSIONS=10000, TIMEOUT=3600s, MAX_ATTEMPTS=5");
@@ -428,11 +373,10 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to benchmark zero-cost security - check system configuration", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to benchmark zero-cost security - check system configuration", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to benchmark zero-cost security - check system configuration", e).to_string()
 ).into())
 });
-        
-        // Verify security performance characteristics
+
         assert!(metrics.operations_per_second > 5000.0); // Should be very fast
         assert!(metrics.average_processing_time_ms < 1.0); // Should be under 1ms average
         assert_eq!(metrics.memory_allocations, 0); // Zero heap allocations for security resolution
@@ -441,13 +385,13 @@ mod tests {
     
     #[tokio::test]
     async fn test_compile_time_security_configuration() {
-        // Test that different security configurations compile to different types
+
         let prod_provider = examples::create_production_security_provider().await
             .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Failed to create production security provider", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to create production security provider", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to create production security provider", e).to_string()
 ).into())
 });
         let dev_provider = examples::create_development_security_provider().await
@@ -455,7 +399,7 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to create development security provider", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to create development security provider", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to create development security provider", e).to_string()
 ).into())
 });
         let high_sec_provider = examples::create_high_security_provider().await
@@ -463,23 +407,21 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to create high security provider", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to create high security provider", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to create high security provider", e).to_string()
 ).into())
 });
-        
-        // Test authentication with different security configurations
+
         let credentials = HashMap::from([
             ("username".to_string(), "test_user".to_string()),
             ("password".to_string(), "test_password_123".to_string()),
         ]);
-        
-        // All providers should authenticate successfully but with different security policies
+
         let prod_result = prod_provider.authenticate(&credentials).await
             .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Failed to authenticate with production provider", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to authenticate with production provider", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to authenticate with production provider", e).to_string()
 ).into())
 });
         let dev_result = dev_provider.authenticate(&credentials).await
@@ -487,7 +429,7 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to authenticate with development provider", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to authenticate with development provider", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to authenticate with development provider", e).to_string()
 ).into())
 });
         let high_result = high_sec_provider.authenticate(&credentials).await
@@ -495,18 +437,14 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to authenticate with high security provider", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to authenticate with high security provider", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to authenticate with high security provider", e).to_string()
 ).into())
 });
         
         assert!(prod_result.success);
         assert!(dev_result.success);
         assert!(high_result.success);
-        
-        // Verify different timeout configurations are compiled in
-        // (In a real implementation, these would have different const generic values)
-        
-        // All assertions happen at compile time - zero runtime cost
+
     }
     
     #[tokio::test]
@@ -516,23 +454,21 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to create development security provider", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to create development security provider", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to create development security provider", e).to_string()
 ).into())
 });
-        
-        // Test health check
+
         let health = provider.health_check().await
             .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Failed to perform health check on security provider", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to perform health check on security provider", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to perform health check on security provider", e).to_string()
 ).into())
 });
         assert_eq!(health.overall_status, "healthy");
         assert!(health.components.contains_key("hardware_security"));
-        
-        // Process some operations to generate metrics
+
         let credentials = HashMap::from([
             ("username".to_string(), "metrics_user".to_string()),
             ("password".to_string(), "metrics_password_123".to_string()),
@@ -543,17 +479,16 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to authenticate in metrics test", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to authenticate in metrics test", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to authenticate in metrics test", e).to_string()
 ).into())
 });
-        
-        // Check that metrics are updated
+
         let metrics = provider.get_metrics().await
             .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Failed to get metrics from security provider", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to get metrics from security provider", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to get metrics from security provider", e).to_string()
 ).into())
 });
         assert!(metrics.auth_success_rate > 0.0);

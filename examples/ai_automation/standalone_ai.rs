@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BearDog Standalone AI Core
-//!
-//! BearDog's onboard minimal AI capabilities for security operations.
-//! This operates independently and provides the foundation for network effects.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -28,7 +8,6 @@ use beardog_errors::BearDogResult;
 use beardog_core::BearDogCore;
 use beardog_types::config::BearDogConfig;
 
-/// BearDog's standalone AI core
 #[derive(Debug)]
 pub struct BearDogAICore {
     pub core: BearDogCore,
@@ -85,7 +64,6 @@ pub struct AIInsight {
     pub suggested_actions: Vec<String>,
 }
 
-/// Initialize BearDog AI core with standalone capabilities
 pub async fn initialize_ai_core(config_path: &Option<PathBuf>) -> BearDogResult<BearDogAICore> {
     let config = if let Some(path) = config_path {
         BearDogConfig::from_file(path).await?
@@ -104,7 +82,7 @@ pub async fn initialize_ai_core(config_path: &Option<PathBuf>) -> BearDogResult<
 
     let security_analyzer = SecurityAnalyzer {
         threat_threshold: 0.7,
-        pattern_cache: HashMap::new(),
+        pattern_cache: HashMap::with_capacity(16),
         anomaly_detector: AnomalyDetector::initialize().await?,
     };
 
@@ -130,7 +108,7 @@ pub async fn initialize_ai_core(config_path: &Option<PathBuf>) -> BearDogResult<
 }
 
 impl BearDogAICore {
-    /// Analyze security patterns using onboard AI
+
     pub async fn analyze_security_patterns(&self, data: &[u8]) -> BearDogResult<Vec<SecurityPattern>> {
         let patterns = self.ai_models.pattern_recognition_model
             .detect_patterns(data).await?;
@@ -154,11 +132,9 @@ impl BearDogAICore {
         Ok(analyzed_patterns)
     }
 
-    /// Generate AI insights for hybrid operations
     pub async fn generate_hybrid_insights(&self) -> BearDogResult<Vec<AIInsight>> {
         let mut insights = Vec::new();
 
-        // Security insights
         let security_insight = AIInsight {
             category: "Security".to_string(),
             confidence: 0.9,
@@ -168,12 +144,10 @@ impl BearDogAICore {
         };
         insights.push(security_insight);
 
-        // Performance insights
         let performance_insight = self.performance_optimizer
             .generate_performance_insight().await?;
         insights.push(performance_insight);
 
-        // Genetic insights
         let genetic_insight = self.genetic_enhancer
             .generate_genetic_insight().await?;
         insights.push(genetic_insight);
@@ -181,7 +155,6 @@ impl BearDogAICore {
         Ok(insights)
     }
 
-    /// Check if AI is operating within standalone capabilities
     pub async fn check_standalone_health(&self) -> BearDogResult<StandaloneHealth> {
         Ok(StandaloneHealth {
             ai_models_loaded: true,
@@ -193,7 +166,6 @@ impl BearDogAICore {
     }
 }
 
-// Supporting types and implementations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StandaloneHealth {
     pub ai_models_loaded: bool,
@@ -203,7 +175,6 @@ pub struct StandaloneHealth {
     pub overall_status: String,
 }
 
-// Placeholder implementations for AI models
 #[derive(Debug)]
 pub struct ThreatDetectionModel;
 
@@ -213,7 +184,7 @@ impl ThreatDetectionModel {
     }
     
     async fn assess_threat_level(&self, _pattern: &DetectedPattern) -> BearDogResult<f64> {
-        // Placeholder: In production this would use actual ML models
+
         Ok(0.5)
     }
 }
@@ -227,7 +198,7 @@ impl PatternRecognitionModel {
     }
     
     async fn detect_patterns(&self, _data: &[u8]) -> BearDogResult<Vec<DetectedPattern>> {
-        // Placeholder: In production this would use actual pattern recognition
+
         Ok(vec![])
     }
 }

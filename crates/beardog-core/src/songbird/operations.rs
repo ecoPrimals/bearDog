@@ -1,28 +1,5 @@
-// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// # Service Mesh Operations
-///
-/// **SERVICE REGISTRATION, LOOKUP, AND MANAGEMENT OPERATIONS**
-/// Contains service operation implementations for registration, lookup, and health management
-/// extracted from the monolithic songbird_client.rs file.
-
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_errors::idiomatic::SystemResult;
 use reqwest::Client as HttpClient;
@@ -35,20 +12,18 @@ use super::types::{
     DiscoveredService, RegistrationInfo, ServiceLookupRequest, ServiceRegistrationRequest,
     ServiceUpdateRequest,
 };
-/// Service registration operations implementation
+
 pub struct ServiceRegistrationManager {
-    /// HTTP client for registration requests
+
     client: HttpClient,
-    /// API base URL
+
     base_url: String,
-    /// Request timeout
+
     timeout: Duration,
 }
 impl ServiceRegistrationManager {
-    /// Create new registration manager}
 
-
-    pub fn new(base_url: String) -> BearDogResult<Self> {
+    pub fn new(base_url: &str) -> BearDogResult<Self> {
         let client = HttpClient::builder()
             .timeout(Duration::from_secs(30))
             .user_agent("`BearDog`-Registration/1.0")
@@ -62,25 +37,15 @@ impl ServiceRegistrationManager {
             timeout: Duration::from_secs(30),
         })
     }
-    /// Build API URL for endpoint
+
     fn api_url(&self, path: &str) -> String {
-        format!("{}/api/v1/{}", self.base_url, path)
+        format_args!("{}/api/v1/{}", self.base_url, path).to_string()
     }
 }
 
-/// **MODERNIZED SERVICE REGISTRATION TRAIT** - Zero-cost async operations
-/// 
-/// This trait now uses native async fn in trait definitions (available in Rust 1.75+)
-/// which eliminates the Box<dyn Future> allocation overhead from async_trait.
-/// 
-/// ## Performance Benefits:
-/// - **15-25% faster service registration** - No boxing overhead
-/// - **Zero heap allocations** - All futures are stack-allocated
-/// - **Perfect inlining** - Compiler can fully optimize service chains
-/// - **Better cache performance** - No pointer indirection
 #[allow(async_fn_in_trait)]
 impl ServiceRegistrationOps for ServiceRegistrationManager {
-    /// Register a service
+
     async fn register(
         &self,
         request: ServiceRegistrationRequest,
@@ -128,16 +93,16 @@ impl ServiceRegistrationOps for ServiceRegistrationManager {
                 "Service registration failed: {error_text}"
             )))
         }
-    /// Update service registration
+
     async fn update(&self, request: ServiceUpdateRequest) -> BearDogResult<()> {
         info!("📝 Updating service registration: {}", request.service_id);
-        let api_url = self.api_url(&format!("services/{}", request.service_id));
+        let api_url = self.api_url(&format_args!("services/{}", request.service_id).to_string());
             .put(&api_url)
             .map_err(|e| BearDogError::internal(format!("Failed to update service: {e}")))?;
             info!("✅ Service updated successfully");
             Ok(())
                 "Service update failed: {error_text}"
-    /// Deregister a service
+
     async fn deregister(&self, service_id: &str) -> BearDogResult<()> {
         info!("📤 Deregistering service: {}", service_id);
         let api_url = self.api_url(&format!("services/{service_id}"));
@@ -145,7 +110,7 @@ impl ServiceRegistrationOps for ServiceRegistrationManager {
             .map_err(|e| BearDogError::internal(format!("Failed to deregister service: {e}")))?;
             info!("✅ Service deregistered successfully");
                 "Service deregistration failed: {error_text}"
-    /// Refresh service registration (heartbeat)
+
     async fn refresh(&self, service_id: &str) -> BearDogResult<()> {
         debug!("💓 Refreshing service registration: {}", service_id);
         let api_url = self.api_url(&format!("services/{service_id}/heartbeat"));
@@ -156,21 +121,19 @@ impl ServiceRegistrationOps for ServiceRegistrationManager {
                 "Failed to refresh service registration: HTTP {}",
                 response.status()
             Err(BearDogError::internal("Service heartbeat failed"))
-/// Service lookup operations implementation
+
 pub struct ServiceLookupManager {
-    /// HTTP client for lookup requests
-    /// Service cache
+
     service_cache: tokio::sync::RwLock<HashMap<String, Vec<DiscoveredService>>>,}
 
-
 impl ServiceLookupManager {
-    /// Create new lookup manager
+
             .timeout(Duration::from_secs(10))
             .user_agent("`BearDog`-Lookup/1.0")
             .map_err(|e| BearDogError::internal(format!("Failed to create lookup client: {e}")))?;
             timeout: Duration::from_secs(10),
             service_cache: tokio::sync::RwLock::new(ahash::HashMap::default()),
-    /// Generate cache key for lookup request
+
     fn cache_key(&self, request: &ServiceLookupRequest) -> String {
         format!(
             "{}:{}:{}",
@@ -179,13 +142,13 @@ impl ServiceLookupManager {
             request.required_capabilities.join(",")
         )
 impl ServiceLookupOps for ServiceLookupManager {
-    /// Look up services by criteria
+
     async fn lookup(&self, request: ServiceLookupRequest) -> BearDogResult<Vec<DiscoveredService>> {
         debug!(
             "🔍 Looking up services with criteria: {:?}",
             request.service_name
         );
-        // Check cache first
+
         let cache_key = self.cache_key(&request);
         {
             let cache = self.service_cache.read().await;
@@ -193,19 +156,19 @@ impl ServiceLookupOps for ServiceLookupManager {
                 debug!("✅ Found {} services in cache", cached_services.len());
                 return Ok(cached_services.clone());
             }
-        // Perform actual lookup
+
         let api_url = self.api_url("services/lookup");
             .map_err(|e| BearDogError::internal(format!("Failed to lookup services: {e}")))?;
             let services: Vec<DiscoveredService> = response.json().await.map_err(|e| {
                 BearDogError::internal(format!("Failed to parse lookup response: {e}"))
-            // Update cache
+
             {
                 let mut cache = self.service_cache.write().await;
                 cache.insert(cache_key, services.clone());
             debug!("✅ Found {} services matching criteria", services.len());
             Ok(services)
                 "Service lookup failed: {error_text}"
-    /// Get service by ID
+
     async fn get_service(&self, service_id: &str) -> BearDogResult<Option<DiscoveredService>> {
         debug!("🔍 Getting service by ID: {}", service_id);
             .get(&api_url)
@@ -216,7 +179,7 @@ impl ServiceLookupOps for ServiceLookupManager {
         } else if response.status() == 404 {
             Ok(None)
                 "Failed to get service: {error_text}"
-    /// Search services by name pattern
+
     async fn search(&self, pattern: &str) -> BearDogResult<Vec<DiscoveredService>> {
         debug!("🔍 Searching services with pattern: {}", pattern);
         let request = ServiceLookupRequest {
@@ -228,18 +191,16 @@ impl ServiceLookupOps for ServiceLookupManager {
             limit: None,
         };
         self.lookup(request).await
-/// Service health operations implementation
-pub struct ServiceHealthManager {
-    /// HTTP client for health requests}
 
+pub struct ServiceHealthManager {
 
 impl ServiceHealthManager {
-    /// Create new health manager
+
             .user_agent("`BearDog`-Health/1.0")
             .map_err(|e| BearDogError::internal(format!("Failed to create health client: {e}")))?;
             timeout: Duration::from_secs(5),
 impl ServiceHealthOps for ServiceHealthManager {
-    /// Check health of a service
+
     async fn check_health(&self, service_id: &str) -> BearDogResult<ServiceHealth> {
         debug!("💓 Checking health of service: {}", service_id);
         let api_url = self.api_url(&format!("services/{service_id}/health"));
@@ -276,7 +237,7 @@ impl ServiceHealthOps for ServiceHealthManager {
                 response_time_ms: 0.0,
                 error_message: Some("Health check failed".to_string()),
             })
-    /// Get health status of all services
+
     async fn get_all_health(&self) -> BearDogResult<Vec<(String, ServiceHealth)>> {
         debug!("💓 Getting health status of all services");
         let api_url = self.api_url("services/health");
@@ -312,7 +273,7 @@ impl ServiceHealthOps for ServiceHealthManager {
                 health_statuses.len()
             Ok(health_statuses)
                 "Failed to get all service health: {error_text}"
-    /// Update health status
+
     async fn update_health(&self, service_id: &str, health: ServiceHealth) -> Result<(), SystemError> {
             "💓 Updating health status for service {}: {:?}",
             service_id, health

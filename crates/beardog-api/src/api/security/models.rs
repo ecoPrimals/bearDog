@@ -1,201 +1,164 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Security API models and data structures
-///
-/// This module contains all request and response types used by the security API,
-/// including threat analysis, ML predictions, behavioral analysis, and more.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-// ============================================================================
-// REQUEST/RESPONSE MODELS
-/// Security event request for threat analysis
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityEventRequest {
-    /// Type of security event (e.g., "login_attempt", "data_access", "network_anomaly")
+
     pub event_type: String,
-    /// Source IP address of the event
+
     pub source_ip: String,
-    /// Destination IP address of the event
+
     pub destination_ip: String,
-    /// User ID associated with the event
+
     pub user_id: String,
-    /// Optional data size in bytes for the event
+
     pub data_size: Option<f64>,
-    /// Optional user agent string from the request
+
     pub user_agent: Option<String>,
-    /// Optional geographic location information
+
     pub location: Option<String>,
-    /// Optional file hash for file-related events
+
     pub file_hash: Option<String>,
-    /// Additional custom data fields
+
     pub additional_data: Option<HashMap<String, String>>,
 }
-/// Response containing threat analysis results
-pub struct ThreatAnalysisResponse {
-    /// Unique event identifier for tracking
-    pub event_id: String,
-    /// Number of threats detected for this event
-    pub threats_detected: usize,
-    /// Overall risk level assessment
-    pub risk_level: String,
-    /// List of specific threats detected
-    pub detected_threats: Vec<ThreatEventResponse>,
-    /// Machine learning predictions and insights
-    pub ml_predictions: Vec<MlPredictionResponse>,
-    /// Recommended security actions to take
-    pub recommendations: Vec<String>,
-    /// Time taken to process this event in milliseconds
-    pub processing_time_ms: u64,
-    /// Incident ID if one was created for this event
-    pub incident_created: Option<String>,
-/// Individual threat event response
-pub struct ThreatEventResponse {
-    /// Unique threat identifier
-    pub threat_id: String,
-    /// Type of threat detected
-    pub threat_type: String,
-    /// Severity level of the threat
-    pub severity: String,
-    /// Description of the threat
-    pub description: String,
-    /// Evidence supporting the threat detection
-    pub evidence: Vec<String>,
-/// Machine learning prediction response
-pub struct MlPredictionResponse {
-    /// Unique identifier for the ML model
-    pub model_id: String,
-    /// Type of prediction made (e.g., "anomaly", "classification", "risk_score")
-    pub prediction_type: String,
-    /// Confidence score for the prediction (0.0 to 1.0)
-    pub confidence_score: f64,
-    /// Risk level assessment based on prediction
-    /// Evidence supporting the prediction
-    /// Recommended actions based on prediction
-/// Batch analysis request for multiple security events
-pub struct BatchAnalysisRequest {
-    /// List of security events to analyze
-    pub events: Vec<SecurityEventRequest>,
-    /// Whether to perform correlation analysis across events
-    pub correlation_analysis: Option<bool>,
-    /// Priority level for batch processing
-    pub priority: Option<String>,
-/// Batch analysis response containing results for multiple events
-pub struct BatchAnalysisResponse {
-    /// Unique identifier for the batch analysis
-    pub batch_id: String,
-    /// Total number of events processed
-    pub total_events: usize,
-    /// Number of threats detected across all events
-    /// Number of high severity threats detected
-    pub high_severity_threats: usize,
-    /// Number of incidents created from the analysis
-    pub incidents_created: usize,
-    /// Total processing time for all events in milliseconds
-    /// Individual analysis results for each event
-    pub results: Vec<ThreatAnalysisResponse>,
-/// Behavioral analysis request for user behavior patterns
-pub struct BehavioralAnalysisRequest {
-    /// User ID to analyze behavior for
-    /// Time window for analysis in hours
-    pub time_window_hours: Option<u32>,
-    /// Whether to include ML-based behavioral analysis
-    pub include_ml_analysis: Option<bool>,
-/// Behavioral analysis response with user behavior insights
-pub struct BehavioralAnalysisResponse {
-    /// User ID that was analyzed
-    /// Anomaly score for the user's behavior (0.0 to 1.0)
-    pub anomaly_score: f64,
-    /// Risk level assessment based on behavior
-    /// List of behavioral anomalies detected
-    pub anomalies_detected: Vec<String>,
-    /// Insights about the user's behavioral patterns
-    pub behavioral_insights: Vec<String>,
-    /// Recommended actions based on behavioral analysis
-/// Threat intelligence request for indicator lookup
-pub struct ThreatIntelRequest {
-    /// List of indicators to check (IPs, domains, hashes, etc.)
-    pub indicators: Vec<String>,
-    /// Type of indicators being submitted
-    pub indicator_type: String,
-/// Threat intelligence response with indicator analysis
-pub struct ThreatIntelResponse {
-    /// Number of malicious indicators found
-    pub matches_found: usize,
-    /// Details of malicious indicators detected
-    pub malicious_indicators: Vec<ThreatIndicatorMatch>,
-    /// Confidence scores for each indicator
-    pub confidence_scores: HashMap<String, f64>,
-/// Individual threat indicator match details
-pub struct ThreatIndicatorMatch {
-    /// The indicator that was matched
-    pub indicator: String,
-    /// Type of threat associated with the indicator
-    /// Confidence level in the match (0.0 to 1.0)
-    pub confidence: f64,
-    /// First time this indicator was seen
-    pub first_seen: String,
-    /// Source of the threat intelligence
-    pub source: String,
-/// Request to create a custom detection rule}
 
+pub struct ThreatAnalysisResponse {
+
+    pub event_id: String,
+
+    pub threats_detected: usize,
+
+    pub risk_level: String,
+
+    pub detected_threats: Vec<ThreatEventResponse>,
+
+    pub ml_predictions: Vec<MlPredictionResponse>,
+
+    pub recommendations: Vec<String>,
+
+    pub processing_time_ms: u64,
+
+    pub incident_created: Option<String>,
+
+pub struct ThreatEventResponse {
+
+    pub threat_id: String,
+
+    pub threat_type: String,
+
+    pub severity: String,
+
+    pub description: String,
+
+    pub evidence: Vec<String>,
+
+pub struct MlPredictionResponse {
+
+    pub model_id: String,
+
+    pub prediction_type: String,
+
+    pub confidence_score: f64,
+
+pub struct BatchAnalysisRequest {
+
+    pub events: Vec<SecurityEventRequest>,
+
+    pub correlation_analysis: Option<bool>,
+
+    pub priority: Option<String>,
+
+pub struct BatchAnalysisResponse {
+
+    pub batch_id: String,
+
+    pub total_events: usize,
+
+    pub high_severity_threats: usize,
+
+    pub incidents_created: usize,
+
+    pub results: Vec<ThreatAnalysisResponse>,
+
+pub struct BehavioralAnalysisRequest {
+
+    pub time_window_hours: Option<u32>,
+
+    pub include_ml_analysis: Option<bool>,
+
+pub struct BehavioralAnalysisResponse {
+
+    pub anomaly_score: f64,
+
+    pub anomalies_detected: Vec<String>,
+
+    pub behavioral_insights: Vec<String>,
+
+pub struct ThreatIntelRequest {
+
+    pub indicators: Vec<String>,
+
+    pub indicator_type: String,
+
+pub struct ThreatIntelResponse {
+
+    pub matches_found: usize,
+
+    pub malicious_indicators: Vec<ThreatIndicatorMatch>,
+
+    pub confidence_scores: HashMap<String, f64>,
+
+pub struct ThreatIndicatorMatch {
+
+    pub indicator: String,
+
+    pub confidence: f64,
+
+    pub first_seen: String,
+
+    pub source: String,
 
 pub struct CreateDetectionRuleRequest {
-    /// Name of the detection rule
+
     pub name: String,
-    /// Description of what the rule detects
-    /// Type of threat this rule detects
-    /// Severity level of threats detected by this rule
-    /// Conditions that must be met for the rule to trigger
+
     pub conditions: Vec<RuleConditionRequest>,
-    /// MITRE ATT&CK techniques covered by this rule
+
     pub mitre_techniques: Vec<String>,
-    /// Automated response actions when rule triggers
+
     pub response_actions: Vec<String>,
-/// Individual condition for a detection rule
+
 pub struct RuleConditionRequest {
-    /// Type of condition (e.g., "field_match", "threshold", "pattern")
+
     pub condition_type: String,
-    /// Field name to evaluate (optional)
+
     pub field: Option<String>,
-    /// Operator for comparison (optional)
+
     pub operator: Option<String>,
-    /// Value to compare against (optional)
+
     pub value: Option<String>,
-    /// Threshold value for numeric comparisons (optional)
+
     pub threshold: Option<f64>,
-/// Security statistics response with system-wide metrics
+
 pub struct SecurityStatisticsResponse {
-    /// Total number of security events analyzed
+
     pub total_events_analyzed: u64,
-    /// Number of threats detected today
+
     pub threats_detected_today: u64,
-    /// Number of active security incidents
+
     pub active_incidents: u64,
-    /// Number of active ML models
+
     pub ml_models_active: u64,
-    /// Number of active detection rules
+
     pub detection_rules_active: u64,
-    /// Number of active threat intelligence feeds
+
     pub threat_feeds_active: u64,
-    /// Average processing time for events in milliseconds
+
     pub average_processing_time_ms: f64,
-    /// Distribution of threat types detected
+
     pub threat_distribution: HashMap<String, u32>,
-    /// Top threat sources by IP address
+
     pub top_threat_sources: Vec<String>,

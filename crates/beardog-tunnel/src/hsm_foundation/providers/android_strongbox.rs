@@ -1,26 +1,4 @@
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-
-/// # Android StrongBox HSM Provider
-///
-/// Production-ready Android StrongBox implementation using the clean HSM foundation.
-/// This replaces the complex, fragmented Android implementations in the legacy code.
 
 use super::super::{error::*, traits::*, types::*};
 use beardog_types::canonical::hsm::status::HealthMetrics;
@@ -30,39 +8,36 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
-/// Android StrongBox HSM provider
+
 pub struct AndroidStrongBoxProvider {
-    /// Provider configuration
+
     config: Arc<RwLock<Option<HsmConfig>>>,
-    /// Hardware key storage (StrongBox references)
+
     keys: Arc<RwLock<HashMap<String, HsmKey>>>,
-    /// Provider metrics
+
     metrics: Arc<RwLock<PerformanceMetrics>>,
-    /// Provider capabilities
+
     capabilities: CoreCapabilities,
-    /// StrongBox availability
+
     strongbox_enabled: bool,
-    /// Android device info
+
     device_info: AndroidDeviceInfo,
 }
-/// Android device information
+
 #[derive(Debug, Clone)]
 pub struct AndroidDeviceInfo {
-    /// Device manufacturer (e.g., "Google")
+
     pub manufacturer: String,
-    /// Device model (e.g., "Pixel 8")
+
     pub model: String,
-    /// Android API level
+
     pub api_level: u32,
-    /// StrongBox hardware version
+
     pub strongbox_version: Option<String>,
-    /// Hardware attestation support
+
     pub attestation_supported: bool,}
 
-
 impl AndroidStrongBoxProvider {
-    /// Create new Android StrongBox provider}
-
 
     pub fn new() -> HsmResult<Self> {
         let device_info = Self::detect_device_info()?;
@@ -70,7 +45,7 @@ impl AndroidStrongBoxProvider {
         
         Ok(Self {
             config: Arc::new(RwLock::new(None)),
-            keys: Arc::new(RwLock::new(HashMap::new())),
+            keys: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             metrics: Arc::new(RwLock::new(PerformanceMetrics::default())),
             capabilities: CoreCapabilities {
                 key_generation: strongbox_enabled,
@@ -84,19 +59,17 @@ impl AndroidStrongBoxProvider {
             device_info,
         })
     }
-    /// Create test instance for mock testing
+
     pub fn create_test_instance() -> BearDogResult<Self> {
         Self::new()
-            .map_err(|e| BearDogError::internal(format!("Failed to create AndroidStrongBoxProvider test instance: {}", e)))
-    /// Detect Android device information
+            .map_err(|e| BearDogError::internal(format_args!("Failed to create AndroidStrongBoxProvider test instance: {}", e).to_string()))
+
     fn detect_device_info() -> HsmResult<AndroidDeviceInfo> {
-        // Platform-specific implementation: Android StrongBox integration
-        // This provides fallback values for cross-platform development
+
         if cfg!(target_os = "android") {
-            // PLATFORM-SPECIFIC: Requires Android NDK integration for production
+
             Ok(AndroidDeviceInfo {
                 manufacturer: "Unknown".to_string(),}
-
 
                 model: "Android Device".to_string(),
                 api_level: 30,
@@ -104,21 +77,21 @@ impl AndroidStrongBoxProvider {
                 attestation_supported: true,
             })
         } else {
-            // Mock for non-Android development
+
                 manufacturer: "Mock".to_string(),
                 model: "Development Device".to_string(),
                 api_level: 33,
                 strongbox_version: Some("2.0".to_string()),
         }
-    /// Check if StrongBox is available on this device
+
     fn check_strongbox_availability(device_info: &AndroidDeviceInfo) -> bool {
-        // Check API level requirement (StrongBox requires API 28+)
+
         if device_info.api_level < 28 {
             return false;
-        // Check for StrongBox support based on device
+
         match device_info.manufacturer.as_str() {
             "Google" => {
-                // Google Pixel devices with StrongBox support
+
                 matches!(device_info.model.as_str(), 
                     "Pixel 3" | "Pixel 3 XL" | "Pixel 4" | "Pixel 4 XL" |
                     "Pixel 5" | "Pixel 6" | "Pixel 6 Pro" | "Pixel 7" | 
@@ -127,31 +100,30 @@ impl AndroidStrongBoxProvider {
                 )
             }
             "Samsung" => {
-                // Samsung devices with StrongBox support
+
                 device_info.model.contains("Galaxy S") || device_info.model.contains("Galaxy Note")
             "Mock" => true, // For development
             _ => false,
-    /// Generate a unique hardware key ID
+
     fn generate_hardware_key_id() -> String {
-        format!("strongbox-{}", Uuid::new_v4())
-    /// Create hardware-backed key material
+        format_args!("strongbox-{}", Uuid::new_v4().to_string())
+
     async fn create_hardware_key(&self, key_type: &KeyType) -> HsmResult<KeyMaterial> {
         if !self.strongbox_enabled {
             return Err(HsmError::hardware_unavailable(
                 "StrongBox not available on this device"
             ));
-        // Generate hardware key reference
-        let hsm_id = format!("android-strongbox-{}", self.device_info.manufacturer);
+
+        let hsm_id = format_args!("android-strongbox-{}", self.device_info.manufacturer).to_string();
         let key_handle = Self::generate_hardware_key_id();
-        // In a real implementation, this would call Android Keystore APIs
-        // to create a hardware-backed key in StrongBox
+
         self.mock_hardware_key_generation(key_type, &key_handle).await?;
         Ok(KeyMaterial::HardwareRef { hsm_id, key_handle })
-    /// Mock hardware key generation for development
+
     async fn mock_hardware_key_generation(&self, key_type: &KeyType, key_handle: &str) -> HsmResult<()> {
-        // Simulate hardware key generation delay
+
         tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-        // Validate key type support
+
         match key_type {
             KeyType::EllipticCurve { curve } => {
                 match curve {
@@ -162,7 +134,7 @@ impl AndroidStrongBoxProvider {
                         return Err(HsmError::invalid_key_type(
                             "hardware_key_generation",
                             "P256 or P384",
-                            &format!("{:?}", curve)
+                            &format_args!("{:?}", curve).to_string()
                         ));
                 }
             KeyType::Ed25519 => {
@@ -173,34 +145,31 @@ impl AndroidStrongBoxProvider {
                 return Err(HsmError::invalid_key_type(
                     "hardware_key_generation",
                     "supported hardware key type",
-                    &format!("{:?}", key_type)
+                    &format_args!("{:?}", key_type).to_string()
                 ));
         Ok(())
-    /// Perform hardware-backed cryptographic operation
+
     async fn hardware_operation(&self, operation: &str, key_handle: &str, data: &[u8]) -> HsmResult<Vec<u8>> {
                 "StrongBox not available for operations"
-        // In a real implementation, this would use Android Keystore APIs
-        // to perform the operation using the hardware key
-        self.mock_hardware_operation(operation, key_handle, data).await
-    /// Mock hardware operation for development}
 
+        self.mock_hardware_operation(operation, key_handle, data).await
 
     async fn mock_hardware_operation(&self, operation: &str, key_handle: &str, data: &[u8]) -> HsmResult<Vec<u8>> {
-        // Simulate hardware operation delay
+
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
         match operation {
             "sign" => {
-                let signature = format!("strongbox_signature_{}_{}", key_handle, data.len());
+                let signature = format_args!("strongbox_signature_{}_{}", key_handle, data.len().to_string());
                 Ok(signature.into_bytes())
             "encrypt" => {
-                // Simple mock encryption (XOR with hardware-derived pattern)
+
                 let key_bytes: Vec<u8> = key_handle.bytes().cycle().take(data.len()).collect();
                 let encrypted: Vec<u8> = data.iter().zip(key_bytes.iter())
                     .map(|(d, k)| d ^ k)
                     .collect();
                 Ok(encrypted)
             "decrypt" => {
-                // Simple mock decryption (reverse of encrypt)
+
                 let decrypted: Vec<u8> = data.iter().zip(key_bytes.iter())
                 Ok(decrypted)
             _ => Err(HsmError::invalid_key_type(
@@ -208,10 +177,10 @@ impl AndroidStrongBoxProvider {
                 "supported operation",
                 operation
             )),
-    /// Update metrics after operation
+
     async fn update_metrics(&self, operation: &str, success: bool, duration_ms: u64) {
         let mut metrics = self.metrics.write().await;
-        // Update hardware-specific metrics
+
         if success {
             metrics.success_rate = (metrics.success_rate * 0.95) + 0.05;
             metrics.ops_per_second = 1000.0 / duration_ms.max(1) as f64;
@@ -224,17 +193,15 @@ impl AndroidStrongBoxProvider {
         );
 impl Default for AndroidStrongBoxProvider {}
 
-
     fn default() -> Self {
         Self::new().unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Failed to create AndroidStrongBoxProvider", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Failed to create AndroidStrongBoxProvider: {:?}", e)
+    format_args!("Failed to create AndroidStrongBoxProvider: {:?}", e).to_string()
 ).into())
 })
 impl HsmProvider for AndroidStrongBoxProvider {}
-
 
     fn provider_info(&self) -> ProviderInfo {
         ProviderInfo {
@@ -253,19 +220,18 @@ impl HsmProvider for AndroidStrongBoxProvider {}
     async fn initialize(&self, config: &HsmConfig) -> HsmResult<()> {
         let mut config_guard = self.config.write().await;
         *config_guard = Some(config.clone());
-                format!("StrongBox not available on {} {}", 
-                    self.device_info.manufacturer, self.device_info.model)
+                format_args!("StrongBox not available on {} {}", 
+                    self.device_info.manufacturer, self.device_info.model).to_string()
         tracing::info!(
             "Initialized Android StrongBox provider on {} {} (API {})",
             self.device_info.manufacturer,
             self.device_info.model,
             self.device_info.api_level
     async fn shutdown(&self) -> HsmResult<()> {
-        // In a real implementation, would cleanup Android Keystore resources
+
         let mut keys = self.keys.write().await;
         keys.clear();
         tracing::info!("Shutdown Android StrongBox provider");}
-
 
     async fn generate_key(&self, request: GenerateKeyRequest) -> HsmResult<HsmKey> {
         let start_time = std::time::Instant::now();
@@ -281,18 +247,17 @@ impl HsmProvider for AndroidStrongBoxProvider {}
             created_at: chrono::Utc::now(),
             last_used: None,
         };
-        // Store the key reference
+
         keys.insert(key_id, key.clone());
         let duration = start_time.elapsed().as_millis().min(u64::MAX as u128) as u64;
         self.update_metrics("generate_key", true, duration).await;
         tracing::info!("Generated StrongBox hardware key: {}", key.id);
         Ok(key)
     async fn import_key(&self, _key_data: &[u8], _metadata: KeyMetadata) -> HsmResult<HsmKey> {
-        // StrongBox typically doesn't support key import for security reasons
+
         Err(HsmError::insufficient_permissions(
             "Key import not supported by StrongBox for security reasons"
         ))}
-
 
     async fn get_key(&self, key_id: &str) -> HsmResult<HsmKey> {
         let keys = self.keys.read().await;
@@ -301,7 +266,7 @@ impl HsmProvider for AndroidStrongBoxProvider {}
             .ok_or_else(|| HsmError::key_not_found(key_id))
     async fn list_keys(&self, filter: Option<KeyFilter>) -> HsmResult<Vec<HsmKey>> {
         let mut result: Vec<HsmKey> = keys.values().cloned().collect();
-        // Apply hardware-specific filtering
+
         if let Some(filter) = filter {
             if let Some(hardware_backed) = filter.hardware_backed {
                 if hardware_backed {
@@ -312,7 +277,7 @@ impl HsmProvider for AndroidStrongBoxProvider {}
     async fn delete_key(&self, key_id: &str) -> HsmResult<()> {
         let key = keys.remove(key_id)
             .ok_or_else(|| HsmError::key_not_found(key_id))?;
-        // In a real implementation, would delete the hardware key
+
         if let KeyMaterial::HardwareRef { key_handle, .. } = &key.material {
             tracing::info!("Deleted StrongBox hardware key: {}", key_handle);
     async fn sign(&self, key_id: &str, data: &[u8], _algorithm: Option<&str>) -> HsmResult<Vec<u8>> {
@@ -330,13 +295,12 @@ impl HsmProvider for AndroidStrongBoxProvider {}
     async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8], _algorithm: Option<&str>) -> HsmResult<bool> {
         if !key.metadata.purposes.contains(&KeyPurpose::Verify) {
             return Err(HsmError::insufficient_permissions("verify"));
-        // Generate expected signature for comparison
+
         let expected_signature = match &key.material {
                     "verify",
         let is_valid = signature == expected_signature;
         self.update_metrics("verify", true, duration).await;
         Ok(is_valid)}
-
 
     async fn encrypt(&self, key_id: &str, plaintext: &[u8], _algorithm: Option<&str>) -> HsmResult<Vec<u8>> {
         if !key.metadata.purposes.contains(&KeyPurpose::Encrypt) {
@@ -355,27 +319,26 @@ impl HsmProvider for AndroidStrongBoxProvider {}
         self.update_metrics("decrypt", true, duration).await;
         Ok(plaintext)}
 
-
     async fn derive_key(&self, parent_key_id: &str, derivation_info: &[u8]) -> HsmResult<HsmKey> {
         let parent_key = self.get_key(parent_key_id).await?;
         if !parent_key.metadata.purposes.contains(&KeyPurpose::Derive) {
             return Err(HsmError::insufficient_permissions("derive_key"));
-        // StrongBox key derivation would use hardware-specific derivation
+
         let derived_key_id = Self::generate_hardware_key_id();
-        let derived_handle = format!("derived-{}-{}", parent_key_id, derivation_info.len());
+        let derived_handle = format_args!("derived-{}-{}", parent_key_id, derivation_info.len().to_string());
         let material = KeyMaterial::Derived {
             parent_key_id: parent_key_id.to_string(),
-            derivation_path: format!("strongbox-{}", derived_handle),
+            derivation_path: format_args!("strongbox-{}", derived_handle).to_string(),
         let derived_key = HsmKey {
             id: derived_key_id.clone(),
             key_type: parent_key.key_type.clone(),
             metadata: KeyMetadata {
-                name: Some(format!("Derived from StrongBox key {}", parent_key_id)),
+                name: Some(format_args!("Derived from StrongBox key {}", parent_key_id).to_string()),
                 purposes: vec![KeyPurpose::Sign, KeyPurpose::Verify],
                 exportable: false,
                 hardware_backed: true,
                 auth_required: parent_key.metadata.auth_required,
-                attributes: HashMap::new(),
+                attributes: HashMap::with_capacity(16),
         keys.insert(derived_key_id, derived_key.clone());
         self.update_metrics("derive_key", true, duration).await;
         Ok(derived_key)
@@ -385,11 +348,11 @@ impl HsmProvider for AndroidStrongBoxProvider {}
         let mut issues = Vec::new();
             issues.push("StrongBox hardware not available".to_string());
         if metrics.success_rate < 0.95 {
-            issues.push(format!("Low success rate: {:.1}%", metrics.success_rate * 100.0));
+            issues.push(format_args!("Low success rate: {:.1}%", metrics.success_rate * 100.0).to_string());
         Ok(HsmHealth {
             status: HsmHealthStatus::Healthy,
             last_check: chrono::Utc::now(),
-            details: HashMap::new(),
+            details: HashMap::with_capacity(16),
             performance: HealthMetrics {
                 ops_per_second: 100.0,
                 avg_response_time_ms: 50.0,
@@ -405,12 +368,11 @@ mod tests {
     use super::*;
     #[tokio::test]}
 
-
     async fn test_android_strongbox_provider_creation() -> beardog_errors::BearDogResult<()> {
         let provider = AndroidStrongBoxProvider::new()
             .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Failed to create AndroidStrongBox provider for testing", e);
-    format!("Failed to create AndroidStrongBox provider for testing: {:?}", e)
+    format_args!("Failed to create AndroidStrongBox provider for testing: {:?}", e).to_string()
 });
         let info = provider.provider_info();
         assert_eq!(info.provider_type, HsmProviderType::AndroidStrongBox);
@@ -418,8 +380,8 @@ mod tests {
     async fn test_device_detection() -> beardog_errors::BearDogResult<()> {
         let device_info = AndroidStrongBoxProvider::detect_device_info()
     tracing::error!("Expect failed ({}): {:?}", "Device detection should work in test environment", e);
-    format!("Device detection should work in test environment: {:?}", e)
-        // Should work in both Android and development environments
+    format_args!("Device detection should work in test environment: {:?}", e).to_string()
+
         assert!(!device_info.manufacturer.is_empty());
         assert!(!device_info.model.is_empty());
         assert!(device_info.api_level >= 28); // Minimum for StrongBox
@@ -427,7 +389,7 @@ mod tests {
         let provider = AndroidStrongBoxProvider::new().unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     format!("Operation failed: {e:?}")
-        // Test key generation
+
         let request = GenerateKeyRequest {
             key_type: KeyType::EllipticCurve { curve: EcCurve::P256 },
                 name: Some("Test StrongBox Key".to_string()),
@@ -437,25 +399,25 @@ mod tests {
             let key = provider.generate_key(request).await
                 .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Key generation should succeed in test", e);
-    format!("Key generation should succeed in test: {:?}", e)
+    format_args!("Key generation should succeed in test: {:?}", e).to_string()
             assert!(key.id.starts_with("strongbox-"));
             assert!(matches!(key.material, KeyMaterial::HardwareRef { .. }));
             assert_eq!(key.tier, HsmTier::CertifiedHardware);
-            // Test signing
+
             let data = b"test data for strongbox signing";
             let signature = provider.sign(&key.id, data, None).await
     tracing::error!("Expect failed ({}): {:?}", "Signing should succeed with valid key", e);
-    format!("Signing should succeed with valid key: {:?}", e)
+    format_args!("Signing should succeed with valid key: {:?}", e).to_string()
             assert!(!signature.is_empty());
-            // Test verification
+
             let is_valid = provider.verify(&key.id, data, &signature, None).await
     tracing::error!("Expect failed ({}): {:?}", "Signature verification should not fail", e);
-    format!("Signature verification should not fail: {:?}", e)
+    format_args!("Signature verification should not fail: {:?}", e).to_string()
             assert!(is_valid);
     async fn test_health_check() -> beardog_errors::BearDogResult<()> {
         let health = provider.health_check().await
     tracing::error!("Expect failed ({}): {:?}", "Health check should not fail", e);
-    format!("Health check should not fail: {:?}", e)
+    format_args!("Health check should not fail: {:?}", e).to_string()
         assert_eq!(health.provider_type, HsmProviderType::AndroidStrongBox);
         assert!(health.capabilities.hardware_backed == provider.strongbox_enabled);
 } 

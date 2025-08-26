@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["calculate_fragmentation_ratio","calculate_optimal_pool_size","estimate_object_memory_usage"]};

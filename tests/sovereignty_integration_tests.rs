@@ -1,27 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Individual Sovereignty API Integration Tests
-//!
-//! **Comprehensive Testing of Human Empowerment Features**
-//!
-//! These tests verify that BearDog's Individual Sovereignty APIs
-//! properly implement consent-based, peer-to-peer resource sharing
-//! that empowers individuals to control their compute, data, and identity.
 
 use axum::{
     body::Body,
@@ -40,7 +17,6 @@ use std::{collections::HashMap, sync::Arc};
 use tower::ServiceExt;
 use uuid::Uuid;
 
-/// Test helper to create test app state
 fn create_test_app_state() -> AppState {
     AppState {
         config: Arc::new(beardog_types::config::BearDogConfig::default()),
@@ -55,10 +31,9 @@ async fn test_resource_sharing_workflow() {
     
     let app = create_app(create_test_app_state()).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-    
-    // Test 1: Request resource sharing
+
     let sharing_request = ResourceSharingRequest {
         friend_node_id: "friend-bob-test".to_string(),
         resource_type: ResourceType::Compute {
@@ -85,38 +60,36 @@ async fn test_resource_sharing_workflow() {
         .header("content-type", "application/json")
         .body(Body::from(serde_json::to_string().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "JSON serialization failed in example", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "JSON serialization failed in example", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "JSON serialization failed in example", e).to_string())
 })?))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Resource sharing request created successfully");
-    
-    // Test 2: List sharing offers
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/sharing/offers")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Sharing offers listed successfully");
-    
-    // Test 3: Accept sharing offer
+
     let offer_id = "test-offer-123";
     let accept_request = serde_json::json!({
         "acceptance_message": "Thanks for sharing compute resources!",
@@ -125,34 +98,33 @@ async fn test_resource_sharing_workflow() {
     
     let request = Request::builder()
         .method("POST")
-        .uri(&format!("/api/v1/sovereignty/sharing/offers/{}/accept", offer_id))
+        .uri(&format_args!("/api/v1/sovereignty/sharing/offers/{}/accept", offer_id).to_string())
         .header("content-type", "application/json")
         .body(Body::from(accept_request.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Sharing offer accepted with consent");
-    
-    // Test 4: List active shares
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/sharing/active")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Active shares listed successfully");
@@ -164,10 +136,9 @@ async fn test_friend_recovery_workflow() {
     
     let app = create_app(create_test_app_state()).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-    
-    // Test 1: Request friend recovery
+
     let recovery_request = serde_json::json!({
         "recovery_type": "DeviceLoss",
         "emergency_message": "Lost device while traveling, need urgent help!",
@@ -187,17 +158,16 @@ async fn test_friend_recovery_workflow() {
         .body(Body::from(recovery_request.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Friend recovery request created");
-    
-    // Test 2: Distribute recovery shards
+
     let shard_distribution = serde_json::json!({
         "shard_count": 5,
         "threshold": 3,
@@ -217,17 +187,16 @@ async fn test_friend_recovery_workflow() {
         .body(Body::from(shard_distribution.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Recovery shards distributed to friends");
-    
-    // Test 3: Friend assists with recovery
+
     let assistance = serde_json::json!({
         "friend_id": "friend-alice-test",
         "recovery_shard": "encrypted_shard_data",
@@ -237,17 +206,17 @@ async fn test_friend_recovery_workflow() {
     let request_id = "recovery-test-456";
     let request = Request::builder()
         .method("POST")
-        .uri(&format!("/api/v1/sovereignty/recovery/requests/{}/assist", request_id))
+        .uri(&format_args!("/api/v1/sovereignty/recovery/requests/{}/assist", request_id).to_string())
         .header("content-type", "application/json")
         .body(Body::from(assistance.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Friend provided recovery assistance");
@@ -259,10 +228,9 @@ async fn test_identity_management_workflow() {
     
     let app = create_app(create_test_app_state()).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-    
-    // Test 1: Generate identity key
+
     let key_request = serde_json::json!({
         "key_purpose": "Authentication",
         "algorithm": "Ed25519",
@@ -279,34 +247,32 @@ async fn test_identity_management_workflow() {
         .body(Body::from(key_request.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Identity key generated locally");
-    
-    // Test 2: List identity keys
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/identity/keys")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Identity keys listed successfully");
-    
-    // Test 3: Verify identity claim
+
     let claim_verification = serde_json::json!({
         "claim_type": "ProfessionalSkill",
         "claim_value": "Machine Learning Engineer",
@@ -322,17 +288,16 @@ async fn test_identity_management_workflow() {
         .body(Body::from(claim_verification.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Identity claim verified successfully");
-    
-    // Test 4: Create identity attestation
+
     let attestation = serde_json::json!({
         "attesting_for": "friend-alice-test",
         "claim_type": "ProfessionalSkill",
@@ -348,12 +313,12 @@ async fn test_identity_management_workflow() {
         .body(Body::from(attestation.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Identity attestation created");
@@ -365,44 +330,41 @@ async fn test_privacy_protection_workflow() {
     
     let app = create_app(create_test_app_state()).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-    
-    // Test 1: Privacy status check
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/privacy/status")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Privacy status checked - protections active");
-    
-    // Test 2: Privacy audit trail
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/privacy/audit")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Privacy audit trail retrieved");
-    
-    // Test 3: Data anonymization
+
     let anonymization_request = serde_json::json!({
         "data_types": ["UserProfile", "InteractionLogs"],
         "anonymization_level": "Strong",
@@ -416,17 +378,16 @@ async fn test_privacy_protection_workflow() {
         .body(Body::from(anonymization_request.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Personal data anonymized successfully");
-    
-    // Test 4: Privacy data purge
+
     let purge_request = serde_json::json!({
         "data_categories": ["TemporaryLogs", "CachedData"],
         "confirm_irreversible": true,
@@ -440,12 +401,12 @@ async fn test_privacy_protection_workflow() {
         .body(Body::from(purge_request.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Privacy data purged successfully");
@@ -457,45 +418,42 @@ async fn test_consent_management_workflow() {
     
     let app = create_app(create_test_app_state()).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-    
-    // Test 1: List active consents
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/consent/active")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Active consents listed successfully");
-    
-    // Test 2: Get consent details
+
     let consent_id = "consent-test-789";
     let request = Request::builder()
         .method("GET")
-        .uri(&format!("/api/v1/sovereignty/consent/{}", consent_id))
+        .uri(&format_args!("/api/v1/sovereignty/consent/{}", consent_id).to_string())
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Consent details retrieved");
-    
-    // Test 3: Revoke consent
+
     let revocation = serde_json::json!({
         "revocation_reason": "No longer need shared resources",
         "notify_parties": true,
@@ -504,51 +462,49 @@ async fn test_consent_management_workflow() {
     
     let request = Request::builder()
         .method("POST")
-        .uri(&format!("/api/v1/sovereignty/consent/{}/revoke", consent_id))
+        .uri(&format_args!("/api/v1/sovereignty/consent/{}/revoke", consent_id).to_string())
         .header("content-type", "application/json")
         .body(Body::from(revocation.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Consent revoked successfully");
-    
-    // Test 4: List consent grants
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/consent/grants")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Consent grants listed successfully");
-    
-    // Test 5: List consent requests
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/consent/requests")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Consent requests listed successfully");
@@ -560,15 +516,11 @@ async fn test_end_to_end_sovereignty_workflow() {
     
     let app = create_app(create_test_app_state()).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-    
-    // Scenario: Alice and Bob share resources, work together, then clean up
-    // This tests the complete human empowerment cycle
-    
+
     println!("   🤝 Scenario: Alice shares storage with Bob for collaboration");
-    
-    // Step 1: Alice offers storage to Bob
+
     let storage_offer = ResourceSharingRequest {
         friend_node_id: "bob-climate-research".to_string(),
         resource_type: ResourceType::Storage {
@@ -595,38 +547,36 @@ async fn test_end_to_end_sovereignty_workflow() {
         .header("content-type", "application/json")
         .body(Body::from(serde_json::to_string().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "JSON serialization failed in example", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "JSON serialization failed in example", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "JSON serialization failed in example", e).to_string())
 })?))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Alice's storage offer created");
-    
-    // Step 2: Verify privacy is maintained
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/privacy/status")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Privacy protections confirmed active");
-    
-    // Step 3: Bob accepts Alice's offer (simulated)
+
     let offer_id = "alice-storage-offer-123";
     let acceptance = serde_json::json!({
         "acceptance_message": "Thanks Alice! This will really help my climate modeling work.",
@@ -636,56 +586,53 @@ async fn test_end_to_end_sovereignty_workflow() {
     
     let request = Request::builder()
         .method("POST")
-        .uri(&format!("/api/v1/sovereignty/sharing/offers/{}/accept", offer_id))
+        .uri(&format_args!("/api/v1/sovereignty/sharing/offers/{}/accept", offer_id).to_string())
         .header("content-type", "application/json")
         .body(Body::from(acceptance.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Bob accepted storage offer with gratitude");
-    
-    // Step 4: Verify consent is properly recorded
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/consent/active")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Mutual consent properly recorded");
-    
-    // Step 5: Monitor active collaboration
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/sharing/active")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Active collaboration monitored");
-    
-    // Step 6: Bob completes work and revokes access
+
     let consent_id = "storage-consent-alice-bob";
     let revocation = serde_json::json!({
         "revocation_reason": "Research project completed successfully",
@@ -695,34 +642,33 @@ async fn test_end_to_end_sovereignty_workflow() {
     
     let request = Request::builder()
         .method("POST")
-        .uri(&format!("/api/v1/sovereignty/consent/{}/revoke", consent_id))
+        .uri(&format_args!("/api/v1/sovereignty/consent/{}/revoke", consent_id).to_string())
         .header("content-type", "application/json")
         .body(Body::from(revocation.to_string()))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.clone().oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Consent revoked with gratitude");
-    
-    // Step 7: Verify clean termination
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/sharing/active")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     println!("   ✅ Clean termination confirmed - no active shares");
@@ -739,8 +685,7 @@ async fn test_end_to_end_sovereignty_workflow() {
 #[tokio::test]
 async fn test_sovereignty_compliance() {
     println!("🧪 Testing sovereignty and human dignity compliance");
-    
-    // Test that the system preserves human dignity and sovereignty
+
     assert!(true, "Individual control is maintained at all times");
     assert!(true, "No central authority can override individual decisions"); 
     assert!(true, "All operations require explicit consent");
@@ -760,29 +705,27 @@ async fn test_anti_surveillance_features() {
     
     let app = create_app(create_test_app_state()).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-    
-    // Verify that surveillance features are NOT present
+
     assert!(true, "No user behavior tracking");
     assert!(true, "No data mining or profiling");
     assert!(true, "No external data transmission without consent");
     assert!(true, "No central monitoring authority");
     assert!(true, "All data encrypted and user-controlled");
-    
-    // Test privacy status to confirm protections
+
     let request = Request::builder()
         .method("GET")
         .uri("/api/v1/sovereignty/privacy/status")
         .body(Body::empty())
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
     let response = app.oneshot(request).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert_eq!(response.status(), StatusCode::OK);
     

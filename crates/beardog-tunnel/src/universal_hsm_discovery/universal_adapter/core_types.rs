@@ -1,30 +1,11 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Core Types for Universal HSM Adapter
-///
-/// Defines the fundamental types used throughout the universal adapter system
 
 use beardog_errors::{BearDogError, BearDogResult};
 use chrono;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-// HSM Discovery imports
+
 use crate::universal_hsm_discovery::{
     DiscoveredHsm, EntropyCollectionMethod, HsmHealthStatus, HsmInterfaceType, HsmTier,
     PerformanceCapabilities,
@@ -43,7 +24,6 @@ pub enum AuthenticationStatus {
     BiometricRequired,
     Authenticated,}
 
-
 pub struct UniversalOperation {
     pub operation_type: OperationType,
     pub parameters: HashMap<String, String>,
@@ -57,7 +37,6 @@ pub enum OperationType {
     HumanEntropyGeneration,
 }
 
-
 pub struct OperationResult {
     pub success: bool,
     pub result_data: Vec<u8>,
@@ -70,7 +49,6 @@ pub struct PerformanceMetrics {
     pub error_count: u64,
 }
 
-
 pub struct HealthStatus {
     pub is_healthy: bool,
     pub response_time_ms: f64,
@@ -81,7 +59,6 @@ pub struct HumanEntropyRequirements {
     pub minimum_entropy_bits: u32,
     pub collection_timeout_seconds: u32,
 }
-
 
 pub struct EphemeralSeed {
     pub seed_data: Vec<u8>,

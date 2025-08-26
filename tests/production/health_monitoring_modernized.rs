@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Modernized Production Health Monitoring Tests
-//!
-//! **Enterprise-Grade Test Infrastructure with Unified Error Handling**
-//!
-//! This module demonstrates modern test patterns using BearDog's unified error
-//! system, replacing panic-prone patterns with sophisticated error handling.
 
 use crate::tests::common::{
     assertions::{assert_in_range, assert_success, assert_true, AssertionContext},
@@ -32,14 +10,13 @@ use beardog::production::*;
 use beardog_errors::{BearDogError, BearDogResult};
 use tracing::{debug, info, warn};
 
-/// Modern test suite for production health monitoring with unified error handling
 pub struct HealthMonitoringTestSuite {
     runner: TestSuiteRunner,
     prod_manager: Option<ProductionManager>,
 }
 
 impl HealthMonitoringTestSuite {
-    /// Create new health monitoring test suite
+
     pub fn new() -> Self {
         Self {
             runner: TestSuiteRunner::new("Production Health Monitoring"),
@@ -47,13 +24,12 @@ impl HealthMonitoringTestSuite {
         }
     }
 
-    /// Initialize production manager with error handling
     pub async fn initialize(&mut self) -> TestResult<()> {
         let core = beardog::BearDogCore::new()
             .await
             .map_err(|e| BearDogError::enhanced(
                 "TEST_SETUP",
-                format!("Failed to initialize BearDog core: {}", e),
+                format_args!("Failed to initialize BearDog core: {}", e).to_string(),
                 beardog_errors::ErrorSeverity::Critical,
                 beardog_errors::ErrorCategory::Initialization,
                 "test_infrastructure",
@@ -66,7 +42,7 @@ impl HealthMonitoringTestSuite {
                 .await
                 .map_err(|e| BearDogError::enhanced(
                     "TEST_SETUP",
-                    format!("Failed to create production manager: {}", e),
+                    format_args!("Failed to create production manager: {}", e).to_string(),
                     beardog_errors::ErrorSeverity::Critical,
                     beardog_errors::ErrorCategory::Initialization,
                     "test_infrastructure",
@@ -79,14 +55,11 @@ impl HealthMonitoringTestSuite {
         Ok(())
     }
 
-    /// Run all health monitoring tests with unified error handling
     pub async fn run_all_tests(&mut self) -> TestResult<()> {
         info!("🏥 Starting comprehensive health monitoring test suite");
 
-        // Initialize test environment
         self.initialize().await?;
 
-        // Execute test suite with modern error handling
         self.runner.run_test("system_health_monitoring", |ctx| self.test_system_health_monitoring(ctx)).await?;
         self.runner.run_test("component_health_checks", |ctx| self.test_component_health_checks(ctx)).await?;
         self.runner.run_test("health_endpoints", |ctx| self.test_health_endpoints(ctx)).await?;
@@ -95,14 +68,13 @@ impl HealthMonitoringTestSuite {
         self.runner.run_test("performance_metrics", |ctx| self.test_performance_metrics(ctx)).await?;
         self.runner.run_test("alert_systems", |ctx| self.test_alert_systems(ctx)).await?;
 
-        // Generate comprehensive report
         let report = self.runner.generate_report();
         report.print_report();
 
         if report.metrics.failed_tests > 0 {
             return Err(BearDogError::enhanced(
                 "TEST_SUITE_FAILED",
-                format!("Health monitoring test suite failed with {} failures", report.metrics.failed_tests),
+                format_args!("Health monitoring test suite failed with {} failures", report.metrics.failed_tests).to_string(),
                 beardog_errors::ErrorSeverity::High,
                 beardog_errors::ErrorCategory::Validation,
                 "test_infrastructure",
@@ -118,14 +90,12 @@ impl HealthMonitoringTestSuite {
         Ok(())
     }
 
-    /// Test system health monitoring with modern error handling
     async fn test_system_health_monitoring(&self, mut context: TestContext) -> TestResult<()> {
         info!("💓 Testing system health monitoring with unified error handling");
 
         let prod_manager = self.prod_manager.as_ref()
             .ok_or_else(|| BearDogError::internal("Production manager not initialized"))?;
 
-        // Test system health status retrieval
         let system_health = prod_manager
             .get_system_health_status()
             .await
@@ -134,7 +104,7 @@ impl HealthMonitoringTestSuite {
                                    "Failed to get system health status");
                 BearDogError::enhanced(
                     "HEALTH_CHECK_FAILED",
-                    format!("System health check failed: {}", e),
+                    format_args!("System health check failed: {}", e).to_string(),
                     beardog_errors::ErrorSeverity::High,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -146,19 +116,17 @@ impl HealthMonitoringTestSuite {
                 )
             })?;
 
-        // Modern assertions with rich error context
         assert_success(
             &Ok(system_health.overall_status.clone()),
             Some(AssertionContext::new("system_health_status")
                 .with_expected("Healthy")
-                .with_actual(format!("{:?}", system_health.overall_status))),
+                .with_actual(format_args!("{:?}", system_health.overall_status).to_string())),
         ).map_err(|e| {
             context.record_error(e.clone(), crate::tests::common::TestPhase::Validation, 
                                "System health status assertion failed");
             e
         })?;
 
-        // Validate CPU utilization with proper range checking
         assert_in_range(
             system_health.cpu_utilization,
             0.0,
@@ -171,7 +139,6 @@ impl HealthMonitoringTestSuite {
             e
         })?;
 
-        // Validate memory utilization with proper range checking
         assert_in_range(
             system_health.memory_utilization,
             0.0,
@@ -184,7 +151,6 @@ impl HealthMonitoringTestSuite {
             e
         })?;
 
-        // Validate disk utilization if available
         if let Some(disk_utilization) = system_health.disk_utilization {
             assert_in_range(
                 disk_utilization,
@@ -203,14 +169,12 @@ impl HealthMonitoringTestSuite {
         Ok(())
     }
 
-    /// Test component health checks with comprehensive error handling
     async fn test_component_health_checks(&self, mut context: TestContext) -> TestResult<()> {
         info!("🔧 Testing component health checks with unified error handling");
 
         let prod_manager = self.prod_manager.as_ref()
             .ok_or_else(|| BearDogError::internal("Production manager not initialized"))?;
 
-        // Test individual component health
         let component_health = prod_manager
             .get_component_health_status()
             .await
@@ -219,7 +183,7 @@ impl HealthMonitoringTestSuite {
                                    "Failed to get component health status");
                 BearDogError::enhanced(
                     "COMPONENT_HEALTH_CHECK_FAILED",
-                    format!("Component health check failed: {}", e),
+                    format_args!("Component health check failed: {}", e).to_string(),
                     beardog_errors::ErrorSeverity::High,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -231,34 +195,32 @@ impl HealthMonitoringTestSuite {
                 )
             })?;
 
-        // Validate core components are healthy
         for (component_name, component_status) in &component_health.components {
             assert_true(
                 *component_status == ComponentHealthStatus::Healthy,
-                format!("Component '{}' should be healthy", component_name),
+                format_args!("Component '{}' should be healthy", component_name).to_string(),
                 Some(AssertionContext::new("component_health_status")
                     .with_expected("Healthy")
-                    .with_actual(format!("{:?}", component_status))
+                    .with_actual(format_args!("{:?}", component_status).to_string())
                     .with_info("component_name", serde_json::json!(component_name))),
             ).map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Validation, 
-                                   &format!("Component '{}' health validation failed", component_name));
+                                   &format_args!("Component '{}' health validation failed", component_name).to_string());
                 e
             })?;
         }
 
-        // Validate critical components are present
         let critical_components = vec!["core", "security", "genetics", "workflows"];
         for critical_component in critical_components {
             assert_true(
                 component_health.components.contains_key(critical_component),
-                format!("Critical component '{}' should be present", critical_component),
+                format_args!("Critical component '{}' should be present", critical_component).to_string(),
                 Some(AssertionContext::new("critical_component_presence")
                     .with_info("component_name", serde_json::json!(critical_component))
                     .with_info("available_components", serde_json::json!(component_health.components.keys().collect::<Vec<_>>()))),
             ).map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Validation, 
-                                   &format!("Critical component '{}' presence validation failed", critical_component));
+                                   &format_args!("Critical component '{}' presence validation failed", critical_component).to_string());
                 e
             })?;
         }
@@ -267,14 +229,12 @@ impl HealthMonitoringTestSuite {
         Ok(())
     }
 
-    /// Test health endpoints with modern patterns
     async fn test_health_endpoints(&self, mut context: TestContext) -> TestResult<()> {
         info!("🌐 Testing health endpoints with unified error handling");
 
         let prod_manager = self.prod_manager.as_ref()
             .ok_or_else(|| BearDogError::internal("Production manager not initialized"))?;
 
-        // Test health endpoint availability
         let endpoint_response = prod_manager
             .test_health_endpoint()
             .await
@@ -283,7 +243,7 @@ impl HealthMonitoringTestSuite {
                                    "Health endpoint test failed");
                 BearDogError::enhanced(
                     "HEALTH_ENDPOINT_FAILED",
-                    format!("Health endpoint test failed: {}", e),
+                    format_args!("Health endpoint test failed: {}", e).to_string(),
                     beardog_errors::ErrorSeverity::High,
                     beardog_errors::ErrorCategory::Network,
                     "health_monitoring",
@@ -295,7 +255,6 @@ impl HealthMonitoringTestSuite {
                 )
             })?;
 
-        // Validate endpoint response
         assert_true(
             endpoint_response.is_accessible,
             "Health endpoint should be accessible",
@@ -322,14 +281,12 @@ impl HealthMonitoringTestSuite {
         Ok(())
     }
 
-    /// Test liveness probes with comprehensive validation
     async fn test_liveness_probes(&self, mut context: TestContext) -> TestResult<()> {
         info!("💗 Testing liveness probes with unified error handling");
 
         let prod_manager = self.prod_manager.as_ref()
             .ok_or_else(|| BearDogError::internal("Production manager not initialized"))?;
 
-        // Test liveness probe
         let liveness_probe = prod_manager
             .get_liveness_probe()
             .await
@@ -338,7 +295,7 @@ impl HealthMonitoringTestSuite {
                                    "Liveness probe test failed");
                 BearDogError::enhanced(
                     "LIVENESS_PROBE_FAILED",
-                    format!("Liveness probe failed: {}", e),
+                    format_args!("Liveness probe failed: {}", e).to_string(),
                     beardog_errors::ErrorSeverity::Critical,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -350,7 +307,6 @@ impl HealthMonitoringTestSuite {
                 )
             })?;
 
-        // Validate liveness status
         assert_true(
             liveness_probe.is_alive,
             "System should be alive",
@@ -377,14 +333,12 @@ impl HealthMonitoringTestSuite {
         Ok(())
     }
 
-    /// Test readiness probes with comprehensive validation
     async fn test_readiness_probes(&self, mut context: TestContext) -> TestResult<()> {
         info!("🚀 Testing readiness probes with unified error handling");
 
         let prod_manager = self.prod_manager.as_ref()
             .ok_or_else(|| BearDogError::internal("Production manager not initialized"))?;
 
-        // Test readiness probe
         let readiness_probe = prod_manager
             .get_readiness_probe()
             .await
@@ -393,7 +347,7 @@ impl HealthMonitoringTestSuite {
                                    "Readiness probe test failed");
                 BearDogError::enhanced(
                     "READINESS_PROBE_FAILED",
-                    format!("Readiness probe failed: {}", e),
+                    format_args!("Readiness probe failed: {}", e).to_string(),
                     beardog_errors::ErrorSeverity::High,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -405,7 +359,6 @@ impl HealthMonitoringTestSuite {
                 )
             })?;
 
-        // Validate readiness status
         assert_true(
             readiness_probe.is_ready,
             "System should be ready",
@@ -421,14 +374,12 @@ impl HealthMonitoringTestSuite {
         Ok(())
     }
 
-    /// Test performance metrics with comprehensive validation
     async fn test_performance_metrics(&self, mut context: TestContext) -> TestResult<()> {
         info!("📊 Testing performance metrics with unified error handling");
 
         let prod_manager = self.prod_manager.as_ref()
             .ok_or_else(|| BearDogError::internal("Production manager not initialized"))?;
 
-        // Test performance metrics collection
         let performance_metrics = prod_manager
             .get_performance_metrics()
             .await
@@ -437,7 +388,7 @@ impl HealthMonitoringTestSuite {
                                    "Performance metrics collection failed");
                 BearDogError::enhanced(
                     "PERFORMANCE_METRICS_FAILED",
-                    format!("Performance metrics collection failed: {}", e),
+                    format_args!("Performance metrics collection failed: {}", e).to_string(),
                     beardog_errors::ErrorSeverity::Medium,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -449,7 +400,6 @@ impl HealthMonitoringTestSuite {
                 )
             })?;
 
-        // Validate performance metrics
         assert_true(
             performance_metrics.response_time_ms < 500.0,
             "Average response time should be acceptable",
@@ -476,14 +426,12 @@ impl HealthMonitoringTestSuite {
         Ok(())
     }
 
-    /// Test alert systems with comprehensive validation
     async fn test_alert_systems(&self, mut context: TestContext) -> TestResult<()> {
         info!("🚨 Testing alert systems with unified error handling");
 
         let prod_manager = self.prod_manager.as_ref()
             .ok_or_else(|| BearDogError::internal("Production manager not initialized"))?;
 
-        // Test alert system functionality
         let alert_status = prod_manager
             .test_alert_systems()
             .await
@@ -492,7 +440,7 @@ impl HealthMonitoringTestSuite {
                                    "Alert systems test failed");
                 BearDogError::enhanced(
                     "ALERT_SYSTEMS_FAILED",
-                    format!("Alert systems test failed: {}", e),
+                    format_args!("Alert systems test failed: {}", e).to_string(),
                     beardog_errors::ErrorSeverity::High,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -504,7 +452,6 @@ impl HealthMonitoringTestSuite {
                 )
             })?;
 
-        // Validate alert system status
         assert_true(
             alert_status.is_functional,
             "Alert system should be functional",
@@ -521,7 +468,6 @@ impl HealthMonitoringTestSuite {
     }
 }
 
-/// Run modernized health monitoring tests
 #[tokio::test]
 async fn test_modernized_health_monitoring() -> TestResult<()> {
     let mut test_suite = HealthMonitoringTestSuite::new();

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["SuiteType","TestImplementation","TestResult","TestType"],"struct":["FinalValidationConfig","SuiteSuccessCriteria","TestCase","ValidationSuite"]};

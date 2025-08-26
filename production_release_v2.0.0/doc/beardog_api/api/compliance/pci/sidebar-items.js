@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["audit_cardholder_data_handling","get_pci_compliance"]};

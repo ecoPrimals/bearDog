@@ -1,39 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-//! Chaos Testing Framework for BearDog
-//!
-//! **Advanced Fault Injection & Resilience Validation**
-//!
-//! This framework provides comprehensive chaos testing capabilities:
-//! - Network partitions and latency injection
-//! - Component failure simulation
-//! - Resource exhaustion testing
-//! - Byzantine fault tolerance validation
-//! - Recovery time measurement
-//! - System degradation analysis
-
-// Use the new modular chaos testing structure
 mod chaos;
 
-// Re-export everything from the chaos module
 pub use chaos::*;
-
-// Chaos testing integration tests
 
 #[tokio::test]
 async fn test_chaos_framework_initialization() -> beardog::BearDogResult<()> {
@@ -79,8 +48,7 @@ async fn test_chaos_scenario_execution() -> beardog::BearDogResult<()> {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
     let mut chaos_framework = ChaosTestFramework::new(core).await?;
-    
-    // Create a simple test scenario
+
     let test_scenario = ChaosScenario {
         name: "Simple Network Test".to_string(),
         description: "Basic network fault test".to_string(),

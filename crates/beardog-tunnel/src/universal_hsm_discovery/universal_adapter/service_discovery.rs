@@ -1,27 +1,4 @@
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-
-/// Service Discovery
-///
-/// **CANONICAL SERVICE DISCOVERY** - Complete implementation for network service discovery and registration
-/// This module provides comprehensive service discovery functionality for the Universal HSM ecosystem,
-/// consolidating patterns from beardog-adapters and beardog-core service discovery implementations.
 
 use super::core_types::*;
 use beardog_errors::{BearDogError, BearDogResult};
@@ -32,29 +9,22 @@ use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
-// CANONICAL IMPORT: use beardog_types::config::UnifiedDiscoveryConfig;
-/// **CANONICAL SERVICE DISCOVERY CLIENT**
-/// Unified service discovery client that consolidates DNS, mDNS, HTTP, and custom discovery methods.
+
 #[derive(Debug)]
 pub struct ServiceDiscoveryClient {
-    /// Discovery configuration
+
     config: DiscoveryConfig,
-    
-    /// Cached service registrations
+
     cache: ServiceCache,
-    /// Discovery backends
-    /// **MODERNIZED** - Discovery backends using zero-cost enum dispatch
+
     backends: Vec<DiscoveryBackendType>,
-    /// Client timeout
+
     timeout: Duration,
 }
-/// **SERVICE DISCOVERY CONFIGURATION**
-#[derive(Debug, Clone, Serialize, Deserialize)]
-// MIGRATED: DiscoveryConfig -> use beardog_types::config::UnifiedDiscoveryConfig;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 
 impl Default for DiscoveryConfig {}
-
 
     fn default() -> Self {
         Self {
@@ -71,79 +41,74 @@ impl Default for DiscoveryConfig {}
             enable_mdns_discovery: true,
         }
     }
-/// **SERVICE CACHE** - Performance optimization with expiration
+
 struct ServiceCache {
-    /// Cached registrations by capability
+
     by_capability: RwLock<HashMap<String, CachedEntry<Vec<BearDogServiceRegistration>>>>,
-    /// Cached individual services
+
     by_service_id: RwLock<HashMap<Uuid, CachedEntry<BearDogServiceRegistration>>>,
-/// **CACHED ENTRY** - Entry with expiration tracking
+
 #[derive(Debug, Clone)]
 struct CachedEntry<T> {
-    /// Cached data
-    data: T,
-    /// Expiration time
-    expires_at: Instant,
-/// **BEARDOG SERVICE REGISTRATION**
-pub struct BearDogServiceRegistration {
-    /// Unique service identifier
-    pub service_id: Uuid,
-    /// Service name
-    pub service_name: String,
-    /// Service type (beardog, songbird, nestgate, etc.)
-    pub service_type: String,
-    /// Service version
-    pub version: String,
-    /// Service endpoint
-    pub endpoint: String,
-    /// Service capabilities
-    pub capabilities: Vec<String>,
-    /// Service metadata
-    pub metadata: HashMap<String, String>,
-    /// Service health status
-    pub health_status: ServiceHealthStatus,
-    /// Registration timestamp
-    pub registered_at: chrono::DateTime<chrono::Utc>,
-    /// Last seen timestamp
-    pub last_seen: chrono::DateTime<chrono::Utc>,
-/// **SERVICE HEALTH STATUS**
-pub enum ServiceHealthStatus {
-    /// Service is healthy and operational
-    Healthy,
-    /// Service is degraded but functional
-    Degraded,
-    /// Service is unhealthy
-    Unhealthy,
-    /// Service status is unknown
-    Unknown,
-/// **NETWORK SERVICE** - Network service representation}
 
+    data: T,
+
+    expires_at: Instant,
+
+pub struct BearDogServiceRegistration {
+
+    pub service_id: Uuid,
+
+    pub service_name: String,
+
+    pub service_type: String,
+
+    pub version: String,
+
+    pub endpoint: String,
+
+    pub capabilities: Vec<String>,
+
+    pub metadata: HashMap<String, String>,
+
+    pub health_status: ServiceHealthStatus,
+
+    pub registered_at: chrono::DateTime<chrono::Utc>,
+
+    pub last_seen: chrono::DateTime<chrono::Utc>,
+
+pub enum ServiceHealthStatus {
+
+    Healthy,
+
+    Degraded,
+
+    Unhealthy,
+
+    Unknown,
 
 pub struct NetworkService {
-    /// Service identifier
+
     pub id: Uuid,
     pub name: String,
-    /// Network address
+
     pub address: String,
-    /// Network port
+
     pub port: u16,
-    /// Service protocol
+
     pub protocol: String,
-/// **DISCOVERY BACKEND TRAIT**
+
 pub trait DiscoveryBackend: Send + Sync {
-    /// Discover services by capability
+
     async fn discover_by_capability(&self, capability: &str) -> BearDogResult<Vec<BearDogServiceRegistration>>;
-    /// Register a service
+
     async fn register_service(&self, registration: &BearDogServiceRegistration) -> BearDogResult<()>;
-    /// Unregister a service
+
     async fn unregister_service(&self, service_id: Uuid) -> BearDogResult<()>;
-    /// Health check for the backend
+
     async fn health_check(&self) -> BearDogResult<bool>;}
 
-
 impl ServiceDiscoveryClient {
-    /// **CREATE NEW SERVICE DISCOVERY CLIENT**}
-
 
     pub fn new(config: DiscoveryConfig) -> BearDogResult<Self> {
         info!("🔍 Initializing Canonical Service Discovery Client");
@@ -152,21 +117,19 @@ impl ServiceDiscoveryClient {
             timeout: Duration::from_millis(config.timeout_ms),
             config,
             cache: ServiceCache {
-                by_capability: RwLock::new(HashMap::new()),
-                by_service_id: RwLock::new(HashMap::new()),
+                by_capability: RwLock::new(HashMap::with_capacity(16)),
+                by_service_id: RwLock::new(HashMap::with_capacity(16)),
             },
             backends: Vec::new(),
         })
-    /// **ADD DISCOVERY BACKEND**
+
     pub fn add_backend(&mut self, backend: Box<dyn DiscoveryBackend>) {
         info!("📡 Adding discovery backend");
         self.backends.push(backend);
-    /// **DISCOVER SERVICES BY CAPABILITY** - Main discovery method with caching}
-
 
     pub async fn discover_by_capability(&self, capability: &str) -> BearDogResult<Vec<BearDogServiceRegistration>> {
         debug!("🔍 Discovering services for capability: {}", capability);
-        // Check cache first
+
         {
             let cache_read = self.cache.by_capability.read().await;
             if let Some(cached) = cache_read.get(capability) {
@@ -175,7 +138,7 @@ impl ServiceDiscoveryClient {
                     return Ok(cached.data.clone());
                 }
             }
-        // Discovery from backends
+
         let mut results = Vec::new();
         let mut last_error = None;
         for backend in &self.backends {
@@ -192,10 +155,10 @@ impl ServiceDiscoveryClient {
             } else {
                 debug!("🔍 No services found for capability: {}", capability);
                 return Ok(Vec::new());
-        // Deduplicate by service_id
+
         results.sort_by_key(|s| s.service_id);
         results.dedup_by_key(|s| s.service_id);
-        // Cache the results
+
         let cache_entry = CachedEntry {
             data: results.clone(),
             expires_at: Instant::now() + Duration::from_secs(self.config.cache_ttl_secs),
@@ -204,7 +167,7 @@ impl ServiceDiscoveryClient {
             cache_write.insert(capability.to_string(), cache_entry);
         info!("🎯 Discovered {} services for capability: {}", results.len(), capability);
         Ok(results)
-    /// **REGISTER SERVICE** - Register a service with all backends
+
     pub async fn register_service(&self, registration: &BearDogServiceRegistration) -> BearDogResult<()> {
         info!("📝 Registering service: {}", registration.service_name);
         let mut success_count = 0;
@@ -215,17 +178,17 @@ impl ServiceDiscoveryClient {
                     warn!("⚠️ Failed to register with backend: {}", e);
         if success_count == 0 {
                 return Err(BearDogError::internal("No backends available for registration"));
-        // Cache the registered service
+
             data: registration.clone(),
             let mut cache_write = self.cache.by_service_id.write().await;
             cache_write.insert(registration.service_id, cache_entry);
         info!("✅ Service registration completed: {}", registration.service_name);
         Ok(())
-    /// **DISCOVER VIA DNS** - DNS-based service discovery
+
     pub async fn discover_via_dns(&self) -> BearDogResult<Vec<BearDogServiceRegistration>> {
         debug!("🔍 Discovering services via DNS");
         let mut discovered = Vec::new();
-        // DNS-SD lookup for BearDog ecosystem services
+
         let dns_names = vec![
             "_beardog._tcp.local",
             "_songbird._tcp.local", 
@@ -237,20 +200,17 @@ impl ServiceDiscoveryClient {
             if let Ok(services) = self.query_dns_service(name).await {
                 discovered.extend(services);
         Ok(discovered)
-    /// **QUERY DNS SERVICE** - Query specific DNS service name}
-
 
     async fn query_dns_service(&self, service_name: &str) -> BearDogResult<Vec<BearDogServiceRegistration>> {
         debug!("🔍 Querying DNS service: {}", service_name);
-        // Implementation would use actual DNS resolution
-        // For now, return empty results as this requires DNS library integration
+
         Ok(Vec::new())
-    /// **HEALTH CHECK** - Check health of all discovery backends
+
     pub async fn health_check(&self) -> BearDogResult<HashMap<String, bool>> {
         debug!("🏥 Performing discovery backend health checks");
-        let mut health_status = HashMap::new();
+        let mut health_status = HashMap::with_capacity(16);
         for (index, backend) in self.backends.iter().enumerate() {
-            let backend_name = format!("backend_{}", index);
+            let backend_name = format_args!("backend_{}", index).to_string();
             match backend.health_check().await {
                 Ok(healthy) => {
                     health_status.insert(backend_name, healthy);

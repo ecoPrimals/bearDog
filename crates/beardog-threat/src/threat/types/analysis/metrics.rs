@@ -1,45 +1,24 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Analysis Metrics Types
-///
-/// This module contains types for analysis performance metrics and statistics.
 use serde::{Deserialize, Serialize};
 
-/// Analysis metrics structure
-/// Contains performance metrics and statistics for
-/// threat analysis operations.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisMetrics {
-    /// Total number of events analyzed
+
     pub total_events_analyzed: u64,
-    /// Average analysis time in milliseconds
+
     pub avg_analysis_time_ms: f64,
-    /// Maximum analysis time in milliseconds
+
     pub max_analysis_time_ms: u64,
-    /// Minimum analysis time in milliseconds
+
     pub min_analysis_time_ms: u64,
-    /// Number of events with threats detected
+
     pub events_with_threats: u64,
-    /// Total number of threats detected
+
     pub total_threats_detected: u64,
-    /// Analysis accuracy (if available)
+
     pub analysis_accuracy: Option<f64>,
-    /// False positive rate
+
     pub false_positive_rate: f64,
 }
 impl Default for AnalysisMetrics {
@@ -58,19 +37,14 @@ impl Default for AnalysisMetrics {
 }
 
 impl AnalysisMetrics {
-    /// Create new metrics
-
 
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Update metrics with new analysis result
-
-
     pub fn update_with_analysis(&mut self, analysis_time_ms: u64, threats_detected: usize) {
         self.total_events_analyzed += 1;
-        // Update timing metrics
+
         if self.total_events_analyzed == 1 {
             self.min_analysis_time_ms = analysis_time_ms;
             self.max_analysis_time_ms = analysis_time_ms;
@@ -78,20 +52,18 @@ impl AnalysisMetrics {
         } else {
             self.min_analysis_time_ms = self.min_analysis_time_ms.min(analysis_time_ms);
             self.max_analysis_time_ms = self.max_analysis_time_ms.max(analysis_time_ms);
-            // Update running average
+
             let total_time = self.avg_analysis_time_ms * (self.total_events_analyzed - 1) as f64;
             self.avg_analysis_time_ms =
                 (total_time + analysis_time_ms as f64) / self.total_events_analyzed as f64;
         }
-        
-        // Update threat metrics
+
         if threats_detected > 0 {
             self.events_with_threats += 1;
             self.total_threats_detected += threats_detected as u64;
         }
     }
 
-    /// Get threat detection rate
     pub fn threat_detection_rate(&self) -> f64 {
         if self.total_events_analyzed == 0 {
             0.0
@@ -100,14 +72,10 @@ impl AnalysisMetrics {
         }
     }
 
-    /// Get threat detection rate (alias for threat_detection_rate)
-
-
     pub fn get_threat_detection_rate(&self) -> f64 {
         self.threat_detection_rate()
     }
 
-    /// Get average threats per event
     pub fn avg_threats_per_event(&self) -> f64 {
         if self.total_events_analyzed == 0 {
             0.0
@@ -116,14 +84,10 @@ impl AnalysisMetrics {
         }
     }
 
-    /// Get average threats per event (alias for avg_threats_per_event)
-
-
     pub fn get_avg_threats_per_event(&self) -> f64 {
         self.avg_threats_per_event()
     }
 
-    /// Get throughput (events per second)
     pub fn throughput_events_per_second(&self) -> f64 {
         if self.avg_analysis_time_ms == 0.0 {
             0.0
@@ -132,20 +96,13 @@ impl AnalysisMetrics {
         }
     }
 
-    /// Set analysis accuracy
-
-
     pub fn set_accuracy(&mut self, accuracy: f64) {
         self.analysis_accuracy = Some(accuracy.clamp(0.0, 1.0));
     }
 
-    /// Set false positive rate
     pub fn set_false_positive_rate(&mut self, rate: f64) {
         self.false_positive_rate = rate.clamp(0.0, 1.0);
     }
-
-    /// Get metrics summary
-
 
     pub fn summary(&self) -> String {
         format!(

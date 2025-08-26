@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["CompressionLevel"],"mod":["predicate"],"struct":["Compression","CompressionBody","CompressionLayer","DefaultPredicate","ResponseFuture"],"trait":["Predicate"]};

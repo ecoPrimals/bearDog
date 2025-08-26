@@ -1,13 +1,4 @@
-//! BearDog Ecosystem Integration Demo
-//!
-//! **Comprehensive demonstration of BearDog's role in the ecoPrimals ecosystem**
-//!
-//! This demo shows how BearDog:
-//! 1. Registers with Songbird as a security provider
-//! 2. Advertises its security capabilities to the ecosystem
-//! 3. Handles ecosystem security requests
-//! 4. Provides encryption, authentication, and compliance services
-//! 5. Integrates with other primals (ToadStool, NestGate, etc.)
+
 
 use serde_json::json;
 use std::collections::HashMap;
@@ -26,28 +17,22 @@ use beardog::{
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Initialize logging
+
     tracing_subscriber::fmt::init();
 
     info!("🌐 Starting BearDog Ecosystem Integration Demo");
     info!("===============================================");
 
-    // Step 1: Initialize BearDog Core
     let beardog_core = initialize_beardog_core().await?;
 
-    // Step 2: Create Ecosystem Provider
     let ecosystem_provider = create_ecosystem_provider(beardog_core.clone()).await?;
 
-    // Step 3: Register with Songbird
     demonstrate_songbird_registration(&ecosystem_provider).await?;
 
-    // Step 4: Handle ecosystem requests
     demonstrate_ecosystem_requests(&ecosystem_provider).await?;
 
-    // Step 5: Show cross-primal integration
     demonstrate_cross_primal_integration(&ecosystem_provider).await?;
 
-    // Step 6: Show security capabilities
     demonstrate_security_capabilities(&ecosystem_provider).await?;
 
     info!("✅ BearDog Ecosystem Integration Demo Completed!");
@@ -61,41 +46,36 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Initialize BearDog Core with production configuration
 async fn initialize_beardog_core() -> BearDogResult<Arc<BearDogCore>> {
     info!("🚀 Initializing BearDog Core for Ecosystem Integration");
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
 
-    // Start the core components
     core.start().await?;
 
     info!("✅ BearDog Core initialized successfully");
     Ok(core)
 }
 
-/// Create BearDog Ecosystem Provider
 async fn create_ecosystem_provider(
     core: Arc<BearDogCore>,
 ) -> BearDogResult<BearDogEcosystemProvider> {
     info!("🔧 Creating BearDog Ecosystem Provider");
 
-    let instance_id = format!("beardog-security-{}", Uuid::new_v4());
+    let instance_id = format_args!("beardog-security-{}", Uuid::new_v4().to_string());
     let provider = BearDogEcosystemProvider::new(core, instance_id);
 
     info!("✅ BearDog Ecosystem Provider created");
     Ok(provider)
 }
 
-/// Demonstrate Songbird registration
 async fn demonstrate_songbird_registration(
     provider: &BearDogEcosystemProvider,
 ) -> BearDogResult<()> {
     info!("🎼 Demonstrating Songbird Registration");
     info!("=====================================");
 
-    // Register with Songbird
     match provider.register_with_songbird().await {
         Ok(service_id) => {
             info!("✅ Successfully registered with Songbird!");
@@ -113,12 +93,10 @@ async fn demonstrate_songbird_registration(
     Ok(())
 }
 
-/// Demonstrate handling ecosystem requests
 async fn demonstrate_ecosystem_requests(provider: &BearDogEcosystemProvider) -> BearDogResult<()> {
     info!("📨 Demonstrating Ecosystem Request Handling");
     info!("===========================================");
 
-    // Demo 1: Authentication request from ToadStool
     info!("🍄 Demo 1: ToadStool Authentication Request");
     let auth_request = EcosystemRequest {
         request_id: Uuid::new_v4(),
@@ -136,7 +114,7 @@ async fn demonstrate_ecosystem_requests(provider: &BearDogEcosystemProvider) -> 
             security_level: SecurityLevel::Internal,
         },
         metadata: {
-            let mut map = HashMap::new();
+            let mut map = HashMap::with_capacity(16);
             map.insert("source_primal".to_string(), "toadstool".to_string());
             map.insert("request_type".to_string(), "authentication".to_string());
             map
@@ -147,7 +125,6 @@ async fn demonstrate_ecosystem_requests(provider: &BearDogEcosystemProvider) -> 
     let auth_response = provider.handle_ecosystem_request(auth_request).await?;
     info!("✅ Authentication response: {:?}", auth_response.status);
 
-    // Demo 2: Encryption request from NestGate
     info!("🏠 Demo 2: NestGate Encryption Request");
     let encrypt_request = EcosystemRequest {
         request_id: Uuid::new_v4(),
@@ -165,7 +142,7 @@ async fn demonstrate_ecosystem_requests(provider: &BearDogEcosystemProvider) -> 
             security_level: SecurityLevel::Restricted,
         },
         metadata: {
-            let mut map = HashMap::new();
+            let mut map = HashMap::with_capacity(16);
             map.insert("source_primal".to_string(), "nestgate".to_string());
             map.insert("data_type".to_string(), "zfs_block".to_string());
             map
@@ -176,7 +153,6 @@ async fn demonstrate_ecosystem_requests(provider: &BearDogEcosystemProvider) -> 
     let encrypt_response = provider.handle_ecosystem_request(encrypt_request).await?;
     info!("✅ Encryption response: {:?}", encrypt_response.status);
 
-    // Demo 3: Compliance check from Squirrel
     info!("🐿️ Demo 3: Squirrel Compliance Check Request");
     let compliance_request = EcosystemRequest {
         request_id: Uuid::new_v4(),
@@ -195,7 +171,7 @@ async fn demonstrate_ecosystem_requests(provider: &BearDogEcosystemProvider) -> 
             security_level: SecurityLevel::Confidential,
         },
         metadata: {
-            let mut map = HashMap::new();
+            let mut map = HashMap::with_capacity(16);
             map.insert("source_primal".to_string(), "squirrel".to_string());
             map.insert(
                 "compliance_context".to_string(),
@@ -214,7 +190,6 @@ async fn demonstrate_ecosystem_requests(provider: &BearDogEcosystemProvider) -> 
     Ok(())
 }
 
-/// Demonstrate cross-primal integration
 async fn demonstrate_cross_primal_integration(
     provider: &BearDogEcosystemProvider,
 ) -> BearDogResult<()> {
@@ -250,14 +225,12 @@ async fn demonstrate_cross_primal_integration(
     Ok(())
 }
 
-/// Demonstrate security capabilities
 async fn demonstrate_security_capabilities(
     provider: &BearDogEcosystemProvider,
 ) -> BearDogResult<()> {
     info!("🛡️ Demonstrating Security Capabilities");
     info!("======================================");
 
-    // Show threat detection request
     info!("🔍 Threat Detection Capabilities:");
     let threat_request = EcosystemRequest {
         request_id: Uuid::new_v4(),
@@ -274,14 +247,13 @@ async fn demonstrate_security_capabilities(
             permissions: vec!["monitor.scan".to_string(), "threat.detect".to_string()],
             security_level: SecurityLevel::Internal,
         },
-        metadata: HashMap::new(),
+        metadata: HashMap::with_capacity(16),
         timestamp: chrono::Utc::now(),
     };
 
     let threat_response = provider.handle_ecosystem_request(threat_request).await?;
     info!("✅ Threat scan completed: {:?}", threat_response.status);
 
-    // Show available capabilities
     info!("📋 Available Security Capabilities:");
     info!("   Core Capabilities:");
     info!("     • Authentication: Multi-factor, biometric, cryptographic");
@@ -306,7 +278,6 @@ async fn demonstrate_security_capabilities(
     Ok(())
 }
 
-/// Health check demonstration
 async fn demonstrate_health_monitoring(provider: &BearDogEcosystemProvider) -> BearDogResult<()> {
     info!("🏥 Health Monitoring Capabilities");
     info!("================================");

@@ -1,50 +1,30 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Prometheus Integration Handler
-///
-/// Provides licensed access to Prometheus metrics operations
 
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
-// Removed async_trait - using native async fn for zero-cost abstractions
+
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_errors::idiomatic::SystemResult;
 use reqwest::Client;
 use serde_json::Value;
 use std::time::Duration;
-/// **PROMETHEUS METRICS EXPORT HANDLER** - Zero-cost implementation
+
 #[derive(Clone)]
 pub struct PrometheusExport;
-// Uses native async fn from trait definition - no async_trait needed
-impl ExternalFunctionHandler for PrometheusExport {}
 
+impl ExternalFunctionHandler for PrometheusExport {}
 
     fn function_name(&self) -> &str {
         "prometheus_export"
     }
-    /// Execute Prometheus operation with licensing check
+
     async fn execute(
         &self,
         license_manager: &LicenseManager,
         _operation: &str,
         payload: serde_json::Value,
     ) -> BearDogResult<serde_json::Value> {
-        // Check licensing with autonomous decision making
+
         if !license_manager
             .is_function_available(self.function_name())
             .await?
@@ -112,12 +92,12 @@ impl ExternalFunctionHandler for PrometheusExport {}
             _ => Ok(serde_json::json!({
                 "operation": _operation,
                 "status": "error",
-                "error": format!("Unknown Prometheus operation: {}", _operation),
+                "error": format_args!("Unknown Prometheus operation: {}", _operation).to_string(),
                 "available_operations": ["query", "export_metrics", "health_check"]
             })),
 }
 impl PrometheusExport {
-    /// Execute Prometheus query
+
     async fn prometheus_query(&self, endpoint: &str, query: &str) -> BearDogResult<Value> {
         let client = Client::builder()
             .timeout(Duration::from_secs(30))
@@ -139,14 +119,14 @@ impl PrometheusExport {
                 })?;
             Ok(result)
         } else {
-            Err(BearDogError::configuration(format!("Prometheus query failed with status: }", response.status()),
+            Err(BearDogError::configuration(format_args!("Prometheus query failed with status: }", response.status().to_string()),
             })
-    /// Export BearDog metrics to Prometheus
+
     async fn export_beardog_metrics(
         endpoint: &str,
         metrics: &[Value],
     ) -> BearDogResult<usize> {
-        // Convert metrics to Prometheus format
+
         let prometheus_metrics = self.convert_to_prometheus_format(metrics);
             .post(format!("{endpoint}/metrics"))
             .header("Content-Type", "text/plain")
@@ -157,7 +137,7 @@ impl PrometheusExport {
             Err(BearDogError::configuration(format!(
                     "Prometheus export failed with status: }",
                     response.status()
-    /// Check Prometheus health
+
     async fn prometheus_health_check(&self, endpoint: &str) -> Result<Value, SystemError> {
             .timeout(Duration::from_secs(10))
         let health_url = format!("{endpoint}/api/v1/status/runtimeinfo");
@@ -176,13 +156,13 @@ impl PrometheusExport {
                 } else {
                     Ok(serde_json::json!({
                         "status": "unhealthy",
-                        "error": format!("HTTP status: {}", response.status())
+                        "error": format_args!("HTTP status: {}", response.status().to_string())
                     }))
             Err(e) => Err(BearDogError::configuration(format!("Prometheus health check failed: {e}"),
             }),
-    /// Convert BearDog metrics to Prometheus format
+
     fn convert_to_prometheus_format(&self, metrics: &[Value]) -> String {
-        let mut prometheus_output = String::new();
+        let mut prometheus_output = String::with_capacity(64);
         for metric in metrics {
             if let Some(name) = metric.get("name").and_then(|v| v.as_str()) {
                 let value = metric.get("value").and_then(|v| v.as_f64()).unwrap_or(0.0);
@@ -190,10 +170,10 @@ impl PrometheusExport {
                 let metric_type = metric
                     .get("type")
                     .unwrap_or("gauge");
-                // Add help and type annotations
+
                 prometheus_output.push_str(&format!("# HELP {name} {help}\n"));
                 prometheus_output.push_str(&format!("# TYPE {name} {metric_type}\n"));
-                // Add labels if present
+
                 if let Some(labels) = metric.get("labels").and_then(|v| v.as_object()) {
                     let label_string: Vec<String> = labels
                         .iter()

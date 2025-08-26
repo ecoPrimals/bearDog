@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["EcosystemRole","PrimalCapability","PrimalType","ServiceHealth"],"struct":["EndpointSecurity","PrimalIdentity","PrimalMetadata","PrimalService","SecurityContext","ServiceContext","ServiceEndpoint"],"trait":["UniversalPrimalProvider"]};

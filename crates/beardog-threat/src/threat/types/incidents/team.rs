@@ -1,68 +1,63 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Incident response team management
-///
-/// This module contains types and functionality for managing incident response
-/// team members and their roles.
 use serde::{Deserialize, Serialize};
+use chrono::Utc;
 
-/// Incident response team member
-/// Represents a team member involved in incident response
-/// with their role and contact information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IncidentTeamMember {
-    /// Team member identifier
+
     pub member_id: String,
-    /// Team member name
+
     pub name: String,
-    /// Role in incident response
+
     pub role: IncidentRole,
-    /// Contact information
+
     pub contact_info: String,
-    /// Availability status
+
     pub available: bool,
-    /// Assigned incidents
+
     pub assigned_incidents: Vec<String>,
+
+    pub availability: MemberAvailability,
+
+    pub last_active: chrono::DateTime<Utc>,
 }
-/// Incident response role enumeration
-/// Defines different roles in incident response
-/// with specific responsibilities.
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum IncidentRole {
-    /// Incident commander - overall coordination
     IncidentCommander,
-    /// Lead analyst - technical investigation
     LeadAnalyst,
-    /// Forensics analyst - evidence collection
+    TechnicalLead,
     ForensicsAnalyst,
-    /// Communications lead - stakeholder communication
     CommunicationsLead,
-    /// Legal counsel - legal and compliance matters
     LegalCounsel,
-    /// Management liaison - business coordination
     ManagementLiaison,
-    /// External consultant - specialized expertise
-    ExternalConsultant,}
+    ExternalConsultant,
+    SecurityAnalyst,
+    ForensicsExpert,
+    NetworkAnalyst,
+    MalwareAnalyst,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum MemberAvailability {
 
-impl Default for IncidentTeamMember {}
+    Available,
 
+    Busy,
 
+    Unavailable,
+
+    OnCall,
+}
+
+impl Default for MemberAvailability {
+    fn default() -> Self {
+        MemberAvailability::Available
+    }
+}
+
+impl Default for IncidentTeamMember {
     fn default() -> Self {
         Self {
             member_id: String::new(),
@@ -70,71 +65,92 @@ impl Default for IncidentTeamMember {}
             role: IncidentRole::LeadAnalyst,
             contact_info: String::new(),
             available: true,
-            assigned_incidents: vec![],
+            assigned_incidents: Vec::new(),
+            availability: MemberAvailability::Available,
+            last_active: chrono::Utc::now(),
         }
     }
+}
+
 impl IncidentTeamMember {
-    /// Create a new team member
-    ///
-    /// # Arguments
-    /// * `member_id` - Unique member identifier
-    /// * `name` - Member name
-    /// * `role` - Member role
-    /// * `contact_info` - Contact information
-    /// # Returns
-    /// A new `IncidentTeamMember` instance
-    /// # Example
-    /// ```rust
-    /// use beardog::threat::types::{IncidentTeamMember, IncidentRole};
-    /// let member = IncidentTeamMember::new(
-    ///     "analyst-001".to_string(),
-    ///     "John Doe".to_string(),
-    ///     IncidentRole::LeadAnalyst,
-    ///     "john.doe@company.com".to_string()
-    /// );
-    /// ```
-    pub fn new(member_id: String, name: String, role: IncidentRole, contact_info: String) -> Self {
-            member_id,
-            name,
+
+    pub fn new(member_id: &str, name: &str, role: IncidentRole, contact_info: &str) -> Self {
+        Self {
+            member_id: member_id.to_string(),
+            name: name.to_string(),
             role,
-            contact_info,
-    /// Assign incident to member
-    /// * `incident_id` - Incident identifier to assign
-    /// let mut member = IncidentTeamMember::new(
-    /// member.assign_incident("INC-2024-001".to_string());
-    /// assert_eq!(member.assigned_incidents.len(), 1);}
+            contact_info: contact_info.to_string(),
+            available: true,
+            assigned_incidents: Vec::new(),
+            availability: MemberAvailability::Available,
+            last_active: Utc::now(),
+        }
+    }
 
+    pub fn with_availability(member_id: &str, name: &str, role: IncidentRole, contact_info: &str, available: bool) -> Self {
+        Self {
+            member_id: member_id.to_string(),
+            name: name.to_string(),
+            role,
+            contact_info: contact_info.to_string(),
+            available,
+            assigned_incidents: Vec::new(),
+            availability: if available { MemberAvailability::Available } else { MemberAvailability::Busy },
+            last_active: Utc::now(),
+        }
+    }
 
-    pub fn assign_incident(&mut self, incident_id: String) {
-        if !self.assigned_incidents.contains(&incident_id) {
-            self.assigned_incidents.push(incident_id);
-    /// Remove incident assignment
-    /// * `incident_id` - Incident identifier to remove
-    /// `true` if incident was found and removed
-    /// assert!(member.remove_incident("INC-2024-001"));
-    /// assert_eq!(member.assigned_incidents.len(), 0);
-    pub fn remove_incident(&mut self, incident_id: &str) -> bool {
-        let original_len = self.assigned_incidents.len();
-        self.assigned_incidents.retain(|id| id != incident_id);
-        self.assigned_incidents.len() != original_len
-    /// Check if member is overloaded
-    /// `true` if member has more than 3 assigned incidents
-    /// // Assign multiple incidents
-    /// for i in 1..=5 {
-    ///     member.assign_incident(format!("INC-2024-{:03}", i));
-    /// }
-    /// assert!(member.is_overloaded());
+    pub fn assign_to_incident(&mut self, incident_id: &str) {
+        let incident_id_string = incident_id.to_string();
+        if !self.assigned_incidents.contains(&incident_id_string) {
+            self.assigned_incidents.push(incident_id_string);
+        }
+    }
+
+    pub fn unassign_incident(&mut self, incident_id: &str) -> bool {
+        if let Some(pos) = self.assigned_incidents.iter().position(|x| x == incident_id) {
+            self.assigned_incidents.remove(pos);
+            self.last_active = Utc::now();
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn is_overloaded(&self) -> bool {
         self.assigned_incidents.len() > 3
-impl std::fmt::Display for IncidentRole {}
+    }
 
+    pub fn update_role(&mut self, new_role: &str) {
 
+        self.last_active = Utc::now();
+    }
+
+    pub fn set_availability(&mut self, availability: MemberAvailability) {
+        self.availability = availability;
+        self.last_active = Utc::now();
+    }
+
+    pub fn incident_count(&self) -> usize {
+        self.assigned_incidents.len()
+    }
+}
+
+impl std::fmt::Display for IncidentRole {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             IncidentRole::IncidentCommander => write!(f, "Incident Commander"),
             IncidentRole::LeadAnalyst => write!(f, "Lead Analyst"),
+            IncidentRole::TechnicalLead => write!(f, "Technical Lead"),
             IncidentRole::ForensicsAnalyst => write!(f, "Forensics Analyst"),
             IncidentRole::CommunicationsLead => write!(f, "Communications Lead"),
             IncidentRole::LegalCounsel => write!(f, "Legal Counsel"),
             IncidentRole::ManagementLiaison => write!(f, "Management Liaison"),
             IncidentRole::ExternalConsultant => write!(f, "External Consultant"),
+            IncidentRole::SecurityAnalyst => write!(f, "Security Analyst"),
+            IncidentRole::ForensicsExpert => write!(f, "Forensics Expert"),
+            IncidentRole::NetworkAnalyst => write!(f, "Network Analyst"),
+            IncidentRole::MalwareAnalyst => write!(f, "Malware Analyst"),
+        }
+    }
+}

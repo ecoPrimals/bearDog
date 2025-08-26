@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["PrivacyAuditEvent","PrivacyProtectionInternal","PrivacyVulnerabilityInternal","ProtectionMetrics","SurveillanceIndicator","TrafficPattern"]};

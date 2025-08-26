@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["create_default_config","create_default_consent"],"mod":["collectors","config","ethics","processors","types"]};

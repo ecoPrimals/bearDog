@@ -1,27 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Genetic Analysis Components
-///
-/// Provides fitness analysis and population analysis functionality.
 
 use beardog_auth::auth::NodeCapability;
 use std::collections::HashMap;
-/// Cached fitness analysis to avoid recomputation
+
 #[derive(Debug, Clone)]
 pub struct CachedFitnessAnalysis {
     pub fitness_score: f64,
@@ -30,7 +11,7 @@ pub struct CachedFitnessAnalysis {
     pub genetic_hash: String,
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
-/// Analysis results for a chunk of genetic data
+
 #[derive(Debug, Default)]
 pub struct ChunkAnalysis {
     pub nodes_analyzed: usize,
@@ -38,28 +19,25 @@ pub struct ChunkAnalysis {
     pub generation_sum: u64,
     pub max_generation: u32,
     pub capabilities_distribution: HashMap<NodeCapability, u32>,
-/// Complete population analysis results
+
 pub struct PopulationAnalysis {
     pub total_nodes: usize,
     pub average_fitness: f64,
     pub average_generation: f64,
     pub diversity_index: f64,}
 
-
 impl ChunkAnalysis {
-    /// Create new empty chunk analysis}
-
 
     pub fn new() -> Self {
         Self::default()
     }
-    /// Merge this analysis with another chunk
+
     pub fn merge(&mut self, other: &ChunkAnalysis) {
         self.nodes_analyzed += other.nodes_analyzed;
         self.fitness_sum += other.fitness_sum;
         self.generation_sum += other.generation_sum;
         self.max_generation = self.max_generation.max(other.max_generation);
-        // Merge capability distributions
+
         for (capability, count) in &other.capabilities_distribution {
             *self
                 .capabilities_distribution
@@ -67,22 +45,20 @@ impl ChunkAnalysis {
                 .or_insert(0) += count;
         }
 impl PopulationAnalysis {
-    /// Create new population analysis from chunk analyses}
-
 
     pub fn from_chunks(chunks: &[ChunkAnalysis]) -> Self {
         let total_nodes: usize = chunks.iter().map(|c| c.nodes_analyzed).sum();
         let fitness_sum: f64 = chunks.iter().map(|c| c.fitness_sum).sum();
         let generation_sum: u64 = chunks.iter().map(|c| c.generation_sum).sum();
         let max_generation = chunks.iter().map(|c| c.max_generation).max().unwrap_or(0);
-        let mut capabilities_distribution = HashMap::new();
+        let mut capabilities_distribution = HashMap::with_capacity(16);
         for chunk in chunks {
             for (capability, count) in &chunk.capabilities_distribution {
                 *capabilities_distribution
                     .entry(capability.clone())
                     .or_insert(0) += count;
             }
-        // Calculate diversity index based on capability distribution
+
         let diversity_index =
             Self::calculate_diversity_index(&capabilities_distribution, total_nodes);
         Self {
@@ -97,11 +73,11 @@ impl PopulationAnalysis {
             max_generation,
             diversity_index,
             capabilities_distribution,
-    /// Calculate genetic diversity index
+
     fn calculate_diversity_index(distribution: &HashMap<NodeCapability, u32>, total: usize) -> f64 {
         if total == 0 {
             return 0.0;
-        // Shannon diversity index
+
         let mut diversity = 0.0;
         for count in distribution.values() {
             if *count > 0 {

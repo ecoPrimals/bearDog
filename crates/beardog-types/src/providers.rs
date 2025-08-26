@@ -1,56 +1,17 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// ================================================================================
-// CANONICAL TYPE RE-EXPORTS
-// ================================================================================
-
-// Re-export canonical types for provider implementations
 pub use crate::canonical::hsm::{HsmKey, KeyMetadata, KeyType};
 pub use crate::canonical::providers::ProviderConfig;
 
-// ================================================================================
-// CANONICAL PROVIDER TRAIT ACCESS - No More Compatibility Layers
-// ================================================================================
-
-/// **MODERNIZATION COMPLETE** ✅
-/// All provider traits are now unified in beardog-traits::canonical.
-/// No more backward compatibility re-exports - use canonical imports directly.
-/// 
-/// ## Canonical Usage:
-/// ```rust
-/// use beardog_traits::canonical::{BaseProvider, SecurityProvider, HsmProvider};
-/// ```
-
-// **CANONICAL PROVIDER TYPES** - Re-export from canonical module  
 pub use crate::canonical::providers::{
     ProviderType, ProviderStatus, ProviderHealth,
     ProviderCapability, ProviderRegistryEntry,
 };
 
-// ================================================================================
-// SUPPORTING TYPES FOR PROVIDER IMPLEMENTATIONS
-// ================================================================================
-
-/// Provider health status information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProviderHealthStatus {
     pub is_healthy: bool,
@@ -59,7 +20,6 @@ pub struct ProviderHealthStatus {
     pub metrics: HashMap<String, f64>,
 }
 
-/// Primal request structure for ecosystem communication
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalRequest {
     pub request_id: String,
@@ -70,7 +30,6 @@ pub struct PrimalRequest {
     pub metadata: HashMap<String, String>,
 }
 
-/// Primal response structure for ecosystem communication
 #[derive(Debug, Clone, Serialize, Deserialize)] 
 pub struct PrimalResponse {
     pub request_id: String,
@@ -79,7 +38,6 @@ pub struct PrimalResponse {
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
-/// Primal capabilities enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PrimalCapability {
     Authentication,
@@ -94,7 +52,6 @@ pub enum PrimalCapability {
     Custom(String),
 }
 
-/// Authentication credentials structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationCredentials {
     pub username: Option<String>,
@@ -104,7 +61,6 @@ pub struct AuthenticationCredentials {
     pub additional_data: HashMap<String, String>,
 }
 
-/// Authentication result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationResult {
     pub user_id: String,
@@ -113,14 +69,12 @@ pub struct AuthenticationResult {
     pub permissions: Vec<String>,
 }
 
-/// Authorization result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizationResult {
     pub allowed: bool,
     pub reason: Option<String>,
 }
 
-/// Client information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClientInfo {
     pub client_id: String,
@@ -129,7 +83,6 @@ pub struct ClientInfo {
     pub platform: String,
 }
 
-/// Secure session information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecureSession {
     pub session_id: String,
@@ -137,7 +90,6 @@ pub struct SecureSession {
     pub expires_at: DateTime<Utc>,
 }
 
-/// Token validation result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenValidation {
     pub valid: bool,
@@ -146,7 +98,6 @@ pub struct TokenValidation {
     pub scopes: Vec<String>,
 }
 
-/// HSM key information - uses canonical types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmKeyInfo {
     pub key_id: String,
@@ -155,7 +106,6 @@ pub struct HsmKeyInfo {
     pub usage_count: u64,
 }
 
-/// HSM hardware status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmHardwareStatus {
     pub available: bool,
@@ -165,7 +115,6 @@ pub struct HsmHardwareStatus {
     pub error_count: u64,
 }
 
-/// General HSM information and capabilities
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmInfo {
     pub instance_id: String,
@@ -181,7 +130,6 @@ pub struct HsmInfo {
     pub tamper_resistant: bool,
 }
 
-/// Hash algorithms supported by crypto providers
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HashAlgorithm {
     Sha256,
@@ -190,7 +138,6 @@ pub enum HashAlgorithm {
     Sha3_256,
 }
 
-/// Key pair algorithms for cryptographic operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeyPairAlgorithm {
     Rsa { bits: u16 },
@@ -198,7 +145,6 @@ pub enum KeyPairAlgorithm {
     Ed25519,
 }
 
-/// Cryptographic key pair
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoKeyPair {
     pub public_key: Vec<u8>,
@@ -206,7 +152,6 @@ pub struct CryptoKeyPair {
     pub algorithm: KeyPairAlgorithm,
 }
 
-/// Cache statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheStats {
     pub hit_count: u64,
@@ -215,7 +160,6 @@ pub struct CacheStats {
     pub eviction_count: u64,
 }
 
-/// Service endpoint configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceEndpoint {
     pub name: String,
@@ -224,7 +168,6 @@ pub struct ServiceEndpoint {
     pub authentication_required: bool,
 }
 
-/// Service health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceHealth {
     pub is_healthy: bool,
@@ -233,5 +176,4 @@ pub struct ServiceHealth {
     pub error_message: Option<String>,
 }
 
-// Re-export canonical security context
 pub use crate::canonical::SecurityContext;

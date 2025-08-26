@@ -1,29 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Comprehensive Utils Tests
-//!
-//! This test suite ensures 100% coverage of BearDog's utility functions
-//! including configuration, validation, formatting, and helper functions.
 
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-/// Comprehensive utils testing
 #[tokio::test]
 async fn test_utils_comprehensive() {
     test_string_utilities();
@@ -37,16 +16,13 @@ async fn test_utils_comprehensive() {
 fn test_string_utilities() {
     println!("�� Testing string utilities...");
 
-    // Test string validation
     assert!(is_valid_identifier("valid_name_123"));
     assert!(!is_valid_identifier("invalid-name!"));
     assert!(!is_valid_identifier(""));
 
-    // Test string sanitization
     let sanitized = sanitize_user_input("user<script>alert('xss')</script>input");
     assert!(!sanitized.contains("<script>"));
 
-    // Test string formatting
     let formatted = format_bytes(1024 * 1024 * 1024);
     assert!(formatted.contains("GB") || formatted.contains("GiB"));
 
@@ -73,7 +49,6 @@ fn test_time_utilities() {
 fn test_validation_utilities() {
     println!("✅ Testing validation utilities...");
 
-    // Network validation
     assert!(is_valid_ip_address("192.168.1.1"));
     assert!(is_valid_ip_address("::1"));
     assert!(!is_valid_ip_address("invalid_ip"));
@@ -82,7 +57,6 @@ fn test_validation_utilities() {
     assert!(!is_valid_port(0));
     assert!(!is_valid_port(65535u32));
 
-    // Crypto validation
     assert!(is_valid_hex_string("deadbeef"));
     assert!(is_valid_hex_string("DEADBEEF"));
     assert!(!is_valid_hex_string("ghijklmn"));
@@ -149,7 +123,6 @@ fn test_security_utilities() {
     assert!(random_id.chars().all(|c| c.is_ascii_alphanumeric()));
 }
 
-// Mock utility functions
 fn is_valid_identifier(s: &str) -> bool {
     !s.is_empty() && s.chars().all(|c| c.is_alphanumeric() || c == '_')
 }
@@ -160,9 +133,9 @@ fn sanitize_user_input(input: &str) -> String {
 
 fn format_bytes(bytes: u64) -> String {
     if bytes >= 1024 * 1024 * 1024 {
-        format!("{:.1} GB", bytes as f64 / (1024.0 * 1024.0 * 1024.0))
+        format_args!("{:.1} GB", bytes as f64 / (1024.0 * 1024.0 * 1024.0).to_string())
     } else if bytes >= 1024 * 1024 {
-        format!("{:.1} MB", bytes as f64 / (1024.0 * 1024.0))
+        format_args!("{:.1} MB", bytes as f64 / (1024.0 * 1024.0).to_string())
     } else {
         format!("{bytes} bytes")
     }
@@ -171,9 +144,9 @@ fn format_bytes(bytes: u64) -> String {
 fn format_duration(duration: Duration) -> String {
     let secs = duration.as_secs();
     if secs >= 3600 {
-        format!("{}h {}m", secs / 3600, (secs % 3600) / 60)
+        format_args!("{}h {}m", secs / 3600, (secs % 3600).to_string() / 60)
     } else if secs >= 60 {
-        format!("{}m {}s", secs / 60, secs % 60)
+        format_args!("{}m {}s", secs / 60, secs % 60).to_string()
     } else {
         format!("{secs}s")
     }
@@ -209,22 +182,22 @@ fn is_valid_key_length(key: &[u8], expected_len: usize) -> bool {
     key.len() == expected_len
 }
 
-fn format_as_json(data: &HashMap<String, String>) -> Result<String, String> {
+fn format_as_json(data: &HashMap<&str, &str>) -> Result<String, String> {
     serde_json::to_string_pretty(data).map_err(|e| e.to_string())
 }
 
-fn format_as_table(data: &[Vec<String>]) -> String {
+fn format_as_table(data: &[Vec<&str>]) -> String {
     data.iter()
         .map(|row| row.join(" | "))
         .collect::<Vec<_>>()
         .join("\n")
 }
 
-fn get_config_value(config: &HashMap<String, String>, key: &str) -> Option<String> {
+fn get_config_value(config: &HashMap<&str, &str>, key: &str) -> Option<String> {
     config.get(key).cloned()
 }
 
-fn parse_config_int(config: &HashMap<String, String>, key: &str) -> Option<i32> {
+fn parse_config_int(config: &HashMap<&str, &str>, key: &str) -> Option<i32> {
     config.get(key)?.parse().ok()
 }
 

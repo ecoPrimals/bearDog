@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["conditions","engine","ml_models","rules"]};

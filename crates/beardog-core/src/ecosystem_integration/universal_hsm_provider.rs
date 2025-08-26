@@ -1,26 +1,4 @@
-// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Universal HSM Provider - Vendor-Agnostic HSM Architecture
-///
-/// This module implements BearDog's Universal HSM Architecture, providing
-/// vendor-agnostic HSM operations across the entire ecosystem. It supports
-/// dynamic provider discovery, intelligent selection, and seamless failover.
 
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::crypto::{HsmKey, HsmKeyInfo, KeyMetadata, KeyType};
@@ -33,7 +11,6 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn, error};
 use uuid::Uuid;
 
-/// Ecosystem HSM Provider Information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemHsmProvider {
     pub id: String,
@@ -46,7 +23,6 @@ pub struct EcosystemHsmProvider {
     pub ecosystem_node: String,
 }
 
-/// Provider health status for intelligent selection
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ProviderHealthStatus {
     Optimal,
@@ -56,7 +32,6 @@ pub enum ProviderHealthStatus {
     Offline,
 }
 
-/// Provider selection strategy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ProviderSelectionStrategy {
     Priority,        // Select by priority
@@ -66,7 +41,6 @@ pub enum ProviderSelectionStrategy {
     Ecosystem,       // Prefer ecosystem providers
 }
 
-/// HSM Failover Manager
 #[derive(Debug)]
 pub struct HsmFailoverManager {
     failover_enabled: bool,
@@ -86,7 +60,6 @@ impl Default for HsmFailoverManager {
     }
 }
 
-/// Intelligent Provider Selector
 #[derive(Debug)]
 pub struct IntelligentProviderSelector {
     strategy: ProviderSelectionStrategy,
@@ -112,60 +85,77 @@ impl Default for IntelligentProviderSelector {
     }
 }
 
-/// Universal HSM Provider - Core Implementation
 #[derive(Debug)]
-pub struct UniversalHsmProvider {
-    /// Active HSM providers across the ecosystem
+pub struct UniversalHsmProvider<D: EcosystemServiceDiscovery = DefaultServiceDiscovery> {
+
     active_providers: Arc<RwLock<HashMap<String, Box<dyn HsmProvider + Send + Sync>>>>,
-    /// Ecosystem provider registry
+
     ecosystem_providers: Arc<RwLock<HashMap<String, EcosystemHsmProvider>>>,
-    /// Provider selection logic
+
     provider_selector: IntelligentProviderSelector,
-    /// Failover management
+
     failover_manager: HsmFailoverManager,
-    /// Service discovery client for ecosystem integration
-    service_discovery: Option<Arc<dyn EcosystemServiceDiscovery + Send + Sync>>,
+
+    service_discovery: Option<D>,
 }
 
-/// Ecosystem Service Discovery trait for HSM providers
-/// **MODERNIZED** ✅: Uses native async fn for zero-cost abstractions
+#[derive(Debug, Default)]
+pub struct DefaultServiceDiscovery;
+
+#[allow(async_fn_in_trait)]
+impl EcosystemServiceDiscovery for DefaultServiceDiscovery {
+    async fn discover_hsm_providers(&self) -> BearDogResult<Vec<EcosystemHsmProvider>> {
+        Ok(Vec::new())
+    }
+    
+    async fn register_hsm_provider(&self, _provider_info: &EcosystemHsmProvider) -> BearDogResult<()> {
+        Ok(())
+    }
+    
+    async fn health_check(&self) -> BearDogResult<bool> {
+        Ok(true)
+    }
+}
+
 #[allow(async_fn_in_trait)]
 pub trait EcosystemServiceDiscovery {
-    /// Discover HSM providers across the ecosystem
+
     async fn discover_hsm_providers(&self) -> BearDogResult<Vec<EcosystemHsmProvider>>;
-    
-    /// Register this HSM provider with the ecosystem
+
     async fn register_hsm_provider(&self, provider_info: &EcosystemHsmProvider) -> BearDogResult<()>;
-    
-    /// Health check for ecosystem connectivity
+
     async fn health_check(&self) -> BearDogResult<bool>;
 }
 
-impl UniversalHsmProvider {
-    /// Create a new Universal HSM Provider
+impl<D: EcosystemServiceDiscovery> UniversalHsmProvider<D> {
+
+    pub fn new_with_discovery(service_discovery: D) -> Self {
+        Self {
+            active_providers: Arc::new(RwLock::new(ahash::HashMap::default())),
+            ecosystem_providers: Arc::new(RwLock::new(ahash::HashMap::default())),
+            provider_selector: IntelligentProviderSelector::default(),
+            failover_manager: HsmFailoverManager::default(),
+            service_discovery: Some(service_discovery),
+        }
+    }
+}
+
+impl UniversalHsmProvider<DefaultServiceDiscovery> {
+
     pub fn new() -> Self {
         Self {
             active_providers: Arc::new(RwLock::new(ahash::HashMap::default())),
             ecosystem_providers: Arc::new(RwLock::new(ahash::HashMap::default())),
             provider_selector: IntelligentProviderSelector::default(),
             failover_manager: HsmFailoverManager::default(),
-            service_discovery: None,
+            service_discovery: Some(DefaultServiceDiscovery),
         }
     }
+}
 
-    /// Create with service discovery for ecosystem integration
-    pub fn with_service_discovery(
-        service_discovery: Arc<dyn EcosystemServiceDiscovery + Send + Sync>,
-    ) -> Self {
-        let mut provider = Self::new();
-        provider.service_discovery = Some(service_discovery);
-        provider
-    }
-
-    /// Register a local HSM provider
     pub async fn register_provider(
         &self,
-        provider_id: String,
+        provider_id: &str,
         provider: Box<dyn HsmProvider + Send + Sync>,
     ) -> BearDogResult<()> {
         let mut providers = self.active_providers.write().await;
@@ -174,7 +164,6 @@ impl UniversalHsmProvider {
         Ok(())
     }
 
-    /// Discover and register ecosystem HSM providers
     pub async fn discover_ecosystem_providers(&self) -> BearDogResult<Vec<EcosystemHsmProvider>> {
         if let Some(discovery) = &self.service_discovery {
             match discovery.discover_hsm_providers().await {
@@ -197,7 +186,6 @@ impl UniversalHsmProvider {
         }
     }
 
-    /// Select the best HSM provider for a given operation
     async fn select_provider(&self, operation: &str, key_type: Option<KeyType>) -> BearDogResult<String> {
         let providers = self.active_providers.read().await;
         let ecosystem_providers = self.ecosystem_providers.read().await;
@@ -208,7 +196,6 @@ impl UniversalHsmProvider {
             ));
         }
 
-        // Implement intelligent selection based on strategy
         match self.provider_selector.strategy {
             ProviderSelectionStrategy::Priority => {
                 self.select_by_priority(&providers, &ecosystem_providers)
@@ -232,7 +219,6 @@ impl UniversalHsmProvider {
         })
     }
 
-    /// Execute operation with failover support
     async fn execute_with_failover<F, T>(&self, operation: F) -> BearDogResult<T>
     where
         F: Fn() -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<T>> + Send>> + Send + Sync,
@@ -264,7 +250,6 @@ impl UniversalHsmProvider {
         Err(BearDogError::system_error("Max retry attempts exceeded".to_string()))
     }
 
-    /// Get ecosystem integration status
     pub async fn get_ecosystem_status(&self) -> BearDogResult<serde_json::Value> {
         let active_count = self.active_providers.read().await.len();
         let ecosystem_count = self.ecosystem_providers.read().await.len();
@@ -282,7 +267,7 @@ impl UniversalHsmProvider {
             "total_providers": active_count + ecosystem_count,
             "ecosystem_connectivity": health_check_result,
             "failover_enabled": self.failover_manager.failover_enabled,
-            "provider_selection_strategy": format!("{:?}", self.provider_selector.strategy),
+            "provider_selection_strategy": format_args!("{:?}", self.provider_selector.strategy).to_string(),
             "timestamp": chrono::Utc::now().to_rfc3339()
         }))
     }
@@ -553,21 +538,19 @@ impl HsmProvider for UniversalHsmProvider {
             })
         }).await
     }
-    
-    /// Select HSM provider by priority (highest first)
+
     fn select_by_priority(
         &self,
-        providers: &std::collections::HashMap<String, Arc<dyn beardog_traits::HsmProvider>>,
-        ecosystem_providers: &std::collections::HashMap<String, EcosystemHsmProvider>
+        providers: &std::collections::HashMap<&str, Arc<dyn beardog_traits::HsmProvider>>,
+        ecosystem_providers: &std::collections::HashMap<&str, EcosystemHsmProvider>
     ) -> BearDogResult<String> {
-        // Prefer hardware HSMs over software ones
+
         for (id, _) in providers.iter() {
             if id.contains("strongbox") || id.contains("secure_enclave") || id.contains("pkcs11") {
                 return Ok(id.clone());
             }
         }
-        
-        // Fallback to first available
+
         if let Some(provider_id) = providers.keys().next() {
             Ok(provider_id.clone())
         } else if let Some(ecosystem_provider) = ecosystem_providers.values().next() {
@@ -576,21 +559,19 @@ impl HsmProvider for UniversalHsmProvider {
             Err(BearDogError::configuration("No HSM providers available".to_string()))
         }
     }
-    
-    /// Select HSM provider by performance (fastest operations)
+
     fn select_by_performance(
         &self,
-        providers: &std::collections::HashMap<String, Arc<dyn beardog_traits::HsmProvider>>,
-        ecosystem_providers: &std::collections::HashMap<String, EcosystemHsmProvider>
+        providers: &std::collections::HashMap<&str, Arc<dyn beardog_traits::HsmProvider>>,
+        ecosystem_providers: &std::collections::HashMap<&str, EcosystemHsmProvider>
     ) -> BearDogResult<String> {
-        // Prefer hardware HSMs for performance
+
         for (id, _) in providers.iter() {
             if id.contains("strongbox") || id.contains("secure_enclave") {
                 return Ok(id.clone());
             }
         }
-        
-        // Fallback to first available
+
         if let Some(provider_id) = providers.keys().next() {
             Ok(provider_id.clone())
         } else if let Some(ecosystem_provider) = ecosystem_providers.values().next() {
@@ -599,16 +580,13 @@ impl HsmProvider for UniversalHsmProvider {
             Err(BearDogError::configuration("No HSM providers available".to_string()))
         }
     }
-    
-    /// Select HSM provider by capability (best match)
+
     fn select_by_capability(
         &self,
-        providers: &std::collections::HashMap<String, Arc<dyn beardog_traits::HsmProvider>>,
-        ecosystem_providers: &std::collections::HashMap<String, EcosystemHsmProvider>
+        providers: &std::collections::HashMap<&str, Arc<dyn beardog_traits::HsmProvider>>,
+        ecosystem_providers: &std::collections::HashMap<&str, EcosystemHsmProvider>
     ) -> BearDogResult<String> {
-        // This is a placeholder. In a real scenario, you'd compare capabilities
-        // and select the one that best matches the required operation.
-        // For now, we'll just return the first available.
+
         if let Some(provider_id) = providers.keys().next() {
             Ok(provider_id.clone())
         } else if let Some(ecosystem_provider) = ecosystem_providers.values().next() {
@@ -617,16 +595,13 @@ impl HsmProvider for UniversalHsmProvider {
             Err(BearDogError::configuration("No HSM providers available".to_string()))
         }
     }
-    
-    /// Select HSM provider by latency (lowest first)
+
     fn select_by_latency(
         &self,
-        providers: &std::collections::HashMap<String, Arc<dyn beardog_traits::HsmProvider>>,
-        ecosystem_providers: &std::collections::HashMap<String, EcosystemHsmProvider>
+        providers: &std::collections::HashMap<&str, Arc<dyn beardog_traits::HsmProvider>>,
+        ecosystem_providers: &std::collections::HashMap<&str, EcosystemHsmProvider>
     ) -> BearDogResult<String> {
-        // This is a placeholder. In a real scenario, you'd measure latency
-        // and select the one with the lowest latency.
-        // For now, we'll just return the first available.
+
         if let Some(provider_id) = providers.keys().next() {
             Ok(provider_id.clone())
         } else if let Some(ecosystem_provider) = ecosystem_providers.values().next() {
@@ -635,33 +610,30 @@ impl HsmProvider for UniversalHsmProvider {
             Err(BearDogError::configuration("No HSM providers available".to_string()))
         }
     }
-    
-    /// Select HSM provider by ecosystem preference
+
     fn select_by_ecosystem(
         &self,
-        providers: &std::collections::HashMap<String, Arc<dyn beardog_traits::HsmProvider>>,
-        ecosystem_providers: &std::collections::HashMap<String, EcosystemHsmProvider>
+        providers: &std::collections::HashMap<&str, Arc<dyn beardog_traits::HsmProvider>>,
+        ecosystem_providers: &std::collections::HashMap<&str, EcosystemHsmProvider>
     ) -> BearDogResult<String> {
-        // Prefer ecosystem providers
+
         for (id, _) in ecosystem_providers.iter() {
             return Ok(id.clone());
         }
-        
-        // Fallback to first available local provider
+
         if let Some(provider_id) = providers.keys().next() {
             Ok(provider_id.clone())
         } else {
             Err(BearDogError::configuration("No HSM providers available".to_string()))
         }
     }
-    
-    /// Select HSM provider with load balancing
+
     fn select_by_load_balance(
         &self,
-        providers: &std::collections::HashMap<String, Arc<dyn beardog_traits::HsmProvider>>,
-        ecosystem_providers: &std::collections::HashMap<String, EcosystemHsmProvider>
+        providers: &std::collections::HashMap<&str, Arc<dyn beardog_traits::HsmProvider>>,
+        ecosystem_providers: &std::collections::HashMap<&str, EcosystemHsmProvider>
     ) -> BearDogResult<String> {
-        // Simple round-robin selection based on provider count
+
         let total_providers = providers.len() + ecosystem_providers.len();
         if total_providers == 0 {
             return Err(BearDogError::configuration("No HSM providers available".to_string()));

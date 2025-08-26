@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["CrossoverStrategy","MutationStrategy","SelectionStrategy"],"struct":["EvolutionStrategiesConfig"]};

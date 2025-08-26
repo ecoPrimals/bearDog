@@ -1,28 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Load Testing Configuration - Canonical
-///
-/// **UNIFIED LOAD TESTING CONFIGURATION** for the BearDog ecosystem
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// **CANONICAL** Unified Load Testing Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct UnifiedLoadTestConfig {
@@ -32,8 +12,6 @@ pub struct UnifiedLoadTestConfig {
     pub reporting: LoadTestReportingConfig,
 }
 
-
-/// **CANONICAL** Load Test Scenario Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadTestScenario {
     pub name: String,
@@ -55,7 +33,6 @@ impl Default for LoadTestScenario {
     }
 }
 
-/// **CANONICAL** Load Test Defaults Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadTestDefaults {
     pub timeout: Duration,
@@ -73,7 +50,6 @@ impl Default for LoadTestDefaults {
     }
 }
 
-/// **CANONICAL** Load Test Monitoring Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadTestMonitoringConfig {
     pub enabled: bool,
@@ -93,7 +69,6 @@ impl Default for LoadTestMonitoringConfig {
     }
 }
 
-/// **CANONICAL** Load Test Reporting Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadTestReportingConfig {
     pub enabled: bool,

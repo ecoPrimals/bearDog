@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["examples"],"struct":["WorkflowEngineMetrics","ZeroCostEngineConfig","ZeroCostEngineMetrics","ZeroCostWorkflowEngine","ZeroCostWorkflowEngineBuilder"],"type":["DevelopmentWorkflowEngine","ProductionWorkflowEngine"]};

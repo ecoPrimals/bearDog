@@ -1,39 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # Pure Rust Android App for Pixel 8 BearDog HSM
-//!
-//! This example demonstrates how to run BearDog entirely in Rust on Android
-//! without any Java layer, using the android-ndk crate for native integration.
-//!
-//! ## Features
-//!
-//! - **Pure Rust** - No Java/Kotlin code required
-//! - **Native Android** - Direct NDK integration
-//! - **StrongBox HSM** - Hardware-backed key operations
-//! - **Pixel 8 Optimized** - Titan M security chip integration
-//! - **GrapheneOS Ready** - Privacy-focused mobile OS support
-//!
-//! ## Usage
-//!
-//! Build for Android:
-//! ```bash
-//! cargo ndk -t arm64-v8a build --example pixel8_native_app
-//! ```
 
 #[cfg(target_os = "android")]
 use android_logger::{Config, FilterBuilder};
@@ -49,11 +14,10 @@ use tracing::{info, Level};
 #[cfg(target_os = "android")]
 use ndk::native_activity::{NativeActivity, NativeActivityCallbacks};
 
-/// Main Android application entry point
 #[cfg(target_os = "android")]
 #[no_mangle]
 pub extern "C" fn android_main(app: *mut std::os::raw::c_void) {
-    // Initialize Android logger
+
     android_logger::init_once(
         Config::default()
             .with_max_level(log::LevelFilter::Info)
@@ -61,14 +25,12 @@ pub extern "C" fn android_main(app: *mut std::os::raw::c_void) {
     );
 
     info!("🚀 BearDog Pure Rust Android App Starting");
-    
-    // Initialize async runtime
+
     let rt = tokio::runtime::Runtime::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e).to_string())
 })?;
-    
-    // Run BearDog HSM system
+
     match rt.block_on(run_beardog_hsm()) {
         Ok(()) => {
             info!("✅ BearDog HSM system completed successfully");
@@ -79,11 +41,10 @@ pub extern "C" fn android_main(app: *mut std::os::raw::c_void) {
     }
 }
 
-/// Non-Android main for development/testing
 #[cfg(not(target_os = "android"))]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging for non-Android
+
     tracing_subscriber::fmt()
         .with_max_level(Level::INFO)
         .init();
@@ -94,33 +55,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Core BearDog HSM operations
 async fn run_beardog_hsm() -> BearDogResult<()> {
     info!("🔐 Initializing BearDog HSM System");
     info!("=================================");
 
-    // Phase 1: Device validation and setup
     let (hsm, anchor_key) = initialize_pixel8_hsm().await?;
 
-    // Phase 2: Test core HSM operations
     test_hsm_operations(&hsm, &anchor_key).await?;
 
-    // Phase 3: Create ecosystem identity
     create_ecosystem_identity(&hsm).await?;
 
-    // Phase 4: Run comprehensive tests
     run_comprehensive_tests(&hsm).await?;
 
     info!("🎉 BearDog HSM System fully operational on Pixel 8!");
     Ok(())
 }
 
-/// Initialize Pixel 8 HSM with custom configuration
 async fn initialize_pixel8_hsm() -> BearDogResult<(Arc<AndroidStrongBoxHsm>, HsmKey)> {
     info!("📱 Phase 1: Pixel 8 HSM Initialization");
     info!("--------------------------------------");
 
-    // Create custom Pixel 8 configuration for maximum security
     let config = Pixel8GrapheneOSConfig {
         require_titan_m: true,                              // Must have Titan M
         require_green_boot: true,                           // Must have verified boot
@@ -129,19 +83,15 @@ async fn initialize_pixel8_hsm() -> BearDogResult<(Arc<AndroidStrongBoxHsm>, Hsm
         performance_mode: Pixel8PerformanceMode::MaxSecurity, // All operations in hardware
     };
 
-    // Initialize with custom configuration
     info!("🔧 Creating Pixel 8 setup with maximum security configuration");
     let setup = Pixel8GrapheneOSSetup::new(config).await?;
 
-    // Initialize HSM
     info!("🚀 Initializing Android StrongBox HSM");
     let hsm = setup.initialize_hsm().await?;
 
-    // Create security anchor key
     info!("🔑 Creating BearDog security anchor key");
     let anchor_key = setup.create_anchor_key(&hsm).await?;
 
-    // Get HSM info
     let hsm_info = hsm.get_info().await?;
     info!("📋 HSM Information:");
     info!("   Vendor: {}", hsm_info.vendor);
@@ -153,20 +103,16 @@ async fn initialize_pixel8_hsm() -> BearDogResult<(Arc<AndroidStrongBoxHsm>, Hsm
     Ok((hsm, anchor_key))
 }
 
-/// Test core HSM operations
 async fn test_hsm_operations(hsm: &Arc<AndroidStrongBoxHsm>, anchor_key: &HsmKey) -> BearDogResult<()> {
     info!("🧪 Phase 2: Core HSM Operations Testing");
     info!("---------------------------------------");
 
-    // Test 1: Basic signing and verification
     info!("🔐 Test 1: Basic Signing and Verification");
     let test_message = b"BearDog security test on Pixel 8 GrapheneOS";
-    
-    // Sign with anchor key
+
     let signature = hsm.sign(&anchor_key.id, test_message).await?;
     info!("   ✅ Message signed: {} bytes signature", signature.len());
-    
-    // Verify signature
+
     let is_valid = hsm.verify(&anchor_key.id, test_message, &signature).await?;
     if is_valid {
         info!("   ✅ Signature verification passed");
@@ -176,14 +122,12 @@ async fn test_hsm_operations(hsm: &Arc<AndroidStrongBoxHsm>, anchor_key: &HsmKey
         });
     }
 
-    // Test 2: Multiple key operations
     info!("🔑 Test 2: Multiple Key Operations");
     let test_keys = generate_test_keys(hsm).await?;
     info!("   ✅ Generated {} test keys", test_keys.len());
 
-    // Test each key
     for (i, key) in test_keys.iter().enumerate() {
-        let test_data = format!("Test message #{}", i + 1);
+        let test_data = format_args!("Test message #{}", i + 1).to_string();
         let signature = hsm.sign(&key.id, test_data.as_bytes()).await?;
         let valid = hsm.verify(&key.id, test_data.as_bytes(), &signature).await?;
         
@@ -191,17 +135,16 @@ async fn test_hsm_operations(hsm: &Arc<AndroidStrongBoxHsm>, anchor_key: &HsmKey
             info!("   ✅ Key {}: Operations successful", i + 1);
         } else {
             return Err(beardog::BearDogError::InvalidInput {
-                message: format!("Key {} operations failed", i + 1),
+                message: format_args!("Key {} operations failed", i + 1).to_string(),
             });
         }
     }
 
-    // Test 3: Performance benchmark
     info!("⚡ Test 3: Performance Benchmark");
     let start_time = std::time::Instant::now();
     
     for i in 0..10 {
-        let data = format!("Performance test iteration {}", i);
+        let data = format_args!("Performance test iteration {}", i).to_string();
         let signature = hsm.sign(&anchor_key.id, data.as_bytes()).await?;
         let _valid = hsm.verify(&anchor_key.id, data.as_bytes(), &signature).await?;
     }
@@ -214,13 +157,11 @@ async fn test_hsm_operations(hsm: &Arc<AndroidStrongBoxHsm>, anchor_key: &HsmKey
     Ok(())
 }
 
-/// Generate test keys for comprehensive testing
 async fn generate_test_keys(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResult<Vec<HsmKey>> {
     info!("🔑 Generating test keys for comprehensive testing");
     
     let mut keys = Vec::new();
-    
-    // Generate different types of keys
+
     let key_specs = vec![
         ("test-ecc-p256", KeyType::EccP256),
         ("test-ecc-p384", KeyType::EccP384),
@@ -239,12 +180,12 @@ async fn generate_test_keys(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResult<Vec
             },
             metadata: KeyMetadata {
                 key_id: key_id.to_string(),
-                key_name: format!("Test Key: {}", key_id),
+                key_name: format_args!("Test Key: {}", key_id).to_string(),
                 key_type: key_type.clone(),
                 created_at: chrono::Utc::now(),
                 expires_at: None,
                 usage_policy: KeyUsagePolicy::default(),
-                tags: std::collections::HashMap::new(),
+                tags: std::collections::HashMap::with_capacity(16),
             },
             target_hsm_tier: "smartphone".to_string(),
             generate_attestation: false,
@@ -266,16 +207,13 @@ async fn generate_test_keys(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResult<Vec
     Ok(keys)
 }
 
-/// Create ecosystem identity for this Pixel 8 device
 async fn create_ecosystem_identity(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResult<()> {
     info!("🌐 Phase 3: Ecosystem Identity Creation");
     info!("--------------------------------------");
 
-    // Create configuration for ecosystem identity
     let config = Pixel8GrapheneOSConfig::default();
     let setup = Pixel8GrapheneOSSetup::new(config).await?;
 
-    // Generate ecosystem identity
     let identity = setup.generate_ecosystem_identity(hsm).await?;
     
     info!("🆔 Ecosystem Identity Created:");
@@ -289,22 +227,19 @@ async fn create_ecosystem_identity(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogRes
     Ok(())
 }
 
-/// Run comprehensive HSM tests
 async fn run_comprehensive_tests(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResult<()> {
     info!("🔬 Phase 4: Comprehensive HSM Testing");
     info!("------------------------------------");
 
-    // Test 1: Health check
     info!("🏥 Test 1: HSM Health Check");
     let health = hsm.health_check().await?;
     info!("   Health Status: {:?}", health);
 
-    // Test 2: Stress test
     info!("💪 Test 2: Stress Test (50 operations)");
     let start_time = std::time::Instant::now();
     
     for i in 0..50 {
-        let data = format!("Stress test iteration {}", i);
+        let data = format_args!("Stress test iteration {}", i).to_string();
         let signature = hsm.sign("beardog-anchor-key", data.as_bytes()).await?;
         let _valid = hsm.verify("beardog-anchor-key", data.as_bytes(), &signature).await?;
         
@@ -317,7 +252,6 @@ async fn run_comprehensive_tests(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResul
     info!("   ✅ Stress test completed in {:?}", elapsed);
     info!("   📊 Operations per second: {:.2}", 50.0 / elapsed.as_secs_f64());
 
-    // Test 3: Concurrent operations
     info!("🔀 Test 3: Concurrent Operations Test");
     let concurrent_start = std::time::Instant::now();
     
@@ -325,14 +259,13 @@ async fn run_comprehensive_tests(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResul
     for i in 0..10 {
         let hsm_clone = hsm.clone();
         let handle = tokio::spawn(async move {
-            let data = format!("Concurrent test {}", i);
+            let data = format_args!("Concurrent test {}", i).to_string();
             let signature = hsm_clone.sign("beardog-anchor-key", data.as_bytes()).await?;
             hsm_clone.verify("beardog-anchor-key", data.as_bytes(), &signature).await
         });
         handles.push(handle);
     }
-    
-    // Wait for all concurrent operations
+
     let mut success_count = 0;
     for handle in handles {
         match handle.await {
@@ -351,8 +284,6 @@ async fn run_comprehensive_tests(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResul
     Ok(())
 }
 
-/// Display system status and capabilities
-#[allow(dead_code)]
 fn display_system_status() {
     info!("📊 System Status Report");
     info!("====================");

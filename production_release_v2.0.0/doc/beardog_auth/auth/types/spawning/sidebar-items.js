@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["SpawnPurpose","SpawnStatus","TaskType"],"struct":["ResourceLimits","SpawnRequest","SpawnedBearDog"]};

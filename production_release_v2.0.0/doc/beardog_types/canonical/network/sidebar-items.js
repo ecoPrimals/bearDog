@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["LoadBalancingStrategy","NetworkProtocol","ServiceDiscoveryType"],"struct":["CircuitBreakerConfig","ConnectionPoolConfig","FailoverConfig","HealthCheckConfig","LoadBalancingConfig","ServiceDiscoveryConfig"]};

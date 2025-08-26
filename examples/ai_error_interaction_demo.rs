@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! AI Error Interaction Demo
-//! 
-//! Demonstrates how an AI agent can understand, analyze, and respond to
-//! BearDog's enhanced error system on behalf of a human user.
 
 use beardog_errors::{BearDogError, BearDogResult, ErrorSeverity, ErrorCategory, RemediationAction};
 use serde_json::json;
@@ -28,8 +8,7 @@ use std::collections::HashMap;
 async fn main() -> BearDogResult<()> {
     println!("🤖 AI Error Interaction Demo");
     println!("============================");
-    
-    // Simulate various error scenarios that an AI might encounter
+
     demonstrate_crypto_error_ai_response().await?;
     demonstrate_network_error_ai_response().await?;
     demonstrate_resource_exhaustion_ai_response().await?;
@@ -37,12 +16,10 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate how AI handles crypto errors
 async fn demonstrate_crypto_error_ai_response() -> BearDogResult<()> {
     println!("\n🔐 SCENARIO 1: Cryptographic Operation Failure");
     println!("==============================================");
-    
-    // Create a realistic crypto error that might occur
+
     let crypto_error = BearDogError::enhanced("CRYPTO_001")
         .severity(ErrorSeverity::High)
         .category(ErrorCategory::Security)
@@ -69,7 +46,7 @@ async fn demonstrate_crypto_error_ai_response() -> BearDogResult<()> {
         .add_remediation(RemediationAction {
             action_type: "use_software_fallback".to_string(),
             description: "Fall back to software encryption temporarily".to_string(),
-            parameters: HashMap::new(),
+            parameters: HashMap::with_capacity(16),
             estimated_time_seconds: Some(2),
             automatable: true,
             prerequisites: vec![],
@@ -90,14 +67,12 @@ async fn demonstrate_crypto_error_ai_response() -> BearDogResult<()> {
         .related_error("CRYPTO_002") // Key generation failures
         .related_error("HSM_001")    // HSM hardware issues
         .build();
-    
-    // AI analyzes and responds to the error
+
     ai_error_analysis("Crypto AI Agent", &crypto_error).await;
     
     Ok(())
 }
 
-/// Demonstrate how AI handles network errors
 async fn demonstrate_network_error_ai_response() -> BearDogResult<()> {
     println!("\n🌐 SCENARIO 2: Network Connectivity Issue");
     println!("=========================================");
@@ -147,7 +122,6 @@ async fn demonstrate_network_error_ai_response() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate how AI handles resource exhaustion
 async fn demonstrate_resource_exhaustion_ai_response() -> BearDogResult<()> {
     println!("\n💾 SCENARIO 3: Resource Exhaustion");
     println!("==================================");
@@ -204,14 +178,11 @@ async fn demonstrate_resource_exhaustion_ai_response() -> BearDogResult<()> {
     Ok(())
 }
 
-/// AI Agent error analysis and decision making
 async fn ai_error_analysis(agent_name: &str, error: &BearDogError) {
     println!("\n🤖 {} analyzing error...", agent_name);
-    
-    // AI generates structured analysis report
+
     let ai_report = error.to_ai_report();
-    
-    // AI evaluates error severity
+
     match error.severity() {
         ErrorSeverity::Critical => {
             println!("🚨 CRITICAL ERROR DETECTED");
@@ -230,8 +201,7 @@ async fn ai_error_analysis(agent_name: &str, error: &BearDogError) {
             println!("   AI Decision: Log and monitor");
         }
     }
-    
-    // AI analyzes context
+
     if let Some(context) = error.context() {
         println!("\n📊 AI Context Analysis:");
         println!("   Error ID: {}", context.error_id);
@@ -245,16 +215,14 @@ async fn ai_error_analysis(agent_name: &str, error: &BearDogError) {
             println!("   User Impact: System-wide issue");
         }
     }
-    
-    // AI examines available actions
+
     let automated_actions = error.automated_remediation_actions();
     let manual_actions = error.manual_remediation_actions();
     
     println!("\n🔧 AI Action Analysis:");
     println!("   Automated actions available: {}", automated_actions.len());
     println!("   Manual actions required: {}", manual_actions.len());
-    
-    // AI selects optimal automated action
+
     if !automated_actions.is_empty() {
         let best_action = automated_actions.iter()
             .min_by_key(|action| action.estimated_time_seconds.unwrap_or(u64::MAX))
@@ -262,7 +230,7 @@ async fn ai_error_analysis(agent_name: &str, error: &BearDogError) {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 });
         
@@ -271,12 +239,10 @@ async fn ai_error_analysis(agent_name: &str, error: &BearDogError) {
         println!("   Type: {}", best_action.action_type);
         println!("   Estimated Time: {}s", best_action.estimated_time_seconds.unwrap_or(0));
         println!("   Prerequisites: {:?}", best_action.prerequisites);
-        
-        // AI would execute the action here
+
         simulate_ai_action_execution(best_action).await;
     }
-    
-    // AI determines if human assistance is needed
+
     if !manual_actions.is_empty() || error.is_critical() {
         println!("\n👤 AI Human Assistance Request:");
         println!("   Reason: {}", if error.is_critical() {
@@ -289,15 +255,13 @@ async fn ai_error_analysis(agent_name: &str, error: &BearDogError) {
             println!("   Manual Action: {}", action.description);
         }
     }
-    
-    // AI generates JSON report for logging/monitoring
+
     println!("\n📋 AI Generated Report (JSON):");
     println!("{}", serde_json::to_string_pretty(&ai_report).unwrap_or_default());
     
     println!("\n" + "=".repeat(60).as_str());
 }
 
-/// Simulate AI executing an automated action
 async fn simulate_ai_action_execution(action: &RemediationAction) {
     println!("\n⚡ AI Executing Action: {}", action.action_type);
     
@@ -308,8 +272,7 @@ async fn simulate_ai_action_execution(action: &RemediationAction) {
             if let Some(max_retries) = action.parameters.get("max_retries").and_then(|v| v.as_u64()) {
                 println!("   📊 Max retries: {}", max_retries);
             }
-            
-            // Simulate the retry process
+
             for i in 1..=3 {
                 println!("   ⏳ Retry attempt {} in progress...", i);
                 tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
@@ -335,8 +298,7 @@ async fn simulate_ai_action_execution(action: &RemediationAction) {
         
         "cleanup_inactive_spawns" => {
             println!("   🧹 AI cleaning up inactive spawn processes");
-            
-            // Simulate cleanup process
+
             for i in 1..=5 {
                 println!("   🔄 Cleaning spawn batch {}...", i);
                 tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;

@@ -1,40 +1,18 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// # Core EcoPrimal Trait Implementation
-///
-/// **EXTRACTED FROM LARGE FILE** - Core trait implementation (~200 lines)
-/// This module contains the main EcoPrimal trait implementation for `BearDog`,
-/// focusing solely on the trait interface without extension methods.
+#![allow(async_fn_in_trait)]
 
-use crate::{`BearDog`Core, BearDogResult};
+use crate::`BearDog`Core, BearDogResult};
 use beardog_types::canonical::HealthStatus;
 use super::super::primal_types::*;
 use super::super::primal_trait::EcoPrimal;
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 use std::collections::HashMap;
 use tracing::{debug, error, info, warn};
 use beardog_errors::BearDogResult;
 use chrono::{Duration, Utc};
-/// `BearDog` EcoPrimal implementation
-// MODERNIZED: Native async fn implementation - no async_trait overhead
-#[allow(async_fn_in_trait)]
-impl EcoPrimal for `BearDog`Core {}
 
+impl EcoPrimal for `BearDog`Core {}
 
     fn metadata(&self) -> &PrimalMetadata {
         static METADATA: std::sync::OnceLock<PrimalMetadata> = std::sync::OnceLock::new();
@@ -66,22 +44,21 @@ impl EcoPrimal for `BearDog`Core {}
             PrimalCapability::Custom("CrossPlatformSecurity".to_string()),
         ]}
 
-
     async fn initialize(&self, config: &PrimalIntegrationConfig) -> Result<(), PrimalError> {
         info!("🚀 Initializing `BearDog` EcoPrimal with integration config");
         debug!("Integration config: {:?}", config);
-        // Initialize HSM providers
+
         if let Err(e) = self.initialize_hsm_providers().await {
             error!("HSM providers initialization failed: {}", e);
             return Err(PrimalError::InitializationFailed {
-                reason: format!("HSM initialization error: {}", e),
+                reason: format_args!("HSM initialization error: {}", e).to_string(),
             });
         }
-        // Register with ecosystem services based on configuration
+
         if config.enable_toadstool_integration {
             if let Err(e) = self.register_with_toadstool().await {
                 warn!("ToadStool registration failed: {}", e);
-                // Non-fatal error for optional dependency
+
             }
         if config.enable_songbird_integration {
             if let Err(e) = self.register_via_universal_adapter().await {
@@ -89,12 +66,12 @@ impl EcoPrimal for `BearDog`Core {}
         if config.enable_squirrel_integration {
             if let Err(e) = self.register_with_squirrel().await {
                 warn!("Squirrel registration failed: {}", e);
-        // Start AI-first API server
+
         if config.enable_ai_api {
             if let Err(e) = self.start_ai_first_api_server().await {
                 error!("AI API server startup failed: {}", e);
                 return Err(PrimalError::InitializationFailed {
-                    reason: format!("AI API startup error: {}", e),
+                    reason: format_args!("AI API startup error: {}", e).to_string(),
                 });
         info!("✅ `BearDog` EcoPrimal initialization complete");
         Ok(())
@@ -132,7 +109,7 @@ impl EcoPrimal for `BearDog`Core {}
         let hsm_health = self.check_hsm_health().await;
         let api_health = self.check_ai_api_health().await;
         let ecosystem_health = self.check_ecosystem_integrations().await;
-        // Overall health is healthy if core systems (HSM) are healthy
+
         let overall_status = match hsm_health {
             HealthStatus::Healthy => {
                 if api_health == HealthStatus::Healthy || ecosystem_health == HealthStatus::Healthy {
@@ -159,7 +136,7 @@ impl EcoPrimal for `BearDog`Core {}
             next_check: Utc::now() + Duration::seconds(30),
     async fn shutdown(&self) -> Result<(), PrimalError> {
         info!("🛑 Shutting down `BearDog` EcoPrimal");
-        // Graceful shutdown of all components
+
         if let Err(e) = self.shutdown_ai_api_server().await {
             warn!("AI API server shutdown error: {}", e);
         if let Err(e) = self.shutdown_hsm_providers().await {

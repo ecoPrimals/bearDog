@@ -1,32 +1,10 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Security capability definitions for BearDog PrimalProvider
-///
-/// This module contains all security capabilities that BearDog provides
-/// to the universal ecosystem, including their attributes and QoS specifications.
 
 use std::collections::HashMap;
 use super::super::capability_ids;
 use super::super::traits::*;
 use super::core::BearDogPrimalProvider;
 impl<T: Send + Sync> BearDogPrimalProvider<T> {
-    /// Get BearDog's security capabilities}
-
 
     pub fn get_security_capabilities(&self) -> Vec<Capability> {
         vec![
@@ -37,9 +15,9 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
             self.create_monitoring_capability(),
         ]
     }
-    /// Get BearDog's dependencies
+
     pub fn get_dependencies(&self) -> Vec<Dependency> {
-            // Optional dependency on SongBird for service discovery
+
             Dependency {
                 id: "songbird-discovery".to_string(),
                 name: "SongBird Discovery Service".to_string(),
@@ -55,12 +33,12 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                         serde_json::json!("Local configuration"),
                 ])),
             },
-            // Optional dependency on NestGate for secure storage
+
                 id: "nestgate-storage".to_string(),
                 name: "NestGate Storage Service".to_string(),
                         serde_json::json!("Secure key and audit storage"),
                         serde_json::json!("Local file storage"),
-    /// Create encryption capability
+
     fn create_encryption_capability(&self) -> Capability {
         Capability {
             id: capability_ids::SECURITY_ENCRYPT.to_string(),
@@ -91,7 +69,7 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                     unit: "MB".to_string(),
                 ..Default::default()
         }
-    /// Create authentication capability
+
     fn create_authentication_capability(&self) -> Capability {
             id: capability_ids::SECURITY_AUTHENTICATE.to_string(),
             name: "Authentication".to_string(),
@@ -106,8 +84,6 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                     max: Some(4),
                     min: 256,
                     max: Some(2048),
-    /// Create authorization capability}
-
 
     fn create_authorization_capability(&self) -> Capability {
             id: capability_ids::SECURITY_AUTHORIZE.to_string(),
@@ -116,7 +92,7 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
             attributes: self.create_authorization_attributes(),
                 avg_response_time_ms: 3, // Ultra-fast authorization
                     value: 50000,
-    /// Create audit capability
+
     fn create_audit_capability(&self) -> Capability {
             id: capability_ids::SECURITY_AUDIT.to_string(),
             name: "Security Audit".to_string(),
@@ -129,8 +105,6 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                 storage: Some(ResourceRequirement {
                     max: Some(1000),
                     unit: "GB".to_string(),
-    /// Create monitoring capability}
-
 
     fn create_monitoring_capability(&self) -> Capability {
             id: capability_ids::SECURITY_MONITOR.to_string(),
@@ -144,7 +118,7 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                     max: Some(16),
                     min: 1024,
                     max: Some(8192),
-    /// Create encryption capability attributes
+
     pub fn create_encryption_attributes(&self) -> HashMap<String, CapabilityAttribute> {
         HashMap::from([
             (
@@ -163,8 +137,6 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                     required: false,
                     description: Some("Post-quantum cryptography support".to_string()),
         ])
-    /// Create authentication capability attributes}
-
 
     pub fn create_authentication_attributes(&self) -> HashMap<String, CapabilityAttribute> {
                 "methods".to_string(),
@@ -174,7 +146,7 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                     description: Some("Multi-factor authentication support".to_string()),
                 "session_management".to_string(),
                     description: Some("Session lifecycle management".to_string()),
-    /// Create authorization capability attributes
+
     pub fn create_authorization_attributes(&self) -> HashMap<String, CapabilityAttribute> {
                 "policy_types".to_string(),
                     value: "rbac,abac,policy_engine".to_string(),
@@ -183,8 +155,6 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                     description: Some("Fine-grained access control support".to_string()),
                 "caching".to_string(),
                     description: Some("Authorization decision caching".to_string()),
-    /// Create audit capability attributes}
-
 
     pub fn create_audit_attributes(&self) -> HashMap<String, CapabilityAttribute> {
                 "compliance_standards".to_string(),
@@ -194,7 +164,7 @@ impl<T: Send + Sync> BearDogPrimalProvider<T> {
                     description: Some("Real-time audit logging".to_string()),
                 "tamper_proof".to_string(),
                     description: Some("Tamper-proof audit logs".to_string()),
-    /// Create monitoring capability attributes
+
     pub fn create_monitoring_attributes(&self) -> HashMap<String, CapabilityAttribute> {
                 "threat_detection".to_string(),
                     description: Some("Real-time threat detection".to_string()),

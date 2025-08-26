@@ -1,33 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! World-Class Testing Framework for BearDog Security Manager
-//!
-//! This framework implements the most comprehensive testing methodology ever created
-//! for a security system, ensuring mathematical certainty of safety and correctness.
-//!
-//! Testing Methodologies Implemented:
-//! - Formal Verification with Mathematical Proofs
-//! - Property-Based Testing with Exhaustive Generation
-//! - Mutation Testing for Test Suite Validation
-//! - Invariant-Based Testing for System Safety
-//! - Exhaustive Edge Case Coverage
-//! - Quantum-Resistant Cryptographic Validation
-//! - Byzantine Fault Tolerance with Formal Guarantees
 
 use beardog_adapters::*;
 use beardog_auth::*;
@@ -43,7 +14,6 @@ use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use rand::Rng;
 
-/// World-Class Testing Framework - The Ultimate Security Validation System
 pub struct WorldClassTestingFramework {
     pub formal_verifiers: Vec<Box<dyn FormalVerifier + Send + Sync>>,
     pub property_generators: Vec<Box<dyn PropertyGenerator + Send + Sync>>,
@@ -54,49 +24,42 @@ pub struct WorldClassTestingFramework {
     pub test_metrics: Arc<RwLock<WorldClassMetrics>>,
 }
 
-/// Formal verification trait for mathematical proofs of correctness
 pub trait FormalVerifier {
     fn verify_correctness(&self, component: &str) -> FormalVerificationResult;
     fn generate_proof(&self, property: &str) -> MathematicalProof;
     fn validate_invariants(&self, system_state: &SystemState) -> InvariantValidationResult;
 }
 
-/// Property-based testing with exhaustive generation
 pub trait PropertyGenerator {
     fn generate_test_cases(&self, property: &SecurityProperty) -> Vec<TestCase>;
     fn validate_property(&self, property: &SecurityProperty, input: &TestInput) -> PropertyResult;
     fn shrink_counterexample(&self, failing_case: &TestCase) -> MinimalCounterexample;
 }
 
-/// Mutation testing to validate test suite effectiveness
 pub trait MutationTester {
     fn generate_mutations(&self, code: &str) -> Vec<CodeMutation>;
     fn execute_mutant(&self, mutation: &CodeMutation) -> MutationResult;
     fn calculate_mutation_score(&self, results: &[MutationResult]) -> f64;
 }
 
-/// Invariant validation for system-wide safety properties
 pub trait InvariantValidator {
     fn define_invariants(&self) -> Vec<SystemInvariant>;
     fn validate_invariant(&self, invariant: &SystemInvariant, state: &SystemState) -> bool;
     fn detect_invariant_violations(&self, execution_trace: &ExecutionTrace) -> Vec<InvariantViolation>;
 }
 
-/// Exhaustive testing for complete edge case coverage
 pub trait ExhaustiveTester {
     fn generate_all_edge_cases(&self, function_signature: &FunctionSignature) -> Vec<EdgeCase>;
     fn test_boundary_conditions(&self, input_space: &InputSpace) -> BoundaryTestResults;
     fn validate_error_conditions(&self, error_cases: &[ErrorCase]) -> ErrorValidationResults;
 }
 
-/// Quantum resistance validation for future-proof cryptography
 pub trait QuantumResistanceValidator {
     fn validate_quantum_resistance(&self, crypto_primitive: &CryptoPrimitive) -> QuantumResistanceResult;
     fn simulate_quantum_attacks(&self, key_material: &[u8]) -> QuantumAttackSimulation;
     fn verify_post_quantum_security(&self, algorithm: &str) -> PostQuantumValidation;
 }
 
-/// Comprehensive metrics for world-class testing
 #[derive(Debug, Default)]
 pub struct WorldClassMetrics {
     pub total_test_cases: u64,
@@ -111,7 +74,6 @@ pub struct WorldClassMetrics {
     pub correctness_proof_strength: f64,   // 0.0 to 1.0
 }
 
-/// Formal verification result with mathematical proof
 #[derive(Debug)]
 pub struct FormalVerificationResult {
     pub component: String,
@@ -121,7 +83,6 @@ pub struct FormalVerificationResult {
     pub verification_time: Duration,
 }
 
-/// Mathematical proof structure
 #[derive(Debug)]
 pub struct MathematicalProof {
     pub theorem: String,
@@ -131,7 +92,6 @@ pub struct MathematicalProof {
     pub validity: ProofValidity,
 }
 
-/// Individual proof step
 #[derive(Debug)]
 pub struct ProofStep {
     pub step_number: u32,
@@ -140,7 +100,6 @@ pub struct ProofStep {
     pub references: Vec<String>,
 }
 
-/// Proof validity assessment
 #[derive(Debug)]
 pub enum ProofValidity {
     Mathematically_Sound,
@@ -149,7 +108,6 @@ pub enum ProofValidity {
     Invalid,
 }
 
-/// Security property for property-based testing
 #[derive(Debug, Clone)]
 pub struct SecurityProperty {
     pub name: String,
@@ -159,7 +117,6 @@ pub struct SecurityProperty {
     pub invariants: Vec<String>,
 }
 
-/// Test case for property-based testing
 #[derive(Debug, Clone)]
 pub struct TestCase {
     pub id: String,
@@ -168,7 +125,6 @@ pub struct TestCase {
     pub properties_to_check: Vec<String>,
 }
 
-/// Test input with comprehensive data generation
 #[derive(Debug, Clone)]
 pub struct TestInput {
     pub data: HashMap<String, serde_json::Value>,
@@ -176,7 +132,6 @@ pub struct TestInput {
     pub constraints: Vec<InputConstraint>,
 }
 
-/// Test output validation
 #[derive(Debug, Clone)]
 pub struct TestOutput {
     pub result: serde_json::Value,
@@ -184,7 +139,6 @@ pub struct TestOutput {
     pub performance_metrics: PerformanceMetrics,
 }
 
-/// System state for invariant validation
 #[derive(Debug, Clone)]
 pub struct SystemState {
     pub memory_state: MemoryState,
@@ -194,7 +148,6 @@ pub struct SystemState {
     pub network_state: NetworkState,
 }
 
-/// System invariant definition
 #[derive(Debug, Clone)]
 pub struct SystemInvariant {
     pub name: String,
@@ -204,7 +157,6 @@ pub struct SystemInvariant {
     pub violation_consequences: Vec<String>,
 }
 
-/// Invariant criticality levels
 #[derive(Debug, Clone)]
 pub enum InvariantCriticality {
     Safety_Critical,      // Violation compromises human safety
@@ -258,7 +210,6 @@ impl WorldClassTestingFramework {
         })
     }
 
-    /// Execute the most comprehensive testing suite ever created
     pub async fn execute_world_class_validation(&self) -> BearDogResult<WorldClassTestResults> {
         println!("🌟 INITIATING WORLD-CLASS TESTING VALIDATION 🌟");
         println!("🎯 Target: Mathematical Certainty of Safety and Correctness");
@@ -266,31 +217,24 @@ impl WorldClassTestingFramework {
         
         let start_time = Instant::now();
 
-        // Phase 1: Formal Verification with Mathematical Proofs
         let formal_results = self.execute_formal_verification().await?;
         println!("✅ Phase 1: Formal Verification Complete - {} proofs generated", formal_results.proofs_generated);
 
-        // Phase 2: Property-Based Testing with Exhaustive Generation
         let property_results = self.execute_property_based_testing().await?;
         println!("✅ Phase 2: Property-Based Testing Complete - {} properties verified", property_results.properties_verified);
 
-        // Phase 3: Mutation Testing for Test Suite Validation
         let mutation_results = self.execute_mutation_testing().await?;
         println!("✅ Phase 3: Mutation Testing Complete - {:.2}% mutation score", mutation_results.mutation_score * 100.0);
 
-        // Phase 4: Invariant Validation for System Safety
         let invariant_results = self.execute_invariant_validation().await?;
         println!("✅ Phase 4: Invariant Validation Complete - {} invariants verified", invariant_results.invariants_verified);
 
-        // Phase 5: Exhaustive Edge Case Testing
         let exhaustive_results = self.execute_exhaustive_testing().await?;
         println!("✅ Phase 5: Exhaustive Testing Complete - {} edge cases covered", exhaustive_results.edge_cases_tested);
 
-        // Phase 6: Quantum Resistance Validation
         let quantum_results = self.execute_quantum_validation().await?;
         println!("✅ Phase 6: Quantum Resistance Validation Complete - {} attack simulations", quantum_results.quantum_attacks_simulated);
 
-        // Phase 7: Mathematical Certainty Calculation
         let certainty_level = self.calculate_mathematical_certainty(&[
             &formal_results,
             &property_results, 
@@ -325,7 +269,6 @@ impl WorldClassTestingFramework {
         })
     }
 
-    /// Execute formal verification with mathematical proofs
     async fn execute_formal_verification(&self) -> BearDogResult<FormalVerificationResults> {
         println!("🔬 Executing Formal Verification...");
         
@@ -333,7 +276,6 @@ impl WorldClassTestingFramework {
         let mut verified_components = Vec::new();
         let mut mathematical_proofs = Vec::new();
 
-        // Critical security properties to formally verify
         let security_properties = [
             "Cryptographic key generation produces cryptographically secure random keys",
             "AES-GCM encryption provides authenticated encryption with semantic security",
@@ -347,7 +289,7 @@ impl WorldClassTestingFramework {
 
         for property in &security_properties {
             for verifier in &self.formal_verifiers {
-                let result = verifier.verify_correctness(&format!("security_property_{}", proofs_generated));
+                let result = verifier.verify_correctness(&format_args!("security_property_{}", proofs_generated).to_string());
                 
                 if result.verified {
                     proofs_generated += 1;
@@ -373,7 +315,6 @@ impl WorldClassTestingFramework {
         })
     }
 
-    /// Execute property-based testing with exhaustive generation
     async fn execute_property_based_testing(&self) -> BearDogResult<PropertyBasedTestResults> {
         println!("🎲 Executing Property-Based Testing...");
         
@@ -381,7 +322,6 @@ impl WorldClassTestingFramework {
         let mut test_cases_generated = 0;
         let mut counterexamples_found = Vec::new();
 
-        // Define critical security properties
         let security_properties = vec![
             SecurityProperty {
                 name: "encryption_decryption_roundtrip".to_string(),
@@ -443,7 +383,6 @@ impl WorldClassTestingFramework {
         })
     }
 
-    /// Execute mutation testing to validate test suite effectiveness
     async fn execute_mutation_testing(&self) -> BearDogResult<MutationTestResults> {
         println!("🧬 Executing Mutation Testing...");
         
@@ -451,7 +390,6 @@ impl WorldClassTestingFramework {
         let mut mutations_killed = 0;
         let mut surviving_mutants = Vec::new();
 
-        // Critical code sections to mutate
         let critical_code_sections = [
             "cryptographic operations",
             "authentication logic", 
@@ -508,14 +446,12 @@ impl WorldClassTestingFramework {
         })
     }
 
-    /// Execute invariant validation for system safety
     async fn execute_invariant_validation(&self) -> BearDogResult<InvariantValidationResults> {
         println!("🛡️ Executing Invariant Validation...");
         
         let mut invariants_verified = 0;
         let mut violations_detected = Vec::new();
 
-        // Define critical system invariants
         let system_invariants = vec![
             SystemInvariant {
                 name: "memory_safety".to_string(),
@@ -547,7 +483,6 @@ impl WorldClassTestingFramework {
             },
         ];
 
-        // Simulate various system states to validate invariants
         let test_states = self.generate_test_system_states().await?;
 
         for invariant in &system_invariants {
@@ -559,7 +494,7 @@ impl WorldClassTestingFramework {
                         invariant_holds = false;
                         violations_detected.push(InvariantViolation {
                             invariant_name: invariant.name.clone(),
-                            violation_description: format!("Invariant {} violated in state {:?}", invariant.name, state),
+                            violation_description: format_args!("Invariant {} violated in state {:?}", invariant.name, state).to_string(),
                             criticality: invariant.criticality.clone(),
                             system_state: state.clone(),
                         });
@@ -590,14 +525,12 @@ impl WorldClassTestingFramework {
         })
     }
 
-    /// Execute exhaustive edge case testing
     async fn execute_exhaustive_testing(&self) -> BearDogResult<ExhaustiveTestResults> {
         println!("🔍 Executing Exhaustive Edge Case Testing...");
         
         let mut edge_cases_tested = 0;
         let mut boundary_violations = Vec::new();
 
-        // Test all possible edge cases for critical functions
         let critical_functions = [
             "key_generation", "encryption", "decryption", "signing", "verification",
             "authentication", "authorization", "audit_logging", "session_management"
@@ -605,7 +538,7 @@ impl WorldClassTestingFramework {
 
         for function in &critical_functions {
             for tester in &self.exhaustive_testers {
-                // Generate all possible edge cases
+
                 let function_sig = FunctionSignature {
                     name: function.to_string(),
                     parameters: self.get_function_parameters(function),
@@ -615,7 +548,6 @@ impl WorldClassTestingFramework {
                 let edge_cases = tester.generate_all_edge_cases(&function_sig);
                 edge_cases_tested += edge_cases.len() as u64;
 
-                // Test boundary conditions
                 let input_space = self.get_function_input_space(function);
                 let boundary_results = tester.test_boundary_conditions(&input_space);
                 
@@ -648,14 +580,12 @@ impl WorldClassTestingFramework {
         })
     }
 
-    /// Execute quantum resistance validation
     async fn execute_quantum_validation(&self) -> BearDogResult<QuantumResistanceResults> {
         println!("🔮 Executing Quantum Resistance Validation...");
         
         let mut quantum_attacks_simulated = 0;
         let mut vulnerable_algorithms = Vec::new();
 
-        // Test quantum resistance of all cryptographic primitives
         let crypto_primitives = [
             "Ed25519", "AES-256-GCM", "Argon2", "PBKDF2", "SHA-256", "ChaCha20-Poly1305"
         ];
@@ -675,7 +605,6 @@ impl WorldClassTestingFramework {
                     println!("  ✓ Quantum resistant: {}", primitive);
                 }
 
-                // Simulate quantum attacks
                 let test_key = vec![0u8; 32]; // Mock key for testing
                 let attack_simulation = validator.simulate_quantum_attacks(&test_key);
                 quantum_attacks_simulated += attack_simulation.attacks_simulated;
@@ -700,11 +629,9 @@ impl WorldClassTestingFramework {
         })
     }
 
-    /// Calculate overall mathematical certainty level
     async fn calculate_mathematical_certainty(&self, _results: &[&dyn std::fmt::Debug]) -> BearDogResult<f64> {
         let metrics = self.test_metrics.read().await;
-        
-        // Combine all certainty factors with weights
+
         let formal_verification_weight = 0.25;
         let property_testing_weight = 0.20;
         let mutation_testing_weight = 0.15;
@@ -720,13 +647,11 @@ impl WorldClassTestingFramework {
             metrics.correctness_proof_strength * exhaustive_testing_weight +
             0.95 * quantum_resistance_weight; // Assume high quantum resistance
 
-        // Cap at 99.99% - absolute certainty is theoretically impossible
         Ok(weighted_certainty.min(0.9999))
     }
 
-    // Helper methods for test generation
     async fn generate_test_system_states(&self) -> BearDogResult<Vec<SystemState>> {
-        // Generate various system states for invariant testing
+
         Ok(vec![
             SystemState {
                 memory_state: MemoryState::Normal,
@@ -742,12 +667,12 @@ impl WorldClassTestingFramework {
                 compliance_state: ComplianceState::Auditing,
                 network_state: NetworkState::Degraded,
             },
-            // Add more states for comprehensive testing
+
         ])
     }
 
     fn get_function_parameters(&self, _function: &str) -> Vec<String> {
-        // Return function parameters for exhaustive testing
+
         vec!["input".to_string(), "key".to_string(), "context".to_string()]
     }
 
@@ -757,7 +682,7 @@ impl WorldClassTestingFramework {
 
     fn get_function_input_space(&self, _function: &str) -> InputSpace {
         InputSpace {
-            parameter_ranges: HashMap::new(),
+            parameter_ranges: HashMap::with_capacity(16),
             constraints: Vec::new(),
         }
     }
@@ -775,8 +700,6 @@ impl WorldClassTestingFramework {
         128 // bits of security
     }
 }
-
-// Supporting structures and enums for comprehensive testing
 
 #[derive(Debug)]
 pub struct WorldClassTestResults {
@@ -799,11 +722,6 @@ pub enum WorldClassStatus {
     Requires_Additional_Testing,
 }
 
-// Additional supporting structures would be defined here...
-// (Implementation continues with all the supporting types and trait implementations)
-
-// World-Class Testing Execution
-
 #[tokio::test]
 async fn test_achieve_world_class_testing_supremacy() -> BearDogResult<()> {
     let framework = WorldClassTestingFramework::new().await?;
@@ -813,8 +731,7 @@ async fn test_achieve_world_class_testing_supremacy() -> BearDogResult<()> {
     println!("Mathematical Certainty: {:.4}%", results.mathematical_certainty_level * 100.0);
     println!("Status: {:?}", results.world_class_status);
     println!("Duration: {:?}", results.total_duration);
-    
-    // Assert world-class standards
+
     assert!(results.mathematical_certainty_level >= 0.95, 
             "BearDog must achieve 95%+ mathematical certainty");
     
@@ -835,9 +752,6 @@ async fn test_achieve_world_class_testing_supremacy() -> BearDogResult<()> {
     Ok(())
 }
 
-// Additional comprehensive tests would follow...
-
-// Placeholder implementations for compilation
 #[derive(Debug)] pub struct FormalVerificationResults { pub proofs_generated: u64, pub verified_components: Vec<String>, pub mathematical_proofs: Vec<MathematicalProof>, pub verification_confidence: f64 }
 #[derive(Debug)] pub struct PropertyBasedTestResults { pub properties_verified: u64, pub test_cases_generated: u64, pub counterexamples_found: Vec<MinimalCounterexample>, pub property_confidence: f64 }
 #[derive(Debug)] pub struct MutationTestResults { pub mutations_tested: u64, pub mutations_killed: u64, pub surviving_mutants: Vec<CodeMutation>, pub mutation_score: f64, pub test_suite_quality: TestSuiteQuality }
@@ -845,13 +759,11 @@ async fn test_achieve_world_class_testing_supremacy() -> BearDogResult<()> {
 #[derive(Debug)] pub struct ExhaustiveTestResults { pub edge_cases_tested: u64, pub boundary_violations: Vec<BoundaryViolation>, pub exhaustive_coverage: ExhaustiveCoverage }
 #[derive(Debug)] pub struct QuantumResistanceResults { pub quantum_attacks_simulated: u64, pub vulnerable_algorithms: Vec<String>, pub post_quantum_readiness: PostQuantumReadiness }
 
-// Enums and additional structures
 #[derive(Debug)] pub enum TestSuiteQuality { Excellent, Good, Needs_Improvement }
 #[derive(Debug)] pub enum SystemSafetyLevel { Mathematically_Proven_Safe, High_Confidence_Safe }
 #[derive(Debug)] pub enum ExhaustiveCoverage { Complete, Comprehensive }
 #[derive(Debug)] pub enum PostQuantumReadiness { Fully_Quantum_Resistant, Partially_Quantum_Resistant }
 
-// Mock implementations for compilation
 pub struct CryptographicVerifier; impl CryptographicVerifier { pub fn new() -> Self { Self } }
 pub struct AuthenticationVerifier; impl AuthenticationVerifier { pub fn new() -> Self { Self } }
 pub struct ComplianceVerifier; impl ComplianceVerifier { pub fn new() -> Self { Self } }
@@ -867,7 +779,6 @@ pub struct ErrorConditionTester; impl ErrorConditionTester { pub fn new() -> Sel
 pub struct PostQuantumCryptographyValidator; impl PostQuantumCryptographyValidator { pub fn new() -> Self { Self } }
 pub struct QuantumAttackSimulator; impl QuantumAttackSimulator { pub fn new() -> Self { Self } }
 
-// Additional placeholder structures
 #[derive(Debug)] pub struct MinimalCounterexample { pub description: String }
 #[derive(Debug)] pub struct CodeMutation { pub description: String }
 #[derive(Debug)] pub struct InvariantViolation { pub invariant_name: String, pub violation_description: String, pub criticality: InvariantCriticality, pub system_state: SystemState }
@@ -890,14 +801,12 @@ pub struct QuantumAttackSimulator; impl QuantumAttackSimulator { pub fn new() ->
 #[derive(Debug)] pub struct MutationResult { pub killed_by_tests: bool }
 #[derive(Debug)] pub struct ExecutionTrace;
 
-// System state enums
 #[derive(Debug, Clone)] pub enum MemoryState { Normal, LowMemory }
 #[derive(Debug, Clone)] pub enum CryptographicState { Initialized, KeyRotation }
 #[derive(Debug, Clone)] pub enum AuthenticationState { Active, Authenticating }
 #[derive(Debug, Clone)] pub enum ComplianceState { Logging, Auditing }
 #[derive(Debug, Clone)] pub enum NetworkState { Connected, Degraded }
 
-// Mock trait implementations for compilation
 impl FormalVerifier for CryptographicVerifier {
     fn verify_correctness(&self, component: &str) -> FormalVerificationResult {
         FormalVerificationResult {

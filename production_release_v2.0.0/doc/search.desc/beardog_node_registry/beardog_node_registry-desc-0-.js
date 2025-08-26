@@ -1,1 +1,0 @@
-searchState.loadedDescShard("beardog_node_registry", 0, "BearDog node-registry module")

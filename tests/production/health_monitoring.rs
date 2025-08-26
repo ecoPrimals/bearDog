@@ -1,38 +1,16 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Production Health Monitoring Tests
-//!
-//! Tests for system health monitoring, component health checks,
-//! health endpoints, liveness/readiness probes, and alert systems.
 
 use beardog::production::*;
 
-/// Test production health monitoring systems
 pub async fn test_health_monitoring(prod_manager: &mut ProductionManager) {
     println!("💓 Testing health monitoring systems...");
 
-    // Test system health monitoring
     let system_health = prod_manager
         .get_system_health_status()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "System health check should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "System health check should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "System health check should succeed", e).to_string())
 })?;
 
     assert_eq!(
@@ -57,13 +35,12 @@ pub async fn test_health_monitoring(prod_manager: &mut ProductionManager) {
         "Network should be connected"
     );
 
-    // Test component health monitoring
     let component_health = prod_manager
         .get_component_health_status()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Component health check should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Component health check should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Component health check should succeed", e).to_string())
 })?;
 
     let required_components = vec![
@@ -98,13 +75,12 @@ pub async fn test_health_monitoring(prod_manager: &mut ProductionManager) {
         );
     }
 
-    // Test health check endpoint
     let health_endpoint = prod_manager
         .test_health_endpoint()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Health endpoint test should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Health endpoint test should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Health endpoint test should succeed", e).to_string())
 })?;
 
     assert_eq!(
@@ -120,13 +96,12 @@ pub async fn test_health_monitoring(prod_manager: &mut ProductionManager) {
         "Health response should be valid JSON"
     );
 
-    // Test liveness and readiness probes
     let liveness_probe = prod_manager
         .test_liveness_probe()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Liveness probe should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Liveness probe should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Liveness probe should succeed", e).to_string())
 })?;
 
     assert!(liveness_probe.is_alive, "System should be alive");
@@ -141,7 +116,7 @@ pub async fn test_health_monitoring(prod_manager: &mut ProductionManager) {
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Readiness probe should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Readiness probe should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Readiness probe should succeed", e).to_string())
 })?;
 
     assert!(readiness_probe.is_ready, "System should be ready");
@@ -154,7 +129,6 @@ pub async fn test_health_monitoring(prod_manager: &mut ProductionManager) {
         "Dependencies should be available"
     );
 
-    // Test health monitoring alerts
     let monitoring_config = MonitoringConfiguration {
         cpu_threshold: 0.8,
         memory_threshold: 0.85,
@@ -169,7 +143,7 @@ pub async fn test_health_monitoring(prod_manager: &mut ProductionManager) {
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Alert configuration should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Alert configuration should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Alert configuration should succeed", e).to_string())
 })?;
 
     assert!(
@@ -197,7 +171,7 @@ async fn test_health_monitoring_standalone() {
             .await
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
 })?,
     );
 
@@ -205,7 +179,7 @@ async fn test_health_monitoring_standalone() {
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Production manager creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Production manager creation failed", e).to_string())
 })?;
         
     test_health_monitoring(&mut production_manager).await;

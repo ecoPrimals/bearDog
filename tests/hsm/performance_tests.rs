@@ -1,38 +1,15 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Performance Tests
-//!
-//! Performance benchmarks for HSM operations
 
 use super::HsmTestHarness;
 use beardog::{BearDogError, BearDogResult};
 
-/// Test performance benchmarks
 pub async fn test_performance_benchmarks(harness: &mut HsmTestHarness) -> BearDogResult<()> {
     println!("⚡ Testing Performance Benchmarks");
 
-    // Test key generation performance
     test_key_generation_performance(harness).await?;
-    
-    // Test signing performance
+
     test_signing_performance(harness).await?;
-    
-    // Test encryption performance
+
     test_encryption_performance(harness).await?;
     
     println!("✅ Performance benchmark tests completed");
@@ -48,7 +25,7 @@ async fn test_key_generation_performance(harness: &mut HsmTestHarness) -> BearDo
     for i in 0..iterations {
         let start_time = std::time::Instant::now();
         
-        let key_id = format!("perf_test_key_{}", i);
+        let key_id = format_args!("perf_test_key_{}", i).to_string();
         let _key = harness.android_strongbox.generate_test_key(&key_id).await?;
         
         let elapsed = start_time.elapsed().as_millis() as f64;
@@ -59,8 +36,7 @@ async fn test_key_generation_performance(harness: &mut HsmTestHarness) -> BearDo
     
     let avg_time = total_time / iterations as f64;
     println!("    Average key generation time: {:.2}ms", avg_time);
-    
-    // Performance target for mock implementation
+
     assert!(avg_time < 1000.0, "Key generation should be under 1000ms on average");
     
     println!("    ✅ Key generation performance tests passed");
@@ -87,8 +63,7 @@ async fn test_signing_performance(harness: &mut HsmTestHarness) -> BearDogResult
     
     let avg_time = total_time / iterations as f64;
     println!("    Average signing time: {:.2}ms", avg_time);
-    
-    // Performance target for mock implementation
+
     assert!(avg_time < 100.0, "Signing should be under 100ms on average");
     
     println!("    ✅ Signing performance tests passed");
@@ -115,8 +90,7 @@ async fn test_encryption_performance(harness: &mut HsmTestHarness) -> BearDogRes
     
     let avg_time = total_time / iterations as f64;
     println!("    Average encryption time: {:.2}ms", avg_time);
-    
-    // Performance target for mock implementation
+
     assert!(avg_time < 50.0, "Encryption should be under 50ms on average");
     
     println!("    ✅ Encryption performance tests passed");

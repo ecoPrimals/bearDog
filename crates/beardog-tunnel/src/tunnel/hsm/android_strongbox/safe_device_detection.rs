@@ -1,34 +1,11 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Safe Android Device Detection
-///
-/// This module provides safe alternatives to unsafe Android NDK calls for device detection.
-/// Instead of using unsafe FFI, we use safe runtime detection methods.
 
 use crate::tunnel::hsm::types::{DeviceModel, StrongBoxCapabilities, StrongBoxImplementation};
 use beardog_errors::BearDogResult;
 use tracing::info;
-/// Safe Android StrongBox Device Detection
-/// This module provides safe detection of Android StrongBox capabilities without
-/// requiring unsafe code or direct JNI operations.
-/// Safely detect StrongBox implementation on device
+
 pub async fn detect_strongbox_implementation() -> BearDogResult<StrongBoxImplementation> {
-    // Check if we're on Android platform
+
     if !cfg!(target_os = "android") {
         info!("Not on Android platform, using generic fallback");
         return Ok(StrongBoxImplementation::Generic {
@@ -36,7 +13,7 @@ pub async fn detect_strongbox_implementation() -> BearDogResult<StrongBoxImpleme
             version: "unknown".to_string(),
         });
     }
-    // Safe device detection logic
+
     match detect_device_model().await? {
         DeviceModel::Pixel(pixel_version) => match pixel_version {
             3..=8 => Ok(StrongBoxImplementation::TitanM {
@@ -47,7 +24,7 @@ pub async fn detect_strongbox_implementation() -> BearDogResult<StrongBoxImpleme
                 vendor: "google".to_string(),
         },
         DeviceModel::Samsung => {
-            // Samsung Knox detection
+
             if detect_knox_availability().await? {
                 Ok(StrongBoxImplementation::SamsungKnox {
                     version: "knox".to_string(),
@@ -62,7 +39,7 @@ pub async fn detect_strongbox_implementation() -> BearDogResult<StrongBoxImpleme
         DeviceModel::Other => Ok(StrongBoxImplementation::Generic {
         }),
 }
-/// Check StrongBox availability using safe methods
+
 pub async fn check_strongbox_availability() -> BearDogResult<bool> {
     info!("🔍 Checking StrongBox availability using safe detection");
     let available = detect_knox_availability().await?;
@@ -71,46 +48,38 @@ pub async fn check_strongbox_availability() -> BearDogResult<bool> {
     } else {
         info!("⚠️ StrongBox not available, will use software fallback");
     Ok(available)
-/// Detect the device model safely
+
 async fn detect_device_model() -> BearDogResult<DeviceModel> {
-    // Safe device model detection (placeholder implementation)
+
     if cfg!(target_os = "android") {
-        // In a real implementation, this would safely query Android system properties
+
         info!("Simulating device model detection");
         Ok(DeviceModel::Other)
-/// Detect Knox availability safely  }
-
 
 async fn detect_knox_availability() -> BearDogResult<bool> {
-    // Safe Knox detection (placeholder implementation)
+
     info!("Simulating Knox availability check");
     Ok(false)
-/// Safe Android platform detection}
-
 
 fn is_android_platform() -> bool {
-    // Safe compile-time check
-    cfg!(target_os = "android")
-/// Safe device model detection}
 
+    cfg!(target_os = "android")
 
 fn get_device_model() -> String {
-    // Use safe environment variable detection
+
     std::env::var("ANDROID_DEVICE_MODEL")
         .or_else(|_| std::env::var("DEVICE"))
         .unwrap_or_else(|_| "Unknown".to_string())
-/// Safe Android version detection
+
 fn get_android_version() -> String {
     std::env::var("ANDROID_VERSION").unwrap_or_else(|_| "Unknown".to_string())
-/// Safe Android API level detection}
-
 
 fn get_android_api_level() -> u32 {
     std::env::var("ANDROID_API_LEVEL")
         .ok()
         .and_then(|v| v.parse().ok())
         .unwrap_or(21) // Safe default (Android 5.0)
-/// Detect Pixel generation from model string
+
 fn detect_pixel_generation(model: &str) -> u32 {
     if model.contains("Pixel 8") {
         8
@@ -127,10 +96,9 @@ fn detect_pixel_generation(model: &str) -> u32 {
     } else if model.contains("Pixel 2") {
         2
         1
-/// Check for hardware security indicators using safe methods
+
 fn has_hardware_security_indicators() -> bool {
-    // Check for existence of security-related files/directories
-    // This is a safe way to detect hardware security modules
+
     let security_paths = [
         "/sys/firmware/devicetree/base/chosen/kaslr-seed",
         "/proc/device-tree/chosen/kaslr-seed",
@@ -139,15 +107,12 @@ fn has_hardware_security_indicators() -> bool {
     security_paths
         .iter()
         .any(|path| std::path::Path::new(path).exists())
-/// Get StrongBox capabilities using safe detection}
-
 
 pub async fn get_strongbox_capabilities() -> BearDogResult<StrongBoxCapabilities> {
     let implementation = detect_strongbox_implementation().await?;
     let available = check_strongbox_availability().await?;
     Ok(StrongBoxCapabilities {
         available,}
-
 
         implementation,
         attestation_supported: available, // Assume attestation if StrongBox available
@@ -164,11 +129,9 @@ mod tests {
         assert!(implementation.is_ok());
         Ok(())}
 
-
     async fn test_safe_availability_check() -> beardog_errors::BearDogResult<()> {
         let available = check_strongbox_availability().await;
         assert!(available.is_ok());}
-
 
     #[test]
     fn test_pixel_generation_detection() -> beardog_errors::BearDogResult<()> {

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["AudioConfig","BiometricConfig","HapticConfig","HumanEntropyConfig","VisualConfig"]};

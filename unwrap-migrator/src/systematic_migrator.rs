@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BearDog Systematic Unwrap & Panic Migrator - Production-Grade Migration Tool
-//!
-//! This module provides automated migration of unwrap/expect/panic calls to use
-//! BearDog's graceful error handling patterns with BearDogError/BearDogResult.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -27,7 +7,6 @@ use regex::Regex;
 use thiserror::Error;
 use tracing::{info, error};
 
-/// Migration tool error type
 #[derive(Error, Debug)]
 pub enum MigratorError {
     #[error("IO error: {0}")]
@@ -38,32 +17,30 @@ pub enum MigratorError {
     Migration { message: String },
 }
 
-// Use centralized migration result type from beardog-types
 pub use beardog_types::aliases::MigrationResult as MigratorResult;
 
-/// Systematic migrator for unwrap/expect/panic patterns optimized for BearDog
 pub struct SystematicUnwrapMigrator {
-    /// Unified error patterns for migration
+
     error_patterns: HashMap<String, MigrationPattern>,
-    /// Files processed counter
+
     files_processed: std::sync::atomic::AtomicU64,
-    /// Migrations applied counter  
+
     migrations_applied: std::sync::atomic::AtomicU64,
-    /// BearDog-specific optimization
+
     beardog_errors_only: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct MigrationPattern {
-    /// Pattern to match
+
     pub pattern: String,
-    /// Replacement template
+
     pub replacement: String,
-    /// Error category for unified error system
+
     pub error_category: BearDogErrorCategory,
-    /// Context description
+
     pub context: String,
-    /// Whether this pattern is BearDogError compatible
+
     pub beardog_compatible: bool,
 }
 
@@ -108,21 +85,17 @@ pub struct MigrationResult {
 }
 
 impl SystematicUnwrapMigrator {
-    /// Create new systematic migrator with BearDog-optimized patterns
+
     pub fn new_beardog_optimized(beardog_errors_only: bool) -> Self {
-        let mut error_patterns = HashMap::new();
-        
-        // ===============================================================
-        // BEARDOG-SPECIFIC CONFIGURATION PATTERNS
-        // ===============================================================
-        
+        let mut error_patterns = HashMap::with_capacity(16);
+
         error_patterns.insert(
             "env_var_beardog".to_string(),
             MigrationPattern {
                 pattern: r#"std::env::var\("([^"]+)"\)\.unwrap\(\)"#.to_string(),
                 replacement: r#"std::env::var("$1").map_err(|e| {
     tracing::error!("Environment variable '{}' not found: {}", "$1", e);
-    beardog_errors::BearDogError::ConfigurationError(format!("Missing environment variable: {}", "$1"))
+    beardog_errors::BearDogError::ConfigurationError(format_args!("Missing environment variable: {}", "$1").to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Configuration,
                 context: "Environment variable access".to_string(),
@@ -136,18 +109,14 @@ impl SystematicUnwrapMigrator {
                 pattern: r#"std::env::var\("([^"]+)"\)\.expect\("([^"]+)"\)"#.to_string(),
                 replacement: r#"std::env::var("$1").map_err(|e| {
     tracing::error!("Environment variable '{}' not found ({}): {}", "$1", "$2", e);
-    beardog_errors::BearDogError::ConfigurationError(format!("Missing environment variable '{}': {}", "$1", "$2"))
+    beardog_errors::BearDogError::ConfigurationError(format_args!("Missing environment variable '{}': {}", "$1", "$2").to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Configuration,
                 context: "Environment variable access with expect message".to_string(),
                 beardog_compatible: true,
             }
         );
-        
-        // ===============================================================
-        // BEARDOG LOCK PATTERNS WITH RECOVERY
-        // ===============================================================
-        
+
         error_patterns.insert(
             "lock_unwrap_beardog".to_string(),
             MigrationPattern {
@@ -172,18 +141,14 @@ impl SystematicUnwrapMigrator {
                 beardog_compatible: true,
             }
         );
-        
-        // ===============================================================
-        // BEARDOG JSON & SERIALIZATION PATTERNS
-        // ===============================================================
-        
+
         error_patterns.insert(
             "json_parse_unwrap_beardog".to_string(),
             MigrationPattern {
                 pattern: r#"serde_json::from_str\(([^)]+)\)\.unwrap\(\)"#.to_string(),
                 replacement: r#"serde_json::from_str($1).map_err(|e| {
     tracing::error!("JSON parsing failed: {}", e);
-    beardog_errors::BearDogError::ValidationError(format!("JSON parsing error: {}", e))
+    beardog_errors::BearDogError::ValidationError(format_args!("JSON parsing error: {}", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Validation,
                 context: "JSON deserialization".to_string(),
@@ -197,7 +162,7 @@ impl SystematicUnwrapMigrator {
                 pattern: r#"serde_json::from_str\(([^)]+)\)\.expect\("([^"]+)"\)"#.to_string(),
                 replacement: r#"serde_json::from_str($1).map_err(|e| {
     tracing::error!("JSON parsing failed ({}): {}", "$2", e);
-    beardog_errors::BearDogError::ValidationError(format!("JSON parsing error ({}): {}", "$2", e))
+    beardog_errors::BearDogError::ValidationError(format_args!("JSON parsing error ({}): {}", "$2", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Validation,
                 context: "JSON deserialization with expect message".to_string(),
@@ -211,25 +176,21 @@ impl SystematicUnwrapMigrator {
                 pattern: r#"serde_json::to_string\(([^)]+)\)\.unwrap\(\)"#.to_string(),
                 replacement: r#"serde_json::to_string($1).map_err(|e| {
     tracing::error!("JSON serialization failed: {}", e);
-    beardog_errors::BearDogError::ValidationError(format!("JSON serialization error: {}", e))
+    beardog_errors::BearDogError::ValidationError(format_args!("JSON serialization error: {}", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Validation,
                 context: "JSON serialization".to_string(),
                 beardog_compatible: true,
             }
         );
-        
-        // ===============================================================
-        // BEARDOG HTTP & NETWORK PATTERNS
-        // ===============================================================
-        
+
         error_patterns.insert(
             "http_send_unwrap_beardog".to_string(),
             MigrationPattern {
                 pattern: r#"\.send\(\)\.await\.unwrap\(\)"#.to_string(),
                 replacement: r#".send().await.map_err(|e| {
     tracing::error!("HTTP request failed: {}", e);
-    beardog_errors::BearDogError::NetworkError(format!("HTTP error: {}", e))
+    beardog_errors::BearDogError::NetworkError(format_args!("HTTP error: {}", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Network,
                 context: "HTTP request execution".to_string(),
@@ -243,25 +204,21 @@ impl SystematicUnwrapMigrator {
                 pattern: r#"\.send\(\)\.await\.expect\("([^"]+)"\)"#.to_string(),
                 replacement: r#".send().await.map_err(|e| {
     tracing::error!("HTTP request failed ({}): {}", "$1", e);
-    beardog_errors::BearDogError::NetworkError(format!("HTTP error ({}): {}", "$1", e))
+    beardog_errors::BearDogError::NetworkError(format_args!("HTTP error ({}): {}", "$1", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Network,
                 context: "HTTP request execution with expect message".to_string(),
                 beardog_compatible: true,
             }
         );
-        
-        // ===============================================================
-        // BEARDOG FILE I/O PATTERNS
-        // ===============================================================
-        
+
         error_patterns.insert(
             "file_read_unwrap_beardog".to_string(),
             MigrationPattern {
                 pattern: r#"fs::read_to_string\(([^)]+)\)\.unwrap\(\)"#.to_string(),
                 replacement: r#"fs::read_to_string($1).map_err(|e| {
     tracing::error!("File read failed: {}", e);
-    beardog_errors::BearDogError::StorageError(format!("File read error: {}", e))
+    beardog_errors::BearDogError::StorageError(format_args!("File read error: {}", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Storage,
                 context: "File read operation".to_string(),
@@ -275,25 +232,21 @@ impl SystematicUnwrapMigrator {
                 pattern: r#"fs::write\(([^,]+),\s*([^)]+)\)\.unwrap\(\)"#.to_string(),
                 replacement: r#"fs::write($1, $2).map_err(|e| {
     tracing::error!("File write failed: {}", e);
-    beardog_errors::BearDogError::StorageError(format!("File write error: {}", e))
+    beardog_errors::BearDogError::StorageError(format_args!("File write error: {}", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Storage,
                 context: "File write operation".to_string(),
                 beardog_compatible: true,
             }
         );
-        
-        // ===============================================================
-        // BEARDOG HSM & SECURITY PATTERNS
-        // ===============================================================
-        
+
         error_patterns.insert(
             "hsm_operation_unwrap".to_string(),
             MigrationPattern {
                 pattern: r#"\.hsm_([a-zA-Z_]+)\([^)]*\)\.unwrap\(\)"#.to_string(),
                 replacement: r#".hsm_$1().map_err(|e| {
     tracing::error!("HSM operation failed: {}", e);
-    beardog_errors::BearDogError::SecurityError(format!("HSM error: {}", e))
+    beardog_errors::BearDogError::SecurityError(format_args!("HSM error: {}", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Security,
                 context: "HSM operation".to_string(),
@@ -301,10 +254,6 @@ impl SystematicUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // BEARDOG LOCK PATTERNS - COMPREHENSIVE
-        // ===============================================================
-        
         error_patterns.insert(
             "read_lock_unwrap_beardog".to_string(),
             MigrationPattern {
@@ -333,17 +282,13 @@ impl SystematicUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // BEARDOG ENVIRONMENT VARIABLE PATTERNS
-        // ===============================================================
-        
         error_patterns.insert(
             "env_var_unwrap_beardog".to_string(),
             MigrationPattern {
                 pattern: r#"env::var\("([^"]+)"\)\.unwrap\(\)"#.to_string(),
                 replacement: r#"env::var("$1").map_err(|e| {
     tracing::error!("Environment variable '{}' not found: {}", "$1", e);
-    beardog_errors::BearDogError::config(format!("Missing environment variable: {}", "$1"))
+    beardog_errors::BearDogError::config(format_args!("Missing environment variable: {}", "$1").to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Configuration,
                 context: "Environment variable access".to_string(),
@@ -351,17 +296,13 @@ impl SystematicUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // BEARDOG PARSING PATTERNS
-        // ===============================================================
-        
         error_patterns.insert(
             "parse_unwrap_beardog".to_string(),
             MigrationPattern {
                 pattern: r#"\.parse\(\)\.unwrap\(\)"#.to_string(),
                 replacement: r#".parse().map_err(|e| {
     tracing::error!("Parsing failed: {:?}", e);
-    beardog_errors::BearDogError::validation(format!("Parse error: {:?}", e))
+    beardog_errors::BearDogError::validation(format_args!("Parse error: {:?}", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Validation,
                 context: "String parsing operation".to_string(),
@@ -375,7 +316,7 @@ impl SystematicUnwrapMigrator {
                 pattern: r#"\.parse\(\)\.expect\("([^"]+)"\)"#.to_string(),
                 replacement: r#".parse().map_err(|e| {
     tracing::error!("Parsing failed ({}): {:?}", "$1", e);
-    beardog_errors::BearDogError::validation(format!("Parse error ({}): {:?}", "$1", e))
+    beardog_errors::BearDogError::validation(format_args!("Parse error ({}): {:?}", "$1", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::Validation,
                 context: "String parsing operation with expect message".to_string(),
@@ -383,10 +324,6 @@ impl SystematicUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // BEARDOG COLLECTION ACCESS PATTERNS
-        // ===============================================================
-        
         error_patterns.insert(
             "first_unwrap_beardog".to_string(),
             MigrationPattern {
@@ -415,17 +352,13 @@ impl SystematicUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // BEARDOG GENERAL UNWRAP PATTERNS
-        // ===============================================================
-        
         error_patterns.insert(
             "general_unwrap_beardog".to_string(),
             MigrationPattern {
                 pattern: r#"\.unwrap\(\)"#.to_string(),
                 replacement: r#".map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::System,
                 context: "General operation".to_string(),
@@ -439,7 +372,7 @@ impl SystematicUnwrapMigrator {
                 pattern: r#"\.expect\("([^"]+)"\)"#.to_string(),
                 replacement: r#".map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "$1", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "$1", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "$1", e).to_string())
 })?"#.to_string(),
                 error_category: BearDogErrorCategory::System,
                 context: "General operation with expect message".to_string(),
@@ -447,15 +380,11 @@ impl SystematicUnwrapMigrator {
             }
         );
 
-        // ===============================================================
-        // EXAMPLE CODE PATTERNS - Use expect with clear messages
-        // ===============================================================
-        
         error_patterns.insert("example_runtime_unwrap".to_string(), MigrationPattern {
             pattern: r"Runtime::new\(\)\.unwrap\(\)".to_string(),
             replacement: r#"Runtime::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create async runtime for example", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Failed to create async runtime for example", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failed to create async runtime for example", e).to_string())
 })?"#.to_string(),
             error_category: BearDogErrorCategory::System,
             context: "Example async runtime creation".to_string(),
@@ -466,7 +395,7 @@ impl SystematicUnwrapMigrator {
             pattern: r"serde_json::to_string\([^)]+\)\.unwrap\(\)".to_string(),
             replacement: r#"serde_json::to_string($1).map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "JSON serialization failed in example", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "JSON serialization failed in example", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "JSON serialization failed in example", e).to_string())
 })?"#.to_string(),
             error_category: BearDogErrorCategory::System,
             context: "Example JSON serialization".to_string(),
@@ -477,7 +406,7 @@ impl SystematicUnwrapMigrator {
             pattern: r"serde_json::from_str\([^)]+\)\.unwrap\(\)".to_string(),
             replacement: r#"serde_json::from_str($1).map_err(|e| {
     tracing::error!("JSON parsing failed ({}): {}", "JSON deserialization failed in example", e);
-    beardog_errors::BearDogError::ValidationError(format!("JSON parsing error ({}): {}", "JSON deserialization failed in example", e))
+    beardog_errors::BearDogError::ValidationError(format_args!("JSON parsing error ({}): {}", "JSON deserialization failed in example", e).to_string())
 })?"#.to_string(),
             error_category: BearDogErrorCategory::System,
             context: "Example JSON deserialization".to_string(),
@@ -491,16 +420,12 @@ impl SystematicUnwrapMigrator {
             context: "Example sorting with float comparison".to_string(),
             beardog_compatible: false,
         });
-        
-        // ===============================================================
-        // BENCHMARK PATTERNS - Performance-focused expect messages
-        // ===============================================================
-        
+
         error_patterns.insert("benchmark_runtime_unwrap".to_string(), MigrationPattern {
             pattern: r"Runtime::new\(\)\.unwrap\(\)".to_string(),
             replacement: r#"Runtime::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e).to_string())
 })?"#.to_string(),
             error_category: BearDogErrorCategory::System,
             context: "Benchmark async runtime creation".to_string(),
@@ -511,7 +436,7 @@ impl SystematicUnwrapMigrator {
             pattern: r"ZeroCopyBuffer::from_vec\([^)]+\)\.unwrap\(\)".to_string(),
             replacement: r#"ZeroCopyBuffer::from_vec($1).map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark buffer creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark buffer creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark buffer creation failed", e).to_string())
 })?"#.to_string(),
             error_category: BearDogErrorCategory::System,
             context: "Benchmark buffer creation".to_string(),
@@ -522,7 +447,7 @@ impl SystematicUnwrapMigrator {
             pattern: r"\.generate_key\([^)]+\)\.await\.unwrap\(\)".to_string(),
             replacement: r#".generate_key($1).await.map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark key generation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark key generation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark key generation failed", e).to_string())
 })?"#.to_string(),
             error_category: BearDogErrorCategory::Security,
             context: "Benchmark key generation".to_string(),
@@ -536,11 +461,7 @@ impl SystematicUnwrapMigrator {
             context: "Benchmark result aggregation".to_string(),
             beardog_compatible: false,
         });
-        
-        // ===============================================================
-        // PRODUCTION PANIC PATTERNS - Convert to proper errors
-        // ===============================================================
-        
+
         error_patterns.insert("production_panic_auth".to_string(), MigrationPattern {
             pattern: r#"panic!\("Expected Authentication event"\)"#.to_string(),
             replacement: r#"return Err(BearDogError::internal("Expected Authentication event"))"#.to_string(),
@@ -556,11 +477,7 @@ impl SystematicUnwrapMigrator {
             context: "Serialization error handling".to_string(),
             beardog_compatible: true,
         });
-        
-        // ===============================================================
-        // TEST PANIC PATTERNS - Convert to proper test failures
-        // ===============================================================
-        
+
         error_patterns.insert("test_panic_setup".to_string(), MigrationPattern {
             pattern: r#"panic!\("Test failed to (\w+): \{e:\?\}"\)"#.to_string(),
             replacement: r#"panic!("Test setup failed during {}: {:?}", "$1", e)"#.to_string(),
@@ -585,7 +502,6 @@ impl SystematicUnwrapMigrator {
         }
     }
 
-    /// Analyze codebase for unwrap/expect patterns with enhanced categorization
     pub async fn analyze_codebase(&self, root_path: &Path, exclude_tests: bool) -> MigratorResult<CodebaseStats> {
         let mut stats = CodebaseStats {
             files_scanned: 0,
@@ -593,7 +509,7 @@ impl SystematicUnwrapMigrator {
             migrable_patterns: 0,
             test_file_patterns: 0,
             beardog_error_compatible: 0,
-            pattern_categories: HashMap::new(),
+            pattern_categories: HashMap::with_capacity(16),
         };
 
         let mut files_to_process = Vec::new();
@@ -618,8 +534,7 @@ impl SystematicUnwrapMigrator {
                     stats.test_file_patterns += 1;
                     continue;
                 }
-                
-                // Only count non-test unwraps as migrable
+
                 if self.is_migrable_pattern(&call.pattern) {
                     stats.migrable_patterns += 1;
                     
@@ -640,7 +555,6 @@ impl SystematicUnwrapMigrator {
         Ok(stats)
     }
 
-    /// Migrate the entire codebase
     pub async fn migrate_codebase(&self, root_path: &Path, dry_run: bool, exclude_tests: bool) -> Result<MigrationResult, MigratorError> {
         let start_time = std::time::Instant::now();
         let mut result = MigrationResult {
@@ -681,16 +595,16 @@ impl SystematicUnwrapMigrator {
             let path = entry.path();
             
             if path.is_dir() {
-                // Skip target directories and hidden directories
+
                 if let Some(dir_name) = path.file_name().and_then(|n| n.to_str()) {
                     if dir_name == "target" || dir_name.starts_with('.') {
                         continue;
                     }
                 }
-                // Use Box::pin for recursive async call
+
                 Box::pin(self.collect_rust_files_recursive(&path, files, exclude_tests)).await?;
             } else if path.extension().map_or(false, |ext| ext == "rs") {
-                // Skip test files if requested
+
                 if exclude_tests && path.to_string_lossy().contains("test") {
                     continue;
                 }
@@ -708,10 +622,9 @@ impl SystematicUnwrapMigrator {
             migrable_patterns: 0,
             test_file_patterns: 0,
             beardog_error_compatible: 0,
-            pattern_categories: HashMap::new(),
+            pattern_categories: HashMap::with_capacity(16),
         };
 
-        // Count basic unwrap/expect patterns
         let unwrap_regex = match Regex::new(r"\.unwrap\(\)") {
             Ok(regex) => regex,
             Err(_) => return stats,
@@ -724,13 +637,12 @@ impl SystematicUnwrapMigrator {
         stats.total_unwrap_calls += unwrap_regex.find_iter(content).count();
         stats.total_unwrap_calls += expect_regex.find_iter(content).count();
 
-        // Analyze specific patterns
         for (_name, pattern) in &self.error_patterns {
             if let Ok(regex) = Regex::new(&pattern.pattern) {
                 let matches = regex.find_iter(content).count();
                 if matches > 0 {
                     stats.migrable_patterns += matches;
-                    let category = format!("{:?}", pattern.error_category);
+                    let category = format_args!("{:?}", pattern.error_category).to_string();
                     *stats.pattern_categories.entry(category).or_insert(0) += matches;
                     
                     if pattern.beardog_compatible {
@@ -748,9 +660,8 @@ impl SystematicUnwrapMigrator {
         let mut modified_content = content.clone();
         let mut migrations_applied = 0;
 
-        // Apply error patterns
         for (_name, pattern) in &self.error_patterns {
-            // Skip non-BearDogError patterns if beardog_errors_only is true
+
             if self.beardog_errors_only && !pattern.beardog_compatible {
                 continue;
             }
@@ -766,7 +677,6 @@ impl SystematicUnwrapMigrator {
             }
         }
 
-        // Write the file if not dry run and changes were made
         if !dry_run && migrations_applied > 0 {
             fs::write(file_path, modified_content).await?;
         }
@@ -774,12 +684,10 @@ impl SystematicUnwrapMigrator {
         Ok(migrations_applied)
     }
 
-    /// Check if content is within a test function
     fn is_in_test_function(&self, content: &str, position: usize) -> bool {
-        // Find the function containing this position
+
         let before_position = &content[..position];
-        
-        // Look for test function markers before this position
+
         let test_markers = [
             "#[test]",
             "#[tokio::test]", 
@@ -789,11 +697,10 @@ impl SystematicUnwrapMigrator {
             "assert_eq!",
             "assert_ne!",
         ];
-        
-        // Check if we're in a test context
+
         for marker in &test_markers {
             if before_position.rfind(marker).is_some() {
-                // Check if this is closer than the last function boundary
+
                 if let Some(last_fn) = before_position.rfind("fn ") {
                     if let Some(marker_pos) = before_position.rfind(marker) {
                         if marker_pos > last_fn {
@@ -807,11 +714,9 @@ impl SystematicUnwrapMigrator {
         false
     }
 
-    /// Enhanced pattern detection
     fn find_unwrap_patterns(&self, content: &str) -> Vec<UnwrapCall> {
         let mut calls = Vec::new();
-        
-        // More precise regex patterns
+
         let patterns = [
             (r"\.unwrap\(\)", "unwrap"),
             (r"\.expect\([^)]+\)", "expect"),
@@ -823,9 +728,7 @@ impl SystematicUnwrapMigrator {
                 for mat in regex.find_iter(content) {
                     let start = mat.start();
                     let end = mat.end();
-                    
-                    // Get surrounding context (50 chars before and after)
-                    // Safe Unicode boundary handling
+
                     let context_start = content.char_indices()
                         .map(|(i, _)| i)
                         .find(|&i| i >= start.saturating_sub(50))
@@ -849,7 +752,6 @@ impl SystematicUnwrapMigrator {
         calls
     }
 
-    /// Enhanced test file detection
     fn is_test_file(&self, path: &Path) -> bool {
         let path_str = path.to_string_lossy();
         path_str.contains("/tests/") || 
@@ -861,7 +763,6 @@ impl SystematicUnwrapMigrator {
         path_str.contains("\\test\\")
     }
 
-    /// Collect all Rust files in the given directory
     fn collect_rust_files<'a>(&'a self, root_path: &'a Path, files: &'a mut Vec<PathBuf>) -> std::pin::Pin<Box<dyn std::future::Future<Output = MigratorResult<()>> + 'a>> {
         Box::pin(async move {
             let mut entries = fs::read_dir(root_path).await?;
@@ -870,7 +771,7 @@ impl SystematicUnwrapMigrator {
                 let path = entry.path();
                 
                 if path.is_dir() {
-                    // Skip target directories and hidden directories
+
                     if let Some(dir_name) = path.file_name() {
                         let dir_str = dir_name.to_string_lossy();
                         if dir_str.starts_with('.') || dir_str == "target" {
@@ -888,20 +789,17 @@ impl SystematicUnwrapMigrator {
         })
     }
 
-    /// Check if a pattern is migrable
     fn is_migrable_pattern(&self, pattern: &str) -> bool {
         matches!(pattern, "unwrap" | "expect")
     }
 
-    /// Check if context is BearDog compatible
     fn is_beardog_compatible(&self, context: &str) -> bool {
-        // Check for BearDogResult, BearDogError, or other BearDog patterns
+
         context.contains("BearDog") || 
         context.contains("beardog") ||
         !context.contains("test") // Assume non-test code is compatible
     }
 
-    /// Categorize pattern based on context
     fn categorize_pattern(&self, context: &str) -> String {
         if context.contains("env::var") || context.contains("config") {
             "Configuration".to_string()

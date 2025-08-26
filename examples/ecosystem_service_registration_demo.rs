@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # BearDog Universal Service Registration Demo
-//!
-//! This example demonstrates BearDog's Universal Service Registration
-//! and AI-First response formats for ecosystem integration.
 
 use beardog_core::{
     UniversalServiceRegistry, UniversalServiceRegistration,
@@ -34,21 +14,18 @@ use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging
+
     tracing_subscriber::fmt()
         .with_max_level(Level::INFO)
         .init();
 
     info!("🚀 Starting BearDog Universal Service Registration Demo");
 
-    // Step 1: Create BearDog Universal Service Registration
     let registration = create_beardog_registration().await?;
     print_registration_info(&registration);
 
-    // Step 2: Create Universal Service Registry client
     let mut registry = UniversalServiceRegistry::new("http://localhost:8080".to_string());
-    
-    // Step 3: Register BearDog with the ecosystem
+
     match registry.register_service(registration.clone()).await {
         Ok(response) => {
             info!("✅ Registration successful!");
@@ -61,10 +38,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // Step 4: Demonstrate AI-First responses
     demonstrate_ai_first_responses().await?;
 
-    // Step 5: Send heartbeat to registry if registered
     if registry.is_registered() {
         match registry.send_heartbeat().await {
             Ok(response) => {
@@ -82,7 +57,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Create BearDog's universal service registration
 async fn create_beardog_registration() -> Result<UniversalServiceRegistration, Box<dyn std::error::Error>> {
     info!("📝 Creating BearDog Universal Service Registration");
     
@@ -98,7 +72,6 @@ async fn create_beardog_registration() -> Result<UniversalServiceRegistration, B
     Ok(registration)
 }
 
-/// Print detailed registration information
 fn print_registration_info(registration: &UniversalServiceRegistration) {
     info!("📊 === BearDog Service Registration Details ===");
     info!("🔍 Service ID: {}", registration.service_id);
@@ -153,16 +126,14 @@ fn print_registration_info(registration: &UniversalServiceRegistration) {
     info!("================================================");
 }
 
-/// Demonstrate AI-First response format
 async fn demonstrate_ai_first_responses() -> Result<(), Box<dyn std::error::Error>> {
     info!("🤖 === Demonstrating AI-First Response Format ===");
     
     let request_id = Uuid::new_v4();
-    
-    // Example 1: Successful HSM operation response
+
     let success_response: AIFirstResponse<HashMap<String, String>> = AIFirstResponseBuilder::new(
         {
-            let mut data = HashMap::new();
+            let mut data = HashMap::with_capacity(16);
             data.insert("operation".to_string(), "key_generation".to_string());
             data.insert("key_id".to_string(), "generated_key_123".to_string());
             data.insert("algorithm".to_string(), "ed25519".to_string());
@@ -181,14 +152,13 @@ async fn demonstrate_ai_first_responses() -> Result<(), Box<dyn std::error::Erro
     info!("  Processing Time: {}ms", success_response.processing_time_ms);
     info!("  Security Quality Score: {}", success_response.ai_metadata.quality_metrics.security);
     info!("  Reliability Score: {}", success_response.ai_metadata.quality_metrics.reliability);
-    
-    // Example 2: Response with AI suggestions
+
     let request_id_2 = Uuid::new_v4();
     let suggested_action = beardog_core::SuggestedAction {
         action: "verify_attestation".to_string(),
         confidence: 0.95,
         parameters: {
-            let mut params = HashMap::new();
+            let mut params = HashMap::with_capacity(16);
             params.insert("attestation_type".to_string(), serde_json::json!("platform_specific"));
             params.insert("hardware_requirement".to_string(), serde_json::json!("strongbox_preferred"));
             params
@@ -226,8 +196,7 @@ async fn demonstrate_ai_first_responses() -> Result<(), Box<dyn std::error::Erro
         info!("       Risk Level: {:?}", action.risk_assessment.risk_level);
         info!("       Human Approval Required: {}", action.human_approval_recommended);
     }
-    
-    // Example 3: HSM capability discovery response  
+
     let discovery_response: AIFirstResponse<serde_json::Value> = AIFirstResponseBuilder::new(
         serde_json::json!({
             "platforms": ["android", "ios", "windows", "linux", "macos"],

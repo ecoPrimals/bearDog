@@ -1,31 +1,11 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Compliance API - Enterprise Compliance & Audit Management
-///
-/// Comprehensive REST API for BearDog's compliance and audit capabilities
-/// supporting GDPR, HIPAA, SOX, PCI DSS, and other regulatory frameworks.
 
 use super::*;
 use axum::{
     routing::{delete, get, post, put},
     Router,
 };
-// Re-export from sub-modules
+
 pub use audit::*;
 pub use gdpr::*;
 pub use hipaa::*;
@@ -37,7 +17,7 @@ pub use risk::*;
 pub use sox::*;
 pub use status::*;
 pub use violations::*;
-// Sub-modules with focused responsibilities
+
 pub mod audit; // Audit trail management
 pub mod gdpr; // GDPR compliance handlers
 pub mod hipaa; // HIPAA compliance handlers
@@ -49,19 +29,19 @@ pub mod risk; // Risk assessment & mitigation
 pub mod sox; // SOX compliance handlers
 pub mod status; // Status, overview, and health endpoints
 pub mod violations; // Violation detection & remediation // Report generation & analytics
-/// Create compliance API routes
+
 pub fn create_routes() -> Router<AppState> {
     Router::new()
-        // Compliance Status & Overview
+
         .route("/status", get(status::get_compliance_status))
         .route("/overview", get(status::get_compliance_overview))
         .route("/health", get(status::get_compliance_health))
-        // Audit Trail Management
+
         .route("/audit/trail", get(audit::get_audit_trail))
         .route("/audit/events", post(audit::log_audit_event))
         .route("/audit/search", post(audit::search_audit_trail))
         .route("/audit/export", get(audit::export_audit_trail))
-        // Regulatory Framework Compliance
+
         .route("/gdpr/status", get(gdpr::get_gdpr_compliance))
         .route(
             "/gdpr/data-subject-request",
@@ -81,24 +61,24 @@ pub fn create_routes() -> Router<AppState> {
         .route("/pci/status", get(pci::get_pci_compliance))
             "/pci/cardholder-data",
             get(pci::audit_cardholder_data_handling),
-        // Policy Management
+
         .route("/policies", get(policies::list_compliance_policies))
         .route("/policies", post(policies::create_compliance_policy))
         .route("/policies/:policy_id", get(policies::get_compliance_policy))
             "/policies/:policy_id",
             put(policies::update_compliance_policy),
             delete(policies::delete_compliance_policy),
-        // Violation Detection & Response
+
         .route("/violations", get(violations::list_compliance_violations))
             "/violations/:violation_id",
             get(violations::get_violation_details),
             "/violations/:violation_id/remediate",
             post(violations::remediate_violation),
-        // Risk Assessment
+
         .route("/risk/assessment", get(risk::get_risk_assessment))
         .route("/risk/assessment", post(risk::conduct_risk_assessment))
         .route("/risk/mitigation", get(risk::get_risk_mitigation_plan))
-        // Reporting & Analytics
+
             "/reports/executive",
             get(reporting::generate_executive_report),
             "/reports/detailed",

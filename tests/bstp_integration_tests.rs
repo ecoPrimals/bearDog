@@ -1,21 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-// 🧬 BSTP Integration Tests - Krogan-Grade Resilience Testing
 
 use beardog::config::EncryptionConfig;
 use beardog::encryption::EncryptionEngine;
@@ -30,7 +13,7 @@ use std::time::{Duration, Instant, SystemTime};
 
 #[tokio::test]
 async fn test_full_bstp_integration() -> BearDogResult<()> {
-    // Test complete BSTP pipeline: session -> encryption -> healing
+
     let config = BStpConfig::competitive_gaming();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -40,7 +23,6 @@ async fn test_full_bstp_integration() -> BearDogResult<()> {
     ));
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
 
-    // Initialize all components
     let crypto_engine = GamingCryptoEngine::new(
         encryption.clone(),
         genetics.clone(),
@@ -51,10 +33,8 @@ async fn test_full_bstp_integration() -> BearDogResult<()> {
 
     let mut healing = GeneticSecurityHealing::new(genetics.clone()).await?;
 
-    // Test full gaming session workflow
     println!("🎮 Testing full gaming session workflow...");
 
-    // Test rapid packet encryption/decryption (gaming scenario)
     let security_genetics = SecurityGenetics::default();
     let gaming_packets = [b"player_move_command_1".to_vec(),
         b"player_attack_unit_2".to_vec(),
@@ -81,7 +61,6 @@ async fn test_full_bstp_integration() -> BearDogResult<()> {
         assert_eq!(packet, &decrypted);
     }
 
-    // Simulate security threat and test genetic healing
     let security_issue = SecurityIssue {
         issue_type: SecurityIssueType::PerformanceDegradation,
         severity: Severity::Medium,
@@ -92,11 +71,9 @@ async fn test_full_bstp_integration() -> BearDogResult<()> {
     let healing_result = healing.heal_security_issue(security_issue).await?;
     assert_eq!(healing_result, HealingResult::Success);
 
-    // Test network event response
     let network_event = NetworkEvent::NetworkCongestion { latency_ms: 150 };
     healing.heal_from_network_event(network_event).await?;
 
-    // Performance assertions for gaming
     let avg_encryption = total_encryption_time / gaming_packets.len() as u32;
     let avg_decryption = total_decryption_time / gaming_packets.len() as u32;
 
@@ -112,7 +89,7 @@ async fn test_full_bstp_integration() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_krogan_resilience_scenario() -> BearDogResult<()> {
-    // Test krogan-like adaptation to multiple simultaneous threats
+
     println!("🦎 Testing krogan-grade resilience to multiple threats...");
 
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -122,7 +99,6 @@ async fn test_krogan_resilience_scenario() -> BearDogResult<()> {
     ));
     let mut healing = GeneticSecurityHealing::new(genetics.clone()).await?;
 
-    // Simulate multiple simultaneous security threats
     let threats = vec![
         SecurityIssue {
             issue_type: SecurityIssueType::EncryptionCompromised,
@@ -144,13 +120,11 @@ async fn test_krogan_resilience_scenario() -> BearDogResult<()> {
         },
     ];
 
-    // Heal each threat - krogan adapt to everything!
     for threat in threats {
         let result = healing.heal_security_issue(threat).await?;
         assert_eq!(result, HealingResult::Success);
     }
 
-    // Test network events that would break lesser systems
     let network_events = vec![
         NetworkEvent::PeerDisconnected {
             reason: "Connection lost".to_string(),
@@ -171,7 +145,7 @@ async fn test_krogan_resilience_scenario() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_toadstool_extension_interfaces() -> BearDogResult<()> {
-    // Test simplified toadstool-compute interface (placeholder for future implementation)
+
     println!("🍄 Testing basic toadstool-compute interface...");
 
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -181,7 +155,6 @@ async fn test_toadstool_extension_interfaces() -> BearDogResult<()> {
     ));
     let mut healing = GeneticSecurityHealing::new(genetics.clone()).await?;
 
-    // Basic healing test to validate the system is working
     let security_issue = SecurityIssue {
         issue_type: SecurityIssueType::EncryptionCompromised,
         severity: Severity::High,
@@ -189,7 +162,6 @@ async fn test_toadstool_extension_interfaces() -> BearDogResult<()> {
         timestamp: SystemTime::now(),
     };
 
-    // This represents the future toadstool-compute interface capability
     println!("🍄 Simulating network healing coordination...");
     let healing_result = healing.heal_security_issue(security_issue).await?;
     assert_eq!(healing_result, HealingResult::Success);
@@ -200,7 +172,7 @@ async fn test_toadstool_extension_interfaces() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_concurrent_gaming_sessions() -> BearDogResult<()> {
-    // Test multiple simultaneous gaming sessions - krogan-grade multitasking
+
     println!("🕹️ Testing concurrent gaming sessions...");
 
     let config = BStpConfig::competitive_gaming();
@@ -219,17 +191,15 @@ async fn test_concurrent_gaming_sessions() -> BearDogResult<()> {
     let num_sessions = 10;
     let mut session_handles = Vec::new();
 
-    // Spawn concurrent gaming sessions
     for i in 0..num_sessions {
         let engine = crypto_engine.clone();
         let config_clone = config.clone();
 
         let handle = tokio::spawn(async move {
-            // Test concurrent session creation
+
             let session_id = format!("concurrent_session_{i}");
             let encryption_start = Instant::now();
 
-            // Simulate gaming packets
             let security_genetics = SecurityGenetics::default();
             let packet = format!("gaming_packet_from_peer_{i}").into_bytes();
 
@@ -246,7 +216,6 @@ async fn test_concurrent_gaming_sessions() -> BearDogResult<()> {
             let encryption_time = encryption_start.elapsed();
             assert!(encryption_time <= Duration::from_micros(200)); // Gaming target
 
-            // Validate session is valid
             let is_valid = !encrypted.data.is_empty();
             assert!(is_valid);
 
@@ -256,7 +225,6 @@ async fn test_concurrent_gaming_sessions() -> BearDogResult<()> {
         session_handles.push(handle);
     }
 
-    // Wait for all sessions to complete
     for handle in session_handles {
         handle.await.map_err(|e| BearDogError::OperationTimeout {
             operation: e.to_string(),
@@ -271,7 +239,7 @@ async fn test_concurrent_gaming_sessions() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_gaming_crypto_optimization() -> BearDogResult<()> {
-    // Test crypto algorithm optimization for gaming performance
+
     println!("🎯 Testing gaming crypto optimization...");
 
     let config = BStpConfig::competitive_gaming();
@@ -286,7 +254,6 @@ async fn test_gaming_crypto_optimization() -> BearDogResult<()> {
     let crypto_engine =
         GamingCryptoEngine::new(encryption, genetics, key_manager, config.clone()).await?;
 
-    // Test basic crypto operations
     let security_genetics = SecurityGenetics::default();
     let test_data = b"StarCraft 2 competitive match data";
 
@@ -304,7 +271,6 @@ async fn test_gaming_crypto_optimization() -> BearDogResult<()> {
 
     assert_eq!(test_data, &decrypted[..]);
 
-    // Verify gaming performance targets
     assert!(encryption_time <= config.performance.max_encryption_latency);
     assert!(decryption_time <= config.performance.max_decryption_latency);
 
@@ -317,7 +283,7 @@ async fn test_gaming_crypto_optimization() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_error_resilience() -> BearDogResult<()> {
-    // Test graceful handling of invalid inputs - krogan-level toughness
+
     println!("🛡️ Testing error resilience...");
 
     let config = BStpConfig::competitive_gaming();
@@ -334,7 +300,6 @@ async fn test_error_resilience() -> BearDogResult<()> {
 
     let mut healing = GeneticSecurityHealing::new(genetics).await?;
 
-    // Test healing with invalid security issue (should still handle gracefully)
     let invalid_issue = SecurityIssue {
         issue_type: SecurityIssueType::PerformanceDegradation,
         severity: Severity::High,
@@ -342,7 +307,6 @@ async fn test_error_resilience() -> BearDogResult<()> {
         timestamp: SystemTime::now(),
     };
 
-    // Should still handle gracefully
     let result = healing.heal_security_issue(invalid_issue).await?;
     assert_eq!(result, HealingResult::Success);
 

@@ -1,79 +1,113 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Threat intelligence enumeration types
-///
-/// This module contains enumeration types used throughout the threat intelligence
-/// system, including feed types, update frequencies, and status indicators.
 use serde::{Deserialize, Serialize};
 
-/// Feed type enumeration
-/// Categorizes different types of threat intelligence feeds
-/// based on the type of data they provide.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum IndicatorType {
+    IpAddress,
+    Domain,
+    DomainName,
+    Url,
+    FileHash,
+    EmailAddress,
+    Registry,
+    RegistryKey, // Alias for Registry
+    Mutex,
+    UserAgent,
+    Certificate,
+    NetworkTraffic,
+    NetworkPattern, // Add missing variant
+    BehavioralPattern,
+    ProcessName, // Add missing variant
+    Yara,
+    Sigma,
+    Custom(String), // Add missing variant
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum ConfidenceLevel {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum FeedType {
-    /// IP address reputation feed
     IpReputation,
-    /// Domain reputation feed
     DomainReputation,
-    /// Known malicious file hashes
     FileHashes,
-    /// URL blacklist feed
     UrlBlacklist,
-    /// Malware signature definitions
     MalwareSignatures,
-    /// Attack pattern descriptions
     AttackPatterns,
-    /// Known threat actor profiles
     ThreatActors,
-    /// Vulnerability information feed
     Vulnerabilities,
 }
-/// Update frequency enumeration
-/// Defines how frequently a threat intelligence feed
-/// should be updated with new data.
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum UpdateFrequency {
-    /// Real-time continuous updates
     RealTime,
-    /// Updated every hour
     Hourly,
-    /// Updated daily
     Daily,
-    /// Updated weekly
     Weekly,
-    /// Updated monthly
     Monthly,
-/// Feed status enumeration
-/// Tracks the current operational status of a
-/// threat intelligence feed.}
+    OnDemand,
+}
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum FeedFormat {
+    Json,
+    Xml,
+    Csv,
+    Stix,
+    Taxii,
+}
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum FeedStatus {
-    /// Feed is active and operational
     Active,
-    /// Feed is inactive or disabled
     Inactive,
-    /// Feed encountered an error
     Error,
-    /// Feed is currently being updated
-    Updating,
-impl std::fmt::Display for FeedType {}
+    Maintenance,
+}
 
+impl std::fmt::Display for IndicatorType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IndicatorType::IpAddress => write!(f, "IP Address"),
+            IndicatorType::Domain => write!(f, "Domain"),
+            IndicatorType::DomainName => write!(f, "Domain Name"),
+            IndicatorType::Url => write!(f, "URL"),
+            IndicatorType::FileHash => write!(f, "File Hash"),
+            IndicatorType::EmailAddress => write!(f, "Email Address"),
+            IndicatorType::Registry => write!(f, "Registry"),
+            IndicatorType::RegistryKey => write!(f, "Registry Key"),
+            IndicatorType::Mutex => write!(f, "Mutex"),
+            IndicatorType::UserAgent => write!(f, "User Agent"),
+            IndicatorType::Certificate => write!(f, "Certificate"),
+            IndicatorType::NetworkTraffic => write!(f, "Network Traffic"),
+            IndicatorType::NetworkPattern => write!(f, "Network Pattern"),
+            IndicatorType::BehavioralPattern => write!(f, "Behavioral Pattern"),
+            IndicatorType::ProcessName => write!(f, "Process Name"),
+            IndicatorType::Yara => write!(f, "YARA Rule"),
+            IndicatorType::Sigma => write!(f, "Sigma Rule"),
+            IndicatorType::Custom(custom) => write!(f, "Custom: {custom}"),
+        }
+    }
+}
 
+impl std::fmt::Display for ConfidenceLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ConfidenceLevel::Low => write!(f, "Low"),
+            ConfidenceLevel::Medium => write!(f, "Medium"),
+            ConfidenceLevel::High => write!(f, "High"),
+            ConfidenceLevel::Critical => write!(f, "Critical"),
+        }
+    }
+}
+
+impl std::fmt::Display for FeedType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             FeedType::IpReputation => write!(f, "IP Reputation"),
@@ -86,16 +120,28 @@ impl std::fmt::Display for FeedType {}
             FeedType::Vulnerabilities => write!(f, "Vulnerabilities"),
         }
     }
+}
+
 impl std::fmt::Display for UpdateFrequency {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
             UpdateFrequency::RealTime => write!(f, "Real-time"),
             UpdateFrequency::Hourly => write!(f, "Hourly"),
             UpdateFrequency::Daily => write!(f, "Daily"),
             UpdateFrequency::Weekly => write!(f, "Weekly"),
-            UpdateFrequency::Monthly => write!(f, "Monthly"),}
-
+            UpdateFrequency::Monthly => write!(f, "Monthly"),
+            UpdateFrequency::OnDemand => write!(f, "On Demand"),
+        }
+    }
+}
 
 impl std::fmt::Display for FeedStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
             FeedStatus::Active => write!(f, "Active"),
             FeedStatus::Inactive => write!(f, "Inactive"),
             FeedStatus::Error => write!(f, "Error"),
-            FeedStatus::Updating => write!(f, "Updating"),
+            FeedStatus::Maintenance => write!(f, "Maintenance"),
+        }
+    }
+}

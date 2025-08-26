@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Unified Test Harness for BearDog
-//!
-//! **Enterprise-Grade Test Environment Management**
-//!
-//! This module provides a comprehensive test harness that standardizes test
-//! environment setup, teardown, and resource management across all BearDog tests.
 
 use crate::common::{TestContext, TestResult, TestMetrics, TestPhase};
 use beardog_errors::{BearDogError, BearDogResult};
@@ -35,80 +13,75 @@ use tokio::sync::{Mutex, RwLock};
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
-/// Unified test harness for all BearDog tests
 pub struct BearDogTestHarness {
-    /// Test configuration
+
     pub config: TestHarnessConfig,
-    /// Core BearDog instance for testing
+
     pub core: Option<Arc<BearDogCore>>,
-    /// Test-specific configurations
+
     pub test_configs: Arc<RwLock<HashMap<String, JsonValue>>>,
-    /// Active test contexts
+
     pub active_contexts: Arc<Mutex<HashMap<String, TestContext>>>,
-    /// Shared test resources
+
     pub shared_resources: Arc<RwLock<TestResourcePool>>,
-    /// Performance metrics collector
+
     pub metrics_collector: Arc<TestMetricsCollector>,
-    /// Test environment state
+
     pub environment_state: Arc<RwLock<TestEnvironmentState>>,
 }
 
-/// Configuration for the test harness
 #[derive(Debug, Clone)]
 pub struct TestHarnessConfig {
-    /// Test environment type
+
     pub environment: TestEnvironment,
-    /// Enable performance monitoring
+
     pub enable_performance_monitoring: bool,
-    /// Enable resource cleanup
+
     pub enable_auto_cleanup: bool,
-    /// Test timeout duration
+
     pub default_timeout: Duration,
-    /// Enable parallel test execution
+
     pub enable_parallel_execution: bool,
-    /// Maximum concurrent tests
+
     pub max_concurrent_tests: usize,
-    /// Enable comprehensive logging
+
     pub enable_verbose_logging: bool,
-    /// Test data directory
+
     pub test_data_dir: String,
-    /// Enable chaos testing integration
+
     pub enable_chaos_testing: bool,
 }
 
-/// Test environment types
 #[derive(Debug, Clone, PartialEq)]
 pub enum TestEnvironment {
-    /// Unit testing environment
+
     Unit,
-    /// Integration testing environment
+
     Integration,
-    /// End-to-end testing environment
+
     E2E,
-    /// Performance testing environment
+
     Performance,
-    /// Chaos testing environment
+
     Chaos,
-    /// Production-like testing environment
+
     Production,
 }
 
-/// Shared test resource pool
 #[derive(Debug, Default)]
 pub struct TestResourcePool {
-    /// Database connections for testing
+
     pub database_connections: HashMap<String, String>,
-    /// Test data sets
+
     pub test_datasets: HashMap<String, JsonValue>,
-    /// Mock services
+
     pub mock_services: HashMap<String, Arc<dyn MockService>>,
-    /// Temporary directories
+
     pub temp_directories: Vec<String>,
-    /// Test artifacts
+
     pub test_artifacts: HashMap<String, TestArtifact>,
 }
 
-/// Test artifact for result storage
 #[derive(Debug, Clone)]
 pub struct TestArtifact {
     pub artifact_id: String,
@@ -118,24 +91,21 @@ pub struct TestArtifact {
     pub metadata: HashMap<String, String>,
 }
 
-/// Mock service trait for test doubles
 pub trait MockService: Send + Sync {
     fn service_name(&self) -> &str;
     fn reset(&self) -> BearDogResult<()>;
     fn configure(&self, config: JsonValue) -> BearDogResult<()>;
 }
 
-/// Test metrics collector for comprehensive analytics
 pub struct TestMetricsCollector {
-    /// Test execution metrics
+
     execution_metrics: Arc<RwLock<HashMap<String, TestExecutionMetrics>>>,
-    /// Performance benchmarks
+
     performance_benchmarks: Arc<RwLock<Vec<PerformanceBenchmark>>>,
-    /// Resource usage tracking
+
     resource_usage: Arc<RwLock<ResourceUsageMetrics>>,
 }
 
-/// Detailed test execution metrics
 #[derive(Debug, Clone)]
 pub struct TestExecutionMetrics {
     pub test_name: String,
@@ -149,7 +119,6 @@ pub struct TestExecutionMetrics {
     pub error_patterns: HashMap<String, u64>,
 }
 
-/// Performance benchmark data
 #[derive(Debug, Clone)]
 pub struct PerformanceBenchmark {
     pub benchmark_name: String,
@@ -162,7 +131,6 @@ pub struct PerformanceBenchmark {
     pub metadata: HashMap<String, JsonValue>,
 }
 
-/// Resource usage metrics
 #[derive(Debug, Clone, Default)]
 pub struct ResourceUsageMetrics {
     pub peak_memory_mb: f64,
@@ -174,7 +142,6 @@ pub struct ResourceUsageMetrics {
     pub cache_misses: u64,
 }
 
-/// Test environment state
 #[derive(Debug, Default)]
 pub struct TestEnvironmentState {
     pub is_initialized: bool,
@@ -186,28 +153,26 @@ pub struct TestEnvironmentState {
 }
 
 impl BearDogTestHarness {
-    /// Create a new test harness with default configuration
+
     pub fn new() -> Self {
         Self::with_config(TestHarnessConfig::default())
     }
 
-    /// Create a test harness with custom configuration
     pub fn with_config(config: TestHarnessConfig) -> Self {
         Self {
             config,
             core: None,
-            test_configs: Arc::new(RwLock::new(HashMap::new())),
-            active_contexts: Arc::new(Mutex::new(HashMap::new())),
+            test_configs: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            active_contexts: Arc::new(Mutex::new(HashMap::with_capacity(16))),
             shared_resources: Arc::new(RwLock::new(TestResourcePool::default())),
             metrics_collector: Arc::new(TestMetricsCollector::new()),
             environment_state: Arc::new(RwLock::new(TestEnvironmentState::default())),
         }
     }
 
-    /// Initialize the test environment
     pub async fn initialize(&mut self) -> TestResult<()> {
         info!("🚀 Initializing BearDog test harness for {} environment", 
-              format!("{:?}", self.config.environment));
+              format_args!("{:?}", self.config.environment).to_string());
 
         let mut state = self.environment_state.write().await;
         
@@ -215,12 +180,11 @@ impl BearDogTestHarness {
             return Ok(());
         }
 
-        // Initialize core BearDog instance based on environment
         let core_config = self.create_test_config().await?;
         self.core = Some(Arc::new(BearDogCore::new(core_config).await
             .map_err(|e| BearDogError::enhanced(
                 "TEST_HARNESS_INIT",
-                format!("Failed to initialize BearDog core for testing: {}", e),
+                format_args!("Failed to initialize BearDog core for testing: {}", e).to_string(),
                 beardog_errors::ErrorSeverity::High,
                 beardog_errors::ErrorCategory::Initialization,
                 "test_harness",
@@ -232,13 +196,10 @@ impl BearDogTestHarness {
                 ],
             ))?));
 
-        // Initialize shared resources
         self.initialize_shared_resources().await?;
 
-        // Set up test data
         self.setup_test_data().await?;
 
-        // Initialize metrics collection
         self.metrics_collector.initialize().await?;
 
         state.is_initialized = true;
@@ -246,28 +207,24 @@ impl BearDogTestHarness {
         Ok(())
     }
 
-    /// Create a new test context with comprehensive setup
-    pub async fn create_test_context(&self, test_name: impl Into<String>) -> TestResult<TestContext> {
+    pub async fn create_test_context(&self, test_name: impl Into<&str>) -> TestResult<TestContext> {
         let test_name = test_name.into();
         let test_id = Uuid::new_v4().to_string();
         
         info!("🧪 Creating test context for: {}", test_name);
 
         let mut context = TestContext::new(&test_name);
-        
-        // Add test-specific metadata
+
         context.add_metadata("test_id", json!(test_id));
-        context.add_metadata("environment", json!(format!("{:?}", self.config.environment)));
+        context.add_metadata("environment", json!(format_args!("{:?}", self.config.environment).to_string()));
         context.add_metadata("harness_version", json!("2.0"));
         context.add_metadata("created_at", json!(chrono::Utc::now().to_rfc3339()));
 
-        // Register context for tracking
         {
             let mut active_contexts = self.active_contexts.lock().await;
             active_contexts.insert(test_id.clone(), context.clone());
         }
 
-        // Update environment state
         {
             let mut state = self.environment_state.write().await;
             state.active_tests += 1;
@@ -277,7 +234,6 @@ impl BearDogTestHarness {
         Ok(context)
     }
 
-    /// Execute a test with comprehensive environment management
     pub async fn run_test<F, Fut, T>(
         &self,
         test_name: impl Into<String>,
@@ -295,21 +251,18 @@ impl BearDogTestHarness {
             .clone();
 
         let start_time = Instant::now();
-        
-        // Execute test with timeout
+
         let result = if self.config.default_timeout > Duration::ZERO {
             tokio::time::timeout(self.config.default_timeout, test_fn(context.clone(), core)).await
-                .map_err(|_| BearDogError::timeout(&format!("Test '{}' exceeded timeout of {:?}", test_name, self.config.default_timeout)))?
+                .map_err(|_| BearDogError::timeout(&format_args!("Test '{}' exceeded timeout of {:?}", test_name, self.config.default_timeout).to_string()))?
         } else {
             test_fn(context.clone(), core).await
         };
 
         let duration = start_time.elapsed();
 
-        // Record metrics
         self.record_test_metrics(&test_name, &result, duration).await;
 
-        // Update environment state
         {
             let mut state = self.environment_state.write().await;
             state.active_tests -= 1;
@@ -320,7 +273,6 @@ impl BearDogTestHarness {
             }
         }
 
-        // Clean up test context
         {
             let mut active_contexts = self.active_contexts.lock().await;
             if let Some(test_context) = context.get_metadata("test_id").and_then(|v| v.as_str()) {
@@ -334,7 +286,6 @@ impl BearDogTestHarness {
         result
     }
 
-    /// Get test harness statistics
     pub async fn get_statistics(&self) -> TestHarnessStatistics {
         let state = self.environment_state.read().await;
         let metrics = self.metrics_collector.get_summary().await;
@@ -352,23 +303,19 @@ impl BearDogTestHarness {
         }
     }
 
-    /// Cleanup test environment
     pub async fn cleanup(&self) -> TestResult<()> {
         info!("🧹 Cleaning up test harness environment");
 
-        // Cleanup shared resources
         {
             let mut resources = self.shared_resources.write().await;
             self.cleanup_shared_resources(&mut resources).await?;
         }
 
-        // Clear active contexts
         {
             let mut active_contexts = self.active_contexts.lock().await;
             active_contexts.clear();
         }
 
-        // Update environment state
         {
             let mut state = self.environment_state.write().await;
             state.last_cleanup = Some(Instant::now());
@@ -378,12 +325,9 @@ impl BearDogTestHarness {
         Ok(())
     }
 
-    // Private helper methods
-
     async fn create_test_config(&self) -> TestResult<BearDogConfig> {
         let mut config = BearDogConfig::default();
-        
-        // Customize configuration based on test environment
+
         match self.config.environment {
             TestEnvironment::Unit => {
                 config.enable_networking = false;
@@ -410,7 +354,7 @@ impl BearDogTestHarness {
                 config.enable_fault_injection = true;
             }
             TestEnvironment::Production => {
-                // Production-like configuration
+
                 config.enable_all_features = true;
             }
         }
@@ -420,18 +364,15 @@ impl BearDogTestHarness {
 
     async fn initialize_shared_resources(&self) -> TestResult<()> {
         info!("🔧 Initializing shared test resources");
-        
-        // Initialize based on environment needs
-        let mut resources = self.shared_resources.write().await;
-        
-        // Create test data directory
-        std::fs::create_dir_all(&self.config.test_data_dir)
-            .map_err(|e| BearDogError::io(&format!("Failed to create test data directory: {}", e)))?;
 
-        // Initialize mock services based on environment
+        let mut resources = self.shared_resources.write().await;
+
+        std::fs::create_dir_all(&self.config.test_data_dir)
+            .map_err(|e| BearDogError::io(&format_args!("Failed to create test data directory: {}", e).to_string()))?;
+
         match self.config.environment {
             TestEnvironment::Integration | TestEnvironment::E2E => {
-                // Add database mock if needed
+
                 resources.database_connections.insert(
                     "test_db".to_string(),
                     "sqlite::memory:".to_string()
@@ -447,13 +388,12 @@ impl BearDogTestHarness {
         debug!("📁 Setting up test data");
         
         let mut resources = self.shared_resources.write().await;
-        
-        // Load common test datasets
+
         resources.test_datasets.insert(
             "sample_config".to_string(),
             json!({
                 "test_mode": true,
-                "environment": format!("{:?}", self.config.environment),
+                "environment": format_args!("{:?}", self.config.environment).to_string(),
                 "created_at": chrono::Utc::now().to_rfc3339()
             })
         );
@@ -470,7 +410,7 @@ impl BearDogTestHarness {
     }
 
     async fn cleanup_shared_resources(&self, resources: &mut TestResourcePool) -> TestResult<()> {
-        // Cleanup temporary directories
+
         for temp_dir in &resources.temp_directories {
             if let Err(e) = std::fs::remove_dir_all(temp_dir) {
                 warn!("Failed to cleanup temporary directory {}: {}", temp_dir, e);
@@ -478,7 +418,6 @@ impl BearDogTestHarness {
         }
         resources.temp_directories.clear();
 
-        // Reset mock services
         for (name, mock_service) in &resources.mock_services {
             if let Err(e) = mock_service.reset() {
                 warn!("Failed to reset mock service {}: {}", name, e);
@@ -489,7 +428,6 @@ impl BearDogTestHarness {
     }
 }
 
-/// Test harness statistics
 #[derive(Debug, Clone)]
 pub struct TestHarnessStatistics {
     pub environment: TestEnvironment,
@@ -506,7 +444,7 @@ pub struct TestHarnessStatistics {
 impl TestMetricsCollector {
     pub fn new() -> Self {
         Self {
-            execution_metrics: Arc::new(RwLock::new(HashMap::new())),
+            execution_metrics: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             performance_benchmarks: Arc::new(RwLock::new(Vec::new())),
             resource_usage: Arc::new(RwLock::new(ResourceUsageMetrics::default())),
         }
@@ -529,7 +467,7 @@ impl TestMetricsCollector {
             min_duration: duration,
             max_duration: duration,
             last_execution: Instant::now(),
-            error_patterns: HashMap::new(),
+            error_patterns: HashMap::with_capacity(16),
         });
 
         entry.execution_count += 1;
@@ -539,7 +477,6 @@ impl TestMetricsCollector {
             entry.failure_count += 1;
         }
 
-        // Update duration statistics
         entry.average_duration = Duration::from_nanos(
             (entry.average_duration.as_nanos() as u64 * (entry.execution_count - 1) + duration.as_nanos() as u64) 
             / entry.execution_count
@@ -580,7 +517,6 @@ impl TestMetricsCollector {
     }
 }
 
-/// Test metrics summary
 #[derive(Debug, Clone)]
 pub struct TestMetricsSummary {
     pub total_tests: usize,
@@ -607,7 +543,6 @@ impl Default for TestHarnessConfig {
     }
 }
 
-/// Convenience macros for test harness usage
 #[macro_export]
 macro_rules! beardog_test {
     ($name:ident, $env:expr, $test:expr) => {

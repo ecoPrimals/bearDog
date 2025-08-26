@@ -1,30 +1,9 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Production Stress Testing
-//!
-//! Tests for production environment under stress conditions,
-//! resource exhaustion scenarios, and cascade failure prevention.
 
 use beardog::core::*;
 use beardog::production::*;
 use std::sync::Arc;
 
-/// Test production environment under stress conditions
 #[tokio::test]
 async fn test_production_stress_conditions() {
     println!("💪 Testing production environment under stress...");
@@ -35,7 +14,7 @@ async fn test_production_stress_conditions() {
             .await
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
 })?,
     );
 
@@ -43,10 +22,9 @@ async fn test_production_stress_conditions() {
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Production manager creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Production manager creation failed", e).to_string())
 })?;
 
-    // Test high load conditions
     let stress_test_config = StressTestConfiguration {
         cpu_stress_percentage: 80,
         memory_stress_percentage: 85,
@@ -60,7 +38,7 @@ async fn test_production_stress_conditions() {
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Stress test should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Stress test should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Stress test should succeed", e).to_string())
 })?;
 
     assert!(
@@ -80,13 +58,12 @@ async fn test_production_stress_conditions() {
         "Recovery time should be acceptable"
     );
 
-    // Test resource exhaustion scenarios
     let resource_exhaustion_test = production_manager
         .test_resource_exhaustion_handling()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Resource exhaustion test should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Resource exhaustion test should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Resource exhaustion test should succeed", e).to_string())
 })?;
 
     assert!(
@@ -102,13 +79,12 @@ async fn test_production_stress_conditions() {
         "Recovery should be effective"
     );
 
-    // Test cascade failure prevention
     let cascade_prevention_test = production_manager
         .test_cascade_failure_prevention()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Cascade failure test should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Cascade failure test should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Cascade failure test should succeed", e).to_string())
 })?;
 
     assert!(
@@ -125,12 +101,8 @@ async fn test_production_stress_conditions() {
     );
 }
 
-/// Additional stress testing functions can be added here
 pub async fn test_stress_testing_comprehensive(prod_manager: &mut ProductionManager) {
-    // This function can be called from the main production test orchestrator
-    // Additional stress tests can be added here
+
     println!("🚀 Running comprehensive stress tests...");
-    
-    // Placeholder for additional comprehensive stress tests
-    // that can be called from the main production test suite
+
 } 

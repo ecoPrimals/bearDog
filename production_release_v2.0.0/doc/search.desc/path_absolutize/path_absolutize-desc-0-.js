@@ -1,1 +1,0 @@
-searchState.loadedDescShard("path_absolutize", 0, "Path Absolutize\nLet <code>Path</code> and <code>PathBuf</code> have <code>absolutize</code> and …\nGet an absolute path. This works even if the path does not …\nGet an absolute path. This works even if the path does not …\nGet an absolute path. This works even if the path does not …")

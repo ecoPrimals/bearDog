@@ -1,22 +1,5 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Workflow Handler Implementation
-/// Contains the main business logic and implementation details for WorkflowEngine.
 use super::canonical::{
     ApprovalDecision, ApprovalRecord, ApprovalResponse, ApprovalStore,
     AuditAction, InMemoryApprovalStore, InMemoryWorkflowStore, Workflow, WorkflowAuditEntry,
@@ -25,11 +8,10 @@ use super::canonical::{
     WorkflowStore,
 };
 
-// Add missing imports
 use crate::workflows::canonical::core::WorkflowContext;
 use crate::workflows::canonical::execution::WorkflowExecutionCommand;
 use beardog_types::configuration::WorkflowConfig;
-// Simple WorkflowHandler for compatibility
+
 pub struct WorkflowHandler {
     pub policy_engine: crate::workflows::canonical::WorkflowPolicyConfig,
     pub scheduler: WorkflowScheduler,
@@ -37,7 +19,7 @@ pub struct WorkflowHandler {
     pub workflow_processors: std::sync::Arc<tokio::sync::RwLock<std::collections::HashMap<beardog_types::canonical::workflow::WorkflowType, String>>>,
     pub approval_store: crate::workflows::canonical::InMemoryApprovalStore,
     pub execution_tx: tokio::sync::mpsc::UnboundedSender<crate::workflows::canonical::execution::WorkflowExecutionCommand>,
-    // Add missing fields that are used in the implementation
+
     pub config: crate::workflows::canonical::WorkflowEngineConfig,
     pub workflow_store: std::sync::Arc<crate::workflows::canonical::InMemoryWorkflowStore>,
     pub notification_engine: std::sync::Arc<crate::workflows::notification::NotificationEngine>,
@@ -51,11 +33,10 @@ pub struct WorkflowScheduler {
 }
 
 impl WorkflowScheduler {
-    /// Start the workflow scheduler
+
     pub async fn start(&self) -> BearDogResult<()> {
         tracing::info!("Starting workflow scheduler");
-        // Scheduler implementation would go here
-        // For now, just return success
+
         Ok(())
     }
 }
@@ -79,7 +60,7 @@ impl Default for WorkflowHandler {
         let notification_engine = Arc::new(
             crate::workflows::notification::NotificationEngine::new(NotificationConfig::default()),
         );
-        // Create async channels for structured concurrency
+
         let (execution_tx, __execution_rx) = tokio::sync::mpsc::unbounded_channel::<crate::workflows::canonical::execution::WorkflowExecutionCommand>();
         let (shutdown_tx, _shutdown_rx) = tokio::sync::broadcast::channel(1);
         WorkflowHandler {
@@ -93,22 +74,20 @@ impl Default for WorkflowHandler {
                 cpu_usage_percent: 0.0,
                 steps_executed: 0,
                 error_count: 0,
-                custom_metrics: std::collections::HashMap::new(),
+                custom_metrics: std::collections::HashMap::with_capacity(16),
             },
-            workflow_processors: Arc::new(RwLock::new(HashMap::new())),
+            workflow_processors: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             approval_store: crate::workflows::canonical::InMemoryApprovalStore::new(),
             execution_tx,
             config,
             workflow_store,
             notification_engine,
-            active_workflows: Arc::new(RwLock::new(HashMap::new())),
+            active_workflows: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             shutdown_tx: Arc::new(shutdown_tx),
         }
     }
 }
 impl WorkflowHandler {
-    /// Create a new multi-party workflow engine from config}
-
 
     pub fn from_config(
         _config: WorkflowConfig,
@@ -116,16 +95,13 @@ impl WorkflowHandler {
         _workflow_store: Arc<InMemoryWorkflowStore>,
         _notification_engine: Arc<crate::workflows::notification::NotificationEngine>,
     ) -> BearDogResult<Self> {
-        // Use the default implementation from structs
+
         Ok(Self::default())
     }
 
-    /// Get approver role - implemented for workflow approval system
-
-
     pub async fn get_approver_role(&self, approver: &str) -> BearDogResult<String> {
         tracing::debug!("Looking up role for approver: {}", approver);
-        // Default role mapping - could be extended with database lookup
+
         let role = match approver {
             admin if admin.contains("admin") => "administrator",
             manager if manager.contains("manager") => "manager",
@@ -135,27 +111,19 @@ impl WorkflowHandler {
         Ok(role.to_string())
     }
 
-    /// Register default workflow processors
     #[allow(dead_code)] // Will be used when workflow processing is fully implemented
     async fn register_default_processors(&self) -> BearDogResult<()> {
         let _processors = self.workflow_processors.write().await;
-        // Use existing zero-cost processors
-        // processors.insert(
-        //     WorkflowType::KeyRotation,
-        //     Arc::new(crate::workflows::zero_cost_processors::ZeroCostKeyRotationProcessor::<10, 5000>::new()),
-        // );
+
         Ok(())
     }
-
-    /// Initiate a new workflow
-
 
     pub async fn initiate_workflow(
         &self,
         request: WorkflowRequest,
     ) -> BearDogResult<WorkflowResponse> {
         let workflow_id = Uuid::new_v4().to_string();
-        // Determine approval requirements based on workflow type and priority
+
         let approval_requirements = self
             .policy_engine
             .determine_approval_requirements(&request.workflow_type, &request.priority)?;
@@ -164,7 +132,7 @@ impl WorkflowHandler {
         let _timeout_duration = Some(timeout_duration_hours);
         let requested_by = request.initiator.clone();
         let workflow_priority = request.priority.clone();
-        // Create workflow with all required fields
+
         let workflow = Workflow {
             id: workflow_id.clone(),
             workflow_type: request.workflow_type.clone(),
@@ -180,7 +148,7 @@ impl WorkflowHandler {
                 auto_approval_rules: Vec::new(),
             }),
             audit_trail: Vec::new(),
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
             target: request.parameters.get("target")
                 .and_then(|v| v.as_str())
                 .unwrap_or("default")
@@ -192,7 +160,7 @@ impl WorkflowHandler {
             description: Some(request.description),
             timeout_duration: Some(Duration::from_secs(24 * 3600)),
             properties: request.properties,
-            parameters: HashMap::new(), // Initialize empty parameters - will be populated from properties
+            parameters: HashMap::with_capacity(16), // Initialize empty parameters - will be populated from properties
             context: WorkflowContext {
                 initiated_by: request.initiator.clone(),
                 target: request.parameters.get("target")
@@ -203,12 +171,12 @@ impl WorkflowHandler {
             },
             approvals: Vec::new(),
         };
-        // Store workflow
+
         self.workflow_store.store_workflow(workflow.clone()).await?;
-        // Add to active workflows
+
         {
             let mut active = self.active_workflows.write().await;
-            // Convert CanonicalWorkflow to WorkflowExecution for storage
+
             let workflow_execution = crate::workflows::canonical::processing::WorkflowExecution {
                 execution_id: workflow_id.clone(),
                 workflow: workflow.clone(),
@@ -220,13 +188,11 @@ impl WorkflowHandler {
             };
             active.insert(workflow_id.clone(), workflow_execution);
         }
-        
-        // Send initiation notification
+
         self.notification_engine
             .notify_workflow_created(&workflow)
             .await?;
-            
-        // Create audit entry
+
         let audit_entry = WorkflowAuditEntry {
             id: Uuid::new_v4().to_string(),
             timestamp: now,
@@ -239,7 +205,7 @@ impl WorkflowHandler {
             action: AuditAction::WorkflowCreated,
             description: format!("Workflow {workflow_id} submitted for processing"),
             context: {
-                let mut details = HashMap::new();
+                let mut details = HashMap::with_capacity(16);
                 details.insert(
                     "workflow_type".to_string(),
                     serde_json::json!(request.workflow_type),
@@ -251,11 +217,10 @@ impl WorkflowHandler {
                 );
                 details
             },
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
             result: Some("workflow_created".to_string()),
         };
-        
-        // Add audit entry to workflow
+
         let mut updated_workflow = workflow;
         updated_workflow.audit_trail.push(audit_entry);
         self.workflow_store
@@ -264,7 +229,7 @@ impl WorkflowHandler {
 
         Ok(WorkflowResponse {
             data: {
-                let mut data = HashMap::new();
+                let mut data = HashMap::with_capacity(16);
                 data.insert("workflow_id".to_string(), serde_json::json!(workflow_id.clone()));
                 data
             },
@@ -272,11 +237,10 @@ impl WorkflowHandler {
             message: "Workflow initiated successfully".to_string(),
             workflow_id: Some(workflow_id),
             estimated_completion: Some(now + chrono::Duration::hours(24)),
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         })
     }
 
-    /// Submit a workflow for processing
     pub async fn submit_workflow(
         &self,
         request: WorkflowRequest,
@@ -285,8 +249,7 @@ impl WorkflowHandler {
         let workflow_id = uuid::Uuid::new_v4().to_string();
         let _timeout_duration_hours = chrono::Duration::hours(24);
         let _workflow_priority = request.priority.clone();
-        
-        // Create canonical workflow from request
+
         let canonical_workflow = crate::workflows::canonical::CanonicalWorkflow {
             id: workflow_id.clone(),
             workflow_type: request.workflow_type,
@@ -300,13 +263,13 @@ impl WorkflowHandler {
             timeout_duration: Some(std::time::Duration::from_secs(3600)),
             created_at: Utc::now(),
             updated_at: Utc::now(),
-            metadata: std::collections::HashMap::new(),
-            parameters: std::collections::HashMap::new(),
-            properties: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::with_capacity(16),
+            parameters: std::collections::HashMap::with_capacity(16),
+            properties: std::collections::HashMap::with_capacity(16),
             context: crate::workflows::canonical::core::types::WorkflowContext {
                 initiated_by: requested_by.to_string(),
                 target: "default".to_string(),
-                data: std::collections::HashMap::new(),
+                data: std::collections::HashMap::with_capacity(16),
             },
             approval_requirements: None,
             approvals: Vec::new(),
@@ -329,66 +292,68 @@ impl WorkflowHandler {
             .insert(workflow_id.clone(), workflow);
             
         let audit_entry = WorkflowAuditEntry::new(
-            workflow_id.clone(),
+            &workflow_id.clone(),
             AuditAction::WorkflowSubmitted,
-            requested_by.to_string(),
-            "Workflow submitted for processing".to_string(),
+            requested_by,
+            "Workflow submitted for processing",
         );
-        
-        // Store audit entry
+
         self.workflow_store.store_audit_entry(audit_entry).await?;
         
         Ok(WorkflowResponse {
-            data: HashMap::new(),
+            data: HashMap::with_capacity(16),
             success: true,
             message: "Workflow submitted successfully".to_string(),
             workflow_id: Some(workflow_id),
             estimated_completion: Some(Utc::now() + chrono::Duration::hours(24)),
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         })
     }
-    /// Submit an approval decision for a workflow
+
     pub async fn submit_approval(
         &self,
         submission: ApprovalSubmission,
     ) -> BearDogResult<ApprovalResponse> {
-        // Get workflow
+
         let mut workflow = self
             .workflow_store
             .get_workflow(&submission.workflow_id)
             .await?
             .ok_or_else(|| {
-                BearDogError::not_found(format!("Workflow {} not found", submission.workflow_id))
+                BearDogError::not_found(format_args!("Workflow {} not found", submission.workflow_id).to_string())
             })?;
-        // Validate workflow is in pending state
+
         if workflow.status != WorkflowStatus::PendingApprovals {
             return Err(BearDogError::validation(format!(
                 "Workflow {} is not pending approvals (status: {:?})",
                 submission.workflow_id, workflow.status
             )));
         }
-        
-        // Create approval record using the unified constructor
+
         let mut approval = ApprovalRecord::new(
-            submission.workflow_id.clone(),
-            submission.approver_id.clone(),
+            &submission.workflow_id,
+            &submission.approver_id,
             crate::workflows::canonical::configuration::ApprovalDecision::Approved,
-            submission.comments.clone(),
+            submission.comments.as_deref(),
         );
-        
-        // Set additional fields from submission
+
         approval.signature = Some(submission.signature);
-        approval.comments = submission.comments;
-        approval.reason = Some(submission.reason.clone());
-        // Store approval
+        // Note: 'comments' and 'reason' fields don't exist in ApprovalRecord
+        // The message field is used for comments
+        if !submission.reason.is_empty() {
+            // Use the reason directly since it's already a String
+            tracing::info!("Workflow submission reason: {}", submission.reason);
+            approval.response = Some(submission.reason);
+        }
+
         self.approval_store.store_approval(approval.clone()).await?;
-        // Add approval to workflow
+
         workflow.approvals.push(approval.clone());
-        // Check if workflow should proceed to execution
+
         let should_execute = self.should_execute_workflow(&workflow).await?;
         if should_execute {
             workflow.status = WorkflowStatus::Approved;
-            // Send execution command via async channel - modern approach
+
             if let Err(e) = self.execution_tx.send(WorkflowExecutionCommand::Execute {
                 workflow_id: workflow.id.clone(),
             }) {
@@ -398,19 +363,17 @@ impl WorkflowHandler {
                 )));
             }
         }
-        
-        // Update workflow
+
         self.workflow_store.update_workflow(workflow.clone()).await?;
         Ok(ApprovalResponse {
             response_id: uuid::Uuid::new_v4().to_string(),
             approval_id: approval.id,
             status: crate::workflows::canonical::configuration::ApprovalDecision::Approved,
             workflow_status: workflow.status,
-            timestamp: approval.timestamp,
+            timestamp: approval.requested_at,
         })
     }
 
-    /// Check if workflow should proceed to execution
     async fn should_execute_workflow(&self, workflow: &Workflow) -> BearDogResult<bool> {
         let approved_count = workflow
             .approvals
@@ -424,33 +387,30 @@ impl WorkflowHandler {
                 .map_or(1, |req| req.required_count))
     }
 
-    /// Start the workflow engine with modern async architecture
-
-
     pub async fn start(&mut self) -> BearDogResult<tokio::task::JoinHandle<()>> {
-        // Start scheduler
+
         self.scheduler.start().await?;
-        // Create execution service with proper channel setup
+
         let (_execution_tx, _execution_rx) = tokio::sync::mpsc::unbounded_channel::<crate::workflows::canonical::execution::WorkflowExecutionCommand>();
         let _shutdown_rx = self.shutdown_tx.subscribe();
-        // Create execution service with proper type constraints
+
         let execution_service = crate::workflows::canonical::execution::engine::SimpleWorkflowExecutionService::new(
             Arc::clone(&self.workflow_store),
             Arc::clone(&self.notification_engine),
         );
-        // Spawn the service and return the handle for structured concurrency
+
         let service_handle = tokio::spawn(async move {
-            execution_service.run().await;
+            let _ = execution_service.run().await;
         });
         Ok(service_handle)
     }
-    /// Stop the workflow engine gracefully with structured shutdown
+
     pub async fn stop(&self) -> BearDogResult<()> {
-        // Send shutdown signal to all subscribers
+
         if let Err(e) = self.shutdown_tx.send(()) {
             error!("Failed to send shutdown signal: {}", e);
         }
-        // Send shutdown command to execution service
+
         if let Err(e) = self.execution_tx.send(WorkflowExecutionCommand::Shutdown) {
             error!("Failed to send shutdown command: {}", e);
             return Err(BearDogError::internal(format!("Failed to send shutdown command: {e}")));

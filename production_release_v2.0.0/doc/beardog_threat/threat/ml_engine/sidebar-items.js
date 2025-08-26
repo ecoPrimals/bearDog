@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["PredictionType"],"struct":["BehavioralAnalyzer","DataExfiltrationModel","LoginAnomalyModel","MlEngineConfig","MlPrediction","MlThreatEngine","ModelMetadata","UserBehaviorProfile"],"trait":["ThreatModel"]};

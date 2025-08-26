@@ -1,28 +1,9 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// # Network and Communication Types
-///
-/// **CANONICAL NETWORK TYPES** - Single source of truth for all network-related types
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-/// **CANONICAL** Network Protocol
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum NetworkProtocol {
     Http,
@@ -40,7 +21,6 @@ impl Default for NetworkProtocol {
     }
 }
 
-/// **CANONICAL** Connection Pool Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionPoolConfig {
     pub min_connections: u32,
@@ -66,7 +46,6 @@ impl Default for ConnectionPoolConfig {
     }
 }
 
-/// **CANONICAL** Health Check Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
     pub enabled: bool,
@@ -89,12 +68,11 @@ impl Default for HealthCheckConfig {
             healthy_threshold: 2,
             unhealthy_threshold: 3,
             expected_status_codes: vec![200],
-            headers: HashMap::new(),
+            headers: HashMap::with_capacity(16),
         }
     }
 }
 
-/// **CANONICAL** Load Balancing Strategy
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum LoadBalancingStrategy {
     RoundRobin,
@@ -111,7 +89,6 @@ impl Default for LoadBalancingStrategy {
     }
 }
 
-/// **CANONICAL** Circuit Breaker Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CircuitBreakerConfig {
     pub failure_threshold: u32,
@@ -131,7 +108,6 @@ impl Default for CircuitBreakerConfig {
     }
 }
 
-/// **CANONICAL** Failover Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FailoverConfig {
     pub max_retries: u32,
@@ -151,7 +127,6 @@ impl Default for FailoverConfig {
     }
 }
 
-/// **CANONICAL** Load Balancing Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct LoadBalancingConfig {
@@ -161,8 +136,6 @@ pub struct LoadBalancingConfig {
     pub failover: FailoverConfig,
 }
 
-
-/// **CANONICAL** Service Discovery Type
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ServiceDiscoveryType {
     Static,
@@ -178,7 +151,6 @@ impl Default for ServiceDiscoveryType {
     }
 }
 
-/// **CANONICAL** Service Discovery Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceDiscoveryConfig {
     pub enabled: bool,

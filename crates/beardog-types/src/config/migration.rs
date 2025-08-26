@@ -1,81 +1,44 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! # Configuration Migration Helper
-//!
-//! **CONFIGURATION CONSOLIDATION UTILITIES**
-//! 
-//! This module provides utilities to migrate from fragmented configuration
-//! structs to canonical unified configurations, reducing 511 config structs
-//! to <50 canonical types.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// Import canonical configurations
-use super::{
-    UnifiedNetworkConfig, UnifiedSecurityConfig, UnifiedMonitoringConfig,
-    UnifiedPerformanceConfig, DatabaseConfig, ComplianceConfig
-};
-
-/// Configuration Migration Registry
-/// 
-/// Tracks the consolidation of fragmented configurations into canonical types
 pub struct ConfigurationMigrationRegistry {
-    /// Maps old config type names to canonical types
+
     pub migration_map: HashMap<String, String>,
-    /// Tracks deprecated configuration structs
+
     pub deprecated_configs: Vec<String>,
-    /// Canonical configuration types
+
     pub canonical_configs: Vec<String>,
 }
 
 impl ConfigurationMigrationRegistry {
-    /// Create a new migration registry with predefined mappings
+
     pub fn new() -> Self {
-        let mut migration_map = HashMap::new();
+        let mut migration_map = HashMap::with_capacity(16);
         let mut deprecated_configs = Vec::new();
-        
-        // Network configuration mappings
+
         migration_map.insert("NetworkConfig".to_string(), "UnifiedNetworkConfig".to_string());
         migration_map.insert("NetworkPortsConfig".to_string(), "UnifiedNetworkConfig".to_string());
         migration_map.insert("NetworkScanConfig".to_string(), "UnifiedNetworkConfig".to_string());
         migration_map.insert("NetworkResourceConfig".to_string(), "UnifiedNetworkConfig".to_string());
-        
-        // Security configuration mappings
+
         migration_map.insert("SecurityConfig".to_string(), "UnifiedSecurityConfig".to_string());
         migration_map.insert("SecurityLevelConfig".to_string(), "UnifiedSecurityConfig".to_string());
         migration_map.insert("SecuritySentinelConfig".to_string(), "UnifiedSecurityConfig".to_string());
         migration_map.insert("SecurityProcessorConfig".to_string(), "UnifiedSecurityConfig".to_string());
-        
-        // Monitoring configuration mappings
+
         migration_map.insert("MonitoringConfig".to_string(), "UnifiedMonitoringConfig".to_string());
         migration_map.insert("MetricCollectionConfig".to_string(), "UnifiedMonitoringConfig".to_string());
         migration_map.insert("AlertProcessingConfig".to_string(), "UnifiedMonitoringConfig".to_string());
         migration_map.insert("PrometheusConfig".to_string(), "UnifiedMonitoringConfig".to_string());
-        
-        // Performance configuration mappings
+
         migration_map.insert("PerformanceConfig".to_string(), "UnifiedPerformanceConfig".to_string());
         migration_map.insert("PerformanceRoutingConfig".to_string(), "UnifiedPerformanceConfig".to_string());
         migration_map.insert("LoadTestConfiguration".to_string(), "UnifiedPerformanceConfig".to_string());
-        
-        // Database configuration mappings
+
         migration_map.insert("DatabaseConfig".to_string(), "UnifiedDatabaseConfig".to_string());
-        
-        // Mark fragmented configs as deprecated
+
         deprecated_configs.extend([
             "BiomeOSAuthConfig".to_string(),
             "BiomeOSConnectionConfig".to_string(),
@@ -124,23 +87,19 @@ impl ConfigurationMigrationRegistry {
             canonical_configs,
         }
     }
-    
-    /// Get the canonical configuration type for a given config
+
     pub fn get_canonical_type(&self, config_type: &str) -> Option<&String> {
         self.migration_map.get(config_type)
     }
-    
-    /// Check if a configuration type is deprecated
+
     pub fn is_deprecated(&self, config_type: &str) -> bool {
         self.deprecated_configs.contains(&config_type.to_string())
     }
-    
-    /// Get all canonical configuration types
+
     pub fn canonical_types(&self) -> &Vec<String> {
         &self.canonical_configs
     }
-    
-    /// Generate migration report
+
     pub fn generate_migration_report(&self) -> ConfigurationMigrationReport {
         ConfigurationMigrationReport {
             total_deprecated: self.deprecated_configs.len(),
@@ -151,55 +110,50 @@ impl ConfigurationMigrationRegistry {
     }
 }
 
-/// Configuration migration report
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigurationMigrationReport {
-    /// Total number of deprecated configurations
+
     pub total_deprecated: usize,
-    /// Total number of canonical configurations
+
     pub total_canonical: usize,
-    /// Number of migration mappings
+
     pub migration_mappings: usize,
-    /// Consolidation ratio (deprecated/canonical)
+
     pub consolidation_ratio: f32,
 }
 
-/// Configuration Migration Utilities
 pub struct ConfigurationMigrator;
 
 impl ConfigurationMigrator {
-    /// Migrate a legacy configuration to its canonical equivalent
+
     pub fn migrate_to_canonical<T, U>(legacy_config: T) -> Result<U, String> 
     where
         T: Serialize,
         U: for<'de> Deserialize<'de>,
     {
-        // Serialize legacy config to JSON
+
         let json = serde_json::to_string(&legacy_config)
-            .map_err(|e| format!("Failed to serialize legacy config: {}", e))?;
-        
-        // Deserialize to canonical config
+            .map_err(|e| format_args!("Failed to serialize legacy config: {}", e).to_string())?;
+
         let canonical = serde_json::from_str::<U>(&json)
-            .map_err(|e| format!("Failed to deserialize to canonical config: {}", e))?;
+            .map_err(|e| format_args!("Failed to deserialize to canonical config: {}", e).to_string())?;
         
         Ok(canonical)
     }
-    
-    /// Validate canonical configuration
+
     pub fn validate_canonical_config<T>(config: &T) -> Result<(), String>
     where
         T: Serialize,
     {
-        // Basic validation - ensure config can be serialized
+
         serde_json::to_string(config)
-            .map_err(|e| format!("Configuration validation failed: {}", e))?;
+            .map_err(|e| format_args!("Configuration validation failed: {}", e).to_string())?;
         
         Ok(())
     }
-    
-    /// Generate migration script for a crate
+
     pub fn generate_migration_script(crate_name: &str, registry: &ConfigurationMigrationRegistry) -> String {
-        let mut script = format!("// Migration script for {}\n\n", crate_name);
+        let mut script = format_args!("// Migration script for {}\n\n", crate_name).to_string();
         
         script.push_str("// Replace fragmented imports with canonical imports:\n");
         for (deprecated, canonical) in &registry.migration_map {
@@ -211,7 +165,7 @@ impl ConfigurationMigrator {
         
         script.push_str("\n// Remove deprecated configuration structs:\n");
         for deprecated in &registry.deprecated_configs {
-            script.push_str(&format!("// Remove: pub struct {} {{ ... }}\n", deprecated));
+            script.push_str(&format_args!("// Remove: pub struct {} {{ ... }}\n", deprecated).to_string());
         }
         
         script

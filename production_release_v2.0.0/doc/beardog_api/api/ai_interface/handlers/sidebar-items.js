@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["batch_security","batch_spawn","decrypt","encrypt","generate_key","health_check","hsm_status","hsm_tiers","metrics","select_hsm_tier","sign","spawn_node","spawn_status","stream_metrics","stream_status","system_status","verify"]};

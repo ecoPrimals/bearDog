@@ -1,25 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Privacy Protection Engine
-///
-/// **EXTRACTED FROM LARGE FILE** - Main engine implementation (~300 lines)
-/// This module contains the main PrivacyProtectionEngine implementation
-/// that orchestrates all privacy protection mechanisms.
 
 use super::models::{
     PrivacyAuditEvent, PrivacyProtectionInternal, PrivacyVulnerabilityInternal, ProtectionMetrics,
@@ -33,40 +12,37 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn};
 use uuid::Uuid;
-/// Anti-surveillance privacy protection engine
+
 pub struct PrivacyProtectionEngine {
-    /// Active privacy protections
+
     active_protections: Arc<RwLock<HashMap<String, PrivacyProtectionInternal>>>,
-    /// Detected vulnerabilities
+
     detected_vulnerabilities: Arc<RwLock<HashMap<String, PrivacyVulnerabilityInternal>>>,
-    /// Surveillance detection system
+
     surveillance_detector: Arc<SurveillanceDetector>,
-    /// Privacy audit trail
+
     audit_trail: Arc<RwLock<Vec<PrivacyAuditEvent>>>,
 }
 impl Default for PrivacyProtectionEngine {}
-
 
     fn default() -> Self {
         Self::new()
     }
 impl PrivacyProtectionEngine {
-    /// Create new privacy protection engine}
-
 
     pub fn new() -> Self {
         info!("🛡️ Initializing Anti-Surveillance Privacy Protection Engine");
         Self {
-            active_protections: Arc::new(RwLock::new(HashMap::new())),
-            detected_vulnerabilities: Arc::new(RwLock::new(HashMap::new())),
+            active_protections: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            detected_vulnerabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             surveillance_detector: Arc::new(SurveillanceDetector::new()),
             audit_trail: Arc::new(RwLock::new(Vec::new())),
         }
-    /// Enable privacy protection
+
     pub async fn enable_protection(
         &self,
         protection_type: PrivacyProtectionType,
-        config: HashMap<String, String>,
+        config: HashMap<&str, &str>,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         info!("🔒 Enabling privacy protection: {:?}", protection_type);
         let protection_id = Uuid::new_v4().to_string();
@@ -89,11 +65,11 @@ impl PrivacyProtectionEngine {
                 effectiveness_trend: vec![0.85],
             },
         };
-        // Store protection
+
         {
             let mut protections = self.active_protections.write().await;
             protections.insert(protection_id.clone(), protection);
-        // Log audit event
+
         self.log_audit_event(
             AuditEventType::PermissionGrant,
             format!("Enabled privacy protection: {protection_type:?}"),
@@ -102,7 +78,7 @@ impl PrivacyProtectionEngine {
         .await;
         info!("✅ Privacy protection enabled: {}", protection_id);
         Ok(protection_id)
-    /// Disable privacy protection
+
     pub async fn disable_protection(
         protection_id: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -111,7 +87,7 @@ impl PrivacyProtectionEngine {
         if let Some(protection) = protections.get_mut(protection_id) {
             protection.enabled = false;
             protection.last_updated = Utc::now();
-            // Log audit event
+
             self.log_audit_event(
                 AuditEventType::PermissionRevoke,
                 format!("Disabled privacy protection: {protection_id}"),
@@ -123,7 +99,7 @@ impl PrivacyProtectionEngine {
         } else {
             warn!("❌ Privacy protection not found: {}", protection_id);
             Err("Protection not found".into())
-    /// Get all active protections
+
     pub async fn get_active_protections(&self) -> Vec<PrivacyProtectionInternal> {
         let protections = self.active_protections.read().await;
         protections
@@ -131,19 +107,17 @@ impl PrivacyProtectionEngine {
             .filter(|p| p.enabled)
             .cloned()
             .collect()
-    /// Scan for privacy vulnerabilities}
-
 
     pub async fn scan_vulnerabilities(
     ) -> Result<Vec<PrivacyVulnerabilityInternal>, Box<dyn std::error::Error + Send + Sync>> {
         info!("🔍 Scanning for privacy vulnerabilities");
         let mut vulnerabilities = Vec::new();
-        // Check for common privacy vulnerabilities
+
         vulnerabilities.extend(self.check_metadata_leakage().await?);
         vulnerabilities.extend(self.check_traffic_analysis().await?);
         vulnerabilities.extend(self.check_encryption_gaps().await?);
         vulnerabilities.extend(self.check_access_controls().await?);
-        // Store detected vulnerabilities
+
             let mut detected = self.detected_vulnerabilities.write().await;
             for vuln in &vulnerabilities {
                 detected.insert(vuln.vulnerability_id.clone(), vuln.clone());
@@ -162,21 +136,21 @@ impl PrivacyProtectionEngine {
             vulnerabilities.len()
         );
         Ok(vulnerabilities)
-    /// Get privacy protection effectiveness metrics
+
     pub async fn get_effectiveness_metrics(&self) -> HashMap<String, f64> {
-        let mut metrics = HashMap::new();
+        let mut metrics = HashMap::with_capacity(16);
         for protection in protections.values() {
             metrics.insert(
-                format!("{:?}", protection.protection_type),
+                format_args!("{:?}", protection.protection_type).to_string(),
                 protection.effectiveness_score,
             );
         metrics
-    /// Apply automatic privacy protections based on threats
+
     pub async fn auto_protect(
     ) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
         info!("🤖 Applying automatic privacy protections");
         let mut enabled_protections = Vec::new();
-        // Detect surveillance indicators
+
         let indicators = self.surveillance_detector.detect_surveillance().await?;
         for indicator in indicators {
             match indicator.indicator_type {
@@ -184,23 +158,22 @@ impl PrivacyProtectionEngine {
                     let protection_id = self
                         .enable_protection(
                             PrivacyProtectionType::TrafficObfuscation,
-                            HashMap::new(),
+                            HashMap::with_capacity(16),
                         )
                         .await?;
                     enabled_protections.push(protection_id);
                 }
                 IndicatorType::MetadataCollection => {
-                        .enable_protection(PrivacyProtectionType::MetadataScrubbing, HashMap::new())
+                        .enable_protection(PrivacyProtectionType::MetadataScrubbing, HashMap::with_capacity(16))
                 IndicatorType::FingerprintingAttempt => {
-                        .enable_protection(PrivacyProtectionType::NoiseInjection, HashMap::new())
+                        .enable_protection(PrivacyProtectionType::NoiseInjection, HashMap::with_capacity(16))
                 _ => {
-                    // Apply general protection
-                        .enable_protection(PrivacyProtectionType::OnionRouting, HashMap::new())
+
+                        .enable_protection(PrivacyProtectionType::OnionRouting, HashMap::with_capacity(16))
             "✅ Auto-protection applied: {} new protections",
             enabled_protections.len()
         Ok(enabled_protections)
-    // Private helper methods
-    /// Get description for protection type
+
     fn get_protection_description(&self, protection_type: &PrivacyProtectionType) -> String {
         match protection_type {
             PrivacyProtectionType::TrafficObfuscation => {
@@ -222,12 +195,10 @@ impl PrivacyProtectionEngine {
                 "Proves knowledge without revealing information".to_string()
             PrivacyProtectionType::HomomorphicEncryption => {
                 "Enables computation on encrypted data".to_string()
-    /// Log privacy audit event}
-
 
     async fn log_audit_event(
         event_type: AuditEventType,
-        description: String,
+        description: &str,
         impact_level: PrivacyImpactLevel,
     ) {
         let event = PrivacyAuditEvent {
@@ -238,16 +209,16 @@ impl PrivacyProtectionEngine {
             data_accessed: None,
             privacy_impact: impact_level,
             compliance_status: ComplianceStatus::Compliant,
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         let mut audit_trail = self.audit_trail.write().await;
         audit_trail.push(event);
-    /// Check for metadata leakage vulnerabilities
+
     async fn check_metadata_leakage(
-        // Mock vulnerability detection - would implement real checks
+
         Ok(vec![])
-    /// Check for traffic analysis vulnerabilities
+
     async fn check_traffic_analysis(
-    /// Check for encryption gaps
+
     async fn check_encryption_gaps(
-    /// Check access control configurations
+
     async fn check_access_controls(

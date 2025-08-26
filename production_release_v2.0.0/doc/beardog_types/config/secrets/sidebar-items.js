@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["SecretKeySource","SecretSourceType"],"struct":["SecretRotationPolicy","SecretSource","SecretsConfig"],"type":["SecretEncryptionConfig"]};

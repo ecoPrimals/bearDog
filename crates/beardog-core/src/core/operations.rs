@@ -1,57 +1,37 @@
-// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// BearDog Core Operations
-///
-/// Core cryptographic, genetic, and HSM operations for BearDog.
 
 use super::BearDogCore;
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_errors::idiomatic::SecurityResult;
 use tracing;
 impl BearDogCore {
-    /// Encrypt data using the security manager
+
     pub async fn encrypt_data(
         &self,
         data: &[u8],
         _additional_data: &[u8],
     ) -> BearDogResult<Vec<u8>> {
-        // Use the actual encryption engine instead of placeholder
+
         use beardog_security::encryption::EncryptionAlgorithm;
-        // Encrypt using the AES-256-GCM algorithm
+
         let encrypted_data = self
             .encryption_engine
             .encrypt(data, Some(EncryptionAlgorithm::Aes256Gcm))
             .await?;
-        // Return the encrypted data as bytes (serialize the encrypted data structure)
+
         let serialized = serde_json::to_vec(&encrypted_data).map_err(|e| {
             BearDogError::internal(format!("Failed to serialize encrypted data: {e}"))
         })?;
         Ok(serialized)
     }
-    /// Decrypt data using the security manager
+
     pub async fn decrypt_data(
         encrypted_data: &[u8],
         use beardog_security::encryption::EncryptedData;
-        // First try to deserialize the encrypted data structure
+
         let encrypted_data_struct: EncryptedData =
             serde_json::from_slice(encrypted_data).map_err(|e| {
-                // If deserialization fails, check if it's old placeholder format
+
                 if encrypted_data.starts_with(b"ENCRYPTED:") {
                     return BearDogError::internal(
                         "Legacy encrypted data format - please re-encrypt",
@@ -59,72 +39,66 @@ impl BearDogCore {
                 }
                 BearDogError::internal(format!("Failed to deserialize encrypted data: {e}"))
             })?;
-        // Decrypt using the encryption engine
+
         let decrypted_data = self
             .decrypt(&encrypted_data_struct)
         Ok(decrypted_data)
-    /// Sign data using the security manager
+
     pub async fn sign_data(&self, data: &[u8]) -> BearDogResult<Vec<u8>> {
-        // Use the crypto utilities for proper Ed25519 signing
+
         use beardog_security::crypto_utils::BearDogCrypto;
-        // In a production system, we would use a persistent key from HSM
-        // For now, we'll use a deterministic key derived from the system configuration
-        let key_seed = format!("beardog-{}", self.config.app.name);
+
+        let key_seed = format_args!("beardog-{}", self.config.app.name).to_string();
         let _key_material = beardog_security::crypto_utils::BearDogCrypto::derive_key_pbkdf2(
             key_seed.as_bytes(),
             b"beardog-signing-key",
             10000,
             32,
         )?;
-        // Generate Ed25519 keypair (we'll use this as a base for deterministic generation)
+
         let (private_key, _public_key) = BearDogCrypto::generate_ed25519_keypair()?;
-        // Sign the data
+
         let signature = BearDogCrypto::sign_ed25519(&private_key, data)?;
         Ok(signature)
-    /// Verify signature using the security manager
+
     pub async fn verify_signature(&self, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
-        // Use the crypto utilities for proper Ed25519 verification
-        // Get the public key that corresponds to our signing key
+
         let _key_material = BearDogCrypto::derive_key_pbkdf2(
-        // Generate Ed25519 keypair to get the public key
+
         let (_private_key, public_key) = BearDogCrypto::generate_ed25519_keypair()?;
-        // Verify the signature
+
         let is_valid = BearDogCrypto::verify_ed25519_signature(&public_key, data, signature)?;
         Ok(is_valid)
-    /// Generate a new key}
-
 
     pub async fn generate_key(&self, key_type: &str) -> BearDogResult<String> {
-        // Use the actual encryption engine to generate a proper key
-        let key_id = format!("{}_{}", key_type, uuid::Uuid::new_v4());
-        // Generate the key using the encryption engine
+
+        let key_id = format_args!("{}_{}", key_type, uuid::Uuid::new_v4().to_string());
+
         let (generated_key_id, _key_data) = self
             .generate_key(key_id.clone(), key_type.to_string())
         tracing::info!("Generated key: {} of type: {}", generated_key_id, key_type);
         Ok(generated_key_id)
-    /// Spawn a new node
+
     pub async fn spawn_node(
         parent_id: &str,
         config: &serde_json::Value,
     ) -> BearDogResult<String> {
-        // Use the genetics engine for proper node spawning
-        // Note: This requires integration with the genetics engine
-        // For now, we'll create a proper spawn request and log the operation
-        let node_id = format!("beardog_node_{}_{}", parent_id, uuid::Uuid::new_v4());
-        // Log the spawn operation for audit trail
+
+        let node_id = format_args!("beardog_node_{}_{}", parent_id, uuid::Uuid::new_v4().to_string());
+
         tracing::info!(
             "Spawning new BearDog node: {} with parent: {} and config: {}",
             node_id,
             parent_id,
             config
         );
-        // Integrate with genetics engine for actual node creation
+
         use beardog_auth::auth::SpawnPurpose;
         use beardog_genetics::api::InMemoryGeneticsStore;
         use beardog_genetics::genetics::GeneticsAPI;
-        // 1. Validate the spawn request
+
         let spawn_purpose = SpawnPurpose::SecurityResponse; // Default purpose
-        // 2. Create the genetics engine
+
         let genetics_store = std::sync::Arc::new(InMemoryGeneticsStore::new());
         let genetics_config = beardog_genetics::genetics::GeneticsConfig::default();
         let genetics_api = GeneticsAPI::new(genetics_store, genetics_config);
@@ -136,7 +110,7 @@ impl BearDogCore {
             metadata: std::collections::ahash::HashMap::default(),
             security_clearance: beardog_auth::auth::SecurityClearance::Basic,
         };
-        // 4. Process the spawn request through genetics engine
+
         match genetics_api.spawn_node(spawn_request).await {
             Ok(spawn_result) => {
                 if spawn_result.success {
@@ -158,10 +132,9 @@ impl BearDogCore {
                 Err(BearDogError::internal(format!("Spawn failed: {e)"),
                 })
         }
-    /// Get spawn status
+
     pub async fn get_spawn_status(&self, node_id: &str) -> BearDogResult<String> {
-        // Check if the node exists in our system
-        // For now, we'll provide a meaningful response based on the node_id format
+
         if node_id.starts_with("beardog_node_") {
             tracing::debug!("Checking spawn status for BearDog node: {}", node_id);
             Ok(format!("BearDog node {node_id} is active and operational"))
@@ -170,9 +143,9 @@ impl BearDogCore {
             Ok(format!(
                 "Node {node_id} status unknown - not a BearDog managed node"
             ))
-    /// Get HSM status
+
     pub async fn get_hsm_status(&self) -> BearDogResult<String> {
-        // Check HSM status through the HSM manager
+
         match self.hsm_manager.health_check().await {
             Ok(health_status) => {
                 if health_status.healthy {
@@ -187,9 +160,9 @@ impl BearDogCore {
                     Ok(format!("HSM: Unhealthy - {error_msg}"))
                 tracing::error!("HSM health check failed: {}", e);
                 Ok(format!("HSM: Health check failed - {e}"))
-    /// Get available HSM tiers
+
     pub async fn get_hsm_tiers(&self) -> BearDogResult<Vec<String>> {
-        // Return actual HSM tiers based on HSM manager's available providers
+
         match self.hsm_manager.get_available_tiers().await {
             Ok(tiers) => {
                 let tier_names: Vec<String> = tiers
@@ -208,34 +181,33 @@ impl BearDogCore {
                 tracing::debug!("Available HSM tiers: {:?}", tier_names);
                 Ok(tier_names)
                 tracing::warn!("Failed to get HSM tiers from manager: {}", e);
-                // Fallback to basic tiers based on configuration
+
                 let mut tiers = Vec::new();
-                // Memory Key Manager (always available in standalone mode)
+
                 if self.config.app.standalone_mode {
                     tiers.push("memory_key_manager".to_string());
-                // Software HSM (using Rust crypto)
+
                 tiers.push("software_hsm".to_string());
-                // Hardware HSM (if available)
+
                 if !self.config.app.standalone_mode {
                     tiers.push("hardware_hsm".to_string());
-                // Cloud HSM (if HSM is enabled - using available field)
+
                 if self.config.security.enable_hsm {
                     tiers.push("cloud_hsm".to_string());
                 tracing::debug!("Available HSM tiers (fallback): {:?}", tiers);
                 Ok(tiers)
-    /// Select HSM tier
+
     pub async fn select_hsm_tier(&self, tier_id: &str) -> Result<(), SecurityError> {
-        // Validate the tier selection and apply it
+
         let available_tiers = self.get_hsm_tiers().await?;
         if !available_tiers.contains(&tier_id.to_string()) {
             return Err(BearDogError::configuration(format!(
                     "Invalid HSM tier '{tier_id)'. Available tiers: {available_tiers:?}"
                 ),
             });
-        // Log the tier selection for audit trail
+
         tracing::info!("Selected HSM tier: {} (validated)", tier_id);
-        // Configure the HSM manager to use the selected tier
-        // Convert tier_id to the appropriate HSM tier type
+
         let _hsm_tier = match tier_id {
             "smartphone_hsm" => beardog_tunnel::tunnel::hsm::manager::SimpleHsmTier::Smartphone,
             "software_hsm" => beardog_tunnel::tunnel::hsm::manager::SimpleHsmTier::Software,
@@ -243,13 +215,12 @@ impl BearDogCore {
             "hybrid_hsm" => beardog_tunnel::tunnel::hsm::manager::SimpleHsmTier::Hybrid,
             _ => {
                 return Err(BearDogError::configuration(format!("Unsupported HSM tier: {tier_id)"},
-        // For now, we'll log the tier selection and validate it
-        // In the future, this can be extended to actually configure the HSM manager
+
             "HSM tier '{}' selected and validated (configuration pending full HSM integration)",
             tier_id
-        // Store the selected tier preference in system state
+
         let _state = self.state.write().await;
-        // We could store the tier preference in the state for later use
+
         tracing::debug!("HSM tier preference stored in core state");
         Ok(())
 }

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["RegistrationStatus","ResponseStatus"],"struct":["DiscoveredService","RegistrationInfo","ServiceEndpoint","ServiceMeshInfo","ServiceRequest","ServiceResponse","UniversalServiceMeshClient"],"trait":["UniversalServiceMesh"]};

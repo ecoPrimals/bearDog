@@ -1,18 +1,3 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 use beardog_types::config::*;
@@ -20,11 +5,9 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Through
 use std::time::Duration;
 use tokio::runtime::Runtime;
 
-/// Benchmark database configuration performance
 fn benchmark_database_config(c: &mut Criterion) {
     let mut group = c.benchmark_group("database_config");
 
-    // Test different database configurations
     let configs = vec![
         ("default", OptimizedDatabaseConfig::default()),
         ("production", OptimizedDatabaseConfig::default()), // Use default as production placeholder
@@ -39,7 +22,7 @@ fn benchmark_database_config(c: &mut Criterion) {
                 b.iter(|| {
                     config.validate().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
                 });
             },
@@ -52,7 +35,7 @@ fn benchmark_database_config(c: &mut Criterion) {
                 b.iter(|| {
                     toml::to_string(&config).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
                 });
             },
@@ -62,7 +45,6 @@ fn benchmark_database_config(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark memory optimization configurations
 fn benchmark_memory_config(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_config");
 
@@ -105,7 +87,6 @@ fn benchmark_memory_config(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark async optimization configurations
 fn benchmark_async_config(c: &mut Criterion) {
     let mut group = c.benchmark_group("async_config");
 
@@ -148,7 +129,6 @@ fn benchmark_async_config(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark unified configuration performance
 fn benchmark_unified_config(c: &mut Criterion) {
     let mut group = c.benchmark_group("unified_config");
 
@@ -166,7 +146,7 @@ fn benchmark_unified_config(c: &mut Criterion) {
                 b.iter(|| {
                     config.validate().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
                 });
             },
@@ -196,13 +176,12 @@ fn benchmark_unified_config(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark parallel processing simulation
 fn benchmark_parallel_processing_simulation(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_processing");
 
     let rt = Runtime::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e).to_string())
 })?;
     let configs = vec![
         ("default", AsyncOptimizationConfig::default()),
@@ -230,12 +209,11 @@ fn benchmark_parallel_processing_simulation(c: &mut Criterion) {
     group.finish();
 }
 
-/// Simulate parallel work to test configuration impact
 async fn simulate_parallel_work(worker_count: usize) {
     let tasks: Vec<_> = (0..worker_count)
         .map(|i| {
             tokio::spawn(async move {
-                // Simulate some work
+
                 let mut sum = 0;
                 for j in 0..1000 {
                     sum += i * j;
@@ -250,7 +228,6 @@ async fn simulate_parallel_work(worker_count: usize) {
     }
 }
 
-/// Benchmark cache configuration impact
 fn benchmark_cache_config_impact(c: &mut Criterion) {
     let mut group = c.benchmark_group("cache_config");
 
@@ -275,7 +252,6 @@ fn benchmark_cache_config_impact(c: &mut Criterion) {
     group.finish();
 }
 
-/// Create a small cache configuration for testing
 fn create_small_cache_config() -> MemoryOptimizationConfig {
     let mut config = MemoryOptimizationConfig::default();
     config.cache.l1_cache.size_kb = 32;
@@ -283,7 +259,6 @@ fn create_small_cache_config() -> MemoryOptimizationConfig {
     config
 }
 
-/// Create a large cache configuration for testing
 fn create_large_cache_config() -> MemoryOptimizationConfig {
     let mut config = MemoryOptimizationConfig::default();
     config.cache.l1_cache.size_kb = 256;
@@ -291,9 +266,8 @@ fn create_large_cache_config() -> MemoryOptimizationConfig {
     config
 }
 
-/// Simulate cache operations
 fn simulate_cache_operations(config: &MemoryOptimizationConfig) {
-    // Simulate cache lookups and calculations
+
     let l1_operations = config.cache.l1_cache.size_kb * 10;
     let l2_operations = config.cache.l2_cache.size_mb * 100;
 
@@ -305,12 +279,10 @@ fn simulate_cache_operations(config: &MemoryOptimizationConfig) {
         total_operations += 1;
     }
 
-    // Simulate cache hit ratio calculations
     let hit_ratio = total_operations as f64 / (total_operations as f64 + 100.0);
     let _ = hit_ratio;
 }
 
-/// Benchmark performance monitoring overhead
 fn benchmark_performance_monitoring_overhead(c: &mut Criterion) {
     let mut group = c.benchmark_group("performance_monitoring");
 
@@ -335,7 +307,6 @@ fn benchmark_performance_monitoring_overhead(c: &mut Criterion) {
     group.finish();
 }
 
-/// Create minimal monitoring configuration
 fn create_minimal_monitoring_config() -> PerformanceConfig {
     let mut config = PerformanceConfig::default();
     config.monitoring.enabled = true;
@@ -344,7 +315,6 @@ fn create_minimal_monitoring_config() -> PerformanceConfig {
     config
 }
 
-/// Create full monitoring configuration
 fn create_full_monitoring_config() -> PerformanceConfig {
     let mut config = PerformanceConfig::default();
     config.monitoring.enabled = true;
@@ -353,13 +323,11 @@ fn create_full_monitoring_config() -> PerformanceConfig {
     config
 }
 
-/// Simulate monitoring overhead
 fn simulate_monitoring_overhead(config: &PerformanceConfig) {
     if !config.monitoring.enabled {
         return;
     }
 
-    // Simulate metrics collection
     let metrics_count = if config.monitoring.enable_detailed_metrics {
         50
     } else {
@@ -368,12 +336,11 @@ fn simulate_monitoring_overhead(config: &PerformanceConfig) {
     let mut collected_metrics = Vec::new();
 
     for i in 0..metrics_count {
-        // Simulate metric collection work
+
         let metric_value = i as f64 * 1.5;
         collected_metrics.push(metric_value);
     }
 
-    // Simulate metric processing
     let average = collected_metrics.iter().sum::<f64>() / collected_metrics.len() as f64;
     let _ = average;
 }

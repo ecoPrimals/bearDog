@@ -1,28 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Network Configuration - Canonical
-///
-/// **UNIFIED NETWORK CONFIGURATION** for the BearDog ecosystem
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// **CANONICAL** Unified Network Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct UnifiedNetworkConfig {
@@ -34,8 +14,6 @@ pub struct UnifiedNetworkConfig {
     pub backend: BackendConfig,
 }
 
-
-/// **CANONICAL** Network Ports Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkPortsConfig {
     pub http_port: u16,
@@ -57,7 +35,6 @@ impl Default for NetworkPortsConfig {
     }
 }
 
-/// **CANONICAL** TLS Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TlsConfig {
     pub enabled: bool,
@@ -79,7 +56,6 @@ impl Default for TlsConfig {
     }
 }
 
-/// **CANONICAL** Load Balancing Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoadBalancingConfig {
     pub enabled: bool,
@@ -97,7 +73,6 @@ impl Default for LoadBalancingConfig {
     }
 }
 
-/// **CANONICAL** Connection Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionConfig {
     pub max_connections: usize,
@@ -119,7 +94,6 @@ impl Default for ConnectionConfig {
     }
 }
 
-/// **CANONICAL** Network Security Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkSecurityConfig {
     pub enable_rate_limiting: bool,
@@ -139,7 +113,6 @@ impl Default for NetworkSecurityConfig {
     }
 }
 
-/// **CANONICAL** Backend Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackendConfig {
     pub service_discovery_enabled: bool,

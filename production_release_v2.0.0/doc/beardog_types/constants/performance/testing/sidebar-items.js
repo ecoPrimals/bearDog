@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["LOAD_TEST_DURATION_SECONDS"]};

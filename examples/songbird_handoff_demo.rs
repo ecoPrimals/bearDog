@@ -1,70 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! SongBird Discovery and Orchestration Handoff Demo
-//!
-//! **Complete Integration Flow: BearDog → SongBird → Ecosystem**
-//!
-//! This demo demonstrates the complete integration flow from BearDog's capability
-//! advertisement system to SongBird's discovery and orchestration platform.
-//!
-//! ## Integration Architecture
-//!
-//! ```text
-//! ┌─────────────────────────────────────────────────────────────┐
-//! │                 BearDog Security Provider                   │
-//! │  ┌─────────────────┐  ┌──────────────────────────────────┐  │
-//! │  │   Capability    │  │     Comprehensive Capability     │  │
-//! │  │ Advertisement   │→ │       Management System          │  │
-//! │  │    System       │  │   • Real-time monitoring         │  │
-//! │  │                 │  │   • Genetic capabilities         │  │
-//! │  │                 │  │   • Emergent discovery           │  │
-//! │  │                 │  │   • Advanced matching            │  │
-//! │  └─────────────────┘  └──────────────────────────────────┘  │
-//! └─────────────────────────┬───────────────────────────────────┘
-//!                           │
-//!                           ▼ HANDOFF via PrimalProvider
-//! ┌─────────────────────────────────────────────────────────────┐
-//! │                 SongBird Orchestrator                       │
-//! │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-//! │  │   Service   │  │   Request   │  │    Load Balancer    │  │
-//! │  │ Discovery   │  │   Routing   │  │   & Orchestration   │  │
-//! │  │             │  │             │  │                     │  │
-//! │  │ • Capability│  │ • Smart     │  │ • Auto-scaling      │  │
-//! │  │   Registry  │  │   Routing   │  │ • Health Checks     │  │
-//! │  │ • Health    │  │ • Load      │  │ • Circuit Breakers  │  │
-//! │  │   Monitoring│  │   Balancing │  │ • Failover          │  │
-//! │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
-//! └─────────────────────────┬───────────────────────────────────┘
-//!                           │
-//!                           ▼ Routes requests to appropriate services
-//! ┌─────────────────────────────────────────────────────────────┐
-//! │            Ecosystem-Wide Service Mesh                     │
-//! │                                                             │
-//! │    ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │
-//! │    │ ToadStool   │  │  NestGate   │  │  Squirrel   │      │
-//! │    │ Compute     │  │  Storage    │  │     AI      │      │
-//! │    │             │  │             │  │             │      │
-//! │    │ Gets security│  │ Gets secure │  │ Gets AI     │      │
-//! │    │ from BearDog │  │ storage     │  │ capabilities│      │
-//! │    │ via SongBird │  │ security    │  │ + security  │      │
-//! │    └─────────────┘  └─────────────┘  └─────────────┘      │
-//! └─────────────────────────────────────────────────────────────┘
-//! ```
 
 use beardog::adapters::universal::*;
 use beardog::core::BearDogCore;
@@ -76,32 +10,25 @@ use tracing::{error, info, warn};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging
+
     tracing_subscriber::fmt::init();
 
     println!("🎼 SongBird Discovery and Orchestration Handoff Demo");
     println!("===================================================");
 
-    // Initialize BearDog with capability management
     let (beardog_system, capability_manager) = initialize_beardog_system().await?;
 
-    // Demonstrate capability advertisement system
     demonstrate_capability_advertisement(&capability_manager).await?;
 
-    // Create SongBird handoff manager
     let songbird_handoff =
         create_songbird_handoff_manager(beardog_system.clone(), capability_manager.clone()).await?;
 
-    // Demonstrate handoff to SongBird
     demonstrate_songbird_handoff(&songbird_handoff).await?;
 
-    // Simulate ecosystem request flow
     simulate_ecosystem_request_flow(&songbird_handoff).await?;
 
-    // Demonstrate real-time monitoring and updates
     demonstrate_real_time_monitoring(&songbird_handoff).await?;
 
-    // Show complete integration status
     show_integration_status(&songbird_handoff).await?;
 
     println!("\n🎉 SongBird Handoff Demo Completed!");
@@ -113,20 +40,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Initialize BearDog with comprehensive capability management
 async fn initialize_beardog_system(
 ) -> Result<(Arc<BearDogCore>, Arc<CapabilityManager>), Box<dyn std::error::Error>> {
     println!("\n🔧 Initializing BearDog with Comprehensive Capability Management");
     println!("================================================================");
 
-    // Initialize BearDog core
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
 
-    // Initialize capability registry
     let registry = Arc::new(CapabilityRegistry::new().await?);
 
-    // Initialize comprehensive capability manager
     let capability_config = CapabilityManagerConfig {
         monitoring_interval: Duration::from_secs(10),
         health_check_timeout: Duration::from_secs(5),
@@ -141,7 +64,6 @@ async fn initialize_beardog_system(
     let capability_manager =
         Arc::new(CapabilityManager::new(registry.clone(), capability_config).await?);
 
-    // Register some initial capabilities
     registry
         .register_capabilities("beardog", "security-001", create_security_capabilities())
         .await?;
@@ -158,14 +80,12 @@ async fn initialize_beardog_system(
     Ok((core, capability_manager))
 }
 
-/// Demonstrate the capability advertisement system
 async fn demonstrate_capability_advertisement(
     capability_manager: &Arc<CapabilityManager>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📋 BearDog Capability Advertisement System");
     println!("==========================================");
 
-    // Demonstrate genetic capability merging
     println!("🧬 Generating genetic capabilities...");
     let genetic_capabilities = capability_manager
         .get_genetic_capabilities()
@@ -185,7 +105,6 @@ async fn demonstrate_capability_advertisement(
         );
     }
 
-    // Demonstrate emergent capability discovery
     println!("\n🔍 Discovering emergent capabilities...");
     let interaction_history = create_mock_interaction_history();
     let emergent_capabilities = capability_manager
@@ -211,7 +130,6 @@ async fn demonstrate_capability_advertisement(
         }
     }
 
-    // Show monitoring status
     println!("\n📊 Real-time capability monitoring...");
     let monitoring_status = capability_manager.get_monitoring_status().await?;
     if monitoring_status.is_empty() {
@@ -236,7 +154,6 @@ async fn demonstrate_capability_advertisement(
     Ok(())
 }
 
-/// Create SongBird handoff manager
 async fn create_songbird_handoff_manager(
     core: Arc<BearDogCore>,
     capability_manager: Arc<CapabilityManager>,
@@ -273,18 +190,14 @@ async fn create_songbird_handoff_manager(
     Ok(handoff_manager)
 }
 
-/// Demonstrate handoff to SongBird
 async fn demonstrate_songbird_handoff(
     handoff_manager: &SongBirdHandoffManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📡 Demonstrating Handoff to SongBird");
     println!("====================================");
 
-    // Register with SongBird
     println!("🔗 Registering BearDog with SongBird for discovery...");
 
-    // Note: In a real environment, this would make actual HTTP calls to SongBird
-    // For the demo, we'll simulate the registration process
     println!("   📋 Preparing service advertisement...");
     sleep(Duration::from_millis(500)).await;
 
@@ -315,7 +228,6 @@ async fn demonstrate_songbird_handoff(
 
     sleep(Duration::from_millis(1000)).await;
 
-    // Simulate successful registration
     println!("\n✅ Successfully registered with SongBird!");
     println!(
         "   🆔 Registration ID: beardog-sec-001-{}",
@@ -325,7 +237,6 @@ async fn demonstrate_songbird_handoff(
     println!("   📊 Monitoring Dashboard: https://songbird.internal/monitoring/beardog");
     println!("   ⚖️ Load Balancer: 3 endpoints configured");
 
-    // Show heartbeat process
     println!("\n💓 Starting heartbeat process...");
     for i in 1..=3 {
         sleep(Duration::from_secs(1)).await;
@@ -335,14 +246,12 @@ async fn demonstrate_songbird_handoff(
     Ok(())
 }
 
-/// Simulate ecosystem request flow through SongBird
 async fn simulate_ecosystem_request_flow(
     handoff_manager: &SongBirdHandoffManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌐 Simulating Ecosystem Request Flow");
     println!("====================================");
 
-    // Simulate different types of requests coming through SongBird
     let request_scenarios = vec![
         (
             "ToadStool Compute",
@@ -376,7 +285,6 @@ async fn simulate_ecosystem_request_flow(
         println!("   📝 Capability needed: {}", capability);
         println!("   📖 Description: {}", description);
 
-        // Simulate SongBird routing decision
         sleep(Duration::from_millis(300)).await;
         println!("   🎼 SongBird routing analysis:");
 
@@ -411,7 +319,6 @@ async fn simulate_ecosystem_request_flow(
             }
         }
 
-        // Simulate request processing
         sleep(Duration::from_millis(200)).await;
         println!("   ✅ Request processed successfully");
         println!(
@@ -432,14 +339,12 @@ async fn simulate_ecosystem_request_flow(
     Ok(())
 }
 
-/// Demonstrate real-time monitoring and updates
 async fn demonstrate_real_time_monitoring(
     handoff_manager: &SongBirdHandoffManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Real-Time Monitoring and Dynamic Updates");
     println!("===========================================");
 
-    // Simulate real-time capability updates
     println!("🔄 Simulating dynamic capability updates...");
 
     for i in 1..=5 {
@@ -486,7 +391,6 @@ async fn demonstrate_real_time_monitoring(
         }
     }
 
-    // Show monitoring dashboard simulation
     println!("\n🎯 SongBird Monitoring Dashboard (Real-time):");
     println!("   ┌─────────────────────────────────────────────┐");
     println!("   │ BearDog Security Provider Status           │");
@@ -512,14 +416,12 @@ async fn demonstrate_real_time_monitoring(
     Ok(())
 }
 
-/// Show complete integration status
 async fn show_integration_status(
     handoff_manager: &SongBirdHandoffManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎯 Complete Integration Status");
     println!("==============================");
 
-    // Simulate getting status from handoff manager
     println!("📋 BearDog → SongBird Integration Summary:");
     println!("   🔗 Registration Status: ✅ Active");
     println!("   📡 Discovery Endpoint: https://songbird.internal/services/beardog-security");
@@ -585,8 +487,6 @@ async fn show_integration_status(
     Ok(())
 }
 
-/// Helper Functions
-
 fn create_security_capabilities() -> Vec<Capability> {
     vec![
         Capability {
@@ -594,7 +494,7 @@ fn create_security_capabilities() -> Vec<Capability> {
             name: "Universal Encryption".to_string(),
             description: "Post-quantum encryption for ecosystem components".to_string(),
             category: CapabilityCategory::Security,
-            attributes: std::collections::HashMap::new(),
+            attributes: std::collections::HashMap::with_capacity(16),
             qos: QualityOfService {
                 avg_response_time_ms: 5,
                 availability_percent: 99.95,
@@ -615,7 +515,7 @@ fn create_security_capabilities() -> Vec<Capability> {
             name: "Multi-Modal Authentication".to_string(),
             description: "Biometric and cryptographic authentication".to_string(),
             category: CapabilityCategory::Security,
-            attributes: std::collections::HashMap::new(),
+            attributes: std::collections::HashMap::with_capacity(16),
             qos: QualityOfService {
                 avg_response_time_ms: 15,
                 availability_percent: 99.9,
@@ -636,7 +536,7 @@ fn create_security_capabilities() -> Vec<Capability> {
             name: "Zero-Trust Authorization".to_string(),
             description: "Policy-based authorization with genetic support".to_string(),
             category: CapabilityCategory::Security,
-            attributes: std::collections::HashMap::new(),
+            attributes: std::collections::HashMap::with_capacity(16),
             qos: QualityOfService {
                 avg_response_time_ms: 10,
                 availability_percent: 99.95,

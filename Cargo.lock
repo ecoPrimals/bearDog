@@ -182,6 +182,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 
 [[package]]
+name = "async-compression"
+version = "0.4.28"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6448dfb3960f0b038e88c781ead1e7eb7929dfc3a71a1336ec9086c00f6d1e75"
+dependencies = [
+ "compression-codecs",
+ "compression-core",
+ "flate2",
+ "futures-core",
+ "memchr",
+ "pin-project-lite",
+ "tokio",
+]
+
+[[package]]
 name = "async-stream"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -343,7 +358,6 @@ name = "beardog-adapters"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "async-trait",
  "base64 0.21.7",
  "beardog-errors",
  "beardog-security",
@@ -365,11 +379,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "beardog-api"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-stream",
+ "axum",
+ "base64 0.21.7",
+ "beardog-auth",
+ "beardog-core",
+ "beardog-errors",
+ "beardog-genetics",
+ "beardog-monitoring",
+ "beardog-security",
+ "beardog-threat",
+ "beardog-tunnel",
+ "beardog-utils",
+ "bytes 1.10.1",
+ "chrono",
+ "ed25519-dalek",
+ "futures 0.3.31",
+ "hex",
+ "ipnet",
+ "lazy_static",
+ "num_cpus",
+ "rand",
+ "redis",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "sha2",
+ "tokio",
+ "tokio-stream",
+ "tower-http 0.4.4",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "beardog-auth"
 version = "3.0.0"
 dependencies = [
  "argon2",
- "async-trait",
  "base64 0.21.7",
  "beardog-errors",
  "beardog-security",
@@ -417,7 +468,6 @@ dependencies = [
 name = "beardog-compliance"
 version = "3.0.0"
 dependencies = [
- "async-trait",
  "beardog-errors",
  "beardog-types",
  "chrono",
@@ -433,7 +483,6 @@ dependencies = [
 name = "beardog-core"
 version = "3.0.0"
 dependencies = [
- "async-trait",
  "beardog-adapters",
  "beardog-auth",
  "beardog-compliance",
@@ -495,7 +544,6 @@ dependencies = [
 name = "beardog-genetics"
 version = "3.0.0"
 dependencies = [
- "async-trait",
  "axum",
  "base64 0.21.7",
  "beardog-auth",
@@ -519,7 +567,6 @@ dependencies = [
 name = "beardog-monitoring"
 version = "3.0.0"
 dependencies = [
- "async-trait",
  "beardog-errors",
  "beardog-types",
  "beardog-utils",
@@ -536,7 +583,6 @@ dependencies = [
 name = "beardog-node-registry"
 version = "3.0.0"
 dependencies = [
- "async-trait",
  "beardog-auth",
  "beardog-errors",
  "beardog-security",
@@ -555,7 +601,6 @@ dependencies = [
 name = "beardog-production"
 version = "3.0.0"
 dependencies = [
- "async-trait",
  "beardog-errors",
  "chrono",
  "serde",
@@ -572,7 +617,6 @@ dependencies = [
  "aes-gcm",
  "anyhow",
  "argon2",
- "async-trait",
  "base64 0.21.7",
  "beardog-compliance",
  "beardog-errors",
@@ -608,10 +652,10 @@ dependencies = [
 name = "beardog-threat"
 version = "3.0.0"
 dependencies = [
+ "anyhow",
  "beardog-errors",
  "beardog-types",
  "chrono",
- "ipnet",
  "serde",
  "serde_json",
  "tokio",
@@ -627,6 +671,7 @@ dependencies = [
  "beardog-types",
  "chrono",
  "serde",
+ "serde_json",
  "tokio",
  "tokio-test",
  "tracing",
@@ -640,7 +685,6 @@ dependencies = [
  "anyhow",
  "argon2",
  "arrayref",
- "async-trait",
  "beardog-auth",
  "beardog-core",
  "beardog-errors",
@@ -689,6 +733,7 @@ version = "3.0.0"
 dependencies = [
  "beardog-errors",
  "chrono",
+ "rand",
  "reqwest 0.12.23",
  "ring",
  "serde",
@@ -719,7 +764,6 @@ dependencies = [
 name = "beardog-workflows"
 version = "3.0.0"
 dependencies = [
- "async-trait",
  "base64 0.22.1",
  "beardog-errors",
  "beardog-types",
@@ -1005,8 +1049,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba5a308b75df32fe02788e748662718f03fde005016435c444eea572398219fd"
 dependencies = [
  "bytes 1.10.1",
+ "futures-core",
  "memchr",
+ "pin-project-lite",
+ "tokio",
+ "tokio-util",
 ]
+
+[[package]]
+name = "compression-codecs"
+version = "0.4.28"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46cc6539bf1c592cff488b9f253b30bc0ec50d15407c2cf45e27bd8f308d5905"
+dependencies = [
+ "compression-core",
+ "flate2",
+ "futures-core",
+ "memchr",
+ "pin-project-lite",
+]
+
+[[package]]
+name = "compression-core"
+version = "0.4.28"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2957e823c15bde7ecf1e8b64e537aa03a6be5fda0e2334e99887669e75b12e01"
 
 [[package]]
 name = "console"
@@ -1072,6 +1139,15 @@ name = "crc-catalog"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19d374276b40fb8bbdee95aef7c7fa6b5316ec764510eb64b8dd0e2ed0d7e7f5"
+
+[[package]]
+name = "crc32fast"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
+dependencies = [
+ "cfg-if 1.0.1",
+]
 
 [[package]]
 name = "criterion"
@@ -1322,6 +1398,7 @@ checksum = "70e796c081cee67dc755e1a36a0a172b897fab85fc3f6bc48307991f64e4eca9"
 dependencies = [
  "curve25519-dalek",
  "ed25519",
+ "rand_core",
  "serde",
  "sha2",
  "subtle",
@@ -1437,6 +1514,16 @@ name = "fiat-crypto"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "64cd1e32ddd350061ae6edb1b082d7c54915b5c672c389143b9a63403a109f24"
+
+[[package]]
+name = "flate2"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a3d7db9596fecd151c5f638c0ee5d5bd487b6e0ea232e5dc96d5250f6f94b1d"
+dependencies = [
+ "crc32fast",
+ "miniz_oxide",
+]
 
 [[package]]
 name = "flume"
@@ -1849,6 +1936,12 @@ dependencies = [
  "http-body 1.0.1",
  "pin-project-lite",
 ]
+
+[[package]]
+name = "http-range-header"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "add0ab9360ddbd88cfeb3bd9574a1d85cfdfa14db10b3e21d3700dbc4328758f"
 
 [[package]]
 name = "httparse"
@@ -3160,6 +3253,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "redis"
+version = "0.23.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f49cdc0bb3f412bf8e7d1bd90fe1d9eb10bc5c399ba90973c14662a27b3f8ba"
+dependencies = [
+ "async-trait",
+ "bytes 1.10.1",
+ "combine",
+ "futures-util",
+ "itoa",
+ "percent-encoding",
+ "pin-project-lite",
+ "ryu",
+ "sha1_smol",
+ "socket2 0.4.10",
+ "tokio",
+ "tokio-util",
+ "url",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.1.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3292,7 +3406,7 @@ dependencies = [
  "tokio",
  "tokio-native-tls",
  "tower",
- "tower-http",
+ "tower-http 0.6.6",
  "tower-service",
  "url",
  "wasm-bindgen",
@@ -3624,6 +3738,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha1_smol"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbfa15b3dddfee50a0fff136974b3e1bde555604ba463834a7eb7deb6417705d"
+
+[[package]]
 name = "sha2"
 version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3698,6 +3818,16 @@ name = "smallvec"
 version = "1.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
+
+[[package]]
+name = "socket2"
+version = "0.4.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f7916fc008ca5542385b89a3d3ce689953c143e9304a9bf8beec1de48994c0d"
+dependencies = [
+ "libc",
+ "winapi 0.3.9",
+]
 
 [[package]]
 name = "socket2"
@@ -4483,6 +4613,28 @@ dependencies = [
  "pin-project-lite",
  "sync_wrapper 1.0.2",
  "tokio",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "tower-http"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61c5bb1d698276a2443e5ecfabc1008bf15a36c12e6a7176e7bf089ea9131140"
+dependencies = [
+ "async-compression",
+ "bitflags 2.9.1",
+ "bytes 1.10.1",
+ "futures-core",
+ "futures-util",
+ "http 0.2.12",
+ "http-body 0.4.6",
+ "http-range-header",
+ "pin-project-lite",
+ "tokio",
+ "tokio-util",
  "tower-layer",
  "tower-service",
  "tracing",

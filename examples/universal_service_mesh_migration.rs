@@ -1,27 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Universal Service Mesh Migration Example
-//!
-//! **MIGRATION FROM SONGBIRD-SPECIFIC TO UNIVERSAL ADAPTER**
-//!
-//! This example demonstrates how to migrate from the deprecated SongBird-specific
-//! client to the new universal service mesh client that follows the principle
-//! "primals only know themselves."
 
 use beardog_core::universal_service_mesh_client::{
     UniversalMeshConfig, UniversalServiceMeshClient, UniversalServiceRequest,
@@ -39,23 +16,18 @@ async fn main() -> BearDogResult<()> {
     info!("🔄 Universal Service Mesh Migration Example");
     info!("📚 Demonstrating migration from SongBird-specific to universal adapter");
 
-    // OLD WAY (DEPRECATED): Direct SongBird coupling
     demonstrate_old_songbird_pattern().await?;
 
-    // NEW WAY: Universal service mesh client
     demonstrate_universal_pattern().await?;
 
-    // Migration comparison
     demonstrate_migration_benefits().await?;
 
     Ok(())
 }
 
-/// OLD PATTERN: Direct SongBird coupling (TECHNICAL DEBT)
 async fn demonstrate_old_songbird_pattern() -> BearDogResult<()> {
     warn!("❌ OLD PATTERN: Direct SongBird coupling (DEPRECATED)");
 
-    // This is what we used to do - hardcoded SongBird references
     println!("  🔗 Hardcoded SongBird endpoint: http://songbird:8080");
     println!("  🔗 Hardcoded SongBird API calls");
     println!("  🔗 SongBird-specific error handling");
@@ -71,11 +43,9 @@ async fn demonstrate_old_songbird_pattern() -> BearDogResult<()> {
     Ok(())
 }
 
-/// NEW PATTERN: Universal service mesh client (BEST PRACTICE)
 async fn demonstrate_universal_pattern() -> BearDogResult<()> {
     info!("✅ NEW PATTERN: Universal service mesh client");
 
-    // Create universal mesh client with configuration
     let config = UniversalMeshConfig {
         discovery_timeout: Duration::from_secs(10),
         health_check_interval: Duration::from_secs(30),
@@ -86,7 +56,6 @@ async fn demonstrate_universal_pattern() -> BearDogResult<()> {
 
     let mesh_client = UniversalServiceMeshClient::new(config);
 
-    // STEP 1: Discover available service mesh capabilities (any primal)
     info!("🔍 Step 1: Discovering service mesh capabilities in ecosystem");
     match mesh_client.discover_service_meshes().await {
         Ok(meshes) => {
@@ -104,7 +73,6 @@ async fn demonstrate_universal_pattern() -> BearDogResult<()> {
         }
     }
 
-    // STEP 2: Register with ecosystem (primal-agnostic)
     info!("🔗 Step 2: Registering BearDog with ecosystem");
     match mesh_client.register_with_ecosystem().await {
         Ok(registration) => {
@@ -119,7 +87,6 @@ async fn demonstrate_universal_pattern() -> BearDogResult<()> {
         }
     }
 
-    // STEP 3: Send service request through universal mesh
     info!("📤 Step 3: Sending service request through universal mesh");
     let service_request = UniversalServiceRequest {
         request_id: Uuid::new_v4().to_string(),
@@ -134,7 +101,7 @@ async fn demonstrate_universal_pattern() -> BearDogResult<()> {
             }
         }),
         metadata: {
-            let mut meta = HashMap::new();
+            let mut meta = HashMap::with_capacity(16);
             meta.insert("source".to_string(), "beardog".to_string());
             meta.insert("priority".to_string(), "high".to_string());
             meta
@@ -156,7 +123,6 @@ async fn demonstrate_universal_pattern() -> BearDogResult<()> {
         }
     }
 
-    // STEP 4: Discover available services
     info!("🔍 Step 4: Discovering available services");
     match mesh_client.discover_services(Some("compute")).await {
         Ok(services) => {
@@ -177,7 +143,6 @@ async fn demonstrate_universal_pattern() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate migration benefits
 async fn demonstrate_migration_benefits() -> BearDogResult<()> {
     info!("🎯 MIGRATION BENEFITS:");
 
@@ -220,7 +185,6 @@ async fn demonstrate_migration_benefits() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Configuration example for universal mesh client
 fn create_production_config() -> UniversalMeshConfig {
     UniversalMeshConfig {
         discovery_timeout: Duration::from_secs(30),
@@ -231,16 +195,13 @@ fn create_production_config() -> UniversalMeshConfig {
     }
 }
 
-/// Environment setup example
 fn setup_environment_variables() {
-    // Universal discovery configuration (no primal-specific variables)
+
     std::env::set_var("ECOSYSTEM_DISCOVERY_URL", "http://ecosystem-discovery:8080");
     std::env::set_var("ECOSYSTEM_HOST", "localhost");
     std::env::set_var("ECOSYSTEM_DISCOVERY_PORTS", "8080,8081,8082");
 
-    // BearDog service configuration
     std::env::set_var("BEARDOG_ENDPOINT", "http://beardog:8080");
     std::env::set_var("DEPLOYMENT_ENV", "production");
 
-    // No more SONGBIRD_PORT or other primal-specific variables!
 }

@@ -1,124 +1,97 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Genetic capability management for spawning and evolution
-///
-/// This module provides genetic capability tracking, trait inheritance,
-/// mutation mechanisms, and genetic spawning for capability evolution.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-/// Genetic capability profile for spawning integration
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticCapabilityProfile {
-    /// Unique genetic identifier
+
     pub genetic_id: String,
-    /// Capabilities that served as parents for this genetic profile
+
     pub parent_capabilities: Vec<String>,
-    /// Traits inherited from parent capabilities
+
     pub inherited_traits: Vec<CapabilityTrait>,
-    /// New capabilities that evolved from this profile
+
     pub evolved_capabilities: Vec<String>,
-    /// Fitness score indicating adaptation success
+
     pub fitness_score: f64,
-    /// Generation number in evolutionary chain
+
     pub generation: u32,
-    /// History of mutations applied to this profile
+
     pub mutation_history: Vec<CapabilityMutation>,
 }
-/// Trait characteristics for genetic capabilities
-pub struct CapabilityTrait {
-    /// Unique trait identifier
-    pub trait_id: String,
-    /// Category of the trait
-    pub trait_type: CapabilityTraitType,
-    /// Level of trait expression (0.0 to 1.0)
-    pub expression_level: f64,
-    /// Dominance level when competing with other traits
-    pub dominance: f64,
-    /// Likelihood of being passed to offspring
-    pub heritability: f64,
-/// Categories of capability traits
-pub enum CapabilityTraitType {
-    /// Performance-related traits
-    Performance,
-    /// Reliability and stability traits
-    Reliability,
-    /// Scalability and capacity traits
-    Scalability,
-    /// Security and protection traits
-    Security,
-    /// Efficiency and optimization traits
-    Efficiency,
-    /// Adaptability and flexibility traits
-    Adaptability,
-    /// Compatibility and integration traits
-    Compatibility,
-    /// Innovation and novelty traits
-    Innovation,
-/// Mutation event in genetic capability evolution}
 
+pub struct CapabilityTrait {
+
+    pub trait_id: String,
+
+    pub trait_type: CapabilityTraitType,
+
+    pub expression_level: f64,
+
+    pub dominance: f64,
+
+    pub heritability: f64,
+
+pub enum CapabilityTraitType {
+
+    Performance,
+
+    Reliability,
+
+    Scalability,
+
+    Security,
+
+    Efficiency,
+
+    Adaptability,
+
+    Compatibility,
+
+    Innovation,
 
 pub struct CapabilityMutation {
-    /// Unique mutation identifier
-    pub mutation_id: String,
-    /// Type of mutation applied
-    pub mutation_type: MutationType,
-    /// Capabilities affected by this mutation
-    pub affected_capabilities: Vec<String>,
-    /// Strength of the mutation effect (0.0 to 1.0)
-    pub mutation_strength: f64,
-    /// When the mutation occurred
-    pub timestamp: DateTime<Utc>,
-    /// What triggered this mutation
-    pub trigger: MutationTrigger,
-/// Types of genetic mutations
-pub enum MutationType {
-    /// Enhancement of existing traits
-    Enhancement,
-    /// Specialization for specific use cases
-    Specialization,
-    /// Hybridization combining multiple traits
-    Hybridization,
-    /// Adaptation to environmental changes
-    Adaptation,
-    /// Optimization for better performance
-    Optimization,
-/// Triggers for genetic mutations}
 
+    pub mutation_id: String,
+
+    pub mutation_type: MutationType,
+
+    pub affected_capabilities: Vec<String>,
+
+    pub mutation_strength: f64,
+
+    pub timestamp: DateTime<Utc>,
+
+    pub trigger: MutationTrigger,
+
+pub enum MutationType {
+
+    Enhancement,
+
+    Specialization,
+
+    Hybridization,
+
+    Adaptation,
+
+    Optimization,
 
 pub enum MutationTrigger {
-    /// Changes in operating environment
+
     EnvironmentalPressure,
-    /// Combining traits from multiple sources
+
     CrossBreeding,
     PerformanceOptimization,
-    /// Response to security requirements
+
     SecurityRequirement,
-    /// Adaptation to user demand patterns
+
     UserDemand,}
 
-
 impl GeneticCapabilityProfile {
-    /// Create a new genetic capability profile}
 
-
-    pub fn new(parent_capabilities: Vec<String>, inherited_traits: Vec<CapabilityTrait>) -> Self {
+    pub fn new(parent_capabilities: Vec<&str>, inherited_traits: Vec<CapabilityTrait>) -> Self {
         Self {
             genetic_id: Uuid::new_v4().to_string(),
             parent_capabilities,
@@ -129,9 +102,9 @@ impl GeneticCapabilityProfile {
             mutation_history: Vec::new(),
         }
     }
-    /// Apply a mutation to this genetic profile
+
     pub fn apply_mutation(&mut self, mutation: CapabilityMutation) {
-        // Update fitness score based on mutation
+
         match mutation.mutation_type {
             MutationType::Enhancement => {
                 self.fitness_score += mutation.mutation_strength * 0.2;
@@ -144,11 +117,11 @@ impl GeneticCapabilityProfile {
                 self.fitness_score += mutation.mutation_strength * 0.3;
             MutationType::Optimization => {
                 self.fitness_score += mutation.mutation_strength * 0.1;
-        // Clamp fitness score between 0.0 and 1.0
+
         self.fitness_score = self.fitness_score.clamp(0.0, 1.0);
-        // Record mutation in history
+
         self.mutation_history.push(mutation);
-    /// Calculate dominance score for trait inheritance
+
     pub fn calculate_dominance(&self, trait_type: &CapabilityTraitType) -> f64 {
         let matching_traits: Vec<_> = self
             .inherited_traits
@@ -162,8 +135,6 @@ impl GeneticCapabilityProfile {
             .sum::<f64>()
             / matching_traits.len() as f64
 impl CapabilityTrait {
-    /// Create a new capability trait}
-
 
     pub fn new(
         trait_type: CapabilityTraitType,
@@ -176,8 +147,6 @@ impl CapabilityTrait {
             expression_level: expression_level.clamp(0.0, 1.0),
             dominance: dominance.clamp(0.0, 1.0),
             heritability: heritability.clamp(0.0, 1.0),
-    /// Create a performance trait}
-
 
     pub fn performance(expression_level: f64) -> Self {
         Self::new(
@@ -186,47 +155,41 @@ impl CapabilityTrait {
             0.8, // High dominance for performance
             0.9, // High heritability
         )
-    /// Create a security trait
+
     pub fn security(expression_level: f64) -> Self {
             CapabilityTraitType::Security,
             0.9,  // Very high dominance for security
             0.85, // High heritability
-    /// Create a reliability trait}
-
 
     pub fn reliability(expression_level: f64) -> Self {
             CapabilityTraitType::Reliability,
             0.85, // High dominance for reliability
             0.8,  // High heritability
-    /// Create a scalability trait
+
     pub fn scalability(expression_level: f64) -> Self {
             CapabilityTraitType::Scalability,
             0.7,  // Medium-high dominance
             0.75, // Medium-high heritability
-    /// Create an efficiency trait}
-
 
     pub fn efficiency(expression_level: f64) -> Self {
             CapabilityTraitType::Efficiency,
             0.6, // Medium dominance
             0.7, // Medium heritability
-    /// Create an adaptability trait
+
     pub fn adaptability(expression_level: f64) -> Self {
             CapabilityTraitType::Adaptability,
             0.75, // Medium-high dominance
-    /// Create a compatibility trait}
-
 
     pub fn compatibility(expression_level: f64) -> Self {
             CapabilityTraitType::Compatibility,
             0.65, // Medium dominance
-    /// Create an innovation trait
+
     pub fn innovation(expression_level: f64) -> Self {
             CapabilityTraitType::Innovation,
             0.5, // Lower dominance - innovation is often recessive
             0.6, // Medium heritability
 impl CapabilityMutation {
-    /// Create a new capability mutation
+
         mutation_type: MutationType,
         affected_capabilities: Vec<String>,
         mutation_strength: f64,
@@ -237,30 +200,24 @@ impl CapabilityMutation {
             mutation_strength: mutation_strength.clamp(0.0, 1.0),
             timestamp: Utc::now(),
             trigger,
-    /// Create an enhancement mutation}
 
-
-    pub fn enhancement(capabilities: Vec<String>, strength: f64) -> Self {
+    pub fn enhancement(capabilities: Vec<&str>, strength: f64) -> Self {
             MutationType::Enhancement,
             capabilities,
             strength,
             MutationTrigger::PerformanceOptimization,
-    /// Create a specialization mutation}
 
-
-    pub fn specialization(capabilities: Vec<String>, strength: f64) -> Self {
+    pub fn specialization(capabilities: Vec<&str>, strength: f64) -> Self {
             MutationType::Specialization,
             MutationTrigger::UserDemand,
-    /// Create a hybridization mutation
-    pub fn hybridization(capabilities: Vec<String>, strength: f64) -> Self {
+
+    pub fn hybridization(capabilities: Vec<&str>, strength: f64) -> Self {
             MutationType::Hybridization,
             MutationTrigger::CrossBreeding,
-    /// Create an adaptation mutation}
 
-
-    pub fn adaptation(capabilities: Vec<String>, strength: f64) -> Self {
+    pub fn adaptation(capabilities: Vec<&str>, strength: f64) -> Self {
             MutationType::Adaptation,
             MutationTrigger::EnvironmentalPressure,
-    /// Create an optimization mutation
-    pub fn optimization(capabilities: Vec<String>, strength: f64) -> Self {
+
+    pub fn optimization(capabilities: Vec<&str>, strength: f64) -> Self {
             MutationType::Optimization,

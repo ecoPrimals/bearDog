@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["AuthenticationChromosome","CryptoChromosome","PerformanceChromosome","SecureSession","SecurityGenetics","SessionManager","ThreatResponseChromosome"]};

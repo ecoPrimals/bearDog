@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Authorization, Roles, Permissions & API Key Handlers
-///
-/// Handles RBAC, permission checking, API key management, and security audit functions.
 
 use super::models::*;
 use crate::api::*;
@@ -29,8 +10,7 @@ use axum::{
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::info;
-// ====== ROLES & PERMISSIONS HANDLERS ======
-/// List all available roles
+
 pub async fn list_roles(
     State(_state): State<AppState>,
 ) -> Result<Json<ApiResponse<RoleListResponse>>, StatusCode> {
@@ -70,7 +50,7 @@ pub async fn list_roles(
         true,
     )))
 }
-/// List all available permissions
+
 pub async fn list_permissions(
     Query(params): Query<PermissionListQuery>,
 ) -> Result<Json<ApiResponse<PermissionListResponse>>, StatusCode> {
@@ -102,8 +82,6 @@ pub async fn list_permissions(
         filters_applied: PermissionListFilters {
             category: params.category,
             resource: params.resource,
-/// Check if user has specific permission}
-
 
 pub async fn check_permission(
     Json(request): Json<PermissionCheckRequest>,
@@ -112,7 +90,7 @@ pub async fn check_permission(
         "🔐 Checking permission '{}' for user: {}",
         request.permission, request.user_id
     );
-    // Simulate permission check - in production this would query the authorization system
+
     let has_permission = request.permission == "read:users" || request.permission == "admin:system";
     let response = PermissionCheckResponse {
         user_id: request.user_id,
@@ -126,9 +104,8 @@ pub async fn check_permission(
             Some("role:admin".to_string())
             None
         expires_at: None, // Permissions don't expire unless explicitly set
-        context_restrictions: HashMap::new(),
-// ====== API KEYS HANDLERS ======
-/// List API keys for user
+        context_restrictions: HashMap::with_capacity(16),
+
 pub async fn list_api_keys(
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<Json<ApiResponse<ApiKeyListResponse>>, StatusCode> {
@@ -158,8 +135,6 @@ pub async fn list_api_keys(
         api_keys,
         total_count: 2,
         user_id,
-/// Create new API key}
-
 
 pub async fn create_api_key(
     Json(request): Json<CreateApiKeyRequest>,
@@ -183,7 +158,7 @@ pub async fn create_api_key(
         warning: "Store this API key securely. It will not be shown again.".to_string(),
         usage_instructions: "Include in Authorization header as 'Bearer <api_key>'".to_string(),
         false,
-// ====== PLACEHOLDER HANDLERS ======
+
 pub async fn create_role(
     State(_): State<AppState>,
     Json(_): Json<serde_json::Value>,

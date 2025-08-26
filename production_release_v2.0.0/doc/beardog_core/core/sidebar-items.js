@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["components","lifecycle","operations"],"struct":["BearDogCore"]};

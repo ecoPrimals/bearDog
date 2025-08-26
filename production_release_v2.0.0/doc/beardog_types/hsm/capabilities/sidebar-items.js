@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["AdvancedFeatureCapabilities","ApiSupportCapabilities","HsmCapabilities","KeyGenerationCapabilities","KeyManagementCapabilities","SecurityCapabilities"]};

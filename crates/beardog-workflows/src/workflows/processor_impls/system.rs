@@ -1,29 +1,12 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// System workflow processors
 
 use super::super::types::Workflow;
 use super::core::{WorkflowProcessingResult, WorkflowProcessor};
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 use beardog_errors::BearDogResult;
 use std::time::Duration;
 use uuid::Uuid;
-/// System maintenance workflow processor
+
 pub struct SystemMaintenanceProcessor;
 
 impl WorkflowProcessor for SystemMaintenanceProcessor {
@@ -44,7 +27,7 @@ impl WorkflowProcessor for SystemMaintenanceProcessor {
         actions_taken.push(format!(
             "Started {maintenance_type} maintenance for system: {target_system}"
         ));
-        // Simulate system maintenance process
+
         actions_taken.push("Pre-maintenance system health check".to_string(),
         actions_taken.push("Notified users of maintenance window".to_string(),
         actions_taken.push("Put system in maintenance mode".to_string(),
@@ -84,13 +67,11 @@ impl WorkflowProcessor for SystemMaintenanceProcessor {
     fn name(&self) -> &str {
         "SystemProcessor"}
 
-
     fn can_handle(&self, workflow: &Workflow) -> bool {
         matches!(workflow.workflow_type, WorkflowType::SystemMaintenance)
     async fn validate_workflow(&self, _workflow: &Workflow) -> BearDogResult<()> {
-        // System maintenance has minimal validation requirements
-        Ok(())}
 
+        Ok(())}
 
     async fn estimate_processing_time(&self, workflow: &Workflow) -> BearDogResult<Duration> {
             .unwrap_or("general");
@@ -102,7 +83,7 @@ impl WorkflowProcessor for SystemMaintenanceProcessor {
         };
         Ok(duration)
 }
-/// Compliance audit workflow processor
+
 pub struct ComplianceAuditProcessor;
 impl WorkflowProcessor for ComplianceAuditProcessor {
         let audit_type = workflow
@@ -111,7 +92,7 @@ impl WorkflowProcessor for ComplianceAuditProcessor {
             .get("scope")
             .unwrap_or("system");
             "Started {audit_type} compliance audit with scope: {scope}"
-        // Simulate compliance audit process
+
         actions_taken.push("Initialized audit framework".to_string(),
         actions_taken.push("Collected system configuration data".to_string(),
         actions_taken.push("Analyzed security policies".to_string(),
@@ -134,7 +115,7 @@ impl WorkflowProcessor for ComplianceAuditProcessor {
         actions_taken.push("Generated compliance report".to_string(),
         actions_taken.push("Identified compliance gaps".to_string(),
         actions_taken.push("Recommended remediation actions".to_string(),
-        // Simulate compliance score calculation
+
         let mut compliance_score = 100u8;
         if matches!(audit_type, "security") {
             compliance_score = 95; // Security audits often find minor issues
@@ -145,7 +126,7 @@ impl WorkflowProcessor for ComplianceAuditProcessor {
                 "audit_id": Uuid::new_v4().to_string(),
         "ComplianceAuditProcessor"
         matches!(workflow.workflow_type, WorkflowType::ComplianceAudit)
-        // Compliance audits have minimal validation requirements
+
         let duration = match audit_type {
             "security" => Duration::from_secs(7200),    // 2 hours
             "privacy" => Duration::from_secs(5400),     // 1.5 hours

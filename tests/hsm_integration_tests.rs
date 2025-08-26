@@ -1,18 +1,3 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 /*
@@ -36,7 +21,6 @@ use tokio_test;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-/// Test multi-vendor PKCS#11 HSM support
 #[tokio::test]
 async fn test_multi_vendor_pkcs11_support() {
     let vendors = vec![
@@ -50,32 +34,29 @@ async fn test_multi_vendor_pkcs11_support() {
 
     for (vendor, library_path) in vendors {
         let hsm = create_mock_pkcs11_hsm(vendor, library_path);
-        
-        // Test connection
+
         let connection_result = adapter.connect(&hsm).await;
         assert!(connection_result.is_ok(), "Failed to connect to {} HSM", vendor);
         
         let connection = connection_result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert_eq!(connection.hsm_id, hsm.hsm_id);
         assert!(connection.connection_handle.contains("pkcs11-session"));
-        
-        // Test health check
+
         let health_result = adapter.test_connection(&hsm).await;
         assert!(health_result.is_ok(), "Health check failed for {} HSM", vendor);
         
         let health = health_result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert!(health.is_healthy);
         assert!(health.response_time_ms > 0.0);
     }
 }
 
-/// Test cross-platform HSM operations
 #[tokio::test]
 async fn test_cross_platform_hsm_operations() {
     let test_scenarios = vec![
@@ -86,38 +67,35 @@ async fn test_cross_platform_hsm_operations() {
 
     for (platform, hsm) in test_scenarios {
         let adapter = get_adapter_for_hsm(&hsm);
-        
-        // Test connection
+
         let connection = adapter.connect(&hsm).await
-            .expect(&format!("Failed to connect to {} HSM", platform));
-        
-        // Test key generation
+            .expect(&format_args!("Failed to connect to {} HSM", platform).to_string());
+
         let gen_operation = UniversalOperation {
             operation_type: OperationType::GenerateKey,
             parameters: HashMap::from([
                 ("key_type".to_string(), "ecdsa_p256".to_string()),
-                ("key_id".to_string(), format!("{}-test-key", platform.to_lowercase().replace(' ', "-"))),
+                ("key_id".to_string(), format_args!("{}-test-key", platform.to_lowercase().to_string().replace(' ', "-"))),
             ]),
         };
         
         let gen_result = adapter.perform_operation(&connection, gen_operation).await
-            .expect(&format!("Key generation failed for {} HSM", platform));
+            .expect(&format_args!("Key generation failed for {} HSM", platform).to_string());
         
         assert!(gen_result.success);
         assert!(!gen_result.result_data.is_empty());
-        
-        // Test signing operation
+
         let sign_operation = UniversalOperation {
             operation_type: OperationType::Sign,
             parameters: HashMap::from([
-                ("key_id".to_string(), format!("{}-test-key", platform.to_lowercase().replace(' ', "-"))),
+                ("key_id".to_string(), format_args!("{}-test-key", platform.to_lowercase().to_string().replace(' ', "-"))),
                 ("data".to_string(), hex::encode(b"Cross-platform test data")),
                 ("algorithm".to_string(), "ECDSA_SHA256".to_string()),
             ]),
         };
         
         let sign_result = adapter.perform_operation(&connection, sign_operation).await
-            .expect(&format!("Signing failed for {} HSM", platform));
+            .expect(&format_args!("Signing failed for {} HSM", platform).to_string());
         
         assert!(sign_result.success);
         assert!(!sign_result.result_data.is_empty());
@@ -126,7 +104,6 @@ async fn test_cross_platform_hsm_operations() {
     }
 }
 
-/// Test performance across different HSM types
 #[tokio::test]
 async fn test_hsm_performance_comparison() {
     let hsm_types = vec![
@@ -141,10 +118,9 @@ async fn test_hsm_performance_comparison() {
         let adapter = get_adapter_for_hsm(&hsm);
         let connection = adapter.connect(&hsm).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-        
-        // Measure signing performance
+
         let start_time = Instant::now();
         let num_operations = 10;
         
@@ -152,15 +128,15 @@ async fn test_hsm_performance_comparison() {
             let operation = UniversalOperation {
                 operation_type: OperationType::Sign,
                 parameters: HashMap::from([
-                    ("key_id".to_string(), format!("perf-test-key-{}", i)),
-                    ("data".to_string(), hex::encode(format!("Performance test data {}", i))),
+                    ("key_id".to_string(), format_args!("perf-test-key-{}", i).to_string()),
+                    ("data".to_string(), hex::encode(format_args!("Performance test data {}", i).to_string())),
                     ("algorithm".to_string(), "ECDSA_SHA256".to_string()),
                 ]),
             };
             
             let result = adapter.perform_operation(&connection, operation).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
             assert!(result.success);
         }
@@ -171,49 +147,43 @@ async fn test_hsm_performance_comparison() {
         performance_results.push((hsm_name, avg_duration_ms));
         println!("📊 {} HSM: Average operation time: {:.2}ms", hsm_name, avg_duration_ms);
     }
-    
-    // Verify all HSMs completed operations
+
     assert_eq!(performance_results.len(), 3);
-    
-    // BearDog Native should be fastest (in our mock implementation)
+
     let beardog_perf = performance_results.iter()
         .find(|(name, _)| name.contains("BearDog"))
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     assert!(beardog_perf.1 < 100.0, "BearDog Native should be fast");
 }
 
-/// Test failover between HSM vendors
 #[tokio::test]
 async fn test_hsm_vendor_failover() {
-    // Simulate HSM priority list
+
     let hsm_priority = vec![
         create_mock_pkcs11_hsm("SafeNet", "/usr/lib/safenet/libpkcs11.so"),  // Primary
         create_mock_pkcs11_hsm("Thales", "/usr/lib/thales/libpkcs11.so"),    // Backup
         create_mock_beardog_native_hsm(),                                     // Tertiary
     ];
-    
-    // Test that we can fail over to any HSM in the priority list
+
     for (i, hsm) in hsm_priority.iter().enumerate() {
         let adapter = get_adapter_for_hsm(hsm);
-        
-        // Test connection
+
         let connection_result = adapter.connect(hsm).await;
         assert!(connection_result.is_ok(), "Failover HSM #{} connection failed", i + 1);
         
         let connection = connection_result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-        
-        // Test that operations work on failover HSM
+
         let operation = UniversalOperation {
             operation_type: OperationType::GenerateKey,
             parameters: HashMap::from([
                 ("key_type".to_string(), "ecdsa_p256".to_string()),
-                ("key_id".to_string(), format!("failover-test-key-{}", i)),
+                ("key_id".to_string(), format_args!("failover-test-key-{}", i).to_string()),
             ]),
         };
         
@@ -225,7 +195,6 @@ async fn test_hsm_vendor_failover() {
     }
 }
 
-/// Test concurrent operations across multiple HSMs
 #[tokio::test]
 async fn test_concurrent_multi_hsm_operations() {
     let hsms = vec![
@@ -243,14 +212,14 @@ async fn test_concurrent_multi_hsm_operations() {
                 let adapter = get_adapter_for_hsm(&hsm_clone);
                 let connection = adapter.connect(&hsm_clone).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
                 
                 let operation = UniversalOperation {
                     operation_type: OperationType::Sign,
                     parameters: HashMap::from([
-                        ("key_id".to_string(), format!("concurrent-key-{}-{}", hsm_index, op_index)),
-                        ("data".to_string(), hex::encode(format!("concurrent data {} {}", hsm_index, op_index))),
+                        ("key_id".to_string(), format_args!("concurrent-key-{}-{}", hsm_index, op_index).to_string()),
+                        ("data".to_string(), hex::encode(format_args!("concurrent data {} {}", hsm_index, op_index).to_string())),
                         ("algorithm".to_string(), "ECDSA_SHA256".to_string()),
                     ]),
                 };
@@ -261,33 +230,29 @@ async fn test_concurrent_multi_hsm_operations() {
             tasks.push(task);
         }
     }
-    
-    // Wait for all concurrent operations to complete
+
     let start_time = Instant::now();
     let results = futures::future::join_all(tasks).await;
     let total_duration = start_time.elapsed();
-    
-    // Verify all operations succeeded
+
     for (i, result) in results.iter().enumerate() {
         assert!(result.is_ok(), "Concurrent operation {} failed", i);
         let op_result = result.as_ref().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?.as_ref().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert!(op_result.success, "Concurrent operation {} was not successful", i);
     }
     
     println!("✅ Completed {} concurrent HSM operations in {:?}", 
              results.len(), total_duration);
-    
-    // Should complete reasonably quickly with concurrent operations
+
     assert!(total_duration < Duration::from_secs(10));
 }
 
-/// Test human entropy generation capabilities
 #[tokio::test]
 async fn test_human_entropy_capabilities() {
     let test_cases = vec![
@@ -298,20 +263,19 @@ async fn test_human_entropy_capabilities() {
     
     for (hsm, should_support_entropy) in test_cases {
         let adapter = get_adapter_for_hsm(&hsm);
-        
-        // Test entropy support detection
+
         let supports_entropy = adapter.supports_human_entropy().await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert_eq!(supports_entropy, should_support_entropy, 
                    "Entropy support mismatch for {} HSM", hsm.vendor);
         
         if should_support_entropy {
-            // Test entropy generation
+
             let connection = adapter.connect(&hsm).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
             let requirements = HumanEntropyRequirements {
                 minimum_entropy_bits: 256,
@@ -323,7 +287,7 @@ async fn test_human_entropy_capabilities() {
             
             let seed = entropy_result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
             assert_eq!(seed.seed_data.len(), 32); // 256 bits = 32 bytes
             assert!(seed.entropy_estimate > 0.8);
@@ -331,10 +295,10 @@ async fn test_human_entropy_capabilities() {
             
             println!("✅ {} HSM: Human entropy generation successful", hsm.vendor);
         } else {
-            // Test that entropy generation properly fails
+
             let connection = adapter.connect(&hsm).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
             let requirements = HumanEntropyRequirements {
                 minimum_entropy_bits: 256,
@@ -353,7 +317,6 @@ async fn test_human_entropy_capabilities() {
     }
 }
 
-/// Test HSM health monitoring and status reporting
 #[tokio::test]
 async fn test_hsm_health_monitoring() {
     let hsms = vec![
@@ -364,25 +327,23 @@ async fn test_hsm_health_monitoring() {
     
     for hsm in hsms {
         let adapter = get_adapter_for_hsm(&hsm);
-        
-        // Test health check
+
         let health_result = adapter.test_connection(&hsm).await;
         assert!(health_result.is_ok(), "Health check failed for {} HSM", hsm.vendor);
         
         let health = health_result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert!(health.is_healthy, "{} HSM should be healthy", hsm.vendor);
         assert!(health.response_time_ms > 0.0, "Response time should be positive");
         assert!(health.response_time_ms < 1000.0, "Response time should be reasonable");
         assert!(health.last_check <= chrono::Utc::now(), "Last check timestamp should be valid");
-        
-        // Test that error cases are handled
+
         if health.error_message.is_some() {
             println!("ℹ️  {} HSM health message: {}", hsm.vendor, health.error_message.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
         }
         
@@ -391,30 +352,29 @@ async fn test_hsm_health_monitoring() {
     }
 }
 
-// Helper functions
 fn get_adapter_for_hsm(hsm: &DiscoveredHsm) -> Box<dyn HsmAdapter> {
     match &hsm.interface_type {
         HsmInterfaceType::Pkcs11 { .. } => Box::new(Pkcs11Adapter),
         HsmInterfaceType::AndroidStrongBox { .. } => Box::new(AndroidStrongBoxAdapter::new().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?),
         HsmInterfaceType::BearDogNative { .. } => Box::new(BearDogNativeAdapter::new().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?),
         _ => Box::new(BearDogNativeAdapter::new().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?), // Default fallback
     }
 }
 
 fn create_mock_pkcs11_hsm(vendor: &str, library_path: &str) -> DiscoveredHsm {
     DiscoveredHsm {
-        hsm_id: format!("pkcs11-{}-001", vendor.to_lowercase()),
+        hsm_id: format_args!("pkcs11-{}-001", vendor.to_lowercase().to_string()),
         vendor: vendor.to_string(),
-        model: format!("{} Network HSM", vendor),
+        model: format_args!("{} Network HSM", vendor).to_string(),
         version: "7.4.0".to_string(),
         interface_type: HsmInterfaceType::Pkcs11 {
             library_path: library_path.to_string(),
@@ -488,14 +448,13 @@ fn create_mock_connection_info() -> HsmConnectionInfo {
 }
 
 fn create_mock_hsm_capabilities() -> beardog_tunnel::universal_hsm_discovery::HsmCapabilities {
-    // For now, create minimal capabilities
+
     use beardog_tunnel::universal_hsm_discovery::{
         HsmCapabilities, KeyGenerationCapabilities, CryptoOperationCapabilities,
         KeyManagementCapabilities, AdvancedFeatureCapabilities, SecurityCapabilities,
         ApiSupportCapabilities, ComplianceCapabilities, HumanEntropyCapabilities,
         PerformanceCapabilities
     };
-    
-    // Return default implementation for testing
+
     HsmCapabilities::default()
 } 

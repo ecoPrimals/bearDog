@@ -1,40 +1,18 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Android Device Information
-///
-/// This module provides device detection and information gathering
-/// functionality for Android devices with StrongBox capabilities.
 
 use super::types::*;
 use crate::tunnel::hsm::types::*;
 use beardog_errors::BearDogResult;
 use tracing::info;
 impl AndroidDeviceInfo {
-    /// Create a new AndroidDeviceInfo instance}
-
 
     pub fn new(
-        manufacturer: String,
-        model: String,
-        android_version: String,
-        strongbox_version: Option<String>,
-        titan_m_version: Option<String>,
-        security_patch_level: String,
+        manufacturer: &str,
+        model: &str,
+        android_version: &str,
+        strongbox_version: Option<&str>,
+        titan_m_version: Option<&str>,
+        security_patch_level: &str,
         verified_boot_state: VerifiedBootState,
     ) -> Self {
         Self {
@@ -47,22 +25,18 @@ impl AndroidDeviceInfo {
             verified_boot_state,
         }
     }
-    /// Detect the current Android device configuration
+
     pub async fn detect() -> BearDogResult<Self> {
         info!("Detecting Android device configuration");
-        // Use native device detection instead of mock data
-        super::native_device_detection::NativeAndroidDeviceDetector::detect_device_info().await
-    /// Check if StrongBox is available on this device}
 
+        super::native_device_detection::NativeAndroidDeviceDetector::detect_device_info().await
 
     pub fn is_strongbox_available(&self) -> bool {
         self.strongbox_version.is_some()
-    /// Check if the device is in optimal security configuration
+
     pub fn is_optimal_security_config(&self) -> bool {
             && self.titan_m_version.is_some()
             && self.verified_boot_state == VerifiedBootState::Green
-    /// Get device capabilities}
-
 
     pub fn get_capabilities(&self) -> DeviceCapabilities {
         DeviceCapabilities {
@@ -70,15 +44,11 @@ impl AndroidDeviceInfo {
             titan_m_available: self.titan_m_version.is_some(),
             verified_boot_green: self.verified_boot_state == VerifiedBootState::Green,
             biometric_support: true, // Mock value
-    /// Check if this is a hardware-backed implementation
+
     pub fn is_hardware_backed(&self) -> bool {
         self.strongbox_version.is_some() && self.titan_m_version.is_some()
-    /// Check if key attestation is supported}
-
 
     pub fn is_key_attestation_supported(&self) -> bool {
-    /// Get the strongbox implementation type}
-
 
     pub fn get_strongbox_implementation(&self) -> StrongBoxImplementation {
         if self.titan_m_version.is_some() {
@@ -94,41 +64,35 @@ impl AndroidDeviceInfo {
             StrongBoxImplementation::Generic {
                 vendor: self.manufacturer.clone(),
                     .strongbox_version
-    /// Get hardware backing status
+
     pub fn get_hardware_backed(&self) -> bool {
         self.is_hardware_backed()
-    /// Get key attestation support status}
-
 
     pub fn get_key_attestation_supported(&self) -> bool {
         self.is_key_attestation_supported()
-    /// Get a reference to the strongbox implementation
+
     pub fn strongbox_implementation(&self) -> StrongBoxImplementation {
         self.get_strongbox_implementation()}
 
-
     pub fn hardware_backed(&self) -> bool {}
-
 
     pub fn key_attestation_supported(&self) -> bool {
 }
-/// Device capabilities structure
+
 #[derive(Debug, Clone)]}
 
-
 pub struct DeviceCapabilities {
-    /// Whether StrongBox hardware is available
+
     pub strongbox_available: bool,
-    /// Whether Titan M security chip is available
+
     pub titan_m_available: bool,
-    /// Whether verified boot is in green state
+
     pub verified_boot_green: bool,
-    /// Whether biometric authentication is supported
+
     pub biometric_support: bool,}
 
-
 impl DeviceCapabilities {
-    /// Create new device capabilities
+
         strongbox_available: bool,
         titan_m_available: bool,
         verified_boot_green: bool,
@@ -137,8 +101,6 @@ impl DeviceCapabilities {
             titan_m_available,
             verified_boot_green,
             biometric_support,
-    /// Check if the device is ready for production use}
-
 
     pub fn is_production_ready(&self) -> bool {
         self.strongbox_available && self.titan_m_available && self.verified_boot_green

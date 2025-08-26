@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["DataTransformationConfig","ExternalSystemConfig","ExternalSystemsConfig","MessageQueuingConfig","ProtocolSupportConfig"]};

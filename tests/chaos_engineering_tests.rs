@@ -1,36 +1,18 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
-/// Chaos Engineering Tests for BearDog System
-/// These tests ensure the system remains stable under extreme conditions
 #[tokio::test]
 async fn test_memory_exhaustion_protection() {
     println!("🔥 CHAOS TEST: Memory Exhaustion Protection");
 
-    // Attempt to create many sessions rapidly
     let mut handles = Vec::new();
     let start = Instant::now();
 
     for i in 0..1000 {
         let handle = tokio::spawn(async move {
-            // Simulate memory-intensive operations
+
             let data = vec![0u8; 1024 * 1024]; // 1MB per task
             sleep(Duration::from_millis(10)).await;
             data.len()
@@ -38,7 +20,6 @@ async fn test_memory_exhaustion_protection() {
         handles.push(handle);
     }
 
-    // Wait for completion or timeout
     let mut completed = 0;
     for handle in handles {
         if let Ok(_) = tokio::time::timeout(Duration::from_secs(30), handle).await {
@@ -52,7 +33,6 @@ async fn test_memory_exhaustion_protection() {
         completed, duration
     );
 
-    // System should handle gracefully, not crash
     assert!(
         completed > 500,
         "System should handle most memory operations"
@@ -70,12 +50,11 @@ async fn test_connection_flooding() {
     let start = Instant::now();
     let mut handles = Vec::new();
 
-    // Flood with concurrent connection attempts
     for i in 0..500 {
         let handle = tokio::spawn(async move {
-            // Simulate connection attempts
+
             sleep(Duration::from_millis(1)).await;
-            format!("connection_{}", i)
+            format_args!("connection_{}", i).to_string()
         });
         handles.push(handle);
     }
@@ -111,10 +90,10 @@ async fn test_rapid_configuration_changes() {
 
     for i in 0..100 {
         let handle = tokio::spawn(async move {
-            // Simulate rapid config changes
+
             let config = beardog::config::BearDogConfig::default();
             sleep(Duration::from_millis(10)).await;
-            format!("config_change_{}", i)
+            format_args!("config_change_{}", i).to_string()
         });
         handles.push(handle);
     }
@@ -134,12 +113,11 @@ async fn test_rapid_configuration_changes() {
 async fn test_disk_space_exhaustion_simulation() {
     println!("🔥 CHAOS TEST: Disk Space Exhaustion Simulation");
 
-    // Simulate disk space issues by creating large log entries
     let mut large_operations = Vec::new();
 
     for i in 0..50 {
         let operation = tokio::spawn(async move {
-            // Simulate large log/audit entries
+
             let large_data = "X".repeat(1024 * 1024); // 1MB entries
             sleep(Duration::from_millis(100)).await;
             large_data.len()
@@ -165,21 +143,19 @@ async fn test_disk_space_exhaustion_simulation() {
 async fn test_network_partition_simulation() {
     println!("🔥 CHAOS TEST: Network Partition Simulation");
 
-    // Simulate network delays and timeouts
     let mut network_ops = Vec::new();
 
     for i in 0..20 {
         let op = tokio::spawn(async move {
-            // Simulate network operations with random delays
+
             let delay = Duration::from_millis(100 + (i * 50) % 1000);
             sleep(delay).await;
 
-            // Simulate timeout scenarios
             if i % 5 == 0 {
                 sleep(Duration::from_secs(2)).await; // Slow operation
             }
 
-            format!("network_op_{}", i)
+            format_args!("network_op_{}", i).to_string()
         });
         network_ops.push(op);
     }
@@ -224,7 +200,7 @@ async fn test_concurrent_security_operations() {
     for i in 0..100 {
         let op = operations[i % operations.len()].to_string();
         let handle = tokio::spawn(async move {
-            // Simulate security operation
+
             match op.as_str() {
                 "encrypt_data" => {
                     sleep(Duration::from_millis(10)).await;
@@ -293,12 +269,11 @@ async fn test_concurrent_security_operations() {
 async fn test_resource_starvation_recovery() {
     println!("🔥 CHAOS TEST: Resource Starvation Recovery");
 
-    // Create resource-intensive operations
     let mut resource_hogs = Vec::new();
 
     for i in 0..50 {
         let hog = tokio::spawn(async move {
-            // Simulate CPU-intensive operation
+
             let mut counter = 0;
             let start = Instant::now();
 
@@ -314,17 +289,15 @@ async fn test_resource_starvation_recovery() {
         resource_hogs.push(hog);
     }
 
-    // While resource hogs are running, try normal operations
     let mut normal_ops = Vec::new();
     for i in 0..20 {
         let op = tokio::spawn(async move {
             sleep(Duration::from_millis(50)).await;
-            format!("normal_op_{}", i)
+            format_args!("normal_op_{}", i).to_string()
         });
         normal_ops.push(op);
     }
 
-    // Wait for all operations
     let mut hog_results = 0;
     for hog in resource_hogs {
         if let Ok(_) = hog.await {
@@ -353,10 +326,8 @@ async fn test_resource_starvation_recovery() {
 async fn test_cascade_failure_prevention() {
     println!("🔥 CHAOS TEST: Cascade Failure Prevention");
 
-    // Simulate a component failure that could cascade
     let mut component_tests = Vec::new();
 
-    // Simulate different components failing
     for component in [
         "encryption",
         "audit",
@@ -366,15 +337,14 @@ async fn test_cascade_failure_prevention() {
     ] {
         let comp = component.to_string();
         let test = tokio::spawn(async move {
-            // Simulate component failure
+
             if comp == "encryption" {
                 sleep(Duration::from_secs(2)).await; // Slow/failed component
                 return Err("encryption_failure");
             }
 
-            // Other components should continue working
             sleep(Duration::from_millis(100)).await;
-            Ok(format!("{}_working", comp))
+            Ok(format_args!("{}_working", comp).to_string())
         });
         component_tests.push(test);
     }
@@ -415,11 +385,11 @@ async fn test_error_recovery_patterns() {
 
     for scenario in error_scenarios {
         let recovery_test = tokio::spawn(async move {
-            // Simulate error condition
+
             match scenario {
                 "connection_timeout" => {
                     sleep(Duration::from_millis(100)).await;
-                    // Simulate retry logic
+
                     for attempt in 1..=3 {
                         sleep(Duration::from_millis(50)).await;
                         if attempt == 3 {
@@ -429,7 +399,7 @@ async fn test_error_recovery_patterns() {
                     Err("connection_failed")
                 }
                 "invalid_input" => {
-                    // Should fail fast and gracefully
+
                     Ok("input_validated_and_rejected")
                 }
                 "resource_unavailable" => {
@@ -459,35 +429,30 @@ async fn test_error_recovery_patterns() {
 async fn test_system_degradation_graceful() {
     println!("🔥 CHAOS TEST: Graceful System Degradation");
 
-    // Simulate gradual system degradation
     let degradation_levels = vec![10, 25, 50, 75, 90]; // Percentage of system stress
 
     for stress_level in degradation_levels {
         println!("Testing {}% system stress", stress_level);
 
-        // Create stress proportional to level
         let stress_tasks = stress_level / 10;
         let mut handles = Vec::new();
 
         for i in 0..stress_tasks {
             let handle = tokio::spawn(async move {
-                // Simulate work proportional to stress
+
                 sleep(Duration::from_millis(stress_level as u64)).await;
                 i
             });
             handles.push(handle);
         }
 
-        // Meanwhile, try essential operations
         let essential_op = tokio::spawn(async {
             sleep(Duration::from_millis(50)).await;
             "essential_operation_completed"
         });
 
-        // Wait for essential operation
         let essential_result = tokio::time::timeout(Duration::from_secs(5), essential_op).await;
 
-        // Clean up stress tasks
         for handle in handles {
             let _ = tokio::time::timeout(Duration::from_millis(100), handle).await;
         }

@@ -1,25 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// HSM Discovery Engine
-///
-/// This module handles the actual discovery process for HSMs across different
-/// interface types and environments. It provides automatic detection and
-/// enumeration of available HSMs.
 
 pub mod cloud_discoverer;
 pub mod mobile_discoverer;
@@ -40,7 +19,7 @@ pub use pkcs11_discoverer::Pkcs11Discoverer;
 pub use platform_discoverer::PlatformDiscoverer;
 pub use software_discoverer::SoftwareDiscoverer;
 pub use usb_discoverer::UsbDiscoverer;
-/// Main HSM discovery engine
+
 #[derive(Debug)]
 pub struct DiscoveryEngine {
     pkcs11_discoverer: Pkcs11Discoverer,
@@ -53,7 +32,6 @@ pub struct DiscoveryEngine {
 }
 impl DiscoveryEngine {}
 
-
     pub fn new() -> BearDogResult<Self> {
         Ok(Self {
             pkcs11_discoverer: Pkcs11Discoverer::new()?,
@@ -65,14 +43,14 @@ impl DiscoveryEngine {}
             software_discoverer: SoftwareDiscoverer::new()?,
         })
     }
-    /// Discover all available HSMs in the environment
+
     pub async fn discover_hsms(
         &self,
         config: &DiscoveryConfig,
     ) -> BearDogResult<Vec<DiscoveredHsm>> {
         info!("🔍 Starting universal HSM discovery");
         let mut all_hsms = Vec::new();
-        // Execute discoveries sequentially for now (can be made concurrent later)
+
         if config.enable_pkcs11_discovery {
             let mut hsms = self.discover_pkcs11_hsms(config).await?;
             all_hsms.append(&mut hsms);

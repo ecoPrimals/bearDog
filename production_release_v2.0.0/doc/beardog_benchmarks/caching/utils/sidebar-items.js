@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["calculate_memory_usage","calculate_optimal_cache_sizes","estimate_cache_hit_ratio","recommend_cache_config","validate_production_config"]};

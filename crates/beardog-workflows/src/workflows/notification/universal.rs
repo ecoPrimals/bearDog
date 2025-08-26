@@ -1,24 +1,5 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Universal notification adapters
-///
-/// These adapters can work with any service that supports standard protocols
-/// Users can configure whatever communication methods they actually have
 use super::*;
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::config::integration::workflows::{
@@ -28,7 +9,6 @@ use beardog_types::config::integration::workflows::{
 use tracing::debug;
 use std::collections::HashMap;
 
-/// Universal webhook adapter - works with Discord, Slack, Teams, or any webhook service
 pub struct WebhookAdapter {
     name: String,
     config: WebhookConfig,
@@ -44,38 +24,34 @@ impl WebhookAdapter {
         }
     }
 
-    /// Create a Discord-compatible adapter
-    pub fn discord(webhook_url: String) -> Self {
+    pub fn discord(webhook_url: &str) -> Self {
         Self::new(WebhookConfig {
             enabled: true,
             urls: vec![webhook_url],
-            auth_headers: HashMap::new(),
+            auth_headers: HashMap::with_capacity(16),
             max_retries: 3,
         })
     }
 
-    /// Create a Slack-compatible adapter
-    pub fn slack(webhook_url: String) -> Self {
+    pub fn slack(webhook_url: &str) -> Self {
         Self::new(WebhookConfig {
             enabled: true,
             urls: vec![webhook_url],
-            auth_headers: HashMap::new(),
+            auth_headers: HashMap::with_capacity(16),
             max_retries: 3,
         })
     }
 
-    /// Create a Teams-compatible adapter
-    pub fn teams(webhook_url: String) -> Self {
+    pub fn teams(webhook_url: &str) -> Self {
         Self::new(WebhookConfig {
             enabled: true,
             urls: vec![webhook_url],
-            auth_headers: HashMap::new(),
+            auth_headers: HashMap::with_capacity(16),
             max_retries: 3,
         })
     }
 }
 
-// MODERNIZED: Native async fn implementation - no async_trait overhead
 impl NotificationAdapter for WebhookAdapter {
     fn name(&self) -> &str {
         &self.name
@@ -88,7 +64,6 @@ impl NotificationAdapter for WebhookAdapter {
             ));
         }
 
-        // Test with a simple ping message
         let test_payload = serde_json::json!({
             "content": "BearDog notification test",
             "text": "BearDog notification test"
@@ -213,19 +188,19 @@ impl NotificationAdapter for WebhookAdapter {
         &self,
         message: &NotificationMessage,
     ) -> BearDogResult<serde_json::Value> {
-        // Create a payload that works with most services
+
         let mut payload = serde_json::Map::new();
-        // Standard fields that work across services
+
         payload.insert(
             "content".to_string(),
-            serde_json::Value::String(format!("**{}**\n{}", message.title, message.content)),
+            serde_json::Value::String(format_args!("**{}**\n{}", message.title, message.content).to_string()),
         );
-        // Discord/Slack compatibility
+
         payload.insert(
             "text".to_string(),
-            serde_json::Value::String(format!("{}: {}", message.title, message.content)),
+            serde_json::Value::String(format_args!("{}: {}", message.title, message.content).to_string()),
         );
-        // Teams compatibility
+
         payload.insert(
             "title".to_string(),
             serde_json::Value::String(message.title.clone()),
@@ -234,7 +209,7 @@ impl NotificationAdapter for WebhookAdapter {
             "summary".to_string(),
             serde_json::Value::String(message.content.clone()),
         );
-        // Rich formatting if supported
+
         if message.format == MessageFormat::Markdown {
             payload.insert(
                 "embeds".to_string(),
@@ -259,7 +234,6 @@ impl NotificationAdapter for WebhookAdapter {
     }
 }
 
-/// Universal email adapter - works with any SMTP server
 pub struct EmailAdapter {
     config: EmailConfig,
 }
@@ -290,8 +264,7 @@ impl NotificationAdapter for EmailAdapter {
     ) -> BearDogResult<NotificationResult> {
         let delivery_id = uuid::Uuid::new_v4().to_string();
         tracing::info!("📧 Sending email notification: {}", message.title);
-        // In a real implementation, would use lettre or similar to send actual email
-        // For now, log the email details
+
         for recipient in &message.recipients {
             tracing::info!(
                 "Email would be sent to: {} | Subject: {} | Body: {}",
@@ -303,7 +276,7 @@ impl NotificationAdapter for EmailAdapter {
         Ok(NotificationResult {
             delivery_id,
             success: true,
-            message: format!("Email sent to {} recipients", message.recipients.len()),
+            message: format_args!("Email sent to {} recipients", message.recipients.len().to_string()),
             timestamp: chrono::Utc::now(),
             retry_count: 0,
         })
@@ -328,7 +301,6 @@ impl NotificationAdapter for EmailAdapter {
     }
 }
 
-/// Universal SMS adapter - works with any SMS provider
 pub struct SmsAdapter {
     provider: String,
     api_key: String,
@@ -336,7 +308,7 @@ pub struct SmsAdapter {
 }
 
 impl SmsAdapter {
-    pub fn twilio(api_key: String, from_number: String) -> Self {
+    pub fn twilio(api_key: &str, from_number: &str) -> Self {
         Self {
             provider: "twilio".to_string(),
             api_key,
@@ -344,15 +316,15 @@ impl SmsAdapter {
         }
     }
 
-    pub fn aws_sns(api_key: String) -> Self {
+    pub fn aws_sns(api_key: &str) -> Self {
         Self {
             provider: "aws_sns".to_string(),
             api_key,
-            from_number: String::new(),
+            from_number: String::with_capacity(64),
         }
     }
 
-    pub fn custom(provider: String, api_key: String, from_number: String) -> Self {
+    pub fn custom(provider: &str, api_key: &str, from_number: &str) -> Self {
         Self {
             provider,
             api_key,
@@ -368,7 +340,7 @@ impl NotificationAdapter for SmsAdapter {
 
     async fn test_connection(&self) -> BearDogResult<()> {
         tracing::info!("Testing SMS connection via {}", self.provider);
-        // In a real implementation, would test the actual SMS API
+
         if self.api_key.is_empty() {
             return Err(BearDogError::configuration(
                 "SMS API key not configured".to_string(),
@@ -377,7 +349,6 @@ impl NotificationAdapter for SmsAdapter {
         Ok(())
     }
 
-    /// Send SMS notification
     async fn send_notification(
         &self,
         message: &NotificationMessage,
@@ -387,9 +358,9 @@ impl NotificationAdapter for SmsAdapter {
             self.provider, self.from_number
         );
         let mut success_count = 0;
-        // Send to all recipients
+
         for recipient in &message.recipients {
-            // Build the SMS payload based on provider
+
             let response = match self.provider.as_str() {
                 "twilio" => {
                     self.client
@@ -407,12 +378,12 @@ impl NotificationAdapter for SmsAdapter {
                         .await
                 },
                 "aws_sns" => {
-                    // For AWS SNS, we'd use different API structure
+
                     self.client
                         .post("https://sns.amazonaws.com/")
                         .header(
                             "Authorization",
-                            format!("AWS4-HMAC-SHA256 Credential={}", self.api_key),
+                            format_args!("AWS4-HMAC-SHA256 Credential={}", self.api_key).to_string(),
                         )
                         .form(&[
                             ("PhoneNumber", recipient),
@@ -424,7 +395,7 @@ impl NotificationAdapter for SmsAdapter {
                         .await
                 },
                 _ => {
-                    // Generic/custom provider
+
                     self.client
                         .post(&self.api_key) // Use api_key as endpoint for custom providers
                         .json(&serde_json::json!({
@@ -485,7 +456,6 @@ impl NotificationAdapter for SmsAdapter {
     }
 }
 
-/// Slack adapter using the universal webhook approach
 pub struct SlackAdapter {
     webhook_adapter: WebhookAdapter,
 }
@@ -523,8 +493,6 @@ impl NotificationAdapter for SlackAdapter {
     }
 }
 
-/// **MODERNIZED** - Zero-cost notification adapter registry
-/// Uses enum dispatch instead of Vec<Box<dyn>> for better performance
 #[derive(Debug)]
 pub enum NotificationAdapterType {
     Discord(DiscordNotificationAdapter),
@@ -533,7 +501,6 @@ pub enum NotificationAdapterType {
     Webhook(WebhookNotificationAdapter),
 }
 
-/// **ZERO-COST** - Configuration builder with enum-based dispatch
 pub struct NotificationAdapterBuilder {
     adapters: Vec<NotificationAdapterType>,
 }
@@ -550,45 +517,45 @@ impl NotificationAdapterBuilder {
             adapters: Vec::new(),
         }
     }
-    /// Add Discord webhook
-    pub fn discord(mut self, webhook_url: String) -> Self {
+
+    pub fn discord(mut self, webhook_url: &str) -> Self {
         self.adapters
             .push(Box::new(WebhookAdapter::discord(webhook_url)));
         self
     }
-    /// Add Slack webhook
-    pub fn slack(mut self, webhook_url: String) -> Self {
+
+    pub fn slack(mut self, webhook_url: &str) -> Self {
         self.adapters
             .push(Box::new(WebhookAdapter::slack(webhook_url)));
         self
     }
-    /// Add Teams webhook
-    pub fn teams(mut self, webhook_url: String) -> Self {
+
+    pub fn teams(mut self, webhook_url: &str) -> Self {
         self.adapters
             .push(Box::new(WebhookAdapter::teams(webhook_url)));
         self
     }
-    /// Add SMS via Twilio
-    pub fn sms_twilio(mut self, api_key: String, from_number: String) -> Self {
+
+    pub fn sms_twilio(mut self, api_key: &str, from_number: &str) -> Self {
         self.adapters
             .push(Box::new(SmsAdapter::twilio(api_key, from_number)));
         self
     }
-    /// Add email via SMTP
+
     pub fn email(mut self, config: EmailConfig) -> Self {
         self.adapters.push(Box::new(EmailAdapter::new(config)));
         self
     }
-    /// Add custom webhook
-    pub fn custom_webhook(mut self, url: String, auth_token: Option<String>) -> Self {
+
+    pub fn custom_webhook(mut self, url: &str, auth_token: Option<&str>) -> Self {
         let config = WebhookConfig {
             urls: vec![url],
             auth_headers: if let Some(token) = auth_token {
-                let mut headers = HashMap::new();
-                headers.insert("Authorization".to_string(), format!("Bearer {}", token));
+                let mut headers = HashMap::with_capacity(16);
+                headers.insert("Authorization".to_string(), format_args!("Bearer {}", token).to_string());
                 headers
             } else {
-                HashMap::new()
+                HashMap::with_capacity(16)
             },
             enabled: true,
             max_retries: 3,
@@ -596,7 +563,7 @@ impl NotificationAdapterBuilder {
         self.adapters.push(Box::new(WebhookAdapter::new(config)));
         self
     }
-    /// Build notification engine with configured adapters
+
     pub fn build(self, config: NotificationConfig) -> NotificationEngine {
         let mut engine = NotificationEngine::new(config);
         for adapter in self.adapters {

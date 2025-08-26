@@ -1,25 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Songbird Service Discovery Implementation
-///
-/// This module implements the EcosystemServiceDiscovery trait using Songbird
-/// as the service mesh for HSM provider discovery and registration across
-/// the ecosystem.
 
 use super::universal_hsm_provider::{EcosystemHsmProvider, EcosystemServiceDiscovery, ProviderHealthStatus};
 use beardog_errors::{BearDogError, BearDogResult};
@@ -31,25 +10,25 @@ use tokio::time::timeout;
 use tracing::{debug, info, warn, error};
 use uuid::Uuid;
 
-/// Songbird service discovery client configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SongbirdServiceDiscoveryConfig {
-    /// Songbird service mesh endpoint
+
     pub songbird_endpoint: String,
-    /// Service discovery timeout in milliseconds
+
     pub discovery_timeout_ms: u64,
-    /// Health check timeout in milliseconds
+
     pub health_check_timeout_ms: u64,
-    /// Registration retry attempts
+
     pub registration_retries: u32,
-    /// BearDog service registration info
+
     pub beardog_service_info: BearDogServiceInfo,
 }
 
 impl Default for SongbirdServiceDiscoveryConfig {
     fn default() -> Self {
         Self {
-            songbird_endpoint: "http://localhost:8080".to_string(),
+            songbird_endpoint: std::env::var("BEARDOG_SONGBIRD_ENDPOINT")
+                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
             discovery_timeout_ms: 30000,
             health_check_timeout_ms: 5000,
             registration_retries: 3,
@@ -58,7 +37,6 @@ impl Default for SongbirdServiceDiscoveryConfig {
     }
 }
 
-/// BearDog service information for ecosystem registration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BearDogServiceInfo {
     pub service_id: String,
@@ -73,7 +51,7 @@ pub struct BearDogServiceInfo {
 impl Default for BearDogServiceInfo {
     fn default() -> Self {
         Self {
-            service_id: format!("beardog-{}", Uuid::new_v4()),
+            service_id: format_args!("beardog-{}", Uuid::new_v4().to_string()),
             service_name: "BearDog Universal HSM".to_string(),
             version: "4.0.0".to_string(),
             capabilities: vec![
@@ -90,7 +68,6 @@ impl Default for BearDogServiceInfo {
     }
 }
 
-/// Songbird service registry response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRegistryResponse {
     pub services: Vec<ServiceRegistration>,
@@ -99,7 +76,6 @@ pub struct ServiceRegistryResponse {
     pub has_more: bool,
 }
 
-/// Service registration in Songbird
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRegistration {
     pub service_id: String,
@@ -113,7 +89,6 @@ pub struct ServiceRegistration {
     pub last_health_check: Option<String>,
 }
 
-/// Songbird Service Discovery Client
 #[derive(Debug)]
 pub struct SongbirdServiceDiscovery {
     config: SongbirdServiceDiscoveryConfig,
@@ -122,7 +97,7 @@ pub struct SongbirdServiceDiscovery {
 }
 
 impl SongbirdServiceDiscovery {
-    /// Create a new Songbird service discovery client
+
     pub fn new(config: SongbirdServiceDiscoveryConfig) -> Self {
         Self {
             config,
@@ -134,7 +109,6 @@ impl SongbirdServiceDiscovery {
         }
     }
 
-    /// Register BearDog as an HSM provider in the ecosystem
     pub async fn register_beardog_service(&mut self) -> BearDogResult<()> {
         let registration_payload = serde_json::json!({
             "service_id": self.config.beardog_service_info.service_id,
@@ -154,7 +128,7 @@ impl SongbirdServiceDiscovery {
             }
         });
 
-        let registration_url = format!("{}/api/v1/services/register", self.config.songbird_endpoint);
+        let registration_url = format_args!("{}/api/v1/services/register", self.config.songbird_endpoint).to_string();
         let timeout_duration = Duration::from_millis(self.config.health_check_timeout_ms);
 
         for attempt in 1..=self.config.registration_retries {
@@ -192,7 +166,6 @@ impl SongbirdServiceDiscovery {
         ))
     }
 
-    /// Query Songbird for services by capability
     async fn query_services_by_capability(&self, capability: &str) -> BearDogResult<Vec<ServiceRegistration>> {
         let query_url = format!(
             "{}/api/v1/services/query?capability={}",
@@ -234,16 +207,14 @@ impl SongbirdServiceDiscovery {
         }
     }
 
-    /// Convert Songbird service registration to ecosystem HSM provider
     fn convert_to_ecosystem_provider(&self, service: &ServiceRegistration) -> Option<EcosystemHsmProvider> {
-        // Only convert services that have HSM capabilities
+
         if !service.capabilities.iter().any(|cap| 
             cap.contains("hsm") || cap.contains("crypto") || cap.contains("key_management")
         ) {
             return None;
         }
 
-        // Parse health status
         let health_status = match service.health_status.as_str() {
             "healthy" => ProviderHealthStatus::Healthy,
             "optimal" => ProviderHealthStatus::Optimal,
@@ -252,14 +223,12 @@ impl SongbirdServiceDiscovery {
             _ => ProviderHealthStatus::Offline,
         };
 
-        // Extract vendor information from metadata
         let vendor = service.metadata
             .get("vendor")
             .and_then(|v| v.as_str())
             .unwrap_or("unknown")
             .to_string();
 
-        // Create basic HSM capabilities
         let capabilities = HsmCapabilities {
             supported_key_types: vec![], // Will be populated by actual provider
             max_keys: 1000,
@@ -290,13 +259,11 @@ impl SongbirdServiceDiscovery {
     }
 }
 
-// MODERNIZED: Native async fn implementation - no async_trait overhead
 impl EcosystemServiceDiscovery for SongbirdServiceDiscovery {
-    /// Discover HSM providers across the ecosystem through Songbird
+
     async fn discover_hsm_providers(&self) -> BearDogResult<Vec<EcosystemHsmProvider>> {
         debug!("🔍 Discovering HSM providers through Songbird service mesh");
 
-        // Query for different HSM-related capabilities
         let hsm_capabilities = vec![
             "hsm_provider",
             "key_management", 
@@ -312,7 +279,7 @@ impl EcosystemServiceDiscovery for SongbirdServiceDiscovery {
             match self.query_services_by_capability(capability).await {
                 Ok(services) => {
                     for service in services {
-                        // Avoid duplicates
+
                         if seen_service_ids.contains(&service.service_id) {
                             continue;
                         }
@@ -333,7 +300,6 @@ impl EcosystemServiceDiscovery for SongbirdServiceDiscovery {
         Ok(discovered_providers)
     }
 
-    /// Register this HSM provider with the ecosystem through Songbird
     async fn register_hsm_provider(&self, provider_info: &EcosystemHsmProvider) -> BearDogResult<()> {
         let registration_payload = serde_json::json!({
             "service_id": provider_info.id,
@@ -349,12 +315,12 @@ impl EcosystemServiceDiscovery for SongbirdServiceDiscovery {
             "metadata": {
                 "vendor": provider_info.vendor,
                 "ecosystem_node": provider_info.ecosystem_node,
-                "health_status": format!("{:?}", provider_info.health_status),
+                "health_status": format_args!("{:?}", provider_info.health_status).to_string(),
                 "registered_by": "beardog_universal_hsm"
             }
         });
 
-        let registration_url = format!("{}/api/v1/services/register", self.config.songbird_endpoint);
+        let registration_url = format_args!("{}/api/v1/services/register", self.config.songbird_endpoint).to_string();
         let timeout_duration = Duration::from_millis(self.config.health_check_timeout_ms);
 
         match timeout(
@@ -385,9 +351,8 @@ impl EcosystemServiceDiscovery for SongbirdServiceDiscovery {
         }
     }
 
-    /// Health check for ecosystem connectivity through Songbird
     async fn health_check(&self) -> BearDogResult<bool> {
-        let health_url = format!("{}/api/v1/health", self.config.songbird_endpoint);
+        let health_url = format_args!("{}/api/v1/health", self.config.songbird_endpoint).to_string();
         let timeout_duration = Duration::from_millis(self.config.health_check_timeout_ms);
 
         match timeout(
@@ -415,21 +380,18 @@ impl EcosystemServiceDiscovery for SongbirdServiceDiscovery {
     }
 }
 
-/// Factory for creating Songbird service discovery clients
 pub struct SongbirdServiceDiscoveryFactory;
 
 impl SongbirdServiceDiscoveryFactory {
-    /// Create a new Songbird service discovery client with default configuration
+
     pub fn create_default() -> SongbirdServiceDiscovery {
         SongbirdServiceDiscovery::new(SongbirdServiceDiscoveryConfig::default())
     }
 
-    /// Create a new Songbird service discovery client with custom configuration
     pub fn create_with_config(config: SongbirdServiceDiscoveryConfig) -> SongbirdServiceDiscovery {
         SongbirdServiceDiscovery::new(config)
     }
 
-    /// Create a Songbird client configured for local development
     pub fn create_for_development() -> SongbirdServiceDiscovery {
         let mut config = SongbirdServiceDiscoveryConfig::default();
         config.songbird_endpoint = "http://localhost:8080".to_string();
@@ -437,8 +399,7 @@ impl SongbirdServiceDiscoveryFactory {
         SongbirdServiceDiscovery::new(config)
     }
 
-    /// Create a Songbird client configured for production ecosystem
-    pub fn create_for_production(songbird_endpoint: String, beardog_endpoint: String) -> SongbirdServiceDiscovery {
+    pub fn create_for_production(songbird_endpoint: &str, beardog_endpoint: &str) -> SongbirdServiceDiscovery {
         let mut config = SongbirdServiceDiscoveryConfig::default();
         config.songbird_endpoint = songbird_endpoint;
         config.beardog_service_info.endpoint = beardog_endpoint;

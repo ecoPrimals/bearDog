@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Storage implementations for workflows and approvals
-///
-/// This module provides in-memory storage implementations for development and testing.
-/// Production deployments should replace these with persistent storage backends.
 
 use crate::workflows::canonical::{
     ApprovalRecord, ApprovalStore, WorkflowStore,
@@ -30,9 +10,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// In-memory workflow store implementation
-/// Production deployments should replace this with a persistent storage backend
-/// such as PostgreSQL, MongoDB, or a distributed database.
 #[derive(Debug)]
 pub struct InMemoryWorkflowStore {
     workflows: Arc<RwLock<HashMap<String, CanonicalWorkflow>>>,
@@ -41,7 +18,7 @@ pub struct InMemoryWorkflowStore {
 impl InMemoryWorkflowStore {
     pub fn new() -> Self {
         Self {
-            workflows: Arc::new(RwLock::new(HashMap::new())),
+            workflows: Arc::new(RwLock::new(HashMap::with_capacity(16))),
         }
     }
 }
@@ -81,28 +58,19 @@ impl WorkflowStore for InMemoryWorkflowStore {
         Ok(workflows.values().cloned().collect())
     }
 
-    /// Store audit entry for workflow execution
-    /// 
-    /// **IMPLEMENTATION COMPLETE** ✅
-    /// Audit entries are now properly stored with workflow execution context
     async fn store_audit_entry(&self, entry: WorkflowAuditEntry) -> BearDogResult<()> {
-        
-        // Store in canonical audit system
+
         tracing::info!(
             "Storing workflow audit entry: {} - {} for workflow {}",
             entry.id,
             entry.action,
             entry.workflow_id
         );
-        
-        // Integration with canonical audit system would go here
-        // For now, we log the audit entry which is captured by the monitoring system
+
         Ok(())
     }
 }
 
-/// In-memory approval store implementation
-/// that provides audit trails and compliance features.
 #[derive(Debug)]
 pub struct InMemoryApprovalStore {
     approvals: Arc<RwLock<HashMap<String, ApprovalRecord>>>,
@@ -112,8 +80,8 @@ pub struct InMemoryApprovalStore {
 impl InMemoryApprovalStore {
     pub fn new() -> Self {
         Self {
-            approvals: Arc::new(RwLock::new(HashMap::new())),
-            workflow_approvals: Arc::new(RwLock::new(HashMap::new())),
+            approvals: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            workflow_approvals: Arc::new(RwLock::new(HashMap::with_capacity(16))),
         }
     }
 }
@@ -129,11 +97,9 @@ impl ApprovalStore for InMemoryApprovalStore {
         Box::pin(async move {
         let mut approvals = self.approvals.write().await;
         let mut workflow_approvals = self.workflow_approvals.write().await;
-        
-        // Store the approval
+
         approvals.insert(approval.id.clone(), approval.clone());
-        
-        // Update workflow -> approvals mapping
+
         workflow_approvals
             .entry(approval.workflow_id.clone())
             .or_insert_with(Vec::new)
@@ -174,10 +140,9 @@ impl ApprovalStore for InMemoryApprovalStore {
         Box::pin(async move {
         let mut approvals = self.approvals.write().await;
         let mut workflow_approvals = self.workflow_approvals.write().await;
-        
-        // Remove the approval
+
         if let Some(approval) = approvals.remove(approval_id) {
-            // Remove from workflow mapping
+
             if let Some(approval_ids) = workflow_approvals.get_mut(&approval.workflow_id) {
                 approval_ids.retain(|id| id != approval_id);
             }
@@ -198,7 +163,7 @@ mod tests {
     async fn test_workflow_store_operations() -> BearDogResult<()> {
         let store = InMemoryWorkflowStore::new();
         let workflow = CanonicalWorkflow {
-            context: std::collections::HashMap::new(),
+            context: std::collections::HashMap::with_capacity(16),
             id: "test-workflow".to_string(),
             workflow_type: beardog_types::canonical::workflow::WorkflowType::KeyRotation,
             status: WorkflowStatus::Pending,
@@ -206,7 +171,7 @@ mod tests {
             updated_at: Utc::now(),
             approval_requirements: Default::default(),
             audit_trail: Vec::new(),
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
             target: "System".to_string(),
             priority: beardog_types::canonical::workflow::WorkflowPriority::Normal,
             expires_at: None,
@@ -214,18 +179,18 @@ mod tests {
             initiator: "test-user".to_string(),
             description: Some("Test workflow".to_string()),
             timeout_duration: chrono::chrono::Duration::hours(24),
-            properties: HashMap::new(),
-            parameters: HashMap::new(),
+            properties: HashMap::with_capacity(16),
+            parameters: HashMap::with_capacity(16),
             approvals: Vec::new(),
         };
-        // Test store and retrieve
+
         store.store_workflow(workflow).await?;
         let retrieved = store.get_workflow("test-workflow").await?;
         assert!(retrieved.is_some());
-        // Test update status
+
         store
             .update_workflow(CanonicalWorkflow {
-                context: std::collections::HashMap::new(),
+                context: std::collections::HashMap::with_capacity(16),
                 id: "test-workflow".to_string(),
                 workflow_type: beardog_types::canonical::workflow::WorkflowType::KeyRotation,
                 status: WorkflowStatus::Approved,
@@ -233,7 +198,7 @@ mod tests {
                 updated_at: Utc::now(),
                 approval_requirements: Default::default(),
                 audit_trail: Vec::new(),
-                metadata: HashMap::new(),
+                metadata: HashMap::with_capacity(16),
                 target: "System".to_string(),
                 priority: beardog_types::canonical::workflow::WorkflowPriority::Normal,
                 expires_at: None,
@@ -241,8 +206,8 @@ mod tests {
                 initiator: "test-user".to_string(),
                 description: Some("Test workflow".to_string()),
                 timeout_duration: chrono::chrono::Duration::hours(24),
-                properties: HashMap::new(),
-                parameters: HashMap::new(),
+                properties: HashMap::with_capacity(16),
+                parameters: HashMap::with_capacity(16),
                 approvals: Vec::new(),
             })
             .await?;
@@ -254,7 +219,6 @@ mod tests {
     }
 }
 
-// Implement WorkflowStore for Arc<InMemoryWorkflowStore> to enable shared ownership
 impl WorkflowStore for Arc<InMemoryWorkflowStore> {
     async fn store_workflow(&self, workflow: CanonicalWorkflow) -> BearDogResult<()> {
         (**self).store_workflow(workflow).await
@@ -279,6 +243,5 @@ impl WorkflowStore for Arc<InMemoryWorkflowStore> {
     async fn store_audit_entry(&self, entry: WorkflowAuditEntry) -> BearDogResult<()> {
         (**self).store_audit_entry(entry).await
     }
-
 
 }

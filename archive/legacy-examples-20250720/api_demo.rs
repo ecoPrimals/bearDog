@@ -1,4 +1,4 @@
-//! BearDog API System Demo
+
 
 use serde_json::json;
 
@@ -7,15 +7,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 BearDog API Demo");
     println!("==================");
 
-    // Demo 1: Security Analysis
     println!("\n🔍 Security Event Analysis:");
     demo_security_analysis().await?;
 
-    // Demo 2: ML Predictions
     println!("\n🧠 ML Threat Prediction:");
     demo_ml_predictions().await?;
 
-    // Demo 3: Performance Features
     println!("\n⚡ Performance Features:");
     demo_performance().await?;
 

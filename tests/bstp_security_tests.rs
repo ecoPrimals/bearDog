@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-// 🧪 BSTP Security Layer Comprehensive Test Suite
-
-// BSTP Security Tests - Validating genetic security systems
 
 use beardog::config::EncryptionConfig;
 use beardog::encryption::EncryptionEngine;
@@ -35,13 +16,12 @@ use tokio;
 
 #[tokio::test]
 async fn test_key_manager_security() -> BearDogResult<()> {
-    // Test secure key generation and management
+
     let config = BStpConfig::default();
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
 
     let session_id = "test_session_123";
 
-    // Test key generation
     let key1 = key_manager
         .generate_session_key(session_id, CryptoAlgorithm::Aes256Gcm)
         .await?;
@@ -49,22 +29,19 @@ async fn test_key_manager_security() -> BearDogResult<()> {
         .generate_session_key("different_session", CryptoAlgorithm::ChaCha20Poly1305)
         .await?;
 
-    // Keys should be different
     assert_ne!(key1.key, key2.key);
     assert_ne!(key1.key_id, key2.key_id);
 
-    // Test key retrieval
     let retrieved_key = key_manager
         .get_session_key(session_id)
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Session key should exist", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Session key should exist", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Session key should exist", e).to_string())
 })?;
     assert_eq!(retrieved_key.key, key1.key);
     assert_eq!(retrieved_key.algorithm, CryptoAlgorithm::Aes256Gcm);
 
-    // Test key rotation
     let rotated_key = key_manager
         .rotate_session_key(session_id, Some(CryptoAlgorithm::ChaCha20Poly1305))
         .await?;
@@ -77,7 +54,7 @@ async fn test_key_manager_security() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_gaming_crypto_performance() -> BearDogResult<()> {
-    // Test ultra-fast encryption targeting <100μs
+
     let config = BStpConfig::competitive_gaming();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -94,24 +71,20 @@ async fn test_gaming_crypto_performance() -> BearDogResult<()> {
     let test_data = b"StarCraft2 gaming packet data for ultra-low latency testing";
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
 
-    // Test encryption performance
     let start = Instant::now();
     let encrypted = crypto_engine
         .ultra_fast_encrypt(session_id, test_data, &security_genetics)
         .await?;
     let encryption_time = start.elapsed();
 
-    // Test decryption performance
     let start = Instant::now();
     let decrypted = crypto_engine
         .ultra_fast_decrypt(session_id, &encrypted, &security_genetics)
         .await?;
     let decryption_time = start.elapsed();
 
-    // Verify correctness
     assert_eq!(test_data, &decrypted[..]);
 
-    // Performance assertions for competitive gaming
     assert!(
         encryption_time <= config.performance.max_encryption_latency,
         "Encryption took {}μs, target was {}μs",
@@ -143,7 +116,7 @@ async fn test_gaming_crypto_performance() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_crypto_algorithm_selection() -> BearDogResult<()> {
-    // Test genetic algorithm crypto selection
+
     let config = BStpConfig::default();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -158,14 +131,12 @@ async fn test_crypto_algorithm_selection() -> BearDogResult<()> {
 
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
 
-    // Test small packet (should use AES)
     let small_data = vec![0u8; 512];
     let encrypted_small = crypto_engine
         .ultra_fast_encrypt("small_packet_session", &small_data, &security_genetics)
         .await?;
     assert_eq!(encrypted_small.crypto_method, CryptoAlgorithm::Aes256Gcm);
 
-    // Test medium packet (should use ChaCha20)
     let medium_data = vec![0u8; 1500];
     let encrypted_medium = crypto_engine
         .ultra_fast_encrypt("medium_packet_session", &medium_data, &security_genetics)
@@ -175,7 +146,6 @@ async fn test_crypto_algorithm_selection() -> BearDogResult<()> {
         CryptoAlgorithm::ChaCha20Poly1305
     );
 
-    // Test large packet (should use genetic hybrid)
     let large_data = vec![0u8; 4096];
     let encrypted_large = crypto_engine
         .ultra_fast_encrypt("large_packet_session", &large_data, &security_genetics)
@@ -191,7 +161,7 @@ async fn test_crypto_algorithm_selection() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_session_security() -> BearDogResult<()> {
-    // Test secure session management
+
     let config = BStpConfig::maximum_security();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -201,13 +171,11 @@ async fn test_session_security() -> BearDogResult<()> {
     ));
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
 
-    // Create crypto engine instead of security provider since those methods don't exist
     let crypto_engine =
         GamingCryptoEngine::new(encryption.clone(), genetics.clone(), key_manager, config).await?;
 
     let peer_id = "secure_gaming_peer";
 
-    // Test basic crypto operations instead of session management
     let test_data = b"session security test data";
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
 
@@ -227,7 +195,7 @@ async fn test_session_security() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_genetic_healing_adaptation() -> BearDogResult<()> {
-    // Test genetic security healing system
+
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
     let genetics = Arc::new(DefaultBearDogGeneticsEngine::new(
         genetics_store,
@@ -235,7 +203,6 @@ async fn test_genetic_healing_adaptation() -> BearDogResult<()> {
     ));
     let mut healing = GeneticSecurityHealing::new(genetics).await?;
 
-    // Test security issue healing
     let security_issue = SecurityIssue {
         issue_type: SecurityIssueType::EncryptionCompromised,
         severity: Severity::High,
@@ -249,7 +216,6 @@ async fn test_genetic_healing_adaptation() -> BearDogResult<()> {
         beardog::tunnel::genetic_healing::HealingResult::Success
     );
 
-    // Test network event adaptation
     let network_event = NetworkEvent::PeerDisconnected {
         reason: "Suspicious behavior detected".to_string(),
     };
@@ -262,9 +228,7 @@ async fn test_genetic_healing_adaptation() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_configuration_profiles() -> BearDogResult<()> {
-    // Test different configuration profiles
 
-    // Competitive gaming profile
     let competitive = BStpConfig::competitive_gaming();
     assert_eq!(
         competitive.performance.max_encryption_latency,
@@ -273,7 +237,6 @@ async fn test_configuration_profiles() -> BearDogResult<()> {
     assert!(competitive.gaming.ultra_low_latency);
     assert_eq!(competitive.genetic_healing.mutation_rate, 0.05);
 
-    // Maximum security profile
     let max_security = BStpConfig::maximum_security();
     assert_eq!(
         max_security.key_management.key_rotation_interval,
@@ -282,7 +245,6 @@ async fn test_configuration_profiles() -> BearDogResult<()> {
     assert_eq!(max_security.genetic_healing.crossover_rate, 1.0);
     assert_eq!(max_security.genetic_healing.population_size, 100);
 
-    // Environment-based config
     std::env::set_var("BEARDOG_GAMING_MODE", "1");
     let env_config = BStpConfig::from_env();
     assert!(env_config.gaming.ultra_low_latency);
@@ -294,7 +256,7 @@ async fn test_configuration_profiles() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_key_expiration_and_rotation() -> BearDogResult<()> {
-    // Test key expiration and automatic rotation
+
     let mut config = BStpConfig::default();
     config.key_management.key_rotation_interval = Duration::from_millis(100); // Short interval for testing
 
@@ -302,18 +264,12 @@ async fn test_key_expiration_and_rotation() -> BearDogResult<()> {
 
     let session_id = "expiration_test_session";
 
-    // Generate initial key
     let key1 = key_manager
         .generate_session_key(session_id, CryptoAlgorithm::Aes256Gcm)
         .await?;
 
-    // Wait for key to expire
     tokio::time::sleep(Duration::from_millis(150)).await;
 
-    // Run maintenance cycle
-    // key_manager.maintenance_cycle().await?; // Method not available
-
-    // Key should be expired and unavailable
     let result = key_manager.get_session_key(session_id).await;
     assert!(result.is_none());
 
@@ -323,7 +279,7 @@ async fn test_key_expiration_and_rotation() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_contextual_key_derivation() -> BearDogResult<()> {
-    // Test contextual key derivation for enhanced security
+
     let config = BStpConfig::default();
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
 
@@ -332,7 +288,6 @@ async fn test_contextual_key_derivation() -> BearDogResult<()> {
         .generate_session_key(session_id, CryptoAlgorithm::Aes256Gcm)
         .await?;
 
-    // Derive keys with different contexts
     let context1 = b"gaming_context_1";
     let context2 = b"gaming_context_2";
 
@@ -343,10 +298,8 @@ async fn test_contextual_key_derivation() -> BearDogResult<()> {
         .derive_contextual_key(&base_key, context2)
         .await?;
 
-    // Different contexts should produce different keys
     assert_ne!(derived_key1, derived_key2);
 
-    // Same context should produce same key
     let derived_key1_again = key_manager
         .derive_contextual_key(&base_key, context1)
         .await?;
@@ -358,7 +311,7 @@ async fn test_contextual_key_derivation() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_stress_performance() -> BearDogResult<()> {
-    // Stress test for gaming performance under load
+
     let config = BStpConfig::competitive_gaming();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -374,13 +327,12 @@ async fn test_stress_performance() -> BearDogResult<()> {
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
     let test_data = b"Real-time gaming packet";
 
-    // Test burst of 100 encryptions
     let start = Instant::now();
     let mut handles = Vec::new();
 
     for i in 0..100 {
         let crypto_engine = crypto_engine.clone();
-        let session_id = format!("stress_session_{}", i);
+        let session_id = format_args!("stress_session_{}", i).to_string();
         let data = test_data.clone();
         let genetics = security_genetics.clone();
 
@@ -392,12 +344,11 @@ async fn test_stress_performance() -> BearDogResult<()> {
         handles.push(handle);
     }
 
-    // Wait for all encryptions to complete
     let mut successes = 0;
     for handle in handles {
         if handle.await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?.is_ok() {
             successes += 1;
         }
@@ -426,7 +377,7 @@ async fn test_stress_performance() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_security_context_isolation() -> BearDogResult<()> {
-    // Test security context isolation between sessions
+
     println!("🔒 Testing security context isolation...");
 
     let config = BStpConfig::competitive_gaming();
@@ -438,7 +389,6 @@ async fn test_security_context_isolation() -> BearDogResult<()> {
     ));
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
 
-    // Create security provider (simplified for testing)
     let crypto_engine = GamingCryptoEngine::new(
         encryption.clone(),
         genetics.clone(),
@@ -447,7 +397,6 @@ async fn test_security_context_isolation() -> BearDogResult<()> {
     )
     .await?;
 
-    // Test isolation between different sessions
     let session1_data = b"session1 isolated data";
     let session2_data = b"session2 isolated data";
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
@@ -460,7 +409,6 @@ async fn test_security_context_isolation() -> BearDogResult<()> {
         .ultra_fast_encrypt("session2", session2_data, &security_genetics)
         .await?;
 
-    // Verify each session can decrypt its own data
     let decrypted1 = crypto_engine
         .ultra_fast_decrypt("session1", &encrypted1, &security_genetics)
         .await?;

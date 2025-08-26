@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Cross-Primal Operations Handlers
-///
-/// Handlers for requesting resources and communicating with other primals
-/// discovered through capability-based discovery. No hardcoded primal names.
 
 use super::super::AppState;
 use super::models::*;
@@ -26,7 +6,7 @@ use axum::{extract::State, http::StatusCode, Json};
 use std::time::{Duration, Instant};
 use tracing::info;
 use uuid::Uuid;
-/// Request compute resources from primals with compute capabilities
+
 pub async fn request_compute_resources(
     State(_state): State<AppState>,
     Json(request): Json<CrossPrimalRequest>,
@@ -37,10 +17,10 @@ pub async fn request_compute_resources(
         "🖥️ Requesting compute resources via capability discovery: {}",
         request.operation
     );
-    // Simulate capability-based resource discovery and allocation
+
     tokio::time::sleep(Duration::from_millis(100)).await;
     let result = serde_json::json!({
-        "allocation_id": format!("alloc_{}", Uuid::new_v4()),
+        "allocation_id": format_args!("alloc_{}", Uuid::new_v4().to_string()),
         "discovered_provider": "compute_capability_provider",
         "allocated_resources": {
             "cpu_cores": request.parameters.get("cpu_cores").unwrap_or(&serde_json::json!(4)),
@@ -72,14 +52,14 @@ pub async fn request_compute_resources(
         processing_time_ms: processing_time,
     }))
 }
-/// Call a discovered ecosystem service by capability
+
 pub async fn call_ecosystem_service(
         "🌐 Calling ecosystem service: {} via capability: {}",
         request.operation, request.target_capability
-    // Simulate capability-based service discovery and invocation
+
     tokio::time::sleep(Duration::from_millis(75)).await;
-        "service_response": format!("Service {} executed successfully", request.operation),
-        "capability_provider": format!("discovered_primal_with_{}", request.target_capability),
+        "service_response": format_args!("Service {} executed successfully", request.operation).to_string(),
+        "capability_provider": format_args!("discovered_primal_with_{}", request.target_capability).to_string(),
         "execution_details": {
             "service_type": request.target_capability,
             "operation": request.operation,
@@ -92,12 +72,12 @@ pub async fn call_ecosystem_service(
         ]
         responding_primal_id: "capability_discovered_service".to_string(),
         execution_time: Duration::from_millis(75),
-/// Broadcast message to ecosystem participants
+
 pub async fn broadcast_to_ecosystem(
     info!("📢 Broadcasting to ecosystem: {}", request.operation);
-    // Simulate capability-based broadcast to interested primals
+
     tokio::time::sleep(Duration::from_millis(50)).await;
-        "broadcast_id": format!("broadcast_{}", Uuid::new_v4()),
+        "broadcast_id": format_args!("broadcast_{}", Uuid::new_v4().to_string()),
         "message": request.parameters.get("message").unwrap_or(&serde_json::json!("Ecosystem message")),
         "delivery_stats": {
             "primals_discovered": 12,
@@ -112,12 +92,12 @@ pub async fn broadcast_to_ecosystem(
         }
         responding_primal_id: "broadcast_service".to_string(),
         execution_time: Duration::from_millis(50),
-/// Request storage resources from primals with storage capabilities
+
 pub async fn request_storage_resources(
         "💾 Requesting storage resources via capability discovery: {}",
-    // Simulate capability-based storage discovery and allocation
+
     tokio::time::sleep(Duration::from_millis(80)).await;
-        "storage_allocation_id": format!("storage_{}", Uuid::new_v4()),
+        "storage_allocation_id": format_args!("storage_{}", Uuid::new_v4().to_string()),
         "discovered_provider": "storage_capability_provider",
         "allocated_storage": {
             "capacity_gb": request.parameters.get("capacity_gb").unwrap_or(&serde_json::json!(1000)),
@@ -130,6 +110,6 @@ pub async fn request_storage_resources(
             "audit_trail": "comprehensive",
             "data_sovereignty": "guaranteed"
         "access_endpoints": [
-            format!("https://storage-provider.ecosystem/api/{}", Uuid::new_v4())
+            format_args!("https://storage-provider.ecosystem/api/{}", Uuid::new_v4().to_string())
         responding_primal_id: "storage_resource_provider".to_string(),
         execution_time: Duration::from_millis(80),

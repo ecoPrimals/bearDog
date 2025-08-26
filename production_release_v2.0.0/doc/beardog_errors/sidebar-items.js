@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["BearDogError"],"macro":["operation_outcome","outcome_with_warnings","success_outcome"],"mod":["improved_results","migration_examples","migration_helpers"],"type":["BearDogResult"]};

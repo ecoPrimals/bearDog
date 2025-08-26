@@ -1,45 +1,22 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Genetic Operations Benchmarking
-//!
-//! Benchmarks for genetic spawning, analysis, and evolutionary algorithms.
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
 use beardog::BearDogResult;
 use std::time::Instant;
 use tracing::info;
 
-/// Benchmark genetic operations
 pub async fn benchmark_genetic_operations(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
-    // Genetic spawning benchmark
     let spawn_result = benchmark_genetic_spawning(suite).await?;
     results.push(spawn_result);
 
-    // Genetic analysis benchmark  
     let analysis_result = benchmark_genetic_analysis(suite).await?;
     results.push(analysis_result);
 
     Ok(results)
 }
 
-/// Benchmark genetic spawning operations
 async fn benchmark_genetic_spawning(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
     info!("  🧬 Benchmarking genetic spawning operations");
 
@@ -49,9 +26,8 @@ async fn benchmark_genetic_spawning(suite: &PerformanceBenchmarkSuite) -> BearDo
     let benchmark_start = Instant::now();
     for i in 0..suite.config.iterations {
         let op_start = Instant::now();
-        let node_id = format!("benchmark_spawn_{}", i);
-        
-        // Simulate genetic spawning with default genetics
+        let node_id = format_args!("benchmark_spawn_{}", i).to_string();
+
         let spawn_genetics = beardog::genetics::BearDogGenetics::default();
         match suite.genetics_engine.spawn_with_genetics(&node_id, spawn_genetics).await {
             Ok(_) => {
@@ -59,7 +35,7 @@ async fn benchmark_genetic_spawning(suite: &PerformanceBenchmarkSuite) -> BearDo
                 latencies.push(op_start.elapsed().as_nanos() as f64 / 1_000_000.0);
             }
             Err(_) => {
-                // Record failed operation
+
             }
         }
     }
@@ -91,7 +67,6 @@ async fn benchmark_genetic_spawning(suite: &PerformanceBenchmarkSuite) -> BearDo
     })
 }
 
-/// Benchmark genetic analysis operations
 async fn benchmark_genetic_analysis(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
     info!("  🧬 Benchmarking genetic analysis operations");
 
@@ -101,7 +76,7 @@ async fn benchmark_genetic_analysis(suite: &PerformanceBenchmarkSuite) -> BearDo
     let benchmark_start = Instant::now();
     for i in 0..suite.config.iterations {
         let op_start = Instant::now();
-        let node_id = format!("benchmark_node_{}", i);
+        let node_id = format_args!("benchmark_node_{}", i).to_string();
         
         match suite.genetics_engine.analyze_genetic_fitness(&node_id).await {
             Ok(_) => {
@@ -109,7 +84,7 @@ async fn benchmark_genetic_analysis(suite: &PerformanceBenchmarkSuite) -> BearDo
                 latencies.push(op_start.elapsed().as_nanos() as f64 / 1_000_000.0);
             }
             Err(_) => {
-                // Record failed operation
+
             }
         }
     }

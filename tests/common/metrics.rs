@@ -1,27 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Test Metrics Collection and Analysis for BearDog
-//!
-//! **Advanced Performance Monitoring for Test Infrastructure**
-//!
-//! This module provides sophisticated metrics collection, analysis, and reporting
-//! capabilities for BearDog's testing infrastructure, enabling performance
-//! optimization and quality insights.
 
 use crate::common::{TestResult, TestContext, TestSummary};
 use beardog_errors::{BearDogError, BearDogResult};
@@ -33,21 +10,19 @@ use std::{
 };
 use tracing::{debug, info, warn};
 
-/// Comprehensive test metrics collector
 pub struct TestMetricsCollector {
-    /// Historical test execution data
+
     execution_history: Arc<RwLock<VecDeque<TestExecutionRecord>>>,
-    /// Performance benchmarks by test
+
     performance_benchmarks: Arc<RwLock<HashMap<String, Vec<PerformanceBenchmark>>>>,
-    /// System resource usage during tests
+
     resource_usage: Arc<RwLock<SystemResourceUsage>>,
-    /// Test quality metrics
+
     quality_metrics: Arc<RwLock<QualityMetrics>>,
-    /// Configuration for metrics collection
+
     config: MetricsConfig,
 }
 
-/// Record of a single test execution
 #[derive(Debug, Clone)]
 pub struct TestExecutionRecord {
     pub test_name: String,
@@ -62,7 +37,6 @@ pub struct TestExecutionRecord {
     pub metadata: HashMap<String, JsonValue>,
 }
 
-/// Performance benchmark for a specific test
 #[derive(Debug, Clone)]
 pub struct PerformanceBenchmark {
     pub benchmark_name: String,
@@ -76,7 +50,6 @@ pub struct PerformanceBenchmark {
     pub environment_info: EnvironmentInfo,
 }
 
-/// Latency percentile measurements
 #[derive(Debug, Clone)]
 pub struct LatencyPercentiles {
     pub p50: Duration,
@@ -86,7 +59,6 @@ pub struct LatencyPercentiles {
     pub max: Duration,
 }
 
-/// Environment information for benchmarks
 #[derive(Debug, Clone)]
 pub struct EnvironmentInfo {
     pub os: String,
@@ -97,7 +69,6 @@ pub struct EnvironmentInfo {
     pub test_mode: String,
 }
 
-/// System resource usage tracking
 #[derive(Debug, Clone, Default)]
 pub struct SystemResourceUsage {
     pub peak_memory_mb: f64,
@@ -111,7 +82,6 @@ pub struct SystemResourceUsage {
     pub total_test_count: u64,
 }
 
-/// Test quality metrics
 #[derive(Debug, Clone, Default)]
 pub struct QualityMetrics {
     pub overall_success_rate: f64,
@@ -123,7 +93,6 @@ pub struct QualityMetrics {
     pub coverage_metrics: CoverageMetrics,
 }
 
-/// Code coverage metrics
 #[derive(Debug, Clone, Default)]
 pub struct CoverageMetrics {
     pub line_coverage_percent: f64,
@@ -133,7 +102,6 @@ pub struct CoverageMetrics {
     pub uncovered_critical_paths: Vec<String>,
 }
 
-/// Configuration for metrics collection
 #[derive(Debug, Clone)]
 pub struct MetricsConfig {
     pub enable_performance_tracking: bool,
@@ -146,7 +114,6 @@ pub struct MetricsConfig {
     pub flaky_test_threshold: f64, // Success rate below this is considered flaky
 }
 
-/// Comprehensive metrics report
 #[derive(Debug, Clone)]
 pub struct MetricsReport {
     pub generation_timestamp: SystemTime,
@@ -159,7 +126,6 @@ pub struct MetricsReport {
     pub trends: Vec<MetricsTrend>,
 }
 
-/// Summary of test executions
 #[derive(Debug, Clone)]
 pub struct ExecutionSummary {
     pub total_tests_run: u64,
@@ -170,7 +136,6 @@ pub struct ExecutionSummary {
     pub tests_per_hour: f64,
 }
 
-/// Performance analysis results
 #[derive(Debug, Clone)]
 pub struct PerformanceAnalysis {
     pub fastest_tests: Vec<String>,
@@ -181,7 +146,6 @@ pub struct PerformanceAnalysis {
     pub performance_improvements: Vec<PerformanceImprovement>,
 }
 
-/// Quality analysis results
 #[derive(Debug, Clone)]
 pub struct QualityAnalysis {
     pub most_reliable_tests: Vec<String>,
@@ -191,7 +155,6 @@ pub struct QualityAnalysis {
     pub coverage_gaps: Vec<String>,
 }
 
-/// Resource usage analysis
 #[derive(Debug, Clone)]
 pub struct ResourceAnalysis {
     pub memory_usage_trends: Vec<(SystemTime, f64)>,
@@ -200,7 +163,6 @@ pub struct ResourceAnalysis {
     pub efficiency_opportunities: Vec<String>,
 }
 
-/// Performance regression detection
 #[derive(Debug, Clone)]
 pub struct PerformanceRegression {
     pub test_name: String,
@@ -212,7 +174,6 @@ pub struct PerformanceRegression {
     pub detected_at: SystemTime,
 }
 
-/// Performance improvement detection
 #[derive(Debug, Clone)]
 pub struct PerformanceImprovement {
     pub test_name: String,
@@ -223,7 +184,6 @@ pub struct PerformanceImprovement {
     pub detected_at: SystemTime,
 }
 
-/// Types of performance regressions
 #[derive(Debug, Clone)]
 pub enum RegressionType {
     ExecutionTime,
@@ -233,7 +193,6 @@ pub enum RegressionType {
     ErrorRate,
 }
 
-/// Types of performance improvements
 #[derive(Debug, Clone)]
 pub enum ImprovementType {
     ExecutionTime,
@@ -243,7 +202,6 @@ pub enum ImprovementType {
     ErrorRate,
 }
 
-/// Severity of performance regressions
 #[derive(Debug, Clone)]
 pub enum RegressionSeverity {
     Critical,  // >50% regression
@@ -252,7 +210,6 @@ pub enum RegressionSeverity {
     Marginal,  // <10% regression
 }
 
-/// Metrics-based recommendations
 #[derive(Debug, Clone)]
 pub struct MetricsRecommendation {
     pub category: RecommendationCategory,
@@ -264,7 +221,6 @@ pub struct MetricsRecommendation {
     pub action_items: Vec<String>,
 }
 
-/// Categories for recommendations
 #[derive(Debug, Clone)]
 pub enum RecommendationCategory {
     Performance,
@@ -274,7 +230,6 @@ pub enum RecommendationCategory {
     Infrastructure,
 }
 
-/// Priority levels for recommendations
 #[derive(Debug, Clone)]
 pub enum RecommendationPriority {
     Critical,
@@ -283,7 +238,6 @@ pub enum RecommendationPriority {
     Low,
 }
 
-/// Trends detected in metrics
 #[derive(Debug, Clone)]
 pub struct MetricsTrend {
     pub metric_name: String,
@@ -293,7 +247,6 @@ pub struct MetricsTrend {
     pub projection: Option<TrendProjection>,
 }
 
-/// Types of trends
 #[derive(Debug, Clone)]
 pub enum TrendType {
     Improving,
@@ -302,7 +255,6 @@ pub enum TrendType {
     Volatile,
 }
 
-/// Trend projection
 #[derive(Debug, Clone)]
 pub struct TrendProjection {
     pub projected_value_30_days: f64,
@@ -311,23 +263,21 @@ pub struct TrendProjection {
 }
 
 impl TestMetricsCollector {
-    /// Create a new metrics collector with configuration
+
     pub fn new(config: MetricsConfig) -> Self {
         Self {
             execution_history: Arc::new(RwLock::new(VecDeque::new())),
-            performance_benchmarks: Arc::new(RwLock::new(HashMap::new())),
+            performance_benchmarks: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             resource_usage: Arc::new(RwLock::new(SystemResourceUsage::default())),
             quality_metrics: Arc::new(RwLock::new(QualityMetrics::default())),
             config,
         }
     }
 
-    /// Create with default configuration
     pub fn default() -> Self {
         Self::new(MetricsConfig::default())
     }
 
-    /// Record a test execution
     pub async fn record_execution(&self, context: &TestContext, summary: &TestSummary) -> TestResult<()> {
         if !self.config.enable_performance_tracking {
             return Ok(());
@@ -346,24 +296,20 @@ impl TestMetricsCollector {
             metadata: context.metadata.clone(),
         };
 
-        // Store execution record
         {
             let mut history = self.execution_history.write()
                 .map_err(|_| BearDogError::internal("Metrics history lock poisoned"))?;
             
             history.push_back(record.clone());
-            
-            // Limit history size based on retention policy
+
             let max_records = (self.config.history_retention_days as usize) * 24 * 60; // Assume 1 test per minute
             while history.len() > max_records {
                 history.pop_front();
             }
         }
 
-        // Update quality metrics
         self.update_quality_metrics(&record).await?;
 
-        // Update resource usage
         if self.config.enable_resource_monitoring {
             self.update_resource_usage(&record).await?;
         }
@@ -372,7 +318,6 @@ impl TestMetricsCollector {
         Ok(())
     }
 
-    /// Record a performance benchmark
     pub async fn record_benchmark(&self, benchmark: PerformanceBenchmark) -> TestResult<()> {
         let mut benchmarks = self.performance_benchmarks.write()
             .map_err(|_| BearDogError::internal("Performance benchmarks lock poisoned"))?;
@@ -380,7 +325,6 @@ impl TestMetricsCollector {
         let test_benchmarks = benchmarks.entry(benchmark.test_name.clone()).or_insert_with(Vec::new);
         test_benchmarks.push(benchmark.clone());
 
-        // Keep only the most recent benchmarks
         if test_benchmarks.len() > self.config.benchmark_sample_size {
             test_benchmarks.remove(0);
         }
@@ -389,26 +333,19 @@ impl TestMetricsCollector {
         Ok(())
     }
 
-    /// Generate comprehensive metrics report
     pub async fn generate_report(&self, period: Duration) -> TestResult<MetricsReport> {
         let cutoff_time = SystemTime::now() - period;
 
-        // Generate execution summary
         let execution_summary = self.generate_execution_summary(cutoff_time).await?;
 
-        // Generate performance analysis
         let performance_analysis = self.generate_performance_analysis(cutoff_time).await?;
 
-        // Generate quality analysis
         let quality_analysis = self.generate_quality_analysis(cutoff_time).await?;
 
-        // Generate resource analysis
         let resource_analysis = self.generate_resource_analysis(cutoff_time).await?;
 
-        // Generate recommendations
         let recommendations = self.generate_recommendations(&execution_summary, &performance_analysis, &quality_analysis, &resource_analysis).await?;
 
-        // Generate trends
         let trends = self.generate_trends(cutoff_time).await?;
 
         Ok(MetricsReport {
@@ -423,7 +360,6 @@ impl TestMetricsCollector {
         })
     }
 
-    /// Detect performance regressions
     pub async fn detect_regressions(&self, test_name: &str) -> TestResult<Vec<PerformanceRegression>> {
         let benchmarks = self.performance_benchmarks.read()
             .map_err(|_| BearDogError::internal("Performance benchmarks lock poisoned"))?;
@@ -439,7 +375,6 @@ impl TestMetricsCollector {
 
         let mut regressions = Vec::new();
 
-        // Compare recent performance to baseline (average of earlier benchmarks)
         let recent_count = std::cmp::min(3, test_benchmarks.len() / 4);
         let baseline_count = test_benchmarks.len() - recent_count;
 
@@ -447,7 +382,6 @@ impl TestMetricsCollector {
             return Ok(regressions);
         }
 
-        // Calculate baseline averages
         let baseline_time: Duration = test_benchmarks[..baseline_count]
             .iter()
             .map(|b| b.execution_time)
@@ -458,7 +392,6 @@ impl TestMetricsCollector {
             .map(|b| b.memory_peak_mb)
             .sum::<f64>() / baseline_count as f64;
 
-        // Calculate recent averages
         let recent_time: Duration = test_benchmarks[baseline_count..]
             .iter()
             .map(|b| b.execution_time)
@@ -469,7 +402,6 @@ impl TestMetricsCollector {
             .map(|b| b.memory_peak_mb)
             .sum::<f64>() / recent_count as f64;
 
-        // Check for execution time regression
         let time_regression_percent = ((recent_time.as_secs_f64() - baseline_time.as_secs_f64()) / baseline_time.as_secs_f64()) * 100.0;
         if time_regression_percent > 10.0 {
             regressions.push(PerformanceRegression {
@@ -483,7 +415,6 @@ impl TestMetricsCollector {
             });
         }
 
-        // Check for memory usage regression
         let memory_regression_percent = ((recent_memory - baseline_memory) / baseline_memory) * 100.0;
         if memory_regression_percent > 10.0 {
             regressions.push(PerformanceRegression {
@@ -500,13 +431,10 @@ impl TestMetricsCollector {
         Ok(regressions)
     }
 
-    // Private helper methods
-
     async fn update_quality_metrics(&self, record: &TestExecutionRecord) -> TestResult<()> {
         let mut quality = self.quality_metrics.write()
             .map_err(|_| BearDogError::internal("Quality metrics lock poisoned"))?;
 
-        // Update stability score for the test
         let stability_entry = quality.test_stability_scores.entry(record.test_name.clone()).or_insert(1.0);
         
         if record.success {
@@ -515,17 +443,14 @@ impl TestMetricsCollector {
             *stability_entry = (*stability_entry * 0.95) + (0.0 * 0.05);
         }
 
-        // Count flaky tests
         quality.flaky_test_count = quality.test_stability_scores.values()
             .filter(|&&score| score < self.config.flaky_test_threshold)
             .count() as u64;
 
-        // Count slow tests
         if record.duration > self.config.slow_test_threshold {
             quality.slow_test_count += 1;
         }
 
-        // Count memory intensive tests
         if let Some(memory_mb) = record.memory_usage_mb {
             if memory_mb > self.config.memory_intensive_threshold_mb {
                 quality.memory_intensive_test_count += 1;
@@ -598,8 +523,7 @@ impl TestMetricsCollector {
     }
 
     async fn generate_performance_analysis(&self, _cutoff_time: SystemTime) -> TestResult<PerformanceAnalysis> {
-        // This would analyze performance benchmarks to identify fastest/slowest tests,
-        // regressions, and improvements
+
         Ok(PerformanceAnalysis {
             fastest_tests: vec!["unit_test_crypto_basics".to_string()],
             slowest_tests: vec!["e2e_full_system_test".to_string()],
@@ -614,13 +538,12 @@ impl TestMetricsCollector {
         let quality = self.quality_metrics.read()
             .map_err(|_| BearDogError::internal("Quality metrics lock poisoned"))?;
 
-        // Find most reliable tests (highest stability scores)
         let mut stability_pairs: Vec<_> = quality.test_stability_scores.iter().collect();
         stability_pairs.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 }));
         
@@ -630,7 +553,6 @@ impl TestMetricsCollector {
             .map(|(name, _)| (*name).clone())
             .collect();
 
-        // Find flakiest tests (lowest stability scores)
         let flakiest_tests = stability_pairs
             .iter()
             .rev()
@@ -665,13 +587,12 @@ impl TestMetricsCollector {
     ) -> TestResult<Vec<MetricsRecommendation>> {
         let mut recommendations = Vec::new();
 
-        // Success rate recommendations
         if execution.success_rate < 95.0 {
             recommendations.push(MetricsRecommendation {
                 category: RecommendationCategory::Reliability,
                 priority: if execution.success_rate < 80.0 { RecommendationPriority::Critical } else { RecommendationPriority::High },
                 title: "Improve Test Success Rate".to_string(),
-                description: format!("Current success rate is {:.1}%, below the target of 95%", execution.success_rate),
+                description: format_args!("Current success rate is {:.1}%, below the target of 95%", execution.success_rate).to_string(),
                 affected_tests: quality.flakiest_tests.clone(),
                 estimated_impact: "Improved development velocity and confidence".to_string(),
                 action_items: vec![
@@ -682,13 +603,12 @@ impl TestMetricsCollector {
             });
         }
 
-        // Flake recommendations
         if !quality.flakiest_tests.is_empty() {
             recommendations.push(MetricsRecommendation {
                 category: RecommendationCategory::Reliability,
                 priority: RecommendationPriority::High,
                 title: "Address Flaky Tests".to_string(),
-                description: format!("Found {} flaky tests that need attention", quality.flakiest_tests.len()),
+                description: format_args!("Found {} flaky tests that need attention", quality.flakiest_tests.len().to_string()),
                 affected_tests: quality.flakiest_tests.clone(),
                 estimated_impact: "Reduced CI/CD failures and developer frustration".to_string(),
                 action_items: vec![
@@ -703,7 +623,7 @@ impl TestMetricsCollector {
     }
 
     async fn generate_trends(&self, _cutoff_time: SystemTime) -> TestResult<Vec<MetricsTrend>> {
-        // This would analyze historical data to identify trends
+
         Ok(Vec::new())
     }
 
@@ -735,7 +655,6 @@ impl Default for MetricsConfig {
     }
 }
 
-/// Utility function to create environment info
 pub fn get_environment_info() -> EnvironmentInfo {
     EnvironmentInfo {
         os: std::env::consts::OS.to_string(),

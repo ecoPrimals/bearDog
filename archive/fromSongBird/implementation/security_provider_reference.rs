@@ -1,7 +1,4 @@
-//! BearDog Security Provider Reference Implementation
-//! 
-//! This file provides a complete reference implementation for integrating 
-//! BearDog Security Manager with Songbird Orchestrator.
+
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -10,31 +7,29 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-// Songbird imports (these would be actual imports in real implementation)
 use songbird_orchestrator::security::{
     SecurityProvider, Subject, Resource, Action, AuditEvent,
     AuthenticationProvider, Credentials, AuthenticationResult, SessionInfo, AuthToken,
 };
 use songbird_orchestrator::errors::Result;
 
-/// BearDog Security Provider Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BearDogSecurityConfig {
-    /// BearDog API endpoint
+
     pub endpoint: String,
-    /// API authentication key
+
     pub api_key: String,
-    /// Connection timeout in seconds
+
     pub timeout_seconds: u64,
-    /// Maximum retry attempts
+
     pub max_retries: u32,
-    /// Audit batch size for performance
+
     pub audit_batch_size: usize,
-    /// Audit flush interval in seconds
+
     pub audit_flush_interval_seconds: u64,
-    /// Enable audit encryption
+
     pub enable_audit_encryption: bool,
-    /// Cache configuration
+
     pub cache_size: usize,
     pub cache_ttl_seconds: u64,
 }
@@ -55,10 +50,9 @@ impl Default for BearDogSecurityConfig {
     }
 }
 
-/// BearDog API Client Interface
 #[async_trait]
 pub trait BearDogClient: Send + Sync {
-    /// Check authorization with BearDog
+
     async fn check_authorization(
         &self,
         subject: &BearDogSubject,
@@ -66,24 +60,19 @@ pub trait BearDogClient: Send + Sync {
         action: &BearDogAction,
     ) -> Result<AuthorizationDecision>;
 
-    /// Send audit events to BearDog
     async fn send_audit_batch(&self, events: Vec<BearDogAuditEvent>) -> Result<()>;
 
-    /// Authenticate user credentials
     async fn authenticate_user(
         &self,
         username: &str,
         password: &str,
     ) -> Result<BearDogAuthResult>;
 
-    /// Validate authentication token
     async fn validate_token(&self, token: &str) -> Result<BearDogSessionInfo>;
 
-    /// Health check for BearDog connectivity
     async fn health_check(&self) -> Result<bool>;
 }
 
-/// BearDog HTTP API Client Implementation
 pub struct BearDogHttpClient {
     config: BearDogSecurityConfig,
     http_client: reqwest::Client, // or hyper client
@@ -96,7 +85,7 @@ impl BearDogHttpClient {
             .build()
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create HTTP client", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Failed to create HTTP client", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failed to create HTTP client", e).to_string())
 })?;
 
         Self { config, http_client }
@@ -107,22 +96,22 @@ impl BearDogHttpClient {
         path: &str,
         payload: &T,
     ) -> Result<R> {
-        let url = format!("{}{}", self.config.endpoint, path);
+        let url = format_args!("{}{}", self.config.endpoint, path).to_string();
         
         let response = self.http_client
             .post(&url)
-            .header("Authorization", format!("Bearer {}", self.config.api_key))
+            .header("Authorization", format_args!("Bearer {}", self.config.api_key).to_string())
             .header("Content-Type", "application/json")
             .json(payload)
             .send()
             .await
-            .map_err(|e| format!("HTTP request failed: {}", e))?;
+            .map_err(|e| format_args!("HTTP request failed: {}", e).to_string())?;
 
         if response.status().is_success() {
             response.json::<R>().await
-                .map_err(|e| format!("Failed to parse response: {}", e).into())
+                .map_err(|e| format_args!("Failed to parse response: {}", e).to_string().into())
         } else {
-            Err(format!("BearDog API error: {}", response.status()).into())
+            Err(format_args!("BearDog API error: {}", response.status().to_string()).into())
         }
     }
 }
@@ -139,7 +128,7 @@ impl BearDogClient for BearDogHttpClient {
             subject: subject.clone(),
             resource: resource.clone(),
             action: action.clone(),
-            context: HashMap::new(),
+            context: HashMap::with_capacity(16),
             timestamp: Utc::now(),
         };
 
@@ -181,17 +170,16 @@ impl BearDogClient for BearDogHttpClient {
 
     async fn health_check(&self) -> Result<bool> {
         let response = self.http_client
-            .get(&format!("{}/api/v1/health", self.config.endpoint))
-            .header("Authorization", format!("Bearer {}", self.config.api_key))
+            .get(&format_args!("{}/api/v1/health", self.config.endpoint).to_string())
+            .header("Authorization", format_args!("Bearer {}", self.config.api_key).to_string())
             .send()
             .await
-            .map_err(|e| format!("Health check failed: {}", e))?;
+            .map_err(|e| format_args!("Health check failed: {}", e).to_string())?;
 
         Ok(response.status().is_success())
     }
 }
 
-/// BearDog Security Provider Implementation
 pub struct BearDogSecurityProvider {
     config: BearDogSecurityConfig,
     client: Arc<dyn BearDogClient>,
@@ -205,11 +193,10 @@ impl BearDogSecurityProvider {
             config,
             client,
             audit_queue: Arc::new(Mutex::new(VecDeque::new())),
-            auth_cache: Arc::new(Mutex::new(HashMap::new())),
+            auth_cache: Arc::new(Mutex::new(HashMap::with_capacity(16))),
         }
     }
 
-    /// Map Songbird Subject to BearDog Subject
     fn map_subject(&self, subject: &Subject) -> BearDogSubject {
         BearDogSubject {
             id: subject.id.clone(),
@@ -222,7 +209,6 @@ impl BearDogSecurityProvider {
         }
     }
 
-    /// Map Songbird Resource to BearDog Resource
     fn map_resource(&self, resource: &Resource) -> BearDogResource {
         BearDogResource {
             id: resource.id.clone(),
@@ -231,7 +217,6 @@ impl BearDogSecurityProvider {
         }
     }
 
-    /// Map Songbird Action to BearDog Action
     fn map_action(&self, action: &Action) -> BearDogAction {
         BearDogAction {
             name: action.name.clone(),
@@ -239,7 +224,6 @@ impl BearDogSecurityProvider {
         }
     }
 
-    /// Check cache for authorization decision
     async fn check_auth_cache(
         &self,
         cache_key: &str,
@@ -253,10 +237,9 @@ impl BearDogSecurityProvider {
         None
     }
 
-    /// Cache authorization decision
     async fn cache_auth_decision(
         &self,
-        cache_key: String,
+        cache_key: &str,
         decision: bool,
     ) {
         let mut cache = self.auth_cache.lock().await;
@@ -267,24 +250,21 @@ impl BearDogSecurityProvider {
             expires_at,
         });
 
-        // Clean up expired entries
         if cache.len() > self.config.cache_size {
             let now = Utc::now();
             cache.retain(|_, v| v.expires_at > now);
         }
     }
 
-    /// Generate cache key for authorization
     fn generate_cache_key(&self, subject: &Subject, resource: &Resource, action: &Action) -> String {
-        format!("{}:{}:{}:{}", 
+        format_args!("{}:{}:{}:{}", 
             subject.subject_type as u8, 
             subject.id, 
             resource.id, 
             action.name
-        )
+        ).to_string()
     }
 
-    /// Flush audit queue if needed
     async fn maybe_flush_audit_queue(&self) -> Result<()> {
         let mut queue = self.audit_queue.lock().await;
         
@@ -298,10 +278,9 @@ impl BearDogSecurityProvider {
         Ok(())
     }
 
-    /// Map Songbird AuditEvent to BearDog AuditEvent
     fn map_audit_event(&self, event: AuditEvent) -> BearDogAuditEvent {
         BearDogAuditEvent {
-            event_type: format!("{:?}", event.event_type),
+            event_type: format_args!("{:?}", event.event_type).to_string(),
             user_id: event.user_id,
             timestamp: event.timestamp,
             details: event.details,
@@ -316,32 +295,28 @@ impl BearDogSecurityProvider {
 #[async_trait]
 impl SecurityProvider for BearDogSecurityProvider {
     async fn authorize(&self, subject: &Subject, resource: &Resource, action: &Action) -> Result<bool> {
-        // Check cache first
+
         let cache_key = self.generate_cache_key(subject, resource, action);
         if let Some(cached_decision) = self.check_auth_cache(&cache_key).await {
             return Ok(cached_decision);
         }
 
-        // Map Songbird entities to BearDog entities
         let beardog_subject = self.map_subject(subject);
         let beardog_resource = self.map_resource(resource);
         let beardog_action = self.map_action(action);
 
-        // Call BearDog authorization service
         let decision = self.client
             .check_authorization(&beardog_subject, &beardog_resource, &beardog_action)
             .await?;
 
-        // Cache the decision
         self.cache_auth_decision(cache_key, decision.allowed).await;
 
-        // Log the authorization decision
         let audit_event = AuditEvent {
             event_type: songbird_orchestrator::security::AuthEventType::AccessGranted,
             user_id: subject.id.clone(),
             timestamp: Utc::now(),
             details: {
-                let mut details = HashMap::new();
+                let mut details = HashMap::with_capacity(16);
                 details.insert("resource".to_string(), serde_json::to_value(&resource.id)?);
                 details.insert("action".to_string(), serde_json::to_value(&action.name)?);
                 details.insert("decision".to_string(), serde_json::to_value(decision.allowed)?);
@@ -359,19 +334,16 @@ impl SecurityProvider for BearDogSecurityProvider {
     }
 
     async fn log_audit(&self, event: AuditEvent) -> Result<()> {
-        // Add to audit queue
+
         let mut queue = self.audit_queue.lock().await;
         queue.push_back(event);
         drop(queue);
 
-        // Maybe flush the queue
         self.maybe_flush_audit_queue().await?;
 
         Ok(())
     }
 }
-
-// BearDog-specific data structures
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BearDogSubject {
@@ -478,43 +450,35 @@ pub struct BearDogSessionInfo {
     pub user_agent: Option<String>,
 }
 
-// Cache structures
 #[derive(Debug, Clone)]
 struct CachedAuthDecision {
     decision: bool,
     expires_at: DateTime<Utc>,
 }
 
-// Integration example
 pub async fn setup_beardog_integration() -> Result<BearDogSecurityProvider> {
-    // Load configuration
+
     let config = BearDogSecurityConfig::default();
-    
-    // Create BearDog client
+
     let client = Arc::new(BearDogHttpClient::new(config.clone()));
-    
-    // Test connectivity
+
     if !client.health_check().await? {
         return Err("BearDog health check failed".into());
     }
-    
-    // Create security provider
+
     let provider = BearDogSecurityProvider::new(config, client);
     
     Ok(provider)
 }
 
-// Usage example with Songbird Orchestrator
 pub async fn integrate_with_songbird() -> Result<()> {
-    // Set up BearDog integration
+
     let beardog_provider = setup_beardog_integration().await?;
-    
-    // Create orchestrator with BearDog security
+
     let mut orchestrator = songbird_orchestrator::Orchestrator::builder()
         .with_security_provider(Arc::new(beardog_provider))
         .build()?;
-    
-    // Start orchestrator
+
     orchestrator.start().await?;
     
     Ok(())

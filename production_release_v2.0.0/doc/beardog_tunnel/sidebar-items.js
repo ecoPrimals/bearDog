@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["BearDogError","HsmError","KeyType","SecurityLevel"],"mod":["tunnel","universal_hsm"],"struct":["KeyMetadata"],"trait":["HsmProvider"],"type":["BearDogResult"]};

@@ -1,35 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # Zero-Cost Full Stack Integration
-//!
-//! This example demonstrates the complete BearDog zero-cost architecture working
-//! together in a production-like scenario, showcasing the seamless integration
-//! of all zero-cost components.
-//!
-//! ## Components Integrated:
-//! 
-//! 1. **Core Architecture** - Zero-cost cache and security from beardog-core
-//! 2. **API Layer** - Zero-cost API server with monomorphized middleware
-//! 3. **Security Module** - Zero-cost hardware-backed security providers
-//! 4. **Workflow Engine** - Zero-cost workflow processors with native async
-//! 5. **End-to-End Performance** - Complete stack benchmarking
-//!
-//! Run with: `cargo run --example zero_cost_full_stack_integration`
 
 use beardog_core::zero_cost_architecture::{
     examples as core_examples, ZeroCostBearDog, ZeroCostCache, ZeroCostSecurity,
@@ -49,7 +18,6 @@ use std::time::Instant;
 use tokio;
 use uuid::Uuid;
 
-/// Full stack performance metrics
 #[derive(Debug)]
 struct FullStackMetrics {
     total_time_micros: u128,
@@ -61,7 +29,6 @@ struct FullStackMetrics {
     workflow_completion_rate: f64,
 }
 
-/// Production deployment configuration
 #[derive(Debug, Clone)]
 struct ProductionConfig {
     max_concurrent_requests: usize,
@@ -88,14 +55,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 BearDog Zero-Cost Full Stack Integration");
     println!("==========================================\n");
 
-    // 1. Initialize Zero-Cost Architecture Stack
     println!("🏗️  Initializing Zero-Cost Architecture Stack");
     println!("---------------------------------------------");
     
     let stack = initialize_zero_cost_stack().await?;
     println!("✅ Complete zero-cost stack initialized successfully\n");
 
-    // 2. Production Scenario Simulation
     println!("🎯 Production Scenario Simulation");
     println!("---------------------------------");
     
@@ -104,7 +69,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 3. Load Testing
     println!("⚡ Zero-Cost Stack Load Testing");
     println!("-------------------------------");
     
@@ -113,7 +77,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 4. Integration Analysis
     println!("📊 Zero-Cost Integration Analysis");
     println!("---------------------------------");
     
@@ -121,7 +84,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 5. Production Readiness Assessment
     println!("🏭 Production Readiness Assessment");
     println!("----------------------------------");
     
@@ -130,7 +92,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Zero-cost architecture stack
 struct ZeroCostStack {
     core_system: ZeroCostBearDog<MemoryCache<String, Vec<u8>, 100000, 3600>, HardwareSecurity>,
     security_provider: beardog_security::zero_cost_security_simplified::ProductionSecurityProvider,
@@ -138,7 +99,6 @@ struct ZeroCostStack {
     config: ProductionConfig,
 }
 
-/// Initialize the complete zero-cost architecture stack
 async fn initialize_zero_cost_stack() -> BearDogResult<ZeroCostStack> {
     println!("   🔧 Initializing core zero-cost system...");
     let core_system = core_examples::create_high_performance_system().await?;
@@ -159,7 +119,6 @@ async fn initialize_zero_cost_stack() -> BearDogResult<ZeroCostStack> {
     })
 }
 
-/// Simulate a realistic production scenario
 async fn simulate_production_scenario(stack: &ZeroCostStack) -> BearDogResult<FullStackMetrics> {
     println!("📈 Running production scenario simulation...");
     
@@ -178,7 +137,6 @@ async fn simulate_production_scenario(stack: &ZeroCostStack) -> BearDogResult<Fu
 
     println!("   👥 Processing {} concurrent users with {} operations each", CONCURRENT_USERS, OPERATIONS_PER_USER);
 
-    // Simulate concurrent user sessions
     let mut tasks = Vec::new();
     
     for user_id in 0..CONCURRENT_USERS {
@@ -190,9 +148,9 @@ async fn simulate_production_scenario(stack: &ZeroCostStack) -> BearDogResult<Fu
             let mut user_metrics = (0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); // (total, success, cache_hits, cache_req, sec_success, sec_attempts, wf_complete, wf_start)
             
             for operation_id in 0..OPERATIONS_PER_USER {
-                // 1. Authentication (Security Layer)
+
                 let credentials = HashMap::from([
-                    ("username".to_string(), format!("user_{}", user_id)),
+                    ("username".to_string(), format_args!("user_{}", user_id).to_string()),
                     ("password".to_string(), "secure_production_password_123".to_string()),
                 ]);
                 
@@ -202,22 +160,19 @@ async fn simulate_production_scenario(stack: &ZeroCostStack) -> BearDogResult<Fu
                         user_metrics.4 += 1; // security successes
                     }
                 }
-                
-                // 2. Cache Operations (Core Layer)
-                let cache_key = format!("user_{}_{}", user_id, operation_id);
-                let cache_data = format!("operation_data_{}", operation_id).into_bytes();
+
+                let cache_key = format_args!("user_{}_{}", user_id, operation_id).to_string();
+                let cache_data = format_args!("operation_data_{}", operation_id).to_string().into_bytes();
                 
                 user_metrics.3 += 1; // cache requests
-                
-                // Write to cache
+
                 if let Ok(_) = stack_core.cache.set(cache_key.clone(), cache_data.clone()) {
-                    // Read from cache
+
                     if let Some(_) = stack_core.cache.get(&cache_key) {
                         user_metrics.2 += 1; // cache hits
                     }
                 }
-                
-                // 3. Workflow Processing (Workflow Layer)
+
                 if operation_id % 3 == 0 { // Every 3rd operation triggers a workflow
                     let mut workflow = create_production_workflow(user_id, operation_id);
                     
@@ -239,7 +194,6 @@ async fn simulate_production_scenario(stack: &ZeroCostStack) -> BearDogResult<Fu
         tasks.push(task);
     }
 
-    // Wait for all concurrent operations to complete
     for task in tasks {
         if let Ok(user_metrics) = task.await {
             total_operations += user_metrics.0;
@@ -275,7 +229,6 @@ async fn simulate_production_scenario(stack: &ZeroCostStack) -> BearDogResult<Fu
     })
 }
 
-/// Perform comprehensive load testing
 async fn perform_load_testing(stack: &ZeroCostStack) -> BearDogResult<FullStackMetrics> {
     println!("📈 Running comprehensive load testing...");
     
@@ -293,21 +246,19 @@ async fn perform_load_testing(stack: &ZeroCostStack) -> BearDogResult<FullStackM
     
     while Instant::now() < end_time {
         interval.tick().await;
-        
-        // Execute a complete operation cycle
+
         let operation_start = Instant::now();
-        
-        // 1. Security operation
+
         let credentials = HashMap::from([
-            ("username".to_string(), format!("load_test_user_{}", total_operations)),
+            ("username".to_string(), format_args!("load_test_user_{}", total_operations).to_string()),
             ("password".to_string(), "load_test_password_123".to_string()),
         ]);
         
         if let Ok(auth_result) = stack.security_provider.authenticate(&credentials).await {
             if auth_result.success {
-                // 2. Cache operation
-                let cache_key = format!("load_test_{}", total_operations);
-                let cache_data = format!("load_test_data_{}", total_operations).into_bytes();
+
+                let cache_key = format_args!("load_test_{}", total_operations).to_string();
+                let cache_data = format_args!("load_test_data_{}", total_operations).to_string().into_bytes();
                 
                 if let Ok(_) = stack.core_system.cache.set(cache_key.clone(), cache_data) {
                     if let Some(_) = stack.core_system.cache.get(&cache_key) {
@@ -318,8 +269,7 @@ async fn perform_load_testing(stack: &ZeroCostStack) -> BearDogResult<FullStackM
         }
         
         total_operations += 1;
-        
-        // Log progress periodically
+
         if total_operations % 1000 == 0 {
             let elapsed = start_time.elapsed().as_secs_f64();
             let current_rps = total_operations as f64 / elapsed;
@@ -345,7 +295,6 @@ async fn perform_load_testing(stack: &ZeroCostStack) -> BearDogResult<FullStackM
     })
 }
 
-/// Create a production workflow for testing
 fn create_production_workflow(user_id: usize, operation_id: usize) -> beardog_workflows::workflows::types::Workflow {
     use beardog_workflows::workflows::types::*;
     use chrono::Utc;
@@ -354,7 +303,7 @@ fn create_production_workflow(user_id: usize, operation_id: usize) -> beardog_wo
         id: Uuid::new_v4().to_string(),
         workflow_type: WorkflowType::KeyRotation,
         status: WorkflowStatus::Approved,
-        target: WorkflowTarget::Key { id: format!("key_{}_{}", user_id, operation_id) },
+        target: WorkflowTarget::Key { id: format_args!("key_{}_{}", user_id, operation_id).to_string() },
         approval_requirements: ApprovalRequirements {
             tiers: vec![],
             minimum_approvals: 0,
@@ -365,14 +314,14 @@ fn create_production_workflow(user_id: usize, operation_id: usize) -> beardog_wo
         priority: WorkflowPriority::Normal,
         created_at: Utc::now(),
         expires_at: Utc::now() + chrono::Duration::hours(1),
-        requested_by: format!("user_{}", user_id),
-        initiator: format!("user_{}", user_id),
-        description: format!("Production workflow for user {} operation {}", user_id, operation_id),
-        metadata: HashMap::new(),
+        requested_by: format_args!("user_{}", user_id).to_string(),
+        initiator: format_args!("user_{}", user_id).to_string(),
+        description: format_args!("Production workflow for user {} operation {}", user_id, operation_id).to_string(),
+        metadata: HashMap::with_capacity(16),
         timeout_duration: None,
-        properties: HashMap::new(),
+        properties: HashMap::with_capacity(16),
         parameters: HashMap::from([
-            ("key_id".to_string(), serde_json::Value::String(format!("prod_key_{}_{}", user_id, operation_id))),
+            ("key_id".to_string(), serde_json::Value::String(format_args!("prod_key_{}_{}", user_id, operation_id).to_string())),
             ("key_type".to_string(), serde_json::Value::String("RSA-2048".to_string())),
         ]),
         approvals: vec![],
@@ -380,7 +329,6 @@ fn create_production_workflow(user_id: usize, operation_id: usize) -> beardog_wo
     }
 }
 
-/// Display comprehensive full stack metrics
 fn display_full_stack_metrics(scenario: &str, metrics: &FullStackMetrics) {
     println!("📋 {} Results:", scenario);
     println!("   ⏱️  Total Time: {:.2}ms", metrics.total_time_micros as f64 / 1000.0);
@@ -392,7 +340,6 @@ fn display_full_stack_metrics(scenario: &str, metrics: &FullStackMetrics) {
     println!("   🔄 Workflow Completion Rate: {:.1}%", metrics.workflow_completion_rate * 100.0);
 }
 
-/// Analyze integration benefits across the full stack
 fn analyze_integration_benefits(scenario: &FullStackMetrics, load_test: &FullStackMetrics) {
     println!("🔹 Zero-Cost Full Stack Integration Benefits:");
     
@@ -430,41 +377,33 @@ fn analyze_integration_benefits(scenario: &FullStackMetrics, load_test: &FullSta
     }
 }
 
-/// Assess production readiness of the zero-cost stack
 async fn assess_production_readiness(stack: &ZeroCostStack) -> BearDogResult<()> {
     println!("🔍 Assessing production readiness...");
-    
-    // 1. Component Health Checks
+
     println!("   🏥 Component health checks:");
-    
-    // Security provider health
+
     match stack.security_provider.health_check().await {
         Ok(health) => println!("      ✅ Security Provider: {}", health.overall_status),
         Err(e) => println!("      ❌ Security Provider: Error - {:?}", e),
     }
-    
-    // Cache health (simplified check)
+
     let cache_performance = stack.core_system.get_cache_performance();
     println!("      ✅ Cache System: {:.1}% hit rate", cache_performance.hit_rate * 100.0);
-    
-    // 2. Performance Benchmarks
+
     println!("   📊 Performance benchmarks:");
     println!("      ✅ Configuration: {} max requests, {}s timeout", 
              stack.config.max_concurrent_requests, stack.config.session_timeout_secs);
-    
-    // 3. Resource Usage Assessment
+
     println!("   💻 Resource usage:");
     println!("      ✅ Memory: Stack-allocated components (zero heap overhead)");
     println!("      ✅ CPU: Monomorphized code (optimal instruction cache usage)");
     println!("      ✅ Network: Direct dispatch (minimal latency overhead)");
-    
-    // 4. Security Assessment
+
     println!("   🔒 Security assessment:");
     println!("      ✅ Hardware-backed: TPM/HSM integration ready");
     println!("      ✅ Compile-time validation: All security policies verified");
     println!("      ✅ Zero-cost audit: Tamper-evident logging with no performance penalty");
-    
-    // 5. Scalability Assessment
+
     println!("   📈 Scalability assessment:");
     println!("      ✅ Horizontal scaling: Stateless zero-cost components");
     println!("      ✅ Vertical scaling: Native async with optimal resource usage");
@@ -488,11 +427,10 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to initialize zero-cost stack for initialization test", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to initialize zero-cost stack for initialization test", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to initialize zero-cost stack for initialization test", e).to_string()
 ).into())
 });
-        
-        // Verify all components are properly initialized
+
         assert!(stack.config.max_concurrent_requests > 0);
         assert!(stack.config.cache_size > 0);
         assert!(stack.config.session_timeout_secs > 0);
@@ -505,7 +443,7 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to initialize zero-cost stack for performance test", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to initialize zero-cost stack for performance test", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to initialize zero-cost stack for performance test", e).to_string()
 ).into())
 });
         let metrics = simulate_production_scenario(&stack).await
@@ -513,11 +451,10 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to simulate production scenario", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to simulate production scenario", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to simulate production scenario", e).to_string()
 ).into())
 });
-        
-        // Verify production performance targets
+
         assert!(metrics.operations_per_second > 1000.0); // Should handle >1000 ops/sec
         assert!(metrics.average_latency_ms < 10.0); // Should be under 10ms average
         assert!(metrics.cache_hit_rate > 0.5); // Should have reasonable cache performance
@@ -531,18 +468,16 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to initialize zero-cost stack for load testing", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to initialize zero-cost stack for load testing", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to initialize zero-cost stack for load testing", e).to_string()
 ).into())
 });
-        
-        // Run a shorter load test for unit testing
+
         let start_time = Instant::now();
         let mut operations = 0;
-        
-        // Run for 1 second instead of 10
+
         while start_time.elapsed().as_secs() < 1 {
             let credentials = HashMap::from([
-                ("username".to_string(), format!("test_user_{}", operations)),
+                ("username".to_string(), format_args!("test_user_{}", operations).to_string()),
                 ("password".to_string(), "test_password_123".to_string()),
             ]);
             
@@ -559,8 +494,7 @@ mod tests {
         
         let duration = start_time.elapsed();
         let ops_per_sec = operations as f64 / duration.as_secs_f64();
-        
-        // Should be able to handle at least 100 ops/sec in test environment
+
         assert!(ops_per_sec > 50.0);
     }
     
@@ -571,13 +505,10 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to initialize zero-cost stack for component compatibility test", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to initialize zero-cost stack for component compatibility test", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to initialize zero-cost stack for component compatibility test", e).to_string()
 ).into())
 });
-        
-        // Test that all components work together
-        
-        // 1. Security + Cache integration
+
         let credentials = HashMap::from([
             ("username".to_string(), "integration_user".to_string()),
             ("password".to_string(), "integration_password_123".to_string()),
@@ -588,12 +519,11 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to authenticate in component compatibility test", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to authenticate in component compatibility test", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to authenticate in component compatibility test", e).to_string()
 ).into())
 });
         assert!(auth_result.success);
-        
-        // 2. Cache operations
+
         let cache_key = "integration_test".to_string();
         let cache_data = b"integration_data".to_vec();
         
@@ -602,7 +532,7 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to set cache data", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to set cache data", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to set cache data", e).to_string()
 ).into())
 });
         let retrieved = stack.core_system.cache.get(&cache_key);
@@ -611,22 +541,20 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Cache data should be present", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Cache data should be present", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Cache data should be present", e).to_string()
 ).into())
 }), cache_data);
-        
-        // 3. Workflow processing
+
         let mut workflow = create_production_workflow(999, 999);
         let workflow_result = stack.workflow_engine.process_workflow(&mut workflow).await
             .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Failed to process workflow in component compatibility test", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to process workflow in component compatibility test", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to process workflow in component compatibility test", e).to_string()
 ).into())
 });
         assert!(workflow_result.success);
-        
-        // All components work together seamlessly
+
     }
 } 

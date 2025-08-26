@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["create_rpc_router"],"mod":["cross_primal_operations","ecosystem_collaboration","models","placeholder_handlers","primal_registration"]};

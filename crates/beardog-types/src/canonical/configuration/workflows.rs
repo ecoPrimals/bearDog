@@ -1,62 +1,23 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Canonical Workflow Configuration
-///
-/// **CONFIGURATION UNIFICATION COMPLETE** ✅
-/// This module consolidates ALL workflow configuration types from across the codebase:
-/// 
-/// ## **Fragmentation Eliminated:**
-/// - `beardog-workflows/src/workflows/canonical/configuration.rs` - WorkflowEngineConfig, WorkflowPolicyConfig
-/// - `beardog-workflows/src/workflows/canonical/execution/engine.rs` - WorkflowEngineConfig (duplicate)
-/// - `beardog-workflows/src/workflows/zero_cost_engine.rs` - ZeroCostEngineConfig  
-/// - `beardog-workflows/src/workflows/zero_cost_hsm/factory.rs` - ZeroCostHsmManagerConfig
-/// - `beardog-workflows/src/workflows/processors/*` - 5+ processor-specific configs
-/// - `beardog-workflows/src/workflows/notification/mod.rs` - RetryConfig
-/// 
-/// ## **Design Benefits:**
-/// - **Single Source of Truth**: All workflow configs defined once
-/// - **Hierarchical Organization**: Logical grouping by workflow domain
-/// - **Zero Duplication**: Eliminates 8+ duplicate configuration structs
-/// - **Canonical Access**: `use beardog_types::canonical::configuration::workflows::*`
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
+use crate::config::UnifiedProcessorConfig;
 
-// ============================================================================
-// UNIFIED WORKFLOW ENGINE CONFIGURATION
-// ============================================================================
-
-/// **CANONICAL WORKFLOW ENGINE CONFIGURATION** 
-/// Consolidates WorkflowEngineConfig from multiple locations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowEngineConfig {
-    /// Maximum concurrent workflows
+
     pub max_concurrent: usize,
-    /// Workflow timeout in seconds
+
     pub timeout_secs: u64,
-    /// Enable audit logging
+
     pub audit_enabled: bool,
-    /// Enable metrics collection
+
     pub metrics_enabled: bool,
-    /// Thread pool size for workflow execution
+
     pub thread_pool_size: Option<usize>,
-    /// Enable workflow persistence
+
     pub persistence_enabled: bool,
 }
 
@@ -73,27 +34,25 @@ impl Default for WorkflowEngineConfig {
     }
 }
 
-/// **CANONICAL WORKFLOW POLICY CONFIGURATION**
-/// Consolidates policy settings from multiple workflow modules
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowPolicyConfig {
-    /// Maximum concurrent workflows per user
+
     pub max_concurrent_per_user: u32,
-    /// Maximum concurrent workflows globally
+
     pub max_concurrent_global: u32,
-    /// Default workflow timeout
+
     pub default_timeout: Duration,
-    /// Approval timeout duration
+
     pub approval_timeout: Duration,
-    /// Auto cleanup enabled
+
     pub auto_cleanup_enabled: bool,
-    /// Retention period for completed workflows
+
     pub retention_period: Duration,
-    /// Maximum workflow history entries
+
     pub max_history_entries: usize,
-    /// Enable workflow notifications
+
     pub notifications_enabled: bool,
-    /// Approval requirements by workflow type
+
     pub approval_requirements: HashMap<String, ApprovalRequirements>,
 }
 
@@ -108,45 +67,37 @@ impl Default for WorkflowPolicyConfig {
             retention_period: Duration::from_secs(2592000), // 30 days
             max_history_entries: 1000,
             notifications_enabled: true,
-            approval_requirements: HashMap::new(),
+            approval_requirements: HashMap::with_capacity(16),
         }
     }
 }
 
-// ============================================================================
-// WORKFLOW PROCESSING CONFIGURATION
-// ============================================================================
-
-/// **CANONICAL WORKFLOW PROCESSOR CONFIGURATION**
-/// Consolidates all processor-specific configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct WorkflowProcessorConfig {
-    /// Security processor configuration
-    pub security: SecurityProcessorConfig,
-    /// Key management processor configuration
-    pub key_management: KeyManagementConfig,
-    /// System processor configuration
-    pub system: SystemProcessorConfig,
-    /// Policy processor configuration
-    pub policy: PolicyProcessorConfig,
-    /// Registry processor configuration
-    pub registry: RegistryProcessorConfig,
-    /// User management processor configuration
+
+    pub security: UnifiedProcessorConfig,
+
+    pub key_management: UnifiedProcessorConfig,
+
+    pub system: UnifiedProcessorConfig,
+
+    pub policy: UnifiedProcessorConfig,
+
+    pub registry: UnifiedProcessorConfig,
+
     pub user_management: UserManagementProcessorConfig,
 }
 
-
-/// Security processor configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
 pub struct SecurityProcessorConfig {
-    /// Enable security auditing
+
     pub audit_enabled: bool,
-    /// Security timeout in seconds
+
     pub timeout_secs: u64,
-    /// Maximum security operations per workflow
+
     pub max_operations: usize,
-    /// Enable hardware security module integration
+
     pub hsm_enabled: bool,
 }
 
@@ -161,18 +112,17 @@ impl Default for SecurityProcessorConfig {
     }
 }
 
-/// Key management processor configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
 pub struct KeyManagementConfig {
-    /// Default key type for generation
+
     pub default_key_type: String,
-    /// Key rotation interval in seconds
+
     pub rotation_interval_secs: u64,
-    /// Enable automatic key backup
+
     pub auto_backup: bool,
-    /// Maximum keys per workflow
+
     pub max_keys_per_workflow: usize,
-    /// HSM tier requirement
+
     pub required_hsm_tier: String,
 }
 
@@ -188,16 +138,15 @@ impl Default for KeyManagementConfig {
     }
 }
 
-/// System processor configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
 pub struct SystemProcessorConfig {
-    /// Enable system monitoring
+
     pub monitoring_enabled: bool,
-    /// System health check interval
+
     pub health_check_interval_secs: u64,
-    /// Maximum system operations per workflow
+
     pub max_operations: usize,
-    /// Enable resource limits
+
     pub resource_limits_enabled: bool,
 }
 
@@ -212,16 +161,15 @@ impl Default for SystemProcessorConfig {
     }
 }
 
-/// Policy processor configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
 pub struct PolicyProcessorConfig {
-    /// Enable policy validation
+
     pub validation_enabled: bool,
-    /// Policy cache TTL in seconds
+
     pub cache_ttl_secs: u64,
-    /// Maximum policy rules per workflow
+
     pub max_rules: usize,
-    /// Enable policy auditing
+
     pub audit_enabled: bool,
 }
 
@@ -236,16 +184,15 @@ impl Default for PolicyProcessorConfig {
     }
 }
 
-/// Registry processor configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
 pub struct RegistryProcessorConfig {
-    /// Registry sync interval in seconds
+
     pub sync_interval_secs: u64,
-    /// Maximum registry operations per workflow
+
     pub max_operations: usize,
-    /// Enable registry caching
+
     pub caching_enabled: bool,
-    /// Registry connection timeout
+
     pub connection_timeout_secs: u64,
 }
 
@@ -260,16 +207,15 @@ impl Default for RegistryProcessorConfig {
     }
 }
 
-/// User management processor configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserManagementProcessorConfig {
-    /// Enable user validation
+
     pub validation_enabled: bool,
-    /// User session timeout in seconds
+
     pub session_timeout_secs: u64,
-    /// Maximum user operations per workflow
+
     pub max_operations: usize,
-    /// Enable user auditing
+
     pub audit_enabled: bool,
 }
 
@@ -284,27 +230,21 @@ impl Default for UserManagementProcessorConfig {
     }
 }
 
-// ============================================================================
-// WORKFLOW NOTIFICATION AND RETRY CONFIGURATION
-// ============================================================================
-
-/// **CANONICAL WORKFLOW RETRY CONFIGURATION**
-/// Consolidates RetryConfig from notification module and other retry logic
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowRetryConfig {
-    /// Maximum retry attempts
+
     pub max_attempts: u32,
-    /// Initial retry delay
+
     pub initial_delay: Duration,
-    /// Maximum retry delay
+
     pub max_delay: Duration,
-    /// Backoff multiplier
+
     pub backoff_multiplier: f64,
-    /// Enable exponential backoff
+
     pub exponential_backoff: bool,
-    /// Retry on timeout
+
     pub retry_on_timeout: bool,
-    /// Retry on network errors
+
     pub retry_on_network_error: bool,
 }
 
@@ -322,21 +262,19 @@ impl Default for WorkflowRetryConfig {
     }
 }
 
-/// **CANONICAL WORKFLOW NOTIFICATION CONFIGURATION**
-/// Consolidates notification settings from multiple modules
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowNotificationConfig {
-    /// Enable email notifications
+
     pub email_enabled: bool,
-    /// Enable webhook notifications
+
     pub webhook_enabled: bool,
-    /// Enable in-app notifications
+
     pub in_app_enabled: bool,
-    /// Notification retry configuration
+
     pub retry_config: WorkflowRetryConfig,
-    /// Email notification settings
+
     pub email_settings: EmailNotificationSettings,
-    /// Webhook notification settings
+
     pub webhook_settings: WebhookNotificationSettings,
 }
 
@@ -353,18 +291,17 @@ impl Default for WorkflowNotificationConfig {
     }
 }
 
-/// Email notification settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EmailNotificationSettings {
-    /// SMTP server host
+
     pub smtp_host: String,
-    /// SMTP server port
+
     pub smtp_port: u16,
-    /// Enable TLS
+
     pub tls_enabled: bool,
-    /// Sender email address
+
     pub sender_email: String,
-    /// Email template directory
+
     pub template_dir: String,
 }
 
@@ -380,16 +317,15 @@ impl Default for EmailNotificationSettings {
     }
 }
 
-/// Webhook notification settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebhookNotificationSettings {
-    /// Default webhook timeout
+
     pub timeout_secs: u64,
-    /// Enable webhook signatures
+
     pub signatures_enabled: bool,
-    /// Webhook secret for signatures
+
     pub webhook_secret: Option<String>,
-    /// Maximum payload size
+
     pub max_payload_size: usize,
 }
 
@@ -404,25 +340,19 @@ impl Default for WebhookNotificationSettings {
     }
 }
 
-// ============================================================================
-// WORKFLOW APPROVAL CONFIGURATION
-// ============================================================================
-
-/// **CANONICAL APPROVAL REQUIREMENTS**
-/// Defines approval requirements for different workflow types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApprovalRequirements {
-    /// Required approval tier
+
     pub tier: ApprovalTier,
-    /// Number of required approvals
+
     pub required_count: u32,
-    /// Required approver roles
+
     pub required_roles: Vec<String>,
-    /// Enable parallel approvals
+
     pub parallel_approvals: bool,
-    /// Approval timeout
+
     pub timeout: Duration,
-    /// Enable automatic approval for certain conditions
+
     pub auto_approval_rules: Vec<AutoApprovalRule>,
 }
 
@@ -439,49 +369,41 @@ impl Default for ApprovalRequirements {
     }
 }
 
-/// Approval tier levels
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ApprovalTier {
-    /// Basic approval tier
+
     Basic,
-    /// Enhanced approval tier
+
     Enhanced,
-    /// Critical approval tier
+
     Critical,
 }
 
-/// Auto approval rule
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AutoApprovalRule {
-    /// Rule name
+
     pub name: String,
-    /// Rule condition
+
     pub condition: String,
-    /// Enable rule
+
     pub enabled: bool,
-    /// Rule priority
+
     pub priority: u32,
 }
 
-// ============================================================================
-// ZERO-COST WORKFLOW CONFIGURATION
-// ============================================================================
-
-/// **CANONICAL ZERO-COST WORKFLOW CONFIGURATION**
-/// Consolidates ZeroCostEngineConfig and related zero-cost optimizations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostWorkflowConfig {
-    /// Enable zero-cost workflow processing
+
     pub enabled: bool,
-    /// Compile-time workflow validation
+
     pub compile_time_validation: bool,
-    /// Use const generics for configuration
+
     pub const_generics_enabled: bool,
-    /// Enable SIMD optimizations
+
     pub simd_enabled: bool,
-    /// Lock-free data structures
+
     pub lock_free_enabled: bool,
-    /// Memory pool configuration
+
     pub memory_pool: ZeroCostMemoryPoolConfig,
 }
 
@@ -498,16 +420,15 @@ impl Default for ZeroCostWorkflowConfig {
     }
 }
 
-/// Zero-cost memory pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostMemoryPoolConfig {
-    /// Initial pool size
+
     pub initial_size: usize,
-    /// Maximum pool size
+
     pub max_size: usize,
-    /// Enable memory pool
+
     pub enabled: bool,
-    /// Pool growth factor
+
     pub growth_factor: f64,
 }
 
@@ -522,42 +443,34 @@ impl Default for ZeroCostMemoryPoolConfig {
     }
 }
 
-// ============================================================================
-// MASTER WORKFLOW CONFIGURATION
-// ============================================================================
-
-/// **CANONICAL WORKFLOW CONFIGURATION** - Master configuration structure
-/// This is the top-level configuration that aggregates all workflow settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct WorkflowConfig {
-    /// Engine configuration
+
     pub engine: WorkflowEngineConfig,
-    /// Policy configuration
+
     pub policy: WorkflowPolicyConfig,
-    /// Processor configurations
+
     pub processors: WorkflowProcessorConfig,
-    /// Notification configuration
+
     pub notifications: WorkflowNotificationConfig,
-    /// Zero-cost optimizations
+
     pub zero_cost: ZeroCostWorkflowConfig,
-    /// Storage configuration
+
     pub storage: WorkflowStorageConfig,
-    /// Monitoring configuration
+
     pub monitoring: WorkflowMonitoringConfig,
 }
 
-
-/// Workflow storage configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowStorageConfig {
-    /// Storage backend type
+
     pub backend_type: WorkflowStorageBackend,
-    /// Database connection string
+
     pub connection_string: Option<String>,
-    /// Enable storage encryption
+
     pub encryption_enabled: bool,
-    /// Storage retention policy
+
     pub retention_policy: WorkflowRetentionPolicy,
 }
 
@@ -572,29 +485,27 @@ impl Default for WorkflowStorageConfig {
     }
 }
 
-/// Workflow storage backend types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum WorkflowStorageBackend {
-    /// In-memory storage
+
     Memory,
-    /// PostgreSQL database
+
     PostgreSQL,
-    /// Redis storage
+
     Redis,
-    /// File system storage
+
     FileSystem,
 }
 
-/// Workflow retention policy
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowRetentionPolicy {
-    /// Retention period for completed workflows
+
     pub completed_retention: Duration,
-    /// Retention period for failed workflows
+
     pub failed_retention: Duration,
-    /// Retention period for cancelled workflows
+
     pub cancelled_retention: Duration,
-    /// Enable automatic cleanup
+
     pub auto_cleanup: bool,
 }
 
@@ -609,18 +520,17 @@ impl Default for WorkflowRetentionPolicy {
     }
 }
 
-/// Workflow monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowMonitoringConfig {
-    /// Enable metrics collection
+
     pub metrics_enabled: bool,
-    /// Enable health monitoring
+
     pub health_monitoring_enabled: bool,
-    /// Metrics collection interval
+
     pub metrics_interval: Duration,
-    /// Health check interval
+
     pub health_check_interval: Duration,
-    /// Enable performance profiling
+
     pub profiling_enabled: bool,
 }
 
@@ -643,21 +553,18 @@ mod tests {
     #[test]
     fn test_workflow_config_defaults() {
         let config = WorkflowConfig::default();
-        
-        // Test engine defaults
+
         assert_eq!(config.engine.max_concurrent, 100);
         assert_eq!(config.engine.timeout_secs, 300);
         assert!(config.engine.audit_enabled);
         assert!(config.engine.metrics_enabled);
         assert!(config.engine.persistence_enabled);
-        
-        // Test policy defaults
+
         assert_eq!(config.policy.max_concurrent_per_user, 10);
         assert_eq!(config.policy.max_concurrent_global, 1000);
         assert!(config.policy.auto_cleanup_enabled);
         assert!(config.policy.notifications_enabled);
-        
-        // Test zero-cost defaults
+
         assert!(config.zero_cost.enabled);
         assert!(config.zero_cost.compile_time_validation);
         assert!(config.zero_cost.const_generics_enabled);

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["PolicyDecision","ThreatSeverity"],"struct":["AuditQuery","PolicyContext","PolicyMetadata"],"trait":["AuditLogger","AuthenticationProvider","AuthorizationProvider","CryptoProvider","PolicyEnforcer","SecureStorage","ThreatDetector","ZeroCopySecure"]};

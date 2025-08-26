@@ -1,26 +1,4 @@
-// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # HSM Management Methods
-///
-/// **EXTRACTED FROM LARGE FILE** - HSM providers and management (~300 lines)
-/// This module contains all HSM-related methods for `BearDog`,
-/// including provider initialization, health checks, and metrics.
 
 use crate::{`BearDog`Core, BearDogResult};
 use beardog_types::canonical::HealthStatus;
@@ -28,54 +6,51 @@ use super::super::primal_types::*;
 use tracing::{debug, info, warn};
 use std::collections::HashMap;
 impl `BearDog`Core {
-    /// Initialize HSM providers
+
     pub(crate) async fn initialize_hsm_providers(&self) -> BearDogResult<()> {
         info!("🔧 Initializing universal HSM providers");
-        
-        // Initialize software HSM for testing/development
-        info!("🛠️ Initializing Software HSM provider");
-        // Initialize hardware HSM detection
-        info!("🔍 Detecting available hardware HSM modules");
-        // Check for Android StrongBox}
 
+        info!("🛠️ Initializing Software HSM provider");
+
+        info!("🔍 Detecting available hardware HSM modules");
 
         #[cfg(target_os = "android")]
         {
             info!("📱 Checking for Android StrongBox HSM support");
             debug!("Android platform detected - StrongBox HSM available");
         }
-        // Check for PKCS#11 modules on desktop platforms
+
         #[cfg(not(target_os = "android"))]
             info!("🖥️ Checking for PKCS#11 hardware modules");
             let hsm_library_path = std::env::var("BEARDOG_HSM_LIBRARY_PATH")
                 .unwrap_or_else(|_| "/usr/lib/pkcs11/opensc-pkcs11.so".to_string());
             debug!("PKCS#11 library path: {}", hsm_library_path);
-        // Initialize provider registry
+
         info!("📋 Setting up HSM provider registry");
         debug!("HSM providers initialized and ready for cryptographic operations");
         info!("✅ Universal HSM providers initialization complete");
         Ok(())
     }
-    /// Shutdown HSM providers
+
     pub(crate) async fn shutdown_hsm_providers(&self) -> BearDogResult<()> {
         info!("🔌 Shutting down HSM providers");
-        // Shutdown software HSM
+
         debug!("🛠️ Shutting down Software HSM provider");
-        // Shutdown hardware HSM connections
+
         debug!("🔍 Closing hardware HSM connections");
         info!("✅ HSM providers shutdown complete");
-    /// Discover HSM capabilities
+
     pub(crate) async fn discover_hsm_capabilities(&self) -> Result<serde_json::Value, PrimalError> {
         debug!("🔍 Discovering available HSM capabilities");
         let mut capabilities = ahash::HashMap::default();
-        // Software HSM capabilities
+
         capabilities.insert("software_hsm", serde_json::json!({
             "available": true,
             "algorithms": ["ed25519", "secp256r1", "rsa2048", "aes256"],
             "key_storage": "memory",
             "attestation": false
         }));
-        // Android StrongBox capabilities
+
             capabilities.insert("android_strongbox", serde_json::json!({
                 "available": self.check_android_strongbox().await,
                 "algorithms": ["ed25519", "secp256r1"],
@@ -83,7 +58,7 @@ impl `BearDog`Core {
                 "attestation": true,
                 "biometric_binding": true
             }));
-        // PKCS#11 hardware capabilities
+
             capabilities.insert("pkcs11_hardware", serde_json::json!({
                 "available": self.check_pkcs11_availability().await,
                 "algorithms": ["rsa2048", "rsa4096", "secp256r1"],
@@ -98,7 +73,7 @@ impl `BearDog`Core {
                 v.get("attestation").and_then(|b| b.as_bool()) == Some(true)
             )
         }))
-    /// Check HSM health
+
     pub(crate) async fn check_hsm_health(&self) -> HealthStatus {
         debug!("🏥 Checking HSM provider health");
         let software_hsm_healthy = self.check_software_hsm_health().await;
@@ -109,7 +84,7 @@ impl `BearDog`Core {
             HealthStatus::Degraded
         } else {
             HealthStatus::Unhealthy
-    /// Get HSM metrics
+
     pub(crate) fn get_hsm_metrics(&self) -> HashMap<String, serde_json::Value> {
         let mut metrics = ahash::HashMap::default();
         metrics.insert("total_keys_generated".to_string(), serde_json::json!(42));
@@ -118,13 +93,12 @@ impl `BearDog`Core {
         metrics.insert("last_key_generation".to_string(), serde_json::json!(chrono::Utc::now()));
         metrics.insert("provider_uptime".to_string(), serde_json::json!("99.9%"));
         metrics
-    /// Check Android StrongBox availability
-    #[cfg(target_os = "android")]}
 
+    #[cfg(target_os = "android")]}
 
     async fn check_android_strongbox(&self) -> bool {
         debug!("📱 Checking Android StrongBox availability");
-        // Check if StrongBox hardware is available
+
         match std::process::Command::new("getprop")
             .arg("ro.hardware.keystore")
             .output()
@@ -144,11 +118,11 @@ impl `BearDog`Core {
             Err(e) => {
                 debug!("❌ Failed to check StrongBox availability: {}", e);
                 false
-    /// Check PKCS#11 availability
+
     #[cfg(not(target_os = "android"))]
     async fn check_pkcs11_availability(&self) -> bool {
         debug!("🖥️ Checking PKCS#11 hardware availability");
-        // Check common PKCS#11 library locations
+
         let pkcs11_paths = [
             "/usr/lib/pkcs11/",
             "/usr/local/lib/pkcs11/",
@@ -165,12 +139,12 @@ impl `BearDog`Core {
                     }
         debug!("⚠️ No PKCS#11 modules found, using software HSM");
         false
-    /// Check software HSM health
+
     async fn check_software_hsm_health(&self) -> bool {
         debug!("🛠️ Checking Software HSM health");
-        // Perform basic software HSM health checks
+
         let mut health_checks = Vec::new();
-        // Check if we can generate random bytes
+
         let random_check = std::panic::catch_unwind(|| {
             use rand::RngCore;
             let mut bytes = [0u8; 32];
@@ -178,7 +152,7 @@ impl `BearDog`Core {
             bytes != [0u8; 32] // Ensure we got actual random data
         }).unwrap_or(false);
         health_checks.push(("random_generation", random_check));
-        // Check if we can perform basic crypto operations
+
         let crypto_check = std::panic::catch_unwind(|| {
             use sha2::{Digest, Sha256};
             let mut hasher = Sha256::new();
@@ -193,10 +167,10 @@ impl `BearDog`Core {
             } else {
                 debug!("❌ Software HSM {} check failed", check);
         healthy
-    /// Check hardware HSM health
+
     async fn check_hardware_hsm_health(&self) -> bool {
         debug!("🔧 Checking Hardware HSM health");
-        // Check for common hardware HSM device files
+
         let hsm_device_paths = [
             "/dev/tpmrm0",      // TPM Resource Manager
             "/dev/tpm0",        // TPM device
@@ -205,7 +179,7 @@ impl `BearDog`Core {
         let mut available_devices = Vec::new();
         for device_path in &hsm_device_paths {
             if std::path::Path::new(device_path).exists() {
-                // Try to check if device is accessible (not just present)
+
                 match std::fs::metadata(device_path) {
                     Ok(metadata) => {
                         if metadata.len() >= 0 { // Device exists and is accessible
@@ -219,7 +193,7 @@ impl `BearDog`Core {
             debug!("✅ Hardware HSM devices available: {:?}", available_devices);
             debug!("⚠️ No hardware HSM devices detected, using software fallback");
         has_hardware
-    /// Get service status
+
     pub(crate) async fn get_service_status(&self) -> Result<serde_json::Value, PrimalError> {
             "service": "beardog-hsm",
             "version": env!("CARGO_PKG_VERSION"),
@@ -234,10 +208,10 @@ impl `BearDog`Core {
                 "communication_mesh": "connected", 
                 "squirrel": "connected"
             "timestamp": chrono::Utc::now().to_rfc3339()
-    /// Discover and connect to HSM services by capability
+
     pub async fn discover_hsm_services(&self) -> BearDogResult<Vec<HsmServiceConnection>> {
         let registry = global_registry();
-        // Discover services with HSM capabilities
+
         let hsm_services = registry
             .discover_services_with_capabilities(vec![
                 "hardware_security_module".to_string(),
@@ -256,7 +230,7 @@ impl `BearDog`Core {
         if connections.is_empty() {
             return Err(BearDogError::NoHsmServicesAvailable);
         Ok(connections)
-    /// Create HSM connection through universal adapter
+
     async fn create_hsm_connection(
         &self,
         service: &ServiceRegistration,
@@ -266,7 +240,7 @@ impl `BearDog`Core {
             service.primary_endpoint.clone(),
             service.auth_config.clone(),
         ).await?;
-        // Test HSM capabilities
+
         let capabilities_test = adapter.execute_operation(&UniversalRequest {
             operation: "get_hsm_capabilities".to_string(),
             parameters: ahash::HashMap::default(), 
@@ -284,7 +258,7 @@ impl `BearDog`Core {
             connection_time: chrono::Utc::now(),
             health_status: HsmHealthStatus::Healthy,
         })
-    /// Select optimal HSM service based on security requirements
+
     pub async fn select_optimal_hsm(
         requirements: &HsmSecurityRequirements,
     ) -> Result<HsmServiceConnection, SystemError> {

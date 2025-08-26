@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Recovery Validation Components
-//!
-//! Recovery validator trait and implementations for validating
-//! system recovery from chaos-induced faults.
 
 use super::models::*;
 use super::ChaosTestFramework;
@@ -28,18 +8,14 @@ use std::time::{Duration, Instant};
 use tokio::time::{sleep, timeout};
 use tracing::warn;
 
-/// Recovery validator trait
-/// **MODERNIZED** - Uses native async fn instead of async_trait for zero-cost abstractions
 #[allow(async_fn_in_trait)]
 pub trait RecoveryValidator: Send + Sync {
-    /// Validate that the system has recovered from a fault
+
     async fn validate_recovery(&self) -> BearDogResult<RecoveryStatus>;
-    
-    /// Get the component this validator checks
+
     fn target_component(&self) -> String;
 }
 
-/// Wait for system recovery and measure recovery time
 pub async fn wait_for_recovery(framework: &ChaosTestFramework, component: &str) -> BearDogResult<u64> {
     let start_time = Instant::now();
     let timeout_duration = Duration::from_millis(framework.config.recovery_timeout_ms);
@@ -76,7 +52,6 @@ pub async fn wait_for_recovery(framework: &ChaosTestFramework, component: &str) 
     }
 }
 
-/// Validate recovery across all registered validators
 pub async fn validate_all_recoveries(framework: &ChaosTestFramework) -> BearDogResult<Vec<RecoveryResult>> {
     let mut results = Vec::new();
     
@@ -90,8 +65,6 @@ pub async fn validate_all_recoveries(framework: &ChaosTestFramework) -> BearDogR
     
     Ok(results)
 }
-
-// Recovery Validator Implementations
 
 pub struct CoreRecoveryValidator {
     core: Arc<BearDogCore>,
@@ -132,7 +105,7 @@ impl SecurityRecoveryValidator {
 #[allow(async_fn_in_trait)]
 impl RecoveryValidator for SecurityRecoveryValidator {
     async fn validate_recovery(&self) -> BearDogResult<RecoveryStatus> {
-        // Simulate security component recovery validation
+
         Ok(RecoveryStatus::FullyRecovered)
     }
 

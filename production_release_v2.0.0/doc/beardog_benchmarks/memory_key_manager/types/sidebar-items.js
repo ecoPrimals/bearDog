@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["KeyStatus","VaultConnectionStatus"],"struct":["DerivedKey","KeyInfo","KeyMetadata","MemoryKeyConfig","SharedVault","StoredKey","VaultPermissions"]};

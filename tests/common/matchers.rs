@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Advanced Test Matchers for BearDog
-//!
-//! **Sophisticated Test Validation Utilities**
-//!
-//! This module provides advanced matchers and validation utilities that enable
-//! expressive, comprehensive test assertions with detailed error reporting.
 
 use crate::common::{TestResult, TestContext};
 use beardog_errors::{BearDogError, BearDogResult};
@@ -31,20 +9,17 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-/// Advanced test matcher for complex validation scenarios
 pub struct TestMatcher {
     name: String,
     description: String,
     matchers: Vec<Box<dyn MatcherFn>>,
 }
 
-/// Trait for matcher functions
 pub trait MatcherFn: Send + Sync {
     fn matches(&self, context: &TestContext, value: &JsonValue) -> MatchResult;
     fn description(&self) -> String;
 }
 
-/// Result of a matcher evaluation
 #[derive(Debug, Clone)]
 pub struct MatchResult {
     pub success: bool,
@@ -53,7 +28,6 @@ pub struct MatchResult {
     pub suggestions: Vec<String>,
 }
 
-/// Performance matcher for duration and resource validation
 pub struct PerformanceMatcher {
     max_duration: Option<Duration>,
     min_duration: Option<Duration>,
@@ -61,7 +35,6 @@ pub struct PerformanceMatcher {
     max_cpu_percent: Option<f64>,
 }
 
-/// HTTP response matcher for API testing
 pub struct HttpResponseMatcher {
     expected_status: Option<u16>,
     expected_headers: HashMap<String, String>,
@@ -69,7 +42,6 @@ pub struct HttpResponseMatcher {
     max_response_time: Option<Duration>,
 }
 
-/// JSON pattern matcher for flexible content validation
 #[derive(Debug, Clone)]
 pub enum JsonPattern {
     Exact(JsonValue),
@@ -91,7 +63,6 @@ pub enum JsonType {
     Null,
 }
 
-/// Error matcher for error scenario validation
 pub struct ErrorMatcher {
     expected_error_type: Option<String>,
     expected_error_code: Option<String>,
@@ -100,7 +71,6 @@ pub struct ErrorMatcher {
     expected_category: Option<String>,
 }
 
-/// Security matcher for cryptographic and security validation
 pub struct SecurityMatcher {
     signature_valid: Option<bool>,
     encryption_algorithm: Option<String>,
@@ -109,7 +79,6 @@ pub struct SecurityMatcher {
     timing_attack_safe: Option<bool>,
 }
 
-/// Genetics matcher for genetic algorithm validation
 pub struct GeneticsMatcher {
     fitness_score_range: Option<(f64, f64)>,
     generation_count: Option<u32>,
@@ -119,22 +88,20 @@ pub struct GeneticsMatcher {
 }
 
 impl TestMatcher {
-    /// Create a new test matcher
-    pub fn new(name: impl Into<String>) -> Self {
+
+    pub fn new(name: impl Into<&str>) -> Self {
         Self {
             name: name.into(),
-            description: String::new(),
+            description: String::with_capacity(64),
             matchers: Vec::new(),
         }
     }
 
-    /// Set description for the matcher
-    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+    pub fn with_description(mut self, description: impl Into<&str>) -> Self {
         self.description = description.into();
         self
     }
 
-    /// Add a custom matcher function
     pub fn add_matcher<F>(mut self, matcher: F) -> Self
     where
         F: Fn(&TestContext, &JsonValue) -> MatchResult + Send + Sync + 'static,
@@ -143,41 +110,35 @@ impl TestMatcher {
         self
     }
 
-    /// Add performance validation
     pub fn performance(mut self, matcher: PerformanceMatcher) -> Self {
         self.matchers.push(Box::new(matcher));
         self
     }
 
-    /// Add HTTP response validation
     pub fn http_response(mut self, matcher: HttpResponseMatcher) -> Self {
         self.matchers.push(Box::new(matcher));
         self
     }
 
-    /// Add error validation
     pub fn error(mut self, matcher: ErrorMatcher) -> Self {
         self.matchers.push(Box::new(matcher));
         self
     }
 
-    /// Add security validation
     pub fn security(mut self, matcher: SecurityMatcher) -> Self {
         self.matchers.push(Box::new(matcher));
         self
     }
 
-    /// Add genetics validation
     pub fn genetics(mut self, matcher: GeneticsMatcher) -> Self {
         self.matchers.push(Box::new(matcher));
         self
     }
 
-    /// Execute all matchers and return comprehensive result
     pub fn validate(&self, context: &TestContext, value: &JsonValue) -> MatchResult {
         let mut all_success = true;
         let mut messages = Vec::new();
-        let mut combined_details = HashMap::new();
+        let mut combined_details = HashMap::with_capacity(16);
         let mut all_suggestions = Vec::new();
 
         for matcher in &self.matchers {
@@ -187,23 +148,21 @@ impl TestMatcher {
                 all_success = false;
             }
 
-            messages.push(format!("{}: {}", matcher.description(), result.message));
-            
-            // Combine details
+            messages.push(format_args!("{}: {}", matcher.description().to_string(), result.message));
+
             for (key, val) in result.details {
                 combined_details.insert(key, val);
             }
 
-            // Collect suggestions
             all_suggestions.extend(result.suggestions);
         }
 
         MatchResult {
             success: all_success,
             message: if all_success {
-                format!("All {} matchers passed for '{}'", self.matchers.len(), self.name)
+                format_args!("All {} matchers passed for '{}'", self.matchers.len().to_string(), self.name)
             } else {
-                format!("Some matchers failed for '{}': {}", self.name, messages.join("; "))
+                format_args!("Some matchers failed for '{}': {}", self.name, messages.join("; ").to_string())
             },
             details: combined_details,
             suggestions: all_suggestions,
@@ -211,7 +170,6 @@ impl TestMatcher {
     }
 }
 
-/// Function-based matcher wrapper
 struct FunctionMatcher {
     func: Box<dyn Fn(&TestContext, &JsonValue) -> MatchResult + Send + Sync>,
 }
@@ -261,10 +219,9 @@ impl MatcherFn for PerformanceMatcher {
     fn matches(&self, context: &TestContext, _value: &JsonValue) -> MatchResult {
         let mut success = true;
         let mut messages = Vec::new();
-        let mut details = HashMap::new();
+        let mut details = HashMap::with_capacity(16);
         let mut suggestions = Vec::new();
 
-        // Check duration constraints
         if let Some(total_duration) = context.performance_metrics.total_duration {
             details.insert("actual_duration_ms".to_string(), 
                           JsonValue::Number(total_duration.as_millis().into()));
@@ -272,8 +229,8 @@ impl MatcherFn for PerformanceMatcher {
             if let Some(max_duration) = self.max_duration {
                 if total_duration > max_duration {
                     success = false;
-                    messages.push(format!("Duration {} exceeds maximum {}", 
-                                        format_duration(total_duration), 
+                    messages.push(format_args!("Duration {} exceeds maximum {}", 
+                                        format_duration(total_duration).to_string(), 
                                         format_duration(max_duration)));
                     suggestions.push("Consider optimizing performance-critical operations".to_string());
                     suggestions.push("Check for unnecessary blocking operations".to_string());
@@ -283,30 +240,29 @@ impl MatcherFn for PerformanceMatcher {
             if let Some(min_duration) = self.min_duration {
                 if total_duration < min_duration {
                     success = false;
-                    messages.push(format!("Duration {} is below minimum {} (possible timing issue)", 
-                                        format_duration(total_duration), 
+                    messages.push(format_args!("Duration {} is below minimum {} (possible timing issue)", 
+                                        format_duration(total_duration).to_string(), 
                                         format_duration(min_duration)));
                     suggestions.push("Verify test is actually performing expected operations".to_string());
                 }
             }
         }
 
-        // Check memory constraints
         if let Some(peak_memory) = context.performance_metrics.memory_peak_mb {
             details.insert("peak_memory_mb".to_string(), 
                           JsonValue::Number(serde_json::Number::from_f64(peak_memory).unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 })));
 
             if let Some(max_memory) = self.max_memory_mb {
                 if peak_memory > max_memory {
                     success = false;
-                    messages.push(format!("Peak memory {:.2} MB exceeds maximum {:.2} MB", 
-                                        peak_memory, max_memory));
+                    messages.push(format_args!("Peak memory {:.2} MB exceeds maximum {:.2} MB", 
+                                        peak_memory, max_memory).to_string());
                     suggestions.push("Review memory usage patterns and potential leaks".to_string());
                     suggestions.push("Consider implementing memory pooling".to_string());
                 }
@@ -318,7 +274,7 @@ impl MatcherFn for PerformanceMatcher {
             message: if success {
                 "Performance constraints satisfied".to_string()
             } else {
-                format!("Performance issues: {}", messages.join(", "))
+                format_args!("Performance issues: {}", messages.join(", ").to_string())
             },
             details,
             suggestions,
@@ -334,7 +290,7 @@ impl HttpResponseMatcher {
     pub fn new() -> Self {
         Self {
             expected_status: None,
-            expected_headers: HashMap::new(),
+            expected_headers: HashMap::with_capacity(16),
             expected_body_patterns: Vec::new(),
             max_response_time: None,
         }
@@ -345,17 +301,17 @@ impl HttpResponseMatcher {
         self
     }
 
-    pub fn header(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+    pub fn header(mut self, key: impl Into<&str>, value: impl Into<&str>) -> Self {
         self.expected_headers.insert(key.into(), value.into());
         self
     }
 
-    pub fn body_contains(mut self, pattern: impl Into<String>) -> Self {
+    pub fn body_contains(mut self, pattern: impl Into<&str>) -> Self {
         self.expected_body_patterns.push(JsonPattern::Contains(pattern.into()));
         self
     }
 
-    pub fn body_matches(mut self, regex: impl Into<String>) -> Self {
+    pub fn body_matches(mut self, regex: impl Into<&str>) -> Self {
         self.expected_body_patterns.push(JsonPattern::Regex(regex.into()));
         self
     }
@@ -370,17 +326,16 @@ impl MatcherFn for HttpResponseMatcher {
     fn matches(&self, _context: &TestContext, value: &JsonValue) -> MatchResult {
         let mut success = true;
         let mut messages = Vec::new();
-        let mut details = HashMap::new();
+        let mut details = HashMap::with_capacity(16);
         let mut suggestions = Vec::new();
 
-        // Validate status code
         if let Some(expected_status) = self.expected_status {
             if let Some(actual_status) = value.get("status_code").and_then(|v| v.as_u64()) {
                 details.insert("actual_status".to_string(), JsonValue::Number(actual_status.into()));
                 
                 if actual_status != expected_status as u64 {
                     success = false;
-                    messages.push(format!("Expected status {}, got {}", expected_status, actual_status));
+                    messages.push(format_args!("Expected status {}, got {}", expected_status, actual_status).to_string());
                     
                     if actual_status >= 400 {
                         suggestions.push("Check API endpoint implementation".to_string());
@@ -394,29 +349,27 @@ impl MatcherFn for HttpResponseMatcher {
             }
         }
 
-        // Validate headers
         if let Some(headers) = value.get("headers").and_then(|v| v.as_object()) {
             for (expected_key, expected_value) in &self.expected_headers {
                 if let Some(actual_value) = headers.get(expected_key).and_then(|v| v.as_str()) {
                     if actual_value != expected_value {
                         success = false;
-                        messages.push(format!("Header '{}': expected '{}', got '{}'", 
-                                            expected_key, expected_value, actual_value));
+                        messages.push(format_args!("Header '{}': expected '{}', got '{}'", 
+                                            expected_key, expected_value, actual_value).to_string());
                     }
                 } else {
                     success = false;
-                    messages.push(format!("Missing expected header: {}", expected_key));
-                    suggestions.push(format!("Ensure API sets '{}' header", expected_key));
+                    messages.push(format_args!("Missing expected header: {}", expected_key).to_string());
+                    suggestions.push(format_args!("Ensure API sets '{}' header", expected_key).to_string());
                 }
             }
         }
 
-        // Validate body patterns
         if let Some(body) = value.get("body") {
             for pattern in &self.expected_body_patterns {
                 if !self.validate_json_pattern(body, pattern) {
                     success = false;
-                    messages.push(format!("Body pattern validation failed: {:?}", pattern));
+                    messages.push(format_args!("Body pattern validation failed: {:?}", pattern).to_string());
                     suggestions.push("Review response body structure and content".to_string());
                 }
             }
@@ -427,7 +380,7 @@ impl MatcherFn for HttpResponseMatcher {
             message: if success {
                 "HTTP response validation passed".to_string()
             } else {
-                format!("HTTP response validation failed: {}", messages.join(", "))
+                format_args!("HTTP response validation failed: {}", messages.join(", ").to_string())
             },
             details,
             suggestions,
@@ -481,7 +434,7 @@ impl HttpResponseMatcher {
                 length >= *min_len && max_len.map_or(true, |max| length <= max)
             }
             JsonPattern::Custom(_expr) => {
-                // Custom expression evaluation pending advanced matching requirements
+
                 true
             }
         }
@@ -499,27 +452,27 @@ impl ErrorMatcher {
         }
     }
 
-    pub fn error_type(mut self, error_type: impl Into<String>) -> Self {
+    pub fn error_type(mut self, error_type: impl Into<&str>) -> Self {
         self.expected_error_type = Some(error_type.into());
         self
     }
 
-    pub fn error_code(mut self, error_code: impl Into<String>) -> Self {
+    pub fn error_code(mut self, error_code: impl Into<&str>) -> Self {
         self.expected_error_code = Some(error_code.into());
         self
     }
 
-    pub fn message_contains(mut self, pattern: impl Into<String>) -> Self {
+    pub fn message_contains(mut self, pattern: impl Into<&str>) -> Self {
         self.expected_message_pattern = Some(pattern.into());
         self
     }
 
-    pub fn severity(mut self, severity: impl Into<String>) -> Self {
+    pub fn severity(mut self, severity: impl Into<&str>) -> Self {
         self.expected_severity = Some(severity.into());
         self
     }
 
-    pub fn category(mut self, category: impl Into<String>) -> Self {
+    pub fn category(mut self, category: impl Into<&str>) -> Self {
         self.expected_category = Some(category.into());
         self
     }
@@ -529,16 +482,15 @@ impl MatcherFn for ErrorMatcher {
     fn matches(&self, _context: &TestContext, value: &JsonValue) -> MatchResult {
         let mut success = true;
         let mut messages = Vec::new();
-        let mut details = HashMap::new();
+        let mut details = HashMap::with_capacity(16);
         let mut suggestions = Vec::new();
 
-        // Extract error information from the value
         let error_info = if value.is_object() {
             value.as_object().unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 })
         } else {
@@ -552,13 +504,12 @@ impl MatcherFn for ErrorMatcher {
             };
         };
 
-        // Validate error type
         if let Some(expected_type) = &self.expected_error_type {
             if let Some(actual_type) = error_info.get("error_type").and_then(|v| v.as_str()) {
                 details.insert("error_type".to_string(), JsonValue::String(actual_type.to_string()));
                 if actual_type != expected_type {
                     success = false;
-                    messages.push(format!("Expected error type '{}', got '{}'", expected_type, actual_type));
+                    messages.push(format_args!("Expected error type '{}', got '{}'", expected_type, actual_type).to_string());
                 }
             } else {
                 success = false;
@@ -567,24 +518,22 @@ impl MatcherFn for ErrorMatcher {
             }
         }
 
-        // Validate error code
         if let Some(expected_code) = &self.expected_error_code {
             if let Some(actual_code) = error_info.get("error_code").and_then(|v| v.as_str()) {
                 details.insert("error_code".to_string(), JsonValue::String(actual_code.to_string()));
                 if actual_code != expected_code {
                     success = false;
-                    messages.push(format!("Expected error code '{}', got '{}'", expected_code, actual_code));
+                    messages.push(format_args!("Expected error code '{}', got '{}'", expected_code, actual_code).to_string());
                 }
             }
         }
 
-        // Validate message pattern
         if let Some(expected_pattern) = &self.expected_message_pattern {
             if let Some(actual_message) = error_info.get("message").and_then(|v| v.as_str()) {
                 details.insert("message".to_string(), JsonValue::String(actual_message.to_string()));
                 if !actual_message.contains(expected_pattern) {
                     success = false;
-                    messages.push(format!("Error message doesn't contain expected pattern '{}'", expected_pattern));
+                    messages.push(format_args!("Error message doesn't contain expected pattern '{}'", expected_pattern).to_string());
                     suggestions.push("Review error message generation and localization".to_string());
                 }
             }
@@ -595,7 +544,7 @@ impl MatcherFn for ErrorMatcher {
             message: if success {
                 "Error validation passed".to_string()
             } else {
-                format!("Error validation failed: {}", messages.join(", "))
+                format_args!("Error validation failed: {}", messages.join(", ").to_string())
             },
             details,
             suggestions,
@@ -607,19 +556,15 @@ impl MatcherFn for ErrorMatcher {
     }
 }
 
-// Utility functions
-
 fn format_duration(duration: Duration) -> String {
     if duration.as_secs() > 0 {
-        format!("{:.2}s", duration.as_secs_f64())
+        format_args!("{:.2}s", duration.as_secs_f64().to_string())
     } else if duration.as_millis() > 0 {
-        format!("{}ms", duration.as_millis())
+        format_args!("{}ms", duration.as_millis().to_string())
     } else {
-        format!("{}μs", duration.as_micros())
+        format_args!("{}μs", duration.as_micros().to_string())
     }
 }
-
-// Convenience macros for creating matchers
 
 #[macro_export]
 macro_rules! match_performance {

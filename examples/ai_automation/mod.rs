@@ -1,36 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BearDog AI Automation Suite
-//!
-//! ## Architecture Philosophy
-//! 
-//! **Standalone Capabilities**: BearDog has onboard minimal AI for security operations
-//! **Network Effects**: When connected to Squirrel, becomes a fleet of encrypted AI subtasks
-//! **Not Dependent**: BearDog AI is independent, not a subtask of Squirrel
-//!
-//! ## Modules
-//!
-//! - `standalone_ai` - BearDog's onboard AI security capabilities
-//! - `network_effects` - Fleet coordination through Squirrel connection
-//! - `encrypted_tasks` - Distributed AI task encryption and coordination
-//! - `security_automation` - AI-driven security operations
-//! - `genetic_automation` - AI-enhanced genetic spawning
-//! - `performance_ai` - AI-driven performance optimization
 
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
@@ -44,94 +12,85 @@ pub mod security_automation;
 pub mod genetic_automation;
 pub mod performance_ai;
 
-/// AI Automation Suite CLI
 #[derive(Parser)]
 #[command(name = "beardog-ai-suite")]
 #[command(about = "BearDog AI: Standalone + Network Effects Architecture")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
-    
-    /// Configuration file
+
     #[arg(long, short)]
     config: Option<PathBuf>,
-    
-    /// Output format
+
     #[arg(long, default_value = "json")]
     format: OutputFormat,
-    
-    /// Enable Squirrel network effects (if available)
+
     #[arg(long)]
     network_effects: bool,
-    
-    /// Verbose output
+
     #[arg(long, short)]
     verbose: bool,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-    /// BearDog standalone AI security operations
+
     StandaloneSecurity {
-        /// Operations file (JSON)
+
         #[arg(long)]
         operations_file: PathBuf,
-        /// Results output file  
+
         #[arg(long)]
         output_file: PathBuf,
-        /// Use onboard AI enhancement
+
         #[arg(long)]
         ai_enhanced: bool,
     },
-    
-    /// Fleet AI operations (requires Squirrel connection)
+
     FleetOperations {
-        /// Task configuration file
+
         #[arg(long)]
         task_file: PathBuf,
-        /// Fleet coordination mode
+
         #[arg(long, default_value = "encrypted")]
         mode: FleetMode,
-        /// Results output file
+
         #[arg(long)]
         output_file: PathBuf,
     },
-    
-    /// Hybrid AI operations (standalone + network effects)
+
     HybridAI {
-        /// Standalone operations file
+
         #[arg(long)]
         standalone_file: PathBuf,
-        /// Network tasks file
+
         #[arg(long)]
         network_file: PathBuf,
-        /// Output file
+
         #[arg(long)]
         output_file: PathBuf,
     },
-    
-    /// AI-enhanced genetic spawning
+
     GeneticAI {
-        /// Spawn requests file
+
         #[arg(long)]
         requests_file: PathBuf,
-        /// Use AI optimization
+
         #[arg(long)]
         ai_optimize: bool,
-        /// Output file
+
         #[arg(long)]
         output_file: PathBuf,
     },
-    
-    /// Performance optimization AI
+
     PerformanceAI {
-        /// Benchmark file
+
         #[arg(long)]
         benchmark_file: PathBuf,
-        /// AI-driven optimization
+
         #[arg(long)]
         ai_optimize: bool,
-        /// Output file
+
         #[arg(long)]
         output_file: PathBuf,
     },
@@ -177,14 +136,11 @@ pub struct AIInsight {
     pub metadata: std::collections::HashMap<String, serde_json::Value>,
 }
 
-/// Main AI automation orchestration
 pub async fn run_ai_automation() -> BearDogResult<()> {
     let cli = Cli::parse();
-    
-    // Initialize BearDog core with AI capabilities
+
     let ai_core = standalone_ai::initialize_ai_core(&cli.config).await?;
-    
-    // Check for Squirrel network effects availability
+
     let network_capability = if cli.network_effects {
         network_effects::check_squirrel_connectivity().await?
     } else {
@@ -254,15 +210,14 @@ async fn run_hybrid_ai_operations(
     network_file: &PathBuf,
     output_file: &PathBuf,
 ) -> BearDogResult<()> {
-    // Run standalone operations
+
     let standalone_result = security_automation::run_standalone_security(
         ai_core,
         standalone_file,
         &PathBuf::from("/tmp/standalone_result.json"),
         true
     ).await?;
-    
-    // If network available, run enhanced operations
+
     let network_result = if let Some(net) = network {
         Some(encrypted_tasks::run_fleet_operations(
             ai_core,
@@ -274,8 +229,7 @@ async fn run_hybrid_ai_operations(
     } else {
         None
     };
-    
-    // Combine results with AI insights
+
     let hybrid_result = AIAutomationResult {
         success: true,
         standalone_result: Some(standalone_result),
@@ -284,8 +238,7 @@ async fn run_hybrid_ai_operations(
         ai_insights: ai_core.generate_hybrid_insights().await?,
                     execution_time_ms: 0, // Execution time measurement not yet implemented
     };
-    
-    // Save combined results
+
     let output = serde_json::to_string_pretty(&hybrid_result)?;
     tokio::fs::write(output_file, output).await?;
     

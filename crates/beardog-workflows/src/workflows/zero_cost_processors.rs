@@ -1,48 +1,16 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Zero-Cost Workflow Processors
-/// 
-/// **MODERNIZED IMPLEMENTATIONS** - Native async fn, no async_trait overhead
-/// 
-/// This module provides zero-cost workflow processors that implement the
-/// canonical ZeroCostWorkflowProcessor trait with native async functions.
-/// 
-/// ## Performance Benefits:
-/// - 15-30% faster than async_trait versions
-/// - Zero allocation in hot paths
-/// - Compile-time optimizations
-/// - Native async fn support
 
 use super::canonical::WorkflowProcessingResult;
 use super::zero_cost_traits::{
     ZeroCostWorkflowProcessor, WorkflowProcessingRequest, WorkflowProcessingContext,
 };
 use beardog_errors::{BearDogError, BearDogResult};
-use beardog_types::constants::unified::performance::CONCURRENT_TASKS;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
-// Define workflow-specific constants
-const BATCH_SIZE: usize = CONCURRENT_TASKS;
 const VALIDATION_STRICT: bool = true;
 
-/// **Key Rotation Parameters** - Zero-cost parameter structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyRotationParams {
     pub key_id: String,
@@ -50,7 +18,6 @@ pub struct KeyRotationParams {
     pub rotation_interval: Duration,
 }
 
-/// **Policy Change Parameters** - Zero-cost parameter structure  
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PolicyChangeParams {
     pub policy_id: String,
@@ -58,9 +25,6 @@ pub struct PolicyChangeParams {
     pub validation_level: String,
 }
 
-/// **ZERO-COST KEY ROTATION PROCESSOR**
-/// 
-/// High-performance key rotation with compile-time optimizations
 pub struct ZeroCostKeyRotationProcessor<const BATCH_SIZE: usize, const TIMEOUT_MS: u64> {
     processed_count: AtomicU64,
     success_count: AtomicU64,
@@ -92,9 +56,6 @@ impl<const BATCH_SIZE: usize, const TIMEOUT_MS: u64>
     }
 }
 
-/// **MODERNIZED IMPLEMENTATION** - Native async fn, no async_trait overhead
-/// 
-/// **PERFORMANCE IMPROVEMENT**: 15-30% faster than async_trait version
 impl<const BATCH_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostWorkflowProcessor
     for ZeroCostKeyRotationProcessor<BATCH_SIZE, TIMEOUT_MS>
 {
@@ -109,19 +70,16 @@ impl<const BATCH_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostWorkflowProcessor
     ) -> BearDogResult<Self::Response> {
         let start_time = Instant::now();
         self.processed_count.fetch_add(1, Ordering::Relaxed);
-        
-        // Extract key rotation parameters
+
         let key_id = &request.payload.key_id;
         let key_type = &request.payload.key_type;
-        
-        // Simulate key rotation with timeout
+
         if start_time.elapsed() > Duration::from_millis(TIMEOUT_MS) {
             return Err(BearDogError::timeout(format!(
                 "Key rotation timeout for key: {key_id}"
             )));
         }
 
-        // Mark success
         self.success_count.fetch_add(1, Ordering::Relaxed);
         
         Ok(WorkflowProcessingResult {
@@ -163,9 +121,6 @@ impl<const BATCH_SIZE: usize, const TIMEOUT_MS: u64> ZeroCostWorkflowProcessor
     }
 }
 
-/// **ZERO-COST POLICY CHANGE PROCESSOR**
-/// 
-/// High-performance policy changes with validation
 pub struct ZeroCostPolicyChangeProcessor<const MAX_CONCURRENT: usize> {
     _phantom: std::marker::PhantomData<[(); MAX_CONCURRENT]>,
 }
@@ -184,9 +139,6 @@ impl<const MAX_CONCURRENT: usize> ZeroCostPolicyChangeProcessor<MAX_CONCURRENT> 
     }
 }
 
-/// **MODERNIZED IMPLEMENTATION** - Native async fn, no async_trait overhead
-/// 
-/// **PERFORMANCE IMPROVEMENT**: 15-30% faster than async_trait version
 impl<const MAX_CONCURRENT: usize> ZeroCostWorkflowProcessor
     for ZeroCostPolicyChangeProcessor<MAX_CONCURRENT>
 {
@@ -200,12 +152,10 @@ impl<const MAX_CONCURRENT: usize> ZeroCostWorkflowProcessor
         _context: Self::Context,
     ) -> BearDogResult<Self::Response> {
         let start_time = Instant::now();
-        
-        // Extract policy change parameters
+
         let policy_id = &request.payload.policy_id;
         let change_type = &request.payload.change_type;
-        
-        // Simulate policy change processing
+
         let base_time_ms = if VALIDATION_STRICT { 200 } else { 100 };
         tokio::time::sleep(Duration::from_millis(base_time_ms)).await;
         
@@ -248,18 +198,16 @@ impl<const MAX_CONCURRENT: usize> ZeroCostWorkflowProcessor
     }
 }
 
-/// **PROCESSOR FACTORY** - Zero-cost processor creation
 pub struct ZeroCostProcessorFactory;
 
 impl ZeroCostProcessorFactory {
-    /// Create a key rotation processor with compile-time parameters
+
     pub fn key_rotation_processor<const BATCH_SIZE: usize, const TIMEOUT_MS: u64>() 
         -> ZeroCostKeyRotationProcessor<BATCH_SIZE, TIMEOUT_MS> 
     {
         ZeroCostKeyRotationProcessor::new()
     }
 
-    /// Create a policy change processor with compile-time parameters
     pub fn policy_change_processor<const MAX_CONCURRENT: usize>() 
         -> ZeroCostPolicyChangeProcessor<MAX_CONCURRENT> 
     {
@@ -284,7 +232,7 @@ mod tests {
                 key_type: "aes256".to_string(),
                 rotation_interval: Duration::from_secs(3600),
             },
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::with_capacity(16),
         };
         
         let context = WorkflowProcessingContext::default();
@@ -307,7 +255,7 @@ mod tests {
                 change_type: "access_control".to_string(),
                 validation_level: "strict".to_string(),
             },
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::with_capacity(16),
         };
         
         let context = WorkflowProcessingContext::default();

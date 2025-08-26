@@ -1,33 +1,10 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-// Songbird Migration Template - BearDog Modernization Patterns
-// This template demonstrates how to apply proven BearDog patterns to songbird codebase
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 
-// ========================================
-// 1. CANONICAL TYPE SYSTEM TEMPLATE
-// ========================================
-
-/// **SONGBIRD CANONICAL TYPES** - Central type definitions
 pub mod songbird_types {
     pub mod canonical {
         pub mod audio {
@@ -66,18 +43,12 @@ pub mod songbird_types {
                 pub latency_target: std::time::Duration,
             }
         }
-        
-        // Re-export commonly used types
+
         pub use audio::*;
         pub use processing::*;
     }
 }
 
-// ========================================
-// 2. ZERO-COST ABSTRACTIONS TEMPLATE
-// ========================================
-
-/// **MODERNIZED** - Audio processor types using enum dispatch
 #[derive(Debug)]
 pub enum AudioProcessorType {
     Reverb(ReverbProcessor),
@@ -86,7 +57,6 @@ pub enum AudioProcessorType {
     Filter(FilterProcessor),
 }
 
-/// **ZERO-COST** - Audio processing engine with enum dispatch
 pub struct AudioProcessingEngine {
     processors: Vec<AudioProcessorType>,
     config: songbird_types::canonical::ProcessingConfig,
@@ -120,29 +90,17 @@ impl AudioProcessingEngine {
     }
 }
 
-// ========================================
-// 3. NATIVE ASYNC TRAITS TEMPLATE
-// ========================================
-
-/// **MODERNIZED** - Native async trait for audio processing
 #[allow(async_fn_in_trait)]
 pub trait AudioProcessor: Send + Sync {
-    /// Process audio data asynchronously
+
     async fn process(&self, input: &[f32]) -> Result<Vec<f32>, SongbirdError>;
-    
-    /// Get processor latency in samples
+
     async fn get_latency(&self) -> u32;
-    
-    /// Configure processor parameters
-    async fn configure(&mut self, params: HashMap<String, f32>) -> Result<(), SongbirdError>;
-    
-    /// Get processor capabilities
+
+    async fn configure(&mut self, params: HashMap<&str, f32>) -> Result<(), SongbirdError>;
+
     async fn get_capabilities(&self) -> Vec<String>;
 }
-
-// ========================================
-// 4. ERROR HANDLING TEMPLATE
-// ========================================
 
 #[derive(Debug, thiserror::Error)]
 pub enum SongbirdError {
@@ -161,10 +119,6 @@ pub enum SongbirdError {
 
 pub type SongbirdResult<T> = Result<T, SongbirdError>;
 
-// ========================================
-// 5. CONCRETE IMPLEMENTATIONS
-// ========================================
-
 #[derive(Debug)]
 pub struct ReverbProcessor {
     room_size: f32,
@@ -180,7 +134,7 @@ impl ReverbProcessor {
 
 impl AudioProcessor for ReverbProcessor {
     async fn process(&self, input: &[f32]) -> Result<Vec<f32>, SongbirdError> {
-        // Simulate reverb processing
+
         let mut output = input.to_vec();
         for sample in &mut output {
             *sample *= (1.0 - self.wet_level) + (self.wet_level * self.room_size * (1.0 - self.damping));
@@ -192,7 +146,7 @@ impl AudioProcessor for ReverbProcessor {
         64 // samples
     }
     
-    async fn configure(&mut self, params: HashMap<String, f32>) -> Result<(), SongbirdError> {
+    async fn configure(&mut self, params: HashMap<&str, f32>) -> Result<(), SongbirdError> {
         if let Some(&room_size) = params.get("room_size") {
             self.room_size = room_size.clamp(0.0, 1.0);
         }
@@ -234,11 +188,11 @@ impl EqualizerProcessor {
 
 impl AudioProcessor for EqualizerProcessor {
     async fn process(&self, input: &[f32]) -> Result<Vec<f32>, SongbirdError> {
-        // Simulate EQ processing
+
         let mut output = input.to_vec();
         for band in &self.bands {
             for sample in &mut output {
-                // Simplified EQ calculation
+
                 *sample *= 1.0 + (band.gain * 0.1);
             }
         }
@@ -249,8 +203,8 @@ impl AudioProcessor for EqualizerProcessor {
         32 // samples
     }
     
-    async fn configure(&mut self, params: HashMap<String, f32>) -> Result<(), SongbirdError> {
-        // Configure EQ bands based on parameters
+    async fn configure(&mut self, params: HashMap<&str, f32>) -> Result<(), SongbirdError> {
+
         Ok(())
     }
     
@@ -279,7 +233,7 @@ impl CompressorProcessor {
 
 impl AudioProcessor for CompressorProcessor {
     async fn process(&self, input: &[f32]) -> Result<Vec<f32>, SongbirdError> {
-        // Simulate compression
+
         let mut output = input.to_vec();
         for sample in &mut output {
             if sample.abs() > self.threshold {
@@ -295,7 +249,7 @@ impl AudioProcessor for CompressorProcessor {
         16 // samples
     }
     
-    async fn configure(&mut self, params: HashMap<String, f32>) -> Result<(), SongbirdError> {
+    async fn configure(&mut self, params: HashMap<&str, f32>) -> Result<(), SongbirdError> {
         if let Some(&threshold) = params.get("threshold") {
             self.threshold = threshold.clamp(0.0, 1.0);
         }
@@ -337,7 +291,7 @@ impl FilterProcessor {
 
 impl AudioProcessor for FilterProcessor {
     async fn process(&self, input: &[f32]) -> Result<Vec<f32>, SongbirdError> {
-        // Simulate filtering
+
         let mut output = input.to_vec();
         let factor = match self.filter_type {
             FilterType::LowPass => 0.8,
@@ -356,7 +310,7 @@ impl AudioProcessor for FilterProcessor {
         8 // samples
     }
     
-    async fn configure(&mut self, params: HashMap<String, f32>) -> Result<(), SongbirdError> {
+    async fn configure(&mut self, params: HashMap<&str, f32>) -> Result<(), SongbirdError> {
         if let Some(&cutoff) = params.get("cutoff") {
             self.cutoff = cutoff.clamp(20.0, 20000.0);
         }
@@ -375,23 +329,17 @@ impl AudioProcessor for FilterProcessor {
     }
 }
 
-// ========================================
-// 6. USAGE EXAMPLE
-// ========================================
-
 #[tokio::main]
 async fn main() -> SongbirdResult<()> {
-    // Create processing configuration
+
     let config = songbird_types::canonical::ProcessingConfig {
         mode: songbird_types::canonical::ProcessingMode::RealTime,
         quality: 0.9,
         latency_target: std::time::Duration::from_millis(10),
     };
-    
-    // Create audio processing engine
+
     let mut engine = AudioProcessingEngine::new(config);
-    
-    // Add processors using zero-cost enum dispatch
+
     engine.add_processor(AudioProcessorType::Reverb(
         ReverbProcessor::new(0.7, 0.3, 0.2)
     ));
@@ -407,8 +355,7 @@ async fn main() -> SongbirdResult<()> {
     engine.add_processor(AudioProcessorType::Compressor(
         CompressorProcessor::new(0.8, 4.0, 0.001, 0.1)
     ));
-    
-    // Process audio data
+
     let input_audio = vec![0.5, -0.3, 0.8, -0.1, 0.2]; // Sample audio data
     let processed = engine.process_audio(&input_audio).await?;
     
@@ -417,10 +364,6 @@ async fn main() -> SongbirdResult<()> {
     
     Ok(())
 }
-
-// ========================================
-// 7. MIGRATION CHECKLIST FOR SONGBIRD
-// ========================================
 
 /*
 SONGBIRD MIGRATION CHECKLIST:

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["canonical_type_info","validate_canonical_usage"],"mod":["canonical","config","constants","hsm","network","providers","testing"]};

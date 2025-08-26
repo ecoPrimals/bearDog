@@ -1,25 +1,5 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// # AI CLI Command Handlers
-///
-/// **EXTRACTED FROM LARGE FILE** - Command execution logic and processing (~200 lines)
-/// This module contains the actual implementation logic for executing AI CLI commands,
-/// including business logic, API calls, and response formatting.
 use std::path::PathBuf;
 use std::time::Instant;
 use tokio::fs;
@@ -32,21 +12,20 @@ use super::genetics::GeneticsOperation;
 use super::hsm::HsmOperation;
 use super::security::SecurityOperation;
 use super::types::{CliError, CliResponse, OutputFormat, StreamType};
-/// Parameters for AI assistant command execution
+
 #[derive(Debug)]
 struct AssistantCommandParams {
     prompt: Option<String>,
     context: Option<PathBuf>,
     model: String,
-    #[allow(dead_code)]
-    format: OutputFormat,
+        format: OutputFormat,
     temperature: f32,
     max_tokens: u32,
     system: Option<String>,
     history: Option<PathBuf>,
     stream: bool,
 }
-/// Execute AI command
+
 pub async fn execute_ai_command(
     command: AiCommand,
     core: &BearDogCore,
@@ -56,7 +35,6 @@ pub async fn execute_ai_command(
         AiCommand::Assistant {
             prompt,
             context,}
-
 
             model,
             format,
@@ -91,7 +69,7 @@ pub async fn execute_ai_command(
             let error = CliError::new("EXECUTION_ERROR".to_string(), e.to_string(), 1);
             Ok(CliResponse::error(error, execution_time_ms))
     }
-/// Execute AI assistant command
+
 async fn execute_assistant_command(
     params: AssistantCommandParams,
     _core: &BearDogCore,
@@ -116,7 +94,7 @@ async fn execute_assistant_command(
     if let Some(system_msg) = params.system {
         response["system"] = serde_json::Value::String(system_msg);
     Ok(response)
-/// Execute AI subcommand
+
 async fn execute_ai_subcommand(
     command: AiSubcommand,
     match command {
@@ -139,7 +117,7 @@ async fn execute_ai_subcommand(
             duration,
         } => execute_stream_operation(stream_type, output, duration, core).await,
         AiSubcommand::Config { operation } => execute_config_operation(operation, core).await,
-/// Execute status command
+
 async fn execute_status_command(
     _format: OutputFormat,
     detailed: bool,
@@ -165,7 +143,7 @@ async fn execute_status_command(
         status["watch_interval"] = serde_json::Value::Number(interval.into());
         status["watch_mode"] = serde_json::Value::Bool(true);
     Ok(status)
-/// Execute security operation
+
 async fn execute_security_operation(
     operation: SecurityOperation,
     match operation {
@@ -197,7 +175,7 @@ async fn execute_security_operation(
             attributes,
             info!("🔑 Generating key: {:?} for usage: {:?}", key_type, usage);
             let generated_key_id =
-                key_id.unwrap_or_else(|| format!("key_{}", uuid::Uuid::new_v4()));
+                key_id.unwrap_or_else(|| format_args!("key_{}", uuid::Uuid::new_v4().to_string()));
                 "operation": "generate_key",
                 "key_id": generated_key_id,
                 "key_type": key_type,
@@ -228,7 +206,7 @@ async fn execute_security_operation(
             "status": "not_implemented",
             "message": "This security operation is not yet implemented"
         })),
-/// Execute genetics operation
+
 async fn execute_genetics_operation(
     operation: GeneticsOperation,
         GeneticsOperation::Spawn {
@@ -260,7 +238,7 @@ async fn execute_genetics_operation(
                         "fitness": 0.92
             "operation": "genetics",
             "message": "This genetics operation is not yet implemented"
-/// Execute HSM operation
+
 async fn execute_hsm_operation(
     operation: HsmOperation,
         HsmOperation::Status {
@@ -275,7 +253,7 @@ async fn execute_hsm_operation(
                 "status": "operational"
             "operation": "hsm",
             "message": "This HSM operation is not yet implemented"
-/// Execute batch operation
+
 async fn execute_batch_operation(
     file: PathBuf,
     max_parallel: u32,
@@ -291,7 +269,7 @@ async fn execute_batch_operation(
         "operations_processed": 0,
         "status": "completed"
     }))
-/// Execute stream operation
+
 async fn execute_stream_operation(
     stream_type: StreamType,
     duration: u64,
@@ -301,7 +279,7 @@ async fn execute_stream_operation(
         "stream_type": stream_type,
         "duration": duration,
         "status": "streaming"
-/// Execute config operation
+
 async fn execute_config_operation(
     operation: ConfigOperation,
         ConfigOperation::Get {

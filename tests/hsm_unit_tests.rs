@@ -1,18 +1,3 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 /*
@@ -34,7 +19,7 @@ use std::collections::HashMap;
 #[tokio::test]
 async fn test_pkcs11_adapter_creation() {
     let adapter = Pkcs11Adapter;
-    // Test that adapter exists and has proper Debug trait
+
     println!("PKCS#11 Adapter: {:?}", adapter);
 }
 
@@ -45,7 +30,7 @@ async fn test_android_strongbox_adapter_creation() {
     
     let adapter = adapter_result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     println!("Android StrongBox Adapter: {:?}", adapter);
 }
@@ -57,7 +42,7 @@ async fn test_beardog_native_adapter_creation() {
     
     let adapter = adapter_result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     println!("BearDog Native Adapter: {:?}", adapter);
 }
@@ -72,9 +57,8 @@ async fn test_operation_type_variants() {
         OperationType::Decrypt,
         OperationType::HumanEntropyGeneration,
     ];
-    
-    // Test that all variants exist and can be used in HashMap
-    let mut op_map = HashMap::new();
+
+    let mut op_map = HashMap::with_capacity(16);
     for (i, op) in operations.iter().enumerate() {
         op_map.insert(op.clone(), i);
     }
@@ -92,8 +76,7 @@ async fn test_human_entropy_requirements() {
     
     assert_eq!(requirements.minimum_entropy_bits, 256);
     assert_eq!(requirements.collection_timeout_seconds, 30);
-    
-    // Test serialization works
+
     let json = serde_json::to_string(&requirements);
     assert!(json.is_ok());
 }
@@ -139,8 +122,7 @@ async fn test_hsm_tiers() {
         HsmTier::HighSecurity,
         HsmTier::HumanEntropyPremium,
     ];
-    
-    // Test ordering
+
     assert!(HsmTier::HumanEntropyPremium > HsmTier::HighSecurity);
     assert!(HsmTier::HighSecurity > HsmTier::CertifiedHardware);
     assert!(HsmTier::CertifiedHardware > HsmTier::BasicHardware);
@@ -161,7 +143,7 @@ async fn test_universal_operation() {
     assert_eq!(operation.parameters.len(), 2);
     assert_eq!(operation.parameters.get("key_type").map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?, "rsa_2048");
 }
 
@@ -173,7 +155,7 @@ async fn test_pkcs11_human_entropy_not_supported() {
     assert!(supports_result.is_ok());
     assert!(!supports_result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
 }
 
@@ -181,13 +163,13 @@ async fn test_pkcs11_human_entropy_not_supported() {
 async fn test_beardog_native_human_entropy_supported() {
     let adapter = BearDogNativeAdapter::new().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     
     let supports_result = adapter.supports_human_entropy().await;
     assert!(supports_result.is_ok());
     assert!(supports_result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
 } 

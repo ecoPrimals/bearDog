@@ -1,28 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # HSM Keys - Canonical
-///
-/// **UNIFIED HSM KEY TYPES** for the BearDog ecosystem
 
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
-/// **CANONICAL** HSM Key
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmKey {
     pub key_id: String,
@@ -44,7 +24,6 @@ impl Default for HsmKey {
     }
 }
 
-/// **CANONICAL** HSM Key Storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmKeyStorage {
     pub storage_id: String,
@@ -72,7 +51,6 @@ impl Default for HsmKeyStorage {
     }
 }
 
-/// **CANONICAL** Key Type
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeyType {
     Symmetric,
@@ -87,7 +65,6 @@ impl Default for KeyType {
     }
 }
 
-/// **CANONICAL** Key Material
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyMaterial {
     pub algorithm: String,
@@ -105,7 +82,6 @@ impl Default for KeyMaterial {
     }
 }
 
-/// **CANONICAL** Key Metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyMetadata {
     pub created_at: SystemTime,
@@ -125,7 +101,6 @@ impl Default for KeyMetadata {
     }
 }
 
-/// **CANONICAL** Key Health
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyHealth {
     pub status: String,
@@ -143,7 +118,6 @@ impl Default for KeyHealth {
     }
 }
 
-/// **CANONICAL** Encryption Info
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionInfo {
     pub cipher: String,
@@ -161,7 +135,6 @@ impl Default for EncryptionInfo {
     }
 }
 
-/// **CANONICAL** Backup Info
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupInfo {
     pub backup_id: String,
@@ -179,7 +152,6 @@ impl Default for BackupInfo {
     }
 }
 
-/// **CANONICAL** Compliance Info
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceInfo {
     pub compliance_level: String,

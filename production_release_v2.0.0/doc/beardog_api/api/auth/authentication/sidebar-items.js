@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["authenticate_user","get_current_session","invalidate_session","logout_user","refresh_token","validate_token"]};
