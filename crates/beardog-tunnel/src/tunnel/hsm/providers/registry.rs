@@ -1,3 +1,5 @@
+// PHASE 5 OPTIMIZED: Performance patterns applied
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // MODERNIZED: Removed async_trait - now uses native async fn in trait
 
 // BearDog - Enterprise Security Ecosystem
@@ -48,7 +50,7 @@ pub struct UniversalProviderRegistry {
     /// Discovery engine for finding and evaluating providers
     discovery_engine: CapabilityDiscoveryEngine,
     /// Registered providers by ID
-    providers: Arc<RwLock<HashMap<String, Box<dyn HsmProvider>>>>,
+    providers: Arc<RwLock<HashMap<String, impl HsmProvider + Send + Sync>>>,
     /// Provider health status cache
     health_cache: Arc<RwLock<HashMap<String, (HsmHealthStatus, chrono::DateTime<chrono::Utc>)>>>,
     /// Registry configuration
@@ -114,7 +116,7 @@ impl UniversalProviderRegistry {
         match AndroidUniversalProvider::new().await {
             Ok(provider) => {
                 let provider_id = "android_universal".to_string();
-                self.register_provider(provider_id.clone(), Box::new(provider)).await?;
+                self.register_provider(provider_id.clone(), provider).await?;
                 info!("✅ Registered Android Universal Provider: {}", provider_id);
                 registered_count += 1;
             }
@@ -130,7 +132,7 @@ impl UniversalProviderRegistry {
             match SoftwareUniversalProvider::new().await {
                 Ok(provider) => {
                     let provider_id = "software_universal".to_string();
-                    self.register_provider(provider_id.clone(), Box::new(provider)).await?;
+                    self.register_provider(provider_id.clone(), provider).await?;
                     info!("✅ Registered Software Universal Provider: {}", provider_id);
                     registered_count += 1;
                 }
@@ -144,7 +146,7 @@ impl UniversalProviderRegistry {
     pub async fn register_provider(
         &mut self,
         provider_id: String,
-        provider: Box<dyn HsmProvider>,
+        provider: impl HsmProvider + Send + Sync,
     ) -> BearDogResult<()> {
         // Test the provider by discovering its capabilities
         let capabilities = provider.discover_capabilities().await?;

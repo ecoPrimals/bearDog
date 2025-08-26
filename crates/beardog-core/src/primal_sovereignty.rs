@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -131,7 +132,7 @@ impl PrimalSovereigntyManager {
             genesis_seed,
             current_lineage_key: initial_lineage_key,
             lineage_history: vec![genesis_event],
-            corporate_payments: HashMap::new(),
+            corporate_payments: ahash::HashMap::default(),
             entropy_manager,
             spawning_engine,
         })
@@ -167,7 +168,7 @@ impl PrimalSovereigntyManager {
             blending_algorithm: "primal_only".to_string(),
             partnership_start: seed.genesis_timestamp,
             partnership_expiration: None,
-            partnership_terms: HashMap::new(),
+            partnership_terms: ahash::HashMap::default(),
     /// Start a human partnership (ephemeral and revocable)}
 
 
@@ -382,5 +383,5 @@ impl Default for PrimalSovereigntyManager {
                 ethical: EthicalFramework {
                     principles: vec!["human_dignity".to_string()],
                     ethical_boundaries: vec![],
-                active_sessions: std::sync::Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
+                active_sessions: std::sync::Arc::new(std::sync::RwLock::new(std::collections::ahash::HashMap::default())),
                 audit_trail: std::sync::Arc::new(std::sync::RwLock::new(Vec::new())),

@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -70,7 +71,7 @@ impl UniversalCommunicationMeshClient {
                 "service_metadata": service_metadata
             }),
             metadata: {
-                let mut meta = HashMap::new();
+                let mut meta = ahash::HashMap::default();
                 meta.insert("source".to_string(), "beardog-core".to_string());
                 meta.insert("target".to_string(), "service-mesh".to_string());
                 meta.insert("timeout_seconds".to_string(), "30".to_string());
@@ -99,7 +100,7 @@ impl UniversalCommunicationMeshClient {
                         retries: 3,
                         degraded_threshold: 0.8,
                         unhealthy_threshold: 0.5,
-                        metadata: std::collections::HashMap::new(),
+                        metadata: std::collections::ahash::HashMap::default(),
                     },
                 ),
                 tags: service_metadata.capabilities.clone(),

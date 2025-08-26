@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -109,7 +110,7 @@ impl Default for BearDogAIArchitecture {}
             external_integrations: vec![],
             routing_config: AIRoutingConfig {
                 default_strategy: AIRoutingStrategy::InternalFirst,
-                capability_routing: HashMap::new(),
+                capability_routing: ahash::HashMap::default(),
                 fallback_enabled: true,
             },
         }
@@ -194,7 +195,7 @@ impl HybridIntelligenceManager {
         info!("🧠 Initializing `BearDog` Hybrid AI Intelligence Manager");
         let internal_ml_engine = Arc::new(SecurityMLEngine::new().await?);
         let ai_architecture = Arc::new(RwLock::new(BearDogAIArchitecture::default()));
-        let active_workflows = Arc::new(RwLock::new(HashMap::new()));
+        let active_workflows = Arc::new(RwLock::new(ahash::HashMap::default()));
         Ok(Self {
             internal_ml_engine,
             universal_adapter,
@@ -271,8 +272,8 @@ impl HybridIntelligenceManager {
                     }),
                     capability_required: "intelligence".to_string(),
                     input_data: WorkflowInputData {
-                        data: HashMap::new(),
-                        metadata: HashMap::new(),
+                        data: ahash::HashMap::default(),
+                        metadata: ahash::HashMap::default(),
                     },
                     expected_output: "threat_analysis_result".to_string(),
                 },
@@ -294,7 +295,7 @@ impl HybridIntelligenceManager {
                 user_agent: None,
                 session_id: Some("ai_workflow_session".to_string()),
                 security_flags: beardog_types::canonical::SecurityFlags::default(),
-                metadata: HashMap::new(),
+                metadata: ahash::HashMap::default(),
         };
         match workflow.routing_strategy {
             AIRoutingStrategy::InternalFirst => {
@@ -352,7 +353,7 @@ impl HybridIntelligenceManager {
         for step in &workflow.steps {
             let step_clone = step.clone();
             let input_clone = input_data.clone();
-            tasks.push(tokio::spawn(async move {
+            tasks.push(tokio::task::spawn_local(async move {
                 Self::execute_internal_step(&step_clone, &input_clone).await
             }));
         }
@@ -634,7 +635,7 @@ impl HybridIntelligenceManager {
                 user_id: Some("beardog_security".to_string()),
                 authorization_level: AuthorizationLevel::Standard,
                 session_id: Some("beardog_ai_session".to_string()),
-                metadata: std::collections::HashMap::new(),
+                metadata: std::collections::ahash::HashMap::default(),
         let semantic_analysis = self.analyze_with_squirrel_ai(semantic_request).await?;
         // Step 3: Calculate combined metrics first
         let combined_threat_score =
@@ -702,7 +703,7 @@ pub struct EnhancedThreatAnalysis {
 
 impl SecurityMLEngine {
     async fn new() -> BearDogResult<Self> {
-            threat_models: HashMap::new(),
+            threat_models: ahash::HashMap::default(),
             anomaly_detector: BehavioralAnomalyDetector::new(),
             crypto_optimizer: CryptographicMLOptimizer::new(),
             risk_assessor: SecurityRiskAssessor::new(),}

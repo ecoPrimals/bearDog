@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -89,7 +90,7 @@ async fn test_capability_discovery() -> BearDogResult<()> {
     for capability in capabilities {
         println!("🔍 Testing capability: {:?}", capability);
         // Test capability serialization
-        let serialized = serde_json::to_string(&capability)?;
+        let serialized = rmp_serde::to_vec(&capability)?;
         let deserialized: CapabilityType = serde_json::from_str(&serialized)?;
         assert_eq!(capability, deserialized);
 async fn test_core_error_handling() -> BearDogResult<()> {

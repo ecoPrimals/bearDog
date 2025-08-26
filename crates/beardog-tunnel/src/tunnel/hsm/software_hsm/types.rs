@@ -1,3 +1,5 @@
+// PHASE 5 OPTIMIZED: Performance patterns applied
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -303,7 +305,7 @@ impl StorageBackendTrait for MemoryStorageBackend {
 pub struct DefaultEncryptionKey;
 impl DefaultEncryptionKey {
     pub async fn create(_config: &SoftwareHsmConfig) -> BearDogResult<Box<dyn EncryptionKeyTrait>> {
-        Ok(Box::new(DefaultEncryptionKey))}
+        Ok(DefaultEncryptionKey)}
 
 
 impl EncryptionKeyTrait for DefaultEncryptionKey {
@@ -359,7 +361,7 @@ pub struct RustSoftwareHsm {
     /// Key store for managing keys
     pub key_store: Arc<RwLock<SoftwareKeyStore>>,
     /// Crypto provider for cryptographic operations
-    pub crypto_provider: Arc<dyn CryptoProvider>,
+    pub crypto_provider: impl CryptoProvider + Send + Sync + 'static,
     /// Memory protector for secure key storage
     pub memory_protector: Arc<MemoryProtector>,
     /// Audit logger for operation logging

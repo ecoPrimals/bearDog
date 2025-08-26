@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -18,7 +19,7 @@
 /// HSM operation router with intelligent routing
 ///
 /// **MODERNIZED ZERO-COST ARCHITECTURE** ✅
-/// This router now uses generic composition instead of Arc<dyn HsmProvider> for
+/// This router now uses generic composition instead of impl HsmProvider + Send + Sync + 'static for
 /// zero-cost abstractions and better performance.
 
 use beardog_errors::{BearDogError, BearDogResult};

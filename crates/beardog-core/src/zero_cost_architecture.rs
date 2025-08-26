@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -102,7 +103,7 @@ where
     misses: std::sync::atomic::AtomicU64,
     _phantom: PhantomData<(K, V)>,
 impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> MemoryCache<K, V, SIZE, TTL_SECONDS>
-            data: RwLock::new(HashMap::new()),
+            data: RwLock::new(ahash::HashMap::default()),
             access_order: RwLock::new(Vec::new()),
             hits: std::sync::atomic::AtomicU64::new(0),
             misses: std::sync::atomic::AtomicU64::new(0),
@@ -201,7 +202,7 @@ for MemoryCache<String, String, SIZE, TTL_SECONDS>
         T: for<'de> serde::Deserialize<'de> + Send,
     {
         if let Some(value) = ZeroCostCache::get(self, &key.to_string()).await {
-            let deserialized: T = serde_json::to_string(&value)
+            let deserialized: T = rmp_serde::to_vec(&value)
                 .and_then(|s| serde_json::from_str(&s))
                 .map_err(|e| beardog_errors::BearDogError::internal(
                     format!("Failed to deserialize cached value: {}", e)
@@ -223,7 +224,7 @@ for MemoryCache<String, String, SIZE, TTL_SECONDS>
         Ok(ZeroCostCache::get(self, &key.to_string()).await.is_some())
         ZeroCostCache::clear(self).await
     async fn get_many(&self, keys: &[String]) -> BearDogResult<HashMap<String, String>> {
-        let mut result = HashMap::new();
+        let mut result = ahash::HashMap::default();
         for key in keys {
             if let Some(value) = ZeroCostCache::get(self, key).await {
                 result.insert(key.clone(), value);

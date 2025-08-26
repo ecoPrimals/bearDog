@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -202,7 +203,7 @@ impl FileSystemStorage {
 
         Ok(Self {
             config,
-            metadata_store: Arc::new(RwLock::new(HashMap::new())),
+            metadata_store: Arc::new(RwLock::new(ahash::HashMap::default())),
         })
     }
 
@@ -235,7 +236,7 @@ impl EcosystemStorage for FileSystemStorage {
 
         // Store metadata
         let metadata_path = self.get_metadata_path(key);
-        let metadata_json = serde_json::to_string(&metadata)
+        let metadata_json = rmp_serde::to_vec(&metadata)
             .map_err(|e| BearDogError::system(format!("Failed to serialize metadata: {}", e)))?;
         tokio::fs::write(&metadata_path, metadata_json)
             .await

@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -168,7 +169,7 @@ impl ServiceLookupManager {
             .user_agent("`BearDog`-Lookup/1.0")
             .map_err(|e| BearDogError::internal(format!("Failed to create lookup client: {e}")))?;
             timeout: Duration::from_secs(10),
-            service_cache: tokio::sync::RwLock::new(HashMap::new()),
+            service_cache: tokio::sync::RwLock::new(ahash::HashMap::default()),
     /// Generate cache key for lookup request
     fn cache_key(&self, request: &ServiceLookupRequest) -> String {
         format!(

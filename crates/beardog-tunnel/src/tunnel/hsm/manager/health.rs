@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // MODERNIZED: Removed async_trait - now uses native async fn in trait
 
 // BearDog - Enterprise Security Ecosystem
@@ -58,7 +59,7 @@ impl DefaultHsmHealthMonitor {
 impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
 
 
-    async fn start_monitoring(&self, providers: Vec<Arc<dyn HsmProvider>>) -> BearDogResult<()> {
+    async fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> BearDogResult<()> {
         let mut is_active = self.monitoring_active.write().await;
         if *is_active {
             warn!("Health monitoring already active");
@@ -158,8 +159,8 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
 
 
     async fn filter_healthy_providers(
-        providers: Vec<Arc<dyn HsmProvider>>,
-    ) -> BearDogResult<Vec<Arc<dyn HsmProvider>>> {
+        providers: Vec<impl HsmProvider + Send + Sync + 'static>,
+    ) -> BearDogResult<Vec<impl HsmProvider + Send + Sync + 'static>> {
         let mut healthy_providers = Vec::new();
         for provider in providers {
             let provider_info = provider.get_info().await?;
@@ -172,7 +173,7 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
                     debug!("Filtering out unhealthy provider: {}", provider_id);
         Ok(healthy_providers)
     async fn perform_health_check(
-        provider: Arc<dyn HsmProvider>,
+        provider: impl HsmProvider + Send + Sync + 'static,
     ) -> BearDogResult<HsmHealthStatus> {
         // Simple health check - try to get provider info
         match provider.get_info().await {

@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -70,7 +71,7 @@ impl BearDogCore {
                 ComponentStatus::Error("Some components unhealthy".to_string())
             },
             last_check: Utc::now(),
-            details: HashMap::new(),
+            details: ahash::HashMap::default(),
             uptime: None, // Add the missing uptime field
         };
         Ok(health_check)

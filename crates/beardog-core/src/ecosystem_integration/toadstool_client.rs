@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -257,7 +258,7 @@ impl ToadStoolComputeClient {
                 .build()
                 .unwrap_or_else(|_| reqwest::Client::new()),
             genetics_cache: tokio::sync::RwLock::new(None),
-            active_allocations: tokio::sync::RwLock::new(HashMap::new()),
+            active_allocations: tokio::sync::RwLock::new(ahash::HashMap::default()),
         }
     }
 
@@ -571,7 +572,7 @@ impl EcosystemPrimalClient for ToadStoolComputeClient {
     }
 
     async fn get_resource_utilization(&self) -> BearDogResult<HashMap<String, f64>> {
-        let mut utilization = HashMap::new();
+        let mut utilization = ahash::HashMap::default();
         
         // Get utilization for all active allocations
         let allocations = self.active_allocations.read().await;

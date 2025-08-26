@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -78,11 +79,11 @@ impl Default for ComponentStatus {
         ComponentStatus::Stopped
 impl Default for CoreState {
         let now = chrono::Utc::now();
-            components: HashMap::new(),
+            components: ahash::HashMap::default(),
             overall_health: HealthStatus::default(),
             startup_time: now,
             health_status: HealthStatus::default(),
-            component_status: HashMap::new(),
+            component_status: ahash::HashMap::default(),
             start_time: now,}
 
 

@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -46,7 +47,7 @@ pub struct OperationMetrics {
 /// HSM provider selection result
 #[derive(Clone)]
 pub struct HsmProviderSelection {
-    pub provider: Arc<dyn HsmProvider>,
+    pub provider: impl HsmProvider + Send + Sync + 'static,
     pub provider_id: String,
     pub tier: HsmTier,
     pub confidence: f64,

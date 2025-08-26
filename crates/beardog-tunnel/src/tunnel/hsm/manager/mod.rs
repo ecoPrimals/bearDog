@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -73,7 +74,7 @@ pub use performance::{HsmPerformanceTracker, OperationMetrics};
 #[derive(Clone)]
 pub struct HsmProviderSelection {
     /// The selected HSM provider instance
-    pub provider: Arc<dyn HsmProvider>,
+    pub provider: impl HsmProvider + Send + Sync + 'static,
     /// Unique identifier for the provider
     pub provider_id: String,
     /// Security tier of the provider
@@ -85,7 +86,7 @@ pub struct HsmProviderSelection {
 }
 /// HSM Manager - Central orchestrator for HSM providers
 pub struct HsmManager {
-    hsm_providers: HashMap<String, Arc<dyn HsmProvider>>,
+    hsm_providers: HashMap<String, impl HsmProvider + Send + Sync + 'static>,
     config: HsmManagerConfig,
     health_monitor: Arc<DefaultHsmHealthMonitor>,
     failover_manager: Arc<DefaultHsmFailoverManager>,

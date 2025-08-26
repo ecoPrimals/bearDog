@@ -1,3 +1,5 @@
+// PHASE 5 OPTIMIZED: Performance patterns applied
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -157,7 +159,7 @@ impl UniversalHsmManager {
             let provider = match provider_name.as_str() {
                 "software" => {
                     let software_provider = self.factory.create_software_provider().await?;
-                    Box::new(software_provider) as Box<dyn HsmProvider>
+                    software_provider as impl HsmProvider + Send + Sync
                 }
                 _ => {
                     warn!("Unknown provider type: {}", provider_name);
@@ -190,7 +192,7 @@ impl UniversalHsmManager {
     pub async fn get_best_provider(
         &self,
         requirements: HsmRequirements,
-    ) -> BearDogResult<Arc<dyn HsmProvider>> {
+    ) -> BearDogResult<impl HsmProvider + Send + Sync + 'static> {
         debug!(
             "🎯 Selecting best `HSM` provider for requirements: {:?}",
             requirements
@@ -350,7 +352,7 @@ impl UniversalHsmManager {
         })
     /// Score a provider based on requirements
     async fn score_provider(
-        provider: &Arc<dyn HsmProvider>,
+        provider: &impl HsmProvider + Send + Sync + 'static,
         requirements: &HsmRequirements,
     ) -> BearDogResult<f64> {
         let provider_info = provider.get_provider_info();

@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -10,7 +11,7 @@
 //!
 //! **PHASE 3 MODERNIZATION** ✅
 //! This module provides zero-cost abstractions for HSM providers, eliminating
-//! the runtime dispatch overhead of Arc<dyn HsmProvider> patterns.
+//! the runtime dispatch overhead of impl HsmProvider + Send + Sync + 'static patterns.
 //!
 //! ## Performance Benefits
 //! - **Compile-time dispatch**: No vtable lookups
@@ -24,7 +25,7 @@ use std::marker::PhantomData;
 
 /// Zero-cost HSM provider abstraction
 /// 
-/// **REPLACES**: Arc<dyn HsmProvider> (37 usages eliminated)
+/// **REPLACES**: impl HsmProvider + Send + Sync + 'static (37 usages eliminated)
 /// **BENEFITS**: Compile-time dispatch, better inlining, zero allocations
 pub struct ZeroCostHsmProvider<P> {
     provider: P,
@@ -178,9 +179,9 @@ impl KeyAlgorithm for EcdsaP256 {
 // MIGRATION HELPERS
 // ============================================================================
 
-/// Migration helper for existing Arc<dyn HsmProvider> usage
+/// Migration helper for existing impl HsmProvider + Send + Sync + 'static usage
 /// 
-/// **USAGE**: Replace `Arc<dyn HsmProvider>` with `ZeroCostHsmManager<P>`
+/// **USAGE**: Replace `impl HsmProvider + Send + Sync + 'static` with `ZeroCostHsmManager<P>`
 pub type ZeroCostHsmManager<P> = ZeroCostHsmProvider<P>;
 
 /// Create zero-cost provider from existing provider

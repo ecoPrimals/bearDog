@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -168,7 +169,7 @@ impl PrimalResponse {
             success: true,
             data: Some(serde_json::to_value(data).unwrap_or(serde_json::Value::Null)),
             error: None,
-            metadata: HashMap::new(),
+            metadata: ahash::HashMap::default(),
             timestamp: Utc::now(),
         }
     }

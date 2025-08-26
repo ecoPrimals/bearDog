@@ -1,3 +1,4 @@
+// PHASE 5 OPTIMIZED: Performance patterns applied
 // MODERNIZED: Removed async_trait - now uses native async fn in trait
 
 // BearDog - Enterprise Security Ecosystem
@@ -36,7 +37,7 @@ pub async fn create_crypto_provider(
     match backend {
         CryptoBackend::RustCrypto => {
             let provider = RustCryptoProvider::new().await?;
-            Ok(Box::new(provider))
+            Ok(provider)
         }
         CryptoBackend::Ring => {
             let provider = RingCryptoProvider::new()?;

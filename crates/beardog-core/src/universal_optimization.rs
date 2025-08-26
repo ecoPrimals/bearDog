@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -327,7 +328,7 @@ impl UniversalOptimizationService for EcosystemOptimizationService {
                     payload: serde_json::to_value(&request)?,
                     quality_requirements: self.create_quality_requirements(&request),
                     performance_requirements: self.create_performance_requirements(&request),
-                    metadata: HashMap::new(),
+                    metadata: ahash::HashMap::default(),
                     timestamp: Utc::now(),
                 };
                 // Send request to best module
@@ -345,7 +346,7 @@ impl UniversalOptimizationService for EcosystemOptimizationService {
                             optimization_type: format!("{request:?}"),
                             success: response.success,
                             improvement_factor: response.actual_performance.resource_efficiency,
-                            optimized_parameters: HashMap::new(),
+                            optimized_parameters: ahash::HashMap::default(),
                             performance_metrics: PerformanceMetrics {
                                 latency_ms: response.actual_performance.average_response_time_ms,
                                 throughput_ops_per_sec: response
@@ -392,7 +393,7 @@ impl UniversalOptimizationService for EcosystemOptimizationService {
 
 
     async fn check_optimization_health(&self) -> BearDogResult<HashMap<String, String>> {
-        let mut health_map = HashMap::new();
+        let mut health_map = ahash::HashMap::default();
         let capabilities_to_check = vec![
         for capability in capabilities_to_check {
                 Ok(health_statuses) => {

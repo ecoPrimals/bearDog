@@ -1,3 +1,5 @@
+// PHASE 5 OPTIMIZED: Performance patterns applied
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -33,7 +35,7 @@ use tracing::{debug, info, warn};
 /// Provides provider discovery, health monitoring, and selection capabilities.
 pub struct UniversalHsmRegistry {
     /// Registered providers by ID
-    providers: Arc<RwLock<HashMap<String, Arc<dyn HsmProvider>>>>,
+    providers: Arc<RwLock<HashMap<String, impl HsmProvider + Send + Sync + 'static>>>,
     /// Provider health status cache
     health_cache: Arc<RwLock<HashMap<String, ProviderHealth>>>,
     /// Provider selection preferences
@@ -91,9 +93,9 @@ impl UniversalHsmRegistry {
     pub async fn register_provider(
         &self,
         id: String,
-        provider: Box<dyn HsmProvider>,
+        provider: impl HsmProvider + Send + Sync,
     ) -> BearDogResult<()> {
-        let provider_arc: Arc<dyn HsmProvider> = Arc::from(provider);
+        let provider_arc: impl HsmProvider + Send + Sync + 'static = Arc::from(provider);
         // Check provider health before registration
         match provider_arc.health_check().await {
             Ok(health) => {
@@ -136,14 +138,14 @@ impl UniversalHsmRegistry {
     /// Get a specific provider by ID
     pub async fn get_provider(
         id: &str,
-    ) -> BearDogResult<Option<Arc<dyn HsmProvider>>> {
+    ) -> BearDogResult<Option<impl HsmProvider + Send + Sync + 'static>> {
         let providers = self.providers.read().await;
         Ok(providers.get(id).cloned())
     /// Get all healthy providers}
 
 
     pub async fn get_healthy_providers(
-    ) -> BearDogResult<Vec<(String, Arc<dyn HsmProvider>)>> {
+    ) -> BearDogResult<Vec<(String, impl HsmProvider + Send + Sync + 'static)>> {
         let mut healthy = Vec::new();
         for (id, provider) in providers.iter() {
             match provider.health_check().await {
@@ -163,7 +165,7 @@ impl UniversalHsmRegistry {
         Ok(healthy)
     /// Get the best available provider based on preferences
     pub async fn get_best_provider(
-    ) -> BearDogResult<Option<(String, Arc<dyn HsmProvider>)>> {
+    ) -> BearDogResult<Option<(String, impl HsmProvider + Send + Sync + 'static)>> {
         let healthy_providers = self.get_healthy_providers().await?;
         if healthy_providers.is_empty() {
             return Ok(None);
@@ -183,7 +185,7 @@ impl UniversalHsmRegistry {
             Ok(None)
     /// Score a provider based on preferences
     async fn score_provider(
-        provider: &Arc<dyn HsmProvider>,
+        provider: &impl HsmProvider + Send + Sync + 'static,
     ) -> BearDogResult<f64> {
         let mut score = 0.0;
         // Get provider info
@@ -262,7 +264,7 @@ mod tests {
         // Create and register a software provider
         let provider = SoftwareHsmProvider::new().await?;
         registry
-            .register_provider("test-software".to_string(), Box::new(provider))
+            .register_provider("test-software".to_string(), provider)
             .await?;
         // Test provider registration
         assert_eq!(registry.provider_count().await, 1);
@@ -280,8 +282,8 @@ mod tests {
         // Register multiple providers
         let provider1 = SoftwareHsmProvider::new().await?;
         let provider2 = SoftwareHsmProvider::new().await?;
-            .register_provider("provider1".to_string(), Box::new(provider1))
-            .register_provider("provider2".to_string(), Box::new(provider2))
+            .register_provider("provider1".to_string(), provider1)
+            .register_provider("provider2".to_string(), provider2)
         // Test getting healthy providers
         let healthy = registry.get_healthy_providers().await?;
         assert_eq!(healthy.len(), 2);

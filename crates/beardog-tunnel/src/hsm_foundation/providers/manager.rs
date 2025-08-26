@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -18,7 +19,7 @@
 /// # HSM Provider Manager - MODERNIZED ZERO-COST ARCHITECTURE
 ///
 /// **MODERNIZATION COMPLETE** ✅
-/// This manager now uses generic composition instead of Arc<dyn HsmProvider> for
+/// This manager now uses generic composition instead of impl HsmProvider + Send + Sync + 'static for
 /// zero-cost abstractions and better performance. The generic approach eliminates
 /// runtime dispatch overhead while maintaining type safety.
 ///

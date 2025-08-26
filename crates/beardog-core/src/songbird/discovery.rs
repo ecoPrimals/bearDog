@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -152,7 +153,7 @@ impl ServiceMeshDiscoveryClient {
                             "load_balancing".to_string(),
                         ],
                         metadata: {
-                            let mut meta = std::collections::HashMap::new();
+                            let mut meta = std::collections::ahash::HashMap::default();
                             meta.insert("discovery_method".to_string(), "dns".to_string());
                             meta.insert("dns_pattern".to_string(), pattern.to_string());
                             meta.insert("resolved_ip".to_string(), addr.ip().to_string());
@@ -234,7 +235,7 @@ impl ServiceMeshDiscoveryClient {
                     error_message: None,
                 },
                 last_health_check: Some(chrono::Utc::now()),
-                metadata: HashMap::new(),
+                metadata: ahash::HashMap::default(),
                 priority: 5, // Default priority
             })
         } else {

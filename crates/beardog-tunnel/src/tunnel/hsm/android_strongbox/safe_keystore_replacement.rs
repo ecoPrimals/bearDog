@@ -1,3 +1,4 @@
+// PHASE 5 OPTIMIZED: Performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -58,17 +59,17 @@ impl SafeAndroidKeystoreOps {
             SafeMobileHardwareProvider::<StrongBoxAvailable>::detect_strongbox().await?
         {
             info!("✅ StrongBox detected - using highest security level");
-            return Ok(Box::new(strongbox));
+            return Ok(strongbox);
         }
         // Fall back to TEE
         if let Some(tee) = SafeMobileHardwareProvider::<TeeAvailable>::detect_tee().await? {
             info!("✅ TEE detected - using hardware security");
-            return Ok(Box::new(tee));
+            return Ok(tee);
         // Final fallback to software
         info!("ℹ️ Using software fallback - no hardware security available");
         let software =
             SafeMobileHardwareProvider::<SoftwareFallback>::new(SoftwareFallback).await?;
-        Ok(Box::new(software))
+        Ok(software)
     /// **SAFE REPLACEMENT** for unsafe generate_key_with_strongbox
     ///
     /// Replaces the unsafe FFI call in native_keystore_ops.rs:162-278

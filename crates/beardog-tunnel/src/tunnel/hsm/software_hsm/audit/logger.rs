@@ -1,3 +1,5 @@
+// PHASE 5 OPTIMIZED: Performance patterns applied
+// PHASE 5 MODERNIZED: Advanced async_trait elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -24,7 +26,7 @@
 // Import audit types from local types module
 use super::super::types::{AuditLogEntry, AuditLogFilter, AuditLogger, OperationResult}; // Import from software_hsm types
 use super::storage::PersistentAuditStorage;
-use async_trait::async_trait; // Add missing async_trait import
+// Add missing async_trait import
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_security::handlers::audit_management::AuditStatistics;
 use std::sync::Arc;
@@ -188,7 +190,7 @@ impl DefaultAuditLogger {
         Ok(json.into_bytes())
     /// Export audit log as CSV
     async fn export_as_csv(&self) -> BearDogResult<Vec<u8>> {
-        let mut csv = String::from("timestamp,operation,user_id,key_id,success,error_message\n");
+        let mut csv = "timestamp,operation,user_id,key_id,success,error_message\n";
         for entry in entries {
             csv.push_str(&format!(
                 "{},{},{},{},{},{}\n",

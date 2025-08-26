@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -66,7 +67,7 @@ impl `BearDog`Core {
     /// Discover HSM capabilities
     pub(crate) async fn discover_hsm_capabilities(&self) -> Result<serde_json::Value, PrimalError> {
         debug!("🔍 Discovering available HSM capabilities");
-        let mut capabilities = HashMap::new();
+        let mut capabilities = ahash::HashMap::default();
         // Software HSM capabilities
         capabilities.insert("software_hsm", serde_json::json!({
             "available": true,
@@ -110,7 +111,7 @@ impl `BearDog`Core {
             HealthStatus::Unhealthy
     /// Get HSM metrics
     pub(crate) fn get_hsm_metrics(&self) -> HashMap<String, serde_json::Value> {
-        let mut metrics = HashMap::new();
+        let mut metrics = ahash::HashMap::default();
         metrics.insert("total_keys_generated".to_string(), serde_json::json!(42));
         metrics.insert("active_sessions".to_string(), serde_json::json!(3));
         metrics.insert("hardware_attestations".to_string(), serde_json::json!(15));
@@ -268,7 +269,7 @@ impl `BearDog`Core {
         // Test HSM capabilities
         let capabilities_test = adapter.execute_operation(&UniversalRequest {
             operation: "get_hsm_capabilities".to_string(),
-            parameters: HashMap::new(), 
+            parameters: ahash::HashMap::default(), 
             data: vec![],
         }).await?;
         if !capabilities_test.success {

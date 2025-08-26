@@ -1,3 +1,4 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -164,7 +165,7 @@ impl UniversalServiceMeshClient {
             client,
             active_mesh: Arc::new(RwLock::new(None)),
             registration: Arc::new(RwLock::new(None)),
-            service_cache: Arc::new(RwLock::new(HashMap::new())),
+            service_cache: Arc::new(RwLock::new(ahash::HashMap::default())),
             available_meshes: Arc::new(RwLock::new(Vec::new())),
             timeout: config.discovery_timeout,
             config,
@@ -342,7 +343,7 @@ impl UniversalServiceMeshClient {
                     std::env::var("BEARDOG_ENDPOINT")
                         .unwrap_or_else(|_| "http://localhost:8080".to_string()))),
                 metrics: Some(format!("{}/metrics", 
-                additional: HashMap::new(),
+                additional: ahash::HashMap::default(),
             },
             registered_at: chrono::Utc::now(),
         // Store registration
@@ -352,7 +353,7 @@ impl UniversalServiceMeshClient {
                 instance_id: registration.instance_id.clone(),
                 registered_at: registration.registered_at,
                 expires_at: None,
-                metadata: HashMap::new(),
+                metadata: ahash::HashMap::default(),
         info!("✅ Successfully registered BearDog with ecosystem");
         Ok(registration)
     /// Create registration request for BearDog

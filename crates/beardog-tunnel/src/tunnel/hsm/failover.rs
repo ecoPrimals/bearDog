@@ -1,3 +1,4 @@
+// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
 // MODERNIZED: Removed async_trait - now uses native async fn in trait
 
 // BearDog - Enterprise Security Ecosystem
@@ -67,7 +68,7 @@ impl DefaultHsmFailoverManager {
 impl HsmFailoverManager for DefaultHsmFailoverManager {
     async fn handle_provider_failure(
         &self,
-        provider: &Arc<dyn HsmProvider>,
+        provider: &impl HsmProvider + Send + Sync + 'static,
         error: &BearDogError,
     ) -> BearDogResult<()> {
         let provider_info = provider.get_info().await?;
@@ -93,9 +94,9 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
             *count += 1;
         Ok(())
     async fn get_failover_provider(
-        _failed_provider: &Arc<dyn HsmProvider>,
+        _failed_provider: &impl HsmProvider + Send + Sync + 'static,
         requirements: &SecurityRequirements,
-    ) -> BearDogResult<Arc<dyn HsmProvider>> {
+    ) -> BearDogResult<impl HsmProvider + Send + Sync + 'static> {
         // For now, return a simple software HSM as fallback
         // In a real implementation, this would select the best available alternative
         let software_config = SoftwareHsmConfig {}
@@ -119,7 +120,7 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
         operation: F,
     ) -> BearDogResult<T>
     where
-        F: Fn(Arc<dyn HsmProvider>) -> Result<T, BearDogError> + Send + Sync + 'static,
+        F: Fn(impl HsmProvider + Send + Sync + 'static) -> Result<T, BearDogError> + Send + Sync + 'static,
         T: Send + 'static,
     {
         // This is a simplified implementation

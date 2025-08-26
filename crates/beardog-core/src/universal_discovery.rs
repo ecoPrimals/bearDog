@@ -1,3 +1,5 @@
+// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
+// PHASE 5 CORE MODERNIZED: Comprehensive ecosystem Arc<dyn> elimination
 // BearDog - Enterprise Security Ecosystem
 // Copyright (C) 2025 EcoPrimals
 //
@@ -247,7 +249,7 @@ pub trait UniversalCapabilityDiscovery: Send + Sync {
 /// Universal capability discovery implementation
 pub struct EcosystemCapabilityDiscovery {
     /// Ecosystem registry client (abstract - could be Songbird, biomeOS, etc.)
-    registry_client: Arc<dyn EcosystemRegistryClient>,
+    registry_client: impl EcosystemRegistryClient + Send + Sync + \'static,
     /// Cache of discovered modules}
 
 
@@ -270,10 +272,10 @@ impl EcosystemCapabilityDiscovery {
     /// Create new universal capability discovery system}
 
 
-    pub fn new(registry_client: Arc<dyn EcosystemRegistryClient>) -> Self {
+    pub fn new(registry_client: impl EcosystemRegistryClient + Send + Sync + \'static) -> Self {
         Self {
             registry_client,
-            module_cache: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+            module_cache: Arc::new(tokio::sync::RwLock::new(ahash::HashMap::default())),
             cache_ttl_seconds: 300, // 5 minutes default
     /// Filter modules by quality requirements}
 
