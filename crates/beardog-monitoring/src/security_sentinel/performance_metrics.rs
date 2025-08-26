@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Performance Metrics Collection and Analysis
-///
-/// Provides metrics collection, analysis, and trend detection for performance monitoring.
 
 use beardog_errors::BearDogResult;
 use chrono::{DateTime, Utc};
@@ -26,22 +7,21 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::debug;
-/// Performance thresholds for alerting
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceThresholds {
-    /// CPU usage threshold (percentage)
+
     pub cpu_threshold: f64,
-    /// Memory usage threshold (percentage)
+
     pub memory_threshold: f64,
-    /// Response time threshold (milliseconds)
+
     pub response_time_threshold: f64,
-    /// Error rate threshold (percentage)
+
     pub error_rate_threshold: f64,
-    /// Throughput threshold (requests per second)
+
     pub throughput_threshold: f64,
 }
 impl Default for PerformanceThresholds {}
-
 
     fn default() -> Self {
         Self {
@@ -52,45 +32,44 @@ impl Default for PerformanceThresholds {}
             throughput_threshold: 100.0,
         }
     }
-/// Performance metrics data point
-pub struct PerformanceMetrics {
-    /// Timestamp of the metrics
-    pub timestamp: DateTime<Utc>,
-    /// CPU usage percentage
-    pub cpu_usage: f64,
-    /// Memory usage percentage
-    pub memory_usage: f64,
-    /// Average response time in milliseconds
-    pub response_time: f64,
-    /// Error rate percentage
-    pub error_rate: f64,
-    /// Requests per second
-    pub throughput: f64,
-    /// Additional custom metrics
-    pub custom_metrics: HashMap<String, f64>,
-/// Performance trend analysis
-pub struct PerformanceTrends {
-    /// CPU usage trend
-    pub cpu_trend: MetricTrend,
-    /// Memory usage trend
-    pub memory_trend: MetricTrend,
-    /// Response time trend
-    pub response_time_trend: MetricTrend,
-    /// Error rate trend
-    pub error_rate_trend: MetricTrend,
-    /// Throughput trend
-    pub throughput_trend: MetricTrend,
-    /// Analysis window in minutes
-    pub window_minutes: u64,
-    /// Number of samples analyzed
-    pub sample_count: usize,
-    /// Average CPU percentage
-    pub avg_cpu_percent: f64,
-    /// Average memory usage in MB
-    pub avg_memory_mb: f64,
-    /// Average latency in milliseconds
-    pub avg_latency_ms: f64,}
 
+pub struct PerformanceMetrics {
+
+    pub timestamp: DateTime<Utc>,
+
+    pub cpu_usage: f64,
+
+    pub memory_usage: f64,
+
+    pub response_time: f64,
+
+    pub error_rate: f64,
+
+    pub throughput: f64,
+
+    pub custom_metrics: HashMap<String, f64>,
+
+pub struct PerformanceTrends {
+
+    pub cpu_trend: MetricTrend,
+
+    pub memory_trend: MetricTrend,
+
+    pub response_time_trend: MetricTrend,
+
+    pub error_rate_trend: MetricTrend,
+
+    pub throughput_trend: MetricTrend,
+
+    pub window_minutes: u64,
+
+    pub sample_count: usize,
+
+    pub avg_cpu_percent: f64,
+
+    pub avg_memory_mb: f64,
+
+    pub avg_latency_ms: f64,}
 
 impl Default for PerformanceTrends {
             cpu_trend: MetricTrend::Stable,
@@ -103,48 +82,40 @@ impl Default for PerformanceTrends {
             avg_cpu_percent: 0.0,
             avg_memory_mb: 0.0,
             avg_latency_ms: 0.0,
-/// Trend direction for metrics}
-
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub enum MetricTrend {
-    /// Metric is increasing
+
     Increasing,
-    /// Metric is decreasing
+
     Decreasing,
-    /// Metric is stable/unchanged
+
     Stable,
-    /// Trend is volatile/unpredictable
+
     Volatile,
-/// Performance metrics collector
+
 #[derive(Debug)]}
 
-
 pub struct PerformanceMetricsCollector {
-    /// Historical metrics
-    metrics_history: Arc<RwLock<Vec<PerformanceMetrics>>>,
-    /// Performance thresholds
-    thresholds: Arc<RwLock<PerformanceThresholds>>,
-    /// Maximum history size
-    max_history_size: usize,}
 
+    metrics_history: Arc<RwLock<Vec<PerformanceMetrics>>>,
+
+    thresholds: Arc<RwLock<PerformanceThresholds>>,
+
+    max_history_size: usize,}
 
 impl Default for PerformanceMetricsCollector {
         Self::new()}
 
-
 impl PerformanceMetricsCollector {
-    /// Create a new metrics collector
+
     pub fn new() -> Self {
             metrics_history: Arc::new(RwLock::new(Vec::new())),
             thresholds: Arc::new(RwLock::new(PerformanceThresholds::default())),
             max_history_size: 1000,
-    /// Collect current performance metrics}
-
 
     pub async fn collect_metrics(&self) -> BearDogResult<PerformanceMetrics> {
-        // This is a placeholder implementation
-        // In a real system, this would collect actual system metrics
+
         let metrics = PerformanceMetrics {
             timestamp: Utc::now(),
             cpu_usage: self.collect_cpu_usage().await?,
@@ -152,13 +123,13 @@ impl PerformanceMetricsCollector {
             response_time: self.collect_response_time().await?,
             error_rate: self.collect_error_rate().await?,
             throughput: self.collect_throughput().await?,
-            custom_metrics: HashMap::new(),
+            custom_metrics: HashMap::with_capacity(16),
         };
-        // Store in history
+
         {
             let mut history = self.metrics_history.write().await;
             history.push(metrics.clone());
-            // Trim history if needed
+
             if history.len() > self.max_history_size {
                 history.remove(0);
             }
@@ -167,7 +138,7 @@ impl PerformanceMetricsCollector {
             metrics.cpu_usage, metrics.memory_usage
         );
         Ok(metrics)
-    /// Get recent metrics for analysis
+
     pub async fn get_recent_metrics(&self, count: usize) -> BearDogResult<Vec<PerformanceMetrics>> {
         let history = self.metrics_history.read().await;
         let start_index = if history.len() > count {
@@ -175,7 +146,7 @@ impl PerformanceMetricsCollector {
         } else {
             0
         Ok(history[start_index..].to_vec())
-    /// Analyze performance trends
+
     pub async fn analyze_trends(&self, window_size: usize) -> BearDogResult<PerformanceTrends> {
         let recent_metrics = self.get_recent_metrics(window_size).await?;
         if recent_metrics.len() < 2 {
@@ -192,7 +163,7 @@ impl PerformanceMetricsCollector {
             avg_memory_mb: recent_metrics.iter().map(|m| m.memory_usage).sum::<f64>()
             avg_latency_ms: recent_metrics.iter().map(|m| m.response_time).sum::<f64>()
         })
-    /// Calculate trend for a specific metric
+
     fn calculate_trend<F>(&self, metrics: &[PerformanceMetrics], extractor: F) -> MetricTrend
     where
         F: Fn(&PerformanceMetrics) -> f64,
@@ -209,8 +180,6 @@ impl PerformanceMetricsCollector {
             x if x > 10.0 => MetricTrend::Increasing,
             x if x < -10.0 => MetricTrend::Decreasing,
             _ => MetricTrend::Stable,
-    /// Check if any metrics exceed thresholds}
-
 
     pub async fn check_thresholds(
         &self,
@@ -233,18 +202,15 @@ impl PerformanceMetricsCollector {
                 "Error rate {:.1}% exceeds threshold {:.1}%",
                 metrics.error_rate, thresholds.error_rate_threshold
         Ok(violations)
-    // Placeholder methods for actual metric collection
-    // In a real implementation, these would interface with system APIs
-    async fn collect_cpu_usage(&self) -> BearDogResult<f64> {
-        // Placeholder: return a mock value
-        Ok(45.0)}
 
+    async fn collect_cpu_usage(&self) -> BearDogResult<f64> {
+
+        Ok(45.0)}
 
     async fn collect_memory_usage(&self) -> BearDogResult<f64> {
         Ok(62.0)
     async fn collect_response_time(&self) -> BearDogResult<f64> {
         Ok(250.0)}
-
 
     async fn collect_error_rate(&self) -> BearDogResult<f64> {
         Ok(1.5)

@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Enhanced BearDog Unwrap Migrator - Advanced Pattern Recognition
-//!
-//! This module provides intelligent migration of unwrap/expect/panic patterns
-//! with context-aware replacements and better error handling.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -27,7 +7,6 @@ use regex::Regex;
 use thiserror::Error;
 use tracing::{info, warn, error};
 
-/// Enhanced migration error type
 #[derive(Error, Debug)]
 pub enum EnhancedMigratorError {
     #[error("IO error: {0}")]
@@ -40,10 +19,8 @@ pub enum EnhancedMigratorError {
     Unicode { message: String },
 }
 
-// Use centralized migration result type from beardog-types
 pub use beardog_types::aliases::MigrationResult as EnhancedMigratorResult;
 
-/// Enhanced unwrap pattern with intelligent context analysis
 #[derive(Debug, Clone)]
 pub struct EnhancedPattern {
     pub pattern_type: PatternType,
@@ -95,7 +72,6 @@ pub enum SafetyLevel {
     TestOnly,    // Only in test code
 }
 
-/// Enhanced unwrap migrator with intelligent pattern recognition
 pub struct EnhancedUnwrapMigrator {
     patterns: Vec<EnhancedPattern>,
     context_analyzers: HashMap<String, ContextAnalyzer>,
@@ -132,11 +108,10 @@ pub struct MigrationCandidate {
 }
 
 impl EnhancedUnwrapMigrator {
-    /// Create new enhanced migrator with intelligent patterns
+
     pub fn new() -> EnhancedMigratorResult<Self> {
         let mut patterns = Vec::new();
-        
-        // Option unwrap patterns
+
         patterns.push(EnhancedPattern {
             pattern_type: PatternType::OptionUnwrap,
             regex: Regex::new(r"(\w+(?:\.\w+)*(?:\([^)]*\))?(?:\?)?)\s*\.\s*unwrap\(\)")?,
@@ -144,8 +119,7 @@ impl EnhancedUnwrapMigrator {
             context_requirements: vec![ContextRequirement::IsOptionType],
             safety_level: SafetyLevel::Safe,
         });
-        
-        // Result unwrap patterns
+
         patterns.push(EnhancedPattern {
             pattern_type: PatternType::ResultUnwrap,
             regex: Regex::new(r"(\w+(?:\.\w+)*(?:\([^)]*\))?(?:\?)?)\s*\.\s*unwrap\(\)")?,
@@ -153,8 +127,7 @@ impl EnhancedUnwrapMigrator {
             context_requirements: vec![ContextRequirement::IsResultType, ContextRequirement::HasBearDogResult],
             safety_level: SafetyLevel::Safe,
         });
-        
-        // Option expect patterns
+
         patterns.push(EnhancedPattern {
             pattern_type: PatternType::OptionExpect,
             regex: Regex::new(r#"(\w+(?:\.\w+)*(?:\([^)]*\))?(?:\?)?)\s*\.\s*expect\s*\(\s*"([^"]+)"\s*\)"#)?,
@@ -162,8 +135,7 @@ impl EnhancedUnwrapMigrator {
             context_requirements: vec![ContextRequirement::IsOptionType],
             safety_level: SafetyLevel::Safe,
         });
-        
-        // Test panic patterns
+
         patterns.push(EnhancedPattern {
             pattern_type: PatternType::TestPanic,
             regex: Regex::new(r#"panic!\s*\(\s*"([^"]+)"\s*(?:,\s*[^)]+)?\s*\)"#)?,
@@ -171,8 +143,7 @@ impl EnhancedUnwrapMigrator {
             context_requirements: vec![ContextRequirement::InTestFunction],
             safety_level: SafetyLevel::TestOnly,
         });
-        
-        // Benchmark unwrap patterns
+
         patterns.push(EnhancedPattern {
             pattern_type: PatternType::BenchmarkUnwrap,
             regex: Regex::new(r"(\w+(?:\.\w+)*(?:\([^)]*\))?)\s*\.\s*unwrap\(\)")?,
@@ -181,16 +152,14 @@ impl EnhancedUnwrapMigrator {
             safety_level: SafetyLevel::Caution,
         });
         
-        let mut context_analyzers = HashMap::new();
-        
-        // Test context analyzer
+        let mut context_analyzers = HashMap::with_capacity(16);
+
         context_analyzers.insert("test".to_string(), ContextAnalyzer {
             function_detector: Regex::new(r"#\[tokio::test\]|#\[test\]|fn test_")?,
             import_detector: Regex::new(r"use.*test")?,
             type_detector: Regex::new(r"TestResult|TestCase")?,
         });
-        
-        // Benchmark context analyzer
+
         context_analyzers.insert("benchmark".to_string(), ContextAnalyzer {
             function_detector: Regex::new(r"#\[bench\]|fn\s+bench_(\w+)")?,
             import_detector: Regex::new(r"use.*bench")?,
@@ -203,25 +172,21 @@ impl EnhancedUnwrapMigrator {
             migration_stats: MigrationStats::default(),
         })
     }
-    
-    /// Analyze file and find migration candidates
+
     pub async fn analyze_file(&mut self, file_path: &Path) -> EnhancedMigratorResult<Vec<MigrationCandidate>> {
         let content = fs::read_to_string(file_path).await?;
         let mut candidates = Vec::new();
         
         self.migration_stats.files_analyzed += 1;
-        
-        // Analyze file context
+
         let file_context = self.analyze_file_context(&content, file_path)?;
         
         for pattern in &self.patterns {
             for mat in pattern.regex.find_iter(&content) {
                 let line_number = content[..mat.start()].matches('\n').count() + 1;
-                
-                // Safe context extraction
+
                 let context = self.extract_safe_context(&content, mat.start(), mat.end())?;
-                
-                // Check if pattern meets context requirements
+
                 if self.meets_context_requirements(&pattern.context_requirements, &content, &file_context, mat.start())? {
                     let candidate = self.create_migration_candidate(
                         file_path.to_path_buf(),
@@ -240,18 +205,15 @@ impl EnhancedUnwrapMigrator {
         
         Ok(candidates)
     }
-    
-    /// Safe context extraction with Unicode boundary handling
+
     fn extract_safe_context(&self, content: &str, start: usize, end: usize) -> EnhancedMigratorResult<String> {
         let context_size = 100;
-        
-        // Find safe start boundary
+
         let context_start = content.char_indices()
             .map(|(i, _)| i)
             .find(|&i| i >= start.saturating_sub(context_size))
             .unwrap_or(0);
-            
-        // Find safe end boundary
+
         let context_end = content.char_indices()
             .map(|(i, _)| i)
             .find(|&i| i >= end + context_size)
@@ -259,12 +221,10 @@ impl EnhancedUnwrapMigrator {
             
         Ok(content[context_start..context_end].to_string())
     }
-    
-    /// Analyze file context for better migration decisions
+
     fn analyze_file_context(&self, content: &str, file_path: &Path) -> EnhancedMigratorResult<FileContext> {
         let mut context = FileContext::default();
-        
-        // Determine file type
+
         if file_path.to_string_lossy().contains("/tests/") || 
            file_path.to_string_lossy().contains("test_") ||
            content.contains("#[test]") || content.contains("#[tokio::test]") {
@@ -280,21 +240,18 @@ impl EnhancedUnwrapMigrator {
         if file_path.to_string_lossy().contains("/examples/") {
             context.is_example_file = true;
         }
-        
-        // Check for BearDogResult usage
+
         if content.contains("BearDogResult") || content.contains("beardog_errors::BearDogResult") {
             context.has_beardog_result = true;
         }
-        
-        // Check for error handling patterns
+
         if content.contains("map_err") || content.contains("?") || content.contains("match") {
             context.has_error_handling = true;
         }
         
         Ok(context)
     }
-    
-    /// Check if pattern meets context requirements
+
     fn meets_context_requirements(
         &self, 
         requirements: &[ContextRequirement],
@@ -334,14 +291,13 @@ impl EnhancedUnwrapMigrator {
         }
         Ok(true)
     }
-    
-    /// Check if position is within a test function
+
     fn is_in_test_function(&self, content: &str, position: usize) -> EnhancedMigratorResult<bool> {
         let before_position = &content[..position];
         let test_regex = Regex::new(r"#\[(tokio::)?test\][\s\n]*(?:async\s+)?fn\s+(\w+)")?;
         
         if let Some(last_match) = test_regex.find_iter(before_position).last() {
-            // Find the end of this function to see if position is within it
+
             let function_start = last_match.start();
             if let Some(function_end) = self.find_function_end(content, function_start)? {
                 return Ok(position >= function_start && position <= function_end);
@@ -350,8 +306,7 @@ impl EnhancedUnwrapMigrator {
         
         Ok(false)
     }
-    
-    /// Check if position is within a benchmark function
+
     fn is_in_benchmark_function(&self, content: &str, position: usize) -> EnhancedMigratorResult<bool> {
         let before_position = &content[..position];
         let bench_regex = Regex::new(r"#\[bench\][\s\n]*fn\s+(\w+)|fn\s+bench_(\w+)")?;
@@ -365,8 +320,7 @@ impl EnhancedUnwrapMigrator {
         
         Ok(false)
     }
-    
-    /// Find the end of a function (simplified heuristic)
+
     fn find_function_end(&self, content: &str, function_start: usize) -> EnhancedMigratorResult<Option<usize>> {
         let after_function = &content[function_start..];
         let mut brace_count = 0;
@@ -390,8 +344,7 @@ impl EnhancedUnwrapMigrator {
         
         Ok(None)
     }
-    
-    /// Create migration candidate with intelligent replacement
+
     fn create_migration_candidate(
         &self,
         file_path: PathBuf,
@@ -421,8 +374,7 @@ impl EnhancedUnwrapMigrator {
             reasoning,
         })
     }
-    
-    /// Generate intelligent replacement based on strategy
+
     fn generate_replacement(
         &self,
         strategy: &ReplacementStrategy,
@@ -441,7 +393,7 @@ impl EnhancedUnwrapMigrator {
                 }
             }
             ReplacementStrategy::PropagateError => {
-                Ok(format!("{}?", self.extract_expression(original_code)?))
+                Ok(format_args!("{}?", self.extract_expression(original_code).to_string()?))
             }
             ReplacementStrategy::TestAssertion => {
                 Ok(format!("assert!(false, \"Test assertion failed: {}\");", 
@@ -460,8 +412,7 @@ impl EnhancedUnwrapMigrator {
             _ => Ok(original_code.to_string()), // No change for other strategies
         }
     }
-    
-    /// Extract the expression from unwrap/expect call
+
     fn extract_expression(&self, code: &str) -> EnhancedMigratorResult<String> {
         let unwrap_regex = Regex::new(r"(.+)\s*\.\s*(?:unwrap|expect)\s*\([^)]*\)")?;
         if let Some(caps) = unwrap_regex.captures(code) {
@@ -470,16 +421,14 @@ impl EnhancedUnwrapMigrator {
             Ok(code.to_string())
         }
     }
-    
-    /// Extract panic message from panic! macro
+
     fn extract_panic_message(&self, code: &str) -> Option<String> {
         let panic_regex = Regex::new(r#"panic!\s*\(\s*"([^"]+)""#).ok()?;
         panic_regex.captures(code)
             .and_then(|caps| caps.get(1))
             .map(|m| m.as_str().to_string())
     }
-    
-    /// Generate reasoning for migration suggestion
+
     fn generate_reasoning(&self, pattern_type: &PatternType, safety_level: &SafetyLevel, file_context: &FileContext) -> String {
         match (pattern_type, safety_level) {
             (PatternType::OptionUnwrap, SafetyLevel::Safe) => {
@@ -497,8 +446,7 @@ impl EnhancedUnwrapMigrator {
             _ => "Pattern can be improved for better error handling".to_string()
         }
     }
-    
-    /// Apply migration to a file
+
     pub async fn apply_migration(&mut self, candidate: &MigrationCandidate) -> EnhancedMigratorResult<bool> {
         let content = fs::read_to_string(&candidate.file_path).await?;
         let new_content = content.replace(&candidate.original_code, &candidate.suggested_replacement);
@@ -523,8 +471,7 @@ impl EnhancedUnwrapMigrator {
         
         Ok(false)
     }
-    
-    /// Get migration statistics
+
     pub fn get_stats(&self) -> &MigrationStats {
         &self.migration_stats
     }
@@ -553,7 +500,7 @@ mod tests {
     fn test_safe_context_extraction() {
         let migrator = EnhancedUnwrapMigrator::new().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         let content = "Hello 🦀 world with unicode";
         let context = migrator.extract_safe_context(content, 6, 8);

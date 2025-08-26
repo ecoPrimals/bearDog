@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["authorization","genetics","node_registry","spawning","workflow"]};

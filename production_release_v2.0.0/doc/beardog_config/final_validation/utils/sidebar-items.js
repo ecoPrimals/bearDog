@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["calculate_validation_resources","generate_validation_summary"]};

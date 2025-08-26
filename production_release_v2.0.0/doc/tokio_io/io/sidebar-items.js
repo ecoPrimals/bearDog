@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["copy","flush","lines","read","read_exact","read_to_end","read_until","shutdown","write_all"],"struct":["AllowStdIo","Copy","Flush","Lines","Read","ReadExact","ReadHalf","ReadToEnd","ReadUntil","Shutdown","Window","WriteAll","WriteHalf"]};

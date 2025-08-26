@@ -1,54 +1,33 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// # AI CLI Types
-///
-/// **EXTRACTED FROM LARGE FILE** - Common CLI types and response structures (~80 lines)
-/// This module contains all the common types, response structures, and enums used
-/// throughout the AI CLI command system.
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// AI-optimized CLI response format
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CliResponse<T> {
-    /// Success status
+
     pub success: bool,
-    /// Response data
+
     pub data: Option<T>,
-    /// Error details
+
     pub error: Option<CliError>,
-    /// Command execution time
+
     pub execution_time_ms: u64,
-    /// Command metadata
+
     pub metadata: HashMap<String, serde_json::Value>,
 }
-/// CLI error format
+
 pub struct CliError {
-    /// Error code
+
     pub code: String,
-    /// Error message
+
     pub message: String,
-    /// Exit code
+
     pub exit_code: i32,
-    /// Additional context
+
     pub context: Option<serde_json::Value>,
-/// Output format options
+
 #[derive(Debug, Clone, ValueEnum, Serialize, Deserialize, Default)]
 pub enum OutputFormat {
     #[default]
@@ -57,9 +36,7 @@ pub enum OutputFormat {
     Table,
     Raw,}
 
-
 impl std::fmt::Display for OutputFormat {}
-
 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -69,55 +46,50 @@ impl std::fmt::Display for OutputFormat {}
             Self::Raw => write!(f, "raw"),
         }
     }
-/// Stream type for real-time operations
-pub enum StreamType {
-    /// JSON lines format
-    JsonLines,
-    /// Server-Sent Events
-    Sse,
-    /// Binary stream
-    Binary,
-    /// Text stream
-    Text,
-/// Batch operation status}
 
+pub enum StreamType {
+
+    JsonLines,
+
+    Sse,
+
+    Binary,
+
+    Text,
 
 pub struct BatchStatus {
-    /// Total operations
+
     pub total: usize,
-    /// Completed operations
+
     pub completed: usize,
-    /// Failed operations
+
     pub failed: usize,
-    /// Operation results
+
     pub results: Vec<BatchResult>,
-/// Individual batch result
+
 pub struct BatchResult {
-    /// Operation ID
+
     pub id: String,
-    /// Result data
+
     pub data: Option<serde_json::Value>,
     pub error: Option<String>,
-    /// Processing time
+
     pub processing_time_ms: u64,
-/// CLI operation context
+
 pub struct OperationContext {
-    /// Operation type
+
     pub operation_type: String,
-    /// User ID
+
     pub user_id: Option<String>,
-    /// Request ID for tracing
+
     pub request_id: String,
-    /// Timestamp
+
     pub timestamp: chrono::DateTime<chrono::Utc>,
-    /// Additional metadata
+
     pub metadata: HashMap<String, String>,
 }
 
-
 impl<T> CliResponse<T> {
-    /// Create a successful response}
-
 
     pub fn success(data: T, execution_time_ms: u64) -> Self {
         Self {
@@ -125,57 +97,47 @@ impl<T> CliResponse<T> {
             data: Some(data),
             error: None,
             execution_time_ms,
-            metadata: HashMap::new(),
-    /// Create an error response}
-
+            metadata: HashMap::with_capacity(16),
 
     pub fn error(error: CliError, execution_time_ms: u64) -> Self {
             success: false,
             data: None,
             error: Some(error),
-    /// Add metadata to response
+
     #[allow(dead_code)] // Part of public API - may be used in future
-    pub fn with_metadata(mut self, key: String, value: serde_json::Value) -> Self {
+    pub fn with_metadata(mut self, key: &str, value: serde_json::Value) -> Self {
         self.metadata.insert(key, value);
         self}
 
-
 impl CliError {
-    /// Create a new CLI error
-    pub const fn new(code: String, message: String, exit_code: i32) -> Self {
+
+    pub const fn new(code: &str, message: &str, exit_code: i32) -> Self {
             code,
             message,
             exit_code,
             context: None,
-    /// Add context to error}
-
 
     pub fn with_context(mut self, context: serde_json::Value) -> Self {
         self.context = Some(context);
-    /// Create a validation error}
 
-
-    pub fn validation_error(message: String) -> Self {
+    pub fn validation_error(message: &str) -> Self {
         Self::new("VALIDATION_ERROR".to_string(), message, 1)
-    /// Create a configuration error
-    pub fn config_error(message: String) -> Self {
+
+    pub fn config_error(message: &str) -> Self {
         Self::new("CONFIG_ERROR".to_string(), message, 2)
-    /// Create an authentication error}
 
-
-    pub fn auth_error(message: String) -> Self {
+    pub fn auth_error(message: &str) -> Self {
         Self::new("AUTH_ERROR".to_string(), message, 3)
-    /// Create a network error
-    pub fn network_error(message: String) -> Self {
+
+    pub fn network_error(message: &str) -> Self {
         Self::new("NETWORK_ERROR".to_string(), message, 4)
 #[cfg(test)]
 mod tests {
     use super::*;
     use chrono::Utc;
     use serde_json::json;
-    /// Test CliResponse success creation and serialization
-    #[test]}
 
+    #[test]}
 
     fn test_cli_response_success() {
         let data = "test data";
@@ -185,7 +147,7 @@ mod tests {
         assert!(response.error.is_none());
         assert_eq!(response.execution_time_ms, 150);
         assert!(response.metadata.is_empty());
-    /// Test CliResponse error creation
+
     fn test_cli_response_error() {
         let error = CliError::new(
             "TEST_ERROR".to_string(),
@@ -197,14 +159,11 @@ mod tests {
         assert!(response.data.is_none());
         assert!(response.error.is_some());
         assert_eq!(response.execution_time_ms, 75);
-        let cli_error = response.error.unwrap_or_else(|| {
-            tracing::error!("Unwrap failed: response.error was None");
-            panic!("Expected error in response, but found None");
-        });
+        let cli_error = response.error.expect("Expected error in response for this test case");
         assert_eq!(cli_error.code, "TEST_ERROR");
         assert_eq!(cli_error.message, "Test error message");
         assert_eq!(cli_error.exit_code, 1);
-    /// Test CliResponse with metadata
+
     fn test_cli_response_with_metadata() {
         let response = CliResponse::success("data", 100)
             .with_metadata("key1".to_string(), json!("value1"))
@@ -212,8 +171,6 @@ mod tests {
         assert_eq!(response.metadata.len(), 2);
         assert_eq!(response.metadata.get("key1"), Some(&json!("value1")));
         assert_eq!(response.metadata.get("key2"), Some(&json!(42)));
-    /// Test CliError creation and methods}
-
 
     fn test_cli_error_creation() {
         let error = CliError::new("CUSTOM_ERROR".to_string(), "Custom message".to_string(), 5);
@@ -221,13 +178,13 @@ mod tests {
         assert_eq!(error.message, "Custom message");
         assert_eq!(error.exit_code, 5);
         assert!(error.context.is_none());
-    /// Test CliError with context
+
     fn test_cli_error_with_context() {
         let context = json!({"field": "username", "value": "invalid"});
         let error = CliError::new("VALIDATION".to_string(), "Invalid input".to_string(), 1)
             .with_context(context.clone());
         assert_eq!(error.context, Some(context));
-    /// Test CliError convenience methods
+
     fn test_cli_error_convenience_methods() {
         let validation_error = CliError::validation_error("Invalid data".to_string());
         assert_eq!(validation_error.code, "VALIDATION_ERROR");
@@ -241,8 +198,6 @@ mod tests {
         let network_error = CliError::network_error("Connection failed".to_string());
         assert_eq!(network_error.code, "NETWORK_ERROR");
         assert_eq!(network_error.exit_code, 4);
-    /// Test OutputFormat enum values and serialization}
-
 
     fn test_output_format() -> Result<(), Box<dyn std::error::Error>> {
         let formats = vec![
@@ -263,10 +218,10 @@ mod tests {
                 tracing::error!("JSON parsing failed: {}", e);
                     format!("JSON parsing error: {e}"),
             assert_eq!(format.to_string(), deserialized.to_string());
-        // Test default
-        assert_eq!(format!("{:?}", OutputFormat::default()), "Json");
+
+        assert_eq!(format_args!("{:?}", OutputFormat::default().to_string()), "Json");
         Ok(())
-    /// Test StreamType enum values and serialization
+
     fn test_stream_type() -> Result<(), Box<dyn std::error::Error>> {
         let stream_types = vec![
             StreamType::JsonLines,
@@ -276,9 +231,9 @@ mod tests {
         for stream_type in stream_types {
             let serialized = serde_json::to_string(&stream_type).map_err(|e| {
             let deserialized: StreamType = serde_json::from_str(&serialized).map_err(|e| {
-            assert_eq!(format!("{stream_type:?}"), format!("{:?}", deserialized));
-        assert_eq!(format!("{:?}", StreamType::default()), "JsonLines");
-    /// Test BatchStatus creation and field access
+            assert_eq!(format!("{stream_type:?}"), format_args!("{:?}", deserialized).to_string());
+        assert_eq!(format_args!("{:?}", StreamType::default().to_string()), "JsonLines");
+
     fn test_batch_status() {
         let results = vec![
             BatchResult {
@@ -307,7 +262,7 @@ mod tests {
         assert!(!batch_status.results[1].success);
         assert_eq!(batch_status.results[0].id, "op1");
         assert_eq!(batch_status.results[1].id, "op2");
-    /// Test BatchResult creation and serialization
+
     fn test_batch_result() -> Result<(), Box<dyn std::error::Error>> {
         let result = BatchResult {
             id: "test-batch-1".to_string(),
@@ -317,9 +272,9 @@ mod tests {
         assert!(json.contains("test-batch-1"));
         assert!(json.contains("\"success\":true"));
         assert!(json.contains("processing_time_ms"));
-    /// Test OperationContext creation and field access
+
     fn test_operation_context() {
-        let mut metadata = HashMap::new();
+        let mut metadata = HashMap::with_capacity(16);
         metadata.insert("source".to_string(), "cli".to_string());
         metadata.insert("version".to_string(), "1.0.0".to_string());
         let context = OperationContext {
@@ -334,8 +289,6 @@ mod tests {
         assert_eq!(context.metadata.len(), 2);
         assert_eq!(context.metadata.get("source"), Some(&"cli".to_string()));
         assert_eq!(context.metadata.get("version"), Some(&"1.0.0".to_string()));
-    /// Test complete CLI response serialization/deserialization}
-
 
     fn test_cli_response_json_roundtrip() -> Result<(), Box<dyn std::error::Error>> {
         metadata.insert("command".to_string(), json!("test"));
@@ -357,7 +310,7 @@ mod tests {
         assert_eq!(original.data, deserialized.data);
         assert_eq!(original.execution_time_ms, deserialized.execution_time_ms);
         assert_eq!(original.metadata.len(), deserialized.metadata.len());
-    /// Test error response JSON serialization
+
     fn test_error_response_json() -> Result<(), Box<dyn std::error::Error>> {
         let error = CliError::validation_error("Field 'name' is required".to_string())
             .with_context(json!({"field": "name"}));
@@ -368,17 +321,15 @@ mod tests {
         assert!(json.contains("\"success\":false"));
         assert!(!deserialized.success);
         assert!(deserialized.error.is_some());
-        let cli_error = deserialized.error.unwrap_or_else(|| {
-            tracing::error!("Unwrap failed: deserialized.error was None");
-            panic!("Expected error in deserialized response, but found None");
+        let cli_error = deserialized.error.expect("Expected error in deserialized response for this test case");
         assert_eq!(cli_error.code, "VALIDATION_ERROR");
-    /// Test all CLI type combinations work together  
+
     fn test_integrated_cli_types() -> Result<(), Box<dyn std::error::Error>> {
-        // Create operation context
+
             operation_type: "batch_operation".to_string(),
             user_id: Some("admin".to_string()),
             request_id: "batch-123".to_string(),
-        // Create batch results
+
             total: 3,
             completed: 2,
             results: vec![
@@ -397,7 +348,7 @@ mod tests {
                     error: Some("Processing failed".to_string()),
                     processing_time_ms: 75,
             ],
-        // Create successful response
+
         let response = CliResponse::success(batch_status, 325)
             .with_metadata(
                 "context".to_string(),
@@ -410,5 +361,5 @@ mod tests {
                     serde_json::Value::String("json".to_string())
             );
         assert!(response.data.is_some());
-        // Ensure full serialization works
+
         let _deserialized: CliResponse<BatchStatus> = serde_json::from_str(&json).map_err(|e| {

@@ -1,30 +1,11 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// GDPR Compliance Handlers
-///
-/// Handlers for GDPR compliance status, data subject requests, and consent tracking.
 
 use super::models::*;
 use crate::api::*;
 use axum::{extract::State, http::StatusCode, Json};
 use std::time::Instant;
 use tracing::info;
-/// Get GDPR compliance status
+
 pub async fn get_gdpr_compliance(
     State(_state): State<AppState>,
 ) -> Result<Json<ApiResponse<GdprComplianceResponse>>, StatusCode> {
@@ -69,7 +50,7 @@ pub async fn get_gdpr_compliance(
         true,
     )))
 }
-/// Handle data subject request (access, rectification, erasure, etc.)
+
 pub async fn handle_data_subject_request(
     Json(request): Json<DataSubjectRequest>,
 ) -> Result<Json<ApiResponse<DataSubjectRequestResponse>>, StatusCode> {
@@ -77,7 +58,7 @@ pub async fn handle_data_subject_request(
         "🔍 Processing data subject request: {}",
         request.request_type
     );
-    // Validate identity and process request
+
     let response = DataSubjectRequestResponse {
         request_id: uuid::Uuid::new_v4().to_string(),
         status: "PROCESSING".to_string(),
@@ -92,7 +73,7 @@ pub async fn handle_data_subject_request(
         ],
         estimated_data_volume: "2.3 MB".to_string(),
         false,
-/// Handle right to be forgotten request
+
 pub async fn handle_right_to_be_forgotten(
     Json(request): Json<RightToBeForgottenRequest>,
 ) -> Result<Json<ApiResponse<RightToBeForgottenResponse>>, StatusCode> {
@@ -116,7 +97,7 @@ pub async fn handle_right_to_be_forgotten(
             "Marketing platform".to_string(),
             "Payment processor".to_string(),
         exceptions_identified: vec![], // No legal exceptions apply
-/// Get consent tracking status
+
 pub async fn get_consent_tracking(
     State(_): State<AppState>,
 ) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {

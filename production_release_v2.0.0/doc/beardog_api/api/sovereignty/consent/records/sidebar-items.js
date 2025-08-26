@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["UserRole"],"struct":["ConsentRecordManager","RecordConfig","UsageReport","ValidationResult"]};

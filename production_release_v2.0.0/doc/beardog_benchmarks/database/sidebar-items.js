@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["CacheEvictionPolicy"],"struct":["ConnectionPoolConfig","DatabaseCachingConfig","DatabaseMonitoringConfig","DatabaseSpecificConfig","MySqlConfig","OptimizedDatabaseConfig","PostgresConfig","QueryOptimizationConfig","RetryConfig","SqliteConfig","SslConfig"]};

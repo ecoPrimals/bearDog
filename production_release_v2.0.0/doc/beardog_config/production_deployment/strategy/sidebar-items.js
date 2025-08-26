@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["CheckType","DeploymentStrategy","SwitchStrategy","SwitchType"],"struct":["CanarySuccessCriteria","PostDeploymentCheck","PreDeploymentCheck","SwitchConfig","SwitchValidation"]};

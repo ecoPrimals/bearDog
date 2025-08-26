@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["SIMDInstructionSet","SIMDOperation"],"struct":["SIMDConfig","VectorizationConfig"]};

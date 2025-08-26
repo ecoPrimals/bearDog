@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// WebSocket Streaming Endpoints
-///
-/// Real-time WebSocket connections for monitoring data
 
 use super::*;
 use axum::{
@@ -30,7 +11,7 @@ use axum::{
 use serde_json::json;
 use tokio::time::{interval, Duration};
 use tracing::{info, warn};
-// Placeholder WebSocket handlers - need to move implementations from original file
+
 pub async fn websocket_dashboard(ws: WebSocketUpgrade, State(state): State<AppState>) -> Response {
     info!("🔗 Dashboard WebSocket connection established");
     ws.on_upgrade(move |socket| handle_dashboard_socket(socket, state))
@@ -39,14 +20,12 @@ pub async fn websocket_metrics(ws: WebSocketUpgrade, State(state): State<AppStat
     info!("📊 Metrics WebSocket connection established");
     ws.on_upgrade(move |socket| handle_metrics_socket(socket, state))}
 
-
 pub async fn websocket_alerts(ws: WebSocketUpgrade, State(state): State<AppState>) -> Response {
     info!("🚨 Alerts WebSocket connection established");
     ws.on_upgrade(move |socket| handle_alerts_socket(socket, state))
 pub async fn websocket_logs(ws: WebSocketUpgrade, State(state): State<AppState>) -> Response {
     info!("📝 Logs WebSocket connection established");
     ws.on_upgrade(move |socket| handle_logs_socket(socket, state))}
-
 
 async fn handle_dashboard_socket(mut socket: WebSocket, _state: AppState) {
     info!("📊 Dashboard WebSocket handler started");
@@ -110,7 +89,7 @@ async fn handle_metrics_socket(mut socket: WebSocket, _state: AppState) {
 async fn handle_alerts_socket(mut socket: WebSocket, _state: AppState) {
     info!("🚨 Alerts WebSocket handler started");
     let mut interval = interval(Duration::from_secs(10));
-                // Send periodic alert updates
+
                 if rand::random::<f32>() < 0.1 { // 10% chance of alert
                     let severities = ["low", "medium", "high"];
                     let severity = severities[rand::random::<usize>() % 3];

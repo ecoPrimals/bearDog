@@ -1,189 +1,52 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Threat detection types
-///
-/// This module provides comprehensive type definitions for threat detection, analysis,
-/// and response operations. The types are organized into logical modules while
-/// maintaining backward compatibility through re-exports.
-/// ## Module Organization
-/// - [`config`] - Configuration types for threat detection engine
-/// - [`core`] - Core threat types (severity, type, events)
-/// - [`sources`] - Threat source and target information
-/// - [`detection`] - Detection methods and evidence types
-/// - [`actions`] - Actions, responses, and mitigation steps
-/// - [`statistics`] - Statistics and metrics tracking
-/// - [`intelligence`] - Threat intelligence and indicators
-/// - [`engine`] - Detection engine and rule types
-/// - [`analysis`] - Analysis results and security events
-/// - [`incidents`] - Incident response and management
-/// ## Usage
-/// ```rust
-/// use beardog::threat::types::{
-///     ThreatSeverity, ThreatType, ThreatEvent,
-///     ThreatDetectionConfig, DetectionMethod,
-///     ThreatAction, ThreatStatus
-/// };
-/// // Create a threat event
-/// let event = ThreatEvent {
-///     id: "threat-001".to_string(),
-///     threat_type: ThreatType::Malware,
-///     severity: ThreatSeverity::High,
-///     // ... other fields
-/// ```
-/// ## Architecture
-/// The threat types are designed to work together as a cohesive system:
-/// 1. **Core Types**: Basic threat classifications and events
-/// 2. **Detection**: Methods and evidence for threat identification
-/// 3. **Intelligence**: External threat intelligence integration
-/// 4. **Analysis**: Event correlation and analysis results
-/// 5. **Response**: Actions and incident management
-/// 6. **Statistics**: Performance and effectiveness metrics
-// Module declarations
 pub mod actions;
 pub mod analysis;
-pub mod config;
 pub mod core;
-pub mod detection;
 pub mod engine;
 pub mod incidents;
 pub mod intelligence;
 pub mod sources;
 pub mod statistics;
 
-// Re-exports for backward compatibility and convenience
-// Configuration types
 pub use config::ThreatDetectionConfig;
-// Core threat types
+
 pub use core::{ThreatEvent, ThreatSeverity, ThreatType};
-// Source and target types
+
 pub use sources::{
     AssetCriticality, GeoLocation, ProtectionLevel, SourceClassification, ThreatSource,
     ThreatTarget,
 };
-// Detection types
+
 pub use detection::{
     DetectionMethod, EvidenceData, EvidenceType, FileMetadataData, LogEntryData, NetworkPacketData,
     ThreatEvidence,
 };
 
-// Action and response types
 pub use actions::{MitigationStep, ResponseAction, ThreatAction, ThreatStatus};
 
-// Statistics types
 pub use statistics::{DetectionMethodStats, ThreatDetectionStats, ThreatStatistics, ThreatTrend};
 
-// Intelligence types
 pub use intelligence::{
     FeedStatus, FeedType, IndicatorType, ThreatIndicator, ThreatIntelligenceFeed, UpdateFrequency,
 };
 
-// Engine types
 pub use engine::{
     DetectionRule, MlModel, MlModelType, RuleCondition, ThreatDetectionEngine, ThreatDetectionRule,
 };
 
-// Analysis types
 pub use analysis::{
     AnalysisMetrics, AnalysisSession, CorrelationType, EventCorrelationResult, SecurityEvent,
     ThreatAnalysisResult,
 };
 
-// Incident types
 pub use incidents::{
     IncidentMetrics, IncidentResponse, IncidentRole, IncidentStatus, IncidentTeamMember,
     IncidentTimelineEntry, TimelineEntryType,
 };
-// Type aliases for backward compatibility
-/// Type alias for response action type for backward compatibility
+
 pub type ResponseActionType = ResponseAction;
-/// Comprehensive threat detection system
-/// This module provides a complete threat detection ecosystem with
-/// integrated components for detection, analysis, and response.
-/// ## Key Features
-/// - **Multi-layered Detection**: Signature, anomaly, behavioral, and ML-based detection
-/// - **Threat Intelligence**: Integration with external threat feeds and indicators
-/// - **Incident Response**: Full incident lifecycle management
-/// - **Analytics**: Performance metrics and trend analysis
-/// - **Extensibility**: Modular architecture for easy extension
-/// ## Example: Complete Threat Detection Workflow
-/// use beardog::threat::types::*;
-/// use chrono::Utc;
-/// // 1. Configure the detection engine
-/// let config = ThreatDetectionConfig {
-///     real_time_detection: true,
-///     threat_threshold: 70,
-///     automated_response: true,
-///     ml_enhancement: true,
-///     ..Default::default()
-/// // 2. Create detection engine
-/// let mut engine = ThreatDetectionEngine::new(config);
-/// // 3. Add detection rules
-/// let rule = DetectionRule::new(
-///     "malware-001".to_string(),
-///     "Malware Detection".to_string(),
-///     RuleCondition::FieldEquals {
-///         field: "file_hash".to_string(),
-///         value: "known_malware_hash".to_string(),
-///     },
-///     ThreatType::Malware,
-///     ThreatSeverity::Critical
-/// );
-/// engine.add_detection_rule(rule);
-/// // 4. Process security event
-/// let event = SecurityEvent::new(
-///     "event-001".to_string(),
-///     "file_upload".to_string(),
-///     "192.168.1.100".to_string(),
-///     "10.0.0.1".to_string(),
-///     "user123".to_string()
-/// // 5. Analyze for threats
-/// let analysis_result = ThreatAnalysisResult::new("event-001".to_string());
-/// // 6. Create incident if threats detected
-/// if analysis_result.has_threats() {
-///     let incident = IncidentResponse::new(
-///         "INC-2024-001".to_string(),
-///         "threat-001".to_string(),
-///         ThreatSeverity::High,
-///         "Malware detected in file upload".to_string()
-///     );
-/// }
-/// ## Module Dependencies
-/// ```text
-/// core ←── sources, detection, actions, statistics, intelligence
-/// engine ←── core, config, intelligence, statistics
-/// analysis ←── core, detection, engine
-/// incidents ←── core, actions
-/// ## Performance Considerations
-/// - Use `ThreatDetectionStats` to monitor system performance
-/// - Implement rate limiting with `ThreatDetectionConfig::max_alerts_per_minute`
-/// - Use high-confidence indicators from `ThreatIntelligenceFeed`
-/// - Optimize rule conditions for faster evaluation
-/// ## Security Considerations
-/// - Validate all external threat intelligence data
-/// - Implement proper access controls for sensitive incident data
-/// - Use secure channels for threat intelligence feed updates
-/// - Regularly review and update detection rules
-/// ## Extensibility
-/// The type system is designed for easy extension:
-/// - Add new `ThreatType` variants for emerging threats
-/// - Implement custom `RuleCondition` types for specialized detection
-/// - Extend `EvidenceType` for new data sources
-/// - Create custom `IndicatorType` for domain-specific indicators
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -432,10 +295,8 @@ mod tests {
             MlModelType::AnomalyDetection,
             vec!["packet_count".to_string(), "byte_count".to_string()],
         );
-        // New model starts with 0.0 accuracy, not high accuracy
-        assert!(!model.is_high_accuracy());
-        // Update accuracy to high value}
 
+        assert!(!model.is_high_accuracy());
 
         model.update_accuracy(0.9);
         assert!(model.is_high_accuracy());
@@ -446,11 +307,10 @@ mod tests {
 
     #[test]
     fn test_comprehensive_workflow() {
-        // Test a complete workflow from detection to incident resolution
+
         let config = ThreatDetectionConfig::default();
         let mut engine = ThreatDetectionEngine::new(config);
-        
-        // Add a detection rule
+
         let rule = DetectionRule::new(
             "test-rule".to_string(),
             "Test Rule".to_string(),
@@ -462,8 +322,7 @@ mod tests {
             ThreatType::Malware,
         );
         engine.add_detection_rule(rule);
-        
-        // Create a security event
+
         let _event = SecurityEvent::new(
             "event-001".to_string(),
             "file_scan".to_string(),
@@ -471,12 +330,11 @@ mod tests {
             "10.0.0.1".to_string(),
             "user123".to_string(),
         );
-        
-        // Analyze the event
+
         let mut analysis =
             ThreatAnalysisResult::new("analysis-001".to_string(), "event-001".to_string());
         analysis.add_recommendation("Quarantine file".to_string());
-        // Create incident if needed
+
         if analysis.has_threats() {
             let incident = IncidentResponse::new(
                 "INC-2024-001".to_string(),
@@ -487,14 +345,15 @@ mod tests {
             assert!(incident.is_active());
             assert!(incident.is_high_priority());
         }
-        // Verify engine state
+
         assert_eq!(engine.detection_rules.len(), 1);
         assert_eq!(engine.get_enabled_rules().len(), 1);
     }
 }
-/// Type validation utilities
+
 pub mod validation {
-    /// Validate threat event
+    use super::*;
+    
     pub fn validate_threat_event(event: &ThreatEvent) -> Result<(), String> {
         if event.id.is_empty() {
             return Err("Event ID cannot be empty".to_string());
@@ -509,9 +368,6 @@ pub mod validation {
         Ok(())
     }
 
-    /// Validate detection rule
-
-
     pub fn validate_detection_rule(rule: &DetectionRule) -> Result<(), String> {
         if rule.id.is_empty() {
             return Err("Rule ID cannot be empty".to_string());
@@ -525,7 +381,7 @@ pub mod validation {
         
         Ok(())
     }
-    /// Validate threat intelligence indicator
+
     pub fn validate_threat_indicator(indicator: &ThreatIndicator) -> Result<(), String> {
         if indicator.value.is_empty() {
             return Err("Indicator value cannot be empty".to_string());
@@ -540,7 +396,6 @@ pub mod validation {
         Ok(())
     }
 
-    /// Validate security event
     pub fn validate_security_event(event: &SecurityEvent) -> Result<(), String> {
         if event.event_id.is_empty() {
             return Err("Event ID cannot be empty".to_string());

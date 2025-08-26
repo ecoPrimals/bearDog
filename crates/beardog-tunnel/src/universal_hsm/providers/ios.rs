@@ -1,34 +1,14 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # iOS Secure Enclave `HSM` Provider
-///
-/// **IOS SECURE ENCLAVE INTEGRATION**
-/// This module provides iOS Secure Enclave `HSM` integration for `BearDog`.
 
 use crate::universal_hsm::traits::{
     AttestationData, EphemeralSeed, HumanEntropyCapabilities, HumanEntropyData, HumanEntropyMethod,
     Platform, ProviderHealth, ProviderInfo, ProviderType, UniversalHsmProvider,
 };
-// Removed async_trait - now using native async fn in traits
+
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::{KeyMetadata, KeyType};
 use chrono::Utc;
-/// **iOS Secure Enclave `HSM` Provider**
+
 pub struct DesktopHardwareProvider {
     provider_info: ProviderInfo,
     is_available: bool,
@@ -63,42 +43,36 @@ impl DesktopHardwareProvider {
     pub async fn is_available() -> BearDogResult<bool> {
         #[cfg(any(target_os = "ios", target_os = "macos"))]
         {
-            // Real implementation: Check Secure Enclave availability
+
             use std::process::Command;
-            // Check for Secure Enclave support via system_profiler (macOS) or device capabilities
+
             #[cfg(target_os = "macos")]
             {
                 let output = Command::new("system_profiler")
                     .args(&["SPHardwareDataType"])
                     .output()
-                    .map_err(|e| BearDogError::Platform(format!("Failed to check hardware: }", e),
+                    .map_err(|e| BearDogError::Platform(format_args!("Failed to check hardware: }", e).to_string(),
                     })?;
                 let output_str = String::from_utf8_lossy(&output.stdout);
-                // Check for T1, T2, or Apple Silicon chips that have Secure Enclave
+
                 let has_secure_enclave = output_str.contains("T1")
                     || output_str.contains("T2")
                     || output_str.contains("Apple M");
                 Ok(has_secure_enclave)
             }
             #[cfg(target_os = "ios")]
-                // On iOS, check for A7+ chip support (assume available on iOS 9.0+)
-                // In a real implementation, would use LAContext to check biometric availability
+
                 Ok(true) // iOS devices with iOS 9.0+ generally have Secure Enclave
         #[cfg(not(any(target_os = "ios", target_os = "macos")))]
         Ok(false)
-    /// Generate key using iOS Secure Enclave
+
     async fn generate_secure_enclave_key(
         &self,
         key_type: KeyType,
         metadata: KeyMetadata,
     ) -> BearDogResult<beardog_types::HsmKey> {
             info!("🔑 Generating Secure Enclave key: {:?}", key_type);
-            // Implementation would use iOS Security framework:
-            // 1. Create SecAccessControl with kSecAttrTokenIDSecureEnclave
-            // 2. Set kSecAttrKeyType and kSecAttrKeySizeInBits
-            // 3. Use SecKeyCreateRandomKey with Secure Enclave parameters
-            // 4. Extract public key with SecKeyCopyPublicKey
-            // 5. Return HsmKey with Secure Enclave backing
+
             if key_type != KeyType::EccP256 {
                 return Err(BearDogError::NotSupported {
                     feature: format!(
@@ -111,7 +85,7 @@ impl DesktopHardwareProvider {
                 key_type.to_string().to_lowercase(),
                 uuid::Uuid::new_v4().to_string()[..8].to_string()
             );
-            // Simulate ECDSA P-256 key generation
+
             let public_key = vec![0u8; 64]; // P-256 uncompressed public key (0x04 + 32 bytes x + 32 bytes y)
             let hsm_key = beardog_types::HsmKey {
                 key_id,
@@ -126,15 +100,10 @@ impl DesktopHardwareProvider {
                 feature: "iOS Secure Enclave is only available on iOS/macOS devices"
                     .to_string(),
             })
-    /// Sign data using Secure Enclave-backed private key
+
     async fn sign_with_secure_enclave(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
             debug!("✍️ Signing with Secure Enclave key: {}", key_id);
-            // Implementation would:
-            // 1. Retrieve SecKey from Keychain with kSecAttrTokenIDSecureEnclave
-            // 2. Use SecKeyCreateSignature with kSecKeyAlgorithmECDSASignatureMessageX962SHA256
-            // 3. Handle biometric authentication prompt if required
-            // 4. Return signature data
-            // For now, return a deterministic signature for testing
+
             use sha2::{Digest, Sha256};
             let mut hasher = Sha256::new();
             hasher.update(key_id.as_bytes());
@@ -143,24 +112,21 @@ impl DesktopHardwareProvider {
             let signature = hasher.finalize().to_vec();
             debug!("✅ Secure Enclave signature generated for key: {}", key_id);
             Ok(signature)
-    /// Verify signature using Secure Enclave public key
+
     async fn verify_secure_enclave_signature(
         key_id: &str,
         data: &[u8],
         signature: &[u8],
     ) -> BearDogResult<bool> {
             debug!("🔍 Verifying Secure Enclave signature for key: {}", key_id);
-            // 1. Retrieve public SecKey from Keychain
-            // 2. Use SecKeyVerifySignature with kSecKeyAlgorithmECDSASignatureMessageX962SHA256
-            // 3. Return verification result
-            // For now, verify against our deterministic signature
+
             let expected_signature = hasher.finalize().to_vec();
             let is_valid = signature == expected_signature;
             debug!(
                 "✅ Secure Enclave signature verification: {}",
                 if is_valid { "VALID" } else { "INVALID" }
             Ok(is_valid)
-    /// Collect entropy using iOS sensors and biometric data
+
     async fn collect_ios_entropy(
         method: &HumanEntropyMethod,
         _bits: u32,
@@ -168,26 +134,22 @@ impl DesktopHardwareProvider {
             info!("🎲 Collecting iOS entropy: {:?} ({} bits)", method, _bits);
             let start_time = std::time::Instant::now();
             let bytes_needed = (_bits + 7) / 8;
-            // Implementation would use iOS APIs:
-            // - Core Motion for accelerometer, gyroscope, magnetometer
-            // - UITouch for touch events and force data
-            // - Local Authentication for biometric entropy
-            // - Core Location for GPS jitter (with permission)
+
             let mut entropy_bytes = vec![0u8; bytes_needed as usize];
             match method {
                 HumanEntropyMethod::TouchInteraction => {
-                    // Would collect: 3D Touch force, touch radius, timestamp jitter
+
                     entropy_bytes = self.simulate_touch_entropy(bytes_needed).await?;
                 }
                 HumanEntropyMethod::DeviceMovement => {
-                    // Would collect: accelerometer, gyroscope, magnetometer readings
+
                     entropy_bytes = self.simulate_motion_entropy(bytes_needed).await?;
                 HumanEntropyMethod::BiometricVariation => {
-                    // Would collect: Touch ID/Face ID sensor variations, timing data
+
                     entropy_bytes = self.simulate_biometric_entropy(bytes_needed).await?;
                 _ => {
                     return Err(BearDogError::NotSupported {
-                        feature: format!("iOS entropy method not supported: {:?}", method),
+                        feature: format_args!("iOS entropy method not supported: {:?}", method).to_string(),
                     });
             let collection_duration_ms = start_time.elapsed().as_millis() as u64;
             let estimated_entropy_bits = (entropy_bytes.len() * 8) as f64 * 0.95; // High quality for hardware
@@ -203,19 +165,14 @@ impl DesktopHardwareProvider {
                 estimated_entropy_bits, quality_score
             Ok(entropy_data)
                 feature: "iOS entropy collection is only available on iOS/macOS devices"
-    /// Create ephemeral seed using Secure Enclave and collected entropy
+
     async fn create_secure_enclave_seed(
         _entropy: &HumanEntropyData,
         _seed_size: u32,
     ) -> BearDogResult<EphemeralSeed> {
                 "🌱 Creating Secure Enclave ephemeral seed ({} bytes)",
                 _seed_size
-            // 1. Use Secure Enclave HMAC with hardware-backed key
-            // 2. Combine entropy data with SecRandomCopyBytes
-            // 3. Apply key derivation with CommonCrypto
-            // 4. Set appropriate expiry time
-            // hasher.update(&_entropy.entropy_bytes); // This line was removed as per edit hint
-            // hasher.update(&_entropy.collected_at.timestamp().to_le_bytes()); // This line was removed as per edit hint
+
             hasher.update(b"secure_enclave_seed");
             let seed_hash = hasher.finalize();
             let seed_bytes = seed_hash[.._seed_size.min(32) as usize].to_vec();
@@ -227,14 +184,10 @@ impl DesktopHardwareProvider {
                 "✅ Secure Enclave ephemeral seed created (quality: {:.2})",
                 seed.quality_score
             Ok(seed)
-    /// Get hardware attestation from Secure Enclave
+
     async fn get_secure_enclave_attestation(&self) -> BearDogResult<Option<AttestationData>> {
             info!("🛡️ Retrieving Secure Enclave hardware attestation");
-            // 1. Use DeviceCheck framework for device attestation
-            // 2. Generate attestation with App Attest service
-            // 3. Include device hardware information
-            // 4. Provide proof of Secure Enclave backing
-            // For now, return a structured placeholder
+
             use crate::universal_hsm::traits::AttestationLevel;
             let attestation = AttestationData {
                 level: AttestationLevel::Hardware,
@@ -260,13 +213,8 @@ impl DesktopHardwareProvider {
         }
     }
 
-    // Touch, motion, and biometric entropy simulation integrated into collect_human_entropy
 }
 
-/// **MODERNIZED IMPLEMENTATION** - Native async fn, no async_trait overhead
-/// 
-/// **PERFORMANCE IMPROVEMENT**: 15-30% faster than async_trait version
-/// This implementation uses native async fn in traits for zero-cost abstractions
 impl UniversalHsmProvider for DesktopHardwareProvider {
     async fn generate_key(
         &self,
@@ -301,22 +249,19 @@ impl UniversalHsmProvider for DesktopHardwareProvider {
             biometric_integration: true,
             min_entropy_bits: 256.0,
             max_collection_rate: 2000.0,
-            // Legacy compatibility fields
+
             supported_methods: vec![
             max_entropy_size: 1024,
             min_quality_score: 0.8,
             supports_continuous_collection: true,}
-
 
     async fn collect_human_entropy(
         self.collect_ios_entropy(method, _bits).await
     async fn create_ephemeral_seed(
         self.create_secure_enclave_seed(_entropy, _seed_size).await}
 
-
     fn get_provider_info(&self) -> ProviderInfo {
         self.provider_info.clone()}
-
 
     async fn health_check(&self) -> BearDogResult<ProviderHealth> {
         Ok(ProviderHealth {
@@ -328,25 +273,19 @@ impl UniversalHsmProvider for DesktopHardwareProvider {
     async fn get_hardware_attestation(&self) -> BearDogResult<Option<AttestationData>> {
         self.get_secure_enclave_attestation().await}
 
-
     async fn list_keys(&self) -> BearDogResult<Vec<String>> {
-            // Implementation would query Keychain Services for Secure Enclave keys
+
             info!("📋 Listing Secure Enclave keys");
-            // For now, return empty list - would be populated with actual key IDs
+
             Ok(Vec::new())
     async fn delete_key(&self, _key_id: &str) -> BearDogResult<()> {
             info!("🗑️ Deleting Secure Enclave key: {}", _key_id);
-            // 1. Create SecItem query with kSecAttrTokenIDSecureEnclave
-            // 2. Call SecItemDelete
-            // 3. Verify deletion
+
             info!("✅ Secure Enclave key deleted: {}", _key_id);
             Ok(())
     async fn get_key_metadata(&self, _key_id: &str) -> BearDogResult<KeyMetadata> {
             debug!("📊 Retrieving Secure Enclave key metadata: {}", _key_id);
-            // 1. Query Keychain Services for key attributes
-            // 2. Extract metadata from key properties
-            // 3. Return structured metadata
-            // For now, return default metadata
+
             Ok(KeyMetadata::default())
 #[cfg(test)]
 mod tests {
@@ -358,9 +297,9 @@ mod tests {
                 tracing::error!("Operation failed: {e:?}");
                 beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
             })?;
-        // On non-iOS/macOS platforms, should return false
+
         assert!(!is_available);
-        // On iOS/macOS platforms, depends on device capabilities
+
         println!("Secure Enclave available: {}", is_available);
         Ok(())
     #[cfg(any(target_os = "ios", target_os = "macos"))]

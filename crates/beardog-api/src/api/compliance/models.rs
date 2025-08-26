@@ -1,28 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Compliance API Models
-///
-/// All request and response models for the compliance and audit API,
-/// including GDPR, HIPAA, SOX, PCI DSS, and other regulatory frameworks.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-// ====== RESPONSE MODELS ======
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceStatusResponse {
     pub overall_compliance_score: f64,
@@ -41,7 +21,6 @@ pub struct ComplianceFrameworkStatus {
     pub violations_count: u32,
     pub critical_issues: u32,
 }
-
 
 pub struct ComplianceOverviewResponse {
     pub assessment_period: String,
@@ -64,7 +43,6 @@ pub struct AuditFindings {
     pub pending: u32,
 }
 
-
 pub struct ComplianceMilestone {
     pub due_date: String,
     pub priority: String,
@@ -79,7 +57,6 @@ pub struct ComplianceHealthResponse {
     pub metrics: ComplianceMetrics,
 }
 
-
 pub struct ComplianceComponentHealth {
     pub health_percentage: f64,
     pub last_check: String,
@@ -90,7 +67,6 @@ pub struct ComplianceMetrics {
     pub violation_alerts_24h: u32,
     pub system_uptime_percentage: f64,
 }
-
 
 pub struct AuditTrailResponse {
     pub events: Vec<AuditEvent>,
@@ -115,7 +91,6 @@ pub struct AuditEvent {
     pub metadata: HashMap<String, String>,
 }
 
-
 pub struct AuditFilters {
     pub start_date: Option<String>,
     pub end_date: Option<String>,
@@ -130,7 +105,6 @@ pub struct GdprComplianceResponse {
     pub privacy_by_design: PrivacyByDesign,
     pub international_transfers: InternationalTransfers,
 }
-
 
 pub struct DataProcessingActivities {
     pub total_activities: u32,
@@ -147,7 +121,6 @@ pub struct DataSubjectRights {
     pub compliance_rate: f64,
 }
 
-
 pub struct PrivacyByDesign {
     pub impact_assessments_completed: u32,
     pub data_minimization_score: f64,
@@ -159,12 +132,11 @@ pub struct InternationalTransfers {
     pub standard_contractual_clauses: u32,
     pub binding_corporate_rules: u32,
     pub derogations_used: u32,
-// ====== REQUEST MODELS ======
+
 pub struct AuditTrailQuery {
     pub page: Option<u32>,
     pub per_page: Option<u32>,
 }
-
 
 pub struct LogAuditEventRequest {
 pub struct LogAuditEventResponse {
@@ -174,7 +146,6 @@ pub struct LogAuditEventResponse {
     pub encrypted: bool,
     pub tamper_proof: bool,
 }
-
 
 pub struct DataSubjectRequest {
     pub data_subject_id: String,
@@ -192,7 +163,6 @@ pub struct DataSubjectRequestResponse {
     pub processing_steps: Vec<String>,
     pub estimated_data_volume: String,
 }
-
 
 pub struct RightToBeForgottenRequest {
     pub verification_method: String,

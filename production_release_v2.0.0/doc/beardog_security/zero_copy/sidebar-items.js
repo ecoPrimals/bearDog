@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["buffer_pool","types"],"struct":["ZeroCopyCrypto"]};

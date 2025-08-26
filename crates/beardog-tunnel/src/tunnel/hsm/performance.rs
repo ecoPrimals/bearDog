@@ -1,25 +1,4 @@
-// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # HSM Performance Tracking Module
-///
-/// This module provides performance tracking functionality for HSM providers, including
-/// operation metrics, latency tracking, and provider selection based on performance.
 
 use super::types::{HsmCapabilities, HsmHealthStatus, HsmTier, SystemMetrics};
 use super::HsmProvider;
@@ -29,12 +8,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
-/// HSM performance tracker
+
 pub struct HsmPerformanceTracker {
     operation_metrics: Arc<RwLock<HashMap<String, OperationMetrics>>>,
     performance_config: PerformanceConfig,
 }
-/// Operation metrics for performance tracking
+
 #[derive(Debug, Clone)]
 pub struct OperationMetrics {
     pub total_operations: u64,
@@ -44,7 +23,7 @@ pub struct OperationMetrics {
     pub min_latency_ms: f64,
     pub max_latency_ms: f64,
     pub last_operation_time: chrono::DateTime<chrono::Utc>,
-/// HSM provider selection result
+
 #[derive(Clone)]
 pub struct HsmProviderSelection {
     pub provider: impl HsmProvider + Send + Sync + 'static,
@@ -53,11 +32,10 @@ pub struct HsmProviderSelection {
     pub confidence: f64,
     pub estimated_latency_ms: f64,}
 
-
 impl HsmPerformanceTracker {
     pub async fn new(config: PerformanceConfig) -> BearDogResult<Self> {
         Ok(Self {
-            operation_metrics: Arc::new(RwLock::new(HashMap::new())),
+            operation_metrics: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             performance_config: config,
         })
     }
@@ -69,7 +47,6 @@ impl HsmPerformanceTracker {
         metrics.record_success(latency_ms);
         Ok(())}
 
-
     pub async fn record_failure(&self, provider_id: &str, latency_ms: f64) -> BearDogResult<()> {
         metrics.record_failure(latency_ms);
     pub async fn get_provider_metrics(
@@ -79,11 +56,9 @@ impl HsmPerformanceTracker {
         let metrics_map = self.operation_metrics.read().await;
         Ok(metrics_map.get(provider_id).cloned())}
 
-
     pub async fn get_all_metrics(&self) -> BearDogResult<HashMap<String, OperationMetrics>> {
         Ok(metrics_map.clone())
 impl OperationMetrics {}
-
 
     pub fn new() -> Self {
         Self {
@@ -100,13 +75,12 @@ impl OperationMetrics {}
         self.successful_operations += 1;
         self.update_latency(latency_ms);}
 
-
     pub fn record_failure(&mut self, latency_ms: f64) {
         self.failed_operations += 1;
     fn update_latency(&mut self, latency_ms: f64) {
         self.min_latency_ms = self.min_latency_ms.min(latency_ms);
         self.max_latency_ms = self.max_latency_ms.max(latency_ms);
-        // Update average latency
+
         self.average_latency_ms = ((self.average_latency_ms * (self.total_operations - 1) as f64)
             + latency_ms)
             / self.total_operations as f64;

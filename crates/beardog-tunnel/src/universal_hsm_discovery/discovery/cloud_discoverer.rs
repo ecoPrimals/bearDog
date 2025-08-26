@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Cloud HSM Discoverer
-///
-/// Discovers cloud-based HSMs including AWS KMS, Azure Key Vault, and Google Cloud KMS
 
 use super::super::*;
 use crate::tunnel::hsm::types::{
@@ -29,7 +10,7 @@ use beardog_types::config::network::security::SslConfig;
 use std::path::Path;
 use std::time::Duration;
 use tracing::{debug, info};
-// Temporary type alias for missing types
+
 #[derive(Debug, Clone)]
 pub struct RetryPolicy {
     pub max_attempts: u32,
@@ -37,11 +18,10 @@ pub struct RetryPolicy {
     pub max_delay_ms: u64,
 }
 pub type ConnectionType = String;
-/// Cloud HSM discoverer
+
 #[derive(Debug)]
 pub struct CloudDiscoverer;
 impl CloudDiscoverer {}
-
 
     pub fn new() -> BearDogResult<Self> {
         Ok(Self)
@@ -49,14 +29,14 @@ impl CloudDiscoverer {}
     pub async fn discover(&self, config: &DiscoveryConfig) -> BearDogResult<Vec<DiscoveredHsm>> {
         debug!("☁️ Discovering Cloud HSMs");
         let mut hsms = Vec::new();
-        // Try to discover AWS KMS
+
         if let Ok(aws_hsms) = self.discover_aws_kms(config).await {
             hsms.extend(aws_hsms);
         }
-        // Try to discover Azure Key Vault
+
         if let Ok(azure_hsms) = self.discover_azure_kv(config).await {
             hsms.extend(azure_hsms);
-        // Try to discover Google Cloud KMS
+
         if let Ok(gcp_hsms) = self.discover_gcp_kms(config).await {
             hsms.extend(gcp_hsms);
         info!("Found {} Cloud HSMs", hsms.len());
@@ -66,17 +46,17 @@ impl CloudDiscoverer {}
         config: &DiscoveryConfig,
     ) -> BearDogResult<Vec<DiscoveredHsm>> {
         debug!("🔍 Checking for AWS KMS availability");
-        // Check for AWS credentials/config
+
         if !self.has_aws_credentials() {
             return Ok(Vec::new());
         let regions = vec!["us-east-1", "us-west-2", "eu-west-1", "ap-southeast-1"];
         for region in regions {
             let hsm = DiscoveredHsm {
-                hsm_id: format!("aws-cloudhsm-{}", region),
-                name: format!("AWS CloudHSM ({})", region),
+                hsm_id: format_args!("aws-cloudhsm-{}", region).to_string(),
+                name: format_args!("AWS CloudHSM ({})", region).to_string(),
                 hsm_type: crate::universal_hsm_discovery::HsmType::Cloud,
                 endpoint: crate::universal_hsm_discovery::HsmEndpoint {
-                    address: format!("cloudhsm.{}.amazonaws.com", region),
+                    address: format_args!("cloudhsm.{}.amazonaws.com", region).to_string(),
                     port: Some(443),
                     protocol: "https".to_string(),
                     secure: true,
@@ -94,16 +74,16 @@ impl CloudDiscoverer {}
         debug!("🔍 Checking for Azure Key Vault availability");
         if !self.has_azure_credentials() {
         let mut discovered_hsms = Vec::new();
-        // Azure Key Vault discovery
+
         for region in &["eastus", "westus2", "northeurope"] {
-                hsm_id: format!("azure-keyvault-{}", region),
-                name: format!("Azure Key Vault ({})", region),
-                    address: format!("{}.vault.azure.net", region),
+                hsm_id: format_args!("azure-keyvault-{}", region).to_string(),
+                name: format_args!("Azure Key Vault ({})", region).to_string(),
+                    address: format_args!("{}.vault.azure.net", region).to_string(),
             discovered_hsms.push(hsm);
-        // Google Cloud KMS discovery
+
         for region in &["us-central1", "europe-west1", "asia-northeast1"] {
-                hsm_id: format!("gcp-kms-{}", region),
-                name: format!("Google Cloud KMS ({})", region),
+                hsm_id: format_args!("gcp-kms-{}", region).to_string(),
+                name: format_args!("Google Cloud KMS ({})", region).to_string(),
                     address: format!("cloudkms.googleapis.com"),
                 assigned_tier: HsmTier::HighSecurity,
         Ok(discovered_hsms)
@@ -115,7 +95,7 @@ impl CloudDiscoverer {}
             ("example-project", "us-central1"),
         ];
         for (project_id, location) in project_locations {
-                hsm_id: format!("gcp-kms-{}-{}", project_id, location),
+                hsm_id: format_args!("gcp-kms-{}-{}", project_id, location).to_string(),
                 vendor: "Google Cloud Platform".to_string(),
                 model: "Google Cloud KMS".to_string(),
                 version: "Current".to_string(),
@@ -142,7 +122,7 @@ impl CloudDiscoverer {}
                     }),
                 discovery_timestamp: chrono::Utc::now(),
     fn has_aws_credentials(&self) -> bool {
-        // Check for AWS credentials in environment or config files
+
         std::env::var("AWS_ACCESS_KEY_ID").is_ok()
             || std::env::var("AWS_PROFILE").is_ok()
             || Path::new(&format!(
@@ -151,11 +131,10 @@ impl CloudDiscoverer {}
             ))
             .exists()
     fn has_azure_credentials(&self) -> bool {
-        // Check for Azure credentials
+
         std::env::var("AZURE_CLIENT_ID").is_ok() || std::env::var("AZURE_TENANT_ID").is_ok()}
 
-
     fn has_gcp_credentials(&self) -> bool {
-        // Check for GCP credentials
+
         std::env::var("GOOGLE_APPLICATION_CREDENTIALS").is_ok()
             || std::env::var("GCLOUD_PROJECT").is_ok()

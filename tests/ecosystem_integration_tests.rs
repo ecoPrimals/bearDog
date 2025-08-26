@@ -1,26 +1,5 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-//! Ecosystem Integration Tests
-//!
-//! Tests for BearDog integration with ToadStool compute orchestration
-//! and genetic spawning network effects across the ecosystem
-
-// Use specific imports to avoid ambiguity
 use beardog::auth::{
     AlgorithmFamily, BearDogGenetics, CrossNodeOperation, CryptoChromosome, NodeCapability,
     NodeSpecialization, OperationType, ResourceLimits, SecurityClearance, SecurityTraits,
@@ -29,7 +8,6 @@ use beardog::auth::{
 use beardog::*;
 use std::collections::HashMap;
 
-// Add missing enum for compliance requirements
 #[derive(Debug, Clone, PartialEq)]
 enum ComplianceRequirement {
     GDPR,
@@ -38,7 +16,6 @@ enum ComplianceRequirement {
     HIPAA,
 }
 
-// Add placeholder GeneticsEngine struct
 struct GeneticsEngine;
 
 impl GeneticsEngine {
@@ -80,15 +57,14 @@ impl GeneticsEngine {
 
 #[tokio::test]
 async fn test_toadstool_compute_integration() -> BearDogResult<()> {
-    // Test BearDog's integration with ToadStool compute orchestration
+
     let _config = BearDogConfig::default();
 
-    // Create a cross-node operation to request compute from ToadStool
     let compute_request = CrossNodeOperation {
         operation_type: OperationType::Execute,
         target_resource: "toadstool-compute-001".to_string(),
         parameters: {
-            let mut params = HashMap::new();
+            let mut params = HashMap::with_capacity(16);
             params.insert(
                 "operation_type".to_string(),
                 "compute_execution".to_string(),
@@ -115,10 +91,8 @@ async fn test_toadstool_compute_integration() -> BearDogResult<()> {
         requester_signature: "mock_signature".to_string(),
     };
 
-    // Create genetics engine for genetic operations
     let genetics_engine = GeneticsEngine::new_placeholder();
 
-    // Create authorization proof
     let authorization_proof = genetics_engine
         .create_authorization_proof(
             &compute_request
@@ -133,10 +107,8 @@ async fn test_toadstool_compute_integration() -> BearDogResult<()> {
         )
         .await?;
 
-    // Verify authorization proof exists
     assert!(!authorization_proof.is_empty());
 
-    // Create BearDog genetics for the operation
     let beardog_genetics = BearDogGenetics {
         id: "beardog-security-v1".to_string(),
         crypto_chromosomes: vec![CryptoChromosome {
@@ -157,7 +129,6 @@ async fn test_toadstool_compute_integration() -> BearDogResult<()> {
         specializations: vec![NodeSpecialization::SecurityResponse],
     };
 
-    // Test successful integration
     assert_eq!(beardog_genetics.generation, 0);
     assert_eq!(beardog_genetics.security_clearance, SecurityClearance::High);
 
@@ -166,7 +137,7 @@ async fn test_toadstool_compute_integration() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_genetic_spawning_network_effects() -> BearDogResult<()> {
-    // Test genetic crossover between BearDog security and ToadStool compute
+
     let spawn_request = AuthSpawnRequest {
         parent_genetics: vec![
             BearDogGenetics {
@@ -236,26 +207,21 @@ async fn test_genetic_spawning_network_effects() -> BearDogResult<()> {
         target_environment: "production".to_string(),
     };
 
-    // Create genetics engine for recombination
     let genetics_engine = GeneticsEngine::new_placeholder();
 
-    // Test genetic recombination
     let child_genetics = genetics_engine
         .perform_genetic_recombination(&spawn_request)
         .await?;
 
-    // Verify child inherits capabilities from both parents
     assert!(!child_genetics.capabilities.is_empty());
     assert!(child_genetics.generation > 0);
 
-    // Test network effects calculation
     let _capabilities = vec![
         NodeCapability::SecurityAnalysis,
         NodeCapability::ComputeProvider,
         NodeCapability::ToadStoolCompute,
     ];
 
-    // Verify ecosystem integration capabilities
     assert!(spawn_request
         .required_capabilities
         .contains(&NodeCapability::SecurityAnalysis));
@@ -268,11 +234,10 @@ async fn test_genetic_spawning_network_effects() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_ecosystem_service_discovery() -> BearDogResult<()> {
-    // Test BearDog's integration with ecosystem service discovery (via SongBird)
+
     let config = BearDogConfig::default();
     let _core = BearDogCore::new(config).await?;
 
-    // Simulate service registration with ecosystem
     let service_registration = EcosystemServiceRegistration {
         service_id: "beardog-security-node-001".to_string(),
         service_type: EcosystemServiceType::SecurityProvider,
@@ -319,11 +284,10 @@ async fn test_ecosystem_service_discovery() -> BearDogResult<()> {
         ]),
     };
 
-    // Test that BearDog can format service registration for ecosystem
     let registration_json = serde_json::to_string(&service_registration)
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Should serialize service registration", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Should serialize service registration", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Should serialize service registration", e).to_string())
 })?;
 
     assert!(registration_json.contains("SecurityProvider"));
@@ -344,15 +308,13 @@ async fn test_ecosystem_service_discovery() -> BearDogResult<()> {
 async fn test_comprehensive_toadstool_integration() -> BearDogResult<()> {
     info!("🚀 Testing Comprehensive ToadStool Ecosystem Integration");
 
-    // Initialize BearDog with production-ready configuration
     let mut config = BearDogConfig::default();
     config.security.level = SecurityLevel::High;
     config.hsm.mobile.enabled = true;
     config.hsm.software.enabled = true;
     
     let core = Arc::new(BearDogCore::new(config).await?);
-    
-    // Test 1: Capability-based ToadStool Discovery
+
     info!("🔍 Test 1: Universal ToadStool Discovery");
     let discovery_request = CapabilityRequest {
         capability_types: vec![
@@ -378,13 +340,12 @@ async fn test_comprehensive_toadstool_integration() -> BearDogResult<()> {
     
     info!("✅ Discovered {} compute-capable services", discovered_services.len());
 
-    // Test 2: Security-Enhanced Genetic Spawning Request
     info!("🧬 Test 2: ToadStool Genetic Spawning Integration");
     let spawning_request = CrossNodeOperation {
         operation_type: OperationType::Execute,
         target_resource: "toadstool-genetic-compute".to_string(),
         parameters: {
-            let mut params = HashMap::new();
+            let mut params = HashMap::with_capacity(16);
             params.insert("operation_type".to_string(), "hybrid_genetic_spawning".to_string());
             params.insert("source_genetics".to_string(), "beardog_security_genetics_v1".to_string());
             params.insert("target_genetics".to_string(), "toadstool_compute_genetics_v1".to_string());
@@ -406,7 +367,6 @@ async fn test_comprehensive_toadstool_integration() -> BearDogResult<()> {
     info!("✅ Hybrid BearDog+ToadStool genetic spawning successful");
     info!("   🧬 Security genetics + Compute genetics = Universal capabilities");
 
-    // Test 3: Universal Platform Security Authorization
     info!("🔐 Test 3: Universal Platform Authorization");
     let platform_request = SecurityAuthorizationRequest {
         operation_id: "toadstool_universal_execution".to_string(),
@@ -436,7 +396,6 @@ async fn test_comprehensive_toadstool_integration() -> BearDogResult<()> {
     info!("✅ Universal platform authorization granted for {} platforms", platform_request.target_platforms.len());
     info!("   🏛️ Sovereignty preserved, human dignity maintained");
 
-    // Test 4: Network Effects Validation
     info!("📈 Test 4: Network Effects Performance Validation");
     let standalone_performance = measure_standalone_performance(&core).await?;
     let ecosystem_performance = measure_ecosystem_performance(&core).await?;
@@ -448,16 +407,13 @@ async fn test_comprehensive_toadstool_integration() -> BearDogResult<()> {
     info!("   🚀 Standalone: {:.0} ops/sec", standalone_performance.operations_per_second);
     info!("   🌐 Ecosystem: {:.0} ops/sec", ecosystem_performance.operations_per_second);
 
-    // Test 5: Fault Tolerance and Graceful Degradation
     info!("🛡️ Test 5: Fault Tolerance Testing");
-    
-    // Simulate ToadStool service unavailability
+
     let degraded_request = discovery_request.clone();
     core.simulate_service_unavailability("toadstool").await?;
     
     let fallback_services = core.discover_ecosystem_capabilities(&degraded_request).await?;
-    // Should gracefully fall back to local capabilities
-    
+
     core.restore_service_availability("toadstool").await?;
     let restored_services = core.discover_ecosystem_capabilities(&degraded_request).await?;
     assert!(restored_services.len() >= fallback_services.len(), "Service restoration should maintain or improve capability count");
@@ -474,7 +430,6 @@ async fn test_comprehensive_toadstool_integration() -> BearDogResult<()> {
     Ok(())
 }
 
-// Supporting types for ecosystem integration
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 struct EcosystemServiceRegistration {
     service_id: String,
@@ -520,5 +475,3 @@ struct TrustMetrics {
     community_reputation: f64,
 }
 
-// Remove duplicate enums - these are defined in the actual codebase
-// SpawnPurpose, NodeCapability, and AlgorithmFamily are imported from beardog modules

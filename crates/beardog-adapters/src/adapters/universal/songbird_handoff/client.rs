@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Universal SongBird Client
-///
-/// **Universal HTTP client for SongBird communication**
-/// This module provides a universal HTTP client for communicating with SongBird's
-/// discovery and orchestration platform. It handles service registration,
-/// heartbeats, and health updates in a domain-agnostic way.
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -28,30 +6,28 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use super::types::*;
 use beardog_errors::{BearDogError, BearDogResult};
-/// Universal SongBird Discovery Client
-/// HTTP client for communicating with SongBird's discovery and orchestration
-/// platform. Designed to work with any ecosystem component.
+
 pub struct SongBirdDiscoveryClient {
-    /// SongBird orchestrator endpoint
+
     endpoint: String,
-    /// API credentials for authentication
+
     api_key: String,
-    /// HTTP client for making requests
+
     client: reqwest::Client,
-    /// Client health status
+
     health_status: Arc<RwLock<ServiceHealth>>,
 }
 impl SongBirdDiscoveryClient {
-    /// Create a new universal SongBird client
-    pub async fn new(endpoint: String, api_key: String) -> BearDogResult<Self> {
+
+    pub async fn new(endpoint: &str, api_key: &str) -> BearDogResult<Self> {
         info!("🔗 Initializing Universal SongBird Discovery Client");
-        // Create HTTP client with universal configuration
+
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
             .user_agent("Universal-EcosystemComponent/1.0")
             .build()
             .map_err(|e| BearDogError::internal(format!("Failed to create HTTP client: {e}")))?;
-        // Initialize health status
+
         let health_status = Arc::new(RwLock::new(ServiceHealth {
             status: super::types::HealthStatus::Unknown,
             last_check: chrono::Utc::now(),
@@ -71,7 +47,7 @@ impl SongBirdDiscoveryClient {
             health_status,
         })
     }
-    /// Register a service with SongBird
+
     pub async fn register_service(
         &self,
         service: &AdvertisedService,
@@ -80,20 +56,20 @@ impl SongBirdDiscoveryClient {
             "📝 Registering service: {}",
             service.registration.service_id
         );
-        let registration_url = format!("{}/api/v1/services/register", self.endpoint);
-        // Create registration request
+        let registration_url = format_args!("{}/api/v1/services/register", self.endpoint).to_string();
+
         let request = self
             .client
             .post(&registration_url)
-            .header("Authorization", format!("Bearer {}", self.api_key))
+            .header("Authorization", format_args!("Bearer {}", self.api_key).to_string())
             .header("Content-Type", "application/json")
             .json(service);
-        // Send registration request
+
         let response = request
             .send()
             .await
             .map_err(|e| BearDogError::internal(format!("Registration request failed: {e}")))?;
-        // Check response status
+
         let status = response.status();
         if !status.is_success() {
             let error_text = response
@@ -104,7 +80,7 @@ impl SongBirdDiscoveryClient {
                 "Registration failed with status {status}: {error_text}"
             )));
         }
-        // Parse registration result
+
         let registration_result: ServiceRegistrationResult =
             response.json().await.map_err(|e| {
                 BearDogError::internal(format!("Failed to parse registration response: {e}"))
@@ -112,35 +88,35 @@ impl SongBirdDiscoveryClient {
         info!(
             "✅ Successfully registered service: {}",
         info!("🔗 Registration ID: {}", registration_result.service_id);
-        // Update health status
+
         self.update_health_status(true, 0).await;
         Ok(registration_result)
-    /// Send heartbeat to SongBird
+
     pub async fn send_heartbeat(&self) -> BearDogResult<()> {
         debug!("💓 Sending heartbeat to SongBird");
-        let heartbeat_url = format!("{}/api/v1/heartbeat", self.endpoint);
-        // Create heartbeat request
+        let heartbeat_url = format_args!("{}/api/v1/heartbeat", self.endpoint).to_string();
+
         let heartbeat_data = serde_json::json!({
             "timestamp": chrono::Utc::now().to_rfc3339(),
             "status": "healthy"
         });
             .post(&heartbeat_url)
             .json(&heartbeat_data);
-        // Send heartbeat
+
             .map_err(|e| BearDogError::internal(format!("Heartbeat request failed: {e}")))?;
             warn!("Heartbeat failed with status {}: {}", status, error_text);
-            // Update health status with error
+
             self.update_health_status(false, 1).await;
                 "Heartbeat failed with status {status}: {error_text}"
         debug!("✅ Heartbeat sent successfully");
         Ok(())
-    /// Update service health with SongBird
+
     pub async fn update_service_health(&self, service_id: &str) -> BearDogResult<()> {
         debug!("🏥 Updating service health for: {}", service_id);
-        let health_url = format!("{}/api/v1/services/{}/health", self.endpoint, service_id);
-        // Get current health status
+        let health_url = format_args!("{}/api/v1/services/{}/health", self.endpoint, service_id).to_string();
+
         let current_health = self.health_status.read().await.clone();
-        // Create health update request
+
         let health_data = serde_json::json!({
             "service_id": service_id,
             "status": current_health.status,
@@ -150,7 +126,7 @@ impl SongBirdDiscoveryClient {
             "uptime_percentage": 99.0
             .put(&health_url)
             .json(&health_data);
-        // Send health update
+
             .map_err(|e| BearDogError::internal(format!("Health update request failed: {e}")))?;
             warn!(
                 "Health update failed with status {}: {}",
@@ -158,45 +134,43 @@ impl SongBirdDiscoveryClient {
             );
                 "Health update failed with status {status}: {error_text}"
         debug!("✅ Service health updated successfully");
-    /// Unregister service from SongBird
+
     pub async fn unregister_service(&self, service_id: &str) -> BearDogResult<()> {
         debug!("🗑️ Unregistering service: {}", service_id);
-        let unregister_url = format!("{}/api/v1/services/{}", self.endpoint, service_id);
+        let unregister_url = format_args!("{}/api/v1/services/{}", self.endpoint, service_id).to_string();
             .delete(&unregister_url)
-            .header("Authorization", format!("Bearer {}", self.api_key));
-        // Send unregister request
+            .header("Authorization", format_args!("Bearer {}", self.api_key).to_string());
+
             .map_err(|e| BearDogError::internal(format!("Unregister request failed: {e}")))?;
             warn!("Unregister failed with status {}: {}", status, error_text);
                 "Unregister failed with status {status}: {error_text}"
         info!("✅ Service unregistered successfully: {}", service_id);
-    /// Get service information from SongBird
+
     pub async fn get_service_info(&self, service_id: &str) -> BearDogResult<AdvertisedService> {
         debug!("📋 Getting service info for: {}", service_id);
-        let info_url = format!("{}/api/v1/services/{}", self.endpoint, service_id);
+        let info_url = format_args!("{}/api/v1/services/{}", self.endpoint, service_id).to_string();
             .get(&info_url)
-        // Send info request
+
             .map_err(|e| BearDogError::internal(format!("Service info request failed: {e}")))?;
                 "Service info request failed with status {status}: {error_text}"
-        // Parse service info
+
         let service_info: AdvertisedService = response
             .json()
             .map_err(|e| BearDogError::internal(format!("Failed to parse service info: {e}")))?;
         debug!("✅ Service info retrieved successfully");
         Ok(service_info)
-    /// Test connection to SongBird
+
     pub async fn test_connection(&self) -> BearDogResult<()> {
         debug!("🔍 Testing connection to SongBird");
-        let health_url = format!("{}/api/v1/health", self.endpoint);
+        let health_url = format_args!("{}/api/v1/health", self.endpoint).to_string();
             .get(&health_url)
-        // Send health check request
+
             .map_err(|e| BearDogError::internal(format!("Connection test failed: {e}")))?;
                 "Connection test failed with status {status}: {error_text}"
         info!("✅ Connection to SongBird successful");
-    /// Get current health status
+
     pub async fn get_health_status(&self) -> ServiceHealth {
         self.health_status.read().await.clone()
-    /// Update health status}
-
 
     pub async fn update_health_status(&self, success: bool, error_count: u64) {
         let mut health = self.health_status.write().await;
@@ -206,7 +180,7 @@ impl SongBirdDiscoveryClient {
             super::types::HealthStatus::Unhealthy
         };
         health.last_check = chrono::Utc::now();
-        // Update error details based on success rate
+
         if success {
             health.error_details = None;
             health.error_details = Some(format!("Errors encountered: {error_count}"));

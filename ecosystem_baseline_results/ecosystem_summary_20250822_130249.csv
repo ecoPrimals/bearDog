@@ -1,7 +1,0 @@
-project,status,priority,expected_improvement,modernization_complete,timestamp,compilation_time,async_trait_count,arc_dyn_count,provider_trait_count,benchmark_results,file_count,line_count,crate_count
-beardog,modernized,reference,15-30%,True,2025-08-22T13:01:19.140892,,126,34,38,778,149970,20,failed
-songbird,in_progress,critical,50-60%,False,2025-08-22T13:01:20.137639,,100,41,33,776,205802,18,failed
-nestgate,pending,high,40-50%,False,2025-08-22T13:01:23.459330,,0,0,0,0,0,0,failed
-biomeOS,pending,medium,25-35%,False,2025-08-22T13:01:58.926451,,3,0,1,36,8735,6,not_found
-squirrel,pending,medium,30-40%,False,2025-08-22T13:02:21.887361,,225,140,38,1018,346407,17,failed
-toadstool,pending,medium,25-35%,False,2025-08-22T13:02:30.399292,,94,40,17,990,256226,16,failed

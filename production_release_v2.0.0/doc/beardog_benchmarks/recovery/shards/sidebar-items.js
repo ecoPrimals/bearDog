@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["KeyWorthinessDemo","RecoveryShard","ShardHolderInfo","ShardUsageRestrictions","TimeWindow"]};

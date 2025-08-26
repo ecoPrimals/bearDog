@@ -1,26 +1,4 @@
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-
-/// # OpenSSL Crypto Provider
-///
-/// This module provides the OpenSSL-based crypto provider implementation using OpenSSL bindings.
-/// It uses OpenSSL's AES-256-GCM for encryption/decryption, Ed25519 for signing/verification, and HMAC-SHA256 for key derivation.
 
 use super::super::types::*;
 use crate::tunnel::hsm::types::*;
@@ -32,9 +10,9 @@ use openssl::rand::rand_bytes;
 use openssl::sign::Signer;
 use openssl::symm::{Cipher, Crypter, Mode};
 use tracing::{debug, info};
-/// OpenSSL-based crypto provider using OpenSSL bindings
+
 impl OpenSslCryptoProvider {
-    /// Create a new OpenSSL crypto provider
+
     pub async fn new() -> BearDogResult<Self> {
         info!("Creating OpenSSL crypto provider");
         Ok(Self)
@@ -42,12 +20,10 @@ impl OpenSslCryptoProvider {
 }
 
 impl CryptoProvider for OpenSslCryptoProvider {
-    /// Initialize the crypto provider
+
     async fn initialize(&self) -> BearDogResult<()> {
         info!("Initializing OpenSSL crypto provider");
         Ok(())
-    /// Generate secure key material}
-
 
     async fn generate_key_material(&self, key_type: &KeyType) -> BearDogResult<Vec<u8>> {
         use rand::RngCore;
@@ -67,13 +43,12 @@ impl CryptoProvider for OpenSslCryptoProvider {
             key_material.len()
         );
         Ok(key_material)
-    /// Encrypt data with key
+
     async fn encrypt(&self, key_material: &[u8], plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
-        // use openssl::symm::{Cipher, Crypter, Mode};
-        // use openssl::rand::rand_bytes;
+
             "Encrypting {} bytes with OpenSSL crypto provider (AES-256-GCM)",
             plaintext.len()
-        // Ensure key is correct size for AES-256-GCM
+
         if key_material.len() != 32 {
             return Err(BearDogError::Crypto {
                 message: format!(
@@ -82,14 +57,12 @@ impl CryptoProvider for OpenSslCryptoProvider {
                 ),
             });
         }
-        // Generate secure nonce
+
         let mut nonce = vec![0u8; 12];
-        // Generate secure random nonce
-        rand::thread_rng().fill_bytes(&mut nonce);
         rand_bytes(&mut nonce).map_err(|e| BearDogError::Crypto {
-            message: format!("Failed to generate nonce: {e}"),
+            message: format!("Failed to generate secure nonce: {e}"),
         })?;
-        // Create encryptor
+
         let cipher = Cipher::aes_256_gcm();
         let mut crypter =
             Crypter::new(cipher, Mode::Encrypt, key_material, Some(&nonce)).map_err(|e| {
@@ -97,7 +70,7 @@ impl CryptoProvider for OpenSslCryptoProvider {
                     message: format!("Failed to create AES-256-GCM encryptor: {e}"),
                 }
             })?;
-        // Encrypt the data
+
         let mut ciphertext = vec![0u8; plaintext.len() + cipher.block_size()];
         let mut count =
             crypter
@@ -110,35 +83,35 @@ impl CryptoProvider for OpenSslCryptoProvider {
             .map_err(|e| BearDogError::Crypto {
                 message: format!("AES-256-GCM finalization failed: {e}"),
         ciphertext.truncate(count);
-        // Get authentication tag
+
         let mut tag = vec![0u8; 16];
         crypter
             .get_tag(&mut tag)
                 message: format!("Failed to get authentication tag: {e}"),
-        // Combine nonce + ciphertext + tag
+
         let mut result = nonce;
         result.extend(ciphertext);
         result.extend(tag);
         Ok(result)
-    /// Decrypt data with key
+
     async fn decrypt(&self, key_material: &[u8], ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
             "Decrypting {} bytes with OpenSSL crypto provider (AES-256-GCM)",
             ciphertext.len()
-        // Ensure ciphertext is large enough to contain nonce + tag
+
         if ciphertext.len() < 12 + 16 {
                     "Ciphertext too short: expected at least 28 bytes, got {}",
                     ciphertext.len()
-        // Extract nonce, ciphertext, and tag
+
         let nonce = &ciphertext[..12];
         let tag = &ciphertext[ciphertext.len() - 16..];
         let encrypted_data = &ciphertext[12..ciphertext.len() - 16];
-        // Create decryptor
+
             Crypter::new(cipher, Mode::Decrypt, key_material, Some(nonce)).map_err(|e| {
                     message: format!("Failed to create AES-256-GCM decryptor: {e}"),
-        // Set authentication tag
+
         crypter.set_tag(tag).map_err(|e| BearDogError::Crypto {
             message: format!("Failed to set authentication tag: {e}"),
-        // Decrypt the data
+
         let mut plaintext = vec![0u8; encrypted_data.len() + cipher.block_size()];
         let mut count = crypter
             .update(encrypted_data, &mut plaintext)
@@ -147,65 +120,41 @@ impl CryptoProvider for OpenSslCryptoProvider {
                 message: format!("AES-256-GCM authentication failed: {e}"),
         plaintext.truncate(count);
         Ok(plaintext)
-    /// Sign data with key
+
     async fn sign(&self, key_material: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
-        // use openssl::pkey::{PKey, Private};
-        // use openssl::sign::Signer;
+
             "Signing {} bytes with OpenSSL crypto provider (Ed25519)",
             data.len()
-        // Ensure key is correct size for Ed25519
+
                     "Invalid key size for Ed25519: expected 32 bytes, got {}",
-        // Create Ed25519 private key
+
         return Err(BearDogError::Crypto {
             message: "OpenSSL not available".to_string(),
         });
-        // The following code would be used if OpenSSL was available:
-        // let private_key = PKey::private_key_from_raw_bytes(key_material, openssl::pkey::Id::ED25519)
-        //     .map_err(|e| BearDogError::Crypto {
-        //         message: format!("Failed to create Ed25519 private key: {e}"),
-        //     })?;
-        //
-        // let mut signer = Signer::new_without_digest(&private_key)
-        //         message: format!("Failed to create Ed25519 signer: {e}"),
-        // Sign the data
-        // let signature = signer.sign_oneshot_to_vec(data)
-        //         message: format!("Ed25519 signing failed: {e}"),
-        // Ok(signature) // This line was commented out as per the new_code, so it's removed.
-    /// Verify signature with key
+
     async fn verify(
         &self,
         key_material: &[u8],
         data: &[u8],
         signature: &[u8],
     ) -> BearDogResult<bool> {
-        // use openssl::pkey::PKey;
-        // use openssl::sign::Verifier;
+
             "Verifying signature for {} bytes with OpenSSL crypto provider (Ed25519)",
-        // Ensure signature is correct size
+
         if signature.len() != 64 {
                     "Invalid signature size for Ed25519: expected 64 bytes, got {}",
                     signature.len()
-        // Create Ed25519 public key
-        // let public_key = PKey::public_key_from_raw_bytes(key_material, openssl::pkey::Id::ED25519)
-        //         message: format!("Failed to create Ed25519 public key: {e}"),
-        // let mut verifier = Verifier::new_without_digest(&public_key)
-        //         message: format!("Failed to create Ed25519 verifier: {e}"),
-        // match verifier.verify_oneshot(signature, data) {
-        //     Ok(true) => Ok(true),
-        //     Ok(false) => Ok(false),
-        //     Err(_) => Ok(false), // Invalid signature, not an error
-        // }
-    /// Derive key from master key
+
     async fn derive_key(
         master_key: &[u8],
         derivation_data: &[u8],
     ) -> BearDogResult<Vec<u8>> {
-        // use openssl::hash::MessageDigest;
+
         debug!("Deriving key with OpenSSL crypto provider (HMAC-SHA256)");
-        // Ensure master key is not empty
+
         if master_key.is_empty() {
                 message: "Master key cannot be empty".to_string(),
-        // Use HMAC-SHA256 for key derivation (simpler than HKDF)
+
         let key = PKey::hmac(master_key).map_err(|e| BearDogError::Crypto {
             message: format!("Failed to create HMAC key: {e}"),
         let mut signer =
@@ -246,9 +195,8 @@ mod tests {
             .decrypt(&key_material, &ciphertext)
         assert_eq!(plaintext, decrypted.as_slice());}
 
-
     async fn test_signing_verification() -> beardog_errors::BearDogResult<()> {
-        // Skip test if OpenSSL is not available (intentionally unimplemented)
+
         let key_result = provider.generate_key_material(&KeyType::EccP256).await;
         if let Err(e) = key_result {
             if e.to_string().contains("OpenSSL not available") {
@@ -270,7 +218,7 @@ mod tests {
         let is_valid = provider
             .verify(&key_material, data, &signature)
         assert!(is_valid);
-        // Test with different data
+
         let different_data = b"Different data";
         let is_invalid = provider
             .verify(&key_material, different_data, &signature)
@@ -281,10 +229,10 @@ mod tests {
         let derived_key1 = provider
             .derive_key(master_key, derivation_data)
         let derived_key2 = provider
-        // Same inputs should produce same outputs
+
         assert_eq!(derived_key1, derived_key2);
         assert!(!derived_key1.is_empty());
-        // Different derivation data should produce different keys
+
         let different_derivation_data = b"different_context";
         let different_key = provider
             .derive_key(master_key, different_derivation_data)

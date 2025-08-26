@@ -1,8 +1,4 @@
-//! biome.yaml Integration Demo for BearDog
-//!
-//! Demonstrates how BearDog parses and integrates with biome.yaml manifests
-//! to enable seamless biomeOS orchestration. Shows manifest-driven deployment,
-//! configuration management, and security context integration.
+
 
 use beardog_core::{
     BiomeYamlParser, BiomeManifest, BiomeEnvironment, BearDogCore,
@@ -15,50 +11,38 @@ use tracing::{info, warn, error};
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Initialize logging
+
     tracing_subscriber::fmt::init();
 
     info!("🌱 BearDog biome.yaml Integration Demo");
 
-    // Step 1: Parse biome.yaml manifest
     let manifest = demonstrate_manifest_parsing().await?;
 
-    // Step 2: Extract BearDog configuration from manifest
     demonstrate_beardog_config_extraction(&manifest).await?;
 
-    // Step 3: Validate security and compliance settings
     demonstrate_security_validation(&manifest).await?;
 
-    // Step 4: Configure BearDog based on manifest
     let beardog_core = demonstrate_beardog_configuration(&manifest).await?;
 
-    // Step 5: Generate services from manifest
     demonstrate_service_generation(&manifest).await?;
 
-    // Step 6: Resource allocation and scaling
     demonstrate_resource_management(&manifest).await?;
 
-    // Step 7: Network security integration
     demonstrate_network_security(&manifest).await?;
 
-    // Step 8: Deployment hooks and lifecycle
     demonstrate_deployment_lifecycle(&manifest).await?;
 
-    // Step 9: Environment-specific configuration
     demonstrate_environment_handling(&manifest).await?;
 
-    // Step 10: Integration with Universal Primal Provider
     demonstrate_primal_provider_integration(&beardog_core, &manifest).await?;
 
     info!("✅ biome.yaml Integration Demo completed successfully!");
     Ok(())
 }
 
-/// Demonstrate parsing a comprehensive biome.yaml manifest
 async fn demonstrate_manifest_parsing() -> BearDogResult<BiomeManifest> {
     info!("📖 === Step 1: Manifest Parsing ===");
 
-    // Parse the example biome.yaml file
     let manifest = BiomeYamlParser::parse_file("examples/biome.yaml").await?;
 
     info!("🎯 Parsed biome manifest:");
@@ -86,14 +70,12 @@ async fn demonstrate_manifest_parsing() -> BearDogResult<BiomeManifest> {
     Ok(manifest)
 }
 
-/// Extract and analyze BearDog-specific configuration
 async fn demonstrate_beardog_config_extraction(manifest: &BiomeManifest) -> BearDogResult<()> {
     info!("🐻 === Step 2: BearDog Configuration Extraction ===");
 
     if let Some(beardog_config) = BiomeYamlParser::extract_beardog_config(manifest).await? {
         info!("✅ Found BearDog configuration in manifest");
-        
-        // Analyze BearDog specific settings
+
         info!("🔒 Security Configuration:");
         if let Some(security_config) = beardog_config.config.get("security") {
             if let Some(encryption) = security_config.get("encryption") {
@@ -154,16 +136,13 @@ async fn demonstrate_beardog_config_extraction(manifest: &BiomeManifest) -> Bear
     Ok(())
 }
 
-/// Validate security and compliance settings
 async fn demonstrate_security_validation(manifest: &BiomeManifest) -> BearDogResult<()> {
     info!("🛡️ === Step 3: Security & Compliance Validation ===");
 
-    // Check environment-appropriate security settings
     match manifest.biome.environment {
         BiomeEnvironment::Production => {
             info!("🏭 Production environment detected - enforcing strict security");
-            
-            // Validate production security requirements
+
             if !manifest.security.encryption.encrypt_at_rest {
                 error!("❌ Production requires encryption at rest");
             } else {
@@ -193,7 +172,6 @@ async fn demonstrate_security_validation(manifest: &BiomeManifest) -> BearDogRes
         }
     }
 
-    // Validate security policies
     info!("📜 Security Policies:");
     for policy in &manifest.security.policies {
         info!("    - {} ({}): {} rules", 
@@ -201,7 +179,6 @@ async fn demonstrate_security_validation(manifest: &BiomeManifest) -> BearDogRes
         info!("      Enforcement: {}", policy.enforcement);
     }
 
-    // Check network security
     info!("🌐 Network Security:");
     info!("    Default Policies: {:?}", manifest.security.network_security.default_policies);
     info!("    Firewall Rules: {}", manifest.security.network_security.firewall_rules.len());
@@ -214,18 +191,14 @@ async fn demonstrate_security_validation(manifest: &BiomeManifest) -> BearDogRes
     Ok(())
 }
 
-/// Configure BearDog based on manifest settings
 async fn demonstrate_beardog_configuration(manifest: &BiomeManifest) -> BearDogResult<Arc<BearDogCore>> {
     info!("⚙️ === Step 4: BearDog Configuration ===");
 
-    // Create BearDog configuration from manifest
     let mut beardog_config = BearDogConfig::default();
-    
-    // Apply manifest-based configuration
+
     if let Some(beardog_manifest_config) = BiomeYamlParser::extract_beardog_config(manifest).await? {
         info!("🔧 Applying manifest configuration to BearDog");
-        
-        // Configure encryption settings
+
         if let Some(security_config) = beardog_manifest_config.config.get("security") {
             if let Some(encryption) = security_config.get("encryption") {
                 if let Some(algorithm) = encryption.get("default_algorithm").and_then(|v| v.as_str()) {
@@ -234,8 +207,7 @@ async fn demonstrate_beardog_configuration(manifest: &BiomeManifest) -> BearDogR
                 }
             }
         }
-        
-        // Configure compliance mode based on environment
+
         match manifest.biome.environment {
             BiomeEnvironment::Production => {
                 beardog_config.compliance.enabled_standards = vec!["GDPR", "HIPAA", "SOX"];
@@ -247,15 +219,13 @@ async fn demonstrate_beardog_configuration(manifest: &BiomeManifest) -> BearDogR
             }
         }
     }
-    
-    // Initialize BearDog with manifest-derived configuration
+
     let beardog_core = Arc::new(BearDogCore::new(beardog_config).await?);
     
     info!("✅ BearDog core initialized with manifest configuration");
     Ok(beardog_core)
 }
 
-/// Generate services from manifest definitions
 async fn demonstrate_service_generation(manifest: &BiomeManifest) -> BearDogResult<()> {
     info!("🌐 === Step 5: Service Generation ===");
 
@@ -278,7 +248,6 @@ async fn demonstrate_service_generation(manifest: &BiomeManifest) -> BearDogResu
     Ok(())
 }
 
-/// Demonstrate resource allocation and scaling configuration
 async fn demonstrate_resource_management(manifest: &BiomeManifest) -> BearDogResult<()> {
     info!("💾 === Step 6: Resource Management ===");
 
@@ -298,7 +267,6 @@ async fn demonstrate_resource_management(manifest: &BiomeManifest) -> BearDogRes
               quota.storage, (quota.storage / manifest.resources.total_storage) * 100.0);
     }
 
-    // Analyze scaling configurations
     info!("📈 Auto-scaling Configuration:");
     for (primal_name, config) in &manifest.primals {
         info!("    {}: {}-{} replicas", 
@@ -320,23 +288,19 @@ async fn demonstrate_resource_management(manifest: &BiomeManifest) -> BearDogRes
     Ok(())
 }
 
-/// Demonstrate network security integration
 async fn demonstrate_network_security(manifest: &BiomeManifest) -> BearDogResult<()> {
     info!("🔒 === Step 7: Network Security Integration ===");
 
     info!("🌐 Networking Mode: {}", manifest.networking.mode);
-    
-    // DNS Configuration
+
     info!("🔍 DNS Configuration:");
     info!("    Servers: {:?}", manifest.networking.dns.servers);
     info!("    Search Domains: {:?}", manifest.networking.dns.search_domains);
-    
-    // Load Balancer
+
     info!("⚖️ Load Balancer: {} ({})", 
           manifest.networking.load_balancer.lb_type,
           manifest.networking.load_balancer.algorithm);
 
-    // Service Mesh
     if manifest.networking.service_mesh.enabled {
         info!("🕸️ Service Mesh: {} enabled", manifest.networking.service_mesh.provider);
         if let Some(config) = manifest.networking.service_mesh.config.get("security") {
@@ -350,7 +314,6 @@ async fn demonstrate_network_security(manifest: &BiomeManifest) -> BearDogResult
         }
     }
 
-    // Network Policies for BearDog
     if let Some(beardog_config) = manifest.primals.get("beardog-primary") {
         info!("🛡️ BearDog Network Policies:");
         for policy in &beardog_config.security.network_policies {
@@ -364,7 +327,6 @@ async fn demonstrate_network_security(manifest: &BiomeManifest) -> BearDogResult
     Ok(())
 }
 
-/// Demonstrate deployment lifecycle hooks
 async fn demonstrate_deployment_lifecycle(manifest: &BiomeManifest) -> BearDogResult<()> {
     info!("🚀 === Step 8: Deployment Lifecycle ===");
 
@@ -381,8 +343,7 @@ async fn demonstrate_deployment_lifecycle(manifest: &BiomeManifest) -> BearDogRe
         info!("    📎 {} ({})", hook.name, hook.hook_type);
         info!("        Command: {:?}", hook.command);
         info!("        Timeout: {}s", hook.timeout);
-        
-        // Simulate hook execution
+
         match hook.hook_type.as_str() {
             "pre_deploy" => {
                 info!("        🔍 Pre-deployment hook would validate security configuration");
@@ -402,16 +363,14 @@ async fn demonstrate_deployment_lifecycle(manifest: &BiomeManifest) -> BearDogRe
     Ok(())
 }
 
-/// Demonstrate environment-specific configuration handling
 async fn demonstrate_environment_handling(manifest: &BiomeManifest) -> BearDogResult<()> {
     info!("🌍 === Step 9: Environment Configuration ===");
 
     info!("🎯 Environment: {:?}", manifest.biome.environment);
-    
-    // Environment variables
+
     info!("📝 Environment Variables:");
     for (key, value) in &manifest.environment {
-        // Don't log sensitive values
+
         let display_value = if key.to_lowercase().contains("secret") || 
                               key.to_lowercase().contains("password") ||
                               key.to_lowercase().contains("token") {
@@ -422,7 +381,6 @@ async fn demonstrate_environment_handling(manifest: &BiomeManifest) -> BearDogRe
         info!("    {}: {}", key, display_value);
     }
 
-    // Environment-specific security recommendations
     match manifest.biome.environment {
         BiomeEnvironment::Production => {
             info!("🏭 Production Environment Security Checklist:");
@@ -430,8 +388,7 @@ async fn demonstrate_environment_handling(manifest: &BiomeManifest) -> BearDogRe
             info!("    ✅ Encryption in transit: {}", manifest.security.encryption.encrypt_in_transit);
             info!("    ✅ Audit logging: {}", manifest.security.audit.enabled);
             info!("    ✅ Key rotation: {} days", manifest.security.encryption.key_rotation_days);
-            
-            // Check if BearDog has production-appropriate resources
+
             if let Some(beardog_config) = manifest.primals.get("beardog-primary") {
                 if beardog_config.scaling.min_replicas >= 2 {
                     info!("    ✅ High availability: {} min replicas", beardog_config.scaling.min_replicas);
@@ -468,14 +425,12 @@ async fn demonstrate_environment_handling(manifest: &BiomeManifest) -> BearDogRe
     Ok(())
 }
 
-/// Demonstrate integration with Universal Primal Provider
 async fn demonstrate_primal_provider_integration(
     beardog_core: &Arc<BearDogCore>,
     manifest: &BiomeManifest
 ) -> BearDogResult<()> {
     info!("🔌 === Step 10: Universal Primal Provider Integration ===");
 
-    // Get primal metadata from BearDog core
     let metadata = beardog_core.metadata();
     info!("🏷️ BearDog Primal Metadata:");
     info!("    Name: {}", metadata.name);
@@ -487,14 +442,12 @@ async fn demonstrate_primal_provider_integration(
           else if metadata.ai_first_score >= 0.8 { "Silver Standard" } 
           else { "Bronze Standard" });
 
-    // Get capabilities
     let capabilities = beardog_core.capabilities();
     info!("🎯 Available Capabilities: {}", capabilities.len());
     for capability in capabilities {
         info!("    - {:?}", capability);
     }
 
-    // Generate services based on manifest configuration
     if let Some(beardog_config) = BiomeYamlParser::extract_beardog_config(manifest).await? {
         let services = BiomeYamlParser::convert_to_primal_services(&beardog_config.services).await?;
         
@@ -505,7 +458,6 @@ async fn demonstrate_primal_provider_integration(
             info!("        Endpoint Security: TLS={}", service.endpoint.security.require_tls);
         }
 
-        // Simulate registration with service mesh (if available)
         info!("🕸️ Registering BearDog services with ecosystem service mesh:");
         info!("    Metadata: Compatible with biome manifest");
         info!("    Services: {} services ready for registration", services.len());

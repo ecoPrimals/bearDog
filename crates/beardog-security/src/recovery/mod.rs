@@ -1,31 +1,11 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Security Recovery Module
-///
-/// This module provides security recovery mechanisms for key recovery,
-/// account recovery, and security incident response.
 
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::security::{SecurityContext, SecurityLevel};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
-// Import recovery sub-modules
+
 pub mod challenges;
 pub mod ephemeral;
 pub mod federation;
@@ -34,24 +14,24 @@ pub mod sessions;
 pub mod shards;
 pub mod social;
 pub mod types;
-// Re-export recovery types
+
 pub use types::*;
-/// Recovery Manager - Handles all recovery operations
+
 #[derive(Debug, Clone)]
 pub struct RecoveryManager {
-    pub config: RecoveryConfig,
+    pub config: UnifiedRecoveryConfig,
     pub active_keys: HashMap<String, EphemeralRecoveryKey>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[deprecated(since = "3.1.0", note = "Use UnifiedRecoveryConfig instead")]
+#[deprecated(since = "3.1.0", note = "Use UnifiedRecoveryConfig instead")]
 pub struct RecoveryConfig {
     pub enable_social_recovery: bool,
     pub enable_shard_recovery: bool,
     pub enable_federation_recovery: bool,
     pub key_expiry_hours: u64,}
 
-
 impl Default for RecoveryConfig {}
-
 
     fn default() -> Self {
         Self {
@@ -69,14 +49,11 @@ pub struct EphemeralRecoveryKey {
     pub expires_at: chrono::DateTime<chrono::Utc>,
     pub is_active: bool,}
 
-
 impl RecoveryManager {}
 
-
     pub fn new() -> Self {
-            config: RecoveryConfig::default(),
-            active_keys: HashMap::new(),}
-
+            config: UnifiedRecoveryConfig::default(),
+            active_keys: HashMap::with_capacity(16),}
 
     pub async fn generate_ephemeral_key(
         &mut self,
@@ -104,8 +81,8 @@ impl RecoveryManager {}
         } else {
             Ok(false)
     async fn generate_secure_key(&self) -> BearDogResult<Vec<u8>> {
-        // Generate a secure random key
+
         use rand::RngCore;
         let mut key = vec![0u8; 32];
         rand::thread_rng().fill_bytes(&mut key);
-// All recovery operations now use BearDogError directly for unified error handling
+

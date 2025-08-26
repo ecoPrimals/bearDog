@@ -1,35 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Peer-to-Peer Resource Sharing
-///
-/// **Empowering individuals to share resources with friends through explicit consent**
-/// This module implements Beardog's core peer-to-peer sharing capabilities:
-/// - Friend-to-friend compute sharing (CPU, GPU, memory)
-/// - Community storage pools with encryption
-/// - Consent-based resource lending
-/// - Usage tracking and fair allocation
-/// - Automated friend network discovery
-/// ## Core Principles
-/// - **Individual Control**: Only you decide what to share and with whom
-/// - **Explicit Consent**: Every resource share requires explicit friend consent
-/// - **Privacy First**: All sharing is encrypted and logged locally
-/// - **Fair Usage**: Built-in mechanisms to prevent abuse
-/// - **Human Dignity**: Technology serves the individual, not corporations
 
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
@@ -41,13 +10,13 @@ use uuid::Uuid;
 use super::models::{
     ActiveShare, ResourceAmount, ResourceType, ResourceUsageStats, SharingOffer, UsageDataPoint,
 };
-/// Peer-to-peer resource sharing engine
+
 pub struct ResourceSharingEngine {
-    /// Active sharing offers (outgoing)
+
     active_offers: Arc<RwLock<HashMap<String, SharingOfferInternal>>>,
-    /// Active shares (resources being used)
+
     active_shares: Arc<RwLock<HashMap<String, ActiveShareInternal>>>,
-    /// Friend network for resource discovery
+
     friend_network: Arc<RwLock<HashMap<String, FriendNode>>>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -92,29 +61,26 @@ struct FriendNode {
     pub usage_history: Vec<String>, // Share IDs
 impl Default for ResourceSharingEngine {}
 
-
     fn default() -> Self {
         Self::new()
     }
 impl ResourceSharingEngine {
-    /// Create new resource sharing engine}
-
 
     pub fn new() -> Self {
         info!("🤝 Initializing peer-to-peer resource sharing engine");
         Self {
-            active_offers: Arc::new(RwLock::new(HashMap::new())),
-            active_shares: Arc::new(RwLock::new(HashMap::new())),
-            friend_network: Arc::new(RwLock::new(HashMap::new())),
+            active_offers: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            active_shares: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            friend_network: Arc::new(RwLock::new(HashMap::with_capacity(16))),
         }
-    /// Create a resource sharing offer to friends
+
     pub async fn create_sharing_offer(
         &self,
-        from_node_id: String,
-        from_display_name: String,
+        from_node_id: &str,
+        from_display_name: &str,
         resource_type: ResourceType,
         resource_amount: ResourceAmount,
-        personal_message: String,
+        personal_message: &str,
         expires_hours: Option<i64>,
     ) -> Result<SharingOffer, Box<dyn std::error::Error + Send + Sync>> {
         info!(
@@ -124,7 +90,7 @@ impl ResourceSharingEngine {
         let offer_id = Uuid::new_v4().to_string();
         let now = Utc::now();
         let expires_at = expires_hours.map(|h| now + Duration::hours(h));
-        // Create temporary offer for workflow
+
         let temp_offer = SharingOffer {
             offer_id: offer_id.clone(),
             from_node_id: from_node_id.clone(),
@@ -136,7 +102,7 @@ impl ResourceSharingEngine {
             expires_at: expires_at.map(|dt| dt.to_rfc3339()),
             terms: self.generate_sharing_terms(&resource_type),
         };
-        // Create consent workflow for friend approval
+
         let workflow_id = self.create_consent_workflow(&temp_offer).await?;
         let offer_internal = SharingOfferInternal {
             created_at: now,
@@ -144,13 +110,13 @@ impl ResourceSharingEngine {
             consent_required: true,
             friends_notified: Vec::new(),
             workflow_id: Some(workflow_id),
-        // Store the offer
+
         {
             let mut offers = self.active_offers.write().await;
             offers.insert(offer_id.clone(), offer_internal);
-        // Notify friends about the offer
+
         self.notify_friends_of_offer(&offer_id).await?;
-        // Convert to public format (clone resource_type to avoid move issues)
+
         let terms = self.generate_sharing_terms(&resource_type);
         Ok(SharingOffer {
             offer_id,
@@ -161,26 +127,26 @@ impl ResourceSharingEngine {
             personal_message,
             terms,
         })
-    /// Accept a resource sharing offer from a friend
+
     pub async fn accept_sharing_offer(
         offer_id: &str,
-        _accepting_node_id: String,
-        _accepting_display_name: String,
+        _accepting_node_id: &str,
+        _accepting_display_name: &str,
     ) -> Result<ActiveShare, Box<dyn std::error::Error + Send + Sync>> {
         info!("✅ Accepting resource sharing offer: {}", offer_id);
-        // Find the offer
+
         let offer = {
             let offers = self.active_offers.read().await;
             offers
                 .get(offer_id)
                 .cloned()
                 .ok_or("Sharing offer not found")?
-        // Check if offer is still valid
+
         if let Some(expires_at) = offer.expires_at {
             if Utc::now() > expires_at {
                 return Err("Sharing offer has expired".into());
             }
-        // Create active share
+
         let share_id = Uuid::new_v4().to_string();
         let consent_record_id = Uuid::new_v4().to_string();
         let active_share_internal = ActiveShareInternal {
@@ -199,16 +165,16 @@ impl ResourceSharingEngine {
             expires_at: offer.expires_at,
             revocable: true,
             consent_record_id: consent_record_id.clone(),
-        // Store the active share
+
             let mut shares = self.active_shares.write().await;
             shares.insert(share_id.clone(), active_share_internal);
-        // Remove the offer since it's been accepted
+
             offers.remove(offer_id);
-        // Update friend network with successful sharing
+
         self.update_friend_trust_score(&offer.from_node_id, 0.1)
             .await?;
         info!("🎉 Resource sharing activated: {}", share_id);
-        // Convert to public format
+
         Ok(ActiveShare {
             share_id,
             friend_node_id: offer.from_node_id,
@@ -217,14 +183,14 @@ impl ResourceSharingEngine {
             usage_stats: ResourceUsageStats {
             started_at: Utc::now().to_rfc3339(),
             expires_at: offer.expires_at.map(|dt| dt.to_rfc3339()),
-    /// List all active sharing offers available from friends
+
     pub async fn list_available_offers(
     ) -> Result<Vec<SharingOffer>, Box<dyn std::error::Error + Send + Sync>> {
         debug!("📋 Listing available sharing offers from friend network");
         let offers = self.active_offers.read().await;
         let mut result = Vec::new();
         for offer in offers.values() {
-            // Only include offers that haven't expired
+
             if let Some(expires_at) = offer.expires_at {
                 if Utc::now() > expires_at {
                     continue;
@@ -241,7 +207,7 @@ impl ResourceSharingEngine {
                 terms: offer.terms.clone(),
             });
         Ok(result)
-    /// List all active resource shares
+
     pub async fn list_active_shares(
     ) -> Result<Vec<ActiveShare>, Box<dyn std::error::Error + Send + Sync>> {
         debug!("📊 Listing active resource shares");
@@ -270,7 +236,7 @@ impl ResourceSharingEngine {
                 started_at: share.started_at.to_rfc3339(),
                 expires_at: share.expires_at.map(|dt| dt.to_rfc3339()),
                 revocable: share.revocable,
-    /// Revoke an active resource share
+
     pub async fn revoke_share(
         share_id: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -281,11 +247,11 @@ impl ResourceSharingEngine {
             Ok(())
         } else {
             Err("Resource share not found".into())
-    /// Add a friend to the network
+
     pub async fn add_friend(
-        node_id: String,
-        display_name: String,
-        public_key: String,
+        node_id: &str,
+        display_name: &str,
+        public_key: &str,
         shared_resources: Vec<ResourceType>,
         info!("👥 Adding friend to network: {}", display_name);
         let friend = FriendNode {
@@ -299,7 +265,7 @@ impl ResourceSharingEngine {
         let mut network = self.friend_network.write().await;
         network.insert(node_id, friend);
         Ok(())
-    /// Update usage statistics for an active share
+
     pub async fn update_usage_stats(
         current_usage: u64,
         debug!("📈 Updating usage statistics for share: {}", share_id);
@@ -307,7 +273,7 @@ impl ResourceSharingEngine {
             share.usage_stats.current_usage = current_usage;
             if current_usage > share.usage_stats.peak_usage {
                 share.usage_stats.peak_usage = current_usage;
-            // Add data point to history
+
             share
                 .usage_stats
                 .usage_history
@@ -317,23 +283,22 @@ impl ResourceSharingEngine {
                     efficiency_score: self
                         .calculate_efficiency_score(current_usage, share.usage_stats.allocated),
                 });
-            // Update fair share score
+
             share.usage_stats.fair_share_score =
                 self.calculate_fair_share_score(&share.usage_stats);
-    // Private helper methods
-    /// Create consent workflow for sharing
+
     async fn create_consent_workflow(
         resource_offer: &SharingOffer,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         debug!("⚖️ Creating consent workflow for resource sharing");
-        // Simplified workflow creation - just return a UUID for now
+
         let workflow_id = Uuid::new_v4().to_string();
             "📋 Created sharing consent workflow {} for offer {}",
             workflow_id, resource_offer.offer_id
             "   Resource: {:?}, Friend: {}",
             resource_offer.resource_type, resource_offer.from_display_name
         Ok(workflow_id)
-    /// Generate standard sharing terms based on resource type
+
     fn generate_sharing_terms(&self, resource_type: &ResourceType) -> Vec<String> {
         let mut terms = vec![
             "Explicit consent required for all usage".to_string(),
@@ -353,35 +318,26 @@ impl ResourceSharingEngine {
                 terms.push("Network usage subject to bandwidth limits".to_string());
                 terms.push("No illegal network activities allowed".to_string());
         terms
-    /// Notify friends about a new sharing offer
+
     async fn notify_friends_of_offer(
             "📢 Notifying friend network about sharing offer: {}",
             offer_id
-        // In a real implementation, this would:
-        // 1. Send encrypted notifications to friends
-        // 2. Update friend discovery services
-        // 3. Broadcast to local network
-        // 4. Update consent workflows
-    /// Update a friend's trust score based on sharing interactions
+
     async fn update_friend_trust_score(
         friend_id: &str,
         delta: f64,
         if let Some(friend) = network.get_mut(friend_id) {
             friend.trust_score = (friend.trust_score + delta).clamp(0.0, 5.0);
             friend.last_seen = Utc::now();
-    /// Calculate efficiency score for resource usage}
-
 
     fn calculate_efficiency_score(&self, used: u64, allocated: u64) -> f64 {
         if allocated == 0 {
             return 0.0;
         let usage_ratio = used as f64 / allocated as f64;
-        // Efficiency peaks at around 70-80% usage
+
         if usage_ratio <= 0.8 {
             usage_ratio / 0.8
             1.0 - ((usage_ratio - 0.8) / 0.2) * 0.5
-    /// Calculate fair share score based on usage patterns}
-
 
     fn calculate_fair_share_score(&self, stats: &ResourceUsageStatsInternal) -> f64 {
         if stats.usage_history.is_empty() {
@@ -392,7 +348,7 @@ impl ResourceSharingEngine {
             .map(|dp| dp.efficiency_score)
             .sum::<f64>()
             / stats.usage_history.len() as f64;
-        // Penalty for consistently low usage
+
         let usage_ratio = stats.current_usage as f64 / stats.allocated as f64;
         if usage_ratio < 0.1 && stats.usage_history.len() > 10 {
             avg_efficiency * 0.7

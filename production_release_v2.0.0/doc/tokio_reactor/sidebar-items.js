@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["set_default","with_default"],"struct":["Background","DefaultGuard","Handle","PollEvented","Reactor","Registration","SetFallbackError","Shutdown","Turn"]};

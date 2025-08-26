@@ -1,48 +1,14 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Security Types Module
-///
-/// **CANONICAL SECURITY TYPES** - Unified security types for all BearDog operations
-/// This module provides the core security types that form the foundation of
-/// BearDog's security system, including configurations, providers, and data structures.
-
-use beardog_errors::{BearDogError, BearDogResult, SecurityError};
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-// Import sub-modules
-pub mod audit_types;
-pub mod auth_types;
-pub mod config_types;
-pub mod crypto_types;
-// Re-export types from sub-modules - avoid duplicates
-pub use audit_types::*;
-pub use crypto_types::*;
-// Only use specific items from auth_types and config_types to avoid conflicts
-pub use auth_types::{UserInfo};
-pub use config_types::{UnifiedSecurityConfig, BasicSecurityConfig, CryptoOptimizationConfig, AuthenticationConfig, AuthorizationConfig, HsmSettingsConfig, RateLimitConfig as ConfigRateLimitConfig, EncryptionConfig};
-// Core security types
-// SecurityProviderConfig moved to beardog-types::security - use that instead
+
+pub use beardog_types::canonical::security::*;
 pub use beardog_types::security::SecurityProviderConfig;
 
-
+impl Default for SecurityProviderConfig {
     fn default() -> Self {
         Self {
             max_failed_attempts: 5,
@@ -52,14 +18,9 @@ pub use beardog_types::security::SecurityProviderConfig;
             require_mfa: false,
         }
     }
-// Rate limiting configuration - USE CANONICAL VERSION
-// Re-export from canonical security configuration
+}
+
 pub use beardog_types::canonical::configuration::security::RateLimitConfig;
-
-
-// Default implementation now provided by canonical type
-// Security provider implementation
-
 
 #[derive(Debug, Clone)]
 pub struct BearDogSecurityProvider {
@@ -73,146 +34,307 @@ pub struct BearDogSecurityProvider {
     pub audit_manager: AuditManager,
 }
 
-
+#[derive(Debug, Clone)]
 pub struct RateLimiter {
     pub config: RateLimitConfig,
     pub state: HashMap<String, RateLimiterState>,
+}
+
+#[derive(Debug, Clone)]
 pub struct RateLimiterState {
     pub requests: u32,
     pub last_reset: DateTime<Utc>,
 }
 
-
+#[derive(Debug, Clone)]
 pub struct SecurityRules {
     pub rules: Vec<SecurityRule>,
     pub default_policy: PolicyDecision,
     pub context: SecurityContext,
+}
+
+#[derive(Debug, Clone)]
 pub struct SecurityRule {
     pub id: String,
     pub condition: String,
     pub action: PolicyDecision,
 }
 
-
+#[derive(Debug, Clone, PartialEq)]
 pub enum PolicyDecision {
     Allow,
     Deny,
-    RequireAdditionalAuth,}
+    RequireAdditionalAuth,
+}
 
-
+#[derive(Debug, Clone)]
 pub struct SecurityContext {
     pub user_id: Option<String>,
     pub ip_address: Option<String>,
     pub user_agent: Option<String>,
-    pub timestamp: DateTime<Utc>,}
-
+    pub timestamp: DateTime<Utc>,
+}
 
 impl Default for SecurityContext {
+    fn default() -> Self {
+        Self {
             user_id: None,
             ip_address: None,
             user_agent: None,
-            timestamp: Utc::now(),}
-
+            timestamp: Utc::now(),
+        }
+    }
+}
 
 #[derive(Debug, Clone, Default)]
 pub struct SecurityProviderMetrics {
     pub successful_authentications: u64,
     pub failed_authentications: u64,
-    pub active_sessions: u64,
     pub blocked_requests: u64,
-    pub total_authentications: u64,
-    pub successful_authorizations: u64,
-    pub failed_authorizations: u64,
-    pub auth_success_rate: f64,
-    pub authz_success_rate: f64,
-    pub avg_response_time_ms: f64,
-    pub requests_per_second: f64,
-    pub error_rate: f64,
-    pub total_sessions_created: u64,
-    pub mfa_tokens_generated: u64,
-    pub mfa_verifications_successful: u64,
-    pub mfa_verifications_failed: u64,
-    pub uptime_seconds: u64,
-    pub low_risk_operations: u64,
-    pub medium_risk_operations: u64,
-    pub high_risk_operations: u64,
-    pub critical_risk_operations: u64,
-    pub collected_at: DateTime<Utc>,
+    pub active_sessions: u64,
+    pub security_events: u64,
 }
 
-
+#[derive(Debug, Clone)]
 pub struct SessionStore {
-    pub sessions: Arc<RwLock<HashMap<String, SecuritySession>>>,}
+    pub sessions: Arc<RwLock<HashMap<String, SessionData>>>,
+    pub config: UnifiedAuthConfig,
+}
 
-
-impl SessionStore {}
-
-
-    pub fn new() -> Self {
-            sessions: Arc::new(RwLock::new(HashMap::new())),}
-
-
-    pub async fn len(&self) -> usize {
-        let sessions = self.sessions.read().await;
-        sessions.len()
-impl Default for SessionStore {
-        Self::new()}
-
-
-pub struct AuditManager {
-    pub events: Arc<RwLock<Vec<SecurityAuditEvent>>>,}
-
-
-impl AuditManager {
-            events: Arc::new(RwLock::new(Vec::new())),}
-
-
-impl Default for AuditManager {
-pub struct SecuritySession {
-    pub session_id: String,
+#[derive(Debug, Clone)]
+pub struct SessionData {
     pub user_id: String,
     pub created_at: DateTime<Utc>,
-    pub expires_at: DateTime<Utc>,
-    pub is_active: bool,
+    pub last_accessed: DateTime<Utc>,
+    pub ip_address: String,
+    pub user_agent: String,
+    pub is_authenticated: bool,
 }
 
+#[derive(Debug, Clone)]
+#[deprecated(since = "3.1.0", note = "Use UnifiedAuthConfig instead")]
+#[deprecated(since = "3.1.0", note = "Use UnifiedAuthConfig instead")]
+pub struct SessionConfig {
+    pub timeout_minutes: u32,
+    pub max_sessions_per_user: u32,
+    pub require_secure_transport: bool,
+}
 
-pub struct SecurityAuditEvent {
-    pub event_id: String,
+impl Default for SessionConfig {
+    fn default() -> Self {
+        Self {
+            timeout_minutes: 60,
+            max_sessions_per_user: 5,
+            require_secure_transport: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct AuditManager {
+    pub config: AuditConfig,
+    pub events: Arc<RwLock<Vec<AuditEvent>>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct AuditConfig {
+    pub enabled: bool,
+    pub log_level: AuditLevel,
+    pub retention_days: u32,
+    pub max_events: usize,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AuditLevel {
+    Critical,
+    High,
+    Medium,
+    Low,
+    Debug,
+}
+
+#[derive(Debug, Clone)]
+pub struct AuditEvent {
+    pub id: String,
     pub event_type: String,
+    pub user_id: Option<String>,
+    pub timestamp: DateTime<Utc>,
     pub details: HashMap<String, String>,
-pub struct AuthenticationResult {
-    pub success: bool,
-    pub session_id: Option<String>,
-    pub message: String,
+    pub level: AuditLevel,
 }
 
+impl Default for AuditConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            log_level: AuditLevel::Medium,
+            retention_days: 90,
+            max_events: 10000,
+        }
+    }
+}
 
-pub struct AuthorizationResult {
-    pub authorized: bool,
-    pub permissions: Vec<String>,
-pub struct SecurityProviderHealth {
-    pub status: String,
-    pub last_check: DateTime<Utc>,}
-
-
-impl Default for BearDogSecurityProvider {
-            config: SecurityProviderConfig::default(),
-            rate_limiter: RateLimiter::default(),
+impl BearDogSecurityProvider {
+    pub fn new(config: SecurityProviderConfig) -> Self {
+        Self {
+            config: config.clone(),
+            rate_limiter: RateLimiter::new(RateLimitConfig::default()),
             security_rules: SecurityRules::default(),
-            locked_accounts: Arc::new(RwLock::new(HashMap::new())),
-            failed_attempts: Arc::new(RwLock::new(HashMap::new())),
+            locked_accounts: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            failed_attempts: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             metrics: SecurityProviderMetrics::default(),
-            session_store: SessionStore::default(),
-            audit_manager: AuditManager::default(),}
+            session_store: SessionStore::new(SessionConfig::default()),
+            audit_manager: AuditManager::new(AuditConfig::default()),
+        }
+    }
 
+    pub async fn is_account_locked(&self, user_id: &str) -> bool {
+        let locked_accounts = self.locked_accounts.read().await;
+        if let Some(locked_until) = locked_accounts.get(user_id) {
+            Utc::now() < *locked_until
+        } else {
+            false
+        }
+    }
 
-impl Default for RateLimiter {
-            config: RateLimitConfig::default(),
-            state: HashMap::new(),
+    pub async fn record_failed_attempt(&mut self, user_id: &str) {
+        let mut failed_attempts = self.failed_attempts.write().await;
+        let attempts = failed_attempts.entry(user_id.to_string()).or_insert(0);
+        *attempts += 1;
+
+        if *attempts >= self.config.max_failed_attempts {
+            let lockout_duration = chrono::Duration::minutes(self.config.lockout_duration_minutes as i64);
+            let locked_until = Utc::now() + lockout_duration;
+            
+            let mut locked_accounts = self.locked_accounts.write().await;
+            locked_accounts.insert(user_id.to_string(), locked_until);
+
+            failed_attempts.remove(user_id);
+        }
+    }
+
+    pub async fn record_successful_auth(&mut self, user_id: &str) {
+
+        let mut failed_attempts = self.failed_attempts.write().await;
+        failed_attempts.remove(user_id);
+
+        self.metrics.successful_authentications += 1;
+    }
+}
+
+impl RateLimiter {
+    pub fn new(config: RateLimitConfig) -> Self {
+        Self {
+            config,
+            state: HashMap::with_capacity(16),
+        }
+    }
+
+    pub fn is_rate_limited(&mut self, identifier: &str) -> bool {
+        let now = Utc::now();
+        let state = self.state.entry(identifier.to_string()).or_insert(RateLimiterState {
+            requests: 0,
+            last_reset: now,
+        });
+
+        if now.signed_duration_since(state.last_reset).num_seconds() >= self.config.window_seconds as i64 {
+            state.requests = 0;
+            state.last_reset = now;
+        }
+
+        state.requests += 1;
+        state.requests > self.config.max_requests
+    }
+}
+
 impl Default for SecurityRules {
+    fn default() -> Self {
+        Self {
             rules: Vec::new(),
             default_policy: PolicyDecision::Deny,
             context: SecurityContext::default(),
-// MIGRATION COMPLETE: Removed conversion from BearDogError to SecurityError
-// All functions now use BearDogError directly for unified error handling
+        }
+    }
+}
+
+impl SessionStore {
+    pub fn new(config: UnifiedAuthConfig) -> Self {
+        Self {
+            sessions: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            config,
+        }
+    }
+
+    pub async fn create_session(&self, user_id: &str, ip_address: &str, user_agent: &str) -> String {
+        let session_id = uuid::Uuid::new_v4().to_string();
+        let session_data = SessionData {
+            user_id,
+            created_at: Utc::now(),
+            last_accessed: Utc::now(),
+            ip_address,
+            user_agent,
+            is_authenticated: true,
+        };
+
+        let mut sessions = self.sessions.write().await;
+        sessions.insert(session_id.clone(), session_data);
+        session_id
+    }
+
+    pub async fn validate_session(&self, session_id: &str) -> Option<SessionData> {
+        let sessions = self.sessions.read().await;
+        sessions.get(session_id).cloned()
+    }
+}
+
+impl AuditManager {
+    pub fn new(config: AuditConfig) -> Self {
+        Self {
+            config,
+            events: Arc::new(RwLock::new(Vec::new())),
+        }
+    }
+
+    pub async fn log_event(&self, event_type: &str, user_id: Option<&str>, details: HashMap<&str, &str>, level: AuditLevel) {
+        if !self.config.enabled || level < self.config.log_level {
+            return;
+        }
+
+        let event = AuditEvent {
+            id: uuid::Uuid::new_v4().to_string(),
+            event_type,
+            user_id,
+            timestamp: Utc::now(),
+            details,
+            level,
+        };
+
+        let mut events = self.events.write().await;
+        events.push(event);
+
+        if events.len() > self.config.max_events {
+            events.remove(0);
+        }
+    }
+}
+
+impl PartialOrd for AuditLevel {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        use std::cmp::Ordering;
+        let self_val = match self {
+            AuditLevel::Debug => 0,
+            AuditLevel::Low => 1,
+            AuditLevel::Medium => 2,
+            AuditLevel::High => 3,
+            AuditLevel::Critical => 4,
+        };
+        let other_val = match other {
+            AuditLevel::Debug => 0,
+            AuditLevel::Low => 1,
+            AuditLevel::Medium => 2,
+            AuditLevel::High => 3,
+            AuditLevel::Critical => 4,
+        };
+        self_val.partial_cmp(&other_val)
+    }
+}

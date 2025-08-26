@@ -9,7 +9,7 @@ authors.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 async-stream = "0.3"
-async-trait = { workspace = true }
+# async-trait = { workspace = true }  # REMOVED: Modernized to native async fn
 axum = { workspace = true, features = ["ws"] }
 base64 = { workspace = true }
 chrono = { workspace = true }

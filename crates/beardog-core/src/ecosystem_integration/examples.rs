@@ -1,25 +1,4 @@
-// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Universal HSM Architecture Examples
-///
-/// This module provides comprehensive examples demonstrating BearDog's
-/// Universal HSM Architecture and ecosystem integration capabilities.
 
 use super::{
     IntegrationEngine, 
@@ -37,38 +16,27 @@ use std::sync::Arc;
 use tracing::{info, warn};
 use uuid::Uuid;
 
-/// Example: Complete Universal HSM Architecture Setup
-/// 
-/// This example demonstrates how to set up BearDog's Universal HSM Architecture
-/// with ecosystem integration through Songbird service mesh.
 pub async fn example_universal_hsm_setup() -> BearDogResult<()> {
     info!("🚀 Example: Universal HSM Architecture Setup");
 
-    // Step 1: Create and initialize the Integration Engine
     let mut integration_engine = IntegrationEngine::new();
-    
-    // Initialize Universal HSM Architecture
+
     integration_engine.initialize_universal_hsm().await?;
     info!("✅ Universal HSM Architecture initialized");
 
-    // Step 2: Integrate with ecosystem
     integration_engine.integrate_with_ecosystem().await?;
     info!("✅ Ecosystem integration completed");
 
-    // Step 3: Get Universal HSM Provider
     if let Some(universal_hsm) = integration_engine.get_universal_hsm() {
         info!("🔐 Universal HSM Provider available");
 
-        // Step 4: Demonstrate ecosystem provider discovery
         let discovered_providers = universal_hsm.discover_ecosystem_providers().await?;
         info!("🌐 Discovered {} ecosystem HSM providers", discovered_providers.len());
 
-        // Step 5: Get ecosystem status
         let status = universal_hsm.get_ecosystem_status().await?;
         info!("📊 Universal HSM Status: {}", serde_json::to_string_pretty(&status)?);
     }
 
-    // Step 6: Get comprehensive health status
     let health_status = integration_engine.get_service_health().await?;
     info!("🏥 Service Health: {}", serde_json::to_string_pretty(&health_status)?);
 
@@ -76,24 +44,17 @@ pub async fn example_universal_hsm_setup() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Example: Vendor-Agnostic HSM Operations
-/// 
-/// This example shows how to perform HSM operations in a vendor-agnostic manner
-/// using the Universal HSM Provider.
 pub async fn example_vendor_agnostic_operations() -> BearDogResult<()> {
     info!("🔐 Example: Vendor-Agnostic HSM Operations");
 
-    // Create Universal HSM Provider
     let universal_hsm = UniversalHsmProvider::new();
 
-    // Register a mock HSM provider for demonstration
     let mock_provider = MockHsmProvider::new();
     universal_hsm.register_provider(
         "mock_hsm_1".to_string(),
         Box::new(mock_provider),
     ).await?;
 
-    // Perform vendor-agnostic key operations
     info!("🔑 Generating key through Universal HSM");
     let key_metadata = KeyMetadata {
         usage: vec!["signing".to_string(), "verification".to_string()],
@@ -108,16 +69,13 @@ pub async fn example_vendor_agnostic_operations() -> BearDogResult<()> {
     let hsm_key = universal_hsm.generate_key(KeyType::EcdsaP256, key_metadata).await?;
     info!("✅ Generated key: {}", hsm_key.id);
 
-    // List all keys
     let keys = universal_hsm.list_keys().await?;
     info!("📋 Total keys in Universal HSM: {}", keys.len());
 
-    // Sign data
     let test_data = b"Hello, Universal HSM Architecture!";
     let signature = universal_hsm.sign_data(&hsm_key.id, test_data).await?;
     info!("✍️ Signed data, signature length: {} bytes", signature.len());
 
-    // Verify signature
     let is_valid = universal_hsm.verify_signature(&hsm_key.id, test_data, &signature).await?;
     info!("✅ Signature verification: {}", if is_valid { "VALID" } else { "INVALID" });
 
@@ -125,23 +83,16 @@ pub async fn example_vendor_agnostic_operations() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Example: Ecosystem HSM Provider Registration
-/// 
-/// This example demonstrates how to register BearDog as an HSM provider
-/// in the ecosystem and discover other providers.
 pub async fn example_ecosystem_provider_registration() -> BearDogResult<()> {
     info!("🌐 Example: Ecosystem HSM Provider Registration");
 
-    // Create Songbird service discovery client
     let mut songbird_discovery = SongbirdServiceDiscoveryFactory::create_for_development();
 
-    // Register BearDog as an HSM provider
     songbird_discovery.register_beardog_service().await?;
     info!("✅ BearDog registered as ecosystem HSM provider");
 
-    // Create and register a custom HSM provider
     let custom_provider = EcosystemHsmProvider {
-        id: format!("custom-hsm-{}", Uuid::new_v4()),
+        id: format_args!("custom-hsm-{}", Uuid::new_v4().to_string()),
         name: "Custom Hardware HSM".to_string(),
         vendor: "Example Corp".to_string(),
         capabilities: HsmCapabilities {
@@ -162,7 +113,6 @@ pub async fn example_ecosystem_provider_registration() -> BearDogResult<()> {
     songbird_discovery.register_hsm_provider(&custom_provider).await?;
     info!("✅ Custom HSM provider registered");
 
-    // Discover all HSM providers in the ecosystem
     let discovered_providers = songbird_discovery.discover_hsm_providers().await?;
     info!("🔍 Discovered {} HSM providers in ecosystem:", discovered_providers.len());
     
@@ -171,7 +121,6 @@ pub async fn example_ecosystem_provider_registration() -> BearDogResult<()> {
               provider.name, provider.vendor, provider.priority, provider.health_status);
     }
 
-    // Test ecosystem connectivity
     let is_connected = songbird_discovery.health_check().await?;
     info!("🏥 Ecosystem connectivity: {}", if is_connected { "HEALTHY" } else { "DEGRADED" });
 
@@ -179,24 +128,17 @@ pub async fn example_ecosystem_provider_registration() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Example: Failover and High Availability
-/// 
-/// This example demonstrates the failover capabilities of the Universal HSM
-/// Architecture when providers become unavailable.
 pub async fn example_failover_and_high_availability() -> BearDogResult<()> {
     info!("🛡️ Example: Failover and High Availability");
 
-    // Create Universal HSM with multiple providers
     let universal_hsm = UniversalHsmProvider::new();
 
-    // Register primary HSM provider
     let primary_provider = MockHsmProvider::new_with_reliability(0.7); // 70% success rate
     universal_hsm.register_provider(
         "primary_hsm".to_string(),
         Box::new(primary_provider),
     ).await?;
 
-    // Register backup HSM provider
     let backup_provider = MockHsmProvider::new_with_reliability(0.9); // 90% success rate
     universal_hsm.register_provider(
         "backup_hsm".to_string(),
@@ -205,7 +147,6 @@ pub async fn example_failover_and_high_availability() -> BearDogResult<()> {
 
     info!("✅ Registered primary and backup HSM providers");
 
-    // Perform operations that will trigger failover
     let key_metadata = KeyMetadata {
         usage: vec!["signing".to_string()],
         algorithm: "ECDSA-P256".to_string(),
@@ -216,7 +157,6 @@ pub async fn example_failover_and_high_availability() -> BearDogResult<()> {
         tags: ahash::HashMap::default(),
     };
 
-    // Attempt multiple key generations to demonstrate failover
     let mut successful_operations = 0;
     let total_operations = 10;
 
@@ -236,7 +176,6 @@ pub async fn example_failover_and_high_availability() -> BearDogResult<()> {
     info!("📊 Failover Results: {}/{} operations successful ({:.1}% success rate)", 
           successful_operations, total_operations, success_rate);
 
-    // Get ecosystem status
     let status = universal_hsm.get_ecosystem_status().await?;
     info!("🏥 Final ecosystem status: {}", serde_json::to_string_pretty(&status)?);
 
@@ -244,7 +183,6 @@ pub async fn example_failover_and_high_availability() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Mock HSM Provider for examples and testing
 #[derive(Debug)]
 pub struct MockHsmProvider {
     keys: Arc<tokio::sync::RwLock<HashMap<String, beardog_types::canonical::crypto::HsmKey>>>,
@@ -272,14 +210,13 @@ impl MockHsmProvider {
     }
 }
 
-// MODERNIZED: Native async fn implementation - no async_trait overhead
 impl HsmProvider for MockHsmProvider {
     async fn generate_key(&self, key_type: KeyType, metadata: KeyMetadata) -> BearDogResult<beardog_types::canonical::crypto::HsmKey> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM operation failed".to_string()));
         }
 
-        let key_id = format!("mock-key-{}", Uuid::new_v4());
+        let key_id = format_args!("mock-key-{}", Uuid::new_v4().to_string());
         let hsm_key = beardog_types::canonical::crypto::HsmKey {
             id: key_id.clone(),
             key_type,
@@ -369,7 +306,7 @@ impl HsmProvider for MockHsmProvider {
                 extractable: key.metadata.extractable,
             })
         } else {
-            Err(beardog_errors::BearDogError::not_found(format!("Key {} not found", key_id)))
+            Err(beardog_errors::BearDogError::not_found(format_args!("Key {} not found", key_id).to_string()))
         }
     }
 
@@ -378,7 +315,6 @@ impl HsmProvider for MockHsmProvider {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM signing failed".to_string()));
         }
 
-        // Return a mock signature (in real implementation, this would be cryptographically valid)
         let mut signature = b"mock_signature_".to_vec();
         signature.extend_from_slice(&data[..std::cmp::min(32, data.len())]);
         Ok(signature)
@@ -389,7 +325,6 @@ impl HsmProvider for MockHsmProvider {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM verification failed".to_string()));
         }
 
-        // Mock verification always returns true for simplicity
         Ok(true)
     }
 
@@ -398,7 +333,6 @@ impl HsmProvider for MockHsmProvider {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM encryption failed".to_string()));
         }
 
-        // Mock encryption (just prepend a marker)
         let mut encrypted = b"MOCK_ENCRYPTED:".to_vec();
         encrypted.extend_from_slice(data);
         Ok(encrypted)
@@ -409,7 +343,6 @@ impl HsmProvider for MockHsmProvider {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM decryption failed".to_string()));
         }
 
-        // Mock decryption (remove the marker prefix)
         if encrypted_data.starts_with(b"MOCK_ENCRYPTED:") {
             Ok(encrypted_data[15..].to_vec())
         } else {
@@ -445,11 +378,9 @@ impl HsmProvider for MockHsmProvider {
     }
 }
 
-/// Run all Universal HSM Architecture examples
 pub async fn run_all_examples() -> BearDogResult<()> {
     info!("🚀 Running all Universal HSM Architecture examples");
 
-    // Run examples in sequence
     example_universal_hsm_setup().await?;
     println!();
 

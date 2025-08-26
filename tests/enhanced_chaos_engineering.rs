@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Enhanced Chaos Engineering Test Suite for BearDog Security Manager
-//!
-//! This test suite extends the existing chaos testing framework with advanced
-//! fault injection scenarios, Byzantine fault tolerance, and recovery validation.
 
 use beardog_types::config::*;
 use beardog_core::*;
@@ -33,7 +13,6 @@ use tokio::time::timeout;
 mod chaos;
 pub use chaos::*;
 
-/// Enhanced chaos testing framework with advanced fault injection
 pub struct EnhancedChaosFramework {
     pub fault_injectors: Vec<Box<dyn FaultInjector + Send + Sync>>,
     pub recovery_validators: Vec<Box<dyn RecoveryValidator + Send + Sync>>,
@@ -42,7 +21,6 @@ pub struct EnhancedChaosFramework {
     pub test_harness: Arc<RwLock<ChaosTestHarness>>,
 }
 
-/// Byzantine fault scenario for testing distributed system resilience
 #[derive(Debug, Clone)]
 pub struct ByzantineScenario {
     pub name: String,
@@ -53,22 +31,20 @@ pub struct ByzantineScenario {
     pub expected_recovery_time: Duration,
 }
 
-/// Types of Byzantine fault behaviors
 #[derive(Debug, Clone)]
 pub enum ByzantineFaultBehavior {
-    /// Node sends conflicting information to different peers
+
     ConflictingMessages,
-    /// Node delays responses beyond acceptable thresholds
+
     DelayedResponses(Duration),
-    /// Node sends malformed or corrupted data
+
     CorruptedData,
-    /// Node stops responding entirely
+
     SilentFailure,
-    /// Node sends valid responses but with wrong signatures
+
     InvalidSignatures,
 }
 
-/// Performance baseline for comparison during chaos testing
 #[derive(Debug, Clone)]
 pub struct PerformanceBaseline {
     pub operation_type: String,
@@ -78,7 +54,6 @@ pub struct PerformanceBaseline {
     pub throughput_ops_per_sec: f64,
 }
 
-/// Chaos test harness for advanced scenarios
 pub struct ChaosTestHarness {
     pub security_manager: MemoryKeyManager,
     pub active_faults: HashMap<String, ActiveFault>,
@@ -86,7 +61,6 @@ pub struct ChaosTestHarness {
     pub byzantine_nodes: HashMap<String, ByzantineNode>,
 }
 
-/// Active fault tracking
 #[derive(Debug)]
 pub struct ActiveFault {
     pub fault_id: String,
@@ -96,7 +70,6 @@ pub struct ActiveFault {
     pub affected_components: Vec<String>,
 }
 
-/// Recovery metrics tracking
 #[derive(Debug, Default)]
 pub struct RecoveryMetrics {
     pub total_faults_injected: u64,
@@ -107,7 +80,6 @@ pub struct RecoveryMetrics {
     pub system_availability: f64,
 }
 
-/// Byzantine node simulation
 pub struct ByzantineNode {
     pub node_id: String,
     pub behavior: ByzantineFaultBehavior,
@@ -138,7 +110,6 @@ impl EnhancedChaosFramework {
         })
     }
 
-    /// Create predefined Byzantine fault scenarios
     fn create_byzantine_scenarios() -> Vec<ByzantineScenario> {
         vec![
             ByzantineScenario {
@@ -168,9 +139,8 @@ impl EnhancedChaosFramework {
         ]
     }
 
-    /// Establish performance baselines for comparison
     async fn establish_baselines() -> HashMap<String, PerformanceBaseline> {
-        let mut baselines = HashMap::new();
+        let mut baselines = HashMap::with_capacity(16);
         
         baselines.insert("key_generation".to_string(), PerformanceBaseline {
             operation_type: "key_generation".to_string(),
@@ -199,30 +169,24 @@ impl EnhancedChaosFramework {
         baselines
     }
 
-    /// Execute a comprehensive chaos engineering test scenario
     pub async fn execute_scenario(&self, scenario_name: &str) -> BearDogResult<ChaosTestResults> {
         let start_time = Instant::now();
         let scenario = self.byzantine_scenarios.iter()
             .find(|s| s.name == scenario_name)
-            .ok_or_else(|| BearDogError::internal(format!("Scenario {) not found", scenario_name),
+            .ok_or_else(|| BearDogError::internal(format_args!("Scenario {) not found", scenario_name).to_string(),
             })?;
 
         println!("🔥 Starting chaos scenario: {}", scenario.name);
         println!("📝 Description: {}", scenario.description);
 
-        // Phase 1: Establish baseline performance
         let baseline_metrics = self.measure_baseline_performance().await?;
-        
-        // Phase 2: Inject Byzantine faults
+
         self.inject_byzantine_faults(scenario).await?;
-        
-        // Phase 3: Monitor system behavior under fault
+
         let fault_metrics = self.monitor_system_under_fault(scenario.duration).await?;
-        
-        // Phase 4: Validate recovery
+
         let recovery_metrics = self.validate_recovery(scenario).await?;
-        
-        // Phase 5: Compare performance degradation
+
         let performance_impact = self.analyze_performance_impact(&baseline_metrics, &fault_metrics).await?;
 
         let total_duration = start_time.elapsed();
@@ -238,7 +202,6 @@ impl EnhancedChaosFramework {
         })
     }
 
-    /// Measure baseline system performance
     async fn measure_baseline_performance(&self) -> BearDogResult<SystemMetrics> {
         println!("📊 Measuring baseline performance...");
         
@@ -248,7 +211,7 @@ impl EnhancedChaosFramework {
         let num_operations = 100;
 
         for i in 0..num_operations {
-            // Test key generation
+
             let key_result = BearDogCrypto::generate_secure_random(32);
             if key_result.is_ok() {
                 successful_ops += 1;
@@ -256,7 +219,6 @@ impl EnhancedChaosFramework {
                 failed_ops += 1;
             }
 
-            // Test encryption
             if let Ok(key) = &key_result {
                 let encrypt_result = BearDogCrypto::encrypt_aes_gcm(key, b"test data", None);
                 if encrypt_result.is_ok() {
@@ -266,7 +228,6 @@ impl EnhancedChaosFramework {
                 }
             }
 
-            // Small delay to simulate realistic load
             tokio::time::sleep(Duration::from_millis(1)).await;
         }
 
@@ -282,7 +243,6 @@ impl EnhancedChaosFramework {
         })
     }
 
-    /// Inject Byzantine faults according to scenario
     async fn inject_byzantine_faults(&self, scenario: &ByzantineScenario) -> BearDogResult<()> {
         println!("💉 Injecting Byzantine faults...");
         
@@ -300,8 +260,8 @@ impl EnhancedChaosFramework {
             harness.byzantine_nodes.insert(node_id.clone(), byzantine_node);
             
             let fault = ActiveFault {
-                fault_id: format!("byzantine_{}_{}", scenario.name, node_id),
-                fault_type: format!("{:?}", scenario.fault_behavior),
+                fault_id: format_args!("byzantine_{}_{}", scenario.name, node_id).to_string(),
+                fault_type: format_args!("{:?}", scenario.fault_behavior).to_string(),
                 injected_at: Instant::now(),
                 duration: scenario.duration,
                 affected_components: vec![node_id.clone()],
@@ -315,7 +275,6 @@ impl EnhancedChaosFramework {
         Ok(())
     }
 
-    /// Monitor system behavior while faults are active
     async fn monitor_system_under_fault(&self, duration: Duration) -> BearDogResult<SystemMetrics> {
         println!("🔍 Monitoring system under fault for {:?}...", duration);
         
@@ -324,13 +283,11 @@ impl EnhancedChaosFramework {
         let mut failed_ops = 0;
         let mut total_ops = 0;
 
-        // Monitor system for the specified duration
         let end_time = start_time + duration;
         
         while Instant::now() < end_time {
             total_ops += 1;
-            
-            // Simulate operations under fault conditions
+
             let operation_result = self.simulate_operation_under_fault().await;
             
             if operation_result.is_ok() {
@@ -354,11 +311,9 @@ impl EnhancedChaosFramework {
         })
     }
 
-    /// Simulate an operation under fault conditions
     async fn simulate_operation_under_fault(&self) -> BearDogResult<()> {
         let harness = self.test_harness.read().await;
-        
-        // Check if any Byzantine nodes would interfere
+
         for (node_id, node) in &harness.byzantine_nodes {
             if !node.is_active {
                 continue;
@@ -366,50 +321,47 @@ impl EnhancedChaosFramework {
             
             match &node.behavior {
                 ByzantineFaultBehavior::ConflictingMessages => {
-                    // Simulate conflicting responses
+
                     if rand::random::<f64>() < 0.3 {
-                        return Err(BearDogError::internal(format!("Conflicting response from {)", node_id),
+                        return Err(BearDogError::internal(format_args!("Conflicting response from {)", node_id).to_string(),
                         });
                     }
                 },
                 ByzantineFaultBehavior::DelayedResponses(delay) => {
-                    // Simulate delayed responses
+
                     tokio::time::sleep(*delay).await;
                 },
                 ByzantineFaultBehavior::CorruptedData => {
-                    // Simulate corrupted data
+
                     if rand::random::<f64>() < 0.4 {
-                        return Err(BearDogError::internal(format!("Corrupted data from {)", node_id),
+                        return Err(BearDogError::internal(format_args!("Corrupted data from {)", node_id).to_string(),
                         });
                     }
                 },
                 ByzantineFaultBehavior::SilentFailure => {
-                    // Simulate timeout
+
                     if rand::random::<f64>() < 0.5 {
                         return Err(BearDogError::Timeout {
-                            message: format!("No response from {}", node_id),
+                            message: format_args!("No response from {}", node_id).to_string(),
                         });
                     }
                 },
                 ByzantineFaultBehavior::InvalidSignatures => {
-                    // Simulate invalid signatures
+
                     if rand::random::<f64>() < 0.2 {
-                        return Err(BearDogError::authentication(format!("Invalid signature from {)", node_id),
+                        return Err(BearDogError::authentication(format_args!("Invalid signature from {)", node_id).to_string(),
                         });
                     }
                 },
             }
         }
-        
-        // If no faults triggered, operation succeeds
+
         Ok(())
     }
 
-    /// Validate system recovery after faults are removed
     async fn validate_recovery(&self, scenario: &ByzantineScenario) -> BearDogResult<RecoveryMetrics> {
         println!("🔄 Validating system recovery...");
-        
-        // Remove Byzantine faults
+
         let mut harness = self.test_harness.write().await;
         for node_id in &scenario.faulty_nodes {
             if let Some(node) = harness.byzantine_nodes.get_mut(node_id) {
@@ -421,8 +373,7 @@ impl EnhancedChaosFramework {
         let recovery_start = Instant::now();
         let mut recovery_successful = false;
         let max_recovery_time = scenario.expected_recovery_time * 3; // Allow 3x expected time
-        
-        // Monitor recovery progress
+
         while recovery_start.elapsed() < max_recovery_time {
             let test_result = self.test_system_health().await;
             
@@ -435,8 +386,7 @@ impl EnhancedChaosFramework {
         }
         
         let actual_recovery_time = recovery_start.elapsed();
-        
-        // Update recovery metrics
+
         let mut harness = self.test_harness.write().await;
         if recovery_successful {
             harness.recovery_metrics.successful_recoveries += 1;
@@ -461,9 +411,8 @@ impl EnhancedChaosFramework {
         })
     }
 
-    /// Test overall system health
     async fn test_system_health(&self) -> BearDogResult<()> {
-        // Test key operations
+
         let key = BearDogCrypto::generate_secure_random(32)?;
         let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(&key, b"health check", None)?;
         let decrypted = BearDogCrypto::decrypt_aes_gcm(&key, &ciphertext, &nonce)?;
@@ -476,7 +425,6 @@ impl EnhancedChaosFramework {
         Ok(())
     }
 
-    /// Analyze performance impact of faults
     async fn analyze_performance_impact(
         &self,
         baseline: &SystemMetrics,
@@ -505,14 +453,13 @@ impl ChaosTestHarness {
     pub fn new() -> Self {
         Self {
             security_manager: MemoryKeyManager::new(),
-            active_faults: HashMap::new(),
+            active_faults: HashMap::with_capacity(16),
             recovery_metrics: RecoveryMetrics::default(),
-            byzantine_nodes: HashMap::new(),
+            byzantine_nodes: HashMap::with_capacity(16),
         }
     }
 }
 
-/// System metrics for performance measurement
 #[derive(Debug, Clone)]
 pub struct SystemMetrics {
     pub duration: Duration,
@@ -523,7 +470,6 @@ pub struct SystemMetrics {
     pub throughput_ops_per_sec: f64,
 }
 
-/// Recovery metrics for fault recovery validation
 #[derive(Debug)]
 pub struct RecoveryMetrics {
     pub recovery_successful: bool,
@@ -533,7 +479,6 @@ pub struct RecoveryMetrics {
     pub health_checks_failed: u32,
 }
 
-/// Performance impact analysis
 #[derive(Debug)]
 pub struct PerformanceImpact {
     pub throughput_degradation_percent: f64,
@@ -542,7 +487,6 @@ pub struct PerformanceImpact {
     pub availability_impact_percent: f64,
 }
 
-/// Comprehensive chaos test results
 #[derive(Debug)]
 pub struct ChaosTestResults {
     pub scenario_name: String,
@@ -554,7 +498,6 @@ pub struct ChaosTestResults {
     pub success: bool,
 }
 
-// Trait definitions for extensible fault injection
 pub trait FaultInjector {
     fn inject_fault(&self, fault_type: &str) -> BearDogResult<String>;
     fn remove_fault(&self, fault_id: &str) -> BearDogResult<()>;
@@ -564,7 +507,6 @@ pub trait RecoveryValidator {
     fn validate_recovery(&self) -> BearDogResult<bool>;
 }
 
-// Concrete fault injector implementations
 pub struct NetworkFaultInjector;
 pub struct MemoryFaultInjector;
 pub struct CryptoFaultInjector;
@@ -576,7 +518,7 @@ impl NetworkFaultInjector {
 
 impl FaultInjector for NetworkFaultInjector {
     fn inject_fault(&self, fault_type: &str) -> BearDogResult<String> {
-        Ok(format!("network_fault_{}", fault_type))
+        Ok(format_args!("network_fault_{}", fault_type).to_string())
     }
     
     fn remove_fault(&self, _fault_id: &str) -> BearDogResult<()> {
@@ -590,7 +532,7 @@ impl MemoryFaultInjector {
 
 impl FaultInjector for MemoryFaultInjector {
     fn inject_fault(&self, fault_type: &str) -> BearDogResult<String> {
-        Ok(format!("memory_fault_{}", fault_type))
+        Ok(format_args!("memory_fault_{}", fault_type).to_string())
     }
     
     fn remove_fault(&self, _fault_id: &str) -> BearDogResult<()> {
@@ -604,7 +546,7 @@ impl CryptoFaultInjector {
 
 impl FaultInjector for CryptoFaultInjector {
     fn inject_fault(&self, fault_type: &str) -> BearDogResult<String> {
-        Ok(format!("crypto_fault_{}", fault_type))
+        Ok(format_args!("crypto_fault_{}", fault_type).to_string())
     }
     
     fn remove_fault(&self, _fault_id: &str) -> BearDogResult<()> {
@@ -618,7 +560,7 @@ impl AuthFaultInjector {
 
 impl FaultInjector for AuthFaultInjector {
     fn inject_fault(&self, fault_type: &str) -> BearDogResult<String> {
-        Ok(format!("auth_fault_{}", fault_type))
+        Ok(format_args!("auth_fault_{}", fault_type).to_string())
     }
     
     fn remove_fault(&self, _fault_id: &str) -> BearDogResult<()> {
@@ -626,7 +568,6 @@ impl FaultInjector for AuthFaultInjector {
     }
 }
 
-// Recovery validator implementations
 pub struct SystemHealthValidator;
 pub struct DataIntegrityValidator;
 pub struct PerformanceValidator;
@@ -637,7 +578,7 @@ impl SystemHealthValidator {
 
 impl RecoveryValidator for SystemHealthValidator {
     fn validate_recovery(&self) -> BearDogResult<bool> {
-        // Simplified health check
+
         Ok(true)
     }
 }
@@ -648,7 +589,7 @@ impl DataIntegrityValidator {
 
 impl RecoveryValidator for DataIntegrityValidator {
     fn validate_recovery(&self) -> BearDogResult<bool> {
-        // Simplified integrity check
+
         Ok(true)
     }
 }
@@ -659,12 +600,10 @@ impl PerformanceValidator {
 
 impl RecoveryValidator for PerformanceValidator {
     fn validate_recovery(&self) -> BearDogResult<bool> {
-        // Simplified performance check
+
         Ok(true)
     }
 }
-
-// Enhanced Chaos Engineering Tests
 
 #[tokio::test]
 async fn test_byzantine_conflicting_messages() -> BearDogResult<()> {
@@ -724,8 +663,7 @@ async fn test_byzantine_corrupted_data() -> BearDogResult<()> {
 #[tokio::test]
 async fn test_concurrent_multiple_byzantine_faults() -> BearDogResult<()> {
     let framework = EnhancedChaosFramework::new().await?;
-    
-    // Execute multiple scenarios concurrently
+
     let scenarios = vec![
         "conflicting_auth_responses",
         "delayed_crypto_operations",
@@ -779,30 +717,26 @@ async fn test_concurrent_multiple_byzantine_faults() -> BearDogResult<()> {
 #[tokio::test]
 async fn test_system_resilience_under_extreme_load() -> BearDogResult<()> {
     let framework = EnhancedChaosFramework::new().await?;
-    
-    // Inject multiple types of faults simultaneously
+
     let mut harness = framework.test_harness.write().await;
-    
-    // Simulate extreme load conditions
+
     for i in 0..10 {
         let fault = ActiveFault {
-            fault_id: format!("extreme_load_fault_{}", i),
+            fault_id: format_args!("extreme_load_fault_{}", i).to_string(),
             fault_type: "extreme_load".to_string(),
             injected_at: Instant::now(),
             duration: Duration::from_secs(60),
-            affected_components: vec![format!("component_{}", i)],
+            affected_components: vec![format_args!("component_{}", i).to_string()],
         };
         harness.active_faults.insert(fault.fault_id.clone(), fault);
     }
     
     drop(harness);
-    
-    // Test system behavior under extreme conditions
+
     let start_time = Instant::now();
     let mut operations_completed = 0;
     let mut operations_failed = 0;
-    
-    // Run for 30 seconds under extreme load
+
     while start_time.elapsed() < Duration::from_secs(30) {
         let operation_result = timeout(
             Duration::from_millis(100),
@@ -823,8 +757,7 @@ async fn test_system_resilience_under_extreme_load() -> BearDogResult<()> {
     println!("  Operations Completed: {}", operations_completed);
     println!("  Operations Failed: {}", operations_failed);
     println!("  Success Rate: {:.2}%", success_rate * 100.0);
-    
-    // System should maintain at least 20% success rate under extreme conditions
+
     assert!(success_rate > 0.2, "System should maintain minimum functionality under extreme load");
     assert!(total_operations > 100, "System should continue processing operations");
     

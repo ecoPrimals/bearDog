@@ -1,46 +1,28 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// System workflow processors
-///
-/// Handles system maintenance and configuration workflows.
 use super::core::WorkflowProcessor;
 use crate::workflows::canonical::{
     Workflow, WorkflowExecutionStatus, WorkflowMetrics, WorkflowProcessingResult,
 };
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
+
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::workflow::WorkflowType;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use tracing::info;
 
-/// Configuration for system processors
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
+#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
 pub struct SystemProcessorConfig {
-    /// Enable automatic maintenance
+
     pub auto_maintenance: bool,
-    /// Maintenance window duration in hours
+
     pub maintenance_window_hours: u64,
-    /// Enable system rollback
+
     pub enable_rollback: bool,
 }
 impl Default for SystemProcessorConfig {}
-
 
     fn default() -> Self {
         Self {
@@ -49,26 +31,21 @@ impl Default for SystemProcessorConfig {}
             enable_rollback: true,
         }
     }
-/// System workflow processor
+
 #[derive(Debug)]
 pub struct SystemProcessor {
-    pub config: SystemProcessorConfig,}
-
+    pub config: UnifiedProcessorConfig,}
 
 impl SystemProcessor {
-    /// Create a new system processor}
 
-
-    pub fn new(config: SystemProcessorConfig) -> Self {
+    pub fn new(config: UnifiedProcessorConfig) -> Self {
         Self { config }
-    /// Create with default configuration
+
     pub fn new_default() -> Self {
         Self::new(SystemProcessorConfig::default())
 impl Default for SystemProcessor {
-            config: SystemProcessorConfig::default(),}
+            config: UnifiedProcessorConfig::default(),}
 
-
-// MODERNIZED: Native async fn implementation - no async_trait overhead
 #[allow(async_fn_in_trait)]
 impl WorkflowProcessor for SystemProcessor {
     async fn process_workflow(
@@ -87,10 +64,9 @@ impl WorkflowProcessor for SystemProcessor {
     fn name(&self) -> &str {
         "SystemProcessor"}
 
-
     fn can_handle(&self, workflow: &Workflow) -> bool {
         matches!(workflow.workflow_type, WorkflowType::SystemMaintenance)
-    /// Process system maintenance workflow
+
     async fn process_system_maintenance(
         let start_time = Instant::now();
         let operation_type = workflow
@@ -128,7 +104,7 @@ impl WorkflowProcessor for SystemProcessor {
             },
             warnings: vec![],
         })
-    /// Process configuration change workflow
+
     async fn process_configuration_change(
         info!("Processing configuration change: {}", operation_type);
             message: format!("Configuration update completed"),

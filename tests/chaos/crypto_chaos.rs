@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Crypto Chaos Testing Module
-//!
-//! Focused chaos engineering tests for cryptographic resilience including:
-//! - Encryption/decryption stress testing
-//! - Key corruption scenarios
-//! - Signature verification under pressure
 
 use super::{ChaosConfig, TestMetrics, TestResult};
 use beardog_errors::{BearDogError, BearDogResult};
@@ -29,7 +7,6 @@ use std::time::{Duration, Instant};
 use tokio::time::timeout;
 use tracing::{error, info, warn};
 
-/// Crypto chaos testing controller
 #[derive(Debug)]
 pub struct CryptoChaosController {
     config: ChaosConfig,
@@ -44,7 +21,6 @@ impl CryptoChaosController {
         }
     }
 
-    /// Test cryptographic operations under chaos
     pub async fn test_crypto_chaos(&self) -> BearDogResult<TestResult> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
@@ -98,24 +74,20 @@ impl CryptoChaosController {
         })
     }
 
-    /// Perform a cryptographic operation with chaos injection
     async fn perform_chaotic_crypto_operation(&self) -> BearDogResult<()> {
-        // Generate test data
-        let test_data = format!("chaos_test_data_{}", fastrand::u64(..));
-        let test_key = format!("chaos_key_{}", fastrand::u64(..));
 
-        // Inject random failures
+        let test_data = format_args!("chaos_test_data_{}", fastrand::u64(..).to_string());
+        let test_key = format_args!("chaos_key_{}", fastrand::u64(..).to_string());
+
         if fastrand::f64() < self.config.failure_rate {
             return Err(BearDogError::encryption("crypto", "Simulated crypto chaos failure".to_string(),
             ));
         }
 
-        // Perform encryption
         let encrypted =
             self.crypto
                 .encrypt_aes_gcm(test_key.as_bytes(), test_data.as_bytes(), None)?;
 
-        // Perform decryption
         let _decrypted = self.crypto.decrypt_aes_gcm(
             test_key.as_bytes(),
             &encrypted.ciphertext,
@@ -126,7 +98,6 @@ impl CryptoChaosController {
     }
 }
 
-/// Crypto stress test implementation
 pub struct CryptoStressTest;
 
 impl CryptoStressTest {

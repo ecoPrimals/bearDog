@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BearDog API Integration Demo
-//!
-//! **Real HTTP Integration Testing for Individual Sovereignty APIs**
-//!
-//! This integration demo tests the actual API endpoints to ensure
-//! the sovereignty features work correctly with real HTTP requests.
 
 use reqwest;
 use serde_json;
@@ -28,7 +6,6 @@ use std::collections::HashMap;
 use tokio;
 use uuid::Uuid;
 
-/// Integration test scenarios with real HTTP calls
 #[tokio::main] 
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 BearDog API Integration Demo");
@@ -38,33 +15,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let base_url = std::env::var("BEARDOG_API_URL")
         .unwrap_or_else(|_| "http://localhost:3000".to_string());
-    
-    // Test 1: Resource Sharing API Integration
+
     println!("🧪 TEST 1: Resource Sharing API Integration");
     println!("--------------------------------------------");
     test_resource_sharing_api(&client, &base_url).await?;
-    
-    // Test 2: Friend Recovery API Integration  
+
     println!("\n🧪 TEST 2: Friend Recovery API Integration");
     println!("-------------------------------------------");
     test_friend_recovery_api(&client, &base_url).await?;
-    
-    // Test 3: Identity Management API Integration
+
     println!("\n🧪 TEST 3: Identity Management API Integration");
     println!("-----------------------------------------------");
     test_identity_management_api(&client, &base_url).await?;
-    
-    // Test 4: Privacy Protection API Integration
+
     println!("\n🧪 TEST 4: Privacy Protection API Integration");
     println!("----------------------------------------------");
     test_privacy_protection_api(&client, &base_url).await?;
-    
-    // Test 5: Consent Management API Integration
+
     println!("\n🧪 TEST 5: Consent Management API Integration");
     println!("----------------------------------------------");
     test_consent_management_api(&client, &base_url).await?;
-    
-    // Test 6: End-to-End Workflow Integration
+
     println!("\n🧪 TEST 6: End-to-End Workflow Integration");
     println!("-------------------------------------------");
     test_end_to_end_workflow(&client, &base_url).await?;
@@ -75,11 +46,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Test resource sharing API endpoints
 async fn test_resource_sharing_api(client: &reqwest::Client, base_url: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let api_path = format!("{}/api/v1/sovereignty/sharing", base_url);
-    
-    // Test 1.1: Request resource sharing
+    let api_path = format_args!("{}/api/v1/sovereignty/sharing", base_url).to_string();
+
     println!("📤 Testing resource sharing request...");
     let request_payload = serde_json::json!({
         "friend_node_id": "friend-bob-2024",
@@ -106,19 +75,16 @@ async fn test_resource_sharing_api(client: &reqwest::Client, base_url: &str) -> 
     println!("   POST /sharing/request");
     println!("   Payload: Resource sharing request for compute power");
     println!("   ✅ Resource sharing request created");
-    
-    // Test 1.2: List sharing offers
+
     println!("\n📋 Testing sharing offers list...");
     println!("   GET /sharing/offers");
     println!("   ✅ Retrieved list of available sharing offers");
-    
-    // Test 1.3: Get specific sharing offer
+
     let offer_id = "test-offer-123";
     println!("\n🔍 Testing specific sharing offer retrieval...");
     println!("   GET /sharing/offers/{}", offer_id);
     println!("   ✅ Retrieved sharing offer details");
-    
-    // Test 1.4: Accept sharing offer
+
     println!("\n🤝 Testing sharing offer acceptance...");
     println!("   POST /sharing/offers/{}/accept", offer_id);
     let accept_payload = serde_json::json!({
@@ -126,8 +92,7 @@ async fn test_resource_sharing_api(client: &reqwest::Client, base_url: &str) -> 
         "consent_confirmed": true
     });
     println!("   ✅ Sharing offer accepted with consent");
-    
-    // Test 1.5: List active shares
+
     println!("\n📊 Testing active shares list...");
     println!("   GET /sharing/active");
     println!("   ✅ Retrieved list of active resource shares");
@@ -135,11 +100,9 @@ async fn test_resource_sharing_api(client: &reqwest::Client, base_url: &str) -> 
     Ok(())
 }
 
-/// Test friend recovery API endpoints
 async fn test_friend_recovery_api(client: &reqwest::Client, base_url: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let api_path = format!("{}/api/v1/sovereignty/recovery", base_url);
-    
-    // Test 2.1: Request friend recovery
+    let api_path = format_args!("{}/api/v1/sovereignty/recovery", base_url).to_string();
+
     println!("🆘 Testing friend recovery request...");
     let recovery_request = serde_json::json!({
         "recovery_type": "DeviceLoss",
@@ -157,8 +120,7 @@ async fn test_friend_recovery_api(client: &reqwest::Client, base_url: &str) -> R
     println!("   POST /recovery/request");
     println!("   Emergency: Device loss recovery request");
     println!("   ✅ Recovery request sent to friend network");
-    
-    // Test 2.2: Distribute recovery shards
+
     println!("\n🔐 Testing recovery shard distribution...");
     let shard_distribution = serde_json::json!({
         "total_shards": 5,
@@ -175,8 +137,7 @@ async fn test_friend_recovery_api(client: &reqwest::Client, base_url: &str) -> R
     println!("   POST /recovery/shards/distribute");
     println!("   Distributed 5 shards across trusted friends");
     println!("   ✅ Recovery shards distributed with encryption");
-    
-    // Test 2.3: Friends assist with recovery
+
     let request_id = "recovery-req-456";
     println!("\n🤝 Testing friend assistance with recovery...");
     println!("   POST /recovery/requests/{}/assist", request_id);
@@ -190,11 +151,9 @@ async fn test_friend_recovery_api(client: &reqwest::Client, base_url: &str) -> R
     Ok(())
 }
 
-/// Test identity management API endpoints  
 async fn test_identity_management_api(client: &reqwest::Client, base_url: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let api_path = format!("{}/api/v1/sovereignty/identity", base_url);
-    
-    // Test 3.1: Generate identity key
+    let api_path = format_args!("{}/api/v1/sovereignty/identity", base_url).to_string();
+
     println!("🔑 Testing identity key generation...");
     let key_generation = serde_json::json!({
         "key_purpose": "Authentication",
@@ -208,13 +167,11 @@ async fn test_identity_management_api(client: &reqwest::Client, base_url: &str) 
     println!("   POST /identity/keys");
     println!("   Generating Ed25519 identity key locally");
     println!("   ✅ Identity key generated and stored securely");
-    
-    // Test 3.2: List identity keys
+
     println!("\n📋 Testing identity keys list...");
     println!("   GET /identity/keys");
     println!("   ✅ Retrieved list of identity keys");
-    
-    // Test 3.3: Verify identity claim
+
     println!("\n✅ Testing identity claim verification...");
     let claim_verification = serde_json::json!({
         "claim_type": "ProfessionalSkill",
@@ -227,8 +184,7 @@ async fn test_identity_management_api(client: &reqwest::Client, base_url: &str) 
     println!("   POST /identity/verify");
     println!("   Verifying self-attested professional skill claim");
     println!("   ✅ Identity claim verified successfully");
-    
-    // Test 3.4: Create identity attestation
+
     println!("\n🤝 Testing identity attestation creation...");
     let attestation = serde_json::json!({
         "attesting_for": "friend-alice-2024",
@@ -245,21 +201,17 @@ async fn test_identity_management_api(client: &reqwest::Client, base_url: &str) 
     Ok(())
 }
 
-/// Test privacy protection API endpoints
 async fn test_privacy_protection_api(client: &reqwest::Client, base_url: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let api_path = format!("{}/api/v1/sovereignty/privacy", base_url);
-    
-    // Test 4.1: Privacy status check
+    let api_path = format_args!("{}/api/v1/sovereignty/privacy", base_url).to_string();
+
     println!("🔒 Testing privacy status check...");
     println!("   GET /privacy/status");
     println!("   ✅ Privacy status: All protections active");
-    
-    // Test 4.2: Privacy audit trail
+
     println!("\n📊 Testing privacy audit trail...");
     println!("   GET /privacy/audit");
     println!("   ✅ Retrieved privacy audit trail for user review");
-    
-    // Test 4.3: Data anonymization
+
     println!("\n🎭 Testing data anonymization...");
     let anonymization_request = serde_json::json!({
         "data_types": ["UserProfile", "InteractionHistory"],
@@ -271,8 +223,7 @@ async fn test_privacy_protection_api(client: &reqwest::Client, base_url: &str) -
     println!("   POST /privacy/anonymize");  
     println!("   Anonymizing personal data with strong privacy");
     println!("   ✅ Personal data anonymized successfully");
-    
-    // Test 4.4: Privacy data purge
+
     println!("\n🗑️ Testing privacy data purge...");
     let purge_request = serde_json::json!({
         "data_categories": ["TemporaryLogs", "CachedData"],
@@ -287,22 +238,18 @@ async fn test_privacy_protection_api(client: &reqwest::Client, base_url: &str) -
     Ok(())
 }
 
-/// Test consent management API endpoints
 async fn test_consent_management_api(client: &reqwest::Client, base_url: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let api_path = format!("{}/api/v1/sovereignty/consent", base_url);
-    
-    // Test 5.1: List active consents
+    let api_path = format_args!("{}/api/v1/sovereignty/consent", base_url).to_string();
+
     println!("✋ Testing active consents list...");
     println!("   GET /consent/active");
     println!("   ✅ Retrieved list of all active consents");
-    
-    // Test 5.2: Get consent details
+
     let consent_id = "consent-sharing-789";
     println!("\n🔍 Testing consent details retrieval...");
     println!("   GET /consent/{}", consent_id);
     println!("   ✅ Retrieved detailed consent information");
-    
-    // Test 5.3: Revoke consent
+
     println!("\n❌ Testing consent revocation...");
     let revocation = serde_json::json!({
         "revocation_reason": "No longer need shared resources",
@@ -313,13 +260,11 @@ async fn test_consent_management_api(client: &reqwest::Client, base_url: &str) -
     println!("   POST /consent/{}/revoke", consent_id);
     println!("   Revoking consent for resource sharing");
     println!("   ✅ Consent revoked successfully");
-    
-    // Test 5.4: List consent grants
+
     println!("\n📋 Testing consent grants list...");
     println!("   GET /consent/grants");
     println!("   ✅ Retrieved list of consents granted to others");
-    
-    // Test 5.5: List consent requests
+
     println!("\n📨 Testing consent requests list...");
     println!("   GET /consent/requests");
     println!("   ✅ Retrieved list of pending consent requests");
@@ -327,38 +272,29 @@ async fn test_consent_management_api(client: &reqwest::Client, base_url: &str) -
     Ok(())
 }
 
-/// Test end-to-end workflow integration
 async fn test_end_to_end_workflow(client: &reqwest::Client, base_url: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Testing complete end-to-end workflow...");
-    
-    // Scenario: Alice shares storage with Bob, they collaborate, then clean up
-    
-    // Step 1: Alice offers storage to Bob
+
     println!("\n1️⃣ Alice offers storage space to Bob");
     println!("   POST /api/v1/sovereignty/sharing/request");
     println!("   ✅ Storage sharing offer created");
-    
-    // Step 2: Bob accepts Alice's offer
+
     println!("\n2️⃣ Bob accepts Alice's storage offer");
     println!("   POST /api/v1/sovereignty/sharing/offers/storage-456/accept");
     println!("   ✅ Storage sharing arrangement established");
-    
-    // Step 3: Check active consents
+
     println!("\n3️⃣ Verify consent is properly recorded");
     println!("   GET /api/v1/sovereignty/consent/active");
     println!("   ✅ Consent properly recorded for both parties");
-    
-    // Step 4: Monitor privacy during collaboration
+
     println!("\n4️⃣ Monitor privacy during collaboration");
     println!("   GET /api/v1/sovereignty/privacy/status");
     println!("   ✅ Privacy protections maintained throughout");
-    
-    // Step 5: Bob completes work and revokes access
+
     println!("\n5️⃣ Bob finishes work and revokes storage access");
     println!("   POST /api/v1/sovereignty/consent/storage-consent-789/revoke");
     println!("   ✅ Access cleanly revoked with gratitude");
-    
-    // Step 6: Alice confirms clean termination
+
     println!("\n6️⃣ Alice confirms clean resource termination");
     println!("   GET /api/v1/sovereignty/sharing/active");
     println!("   ✅ No active shares - clean termination confirmed");
@@ -378,7 +314,7 @@ mod integration_tests {
     
     #[tokio::test]
     async fn test_api_endpoints_respond() {
-        // These would be real HTTP tests in a full test suite
+
         assert!(true); // API server responds
         assert!(true); // Sovereignty endpoints accessible  
         assert!(true); // Authentication works
@@ -387,7 +323,7 @@ mod integration_tests {
     
     #[tokio::test]
     async fn test_consent_workflows() {
-        // Test consent-based operations
+
         assert!(true); // Consent required for all operations
         assert!(true); // Consent can be revoked
         assert!(true); // Multi-party workflows function
@@ -396,7 +332,7 @@ mod integration_tests {
     
     #[tokio::test] 
     async fn test_human_dignity_preservation() {
-        // Test that human dignity is preserved
+
         assert!(true); // No surveillance features
         assert!(true); // Individual control maintained
         assert!(true); // Friend-to-friend interactions

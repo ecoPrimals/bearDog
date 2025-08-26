@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["CpuPriority","EnvironmentType","NetworkQoS","OvercommitPolicy","StorageType"],"struct":["CpuAllocation","DeploymentEnvironment","EnvironmentConfig","MemoryAllocation","MemoryOptimization","NetworkAllocation","ResourceAllocation","ResourceLimits","StorageAllocation","SwapConfig"]};

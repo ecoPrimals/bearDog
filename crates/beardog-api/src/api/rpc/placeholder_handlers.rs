@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Canonical Ecosystem Operations Handlers
-///
-/// Implementation of ecosystem management operations within the canonical architecture.
-/// These handlers maintain the capability-based discovery pattern and sovereignty principles.
 
 use super::super::AppState;
 use super::models::*;
@@ -27,7 +7,7 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use tracing::info;
 use uuid::Uuid;
-/// Deregister from ecosystem while maintaining sovereignty
+
 pub async fn deregister_from_ecosystem(
     State(_state): State<AppState>,
 ) -> Result<Json<ApiResponse<HashMap<String, String>>>, StatusCode> {
@@ -48,7 +28,7 @@ pub async fn deregister_from_ecosystem(
         processing_time_ms: processing_time,
     }))
 }
-/// Get canonical primal metadata (self-sovereign only)
+
 pub async fn get_primal_metadata(
 ) -> Result<Json<ApiResponse<HashMap<String, serde_json::Value>>>, StatusCode> {
     let metadata = HashMap::from([
@@ -61,8 +41,6 @@ pub async fn get_primal_metadata(
         ("capabilities_count".to_string(), serde_json::json!(2)),
         ("sovereignty_compliant".to_string(), serde_json::json!(true)),
         data: Some(metadata),
-/// Health check}
-
 
 pub async fn primal_health_check(
     let health = HashMap::from([
@@ -70,12 +48,12 @@ pub async fn primal_health_check(
         ("uptime".to_string(), "operational".to_string()),
         ("discovery_enabled".to_string(), "true".to_string()),
         data: Some(health),
-/// Discover ecosystem services by capabilities
+
 pub async fn discover_ecosystem_services(
     Json(_request): Json<CapabilityDiscoveryRequest>,
 ) -> Result<Json<ApiResponse<CapabilityDiscoveryResponse>>, StatusCode> {
     info!("🔍 Discovering ecosystem services by capabilities");
-    // Simulate service discovery
+
     tokio::time::sleep(Duration::from_millis(25)).await;
     let discovered_primals = vec![DiscoveredPrimal {
         primal_id: "service_provider_1".to_string(),
@@ -87,10 +65,10 @@ pub async fn discover_ecosystem_services(
     let response = CapabilityDiscoveryResponse {
         discovered_primals,
         total_count: 1,
-        search_metadata: HashMap::new(),
+        search_metadata: HashMap::with_capacity(16),
     };
         data: Some(response),
-/// Subscribe to capability-based service updates
+
 pub async fn subscribe_to_service(
     Json(request): Json<HashMap<String, String>>,
     let service_type = request
@@ -99,17 +77,17 @@ pub async fn subscribe_to_service(
         .clone();
     info!("📬 Subscribing to service type: {}", service_type);
             "subscription_id".to_string(),
-            format!("sub_{}", Uuid::new_v4()),
+            format_args!("sub_{}", Uuid::new_v4().to_string()),
         ("service_type".to_string(), service_type),
         ("status".to_string(), "subscribed".to_string()),
-/// Unsubscribe from service updates
+
 pub async fn unsubscribe_from_service(
     let subscription_id = request
         .get("subscription_id")
     info!("📪 Unsubscribing from: {}", subscription_id);
         ("subscription_id".to_string(), subscription_id),
         ("status".to_string(), "unsubscribed".to_string()),
-/// Get ecosystem metrics
+
 pub async fn get_ecosystem_metrics(
     let metrics = HashMap::from([
         ("discovered_primals".to_string(), serde_json::json!(12)),
@@ -117,7 +95,7 @@ pub async fn get_ecosystem_metrics(
         ("network_health".to_string(), serde_json::json!("excellent")),
         ("sovereignty_score".to_string(), serde_json::json!(100.0)),
         data: Some(metrics),
-/// Get ecosystem topology
+
 pub async fn get_ecosystem_topology(
     let topology = HashMap::from([
         ("node_count".to_string(), serde_json::json!(12)),

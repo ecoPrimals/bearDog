@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// SongBird Client Integration
-///
-/// Provides integration with the SongBird service mesh for distributed operations.
 
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::network::{NetworkConfig, ServiceEndpoint};
@@ -25,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-/// SongBird service client configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SongBirdClientConfig {
     pub service_endpoint: ServiceEndpoint,
@@ -49,7 +29,6 @@ impl Default for SongBirdClientConfig {
     }
 }
 
-/// SongBird client for service mesh operations
 #[derive(Debug)]
 pub struct SongBirdClient {
     config: SongBirdClientConfig,
@@ -57,20 +36,19 @@ pub struct SongBirdClient {
 }
 
 impl SongBirdClient {
-    /// Create new SongBird client
+
     pub fn new(config: SongBirdClientConfig) -> Self {
         let client = reqwest::Client::builder()
             .timeout(config.timeout)
             .build()
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create HTTP client", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Failed to create HTTP client", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failed to create HTTP client", e).to_string())
 })?;
 
         Self { config, client }
     }
 
-    /// Connect to SongBird service mesh
     pub async fn connect(&self) -> BearDogResult<()> {
         let url = format!(
             "{}://{}:{}/health",
@@ -84,7 +62,7 @@ impl SongBirdClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| BearDogError::system(format!("Failed to connect to SongBird: {}", e)))?;
+            .map_err(|e| BearDogError::system(format_args!("Failed to connect to SongBird: {}", e).to_string()))?;
 
         if response.status().is_success() {
             tracing::info!("Successfully connected to SongBird service mesh");
@@ -97,11 +75,10 @@ impl SongBirdClient {
         }
     }
 
-    /// Register service with SongBird discovery
     pub async fn register_service(
         &self,
         service_name: &str,
-        metadata: HashMap<String, String>,
+        metadata: HashMap<&str, &str>,
     ) -> BearDogResult<String> {
         if !self.config.enable_discovery {
             return Err(BearDogError::system(
@@ -133,13 +110,13 @@ impl SongBirdClient {
             .json(&registration_data)
             .send()
             .await
-            .map_err(|e| BearDogError::system(format!("Failed to register service: {}", e)))?;
+            .map_err(|e| BearDogError::system(format_args!("Failed to register service: {}", e).to_string()))?;
 
         if response.status().is_success() {
             let registration_id: String = response
                 .json()
                 .await
-                .map_err(|e| BearDogError::system(format!("Failed to parse response: {}", e)))?;
+                .map_err(|e| BearDogError::system(format_args!("Failed to parse response: {}", e).to_string()))?;
 
             tracing::info!("Service '{}' registered with ID: {}", service_name, registration_id);
             Ok(registration_id)
@@ -151,7 +128,6 @@ impl SongBirdClient {
         }
     }
 
-    /// Discover services by name
     pub async fn discover_service(&self, service_name: &str) -> BearDogResult<Vec<ServiceEndpoint>> {
         let url = format!(
             "{}://{}:{}/discover/{}",
@@ -166,13 +142,13 @@ impl SongBirdClient {
             .get(&url)
             .send()
             .await
-            .map_err(|e| BearDogError::system(format!("Failed to discover service: {}", e)))?;
+            .map_err(|e| BearDogError::system(format_args!("Failed to discover service: {}", e).to_string()))?;
 
         if response.status().is_success() {
             let endpoints: Vec<ServiceEndpoint> = response
                 .json()
                 .await
-                .map_err(|e| BearDogError::system(format!("Failed to parse response: {}", e)))?;
+                .map_err(|e| BearDogError::system(format_args!("Failed to parse response: {}", e).to_string()))?;
 
             tracing::info!("Discovered {} endpoints for service '{}'", endpoints.len(), service_name);
             Ok(endpoints)
@@ -185,7 +161,6 @@ impl SongBirdClient {
     }
 }
 
-/// Service registration data
 #[derive(Debug, Serialize, Deserialize)]
 struct ServiceRegistration {
     service_name: String,
@@ -193,23 +168,18 @@ struct ServiceRegistration {
     health_check_url: String,
 }
 
-/// SongBird service trait - modernized with native async fn
 #[allow(async_fn_in_trait)]
 pub trait SongBirdService: Send + Sync {
-    /// Initialize the service
+
     async fn initialize(&mut self) -> BearDogResult<()>;
 
-    /// Handle incoming request
     async fn handle_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse>;
 
-    /// Get service health status
     async fn health_check(&self) -> BearDogResult<ServiceHealth>;
 
-    /// Shutdown the service gracefully
     async fn shutdown(&mut self) -> BearDogResult<()>;
 }
 
-/// Service request structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceRequest {
     pub id: String,
@@ -219,7 +189,6 @@ pub struct ServiceRequest {
     pub body: Vec<u8>,
 }
 
-/// Service response structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceResponse {
     pub status: u16,
@@ -227,7 +196,6 @@ pub struct ServiceResponse {
     pub body: Vec<u8>,
 }
 
-/// Service health information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceHealth {
     pub healthy: bool,

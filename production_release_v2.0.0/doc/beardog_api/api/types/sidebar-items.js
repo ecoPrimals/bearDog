@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["API_VERSION","API_VERSION_HEADER"],"enum":["HealthStatus"],"struct":["AuditEntry","ComponentHealth","EndpointInfo","FeatureFlag","FilterParams","PaginationParams","RateLimitInfo","ResponseMetadata"]};

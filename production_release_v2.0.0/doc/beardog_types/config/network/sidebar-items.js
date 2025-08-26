@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["DiscoveryProvider","LoadBalancingStrategy","MeshAuthType"],"mod":["external_services","load_balancing","security"],"struct":["CommunicationMeshConfig","EndpointConfig","MeshAuthConfig","RetryConfig","ServiceDiscoveryConfig"]};

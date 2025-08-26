@@ -1,33 +1,9 @@
-// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-
-/// # Software HSM Core Implementation
-///
-/// This module provides the core Software HSM implementation including the main
-/// RustSoftwareHsm struct and HsmProvider trait implementation.
 
 use super::super::types::{HsmCapabilities, HsmCapability, HsmTier, KeyType};
 use crate::tunnel::hsm::types::config::SoftwareHsmConfig;
 use beardog_core::HsmHealthStatus; // Use canonical HsmHealthStatus for trait compatibility
-                                   // Use canonical types instead of fragmented ones
-// Import required types
+
 use super::super::types::canonical::MemoryProtectionLevel;
 use super::audit::logger::DefaultAuditLogger; // Add specific import
 use super::crypto_providers::ring_crypto::RingCryptoProvider;
@@ -48,18 +24,12 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 impl RustSoftwareHsm {
-    /// Create a new Rust Software HSM instance
-    ///
-    /// # Arguments
-    /// * `config` - Software HSM configuration
-    /// # Returns
-    /// * `Ok(RustSoftwareHsm)` - Successfully initialized HSM
-    /// * `Err(BearDogError)` - Initialization failure
+
     pub async fn new(config: CanonicalSoftwareHsmConfig) -> BearDogResult<Self> {
         info!("🔐 Initializing Rust Software HSM");
-        // Initialize crypto provider
+
         let crypto_provider = Self::create_crypto_provider(&config.crypto_backend).await?;
-        // Create memory protector with conversion from MemoryConfig to MemoryProtectionConfig
+
         let memory_config = MemoryProtectionConfig {
             enable_protection: matches!(
                 config.memory_protection,
@@ -68,13 +38,13 @@ impl RustSoftwareHsm {
             clear_on_drop: true, // Enable encryption by default
         };
         let memory_protector = Arc::new(DefaultMemoryProtector::new(memory_config).await?);
-        // Initialize key store
+
         let key_store = Arc::new(RwLock::new(
             SoftwareKeyStore::new(&config.key_storage).await?,
         ));
-        // Initialize audit logger
+
         let audit_logger = Self::create_audit_logger().await?;
-        // Initialize health monitor
+
         let health_monitor = Arc::new(SoftwareHealthMonitor::new().await?);
         let hsm = Self {
             config,
@@ -86,7 +56,7 @@ impl RustSoftwareHsm {
         info!("✅ Rust Software HSM initialized successfully");
         Ok(hsm)
     }
-    /// Create crypto provider based on backend type
+
     async fn create_crypto_provider(
         backend: &CryptoBackend,
     ) -> BearDogResult<impl CryptoProvider + Send + Sync + 'static> {
@@ -99,66 +69,64 @@ impl RustSoftwareHsm {
             CryptoBackend::Custom(name) => Err(BearDogError::unsupported_operation(format!("Unsupported crypto backend: {name)"},
             }),
         }
-    /// Create memory protector based on configuration
+
     pub async fn create_memory_protector(
         config: &MemoryConfig,
     ) -> BearDogResult<Arc<dyn MemoryProtector>> {
-        // Convert MemoryConfig to MemoryProtectionConfig
+
         let memory_protection_config = MemoryProtectionConfig {
             enable_protection: !matches!(config.protection_level, MemoryProtectionLevel::None),
             clear_on_drop: config.enable_encryption,
         Ok(Arc::new(
             DefaultMemoryProtector::new(memory_protection_config).await?,
         ))
-    /// Create audit logger}
-
 
     async fn create_audit_logger() -> BearDogResult<Arc<dyn AuditLogger>> {
         Ok(Arc::new(DefaultAuditLogger::new().await?))
-    /// Generate software key
+
     async fn generate_software_key(&self, request: &GenerateKeyRequest) -> BearDogResult<HsmKey> {
         info!("🔑 Generating software key: {}", request.key_id);
-        // Generate key material
+
         let key_material = self
             .crypto_provider
             .generate_key_material(&request.key_type)
             .await?;
-        // Protect key material in memory
+
         let protected_key = self
             .memory_protector
             .protect_key_material(&key_material)
-        // Create software key
+
         let software_key = SoftwareKey::new(
             request.key_id.clone(),
             request.key_type.clone(),
             protected_key,
             request.metadata.clone(),
         );
-        // Store key in key store
+
         let key_store = self.key_store.write().await;
         key_store.store_key(&software_key).await?;
-        // Log operation
+
         self.audit_logger
             .log_operation(&AuditLogEntry::success(
                 "generate_key".to_string(),
                 Some(request.key_id.clone()),
                 None,
             ))
-        // Create HSM key using beardog_core::HsmKey structure
+
         let hsm_key = HsmKey {
             id: request.key_id.clone(),
             key_type: request.key_type.clone(),
             created_at: Utc::now(),
             metadata: {
-                let mut meta = std::collections::HashMap::new();
+                let mut meta = std::collections::HashMap::with_capacity(16);
                 meta.insert("hsm_type".to_string(), "SoftwareHsm".to_string());
-                meta.insert("algorithm".to_string(), format!("{:?}", request.key_type));
+                meta.insert("algorithm".to_string(), format_args!("{:?}", request.key_type).to_string());
                 meta.insert("key_material_type".to_string(), "Encrypted".to_string());
                 meta
             },
         info!("✅ Software key generated successfully: {}", request.key_id);
         Ok(hsm_key)
-    /// Perform cryptographic operation with key
+
     async fn perform_crypto_operation<T>(
         &self,
         key_id: &str,
@@ -166,17 +134,17 @@ impl RustSoftwareHsm {
         op_fn: impl Fn(&[u8]) -> Result<T, BearDogError>,
     ) -> BearDogResult<T> {
         let start_time = std::time::Instant::now();
-        // Get key from store
+
         let key_store = self.key_store.read().await;
         let software_key = key_store.get_key(key_id).await?;
-        // Unprotect key material
+
             .unprotect_key_material(&software_key.key_material)
-        // Perform operation
+
         let result = op_fn(&key_material);
-        // Zeroize key material
+
         self.memory_protector
             .zeroize_key_material(&key_material)
-        // Record performance metrics
+
         let duration = start_time.elapsed();
         self.health_monitor
             .record_operation(operation, duration, result.is_ok())
@@ -185,70 +153,63 @@ impl RustSoftwareHsm {
                 operation.to_string(),
                 Some(key_id.to_string()),
                 log_result.to_string(),
-                HashMap::new(),
+                HashMap::with_capacity(16),
         result
-    /// Get HSM configuration
+
     pub fn get_config(&self) -> &SoftwareHsmConfig {
         &self.config
-    /// Get key store reference}
-
 
     pub fn get_key_store(&self) -> &Arc<RwLock<SoftwareKeyStore>> {
         &self.key_store
-    /// Get health monitor reference
+
     pub fn get_health_monitor(&self) -> &Arc<SoftwareHealthMonitor> {
         &self.health_monitor
-    /// Update configuration}
-
 
     pub async fn update_config(&mut self, config: CanonicalSoftwareHsmConfig) -> BearDogResult<()> {
         info!("Updating Software HSM configuration");
-        // Update configuration
+
         self.config = config;
-        // Reinitialize components if needed
-        // Implement configuration hot-reload functionality
+
         self.reload_configuration_internal().await?;
         info!("Software HSM configuration updated successfully");
         Ok(())
 }
 
 impl HsmProvider for RustSoftwareHsm {
-    /// Initialize the HSM connection
+
     async fn initialize(&self, _config: HsmConfig) -> BearDogResult<()> {
         info!("🔄 Initializing Rust Software HSM");
         self.crypto_provider.initialize().await?;
-        // Initialize memory protector
+
         self.memory_protector.initialize().await?;
         key_store.initialize().await?;
-        // Log initialization
-                "initialize".to_string(),
-    /// Generate a new key in the HSM}
 
+                "initialize".to_string(),
 
     async fn generate_key(&self, request: GenerateKeyRequest) -> BearDogResult<HsmKey> {
         self.generate_software_key(&request).await
-    /// Import an existing key into the HSM
+
     async fn import_key(&self, key_data: &[u8], metadata: KeyMetadata) -> BearDogResult<HsmKey> {
         info!("📥 Importing key into Software HSM: {}", metadata.key_id);
-        // Protect key material
+
         let protected_key = self.memory_protector.protect_key_material(key_data).await?;
         let protected_key_data = protected_key.data.clone();
             metadata.key_id.clone(),
             metadata.key_type.clone(),
             metadata.clone(),
-        // Store key
+
                 "import_key".to_string(),
                 Some(metadata.key_id.clone()),
             id: metadata.key_id.clone(),
             key_type: metadata.key_type.clone(),
-                meta.insert("algorithm".to_string(), format!("{:?}", metadata.key_type));
+                meta.insert("algorithm".to_string(), format_args!("{:?}", metadata.key_type).to_string());
                 meta.insert("key_material_type".to_string(), "Imported".to_string());
         info!("✅ Key imported successfully: {}", hsm_key.id);
-    /// Encrypt data using HSM key
+
     async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
         debug!("🔒 Encrypting data with software key: {}", key_id);
         self.perform_crypto_operation(key_id, "encrypt", |key_material| {
-            // This would be async in real implementation
+
             match tokio::runtime::Runtime::new() {
                 Ok(rt) => rt.block_on(async {
                     self.crypto_provider.encrypt(key_material, plaintext).await
@@ -257,13 +218,13 @@ impl HsmProvider for RustSoftwareHsm {
             }
         })
         .await
-    /// Decrypt data using HSM key
+
     async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
         debug!("🔓 Decrypting data with software key: {}", key_id);
         self.perform_crypto_operation(key_id, "decrypt", |key_material| {
                     self.crypto_provider.decrypt(key_material, ciphertext).await
                     message: format!("Failed to create runtime for decryption: {e}"),
-    /// Sign data using HSM key
+
     async fn sign(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
         debug!("✍️ Signing data with software key: {}", key_id);
         self.perform_crypto_operation(key_id, "sign", |key_material| {
@@ -271,7 +232,7 @@ impl HsmProvider for RustSoftwareHsm {
                     rt.block_on(async { self.crypto_provider.sign(key_material, data).await })
                 }
                     message: format!("Failed to create runtime for signing: {e}"),
-    /// Verify signature using HSM key
+
     async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
         debug!("🔍 Verifying signature with software key: {}", key_id);
         self.perform_crypto_operation(key_id, "verify", |key_material| {
@@ -279,7 +240,7 @@ impl HsmProvider for RustSoftwareHsm {
                         .verify(key_material, data, signature)
                         .await
                     message: format!("Failed to create runtime for verification: {e}"),
-    /// Derive key using HSM-based KDF
+
     async fn derive_key(
         master_key_id: &str,
         derivation_data: &[u8],
@@ -287,17 +248,17 @@ impl HsmProvider for RustSoftwareHsm {
         info!(
             "🔑 Deriving key from software master key: {}",
             master_key_id
-        // Get master key
+
         let master_key = key_store.get_key(master_key_id).await?;
         let master_key_material = self
             .unprotect_key_material(&master_key.key_material)
-        // Derive new key material
+
         let derived_key_material = self
             .derive_key(&master_key_material, derivation_data)
-        // Zeroize master key material
+
             .zeroize_key_material(&master_key_material)
-        // Create derived key
-        let derived_key_id = format!("{}_{}", master_key_id, hex::encode(&derivation_data[..8]));
+
+        let derived_key_id = format_args!("{}_{}", master_key_id, hex::encode(&derivation_data[..8]).to_string());
         let derived_metadata = KeyMetadata {
             key_id: derived_key_id.clone(),
             key_name: format!("derived-{derived_key_id}"),
@@ -305,11 +266,11 @@ impl HsmProvider for RustSoftwareHsm {
             last_used: None,
             expires_at: None,
             usage_policy: "default".to_string(),
-            tags: HashMap::new(),
-        // Import derived key
+            tags: HashMap::with_capacity(16),
+
         self.import_key(&derived_key_material, derived_metadata)
             .await
-    /// Get HSM information and capabilities
+
     async fn get_info(&self) -> BearDogResult<HsmInfo> {
         Ok(HsmInfo {
             instance_id: "software-hsm-001".to_string(),
@@ -336,8 +297,6 @@ impl HsmProvider for RustSoftwareHsm {
             max_key_size: Some(4096),
             certification: None,
             tamper_resistance: crate::tunnel::hsm::types::tier::TamperResistanceLevel::None,
-    /// List keys stored in HSM}
-
 
     async fn list_keys(&self) -> BearDogResult<Vec<HsmKeyInfo>> {
         let key_ids = key_store.list_keys().await?;
@@ -363,63 +322,56 @@ impl HsmProvider for RustSoftwareHsm {
                     usage_policy: key.metadata().usage_policy.clone(),
                 });
         Ok(key_infos)
-    /// Delete key from HSM
+
     async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
         info!("🗑️ Deleting software key: {}", key_id);
         key_store.delete_key(key_id).await?;
                 "delete_key".to_string(),
         info!("✅ Software key deleted successfully: {}", key_id);
-    /// Backup HSM state
+
     async fn backup(&self) -> BearDogResult<Option<Vec<u8>>> {
         info!("💾 Creating software HSM backup");
         let backup_data = key_store.backup().await?;
             .log_operation(&AuditLogEntry::success("backup".to_string(), None, None))
         info!("✅ Software HSM backup created successfully");
         Ok(Some(backup_data))
-    /// Restore HSM state}
-
 
     async fn restore(&self, backup_data: &[u8]) -> BearDogResult<()> {
         info!("📥 Restoring software HSM from backup");
         key_store.restore(backup_data).await?;
             .log_operation(&AuditLogEntry::success("restore".to_string(), None, None))
         info!("✅ Software HSM restored successfully");
-    /// Get HSM health status
+
     async fn health_check(&self) -> BearDogResult<beardog_core::HsmHealthStatus> {
-        // Convert from local HsmHealthStatus to beardog_core::HsmHealthStatus
+
         let local_status = self.health_monitor.perform_health_check().await?;
         Ok(beardog_core::HsmHealthStatus {
             is_healthy: local_status.is_healthy,
             last_check: local_status.last_check,
             error_count: local_status.error_count,
             uptime: local_status.uptime,
-/// Additional helper methods for RustSoftwareHsm (not part of HsmProvider trait)
-    /// Reload HSM configuration for hot-reload support (private helper)}
-
 
     async fn reload_configuration_internal(&self) -> BearDogResult<()> {
         info!("🔧 Reloading HSM configuration");
-        // 1. Reload crypto provider configuration
+
         let _crypto_provider = Self::create_crypto_provider(&self.config.crypto_backend).await?;
-        // Note: In real implementation, we'd need to use Arc<RwLock<>> for hot swapping
+
         debug!("🔧 Crypto provider configuration reloaded");
-        // 2. Reload memory protector settings
+
                 self.config.memory_config.protection_level,
             clear_on_drop: self.config.memory_config.enable_encryption,
         debug!(
             "🔧 Memory protection configuration reloaded: {:?}",
             memory_config
-        // 3. Reload key store configuration
-        // Note: Key store configuration changes require careful handling to avoid data loss
+
         debug!("🔧 Key store configuration validated");
-        // 4. Reload audit configuration
+
         debug!("🔧 Audit configuration reloaded");
         info!("✅ HSM configuration hot-reload completed successfully");
-    /// Get actual key count from key store (private helper)
+
     async fn get_actual_key_count_internal(&self) -> BearDogResult<u32> {
         let _key_store = self.key_store.read().await;
-        // For now, return a mock count since SoftwareKeyStore doesn't have get_key_count yet
-        // In real implementation, we'd need to add this method to SoftwareKeyStore
+
         let key_count = 0u32; // Mock implementation
         debug!("📊 Current key count: {}", key_count);
         Ok(key_count)

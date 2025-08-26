@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Authentication tests
-///
-/// Comprehensive tests for authentication functionality
 
 #[cfg(test)]
 mod auth_tests {
@@ -25,16 +6,16 @@ mod auth_tests {
     #[tokio::test]
     async fn test_password_hashing() {
         let password = "test_password_123";
-        let hash = hash_password(password).await.map_err(|e| BearDogError::internal(format!("Operation failed: {:?}", e)))?;
-        assert!(verify_password(password, &hash).await.map_err(|e| BearDogError::internal(format!("Operation failed: {:?}", e)))?);
-        assert!(!verify_password("wrong_password", &hash).await.map_err(|e| BearDogError::internal(format!("Operation failed: {:?}", e)))?);
+        let hash = hash_password(password).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?;
+        assert!(verify_password(password, &hash).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?);
+        assert!(!verify_password("wrong_password", &hash).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?);
     }
     async fn test_token_generation() {
-        let token = generate_secure_token(32).await.map_err(|e| BearDogError::internal(format!("Operation failed: {:?}", e)))?;
+        let token = generate_secure_token(32).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?;
         assert_eq!(token.len(), 32);
-        let token2 = generate_secure_token(32).await.map_err(|e| BearDogError::internal(format!("Operation failed: {:?}", e)))?;
+        let token2 = generate_secure_token(32).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?;
         assert_ne!(token, token2); // Should be different
-    // Mock structures for testing
+
     #[derive(Debug)]
     struct MockSessionData {
         user_id: String,
@@ -42,77 +23,74 @@ mod auth_tests {
         valid: bool,
     impl MockSessionData {}
 
-
         fn is_valid(&self) -> bool {
             self.valid
         }
     async fn test_session_validation() {
         let session_id = "test_session_123";
         let user_id = "user123";
-        // Test session creation logic
+
         let session_data = create_session_data(user_id, session_id).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert_eq!(session_data.user_id, user_id);
         assert_eq!(session_data.session_id, session_id);
         assert!(session_data.is_valid());}
 
-
     async fn test_mfa_token_generation() {
         let token = generate_mfa_token(user_id).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert_eq!(token.len(), 6); // Standard TOTP length
         assert!(token.chars().all(|c| c.is_ascii_digit()));
     async fn test_decentralized_auth_token_operations() {
         use beardog_security::decentralized_auth::DecentralizedAuthManager;
         use std::collections::HashMap;
-        // Create decentralized auth manager
+
         let auth_manager = DecentralizedAuthManager::new(24).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-        // Create cryptographic auth token
+
         let token = auth_manager
             .create_auth_token(
                 "test_user",
                 "test_service",
                 vec!["read".to_string(), "write".to_string()],
-                HashMap::new(),
+                HashMap::with_capacity(16),
             )
             .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-        // Verify token
+
         let is_valid = auth_manager.verify_auth_token(&token).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert!(is_valid);
-        // Check token claims
+
         assert_eq!(token.claims.subject, "test_user");
         assert_eq!(token.claims.audience, "test_service");
         assert_eq!(token.claims.permissions, vec!["read", "write"]);
         assert!(!token.signature.is_empty());}
 
-
     async fn test_user_authentication_flow() {
         let username = "testuser";
         let password = "secure_password_123";
-        // Simulate user registration
+
         let user = create_test_user(username, password).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert_eq!(user.username, username);
         assert!(!user.password_hash.is_empty());
-        // Simulate authentication
+
         let auth_result = authenticate_user(username, password).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert!(auth_result.success);
         assert!(auth_result.session_token.is_some());
@@ -121,8 +99,6 @@ mod auth_tests {
         let required_role = "user";
         assert!(has_required_role(&user_roles, required_role));
         assert!(!has_required_role(&user_roles, "admin"));
-    // Helper functions for testing}
-
 
     async fn hash_password(password: &str) -> Result<String, Box<dyn std::error::Error>> {
         use argon2::password_hash::SaltString;
@@ -168,14 +144,13 @@ mod auth_tests {
     async fn generate_mfa_token(user_id: &str) -> Result<String, Box<dyn std::error::Error>> {
         let _ = user_id; // Use parameter to avoid warnings
         let token: String = (0..6).map(|_| rng.gen_range(0..10).to_string()).collect();
-    // Mock user structure for testing
+
     struct MockUser {
         username: String,
         password_hash: String,
     struct MockAuthResult {
         success: bool,
         session_token: Option<String>,}
-
 
     async fn create_test_user(
         username: &str,
@@ -191,7 +166,6 @@ mod auth_tests {
             success: true,
             session_token: Some("mock_session_token_123".to_string()),}
 
-
-    fn has_required_role(user_roles: &[String], required_role: &str) -> bool {
+    fn has_required_role(user_roles: &[&str], required_role: &str) -> bool {
         user_roles.contains(&required_role.to_string())
 }

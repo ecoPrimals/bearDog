@@ -12,16 +12,11 @@ categories = ["cryptography", "security", "data-structures"]
 [dependencies]
 beardog-errors = { path = "../beardog-errors" }
 beardog-types = { path = "../beardog-types" }
-
-# Core async runtime - minimal features for traits
-tokio = { version = "1.0", features = ["rt", "macros"] }
-
-# Serialization
 serde = { version = "1.0", features = ["derive"] }
-
-# Logging
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1.0", features = ["full"] }
 tracing = "0.1"
-chrono.workspace = true
 
 # Documentation and testing
 [dev-dependencies]

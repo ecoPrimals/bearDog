@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AlertSeverity","ComponentHealthStatus"],"fn":["collect_metrics_improved","monitor_system_health_improved","process_alerts_improved"],"struct":["Alert","AlertProcessingConfig","AlertProcessingResult","ComponentMetrics","MetricCollectionConfig","MetricCollectionResult","MetricData","MetricSource","MonitoringConfig","SystemHealthResult"]};

@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Unit tests for compliance module
-///
-/// Contains comprehensive test functions for compliance functionality.
 
 #[cfg(test)]
 mod unit_tests {
@@ -29,12 +10,12 @@ mod unit_tests {
     async fn test_compliance_engine_creation() -> BearDogResult<()> {
         let config = ComplianceConfig::default();
         let _engine = ComplianceEngine::new(config).await?;
-        // Test that engine was created successfully
+
         Ok(())
     }
     #[test]
     fn test_compliance_standards_serialization() {
-        // Test all compliance standards can be serialized/deserialized
+
         let standards = vec![
             ComplianceStandard::Gdpr,
             ComplianceStandard::Sox,
@@ -46,7 +27,7 @@ mod unit_tests {
             ComplianceStandard::Custom("CustomStandard".to_string()),
         ];
         for standard in standards {
-            // Test that standards can be created and compared
+
             let cloned_standard = standard.clone();
             assert_eq!(standard, cloned_standard);
         }
@@ -57,10 +38,10 @@ mod unit_tests {
             timestamp: Utc::now(),
             user_id: Some("test_user".to_string()),
             resource: Some("test_resource".to_string()),
-            data: HashMap::new(),
-            metadata: HashMap::new(),
+            data: HashMap::with_capacity(16),
+            metadata: HashMap::with_capacity(16),
         };
-        // Test event creation succeeded
+
         assert!(!event.id.is_empty());
         assert!(!event.event_type.is_empty());
     async fn test_compliance_report_generation() -> BearDogResult<()> {
@@ -74,7 +55,6 @@ mod unit_tests {
         assert!(report.overall_score >= 0.0);
         assert!(report.overall_score <= 100.0);}
 
-
     fn test_report_format_enum() {
         let formats = vec![
             ReportFormat::Pdf,
@@ -85,9 +65,9 @@ mod unit_tests {
             ReportFormat::Txt,
             ReportFormat::Yaml,
         for format in formats {
-            // Test that formats can be cloned and compared
+
             let cloned_format = format.clone();
-            // Just verify they're the same type (no PartialEq for ReportFormat)
+
             match (format, cloned_format) {
                 (ReportFormat::Pdf, ReportFormat::Pdf) => {}
                 (ReportFormat::Json, ReportFormat::Json) => {}
@@ -96,16 +76,17 @@ mod unit_tests {
                 (ReportFormat::Html, ReportFormat::Html) => {}
                 (ReportFormat::Txt, ReportFormat::Txt) => {}
                 (ReportFormat::Yaml, ReportFormat::Yaml) => {}
-                _ => panic!("Format mismatch"),
+                _ => {
+                    assert_eq!(format, cloned_format, "Report format should be preserved after serialization/deserialization");
+                }
             }
     fn test_compliance_config_defaults() {
         assert!(!config.enabled_standards.is_empty());
         assert!(config.reporting.auto_generate);
         assert!(config.monitoring_interval.num_seconds() > 0);}
 
-
     async fn test_compliance_violation_creation() -> BearDogResult<()> {
-        // Create a test violation
+
         let violation = ComplianceViolation {
             id: "violation-test-1".to_string(),
             standard: ComplianceStandard::Gdpr,
@@ -114,17 +95,16 @@ mod unit_tests {
             severity: ComplianceSeverity::Critical,
             description: "Processing personal data without explicit consent".to_string(),
             remediation_required: true,
-        // Test violation creation
+
         assert!(!violation.id.is_empty());
         assert_eq!(violation.standard, ComplianceStandard::Gdpr);
         assert!(!violation.description.is_empty());
         assert_eq!(violation.severity, ComplianceSeverity::Critical);
     fn test_compliance_severity_ordering() {
-        // Test that severity levels can be compared
+
         assert!(ComplianceSeverity::Critical > ComplianceSeverity::Violation);
         assert!(ComplianceSeverity::Violation > ComplianceSeverity::Warning);
         assert!(ComplianceSeverity::Warning > ComplianceSeverity::Info);}
-
 
     fn test_compliance_result_creation() {
         let result = ComplianceResult {

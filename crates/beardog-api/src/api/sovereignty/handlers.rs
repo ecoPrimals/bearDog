@@ -1,28 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Individual Sovereignty API Handlers
-///
-/// **Empowering individuals to control their compute, data, and identity**
-/// These handlers implement BearDog's core mission: enabling individuals to:
-/// - Share resources with friends through explicit consent
-/// - Maintain sovereignty over their data and compute
-/// - Recover access through trusted friend networks
-/// - Protect privacy against surveillance
 
 use crate::api::{success_response, ApiResponse, AppState};
 use axum::{
@@ -33,9 +9,9 @@ use axum::{
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::info;
-// Import workflow system for consent-based operations
+
 use super::models::*;
-/// Request to share resources with a friend - initiates consent workflow
+
 pub async fn request_resource_sharing(
     State(_state): State<AppState>,
     Json(request): Json<ResourceSharingRequest>,
@@ -61,7 +37,7 @@ pub async fn request_resource_sharing(
         false,
     )))
 }
-/// List sharing offers from friends
+
 pub async fn list_sharing_offers(
 ) -> Result<Json<ApiResponse<Vec<SharingOffer>>>, StatusCode> {
     info!("📋 Individual checking sharing offers from friends");
@@ -69,8 +45,6 @@ pub async fn list_sharing_offers(
         demo_offers,
         "Current sharing offers".to_string(),
         0,
-/// Get specific sharing offer details}
-
 
 pub async fn get_sharing_offer(
     Path(offer_id): Path<String>,
@@ -92,7 +66,7 @@ pub async fn get_sharing_offer(
         terms: vec!["Available weekdays 9am-5pm".to_string()],
         offer,
         "Sharing offer details".to_string(),
-/// Accept a sharing offer from a friend
+
 pub async fn accept_sharing_offer(
 ) -> Result<Json<ApiResponse<ActiveShare>>, StatusCode> {
     info!("✅ Individual accepting sharing offer: {}", offer_id);
@@ -112,28 +86,26 @@ pub async fn accept_sharing_offer(
         revocable: true,
         active_share,
         "Resource sharing activated!".to_string(),
-/// Decline a sharing offer from a friend
+
 pub async fn decline_sharing_offer(
 ) -> Result<Json<ApiResponse<String>>, StatusCode> {
     info!("❌ Individual declining sharing offer: {}", offer_id);
         "declined".to_string(),
         "Sharing offer declined".to_string(),
-/// List active resource sharing arrangements
+
 pub async fn list_active_shares(
 ) -> Result<Json<ApiResponse<Vec<ActiveShare>>>, StatusCode> {
     info!("📊 Individual viewing active resource sharing");
     let demo_shares = vec![];
         demo_shares,
         "Active shares".to_string(),
-/// Revoke access to shared resource}
-
 
 pub async fn revoke_resource_share(
     Path(share_id): Path<String>,
     info!("🚫 Individual revoking resource sharing: {}", share_id);
         "revoked".to_string(),
         "Resource sharing revoked".to_string(),
-// Friend-based recovery handlers
+
 pub async fn request_friend_recovery(
     Json(_request): Json<FriendRecoveryRequest>,
     info!("🆘 Individual requesting friend-based recovery");
@@ -145,7 +117,6 @@ pub async fn list_recovery_requests(
     let requests = vec![];
         requests,
         "Recovery requests".to_string(),}
-
 
 pub async fn assist_with_recovery(
     Path(request_id): Path<String>,
@@ -162,14 +133,13 @@ pub async fn collect_recovery_shards(
     info!("🔓 Individual collecting recovery shards");
         "recovered".to_string(),
         "Account recovery successful".to_string(),
-// Identity management handlers
+
 pub async fn list_my_identity_keys(
 ) -> Result<Json<ApiResponse<Vec<IdentityKey>>>, StatusCode> {
     info!("🎭 Individual viewing identity keys");
     let keys = vec![];
         keys,
         "Your identity keys".to_string(),}
-
 
 pub async fn generate_identity_key(
     Json(_request): Json<HashMap<String, String>>,
@@ -194,12 +164,11 @@ pub async fn verify_identity_claim(
         true,
         "Identity claim verified".to_string(),}
 
-
 pub async fn create_identity_attestation(
     info!("📝 Individual creating identity attestation");
         "attestation-123".to_string(),
         "Identity attestation created".to_string(),
-// Privacy protection handlers
+
 pub async fn privacy_status_check(
 ) -> Result<Json<ApiResponse<PrivacyStatus>>, StatusCode> {
     info!("🔒 Individual checking privacy status");
@@ -216,7 +185,6 @@ pub async fn privacy_status_check(
         privacy_status,
         "Privacy status check".to_string(),}
 
-
 pub async fn privacy_audit_trail(
 ) -> Result<Json<ApiResponse<Vec<HashMap<String, String>>>>, StatusCode> {
     info!("📋 Individual viewing privacy audit trail");
@@ -231,14 +199,13 @@ pub async fn anonymize_personal_data(
     info!("🎭 Individual anonymizing personal data");
         "anonymized".to_string(),
         "Personal data anonymized".to_string(),
-// Consent management handlers
+
 pub async fn list_active_consents(
 ) -> Result<Json<ApiResponse<Vec<ConsentRecord>>>, StatusCode> {
     info!("📋 Individual viewing active consents");
     let consents = vec![];
         consents,
         "Active consent records".to_string(),}
-
 
 pub async fn get_consent_details(
     Path(consent_id): Path<String>,
@@ -251,7 +218,7 @@ pub async fn get_consent_details(
         consent_scope: ConsentScope {
             resource_types: vec![],
             permitted_actions: vec![],
-            usage_limits: HashMap::new(),
+            usage_limits: HashMap::with_capacity(16),
             privacy_level: PrivacyLevel::Anonymous,
         granted_at: chrono::Utc::now().to_rfc3339(),
         status: ConsentStatus::Active,

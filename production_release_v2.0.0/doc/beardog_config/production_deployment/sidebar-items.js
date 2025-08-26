@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["environment","health_checks","monitoring","network","rollback","security","services","storage","strategy","validation"],"struct":["DeploymentResourceEstimate","ProductionDeploymentConfig"]};

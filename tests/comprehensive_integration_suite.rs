@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Comprehensive Integration Test Suite for BearDog Security Manager
-//!
-//! This test suite validates complete system workflows, cross-module interactions,
-//! and real-world scenarios to ensure production readiness.
 
 use beardog_adapters::*;
 use beardog_types::canonical::AuditEventType;
@@ -35,7 +15,6 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
-/// Integration test harness for cross-module testing
 pub struct IntegrationTestHarness {
     pub config: OptimizedBearDogConfig,
     pub security_manager: Arc<RwLock<MemoryKeyManager>>,
@@ -44,7 +23,6 @@ pub struct IntegrationTestHarness {
     pub metrics: Arc<RwLock<TestMetrics>>,
 }
 
-/// Mock authentication handler for integration testing
 pub struct MockAuthHandler {
     pub authorized_users: HashMap<String, Vec<String>>,
     pub active_sessions: HashMap<String, AuthSession>,
@@ -52,7 +30,6 @@ pub struct MockAuthHandler {
     pub successful_attempts: u64,
 }
 
-/// Test session for authentication tracking
 #[derive(Debug, Clone)]
 pub struct AuthSession {
     pub user_id: String,
@@ -61,7 +38,6 @@ pub struct AuthSession {
     pub expires_at: std::time::Instant,
 }
 
-/// Test metrics collection
 #[derive(Debug, Default)]
 pub struct TestMetrics {
     pub operations_completed: u64,
@@ -88,23 +64,18 @@ impl IntegrationTestHarness {
         })
     }
 
-    /// Simulate a complete user authentication and authorization workflow
     pub async fn test_auth_workflow(&self, user_id: &str, requested_resource: &str) -> BearDogResult<bool> {
         let start_time = Instant::now();
-        
-        // Step 1: Authentication
+
         let mut auth_handler = self.auth_handler.write().await;
         let session = auth_handler.authenticate(user_id).await?;
-        
-        // Step 2: Authorization check
+
         let authorized = auth_handler.authorize(&session, requested_resource).await?;
-        
-        // Step 3: Compliance logging
+
         drop(auth_handler); // Release the lock
         let mut compliance = self.compliance_engine.write().await;
         compliance.log_access_attempt(user_id, requested_resource, authorized).await?;
-        
-        // Step 4: Metrics update
+
         drop(compliance); // Release the lock
         let mut metrics = self.metrics.write().await;
         let duration = start_time.elapsed();
@@ -113,30 +84,26 @@ impl IntegrationTestHarness {
         Ok(authorized)
     }
 
-    /// Test cryptographic key lifecycle with compliance auditing
     pub async fn test_key_lifecycle_with_audit(&self, key_id: &str) -> BearDogResult<()> {
         let start_time = Instant::now();
-        
-        // Step 1: Generate cryptographic key
+
         let key_data = BearDogCrypto::generate_secure_random(32)?;
-        
-        // Step 2: Store key securely
+
         let mut security_manager = self.security_manager.write().await;
         security_manager.store_key(key_id, key_data.clone())?;
-        
-        // Step 3: Log key creation for compliance
+
         drop(security_manager); // Release the lock
         let mut compliance = self.compliance_engine.write().await;
         let event = AuditEvent {
-            id: format!("key_create_{}", key_id),
+            id: format_args!("key_create_{}", key_id).to_string(),
             event_type: AuditEventType::Security,
             severity: AuditSeverity::Medium,
             user_id: "system".to_string(),
             resource: key_id.to_string(),
             outcome: "success".to_string(),
-            description: format!("Cryptographic key {} created and stored", key_id),
+            description: format_args!("Cryptographic key {} created and stored", key_id).to_string(),
             metadata: {
-                let mut meta = HashMap::new();
+                let mut meta = HashMap::with_capacity(16);
                 meta.insert("key_size".to_string(), "256".to_string());
                 meta.insert("algorithm".to_string(), "AES-256".to_string());
                 meta
@@ -144,8 +111,7 @@ impl IntegrationTestHarness {
             timestamp: chrono::Utc::now(),
         };
         compliance.log_event(event).await?;
-        
-        // Step 4: Test key retrieval
+
         drop(compliance); // Release the lock
         let mut security_manager = self.security_manager.write().await;
         let retrieved_key = security_manager.get_key(key_id)?
@@ -153,36 +119,32 @@ impl IntegrationTestHarness {
             ))?;
         
         assert_eq!(key_data, retrieved_key);
-        
-        // Step 5: Test key rotation
+
         let new_key_data = BearDogCrypto::generate_secure_random(32)?;
         security_manager.store_key(key_id, new_key_data.clone())?;
-        
-        // Step 6: Verify rotation
+
         let rotated_key = security_manager.get_key(key_id)?
             .ok_or_else(|| BearDogError::internal("Key not found after rotation".to_string(),
             ))?;
         
         assert_eq!(new_key_data, rotated_key);
         assert_ne!(key_data, rotated_key);
-        
-        // Step 7: Log key rotation
+
         drop(security_manager); // Release the lock
         let mut compliance = self.compliance_engine.write().await;
         let rotation_event = AuditEvent {
-            id: format!("key_rotate_{}", key_id),
+            id: format_args!("key_rotate_{}", key_id).to_string(),
             event_type: AuditEventType::Security,
             severity: AuditSeverity::Medium,
             user_id: "system".to_string(),
             resource: key_id.to_string(),
             outcome: "success".to_string(),
-            description: format!("Cryptographic key {} rotated successfully", key_id),
-            metadata: HashMap::new(),
+            description: format_args!("Cryptographic key {} rotated successfully", key_id).to_string(),
+            metadata: HashMap::with_capacity(16),
             timestamp: chrono::Utc::now(),
         };
         compliance.log_event(rotation_event).await?;
-        
-        // Step 8: Update metrics
+
         drop(compliance); // Release the lock
         let mut metrics = self.metrics.write().await;
         let duration = start_time.elapsed();
@@ -191,41 +153,35 @@ impl IntegrationTestHarness {
         Ok(())
     }
 
-    /// Test end-to-end encrypted communication workflow
     pub async fn test_encrypted_communication(&self, sender: &str, receiver: &str, message: &[u8]) -> BearDogResult<Vec<u8>> {
         let start_time = Instant::now();
-        
-        // Step 1: Generate ephemeral keys for communication
+
         let (sender_private, sender_public) = BearDogCrypto::generate_ed25519_keypair()?;
         let (receiver_private, receiver_public) = BearDogCrypto::generate_ed25519_keypair()?;
-        
-        // Step 2: Store keys securely
+
         let mut security_manager = self.security_manager.write().await;
-        security_manager.store_key(&format!("{}_private", sender), sender_private.clone())?;
-        security_manager.store_key(&format!("{}_public", sender), sender_public.clone())?;
-        security_manager.store_key(&format!("{}_private", receiver), receiver_private.clone())?;
-        security_manager.store_key(&format!("{}_public", receiver), receiver_public.clone())?;
+        security_manager.store_key(&format_args!("{}_private", sender).to_string(), sender_private.clone())?;
+        security_manager.store_key(&format_args!("{}_public", sender).to_string(), sender_public.clone())?;
+        security_manager.store_key(&format_args!("{}_private", receiver).to_string(), receiver_private.clone())?;
+        security_manager.store_key(&format_args!("{}_public", receiver).to_string(), receiver_public.clone())?;
         drop(security_manager); // Release the lock
-        
-        // Step 3: Encrypt message
+
         let encryption_key = BearDogCrypto::generate_secure_random(32)?;
         let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(&encryption_key, message, None)?;
-        
-        // Step 4: Sign the encrypted message
+
         let signature = BearDogCrypto::sign_ed25519(&sender_private, &ciphertext)?;
-        
-        // Step 5: Log communication attempt
+
         let mut compliance = self.compliance_engine.write().await;
         let comm_event = AuditEvent {
-            id: format!("comm_{}_{}", sender, receiver),
+            id: format_args!("comm_{}_{}", sender, receiver).to_string(),
             event_type: AuditEventType::Security,
             severity: AuditSeverity::Low,
             user_id: sender.to_string(),
-            resource: format!("communication_channel_{}", receiver),
+            resource: format_args!("communication_channel_{}", receiver).to_string(),
             outcome: "encrypted".to_string(),
-            description: format!("Encrypted communication from {} to {}", sender, receiver),
+            description: format_args!("Encrypted communication from {} to {}", sender, receiver).to_string(),
             metadata: {
-                let mut meta = HashMap::new();
+                let mut meta = HashMap::with_capacity(16);
                 meta.insert("message_size".to_string(), message.len().to_string());
                 meta.insert("encryption".to_string(), "AES-256-GCM".to_string());
                 meta.insert("signature".to_string(), "Ed25519".to_string());
@@ -235,21 +191,17 @@ impl IntegrationTestHarness {
         };
         compliance.log_event(comm_event).await?;
         drop(compliance); // Release the lock
-        
-        // Step 6: Verify signature (receiver side)
+
         let signature_valid = BearDogCrypto::verify_ed25519_signature(&sender_public, &ciphertext, &signature)?;
         if !signature_valid {
             return Err(BearDogError::authentication("Invalid message signature".to_string(),
             ));
         }
-        
-        // Step 7: Decrypt message
+
         let decrypted = BearDogCrypto::decrypt_aes_gcm(&encryption_key, &ciphertext, &nonce)?;
-        
-        // Step 8: Verify message integrity
+
         assert_eq!(message, decrypted);
-        
-        // Step 9: Update metrics
+
         let mut metrics = self.metrics.write().await;
         let duration = start_time.elapsed();
         metrics.update_operation(true, duration);
@@ -258,7 +210,6 @@ impl IntegrationTestHarness {
         Ok(decrypted)
     }
 
-    /// Test system resilience under load
     pub async fn test_concurrent_operations(&self, num_operations: usize) -> BearDogResult<TestResults> {
         let start_time = Instant::now();
         let mut handles = Vec::new();
@@ -266,22 +217,19 @@ impl IntegrationTestHarness {
         for i in 0..num_operations {
             let harness = self.clone_refs().await;
             let handle = tokio::spawn(async move {
-                let user_id = format!("user_{}", i);
-                let resource = format!("resource_{}", i % 10); // 10 different resources
-                
-                // Test concurrent auth workflow
+                let user_id = format_args!("user_{}", i).to_string();
+                let resource = format_args!("resource_{}", i % 10).to_string(); // 10 different resources
+
                 let auth_result = harness.test_auth_workflow(&user_id, &resource).await;
-                
-                // Test concurrent key operations
-                let key_id = format!("key_{}", i);
+
+                let key_id = format_args!("key_{}", i).to_string();
                 let key_result = harness.test_key_lifecycle_with_audit(&key_id).await;
                 
                 (auth_result.is_ok(), key_result.is_ok())
             });
             handles.push(handle);
         }
-        
-        // Collect results
+
         let mut successful_auth = 0;
         let mut successful_keys = 0;
         let mut total_operations = 0;
@@ -294,7 +242,7 @@ impl IntegrationTestHarness {
                     if key_success { successful_keys += 1; }
                 },
                 Err(_) => {
-                    // Handle join error
+
                     total_operations += 1;
                 }
             }
@@ -315,7 +263,6 @@ impl IntegrationTestHarness {
         })
     }
 
-    /// Helper method to clone Arc references for concurrent testing
     async fn clone_refs(&self) -> IntegrationTestHarness {
         IntegrationTestHarness {
             config: self.config.clone(),
@@ -329,14 +276,14 @@ impl IntegrationTestHarness {
 
 impl MockAuthHandler {
     pub fn new() -> Self {
-        let mut authorized_users = HashMap::new();
+        let mut authorized_users = HashMap::with_capacity(16);
         authorized_users.insert("admin".to_string(), vec!["read".to_string(), "write".to_string(), "admin".to_string()]);
         authorized_users.insert("user".to_string(), vec!["read".to_string(), "write".to_string()]);
         authorized_users.insert("guest".to_string(), vec!["read".to_string()]);
         
         Self {
             authorized_users,
-            active_sessions: HashMap::new(),
+            active_sessions: HashMap::with_capacity(16),
             failed_attempts: 0,
             successful_attempts: 0,
         }
@@ -356,18 +303,17 @@ impl MockAuthHandler {
             Ok(session)
         } else {
             self.failed_attempts += 1;
-            Err(BearDogError::authentication(format!("User {) not authorized", user_id),
+            Err(BearDogError::authentication(format_args!("User {) not authorized", user_id).to_string(),
             })
         }
     }
     
     pub async fn authorize(&self, session: &AuthSession, resource: &str) -> BearDogResult<bool> {
-        // Simple authorization logic for testing
+
         if session.expires_at < Instant::now() {
             return Ok(false); // Session expired
         }
-        
-        // Check if user has required permissions based on resource type
+
         let required_permission = if resource.contains("admin") {
             "admin"
         } else if resource.contains("write") || resource.starts_with("key_") {
@@ -386,14 +332,12 @@ impl TestMetrics {
         if !success {
             self.operations_failed += 1;
         }
-        
-        // Update average response time
+
         let duration_ms = duration.as_millis() as f64;
         self.average_response_time_ms = (self.average_response_time_ms * (self.operations_completed - 1) as f64 + duration_ms) / self.operations_completed as f64;
     }
 }
 
-/// Test results structure
 #[derive(Debug)]
 pub struct TestResults {
     pub total_operations: usize,
@@ -406,24 +350,19 @@ pub struct TestResults {
     pub security_violations: u64,
 }
 
-// Integration Tests
-
 #[tokio::test]
 async fn test_complete_authentication_workflow() -> BearDogResult<()> {
     let harness = IntegrationTestHarness::new().await?;
-    
-    // Test successful authentication
+
     let result = harness.test_auth_workflow("admin", "admin_resource").await?;
     assert!(result, "Admin should be authorized for admin resource");
     
     let result = harness.test_auth_workflow("user", "read_resource").await?;
     assert!(result, "User should be authorized for read resource");
-    
-    // Test failed authentication
+
     let result = harness.test_auth_workflow("guest", "admin_resource").await?;
     assert!(!result, "Guest should not be authorized for admin resource");
-    
-    // Verify metrics
+
     let metrics = harness.metrics.read().await;
     assert_eq!(metrics.operations_completed, 3);
     assert!(metrics.average_response_time_ms > 0.0);
@@ -435,16 +374,13 @@ async fn test_complete_authentication_workflow() -> BearDogResult<()> {
 #[tokio::test]
 async fn test_cryptographic_key_lifecycle() -> BearDogResult<()> {
     let harness = IntegrationTestHarness::new().await?;
-    
-    // Test key lifecycle with audit trail
+
     harness.test_key_lifecycle_with_audit("test_key_001").await?;
-    
-    // Verify compliance events were logged
+
     let compliance = harness.compliance_engine.read().await;
     let events = compliance.search_events(Some(AuditEventType::Security), None, None).await?;
     assert!(!events.is_empty(), "Security events should be logged");
-    
-    // Verify key operations in metrics
+
     let metrics = harness.metrics.read().await;
     assert!(metrics.operations_completed > 0);
     
@@ -460,8 +396,7 @@ async fn test_encrypted_communication_workflow() -> BearDogResult<()> {
     let decrypted = harness.test_encrypted_communication("alice", "bob", original_message).await?;
     
     assert_eq!(original_message, decrypted.as_slice());
-    
-    // Verify compliance logging
+
     let compliance = harness.compliance_engine.read().await;
     let events = compliance.search_events(Some(AuditEventType::Security), None, None).await?;
     assert!(events.iter().any(|e| e.description.contains("Encrypted communication")));
@@ -473,8 +408,7 @@ async fn test_encrypted_communication_workflow() -> BearDogResult<()> {
 #[tokio::test]
 async fn test_concurrent_system_load() -> BearDogResult<()> {
     let harness = IntegrationTestHarness::new().await?;
-    
-    // Test system under concurrent load
+
     let results = harness.test_concurrent_operations(50).await?;
     
     println!("📊 Concurrent Load Test Results:");
@@ -486,8 +420,7 @@ async fn test_concurrent_system_load() -> BearDogResult<()> {
     println!("  Operations/sec: {:.2}", results.operations_per_second);
     println!("  Compliance Events: {}", results.compliance_events);
     println!("  Security Violations: {}", results.security_violations);
-    
-    // Verify performance benchmarks
+
     assert!(results.operations_per_second > 10.0, "Should handle at least 10 ops/sec");
     assert!(results.average_response_time < 1000.0, "Average response time should be under 1 second");
     assert_eq!(results.security_violations, 0, "Should have no security violations");
@@ -499,28 +432,22 @@ async fn test_concurrent_system_load() -> BearDogResult<()> {
 #[tokio::test]
 async fn test_system_resilience_and_recovery() -> BearDogResult<()> {
     let harness = IntegrationTestHarness::new().await?;
-    
-    // Test system behavior under various failure conditions
-    
-    // 1. Test with invalid user
+
     let result = harness.test_auth_workflow("nonexistent_user", "some_resource").await;
     assert!(result.is_err(), "Should fail for nonexistent user");
-    
-    // 2. Test key operations with invalid keys
+
     let security_manager = harness.security_manager.read().await;
     let result = security_manager.get_key("nonexistent_key");
     assert!(result.is_ok() && result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?.is_none(), "Should handle missing keys gracefully");
     drop(security_manager);
-    
-    // 3. Test encryption with malformed data
+
     let malformed_key = vec![1, 2, 3]; // Too short for AES-256
     let result = BearDogCrypto::encrypt_aes_gcm(&malformed_key, b"test", None);
     assert!(result.is_err(), "Should fail with malformed key");
-    
-    // 4. Test system recovery after errors
+
     let result = harness.test_auth_workflow("admin", "admin_resource").await?;
     assert!(result, "System should recover and handle valid requests after errors");
     
@@ -531,23 +458,19 @@ async fn test_system_resilience_and_recovery() -> BearDogResult<()> {
 #[tokio::test]
 async fn test_compliance_audit_trail() -> BearDogResult<()> {
     let harness = IntegrationTestHarness::new().await?;
-    
-    // Perform various operations to generate audit trail
+
     harness.test_auth_workflow("admin", "sensitive_resource").await?;
     harness.test_key_lifecycle_with_audit("audit_test_key").await?;
     harness.test_encrypted_communication("admin", "user", b"audit test message").await?;
-    
-    // Verify comprehensive audit trail
+
     let compliance = harness.compliance_engine.read().await;
     let all_events = compliance.search_events(None, None, None).await?;
     
     assert!(!all_events.is_empty(), "Should have audit events");
-    
-    // Verify different event types are logged
+
     let security_events = compliance.search_events(Some(AuditEventType::Security), None, None).await?;
     assert!(!security_events.is_empty(), "Should have security events");
-    
-    // Verify event details
+
     for event in &security_events {
         assert!(!event.id.is_empty(), "Event ID should not be empty");
         assert!(!event.user_id.is_empty(), "User ID should not be empty");
@@ -564,14 +487,12 @@ async fn test_compliance_audit_trail() -> BearDogResult<()> {
 #[tokio::test]
 async fn test_configuration_integration() -> BearDogResult<()> {
     let harness = IntegrationTestHarness::new().await?;
-    
-    // Test that configuration is properly integrated across modules
+
     assert!(harness.config.database.pool.max_connections > 0);
     assert!(harness.config.memory.monitoring.enabled);
     assert!(harness.config.async_optimization.parallel_processing.enabled);
     assert!(harness.config.performance.monitoring.enabled);
-    
-    // Test configuration serialization/deserialization
+
     let json = serde_json::to_string(&harness.config)?;
     let deserialized: OptimizedBearDogConfig = serde_json::from_str(&json)?;
     

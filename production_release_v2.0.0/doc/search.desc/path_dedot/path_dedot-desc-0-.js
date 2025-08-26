@@ -1,1 +1,0 @@
-searchState.loadedDescShard("path_dedot", 0, "Path Dedot\nThe main separator for the target OS.\nLet <code>Path</code> and <code>PathBuf</code> have <code>parse_dot</code> method.\nRemove dots in the path and create a new <code>PathBuf</code> instance …\nRemove dots in the path and create a new <code>PathBuf</code> instance …")

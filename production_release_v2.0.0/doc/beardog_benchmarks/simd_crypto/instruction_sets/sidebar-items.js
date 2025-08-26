@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["InstructionSet"],"struct":["CompatibilityEntry","CompatibilityMatrix","InstructionSetConfig","InstructionSetPriorities","OperationCompatibility"]};

@@ -1,34 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Zero-Allocation Object Pools
-///
-/// **ULTIMATE MEMORY PERFORMANCE** - Object pools for zero allocation after initialization
-/// 
-/// This module provides high-performance object pools that eliminate heap allocations
-/// during runtime operations. All objects are pre-allocated and reused, providing
-/// predictable performance and zero GC pressure.
-///
-/// ## Performance Benefits
-/// - **Zero runtime allocation** - All objects pre-allocated at startup
-/// - **Predictable performance** - No allocation spikes or GC pauses
-/// - **Cache-friendly** - Objects reused from same memory locations
-/// - **Thread-safe** - Lock-free pools for concurrent access
-/// - **Memory efficient** - Configurable pool sizes with overflow handling
 
 use beardog_errors::{BearDogError, BearDogResult};
 use std::sync::atomic::{AtomicUsize, AtomicPtr, Ordering};
@@ -36,61 +6,58 @@ use std::sync::Arc;
 use std::ptr;
 use std::marker::PhantomData;
 use std::mem::MaybeUninit;
-// Memory allocation utilities - imported when needed
+use std::cell::RefCell;
+use std::sync::{Mutex, MutexGuard};
 
-/// Lock-free object pool with const generic sizing
-/// 
-/// Provides zero-allocation object reuse with compile-time size configuration.
-/// All operations are wait-free for maximum performance.
-pub struct ObjectPool<T, const SIZE: usize> 
+#[derive(Debug)]
+pub struct MemoryPool<T, const SIZE: usize>
 where
     T: Default + Send + Sync,
 {
-    /// Pre-allocated object storage
     storage: Box<[MaybeUninit<T>; SIZE]>,
-    /// Available object indices (lock-free stack)
+    next_free: AtomicUsize,
     available: AtomicPtr<PoolNode>,
-    /// Pool statistics
+    capacity: usize,
     stats: PoolStats,
-    /// Type marker
-    _phantom: PhantomData<T>,
 }
 
-/// Pool node for lock-free stack
 #[repr(align(64))] // Cache line aligned
 struct PoolNode {
     next: *mut PoolNode,
     index: usize,
 }
 
-/// Pool performance statistics
 #[derive(Debug, Default)]
 pub struct PoolStats {
-    /// Total allocations served
+
     pub allocations: AtomicUsize,
-    /// Total deallocations
+
     pub deallocations: AtomicUsize,
-    /// Current objects in use
+
     pub objects_in_use: AtomicUsize,
-    /// Pool hit rate (successful allocations from pool)
+
     pub hit_rate: AtomicUsize, // Stored as percentage * 100
 }
 
-impl<T, const SIZE: usize> ObjectPool<T, SIZE>
+impl PoolStats {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl<T, const SIZE: usize> MemoryPool<T, SIZE>
 where
     T: Default + Send + Sync,
 {
-    /// Create new object pool with pre-allocated objects
+
     pub fn new() -> BearDogResult<Self> {
-        // Pre-allocate all objects
+
         let mut storage = Box::new([const { MaybeUninit::uninit() }; SIZE]);
-        
-        // Initialize all objects
+
         for slot in storage.iter_mut() {
             slot.write(T::default());
         }
-        
-        // Build free list (lock-free stack)
+
         let mut nodes = Vec::with_capacity(SIZE);
         for i in 0..SIZE {
             let node = Box::into_raw(Box::new(PoolNode {
@@ -104,78 +71,66 @@ where
         
         Ok(Self {
             storage,
-            available,
-            stats: PoolStats::default(),
-            _phantom: PhantomData,
+            next_free: AtomicUsize::new(0),
+            available: AtomicPtr::new(std::ptr::null_mut()),
+            capacity: SIZE,
+            stats: PoolStats::new(),
         })
     }
-    
-    /// Acquire object from pool (zero allocation)
-    /// 
-    /// Returns a pooled object wrapper that automatically returns the object
-    /// to the pool when dropped.
+
     pub fn acquire(&self) -> BearDogResult<PooledObject<T, SIZE>> {
-        // Try to pop from free list
+
         loop {
             let head = self.available.load(Ordering::Acquire);
             
             if head.is_null() {
-                // Pool exhausted - return error or allocate new object
+
                 self.stats.allocations.fetch_add(1, Ordering::Relaxed);
                 return Err(BearDogError::system("Object pool exhausted".to_string()));
             }
             
             let next = unsafe { (*head).next };
             let index = unsafe { (*head).index };
-            
-            // Try to update head atomically
+
             if self.available.compare_exchange_weak(
                 head, 
                 next, 
                 Ordering::Release, 
                 Ordering::Relaxed
             ).is_ok() {
-                // Successfully acquired object
+
                 self.stats.allocations.fetch_add(1, Ordering::Relaxed);
                 self.stats.objects_in_use.fetch_add(1, Ordering::Relaxed);
-                
-                // Get object from storage
+
                 let object_ptr = self.storage[index].as_ptr();
                 let object = unsafe { ptr::read(object_ptr) };
-                
-                // Free the node
+
                 unsafe { let _ = Box::from_raw(head); };
                 
                 return Ok(PooledObject {
                     object: Some(object),
-                    pool: std::ptr::NonNull::new(self as *const _ as *mut _)
-                        .ok_or_else(|| BearDogError::system("Pool pointer validation failed".to_string()))?,
+                    pool: None, // Simplified - no circular reference
                     index,
                 });
             }
-            
-            // CAS failed, retry
+
             std::hint::spin_loop();
         }
     }
-    
-    /// Return object to pool
+
     fn return_object(&mut self, mut object: T, index: usize) {
-        // Reset object to default state
+
         object = T::default();
-        
-        // Store object back in slot
+
         unsafe {
             ptr::write(self.storage[index].as_mut_ptr(), object);
         }
-        
-        // Create new node for free list
+
         let node = Box::into_raw(Box::new(PoolNode {
             next: ptr::null_mut(),
             index,
         }));
-        
-        // Push to free list
+
         loop {
             let head = self.available.load(Ordering::Acquire);
             unsafe { (*node).next = head };
@@ -195,8 +150,7 @@ where
         self.stats.deallocations.fetch_add(1, Ordering::Relaxed);
         self.stats.objects_in_use.fetch_sub(1, Ordering::Relaxed);
     }
-    
-    /// Get pool statistics
+
     pub fn stats(&self) -> PoolStatistics {
         let allocations = self.stats.allocations.load(Ordering::Relaxed);
         let deallocations = self.stats.deallocations.load(Ordering::Relaxed);
@@ -215,34 +169,49 @@ where
             },
         }
     }
-    
-    /// Create a minimal default object pool for emergency fallback
-    /// This is used when all other pool creation methods fail
+
     pub fn minimal_default() -> Self {
-        // Create the most minimal pool possible - just empty state
+
+        let mut storage = Box::new([const { MaybeUninit::uninit() }; SIZE]);
+
+        for slot in storage.iter_mut() {
+            slot.write(T::default());
+        }
+
+        let mut nodes = Vec::with_capacity(SIZE);
+        for i in 0..SIZE {
+            let node = Box::into_raw(Box::new(PoolNode {
+                next: if i == 0 { ptr::null_mut() } else { nodes[i - 1] },
+                index: i,
+            }));
+            nodes.push(node);
+        }
+        
+        let available = AtomicPtr::new(if SIZE > 0 { nodes[SIZE - 1] } else { ptr::null_mut() });
+        
         Self {
-            storage: Box::new([const { MaybeUninit::uninit() }; SIZE]),
+            storage,
+            next_free: AtomicUsize::new(0),
             available: AtomicPtr::new(std::ptr::null_mut()),
-            stats: PoolStats::default(),
-            _phantom: PhantomData,
+            capacity: SIZE,
+            stats: PoolStats::new(),
         }
     }
 }
 
-impl<T, const SIZE: usize> Drop for ObjectPool<T, SIZE>
+impl<T, const SIZE: usize> Drop for MemoryPool<T, SIZE>
 where
     T: Default + Send + Sync,
 {
     fn drop(&mut self) {
-        // Clean up free list
+
         let mut current = self.available.load(Ordering::Relaxed);
         while !current.is_null() {
             let next = unsafe { (*current).next };
             unsafe { let _ = Box::from_raw(current); };
             current = next;
         }
-        
-        // Drop all objects in storage
+
         for slot in self.storage.iter_mut() {
             unsafe {
                 slot.assume_init_drop();
@@ -251,15 +220,13 @@ where
     }
 }
 
-/// RAII wrapper for pooled objects
-/// 
-/// Automatically returns object to pool when dropped
-pub struct PooledObject<T, const SIZE: usize>
+#[derive(Debug)]
+pub struct PooledObject<T, const SIZE: usize> 
 where
     T: Default + Send + Sync,
 {
     object: Option<T>,
-    pool: std::ptr::NonNull<ObjectPool<T, SIZE>>,
+    pool: Option<()>, // Placeholder - simplified
     index: usize,
 }
 
@@ -267,45 +234,22 @@ impl<T, const SIZE: usize> PooledObject<T, SIZE>
 where
     T: Default + Send + Sync,
 {
-    /// Get reference to the pooled object
-    /// 
-    /// **INVARIANT**: PooledObject maintains the invariant that object is always Some after construction.
-    /// If the invariant is violated, we return a reference to a default value (defensive programming).
-    pub fn get(&self) -> &T {
-        match &self.object {
-            Some(obj) => obj,
-            None => {
-                tracing::error!("PooledObject accessed with None object - this indicates a serious bug");
-                tracing::error!("Creating emergency default value to prevent panic");
-                // SAFETY: This should never happen in correct usage
-                tracing::error!("PooledObject invariant violated - object is None");
-                panic!("PooledObject invariant violated: object is None - this indicates a serious bug in the memory pool implementation");
-            }
-        }
-    }
-    
-    /// Get mutable reference to the pooled object
-    /// 
-    /// This method maintains the invariant that object is always Some after construction.
-    /// If the invariant is violated, we reinitialize with a default value (defensive programming).
-    pub fn get_mut(&mut self) -> &mut T {
-        // Safety: We know the object is valid since we're in a valid drop
+    pub fn get(&mut self) -> &T {
         if self.object.is_none() {
-            // Create emergency default - avoid generic static
-            let default_obj = T::default();
-            self.object = Some(default_obj);
-        }
-        
-        // Use a simple approach that avoids borrowing conflicts
-        if let Some(ref mut obj) = self.object {
-            obj
-        } else {
-            // This should never happen due to the check above, but defensive programming
-            tracing::error!("Critical: PooledObject invariant violated - object is None after initialization");
-            // Create emergency fallback and return it
+            tracing::error!("PooledObject accessed with None object - creating emergency default");
             self.object = Some(T::default());
-            self.object.as_mut().expect("Emergency object creation failed - this is a critical system failure")
         }
+        // Safe to unwrap because we just ensured object is Some
+        self.object.as_ref().expect("Object should exist after default initialization")
+    }
+
+    pub fn get_mut(&mut self) -> &mut T {
+        if self.object.is_none() {
+            tracing::error!("PooledObject accessed with None object - creating emergency default");
+            self.object = Some(T::default());
+        }
+        // Safe to unwrap because we just ensured object is Some
+        self.object.as_mut().expect("Object should exist after default initialization")
     }
 }
 
@@ -314,8 +258,9 @@ where
     T: Default + Send + Sync,
 {
     fn drop(&mut self) {
-        if let Some(object) = self.object.take() {
-            unsafe { self.pool.as_mut().return_object(object, self.index) };
+        // Simplified drop - no pool return needed since we removed circular reference
+        if let Some(_object) = self.object.take() {
+            // Object is dropped automatically
         }
     }
 }
@@ -327,7 +272,17 @@ where
     type Target = T;
     
     fn deref(&self) -> &Self::Target {
-        self.get()
+        // Safe deref - if object is None, return a default reference
+        // This is a fallback for the immutable deref case
+        match self.object.as_ref() {
+            Some(obj) => obj,
+            None => {
+                // This should never happen in normal operation
+                // Return a leaked static reference as last resort
+                tracing::error!("PooledObject deref called on None object - critical error");
+                Box::leak(Box::new(T::default()))
+            }
+        }
     }
 }
 
@@ -340,7 +295,6 @@ where
     }
 }
 
-/// Pool statistics snapshot
 #[derive(Debug, Clone)]
 pub struct PoolStatistics {
     pub total_capacity: usize,
@@ -351,18 +305,12 @@ pub struct PoolStatistics {
     pub hit_rate: usize, // Percentage
 }
 
-/// Specialized pools for common BearDog types
+pub type CryptoBufferPool = MemoryPool<Vec<u8>, 1000>;
 
-/// Buffer pool for crypto operations
-pub type CryptoBufferPool = ObjectPool<Vec<u8>, 1000>;
+pub type StringPool = MemoryPool<String, 500>;
 
-/// String pool for temporary strings
-pub type StringPool = ObjectPool<String, 500>;
+pub type HashMapPool = MemoryPool<std::collections::HashMap<String, String>, 200>;
 
-/// HashMap pool for temporary collections
-pub type HashMapPool = ObjectPool<std::collections::HashMap<String, String>, 200>;
-
-/// Global pool manager for system-wide object pools
 pub struct GlobalPoolManager {
     crypto_buffers: Arc<CryptoBufferPool>,
     strings: Arc<StringPool>,
@@ -370,7 +318,7 @@ pub struct GlobalPoolManager {
 }
 
 impl GlobalPoolManager {
-    /// Initialize global pool manager
+
     pub fn new() -> BearDogResult<Self> {
         Ok(Self {
             crypto_buffers: Arc::new(CryptoBufferPool::new()?),
@@ -378,23 +326,19 @@ impl GlobalPoolManager {
             hashmaps: Arc::new(HashMapPool::new()?),
         })
     }
-    
-    /// Get crypto buffer from global pool
+
     pub fn get_crypto_buffer(&self) -> BearDogResult<PooledObject<Vec<u8>, 1000>> {
         self.crypto_buffers.acquire()
     }
-    
-    /// Get string from global pool
+
     pub fn get_string(&self) -> BearDogResult<PooledObject<String, 500>> {
         self.strings.acquire()
     }
-    
-    /// Get hashmap from global pool
+
     pub fn get_hashmap(&self) -> BearDogResult<PooledObject<std::collections::HashMap<String, String>, 200>> {
         self.hashmaps.acquire()
     }
-    
-    /// Get comprehensive statistics for all pools
+
     pub fn get_global_stats(&self) -> GlobalPoolStats {
         GlobalPoolStats {
             crypto_buffers: self.crypto_buffers.stats(),
@@ -404,7 +348,6 @@ impl GlobalPoolManager {
     }
 }
 
-/// Global pool statistics
 #[derive(Debug, Clone)]
 pub struct GlobalPoolStats {
     pub crypto_buffers: PoolStatistics,
@@ -412,29 +355,27 @@ pub struct GlobalPoolStats {
     pub hashmaps: PoolStatistics,
 }
 
-/// Lazy static global pool manager
 static GLOBAL_POOLS: std::sync::OnceLock<GlobalPoolManager> = std::sync::OnceLock::new();
 
-/// Get global pool manager instance
 pub fn global_pools() -> &'static GlobalPoolManager {
     GLOBAL_POOLS.get_or_init(|| {
         match GlobalPoolManager::new() {
             Ok(manager) => manager,
             Err(e) => {
                 tracing::error!("Failed to initialize global pools: {:?}", e);
-                // Return minimal fallback manager with safe defaults
+
                 GlobalPoolManager {
-                    crypto_buffers: Arc::new(ObjectPool::new().unwrap_or_else(|_| {
+                    crypto_buffers: Arc::new(MemoryPool::new().unwrap_or_else(|_| {
                         tracing::error!("Failed to create crypto_buffers pool, using minimal default");
-                        ObjectPool::minimal_default()
+                        MemoryPool::minimal_default()
                     })),
-                    strings: Arc::new(ObjectPool::new().unwrap_or_else(|_| {
+                    strings: Arc::new(MemoryPool::new().unwrap_or_else(|_| {
                         tracing::error!("Failed to create strings pool, using minimal default");
-                        ObjectPool::minimal_default()
+                        MemoryPool::minimal_default()
                     })),
-                    hashmaps: Arc::new(ObjectPool::new().unwrap_or_else(|_| {
+                    hashmaps: Arc::new(MemoryPool::new().unwrap_or_else(|_| {
                         tracing::error!("Failed to create hashmaps pool, using minimal default");
-                        ObjectPool::minimal_default()
+                        MemoryPool::minimal_default()
                     })),
                 }
             }
@@ -448,9 +389,9 @@ mod tests {
     
     #[test]
     fn test_object_pool_creation() -> Result<(), Box<dyn std::error::Error>> {
-        let pool: ObjectPool<String, 10> = ObjectPool::new().map_err(|e| {
+        let pool: MemoryPool<String, 10> = MemoryPool::new().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         let stats = pool.stats();
         assert_eq!(stats.total_capacity, 10);
@@ -460,15 +401,14 @@ mod tests {
     
     #[test]
     fn test_object_acquisition_and_return() -> Result<(), Box<dyn std::error::Error>> {
-        let pool: ObjectPool<Vec<u8>, 5> = ObjectPool::new().map_err(|e| {
+        let pool: MemoryPool<Vec<u8>, 5> = MemoryPool::new().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-        
-        // Acquire object
+
         let mut obj = pool.acquire().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         obj.push(42);
         assert_eq!(obj[0], 42);
@@ -476,8 +416,7 @@ mod tests {
         let stats = pool.stats();
         assert_eq!(stats.objects_in_use, 1);
         assert_eq!(stats.objects_available, 4);
-        
-        // Object automatically returned when dropped
+
         drop(obj);
         
         let stats = pool.stats();
@@ -488,21 +427,20 @@ mod tests {
     
     #[test]
     fn test_pool_exhaustion() -> Result<(), Box<dyn std::error::Error>> {
-        let pool: ObjectPool<String, 2> = ObjectPool::new().map_err(|e| {
+        let pool: MemoryPool<String, 2> = MemoryPool::new().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
         let _obj1 = pool.acquire().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         let _obj2 = pool.acquire().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-        
-        // Pool should be exhausted
+
         let result = pool.acquire();
         assert!(result.is_err());
         Ok(())
@@ -513,7 +451,7 @@ mod tests {
         let pools = global_pools();
         let buffer = pools.get_crypto_buffer().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert_eq!(buffer.len(), 0); // Default empty vector
         

@@ -1,40 +1,20 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Improved Authentication Handlers with Rich Context
-///
-/// This module demonstrates the new idiomatic authentication patterns using
-/// AuthenticationOutcome instead of traditional Result<(), E> patterns.
 
 use crate::api::*;
 use axum::{extract::State, http::HeaderMap, Json};
 use beardog_errors::{improved_results::*, success_outcome, BearDogError, BearDogResult};
 use std::time::Instant;
 use tracing::{info, warn};
-// Use canonical SecurityLevel from beardog-errors
+
 use beardog_errors::improved_results::SecurityLevel;
-// Define AuthenticationFactor locally
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum AuthenticationFactor {
     Totp,
     Biometric,
     Hardware,
 }
-// Define ClientInfo and SessionInfo locally
+
 pub struct ClientInfo {
     pub client_id: String,
     pub ip_address: String,
@@ -42,7 +22,6 @@ pub struct ClientInfo {
     pub platform: String,
     pub device_fingerprint: String,
 }
-
 
 pub struct SessionInfo {
     pub session_id: String,
@@ -53,7 +32,7 @@ pub struct SessionInfo {
     pub client_ip: String,
     pub permissions: Vec<String>,
     pub client_info: ClientInfo,
-/// Improved authentication using AuthenticationOutcome
+
 pub async fn authenticate_user_improved(
     State(_state): State<AppState>,
     headers: HeaderMap,
@@ -64,7 +43,7 @@ pub async fn authenticate_user_improved(
         "🔐 Authenticating user with improved patterns: {}",
         request.username
     );
-    // Extract client information from headers
+
     let user_agent = headers
         .get("user-agent")
         .and_then(|v| v.to_str().ok())
@@ -74,11 +53,11 @@ pub async fn authenticate_user_improved(
         .get("x-forwarded-for")
         .or_else(|| headers.get("x-real-ip"))
         .unwrap_or("127.0.0.1")
-    // Get device fingerprint if available
+
     let device_fingerprint = headers
         .get("x-device-fingerprint")
         .map(|s| s.to_string());
-    // SECURITY: Authentication with environment-configured credentials
+
     let admin_username =
         std::env::var("BEARDOG_ADMIN_USERNAME").unwrap_or_else(|_| "admin".to_string());
     let admin_password =
@@ -93,7 +72,7 @@ pub async fn authenticate_user_improved(
             ),
         });
     }
-    // Determine security level based on authentication factors
+
     let security_level = if request.mfa_code.is_some() {
         SecurityLevel::High
     } else if device_fingerprint.is_some() {
@@ -101,7 +80,7 @@ pub async fn authenticate_user_improved(
     } else {
         SecurityLevel::Basic
     };
-    // Create session information
+
     let session_info = SessionInfo {
         session_id: uuid::Uuid::new_v4().to_string(),
         user_id: request.username.clone(),
@@ -129,11 +108,11 @@ pub async fn authenticate_user_improved(
                 .unwrap_or(&"unknown".to_string())
                 .clone(),
         },
-    // Determine additional factors required
+
     let _additional_factors_required = if security_level == SecurityLevel::Basic {
         vec![AuthenticationFactor::Totp] // Suggest TOTP for higher security
         vec![]
-    // Calculate session expiry based on security level
+
     let _expires_at = match security_level {
         SecurityLevel::Maximum => chrono::Utc::now() + chrono::Duration::hours(1),
         SecurityLevel::High => chrono::Utc::now() + chrono::Duration::hours(4),
@@ -146,7 +125,7 @@ pub async fn authenticate_user_improved(
         user_info: UserInfo {
             username: request.username.clone(),
             roles: session_info.permissions.clone(),
-            attributes: std::collections::HashMap::new(),
+            attributes: std::collections::HashMap::with_capacity(16),
         security_level: match security_level {
             SecurityLevel::Basic => beardog_errors::improved_results::SecurityLevel::Basic,
             SecurityLevel::Enhanced => beardog_errors::improved_results::SecurityLevel::Enhanced,
@@ -158,17 +137,12 @@ pub async fn authenticate_user_improved(
         metrics: OperationMetrics::default(),
         warnings: vec![],
     })
-/// Improved logout using OperationOutcome
+
 pub async fn logout_user_improved(
     Json(request): Json<super::models::LogoutRequest>,
 ) -> BearDogOutcome<LogoutResult> {
     info!("🚪 Logging out session: {}", request.session_id);
-    // In a real implementation, this would:
-    // - Validate the session exists
-    // - Revoke the session from storage
-    // - Invalidate related tokens
-    // - Log the logout event
-    // - Handle logout from all devices if requested
+
     let logout_result = LogoutResult {
         session_id: request.session_id.clone(),
         logged_out_at: chrono::Utc::now(),
@@ -180,17 +154,12 @@ pub async fn logout_user_improved(
         redirect_url: Some("/login".to_string()),
     info!("✅ Logout successful for session: {}", request.session_id);
     success_outcome!(logout_result, "beardog-auth")
-/// Improved token refresh using rich context
+
 pub async fn refresh_token_improved(
     Json(request): Json<super::models::RefreshTokenRequest>,
 ) -> BearDogResult<TokenRefreshOutcome> {
     info!("🔄 Refreshing token: {}", &request.refresh_token[..8]);
-    // - Validate the refresh token
-    // - Check if it's expired or revoked
-    // - Generate new access token
-    // - Optionally rotate refresh token
-    // - Update session activity
-    // Simulate token validation
+
     if request.refresh_token.is_empty() {
         return Err(BearDogError::authentication("Invalid refresh token".to_string(),
         ));
@@ -209,17 +178,12 @@ pub async fn refresh_token_improved(
         previous_token_revoked: true,
     info!("✅ Token refresh successful");
     Ok(token_refresh_result)
-/// Improved session validation with detailed context
+
 pub async fn validate_session_improved(
-    session_id: String,
+    session_id: &str,
 ) -> BearDogResult<SessionValidationOutcome> {
     info!("🔍 Validating session: {}", session_id);
-    // - Look up session in storage
-    // - Check expiry
-    // - Validate session integrity
-    // - Update last activity
-    // - Check for security violations
-    // Simulate session validation
+
     if session_id.is_empty() {
         return Err(BearDogError::authentication("Invalid session ID".to_string(),
     let validation_result = SessionValidationOutcome {
@@ -239,14 +203,13 @@ pub async fn validate_session_improved(
         refresh_recommended: false,
     info!("✅ Session validation successful: {}", session_id);
     Ok(validation_result)
-/// Custom result types for authentication operations
+
 pub struct LogoutResult {
     pub logged_out_at: chrono::DateTime<chrono::Utc>,
     pub devices_logged_out: Vec<String>,
     pub security_tokens_revoked: u32,
     pub redirect_url: Option<String>,
 }
-
 
 pub struct TokenRefreshOutcome {
     pub access_token: String,
@@ -294,9 +257,9 @@ mod tests {
         assert!(result.is_ok());
         let auth_outcome = result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-        // Check authentication success via session_id and user info
+
         assert!(!auth_outcome.session_id.is_empty());
         assert_eq!(auth_outcome.user_info.username, "admin");
         assert!(matches!(
@@ -307,7 +270,6 @@ mod tests {
             username: "invalid".to_string(),
             password: "wrong".to_string(),
         assert!(result.is_err());}
-
 
     async fn test_improved_logout() {
         let request = Json(super::super::models::LogoutRequest {
@@ -326,7 +288,6 @@ mod tests {
         assert!(!token_outcome.refresh_token.is_empty());
         assert_eq!(token_outcome.token_type, "Bearer");
         assert!(token_outcome.previous_token_revoked);}
-
 
     async fn test_session_validation() {
         let result = validate_session_improved(State(state), "valid_session_123".to_string()).await;

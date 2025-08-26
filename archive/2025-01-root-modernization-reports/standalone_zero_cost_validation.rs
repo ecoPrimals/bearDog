@@ -1,24 +1,16 @@
-//! # Standalone Zero-Cost Architecture Validation
-//!
-//! This standalone program demonstrates that our zero-cost dependency injection
-//! revolution is REAL and delivers the promised performance improvements.
-//!
-//! Run with: `rustc --edition 2021 standalone_zero_cost_validation.rs && ./standalone_zero_cost_validation`
+
 
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use std::sync::Arc;
 use std::marker::PhantomData;
 
-/// Traditional async_trait pattern (what we replaced)
-#[allow(dead_code)]
 mod traditional_pattern {
     use super::*;
-    
-    // This is what the old code looked like - heavy with overhead
+
     pub trait AsyncTraitCache {
         fn get(&self, key: &str) -> Option<Vec<u8>>;
-        fn set(&self, key: String, value: Vec<u8>);
+        fn set(&self, key: &str, value: Vec<u8>);
     }
     
     pub struct RuntimeCache {
@@ -30,38 +22,35 @@ mod traditional_pattern {
             match self.data.lock() {
                 Ok(data) => data.get(key).cloned(),
                 Err(poisoned) => {
-                    // Recover from poisoned lock
+
                     tracing::warn!("Cache lock poisoned, recovering gracefully");
                     poisoned.into_inner().get(key).cloned()
                 }
             }
         }
         
-        fn set(&self, key: String, value: Vec<u8>) {
+        fn set(&self, key: &str, value: Vec<u8>) {
             match self.data.lock() {
                 Ok(mut data) => {
                     data.insert(key, value);
                 },
                 Err(poisoned) => {
-                    // Recover from poisoned lock
+
                     tracing::warn!("Cache lock poisoned, recovering gracefully");
                     poisoned.into_inner().insert(key, value);
                 }
             }
         }
     }
-    
-    // Traditional dependency injection with Arc<dyn Trait>
+
     pub struct TraditionalSystem {
         pub cache: Arc<dyn AsyncTraitCache + Send + Sync>,
     }
 }
 
-/// Zero-Cost Architecture (our revolutionary approach)
 mod zero_cost_architecture {
     use super::*;
-    
-    /// Zero-cost cache trait with compile-time specialization
+
     pub trait ZeroCostCache<K, V> 
     where 
         K: Clone + std::hash::Hash + Eq,
@@ -71,8 +60,7 @@ mod zero_cost_architecture {
         fn set(&self, key: K, value: V);
         fn size(&self) -> usize;
     }
-    
-    /// High-performance memory cache with const generic configuration
+
     pub struct MemoryCache<K, V, const CAPACITY: usize, const TTL_SECONDS: u64> 
     where
         K: Clone + std::hash::Hash + Eq,
@@ -135,14 +123,12 @@ mod zero_cost_architecture {
             }
         }
     }
-    
-    /// Zero-cost security trait
+
     pub trait ZeroCostSecurity<T> {
         fn authenticate(&self, data: &[u8]) -> bool;
         fn get_session_count(&self) -> usize;
     }
-    
-    /// Hardware-backed security with const generic configuration
+
     pub struct HardwareSecurity<const MAX_SESSIONS: usize, const TIMEOUT_SECS: u64> {
         sessions: std::sync::RwLock<HashMap<String, Instant>>,
         _phantom: PhantomData<()>,
@@ -159,7 +145,7 @@ mod zero_cost_architecture {
     
     impl<const MAX_SESSIONS: usize, const TIMEOUT_SECS: u64> ZeroCostSecurity<()> for HardwareSecurity<MAX_SESSIONS, TIMEOUT_SECS> {
         fn authenticate(&self, _data: &[u8]) -> bool {
-            // Simplified hardware-backed authentication
+
             let session_count = match self.sessions.read() {
                 Ok(sessions) => sessions.len(),
                 Err(poisoned) => {
@@ -167,7 +153,7 @@ mod zero_cost_architecture {
                     poisoned.into_inner().len()
                 }
             };
-            let session_id = format!("session_{}", session_count);
+            let session_id = format_args!("session_{}", session_count).to_string();
             
             match self.sessions.write() {
                 Ok(mut sessions) => {
@@ -191,8 +177,7 @@ mod zero_cost_architecture {
             }
         }
     }
-    
-    /// Zero-cost system with compile-time dependency injection
+
     pub struct ZeroCostSystem<Cache, Security> {
         pub cache: Cache,
         pub security: Security,
@@ -203,8 +188,7 @@ mod zero_cost_architecture {
             Self { cache, security }
         }
     }
-    
-    /// Type aliases for different configurations (compile-time specialized)
+
     pub type DevelopmentCache = MemoryCache<String, Vec<u8>, 1000, 300>;
     pub type ProductionCache = MemoryCache<String, Vec<u8>, 100000, 3600>;
     pub type DevelopmentSecurity = HardwareSecurity<100, 1800>;
@@ -214,7 +198,6 @@ mod zero_cost_architecture {
     pub type ProductionSystem = ZeroCostSystem<ProductionCache, ProductionSecurity>;
 }
 
-/// Performance benchmark results
 #[derive(Debug)]
 struct BenchmarkResults {
     name: String,
@@ -225,7 +208,7 @@ struct BenchmarkResults {
 }
 
 impl BenchmarkResults {
-    fn new(name: String, operations: u64, duration: Duration) -> Self {
+    fn new(name: &str, operations: u64, duration: Duration) -> Self {
         let duration_ms = duration.as_millis();
         let ops_per_second = operations as f64 / duration.as_secs_f64();
         let average_latency_ns = duration.as_nanos() as f64 / operations as f64;
@@ -249,25 +232,22 @@ impl BenchmarkResults {
     }
 }
 
-/// Benchmark traditional async_trait approach
 fn benchmark_traditional_approach() -> BenchmarkResults {
     use traditional_pattern::*;
     
     let cache = Arc::new(RuntimeCache {
-        data: std::sync::Mutex::new(HashMap::new()),
+        data: std::sync::Mutex::new(HashMap::with_capacity(16)),
     });
     
     let system = TraditionalSystem { cache };
     
     let operations = 100_000u64;
     let start = Instant::now();
-    
-    // Simulate workload with trait object dispatch
+
     for i in 0..operations {
-        let key = format!("key_{}", i);
-        let value = format!("value_{}", i).into_bytes();
-        
-        // This goes through Arc<dyn Trait> with runtime dispatch
+        let key = format_args!("key_{}", i).to_string();
+        let value = format_args!("value_{}", i).to_string().into_bytes();
+
         system.cache.set(key.clone(), value);
         let _retrieved = system.cache.get(&key);
     }
@@ -276,28 +256,23 @@ fn benchmark_traditional_approach() -> BenchmarkResults {
     BenchmarkResults::new("Traditional Arc<dyn Trait> System".to_string(), operations, duration)
 }
 
-/// Benchmark zero-cost architecture
 fn benchmark_zero_cost_approach() -> BenchmarkResults {
     use zero_cost_architecture::*;
-    
-    // Create zero-cost system with compile-time specialization
+
     let cache = ProductionCache::new();
     let security = ProductionSecurity::new();
     let system = ZeroCostSystem::new(cache, security);
     
     let operations = 100_000u64;
     let start = Instant::now();
-    
-    // Simulate workload with direct method calls (zero overhead)
+
     for i in 0..operations {
-        let key = format!("key_{}", i);
-        let value = format!("value_{}", i).into_bytes();
-        
-        // These are direct method calls with no runtime dispatch
+        let key = format_args!("key_{}", i).to_string();
+        let value = format_args!("value_{}", i).to_string().into_bytes();
+
         system.cache.set(key.clone(), value.clone());
         let _retrieved = system.cache.get(&key);
-        
-        // Hardware-backed security with zero cost abstraction
+
         let _auth = system.security.authenticate(&value);
     }
     
@@ -305,15 +280,13 @@ fn benchmark_zero_cost_approach() -> BenchmarkResults {
     BenchmarkResults::new("Zero-Cost Architecture System".to_string(), operations, duration)
 }
 
-/// Demonstrate compile-time specialization
 fn demonstrate_compile_time_specialization() {
     use zero_cost_architecture::*;
     
     println!("🔧 Compile-Time Specialization Demonstration");
     println!("============================================");
     println!();
-    
-    // Different cache configurations create different types at compile time
+
     let dev_cache = DevelopmentCache::new();
     let prod_cache = ProductionCache::new();
     
@@ -325,8 +298,7 @@ fn demonstrate_compile_time_specialization() {
     println!("📋 Production Cache Configuration:");
     println!("   • Capacity: {} entries", ProductionCache::CAPACITY);
     println!("   • TTL: {} seconds", ProductionCache::TTL_SECONDS);
-    
-    // Add some data to show they work independently
+
     dev_cache.set("dev_key".to_string(), b"dev_data".to_vec());
     prod_cache.set("prod_key".to_string(), b"prod_data".to_vec());
     
@@ -337,15 +309,13 @@ fn demonstrate_compile_time_specialization() {
     println!();
 }
 
-/// Demonstrate zero allocation guarantee
 fn demonstrate_zero_allocation() {
     use zero_cost_architecture::*;
     
     println!("💾 Zero-Cost Abstraction Demonstration");
     println!("======================================");
     println!();
-    
-    // Create system (stack allocated)
+
     let cache = ProductionCache::new();
     let security = ProductionSecurity::new();
     let system = ZeroCostSystem::new(cache, security);
@@ -354,8 +324,7 @@ fn demonstrate_zero_allocation() {
     println!("✅ All dependency injection resolved at compile time");
     println!("✅ Direct method calls with no virtual dispatch");
     println!();
-    
-    // Test operations
+
     system.cache.set("test".to_string(), b"data".to_vec());
     let result = system.cache.get(&"test".to_string());
     assert!(result.is_some());
@@ -375,30 +344,24 @@ fn main() {
     println!("This standalone program proves our zero-cost dependency injection");
     println!("revolution delivers REAL performance improvements!");
     println!();
-    
-    // 1. Demonstrate compile-time specialization
+
     demonstrate_compile_time_specialization();
-    
-    // 2. Demonstrate zero allocation guarantees
+
     demonstrate_zero_allocation();
-    
-    // 3. Performance comparison
+
     println!("⚡ Performance Comparison");
     println!("========================");
     println!();
     
     println!("Running 100,000 operations on each system...");
     println!();
-    
-    // Benchmark traditional approach
+
     let traditional_results = benchmark_traditional_approach();
     traditional_results.display();
-    
-    // Benchmark zero-cost approach
+
     let zero_cost_results = benchmark_zero_cost_approach();
     zero_cost_results.display();
-    
-    // Calculate improvement
+
     let performance_improvement = zero_cost_results.ops_per_second / traditional_results.ops_per_second;
     let latency_improvement = traditional_results.average_latency_ns / zero_cost_results.average_latency_ns;
     

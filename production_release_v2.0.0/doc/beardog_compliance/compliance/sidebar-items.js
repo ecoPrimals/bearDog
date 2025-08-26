@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ComplianceSeverity","ComplianceStandard","ReportFormat"],"struct":["ComplianceConfig","ComplianceDashboard","ComplianceEngine","ComplianceEvent","ComplianceMetrics","ComplianceReport","ComplianceResult","ComplianceStatus","ComplianceViolation","ComplianceWarning","DateRange","ReportingConfig","StandardEvaluationResult"]};

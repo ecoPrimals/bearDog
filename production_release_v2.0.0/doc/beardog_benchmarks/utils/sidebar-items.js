@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["calculate_stats"],"struct":["BenchmarkStats"]};

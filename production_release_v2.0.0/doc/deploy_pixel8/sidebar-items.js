@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Commands"],"fn":["build_command","check_command","deploy_command","full_command","logs_command","main","run_command"],"mod":["android","builder","device","error"],"struct":["Cli"]};

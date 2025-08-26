@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["authenticate_user_new","authenticate_user_old","backup_data_new","demonstrate_migration_helper","initialize_system_new","process_items_new","process_items_old"]};

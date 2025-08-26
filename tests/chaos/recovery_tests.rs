@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Recovery Testing Module
-//!
-//! Focused chaos engineering tests for recovery scenarios including:
-//! - System recovery validation
-//! - Graceful degradation testing
-//! - Service restoration verification
 
 use super::{ChaosConfig, TestMetrics, TestResult};
 use beardog_errors::{BearDogError, BearDogResult};
@@ -28,7 +6,6 @@ use beardog_security::crypto_utils::BearDogCrypto;
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
-/// Recovery test suite controller
 #[derive(Debug)]
 pub struct RecoveryTestSuite {
     config: ChaosConfig,
@@ -43,7 +20,6 @@ impl RecoveryTestSuite {
         }
     }
 
-    /// Test system recovery capabilities
     pub async fn test_system_recovery(&self) -> BearDogResult<TestResult> {
         let start_time = Instant::now();
         let mut recovery_attempts = 0u64;
@@ -51,14 +27,11 @@ impl RecoveryTestSuite {
 
         info!("🔄 Testing system recovery capabilities");
 
-        // Simulate multiple failure-recovery cycles
         for _ in 0..10 {
             recovery_attempts += 1;
 
-            // Inject failure
             let failure_result = self.inject_controlled_failure().await;
 
-            // Attempt recovery
             let recovery_result = self.attempt_system_recovery().await;
 
             match (failure_result, recovery_result) {
@@ -70,7 +43,7 @@ impl RecoveryTestSuite {
                     warn!("❌ Recovery failed: {}", e);
                 }
                 _ => {
-                    // Unexpected scenario
+
                     warn!("⚠️ Unexpected recovery scenario");
                 }
             }
@@ -85,7 +58,7 @@ impl RecoveryTestSuite {
             test_name: "system_recovery".to_string(),
             duration: start_time.elapsed(),
             error_message: if recovery_rate < 0.8 {
-                Some(format!("Low recovery rate: {:.2}%", recovery_rate * 100.0))
+                Some(format_args!("Low recovery rate: {:.2}%", recovery_rate * 100.0).to_string())
             } else {
                 None
             },
@@ -99,20 +72,17 @@ impl RecoveryTestSuite {
         })
     }
 
-    /// Inject a controlled failure for recovery testing
     async fn inject_controlled_failure(&self) -> BearDogResult<()> {
-        // Always inject failure for recovery testing
+
         Err(BearDogError::System {
             message: "Controlled failure injection".to_string(),
         })
     }
 
-    /// Attempt system recovery
     async fn attempt_system_recovery(&self) -> BearDogResult<()> {
-        // Simulate recovery process
+
         tokio::time::sleep(Duration::from_millis(50)).await;
 
-        // Test that crypto still works after recovery
         self.crypto
             .encrypt_aes_gcm(b"recovery_key", b"recovery_test", None)?;
 
@@ -120,7 +90,6 @@ impl RecoveryTestSuite {
     }
 }
 
-/// Recovery scenario definition
 #[derive(Debug, Clone)]
 pub struct RecoveryScenario {
     pub name: String,

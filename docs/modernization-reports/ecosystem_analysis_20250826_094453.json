@@ -1,0 +1,52 @@
+{
+  "songbird": {
+    "primal_name": "songbird",
+    "async_trait_count": 3,
+    "arc_dyn_count": 70,
+    "large_files_count": 0,
+    "technical_debt_markers": 3,
+    "estimated_performance_gain": "30-50%",
+    "priority_level": "\ud83d\udd25 HIGH",
+    "total_opportunities": 874
+  },
+  "nestgate": {
+    "primal_name": "nestgate",
+    "async_trait_count": 32,
+    "arc_dyn_count": 111,
+    "large_files_count": 0,
+    "technical_debt_markers": 3,
+    "estimated_performance_gain": "30-50%",
+    "priority_level": "\ud83d\udd25 HIGH",
+    "total_opportunities": 869
+  },
+  "squirrel": {
+    "primal_name": "squirrel",
+    "async_trait_count": 207,
+    "arc_dyn_count": 506,
+    "large_files_count": 0,
+    "technical_debt_markers": 33,
+    "estimated_performance_gain": "40-60%",
+    "priority_level": "\ud83d\udea8 CRITICAL",
+    "total_opportunities": 4647
+  },
+  "toadstool": {
+    "primal_name": "toadstool",
+    "async_trait_count": 88,
+    "arc_dyn_count": 124,
+    "large_files_count": 0,
+    "technical_debt_markers": 46,
+    "estimated_performance_gain": "40-60%",
+    "priority_level": "\ud83d\udea8 CRITICAL",
+    "total_opportunities": 1608
+  },
+  "biomeOS": {
+    "primal_name": "biomeOS",
+    "async_trait_count": 8,
+    "arc_dyn_count": 0,
+    "large_files_count": 0,
+    "technical_debt_markers": 4,
+    "estimated_performance_gain": "5-15%",
+    "priority_level": "\ud83d\udcdd LOW",
+    "total_opportunities": 161
+  }
+}

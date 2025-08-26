@@ -1,33 +1,13 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Improved Monitoring Operations with Rich Context
-///
-/// This module demonstrates the new idiomatic monitoring patterns using
-/// ProcessingOutcome and specialized outcome types instead of traditional patterns.
 
 use beardog_errors::{improved_results::*, BearDogError, BearDogResult};
 use serde_json;
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::{debug, info};
-/// Improved system health monitoring using ProcessingOutcome
+
 pub async fn monitor_system_health_improved(
-    components: Vec<String>,
+    components: Vec<&str>,
     monitoring_config: &MonitoringConfig,
 ) -> BearDogResult<ProcessingOutcome<SystemHealthResult>> {
     let _start_time = Instant::now();
@@ -35,7 +15,7 @@ pub async fn monitor_system_health_improved(
         "🔍 Monitoring {} system components with improved patterns",
         components.len()
     );
-    // Validate monitoring configuration
+
     let validation_result = validate_monitoring_config_improved(monitoring_config).await?;
     if validation_result.status != ValidationStatus::Passed {
         return Err(BearDogError::invalid_input(format!(
@@ -51,7 +31,7 @@ pub async fn monitor_system_health_improved(
     let mut health_results = Vec::new();
     let mut failed_items = Vec::new();
     let mut successful_count = 0;
-    // Monitor each component
+
     for component in components {
         match monitor_component_health(&component, monitoring_config).await {
             Ok(health_result) => {
@@ -77,7 +57,7 @@ pub async fn monitor_system_health_improved(
         "✅ System health monitoring completed: {}/{} components healthy",
         successful_count, total_items
     let now = chrono::Utc::now();
-    // Create a summary result instead of the full Vec
+
     let summary_result = SystemHealthResult {
         component_name: "system_health_summary".to_string(),
         health_status: if failed_items.is_empty() {
@@ -116,7 +96,7 @@ pub async fn monitor_system_health_improved(
             component: "beardog-monitoring".to_string(),
             initiator: "system".to_string(),
             request_id: None,
-            metadata: std::collections::HashMap::new(),
+            metadata: std::collections::HashMap::with_capacity(16),
         metrics: OperationMetrics::default(),
         items: health_results,
         failed_items,
@@ -129,7 +109,7 @@ pub async fn monitor_system_health_improved(
             parallel_processing: true,
     })
 }
-/// Improved metrics collection using ProcessingOutcome
+
 pub async fn collect_metrics_improved(
     metric_sources: Vec<MetricSource>,
     collection_config: &MetricCollectionConfig,
@@ -156,7 +136,7 @@ pub async fn collect_metrics_improved(
         metrics: vec![],
         errors: if failed_items.is_empty() {
             vec![]
-            vec![format!("{} sources failed", failed_items.len())]
+            vec![format_args!("{} sources failed", failed_items.len().to_string())]
             total_items: total_sources as usize,
             success_rate: (successful_count as f64 / total_sources as f64) * 100.0,
             avg_processing_time: std::time::Duration::from_millis(80),
@@ -167,7 +147,7 @@ pub async fn collect_metrics_improved(
             batch_size: 10,
             max_retries: 3,
             timeout_seconds: 15,
-/// Improved alert processing using ProcessingOutcome
+
 pub async fn process_alerts_improved(
     alerts: Vec<Alert>,
     alert_config: &AlertProcessingConfig,
@@ -207,7 +187,7 @@ pub async fn process_alerts_improved(
             batch_size: 20,
             max_retries: 1,
             timeout_seconds: 10,
-/// Improved monitoring configuration validation
+
 async fn validate_monitoring_config_improved(
     config: &MonitoringConfig,
 ) -> BearDogResult<ValidationOutcome> {
@@ -216,7 +196,7 @@ async fn validate_monitoring_config_improved(
         config.config_id
     let mut findings = Vec::new();
     let mut score: f64 = 1.0;
-    // Validate configuration ID
+
     if config.config_id.is_empty() {
         findings.push(ValidationFinding {
             severity: FindingSeverity::Critical,
@@ -228,7 +208,7 @@ async fn validate_monitoring_config_improved(
             code: "MON001".to_string(),
         });
         score -= 0.5;
-    // Validate collection interval
+
     if config.collection_interval_seconds < 5 {
             severity: FindingSeverity::Warning,
             field: "config.collection_interval_seconds".to_string(),
@@ -240,7 +220,7 @@ async fn validate_monitoring_config_improved(
             suggestion: Some(
             code: "MON002".to_string(),
         score -= 0.1;
-    // Validate retention period
+
     if config.retention_days < 1 {
             severity: FindingSeverity::Error,
             field: "config.retention_days".to_string(),
@@ -250,7 +230,7 @@ async fn validate_monitoring_config_improved(
             suggestion: Some("Set retention period to at least 1 day".to_string()),
             code: "MON003".to_string(),
         score -= 0.3;
-    // Validate alert thresholds
+
     if config.cpu_threshold_percent > 100.0 || config.cpu_threshold_percent < 0.0 {
             field: "config.cpu_threshold_percent".to_string(),
             message: "CPU threshold must be between 0 and 100 percent".to_string(),
@@ -289,24 +269,24 @@ async fn validate_monitoring_config_improved(
         criteria,
             started_at: chrono::Utc::now(),
             completed_at: chrono::Utc::now(),
-/// Helper functions for monitoring operations
+
 async fn monitor_component_health(
     component: &str,
     _config: &MonitoringConfig,
 ) -> BearDogResult<SystemHealthResult> {
     debug!("🔍 Monitoring component health: {}", component);
-    // Simulate component health monitoring
+
     let health_status = match component {
         "database" => {
-            // Simulate database health check
+
         "cache" => {
-            // Simulate cache health check
+
         "api_server" => {
-            // Simulate API server health check
+
         "hsm" => {
-            // Simulate HSM health check
+
         _ => {
-            // Unknown component
+
             ComponentHealthStatus::Unknown
     let metrics = ComponentMetrics {
         cpu_usage_percent: 45.2,
@@ -333,7 +313,7 @@ async fn collect_source_metrics(
     _config: &MetricCollectionConfig,
 ) -> BearDogResult<MetricCollectionResult> {
     debug!("📊 Collecting metrics from source: {}", source.source_id);
-    // Simulate metric collection based on source type
+
     let collected_metrics = match source.source_type.as_str() {
         "system" => {
             vec![
@@ -380,7 +360,7 @@ async fn process_individual_alert(
 ) -> BearDogResult<AlertProcessingResult> {
         "🚨 Processing alert: {} ({:?})",
         alert.alert_id, alert.severity
-    // Simulate alert processing based on severity
+
     let processing_actions = match alert.severity {
         AlertSeverity::Critical => {
                 "send_email_notification".to_string(),
@@ -408,7 +388,7 @@ async fn process_individual_alert(
         ),
         "✅ Alert processing completed: {} ({} actions taken)",
         alert.alert_id, notifications_sent
-/// Custom types for monitoring operations
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MonitoringConfig {
     pub config_id: String,
@@ -420,7 +400,6 @@ pub struct MonitoringConfig {
     pub enable_alerting: bool,
 }
 
-
 pub struct MetricCollectionConfig {
     pub batch_size: usize,
     pub timeout_seconds: u64,
@@ -431,7 +410,6 @@ pub struct AlertProcessingConfig {
     pub escalation_enabled: bool,
     pub suppression_rules: Vec<String>,
 }
-
 
 pub struct MetricSource {
     pub source_id: String,
@@ -447,14 +425,12 @@ pub struct Alert {
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
-
 pub enum AlertSeverity {
     Critical,
     High,
     Medium,
     Low,
     Info,}
-
 
 pub struct SystemHealthResult {
     pub component_name: String,
@@ -466,13 +442,11 @@ pub struct SystemHealthResult {
     pub last_error: Option<String>,
 }
 
-
 pub enum ComponentHealthStatus {
     Healthy,
     Degraded,
     Unhealthy,
     Unknown,}
-
 
 pub struct ComponentMetrics {
     pub cpu_usage_percent: f64,
@@ -482,7 +456,6 @@ pub struct ComponentMetrics {
     pub error_rate_percent: f64,
     pub uptime_seconds: u64,
 }
-
 
 pub struct MetricCollectionResult {
     pub collection_timestamp: chrono::DateTime<chrono::Utc>,
@@ -497,7 +470,6 @@ pub struct MetricData {
     pub timestamp: chrono::DateTime<chrono::Utc>,
     pub tags: HashMap<String, String>,
 }
-
 
 pub struct AlertProcessingResult {
     pub alert_severity: AlertSeverity,
@@ -521,16 +493,16 @@ mod tests {
             disk_threshold_percent: 90.0,
             enable_alerting: true,}
 
-
     fn create_test_metric_source() -> MetricSource {
         MetricSource {
             source_id: "test_source".to_string(),
             source_type: "system".to_string(),
-            endpoint: "http://localhost:9090".to_string(),
+            endpoint: std::env::var("BEARDOG_MONITORING_ENDPOINT")
+                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
             credentials: None,
     fn create_test_alert() -> Alert {
         Alert {
-            alert_id: format!("alert_{}", uuid::Uuid::new_v4()),
+            alert_id: format_args!("alert_{}", uuid::Uuid::new_v4().to_string()),
             alert_name: "Test Alert".to_string(),
             severity: AlertSeverity::Medium,
             description: "Test alert for monitoring".to_string(),
@@ -548,7 +520,7 @@ mod tests {
         assert!(result.is_ok());
         let health_outcome = result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert_eq!(health_outcome.statistics.total_items, 3);
         assert!(health_outcome.statistics.successful_items >= 1);
@@ -559,7 +531,8 @@ mod tests {
             MetricSource {
                 source_id: "app_source".to_string(),
                 source_type: "application".to_string(),
-                endpoint: "http://localhost:8080".to_string(),
+                endpoint: std::env::var("BEARDOG_MONITORING_ENDPOINT")
+                    .unwrap_or_else(|_| "http://localhost:8080".to_string()),
                 credentials: None,
             },
         let config = MetricCollectionConfig {
@@ -576,7 +549,7 @@ mod tests {
         let alerts = vec![
             create_test_alert(),
             Alert {
-                alert_id: format!("critical_alert_{}", uuid::Uuid::new_v4()),
+                alert_id: format_args!("critical_alert_{}", uuid::Uuid::new_v4().to_string()),
                 alert_name: "Critical Test Alert".to_string(),
                 severity: AlertSeverity::Critical,
                 description: "Critical test alert".to_string(),
@@ -594,13 +567,12 @@ mod tests {
     async fn test_monitoring_config_validation() {
         let result = validate_monitoring_config_improved(&config).await;
         let validation = result.map_err(|e| {
-        // Use correct ValidationOutcome fields
+
         assert_eq!(
             validation.status,
             beardog_errors::improved_results::ValidationStatus::Passed
         );
         assert!(validation.findings.is_empty()); // No findings means valid}
-
 
     async fn test_monitoring_config_validation_failure() {
         let mut config = create_test_monitoring_config();

@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// HSM Manager Implementation
-///
-/// This module contains the main implementation logic for the HSM Manager.
 
 use super::*;
 use crate::tunnel::hsm::{AndroidStrongBoxHsm, RustSoftwareHsm};
@@ -29,38 +10,36 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 impl HsmManager {
-    /// Create a basic HSM manager for testing/development}
-
 
     pub fn new() -> Self {
         let config = HsmManagerConfig::default();
         Self {
-            hsm_providers: HashMap::new(),
+            hsm_providers: HashMap::with_capacity(16),
             config: config.clone(),
             health_monitor: Arc::new(DefaultHsmHealthMonitor {
-                provider_health: Arc::new(RwLock::new(HashMap::new())),
+                provider_health: Arc::new(RwLock::new(HashMap::with_capacity(16))),
                 health_config: config.health_config.clone(),
                 monitoring_active: Arc::new(RwLock::new(false)),
             }),
             failover_manager: Arc::new(DefaultHsmFailoverManager {
-                circuit_breakers: Arc::new(RwLock::new(HashMap::new())),
+                circuit_breakers: Arc::new(RwLock::new(HashMap::with_capacity(16))),
                 failover_config: config.failover_config.clone(),
-                retry_counts: Arc::new(RwLock::new(HashMap::new())),
+                retry_counts: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             capability_detector: Arc::new(DefaultHsmCapabilityDetector {
-                provider_capabilities: Arc::new(RwLock::new(HashMap::new())),
+                provider_capabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             performance_tracker: Arc::new(HsmPerformanceTracker {
-                operation_metrics: Arc::new(RwLock::new(HashMap::new())),
+                operation_metrics: Arc::new(RwLock::new(HashMap::with_capacity(16))),
                 performance_config: config.performance_config,
             operation_router: Arc::new(RwLock::new(HsmOperationRouter::new())),
         }
     }
-    /// Create HSM provider from configuration
+
     pub async fn create_hsm_provider(
         &self,
         hsm_type: &str,
     ) -> BearDogResult<Arc<dyn super::HsmProvider>> {
         let config = &self.config;
-        // Use a default provider type if not specified in config
+
         let provider_type = "software"; // Default fallback
         match provider_type {
             "hardware" => {
@@ -79,7 +58,7 @@ impl HsmManager {
                     crate::tunnel::hsm::types::config::SoftwareHsmConfig::default();
                 let software_hsm = RustSoftwareHsm::new(software_config).await?;
                 Ok(Arc::new(software_hsm))
-    /// Get the best available HSM provider based on security requirements
+
     pub async fn get_best_provider(
         requirements: &SecurityRequirements,
     ) -> BearDogResult<String> {
@@ -87,7 +66,7 @@ impl HsmManager {
             "🔍 Selecting best HSM provider for requirements: {:?}",
             requirements
         );
-        // Find the best provider based on security requirements
+
         let mut best_provider = None;
         let mut best_score = 0;
         for (provider_id, _provider) in &self.hsm_providers {
@@ -99,22 +78,20 @@ impl HsmManager {
                 best_provider = Some(provider_id.clone());
         best_provider.ok_or_else(|| BearDogError::not_found("No suitable HSM provider found".to_string(),
         ))
-    /// Calculate suitability score for a provider
+
     async fn calculate_provider_score(
         provider_id: &str,
     ) -> BearDogResult<u32> {
         let mut score = 0;
-        // Base score for availability
+
         score += 10;
-        // Bonus for hardware backing if required
+
         if requirements.require_hardware_backing && provider_id.contains("strongbox") {
             score += 50;
-        // Bonus for attestation support
+
         if requirements.require_attestation && provider_id.contains("strongbox") {
             score += 30;
         Ok(score)
-    /// Get routing metrics for monitoring}
-
 
     pub async fn get_routing_metrics(&self) -> BearDogResult<RoutingMetrics> {
         info!("📊 Getting HSM routing metrics");
@@ -123,9 +100,9 @@ impl HsmManager {
             successful_requests: 40,
             failed_requests: 2,
             average_response_time_ms: 150,
-            provider_utilization: std::collections::HashMap::new(),
+            provider_utilization: std::collections::HashMap::with_capacity(16),
         })
-    /// Register HSM provider with the manager
+
     pub async fn register_hsm_provider(
         &mut self,
         tier: &str,
@@ -135,18 +112,18 @@ impl HsmManager {
         self.hsm_providers.insert(tier.to_string(), provider);
         Ok(())
 }
-/// Security requirements for HSM selection
+
 #[derive(Debug, Clone)]
 pub struct SecurityRequirements {
     pub require_hardware_backing: bool,
     pub require_attestation: bool,
     pub minimum_key_size: u32,
-/// HSM routing metrics
+
 pub struct RoutingMetrics {
     pub total_requests: u64,
     pub successful_requests: u64,
     pub failed_requests: u64,
     pub average_response_time_ms: u64,
     pub provider_utilization: std::collections::HashMap<String, f64>,
-// Use canonical HsmTier from types module instead of duplicate definition
+
 use crate::tunnel::hsm::types::HsmTier;

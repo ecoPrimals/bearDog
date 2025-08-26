@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["KEY_ROTATION_TIMEOUT_MS"]};

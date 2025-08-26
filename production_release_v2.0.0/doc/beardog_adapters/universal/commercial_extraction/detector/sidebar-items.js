@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AccessLevel","CommercialClassification","ExtractionRisk"],"struct":["CommercialExtractionDetector","DataVolumePattern","EntropyHistory","EvolutionConfig","GeneticKeyEvolutionEngine","HumanEntropyUsage","KeyGeneration","NetworkBehaviorPattern","UsagePattern"]};

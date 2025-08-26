@@ -1,40 +1,14 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Canonical Modernization Performance Benchmarks
-///
-/// **MODERNIZATION VALIDATION BENCHMARKS** 🚀
-/// These benchmarks quantify the performance improvements achieved through:
-/// - async_trait elimination (native async fn)
-/// - Arc<dyn> optimization (generic composition)
-/// - Zero-cost abstraction patterns
-/// - Unified provider system performance
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::time::Duration;
 use tokio::runtime::Runtime;
 
-// Import canonical traits for benchmarking
 use beardog_traits::canonical::{BaseProvider, SecurityProvider, HsmProvider};
 use beardog_types::canonical::hsm::{HsmKey, KeyType, KeyMetadata};
 use beardog_types::providers::{AuthenticationCredentials, ProviderHealthStatus};
 use beardog_errors::BearDogResult;
 
-// Mock implementations for benchmarking
 #[derive(Clone)]
 struct MockSecurityProvider {
     id: String,
@@ -68,7 +42,7 @@ impl BaseProvider for MockSecurityProvider {
     }
 
     async fn metrics(&self) -> BearDogResult<beardog_traits::canonical::ProviderMetrics> {
-        Ok(std::collections::HashMap::new())
+        Ok(std::collections::HashMap::with_capacity(16))
     }
 
     async fn validate_config(&self, _config: &beardog_types::canonical::providers::ProviderConfig) -> BearDogResult<bool> {
@@ -95,7 +69,7 @@ impl BaseProvider for MockSecurityProvider {
 #[allow(async_fn_in_trait)]
 impl SecurityProvider for MockSecurityProvider {
     async fn authenticate(&self, _credentials: AuthenticationCredentials) -> BearDogResult<beardog_types::providers::AuthenticationResult> {
-        // Simulate authentication work
+
         tokio::time::sleep(Duration::from_micros(10)).await;
         Ok(beardog_types::providers::AuthenticationResult {
             user_id: "test_user".to_string(),
@@ -130,7 +104,7 @@ impl SecurityProvider for MockSecurityProvider {
     }
 
     async fn encrypt(&self, data: &[u8]) -> BearDogResult<Vec<u8>> {
-        // Simulate encryption work
+
         let mut result = data.to_vec();
         for byte in &mut result {
             *byte = byte.wrapping_add(1);
@@ -139,7 +113,7 @@ impl SecurityProvider for MockSecurityProvider {
     }
 
     async fn decrypt(&self, encrypted_data: &[u8]) -> BearDogResult<Vec<u8>> {
-        // Simulate decryption work
+
         let mut result = encrypted_data.to_vec();
         for byte in &mut result {
             *byte = byte.wrapping_sub(1);
@@ -181,7 +155,7 @@ impl BaseProvider for MockHsmProvider {
     }
 
     async fn metrics(&self) -> BearDogResult<beardog_traits::canonical::ProviderMetrics> {
-        Ok(std::collections::HashMap::new())
+        Ok(std::collections::HashMap::with_capacity(16))
     }
 
     async fn validate_config(&self, _config: &beardog_types::canonical::providers::ProviderConfig) -> BearDogResult<bool> {
@@ -208,7 +182,7 @@ impl BaseProvider for MockHsmProvider {
 #[allow(async_fn_in_trait)]
 impl HsmProvider for MockHsmProvider {
     async fn generate_key(&self, _key_type: KeyType, _metadata: KeyMetadata) -> BearDogResult<HsmKey> {
-        // Simulate key generation work
+
         tokio::time::sleep(Duration::from_micros(50)).await;
         Ok(HsmKey {
             id: "key_123".to_string(),
@@ -244,10 +218,10 @@ impl HsmProvider for MockHsmProvider {
                 key_id: "key_123".to_string(),
                 health_status: "healthy".to_string(),
                 performance_metrics: None,
-                provider_attributes: std::collections::HashMap::new(),
+                provider_attributes: std::collections::HashMap::with_capacity(16),
                 derivation_path: None,
-                custom: std::collections::HashMap::new(),
-                custom_fields: std::collections::HashMap::new(),
+                custom: std::collections::HashMap::with_capacity(16),
+                custom_fields: std::collections::HashMap::with_capacity(16),
                 key_name: None,
                 key_size: None,
                 expires_at: None,
@@ -261,19 +235,19 @@ impl HsmProvider for MockHsmProvider {
     }
 
     async fn sign_data(&self, _key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
-        // Simulate signing work
+
         tokio::time::sleep(Duration::from_micros(30)).await;
-        Ok(format!("signature_{}", data.len()).into_bytes())
+        Ok(format_args!("signature_{}", data.len().to_string()).into_bytes())
     }
 
     async fn verify_signature(&self, _key_id: &str, _data: &[u8], _signature: &[u8]) -> BearDogResult<bool> {
-        // Simulate verification work
+
         tokio::time::sleep(Duration::from_micros(25)).await;
         Ok(true)
     }
 
     async fn encrypt_with_key(&self, _key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
-        // Simulate encryption
+
         let mut result = data.to_vec();
         for byte in &mut result {
             *byte = byte.wrapping_add(42);
@@ -282,7 +256,7 @@ impl HsmProvider for MockHsmProvider {
     }
 
     async fn decrypt_with_key(&self, _key_id: &str, encrypted_data: &[u8]) -> BearDogResult<Vec<u8>> {
-        // Simulate decryption
+
         let mut result = encrypted_data.to_vec();
         for byte in &mut result {
             *byte = byte.wrapping_sub(42);
@@ -333,10 +307,10 @@ impl HsmProvider for MockHsmProvider {
                 key_id: "key_123".to_string(),
                 health_status: "healthy".to_string(),
                 performance_metrics: None,
-                provider_attributes: std::collections::HashMap::new(),
+                provider_attributes: std::collections::HashMap::with_capacity(16),
                 derivation_path: None,
-                custom: std::collections::HashMap::new(),
-                custom_fields: std::collections::HashMap::new(),
+                custom: std::collections::HashMap::with_capacity(16),
+                custom_fields: std::collections::HashMap::with_capacity(16),
                 key_name: None,
                 key_size: None,
                 expires_at: None,
@@ -351,7 +325,6 @@ impl HsmProvider for MockHsmProvider {
     }
 }
 
-// Zero-cost generic composition manager (modernized)
 struct ModernProviderManager<P: BaseProvider + Clone> {
     provider: P,
 }
@@ -367,7 +340,6 @@ impl<P: BaseProvider + Clone> ModernProviderManager<P> {
     }
 }
 
-// Legacy Arc<dyn> pattern for comparison
 struct LegacyProviderManager {
     provider: std::sync::Arc<dyn BaseProvider + Send + Sync>,
 }
@@ -383,19 +355,17 @@ impl LegacyProviderManager {
     }
 }
 
-/// Benchmark native async fn vs async_trait patterns
 fn bench_async_patterns(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e).to_string())
 })?;
     let provider = MockSecurityProvider {
         id: "test_provider".to_string(),
     };
 
     let mut group = c.benchmark_group("async_patterns");
-    
-    // Benchmark native async fn (our modernized approach)
+
     group.bench_function("native_async_fn", |b| {
         b.to_async(&rt).iter(|| async {
             let result = provider.authenticate(black_box(AuthenticationCredentials {
@@ -403,7 +373,7 @@ fn bench_async_patterns(c: &mut Criterion) {
                 password: Some("password".to_string()),
                 token: None,
                 certificate: None,
-                additional_data: std::collections::HashMap::new(),
+                additional_data: std::collections::HashMap::with_capacity(16),
             })).await;
             black_box(result)
         })
@@ -412,11 +382,10 @@ fn bench_async_patterns(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark generic composition vs Arc<dyn> patterns
 fn bench_provider_patterns(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e).to_string())
 })?;
     let mock_provider = MockSecurityProvider {
         id: "test_provider".to_string(),
@@ -424,7 +393,6 @@ fn bench_provider_patterns(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("provider_patterns");
 
-    // Modern generic composition (zero-cost)
     group.bench_function("generic_composition", |b| {
         let manager = ModernProviderManager::new(mock_provider.clone());
         b.to_async(&rt).iter(|| async {
@@ -433,7 +401,6 @@ fn bench_provider_patterns(c: &mut Criterion) {
         })
     });
 
-    // Legacy Arc<dyn> pattern
     group.bench_function("arc_dyn_dispatch", |b| {
         let manager = LegacyProviderManager::new(std::sync::Arc::new(mock_provider.clone()));
         b.to_async(&rt).iter(|| async {
@@ -445,11 +412,10 @@ fn bench_provider_patterns(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark HSM operations with canonical types
 fn bench_hsm_operations(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e).to_string())
 })?;
     let hsm_provider = MockHsmProvider {
         id: "test_hsm".to_string(),
@@ -457,7 +423,6 @@ fn bench_hsm_operations(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("hsm_operations");
 
-    // Key generation benchmark
     group.bench_function("key_generation", |b| {
         b.to_async(&rt).iter(|| async {
             let result = hsm_provider.generate_key(
@@ -493,10 +458,10 @@ fn bench_hsm_operations(c: &mut Criterion) {
                     key_id: "bench_key".to_string(),
                     health_status: "healthy".to_string(),
                     performance_metrics: None,
-                    provider_attributes: std::collections::HashMap::new(),
+                    provider_attributes: std::collections::HashMap::with_capacity(16),
                     derivation_path: None,
-                    custom: std::collections::HashMap::new(),
-                    custom_fields: std::collections::HashMap::new(),
+                    custom: std::collections::HashMap::with_capacity(16),
+                    custom_fields: std::collections::HashMap::with_capacity(16),
                     key_name: None,
                     key_size: None,
                     expires_at: None,
@@ -511,7 +476,6 @@ fn bench_hsm_operations(c: &mut Criterion) {
         })
     });
 
-    // Signing benchmark
     group.bench_function("data_signing", |b| {
         let test_data = b"Hello, BearDog canonical modernization!";
         b.to_async(&rt).iter(|| async {
@@ -523,7 +487,6 @@ fn bench_hsm_operations(c: &mut Criterion) {
         })
     });
 
-    // Signature verification benchmark
     group.bench_function("signature_verification", |b| {
         let test_data = b"Hello, BearDog canonical modernization!";
         let test_signature = b"mock_signature";
@@ -540,11 +503,10 @@ fn bench_hsm_operations(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark provider health checks and metrics
 fn bench_provider_health(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e).to_string())
 })?;
     let provider = MockSecurityProvider {
         id: "health_test".to_string(),
@@ -576,11 +538,10 @@ fn bench_provider_health(c: &mut Criterion) {
     group.finish();
 }
 
-/// Comprehensive provider workflow benchmark
 fn bench_provider_workflow(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e).to_string())
 })?;
     let security_provider = MockSecurityProvider {
         id: "workflow_test".to_string(),
@@ -593,25 +554,25 @@ fn bench_provider_workflow(c: &mut Criterion) {
 
     group.bench_function("complete_security_workflow", |b| {
         b.to_async(&rt).iter(|| async {
-            // Simulate complete security workflow
+
             let _health = security_provider.health_check().await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
             let _auth = security_provider.authenticate(AuthenticationCredentials {
                 username: Some("workflow_user".to_string()),
                 password: Some("secure_password".to_string()),
                 token: None,
                 certificate: None,
-                additional_data: std::collections::HashMap::new(),
+                additional_data: std::collections::HashMap::with_capacity(16),
             }).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
             let test_data = b"workflow test data";
             let _encrypted = security_provider.encrypt(test_data).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
             black_box(())
         })
@@ -619,10 +580,10 @@ fn bench_provider_workflow(c: &mut Criterion) {
 
     group.bench_function("complete_hsm_workflow", |b| {
         b.to_async(&rt).iter(|| async {
-            // Simulate complete HSM workflow
+
             let _health = hsm_provider.health_check().await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
             let _key = hsm_provider.generate_key(
                 KeyType::Symmetric,
@@ -657,10 +618,10 @@ fn bench_provider_workflow(c: &mut Criterion) {
                     key_id: "workflow_key".to_string(),
                     health_status: "healthy".to_string(),
                     performance_metrics: None,
-                    provider_attributes: std::collections::HashMap::new(),
+                    provider_attributes: std::collections::HashMap::with_capacity(16),
                     derivation_path: None,
-                    custom: std::collections::HashMap::new(),
-                    custom_fields: std::collections::HashMap::new(),
+                    custom: std::collections::HashMap::with_capacity(16),
+                    custom_fields: std::collections::HashMap::with_capacity(16),
                     key_name: None,
                     key_size: None,
                     expires_at: None,
@@ -672,12 +633,12 @@ fn bench_provider_workflow(c: &mut Criterion) {
                 }
             ).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
             let test_data = b"workflow signing data";
             let _signature = hsm_provider.sign_data("workflow_key", test_data).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
             black_box(())
         })

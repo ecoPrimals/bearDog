@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AccessLevel"],"struct":["ActionConstraint","ConsentAuditEvent","ConsentCondition","ConsentDelegation","ConsentRecordInternal","ConsentRequestInternal","ConsentScopeInternal","ConsentTemplate","PermittedAction","ResourceTypeAccess","UsageLimit"]};

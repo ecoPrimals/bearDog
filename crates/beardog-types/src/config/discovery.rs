@@ -1,28 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Discovery Configuration - Canonical
-///
-/// **UNIFIED DISCOVERY CONFIGURATION** for the BearDog ecosystem
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// **CANONICAL** Unified Discovery Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct UnifiedDiscoveryConfig {
@@ -32,8 +12,6 @@ pub struct UnifiedDiscoveryConfig {
     pub load_balancing: DiscoveryLoadBalancingConfig,
 }
 
-
-/// **CANONICAL** Service Discovery Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceDiscoveryConfig {
     pub enabled: bool,
@@ -53,7 +31,6 @@ impl Default for ServiceDiscoveryConfig {
     }
 }
 
-/// **CANONICAL** Node Discovery Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeDiscoveryConfig {
     pub enabled: bool,
@@ -73,7 +50,6 @@ impl Default for NodeDiscoveryConfig {
     }
 }
 
-/// **CANONICAL** Discovery Health Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryHealthConfig {
     pub enabled: bool,
@@ -93,7 +69,6 @@ impl Default for DiscoveryHealthConfig {
     }
 }
 
-/// **CANONICAL** Discovery Load Balancing Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryLoadBalancingConfig {
     pub enabled: bool,

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["StorageCapability"],"struct":["StorageResponse","UniversalStorageAdapter","UniversalStorageConfig"]};

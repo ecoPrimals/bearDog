@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["HealthLevel"],"struct":["EntropyAnalytics","EntropyHealthStatus","EntropyMonitor","PerformanceMetrics"]};

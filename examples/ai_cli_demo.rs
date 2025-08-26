@@ -1,32 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! AI-First CLI Demo
-//!
-//! Pure Rust demonstration of AI-optimized BearDog operations:
-//! - JSON-only output (no human UI)
-//! - Batch processing
-//! - Machine-readable error codes
-//! - Automation-friendly interface
-//!
-//! Usage:
-//! ```bash
-//! cargo run --example ai_cli_demo
-//! ```
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -37,7 +9,6 @@ use beardog_types::config::BearDogConfig;
 use beardog_core::BearDogCore;
 use beardog_errors::{BearDogError, BearDogResult};
 
-/// AI-optimized response wrapper
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AiResponse<T> {
     pub success: bool,
@@ -48,7 +19,6 @@ pub struct AiResponse<T> {
     pub timestamp: String,
 }
 
-/// Machine-readable error
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AiError {
     pub code: String,
@@ -58,7 +28,6 @@ pub struct AiError {
     pub retry_delay_ms: u64,
 }
 
-/// Security operation request
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SecurityOpRequest {
     pub operation: String,
@@ -67,7 +36,6 @@ pub struct SecurityOpRequest {
     pub algorithm: Option<String>,
 }
 
-/// Batch security operation
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BatchSecurityRequest {
     pub operations: Vec<SecurityOpRequest>,
@@ -75,7 +43,6 @@ pub struct BatchSecurityRequest {
     pub continue_on_error: bool,
 }
 
-/// Genetic spawn request
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GeneticSpawnRequest {
     pub parent_id: String,
@@ -84,7 +51,6 @@ pub struct GeneticSpawnRequest {
     pub resource_limits: HashMap<String, f64>,
 }
 
-/// System status response
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SystemStatus {
     pub health: String,
@@ -94,7 +60,6 @@ pub struct SystemStatus {
     pub performance: PerformanceMetrics,
 }
 
-/// Component status
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ComponentStatus {
     pub name: String,
@@ -103,7 +68,6 @@ pub struct ComponentStatus {
     pub error_message: Option<String>,
 }
 
-/// HSM status
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HsmStatus {
     pub available_tiers: Vec<String>,
@@ -112,7 +76,6 @@ pub struct HsmStatus {
     pub operations_per_second: f64,
 }
 
-/// Performance metrics
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
     pub cpu_usage_percent: f64,
@@ -125,25 +88,22 @@ pub struct PerformanceMetrics {
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Initialize tracing
+
     tracing_subscriber::fmt::init();
     
     info!("🤖 AI-First BearDog CLI Demo");
-    
-    // Initialize BearDog
+
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
     core.start().await?;
-    
-    // Demo 1: System Status (Machine-readable)
+
     println!("=== SYSTEM STATUS ===");
     let status_response = get_system_status(&core).await;
     println!("{}", serde_json::to_string_pretty(&status_response).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
-    
-    // Demo 2: Batch Security Operations
+
     println!("\n=== BATCH SECURITY OPERATIONS ===");
     let batch_request = BatchSecurityRequest {
         operations: vec![
@@ -173,17 +133,16 @@ async fn main() -> BearDogResult<()> {
     let batch_response = process_batch_security(&core, batch_request).await;
     println!("{}", serde_json::to_string_pretty(&batch_response).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
-    
-    // Demo 3: Genetic Spawning
+
     println!("\n=== GENETIC SPAWNING ===");
     let spawn_request = GeneticSpawnRequest {
         parent_id: "parent_node_001".to_string(),
         co_parents: vec!["co_parent_001".to_string()],
         purpose: "LocalProcessing".to_string(),
         resource_limits: {
-            let mut limits = HashMap::new();
+            let mut limits = HashMap::with_capacity(16);
             limits.insert("cpu_percent".to_string(), 50.0);
             limits.insert("memory_mb".to_string(), 2048.0);
             limits
@@ -193,26 +152,23 @@ async fn main() -> BearDogResult<()> {
     let spawn_response = process_genetic_spawn(&core, spawn_request).await;
     println!("{}", serde_json::to_string_pretty(&spawn_response).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
-    
-    // Demo 4: HSM Operations
+
     println!("\n=== HSM OPERATIONS ===");
     let hsm_response = get_hsm_status(&core).await;
     println!("{}", serde_json::to_string_pretty(&hsm_response).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
-    
-    // Demo 5: Performance Benchmark
+
     println!("\n=== PERFORMANCE BENCHMARK ===");
     let benchmark_response = run_performance_benchmark(&core).await;
     println!("{}", serde_json::to_string_pretty(&benchmark_response).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
-    
-    // Graceful shutdown
+
     core.stop().await?;
     
     println!("\n✅ AI-First CLI Demo completed - all operations machine-readable!");
@@ -220,7 +176,6 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Get system status (AI-optimized)
 async fn get_system_status(core: &BearDogCore) -> AiResponse<SystemStatus> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
@@ -235,7 +190,7 @@ async fn get_system_status(core: &BearDogCore) -> AiResponse<SystemStatus> {
             }).collect();
             
             let status = SystemStatus {
-                health: format!("{:?}", health.status),
+                health: format_args!("{:?}", health.status).to_string(),
                 uptime_seconds: health.uptime.map(|d| d.num_seconds() as u64).unwrap_or(0),
                 components,
                 hsm_status: HsmStatus {
@@ -282,21 +237,19 @@ async fn get_system_status(core: &BearDogCore) -> AiResponse<SystemStatus> {
     }
 }
 
-/// Process batch security operations
 async fn process_batch_security(
     core: &BearDogCore,
     request: BatchSecurityRequest,
 ) -> AiResponse<serde_json::Value> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
-    
-    // Simulate batch processing
+
     let mut results = Vec::new();
     let mut successful = 0;
     let mut failed = 0;
     
     for (index, op) in request.operations.iter().enumerate() {
-        // Simulate operation processing
+
         let op_start = Instant::now();
         let op_result = simulate_security_operation(op).await;
         let op_time = op_start.elapsed().as_millis() as u64;
@@ -353,15 +306,13 @@ async fn process_batch_security(
     }
 }
 
-/// Process genetic spawning
 async fn process_genetic_spawn(
     core: &BearDogCore,
     request: GeneticSpawnRequest,
 ) -> AiResponse<serde_json::Value> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
-    
-    // Simulate genetic spawning
+
     let child_id = uuid::Uuid::new_v4().to_string();
     
     let spawn_result = serde_json::json!({
@@ -396,7 +347,6 @@ async fn process_genetic_spawn(
     }
 }
 
-/// Get HSM status
 async fn get_hsm_status(core: &BearDogCore) -> AiResponse<serde_json::Value> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
@@ -450,12 +400,10 @@ async fn get_hsm_status(core: &BearDogCore) -> AiResponse<serde_json::Value> {
     }
 }
 
-/// Run performance benchmark
 async fn run_performance_benchmark(core: &BearDogCore) -> AiResponse<serde_json::Value> {
     let start_time = Instant::now();
     let request_id = uuid::Uuid::new_v4().to_string();
-    
-    // Simulate benchmark operations
+
     let mut encryption_times = Vec::new();
     let mut signing_times = Vec::new();
     
@@ -478,11 +426,11 @@ async fn run_performance_benchmark(core: &BearDogCore) -> AiResponse<serde_json:
                 "avg_time_ms": encryption_times.iter().sum::<u64>() as f64 / encryption_times.len() as f64,
                 "min_time_ms": *encryption_times.iter().min().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?,
                 "max_time_ms": *encryption_times.iter().max().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?,
                 "operations_per_second": 1000.0 / (encryption_times.iter().sum::<u64>() as f64 / encryption_times.len() as f64),
             },
@@ -490,11 +438,11 @@ async fn run_performance_benchmark(core: &BearDogCore) -> AiResponse<serde_json:
                 "avg_time_ms": signing_times.iter().sum::<u64>() as f64 / signing_times.len() as f64,
                 "min_time_ms": *signing_times.iter().min().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?,
                 "max_time_ms": *signing_times.iter().max().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?,
                 "operations_per_second": 1000.0 / (signing_times.iter().sum::<u64>() as f64 / signing_times.len() as f64),
             }
@@ -522,37 +470,34 @@ async fn run_performance_benchmark(core: &BearDogCore) -> AiResponse<serde_json:
     }
 }
 
-/// Simulate security operation
 async fn simulate_security_operation(op: &SecurityOpRequest) -> BearDogResult<serde_json::Value> {
-    // Simulate processing delay
+
     tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
     
     match op.operation.as_str() {
         "encrypt" => Ok(serde_json::json!({
-            "encrypted_data": format!("encrypted_{}", op.data),
+            "encrypted_data": format_args!("encrypted_{}", op.data).to_string(),
             "algorithm": op.algorithm.as_ref().unwrap_or(&"AES256".to_string()),
             "key_id": op.key_id,
         })),
         "decrypt" => Ok(serde_json::json!({
-            "decrypted_data": format!("decrypted_{}", op.data),
+            "decrypted_data": format_args!("decrypted_{}", op.data).to_string(),
             "key_id": op.key_id,
         })),
         "sign" => Ok(serde_json::json!({
-            "signature": format!("signature_of_{}", op.data),
+            "signature": format_args!("signature_of_{}", op.data).to_string(),
             "algorithm": op.algorithm.as_ref().unwrap_or(&"Ed25519".to_string()),
             "key_id": op.key_id,
         })),
-        _ => Err(BearDogError::configuration(format!("Unknown operation: {)", op.operation),
+        _ => Err(BearDogError::configuration(format_args!("Unknown operation: {)", op.operation).to_string(),
         }),
     }
 }
 
-/// Simulate encrypt operation
 async fn simulate_encrypt_operation() {
     tokio::time::sleep(tokio::time::Duration::from_millis(1)).await;
 }
 
-/// Simulate sign operation
 async fn simulate_sign_operation() {
     tokio::time::sleep(tokio::time::Duration::from_millis(3)).await;
 } 

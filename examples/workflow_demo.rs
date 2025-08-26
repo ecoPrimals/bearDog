@@ -1,37 +1,12 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 #!/usr/bin/env rust-script
-
-//! BearDog Sprint 3: Multi-Party Workflow Engine Demo
-//! 
-//! This demonstrates the complete workflow approval process:
-//! - Workflow initiation with configurable approval requirements
-//! - Role-based approval hierarchies
-//! - Time-bound approval windows
-//! - Audit-compliant workflow tracking
-//! - Automated workflow orchestration
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 BearDog Sprint 3: Multi-Party Workflow Engine Demo");
     println!("====================================================");
-    
-    // Initialize workflow engine with secure defaults
+
     let workflow_config = create_demo_config();
     
     println!("\n📋 Initializing Multi-Party Workflow Engine...");
@@ -45,8 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Ok(());
         }
     };
-    
-    // Demo 1: Key Rotation Workflow (Normal Priority)
+
     println!("\n🔑 Demo 1: Key Rotation Workflow (Multi-Party Approval)");
     println!("------------------------------------------------------");
     
@@ -69,14 +43,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("   Status: {}", workflow_response.status);
             println!("   Required Approvals: {}", workflow_response.required_approvals);
             println!("   Pending Approvers: {:?}", workflow_response.pending_approvers);
-            
-            // Simulate approval process
+
             simulate_approval_process(&workflow_engine, &workflow_response.workflow_id).await?;
         }
         Err(e) => println!("❌ Workflow initiation failed: {}", e),
     }
-    
-    // Demo 2: Emergency Access Workflow (Critical Priority)
+
     println!("\n🚨 Demo 2: Emergency Access Workflow (Expedited Approval)");
     println!("--------------------------------------------------------");
     
@@ -99,14 +71,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("   Status: {}", workflow_response.status);
             println!("   Required Approvals: {} (expedited)", workflow_response.required_approvals);
             println!("   Pending Approvers: {:?}", workflow_response.pending_approvers);
-            
-            // Emergency workflows require fewer approvals
+
             simulate_emergency_approval(&workflow_engine, &workflow_response.workflow_id).await?;
         }
         Err(e) => println!("❌ Emergency workflow initiation failed: {}", e),
     }
-    
-    // Demo 3: Policy Change Workflow (High Priority)
+
     println!("\n📋 Demo 3: Policy Change Workflow (Multi-Tier Approval)");
     println!("------------------------------------------------------");
     
@@ -129,8 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("   Status: {}", workflow_response.status);
             println!("   Required Approvals: {}", workflow_response.required_approvals);
             println!("   Pending Approvers: {:?}", workflow_response.pending_approvers);
-            
-            // Policy changes require multi-tier approval
+
             simulate_policy_approval_process(&workflow_engine, &workflow_response.workflow_id).await?;
         }
         Err(e) => println!("❌ Policy workflow initiation failed: {}", e),
@@ -149,8 +118,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     Ok(())
 }
-
-// Demo data structures (simplified for demonstration)
 
 #[derive(Debug, Clone)]
 struct WorkflowRequest {
@@ -183,8 +150,6 @@ struct WorkflowConfig {
     notification_enabled: bool,
 }
 
-// Demo implementation functions
-
 fn create_demo_config() -> WorkflowConfig {
     WorkflowConfig {
         default_approval_timeout_hours: 72, // 3 days
@@ -194,7 +159,7 @@ fn create_demo_config() -> WorkflowConfig {
 }
 
 async fn simulate_workflow_engine_creation(config: WorkflowConfig) -> Result<WorkflowEngine, String> {
-    // Simulate engine initialization
+
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
     
     println!("   🔧 Loading workflow processors...");
@@ -209,10 +174,10 @@ async fn simulate_workflow_initiation(
     _engine: &WorkflowEngine,
     request: WorkflowRequest,
 ) -> Result<WorkflowResponse, String> {
-    // Simulate workflow creation and approval requirement determination
+
     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
     
-    let workflow_id = format!("WF-{}", uuid::Uuid::new_v4().to_string()[..8].to_uppercase());
+    let workflow_id = format_args!("WF-{}", uuid::Uuid::new_v4().to_string().to_string()[..8].to_uppercase());
     
     let (required_approvals, pending_approvers) = match request.priority.as_str() {
         "Emergency" => (1, vec!["admin1".to_string()]),
@@ -227,7 +192,7 @@ async fn simulate_workflow_initiation(
         status: "PendingApprovals".to_string(),
         required_approvals,
         pending_approvers,
-        tracking_url: format!("/workflows/{}", workflow_id),
+        tracking_url: format_args!("/workflows/{}", workflow_id).to_string(),
     })
 }
 
@@ -273,13 +238,11 @@ async fn simulate_policy_approval_process(
     workflow_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n   📋 Multi-tier policy approval process...");
-    
-    // Tier 1: Administrative approval
+
     println!("   👤 admin1 reviewing policy change...");
     tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
     println!("   ✅ admin1 approved: 'Policy change technically sound'");
-    
-    // Tier 2: Security review  
+
     println!("   👤 security_officer1 reviewing security implications...");
     tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
     println!("   ✅ security_officer1 approved: 'Security implications reviewed and acceptable'");
@@ -292,7 +255,6 @@ async fn simulate_policy_approval_process(
     Ok(())
 }
 
-// Simple UUID generation for demo
 mod uuid {
     pub struct Uuid;
     
@@ -313,13 +275,12 @@ mod uuid {
     }
 }
 
-// Simple random number generation
 mod rand {
     pub fn random<T>() -> T 
     where 
         T: From<u8>
     {
-        // Simple demo random (not cryptographically secure)
+
         T::from(42)
     }
 } 

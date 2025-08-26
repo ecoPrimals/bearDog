@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Refactored World-Class Testing Framework
-//!
-//! This file demonstrates the usage of the new modular testing framework.
-//! The original 967-line monolithic file has been refactored into focused modules.
 
 mod testing_framework;
 
@@ -28,14 +8,11 @@ use tokio::test;
 #[test]
 async fn test_comprehensive_validation_framework() {
     println!("🧪 Running World-Class Testing Framework - Refactored Version");
-    
-    // Create the framework with all testing components
+
     let framework = WorldClassTestingFramework::new();
-    
-    // Run comprehensive validation
+
     let results = framework.run_comprehensive_validation().await;
-    
-    // Verify results
+
     assert!(matches!(results.overall_status, WorldClassStatus::MathematicalCertaintyAchieved));
     assert!(results.mathematical_certainty_score >= 95.0);
     assert!(results.formal_verification.proofs_generated > 0);
@@ -48,8 +25,7 @@ async fn test_comprehensive_validation_framework() {
     println!("   ✅ All validation systems passed");
     println!("   ✅ Mathematical certainty achieved: {:.2}%", results.mathematical_certainty_score);
     println!("   ✅ Execution time: {}ms", results.execution_time_ms);
-    
-    // Generate metrics report
+
     let metrics = framework.test_metrics.read().await;
     println!("\n{}", metrics.generate_report());
 }
@@ -158,8 +134,7 @@ async fn test_framework_performance() {
     let framework = WorldClassTestingFramework::new();
     let results = framework.run_comprehensive_validation().await;
     let execution_time = start_time.elapsed();
-    
-    // Performance assertions
+
     assert!(execution_time.as_millis() < 5000); // Should complete in under 5 seconds
     assert!(results.execution_time_ms < 5000);
     
@@ -171,11 +146,9 @@ async fn test_framework_performance() {
 #[test]
 fn test_framework_architecture() {
     println!("🏗️ Testing Framework Architecture");
-    
-    // Test that framework can be constructed
+
     let framework = WorldClassTestingFramework::new();
-    
-    // Verify all components are present
+
     assert!(!framework.formal_verifiers.is_empty());
     assert!(!framework.property_generators.is_empty());
     assert!(!framework.mutation_testers.is_empty());
@@ -188,7 +161,6 @@ fn test_framework_architecture() {
     println!("   ✅ Modular design verified");
 }
 
-/// Integration test demonstrating the complete refactored framework
 #[test]
 async fn test_complete_refactored_framework_integration() {
     println!("\n🚀 COMPLETE REFACTORED FRAMEWORK INTEGRATION TEST");
@@ -196,12 +168,10 @@ async fn test_complete_refactored_framework_integration() {
     
     let framework = WorldClassTestingFramework::new();
     let results = framework.run_comprehensive_validation().await;
-    
-    // Comprehensive validation
+
     assert!(matches!(results.overall_status, WorldClassStatus::MathematicalCertaintyAchieved));
     assert_eq!(results.mathematical_certainty_score, 100.0);
-    
-    // Individual system validation
+
     assert!(results.formal_verification.verification_confidence > 95.0);
     assert!(results.property_based_testing.property_confidence > 90.0);
     assert!(results.mutation_testing.mutation_score > 95.0);

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["AISpawnNodeRequest","AISpawnNodeResponse","AISpawnRequest","AISpawnResponse","AISpawnStatusResponse"]};

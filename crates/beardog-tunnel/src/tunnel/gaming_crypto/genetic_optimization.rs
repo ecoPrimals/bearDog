@@ -1,54 +1,32 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Genetic Optimization for Gaming Crypto
-///
-/// Provides genetic algorithm-based optimization for crypto parameters
-/// and performance tuning in gaming environments.
 
 use serde::{Deserialize, Serialize};
-/// Genetic parameters for crypto optimization
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticParameters {
-    /// Population size for genetic algorithm
+
     pub population_size: usize,
-    /// Mutation rate (0.0 to 1.0)
+
     pub mutation_rate: f64,
-    /// Crossover rate (0.0 to 1.0)
+
     pub crossover_rate: f64,
-    /// Number of generations to evolve
+
     pub generations: usize,
-    /// Elite selection percentage
+
     pub elite_percentage: f64,
 }
-/// Results from genetic evolution
+
 pub struct EvolutionResult {
-    /// Best fitness score achieved
+
     pub best_fitness: f64,
-    /// Number of generations evolved
+
     pub generations_evolved: usize,
-    /// Performance improvement over baseline
+
     pub improvement_percentage: f64,
-    /// Optimized parameters
+
     pub optimized_params: Vec<u8>,}
 
-
 impl Default for GeneticParameters {}
-
 
     fn default() -> Self {
         Self {

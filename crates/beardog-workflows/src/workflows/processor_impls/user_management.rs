@@ -1,33 +1,14 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// User management workflow processors
 
 use super::super::types::Workflow;
 use super::core::{WorkflowProcessingResult, WorkflowProcessor};
-// MODERNIZED: Using native async fn in traits - no async_trait needed
+
 use beardog_errors::{BearDogError, BearDogResult};
 use std::time::Duration;
 use uuid::Uuid;
 
-/// User provisioning workflow processor
 pub struct UserProvisioningProcessor;
 
-// MODERNIZED: Native async fn implementation - zero-cost abstraction
 impl WorkflowProcessor for UserProvisioningProcessor {
     async fn process_workflow(
         &self,
@@ -46,7 +27,7 @@ impl WorkflowProcessor for UserProvisioningProcessor {
             .ok_or_else(|| BearDogError::invalid_input("Missing required parameter: action"))?;
         let mut actions_taken = Vec::new();
         actions_taken.push(format!("Started user {user_action} for user: {user_id}"));
-        // Simulate user provisioning process
+
         match user_action {
             "provision" => {
                 actions_taken.push("Created user account".to_string(),
@@ -82,7 +63,6 @@ impl WorkflowProcessor for UserProvisioningProcessor {
     fn name(&self) -> &str {
         "UserManagementProcessor"}
 
-
     fn can_handle(&self, workflow: &Workflow) -> bool {
         matches!(workflow.workflow_type, WorkflowType::UserManagement)
     async fn validate_workflow(&self, workflow: &Workflow) -> BearDogResult<()> {
@@ -93,7 +73,7 @@ impl WorkflowProcessor for UserProvisioningProcessor {
     async fn estimate_processing_time(&self, _workflow: &Workflow) -> BearDogResult<Duration> {
         Ok(Duration::from_secs(90)) // 1.5 minutes
 }
-/// Emergency access workflow processor
+
 pub struct EmergencyAccessProcessor;
 impl WorkflowProcessor for EmergencyAccessProcessor {
         let resource_id = workflow
@@ -105,7 +85,7 @@ impl WorkflowProcessor for EmergencyAccessProcessor {
         actions_taken.push(format!(
             "Started emergency access for resource: {resource_id}"
         ));
-        // Simulate emergency access process
+
         actions_taken.push("Validated emergency conditions".to_string(),
         actions_taken.push("Bypassed normal approval process".to_string(),
         actions_taken.push("Granted temporary access".to_string(),

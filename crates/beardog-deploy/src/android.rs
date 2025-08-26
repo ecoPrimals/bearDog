@@ -1,21 +1,5 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Android NDK and build environment management
 use beardog_errors::BearDogError;
 use anyhow::Result;
 use std::{
@@ -43,31 +27,30 @@ impl AndroidManager {
             ndk_home,
         }
     }
-    /// Check all prerequisites for Android development
+
     pub async fn check_prerequisites(&self) -> Result<()> {
         info!("🔍 Checking Android development prerequisites...");
-        // Check Rust installation
+
         self.check_rust().await?;
         info!("✅ Rust toolchain available");
-        // Check Android NDK
+
         self.check_ndk()?;
         info!("✅ Android NDK available");
-        // Check cargo-ndk
+
         self.check_cargo_ndk().await?;
         info!("✅ cargo-ndk available");
-        // Check ADB
+
         self.check_adb().await?;
         info!("✅ ADB available");
         Ok(())
     }
 
-    /// Setup the build environment
     pub async fn setup_build_environment(&self) -> Result<()> {
         info!("🦀 Setting up Rust Android build environment...");
-        // Add Android target if not present
+
         self.add_android_target("aarch64-linux-android").await?;
         info!("✅ Android target added");
-        // Setup NDK environment variables
+
         self.setup_ndk_environment()?;
         info!("✅ NDK environment configured");
         Ok(())
@@ -80,9 +63,9 @@ impl AndroidManager {
             .stderr(Stdio::piped())
             .output()
             .await
-            .map_err(|_| BearDogError::deployment_with_stage("rustc not found in PATH", "rust_toolchain_check"))?;
+            .map_err(|_| BearDogError::system("rustc not found in PATH"))?;
         if !output.status.success() {
-            return Err(BearDogError::deployment_with_stage("rustc command failed", "rust_toolchain_check").into());
+            return Err(BearDogError::system("rustc command failed").into());
         }
         debug!("Rust version: {}", String::from_utf8_lossy(&output.stdout));
         Ok(())
@@ -92,17 +75,16 @@ impl AndroidManager {
         let ndk_home = self
             .ndk_home
             .as_ref()
-            .ok_or_else(|| BearDogError::deployment_with_stage("ANDROID_NDK_HOME not set", "ndk_validation"))?;
+            .ok_or_else(|| BearDogError::system("ANDROID_NDK_HOME not set"))?;
         if !ndk_home.exists() {
-            return Err(BearDogError::deployment_with_stage(
-                format!("NDK directory does not exist: {}", ndk_home.display()),
-                "ndk_validation"
+            return Err(BearDogError::system(
+                format!("NDK directory does not exist: {}", ndk_home.display())
             ).into());
         }
-        // Check for required NDK components
+
         let toolchain_dir = ndk_home.join("toolchains/llvm/prebuilt");
         if !toolchain_dir.exists() {
-            return Err(BearDogError::deployment_with_stage("NDK toolchain directory not found", "ndk_validation").into());
+            return Err(BearDogError::system("NDK toolchain directory not found").into());
         }
         debug!("NDK found at: {}", ndk_home.display());
         Ok(())
@@ -134,13 +116,12 @@ impl AndroidManager {
             .output()
             .await
             .map_err(|e| {
-                BearDogError::deployment_with_stage(format!("Failed to install cargo-ndk: {e}"), "cargo_ndk_install")
+                BearDogError::system(format!("Failed to install cargo-ndk: {e}"))
             })?;
         
         if !output.status.success() {
-            return Err(BearDogError::deployment_with_stage(
-                format!("cargo-ndk installation failed: {}", String::from_utf8_lossy(&output.stderr)),
-                "cargo_ndk_install"
+            return Err(BearDogError::system(
+                format!("cargo-ndk installation failed: {}", String::from_utf8_lossy(&output.stderr))
             ).into());
         }
         Ok(())
@@ -151,22 +132,21 @@ impl AndroidManager {
             .arg("version")
             .output()
             .await
-            .map_err(|_| BearDogError::deployment_with_stage("adb not found in PATH", "adb_check"))?;
+            .map_err(|_| BearDogError::system("adb not found in PATH"))?;
         
         if !output.status.success() {
-            return Err(BearDogError::deployment_with_stage("adb command failed", "adb_check").into());
+            return Err(BearDogError::system("adb command failed").into());
         }
         debug!("ADB version: {}", String::from_utf8_lossy(&output.stdout));
         Ok(())
     }
 
     async fn add_android_target(&self, target: &str) -> Result<()> {
-        // Check if target is already installed
         let output = Command::new("rustup")
             .args(["target", "list", "--installed"])
             .output()
             .await
-            .map_err(|e| BearDogError::deployment_with_stage(format!("Failed to list targets: {e}"), "rust_target_check"))?;
+            .map_err(|e| BearDogError::system(format!("Failed to list targets: {e}")))?;
         let installed_targets = String::from_utf8_lossy(&output.stdout);
         if installed_targets.contains(target) {
             debug!("Target {} already installed", target);
@@ -178,12 +158,11 @@ impl AndroidManager {
             .args(["target", "add", target])
             .output()
             .await
-            .map_err(|e| BearDogError::deployment_with_stage(format!("Failed to add target: {e}"), "rust_target_add"))?;
+            .map_err(|e| BearDogError::system(format!("Failed to add target: {e}")))?;
         
         if !output.status.success() {
-            return Err(BearDogError::deployment_with_stage(
-                format!("Failed to add target {}: {}", target, String::from_utf8_lossy(&output.stderr)),
-                "rust_target_add"
+            return Err(BearDogError::system(
+                format!("Failed to add target {}: {}", target, String::from_utf8_lossy(&output.stderr))
             ).into());
         }
         Ok(())
@@ -191,20 +170,25 @@ impl AndroidManager {
 
     fn setup_ndk_environment(&self) -> Result<()> {
         let ndk_home = self.ndk_home.as_ref()
-            .ok_or_else(|| BearDogError::deployment_with_stage("NDK not available", "ndk_validation"))?;
-        // Detect host architecture
-        let host_arch = if cfg!(target_os = "linux") && cfg!(target_arch = "x86_64") {
-            "linux-x86_64"
-        } else if cfg!(target_os = "macos") {
-            "darwin-x86_64" // NDK uses x86_64 tools for both Intel and M1 Macs
-        } else {
-            return Err(BearDogError::deployment_with_stage("Unsupported host platform", "platform_check").into());
-        };
+            .ok_or_else(|| BearDogError::system("NDK not available"))?;
+
+        #[cfg(not(target_os = "linux"))]
+        {
+            return Err(BearDogError::system(
+                format!("Toolchain not found for host: {host_arch}")
+            ).into());
+        }
+
+        let host_arch = std::env::consts::ARCH;
+        if host_arch != "x86_64" {
+            return Err(BearDogError::system(
+                format!("Toolchain not found for host: {host_arch}")
+            ).into());
+        }
         let toolchain_path = ndk_home.join(format!("toolchains/llvm/prebuilt/{host_arch}"));
         if !toolchain_path.exists() {
-            return Err(BearDogError::deployment_with_stage(
-                format!("Toolchain not found for host: {host_arch}"),
-                "ndk_toolchain_check"
+            return Err(BearDogError::system(
+                format!("Toolchain not found for host: {host_arch}")
             ).into());
         }
         debug!("NDK toolchain path: {}", toolchain_path.display());
@@ -213,7 +197,7 @@ impl AndroidManager {
 
     fn get_ndk_home(&self) -> Result<&PathBuf, BearDogError> {
         self.ndk_home.as_ref()
-            .ok_or_else(|| BearDogError::deployment_with_stage("NDK not available", "ndk_validation"))
+            .ok_or_else(|| BearDogError::system("NDK not available"))
     }
 
     #[allow(dead_code)] // Future deployment functionality
@@ -222,8 +206,7 @@ impl AndroidManager {
         Ok(ndk_home.join(format!("toolchains/llvm/prebuilt/{host_arch}")))
     }
 
-    #[allow(dead_code)]
-    pub fn get_project_root(&self) -> &Path {
+        pub fn get_project_root(&self) -> &Path {
         &self.project_root
     }
 }

@@ -1,21 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-// 🚀 BSTP Performance Benchmarks - Krogan-Grade Gaming Performance
 
 use beardog::config::EncryptionConfig;
 use beardog::encryption::EncryptionEngine;
@@ -32,7 +15,7 @@ use std::time::{Duration, Instant};
 
 #[tokio::test]
 async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
-    // Benchmark real StarCraft 2 gaming scenarios
+
     println!("🎮 Benchmarking StarCraft 2 gaming performance...");
 
     let config = BStpConfig::competitive_gaming();
@@ -49,7 +32,6 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
 
     let security_genetics = SecurityGenetics::default();
 
-    // StarCraft 2 typical packet sizes and patterns
     let sc2_packets = vec![
         (b"player_select_units".to_vec(), "Unit Selection"),
         (
@@ -80,7 +62,6 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
         for i in 0..iterations {
             let session_id = format!("sc2_session_{packet_type}_{i}");
 
-            // Encryption benchmark
             let start = Instant::now();
             let encrypted = crypto_engine
                 .ultra_fast_encrypt(&session_id, packet_data, &security_genetics)
@@ -88,7 +69,6 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
             let encryption_time = start.elapsed();
             encryption_times.push(encryption_time);
 
-            // Decryption benchmark
             let start = Instant::now();
             let decrypted = crypto_engine
                 .ultra_fast_decrypt(&session_id, &encrypted, &security_genetics)
@@ -99,26 +79,25 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
             assert_eq!(packet_data, &decrypted);
         }
 
-        // Calculate statistics
         let avg_encryption = encryption_times.iter().sum::<Duration>() / iterations as u32;
         let avg_decryption = decryption_times.iter().sum::<Duration>() / iterations as u32;
 
         let max_encryption = encryption_times.iter().max().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         let max_decryption = decryption_times.iter().max().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
 
         let min_encryption = encryption_times.iter().min().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         let min_decryption = decryption_times.iter().min().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
 
         println!("📊 {packet_type} Performance:");
@@ -135,7 +114,6 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
             max_decryption.as_micros()
         );
 
-        // Assert performance targets for competitive gaming
         assert!(
             avg_encryption <= config.performance.max_encryption_latency,
             "Average encryption {}μs exceeds target {}μs for {}",
@@ -155,7 +133,6 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
         total_times.push((avg_encryption, avg_decryption));
     }
 
-    // Overall performance summary
     let overall_avg_encryption: Duration =
         total_times.iter().map(|(e, _)| *e).sum::<Duration>() / total_times.len() as u32;
     let overall_avg_decryption: Duration =
@@ -178,7 +155,7 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn benchmark_age_of_empires2_scenario() -> BearDogResult<()> {
-    // Benchmark Age of Empires 2 gaming scenarios
+
     println!("🏰 Benchmarking Age of Empires 2 gaming performance...");
 
     let config = BStpConfig::competitive_gaming();
@@ -195,7 +172,6 @@ async fn benchmark_age_of_empires2_scenario() -> BearDogResult<()> {
 
     let security_genetics = SecurityGenetics::default();
 
-    // Age of Empires 2 typical commands
     let aoe2_commands = vec![
         b"villager_gather_wood_forest_1".to_vec(),
         b"military_unit_attack_enemy_castle".to_vec(),
@@ -225,7 +201,6 @@ async fn benchmark_age_of_empires2_scenario() -> BearDogResult<()> {
         }
     }
 
-    // Calculate percentiles for AoE2 gaming
     all_latencies.sort();
     let p50 = all_latencies[all_latencies.len() / 2];
     let p95 = all_latencies[(all_latencies.len() * 95) / 100];
@@ -241,7 +216,6 @@ async fn benchmark_age_of_empires2_scenario() -> BearDogResult<()> {
     println!("   P99: {}μs", p99.as_micros());
     println!("   Max: {}μs", max_latency.as_micros());
 
-    // AoE2 is more latency tolerant than StarCraft, but still needs good performance
     let aoe2_target = Duration::from_micros(200); // 200μs target for AoE2
     assert!(
         p95 <= aoe2_target,
@@ -255,7 +229,7 @@ async fn benchmark_age_of_empires2_scenario() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn benchmark_throughput_stress_test() -> BearDogResult<()> {
-    // Stress test throughput under high load
+
     println!("⚡ Benchmarking throughput under stress...");
 
     let config = BStpConfig::competitive_gaming();
@@ -272,7 +246,6 @@ async fn benchmark_throughput_stress_test() -> BearDogResult<()> {
 
     let security_genetics = SecurityGenetics::default();
 
-    // Test different packet sizes
     let packet_sizes = vec![64, 256, 512, 1024, 1500]; // Common network packet sizes
     let packets_per_size = 1000;
 
@@ -282,7 +255,6 @@ async fn benchmark_throughput_stress_test() -> BearDogResult<()> {
 
         let start_time = Instant::now();
 
-        // Process packets concurrently
         for i in 0..packets_per_size {
             let crypto = crypto_engine.clone();
             let data = test_data.clone();
@@ -306,7 +278,6 @@ async fn benchmark_throughput_stress_test() -> BearDogResult<()> {
             handles.push(handle);
         }
 
-        // Wait for all to complete
         for handle in handles {
             handle
                 .await
@@ -325,7 +296,6 @@ async fn benchmark_throughput_stress_test() -> BearDogResult<()> {
         println!("   Packets/sec: {packets_per_second:.0}");
         println!("   Total time: {:.2}s", total_time.as_secs_f64());
 
-        // Verify throughput requirements
         let min_throughput_mbps = config.performance.min_gaming_throughput;
         assert!(
             throughput_mbps >= min_throughput_mbps as f64,
@@ -338,7 +308,7 @@ async fn benchmark_throughput_stress_test() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn benchmark_genetic_healing_performance() -> BearDogResult<()> {
-    // Benchmark genetic healing response times
+
     println!("🧬 Benchmarking genetic healing performance...");
 
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -379,14 +349,13 @@ async fn benchmark_genetic_healing_performance() -> BearDogResult<()> {
         let avg_healing_time = healing_times.iter().sum::<Duration>() / iterations as u32;
         let max_healing_time = healing_times.iter().max().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
 
         println!("🧬 {threat_type:?} Healing Performance:");
         println!("   Average: {}ms", avg_healing_time.as_millis());
         println!("   Maximum: {}ms", max_healing_time.as_millis());
 
-        // Genetic healing should be fast for gaming
         let max_acceptable = Duration::from_millis(50); // 50ms max for gaming
         assert!(
             avg_healing_time <= max_acceptable,
@@ -402,7 +371,7 @@ async fn benchmark_genetic_healing_performance() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn benchmark_key_management_performance() -> BearDogResult<()> {
-    // Benchmark key management operations
+
     println!("🔑 Benchmarking key management performance...");
 
     let config = BStpConfig::competitive_gaming();
@@ -410,7 +379,6 @@ async fn benchmark_key_management_performance() -> BearDogResult<()> {
 
     let operations = 1000;
 
-    // Benchmark key generation
     let start = Instant::now();
     let mut generation_times = Vec::new();
 
@@ -439,7 +407,6 @@ async fn benchmark_key_management_performance() -> BearDogResult<()> {
         operations as f64 / total_generation_time.as_secs_f64()
     );
 
-    // Key operations should be very fast for gaming
     assert!(
         avg_generation_time <= Duration::from_micros(500),
         "Key generation too slow"

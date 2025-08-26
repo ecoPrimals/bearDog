@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["API_KEY","DATABASE_PASSWORD","ENCRYPTION_KEY"]};

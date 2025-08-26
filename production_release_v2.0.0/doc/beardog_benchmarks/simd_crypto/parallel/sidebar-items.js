@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AffinityStrategy","BatchProcessingStrategy","LoadBalancingAlgorithm","SynchronizationPrimitive","ThreadPriority","WorkDistributionStrategy"],"struct":["BatchProcessingConfig","LoadBalancingConfig","ParallelCryptoConfig","SynchronizationConfig","ThreadAffinityConfig","ThreadPoolConfig"]};

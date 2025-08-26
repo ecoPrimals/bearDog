@@ -1,21 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Threat detection integration tests
 
 use super::common::*;
 use beardog::errors::BearDogResult;
@@ -26,10 +9,8 @@ use beardog::tunnel::events::types::ThreatLevel;
 async fn test_threat_detection_engine() -> BearDogResult<()> {
     let core = create_test_core().await?;
 
-    // Test threat detection through core
     let threat_engine = core.threat_detection_engine();
 
-    // Create a test security event
     let event = SecurityEvent {
         event_id: "test-event-001".to_string(),
         event_type: "file_access".to_string(),
@@ -44,10 +25,8 @@ async fn test_threat_detection_engine() -> BearDogResult<()> {
         }),
     };
 
-    // Analyze the event for threats
     let analysis_result = threat_engine.analyze_event(event).await?;
-    
-    // Verify analysis was performed
+
     assert!(!analysis_result.threat_id.is_empty());
     assert!(analysis_result.confidence >= 0.0 && analysis_result.confidence <= 1.0);
 
@@ -59,7 +38,6 @@ async fn test_threat_detection_file_integrity() -> BearDogResult<()> {
     let core = create_test_core().await?;
     let threat_engine = core.threat_detection_engine();
 
-    // Test file integrity threat detection
     let integrity_event = SecurityEvent {
         event_id: "integrity-001".to_string(),
         event_type: "file_modification".to_string(),
@@ -76,8 +54,7 @@ async fn test_threat_detection_file_integrity() -> BearDogResult<()> {
     };
 
     let analysis = threat_engine.analyze_event(integrity_event).await?;
-    
-    // File integrity threats should have high confidence
+
     assert!(analysis.confidence > 0.7);
     assert!(matches!(analysis.threat_level, ThreatLevel::High | ThreatLevel::Critical));
 

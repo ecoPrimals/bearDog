@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// BearDog Universal Primal Provider Implementation
-///
-/// Implements the Universal Primal Provider trait for ecosystem integration.
-/// **MODERNIZED ✅** - Now uses native async fn for zero-cost abstractions
 
 use super::BearDogCore;
 use crate::universal_primal_provider::{
@@ -28,25 +8,20 @@ use crate::universal_primal_provider::{
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_errors::idiomatic::SecurityResult;
 
-// Universal Primal Provider implementation for ecosystem integration
-// **ZERO-COST ASYNC** - Native async methods eliminate boxing overhead
-impl UniversalPrimalProvider for BearDogCore {
-    /// Get primal metadata for ecosystem registration
+impl UniversalProvider for BearDogCore {
+
     fn metadata(&self) -> &PrimalMetadata {
         &self.primal_metadata
     }
-    
-    /// Get list of capabilities this primal provides
+
     fn capabilities(&self) -> &[PrimalCapability] {
         &self.primal_capabilities
     }
-    
-    /// Get list of services this primal exposes
+
     #[allow(clippy::vec_init_then_push)] // Complex service definitions are clearer with push
     async fn services(&self) -> BearDogResult<Vec<PrimalService>> {
         let mut services = Vec::new();
-        
-        // Security service
+
         services.push(PrimalService {
             id: "security".to_string(),
             name: "BearDog Security Service".to_string(),
@@ -74,8 +49,7 @@ impl UniversalPrimalProvider for BearDogCore {
             ],
             health: ServiceHealth::Healthy,
         });
-        
-        // Threat detection service
+
         services.push(PrimalService {
             id: "threat-detection".to_string(),
             name: "BearDog Threat Detection".to_string(),
@@ -103,8 +77,7 @@ impl UniversalPrimalProvider for BearDogCore {
             ],
             health: ServiceHealth::Healthy,
         });
-        
-        // Compliance service
+
         services.push(PrimalService {
             id: "compliance".to_string(),
             name: "BearDog Compliance Engine".to_string(),
@@ -128,8 +101,7 @@ impl UniversalPrimalProvider for BearDogCore {
             capabilities: vec![PrimalCapability::Compliance, PrimalCapability::Monitoring],
             health: ServiceHealth::Healthy,
         });
-        
-        // Workflow service
+
         services.push(PrimalService {
             id: "workflow".to_string(),
             name: "BearDog Workflow Engine".to_string(),
@@ -156,8 +128,7 @@ impl UniversalPrimalProvider for BearDogCore {
         
         Ok(services)
     }
-    
-    /// Register with the ecosystem through Songbird
+
     async fn register_with_ecosystem(&self, songbird_endpoint: &str) -> BearDogResult<()> {
         use reqwest;
         use serde_json;
@@ -197,8 +168,7 @@ impl UniversalPrimalProvider for BearDogCore {
             )))
         }
     }
-    
-    /// Handle incoming service request from ecosystem
+
     async fn handle_service_request(
         &self,
         service_id: &str,
@@ -214,28 +184,24 @@ impl UniversalPrimalProvider for BearDogCore {
         
         match service_id {
             "security" => {
-                // Handle security service requests
-                // This would route to the security provider
+
                 let _context_json = serde_json::to_value(&context).map_err(|e| {
                     BearDogError::internal(format!("Failed to serialize context: {e}"))
                 })?;
-                
-                // Use universal ecosystem integration instead of direct method calls
+
                 let response = serde_json::json!({
                     "success": true,
                     "message": "Security request handled via universal ecosystem integration",
                     "data": request_data
                 });
-                
-                // Convert JSON to bytes as expected by the return type
+
                 let response_bytes = serde_json::to_vec(&response).map_err(|e| {
                     BearDogError::internal(format!("Failed to serialize response: {e}"))
                 })?;
                 Ok(response_bytes)
             }
             "threat-detection" => {
-                // Handle threat detection requests
-                // This would route to the threat detection engine
+
                 let response = serde_json::json!({
                     "status": "processing",
                     "message": "Threat analysis initiated",
@@ -244,7 +210,7 @@ impl UniversalPrimalProvider for BearDogCore {
                 Ok(response.to_string().into_bytes())
             }
             "compliance" => {
-                // Handle compliance requests
+
                 let response = serde_json::json!({
                     "status": "compliant",
                     "message": "Compliance check completed",
@@ -253,7 +219,7 @@ impl UniversalPrimalProvider for BearDogCore {
                 Ok(response.to_string().into_bytes())
             }
             "workflow" => {
-                // Handle workflow requests
+
                 let response = serde_json::json!({
                     "status": "queued",
                     "message": "Workflow initiated",
@@ -264,8 +230,7 @@ impl UniversalPrimalProvider for BearDogCore {
             _ => Err(BearDogError::not_found(format!("Service '{service_id}' not found"))),
         }
     }
-    
-    /// Health check for ecosystem monitoring
+
     async fn health_check(&self) -> BearDogResult<ServiceHealth> {
         let state = self.state.read().await;
         match state.health_status {
@@ -275,8 +240,7 @@ impl UniversalPrimalProvider for BearDogCore {
             _ => Ok(ServiceHealth::Unknown),
         }
     }
-    
-    /// Shutdown notification from ecosystem
+
     async fn shutdown(&self) -> BearDogResult<()> {
         tracing::info!("Received shutdown notification from ecosystem");
         self.stop().await

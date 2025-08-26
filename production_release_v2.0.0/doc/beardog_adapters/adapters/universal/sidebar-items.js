@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["authentication","protocols","providers","transformers"],"struct":["UniversalAdapterConfig","UniversalExternalAdapter","UniversalRequest","UniversalResponse"],"trait":["ExternalSystemProvider"]};

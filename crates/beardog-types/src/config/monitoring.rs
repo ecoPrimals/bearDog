@@ -1,29 +1,9 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Monitoring Configuration - Canonical
-///
-/// **UNIFIED MONITORING CONFIGURATION** for the BearDog ecosystem
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-/// **CANONICAL** Basic Monitoring Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BasicMonitoringConfig {
     pub enabled: bool,
@@ -43,7 +23,6 @@ impl Default for BasicMonitoringConfig {
     }
 }
 
-/// **CANONICAL** Production Monitoring Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct ProductionMonitoringConfig {
@@ -54,8 +33,6 @@ pub struct ProductionMonitoringConfig {
     pub sla_monitoring: SlaMonitoringConfig,
 }
 
-
-/// **CANONICAL** Metrics Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricsConfig {
     pub enabled: bool,
@@ -73,7 +50,6 @@ impl Default for MetricsConfig {
     }
 }
 
-/// **CANONICAL** Alerting Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertingConfig {
     pub enabled: bool,
@@ -86,12 +62,11 @@ impl Default for AlertingConfig {
         Self {
             enabled: true,
             notification_channels: vec!["email".to_string()],
-            alert_thresholds: HashMap::new(),
+            alert_thresholds: HashMap::with_capacity(16),
         }
     }
 }
 
-/// **CANONICAL** Health Check Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
     pub enabled: bool,
@@ -109,7 +84,6 @@ impl Default for HealthCheckConfig {
     }
 }
 
-/// **CANONICAL** Profiling Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProfilingConfig {
     pub enabled: bool,
@@ -127,7 +101,6 @@ impl Default for ProfilingConfig {
     }
 }
 
-/// **CANONICAL** SLA Monitoring Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SlaMonitoringConfig {
     pub enabled: bool,
@@ -141,7 +114,7 @@ impl Default for SlaMonitoringConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            targets: HashMap::new(),
+            targets: HashMap::with_capacity(16),
             response_time_threshold: 1000.0, // 1 second
             availability_threshold: 99.9,    // 99.9%
             error_rate_threshold: 5.0,       // 5%

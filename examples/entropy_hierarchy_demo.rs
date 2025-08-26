@@ -1,31 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Entropy Hierarchy Demo
-//!
-//! **Demonstrates the revolutionary entropy hierarchy system that recognizes
-//! human-lived experience entropy as fundamentally superior to store-bought compute random**
-//!
-//! This demo shows:
-//! - Creating self-sovereign entropy seeds from human entropy
-//! - Event-based seed sharing for concerts, conferences, communities
-//! - Ownership transfer and expiration with downstream effects
-//! - Generative crypto capabilities for creative and social purposes
-//! - Making advanced cryptography accessible to everyone
 
 use beardog::genetics::entropy_hierarchy::*;
 use beardog::genetics::human_entropy::*;
@@ -42,16 +15,13 @@ async fn main() -> BearDogResult<()> {
     println!("🧬 Revolutionary Human-First Cryptographic Seeds");
     println!("=====================================\n");
 
-    // Initialize the entropy hierarchy system with HSM and entropy collection
     let config = EntropyHierarchyConfig::default();
 
-    // Create dummy HSM manager and entropy collector for demonstration
     let hsm_manager = Arc::new(create_demo_hsm_manager().await?);
     let entropy_collector = Arc::new(create_demo_entropy_collector().await?);
 
     let mut entropy_manager = EntropyHierarchyManager::new(config, hsm_manager, entropy_collector);
 
-    // Demo 1: Human-Lived Experience Entropy
     println!("📱 Demo 1: Human-Lived Experience Entropy");
     println!("-----------------------------------------");
 
@@ -88,7 +58,6 @@ async fn main() -> BearDogResult<()> {
     println!("   - Transferable: Yes (max 3 transfers)");
     println!("   - Downstream policy: Preserve human classification\n");
 
-    // Demo 2: Event-Based Seed Sharing (Concert)
     println!("🎵 Demo 2: Event-Based Seed Sharing (Concert)");
     println!("----------------------------------------------");
 
@@ -139,7 +108,6 @@ async fn main() -> BearDogResult<()> {
     println!("   - Expiration: 30 days");
     println!("   - Operations: concert memories, NFT proofs, experience sharing\n");
 
-    // Demo 3: Conference Seed for Knowledge Sharing
     println!("🎓 Demo 3: Conference Seed for Knowledge Sharing");
     println!("-----------------------------------------------");
 
@@ -190,7 +158,6 @@ async fn main() -> BearDogResult<()> {
     println!("   - Expiration: 90 days (educational content)");
     println!("   - Operations: learning proofs, certificates, knowledge sharing\n");
 
-    // Demo 4: Ownership Transfer
     println!("🔄 Demo 4: Ownership Transfer");
     println!("----------------------------");
 
@@ -209,15 +176,12 @@ async fn main() -> BearDogResult<()> {
         println!("   - Transfer count: 1/3 (2 transfers remaining)\n");
     }
 
-    // Demo 5: Cryptographic Operations with Seeds
     println!("🔐 Demo 5: Cryptographic Operations with Seeds");
     println!("---------------------------------------------");
 
-    // Use the concert seed for generating a concert memory proof
     let concert_key = entropy_manager.use_seed(&concert_seed_id, "derive_key")?;
     println!("✅ Derived concert memory key: {} bytes", concert_key.len());
 
-    // Use the conference seed for creating a certificate
     let certificate_signature =
         entropy_manager.use_seed(&conference_seed_id, "generate_signature")?;
     println!(
@@ -225,12 +189,10 @@ async fn main() -> BearDogResult<()> {
         certificate_signature.len()
     );
 
-    // Use the human seed for general key derivation
     let general_key = entropy_manager.use_seed(&human_seed_id, "derive_key")?;
     println!("✅ Derived general key: {} bytes", general_key.len());
     println!();
 
-    // Demo 6: Ownership Expiration and Downstream Effects
     println!("⏳ Demo 6: Ownership Expiration and Downstream Effects");
     println!("-----------------------------------------------------");
 
@@ -249,7 +211,6 @@ async fn main() -> BearDogResult<()> {
         println!("   - Previous owner tracked in lineage\n");
     }
 
-    // Demo 7: Entropy Hierarchy in Action
     println!("🧬 Demo 7: Entropy Hierarchy in Action");
     println!("-------------------------------------");
 
@@ -296,7 +257,6 @@ async fn main() -> BearDogResult<()> {
     );
     println!();
 
-    // Demo 8: System Statistics
     println!("📊 Demo 8: System Statistics");
     println!("----------------------------");
 
@@ -316,7 +276,6 @@ async fn main() -> BearDogResult<()> {
     println!("   - Self-sovereign seeds: {}", stats.self_sovereign_seeds);
     println!();
 
-    // Demo 9: Clean up expired seeds
     println!("🧹 Demo 9: Cleanup and Lifecycle Management");
     println!("------------------------------------------");
 
@@ -332,7 +291,6 @@ async fn main() -> BearDogResult<()> {
     );
     println!("   - All seeds are still valid (no expiration in demo)\n");
 
-    // Demo 10: Revolutionary Impact Summary
     println!("🚀 Demo 10: Revolutionary Impact Summary");
     println!("---------------------------------------");
 
@@ -364,12 +322,11 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Create a demo HSM manager for demonstration purposes
 async fn create_demo_hsm_manager() -> BearDogResult<HsmManager> {
     let config = HsmManagerConfig {
         hsm_configs: vec![HsmConfig {
             hsm_type: HsmType::SoftwareRust,
-            config_data: HashMap::new(),
+            config_data: HashMap::with_capacity(16),
             ios_config: None,
             android_config: None,
             software_config: Some(SoftwareHsmConfig {
@@ -392,7 +349,6 @@ async fn create_demo_hsm_manager() -> BearDogResult<HsmManager> {
     HsmManager::new(config).await
 }
 
-/// Create a demo entropy collector for demonstration purposes
 async fn create_demo_entropy_collector() -> BearDogResult<MultiModalHumanEntropyCollector> {
     let config = HumanEntropyConfig {
         collection_duration: std::time::Duration::from_secs(30),
@@ -426,11 +382,9 @@ async fn create_demo_entropy_collector() -> BearDogResult<MultiModalHumanEntropy
     Ok(MultiModalHumanEntropyCollector::new(config))
 }
 
-// Helper functions for demo
-
 fn create_demo_human_identity(username: &str, display_name: &str) -> BearDogResult<HumanIdentity> {
     Ok(HumanIdentity {
-        identity_id: format!("{}_{}", username, Uuid::new_v4()),
+        identity_id: format_args!("{}_{}", username, Uuid::new_v4().to_string()),
         public_key: vec![0u8; 32],              // Demo public key
         biometric_hash: Some(vec![1, 2, 3, 4]), // Demo biometric hash
         verification_level: VerificationLevel::BasicBiometric,
@@ -530,7 +484,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_entropy_hierarchy_demo() {
-        // Run the full demo as a test
+
         let result = main().await;
         assert!(result.is_ok());
     }
@@ -539,14 +493,14 @@ mod tests {
     fn test_demo_helper_functions() {
         let identity = create_demo_human_identity("test", "Test User").map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert!(identity.identity_id.starts_with("test_"));
         assert_eq!(identity.public_key.len(), 32);
 
         let entropy = create_demo_human_entropy().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         assert!(matches!(entropy, EntropyClass::HumanLivedExperience { .. }));
     }

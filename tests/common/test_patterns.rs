@@ -1,30 +1,9 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Common Test Patterns and Utilities
-//!
-//! This module consolidates repeated patterns found across test files,
-//! eliminating duplication and providing consistent testing utilities.
 
 use beardog_errors::{BearDogError, BearDogResult};
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info, warn};
 
-/// Common test execution pattern with proper error handling
 pub async fn execute_test_with_context<F, Fut, T>(
     test_name: &str,
     test_fn: F,
@@ -50,7 +29,6 @@ where
     }
 }
 
-/// Common adapter creation pattern (eliminates the repeated unwrap_or_else pattern)
 pub fn create_adapter_safely<T, E>(
     adapter_result: Result<T, E>,
     adapter_name: &str,
@@ -61,12 +39,11 @@ where
     adapter_result.map_err(|e| {
         error!("Failed to create {} adapter: {:?}", adapter_name, e);
         BearDogError::Initialization {
-            message: format!("Failed to create {} adapter: {:?}", adapter_name, e),
+            message: format_args!("Failed to create {} adapter: {:?}", adapter_name, e).to_string(),
         }
     })
 }
 
-/// Common HSM operation testing pattern
 pub async fn test_hsm_operation<F, Fut, T>(
     operation_name: &str,
     platform: &str,
@@ -88,7 +65,6 @@ where
     result
 }
 
-/// Common test platform iteration pattern
 pub async fn test_across_platforms<F, Fut>(
     platforms: &[&str],
     test_name: &str,
@@ -104,7 +80,6 @@ where
     Ok(())
 }
 
-/// Common test harness setup pattern
 pub async fn setup_test_harness(test_name: &str) -> BearDogResult<TestHarnessContext> {
     info!("⚙️ Setting up test harness for: {}", test_name);
     
@@ -118,7 +93,6 @@ pub async fn setup_test_harness(test_name: &str) -> BearDogResult<TestHarnessCon
     })
 }
 
-/// Simplified test harness context
 pub struct TestHarnessContext {
     pub test_name: String,
     pub core: std::sync::Arc<beardog::core::BearDogCore>,
@@ -133,7 +107,7 @@ impl TestHarnessContext {
     pub async fn cleanup(self) -> BearDogResult<()> {
         debug!("🧹 Cleaning up test harness for: {} (ran for {:?})", 
                self.test_name, self.elapsed());
-        // Cleanup logic here
+
         Ok(())
     }
 } 

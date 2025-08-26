@@ -1,34 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # BearDog Pixel 8 HSM Benchmark Suite
-//!
-//! **LIVE HSM TESTING: Hardware vs Software Performance**
-//!
-//! This benchmark suite tests BearDog's HSM capabilities on real Pixel 8 hardware
-//! with Titan M security chip, comparing against software HSM implementations
-//! running on Pop!_OS towers.
-//!
-//! ## Testing Scenarios:
-//! - Titan M Hardware HSM (StrongBox) performance
-//! - Software HSM performance on Pop!_OS
-//! - SIMD genetic algorithm performance on mobile
-//! - Distributed HSM operations across towers
-//! - Real-world security operation benchmarks
 
 use beardog_types::canonical::{KeyType, HealthStatus, WorkflowType};
 use beardog_errors::{BearDogError, BearDogResult};
@@ -36,7 +6,6 @@ use std::time::{Instant, Duration};
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
-/// HSM Performance Benchmark Results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmBenchmarkResults {
     pub device_info: DeviceInfo,
@@ -95,7 +64,6 @@ pub struct DistributedMetrics {
     pub throughput_ops_per_sec: f64,
 }
 
-/// Main benchmark orchestrator
 pub struct Pixel8HsmBenchmark {
     pub device_info: DeviceInfo,
     pub test_iterations: u32,
@@ -103,7 +71,7 @@ pub struct Pixel8HsmBenchmark {
 }
 
 impl Pixel8HsmBenchmark {
-    /// Create new benchmark suite
+
     pub fn new() -> Self {
         Self {
             device_info: Self::detect_device_info(),
@@ -112,7 +80,6 @@ impl Pixel8HsmBenchmark {
         }
     }
 
-    /// Detect device information
     fn detect_device_info() -> DeviceInfo {
         DeviceInfo {
             device_name: "Pixel 8 (GrapheneOS)".to_string(),
@@ -124,7 +91,6 @@ impl Pixel8HsmBenchmark {
         }
     }
 
-    /// Run comprehensive HSM benchmark suite
     pub async fn run_comprehensive_benchmark(&self) -> BearDogResult<Vec<HsmBenchmarkResults>> {
         println!("🚀 BearDog Pixel 8 HSM Benchmark Suite");
         println!("=====================================");
@@ -132,7 +98,6 @@ impl Pixel8HsmBenchmark {
         
         let mut results = Vec::new();
 
-        // Test 1: Titan M Hardware HSM
         if self.verbose {
             println!("📱 Phase 1: Titan M Hardware HSM Testing");
             println!("---------------------------------------");
@@ -140,7 +105,6 @@ impl Pixel8HsmBenchmark {
         let titan_m_results = self.benchmark_titan_m_hsm().await?;
         results.push(titan_m_results);
 
-        // Test 2: Software HSM (Pop!_OS)
         if self.verbose {
             println!("🐧 Phase 2: Software HSM Testing (Pop!_OS)");
             println!("------------------------------------------");
@@ -148,7 +112,6 @@ impl Pixel8HsmBenchmark {
         let software_results = self.benchmark_software_hsm().await?;
         results.push(software_results);
 
-        // Test 3: Distributed HSM across towers
         if self.verbose {
             println!("🏗️ Phase 3: Distributed HSM Testing");
             println!("----------------------------------");
@@ -156,17 +119,14 @@ impl Pixel8HsmBenchmark {
         let distributed_results = self.benchmark_distributed_hsm().await?;
         results.push(distributed_results);
 
-        // Generate comparison report
         self.generate_comparison_report(&results)?;
 
         Ok(results)
     }
 
-    /// Benchmark Titan M hardware HSM
     async fn benchmark_titan_m_hsm(&self) -> BearDogResult<HsmBenchmarkResults> {
         println!("🔐 Testing Titan M StrongBox HSM...");
 
-        // Simulate Titan M HSM operations (would connect to actual hardware)
         let key_gen_metrics = self.benchmark_key_generation_titan_m().await?;
         let signing_metrics = self.benchmark_signing_operations_titan_m().await?;
         let verification_metrics = self.benchmark_verification_operations_titan_m().await?;
@@ -186,7 +146,6 @@ impl Pixel8HsmBenchmark {
         })
     }
 
-    /// Benchmark software HSM
     async fn benchmark_software_hsm(&self) -> BearDogResult<HsmBenchmarkResults> {
         println!("💻 Testing Software HSM (Pop!_OS)...");
 
@@ -215,7 +174,6 @@ impl Pixel8HsmBenchmark {
         })
     }
 
-    /// Benchmark distributed HSM
     async fn benchmark_distributed_hsm(&self) -> BearDogResult<HsmBenchmarkResults> {
         println!("🌐 Testing Distributed HSM across towers...");
 
@@ -251,7 +209,6 @@ impl Pixel8HsmBenchmark {
         })
     }
 
-    /// Benchmark key generation on Titan M
     async fn benchmark_key_generation_titan_m(&self) -> BearDogResult<PerformanceMetrics> {
         println!("   🔑 Key Generation (Titan M)...");
         
@@ -261,8 +218,7 @@ impl Pixel8HsmBenchmark {
 
         for _ in 0..operations {
             let op_start = Instant::now();
-            
-            // Simulate Titan M key generation (hardware-backed, secure but slower)
+
             tokio::time::sleep(Duration::from_millis(20)).await; // Titan M latency
             
             let latency = op_start.elapsed().as_millis() as f64;
@@ -292,7 +248,6 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    /// Benchmark signing operations on Titan M
     async fn benchmark_signing_operations_titan_m(&self) -> BearDogResult<PerformanceMetrics> {
         println!("   ✍️ Signing Operations (Titan M)...");
         
@@ -302,8 +257,7 @@ impl Pixel8HsmBenchmark {
 
         for _ in 0..operations {
             let op_start = Instant::now();
-            
-            // Simulate Titan M signing (hardware-backed ECDSA)
+
             tokio::time::sleep(Duration::from_micros(500)).await; // Titan M signing latency
             
             let latency = op_start.elapsed().as_millis() as f64;
@@ -315,7 +269,7 @@ impl Pixel8HsmBenchmark {
 
         latencies.sort_by(|a, b| a.partial_cmp(b).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
         let p95_index = (latencies.len() as f64 * 0.95) as usize;
         let p99_index = (latencies.len() as f64 * 0.99) as usize;
@@ -336,7 +290,6 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    /// Benchmark verification operations on Titan M
     async fn benchmark_verification_operations_titan_m(&self) -> BearDogResult<PerformanceMetrics> {
         println!("   ✅ Verification Operations (Titan M)...");
         
@@ -346,8 +299,7 @@ impl Pixel8HsmBenchmark {
 
         for _ in 0..operations {
             let op_start = Instant::now();
-            
-            // Simulate Titan M verification (faster than signing)
+
             tokio::time::sleep(Duration::from_micros(200)).await;
             
             let latency = op_start.elapsed().as_millis() as f64;
@@ -359,7 +311,7 @@ impl Pixel8HsmBenchmark {
 
         latencies.sort_by(|a, b| a.partial_cmp(b).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
         let p95_index = (latencies.len() as f64 * 0.95) as usize;
         let p99_index = (latencies.len() as f64 * 0.99) as usize;
@@ -380,7 +332,6 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    /// Benchmark secure storage on Titan M
     async fn benchmark_secure_storage_titan_m(&self) -> BearDogResult<PerformanceMetrics> {
         println!("   💾 Secure Storage (Titan M)...");
         
@@ -390,8 +341,7 @@ impl Pixel8HsmBenchmark {
 
         for _ in 0..operations {
             let op_start = Instant::now();
-            
-            // Simulate Titan M secure storage access
+
             tokio::time::sleep(Duration::from_micros(100)).await;
             
             let latency = op_start.elapsed().as_millis() as f64;
@@ -403,7 +353,7 @@ impl Pixel8HsmBenchmark {
 
         latencies.sort_by(|a, b| a.partial_cmp(b).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?);
         let p95_index = (latencies.len() as f64 * 0.95) as usize;
         let p99_index = (latencies.len() as f64 * 0.99) as usize;
@@ -424,7 +374,6 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    /// Benchmark genetic algorithms on mobile hardware
     async fn benchmark_genetic_algorithms_mobile(&self) -> BearDogResult<GeneticPerformanceMetrics> {
         println!("   🧬 SIMD Genetic Algorithms (Mobile)...");
         
@@ -432,12 +381,10 @@ impl Pixel8HsmBenchmark {
         let population_size = 1000;
         let generations = 10;
 
-        // Simulate mobile-optimized genetic algorithm processing
         for _ in 0..generations {
-            // Simulate population fitness evaluation with mobile SIMD
+
             tokio::time::sleep(Duration::from_millis(10)).await;
-            
-            // Simulate crossover and mutation operations
+
             tokio::time::sleep(Duration::from_millis(5)).await;
         }
 
@@ -461,14 +408,12 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    // Software HSM benchmark methods (similar structure, higher performance)
     async fn benchmark_key_generation_software(&self) -> BearDogResult<PerformanceMetrics> {
         println!("   🔑 Key Generation (Software HSM)...");
         
         let start = Instant::now();
         let operations = 500; // Software HSM can handle more operations
-        
-        // Simulate fast software key generation
+
         tokio::time::sleep(Duration::from_millis(operations / 10)).await;
         
         let duration = start.elapsed();
@@ -571,7 +516,6 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    // Distributed HSM benchmark methods (similar to software but with network overhead)
     async fn benchmark_key_generation_distributed(&self) -> BearDogResult<PerformanceMetrics> {
         println!("   🔑 Key Generation (Distributed HSM)...");
         
@@ -680,7 +624,6 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    /// Generate comprehensive comparison report
     fn generate_comparison_report(&self, results: &[HsmBenchmarkResults]) -> BearDogResult<()> {
         println!();
         println!("📊 COMPREHENSIVE HSM BENCHMARK RESULTS");
@@ -731,7 +674,6 @@ impl Pixel8HsmBenchmark {
             println!();
         }
 
-        // Performance comparison summary
         println!("🏆 PERFORMANCE SUMMARY");
         println!("=====================");
         
@@ -764,7 +706,6 @@ impl Pixel8HsmBenchmark {
     }
 }
 
-/// Main benchmark execution function
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
     println!("🚀 Starting BearDog Pixel 8 HSM Benchmark Suite...");

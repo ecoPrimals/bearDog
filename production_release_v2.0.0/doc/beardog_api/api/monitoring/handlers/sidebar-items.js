@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["get_component_health","get_detailed_health","get_liveness","get_readiness","get_realtime_metrics","get_system_health","get_system_metrics","get_system_status"]};

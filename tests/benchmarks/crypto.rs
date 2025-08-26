@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Cryptographic Operations Benchmarking
-//!
-//! Benchmarks for encryption, signing, hashing, and other cryptographic operations.
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
 use beardog::BearDogResult;
@@ -25,23 +6,19 @@ use rand::{thread_rng, RngCore};
 use std::time::Instant;
 use tracing::info;
 
-/// Benchmark cryptographic operations
 pub async fn benchmark_crypto_operations(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
-    // Encryption benchmarks
     for &data_size in &suite.config.data_sizes {
         let result = benchmark_encryption(suite, data_size).await?;
         results.push(result);
     }
 
-    // Signing benchmarks
     for &data_size in &suite.config.data_sizes {
         let result = benchmark_signing(suite, data_size).await?;
         results.push(result);
     }
 
-    // Hashing benchmarks
     for &data_size in &suite.config.data_sizes {
         let result = benchmark_hashing(suite, data_size).await?;
         results.push(result);
@@ -50,7 +27,6 @@ pub async fn benchmark_crypto_operations(suite: &mut PerformanceBenchmarkSuite) 
     Ok(results)
 }
 
-/// Benchmark encryption operations
 async fn benchmark_encryption(suite: &PerformanceBenchmarkSuite, data_size: usize) -> BearDogResult<BenchmarkResult> {
     info!("  🔐 Benchmarking encryption for {} bytes", data_size);
 
@@ -60,12 +36,10 @@ async fn benchmark_encryption(suite: &PerformanceBenchmarkSuite, data_size: usiz
     let mut latencies = Vec::new();
     let mut successful_ops = 0;
 
-    // Warmup
     for _ in 0..suite.config.warmup_iterations {
         let _ = suite.security_provider.encrypt_data(&data, "benchmark_key").await;
     }
 
-    // Actual benchmark
     let benchmark_start = Instant::now();
     for _ in 0..suite.config.iterations {
         let op_start = Instant::now();
@@ -76,7 +50,7 @@ async fn benchmark_encryption(suite: &PerformanceBenchmarkSuite, data_size: usiz
                 latencies.push(op_start.elapsed().as_nanos() as f64 / 1_000_000.0);
             }
             Err(_) => {
-                // Record failed operation
+
             }
         }
     }
@@ -94,7 +68,7 @@ async fn benchmark_encryption(suite: &PerformanceBenchmarkSuite, data_size: usiz
     let meets_threshold = throughput_per_mb >= (1000.0 / suite.config.thresholds.encryption_ms_per_mb);
 
     Ok(BenchmarkResult {
-        name: format!("Encryption ({}B)", data_size),
+        name: format_args!("Encryption ({}B)", data_size).to_string(),
         operations_per_second: ops_per_second,
         average_latency_ms: average_latency,
         p50_latency_ms: p50_latency,
@@ -109,7 +83,6 @@ async fn benchmark_encryption(suite: &PerformanceBenchmarkSuite, data_size: usiz
     })
 }
 
-/// Benchmark signing operations
 async fn benchmark_signing(suite: &PerformanceBenchmarkSuite, data_size: usize) -> BearDogResult<BenchmarkResult> {
     info!("  ✍️ Benchmarking signing for {} bytes", data_size);
 
@@ -119,12 +92,10 @@ async fn benchmark_signing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
     let mut latencies = Vec::new();
     let mut successful_ops = 0;
 
-    // Warmup
     for _ in 0..suite.config.warmup_iterations {
         let _ = suite.security_provider.sign_data(&data, "benchmark_signing_key").await;
     }
 
-    // Actual benchmark
     let benchmark_start = Instant::now();
     for _ in 0..suite.config.iterations {
         let op_start = Instant::now();
@@ -135,7 +106,7 @@ async fn benchmark_signing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
                 latencies.push(op_start.elapsed().as_micros() as f64);
             }
             Err(_) => {
-                // Record failed operation
+
             }
         }
     }
@@ -152,7 +123,7 @@ async fn benchmark_signing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
     let meets_threshold = average_latency * 1000.0 <= suite.config.thresholds.signature_generation_us;
 
     Ok(BenchmarkResult {
-        name: format!("Signing ({}B)", data_size),
+        name: format_args!("Signing ({}B)", data_size).to_string(),
         operations_per_second: ops_per_second,
         average_latency_ms: average_latency,
         p50_latency_ms: p50_latency,
@@ -167,7 +138,6 @@ async fn benchmark_signing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
     })
 }
 
-/// Benchmark hashing operations
 async fn benchmark_hashing(suite: &PerformanceBenchmarkSuite, data_size: usize) -> BearDogResult<BenchmarkResult> {
     info!("  #️⃣ Benchmarking hashing for {} bytes", data_size);
 
@@ -177,12 +147,10 @@ async fn benchmark_hashing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
     let mut latencies = Vec::new();
     let mut successful_ops = 0;
 
-    // Warmup
     for _ in 0..suite.config.warmup_iterations {
         let _ = suite.security_provider.hash_data(&data).await;
     }
 
-    // Actual benchmark
     let benchmark_start = Instant::now();
     for _ in 0..suite.config.iterations {
         let op_start = Instant::now();
@@ -193,7 +161,7 @@ async fn benchmark_hashing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
                 latencies.push(op_start.elapsed().as_nanos() as f64 / 1_000_000.0);
             }
             Err(_) => {
-                // Record failed operation
+
             }
         }
     }
@@ -211,7 +179,7 @@ async fn benchmark_hashing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
     let meets_threshold = throughput_per_mb >= (1000.0 / suite.config.thresholds.hashing_ms_per_mb);
 
     Ok(BenchmarkResult {
-        name: format!("Hashing ({}B)", data_size),
+        name: format_args!("Hashing ({}B)", data_size).to_string(),
         operations_per_second: ops_per_second,
         average_latency_ms: average_latency,
         p50_latency_ms: p50_latency,
@@ -226,9 +194,7 @@ async fn benchmark_hashing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
     })
 }
 
-/// Get current memory usage in MB (simplified implementation)
 fn get_current_memory_usage() -> f64 {
-    // This is a simplified implementation - in a real scenario you'd use 
-    // system monitoring tools or memory profilers
+
     128.0 // Return a placeholder value
 } 

@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! AI-Enhanced Genetic Spawning
-//!
-//! BearDog's AI-enhanced genetic algorithm operations,
-//! leveraging standalone capabilities and network effects.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -28,7 +8,6 @@ use beardog_errors::BearDogResult;
 use crate::ai_automation::standalone_ai::{BearDogAICore, AIInsight};
 use crate::ai_automation::network_effects::SquirrelNetwork;
 
-/// Genetic spawning request with AI enhancement
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticSpawnRequest {
     pub request_id: String,
@@ -110,7 +89,6 @@ pub struct NetworkAcceleration {
     pub network_speedup_factor: f64,
 }
 
-/// Run AI-enhanced genetic operations
 pub async fn run_ai_genetics(
     ai_core: &BearDogAICore,
     network: Option<&SquirrelNetwork>,
@@ -118,7 +96,7 @@ pub async fn run_ai_genetics(
     ai_optimize: bool,
     output_file: &PathBuf,
 ) -> BearDogResult<Vec<GeneticResult>> {
-    // Load genetic spawn requests from file
+
     let requests_data = fs::read_to_string(requests_file).await?;
     let requests: Vec<GeneticSpawnRequest> = serde_json::from_str(&requests_data)?;
     
@@ -129,12 +107,11 @@ pub async fn run_ai_genetics(
     
     for request in requests {
         let start_time = std::time::Instant::now();
-        
-        // Execute genetic operation
+
         let result = if network.is_some() && request.network_enhancement {
             execute_network_enhanced_genetics(ai_core, network.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?, &request, ai_optimize).await?
         } else {
             execute_standalone_genetics(ai_core, &request, ai_optimize).await?
@@ -146,8 +123,7 @@ pub async fn run_ai_genetics(
         
         results.push(final_result);
     }
-    
-    // Save results
+
     let results_json = serde_json::to_string_pretty(&results)?;
     fs::write(output_file, results_json).await?;
     
@@ -162,18 +138,15 @@ async fn execute_standalone_genetics(
     ai_optimize: bool,
 ) -> BearDogResult<GeneticResult> {
     println!("🔬 Running standalone genetic evolution: {:?}", request.spawn_purpose);
-    
-    // AI-optimized genetic parameters if requested
+
     let optimized_params = if ai_optimize {
         optimize_genetic_parameters_with_ai(ai_core, &request.genetic_parameters).await?
     } else {
         request.genetic_parameters.clone()
     };
-    
-    // Run genetic algorithm with optimized parameters
+
     let evolution_result = run_genetic_evolution(&request.spawn_purpose, &optimized_params).await?;
-    
-    // Generate AI insights about the evolutionary process
+
     let ai_insights = if ai_optimize {
         generate_genetic_ai_insights(ai_core, &evolution_result, &optimized_params).await?
     } else {
@@ -199,18 +172,15 @@ async fn execute_network_enhanced_genetics(
     ai_optimize: bool,
 ) -> BearDogResult<GeneticResult> {
     println!("🌐 Running network-enhanced genetic evolution: {:?}", request.spawn_purpose);
-    
-    // Distribute genetic evolution across network nodes
+
     let distributed_evolution = distribute_genetic_evolution(
         network,
         &request.spawn_purpose,
         &request.genetic_parameters
     ).await?;
-    
-    // Combine results from distributed evolution
+
     let combined_result = combine_distributed_genetic_results(distributed_evolution).await?;
-    
-    // AI insights on network-enhanced evolution
+
     let ai_insights = if ai_optimize {
         generate_network_genetic_insights(ai_core, &combined_result).await?
     } else {
@@ -240,10 +210,9 @@ async fn optimize_genetic_parameters_with_ai(
     ai_core: &BearDogAICore,
     base_params: &GeneticParameters,
 ) -> BearDogResult<GeneticParameters> {
-    // AI analyzes the genetic parameters and suggests optimizations
+
     let fitness_predictor = &ai_core.genetic_enhancer.fitness_evaluator;
-    
-    // Simulate AI optimization of genetic parameters
+
     Ok(GeneticParameters {
         population_size: (base_params.population_size as f64 * 1.2) as u32,
         mutation_rate: base_params.mutation_rate * 0.9, // AI suggests slightly lower mutation
@@ -258,7 +227,7 @@ async fn run_genetic_evolution(
     purpose: &SpawnPurpose,
     params: &GeneticParameters,
 ) -> BearDogResult<EvolutionaryResult> {
-    // Simulate genetic evolution based on purpose
+
     let base_fitness = match purpose {
         SpawnPurpose::SecurityOptimization => 0.85,
         SpawnPurpose::PerformanceEnhancement => 0.82,
@@ -267,8 +236,7 @@ async fn run_genetic_evolution(
         SpawnPurpose::ComplianceEvolution => 0.80,
         SpawnPurpose::CustomObjective(_) => 0.75,
     };
-    
-    // Simulate evolutionary improvements
+
     let final_fitness = base_fitness + (params.max_generations as f64 * 0.01);
     
     let adaptation_traits = vec![
@@ -292,7 +260,7 @@ async fn run_genetic_evolution(
     
     Ok(EvolutionaryResult {
         solution_id: uuid::Uuid::new_v4().to_string(),
-        genetic_signature: format!("GEN_{:08X}", rand::random::<u32>()),
+        genetic_signature: format_args!("GEN_{:08X}", rand::random::<u32>().to_string()),
         fitness_score: final_fitness,
         adaptation_traits,
         performance_metrics: PerformanceMetrics {
@@ -313,12 +281,12 @@ async fn generate_genetic_ai_insights(
         AIInsight {
             category: "Genetic Evolution".to_string(),
             confidence: 0.92,
-            recommendation: format!("Solution {} shows strong adaptation traits", 
-                evolution_result.solution_id),
+            recommendation: format_args!("Solution {} shows strong adaptation traits", 
+                evolution_result.solution_id).to_string(),
             evidence: vec![
-                format!("Fitness score: {:.3}", evolution_result.fitness_score),
-                format!("Security enhancement: {:.1}%", 
-                    evolution_result.performance_metrics.security_enhancement * 100.0)
+                format_args!("Fitness score: {:.3}", evolution_result.fitness_score).to_string(),
+                format_args!("Security enhancement: {:.1}%", 
+                    evolution_result.performance_metrics.security_enhancement * 100.0).to_string()
             ],
             suggested_actions: vec![
                 "Deploy evolved solution to production".to_string(),
@@ -335,10 +303,9 @@ async fn distribute_genetic_evolution(
     purpose: &SpawnPurpose,
     params: &GeneticParameters,
 ) -> BearDogResult<Vec<EvolutionaryResult>> {
-    // Simulate distributed genetic evolution across network nodes
+
     let mut results = Vec::new();
-    
-    // Each node runs a subset of the genetic algorithm
+
     for node_index in 0..3 {  // Simulate 3 network nodes
         let node_result = run_genetic_evolution(purpose, params).await?;
         results.push(node_result);
@@ -350,15 +317,15 @@ async fn distribute_genetic_evolution(
 async fn combine_distributed_genetic_results(
     results: Vec<EvolutionaryResult>
 ) -> BearDogResult<EvolutionaryResult> {
-    // Find the best result from distributed evolution
+
     let best_result = results.into_iter()
         .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?)
         .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     
     Ok(best_result)
@@ -374,7 +341,7 @@ async fn generate_network_genetic_insights(
             confidence: 0.95,
             recommendation: "Network effects significantly improved genetic evolution".to_string(),
             evidence: vec![
-                format!("Best fitness: {:.3}", result.fitness_score),
+                format_args!("Best fitness: {:.3}", result.fitness_score).to_string(),
                 "Distributed evolution converged efficiently".to_string(),
             ],
             suggested_actions: vec![

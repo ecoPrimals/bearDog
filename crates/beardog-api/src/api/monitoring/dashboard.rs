@@ -1,29 +1,10 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Dashboard API Handlers
-///
-/// Handlers for decentralized dashboard functionality
 
 use super::*;
 use axum::{extract::State, http::StatusCode, Json};
 use serde_json::json;
 use tracing::info;
-// Placeholder dashboard handlers - need to move implementations from original file
+
 pub async fn get_dashboard_overview(
     State(_state): State<AppState>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
@@ -102,7 +83,6 @@ pub async fn get_security_dashboard_data(
             "vpn_connections": 3,
             "encrypted_traffic_percentage": 100.0
     Ok(Json(security_data))}
-
 
 pub async fn get_genetics_dashboard_data(
     info!("🧬 Fetching genetics dashboard data");

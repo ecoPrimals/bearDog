@@ -1,28 +1,9 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// PKCS#11 Capability Prober
-///
-/// Probes PKCS#11 HSM libraries to determine their capabilities
 
 use super::super::*;
 use beardog_errors::BearDogResult;
 use tracing::debug;
-// Import canonical types from beardog-types
+
 use beardog_types::canonical::capabilities::*;
 use beardog_types::canonical::hsm::capabilities::*;
 use beardog_types::SecurityLevel as TamperResistanceLevel;
@@ -30,17 +11,14 @@ use beardog_types::SecurityLevel as TamperResistanceLevel;
 pub struct Pkcs11CapabilityProber;
 impl Pkcs11CapabilityProber {}
 
-
     pub fn new() -> BearDogResult<Self> {
         Ok(Self)
     }
     pub async fn probe_capabilities(&self, library_path: &str) -> BearDogResult<HsmCapabilities> {
         debug!("🔍 Probing PKCS#11 library: {}", library_path);
-        // In a real implementation, this would load the PKCS#11 library
-        // and query its capabilities using C_GetInfo, C_GetSlotList, etc.
+
         Ok(HsmCapabilities {
             vendor: "PKCS#11 HSM".to_string(),}
-
 
             model: "Generic PKCS#11 Device".to_string(),
             firmware_version: "1.0.0".to_string(),
@@ -56,7 +34,7 @@ impl Pkcs11CapabilityProber {}
             security_features: vec![
                 "Hardware-backed".to_string(),
                 "Tamper-resistant".to_string(),
-            performance_metrics: std::collections::HashMap::new(),
+            performance_metrics: std::collections::HashMap::with_capacity(16),
             certifications: vec![
                 "FIPS 140-2 Level 3".to_string(),
                 "Common Criteria EAL4+".to_string(),
@@ -134,7 +112,7 @@ impl Pkcs11CapabilityProber {}
                 encryption_at_rest: true,
                 encryption_in_transit: true,
                 access_control: true,
-            vendor_capabilities: std::collections::HashMap::new(),
-            custom_capabilities: std::collections::HashMap::new(),
+            vendor_capabilities: std::collections::HashMap::with_capacity(16),
+            custom_capabilities: std::collections::HashMap::with_capacity(16),
         })
 }

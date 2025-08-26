@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["PrimalCapability"],"fn":["demonstrate_ecosystem_integration"],"struct":["BearDogEcosystemFactory","BearDogEcosystemProvider","EcosystemService","ModuleDiscoveryService","ModuleRequest","ModuleResponse"],"trait":["UniversalPrimalProvider"]};

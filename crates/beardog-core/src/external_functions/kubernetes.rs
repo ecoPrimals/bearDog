@@ -1,50 +1,30 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Kubernetes Integration Handler
-///
-/// Provides licensed access to Kubernetes cluster operations
 
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
-// Removed async_trait - using native async fn for zero-cost abstractions
+
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_errors::idiomatic::SecurityResult;
 use serde_json;
 use std::process::Stdio;
 use tokio::process::Command;
-/// **KUBERNETES INTEGRATION HANDLER** - Zero-cost implementation
+
 #[derive(Clone)]
 pub struct KubernetesIntegration;
-// Uses native async fn from trait definition - no async_trait needed
-impl ExternalFunctionHandler for KubernetesIntegration {}
 
+impl ExternalFunctionHandler for KubernetesIntegration {}
 
     fn function_name(&self) -> &str {
         "kubernetes_integration"
     }
-    /// Execute Kubernetes operation with licensing check
+
     async fn execute(
         &self,
         license_manager: &LicenseManager,
         _operation: &str,
         payload: serde_json::Value,
     ) -> BearDogResult<serde_json::Value> {
-        // Check licensing with autonomous decision making
+
         if !license_manager
             .is_function_available(self.function_name())
             .await?
@@ -58,7 +38,7 @@ impl ExternalFunctionHandler for KubernetesIntegration {}
                 ),
             });
         }
-        // Extract parameters
+
         let namespace = payload
             .get("namespace")
             .and_then(|v| v.as_str())
@@ -68,7 +48,7 @@ impl ExternalFunctionHandler for KubernetesIntegration {}
             _operation,
             namespace
         );
-        // Implement actual Kubernetes API operations
+
         match _operation {
             "list_pods" => {
                 match self
@@ -118,7 +98,7 @@ impl ExternalFunctionHandler for KubernetesIntegration {}
             _ => Ok(serde_json::json!({
                 "operation": _operation,
                 "status": "error",
-                "error": format!("Unknown Kubernetes operation: {}", _operation),
+                "error": format_args!("Unknown Kubernetes operation: {}", _operation).to_string(),
                 "available_operations": [
                     "list_pods", "list_services", "list_deployments",
                     "create_namespace", "apply_yaml", "get_cluster_info", "get_nodes"
@@ -126,7 +106,7 @@ impl ExternalFunctionHandler for KubernetesIntegration {}
             })),
 }
 impl KubernetesIntegration {
-    /// Execute kubectl command
+
     async fn kubectl_exec(&self, args: &[&str]) -> BearDogResult<String> {
         let output = Command::new("kubectl")
             .args(args)
@@ -142,7 +122,7 @@ impl KubernetesIntegration {
             let error = String::from_utf8_lossy(&output.stderr);
             Err(BearDogError::configuration(format!("kubectl error: {error)"},
             })
-    /// Apply YAML configuration via kubectl
+
     async fn kubectl_apply(&self, yaml_content: &str) -> Result<String, SecurityError> {
         use std::process::Stdio;
         use tokio::io::AsyncWriteExt;
@@ -151,7 +131,7 @@ impl KubernetesIntegration {
             .stdin(Stdio::piped())
             .spawn()
             .map_err(|e| BearDogError::configuration(format!("Failed to start kubectl apply: {e}"),
-        // Write YAML to stdin
+
         if let Some(stdin) = child.stdin.take() {
             let mut stdin = stdin;
             stdin

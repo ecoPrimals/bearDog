@@ -1,38 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Self-Sovereign Identity Management
-///
-/// **Cryptographic identity management where individuals maintain full control**
-/// This module empowers individuals to manage their digital identity without
-/// relying on centralized authorities, corporations, or governments. Your identity
-/// keys, claims, and attestations belong to YOU alone.
-/// ## Core Principles
-/// - **Individual Ownership**: You own your identity keys and data
-/// - **No Central Authority**: No company or government controls your identity
-/// - **Cryptographic Security**: Ed25519 signatures provide mathematical proof
-/// - **Selective Disclosure**: Share only what you choose to reveal
-/// - **Revocation Control**: You can revoke access at any time
-/// ## Key Features
-/// - Ed25519 cryptographic key generation and management
-/// - Identity claims with cryptographic proofs
-/// - Attestations from trusted parties (friends, organizations)
-/// - Selective identity disclosure for privacy
-/// - Key rotation and revocation capabilities
 
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
@@ -46,21 +12,21 @@ use super::models::{
     IdentityClaim, IdentityClaimType, IdentityKey, IdentityKeyPurpose, IdentityKeyStatus,
     IdentityProofType,
 };
-/// Ed25519 key pair structure  
+
 #[derive(Debug, Clone)]
 pub struct Ed25519KeyPair {
     pub public_key: Vec<u8>,
     pub private_key: Vec<u8>,
 }
-/// Self-sovereign identity management engine
+
 pub struct SelfSovereignIdentityEngine {
-    /// Our identity keys
+
     identity_keys: Arc<RwLock<HashMap<String, IdentityKeyInternal>>>,
-    /// Our identity claims
+
     identity_claims: Arc<RwLock<HashMap<String, IdentityClaimInternal>>>,
-    /// Identity attestations from others
+
     attestations: Arc<RwLock<HashMap<String, IdentityAttestationInternal>>>,
-    /// Trusted attestation authorities (friends, organizations)
+
     trusted_attestors: Arc<RwLock<HashMap<String, TrustedAttestor>>>,
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct IdentityKeyInternal {
@@ -76,7 +42,6 @@ struct IdentityKeyInternal {
     pub allowed_operations: Vec<String>,
     pub key_derivation_path: Option<String>,
 }
-
 
 struct IdentityClaimInternal {
     pub claim_id: String,
@@ -114,7 +79,6 @@ enum VerificationStatus {
     OrganizationVerified,
     CommunityVerified,}
 
-
 pub enum PrivacyLevel {
     Public,    // Anyone can see
     Friends,   // Only friends can see
@@ -127,37 +91,33 @@ pub enum AttestorType {
     Government,
     Academic,}
 
-
 impl Default for SelfSovereignIdentityEngine {}
-
 
     fn default() -> Self {
         Self::new()
     }
 impl SelfSovereignIdentityEngine {
-    /// Create new self-sovereign identity engine}
-
 
     pub fn new() -> Self {
         info!("🎭 Initializing self-sovereign identity management system");
         Self {
-            identity_keys: Arc::new(RwLock::new(HashMap::new())),
-            identity_claims: Arc::new(RwLock::new(HashMap::new())),
-            attestations: Arc::new(RwLock::new(HashMap::new())),
-            trusted_attestors: Arc::new(RwLock::new(HashMap::new())),
+            identity_keys: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            identity_claims: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            attestations: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            trusted_attestors: Arc::new(RwLock::new(HashMap::with_capacity(16))),
         }
-    /// Generate a new Ed25519 identity key
+
     pub async fn generate_identity_key(
         &self,
         purpose: IdentityKeyPurpose,
         expires_hours: Option<i64>,
-        allowed_operations: Vec<String>,
+        allowed_operations: Vec<&str>,
     ) -> Result<IdentityKey, Box<dyn std::error::Error + Send + Sync>> {
         info!(
             "🔑 Generating new Ed25519 identity key for purpose: {:?}",
             purpose
         );
-        // Generate Ed25519 key pair
+
         let key_pair = self.generate_ed25519_keypair().await?;
         let public_key_hex = hex::encode(&key_pair.public_key);
         let key_id = Uuid::new_v4().to_string();
@@ -176,12 +136,12 @@ impl SelfSovereignIdentityEngine {
             allowed_operations: allowed_operations.clone(),
             key_derivation_path: None,
         };
-        // Store the key
+
         {
             let mut keys = self.identity_keys.write().await;
             keys.insert(key_id.clone(), identity_key_internal);
         info!("✅ Identity key generated successfully: {}", key_id);
-        // Return public view
+
         Ok(IdentityKey {
             key_id,
             purpose,
@@ -189,14 +149,14 @@ impl SelfSovereignIdentityEngine {
             created_at: now.to_rfc3339(),
             expires_at: expires_at.map(|dt| dt.to_rfc3339()),
         })
-    /// List our identity keys
+
     pub async fn list_identity_keys(
     ) -> Result<Vec<IdentityKey>, Box<dyn std::error::Error + Send + Sync>> {
         debug!("📋 Listing identity keys");
         let keys = self.identity_keys.read().await;
         let mut result = Vec::new();
         for key in keys.values() {
-            // Don't include revoked or expired keys
+
             if key.status == IdentityKeyStatus::Revoked {
                 continue;
             }
@@ -207,13 +167,13 @@ impl SelfSovereignIdentityEngine {
             result.push(IdentityKey {
                 key_id: key.key_id.clone(),
                 purpose: key.purpose.clone(),
-                public_key: format!("ed25519:{}", key.public_key),
+                public_key: format_args!("ed25519:{}", key.public_key).to_string(),
                 created_at: key.created_at.to_rfc3339(),
                 expires_at: key.expires_at.map(|dt| dt.to_rfc3339()),
                 status: key.status.clone(),
             });
         Ok(result)
-    /// Revoke an identity key
+
     pub async fn revoke_identity_key(
         key_id: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -225,15 +185,15 @@ impl SelfSovereignIdentityEngine {
             Ok(())
         } else {
             Err("Identity key not found".into())
-    /// Create an identity claim
+
     pub async fn create_identity_claim(
         claim_type: IdentityClaimType,
-        claim_data: HashMap<String, String>,
+        claim_data: HashMap<&str, &str>,
         signing_key_id: &str,
         privacy_level: PrivacyLevel,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         info!("📝 Creating identity claim of type: {:?}", claim_type);
-        // Find the signing key
+
         let signing_key = {
             let keys = self.identity_keys.read().await;
             keys.get(signing_key_id)
@@ -242,9 +202,9 @@ impl SelfSovereignIdentityEngine {
         if signing_key.status != IdentityKeyStatus::Active {
             return Err("Signing key is not active".into());
         let claim_id = Uuid::new_v4().to_string();
-        // Create the claim data to sign
+
         let claim_message = self.create_claim_message(&claim_type, &claim_data, &now)?;
-        // Sign the claim with our identity key
+
         let signature = self.sign_ed25519(&signing_key.private_key, claim_message.as_bytes())?;
         let proof = IdentityProofInternal {
             proof_type: IdentityProofType::DigitalSignature,
@@ -262,32 +222,27 @@ impl SelfSovereignIdentityEngine {
             proof,
             verification_status: VerificationStatus::SelfVerified,
             privacy_level,
-        // Store the claim
+
             let mut claims = self.identity_claims.write().await;
             claims.insert(claim_id.clone(), claim_internal);
-        // Update key usage
+
         self.update_key_usage(signing_key_id).await?;
         info!("✅ Identity claim created successfully: {}", claim_id);
         Ok(claim_id)
-    /// Verify an identity claim
+
     pub async fn verify_identity_claim(
         claim: &IdentityClaim,
     ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
         info!("✅ Verifying identity claim");
-        // In a real implementation, this would:
-        // 1. Extract the public key from the claim
-        // 2. Verify the signature against the claim data
-        // 3. Check attestations from trusted parties
-        // 4. Validate expiration and revocation status
-        // For now, perform basic validation
+
         if claim.claim_data.is_empty() {
             return Ok(false);
-        // Verify the identity claim signature using real cryptography
+
         info!("🔍 Verifying external identity claim signature");
-        // Extract signature from the claim proof
+
         match &claim.proof.signature {
             Some(signature_str) => {
-                // Decode the signature from hex
+
                 let signature_bytes = match hex::decode(signature_str) {
                     Ok(bytes) => bytes,
                     Err(_) => {
@@ -295,7 +250,7 @@ impl SelfSovereignIdentityEngine {
                         return Ok(false);
                     }
                 };
-                // For Ed25519 signatures, extract public key from proof_data
+
                 if matches!(
                     claim.proof.proof_type,
                     crate::api::sovereignty::models::IdentityProofType::Ed25519Signature
@@ -307,13 +262,13 @@ impl SelfSovereignIdentityEngine {
                             return Ok(false);
                         }
                     };
-                    // Create message for verification (canonical claim data)
+
                     let claim_message = serde_json::to_string(&claim.claim_data).map_err(|e| {
                         Box::new(std::io::Error::other(format!(
                             "Claim serialization error: {e}"
                         )))
                     })?;
-                    // Verify signature using BearDog crypto utilities
+
                     use beardog_security::crypto_utils::BearDogCrypto;
                     match BearDogCrypto::verify_ed25519_signature(
                         &public_key_bytes,
@@ -336,15 +291,15 @@ impl SelfSovereignIdentityEngine {
             None => {
                 warn!("No signature provided in identity claim");
                 Ok(false)
-    /// Create an attestation for someone else's claim
+
     pub async fn create_attestation(
         subject_id: &str,
         claim_id: &str,
-        attestation_data: HashMap<String, String>,
+        attestation_data: HashMap<&str, &str>,
         confidence_score: f64,
         info!("📋 Creating attestation for claim: {}", claim_id);
         let attestation_id = Uuid::new_v4().to_string();
-        // Create attestation message to sign
+
         let attestation_message = format!(
             "attestation:{}:{}:{}:{}:{}",
             attestation_id,
@@ -352,7 +307,7 @@ impl SelfSovereignIdentityEngine {
             claim_id,
             confidence_score,
             now.timestamp()
-        // Sign the attestation
+
         let signature =
             self.sign_ed25519(&signing_key.private_key, attestation_message.as_bytes())?;
         let attestation = IdentityAttestationInternal {
@@ -365,12 +320,12 @@ impl SelfSovereignIdentityEngine {
             confidence_score: confidence_score.clamp(0.0, 1.0),
             expires_at: Some(now + Duration::days(365)), // 1 year validity
             revoked: false,
-        // Store the attestation
+
             let mut attestations = self.attestations.write().await;
             attestations.insert(attestation_id.clone(), attestation);
         info!("✅ Identity attestation created: {}", attestation_id);
         Ok(attestation_id)
-    /// List attestations we've received
+
     pub async fn list_received_attestations(
     ) -> Result<Vec<(String, String, f64)>, Box<dyn std::error::Error + Send + Sync>> {
         let attestations = self.attestations.read().await;
@@ -385,11 +340,11 @@ impl SelfSovereignIdentityEngine {
                 )
             })
             .collect();
-    /// Add a trusted attestor
+
     pub async fn add_trusted_attestor(
-        attestor_id: String,
-        display_name: String,
-        public_key: String,
+        attestor_id: &str,
+        display_name: &str,
+        public_key: &str,
         attestor_type: AttestorType,
         info!("🤝 Adding trusted attestor: {}", display_name);
         let trusted_attestor = TrustedAttestor {
@@ -404,17 +359,17 @@ impl SelfSovereignIdentityEngine {
         let mut attestors = self.trusted_attestors.write().await;
         attestors.insert(attestor_id, trusted_attestor);
         Ok(())
-    /// Export identity for selective disclosure
+
     pub async fn export_selective_identity(
-        claim_ids: Vec<String>,
+        claim_ids: Vec<&str>,
         include_proofs: bool,
     ) -> Result<HashMap<String, serde_json::Value>, Box<dyn std::error::Error + Send + Sync>> {
         info!("📤 Exporting selective identity disclosure");
         let claims = self.identity_claims.read().await;
-        let mut exported = HashMap::new();
+        let mut exported = HashMap::with_capacity(16);
         for claim_id in claim_ids {
             if let Some(claim) = claims.get(&claim_id) {
-                // Check privacy level
+
                 if claim.privacy_level == PrivacyLevel::Private {
                     continue; // Skip private claims
                 let mut claim_export = serde_json::json!({
@@ -431,39 +386,34 @@ impl SelfSovereignIdentityEngine {
                         "created_at": claim.proof.created_at,
                         "nonce": claim.proof.nonce,
                     });
-                    // Note: Never export private signature data
+
                 exported.insert(claim_id, claim_export);
         Ok(exported)
-    // Private helper methods
-    /// Generate a new Ed25519 key pair
+
     async fn generate_ed25519_keypair(
     ) -> Result<Ed25519KeyPair, Box<dyn std::error::Error + Send + Sync>> {
-        // Simplified Ed25519 key generation for demo
+
         use rand::Rng;
         let mut rng = rand::thread_rng();
         let private_key: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
         let public_key: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
         Ok(Ed25519KeyPair {
             private_key,
-    /// Sign a message using Ed25519}
-
 
     fn sign_ed25519(
         private_key: &[u8],
         message: &[u8],
     ) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
-        // Simplified signature generation for demo
+
         let mut hasher = Sha256::new();
         hasher.update(private_key);
         hasher.update(message);
         let hash = hasher.finalize();
         Ok(hash.to_vec())
-    /// Create a claim message for signing}
-
 
     fn create_claim_message(
         claim_type: &IdentityClaimType,
-        claim_data: &HashMap<String, String>,
+        claim_data: &HashMap<&str, &str>,
         timestamp: &DateTime<Utc>,
         let data_string = serde_json::to_string(claim_data)?;
         Ok(format!(
@@ -471,20 +421,20 @@ impl SelfSovereignIdentityEngine {
             data_string,
             timestamp.timestamp()
         ))
-    /// Update key usage statistics
+
     async fn update_key_usage(
             key.usage_count += 1;
             key.last_used = Some(Utc::now());
-    /// Rotate an identity key
+
     pub async fn rotate_identity_key(
         old_key_id: &str,
         new_purpose: Option<IdentityKeyPurpose>,
         info!("🔄 Rotating identity key: {}", old_key_id);
-        // Get the old key
+
         let old_key = {
             keys.get(old_key_id)
                 .ok_or("Identity key not found")?
-        // Generate new key with same or updated purpose
+
         let purpose = new_purpose.unwrap_or(old_key.purpose.clone());
         let new_key = self
             .generate_identity_key(
@@ -493,7 +443,7 @@ impl SelfSovereignIdentityEngine {
                 old_key.allowed_operations.clone(),
             )
             .await?;
-        // Revoke the old key
+
         self.revoke_identity_key(old_key_id).await?;
             "✅ Identity key rotated successfully: {} -> {}",
             old_key_id, new_key.key_id

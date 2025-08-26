@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ActionType","AuditEvent","HealthStatus","ResourceClassification","RiskLevel"],"struct":["Action","AuditLogEntry","AuditManager","ComponentHealth","Resource","SecurityAuditEvent","SecurityMetrics","SecurityProviderHealth","SecurityProviderMetrics"]};

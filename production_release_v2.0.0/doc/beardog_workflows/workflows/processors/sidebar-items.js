@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["WorkflowType"],"mod":["key_management","policy","security","system"],"struct":["ProcessorRegistry"]};

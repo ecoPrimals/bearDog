@@ -1,33 +1,10 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Memory Chaos Testing Module
-//!
-//! Focused chaos engineering tests for memory resilience including:
-//! - Memory pressure simulation
-//! - Resource exhaustion scenarios
-//! - Memory leak detection
 
 use super::{ChaosConfig, TestMetrics, TestResult};
 use beardog_errors::{BearDogError, BearDogResult};
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
-/// Memory chaos testing controller
 #[derive(Debug)]
 pub struct MemoryChaosController {
     config: ChaosConfig,
@@ -38,7 +15,6 @@ impl MemoryChaosController {
         Self { config }
     }
 
-    /// Test memory pressure resilience
     pub async fn test_memory_pressure(&self) -> BearDogResult<TestResult> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
@@ -50,10 +26,8 @@ impl MemoryChaosController {
         while start_time.elapsed() < self.config.test_duration {
             operations_attempted += 1;
 
-            // Simulate memory pressure
             let memory_result = self.simulate_memory_pressure().await;
 
-            // Track peak memory usage
             let current_memory = self.get_memory_usage_mb();
             if current_memory > peak_memory {
                 peak_memory = current_memory;
@@ -91,12 +65,10 @@ impl MemoryChaosController {
         })
     }
 
-    /// Simulate memory pressure scenarios
     async fn simulate_memory_pressure(&self) -> BearDogResult<()> {
-        // Allocate temporary memory to simulate pressure
+
         let _memory_pressure: Vec<u8> = vec![0u8; self.config.memory_pressure_mb * 1024];
 
-        // Inject random failures
         if fastrand::f64() < self.config.failure_rate {
             return Err(BearDogError::Resource {
                 message: "Simulated memory pressure failure".to_string(),
@@ -106,15 +78,12 @@ impl MemoryChaosController {
         Ok(())
     }
 
-    /// Get current memory usage in MB (simplified)
     fn get_memory_usage_mb(&self) -> u64 {
-        // Simplified memory usage estimation
-        // In real implementation, would use system APIs
+
         self.config.memory_pressure_mb as u64
     }
 }
 
-/// Memory pressure test implementation
 pub struct MemoryPressureTest;
 
 impl MemoryPressureTest {

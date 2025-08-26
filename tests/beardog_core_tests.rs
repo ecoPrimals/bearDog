@@ -1,18 +1,3 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 use beardog::compliance::types::ComplianceEvent;
@@ -26,18 +11,13 @@ use chrono;
 use std::collections::HashMap;
 use tokio::time::{timeout, Duration};
 
-/// Core BearDog functionality tests - Foundation for robust validation
-///
-/// These tests validate the essential components that protect our digital forest,
-/// ensuring scientists can safely explore and newcomers can trust our protection.
-
 #[tokio::test]
 async fn test_beardog_core_initialization() {
-    // 🌲 Test 1: Verify BearDog core systems can initialize
+
     println!("🌲 Testing BearDog core initialization...");
 
     let result = timeout(Duration::from_secs(5), async {
-        // Basic crypto engine setup
+
         let config = EncryptionConfig::default();
         let crypto_engine = GamingCryptoEngine::new(&config).await;
 
@@ -50,7 +30,7 @@ async fn test_beardog_core_initialization() {
     assert!(
         result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?.is_ok(),
         "Core initialization should succeed"
     );
@@ -59,10 +39,9 @@ async fn test_beardog_core_initialization() {
 
 #[tokio::test]
 async fn test_event_system_integrity() {
-    // 🔊 Test 2: Verify BSTP event system works correctly
+
     println!("🔊 Testing BSTP event system integrity...");
 
-    // Test network security events
     let peer_caps = PeerCapabilities {
         supported_algorithms: vec!["AES-256-GCM".to_string()],
         max_connection_count: 100,
@@ -77,7 +56,6 @@ async fn test_event_system_integrity() {
         trust_level: TrustLevel::Basic,
     };
 
-    // Verify event can be created and accessed
     match event {
         NetworkSecurityEvent::PeerConnected {
             peer_id,
@@ -96,14 +74,13 @@ async fn test_event_system_integrity() {
 
 #[tokio::test]
 async fn test_crypto_operations_reliability() {
-    // 🔐 Test 3: Verify cryptographic operations are reliable
+
     println!("🔐 Testing cryptographic operations reliability...");
 
     let result = timeout(Duration::from_secs(10), async {
         let config = EncryptionConfig::default();
         let mut crypto_engine = GamingCryptoEngine::new(&config).await?;
 
-        // Test basic encryption/decryption cycle
         let test_data = b"Protecting our digital forest for science";
         let encrypted = crypto_engine.encrypt(test_data).await?;
         let decrypted = crypto_engine.decrypt(&encrypted).await?;
@@ -121,17 +98,16 @@ async fn test_crypto_operations_reliability() {
     assert!(result.is_ok(), "Crypto operations should not timeout");
     assert!(result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?.is_ok(), "Crypto operations should succeed");
     println!("✅ Cryptographic reliability: PASS");
 }
 
 #[tokio::test]
 async fn test_error_handling_robustness() {
-    // ⚠️ Test 4: Verify error handling is robust
+
     println!("⚠️ Testing error handling robustness...");
 
-    // Test that our error types work correctly
     let spawn_error = BearDogError::SpawnRejected {
         reason: "Test rejection for robustness".to_string(),
         genetics_hash: "test-hash-123".to_string(),
@@ -148,20 +124,19 @@ async fn test_error_handling_robustness() {
         _ => panic!("Error type handling failed"),
     }
 
-    // Test timeout error
     let timeout_error = BearDogError::OperationTimeout {
         operation: "test_operation".to_string(),
         duration_ms: 5000,
     };
 
-    assert!(format!("{:?}", timeout_error).contains("OperationTimeout"));
+    assert!(format_args!("{:?}", timeout_error).to_string().contains("OperationTimeout"));
 
     println!("✅ Error handling robustness: PASS");
 }
 
 #[tokio::test]
 async fn test_trust_level_progression() {
-    // 🤝 Test 5: Verify trust level system works correctly
+
     println!("🤝 Testing trust level progression...");
 
     let levels = vec![
@@ -172,7 +147,6 @@ async fn test_trust_level_progression() {
         TrustLevel::Explicit,
     ];
 
-    // Verify trust levels can be compared and ordered
     assert!(TrustLevel::Basic as u8 > TrustLevel::Unknown as u8);
     assert!(TrustLevel::Medium as u8 > TrustLevel::Basic as u8);
     assert!(TrustLevel::High as u8 > TrustLevel::Medium as u8);
@@ -183,20 +157,19 @@ async fn test_trust_level_progression() {
 
 #[tokio::test]
 async fn test_concurrent_operations_stability() {
-    // 🧵 Test 6: Verify system handles concurrent operations
+
     println!("🧵 Testing concurrent operations stability...");
 
     let result = timeout(Duration::from_secs(15), async {
         let config = EncryptionConfig::default();
 
-        // Create multiple concurrent crypto operations
         let mut handles = Vec::new();
 
         for i in 0..5 {
             let config_clone = config.clone();
             let handle = tokio::spawn(async move {
                 let mut engine = GamingCryptoEngine::new(&config_clone)?;
-                let data = format!("Forest protection test {}", i);
+                let data = format_args!("Forest protection test {}", i).to_string();
                 let encrypted = engine.encrypt(data.as_bytes()).await?;
                 let decrypted = engine.decrypt(&encrypted).await?;
                 assert_eq!(data.as_bytes(), decrypted.as_slice());
@@ -205,10 +178,9 @@ async fn test_concurrent_operations_stability() {
             handles.push(handle);
         }
 
-        // Wait for all operations to complete
         for handle in handles {
             handle.await.map_err(|e| BearDogError::InvalidGenetics {
-                reason: format!("Task join error: {}", e),
+                reason: format_args!("Task join error: {}", e).to_string(),
                 message: "Invalid genetics data".to_string(),
             })??;
         }
@@ -221,7 +193,7 @@ async fn test_concurrent_operations_stability() {
     assert!(
         result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?.is_ok(),
         "All concurrent operations should succeed"
     );
@@ -230,27 +202,25 @@ async fn test_concurrent_operations_stability() {
 
 #[tokio::test]
 async fn test_memory_safety_under_load() {
-    // 🧠 Test 7: Verify memory safety under repeated operations
+
     println!("🧠 Testing memory safety under load...");
 
     let result = timeout(Duration::from_secs(20), async {
         let config = EncryptionConfig::default();
 
-        // Perform many operations to test memory safety
         for batch in 0..10 {
             let encryption_engine = Arc::new(crate::encryption::EncryptionEngine::default().await?);
             let genetics_engine = Arc::new(crate::genetics::DefaultBearDogGeneticsEngine::default().await?);
-            let key_manager = Arc::new(crate::tunnel::key_manager::BStpKeyManager::new(crate::tunnel::config::KeyManagementConfig::default()).await?);
+            let key_manager = Arc::new(crate::tunnel::key_manager::BStpKeyManager::new(crate::tunnel::config::UnifiedProcessorConfig::default()).await?);
             let bstp_config = crate::tunnel::config::BStpConfig::default();
             let mut crypto_engine = GamingCryptoEngine::new(encryption_engine, genetics_engine, key_manager, bstp_config).await?;
 
             for i in 0..20 {
-                let test_data = format!("Load test batch {} iteration {}", batch, i);
+                let test_data = format_args!("Load test batch {} iteration {}", batch, i).to_string();
                 let encrypted = crypto_engine.encrypt(test_data.as_bytes()).await?;
                 let decrypted = crypto_engine.decrypt(&encrypted).await?;
                 assert_eq!(test_data.as_bytes(), decrypted.as_slice());
 
-                // Small yield to prevent total CPU hogging
                 if i % 5 == 0 {
                     tokio::task::yield_now().await;
                 }
@@ -265,7 +235,7 @@ async fn test_memory_safety_under_load() {
     assert!(
         result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?.is_ok(),
         "Memory safety should be maintained under load"
     );
@@ -274,30 +244,27 @@ async fn test_memory_safety_under_load() {
 
 #[test]
 fn test_configuration_validation() {
-    // ⚙️ Test 8: Verify configuration validation (synchronous)
+
     println!("⚙️ Testing configuration validation...");
 
-    // Test default configuration is valid
     let default_config = EncryptionConfig::default();
     assert!(default_config.key_derivation_iterations > 0, "Key derivation iterations must be positive");
 
-    // Test that we can create configurations
     println!("✅ Configuration validation: PASS");
 }
 
 #[tokio::test]
 async fn test_graceful_degradation() {
-    // 🛡️ Test 9: Verify system degrades gracefully under stress
+
     println!("🛡️ Testing graceful degradation...");
 
     let result = timeout(Duration::from_secs(25), async {
-        // Simulate high load scenarios
+
         let config = EncryptionConfig::default();
 
-        // Test with increasingly large data
         let encryption_engine = Arc::new(crate::encryption::EncryptionEngine::default().await?);
         let genetics_engine = Arc::new(crate::genetics::DefaultBearDogGeneticsEngine::default().await?);
-        let key_manager = Arc::new(crate::tunnel::key_manager::BStpKeyManager::new(crate::tunnel::config::KeyManagementConfig::default()).await?);
+        let key_manager = Arc::new(crate::tunnel::key_manager::BStpKeyManager::new(crate::tunnel::config::UnifiedProcessorConfig::default()).await?);
         let bstp_config = crate::tunnel::config::BStpConfig::default();
         let mut crypto_engine = GamingCryptoEngine::new(encryption_engine, genetics_engine, key_manager, bstp_config).await?;
 
@@ -321,7 +288,7 @@ async fn test_graceful_degradation() {
     assert!(
         result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?.is_ok(),
         "System should handle increasing load gracefully"
     );
@@ -330,26 +297,23 @@ async fn test_graceful_degradation() {
 
 #[tokio::test]
 async fn test_forest_protection_integrity() {
-    // 🌲 Test 10: Master test - Full forest protection validation
+
     println!("🌲 Testing complete forest protection integrity...");
 
     let result = timeout(Duration::from_secs(30), async {
         println!("   🔬 Simulating scientist data protection...");
 
-        // Simulate protecting scientific data
         let config = EncryptionConfig::default();
         let encryption_engine = Arc::new(crate::encryption::EncryptionEngine::default().await?);
         let genetics_engine = Arc::new(crate::genetics::DefaultBearDogGeneticsEngine::default().await?);
-        let key_manager = Arc::new(crate::tunnel::key_manager::BStpKeyManager::new(crate::tunnel::config::KeyManagementConfig::default()).await?);
+        let key_manager = Arc::new(crate::tunnel::key_manager::BStpKeyManager::new(crate::tunnel::config::UnifiedProcessorConfig::default()).await?);
         let bstp_config = crate::tunnel::config::BStpConfig::default();
         let mut crypto_engine = GamingCryptoEngine::new(encryption_engine, genetics_engine, key_manager, bstp_config).await?;
 
-        // Test data representing different types of scientific information
         let research_data = b"Quantum cryptography research findings - CONFIDENTIAL";
         let student_data = b"Learning materials for forest newcomers";
         let collaboration_data = b"International research collaboration metadata";
 
-        // Protect each type of data
         for (data_type, data) in [
             ("research", research_data.as_slice()),
             ("education", student_data.as_slice()),
@@ -363,7 +327,6 @@ async fn test_forest_protection_integrity() {
 
         println!("   🛡️ Testing threat response simulation...");
 
-        // Simulate threat detection and response
         let threat_event = NetworkSecurityEvent::SuspiciousActivity {
             source_peer: "suspicious-peer-999".to_string(),
             activity_type: SuspiciousActivityType::DataExfiltration,
@@ -371,7 +334,7 @@ async fn test_forest_protection_integrity() {
             evidence: vec![NetworkEvidence {
                 evidence_type: "authentication_failure".to_string(),
                 data: {
-                    let mut data = HashMap::new();
+                    let mut data = HashMap::with_capacity(16);
                     data.insert("source_ip".to_string(), "192.168.1.100".to_string());
                     data.insert("failed_attempts".to_string(), "5".to_string());
                     data
@@ -381,7 +344,6 @@ async fn test_forest_protection_integrity() {
             }],
         };
 
-        // Verify threat event can be processed
         match threat_event {
             NetworkSecurityEvent::SuspiciousActivity { severity, .. } => {
                 assert_eq!(severity, NetworkThreatLevel::High);
@@ -391,7 +353,6 @@ async fn test_forest_protection_integrity() {
 
         println!("   🌍 Testing international compliance simulation...");
 
-        // Test compliance event handling
         let event = ComplianceEvent {
             event_id: "test-event".to_string(),
             event_type: beardog::compliance::types::ComplianceEventType::DataProcessing,
@@ -401,13 +362,13 @@ async fn test_forest_protection_integrity() {
             processing_purpose: Some("test".to_string()),
             legal_basis: None,
             retention_period: None,
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         };
 
         let subject = Subject {
             id: "test-subject".to_string(),
             subject_type: beardog::security::types::SubjectType::User,
-            attributes: HashMap::new(),
+            attributes: HashMap::with_capacity(16),
             roles: vec![],
             clearance_level: None,
         };
@@ -416,7 +377,7 @@ async fn test_forest_protection_integrity() {
             id: "test-resource".to_string(),
             resource_type: "file".to_string(),
             classification: beardog::security::types::ResourceClassification::Internal,
-            attributes: HashMap::new(),
+            attributes: HashMap::with_capacity(16),
             owner: Some("test-owner".to_string()),
         };
 
@@ -431,7 +392,7 @@ async fn test_forest_protection_integrity() {
     assert!(
         result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?.is_ok(),
         "Complete forest protection should be validated"
     );

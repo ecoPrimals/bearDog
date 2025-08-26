@@ -1,68 +1,43 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Data Transformers for Universal Adapter
-///
-/// Format-agnostic data transformation layer
 use beardog_errors::{BearDogError, BearDogResult};
 use serde_json;
 
-/// Data transformer trait for universal adapter
 pub trait DataTransformer: Send + Sync {
-    /// Transform input data to target format
+
     fn transform(&self, input: serde_json::Value) -> BearDogResult<serde_json::Value>;
-    /// Get transformer name
+
     fn name(&self) -> &str;
-    /// Get supported input formats
+
     fn supported_inputs(&self) -> Vec<String>;
-    /// Get supported output formats
+
     fn supported_outputs(&self) -> Vec<String>;
 }
-/// Pass-through transformer (no transformation)
+
 pub struct PassThroughTransformer;
 impl Default for PassThroughTransformer {}
-
 
     fn default() -> Self {
         Self::new()
     }
 impl PassThroughTransformer {}
 
-
     pub fn new() -> Self {
         Self
 impl DataTransformer for PassThroughTransformer {}
 
-
     fn transform(&self, input: serde_json::Value) -> BearDogResult<serde_json::Value> {
         Ok(input)}
-
 
     fn name(&self) -> &str {
         "passthrough"
     fn supported_inputs(&self) -> Vec<String> {
         vec!["json".to_string()]}
 
-
     fn supported_outputs(&self) -> Vec<String> {
-/// JSON to YAML transformer
+
 pub struct JsonToYamlTransformer;
 impl Default for JsonToYamlTransformer {}
-
 
 impl JsonToYamlTransformer {
 impl DataTransformer for JsonToYamlTransformer {
@@ -74,14 +49,13 @@ impl DataTransformer for JsonToYamlTransformer {
         }))
         "json_to_yaml"
         vec!["yaml".to_string()]
-/// Kubernetes resource transformer
+
 pub struct KubernetesResourceTransformer;
 impl Default for KubernetesResourceTransformer {}
 
-
 impl KubernetesResourceTransformer {
 impl DataTransformer for KubernetesResourceTransformer {
-        // Transform BearDog resource request to Kubernetes resource format
+
         let resource_type = input
             .get("type")
             .and_then(|v| v.as_str())

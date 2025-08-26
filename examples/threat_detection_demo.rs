@@ -1,28 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # Threat Detection Engine Demo
-//!
-//! This demo showcases BearDog's advanced threat detection capabilities including:
-//! - Rule-based threat detection
-//! - ML-powered anomaly detection
-//! - Behavioral analysis
-//! - Threat intelligence integration
-//! - Automated incident response
 
 use beardog::threat::*;
 use chrono::Utc;
@@ -30,22 +6,19 @@ use std::collections::HashMap;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging
+
     tracing_subscriber::init();
 
     println!("🔍 BearDog Threat Detection Engine Demo");
     println!("========================================");
 
-    // Initialize enhanced threat detection engine with ML
     let (mut threat_engine, ml_engine) = ThreatAPI::new_with_ml().await?;
 
     println!("✅ Threat Detection Engine initialized with ML capabilities");
 
-    // Demo 1: Rule-based threat detection
     println!("\n📋 Demo 1: Rule-based Threat Detection");
     println!("--------------------------------------");
 
-    // Create suspicious login event
     let suspicious_login = create_suspicious_login_event()?;
     println!("🔍 Analyzing suspicious login event...");
 
@@ -59,11 +32,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    // Demo 2: ML-powered anomaly detection
     println!("\n🧠 Demo 2: ML-powered Anomaly Detection");
     println!("--------------------------------------");
 
-    // Create data exfiltration event
     let data_exfil_event = create_data_exfiltration_event()?;
     println!("🔍 Analyzing large data transfer event...");
 
@@ -84,11 +55,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    // Demo 3: Brute force attack detection
     println!("\n🔥 Demo 3: Brute Force Attack Detection");
     println!("--------------------------------------");
 
-    // Simulate multiple failed login attempts
     println!("🔍 Simulating brute force attack...");
 
     for i in 1..=15 {
@@ -104,16 +73,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // Demo 4: Threat intelligence integration
     println!("\n🌐 Demo 4: Threat Intelligence Integration");
     println!("----------------------------------------");
 
-    // Add threat intelligence feed
     let threat_feed = create_sample_threat_feed()?;
     threat_engine.update_threat_feed(threat_feed).await?;
     println!("✅ Threat intelligence feed updated");
 
-    // Create event with known malicious IP
     let malicious_event = create_malicious_ip_event()?;
     println!("🔍 Analyzing event with known malicious IP...");
 
@@ -127,15 +93,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    // Demo 5: Behavioral analysis
     println!("\n👤 Demo 5: Behavioral Analysis");
     println!("-----------------------------");
 
-    // Create unusual access pattern
     let unusual_access = create_unusual_access_event()?;
     println!("🔍 Analyzing unusual access pattern...");
 
-    // Use ML engine directly for behavioral analysis
     let behavioral_predictions = ml_engine.analyze_event(&unusual_access).await?;
     for prediction in &behavioral_predictions {
         println!(
@@ -147,7 +110,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // Demo 6: Comprehensive threat statistics
     println!("\n📊 Demo 6: Threat Statistics");
     println!("---------------------------");
 
@@ -161,11 +123,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Threat feeds: {}", stats.threat_feeds_count);
     println!("ML models: {}", stats.ml_models_count);
 
-    // Demo 7: Custom detection rule
     println!("\n🛠️ Demo 7: Custom Detection Rule");
     println!("-------------------------------");
 
-    // Add custom rule for cryptocurrency mining
     let crypto_mining_rule = ThreatDetectionRule {
         rule_id: "crypto_mining_001".to_string(),
         name: "Cryptocurrency Mining Detection".to_string(),
@@ -188,7 +148,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     threat_engine.add_detection_rule(crypto_mining_rule);
     println!("✅ Custom detection rule added");
 
-    // Test custom rule
     let mining_event = create_crypto_mining_event()?;
     let mining_analysis = threat_engine.analyze_event(&mining_event).await?;
 
@@ -211,7 +170,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Create a suspicious login event (off-hours)
 fn create_suspicious_login_event() -> Result<SecurityEvent, Box<dyn std::error::Error>> {
     Ok(SecurityEvent {
         event_id: "login_001".to_string(),
@@ -225,14 +183,13 @@ fn create_suspicious_login_event() -> Result<SecurityEvent, Box<dyn std::error::
         location: Some("Unknown".to_string()),
         file_hash: None,
         additional_data: {
-            let mut data = HashMap::new();
+            let mut data = HashMap::with_capacity(16);
             data.insert("timestamp".to_string(), "23".to_string()); // 11 PM
             data
         },
     })
 }
 
-/// Create a data exfiltration event
 fn create_data_exfiltration_event() -> Result<SecurityEvent, Box<dyn std::error::Error>> {
     Ok(SecurityEvent {
         event_id: "data_transfer_001".to_string(),
@@ -246,7 +203,7 @@ fn create_data_exfiltration_event() -> Result<SecurityEvent, Box<dyn std::error:
         location: Some("office".to_string()),
         file_hash: Some("a1b2c3d4e5f6".to_string()),
         additional_data: {
-            let mut data = HashMap::new();
+            let mut data = HashMap::with_capacity(16);
             data.insert("protocol".to_string(), "https".to_string());
             data.insert("encrypted".to_string(), "true".to_string());
             data
@@ -254,10 +211,9 @@ fn create_data_exfiltration_event() -> Result<SecurityEvent, Box<dyn std::error:
     })
 }
 
-/// Create a failed login event for brute force simulation
 fn create_failed_login_event(attempt: i32) -> Result<SecurityEvent, Box<dyn std::error::Error>> {
     Ok(SecurityEvent {
-        event_id: format!("failed_login_{:03}", attempt),
+        event_id: format_args!("failed_login_{:03}", attempt).to_string(),
         timestamp: Utc::now(),
         event_type: "login_failed".to_string(),
         source_ip: "203.0.113.666".to_string(), // Suspicious IP
@@ -268,7 +224,7 @@ fn create_failed_login_event(attempt: i32) -> Result<SecurityEvent, Box<dyn std:
         location: Some("Unknown".to_string()),
         file_hash: None,
         additional_data: {
-            let mut data = HashMap::new();
+            let mut data = HashMap::with_capacity(16);
             data.insert("attempt".to_string(), attempt.to_string());
             data.insert("reason".to_string(), "invalid_password".to_string());
             data
@@ -276,7 +232,6 @@ fn create_failed_login_event(attempt: i32) -> Result<SecurityEvent, Box<dyn std:
     })
 }
 
-/// Create a sample threat intelligence feed
 fn create_sample_threat_feed() -> Result<ThreatIntelligenceFeed, Box<dyn std::error::Error>> {
     Ok(ThreatIntelligenceFeed {
         feed_id: "malicious_ips_001".to_string(),
@@ -301,11 +256,10 @@ fn create_sample_threat_feed() -> Result<ThreatIntelligenceFeed, Box<dyn std::er
                 last_seen: Utc::now(),
             },
         ],
-        metadata: HashMap::new(),
+        metadata: HashMap::with_capacity(16),
     })
 }
 
-/// Create an event with known malicious IP
 fn create_malicious_ip_event() -> Result<SecurityEvent, Box<dyn std::error::Error>> {
     Ok(SecurityEvent {
         event_id: "malicious_001".to_string(),
@@ -319,7 +273,7 @@ fn create_malicious_ip_event() -> Result<SecurityEvent, Box<dyn std::error::Erro
         location: Some("office".to_string()),
         file_hash: None,
         additional_data: {
-            let mut data = HashMap::new();
+            let mut data = HashMap::with_capacity(16);
             data.insert("protocol".to_string(), "tcp".to_string());
             data.insert("port".to_string(), "8080".to_string());
             data
@@ -327,7 +281,6 @@ fn create_malicious_ip_event() -> Result<SecurityEvent, Box<dyn std::error::Erro
     })
 }
 
-/// Create an unusual access event for behavioral analysis
 fn create_unusual_access_event() -> Result<SecurityEvent, Box<dyn std::error::Error>> {
     Ok(SecurityEvent {
         event_id: "unusual_access_001".to_string(),
@@ -341,7 +294,7 @@ fn create_unusual_access_event() -> Result<SecurityEvent, Box<dyn std::error::Er
         location: Some("Tokyo".to_string()), // Unusual location
         file_hash: None,
         additional_data: {
-            let mut data = HashMap::new();
+            let mut data = HashMap::with_capacity(16);
             data.insert("timestamp".to_string(), "3".to_string()); // 3 AM
             data.insert("device".to_string(), "unknown".to_string());
             data
@@ -349,7 +302,6 @@ fn create_unusual_access_event() -> Result<SecurityEvent, Box<dyn std::error::Er
     })
 }
 
-/// Create a cryptocurrency mining event
 fn create_crypto_mining_event() -> Result<SecurityEvent, Box<dyn std::error::Error>> {
     Ok(SecurityEvent {
         event_id: "mining_001".to_string(),
@@ -363,7 +315,7 @@ fn create_crypto_mining_event() -> Result<SecurityEvent, Box<dyn std::error::Err
         location: Some("office".to_string()),
         file_hash: Some("mining_hash_123".to_string()),
         additional_data: {
-            let mut data = HashMap::new();
+            let mut data = HashMap::with_capacity(16);
             data.insert("process".to_string(), "xmrig".to_string());
             data.insert("cpu_usage".to_string(), "95".to_string());
             data

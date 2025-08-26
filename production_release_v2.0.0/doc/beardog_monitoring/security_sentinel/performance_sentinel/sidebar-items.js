@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AlertSeverity"],"struct":["AlertManager","PerformanceAlert","PerformanceSentinel","PerformanceThresholds","PerformanceTrends"]};

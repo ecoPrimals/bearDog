@@ -1,10 +1,4 @@
-//! Comprehensive BearDog API Demo
-//!
-//! Demonstrates the complete AI-first API system including:
-//! - Security API with threat detection and ML capabilities
-//! - Genetics API with node spawning and genetic analysis  
-//! - Monitoring API with health checks and metrics
-//! - Performance features (caching, rate limiting, real-time data)
+
 
 use serde_json::{json, Value};
 use std::time::Duration;
@@ -13,7 +7,7 @@ use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize tracing
+
     tracing_subscriber::fmt::init();
 
     info!("🚀 Starting BearDog Comprehensive API Demo");
@@ -22,19 +16,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let base_url =
         std::env::var("BEARDOG_API_URL").unwrap_or_else(|_| "http://localhost:8080".to_string());
 
-    // Start with API info and health checks
     demo_api_basics(&client, &base_url).await?;
 
-    // Demo Security API capabilities
     demo_security_api(&client, &base_url).await?;
 
-    // Demo Genetics API capabilities
     demo_genetics_api(&client, &base_url).await?;
 
-    // Demo Monitoring API capabilities
     demo_monitoring_api(&client, &base_url).await?;
 
-    // Demo real-time monitoring
     demo_realtime_monitoring(&client, &base_url).await?;
 
     info!("✅ Comprehensive API demo completed successfully!");
@@ -42,14 +31,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demo basic API information and health endpoints
 async fn demo_api_basics(
     client: &reqwest::Client,
     base_url: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("📋 Testing API Basics");
 
-    // Get API information
     let response: Value = client
         .get(format!("{base_url}/api/"))
         .send()
@@ -59,7 +46,6 @@ async fn demo_api_basics(
 
     info!("API Info: {}", serde_json::to_string_pretty(&response)?);
 
-    // Check API health
     let health: Value = client
         .get(format!("{base_url}/api/health"))
         .send()
@@ -69,7 +55,6 @@ async fn demo_api_basics(
 
     info!("API Health: {}", health["data"]["status"]);
 
-    // Get comprehensive status
     let status: Value = client
         .get(format!("{base_url}/api/v1/status"))
         .send()
@@ -82,14 +67,12 @@ async fn demo_api_basics(
     Ok(())
 }
 
-/// Demo Security API with threat detection and ML capabilities
 async fn demo_security_api(
     client: &reqwest::Client,
     base_url: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("🛡️ Testing Security API");
 
-    // Test threat analysis
     let security_event = json!({
         "event_type": "login_attempt",
         "source_ip": "192.168.1.100",
@@ -115,7 +98,6 @@ async fn demo_security_api(
         analysis["data"]["threat_level"]
     );
 
-    // Test ML prediction
     let ml_request = json!({
         "features": [0.8, 0.2, 0.95, 0.1, 0.7],
         "model_type": "anomaly_detection",
@@ -135,7 +117,6 @@ async fn demo_security_api(
 
     info!("ML Prediction: {}", prediction["data"]["prediction"]);
 
-    // Get security statistics
     let stats: Value = client
         .get(format!("{base_url}/api/v1/security/stats"))
         .send()
@@ -151,14 +132,12 @@ async fn demo_security_api(
     Ok(())
 }
 
-/// Demo Genetics API with node spawning and genetic analysis
 async fn demo_genetics_api(
     client: &reqwest::Client,
     base_url: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("🧬 Testing Genetics API");
 
-    // Create a genesis node
     let genesis_request = json!({
         "node_id": "genesis_demo_001",
         "capabilities": ["storage", "compute", "network", "security"],
@@ -187,7 +166,6 @@ async fn demo_genetics_api(
     let genesis_node_id = &genesis_response["data"]["node_id"];
     info!("Created Genesis Node: {}", genesis_node_id);
 
-    // Submit a spawning request
     let spawn_request = json!({
         "parent_node_id": genesis_node_id,
         "requested_capabilities": ["storage", "compute", "enhanced_security"],
@@ -219,7 +197,6 @@ async fn demo_genetics_api(
     let request_id = &spawn_response["data"]["request_id"];
     info!("Spawn Request Submitted: {}", request_id);
 
-    // Wait a moment then check spawn status
     sleep(Duration::from_millis(1000)).await;
 
     let status: Value = client
@@ -233,7 +210,6 @@ async fn demo_genetics_api(
 
     info!("Spawn Status: {}", status["data"]["status"]);
 
-    // Analyze genetics of the genesis node
     let genetics_analysis: Value = client
         .get(format!(
             "{base_url}/api/v1/genetics/analyze/{genesis_node_id}"
@@ -248,7 +224,6 @@ async fn demo_genetics_api(
         genetics_analysis["data"]["diversity_scores"]["overall_diversity"]
     );
 
-    // Get genetics statistics
     let genetics_stats: Value = client
         .get(format!("{base_url}/api/v1/genetics/stats"))
         .send()
@@ -261,14 +236,12 @@ async fn demo_genetics_api(
     Ok(())
 }
 
-/// Demo Monitoring API with health checks and metrics
 async fn demo_monitoring_api(
     client: &reqwest::Client,
     base_url: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Testing Monitoring API");
 
-    // Get comprehensive system health
     let health: Value = client
         .get(format!("{base_url}/api/v1/monitoring/health"))
         .send()
@@ -282,7 +255,6 @@ async fn demo_monitoring_api(
         health["data"]["uptime_seconds"]
     );
 
-    // Get system metrics
     let metrics: Value = client
         .get(format!("{base_url}/api/v1/monitoring/metrics"))
         .send()
@@ -299,7 +271,6 @@ async fn demo_monitoring_api(
         metrics["data"]["resources"]["memory_usage_percent"]
     );
 
-    // Get active alerts
     let alerts: Value = client
         .get(format!("{base_url}/api/v1/monitoring/alerts"))
         .send()
@@ -310,7 +281,6 @@ async fn demo_monitoring_api(
     let alert_count = alerts["data"].as_array().map(|a| a.len()).unwrap_or(0);
     info!("Active Alerts: {}", alert_count);
 
-    // Search logs
     let log_search = json!({
         "query": "API request",
         "level": "info",
@@ -331,14 +301,12 @@ async fn demo_monitoring_api(
     Ok(())
 }
 
-/// Demo real-time monitoring capabilities
 async fn demo_realtime_monitoring(
     client: &reqwest::Client,
     base_url: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing Real-time Monitoring");
 
-    // Get real-time metrics multiple times to show live data
     for i in 1..=3 {
         let realtime: Value = client
             .get(format!("{base_url}/api/v1/monitoring/metrics/realtime"))
@@ -358,7 +326,6 @@ async fn demo_realtime_monitoring(
         sleep(Duration::from_millis(2000)).await;
     }
 
-    // Test liveness and readiness probes
     let liveness: Value = client
         .get(format!("{base_url}/api/v1/monitoring/liveness"))
         .send()
@@ -381,14 +348,12 @@ async fn demo_realtime_monitoring(
     Ok(())
 }
 
-/// Demonstrate performance features like caching and rate limiting
 async fn demo_performance_features(
     client: &reqwest::Client,
     base_url: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Testing Performance Features");
 
-    // Make the same request multiple times to test caching
     let endpoint = format!("{base_url}/api/v1/security/stats");
 
     for i in 1..=3 {
@@ -415,14 +380,12 @@ async fn demo_performance_features(
     Ok(())
 }
 
-/// Test error handling and edge cases
 async fn demo_error_handling(
     client: &reqwest::Client,
     base_url: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("🔧 Testing Error Handling");
 
-    // Test invalid endpoint
     let invalid_response = client
         .get(format!("{base_url}/api/v1/invalid/endpoint"))
         .send()
@@ -430,7 +393,6 @@ async fn demo_error_handling(
 
     info!("Invalid endpoint status: {}", invalid_response.status());
 
-    // Test malformed request
     let malformed_json = "{ invalid json }";
     let malformed_response = client
         .post(format!("{base_url}/api/v1/security/analyze"))
@@ -450,8 +412,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_api_demo_flow() {
-        // This would test the demo in a real environment
-        // For now, just verify the demo functions compile
+
         assert!(true);
     }
 }

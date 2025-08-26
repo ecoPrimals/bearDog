@@ -1,22 +1,14 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
 
-/// # BearDog Modernization Baseline Benchmarks
-/// 
-/// **PERFORMANCE BASELINE ESTABLISHMENT** - Post-Modernization Metrics
-/// This benchmark establishes baseline performance metrics for the fully modernized BearDog system.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::time::Duration;
 
-// Simple benchmarks to establish baseline metrics
 fn benchmark_modernized_system(c: &mut Criterion) {
     let mut group = c.benchmark_group("modernized_baseline");
-    
-    // Benchmark basic operations to establish baseline
+
     group.bench_function("type_operations", |b| {
         b.iter(|| {
-            // Simulate canonical type operations
+
             let value = black_box(42i32);
             let result = black_box(value * 2);
             black_box(result);
@@ -25,7 +17,7 @@ fn benchmark_modernized_system(c: &mut Criterion) {
     
     group.bench_function("error_handling", |b| {
         b.iter(|| {
-            // Simulate unified error handling
+
             let result: Result<i32, &str> = black_box(Ok(42));
             let mapped = black_box(result.map(|x| x * 2));
             black_box(mapped.unwrap());
@@ -35,7 +27,6 @@ fn benchmark_modernized_system(c: &mut Criterion) {
     group.finish();
 }
 
-/// Generate modernization performance report
 fn generate_performance_report() {
     println!("\n🏆 BearDog Modernization Performance Report");
     println!("==========================================");

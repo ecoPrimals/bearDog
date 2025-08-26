@@ -1,57 +1,28 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # BearDog Unified Tunnel Architecture - Production Demo
-//!
-//! **🎉 UNIFIED ARCHITECTURE COMPLETE**
-//!
-//! This demonstration showcases the successfully modernized beardog-tunnel
-//! architecture that eliminates fragmentation while preserving human entropy
-//! capabilities for digital sovereignty.
 
 use std::time::Instant;
 use tracing::{info, warn};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize comprehensive logging
+
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    // 🎊 Display the unified architecture success
     display_modernization_success();
 
-    // 🧠 Demonstrate human entropy capabilities
     demonstrate_human_entropy_sovereignty().await?;
 
-    // ⚡ Benchmark performance improvements
     benchmark_unified_performance().await?;
 
-    // 🛡️ Validate security and sovereignty features
     validate_security_sovereignty().await?;
 
-    // 🏆 Final success celebration
     celebrate_architectural_achievement();
 
     Ok(())
 }
 
-/// Display the comprehensive modernization success
 fn display_modernization_success() {
     println!("\n🎉 BearDog Unified Tunnel Architecture");
     println!("=====================================");
@@ -84,12 +55,10 @@ fn display_modernization_success() {
     println!();
 }
 
-/// Demonstrate human entropy capabilities for digital sovereignty
 async fn demonstrate_human_entropy_sovereignty() -> Result<(), Box<dyn std::error::Error>> {
     info!("🧠 Demonstrating Human Entropy & Digital Sovereignty");
     info!("===================================================");
 
-    // Simulate human entropy collection methods
     let entropy_methods = vec![
         "Touch Patterns (pressure-sensitive)",
         "Biometric (fingerprint analysis)",
@@ -103,7 +72,6 @@ async fn demonstrate_human_entropy_sovereignty() -> Result<(), Box<dyn std::erro
     for (i, method) in entropy_methods.iter().enumerate() {
         info!("   {}. {}", i + 1, method);
 
-        // Simulate entropy collection
         let entropy_quality = simulate_entropy_collection(method).await;
         info!("      → Quality Score: {:.2}/1.0", entropy_quality);
 
@@ -114,7 +82,6 @@ async fn demonstrate_human_entropy_sovereignty() -> Result<(), Box<dyn std::erro
         }
     }
 
-    // Simulate tier elevation decision
     info!("\n🎯 Tier Elevation Analysis:");
     let overall_entropy_score = 0.87;
     let methods_used = 3;
@@ -143,12 +110,10 @@ async fn demonstrate_human_entropy_sovereignty() -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-/// Simulate entropy collection for a specific method
 async fn simulate_entropy_collection(method: &str) -> f64 {
-    // Simulate processing time
+
     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
 
-    // Simulate different quality scores based on method
     match method {
         m if m.contains("Touch Patterns") => 0.85,
         m if m.contains("Biometric") => 0.92,
@@ -160,12 +125,10 @@ async fn simulate_entropy_collection(method: &str) -> f64 {
     }
 }
 
-/// Benchmark the unified architecture performance
 async fn benchmark_unified_performance() -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Benchmarking Unified Architecture Performance");
     info!("==============================================");
 
-    // Simulate various operations and measure performance
     let operations = vec![
         ("HSM Provider Registration", simulate_provider_registration),
         ("Key Generation (Gaming)", simulate_gaming_key_generation),
@@ -191,7 +154,6 @@ async fn benchmark_unified_performance() -> Result<(), Box<dyn std::error::Error
         );
         total_time += duration.as_micros() as u64;
 
-        // Check if meets gaming requirements (sub-100μs for critical operations)
         if operation_name.contains("Gaming") && duration.as_micros() < 100 {
             info!("     ✅ Meets gaming latency requirements (<100μs)");
         }
@@ -206,7 +168,6 @@ async fn benchmark_unified_performance() -> Result<(), Box<dyn std::error::Error
     );
     info!("   • Performance target: ✅ Exceeded expectations");
 
-    // Compare with theoretical fragmented performance
     let fragmented_penalty = 1.4; // 40% slower due to fragmentation
     let old_avg_time = avg_time * fragmented_penalty;
     let improvement = ((old_avg_time - avg_time) / old_avg_time) * 100.0;
@@ -220,37 +181,30 @@ async fn benchmark_unified_performance() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
-/// Simulate HSM provider registration
 async fn simulate_provider_registration() {
     tokio::time::sleep(tokio::time::Duration::from_micros(150)).await;
 }
 
-/// Simulate gaming-optimized key generation
 async fn simulate_gaming_key_generation() {
     tokio::time::sleep(tokio::time::Duration::from_micros(75)).await; // Sub-100μs target
 }
 
-/// Simulate entropy collection benchmark
 async fn simulate_entropy_collection_benchmark() {
     tokio::time::sleep(tokio::time::Duration::from_micros(200)).await;
 }
 
-/// Simulate tier evaluation
 async fn simulate_tier_evaluation() {
     tokio::time::sleep(tokio::time::Duration::from_micros(100)).await;
 }
 
-/// Simulate health check
 async fn simulate_health_check() {
     tokio::time::sleep(tokio::time::Duration::from_micros(50)).await;
 }
 
-/// Validate security and sovereignty features
 async fn validate_security_sovereignty() -> Result<(), Box<dyn std::error::Error>> {
     info!("🛡️ Validating Security & Digital Sovereignty");
     info!("===========================================");
 
-    // Validate unified architecture components
     let components = vec![
         ("UnifiedHsmProvider Interface", true),
         ("UnifiedHumanEntropyClassifier", true),
@@ -277,7 +231,6 @@ async fn validate_security_sovereignty() -> Result<(), Box<dyn std::error::Error
     let health_percentage = (healthy_components as f64 / components.len() as f64) * 100.0;
     info!("\n📊 Overall System Health: {:.0}%", health_percentage);
 
-    // Validate digital sovereignty features
     info!("\n🧠 Digital Sovereignty Validation:");
     let sovereignty_features = vec![
         ("Human Agency in Cryptography", true),
@@ -306,7 +259,6 @@ async fn validate_security_sovereignty() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
-/// Final celebration of the architectural achievement
 fn celebrate_architectural_achievement() {
     println!("🎊 UNIFIED TUNNEL ARCHITECTURE - MISSION ACCOMPLISHED!");
     println!("======================================================");
@@ -369,7 +321,6 @@ mod tests {
         simulate_gaming_key_generation().await;
         let duration = start.elapsed();
 
-        // Should meet gaming requirements
         assert!(
             duration.as_micros() < 100,
             "Gaming operations should be sub-100μs"
@@ -378,13 +329,13 @@ mod tests {
 
     #[test]
     fn test_modernization_display() {
-        // Test that the display function doesn't panic
+
         display_modernization_success();
     }
 
     #[test]
     fn test_celebration_display() {
-        // Test that the celebration function doesn't panic
+
         celebrate_architectural_achievement();
     }
 }

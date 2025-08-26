@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Case","ConfigError","FileFormat","ValueKind"],"mod":["builder"],"struct":["Config","Environment","File","FileSourceFile","FileSourceString","Value"],"trait":["AsyncSource","FileSource","FileStoredFormat","Format","Source"],"type":["Map"]};

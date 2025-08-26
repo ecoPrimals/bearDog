@@ -1,43 +1,19 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Compliance Types - Canonical System
-///
-/// This module provides unified compliance types and standards for regulatory
-/// compliance across different jurisdictions and frameworks.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-/// **CANONICAL MIGRATION COMPLETE** ✅
-/// All compliance types now use canonical definitions from beardog-types
 pub use beardog_types::canonical::configuration::{
     ComplianceConfig, ComplianceStandard, ReportingConfig,
     PrivacyAuditConfig, DataSovereigntyConfig
 };
 
-// Re-export specific types from compliance module
 pub use beardog_types::canonical::configuration::compliance::{
     ReportFormat, ReportFrequency
 };
 
-/// Compliance event for audit trail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceEvent {
     pub id: Uuid,
@@ -49,7 +25,6 @@ pub struct ComplianceEvent {
     pub metadata: serde_json::Value,
 }
 
-/// Types of compliance events
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ComplianceEventType {
     PolicyViolation,
@@ -62,7 +37,6 @@ pub enum ComplianceEventType {
     ReportGeneration,
 }
 
-/// Severity levels for compliance events
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ComplianceSeverity {
     Low,
@@ -71,7 +45,6 @@ pub enum ComplianceSeverity {
     Critical,
 }
 
-/// Compliance check result
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceResult {
     pub standard: ComplianceStandard,
@@ -82,7 +55,6 @@ pub struct ComplianceResult {
     pub timestamp: DateTime<Utc>,
 }
 
-/// Compliance violation details
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceViolation {
     pub id: Uuid,
@@ -93,7 +65,6 @@ pub struct ComplianceViolation {
     pub affected_data: Option<String>,
 }
 
-/// Audit trail entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEntry {
     pub id: Uuid,
@@ -105,7 +76,6 @@ pub struct AuditEntry {
     pub details: serde_json::Value,
 }
 
-/// Audit outcome
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AuditOutcome {
     Success,
@@ -114,7 +84,6 @@ pub enum AuditOutcome {
     Denied,
 }
 
-/// Data processing record for GDPR compliance
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataProcessingRecord {
     pub id: Uuid,
@@ -128,7 +97,6 @@ pub struct DataProcessingRecord {
     pub timestamp: DateTime<Utc>,
 }
 
-/// Consent record for privacy compliance
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsentRecord {
     pub id: Uuid,
@@ -141,7 +109,6 @@ pub struct ConsentRecord {
     pub evidence: String,
 }
 
-/// Method of consent collection
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ConsentMethod {
     ExplicitConsent,
@@ -151,7 +118,6 @@ pub enum ConsentMethod {
     LegitimateInterest,
 }
 
-/// Privacy impact assessment
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyImpactAssessment {
     pub id: Uuid,
@@ -164,7 +130,6 @@ pub struct PrivacyImpactAssessment {
     pub approval_status: ApprovalStatus,
 }
 
-/// Privacy risk assessment
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyRisk {
     pub description: String,
@@ -173,7 +138,6 @@ pub struct PrivacyRisk {
     pub overall_risk: RiskLevel,
 }
 
-/// Risk level enumeration
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum RiskLevel {
     Low,
@@ -182,7 +146,6 @@ pub enum RiskLevel {
     Critical,
 }
 
-/// Approval status for assessments
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ApprovalStatus {
     Pending,
@@ -191,7 +154,6 @@ pub enum ApprovalStatus {
     RequiresRevision,
 }
 
-/// Data breach incident record
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataBreachIncident {
     pub id: Uuid,
@@ -208,7 +170,6 @@ pub struct DataBreachIncident {
     pub status: IncidentStatus,
 }
 
-/// Types of data breaches
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum BreachType {
     UnauthorizedAccess,
@@ -219,7 +180,6 @@ pub enum BreachType {
     Other(String),
 }
 
-/// Incident status tracking
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum IncidentStatus {
     Open,
@@ -229,7 +189,6 @@ pub enum IncidentStatus {
     Closed,
 }
 
-/// Compliance dashboard metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceMetrics {
     pub overall_score: f64,
@@ -240,7 +199,6 @@ pub struct ComplianceMetrics {
     pub next_assessment_due: Option<DateTime<Utc>>,
 }
 
-// Legacy framework enum for backward compatibility
 pub enum ComplianceFramework {
     Ccpa,
 }

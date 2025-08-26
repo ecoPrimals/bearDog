@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["conduct_breach_assessment","get_hipaa_compliance","log_phi_access"]};

@@ -1,32 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # AI-Powered Performance Optimization Engine
-/// 
-/// **NEXT-GENERATION INTELLIGENCE** - Machine learning-driven performance optimization
-/// This module implements an AI-powered optimization engine that uses machine learning
-/// algorithms to continuously optimize BearDog's performance characteristics in real-time.
-/// 
-/// ## AI Optimization Features
-/// - **Adaptive Performance Tuning**: Real-time performance parameter adjustment
-/// - **Predictive Load Balancing**: ML-based workload distribution
-/// - **Intelligent Resource Management**: AI-driven memory and CPU optimization
-/// - **Self-Learning Algorithms**: Continuous improvement through usage patterns
-/// - **Multi-Objective Optimization**: Balancing performance, security, and efficiency
 
 use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
@@ -35,7 +7,6 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::RwLock;
 
-/// AI optimization engine with machine learning capabilities
 pub struct AIOptimizationEngine {
     performance_model: Arc<RwLock<PerformanceModel>>,
     resource_predictor: Arc<Mutex<ResourcePredictor>>,
@@ -45,7 +16,6 @@ pub struct AIOptimizationEngine {
     neural_network: Arc<Mutex<SimpleNeuralNetwork>>,
 }
 
-/// Performance model for ML-based optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceModel {
     cpu_utilization_weights: Vec<f64>,
@@ -56,7 +26,6 @@ pub struct PerformanceModel {
     last_updated: u64,
 }
 
-/// Resource usage predictor using time series analysis
 pub struct ResourcePredictor {
     cpu_history: VecDeque<f64>,
     memory_history: VecDeque<f64>,
@@ -64,14 +33,12 @@ pub struct ResourcePredictor {
     prediction_window: usize,
 }
 
-/// Optimization history for learning and adaptation
 pub struct OptimizationHistory {
     optimization_actions: VecDeque<OptimizationAction>,
     success_rates: HashMap<String, f64>,
     max_history_size: usize,
 }
 
-/// Simple neural network for pattern recognition
 pub struct SimpleNeuralNetwork {
     input_layer: Vec<f64>,
     hidden_layer: Vec<f64>,
@@ -80,7 +47,6 @@ pub struct SimpleNeuralNetwork {
     weights_ho: Vec<Vec<f64>>, // Hidden to output weights
 }
 
-/// Performance metrics sample
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceSample {
     timestamp: u64,
@@ -93,7 +59,6 @@ pub struct PerformanceSample {
     system_load: f64,
 }
 
-/// Optimization action taken by the AI engine
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationAction {
     timestamp: u64,
@@ -104,30 +69,26 @@ pub struct OptimizationAction {
     success: Option<bool>,
 }
 
-/// Types of optimizations the AI can perform
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OptimizationType {
-    /// Adjust CPU thread pool size
+
     ThreadPoolOptimization,
-    /// Modify memory allocation strategies
+
     MemoryOptimization,
-    /// Tune cryptographic algorithm selection
+
     CryptoOptimization,
-    /// Optimize network buffer sizes
+
     NetworkOptimization,
-    /// Adjust caching strategies
+
     CacheOptimization,
-    /// Modify garbage collection parameters
+
     GCOptimization,
-    /// Tune SIMD instruction usage
+
     SIMDOptimization,
-    /// Optimize object pool sizes
+
     PoolOptimization,
 }
 
-
-
-/// AI optimization recommendations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationRecommendation {
     pub optimization_type: OptimizationType,
@@ -138,7 +99,6 @@ pub struct OptimizationRecommendation {
     pub priority: RecommendationPriority,
 }
 
-/// Priority levels for optimization recommendations
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum RecommendationPriority {
     Low,
@@ -147,7 +107,6 @@ pub enum RecommendationPriority {
     Critical,
 }
 
-/// AI optimization statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIOptimizationStats {
     pub total_optimizations: u64,
@@ -160,7 +119,7 @@ pub struct AIOptimizationStats {
 }
 
 impl AIOptimizationEngine {
-    /// Create new AI optimization engine
+
     pub fn new(optimization_interval: Duration) -> BearDogResult<Self> {
         let performance_model = Arc::new(RwLock::new(PerformanceModel::new()));
         let resource_predictor = Arc::new(Mutex::new(ResourcePredictor::new(100)?));
@@ -177,7 +136,6 @@ impl AIOptimizationEngine {
         })
     }
 
-    /// Start the AI optimization engine
     pub async fn start_optimization(&self) -> BearDogResult<()> {
         let mut interval = tokio::time::interval(self.optimization_interval);
         
@@ -185,29 +143,23 @@ impl AIOptimizationEngine {
             interval.tick().await;
             
             if self.is_learning_enabled {
-                // Collect performance metrics
+
                 let sample = self.collect_performance_sample().await?;
-                
-                // Update predictive models
+
                 self.update_models(&sample).await?;
-                
-                // Generate optimization recommendations
+
                 let recommendations = self.generate_recommendations().await?;
-                
-                // Apply best recommendations
+
                 self.apply_optimizations(&recommendations).await?;
-                
-                // Learn from results
+
                 self.learn_from_results().await?;
             }
         }
     }
 
-    /// Collect current performance metrics
     async fn collect_performance_sample(&self) -> BearDogResult<PerformanceSample> {
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| BearDogError::system(e.to_string()))?.as_secs();
-        
-        // Simulate metric collection (in real implementation, these would be actual system metrics)
+
         Ok(PerformanceSample {
             timestamp,
             cpu_usage: self.get_cpu_usage().await?,
@@ -220,15 +172,13 @@ impl AIOptimizationEngine {
         })
     }
 
-    /// Update machine learning models with new data
     async fn update_models(&self, sample: &PerformanceSample) -> BearDogResult<()> {
-        // Update performance model
+
         {
             let mut model = self.performance_model.write().await;
             model.update_with_sample(sample)?;
         }
 
-        // Update resource predictor
         {
             let mut predictor = self.resource_predictor.lock().map_err(|e| {
                 BearDogError::internal(format!("Failed to lock resource predictor: {e}"))
@@ -236,7 +186,6 @@ impl AIOptimizationEngine {
             predictor.add_sample(sample)?;
         }
 
-        // Update neural network
         {
             let mut network = self.neural_network.lock().map_err(|e| {
                 BearDogError::internal(format!("Failed to lock neural network: {e}"))
@@ -247,23 +196,18 @@ impl AIOptimizationEngine {
 
     }
 
-    /// Generate AI-powered optimization recommendations
     async fn generate_recommendations(&self) -> BearDogResult<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
 
-        // Get current performance predictions
         let predicted_metrics = self.predict_future_performance().await?;
-        
-        // Analyze performance bottlenecks
+
         let bottlenecks = self.identify_bottlenecks(&predicted_metrics).await?;
-        
-        // Generate targeted recommendations for each bottleneck
+
         for bottleneck in bottlenecks {
             let recommendation = self.create_recommendation_for_bottleneck(&bottleneck).await?;
             recommendations.push(recommendation);
         }
 
-        // Sort by priority and confidence
         recommendations.sort_by(|a, b| {
             a.priority.cmp(&b.priority).reverse()
                 .then(a.confidence.partial_cmp(&b.confidence).unwrap_or(std::cmp::Ordering::Equal).reverse())
@@ -272,7 +216,6 @@ impl AIOptimizationEngine {
         Ok(recommendations)
     }
 
-    /// Apply optimization recommendations
     async fn apply_optimizations(&self, recommendations: &[OptimizationRecommendation]) -> BearDogResult<()> {
         for recommendation in recommendations.iter().take(3) { // Apply top 3 recommendations
             if recommendation.confidence > 0.7 { // Only apply high-confidence recommendations
@@ -282,13 +225,11 @@ impl AIOptimizationEngine {
         Ok(())
     }
 
-    /// Learn from optimization results
     async fn learn_from_results(&self) -> BearDogResult<()> {
         let mut history = self.optimization_history.lock().map_err(|e| {
             BearDogError::internal(format!("Failed to lock optimization history: {e}"))
         })?;
 
-        // Analyze recent optimization results
         let recent_actions: Vec<_> = history.optimization_actions
             .iter()
             .rev()
@@ -298,9 +239,9 @@ impl AIOptimizationEngine {
 
         for action in recent_actions {
             if let Some(actual_improvement) = action.actual_improvement {
-                // Update success rates
+
                 let success_rate = history.success_rates
-                    .entry(format!("{:?}", action.action_type))
+                    .entry(format_args!("{:?}", action.action_type).to_string())
                     .or_insert(0.5);
                 
                 let improvement_factor = if actual_improvement > 0.0 { 1.1 } else { 0.9 };
@@ -310,7 +251,6 @@ impl AIOptimizationEngine {
         Ok(())
     }
 
-    /// Predict future performance metrics
     async fn predict_future_performance(&self) -> BearDogResult<PerformanceSample> {
         let predictor = self.resource_predictor.lock().map_err(|e| {
             BearDogError::internal(format!("Failed to lock resource predictor: {e}"))
@@ -319,7 +259,6 @@ impl AIOptimizationEngine {
         predictor.predict_next_sample()
     }
 
-    /// Identify performance bottlenecks
     async fn identify_bottlenecks(&self, metrics: &PerformanceSample) -> BearDogResult<Vec<String>> {
         let mut bottlenecks = Vec::new();
 
@@ -342,7 +281,6 @@ impl AIOptimizationEngine {
         Ok(bottlenecks)
     }
 
-    /// Create optimization recommendation for specific bottleneck
     async fn create_recommendation_for_bottleneck(&self, bottleneck: &str) -> BearDogResult<OptimizationRecommendation> {
         match bottleneck {
             "high_cpu_usage" => Ok(OptimizationRecommendation {
@@ -373,18 +311,16 @@ impl AIOptimizationEngine {
                 optimization_type: OptimizationType::CacheOptimization,
                 confidence: 0.60,
                 expected_improvement: 0.10,
-                parameters: HashMap::new(),
+                parameters: HashMap::with_capacity(16),
                 reasoning: "General performance optimization".to_string(),
                 priority: RecommendationPriority::Medium,
             }),
         }
     }
 
-    /// Execute a specific optimization
     async fn execute_optimization(&self, recommendation: &OptimizationRecommendation) -> BearDogResult<()> {
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| BearDogError::system(e.to_string()))?.as_secs();
-        
-        // Create optimization action record
+
         let action = OptimizationAction {
             timestamp,
             action_type: recommendation.optimization_type.clone(),
@@ -394,7 +330,6 @@ impl AIOptimizationEngine {
             success: None,
         };
 
-        // Record the action
         {
             let mut history = self.optimization_history.lock().map_err(|e| {
                 BearDogError::internal(format!("Failed to lock optimization history: {e}"))
@@ -402,20 +337,19 @@ impl AIOptimizationEngine {
             history.add_action(action);
         }
 
-        // Simulate optimization execution (in real implementation, this would apply actual optimizations)
         match recommendation.optimization_type {
             OptimizationType::ThreadPoolOptimization => {
-                // Adjust thread pool size
+
                 println!("AI: Optimizing thread pool size to improve CPU utilization");
                 Ok(())
             },
             OptimizationType::SIMDOptimization => {
-                // Enable SIMD acceleration
+
                 println!("AI: Enabling SIMD acceleration for cryptographic operations");
                 Ok(())
             },
             OptimizationType::MemoryOptimization => {
-                // Optimize memory allocation
+
                 println!("AI: Optimizing memory allocation strategy");
                 Ok(())
             },
@@ -427,7 +361,6 @@ impl AIOptimizationEngine {
 
     }
 
-    /// Get AI optimization statistics
     pub async fn get_stats(&self) -> BearDogResult<AIOptimizationStats> {
         let history = self.optimization_history.lock().map_err(|e| {
             BearDogError::internal(format!("Failed to lock optimization history: {e}"))
@@ -457,7 +390,6 @@ impl AIOptimizationEngine {
         })
     }
 
-    // Helper methods for metric collection (simulated)
     async fn get_cpu_usage(&self) -> BearDogResult<f64> {
         Ok(0.45 + (rand::random::<f64>() - 0.5) * 0.2) // Simulated CPU usage
     }
@@ -487,7 +419,6 @@ impl AIOptimizationEngine {
     }
 }
 
-// Implementation of supporting structures
 impl PerformanceModel {
     fn new() -> Self {
         Self {
@@ -495,7 +426,7 @@ impl PerformanceModel {
             memory_usage_weights: vec![1.0; 10],
             network_latency_weights: vec![1.0; 10],
             crypto_performance_weights: vec![1.0; 10],
-            confidence_scores: HashMap::new(),
+            confidence_scores: HashMap::with_capacity(16),
             last_updated: SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
     beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
@@ -504,7 +435,7 @@ impl PerformanceModel {
     }
 
     fn update_with_sample(&mut self, sample: &PerformanceSample) -> BearDogResult<()> {
-        // Update model weights based on sample (simplified)
+
         self.confidence_scores.insert("cpu".to_string(), 0.85);
         self.confidence_scores.insert("memory".to_string(), 0.80);
         self.confidence_scores.insert("network".to_string(), 0.75);
@@ -526,7 +457,7 @@ impl ResourcePredictor {
     }
 
     fn add_sample(&mut self, sample: &PerformanceSample) -> BearDogResult<()> {
-        // Add to history queues, maintaining window size
+
         if self.cpu_history.len() >= self.prediction_window {
             self.cpu_history.pop_front();
         }
@@ -547,7 +478,6 @@ impl ResourcePredictor {
     fn predict_next_sample(&self) -> BearDogResult<PerformanceSample> {
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| BearDogError::system(e.to_string()))?.as_secs() + 60; // Predict 1 minute ahead
 
-        // Simple linear regression prediction (in real implementation, use more sophisticated models)
         let predicted_cpu = self.predict_linear_trend(&self.cpu_history);
         let predicted_memory = self.predict_linear_trend(&self.memory_history);
         let predicted_network = self.predict_linear_trend(&self.network_history);
@@ -586,7 +516,7 @@ impl OptimizationHistory {
     fn new(max_size: usize) -> Self {
         Self {
             optimization_actions: VecDeque::with_capacity(max_size),
-            success_rates: HashMap::new(),
+            success_rates: HashMap::with_capacity(16),
             max_history_size: max_size,
         }
     }
@@ -604,7 +534,6 @@ impl SimpleNeuralNetwork {
         let mut weights_ih = vec![vec![0.0; hidden_size]; input_size];
         let mut weights_ho = vec![vec![0.0; output_size]; hidden_size];
 
-        // Initialize weights randomly
         for i in 0..input_size {
             for j in 0..hidden_size {
                 weights_ih[i][j] = (rand::random::<f64>() - 0.5) * 2.0;
@@ -627,7 +556,7 @@ impl SimpleNeuralNetwork {
     }
 
     fn train_with_sample(&mut self, sample: &PerformanceSample) -> BearDogResult<()> {
-        // Convert sample to input vector
+
         self.input_layer = vec![
             sample.cpu_usage,
             sample.memory_usage,
@@ -639,7 +568,6 @@ impl SimpleNeuralNetwork {
             (sample.timestamp % 86400) as f64 / 86400.0, // Time of day normalized
         ];
 
-        // Forward pass (simplified)
         for (j, hidden_neuron) in self.hidden_layer.iter_mut().enumerate() {
             *hidden_neuron = 0.0;
             for (i, &input) in self.input_layer.iter().enumerate() {
@@ -663,23 +591,16 @@ impl SimpleNeuralNetwork {
 
     }
 
-    /// Static sigmoid activation function to avoid borrowing conflicts
     fn sigmoid_static(x: f64) -> f64 {
         1.0 / (1.0 + (-x).exp())
     }
 }
 
-
-
-
-
-/// Benchmark AI optimization performance
 pub async fn benchmark_ai_optimization() -> BearDogResult<()> {
             let engine = AIOptimizationEngine::new(Duration::from_secs(60))?;
     
     let start = Instant::now();
-    
-    // Simulate optimization cycle
+
     let sample = PerformanceSample {
         timestamp: SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| BearDogError::system(e.to_string()))?.as_secs(),
         cpu_usage: 0.75,
@@ -715,11 +636,11 @@ mod tests {
     async fn test_ai_optimization_engine_creation() -> Result<(), Box<dyn std::error::Error>> {
         let engine = AIOptimizationEngine::new(Duration::from_secs(30)).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         let stats = engine.get_stats().await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
         assert_eq!(stats.total_optimizations, 0);
@@ -730,11 +651,11 @@ mod tests {
     async fn test_performance_sample_collection() -> Result<(), Box<dyn std::error::Error>> {
         let engine = AIOptimizationEngine::new(Duration::from_secs(30)).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         let sample = engine.collect_performance_sample().await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
         assert!(sample.cpu_usage >= 0.0 && sample.cpu_usage <= 1.0);
@@ -746,14 +667,13 @@ mod tests {
     async fn test_recommendation_generation() -> Result<(), Box<dyn std::error::Error>> {
         let engine = AIOptimizationEngine::new(Duration::from_secs(30)).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         let recommendations = engine.generate_recommendations().await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
-        
-        // Should generate at least some recommendations
+
         assert!(!recommendations.is_empty());
         
         for rec in &recommendations {
@@ -766,7 +686,7 @@ mod tests {
     fn test_neural_network_creation() -> Result<(), Box<dyn std::error::Error>> {
         let network = SimpleNeuralNetwork::new(8, 16, 4).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
         assert_eq!(network.input_layer.len(), 8);
@@ -779,7 +699,7 @@ mod tests {
     fn test_resource_predictor() -> Result<(), Box<dyn std::error::Error>> {
         let mut predictor = ResourcePredictor::new(10).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
         let sample = PerformanceSample {
@@ -795,11 +715,11 @@ mod tests {
         
         predictor.add_sample(&sample).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         let prediction = predictor.predict_next_sample().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         
         assert!(prediction.timestamp > sample.timestamp);

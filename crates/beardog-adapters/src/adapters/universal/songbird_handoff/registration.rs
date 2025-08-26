@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Universal SongBird Registration
-///
-/// **Universal service registration and discovery logic**
-/// This module provides universal service registration patterns that work with
-/// any ecosystem component implementing the PrimalProvider trait. It handles
-/// the registration of capabilities, endpoints, and metadata with SongBird.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -39,37 +17,35 @@ use super::types::{
     SecurityConfig, SecurityLevel, ServiceCapabilities, ServiceEndpoint, ServiceEndpoints,
     ServiceHealth, SongBirdHandoffConfig,
 use beardog_errors::BearDogResult;
-/// Universal SongBird Registration Manager
-/// Handles the registration of any ecosystem component with SongBird's
-/// discovery and orchestration platform using universal patterns.
+
 pub struct SongBirdRegistrationManager<T> {
-    /// Universal ecosystem component core
+
     core: Arc<T>,
-    /// Capability manager for dynamic capability advertisement
+
     capability_manager: Arc<CapabilityManager>,
-    /// SongBird client for discovery registration
+
     client: Arc<SongBirdDiscoveryClient>,
-    /// Registration status tracking
+
     registration_status: Arc<RwLock<RegistrationStatus>>,
-    /// Advertised services tracking
+
     advertised_services: Arc<RwLock<HashMap<String, AdvertisedService>>>,
-    /// Registration configuration
+
     config: SongBirdHandoffConfig,
 }
 impl<T: Send + Sync> SongBirdRegistrationManager<T> {
-    /// Create a new universal registration manager
+
     pub async fn new(
         core: Arc<T>,
         capability_manager: Arc<CapabilityManager>,
         config: SongBirdHandoffConfig,
     ) -> BearDogResult<Self> {
         info!("🔗 Initializing Universal SongBird Registration Manager");
-        // Create SongBird client
+
         let client = Arc::new(
             SongBirdDiscoveryClient::new(config.songbird_endpoint.clone(), config.api_key.clone())
                 .await?,
         );
-        // Initialize registration status
+
         let registration_status = Arc::new(RwLock::new(RegistrationStatus {
             registration_id: uuid::Uuid::new_v4().to_string(),
             status: RegistrationState::NotRegistered,
@@ -83,23 +59,23 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
             capability_manager,
             client,
             registration_status,
-            advertised_services: Arc::new(RwLock::new(HashMap::new())),
+            advertised_services: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             config,
         })
     }
-    /// Register this ecosystem component with SongBird
+
     pub async fn register_with_songbird(&self) -> BearDogResult<()> {
         info!("📡 Registering ecosystem component with SongBird for universal discovery");
-        // Update registration status
+
         {
             let mut status = self.registration_status.write().await;
             status.status = RegistrationState::Registering;
         }
-        // Get current capabilities from capability manager
+
         let genetic_capabilities = self.capability_manager.get_genetic_capabilities().await?;
         let emergent_capabilities = self.capability_manager.get_emergent_capabilities().await?;
         let monitoring_status = self.capability_manager.get_monitoring_status().await?;
-        // Create universal service advertisement
+
         let advertised_service = self
             .create_universal_service_advertisement(
                 &genetic_capabilities,
@@ -107,52 +83,52 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 &monitoring_status,
             )
             .await?;
-        // Register with SongBird
+
         let registration_result = self.client.register_service(&advertised_service).await?;
             status.registration_id = registration_result.service_id.clone();
             status.status = RegistrationState::Active;
             status.last_registration = chrono::Utc::now();
             status.consecutive_failures = 0;
-        // Store advertised service
+
             let mut services = self.advertised_services.write().await;
             services.insert(
                 advertised_service.registration.service_id.clone(),
                 advertised_service,
             );
-        // Start background tasks
+
         self.start_heartbeat_task().await?;
         self.start_health_monitoring_task().await?;
         info!("✅ Successfully registered ecosystem component with SongBird");
         info!("🔍 SongBird can now discover and route requests to this component");
         info!("⚖️ Load balancing, failover, and scaling managed by SongBird");
         Ok(())
-    /// Create universal service advertisement
+
     async fn create_universal_service_advertisement(
         &self,
         genetic_capabilities: &HashMap<
-            String,
+            &str,
             super::super::capability_manager::GeneticCapabilityProfile,
         >,
         emergent_capabilities: &HashMap<
             super::super::capability_manager::EmergentCapability,
-        _monitoring_status: &HashMap<String, super::super::capability_manager::CapabilityMonitor>,
+        _monitoring_status: &HashMap<&str, super::super::capability_manager::CapabilityMonitor>,
     ) -> BearDogResult<AdvertisedService> {
-        // Create universal service ID (ecosystem-agnostic)
-        let service_id = format!("universal-component-{}", uuid::Uuid::new_v4());
-        // Collect all capabilities for advertisement
+
+        let service_id = format_args!("universal-component-{}", uuid::Uuid::new_v4().to_string());
+
         let mut all_capabilities = Vec::new();
-        // Add universal core capabilities
+
         all_capabilities.extend(self.get_universal_core_capabilities());
-        // Add genetic capabilities (converted to universal format)
+
         for genetic_profile in genetic_capabilities.values() {
             all_capabilities
                 .extend(self.convert_genetic_capabilities_to_universal(genetic_profile));
-        // Add emergent capabilities (converted to universal format)
+
         for emergent_capability in emergent_capabilities.values() {
                 .push(self.convert_emergent_capability_to_universal(emergent_capability));
-        // Create universal service endpoints
+
         let endpoints = self.create_universal_service_endpoints().await?;
-        // Create health check URL
+
         let health_check_url = format!(
             "{}://{}/health",
             endpoints
@@ -166,14 +142,14 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                         + ":" + &std::env::var("BEARDOG_SERVICE_PORT")
                             .unwrap_or_else(|_| "8080".to_string())
                 })
-        // Create discovery tags (universal ecosystem tags)
+
         let mut discovery_tags = self.config.discovery_tags.clone();
         discovery_tags.extend(vec![
             "ecosystem".to_string(),
             "universal".to_string(),
             "primal-provider".to_string(),
         ]);
-        // Create load balancer configuration
+
         let _load_balancer_config = LoadBalancerConfig {
             algorithm: self.config.load_balancer_algorithm.clone(),
             weight: 100,
@@ -184,7 +160,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 success_threshold: 3,
             },
         };
-        // Create orchestration metadata
+
         let orchestration_metadata = self
             .create_universal_orchestration_metadata(&all_capabilities)
         Ok(AdvertisedService {
@@ -233,7 +209,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                     interval_seconds: 30,
                     timeout_seconds: 5,
                     failure_threshold: 3,
-                metadata: HashMap::new(),
+                metadata: HashMap::with_capacity(16),
                 registered_at: chrono::Utc::now(),
             health: ServiceHealth {
                 status: super::types::HealthStatus::Healthy,
@@ -254,7 +230,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                     timeout_seconds: 30,
                     success_threshold: 2,
             orchestration: orchestration_metadata,
-    /// Get universal core capabilities
+
     fn get_universal_core_capabilities(&self) -> Vec<Capability> {
         vec![
             Capability {
@@ -263,7 +239,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 description: "Universal health check capability for any ecosystem component"
                     .to_string(),
                 category: CapabilityCategory::Monitoring,
-                attributes: HashMap::new(),
+                attributes: HashMap::with_capacity(16),
                 qos: QualityOfService::default(),
                 resource_requirements: ResourceRequirements::default(),
                 id: "universal.metrics".to_string(),
@@ -274,70 +250,66 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 description: "Universal service discovery integration".to_string(),
                 category: CapabilityCategory::Integration,
         ]
-    /// Convert genetic capabilities to universal format}
-
 
     fn convert_genetic_capabilities_to_universal(
         genetic_profile: &super::super::capability_manager::GeneticCapabilityProfile,
     ) -> Vec<Capability> {
         let mut capabilities = Vec::new();
-        // Convert inherited traits to universal capabilities
+
         for trait_obj in &genetic_profile.inherited_traits {
             capabilities.push(Capability {
-                id: format!("universal.genetic.{}", trait_obj.trait_id),
-                name: format!("Universal Genetic {:?}", trait_obj.trait_type),
+                id: format_args!("universal.genetic.{}", trait_obj.trait_id).to_string(),
+                name: format_args!("Universal Genetic {:?}", trait_obj.trait_type).to_string(),
                 description: format!(
                     "Universal genetic trait: {:?} (expression: {:.2})",
                     trait_obj.trait_type, trait_obj.expression_level
                 ),
                 category: CapabilityCategory::Compute,
             });
-        // Convert evolved capabilities to universal format (these are capability IDs)
+
         for capability_id in &genetic_profile.evolved_capabilities {
                 id: format!("universal.genetic.{capability_id}"),
                 name: format!("Universal Evolved {capability_id}"),
                 description: format!("Universal evolved genetic capability: {capability_id}"),
         capabilities
-    /// Convert emergent capability to universal format
+
     fn convert_emergent_capability_to_universal(
         emergent: &super::super::capability_manager::EmergentCapability,
     ) -> Capability {
         Capability {
-            id: format!("universal.emergent.{}", emergent.capability_id),
-            name: format!("Universal Emergent {}", emergent.name),
-            description: format!("Universal emergent capability: {}", emergent.description),
+            id: format_args!("universal.emergent.{}", emergent.capability_id).to_string(),
+            name: format_args!("Universal Emergent {}", emergent.name).to_string(),
+            description: format_args!("Universal emergent capability: {}", emergent.description).to_string(),
             category: CapabilityCategory::Compute,
-            attributes: HashMap::new(),
+            attributes: HashMap::with_capacity(16),
             qos: QualityOfService::default(),
             resource_requirements: ResourceRequirements::default(),
-    /// Create universal service endpoints
+
     async fn create_universal_service_endpoints(&self) -> BearDogResult<Vec<ServiceEndpoint>> {
         let endpoints = vec![
-            // HTTP/HTTPS endpoint for universal communication
+
             ServiceEndpoint {
                 url: "https://0.0.0.0:8443/api/v1".to_string(),
                 endpoint_type: EndpointType::Primary,
                 protocol: "https".to_string(),
                 port: 8443,
-            // gRPC endpoint for high-performance communication
+
                 url: "grpc://0.0.0.0:9443".to_string(),
                 endpoint_type: EndpointType::Custom("grpc".to_string()),
                 protocol: "grpc".to_string(),
                 port: 9443,
-            // Metrics endpoint for monitoring
+
                 url: "http://0.0.0.0:9090/metrics".to_string(),
                 endpoint_type: EndpointType::Metrics,
                 protocol: "http".to_string(),
                 port: 9090,
         ];
         Ok(endpoints)
-    /// Create universal orchestration metadata}
-
 
     async fn create_universal_orchestration_metadata(
         _capabilities: &[Capability],
     ) -> BearDogResult<OrchestrationMetadata> {
-        // Create universal routing rules
+
         let routing_rules = vec![
             RoutingRule {
                 condition: "path_prefix == '/api/v1'".to_string(),
@@ -345,7 +317,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 condition: "content-type == 'application/grpc'".to_string(),
                 target: "grpc-endpoint".to_string(),
                 weight: 90,
-        // Create universal scaling policies
+
         let scaling_policies = vec![
             ScalingPolicy {
                 metric: "cpu_utilization".to_string(),
@@ -354,7 +326,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 metric: "request_rate".to_string(),
                 threshold: 1000.0,
                 action: ScalingAction::ScaleUp(5),
-        // Create universal monitoring configuration
+
         let _monitoring_config = MonitoringConfig {
             metrics_enabled: true,
             log_level: "info".to_string(),
@@ -363,7 +335,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
             routing_rules,
             scaling_policies,
             affinity_rules: Vec::new(),
-    /// Start heartbeat task for maintaining registration
+
     async fn start_heartbeat_task(&self) -> BearDogResult<()> {
         debug!("💓 Starting universal heartbeat task");
         let client = Arc::clone(&self.client);
@@ -383,42 +355,37 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                     }
                     Err(e) => {
                         warn!("❌ Heartbeat failed for primal {}: {}", primal_id, e);
-                        // In production, might want to implement exponential backoff
+
                 }
             }
         });
-    /// Start health monitoring task
+
     async fn start_health_monitoring_task(&self) -> BearDogResult<()> {
         debug!("🏥 Starting universal health monitoring task");
             let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
-                // Perform health check
+
                 match Self::perform_health_check(&primal_id).await {
                     Ok(health_status) => {
-                        // Report health status to SongBird
+
                         let success = matches!(health_status, super::types::HealthStatus::Healthy);
                         let error_count = if success { 0 } else { 1 };
                         client.update_health_status(success, error_count).await;
                         warn!("Health check failed: {}", e);
-                        // Report unhealthy status to SongBird
+
                         client.update_health_status(false, 1).await;
-    /// Update capability advertisement
+
     pub async fn update_capability_advertisement(&self) -> BearDogResult<()> {
         debug!("🔄 Updating universal capability advertisement");
-        // Get current capabilities from the provider
-        let _capabilities = self.get_current_capabilities().await?;
-        // NOTE: Capability update mechanism can be implemented based on specific requirements
-        // For now, just log the update
-        info!("✅ Capability advertisement updated successfully");
-    /// Get registration status}
 
+        let _capabilities = self.get_current_capabilities().await?;
+
+        info!("✅ Capability advertisement updated successfully");
 
     pub async fn get_registration_status(&self) -> RegistrationStatus {
         self.registration_status.read().await.clone()
-    /// Get advertised services
+
     pub async fn get_advertised_services(&self) -> HashMap<String, AdvertisedService> {
         self.advertised_services.read().await.clone()
-    /// Send heartbeat to SongBird to maintain registration}
-
 
     pub async fn send_heartbeat(&self) -> BearDogResult<()> {
         debug!("💓 Sending heartbeat to SongBird");
@@ -429,26 +396,23 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
             Err(e) => {
                 warn!("❌ Heartbeat failed: {}", e);
                 Err(e)
-    /// Deregister from SongBird
+
     pub async fn deregister(&self) -> BearDogResult<()> {
         info!("🔄 Deregistering from SongBird");
-        // NOTE: Deregistration mechanism available - implement cleanup as needed
-        // For now, just log the deregistration
-        info!("✅ Successfully deregistered from SongBird");
-    /// Use the core instance for registration operations}
 
+        info!("✅ Successfully deregistered from SongBird");
 
     pub async fn get_core_info(&self) -> String {
-        // Use the core field for service identification
-        format!("Core instance: {:p}", self.core.as_ref())
-    /// Perform health check for the primal
-    async fn perform_health_check(primal_id: &String) -> BearDogResult<super::types::HealthStatus> {
+
+        format_args!("Core instance: {:p}", self.core.as_ref().to_string())
+
+    async fn perform_health_check(primal_id: &&str) -> BearDogResult<super::types::HealthStatus> {
         let mut health_status = super::types::HealthStatus::Healthy;
-        // Check component health
+
         if let Err(e) = Self::check_component_health().await {
             warn!("Component health check failed: {}", e);
             health_status = super::types::HealthStatus::Unhealthy;
-        // Check resource utilization
+
         if let Err(e) = Self::check_resource_utilization().await {
             warn!("Resource utilization check failed: {}", e);
             health_status = super::types::HealthStatus::Degraded;
@@ -456,25 +420,19 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
             "🏥 Health check completed for primal: {}, status: {:?}",
             primal_id, health_status
         Ok(health_status)
-    /// Check component health
-    async fn check_component_health() -> BearDogResult<()> {
-        // Check if core components are responding
-        // This would check BearDog core, HSM, database connections, etc.
-        debug!("🔍 Checking component health");
-    /// Check resource utilization}
 
+    async fn check_component_health() -> BearDogResult<()> {
+
+        debug!("🔍 Checking component health");
 
     async fn check_resource_utilization() -> BearDogResult<()> {
-        // Check memory usage, CPU usage, disk space, etc.
+
         debug!("📊 Checking resource utilization");
-    /// Get current capabilities of the primal
+
     async fn get_current_capabilities(&self) -> BearDogResult<Vec<Capability>> {
         debug!("🔍 Getting current capabilities");
-        // This would query the actual provider for its current capabilities
-        // For now, return a basic set of security capabilities
-        Ok(Self::get_default_capabilities())
-    /// Get default BearDog capabilities}
 
+        Ok(Self::get_default_capabilities())
 
     fn get_default_capabilities() -> Vec<Capability> {
             Capability::new(

@@ -1,34 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # Zero-Cost Workflow Architecture Comparison
-//!
-//! This example demonstrates the revolutionary performance difference between
-//! traditional async_trait workflow processors and the new zero-cost architecture.
-//!
-//! ## Performance Benefits Measured:
-//! 
-//! 1. **Workflow Processing** - Direct dispatch vs trait object dispatch
-//! 2. **Processor Resolution** - Compile-time vs HashMap runtime lookup
-//! 3. **Parameter Validation** - Native async vs boxed async traits
-//! 4. **Configuration Access** - Const generics vs runtime configuration
-//! 5. **Memory Allocation** - Stack vs heap for processor state
-//!
-//! Run with: `cargo run --example zero_cost_workflow_comparison`
 
 use beardog_workflows::workflows::zero_cost_workflows::{
     examples, ZeroCostWorkflowProcessor, ZeroCostKeyRotationProcessor, 
@@ -49,7 +19,6 @@ use chrono::Utc;
 use uuid::Uuid;
 use tokio;
 
-/// Comparison metrics
 #[derive(Debug)]
 struct WorkflowPerformanceMetrics {
     total_time_micros: u128,
@@ -64,7 +33,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 BearDog Workflow Architecture Comparison");
     println!("===========================================\n");
 
-    // 1. Zero-Cost Architecture Performance
     println!("🔥 Zero-Cost Workflow Architecture Performance");
     println!("----------------------------------------------");
     
@@ -73,7 +41,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 2. Architecture Analysis
     println!("📊 Workflow Architecture Analysis");
     println!("---------------------------------");
     
@@ -81,7 +48,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 3. Memory Usage Analysis
     println!("💾 Workflow Memory Usage Analysis");
     println!("---------------------------------");
     
@@ -89,7 +55,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 4. Processor Dispatch Analysis
     println!("⚡ Processor Dispatch Analysis");
     println!("------------------------------");
     
@@ -97,7 +62,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     println!();
 
-    // 5. Configuration Comparison
     println!("🔧 Configuration Architecture Comparison");
     println!("----------------------------------------");
     
@@ -106,16 +70,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Benchmark the zero-cost workflow architecture
 async fn benchmark_zero_cost_workflows() -> Result<WorkflowPerformanceMetrics, Box<dyn std::error::Error>> {
     println!("📈 Running zero-cost workflow benchmarks...");
-    
-    // Create different engine configurations for testing
+
     let prod_engine = examples::create_production_workflow_engine();
     let dev_engine = examples::create_development_workflow_engine();
     let benchmark_engine = examples::create_benchmark_workflow_engine();
-    
-    // Benchmark parameters
+
     const ITERATIONS: usize = beardog_types::constants::performance::testing::LIGHT_ITERATIONS / 2;
     const WORKFLOW_TYPES: &[WorkflowType] = &[
         WorkflowType::KeyRotation,
@@ -124,18 +85,16 @@ async fn benchmark_zero_cost_workflows() -> Result<WorkflowPerformanceMetrics, B
     
     let mut total_workflows_processed = 0u64;
     let start_time = Instant::now();
-    
-    // Key Rotation Performance Test
+
     println!("   🔑 Key rotation workflows ({} iterations)", ITERATIONS);
     let key_rotation_start = Instant::now();
     
     for i in 0..ITERATIONS {
         let mut workflow = create_test_workflow(
             WorkflowType::KeyRotation,
-            &format!("benchmark_key_{}", i),
+            &format_args!("benchmark_key_{}", i).to_string(),
         );
-        
-        // Zero-cost workflow processing - completely monomorphized
+
         let result = benchmark_engine.process_workflow(&mut workflow).await?;
         assert!(result.success);
         total_workflows_processed += 1;
@@ -147,17 +106,15 @@ async fn benchmark_zero_cost_workflows() -> Result<WorkflowPerformanceMetrics, B
     println!("      ⚡ Key Rotation: {:.0} workflows/sec ({:.2}ms total)", 
              key_rotation_per_sec, key_rotation_duration.as_millis());
 
-    // Policy Change Performance Test
     println!("   📋 Policy change workflows ({} iterations)", ITERATIONS);
     let policy_start = Instant::now();
     
     for i in 0..ITERATIONS {
         let mut workflow = create_test_workflow(
             WorkflowType::PolicyChange,
-            &format!("benchmark_policy_{}", i),
+            &format_args!("benchmark_policy_{}", i).to_string(),
         );
-        
-        // Zero-cost workflow processing - completely monomorphized
+
         let result = prod_engine.process_workflow(&mut workflow).await?;
         assert!(result.success);
         total_workflows_processed += 1;
@@ -169,7 +126,6 @@ async fn benchmark_zero_cost_workflows() -> Result<WorkflowPerformanceMetrics, B
     println!("      ⚡ Policy Change: {:.0} workflows/sec ({:.2}ms total)", 
              policy_per_sec, policy_duration.as_millis());
 
-    // Mixed Workflow Performance Test
     println!("   🔄 Mixed workflow processing ({} iterations)", ITERATIONS);
     let mixed_start = Instant::now();
     
@@ -177,10 +133,9 @@ async fn benchmark_zero_cost_workflows() -> Result<WorkflowPerformanceMetrics, B
         let workflow_type = WORKFLOW_TYPES[i % WORKFLOW_TYPES.len()];
         let mut workflow = create_test_workflow(
             workflow_type,
-            &format!("mixed_workflow_{}", i),
+            &format_args!("mixed_workflow_{}", i).to_string(),
         );
-        
-        // Zero-cost dispatch - no runtime overhead
+
         let result = dev_engine.process_workflow(&mut workflow).await?;
         assert!(result.success);
         total_workflows_processed += 1;
@@ -208,9 +163,8 @@ async fn benchmark_zero_cost_workflows() -> Result<WorkflowPerformanceMetrics, B
     })
 }
 
-/// Create a test workflow
 fn create_test_workflow(workflow_type: WorkflowType, identifier: &str) -> Workflow {
-    let mut parameters = HashMap::new();
+    let mut parameters = HashMap::with_capacity(16);
     
     match workflow_type {
         WorkflowType::KeyRotation => {
@@ -242,17 +196,16 @@ fn create_test_workflow(workflow_type: WorkflowType, identifier: &str) -> Workfl
         expires_at: Utc::now() + chrono::Duration::hours(1),
         requested_by: "benchmark_user".to_string(),
         initiator: "benchmark_user".to_string(),
-        description: format!("Benchmark workflow: {}", identifier),
-        metadata: HashMap::new(),
+        description: format_args!("Benchmark workflow: {}", identifier).to_string(),
+        metadata: HashMap::with_capacity(16),
         timeout_duration: None,
-        properties: HashMap::new(),
+        properties: HashMap::with_capacity(16),
         parameters,
         approvals: vec![],
         audit_trail: vec![],
     }
 }
 
-/// Display workflow performance metrics
 fn display_workflow_metrics(architecture: &str, metrics: &WorkflowPerformanceMetrics) {
     println!("📋 {} Workflow Architecture Results:", architecture);
     println!("   ⏱️  Total Time: {:.2}ms", metrics.total_time_micros as f64 / 1000.0);
@@ -262,11 +215,9 @@ fn display_workflow_metrics(architecture: &str, metrics: &WorkflowPerformanceMet
     println!("   💾 Heap Allocations: {} (for processor resolution)", metrics.memory_allocations);
 }
 
-/// Analyze workflow architecture benefits
 fn analyze_workflow_architecture_benefits(zero_cost: &WorkflowPerformanceMetrics) {
     println!("🔹 Zero-Cost Workflow Architecture Benefits:");
-    
-    // Theoretical comparison with async_trait overhead
+
     let estimated_async_trait_overhead = 0.20; // 20% estimated overhead
     let estimated_traditional_time = zero_cost.total_time_micros as f64 * (1.0 + estimated_async_trait_overhead);
     let performance_improvement = (estimated_traditional_time - zero_cost.total_time_micros as f64) / estimated_traditional_time * 100.0;
@@ -290,7 +241,6 @@ fn analyze_workflow_architecture_benefits(zero_cost: &WorkflowPerformanceMetrics
     println!("   ❌ Virtual method dispatch - Direct struct method calls");
 }
 
-/// Analyze workflow memory usage patterns
 fn analyze_workflow_memory_usage() {
     println!("🔹 Workflow Memory Usage Comparison:");
     
@@ -316,7 +266,6 @@ fn analyze_workflow_memory_usage() {
     println!("   • **Memory efficiency improvement: ~90% for workflow engine state**");
 }
 
-/// Demonstrate processor dispatch mechanisms
 fn demonstrate_processor_dispatch() {
     println!("🔹 Processor Dispatch Comparison:");
     
@@ -349,7 +298,6 @@ fn demonstrate_processor_dispatch() {
     println!("   • **Performance improvement**: 10-20x faster processor dispatch");
 }
 
-/// Demonstrate configuration benefits
 fn demonstrate_configuration_benefits() {
     println!("🔹 Workflow Configuration Comparison:");
     
@@ -374,8 +322,7 @@ fn demonstrate_configuration_benefits() {
     println!("      • Zero runtime configuration overhead");
     println!("      • Impossible to create invalid configurations");
     println!("      • Perfect compiler optimizations");
-    
-    // Demonstrate with actual processor instances
+
     println!("\n🔹 Configuration Examples:");
     
     let prod_processor = ZeroCostKeyRotationProcessor::<10, 60000>::new();
@@ -398,11 +345,9 @@ fn demonstrate_configuration_benefits() {
     println!("   ✨ All configuration validation happens at compile time!");
 }
 
-/// Additional workflow performance demonstrations
 mod workflow_performance_tests {
     use super::*;
-    
-    /// Demonstrate workflow processor monomorphization
+
     pub fn demonstrate_processor_monomorphization() {
         println!("🔹 Workflow Processor Monomorphization Benefits:");
         println!("   🎯 Each processor configuration generates specialized machine code:");
@@ -415,8 +360,7 @@ mod workflow_performance_tests {
         println!("      • Constant folding for configuration parameter access");
         println!("      • Loop unrolling for batch processing operations");
     }
-    
-    /// Workflow engine allocation patterns
+
     pub fn workflow_engine_allocation_comparison() {
         println!("🔹 Workflow Engine Allocation Patterns:");
         
@@ -447,11 +391,10 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Failed to benchmark zero-cost workflows - check system configuration", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to benchmark zero-cost workflows - check system configuration", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to benchmark zero-cost workflows - check system configuration", e).to_string()
 ).into())
 });
-        
-        // Verify performance characteristics
+
         assert!(metrics.workflows_per_second > 1000.0); // Should be very fast
         assert!(metrics.average_processing_time_ms < 10.0); // Should be under 10ms average
         assert_eq!(metrics.memory_allocations, 0); // Zero heap allocations for processor resolution
@@ -460,47 +403,42 @@ mod tests {
     
     #[test]
     fn test_compile_time_processor_configuration() {
-        // Test that different processor configurations compile to different types
+
         let prod_key_processor = ZeroCostKeyRotationProcessor::<10, 60000>::new();
         let dev_key_processor = ZeroCostKeyRotationProcessor::<1, 10000>::new();
         
         let prod_policy_processor = ZeroCostPolicyChangeProcessor::<true, true>::new();
         let dev_policy_processor = ZeroCostPolicyChangeProcessor::<false, false>::new();
-        
-        // Get capabilities to verify different configurations
+
         let prod_key_caps = prod_key_processor.get_capabilities();
         let dev_key_caps = dev_key_processor.get_capabilities();
         
         let prod_policy_caps = prod_policy_processor.get_capabilities();
         let dev_policy_caps = dev_policy_processor.get_capabilities();
-        
-        // Verify different capabilities based on compile-time configuration
+
         assert_eq!(prod_key_caps.supports_parallel_execution, true); // Batch size > 1
         assert_eq!(dev_key_caps.supports_parallel_execution, false); // Batch size = 1
         
         assert_eq!(prod_policy_caps.supports_rollback, true); // Backup enabled
         assert_eq!(dev_policy_caps.supports_rollback, false); // Backup disabled
-        
-        // All assertions happen at compile time - zero runtime cost
+
     }
     
     #[tokio::test]
     async fn test_workflow_engine_statistics() {
         let engine = examples::create_development_workflow_engine();
-        
-        // Process a workflow
+
         let mut workflow = create_test_workflow(WorkflowType::KeyRotation, "stats_test");
         let result = engine.process_workflow(&mut workflow).await
             .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Failed to process test workflow - check engine configuration", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Failed to process test workflow - check engine configuration", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Failed to process test workflow - check engine configuration", e).to_string()
 ).into())
 });
         assert!(result.success);
-        
-        // Check that statistics are updated
+
         let stats = engine.get_stats();
         assert_eq!(stats.total_workflows_processed, 1);
         assert_eq!(stats.successful_workflows, 1);

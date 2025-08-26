@@ -1,29 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Cryptographic Utilities for BearDog Security
-///
-/// **PRODUCTION-READY CRYPTOGRAPHIC OPERATIONS** ✅
-/// This module provides secure cryptographic operations including:
-/// - Ed25519 signature generation and verification
-/// - Secure random nonce generation  
-/// - Key derivation functions (PBKDF2)
-/// - AES-GCM encryption/decryption
-/// - Password hashing with Argon2
 
 use beardog_errors::{BearDogError, BearDogResult};
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
@@ -40,11 +15,10 @@ use sha2::{Sha256, Digest};
 use ring::pbkdf2;
 use std::num::NonZeroU32;
 
-/// Cryptographic utilities for BearDog security operations
 pub struct BearDogCrypto;
 
 impl BearDogCrypto {
-    /// Generate Ed25519 keypair
+
     pub fn generate_ed25519_keypair() -> BearDogResult<(Vec<u8>, Vec<u8>)> {
         let signing_key = SigningKey::generate(&mut OsRng);
         let verifying_key = signing_key.verifying_key();
@@ -55,7 +29,6 @@ impl BearDogCrypto {
         ))
     }
 
-    /// Sign data with Ed25519 private key
     pub fn sign_ed25519(private_key: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
         if private_key.len() != 32 {
             return Err(BearDogError::invalid_input("Ed25519 private key must be 32 bytes"));
@@ -70,7 +43,6 @@ impl BearDogCrypto {
         Ok(signature.to_bytes().to_vec())
     }
 
-    /// Verify Ed25519 signature - PRODUCTION IMPLEMENTATION ✅
     pub fn verify_ed25519_signature(public_key: &[u8], data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
         if public_key.len() != 32 {
             return Err(BearDogError::invalid_input("Ed25519 public key must be 32 bytes"));
@@ -85,7 +57,7 @@ impl BearDogCrypto {
             .map_err(|_| BearDogError::invalid_input("Invalid signature format"))?;
 
         let verifying_key = VerifyingKey::from_bytes(&public_key_bytes)
-            .map_err(|e| BearDogError::encryption("crypto", format!("Invalid public key: {}", e)))?;
+            .map_err(|e| BearDogError::encryption("crypto", format_args!("Invalid public key: {}", e).to_string()))?;
         let sig = Signature::from_bytes(&signature_bytes);
 
         match verifying_key.verify(data, &sig) {
@@ -94,19 +66,16 @@ impl BearDogCrypto {
         }
     }
 
-    /// Generate secure random bytes - PRODUCTION IMPLEMENTATION ✅
     pub fn generate_secure_random(size: usize) -> BearDogResult<Vec<u8>> {
         let mut bytes = vec![0u8; size];
         thread_rng().fill_bytes(&mut bytes);
         Ok(bytes)
     }
 
-    /// Generate secure random nonce - PRODUCTION IMPLEMENTATION ✅
     pub fn generate_secure_nonce(size: usize) -> BearDogResult<Vec<u8>> {
         Self::generate_secure_random(size)
     }
 
-    /// Derive key using PBKDF2
     pub fn derive_key_pbkdf2(password: &[u8], salt: &[u8], iterations: u32, key_length: usize) -> BearDogResult<Vec<u8>> {
         let mut key = vec![0u8; key_length];
         let iterations = NonZeroU32::new(iterations)
@@ -123,7 +92,6 @@ impl BearDogCrypto {
         Ok(key)
     }
 
-    /// Encrypt data using AES-256-GCM
     pub fn encrypt_aes_gcm(key: &[u8], plaintext: &[u8], nonce_opt: Option<&[u8]>) -> BearDogResult<(Vec<u8>, Vec<u8>)> {
         if key.len() != 32 {
             return Err(BearDogError::invalid_input("AES-256 key must be 32 bytes"));
@@ -144,12 +112,11 @@ impl BearDogCrypto {
         let nonce = Nonce::from_slice(&nonce_bytes);
         
         let ciphertext = cipher.encrypt(nonce, plaintext)
-            .map_err(|e| BearDogError::encryption("aes-gcm", format!("Encryption failed: {}", e)))?;
+            .map_err(|e| BearDogError::encryption("aes-gcm", format_args!("Encryption failed: {}", e).to_string()))?;
 
         Ok((ciphertext, nonce_bytes))
     }
 
-    /// Decrypt data using AES-256-GCM
     pub fn decrypt_aes_gcm(key: &[u8], ciphertext: &[u8], nonce: &[u8]) -> BearDogResult<Vec<u8>> {
         if key.len() != 32 {
             return Err(BearDogError::invalid_input("AES-256 key must be 32 bytes"));
@@ -163,26 +130,24 @@ impl BearDogCrypto {
         let nonce = Nonce::from_slice(nonce);
 
         let plaintext = cipher.decrypt(nonce, ciphertext)
-            .map_err(|e| BearDogError::encryption("aes-gcm", format!("Decryption failed: {}", e)))?;
+            .map_err(|e| BearDogError::encryption("aes-gcm", format_args!("Decryption failed: {}", e).to_string()))?;
 
         Ok(plaintext)
     }
 
-    /// Hash password using Argon2
     pub fn hash_password_argon2(password: &str) -> BearDogResult<String> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
         
         let password_hash = argon2.hash_password(password.as_bytes(), &salt)
-            .map_err(|e| BearDogError::encryption("argon2", format!("Password hashing failed: {}", e)))?;
+            .map_err(|e| BearDogError::encryption("argon2", format_args!("Password hashing failed: {}", e).to_string()))?;
 
         Ok(password_hash.to_string())
     }
 
-    /// Verify password using Argon2
     pub fn verify_password_argon2(password: &str, hash: &str) -> BearDogResult<bool> {
         let parsed_hash = PasswordHash::new(hash)
-            .map_err(|e| BearDogError::encryption("argon2", format!("Invalid password hash: {}", e)))?;
+            .map_err(|e| BearDogError::encryption("argon2", format_args!("Invalid password hash: {}", e).to_string()))?;
         
         let argon2 = Argon2::default();
         
@@ -192,7 +157,6 @@ impl BearDogCrypto {
         }
     }
 
-    /// Generate SHA-256 hash
     pub fn sha256_hash(data: &[u8]) -> String {
         let mut hasher = Sha256::new();
         hasher.update(data);
@@ -213,8 +177,7 @@ mod tests {
         let is_valid = BearDogCrypto::verify_ed25519_signature(&public_key, message, &signature)?;
         
         assert!(is_valid, "Valid signature should verify");
-        
-        // Test with wrong message
+
         let wrong_message = b"wrong message";
         let is_invalid = BearDogCrypto::verify_ed25519_signature(&public_key, wrong_message, &signature)?;
         assert!(!is_invalid, "Invalid signature should not verify");

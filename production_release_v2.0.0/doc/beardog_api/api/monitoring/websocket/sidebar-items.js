@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["websocket_alerts","websocket_dashboard","websocket_logs","websocket_metrics"]};

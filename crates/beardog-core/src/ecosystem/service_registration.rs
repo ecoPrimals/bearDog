@@ -1,25 +1,4 @@
-// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Universal Service Registration
-///
-/// This module implements `BearDog`'s Universal Service Registration for the
-/// ecoPrimals ecosystem, enabling dynamic capability declaration and service discovery.
 
 use crate::{BearDogError, BearDogResult};
 use chrono::{DateTime, Duration, Utc};
@@ -27,140 +6,132 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
-/// Universal Service Registration for `BearDog`
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalServiceRegistration {
-    /// Unique service identifier
+
     pub service_id: Uuid,
-    /// Service metadata
+
     pub metadata: ServiceMetadata,
-    /// Service capabilities
+
     pub capabilities: Vec<ServiceCapability>,
-    /// Resource specifications
+
     pub resources: ResourceSpec,
-    /// Service endpoints
+
     pub endpoints: Vec<ServiceEndpoint>,
-    /// Integration preferences
+
     pub integration: IntegrationPreferences,
-    /// Custom extensions
+
     pub extensions: HashMap<String, serde_json::Value>,
-    /// Registration timestamp
+
     pub registration_timestamp: DateTime<Utc>,
-    /// Service version
+
     pub service_version: String,
-    /// Instance identifier
+
     pub instance_id: String,
-    /// Priority level for service selection
+
     pub priority: u32,
 }
-/// Service metadata information
+
 pub struct ServiceMetadata {
-    /// Service name
+
     pub name: String,
-    /// Service category
+
     pub category: ServiceCategory,
     pub version: String,
-    /// Service description
+
     pub description: String,
-    /// Maintainer contact information
+
     pub maintainer: ContactInfo,
-    /// Supported protocols
+
     pub protocols: Vec<String>,
-/// Service category enumeration
+
 pub enum ServiceCategory {
-    /// Security services
+
     Security {
-        /// Security domains
+
         domains: Vec<String>,
     },
-    /// Compute services
-    Compute {
-        /// Compute capabilities
-        capabilities: Vec<String>,
-    /// Storage services
-    Storage {
-        /// Storage types
-        types: Vec<String>,
-    /// AI services
-    ArtificialIntelligence {
-        /// AI capabilities
-        models: Vec<String>,
-    /// Custom service category
-    Custom {
-        /// Category name
-        category: String,
-        /// Category description
-        description: String,
-/// Contact information for service maintainer
-pub struct ContactInfo {
-    /// Maintainer name
-    /// Contact email (optional)
-    pub email: Option<String>,
-    /// Organization (optional)
-    pub organization: Option<String>,
-/// Service capability specification
-pub enum ServiceCapability {
-    /// Security capability
-        /// Security functions
-        functions: Vec<String>,
-        /// Compliance standards
-        compliance: Vec<String>,
-        /// Trust levels supported
-        trust_levels: Vec<String>,
-    /// AI capability
-        /// AI models available
-        /// AI tasks supported
-        tasks: Vec<String>,
-        /// Interface types
-        interfaces: Vec<String>,
-    /// Custom capability
-        /// Capability domain
-        domain: String,
-        /// Capability name
-        capability: String,
-        /// Capability parameters
-        parameters: HashMap<String, serde_json::Value>,
-/// Resource specification}
 
+    Compute {
+
+        capabilities: Vec<String>,
+
+    Storage {
+
+        types: Vec<String>,
+
+    ArtificialIntelligence {
+
+        models: Vec<String>,
+
+    Custom {
+
+        category: String,
+
+        description: String,
+
+pub struct ContactInfo {
+
+    pub email: Option<String>,
+
+    pub organization: Option<String>,
+
+pub enum ServiceCapability {
+
+        functions: Vec<String>,
+
+        compliance: Vec<String>,
+
+        trust_levels: Vec<String>,
+
+        tasks: Vec<String>,
+
+        interfaces: Vec<String>,
+
+        domain: String,
+
+        capability: String,
+
+        parameters: HashMap<String, serde_json::Value>,
 
 pub struct ResourceSpec {
-    /// CPU cores required
+
     pub cpu_cores: f64,
-    /// Memory bytes required
+
     pub memory_bytes: u64,
-    /// Storage bytes (optional)
+
     pub storage_bytes: Option<u64>,
-    /// Network bandwidth in Mbps (optional)
+
     pub network_bandwidth_mbps: Option<u32>,
-    /// GPU required
+
     pub gpu_required: bool,
-    /// Specialized hardware requirements
+
     pub specialized_hardware: Vec<String>,
-/// Service endpoint specification
+
 pub struct ServiceEndpoint {
-    /// Endpoint name
-    /// Endpoint URL
+
     pub url: String,
-    /// Protocol
+
     pub protocol: String,
-    /// Supported HTTP methods
+
     pub methods: Vec<String>,
-    /// AI-optimized endpoint
+
     pub ai_optimized: bool,
-/// Integration preferences
+
 pub struct IntegrationPreferences {
-    /// Prefers local deployment
+
     pub prefers_local_deployment: bool,
-    /// Supports horizontal scaling
+
     pub supports_horizontal_scaling: bool,
-    /// Supports load balancing
+
     pub supports_load_balancing: bool,
-    /// Health check interval
+
     #[serde(with = "duration_serde")]
     pub health_check_interval: Duration,
-    /// Graceful shutdown timeout
+
     pub graceful_shutdown_timeout: Duration,
-// Custom serialization for Duration
+
 mod duration_serde {
     use chrono::Duration;
     use serde::{Deserialize, Deserializer, Serializer};
@@ -174,28 +145,25 @@ mod duration_serde {
         D: Deserializer<'de>,
         let seconds = i64::deserialize(deserializer)?;
         Ok(Duration::seconds(seconds))
-/// Universal Service Registry client
+
 #[derive(Debug)]
 pub struct UniversalServiceRegistry {
-    /// Registry endpoint
+
     registry_endpoint: String,
-    /// Service registration
+
     registration: Option<UniversalServiceRegistration>,
-    /// HTTP client
+
     client: reqwest::Client,}
 
-
 impl UniversalServiceRegistry {
-    /// Create new universal service registry client}
 
-
-    pub fn new(registry_endpoint: String) -> Self {
+    pub fn new(registry_endpoint: &str) -> Self {
         Self {
             registry_endpoint,
             registration: None,
             client: reqwest::Client::new(),
         }
-    /// Create `BearDog`'s universal service registration
+
     pub fn create_beardog_registration() -> BearDogResult<UniversalServiceRegistration> {
         info!("🌌 Creating `BearDog` Universal Service Registration");
         let hostname = gethostname::gethostname().to_string_lossy().to_string();
@@ -224,7 +192,7 @@ impl UniversalServiceRegistry {
                 ],
             },
             capabilities: vec![
-                // Core HSM Capabilities
+
                 ServiceCapability::Security {
                     functions: vec![
                         "hardware_key_generation".to_string(),
@@ -245,7 +213,7 @@ impl UniversalServiceRegistry {
                         "tee_secured".to_string(),
                         "biometric_gated".to_string(),
                         "quantum_resistant".to_string(),
-                // Cross-Platform HSM Capability
+
                 ServiceCapability::Custom {
                     domain: "hsm".to_string(),
                     capability: "universal_hsm_abstraction".to_string(),
@@ -270,7 +238,7 @@ impl UniversalServiceRegistry {
                         params.insert("batch_processing".to_string(), serde_json::json!(true));
                         params
                     },
-                // AI-First HSM Operations
+
                 ServiceCapability::ArtificialIntelligence {
                     models: vec![
                         "threat_detection".to_string(),
@@ -330,7 +298,7 @@ impl UniversalServiceRegistry {
         info!("✅ `BearDog` Universal Service Registration created successfully");
         debug!("Registration details: {:?}", registration);
         Ok(registration)
-    /// Register service with the universal service registry
+
     pub async fn register_service(
         &mut self,
         registration: UniversalServiceRegistration,
@@ -338,9 +306,9 @@ impl UniversalServiceRegistry {
         info!("🌐 Registering `BearDog` with Universal Service Registry");
         info!("Registry endpoint: {}", self.registry_endpoint);
         info!("Service ID: {}", registration.service_id);
-        // Store registration locally
+
         self.registration = Some(registration.clone());
-        // Attempt to register with remote registry
+
         match self.attempt_remote_registration(&registration).await {
             Ok(response) => {
                 info!("✅ Successfully registered with remote registry");
@@ -349,7 +317,7 @@ impl UniversalServiceRegistry {
             Err(e) => {
                 warn!("⚠️ Failed to register with remote registry: {}", e);
                 info!("📝 Using local registration fallback");
-                // Return local registration response as fallback
+
                 Ok(RegistrationResponse {
                     registration_id: registration.service_id,
                     status: RegistrationStatus::LocalFallback,
@@ -358,11 +326,11 @@ impl UniversalServiceRegistry {
                     capabilities_accepted: registration.capabilities.len() as u32,
                     message: "Local registration active - remote registry unavailable".to_string(),
                 })
-    /// Attempt remote registry registration
+
     async fn attempt_remote_registration(
         &self,
         registration: &UniversalServiceRegistration,
-        let url = format!("{}/api/v1/services/register", self.registry_endpoint);
+        let url = format_args!("{}/api/v1/services/register", self.registry_endpoint).to_string();
         debug!("Attempting registration at: {}", url);
         let response = self
             .client
@@ -383,15 +351,13 @@ impl UniversalServiceRegistry {
                 "Registration failed with status: {}",
                 response.status()
             )))
-    /// Get current registration
+
     pub fn get_registration(&self) -> Option<&UniversalServiceRegistration> {
         self.registration.as_ref()
-    /// Check if service is registered}
-
 
     pub fn is_registered(&self) -> bool {
         self.registration.is_some()
-    /// Send heartbeat to registry
+
     pub async fn send_heartbeat(&self) -> BearDogResult<HeartbeatResponse> {
         let Some(registration) = &self.registration else {
             return Err(BearDogError::ValidationError(
@@ -407,17 +373,17 @@ impl UniversalServiceRegistry {
         match self.send_remote_heartbeat(&heartbeat).await {
                 debug!("✅ Heartbeat sent successfully");
                 warn!("⚠️ Heartbeat failed: {}", e);
-                // Return local heartbeat response as fallback
+
                 Ok(HeartbeatResponse {
                     service_id: registration.service_id,
                     status: HeartbeatStatus::LocalOnly,
                     next_heartbeat: Utc::now() + Duration::seconds(30),
                     message: "Local heartbeat only - registry unavailable".to_string(),
-    /// Send remote heartbeat
+
     async fn send_remote_heartbeat(
         heartbeat: &ServiceHeartbeat,
     ) -> BearDogResult<HeartbeatResponse> {
-        let url = format!("{}/api/v1/services/heartbeat", self.registry_endpoint);
+        let url = format_args!("{}/api/v1/services/heartbeat", self.registry_endpoint).to_string();
             .json(heartbeat)
             .timeout(std::time::Duration::from_secs(5))
             .map_err(|e| BearDogError::NetworkError(format!("Heartbeat request failed: {e}")))?;
@@ -426,83 +392,74 @@ impl UniversalServiceRegistry {
             })?;
             Ok(heartbeat_response)
                 "Heartbeat failed with status: {}",
-    /// Get current health status
-    async fn get_health_status(&self) -> BearDogResult<HealthStatus> {
-        // Health check implementation pending service architecture finalization
-        Ok(HealthStatus::Healthy)
-    /// Get current resource usage}
 
+    async fn get_health_status(&self) -> BearDogResult<HealthStatus> {
+
+        Ok(HealthStatus::Healthy)
 
     async fn get_resource_usage(&self) -> Result<ResourceUsage, SystemError> {
-        // Resource monitoring implementation pending metrics architecture finalization
+
         Ok(ResourceUsage {
             cpu_usage_percent: 25.0,
             memory_usage_bytes: 128 * 1024 * 1024, // 128MB
             network_usage_bytes_per_sec: 1024,     // 1KB/s
         })
-/// Registration response
+
 pub struct RegistrationResponse {
-    /// Registration ID
+
     pub registration_id: Uuid,
-    /// Registration status
+
     pub status: RegistrationStatus,
     pub registry_endpoint: String,
-    /// Registration expiration
-    pub expires_at: DateTime<Utc>,
-    /// Number of capabilities accepted
-    pub capabilities_accepted: u32,
-    /// Status message
-    pub message: String,
-/// Registration status
-pub enum RegistrationStatus {
-    /// Successfully registered
-    Active,
-    /// Registration pending
-    Pending,
-    /// Using local fallback
-    LocalFallback,
-    /// Registration failed
-    Failed,
-/// Service heartbeat}
 
+    pub expires_at: DateTime<Utc>,
+
+    pub capabilities_accepted: u32,
+
+    pub message: String,
+
+pub enum RegistrationStatus {
+
+    Active,
+
+    Pending,
+
+    LocalFallback,
+
+    Failed,
 
 pub struct ServiceHeartbeat {
-    /// Service ID
-    /// Instance ID
-    /// Heartbeat timestamp
-    pub timestamp: DateTime<Utc>,
-    /// Current health status
-    pub health_status: HealthStatus,
-    /// Current resource usage
-    pub resource_usage: ResourceUsage,
-/// Health status
-pub use beardog_types::canonical::HealthStatus;
-/// Resource usage metrics
-pub struct ResourceUsage {
-    /// CPU usage percentage
-    pub cpu_usage_percent: f64,
-    /// Memory usage in bytes
-    pub memory_usage_bytes: u64,
-    /// Network usage in bytes per second
-    pub network_usage_bytes_per_sec: u64,
-/// Heartbeat response};
 
+    pub timestamp: DateTime<Utc>,
+
+    pub health_status: HealthStatus,
+
+    pub resource_usage: ResourceUsage,
+
+pub use beardog_types::canonical::HealthStatus;
+
+pub struct ResourceUsage {
+
+    pub cpu_usage_percent: f64,
+
+    pub memory_usage_bytes: u64,
+
+    pub network_usage_bytes_per_sec: u64,
 
 pub struct HeartbeatResponse {
-    /// Heartbeat status
+
     pub status: HeartbeatStatus,
-    /// Next heartbeat time
+
     pub next_heartbeat: DateTime<Utc>,
-/// Heartbeat status
+
 pub enum HeartbeatStatus {
-    /// Heartbeat accepted
+
     Accepted,
-    /// Local heartbeat only
+
     LocalOnly,
-    /// Heartbeat rejected
+
     Rejected,
 #[cfg(test)]}
-
 
 mod tests {
     use super::*;
@@ -513,7 +470,7 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Should create registration", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Should create registration: {:?}", e)
+    format_args!("Should create registration: {:?}", e).to_string()
 ).into())
 });
         assert_eq!(registration.metadata.name, "beardog");
@@ -523,11 +480,11 @@ mod tests {
     fn test_registration_serialization() {
         let json = rmp_serde::to_vec(&registration).unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Should serialize to JSON", e);
-    format!("Should serialize to JSON: {:?}", e)
+    format_args!("Should serialize to JSON: {:?}", e).to_string()
         let deserialized: UniversalServiceRegistration =
             serde_json::from_str(&json).map_err(|e| {
     tracing::error!("JSON parsing failed ({}): {}", "Should deserialize from JSON", e);
-    std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON parsing error ({}): {}", "Should deserialize from JSON", e))
+    std::io::Error::new(std::io::ErrorKind::InvalidData, format_args!("JSON parsing error ({}): {}", "Should deserialize from JSON", e).to_string())
 })?;
         assert_eq!(registration.service_id, deserialized.service_id);
         assert_eq!(registration.metadata.name, deserialized.metadata.name);
@@ -539,7 +496,6 @@ mod tests {
         assert!(!registry.is_registered());
         assert!(registry.get_registration().is_none());}
 
-
     async fn test_primal_service_creation() {
         let service = PrimalService::new(
             "test-service",
@@ -547,17 +503,17 @@ mod tests {
             "Test service for `BearDog`",
             vec!["capability1".to_string(), "capability2".to_string()],
         )
-        .map_err(|e| BearDogError::internal(format!("Failed to create test service: {}", e)))
+        .map_err(|e| BearDogError::internal(format_args!("Failed to create test service: {}", e).to_string()))
         .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Should create registration for test purposes", e);
-    format!("Should create registration for test purposes: {:?}", e)
+    format_args!("Should create registration for test purposes: {:?}", e).to_string()
         assert_eq!(service.name, "test-service");
         assert_eq!(service.version, "1.0.0");
         assert_eq!(service.capabilities.len(), 2);
     async fn test_ecosystem_registration_serialization() {
         let mut registration = EcosystemRegistration::new("test-ecosystem".to_string())
             .map_err(|e| {
-                BearDogError::internal(format!("Failed to create test registration: {}", e))
+                BearDogError::internal(format_args!("Failed to create test registration: {}", e).to_string())
             })
         registration.add_service(
             "service1",
@@ -566,8 +522,8 @@ mod tests {
         let json = rmp_serde::to_vec(&registration)
             .map_err(|e| BearDogError::serialize_error("ecosystem registration", e))
     tracing::error!("Expect failed ({}): {:?}", "Should serialize to JSON for test purposes", e);
-    format!("Should serialize to JSON for test purposes: {:?}", e)
+    format_args!("Should serialize to JSON for test purposes: {:?}", e).to_string()
         let deserialized: EcosystemRegistration = serde_json::from_str(&json)
             .map_err(|e| BearDogError::serialize_error("ecosystem registration deserialization", e))
     tracing::error!("Expect failed ({}): {:?}", "Should deserialize from JSON for test purposes", e);
-    format!("Should deserialize from JSON for test purposes: {:?}", e)
+    format_args!("Should deserialize from JSON for test purposes: {:?}", e).to_string()

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AuditEventType","ComplianceStatus","IndicatorType","PrivacyImpactLevel","PrivacyProtectionType","VulnerabilitySeverity","VulnerabilityType"]};

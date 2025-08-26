@@ -1,38 +1,16 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Production Deployment Validation Tests
-//!
-//! Tests for production deployment readiness, environment validation,
-//! dependency checks, and pre-deployment safety procedures.
 
 use beardog::production::*;
 
-/// Test production deployment validation
 pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
     println!("🚀 Testing production deployment validation...");
 
-    // Test deployment readiness check
     let readiness_check = prod_manager
         .check_deployment_readiness()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Deployment readiness check should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Deployment readiness check should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Deployment readiness check should succeed", e).to_string())
 })?;
 
     assert!(
@@ -56,13 +34,12 @@ pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
         "Backup systems should be ready"
     );
 
-    // Test environment validation
     let environment_validation = prod_manager
         .validate_production_environment()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Environment validation should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Environment validation should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Environment validation should succeed", e).to_string())
 })?;
 
     assert!(
@@ -86,13 +63,12 @@ pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
         "Security policies should be applied"
     );
 
-    // Test dependency validation
     let dependency_check = prod_manager
         .validate_dependencies()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Dependency validation should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Dependency validation should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Dependency validation should succeed", e).to_string())
 })?;
 
     assert!(
@@ -112,13 +88,12 @@ pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
         "Version compatibility should be verified"
     );
 
-    // Test configuration validation
     let config_validation = prod_manager
         .validate_production_configuration()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Configuration validation should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Configuration validation should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Configuration validation should succeed", e).to_string())
 })?;
 
     assert!(
@@ -138,13 +113,12 @@ pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
         "Monitoring endpoints should be active"
     );
 
-    // Test pre-deployment safety checks
     let safety_checks = prod_manager
         .run_pre_deployment_safety_checks()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Safety checks should succeed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Safety checks should succeed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Safety checks should succeed", e).to_string())
 })?;
 
     assert!(
@@ -165,9 +139,6 @@ pub async fn test_deployment_validation(prod_manager: &mut ProductionManager) {
     );
 }
 
-/// Individual deployment validation test functions can be added here
-/// for more granular testing if needed
-
 #[tokio::test]
 async fn test_deployment_readiness_standalone() {
     use beardog::core::*;
@@ -179,7 +150,7 @@ async fn test_deployment_readiness_standalone() {
             .await
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
 })?,
     );
 
@@ -187,7 +158,7 @@ async fn test_deployment_readiness_standalone() {
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Production manager creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Production manager creation failed", e).to_string())
 })?;
         
     test_deployment_validation(&mut production_manager).await;

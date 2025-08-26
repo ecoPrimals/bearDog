@@ -1,33 +1,12 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// External System Providers for Universal Adapter
-///
-/// Concrete implementations for external (non-ecoPrimals) systems
 use super::*;
 use beardog_errors::{BearDogError, BearDogResult};
 use serde_json;
 use std::process::Stdio;
 use tokio::process::Command;
 use tracing::debug;
-// CANONICAL IMPORT: use beardog_types::config::UnifiedMonitoringConfig;
 
-// ============================================================================
-// KUBERNETES PROVIDER - External System
 pub struct KubernetesProvider {
     config: KubernetesConfig,
     http_protocol: Box<dyn Protocol>,
@@ -39,9 +18,7 @@ pub struct KubernetesConfig {
     pub default_namespace: String,
     pub timeout_seconds: u64,}
 
-
 impl Default for KubernetesConfig {}
-
 
     fn default() -> Self {
         Self {
@@ -53,7 +30,6 @@ impl Default for KubernetesConfig {}
     }
 impl KubernetesProvider {}
 
-
     pub fn new(config: KubernetesConfig) -> Self {
             config,
             http_protocol: Box::new(HttpProtocol::new()),
@@ -62,7 +38,7 @@ impl KubernetesProvider {}
     }
 }
 
-impl ExternalSystemProvider for KubernetesProvider {
+impl UniversalProvider for KubernetesProvider {
     fn system_id(&self) -> &str {
         "kubernetes"
     }
@@ -74,7 +50,6 @@ impl ExternalSystemProvider for KubernetesProvider {
     fn authentication(&self) -> &dyn Authentication {
         self.kubectl_auth.as_ref()
     }
-
 
     async fn execute(
         &self,
@@ -100,7 +75,6 @@ impl ExternalSystemProvider for KubernetesProvider {
             Ok(status) => Ok(status.success()),
             Err(_) => Ok(false),}
 
-
     fn capabilities(&self) -> Vec<String> {
         vec![
             "get".to_string(),
@@ -119,7 +93,6 @@ impl ExternalSystemProvider for KubernetesProvider {
             .unwrap_or(&self.config.default_namespace);
         self.execute_kubectl(&["get", resource, "-n", namespace, "-o", "json"])}
 
-
     async fn kubectl_describe(
         payload: &serde_json::Value,
             .ok_or_else(|| BearDogError::invalid_input("Missing 'resource' parameter for describe operation"))?;
@@ -135,7 +108,7 @@ impl ExternalSystemProvider for KubernetesProvider {
         let manifest = payload
             .get("manifest")
             .ok_or_else(|| BearDogError::invalid_input("Missing 'manifest' parameter for apply operation"))?;
-        // SECURITY: Use stdin instead of temporary files to avoid exposing sensitive manifests
+
         let manifest_str = if manifest.is_string() {
             manifest.as_str().map(|s| s.to_string()).unwrap_or_else(|| {
                 tracing::warn!("Failed to convert manifest to string, using default");
@@ -144,7 +117,7 @@ impl ExternalSystemProvider for KubernetesProvider {
         } else {
             serde_yaml::to_string(&manifest).map_err(|e| BearDogError::internal(format!("Failed to serialize manifest to YAML: {e}")))?
         };
-        // Use kubectl with stdin to avoid temporary file exposure
+
         let result = self
             .execute_kubectl_with_stdin(&["apply", "-f", "-"], manifest_str)
             .await;
@@ -169,7 +142,6 @@ impl ExternalSystemProvider for KubernetesProvider {
             .execute_kubectl_text(&["logs", resource, "-n", namespace, "--tail", tail])
             "logs": output.lines().collect::<Vec<_>>(),}
 
-
     async fn execute_kubectl(&self, args: &[&str]) -> BearDogResult<serde_json::Value> {
         let output = Command::new("kubectl")
             .args(args)
@@ -182,12 +154,10 @@ impl ExternalSystemProvider for KubernetesProvider {
             Err(BearDogError::network(format!("kubectl command failed: {stderr}")))
     async fn execute_kubectl_text(&self, args: &[&str]) -> BearDogResult<String> {
             Ok(String::from_utf8_lossy(&output.stdout).to_string())
-    /// Execute kubectl with stdin input - secure alternative to temporary files}
-
 
     async fn execute_kubectl_with_stdin(
         args: &[&str],
-        input: String,
+        input: &str,
     ) -> BearDogResult<String> {
         let mut child = Command::new("kubectl")
             .stdin(std::process::Stdio::piped())
@@ -195,7 +165,7 @@ impl ExternalSystemProvider for KubernetesProvider {
             .stderr(std::process::Stdio::piped())
             .spawn()
             .map_err(|e| BearDogError::network(format!("Failed to spawn kubectl process: {e}")))?;
-        // Write input to stdin
+
         if let Some(stdin) = child.stdin.take() {
             let mut stdin = stdin;
             tokio::io::AsyncWriteExt::write_all(&mut stdin, input.as_bytes())
@@ -205,25 +175,20 @@ impl ExternalSystemProvider for KubernetesProvider {
             child
                 .wait_with_output()
                 .map_err(|e| BearDogError::network(format!("Failed to execute kubectl with stdin: {e}")))?;
-// PROMETHEUS PROVIDER - External System
+
 pub struct PrometheusProvider {
     config: PrometheusConfig,
     http_auth: Box<dyn Authentication>,
 }
 
-
-// MIGRATED: PrometheusConfig -> use beardog_types::config::UnifiedMonitoringConfig;
-
-
 impl Default for PrometheusConfig {
             endpoint: std::env::var("PROMETHEUS_ENDPOINT")
                 .unwrap_or_else(|_| "https://prometheus.ecosystem.internal:9090".to_string()),}
 
-
 impl PrometheusProvider {
     pub fn new(config: PrometheusConfig) -> Self {
             http_auth: Box::new(NoAuthentication::new()),
-impl ExternalSystemProvider for PrometheusProvider {
+impl UniversalProvider for PrometheusProvider {
         "prometheus"
         self.http_auth.as_ref()
             "query" => self.query_metrics(&payload).await,
@@ -232,7 +197,7 @@ impl ExternalSystemProvider for PrometheusProvider {
             _ => Err(BearDogError::invalid_input(format!("Unknown Prometheus operation: {operation}"))),
         let client = reqwest::Client::new();
         match client
-            .get(format!("{}/api/v1/query", self.config.endpoint))
+            .get(format_args!("{}/api/v1/query", self.config.endpoint).to_string())
             .query(&[("query", "up")])
             .timeout(std::time::Duration::from_secs(5))
             .send()
@@ -258,7 +223,7 @@ impl ExternalSystemProvider for PrometheusProvider {
                 "data": metrics_data,
                 "query": query
             }))
-            Err(BearDogError::network(format!("Prometheus query failed with status: {}", response.status())))
+            Err(BearDogError::network(format_args!("Prometheus query failed with status: {}", response.status().to_string())))
     async fn query_range(&self, payload: &serde_json::Value) -> BearDogResult<serde_json::Value> {
             .ok_or_else(|| BearDogError::invalid_input("Missing 'query' parameter".to_string(),
             ))?;
@@ -272,7 +237,7 @@ impl ExternalSystemProvider for PrometheusProvider {
         let step = payload
             .get("step")
             .unwrap_or("15s");
-            .get(format!("{}/api/v1/query_range", self.config.endpoint))
+            .get(format_args!("{}/api/v1/query_range", self.config.endpoint).to_string())
             .query(&[
                 ("query", query),
                 ("start", start),
@@ -289,9 +254,9 @@ impl ExternalSystemProvider for PrometheusProvider {
                 )))
     async fn export_metrics(
         _payload: &serde_json::Value,
-        // Export BearDog metrics in Prometheus format
+
             "metrics_format": "prometheus",
-            "endpoint": format!("{}/metrics", self.config.endpoint),
+            "endpoint": format_args!("{}/metrics", self.config.endpoint).to_string(),
             "exported_metrics": [
                 "beardog_api_requests_total",
                 "beardog_security_events_total",

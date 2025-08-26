@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # BearDog HSM System Demo
-//!
-//! This example demonstrates how to use BearDog's multi-tier HSM system
-//! with GrapheneOS on Pixel 8a as the anchor device.
 
 use beardog::error::BearDogResult;
 use beardog::tunnel::hsm::manager::SimpleHsmTier;
@@ -38,10 +18,8 @@ async fn main() -> BearDogResult<()> {
     println!("🚀 BearDog HSM Demo for GrapheneOS/Pixel 8a");
     println!("====================================================");
 
-    // Create HSM Manager
     let mut hsm_manager = HsmManager::new();
 
-    // Configure GrapheneOS/Pixel 8a Android StrongBox HSM
     let android_config = AndroidHsmConfig {
         manufacturer: "Google".to_string(),
         model: "Pixel 8a".to_string(),
@@ -67,7 +45,7 @@ async fn main() -> BearDogResult<()> {
 
     let android_hsm_config = HsmConfig {
         hsm_type: HsmType::SmartphoneAndroid,
-        config_data: HashMap::new(),
+        config_data: HashMap::with_capacity(16),
         ios_config: None,
         android_config: Some(android_config),
         software_config: None,
@@ -75,7 +53,6 @@ async fn main() -> BearDogResult<()> {
         luna_config: None,
     };
 
-    // Configure Software HSM for fallback
     let software_config = SoftwareHsmConfig {
         implementation: SoftwareHsmType::RustSoftwareHsm,
         key_store_config: KeyStoreConfig {
@@ -97,7 +74,7 @@ async fn main() -> BearDogResult<()> {
 
     let software_hsm_config = HsmConfig {
         hsm_type: HsmType::SoftwareRust,
-        config_data: HashMap::new(),
+        config_data: HashMap::with_capacity(16),
         ios_config: None,
         android_config: None,
         software_config: Some(software_config),
@@ -105,7 +82,6 @@ async fn main() -> BearDogResult<()> {
         luna_config: None,
     };
 
-    // Register HSMs
     hsm_manager
         .register_hsm(SimpleHsmTier::Smartphone, android_hsm_config)
         .await?;
@@ -118,7 +94,6 @@ async fn main() -> BearDogResult<()> {
     println!("   - Software HSM (Rust-based fallback)");
     println!();
 
-    // Test 1: HSM Manager Setup and Health Check
     println!("🔍 Test 1: HSM Manager Health Check");
     println!("-----------------------------------");
 
@@ -137,7 +112,6 @@ async fn main() -> BearDogResult<()> {
     );
     println!();
 
-    // Test 2: Security Level Selection
     println!("🔒 Test 2: Security Level Selection");
     println!("----------------------------------");
 
@@ -173,7 +147,6 @@ async fn main() -> BearDogResult<()> {
     println!("Selected HSM tier for High security: {:?}", selected_tier);
     println!();
 
-    // Test 3: Key Operations
     println!("🔑 Test 3: Key Operations");
     println!("-------------------------");
 
@@ -186,10 +159,9 @@ async fn main() -> BearDogResult<()> {
         performance_requirements: PerformanceRequirements::default(),
     };
 
-    // Generate a key with Android StrongBox HSM
     hsm_manager
         .perform_operation(&requirements, |provider| async move {
-            // Debug: Print provider info
+
             let provider_info = provider.get_info().await?;
             println!(
                 "🔍 DEBUG: Using HSM for key generation: {} {}",
@@ -205,7 +177,7 @@ async fn main() -> BearDogResult<()> {
                 created_at: Utc::now(),
                 expires_at: None,
                 usage_policy: usage_policy.clone(),
-                attributes: HashMap::new(),
+                attributes: HashMap::with_capacity(16),
             };
 
             let request = GenerateKeyRequest {
@@ -223,7 +195,6 @@ async fn main() -> BearDogResult<()> {
 
     println!("✅ Generated AES256 key with Android StrongBox HSM");
 
-    // Test 4: Encryption/Decryption
     println!("🔐 Test 4: Encryption/Decryption");
     println!("--------------------------------");
 
@@ -234,14 +205,13 @@ async fn main() -> BearDogResult<()> {
         .perform_operation(&requirements, move |provider| {
             let data = plaintext_clone.clone();
             async move {
-                // Debug: Print provider info
+
                 let provider_info = provider.get_info().await?;
                 println!(
                     "🔍 DEBUG: Using HSM for encryption: {} {}",
                     provider_info.vendor, provider_info.model
                 );
 
-                // Check if the key exists
                 let keys = provider.list_keys().await?;
                 println!(
                     "🔍 DEBUG: Available keys in this HSM: {:?}",
@@ -270,7 +240,6 @@ async fn main() -> BearDogResult<()> {
     println!("Original: {:?}", String::from_utf8_lossy(plaintext));
     println!("Decrypted: {:?}", String::from_utf8_lossy(&decrypted_data));
 
-    // Verify data integrity
     if plaintext == &decrypted_data[..] {
         println!("✅ Encryption/Decryption integrity verified!");
     } else {
@@ -278,7 +247,6 @@ async fn main() -> BearDogResult<()> {
     }
     println!();
 
-    // Test 4.5: Generate Signing Key for Digital Signatures
     println!("🔑 Test 4.5: Generate ECC P256 Signing Key");
     println!("------------------------------------------");
 
@@ -296,7 +264,7 @@ async fn main() -> BearDogResult<()> {
                 created_at: Utc::now(),
                 expires_at: None,
                 usage_policy: usage_policy.clone(),
-                attributes: HashMap::new(),
+                attributes: HashMap::with_capacity(16),
             };
 
             let request = GenerateKeyRequest {
@@ -314,7 +282,6 @@ async fn main() -> BearDogResult<()> {
 
     println!("✅ Generated ECC P256 signing key with Android StrongBox HSM");
 
-    // Test 5: Digital Signing and Verification
     println!("✍️  Test 5: Digital Signing and Verification");
     println!("--------------------------------------------");
 
@@ -347,7 +314,6 @@ async fn main() -> BearDogResult<()> {
     }
     println!();
 
-    // Test 6: Performance Metrics and HSM Information
     println!("📊 Test 6: HSM Performance and Information");
     println!("------------------------------------------");
 
@@ -376,7 +342,6 @@ async fn main() -> BearDogResult<()> {
     }
     println!();
 
-    // Test 7: List Keys in HSM
     println!("🗂️  Test 7: List Keys in HSM");
     println!("----------------------------");
 
@@ -398,7 +363,6 @@ async fn main() -> BearDogResult<()> {
     }
     println!();
 
-    // Test 8: Failover to Software HSM
     println!("🔄 Test 8: Failover to Software HSM");
     println!("----------------------------------");
 
@@ -422,7 +386,7 @@ async fn main() -> BearDogResult<()> {
                 created_at: Utc::now(),
                 expires_at: None,
                 usage_policy: usage_policy.clone(),
-                attributes: HashMap::new(),
+                attributes: HashMap::with_capacity(16),
             };
 
             let request = GenerateKeyRequest {
@@ -441,7 +405,6 @@ async fn main() -> BearDogResult<()> {
     println!("✅ Generated key with Software HSM (fallback successful)");
     println!();
 
-    // Test 9: HSM Health Status and Performance
     println!("📊 Test 9: HSM Health Status and Performance");
     println!("--------------------------------------------");
 
@@ -482,7 +445,6 @@ async fn main() -> BearDogResult<()> {
     );
     println!();
 
-    // Test 10: Revolutionary Features Demo
     println!("🌟 Test 10: Revolutionary BearDog Features");
     println!("------------------------------------------");
 
@@ -505,7 +467,6 @@ async fn main() -> BearDogResult<()> {
     println!("   🎯 StrongBox requirement for maximum security");
     println!();
 
-    // Final Summary
     println!("🎉 BearDog HSM Demo Complete!");
     println!("==============================");
     println!("✅ All tests passed successfully!");

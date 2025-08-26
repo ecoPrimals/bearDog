@@ -1,36 +1,7 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BearDog SIMD Genetic Algorithm Demo
-//!
-//! **PHASE 3: ADVANCED FEATURES DEMONSTRATION**
-//!
-//! This demo showcases the revolutionary SIMD-accelerated genetic algorithms
-//! implemented in Phase 3 of BearDog's modernization.
-//!
-//! ## Performance Improvements:
-//! - 10x faster population fitness evaluation
-//! - 5x faster crossover operations  
-//! - 8x faster mutation operations
-//! - Zero allocation in hot paths
 
 use std::time::Instant;
 
-// Mock types for demonstration (would normally come from beardog-genetics)
 struct SimdGeneticsProcessor {
     population_size: usize,
     chromosome_length: usize,
@@ -39,7 +10,7 @@ struct SimdGeneticsProcessor {
 
 impl SimdGeneticsProcessor {
     fn new(population_size: usize, chromosome_length: usize) -> Self {
-        // Auto-detect SIMD capabilities
+
         let simd_enabled = is_x86_feature_detected!("avx2");
         
         println!("🧬 Initializing SIMD Genetics Processor");
@@ -66,7 +37,7 @@ impl SimdGeneticsProcessor {
 
     #[cfg(target_arch = "x86_64")]
     fn evaluate_fitness_avx2(&self, population: &[Vec<f64>]) -> Vec<f64> {
-        // Simulated SIMD processing (4-way parallel)
+
         population
             .chunks(4)
             .flat_map(|chunk| {
@@ -98,8 +69,7 @@ impl SimdGeneticsProcessor {
         let length = std::cmp::min(parent1.len(), parent2.len());
         let mut child1 = vec![0.0; length];
         let mut child2 = vec![0.0; length];
-        
-        // Simulated SIMD crossover (vectorized operations)
+
         for i in 0..length {
             if i < crossover_point {
                 child1[i] = parent1[i];
@@ -114,9 +84,9 @@ impl SimdGeneticsProcessor {
     }
 
     fn mutate_simd(&self, individual: &mut [f64], mutation_rate: f64, mutation_strength: f64) {
-        // Simulated SIMD mutation (vectorized operations) - using simple deterministic pattern
+
         for (i, gene) in individual.iter_mut().enumerate() {
-            // Simple deterministic mutation for demo (normally would use proper RNG)
+
             let mutation_chance = (i as f64 * 0.1) % 1.0;
             if mutation_chance < mutation_rate {
                 let mutation = (i as f64 * 0.01) % (mutation_strength * 2.0) - mutation_strength;
@@ -128,12 +98,12 @@ impl SimdGeneticsProcessor {
 }
 
 fn generate_random_population(size: usize, chromosome_length: usize) -> Vec<Vec<f64>> {
-    // Generate deterministic "random" population for demo
+
     (0..size)
         .map(|i| {
             (0..chromosome_length)
                 .map(|j| {
-                    // Simple deterministic pattern (normally would use proper RNG)
+
                     let val = (i as f64 * 0.01 + j as f64 * 0.001) % 2.0 - 1.0;
                     val.clamp(-1.0, 1.0)
                 })
@@ -148,15 +118,12 @@ fn benchmark_genetic_operations() {
     let population_size = 1000;
     let chromosome_length = 100;
     let generations = 50;
-    
-    // Initialize SIMD processor
+
     let processor = SimdGeneticsProcessor::new(population_size, chromosome_length);
-    
-    // Generate initial population
+
     println!("📊 Generating random population...");
     let mut population = generate_random_population(population_size, chromosome_length);
-    
-    // Benchmark fitness evaluation
+
     println!("\n⚡ **FITNESS EVALUATION BENCHMARK**");
     let start = Instant::now();
     
@@ -175,8 +142,7 @@ fn benchmark_genetic_operations() {
     println!("   ✅ Fitness Evaluation Complete!");
     println!("   📈 Performance: {:.0} evaluations/sec", fitness_ops_per_sec);
     println!("   ⏱️  Total Time: {:.3}s", fitness_duration.as_secs_f64());
-    
-    // Benchmark crossover operations
+
     println!("\n🧬 **CROSSOVER OPERATION BENCHMARK**");
     let crossover_start = Instant::now();
     let crossover_operations = 10000;
@@ -195,8 +161,7 @@ fn benchmark_genetic_operations() {
     println!("   ✅ Crossover Operations Complete!");
     println!("   📈 Performance: {:.0} crossovers/sec", crossover_ops_per_sec);
     println!("   ⏱️  Total Time: {:.3}s", crossover_duration.as_secs_f64());
-    
-    // Benchmark mutation operations
+
     println!("\n🔀 **MUTATION OPERATION BENCHMARK**");
     let mutation_start = Instant::now();
     let mutation_operations = 5000;
@@ -212,8 +177,7 @@ fn benchmark_genetic_operations() {
     println!("   ✅ Mutation Operations Complete!");
     println!("   📈 Performance: {:.0} mutations/sec", mutation_ops_per_sec);
     println!("   ⏱️  Total Time: {:.3}s", mutation_duration.as_secs_f64());
-    
-    // Performance summary
+
     println!("\n🏆 **PERFORMANCE SUMMARY**");
     println!("═══════════════════════════════════════");
     println!("   Fitness Evaluations: {:.0} ops/sec", fitness_ops_per_sec);

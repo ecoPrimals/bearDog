@@ -1,79 +1,54 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// BearDog Universal Ecosystem Provider
-///
-/// This implements BearDog as a universal ecosystem provider that registers its security
-/// capabilities for discovery by other ecosystem components. No hardcoded integrations.
-
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 use chrono::Utc;
 use std::collections::HashMap;
 use uuid::Uuid;
 use super::*;
 use crate::{AIFirstResponse, EcosystemResult};
-/// Implements BearDog as a capability-based ecosystem participant following
-/// the Universal Primal Architecture Standard
+
 #[derive(Debug)]
 pub struct BearDogEcosystemProvider {
-    /// Service ID for this BearDog instance
+
     pub service_id: Uuid,
-    /// Instance identifier
+
     pub instance_id: String,
-    /// Service version
+
     pub version: String,
-    /// Configuration
+
     pub config: BearDogEcosystemConfig,
 }
-/// BearDog ecosystem configuration
+
 #[derive(Debug, Clone)]
 pub struct BearDogEcosystemConfig {
-    /// Service name
+
     pub service_name: String,
-    /// Service description
+
     pub description: String,
-    /// Maintainer information
+
     pub maintainer: String,
-    /// Base URL for this instance
+
     pub base_url: String,
-    /// Enabled capabilities
+
     pub enabled_capabilities: Vec<String>,
-    /// Resource allocation
+
     pub resources: ResourceSpec,
-    /// Integration preferences
+
     pub integration: IntegrationPreferences,}
 
-
 impl BearDogEcosystemProvider {
-    /// Create new BearDog ecosystem provider}
-
 
     pub fn new(config: BearDogEcosystemConfig) -> Self {
         Self {
             service_id: Uuid::new_v4(),
-            instance_id: format!("beardog-{}", Uuid::new_v4()),
+            instance_id: format_args!("beardog-{}", Uuid::new_v4().to_string()),
             version: env!("CARGO_PKG_VERSION").to_string(),
             config,
         }
     }
-    /// Get BearDog's security capabilities
+
     fn get_security_capabilities(&self) -> Vec<ServiceCapability> {
         let mut capabilities = Vec::new();
-        // Core security capabilities that BearDog provides
+
         if self
             .config
             .enabled_capabilities
@@ -112,7 +87,7 @@ impl BearDogEcosystemProvider {
                         memory_mb: 50,
                         storage_mb: 0,
                         network_kbps: 100,
-                        custom: HashMap::new(),
+                        custom: HashMap::with_capacity(16),
                     },
                     scalability: ScalabilitySpec {
                         min_instances: 1,
@@ -129,7 +104,7 @@ impl BearDogEcosystemProvider {
                     authorization_level: "standard".to_string(),
                     encryption_required: false, // We are the encryption provider
                     audit_logging: true,
-                    custom: HashMap::new(),
+                    custom: HashMap::with_capacity(16),
             });
             .contains(&"authentication".to_string())
                 capability_id: "security.authentication.multi_factor".to_string(),
@@ -204,12 +179,12 @@ impl BearDogEcosystemProvider {
                         scaling_triggers: vec![],
                     authorization_level: "admin".to_string(),
         capabilities
-    /// Get BearDog's service endpoints
+
     fn get_service_endpoints(&self) -> Vec<ServiceEndpoint> {
         vec![
             ServiceEndpoint {
                 endpoint_id: "security_api".to_string(),
-                url: format!("{}/api/v1/security", self.config.base_url),
+                url: format_args!("{}/api/v1/security", self.config.base_url).to_string(),
                 method: "POST".to_string(),
                 capabilities: vec![
                     "security.encryption.symmetric".to_string(),
@@ -225,14 +200,14 @@ impl BearDogEcosystemProvider {
                             "error": {"type": "object"}
                         "required": ["success"]
                 health_check: Some(HealthCheckConfig {
-                    url: format!("{}/health", self.config.base_url),
+                    url: format_args!("{}/health", self.config.base_url).to_string(),
                     interval_secs: 30,
                     timeout_secs: 5,
                     expected_status_codes: vec![200],
                 }),
             },
                 endpoint_id: "health_check".to_string(),
-                url: format!("{}/health", self.config.base_url),
+                url: format_args!("{}/health", self.config.base_url).to_string(),
                 method: "GET".to_string(),
                 capabilities: vec!["health.status".to_string()],
                     input_schema: serde_json::json!({"type": "null"}),
@@ -242,9 +217,10 @@ impl BearDogEcosystemProvider {
                         "required": ["status", "version"]
                 health_check: None, // This is the health check endpoint
         ]
-#[async_trait]
+
+#[allow(async_fn_in_trait)]
 impl EcosystemIntegration for BearDogEcosystemProvider {
-    /// Register BearDog in the ecosystem with its security capabilities
+
     async fn register(&self) -> EcosystemResult<UniversalServiceRegistration> {
         Ok(UniversalServiceRegistration {
             service_id: self.service_id,
@@ -269,7 +245,7 @@ impl EcosystemIntegration for BearDogEcosystemProvider {
             endpoints: self.get_service_endpoints(),
             integration: self.config.integration.clone(),
             extensions: {
-                let mut ext = HashMap::new();
+                let mut ext = HashMap::with_capacity(16);
                 ext.insert("ai_first_score".to_string(), serde_json::json!(0.95));
                 ext.insert(
                     "ecosystem_role".to_string(),
@@ -282,20 +258,16 @@ impl EcosystemIntegration for BearDogEcosystemProvider {
             instance_id: self.instance_id.clone(),
             priority: 10, // High priority for security services
         })
-    /// Discover other services by capability (for integration)
+
     async fn discover_by_capability(
         &self,
         _capability: &str,
     ) -> EcosystemResult<Vec<UniversalServiceRegistration>> {
-        // This would integrate with the ecosystem's service registry
-        // For now, return empty - this is where dynamic discovery would happen
-        Ok(Vec::new())
-    /// Get BearDog health status}
 
+        Ok(Vec::new())
 
     async fn health_check(&self) -> EcosystemResult<HealthStatus> {
-        // This would check actual BearDog systems
-        // For now, return healthy status
+
         Ok(HealthStatus {
             status: HealthLevel::Healthy,
             checks: vec![
@@ -313,16 +285,15 @@ impl EcosystemIntegration for BearDogEcosystemProvider {
             ],
             last_updated: Utc::now(),
             version: self.version.clone(),
-    /// Handle ecosystem requests for BearDog capabilities
+
     async fn handle_request(
         request: EcosystemRequest,
     ) -> EcosystemResult<AIFirstResponse<serde_json::Value>> {
-        // This would route to actual BearDog implementations
-        // For now, return a placeholder response
+
         Ok(AIFirstResponse {
             success: true,
             data: serde_json::json!({
-                "message": format!("BearDog handled capability: {}", request.capability),
+                "message": format_args!("BearDog handled capability: {}", request.capability).to_string(),
                 "request_id": request.request_id
             }),
             error: None,
@@ -336,27 +307,27 @@ impl EcosystemIntegration for BearDogEcosystemProvider {
                     network_kb: 1.0,
                     disk_kb: 0.0,
                 performance_indicators: {
-                    let mut indicators = HashMap::new();
+                    let mut indicators = HashMap::with_capacity(16);
                     indicators.insert("latency_ms".to_string(), 10.0);
                     indicators.insert("success_rate".to_string(), 1.0);
                     indicators
-                context: HashMap::new(),
+                context: HashMap::with_capacity(16),
             confidence_score: 0.95,
             suggested_actions: vec![crate::SuggestedAction {
                 action_type: "monitor".to_string(),
                 description: "Continue monitoring security status".to_string(),
                 priority: 5,
-                parameters: HashMap::new(),
+                parameters: HashMap::with_capacity(16),
             }],
 impl Default for BearDogEcosystemConfig {}
-
 
     fn default() -> Self {
             service_name: "BearDog Security Suite".to_string(),
             description: "Comprehensive security provider with encryption, authentication, threat detection, and compliance capabilities".to_string(),
             maintainer: "BearDog Security Team".to_string(),
             base_url: std::env::var("BEARDOG_BASE_URL")
-                .unwrap_or_else(|_| "http://localhost:8080".to_string()),
+                .unwrap_or_else(|_| std::env::var("BEARDOG_DEFAULT_ENDPOINT")
+                    .unwrap_or_else(|_| "http://localhost:8080".to_string())),
             enabled_capabilities: vec![
                 "encryption".to_string(),
                 "authentication".to_string(),
@@ -367,7 +338,7 @@ impl Default for BearDogEcosystemConfig {}
                 memory_mb: 1024,
                 storage_mb: 500,
                 network_kbps: 1000,
-                custom: HashMap::new(),
+                custom: HashMap::with_capacity(16),
             integration: IntegrationPreferences {
                 preferred_protocols: vec!["https".to_string(), "http2".to_string()],
                 load_balancing: LoadBalancingPreferences {

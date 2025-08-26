@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["WorkflowPriority","WorkflowType"],"mod":["canonical","improved_processing","notification","processors","storage","types","zero_cost_engine","zero_cost_processors","zero_cost_storage"],"struct":["WorkflowEngine"]};

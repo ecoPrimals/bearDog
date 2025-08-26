@@ -1,21 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Tests for CrossNodeAuthEngine
 
 use super::mocks::*;
 use crate::auth::types::*;
@@ -24,19 +7,19 @@ use beardog_security::handlers::threat_analysis::{
 };
 use chrono::Utc;
 use std::collections::HashMap;
-/// Test CrossNodeAuthEngine creation
+
 #[test]
 fn test_cross_node_auth_engine_creation() {
     let node_registry = Box::new(MockNodeRegistry);
     let proof_verifier = Box::new(MockProofVerifier);
     let engine = CrossNodeAuthEngine::new(node_registry, proof_verifier);
-    // Test that engine is created with default config
+
     assert!(engine.config.proof_verification_enabled);
     assert_eq!(engine.config.max_proof_validity_minutes, 60);
     assert!(engine.active_authorizations.is_empty());
     assert!(engine.spawned_beardogs.is_empty());
 }
-/// Test CrossNodeAuthEngine with custom config
+
 fn test_cross_node_auth_engine_with_config() {
     let config = CrossNodeAuthConfig {
         proof_verification_enabled: true,
@@ -52,7 +35,7 @@ fn test_cross_node_auth_engine_with_config() {
     assert!(engine.config.require_consensus);
     assert_eq!(engine.config.consensus_threshold, 0.8);
     assert!(engine.config.genetic_spawning_enabled);
-/// Test authorization creation for trusted node
+
 #[tokio::test]
 async fn test_create_authorization_trusted_node() -> Result<(), Box<dyn std::error::Error>> {
     let subject = Subject {
@@ -64,7 +47,7 @@ async fn test_create_authorization_trusted_node() -> Result<(), Box<dyn std::err
         permissions: vec!["read".to_string()],
         trust_level: 0.8,
         clearance_level: Some(3),
-        metadata: HashMap::new(),
+        metadata: HashMap::with_capacity(16),
     let resource = Resource {
         id: "test-resource".to_string(),
         name: "Test Resource".to_string(),
@@ -95,9 +78,9 @@ async fn test_create_authorization_trusted_node() -> Result<(), Box<dyn std::err
         ))
     })?;
     assert!(auth_result.allowed);
-    // Note: AuthorizationResult doesn't have subject_id/resource_id fields in canonical type
+
     Ok(())
-/// Test authorization denial for untrusted node
+
 async fn test_create_authorization_untrusted_node() -> beardog_errors::BearDogResult<()> {
         id: "untrusted-node".to_string(),
         name: "Untrusted Service".to_string(),
@@ -118,13 +101,11 @@ async fn test_create_authorization_untrusted_node() -> beardog_errors::BearDogRe
             "Authorization should complete",
             "Authorization should complete", e
     assert!(!auth_result.allowed); // Should be denied due to low trust
-/// Test comprehensive authorization workflow}
-
 
 async fn test_comprehensive_authorization_workflow() -> beardog_errors::BearDogResult<()> {
-    // Test multiple authorization scenarios
+
     let scenarios = vec![
-        // (subject_id, resource_class, action_type, expected_allowed)
+
         (
             "trusted-node",
             ResourceClassification::Public,
@@ -149,7 +130,7 @@ async fn test_comprehensive_authorization_workflow() -> beardog_errors::BearDogR
             permissions: vec!["read".to_string()],
             trust_level: 0.5,
             clearance_level: Some(2),
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         };
         let resource = Resource {
             id: format!("resource-{i}"),
@@ -184,7 +165,7 @@ async fn test_comprehensive_authorization_workflow() -> beardog_errors::BearDogR
             "Unexpected authorization result for scenario {}: subject={}, resource={:?}, expected={}, got={}", 
             i, subject_id, resource_class, expected, auth_result.allowed);
     }
-/// Test proof verification integration
+
 async fn test_proof_verification() -> beardog_errors::BearDogResult<()> {
     let authorization = CrossNodeAuthorization {
         id: "test-authorization".to_string(),
@@ -199,9 +180,9 @@ async fn test_proof_verification() -> beardog_errors::BearDogResult<()> {
     let operation = CrossNodeOperation {
         operation_type: OperationType::Read,
         target_resource: "test-resource".to_string(),
-        parameters: HashMap::new(),
+        parameters: HashMap::with_capacity(16),
         requester_signature: "test-signature".to_string(),
-    // Test proof creation
+
     let proof_result = engine
         .proof_verifier
         .generate_proof(&authorization, &operation);
@@ -211,14 +192,14 @@ async fn test_proof_verification() -> beardog_errors::BearDogResult<()> {
             "Proof creation should succeed", e
     assert_eq!(proof.authorization_id, "test-authorization");
     assert!(!proof.proof_signature.is_empty());
-    // Test proof verification
+
     let verification_result = engine.proof_verifier.verify_authorization_proof(&proof);
     assert!(verification_result.is_ok());
     assert!(verification_result.map_err(|e| {
             "Verification should succeed",
             "Verification should succeed", e
     })?);
-/// Test CrossNodeAuthConfig default values
+
 fn test_cross_node_auth_config_default() {
     let config = CrossNodeAuthConfig::default();
     assert!(config.proof_verification_enabled);

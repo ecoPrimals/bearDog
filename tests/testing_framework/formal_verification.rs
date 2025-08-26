@@ -1,35 +1,14 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Formal Verification Module
-//!
-//! This module implements mathematical proof systems for formal verification
-//! of security properties and system correctness.
 
 use crate::testing_framework::{traits::*, metrics::*};
 
-/// Run formal verification across all verifiers
 pub async fn run_verification(verifiers: &[Box<dyn FormalVerifier + Send + Sync>]) -> FormalVerificationResults {
     let mut verified_components = Vec::new();
     let mut mathematical_proofs = Vec::new();
     let mut total_confidence = 0.0;
 
     for verifier in verifiers {
-        // Verify core components
+
         let components = ["crypto_engine", "auth_system", "compliance_auditor"];
         for component in components {
             let result = verifier.verify_correctness(component);
@@ -57,7 +36,6 @@ pub async fn run_verification(verifiers: &[Box<dyn FormalVerifier + Send + Sync>
     }
 }
 
-/// Generate mathematical proof for a given property
 pub fn generate_mathematical_proof(theorem: &str, component: &str) -> MathematicalProof {
     let steps = match component {
         "crypto_engine" => generate_crypto_proof_steps(theorem),
@@ -77,7 +55,7 @@ fn generate_crypto_proof_steps(theorem: &str) -> Vec<ProofStep> {
     vec![
         ProofStep {
             step_number: 1,
-            description: format!("Given: {}", theorem),
+            description: format_args!("Given: {}", theorem).to_string(),
             justification: "Initial assumption".to_string(),
         },
         ProofStep {
@@ -102,7 +80,7 @@ fn generate_auth_proof_steps(theorem: &str) -> Vec<ProofStep> {
     vec![
         ProofStep {
             step_number: 1,
-            description: format!("Given: {}", theorem),
+            description: format_args!("Given: {}", theorem).to_string(),
             justification: "Initial assumption".to_string(),
         },
         ProofStep {
@@ -127,7 +105,7 @@ fn generate_compliance_proof_steps(theorem: &str) -> Vec<ProofStep> {
     vec![
         ProofStep {
             step_number: 1,
-            description: format!("Given: {}", theorem),
+            description: format_args!("Given: {}", theorem).to_string(),
             justification: "Initial assumption".to_string(),
         },
         ProofStep {
@@ -152,7 +130,7 @@ fn generate_generic_proof_steps(theorem: &str) -> Vec<ProofStep> {
     vec![
         ProofStep {
             step_number: 1,
-            description: format!("Given: {}", theorem),
+            description: format_args!("Given: {}", theorem).to_string(),
             justification: "Initial assumption".to_string(),
         },
         ProofStep {

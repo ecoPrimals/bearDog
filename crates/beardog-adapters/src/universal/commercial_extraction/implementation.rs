@@ -1,50 +1,31 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Commercial Extraction Detection Implementation
-///
-/// Core detection algorithms and behavioral analysis implementations
 use super::detector::*;
 use beardog_errors::{BearDogError, BearDogResult};
-// Removed - using re-export instead
+
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-// Tracing will be used when detection algorithms are fully implemented
 
 impl CommercialExtractionDetector {
-    /// Analyze request for commercial extraction patterns
+
     pub async fn analyze_request(
         &mut self,
         request: &UniversalRequest,
     ) -> CommercialClassification {
         let user_id = self.extract_user_identity(request);
-        // Update usage patterns
+
         self.update_usage_patterns(&user_id, request).await;
-        // Analyze entropy quality
+
         let entropy_quality = self.analyze_entropy_quality(&user_id, request).await;
-        // Detect commercial patterns
+
         let commercial_indicators = self.detect_commercial_indicators(&user_id).await;
-        // Genetic key evolution check
+
         let key_evolution_status = match self.check_key_evolution(&user_id).await {
             Ok(status) => status,
             Err(_) => KeyEvolutionStatus::Uninitialized, // Fallback for errors
         };
-        // Final classification
+
         self.classify_user_behavior(
             &user_id,
             entropy_quality,
@@ -53,12 +34,12 @@ impl CommercialExtractionDetector {
         )
         .await
     }
-    /// Extract user identity with privacy preservation
+
     fn extract_user_identity(&self, request: &UniversalRequest) -> String {
-        // Generate privacy-preserving identifier
+
         use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
-        // Hash multiple request characteristics
+
         if let Some(org) = request.payload.get("organization").and_then(|v| v.as_str()) {
             hasher.update(org.as_bytes());
         }
@@ -72,7 +53,7 @@ impl CommercialExtractionDetector {
                 .iter()
                 .take(8)
                 .fold(0u64, |acc, &b| acc << 8 | b as u64)
-    /// Update usage patterns for behavioral analysis
+
     async fn update_usage_patterns(&mut self, user_id: &str, request: &UniversalRequest) {
         let now = Utc::now();
         let pattern = self
@@ -80,7 +61,7 @@ impl CommercialExtractionDetector {
             .entry(user_id.to_string())
             .or_insert_with(|| UsagePattern {
                 request_frequencies: Vec::new(),
-                function_patterns: HashMap::new(),
+                function_patterns: HashMap::with_capacity(16),
                 timing_variance: 0.0,
                 network_patterns: NetworkBehaviorPattern {
                     connection_persistence: 0.0,
@@ -95,11 +76,11 @@ impl CommercialExtractionDetector {
                     bulk_operation_score: 0.0,
                 classification_confidence: 0.5,
             });
-        // Update request frequency (humans are irregular, machines are regular)
+
         pattern.request_frequencies.push((now, 1));
         if pattern.request_frequencies.len() > 100 {
             pattern.request_frequencies.remove(0);
-        // Analyze timing patterns
+
         if pattern.request_frequencies.len() > 1 {
             let intervals: Vec<i64> = pattern
                 .request_frequencies
@@ -113,16 +94,16 @@ impl CommercialExtractionDetector {
                     .map(|&x| (x as f64 - mean).powi(2))
                     .sum::<f64>()
                     / intervals.len() as f64;
-                // Humans have high variance, machines have low variance
+
                 pattern.timing_variance = variance.sqrt();
             }
-        // Track function patterns
+
         if let Some(function) = request.payload.get("function").and_then(|v| v.as_str()) {
             *pattern
                 .function_patterns
                 .entry(function.to_string())
                 .or_insert(0) += 1;
-    /// Analyze entropy quality for human vs machine detection
+
     async fn analyze_entropy_quality(&mut self, user_id: &str, request: &UniversalRequest) -> f64 {
         let history = self
             .entropy_tracking
@@ -131,13 +112,12 @@ impl CommercialExtractionDetector {
                 quality_progression: Vec::new(),
                 human_entropy_sources: Vec::new(),
                 key_generations: Vec::new(),
-        // Check for human entropy indicators
+
         let mut entropy_quality = 0.3; // Base machine entropy
-        // Look for human-like characteristics in the request
-            // Individual patterns vs corporate patterns
+
             if !org.contains("corp") && !org.contains("inc") && !org.contains("llc") {
                 entropy_quality += 0.2; // Individual boost
-        // Check for human entropy collection patterns
+
         if let Some(payload_obj) = request.payload.as_object() {
             if payload_obj.contains_key("biometric_data")
                 || payload_obj.contains_key("audio_entropy")
@@ -150,7 +130,7 @@ impl CommercialExtractionDetector {
                     quality_indicators: vec![entropy_quality],
                     consistency_score: 0.5,
                 });
-        // Progressive improvement for consistent human users
+
         if history.quality_progression.len() > 5 {
             let recent_avg = history
                 .quality_progression
@@ -165,30 +145,30 @@ impl CommercialExtractionDetector {
             .quality_progression
             .push((Utc::now(), entropy_quality));
         entropy_quality
-    /// Detect commercial extraction indicators
+
     async fn detect_commercial_indicators(&self, user_id: &str) -> f64 {
         if let Some(pattern) = self.usage_patterns.get(user_id) {
             let mut commercial_score: f64 = 0.0;
-            // High frequency = commercial
+
             if pattern.request_frequencies.len() > 50 {
                 commercial_score += 0.3;
-            // Low timing variance = automation = commercial
+
             if pattern.timing_variance < 1.0 {
                 commercial_score += 0.4;
-            // Bulk operations = commercial
+
             if pattern.data_volume_analysis.bulk_operation_score > 0.5 {
-            // Persistent connections = commercial
+
             if pattern.network_patterns.connection_persistence > 0.8 {
                 commercial_score += 0.2;
             commercial_score.min(1.0)
         } else {
             0.0
-    /// Check genetic key evolution status
+
     async fn check_key_evolution(&mut self, user_id: &str) -> BearDogResult<KeyEvolutionStatus> {
         if let Some(history) = self.entropy_tracking.get_mut(user_id) {
-            // Check if key needs evolution
+
             if history.key_generations.is_empty() {
-                // Create first generation
+
                 let first_gen = KeyGeneration {
                     generation: 0,
                     fitness_score: 0.5,
@@ -216,14 +196,14 @@ impl CommercialExtractionDetector {
                     Ok(KeyEvolutionStatus::Stable)
                 }
             Ok(KeyEvolutionStatus::Uninitialized)
-    /// Final classification of user behavior
+
     async fn classify_user_behavior(
         &self,
         _user_id: &str,
         entropy_quality: f64,
         commercial_indicators: f64,
         key_evolution: KeyEvolutionStatus,
-        // Sophisticated classification algorithm
+
         let human_score = entropy_quality
             + match key_evolution {
                 KeyEvolutionStatus::NewLineage => 0.1,
@@ -244,12 +224,12 @@ impl CommercialExtractionDetector {
             CommercialClassification::Uncertain {
                 human_probability: human_score / (human_score + commercial_score),
 }
-/// Key evolution status
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeyEvolutionStatus {
     Uninitialized,
     NewLineage,
     Stable,
     ReadyForEvolution,
-// Use the actual UniversalRequest from the adapters module
+
 pub use crate::adapters::UniversalRequest;

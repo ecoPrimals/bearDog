@@ -1,70 +1,45 @@
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-
-/// Canonical HSM Types - Unified Type System
-///
-/// This module provides the canonical, modernized HSM types that replace
-/// the fragmented type definitions across the tunnel crate.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
-// CANONICAL IMPORT: use beardog_types::config::UnifiedDiscoveryConfig;
-/// Canonical memory protection level - unified definition
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MemoryProtectionLevel {
-    /// No special memory protection
+
     None,
-    /// Basic memory protection
+
     Low,
-    /// Standard memory protection
+
     Medium,
-    /// Enhanced memory protection with encryption
+
     High,
-    /// Maximum security with hardware-backed protection
+
     Maximum,
 }
 impl Default for MemoryProtectionLevel {}
 
-
     fn default() -> Self {
         Self::Medium
     }
-/// Canonical performance metrics - unified definition
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
-    /// Operations per second
-    pub operations_per_second: f64,
-    /// Average latency in milliseconds
-    pub average_latency_ms: f64,
-    /// Success rate percentage (0.0 to 100.0)
-    pub success_rate: f64,
-    /// Memory usage in MB
-    pub memory_usage_mb: f64,
-    /// CPU usage percentage (0.0 to 100.0)
-    pub cpu_usage_percent: f64,
-    /// Total number of errors
-    pub error_count: u64,
-    /// Uptime in seconds
-    pub uptime_seconds: u64,}
 
+    pub operations_per_second: f64,
+
+    pub average_latency_ms: f64,
+
+    pub success_rate: f64,
+
+    pub memory_usage_mb: f64,
+
+    pub cpu_usage_percent: f64,
+
+    pub error_count: u64,
+
+    pub uptime_seconds: u64,}
 
 impl Default for PerformanceMetrics {
         Self {
@@ -76,190 +51,171 @@ impl Default for PerformanceMetrics {
             error_count: 0,
             uptime_seconds: 0,
         }
-/// Canonical attestation level - unified definition
-pub enum AttestationLevel {
-    /// No attestation
-    /// Basic software attestation
-    Software,
-    /// Hardware-backed attestation
-    Hardware,
-    /// Verified boot attestation
-    VerifiedBoot,
-    /// Strong hardware attestation
-    StrongBox,
-/// Canonical HSM type - unified definition}
 
+pub enum AttestationLevel {
+
+    Software,
+
+    Hardware,
+
+    VerifiedBoot,
+
+    StrongBox,
 
 pub enum HsmType {
-    /// Software-based HSM
-    /// Network-attached HSM
-    Network,
-    /// USB-connected HSM
-    Usb,
-    /// PCIe card HSM
-    Pcie,
-    /// Cloud-based HSM
-    Cloud,
-    /// Mobile secure element
-    Mobile,
-    /// TPM (Trusted Platform Module)
-    Tpm,
-/// Canonical smartphone type - unified definition
-pub enum SmartphoneType {
-    /// Android device
-    Android,
-    /// iOS device
-    Ios,
-    /// Other smartphone OS
-    Other(String),
-/// Canonical secure enclave type - unified definition}
 
+    Network,
+
+    Usb,
+
+    Pcie,
+
+    Cloud,
+
+    Mobile,
+
+    Tpm,
+
+pub enum SmartphoneType {
+
+    Android,
+
+    Ios,
+
+    Other(String),
 
 pub enum SecureEnclaveType {
-    /// Apple Secure Enclave
-    AppleSecureEnclave,
-    /// Android StrongBox
-    AndroidStrongBox,
-    /// Samsung Knox
-    SamsungKnox,
-    /// Qualcomm Secure Processing Unit
-    QualcommSpu,
-    /// Generic TEE
-    TrustedExecutionEnvironment,
-/// Canonical software HSM type - unified definition
-pub enum SoftwareHsmType {
-    /// SoftHSM implementation
-    SoftHsm,
-    /// OpenSSL engine
-    OpenSsl,
-    /// BearDog native implementation
-    BearDogNative,
-    /// Custom implementation
-    Custom(String),
-/// Canonical entropy quality rating - unified definition}
 
+    AppleSecureEnclave,
+
+    AndroidStrongBox,
+
+    SamsungKnox,
+
+    QualcommSpu,
+
+    TrustedExecutionEnvironment,
+
+pub enum SoftwareHsmType {
+
+    SoftHsm,
+
+    OpenSsl,
+
+    BearDogNative,
+
+    Custom(String),
 
 pub enum EntropyQualityRating {
-    /// No entropy quality (legacy)
-    /// Insufficient entropy quality
-    Insufficient,
-    /// Low entropy quality
-    /// Basic entropy quality
-    Basic,
-    /// Medium entropy quality
-    /// Good entropy quality
-    Good,
-    /// High entropy quality
-    /// Excellent entropy quality
-    Excellent,
-    /// Premium entropy quality
-    Premium,}
 
+    Insufficient,
+
+    Basic,
+
+    Good,
+
+    Excellent,
+
+    Premium,}
 
 impl Default for EntropyQualityRating {
         Self::Basic
-/// Canonical entropy collection method - unified definition
+
 pub enum EntropyCollectionMethod {
-    /// Touch patterns with pressure sensitivity
+
     TouchPatterns { pressure_sensitive: bool },
-    /// Advanced touch patterns with multiple sensors
+
     TouchPatternsAdvanced {
         pressure_sensitive: bool,
         multi_touch: bool,
         gesture_recognition: bool,
     },
-    /// Device motion sensors
+
     DeviceMotion,
-    /// Environmental sensors
+
     EnvironmentalSensors { sensor_types: Vec<String> },
-    /// Biometric data
+
     Biometric,
-    /// Behavioral patterns
+
     Behavioral,
-/// Canonical HSM interface type - unified definition
+
 pub enum HsmInterfaceType {
-    /// PKCS#11 interface
+
     Pkcs11 { library_path: String },
-    /// Network HSM interface
+
     NetworkHsm { endpoint: String, protocol: String },
-    /// USB HSM interface
+
     UsbHsm { device_path: String },
-    /// Smart card interface
+
     SmartCard { reader_name: String },
-    /// TPM interface
+
     Tpm { version: String },
-    /// AWS KMS interface
+
     AwsKms { region: String },
-    /// Azure Key Vault interface
+
     AzureKeyVault { vault_url: String },
-    /// Google Cloud KMS interface
+
     GcpKms {
         project_id: String,
         location: String,
-    /// Android StrongBox interface
+
     AndroidStrongBox { security_level: u8 },
-    /// iOS Secure Enclave interface
+
     IosSecureEnclave { enclave_version: String },
-    /// SoftHSM interface
+
     SoftHsm { config_path: String },
-    /// OpenSSL engine interface
+
     OpenSsl { engine_path: String },
-    /// BearDog native interface
+
     BearDogNative { instance_id: String },
-    /// Windows CNG interface
+
     WindowsCng { provider_name: String },
-    /// macOS Keychain interface
+
     MacOsKeychain { keychain_path: String },
-    /// Custom API interface
+
     CustomApi {
         api_endpoint: String,
         auth_method: String,
-    /// Proprietary driver interface
-    ProprietaryDriver { driver_path: String, config: String },
-/// Canonical HSM connection info - unified definition
-pub struct HsmConnectionInfo {
-    /// Connection timeout in seconds
-    pub timeout: u64,
-    /// Maximum retry attempts
-    pub max_retries: u32,
-    /// Connection pool size
-    pub pool_size: u32,
-    /// Additional connection parameters
-    pub parameters: HashMap<String, String>,}
 
+    ProprietaryDriver { driver_path: String, config: String },
+
+pub struct HsmConnectionInfo {
+
+    pub timeout: u64,
+
+    pub max_retries: u32,
+
+    pub pool_size: u32,
+
+    pub parameters: HashMap<String, String>,}
 
 impl Default for HsmConnectionInfo {
             timeout: 30,
             max_retries: 3,
             pool_size: 10,
-            parameters: HashMap::new(),
-/// Canonical discovered HSM - unified definition}
-
+            parameters: HashMap::with_capacity(16),
 
 pub struct DiscoveredHsm {
-    /// HSM name/identifier
-    pub name: String,
-    /// HSM type
-    pub hsm_type: HsmType,
-    /// Connection endpoint
-    pub endpoint: String,
-    /// Supports human entropy
-    pub supports_human_entropy: bool,
-    /// Discovery timestamp
-    pub discovered_at: DateTime<Utc>,
-    /// Vendor information
-    pub vendor: Option<String>,
-    /// Model information
-    pub model: Option<String>,
-    /// Version information
-    pub version: Option<String>,
-    /// Interface type
-    pub interface_type: Option<HsmInterfaceType>,
-    /// Connection information
-    pub connection_info: Option<HsmConnectionInfo>,
-/// Canonical discovery config - unified definition
-// MIGRATED: DiscoveryConfig -> use beardog_types::config::UnifiedDiscoveryConfig;
 
+    pub name: String,
+
+    pub hsm_type: HsmType,
+
+    pub endpoint: String,
+
+    pub supports_human_entropy: bool,
+
+    pub discovered_at: DateTime<Utc>,
+
+    pub vendor: Option<String>,
+
+    pub model: Option<String>,
+
+    pub version: Option<String>,
+
+    pub interface_type: Option<HsmInterfaceType>,
+
+    pub connection_info: Option<HsmConnectionInfo>,
 
 impl Default for DiscoveryConfig {
             enable_cloud_discovery: true,
@@ -269,11 +225,9 @@ impl Default for DiscoveryConfig {
             enable_capability_detection: true,
             auto_discovery_enabled: true,
             timeout: Some(300),
-/// Canonical key metadata - unified definition}
-
 
 impl Default for KeyMetadata {
-            key_id: String::new(),
+            key_id: String::with_capacity(64),
             key_name: None,
             key_type: None,
             algorithm: None,
@@ -285,9 +239,8 @@ impl Default for KeyMetadata {
             usage_count: Some(0),
             is_exportable: Some(false),
             is_hardware_backed: Some(false),
-            tags: HashMap::new(),
-// Legacy type aliases removed - use canonical types directly
-/// Re-export canonical types for easy migration
+            tags: HashMap::with_capacity(16),
+
 pub use self::{
     AttestationLevel as CanonicalAttestationLevel, DiscoveredHsm as CanonicalDiscoveredHsm,
     DiscoveryConfig as CanonicalDiscoveryConfig,

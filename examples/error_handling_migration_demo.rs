@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BearDog Error Handling Migration Demo
-//!
-//! This example demonstrates the evolution from old `Result<(), E>` patterns
-//! to idiomatic Rust error handling with rich context, following SongBird's lead.
 
 use beardog_errors::{
     improved_results::*, migration_examples::*, operation_outcome, outcome_with_data, BearDogError,
@@ -31,7 +11,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 BearDog Error Handling Migration Demo");
     println!("========================================\n");
 
-    // Demo 1: Authentication Improvements
     println!("📝 Demo 1: Authentication Pattern Evolution");
     println!("-------------------------------------------");
 
@@ -62,7 +41,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n{}", "=".repeat(60));
 
-    // Demo 2: Key Generation Improvements
     println!("\n📝 Demo 2: Key Generation Pattern Evolution");
     println!("--------------------------------------------");
 
@@ -90,7 +68,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n{}", "=".repeat(60));
 
-    // Demo 3: Validation Improvements
     println!("\n📝 Demo 3: Validation Pattern Evolution");
     println!("----------------------------------------");
 
@@ -140,7 +117,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n{}", "=".repeat(60));
 
-    // Demo 4: Processing Improvements
     println!("\n📝 Demo 4: Processing Pattern Evolution");
     println!("---------------------------------------");
 
@@ -219,7 +195,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n{}", "=".repeat(60));
 
-    // Demo 5: Simple Operations with Rich Context
     println!("\n📝 Demo 5: Simple Operations with OperationOutcome");
     println!("--------------------------------------------------");
 
@@ -247,7 +222,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n{}", "=".repeat(60));
 
-    // Demo 6: Custom Data with OperationOutcome
     println!("\n📝 Demo 6: Custom Data with OperationOutcome");
     println!("---------------------------------------------");
 

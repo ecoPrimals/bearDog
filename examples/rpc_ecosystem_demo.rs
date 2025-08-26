@@ -1,32 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BearDog RPC Ecosystem Integration Demo
-//!
-//! Demonstrates how BearDog integrates with the ecoPrimals ecosystem via RPC
-//! while maintaining complete sovereignty and empowering human dignity.
-//!
-//! ## Demo Scenarios
-//! - Register BearDog with the ecosystem
-//! - Discover available primal services (ToadStool, Songbird, NestGate, etc.)
-//! - Provide security services to other primals  
-//! - Request compute resources from ToadStool
-//! - Leverage Squirrel for AI assistance
-//! - Network effects analytics
 
 use beardog_api::api::success_response;
 use beardog_core::core::BearDogCore;
@@ -37,41 +9,33 @@ use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize tracing
+
     tracing_subscriber::fmt::init();
 
     info!("🌟 BearDog RPC Ecosystem Integration Demo");
     info!("==========================================");
-    
-    // Initialize BearDog core 
+
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
-    
-    // Demo Scenario 1: Ecosystem Registration
+
     demo_ecosystem_registration().await?;
     sleep(Duration::from_secs(1)).await;
-    
-    // Demo Scenario 2: Service Discovery
+
     demo_service_discovery().await?;
     sleep(Duration::from_secs(1)).await;
-    
-    // Demo Scenario 3: Cross-Primal Security Services
+
     demo_security_service_provision().await?;
     sleep(Duration::from_secs(1)).await;
-    
-    // Demo Scenario 4: Request Compute from ToadStool
+
     demo_toadstool_compute_request().await?;
     sleep(Duration::from_secs(1)).await;
-    
-    // Demo Scenario 5: AI Assistance from Squirrel
+
     demo_squirrel_ai_assistance().await?;
     sleep(Duration::from_secs(1)).await;
-    
-    // Demo Scenario 6: Storage Integration with NestGate
+
     demo_nestgate_storage().await?;
     sleep(Duration::from_secs(1)).await;
-    
-    // Demo Scenario 7: Network Effects Analytics
+
     demo_network_effects_analytics().await?;
     
     info!("✅ RPC Ecosystem Integration Demo completed successfully!");
@@ -80,12 +44,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demo 1: Register BearDog with the ecosystem
 async fn demo_ecosystem_registration() -> Result<(), Box<dyn std::error::Error>> {
     info!("📋 Demo 1: Ecosystem Registration");
     info!("----------------------------------");
-    
-    // Simulate registering BearDog's capabilities with the ecosystem
+
     let registration_data = serde_json::json!({
         "primal_id": "beardog-node-001",
         "primal_type": "security_manager",
@@ -120,8 +82,7 @@ async fn demo_ecosystem_registration() -> Result<(), Box<dyn std::error::Error>>
     info!("   • Context-Aware Licensing");
     info!("   • Genetic Node Spawning");
     info!("   • Zero-Copy Cryptography");
-    
-    // Simulate successful registration
+
     let response = success_response(
         registration_data,
         uuid::Uuid::new_v4().to_string(),
@@ -136,12 +97,10 @@ async fn demo_ecosystem_registration() -> Result<(), Box<dyn std::error::Error>>
     Ok(())
 }
 
-/// Demo 2: Discover available ecosystem services
 async fn demo_service_discovery() -> Result<(), Box<dyn std::error::Error>> {
     info!("🔍 Demo 2: Service Discovery");
     info!("-----------------------------");
-    
-    // Simulate discovering other primals in the ecosystem
+
     let discovered_services = serde_json::json!({
         "total_primals": 5,
         "active_services": [
@@ -206,12 +165,10 @@ async fn demo_service_discovery() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demo 3: Provide security services to other primals
 async fn demo_security_service_provision() -> Result<(), Box<dyn std::error::Error>> {
     info!("🛡️ Demo 3: Security Service Provision");
     info!("--------------------------------------");
-    
-    // Simulate providing threat detection services to ToadStool
+
     let security_service_data = serde_json::json!({
         "service_type": "threat_detection",
         "requesting_primal": "toadstool-compute-01",
@@ -235,8 +192,7 @@ async fn demo_security_service_provision() -> Result<(), Box<dyn std::error::Err
     info!("   • ML Prediction: Normal Behavior");
     info!("   • 🏛️ Sovereignty: Preserved");
     info!("   • 🧑 Human Impact: Positive");
-    
-    // Simulate compliance audit for Songbird
+
     let compliance_data = serde_json::json!({
         "service_type": "compliance_audit",
         "requesting_primal": "songbird-mesh-01",
@@ -273,12 +229,10 @@ async fn demo_security_service_provision() -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
-/// Demo 4: Request compute resources from ToadStool
 async fn demo_toadstool_compute_request() -> Result<(), Box<dyn std::error::Error>> {
     info!("💻 Demo 4: ToadStool Compute Integration");
     info!("----------------------------------------");
-    
-    // Simulate requesting compute for genetic analysis
+
     let compute_request = serde_json::json!({
         "requested_service": "substrate_agnostic_hosting",
         "workload_type": "genetic_spawning_validation",
@@ -302,8 +256,7 @@ async fn demo_toadstool_compute_request() -> Result<(), Box<dyn std::error::Erro
     info!("   • Runtime: Rust Native");
     info!("   • Duration: ~10 minutes");
     info!("   • 🔐 Sovereignty: Data stays sovereign");
-    
-    // Simulate ToadStool response
+
     let compute_response = serde_json::json!({
         "request_status": "ACCEPTED",
         "allocated_resources": {
@@ -342,12 +295,10 @@ async fn demo_toadstool_compute_request() -> Result<(), Box<dyn std::error::Erro
     Ok(())
 }
 
-/// Demo 5: AI assistance from Squirrel
 async fn demo_squirrel_ai_assistance() -> Result<(), Box<dyn std::error::Error>> {
     info!("🐿️ Demo 5: Squirrel AI Coordination");
     info!("----------------------------------");
-    
-    // Request AI assistance for threat analysis
+
     let ai_request = serde_json::json!({
         "assistance_type": "security_analysis_optimization",
         "context": {
@@ -368,8 +319,7 @@ async fn demo_squirrel_ai_assistance() -> Result<(), Box<dyn std::error::Error>>
     info!("   • Current Accuracy: 95%");
     info!("   • 🔐 Privacy: No data extraction allowed");
     info!("   • 🏠 Local Inference: Required");
-    
-    // Simulate Squirrel AI response 
+
     let ai_response = serde_json::json!({
         "analysis_complete": true,
         "recommendations": [
@@ -417,12 +367,10 @@ async fn demo_squirrel_ai_assistance() -> Result<(), Box<dyn std::error::Error>>
     Ok(())
 }
 
-/// Demo 6: Storage integration with NestGate
 async fn demo_nestgate_storage() -> Result<(), Box<dyn std::error::Error>> {
     info!("🗄️ Demo 6: NestGate Storage Integration");
     info!("---------------------------------------");
-    
-    // Request encrypted storage for compliance logs
+
     let storage_request = serde_json::json!({
         "storage_type": "encrypted_compliance_logs",
         "requirements": {
@@ -441,8 +389,7 @@ async fn demo_nestgate_storage() -> Result<(), Box<dyn std::error::Error>> {
     info!("   • Integrity: ZFS checksums");
     info!("   • Retention: 7 years");
     info!("   • 🌍 Geographic Sovereignty: Local jurisdiction");
-    
-    // Simulate NestGate response
+
     let storage_response = serde_json::json!({
         "storage_allocated": true,
         "storage_pool": "nestgate-compliance-pool-03",
@@ -487,12 +434,10 @@ async fn demo_nestgate_storage() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demo 7: Network effects analytics  
 async fn demo_network_effects_analytics() -> Result<(), Box<dyn std::error::Error>> {
     info!("📊 Demo 7: Network Effects Analytics");
     info!("------------------------------------");
-    
-    // Simulate network effects measurement
+
     let network_analytics = serde_json::json!({
         "beardog_contributions": {
             "security_services_provided": 847,

@@ -1,26 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Benchmark-specific type definitions
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// Rate limiting configuration for benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitConfig {
     pub requests_per_minute: u32,
@@ -38,7 +20,6 @@ impl Default for RateLimitConfig {
     }
 }
 
-/// Memory optimization configuration for benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryOptimizationConfig {
     pub buffer_pool_size: usize,
@@ -74,7 +55,6 @@ impl MemoryOptimizationConfig {
     }
 }
 
-/// Async optimization configuration for benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AsyncOptimizationConfig {
     pub max_concurrent_tasks: usize,
@@ -110,7 +90,6 @@ impl AsyncOptimizationConfig {
     }
 }
 
-/// Optimized database configuration for benchmarks
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizedDatabaseConfig {
     pub max_connections: u32,
@@ -129,7 +108,7 @@ impl Default for OptimizedDatabaseConfig {
 }
 
 impl OptimizedDatabaseConfig {
-    /// Validate the database configuration
+
     pub fn validate(&self) -> Result<(), String> {
         if self.max_connections == 0 {
             return Err("max_connections must be greater than 0".to_string());
@@ -144,7 +123,6 @@ impl OptimizedDatabaseConfig {
     }
 }
 
-/// Risk level enumeration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RiskLevel {
     Low,
@@ -153,7 +131,6 @@ pub enum RiskLevel {
     Critical,
 }
 
-/// Account status enumeration  
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AccountStatus {
     Active,
@@ -162,7 +139,6 @@ pub enum AccountStatus {
     Closed,
 }
 
-/// Zero-copy performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCopyPerformanceMetrics {
     pub buffer_pool_hit: bool,

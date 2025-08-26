@@ -1,21 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Integration tests for mathematical certainty framework
 
 use super::framework::*;
 use beardog_errors::BearDogResult;
@@ -26,8 +9,7 @@ async fn test_achieve_mathematical_certainty() -> BearDogResult<()> {
     println!("🧮 Testing Mathematical Certainty Framework");
     
     let mut framework = MathematicalCertaintyFramework::new();
-    
-    // Execute a smaller scale test for CI/CD compatibility
+
     let result = framework.achieve_mathematical_certainty().await;
     
     match result {
@@ -37,8 +19,7 @@ async fn test_achieve_mathematical_certainty() -> BearDogResult<()> {
             println!("   🧪 Total Tests: {}", report.total_tests_executed);
             println!("   ⚠️  Critical Failures: {}", report.critical_failures);
             println!("   ⏱️  Execution Time: {:?}", report.execution_time);
-            
-            // Verify reasonable confidence levels
+
             assert!(report.confidence_level >= 0.95, "Confidence level should be at least 95%");
             assert!(report.total_tests_executed > 0, "Should execute tests");
             assert_eq!(report.critical_failures, 0, "Should have no critical failures");
@@ -53,14 +34,13 @@ async fn test_achieve_mathematical_certainty() -> BearDogResult<()> {
 }
 
 impl MathematicalCertaintyFramework {
-    /// Achieve mathematical certainty through comprehensive testing
+
     pub async fn achieve_mathematical_certainty(&mut self) -> BearDogResult<MathematicalCertaintyReport> {
         println!("🎯 INITIATING MATHEMATICAL CERTAINTY ANALYSIS");
         println!("📊 Target: 99.9% Statistical Confidence");
         
         let start_time = std::time::Instant::now();
 
-        // Execute comprehensive testing phases
         let property_results = self.execute_million_scale_property_testing().await?;
         let crypto_results = self.execute_exhaustive_cryptographic_testing().await?;
         let boundary_results = self.execute_comprehensive_boundary_testing().await?;
@@ -93,7 +73,7 @@ impl MathematicalCertaintyFramework {
     }
 
     async fn execute_million_scale_property_testing(&mut self) -> BearDogResult<PropertyTestingResults> {
-        // Simplified for CI/CD - would be millions in production
+
         let test_count = 10_000;
         
         Ok(PropertyTestingResults {
@@ -151,7 +131,7 @@ impl MathematicalCertaintyFramework {
         _property_results: &PropertyTestingResults,
         _crypto_results: &CryptographicTestingResults,
     ) -> BearDogResult<f64> {
-        // Simplified calculation for this refactor
+
         Ok(0.999)
     }
 } 

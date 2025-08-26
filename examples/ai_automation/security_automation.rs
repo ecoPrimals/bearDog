@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! AI-Driven Security Operations
-//!
-//! BearDog's standalone security automation capabilities,
-//! enhanced through network effects when connected to Squirrel fleet.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -27,7 +7,6 @@ use tokio::fs;
 use beardog_errors::BearDogResult;
 use crate::ai_automation::standalone_ai::{BearDogAICore, SecurityPattern, AIInsight};
 
-/// Security operation types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SecurityOperationType {
     ThreatDetection,
@@ -93,14 +72,13 @@ pub enum VulnerabilitySeverity {
     Informational,
 }
 
-/// Run standalone security operations with optional AI enhancement
 pub async fn run_standalone_security(
     ai_core: &BearDogAICore,
     operations_file: &PathBuf,
     output_file: &PathBuf,
     ai_enhanced: bool,
 ) -> BearDogResult<Vec<SecurityResult>> {
-    // Load security operations from file
+
     let operations_data = fs::read_to_string(operations_file).await?;
     let operations: Vec<SecurityOperation> = serde_json::from_str(&operations_data)?;
     
@@ -110,8 +88,7 @@ pub async fn run_standalone_security(
     
     for operation in operations {
         let start_time = std::time::Instant::now();
-        
-        // Execute security operation with standalone AI
+
         let result = execute_security_operation(ai_core, &operation, ai_enhanced).await?;
         
         let execution_time = start_time.elapsed().as_millis() as u64;
@@ -120,8 +97,7 @@ pub async fn run_standalone_security(
         
         results.push(final_result);
     }
-    
-    // Save results
+
     let results_json = serde_json::to_string_pretty(&results)?;
     fs::write(output_file, results_json).await?;
     
@@ -163,37 +139,33 @@ async fn execute_threat_detection(
     ai_enhanced: bool,
 ) -> BearDogResult<SecurityResult> {
     println!("🕵️ Running threat detection for: {}", operation.target.endpoint);
-    
-    // Simulate collecting security data
+
     let security_data = collect_security_data(&operation.target).await?;
-    
-    // AI-enhanced pattern analysis if requested
+
     let (patterns, ai_insights) = if ai_enhanced {
         let patterns = ai_core.analyze_security_patterns(&security_data).await?;
         let insights = ai_core.generate_hybrid_insights().await?;
         (patterns, insights)
     } else {
-        // Basic pattern detection without AI
+
         (Vec::new(), Vec::new())
     };
-    
-    // Calculate threat level based on patterns found
+
     let threat_level = patterns.iter()
         .map(|p| p.threat_level)
         .fold(0.0, f64::max);
-    
-    // Generate vulnerabilities based on threat patterns
+
     let vulnerabilities = patterns.into_iter()
         .filter(|p| p.threat_level > 0.5)
         .map(|pattern| Vulnerability {
-            vuln_id: format!("THREAT-{}", pattern.pattern_id),
+            vuln_id: format_args!("THREAT-{}", pattern.pattern_id).to_string(),
             severity: match pattern.threat_level {
                 x if x > 0.9 => VulnerabilitySeverity::Critical,
                 x if x > 0.7 => VulnerabilitySeverity::High,
                 x if x > 0.5 => VulnerabilitySeverity::Medium,
                 _ => VulnerabilitySeverity::Low,
             },
-            description: format!("Security threat pattern detected: {}", pattern.pattern_id),
+            description: format_args!("Security threat pattern detected: {}", pattern.pattern_id).to_string(),
             cve_ids: Vec::new(),
             ai_confidence: pattern.confidence,
             remediation_steps: vec!["Monitor closely".to_string(), "Apply security updates".to_string()],
@@ -227,8 +199,7 @@ async fn execute_vulnerability_scanning(
     ai_enhanced: bool,
 ) -> BearDogResult<SecurityResult> {
     println!("🔍 Scanning for vulnerabilities: {}", operation.target.endpoint);
-    
-    // Placeholder vulnerability scanning logic
+
     let vulnerabilities = vec![
         Vulnerability {
             vuln_id: "CVE-2024-0001".to_string(),
@@ -263,8 +234,7 @@ async fn execute_access_control_validation(
     _ai_enhanced: bool,
 ) -> BearDogResult<SecurityResult> {
     println!("🔑 Validating access controls: {}", operation.target.endpoint);
-    
-    // Placeholder access control validation
+
     Ok(SecurityResult {
         operation_id: operation.operation_id.clone(),
         success: true,
@@ -282,8 +252,7 @@ async fn execute_compliance_audit(
     _ai_enhanced: bool,
 ) -> BearDogResult<SecurityResult> {
     println!("📋 Running compliance audit: {}", operation.target.endpoint);
-    
-    // Placeholder compliance audit
+
     Ok(SecurityResult {
         operation_id: operation.operation_id.clone(),
         success: true,
@@ -351,8 +320,7 @@ async fn execute_forensic_analysis(
 }
 
 async fn collect_security_data(target: &SecurityTarget) -> BearDogResult<Vec<u8>> {
-    // Placeholder: In production this would collect actual security data
-    // based on the target type and endpoint
+
     match target.target_type {
         TargetType::NetworkEndpoint => Ok(b"network_scan_data".to_vec()),
         TargetType::FileSystem => Ok(b"filesystem_scan_data".to_vec()),

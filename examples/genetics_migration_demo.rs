@@ -1,30 +1,9 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Genetics Migration Demonstration
-//!
-//! This example demonstrates the migration of genetics operations from
-//! `Result<(), E>` patterns to rich, idiomatic return types.
 
 use beardog_errors::{improved_results::*, migration_helpers::*, BearDogError, BearDogResult};
 use chrono::Utc;
 use std::collections::HashMap;
 
-// Mock genetics types for demonstration
 #[derive(Debug, Clone)]
 pub struct BearDogGenetics {
     pub id: String,
@@ -50,39 +29,29 @@ pub struct MockGeneticsRegistry {
 impl MockGeneticsRegistry {
     pub fn new() -> Self {
         Self {
-            genetics: HashMap::new(),
+            genetics: HashMap::with_capacity(16),
         }
     }
 }
 
-// ============================================================================
-// BEFORE: Non-idiomatic patterns
-// ============================================================================
-
-/// ❌ OLD: Non-idiomatic genetics registration - provides no useful information
 impl MockGeneticsRegistry {
     pub fn register_genetics_old(&mut self, genetics: BearDogGenetics) -> BearDogResult<()> {
-        // Simulate genetics registration
+
         self.genetics.insert(genetics.id.clone(), genetics);
         Ok(()) // What validation occurred? Performance metrics? Registry size?
     }
 
     pub fn terminate_spawn_old(&mut self, spawn_id: &str) -> BearDogResult<()> {
-        // Simulate spawn termination
+
         if spawn_id == "valid_spawn" {
             Ok(()) // No cleanup info, performance metrics, or termination details
         } else {
-            Err(BearDogError::authorization(format!("Spawn not found: {)", spawn_id),
+            Err(BearDogError::authorization(format_args!("Spawn not found: {)", spawn_id).to_string(),
             })
         }
     }
 }
 
-// ============================================================================
-// AFTER: Rich, idiomatic patterns
-// ============================================================================
-
-/// ✅ NEW: Rich genetics registration with comprehensive validation and context
 impl MockGeneticsRegistry {
     pub fn register_genetics_rich(
         &mut self,
@@ -90,17 +59,14 @@ impl MockGeneticsRegistry {
     ) -> BearDogResult<GeneticsRegistrationOutcome> {
         let start_time = Utc::now();
 
-        // Extract genetics information for the outcome
         let genetics_id = genetics.id.clone();
         let capabilities = genetics.capabilities.clone();
-        let security_clearance = format!("{:?}", genetics.security_clearance);
+        let security_clearance = format_args!("{:?}", genetics.security_clearance).to_string();
         let generation = genetics.generation;
         let fitness_score = genetics.fitness_score;
 
-        // Perform the registration
         self.genetics.insert(genetics.id.clone(), genetics);
 
-        // Create rich outcome with comprehensive context
         let mut outcome = create_genetics_outcome(
             genetics_id,
             capabilities,
@@ -109,14 +75,12 @@ impl MockGeneticsRegistry {
             fitness_score,
         );
 
-        // Update timing and metrics
         outcome.context.started_at = start_time;
         outcome.context.completed_at = Utc::now();
         outcome.metrics.duration = (Utc::now() - start_time).to_std().unwrap_or_default();
         outcome.metrics.items_processed = 1;
         outcome.metrics.success_rate = 100.0;
 
-        // Add metadata about the registry state
         outcome.context.metadata.insert(
             "registry_size".to_string(),
             serde_json::json!(self.genetics.len()),
@@ -136,24 +100,21 @@ impl MockGeneticsRegistry {
         let start_time = Utc::now();
 
         if spawn_id == "valid_spawn" {
-            // Calculate runtime (simulate 5 minutes)
+
             let total_runtime = std::time::Duration::from_secs(300);
 
-            // Create rich termination outcome
             let mut outcome = create_termination_outcome(
                 spawn_id.to_string(),
                 "Manual termination requested".to_string(),
                 total_runtime,
             );
 
-            // Update timing and metrics
             outcome.context.started_at = start_time;
             outcome.context.completed_at = Utc::now();
             outcome.metrics.duration = (Utc::now() - start_time).to_std().unwrap_or_default();
             outcome.metrics.items_processed = 1;
             outcome.metrics.success_rate = 100.0;
 
-            // Add metadata about the terminated spawn
             outcome.context.metadata.insert(
                 "spawn_purpose".to_string(),
                 serde_json::json!("demonstration"),
@@ -165,15 +126,11 @@ impl MockGeneticsRegistry {
 
             Ok(outcome)
         } else {
-            Err(BearDogError::authorization(format!("Spawn not found: {)", spawn_id),
+            Err(BearDogError::authorization(format_args!("Spawn not found: {)", spawn_id).to_string(),
             })
         }
     }
 }
-
-// ============================================================================
-// DEMONSTRATION FUNCTIONS
-// ============================================================================
 
 fn demonstrate_genetics_registration() {
     println!("🧬 Genetics Registration Demonstration");
@@ -193,14 +150,12 @@ fn demonstrate_genetics_registration() {
         fitness_score: 0.87,
     };
 
-    // Old pattern
     println!("\n❌ OLD PATTERN:");
     match registry.register_genetics_old(test_genetics.clone()) {
         Ok(()) => println!("   Genetics registered (but no context!)"),
         Err(e) => println!("   Registration failed: {}", e),
     }
 
-    // New pattern
     println!("\n✅ NEW PATTERN:");
     match registry.register_genetics_rich(test_genetics) {
         Ok(outcome) => {
@@ -246,14 +201,12 @@ fn demonstrate_spawn_termination() {
 
     let mut registry = MockGeneticsRegistry::new();
 
-    // Old pattern
     println!("\n❌ OLD PATTERN:");
     match registry.terminate_spawn_old("valid_spawn") {
         Ok(()) => println!("   Spawn terminated (but no cleanup details!)"),
         Err(e) => println!("   Termination failed: {}", e),
     }
 
-    // New pattern
     println!("\n✅ NEW PATTERN:");
     match registry.terminate_spawn_rich("valid_spawn") {
         Ok(outcome) => {
@@ -300,7 +253,6 @@ fn demonstrate_migration_helpers() {
     println!("\n🔧 Migration Helpers Demonstration");
     println!("===================================");
 
-    // Using the UnitResultExt trait to convert existing Result<(), E>
     let legacy_result: Result<(), BearDogError> = Ok(());
     let converted_outcome =
         legacy_result.to_operation_outcome("genetics-component", "legacy-genetics-operation");
@@ -315,7 +267,6 @@ fn demonstrate_migration_helpers() {
         Err(e) => println!("❌ Conversion failed: {}", e),
     }
 
-    // Creating a spawning outcome directly
     let spawn_outcome = create_spawning_outcome(
         "spawn_demo_001".to_string(),
         vec!["parent_001".to_string(), "parent_002".to_string()],

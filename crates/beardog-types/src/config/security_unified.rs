@@ -1,28 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Security Configuration - Canonical
-///
-/// **UNIFIED SECURITY CONFIGURATION** for the BearDog ecosystem
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// **CANONICAL** Basic Security Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BasicSecurityConfig {
     pub encryption_enabled: bool,
@@ -42,7 +22,6 @@ impl Default for BasicSecurityConfig {
     }
 }
 
-/// **CANONICAL** Unified Security Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct UnifiedSecurityConfig {
@@ -54,8 +33,6 @@ pub struct UnifiedSecurityConfig {
     pub jwt: JwtConfig,
 }
 
-
-/// **CANONICAL** Crypto Optimization Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoOptimizationConfig {
     pub algorithm: String,
@@ -75,7 +52,6 @@ impl Default for CryptoOptimizationConfig {
     }
 }
 
-/// **CANONICAL** Authentication Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationConfig {
     pub method: String,
@@ -95,7 +71,6 @@ impl Default for AuthenticationConfig {
     }
 }
 
-/// **CANONICAL** Authorization Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthorizationConfig {
     pub enabled: bool,
@@ -115,7 +90,6 @@ impl Default for AuthorizationConfig {
 
 pub use crate::canonical::hsm::config::HsmConfig;
 
-/// **CANONICAL** JWT Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JwtConfig {
     pub secret: String,

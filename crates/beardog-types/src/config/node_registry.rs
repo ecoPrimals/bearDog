@@ -1,28 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Node Registry Configuration - Canonical
-///
-/// **UNIFIED NODE REGISTRY CONFIGURATION** for the BearDog ecosystem
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// **CANONICAL** Unified Node Registry Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct UnifiedNodeRegistryConfig {
@@ -34,8 +14,6 @@ pub struct UnifiedNodeRegistryConfig {
     pub bootstrap: BootstrapConfig,
 }
 
-
-/// **CANONICAL** Node Discovery Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeDiscoveryConfig {
     pub enabled: bool,
@@ -55,7 +33,6 @@ impl Default for NodeDiscoveryConfig {
     }
 }
 
-/// **CANONICAL** P2P Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct P2PConfig {
     pub enabled: bool,
@@ -77,7 +54,6 @@ impl Default for P2PConfig {
     }
 }
 
-/// **CANONICAL** Federation Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FederationConfig {
     pub enabled: bool,
@@ -97,7 +73,6 @@ impl Default for FederationConfig {
     }
 }
 
-/// **CANONICAL** Trust Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrustConfig {
     pub enabled: bool,
@@ -117,7 +92,6 @@ impl Default for TrustConfig {
     }
 }
 
-/// **CANONICAL** Phonebook Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PhonebookConfig {
     pub enabled: bool,
@@ -137,7 +111,6 @@ impl Default for PhonebookConfig {
     }
 }
 
-/// **CANONICAL** Bootstrap Configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BootstrapConfig {
     pub enabled: bool,

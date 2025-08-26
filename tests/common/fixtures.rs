@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Test Fixtures and Mock Data for BearDog
-//!
-//! **Comprehensive Test Data Management**
-//!
-//! This module provides standardized test fixtures, mock data, and test doubles
-//! that ensure consistent and reliable testing across all BearDog components.
 
 use crate::common::TestResult;
 use beardog_errors::{BearDogError, BearDogResult};
@@ -34,23 +12,21 @@ use std::{
 use uuid::Uuid;
 use std::sync::OnceLock;
 
-/// Test fixture manager for consistent test data
 pub struct TestFixtures {
-    /// Pre-configured test data sets
+
     datasets: HashMap<String, JsonValue>,
-    /// Mock configurations
+
     configs: HashMap<String, BearDogConfig>,
-    /// Test users and identities
+
     test_identities: HashMap<String, TestIdentity>,
-    /// Sample cryptographic data
+
     crypto_fixtures: CryptoFixtures,
-    /// Network and API test data
+
     network_fixtures: NetworkFixtures,
-    /// Genetics and spawning test data
+
     genetics_fixtures: GeneticsFixtures,
 }
 
-/// Test identity for authentication and authorization testing
 #[derive(Debug, Clone)]
 pub struct TestIdentity {
     pub user_id: String,
@@ -63,16 +39,15 @@ pub struct TestIdentity {
     pub metadata: HashMap<String, JsonValue>,
 }
 
-/// Cryptographic test fixtures
 #[derive(Debug, Clone)]
 pub struct CryptoFixtures {
-    /// Sample Ed25519 keypairs
+
     pub ed25519_keypairs: Vec<Ed25519KeyPair>,
-    /// Sample encrypted data
+
     pub encrypted_samples: Vec<EncryptedSample>,
-    /// Sample signatures
+
     pub signature_samples: Vec<SignatureSample>,
-    /// Sample nonces and randomness
+
     pub nonce_samples: Vec<Vec<u8>>,
 }
 
@@ -102,16 +77,15 @@ pub struct SignatureSample {
     pub is_valid: bool,
 }
 
-/// Network and API test fixtures
 #[derive(Debug, Clone)]
 pub struct NetworkFixtures {
-    /// Sample HTTP requests
+
     pub http_requests: Vec<HttpRequestSample>,
-    /// Sample API responses
+
     pub api_responses: Vec<ApiResponseSample>,
-    /// Sample network events
+
     pub network_events: Vec<NetworkEventSample>,
-    /// Sample peer configurations
+
     pub peer_configs: Vec<PeerConfigSample>,
 }
 
@@ -150,16 +124,15 @@ pub struct PeerConfigSample {
     pub trust_level: String,
 }
 
-/// Genetics and spawning test fixtures
 #[derive(Debug, Clone)]
 pub struct GeneticsFixtures {
-    /// Sample genetics configurations
+
     pub genetics_configs: Vec<GeneticsConfigSample>,
-    /// Sample spawn requests
+
     pub spawn_requests: Vec<SpawnRequestSample>,
-    /// Sample genetic lineages
+
     pub genetic_lineages: Vec<GeneticLineageSample>,
-    /// Sample fitness scores
+
     pub fitness_samples: Vec<FitnessSample>,
 }
 
@@ -198,12 +171,12 @@ pub struct FitnessSample {
 }
 
 impl TestFixtures {
-    /// Create a new test fixtures manager with default data
+
     pub fn new() -> Self {
         let mut fixtures = Self {
-            datasets: HashMap::new(),
-            configs: HashMap::new(),
-            test_identities: HashMap::new(),
+            datasets: HashMap::with_capacity(16),
+            configs: HashMap::with_capacity(16),
+            test_identities: HashMap::with_capacity(16),
             crypto_fixtures: CryptoFixtures::default(),
             network_fixtures: NetworkFixtures::default(),
             genetics_fixtures: GeneticsFixtures::default(),
@@ -213,30 +186,23 @@ impl TestFixtures {
         fixtures
     }
 
-    /// Initialize default test fixtures
     fn initialize_default_fixtures(&mut self) {
-        // Create default test identities
+
         self.create_default_identities();
-        
-        // Create default configurations
+
         self.create_default_configs();
-        
-        // Create default datasets
+
         self.create_default_datasets();
-        
-        // Initialize crypto fixtures
+
         self.crypto_fixtures = CryptoFixtures::create_samples();
-        
-        // Initialize network fixtures
+
         self.network_fixtures = NetworkFixtures::create_samples();
-        
-        // Initialize genetics fixtures
+
         self.genetics_fixtures = GeneticsFixtures::create_samples();
     }
 
-    /// Create default test identities
     fn create_default_identities(&mut self) {
-        // Admin user
+
         self.test_identities.insert("admin".to_string(), TestIdentity {
             user_id: "admin_001".to_string(),
             username: "admin".to_string(),
@@ -252,12 +218,11 @@ impl TestFixtures {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 }).clone(),
         });
 
-        // Regular user
         self.test_identities.insert("user".to_string(), TestIdentity {
             user_id: "user_001".to_string(),
             username: "testuser".to_string(),
@@ -273,12 +238,11 @@ impl TestFixtures {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 }).clone(),
         });
 
-        // Readonly user
         self.test_identities.insert("readonly".to_string(), TestIdentity {
             user_id: "readonly_001".to_string(),
             username: "readonly".to_string(),
@@ -294,29 +258,26 @@ impl TestFixtures {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 }).clone(),
         });
     }
 
-    /// Create default test configurations
     fn create_default_configs(&mut self) {
-        // Unit test configuration
+
         let mut unit_config = BearDogConfig::default();
         unit_config.enable_networking = false;
         unit_config.enable_database = false;
         unit_config.test_mode = true;
         self.configs.insert("unit".to_string(), unit_config);
 
-        // Integration test configuration
         let mut integration_config = BearDogConfig::default();
         integration_config.enable_networking = true;
         integration_config.enable_database = true;
         integration_config.test_mode = true;
         self.configs.insert("integration".to_string(), integration_config);
 
-        // Performance test configuration
         let mut performance_config = BearDogConfig::default();
         performance_config.enable_performance_monitoring = true;
         performance_config.enable_metrics = true;
@@ -324,9 +285,8 @@ impl TestFixtures {
         self.configs.insert("performance".to_string(), performance_config);
     }
 
-    /// Create default test datasets
     fn create_default_datasets(&mut self) {
-        // Sample API request
+
         self.datasets.insert("api_request".to_string(), json!({
             "endpoint": "/api/v1/test",
             "method": "POST",
@@ -342,7 +302,6 @@ impl TestFixtures {
             }
         }));
 
-        // Sample configuration data
         self.datasets.insert("test_config".to_string(), json!({
             "environment": "test",
             "debug": true,
@@ -357,7 +316,6 @@ impl TestFixtures {
             }
         }));
 
-        // Sample error scenarios
         self.datasets.insert("error_scenarios".to_string(), json!([
             {
                 "name": "network_timeout",
@@ -377,29 +335,25 @@ impl TestFixtures {
         ]));
     }
 
-    /// Get a test identity by name
     pub fn get_identity(&self, name: &str) -> Option<&TestIdentity> {
         self.test_identities.get(name)
     }
 
-    /// Get a test configuration by name
     pub fn get_config(&self, name: &str) -> Option<&BearDogConfig> {
         self.configs.get(name)
     }
 
-    /// Get a test dataset by name
     pub fn get_dataset(&self, name: &str) -> Option<&JsonValue> {
         self.datasets.get(name)
     }
 
-    /// Create a temporary test identity
-    pub fn create_temp_identity(&mut self, username: &str, roles: Vec<String>) -> String {
-        let identity_id = format!("temp_{}", Uuid::new_v4().to_string()[..8].to_string());
+    pub fn create_temp_identity(&mut self, username: &str, roles: Vec<&str>) -> String {
+        let identity_id = format_args!("temp_{}", Uuid::new_v4().to_string().to_string()[..8].to_string());
         
         self.test_identities.insert(identity_id.clone(), TestIdentity {
-            user_id: format!("temp_user_{}", Uuid::new_v4().to_string()[..8].to_string()),
+            user_id: format_args!("temp_user_{}", Uuid::new_v4().to_string().to_string()[..8].to_string()),
             username: username.to_string(),
-            email: format!("{}@temp.beardog.test", username),
+            email: format_args!("{}@temp.beardog.test", username).to_string(),
             roles,
             permissions: vec!["read".to_string()],
             created_at: SystemTime::now(),
@@ -412,7 +366,7 @@ impl TestFixtures {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 }).clone(),
         });
@@ -420,31 +374,27 @@ impl TestFixtures {
         identity_id
     }
 
-    /// Get crypto fixtures
     pub fn crypto(&self) -> &CryptoFixtures {
         &self.crypto_fixtures
     }
 
-    /// Get network fixtures
     pub fn network(&self) -> &NetworkFixtures {
         &self.network_fixtures
     }
 
-    /// Get genetics fixtures
     pub fn genetics(&self) -> &GeneticsFixtures {
         &self.genetics_fixtures
     }
 
-    /// Create a test BearDogCore instance with specified configuration
     pub async fn create_test_core(&self, config_name: &str) -> TestResult<Arc<BearDogCore>> {
         let config = self.get_config(config_name)
-            .ok_or_else(|| BearDogError::not_found(&format!("Test configuration '{}' not found", config_name)))?
+            .ok_or_else(|| BearDogError::not_found(&format_args!("Test configuration '{}' not found", config_name).to_string()))?
             .clone();
 
         let core = BearDogCore::new(config).await
             .map_err(|e| BearDogError::enhanced(
                 "TEST_CORE_CREATION",
-                format!("Failed to create test BearDogCore instance: {}", e),
+                format_args!("Failed to create test BearDogCore instance: {}", e).to_string(),
                 beardog_errors::ErrorSeverity::High,
                 beardog_errors::ErrorCategory::Initialization,
                 "test_fixtures",
@@ -468,14 +418,14 @@ impl CryptoFixtures {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 }),
                     public_key: hex::decode("fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210").unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 }),
                     key_id: "test_key_001".to_string(),
@@ -499,7 +449,7 @@ impl CryptoFixtures {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 }),
                     algorithm: "Ed25519".to_string(),
@@ -514,12 +464,10 @@ impl CryptoFixtures {
         }
     }
 
-    /// Get a sample Ed25519 keypair
     pub fn get_ed25519_keypair(&self, index: usize) -> Option<&Ed25519KeyPair> {
         self.ed25519_keypairs.get(index)
     }
 
-    /// Get a sample encrypted data
     pub fn get_encrypted_sample(&self, index: usize) -> Option<&EncryptedSample> {
         self.encrypted_samples.get(index)
     }
@@ -651,15 +599,12 @@ impl Default for TestFixtures {
     }
 }
 
-/// Global test fixtures instance - now completely safe
 static GLOBAL_FIXTURES: OnceLock<TestFixtures> = OnceLock::new();
 
-/// Get global test fixtures instance - now completely safe
 pub fn global_fixtures() -> &'static TestFixtures {
     GLOBAL_FIXTURES.get_or_init(|| TestFixtures::new())
 }
 
-/// Convenience macro for accessing test fixtures
 #[macro_export]
 macro_rules! test_fixtures {
     () => {

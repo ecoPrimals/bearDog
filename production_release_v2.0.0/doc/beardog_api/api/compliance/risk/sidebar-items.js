@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["conduct_risk_assessment","get_risk_assessment","get_risk_mitigation_plan"]};

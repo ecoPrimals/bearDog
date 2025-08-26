@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! AI-Driven Performance Optimization
-//!
-//! BearDog's AI-enhanced performance optimization capabilities,
-//! amplified through network effects when connected to Squirrel.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -28,7 +8,6 @@ use beardog_errors::BearDogResult;
 use crate::ai_automation::standalone_ai::{BearDogAICore, AIInsight};
 use crate::ai_automation::network_effects::SquirrelNetwork;
 
-/// Performance optimization request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceOptimizationRequest {
     pub request_id: String,
@@ -112,7 +91,6 @@ pub struct NetworkPerformanceBenefits {
     pub network_overhead_reduction: f64,
 }
 
-/// Run AI-driven performance optimization
 pub async fn run_performance_optimization(
     ai_core: &BearDogAICore,
     network: Option<&SquirrelNetwork>,
@@ -120,7 +98,7 @@ pub async fn run_performance_optimization(
     ai_optimize: bool,
     output_file: &PathBuf,
 ) -> BearDogResult<Vec<PerformanceOptimizationResult>> {
-    // Load optimization requests from file
+
     let requests_data = fs::read_to_string(benchmark_file).await?;
     let requests: Vec<PerformanceOptimizationRequest> = serde_json::from_str(&requests_data)?;
     
@@ -131,12 +109,11 @@ pub async fn run_performance_optimization(
     
     for request in requests {
         let start_time = std::time::Instant::now();
-        
-        // Execute performance optimization
+
         let result = if network.is_some() && request.network_distributed {
             execute_network_distributed_optimization(ai_core, network.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?, &request, ai_optimize).await?
         } else {
             execute_standalone_optimization(ai_core, &request, ai_optimize).await?
@@ -148,8 +125,7 @@ pub async fn run_performance_optimization(
         
         results.push(final_result);
     }
-    
-    // Save results
+
     let results_json = serde_json::to_string_pretty(&results)?;
     fs::write(output_file, results_json).await?;
     
@@ -164,26 +140,21 @@ async fn execute_standalone_optimization(
     ai_optimize: bool,
 ) -> BearDogResult<PerformanceOptimizationResult> {
     println!("🔧 Running standalone optimization: {:?}", request.optimization_target);
-    
-    // Collect baseline performance metrics
+
     let baseline_metrics = collect_baseline_metrics(&request.optimization_target).await?;
-    
-    // AI-driven optimization analysis if requested
+
     let optimization_actions = if ai_optimize {
         analyze_optimization_opportunities_with_ai(ai_core, request, &baseline_metrics).await?
     } else {
         generate_basic_optimization_actions(request, &baseline_metrics).await?
     };
-    
-    // Simulate applying optimizations
+
     let optimized_metrics = apply_optimization_actions(&optimization_actions, &baseline_metrics).await?;
-    
-    // Calculate improvements
+
     let improvement_percentages = calculate_improvements(&baseline_metrics, &optimized_metrics);
     let achieved_improvement = improvement_percentages.values()
         .sum::<f64>() / improvement_percentages.len() as f64;
-    
-    // Generate AI insights if enabled
+
     let ai_insights = if ai_optimize {
         generate_performance_ai_insights(ai_core, &optimization_actions, achieved_improvement).await?
     } else {
@@ -214,31 +185,25 @@ async fn execute_network_distributed_optimization(
     ai_optimize: bool,
 ) -> BearDogResult<PerformanceOptimizationResult> {
     println!("🌐 Running network-distributed optimization: {:?}", request.optimization_target);
-    
-    // Distribute optimization analysis across network nodes
+
     let distributed_analysis = distribute_optimization_analysis(network, request).await?;
-    
-    // Combine distributed optimization results
+
     let combined_actions = combine_distributed_optimizations(distributed_analysis).await?;
-    
-    // Apply network-enhanced optimizations
+
     let baseline_metrics = collect_baseline_metrics(&request.optimization_target).await?;
     let optimized_metrics = apply_network_enhanced_optimizations(&combined_actions, &baseline_metrics).await?;
-    
-    // Calculate network-enhanced improvements
+
     let improvement_percentages = calculate_improvements(&baseline_metrics, &optimized_metrics);
     let achieved_improvement = improvement_percentages.values()
         .sum::<f64>() / improvement_percentages.len() as f64;
-    
-    // Network benefits from distributed processing
+
     let network_benefits = NetworkPerformanceBenefits {
         distributed_optimization_nodes: network.fleet_coordinator.connected_nodes.len() as u32,
         parallel_analysis_speedup: 2.5,
         cross_node_knowledge_sharing: 15,
         network_overhead_reduction: 0.15,
     };
-    
-    // AI insights on network-distributed optimization
+
     let ai_insights = if ai_optimize {
         generate_network_optimization_insights(ai_core, &combined_actions, &network_benefits).await?
     } else {
@@ -263,8 +228,8 @@ async fn execute_network_distributed_optimization(
 }
 
 async fn collect_baseline_metrics(target: &OptimizationTarget) -> BearDogResult<HashMap<String, f64>> {
-    // Simulate collecting performance metrics based on optimization target
-    let mut metrics = HashMap::new();
+
+    let mut metrics = HashMap::with_capacity(16);
     
     match target {
         OptimizationTarget::SystemThroughput => {
@@ -304,12 +269,11 @@ async fn collect_baseline_metrics(target: &OptimizationTarget) -> BearDogResult<
 async fn analyze_optimization_opportunities_with_ai(
     ai_core: &BearDogAICore,
     request: &PerformanceOptimizationRequest,
-    baseline_metrics: &HashMap<String, f64>,
+    baseline_metrics: &HashMap<&str, f64>,
 ) -> BearDogResult<Vec<OptimizationAction>> {
-    // AI analyzes current performance and suggests optimizations
+
     let mut actions = Vec::new();
-    
-    // AI-driven optimization suggestions based on the target
+
     match request.optimization_target {
         OptimizationTarget::SystemThroughput => {
             actions.push(OptimizationAction {
@@ -341,7 +305,7 @@ async fn analyze_optimization_opportunities_with_ai(
             });
         }
         _ => {
-            // Generic AI optimization
+
             actions.push(OptimizationAction {
                 action_id: uuid::Uuid::new_v4().to_string(),
                 action_type: ActionType::ResourceReallocation,
@@ -358,9 +322,9 @@ async fn analyze_optimization_opportunities_with_ai(
 
 async fn generate_basic_optimization_actions(
     request: &PerformanceOptimizationRequest,
-    _baseline_metrics: &HashMap<String, f64>,
+    _baseline_metrics: &HashMap<&str, f64>,
 ) -> BearDogResult<Vec<OptimizationAction>> {
-    // Basic optimization without AI
+
     Ok(vec![
         OptimizationAction {
             action_id: uuid::Uuid::new_v4().to_string(),
@@ -375,16 +339,15 @@ async fn generate_basic_optimization_actions(
 
 async fn apply_optimization_actions(
     actions: &[OptimizationAction],
-    baseline_metrics: &HashMap<String, f64>,
+    baseline_metrics: &HashMap<&str, f64>,
 ) -> BearDogResult<HashMap<String, f64>> {
-    // Simulate applying optimization actions
+
     let mut optimized_metrics = baseline_metrics.clone();
     
     let total_improvement = actions.iter()
         .map(|action| action.expected_impact)
         .sum::<f64>();
-    
-    // Apply improvements to all metrics
+
     for (key, value) in optimized_metrics.iter_mut() {
         *value *= 1.0 + total_improvement;
     }
@@ -394,12 +357,11 @@ async fn apply_optimization_actions(
 
 async fn apply_network_enhanced_optimizations(
     actions: &[OptimizationAction],
-    baseline_metrics: &HashMap<String, f64>,
+    baseline_metrics: &HashMap<&str, f64>,
 ) -> BearDogResult<HashMap<String, f64>> {
-    // Network effects provide additional optimization benefits
+
     let mut optimized_metrics = apply_optimization_actions(actions, baseline_metrics).await?;
-    
-    // Network enhancement bonus
+
     let network_bonus = 0.15;
     for (key, value) in optimized_metrics.iter_mut() {
         *value *= 1.0 + network_bonus;
@@ -409,10 +371,10 @@ async fn apply_network_enhanced_optimizations(
 }
 
 fn calculate_improvements(
-    baseline: &HashMap<String, f64>,
-    optimized: &HashMap<String, f64>,
+    baseline: &HashMap<&str, f64>,
+    optimized: &HashMap<&str, f64>,
 ) -> HashMap<String, f64> {
-    let mut improvements = HashMap::new();
+    let mut improvements = HashMap::with_capacity(16);
     
     for (key, baseline_value) in baseline {
         if let Some(optimized_value) = optimized.get(key) {
@@ -433,12 +395,12 @@ async fn generate_performance_ai_insights(
         AIInsight {
             category: "Performance Optimization".to_string(),
             confidence: 0.88,
-            recommendation: format!("Achieved {:.1}% performance improvement through AI optimization", 
-                achieved_improvement * 100.0),
+            recommendation: format_args!("Achieved {:.1}% performance improvement through AI optimization", 
+                achieved_improvement * 100.0).to_string(),
             evidence: vec![
-                format!("Applied {} optimization actions", actions.len()),
-                format!("Average action confidence: {:.2}", 
-                    actions.iter().map(|a| a.ai_confidence).sum::<f64>() / actions.len() as f64)
+                format_args!("Applied {} optimization actions", actions.len().to_string()),
+                format_args!("Average action confidence: {:.2}", 
+                    actions.iter().to_string().map(|a| a.ai_confidence).sum::<f64>() / actions.len() as f64)
             ],
             suggested_actions: vec![
                 "Monitor performance gains".to_string(),
@@ -452,12 +414,11 @@ async fn distribute_optimization_analysis(
     _network: &SquirrelNetwork,
     request: &PerformanceOptimizationRequest,
 ) -> BearDogResult<Vec<Vec<OptimizationAction>>> {
-    // Simulate distributing optimization analysis across network nodes
+
     let baseline_metrics = collect_baseline_metrics(&request.optimization_target).await?;
     
     let mut distributed_results = Vec::new();
-    
-    // Each node analyzes different aspects of optimization
+
     for _ in 0..3 {  // Simulate 3 network nodes
         let actions = generate_basic_optimization_actions(request, &baseline_metrics).await?;
         distributed_results.push(actions);
@@ -469,14 +430,13 @@ async fn distribute_optimization_analysis(
 async fn combine_distributed_optimizations(
     distributed_results: Vec<Vec<OptimizationAction>>,
 ) -> BearDogResult<Vec<OptimizationAction>> {
-    // Combine optimization actions from all nodes
+
     let mut combined_actions = Vec::new();
     
     for node_actions in distributed_results {
         combined_actions.extend(node_actions);
     }
-    
-    // Remove duplicates and select best actions
+
     combined_actions.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     combined_actions.truncate(5); // Keep top 5 optimization actions
     
@@ -494,9 +454,9 @@ async fn generate_network_optimization_insights(
             confidence: 0.94,
             recommendation: "Network effects significantly amplified optimization results".to_string(),
             evidence: vec![
-                format!("Distributed across {} nodes", network_benefits.distributed_optimization_nodes),
-                format!("{:.1}x speedup from parallel analysis", network_benefits.parallel_analysis_speedup),
-                format!("Applied {} optimization actions", actions.len()),
+                format_args!("Distributed across {} nodes", network_benefits.distributed_optimization_nodes).to_string(),
+                format_args!("{:.1}x speedup from parallel analysis", network_benefits.parallel_analysis_speedup).to_string(),
+                format_args!("Applied {} optimization actions", actions.len().to_string()),
             ],
             suggested_actions: vec![
                 "Scale network optimization for more complex workloads".to_string(),

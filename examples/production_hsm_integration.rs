@@ -1,31 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # Production HSM Integration Example
-//!
-//! **REAL-WORLD VENDOR-AGNOSTIC HSM USAGE** - Production-ready patterns
-//!
-//! This example demonstrates how to integrate the vendor-agnostic HSM architecture
-//! into a real production application:
-//! - Service initialization with provider discovery
-//! - Request-based provider selection
-//! - Error handling and fallback strategies
-//! - Performance monitoring and health checks
-//! - Configuration-driven provider management
 
 use beardog_errors::BearDogResult;
 use beardog_types::canonical::{
@@ -42,39 +15,36 @@ use std::collections::HashMap;
 use tracing::{info, warn, error};
 use serde::{Deserialize, Serialize};
 
-/// Production HSM service configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmServiceConfig {
-    /// Preferred security level for operations
+
     pub preferred_security_level: SecurityLevel,
-    /// Fallback security level if preferred not available
+
     pub fallback_security_level: SecurityLevel,
-    /// Maximum acceptable latency (ms)
+
     pub max_latency_ms: f64,
-    /// Minimum performance requirements
+
     pub min_key_generation_speed: f64,
     pub min_signing_speed: f64,
-    /// Provider selection strategy
+
     pub provider_selection: ProviderSelectionStrategy,
-    /// Health check interval (seconds)
+
     pub health_check_interval: u64,
 }
 
-/// Provider selection strategies for production
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum ProviderSelectionStrategy {
-    /// Always use highest available security
+
     HighestSecurity,
-    /// Balance security and performance
+
     Balanced { security_weight: f64, performance_weight: f64 },
-    /// Prioritize performance
+
     Performance,
-    /// Custom requirements-based selection
+
     Custom { requirements: ProductionHsmRequirements },
 }
 
-/// Production HSM requirements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProductionHsmRequirements {
     pub min_security_level: SecurityLevel,
@@ -85,7 +55,6 @@ pub struct ProductionHsmRequirements {
     pub min_throughput: Option<f64>,
 }
 
-/// Simplified HSM requirements for this demo
 #[derive(Debug, Clone)]
 pub struct SimpleHsmRequirements {
     pub min_security_level: SecurityLevel,
@@ -94,14 +63,12 @@ pub struct SimpleHsmRequirements {
     pub authentication_preference: Option<AuthenticationMethod>,
 }
 
-/// Production HSM service
 pub struct ProductionHsmService {
     config: HsmServiceConfig,
     metrics: ServiceMetrics,
     health_status: HashMap<String, ServiceHealth>,
 }
 
-/// Service metrics for monitoring
 #[derive(Debug, Clone, Default)]
 pub struct ServiceMetrics {
     pub total_operations: u64,
@@ -111,7 +78,6 @@ pub struct ServiceMetrics {
     pub provider_usage: HashMap<String, u64>,
 }
 
-/// Service health status
 #[derive(Debug, Clone)]
 pub struct ServiceHealth {
     pub is_healthy: bool,
@@ -121,7 +87,7 @@ pub struct ServiceHealth {
 }
 
 impl ProductionHsmService {
-    /// Initialize the production HSM service
+
     pub async fn new(config: HsmServiceConfig) -> BearDogResult<Self> {
         info!("🏭 Initializing Production HSM Service");
         info!("   Preferred Security Level: {:?}", config.preferred_security_level);
@@ -130,14 +96,13 @@ impl ProductionHsmService {
         let service = Self {
             config,
             metrics: ServiceMetrics::default(),
-            health_status: HashMap::new(),
+            health_status: HashMap::with_capacity(16),
         };
         
         info!("✅ Production HSM Service initialized successfully");
         Ok(service)
     }
-    
-    /// Generate a key with automatic provider selection
+
     pub async fn generate_key(
         &mut self,
         request: KeyGenerationRequest,
@@ -145,16 +110,13 @@ impl ProductionHsmService {
         info!("🔑 Processing key generation request: {}", request.request_id);
         
         let start_time = std::time::Instant::now();
-        
-        // Step 1: Determine requirements based on request
+
         let requirements = self.build_requirements_from_request(&request)?;
         info!("   Requirements: {:?}", requirements);
-        
-        // Step 2: Select best provider (simulated)
+
         let selected_provider = self.select_provider_for_requirements(&requirements).await?;
         info!("   Selected Provider: {}", selected_provider);
-        
-        // Step 3: Attempt key generation with error handling
+
         let result = match self.attempt_key_generation(&selected_provider, &request).await {
             Ok(response) => {
                 self.metrics.successful_operations += 1;
@@ -163,8 +125,7 @@ impl ProductionHsmService {
             }
             Err(e) => {
                 warn!("⚠️ Key generation failed with primary provider: {}", e);
-                
-                // Step 4: Attempt fallback if configured
+
                 if let Some(fallback_response) = self.attempt_fallback_generation(&request).await? {
                     self.metrics.successful_operations += 1;
                     info!("✅ Key generated with fallback provider: {}", fallback_response.key_id);
@@ -176,15 +137,13 @@ impl ProductionHsmService {
                 }
             }
         };
-        
-        // Step 5: Update metrics
+
         let elapsed = start_time.elapsed();
         self.update_metrics(&selected_provider, elapsed.as_millis() as f64);
         
         result
     }
-    
-    /// Sign data with automatic provider selection
+
     pub async fn sign_data(
         &mut self,
         request: SigningRequest,
@@ -192,16 +151,14 @@ impl ProductionHsmService {
         info!("✍️ Processing signing request: {}", request.request_id);
         
         let start_time = std::time::Instant::now();
-        
-        // Build requirements for signing operation
+
         let requirements = SimpleHsmRequirements {
             min_security_level: self.config.preferred_security_level.clone(),
             required_operations: vec![CryptoOperation::DigitalSigning],
             preferred_key_types: vec![KeyType::Ed25519, KeyType::EcdsaP256],
             authentication_preference: Some(AuthenticationMethod::Biometric),
         };
-        
-        // Simulate provider selection and signing
+
         let selected_provider = self.select_provider_for_requirements(&requirements).await?;
         let signature = self.simulate_signing(&selected_provider, &request).await?;
         
@@ -218,15 +175,12 @@ impl ProductionHsmService {
         info!("✅ Data signed successfully: {}", response.request_id);
         Ok(response)
     }
-    
-    /// Perform health check on all providers
+
     pub async fn health_check(&mut self) -> BearDogResult<ServiceHealthReport> {
         info!("💚 Performing service health check");
-        
-        // Simulate health checks for different providers
-        let mut provider_health = HashMap::new();
-        
-        // Simulate checking different provider types
+
+        let mut provider_health = HashMap::with_capacity(16);
+
         let providers = vec![
             ("android_strongbox", true, 95.0),
             ("ios_secure_enclave", true, 92.0),
@@ -261,19 +215,15 @@ impl ProductionHsmService {
         info!("💚 Health check complete: {}/{} providers healthy", healthy_count, total_count);
         Ok(report)
     }
-    
-    /// Get service metrics
+
     pub fn get_metrics(&self) -> &ServiceMetrics {
         &self.metrics
     }
-    
-    /// Get current configuration
+
     pub fn get_config(&self) -> &HsmServiceConfig {
         &self.config
     }
-    
-    // === PRIVATE HELPER METHODS ===
-    
+
     fn build_requirements_from_request(&self, request: &KeyGenerationRequest) -> BearDogResult<SimpleHsmRequirements> {
         let security_level = match request.security_level.as_deref() {
             Some("hardware") => SecurityLevel::Hardware,
@@ -298,7 +248,7 @@ impl ProductionHsmService {
     }
     
     async fn select_provider_for_requirements(&self, requirements: &SimpleHsmRequirements) -> BearDogResult<String> {
-        // Simulate provider selection logic
+
         match &self.config.provider_selection {
             ProviderSelectionStrategy::HighestSecurity => {
                 match requirements.min_security_level {
@@ -309,7 +259,7 @@ impl ProductionHsmService {
             }
             ProviderSelectionStrategy::Performance => Ok("software_hsm".to_string()),
             ProviderSelectionStrategy::Balanced { security_weight, performance_weight } => {
-                // Simulate balanced selection
+
                 if security_weight > performance_weight {
                     Ok("android_strongbox".to_string())
                 } else {
@@ -325,10 +275,9 @@ impl ProductionHsmService {
         provider: &str,
         request: &KeyGenerationRequest,
     ) -> BearDogResult<KeyGenerationResponse> {
-        // Simulate key generation
-        let key_id = format!("{}_{}", provider, uuid::Uuid::new_v4());
-        
-        // Simulate potential failures
+
+        let key_id = format_args!("{}_{}", provider, uuid::Uuid::new_v4().to_string());
+
         if provider == "tpm_provider" {
             return Err(beardog_errors::BearDogError::Unavailable {
                 message: "TPM provider not available".to_string(),
@@ -350,8 +299,7 @@ impl ProductionHsmService {
         request: &KeyGenerationRequest,
     ) -> BearDogResult<Option<KeyGenerationResponse>> {
         info!("🔄 Attempting fallback key generation");
-        
-        // Always fallback to software HSM
+
         match self.attempt_key_generation("software_hsm", request).await {
             Ok(response) => {
                 info!("✅ Fallback generation successful");
@@ -369,7 +317,7 @@ impl ProductionHsmService {
         provider: &str,
         request: &SigningRequest,
     ) -> BearDogResult<Vec<u8>> {
-        // Simulate signing operation
+
         let mut signature = Vec::new();
         signature.extend_from_slice(provider.as_bytes());
         signature.extend_from_slice(b"_signature_");
@@ -380,18 +328,14 @@ impl ProductionHsmService {
     
     fn update_metrics(&mut self, provider: &str, latency_ms: f64) {
         self.metrics.total_operations += 1;
-        
-        // Update provider usage
+
         *self.metrics.provider_usage.entry(provider.to_string()).or_insert(0) += 1;
-        
-        // Update average latency (simple moving average)
+
         let total_ops = self.metrics.total_operations as f64;
         self.metrics.average_latency_ms = 
             ((self.metrics.average_latency_ms * (total_ops - 1.0)) + latency_ms) / total_ops;
     }
 }
-
-// === REQUEST/RESPONSE TYPES ===
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyGenerationRequest {
@@ -438,15 +382,12 @@ pub struct ServiceHealthReport {
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
 
-// === MAIN DEMONSTRATION ===
-
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
     tracing_subscriber::init();
     
     info!("🏭 Starting Production HSM Integration Demo");
-    
-    // === STEP 1: SERVICE INITIALIZATION ===
+
     info!("\n📋 Step 1: Service Configuration and Initialization");
     
     let config = HsmServiceConfig {
@@ -463,8 +404,7 @@ async fn main() -> BearDogResult<()> {
     };
     
     let mut hsm_service = ProductionHsmService::new(config).await?;
-    
-    // === STEP 2: KEY GENERATION OPERATIONS ===
+
     info!("\n🔑 Step 2: Production Key Generation");
     
     let key_requests = vec![
@@ -474,7 +414,7 @@ async fn main() -> BearDogResult<()> {
             security_level: Some("hardware".to_string()),
             purpose: "document_signing".to_string(),
             metadata: {
-                let mut meta = HashMap::new();
+                let mut meta = HashMap::with_capacity(16);
                 meta.insert("department".to_string(), "finance".to_string());
                 meta.insert("compliance".to_string(), "sox".to_string());
                 meta
@@ -486,7 +426,7 @@ async fn main() -> BearDogResult<()> {
             security_level: Some("tee".to_string()),
             purpose: "api_authentication".to_string(),
             metadata: {
-                let mut meta = HashMap::new();
+                let mut meta = HashMap::with_capacity(16);
                 meta.insert("service".to_string(), "user_api".to_string());
                 meta.insert("environment".to_string(), "production".to_string());
                 meta
@@ -497,7 +437,7 @@ async fn main() -> BearDogResult<()> {
             key_type: "aes256_gcm".to_string(),
             security_level: Some("software".to_string()),
             purpose: "data_encryption".to_string(),
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         },
     ];
     
@@ -514,8 +454,7 @@ async fn main() -> BearDogResult<()> {
             }
         }
     }
-    
-    // === STEP 3: SIGNING OPERATIONS ===
+
     info!("\n✍️ Step 3: Production Signing Operations");
     
     if let Some(key) = generated_keys.first() {
@@ -535,8 +474,7 @@ async fn main() -> BearDogResult<()> {
             }
         }
     }
-    
-    // === STEP 4: HEALTH MONITORING ===
+
     info!("\n💚 Step 4: Service Health Monitoring");
     
     let health_report = hsm_service.health_check().await?;
@@ -549,8 +487,7 @@ async fn main() -> BearDogResult<()> {
         let status = if health.is_healthy { "✅" } else { "❌" };
         info!("   {} {}: Score {:.1}%", status, provider, health.performance_score);
     }
-    
-    // === STEP 5: METRICS AND MONITORING ===
+
     info!("\n📈 Step 5: Service Metrics");
     
     let metrics = hsm_service.get_metrics();
@@ -564,13 +501,12 @@ async fn main() -> BearDogResult<()> {
     for (provider, count) in &metrics.provider_usage {
         info!("     {}: {} operations", provider, count);
     }
-    
-    // === STEP 6: CONFIGURATION DEMONSTRATION ===
+
     info!("\n⚙️ Step 6: Configuration-Driven Behavior");
     
     let config_json = serde_json::to_string_pretty(hsm_service.get_config()).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
     info!("📋 Current Configuration:");
     for line in config_json.lines() {

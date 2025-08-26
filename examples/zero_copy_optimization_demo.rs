@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Zero-Copy Optimization Demo
-//!
-//! Demonstrates how the BearDog zero-copy optimization system eliminates
-//! the 500+ instances of excessive cloning identified in the performance audit.
 
 use beardog_utils::zero_copy::*;
 use beardog_errors::BearDogResult;
@@ -26,21 +6,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::info;
 
-// Zero-copy optimization testing with configurable services
-// let songbird_optimization = test_zero_copy_optimization_for_service("songbird").await?;
-// let nestgate_optimization = test_zero_copy_optimization_for_service("nestgate").await?;
-// let toadstool_optimization = test_zero_copy_optimization_for_service("toadstool").await?;
-
-// ✅ CORRECT: Capability-based zero-copy optimization testing
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
     println!("🚀 BearDog Zero-Copy Optimization Demo");
     println!("====================================");
-    
-    // Initialize zero-copy optimization system
+
     let optimizer = ZeroCopyOptimizationSystem::new().await?;
-    
-    // Test zero-copy optimization for different service capabilities
+
     let test_capabilities = vec![
         "communication_mesh",
         "storage_services",
@@ -68,8 +40,7 @@ async fn main() -> BearDogResult<()> {
             }
         }
     }
-    
-    // Demonstrate cross-capability zero-copy coordination
+
     println!("\n🔗 Testing Cross-Capability Zero-Copy Coordination...");
     
     let coordination_result = optimizer
@@ -85,12 +56,11 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Test zero-copy optimization for services with a specific capability
 async fn test_zero_copy_optimization_for_capability(
     optimizer: &ZeroCopyOptimizationSystem,
     capability: &str,
 ) -> BearDogResult<OptimizationResult> {
-    // Discover services with the capability
+
     let registry = global_registry();
     let services = registry
         .discover_by_capability(capability)
@@ -101,23 +71,20 @@ async fn test_zero_copy_optimization_for_capability(
             capability: capability.to_string(),
         });
     }
-    
-    // Select best service for optimization testing
+
     let test_service = services
         .iter()
         .max_by_key(|service| service.performance_metrics.overall_score)
         .ok_or_else(|| BearDogError::NoSuitableService {
             capability: capability.to_string(),
         })?;
-    
-    // Create universal adapter for the service
+
     let adapter = UniversalAdapterFactory::create_adapter(
         PrimalId::from_id(&test_service.service_id),
         test_service.primary_endpoint.clone(),
         test_service.auth_config.clone(),
     ).await?;
-    
-    // Run zero-copy optimization tests
+
     let baseline_performance = optimizer
         .measure_baseline_performance(&adapter)
         .await?;
@@ -147,16 +114,9 @@ async fn test_zero_copy_optimization_for_capability(
     })
 }
 
-/// Demonstrate ID optimization - addressing the most common cloning pattern
 async fn demo_id_optimization() -> BearDogResult<()> {
     info!("🆔 Demo 1: ID Optimization - Eliminating ID String Cloning");
 
-    // BEFORE: Excessive cloning found in audit
-    // request_id: request.request_id.clone(),
-    // task_id: task.task_id.clone(),
-    // node_id: node.node_id.clone(),
-
-    // AFTER: Zero-copy ID management
     let request_id = generate_request_id("api");
     let task_id = generate_task_id("wrk", 42);
     let node_id = generate_node_id("server", 1);
@@ -166,15 +126,12 @@ async fn demo_id_optimization() -> BearDogResult<()> {
     info!("   Task ID: {}", task_id);
     info!("   Node ID: {}", node_id);
 
-    // Shared ID usage - same Arc instances reused
     let shared_req_id = shared_request_id("req_12345");
     let shared_req_id_2 = shared_request_id("req_12345");
-    
-    // Verify they're the same instance (no cloning)
+
     assert!(Arc::ptr_eq(&shared_req_id, &shared_req_id_2));
     info!("✅ Shared IDs use same Arc instance - zero cloning!");
 
-    // Statistics from ID manager
     let id_manager = global_id_manager();
     let stats = id_manager.get_stats();
     info!("📈 ID Manager Stats:");
@@ -185,15 +142,9 @@ async fn demo_id_optimization() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate configuration sharing - eliminating config.clone() patterns
 async fn demo_config_sharing() -> BearDogResult<()> {
     info!("⚙️  Demo 2: Configuration Sharing - Eliminating Config Cloning");
 
-    // BEFORE: Found in audit - config.clone() everywhere
-    // let client = SongBirdClient::new(config.clone());
-    // let provider = BearDogProvider::new(primal_id.clone(), config.clone());
-
-    // AFTER: Shared configuration instances
     let api_config = shared_api_config(|| ApiConfig {
         bind_address: "0.0.0.0:8080".to_string(),
         port: 8080,
@@ -211,19 +162,18 @@ async fn demo_config_sharing() -> BearDogResult<()> {
         timeout_secs: 30,
     });
 
-    // Get the same instances - no cloning!
     let api_config_2 = get_shared_config::<ApiConfig>("api").unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 });
     let db_config_2 = get_shared_config::<DatabaseConfig>("database").unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 });
 
@@ -234,7 +184,6 @@ async fn demo_config_sharing() -> BearDogResult<()> {
     info!("   API Config - Bind: {} Port: {}", api_config.bind_address, api_config.port);
     info!("   DB Config - Host: {} Max Connections: {}", database_config.host, database_config.max_connections);
 
-    // Configuration manager statistics
     let config_manager = global_config_manager();
     info!("📈 Config Manager Stats:");
     info!("   Hit Rate: {:.2}%", config_manager.hit_rate() * 100.0);
@@ -244,41 +193,32 @@ async fn demo_config_sharing() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate request/response caching - eliminating request cloning
 async fn demo_request_caching() -> BearDogResult<()> {
     info!("📨 Demo 3: Request/Response Caching - Eliminating Request Cloning");
 
-    // BEFORE: Found in audit - repeated request processing and cloning
-    // let request_clone = request.clone();
-    // process_request(request_clone);
-
-    // AFTER: Cached request/response pattern
     let request = ApiRequest {
         request_id: "req_cached_demo".to_string(),
         method: "GET".to_string(),
         path: "/api/users".to_string(),
-        headers: HashMap::new(),
+        headers: HashMap::with_capacity(16),
         body: None,
     };
 
-    // Cache the request - returns Arc
     let cached_request = cache_request(request);
     info!("💾 Cached request: {} {}", cached_request.method, cached_request.path);
 
-    // Simulate repeated access - gets same Arc instance
     let cache_key = RequestCacheKey::from_http_request("GET", "/api/users", None, None);
     let retrieved_request = get_cached_request(&cache_key).unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 });
     
     assert!(Arc::ptr_eq(&cached_request, &retrieved_request));
     info!("✅ Retrieved same request instance - no cloning!");
 
-    // Cache a response
     let response = ApiResponse::new(200, b"Success".to_vec())
         .with_header("Content-Type".to_string(), "application/json".to_string());
     
@@ -286,7 +226,6 @@ async fn demo_request_caching() -> BearDogResult<()> {
     info!("💾 Cached response: Status {} Body: {} bytes", 
           cached_response.status, cached_response.body.len());
 
-    // Request cache statistics
     let request_cache = global_request_cache();
     info!("📈 Request Cache Stats:");
     info!("   Hit Rate: {:.2}%", request_cache.hit_rate() * 100.0);
@@ -295,18 +234,16 @@ async fn demo_request_caching() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate performance comparison - before vs after optimization
 async fn demo_performance_comparison() -> BearDogResult<()> {
     info!("⚡ Demo 4: Performance Comparison - Before vs After Optimization");
 
     const ITERATIONS: usize = beardog_types::constants::performance::testing::LIGHT_ITERATIONS;
 
-    // BEFORE: Excessive cloning (simulated)
     let start = std::time::Instant::now();
     let mut cloned_strings = Vec::new();
     for i in 0..ITERATIONS {
-        let base_string = format!("request_id_{}", i);
-        // Simulate the cloning found in audit
+        let base_string = format_args!("request_id_{}", i).to_string();
+
         let cloned1 = base_string.clone(); // First clone
         let cloned2 = base_string.clone(); // Second clone  
         let cloned3 = base_string.clone(); // Third clone
@@ -314,13 +251,12 @@ async fn demo_performance_comparison() -> BearDogResult<()> {
     }
     let clone_duration = start.elapsed();
 
-    // AFTER: Zero-copy optimization
     let start = std::time::Instant::now();
     let mut shared_strings = Vec::new();
     for i in 0..ITERATIONS {
-        let base_string = format!("request_id_{}", i);
+        let base_string = format_args!("request_id_{}", i).to_string();
         let shared = shared_string(&base_string);
-        // Multiple references to same Arc - no cloning
+
         let ref1 = shared.clone(); // Arc clone (cheap)
         let ref2 = shared.clone(); // Arc clone (cheap)
         let ref3 = shared.clone(); // Arc clone (cheap)
@@ -334,7 +270,6 @@ async fn demo_performance_comparison() -> BearDogResult<()> {
     info!("   Improvement: {:.2}x faster", 
           clone_duration.as_nanos() as f64 / shared_duration.as_nanos() as f64);
 
-    // Memory usage comparison
     let clone_memory = cloned_strings.len() * 3 * 32; // Rough estimate
     let shared_memory = shared_strings.len() * 3 * 8; // Arc pointers
     info!("📊 Memory Comparison:");
@@ -345,17 +280,14 @@ async fn demo_performance_comparison() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate overall memory optimization benefits
 async fn demo_memory_optimization() -> BearDogResult<()> {
     info!("🧠 Demo 5: Memory Optimization - Overall System Benefits");
 
-    // Simulate common patterns found in audit
     let common_ids = vec![
         "api", "metrics", "health", "admin", "beardog", "songbird", 
         "nestgate", "squirrel", "GET", "POST", "application/json",
     ];
 
-    // Create many instances using zero-copy optimization
     let mut shared_instances = Vec::new();
     for _ in 0..1000 {
         for common_id in &common_ids {
@@ -367,12 +299,10 @@ async fn demo_memory_optimization() -> BearDogResult<()> {
     info!("📊 Created {} string instances from {} unique values", 
           shared_instances.len(), common_ids.len());
 
-    // Verify they're actually shared (same Arc instances)
     let first_api = shared_string("api");
     let last_api = shared_string("api");
     assert!(Arc::ptr_eq(&first_api, &last_api));
 
-    // Zero-copy manager statistics
     let zero_copy_manager = global_zero_copy_manager();
     let stats = zero_copy_manager.get_stats();
     
@@ -382,72 +312,59 @@ async fn demo_memory_optimization() -> BearDogResult<()> {
     info!("   Clones Avoided: {}", stats.clones_avoided.load(std::sync::atomic::Ordering::Relaxed));
     info!("   Memory Saved: {} bytes", stats.memory_saved.load(std::sync::atomic::Ordering::Relaxed));
 
-    // Cleanup demonstration
     zero_copy_manager.cleanup_expired();
     info!("🧹 Performed cleanup of expired references");
 
     Ok(())
 }
 
-/// Example of how to refactor existing code patterns
-#[allow(dead_code)]
 mod refactoring_examples {
     use super::*;
 
-    // BEFORE: Pattern found in audit
-    #[allow(dead_code)]
-    struct OldGeneticAutomation {
+        struct OldGeneticAutomation {
         request_id: String,
         genetic_parameters: String,
         node_id: String,
     }
 
-    #[allow(dead_code)]
-    impl OldGeneticAutomation {
+        impl OldGeneticAutomation {
         fn process_request_old(&self, request: &ApiRequest) {
-            // This creates unnecessary clones
+
             let _request_id = request.request_id.clone();
             let _method = request.method.clone();
             let _path = request.path.clone();
-            // ... more cloning
+
         }
     }
 
-    // AFTER: Zero-copy optimized
-    #[allow(dead_code)]
-    struct NewGeneticAutomation {
+        struct NewGeneticAutomation {
         request_id: IdString,
         genetic_parameters: Arc<String>,
         node_id: Arc<str>,
     }
 
-    #[allow(dead_code)]
-    impl NewGeneticAutomation {
+        impl NewGeneticAutomation {
         fn process_request_new(&self, request: &Arc<ApiRequest>) {
-            // No cloning - use references
+
             let _request_id = &request.request_id;
             let _method = &request.method;
             let _path = &request.path;
-            // Share the Arc instead of cloning
+
             let _shared_request = request.clone(); // Just Arc clone, not data clone
         }
     }
 
-    // BEFORE: HSM provider cloning pattern
-    #[allow(dead_code)]
-    fn old_hsm_pattern(provider_info: &ProviderInfo) -> HashMap<String, String> {
-        let mut health_results = HashMap::new();
-        // Found in audit: excessive cloning
+        fn old_hsm_pattern(provider_info: &ProviderInfo) -> HashMap<String, String> {
+        let mut health_results = HashMap::with_capacity(16);
+
         health_results.insert("provider_type".to_string(), provider_info.provider_type.clone());
         health_results.insert("description".to_string(), provider_info.description.clone());
         health_results        
     }
 
-    // AFTER: Zero-copy HSM pattern
-    #[allow(dead_code)]
-    fn new_hsm_pattern(provider_info: &ProviderInfo) -> HashMap<Arc<str>, Arc<str>> {
-        let mut health_results = HashMap::new();
-        // Use shared strings for common keys and values
+        fn new_hsm_pattern(provider_info: &ProviderInfo) -> HashMap<Arc<str>, Arc<str>> {
+        let mut health_results = HashMap::with_capacity(16);
+
         health_results.insert(
             shared_string("provider_type"), 
             shared_string(&provider_info.provider_type)
@@ -459,39 +376,31 @@ mod refactoring_examples {
         health_results
     }
 
-    // Dummy struct for example
-    #[allow(dead_code)]
-    struct ProviderInfo {
+        struct ProviderInfo {
         provider_type: String,
         description: String,
     }
 }
 
-/// Performance benchmarks showing the improvements
-#[allow(dead_code)]
 mod benchmarks {
     use super::*;
     use std::time::Instant;
 
-    /// Benchmark string operations
-    #[allow(dead_code)]
-    pub fn benchmark_string_operations() {
+        pub fn benchmark_string_operations() {
         const ITERATIONS: usize = beardog_types::constants::performance::testing::STANDARD_ITERATIONS;
 
-        // Benchmark string cloning (old pattern)
         let start = Instant::now();
         let mut cloned = Vec::new();
         for i in 0..ITERATIONS {
-            let s = format!("request_{}", i % 100); // Simulate common IDs
+            let s = format_args!("request_{}", i % 100).to_string(); // Simulate common IDs
             cloned.push(s.clone());
         }
         let clone_time = start.elapsed();
 
-        // Benchmark shared strings (new pattern)
         let start = Instant::now();
         let mut shared = Vec::new();
         for i in 0..ITERATIONS {
-            let s = format!("request_{}", i % 100);
+            let s = format_args!("request_{}", i % 100).to_string();
             shared.push(shared_string(s));
         }
         let shared_time = start.elapsed();
@@ -503,12 +412,9 @@ mod benchmarks {
                 clone_time.as_nanos() as f64 / shared_time.as_nanos() as f64);
     }
 
-    /// Benchmark configuration access
-    #[allow(dead_code)]
-    pub fn benchmark_config_access() {
+        pub fn benchmark_config_access() {
         const ITERATIONS: usize = beardog_types::constants::performance::testing::STANDARD_ITERATIONS / 2;
 
-        // Setup shared config
         let _shared_config = shared_api_config(|| ApiConfig {
             bind_address: "0.0.0.0:8080".to_string(),
             port: 8080,
@@ -517,17 +423,16 @@ mod benchmarks {
             cors_origins: vec!["https://beardog.local".to_string()],
         });
 
-        // Benchmark shared config access
         let start = Instant::now();
         for _ in 0..ITERATIONS {
             let _config = get_shared_config::<ApiConfig>("api").unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed: {:?}", e)
+    format_args!("Operation failed: {:?}", e).to_string()
 ).into())
 });
-            // Use config without cloning
+
         }
         let shared_access_time = start.elapsed();
 

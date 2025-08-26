@@ -1,26 +1,4 @@
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-
-/// TPM Capability Handler
-///
-/// Framework implementation for TPM hardware integration within the canonical architecture.
-/// Ready for future TPM hardware integration when required.
 
 use beardog_errors::{BearDogError, BearDogResult};
 use serde_json::json;
@@ -29,17 +7,13 @@ use crate::adapters::universal::{
     CapabilityHandler, CapabilityType, UniversalVendorRequest, UniversalVendorResponse,
 };
 
-/// TPM (Trusted Platform Module) capability handler for hardware-based security operations
-/// 
-/// This handler provides integration with TPM chips for secure key generation,
-/// attestation, and hardware-backed cryptographic operations.
 #[derive(Debug, Clone)]
 pub struct TpmCapabilityHandler {
-    /// TPM version (1.2 or 2.0)
+
     pub tpm_version: String,
-    /// Whether TPM is available on the system
+
     pub tpm_available: bool,
-    /// TPM device path (Linux systems)
+
     pub device_path: Option<String>,
 }
 
@@ -54,36 +28,32 @@ impl Default for TpmCapabilityHandler {
 }
 
 impl TpmCapabilityHandler {
-    /// Create a new TPM handler with specified version
-    pub fn new(tpm_version: String) -> Self {
+
+    pub fn new(tpm_version: &str) -> Self {
         Self {
             tpm_version,
             tpm_available: false,
             device_path: Some("/dev/tpm0".to_string()),
         }
     }
-    
-    /// Create handler with custom device path
-    pub fn with_device_path(device_path: String) -> Self {
+
+    pub fn with_device_path(device_path: &str) -> Self {
         Self {
             tpm_version: "2.0".to_string(),
             tpm_available: false,
             device_path: Some(device_path),
         }
     }
-    
-    /// Check if TPM is available on the system
+
     pub async fn detect_tpm(&mut self) -> BearDogResult<bool> {
-        // In a real implementation, this would check for TPM availability
-        // For now, simulate detection logic
+
         if let Some(path) = &self.device_path {
-            // Simulate checking if TPM device exists
+
             self.tpm_available = std::path::Path::new(path).exists();
         }
         Ok(self.tpm_available)
     }
 }
-
 
 impl CapabilityHandler for TpmCapabilityHandler {
     fn capability_type(&self) -> CapabilityType {
@@ -91,11 +61,11 @@ impl CapabilityHandler for TpmCapabilityHandler {
     }
 
     async fn can_handle(&self, request: &UniversalVendorRequest) -> BearDogResult<f64> {
-        // Check if this is a hardware security request
+
         if let Some(operation) = &request.operation {
             match operation.as_str() {
                 "generate_key" | "seal" | "unseal" => {
-                    // High confidence for TPM-specific operations
+
                     if self.tpm_available {
                         Ok(0.95)
                     } else {
@@ -103,7 +73,7 @@ impl CapabilityHandler for TpmCapabilityHandler {
                     }
                 },
                 "attest" | "quote" => {
-                    // Very high confidence for attestation
+
                     if self.tpm_available {
                         Ok(0.98)
                     } else {
@@ -111,7 +81,7 @@ impl CapabilityHandler for TpmCapabilityHandler {
                     }
                 },
                 "encrypt" | "decrypt" => {
-                    // Medium confidence for general crypto
+
                     if self.tpm_available {
                         Ok(0.70)
                     } else {
@@ -144,7 +114,7 @@ impl CapabilityHandler for TpmCapabilityHandler {
             "encrypt" => self.handle_encrypt_request(request).await,
             "decrypt" => self.handle_decrypt_request(request).await,
             _ => Err(BearDogError::configuration(
-                format!("TPM operation '{}' not supported", operation)
+                format_args!("TPM operation '{}' not supported", operation).to_string()
             ))
         }
     }
@@ -152,7 +122,7 @@ impl CapabilityHandler for TpmCapabilityHandler {
 
 impl TpmCapabilityHandler {
     async fn handle_generate_key_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
-        // In a real implementation, this would use TPM APIs to generate hardware-backed keys
+
         Ok(UniversalVendorResponse {
             success: true,
             payload: json!({
@@ -164,7 +134,7 @@ impl TpmCapabilityHandler {
                 "hardware_backed": true
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::new();
+                let mut meta = std::collections::HashMap::with_capacity(16);
                 meta.insert("provider".to_string(), "tpm".to_string());
                 meta.insert("tpm_version".to_string(), self.tpm_version.clone());
                 meta.insert("hardware_backed".to_string(), "true".to_string());
@@ -188,7 +158,7 @@ impl TpmCapabilityHandler {
                 "sealed": true
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::new();
+                let mut meta = std::collections::HashMap::with_capacity(16);
                 meta.insert("provider".to_string(), "tpm".to_string());
                 meta.insert("operation_type".to_string(), "seal".to_string());
                 meta
@@ -209,7 +179,7 @@ impl TpmCapabilityHandler {
                 "unsealed": true
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::new();
+                let mut meta = std::collections::HashMap::with_capacity(16);
                 meta.insert("provider".to_string(), "tpm".to_string());
                 meta.insert("operation_type".to_string(), "unseal".to_string());
                 meta
@@ -231,7 +201,7 @@ impl TpmCapabilityHandler {
                 "platform_verified": true
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::new();
+                let mut meta = std::collections::HashMap::with_capacity(16);
                 meta.insert("provider".to_string(), "tpm".to_string());
                 meta.insert("attestation_type".to_string(), "platform".to_string());
                 meta
@@ -253,7 +223,7 @@ impl TpmCapabilityHandler {
                 "quote_signature": "would_be_tpm_signature"
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::new();
+                let mut meta = std::collections::HashMap::with_capacity(16);
                 meta.insert("provider".to_string(), "tpm".to_string());
                 meta.insert("quote_type".to_string(), "pcr".to_string());
                 meta
@@ -274,7 +244,7 @@ impl TpmCapabilityHandler {
                 "algorithm": "RSA_OAEP_SHA256"
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::new();
+                let mut meta = std::collections::HashMap::with_capacity(16);
                 meta.insert("provider".to_string(), "tpm".to_string());
                 meta.insert("hardware_backed".to_string(), "true".to_string());
                 meta
@@ -295,7 +265,7 @@ impl TpmCapabilityHandler {
                 "algorithm": "RSA_OAEP_SHA256"
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::new();
+                let mut meta = std::collections::HashMap::with_capacity(16);
                 meta.insert("provider".to_string(), "tpm".to_string());
                 meta.insert("hardware_backed".to_string(), "true".to_string());
                 meta

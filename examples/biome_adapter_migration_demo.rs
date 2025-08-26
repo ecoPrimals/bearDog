@@ -1,38 +1,10 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BiomeOS Adapter Migration Demo
-//!
-//! This example demonstrates how BearDog's Universal Adapter system enables
-//! seamless migration from BiomeOS-specific integrations to a capability-first,
-//! vendor-agnostic approach.
-//!
-//! ## Key Features Demonstrated:
-//! - 🔄 **Migration path** from BiomeOS-specific code to universal adapters
-//! - 🎯 **Capability-first design** - Request capabilities, not specific vendors
-//! - 🔌 **Hot-swappable providers** - Change backends without code changes
-//! - ✅ **Capability-based routing** - No hardcoded BiomeOS integration logic
 
 use beardog_errors::BearDogResult;
 use std::collections::HashMap;
 use tokio;
 use tracing::{info, warn};
 
-// Local definitions for demo purposes
 #[derive(Debug, Clone, PartialEq)]
 pub enum CapabilityType {
     Storage,
@@ -64,7 +36,6 @@ pub struct BiomeOSAuthConfig {
     pub timeout_seconds: u64,
 }
 
-// Legacy BiomeOS-specific adapter (what we're migrating FROM)
 pub struct BiomeOSAdapter {
     config: BiomeOSAuthConfig,
     authenticated: bool,
@@ -80,8 +51,7 @@ impl BiomeOSAdapter {
 
     pub async fn authenticate(&mut self) -> BearDogResult<()> {
         info!("🔐 Authenticating with BiomeOS at {}", self.config.endpoint);
-        
-        // Simulate authentication
+
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
         self.authenticated = true;
         
@@ -95,11 +65,10 @@ impl BiomeOSAdapter {
         }
 
         info!("💾 Storing data in BiomeOS: {} bytes", data.len());
-        
-        // Simulate storage operation
+
         tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
         
-        Ok(format!("biome_storage_{}", key))
+        Ok(format_args!("biome_storage_{}", key).to_string())
     }
 
     pub async fn encrypt_data(&self, data: &[u8]) -> BearDogResult<Vec<u8>> {
@@ -108,8 +77,7 @@ impl BiomeOSAdapter {
         }
 
         info!("🔐 Encrypting data with BiomeOS: {} bytes", data.len());
-        
-        // Simulate encryption (just reverse bytes for demo)
+
         let mut encrypted = data.to_vec();
         encrypted.reverse();
         
@@ -117,7 +85,6 @@ impl BiomeOSAdapter {
     }
 }
 
-// Universal Adapter (what we're migrating TO)
 pub struct UniversalAdapter {
     providers: HashMap<CapabilityType, String>,
     biome_adapter: Option<BiomeOSAdapter>,
@@ -126,7 +93,7 @@ pub struct UniversalAdapter {
 impl UniversalAdapter {
     pub fn new() -> Self {
         Self {
-            providers: HashMap::new(),
+            providers: HashMap::with_capacity(16),
             biome_adapter: None,
         }
     }
@@ -134,8 +101,7 @@ impl UniversalAdapter {
     pub async fn register_biome_provider(&mut self, config: BiomeOSAuthConfig) -> BearDogResult<()> {
         let mut adapter = BiomeOSAdapter::new(config);
         adapter.authenticate().await?;
-        
-        // Register BiomeOS for multiple capabilities
+
         self.providers.insert(CapabilityType::Storage, "BiomeOS".to_string());
         self.providers.insert(CapabilityType::Encryption, "BiomeOS".to_string());
         self.biome_adapter = Some(adapter);
@@ -145,7 +111,7 @@ impl UniversalAdapter {
     }
 
     pub async fn register_fallback_providers(&mut self) -> BearDogResult<()> {
-        // Register software fallbacks for capabilities not covered by BiomeOS
+
         self.providers.insert(CapabilityType::KeyManagement, "Software".to_string());
         self.providers.insert(CapabilityType::Authentication, "Local".to_string());
         
@@ -155,13 +121,13 @@ impl UniversalAdapter {
 
     pub async fn execute_request(&self, request: PrimalRequest) -> BearDogResult<PrimalResponse> {
         let provider = self.providers.get(&request.capability)
-            .ok_or_else(|| format!("No provider for capability: {:?}", request.capability))?;
+            .ok_or_else(|| format_args!("No provider for capability: {:?}", request.capability).to_string())?;
 
         match provider.as_str() {
             "BiomeOS" => self.execute_biome_request(request).await,
             "Software" => self.execute_software_request(request).await,
             "Local" => self.execute_local_request(request).await,
-            _ => Err(format!("Unknown provider: {}", provider).into()),
+            _ => Err(format_args!("Unknown provider: {}", provider).to_string().into()),
         }
     }
 
@@ -174,7 +140,7 @@ impl UniversalAdapter {
                 let key = request.parameters.get("key").unwrap_or(&"default".to_string());
                 let storage_id = adapter.store_data(key, &request.data).await?;
                 
-                let mut metadata = HashMap::new();
+                let mut metadata = HashMap::with_capacity(16);
                 metadata.insert("storage_id".to_string(), storage_id);
                 
                 Ok(PrimalResponse {
@@ -190,36 +156,34 @@ impl UniversalAdapter {
                 Ok(PrimalResponse {
                     success: true,
                     data: encrypted_data,
-                    metadata: HashMap::new(),
+                    metadata: HashMap::with_capacity(16),
                     provider_used: "BiomeOS".to_string(),
                 })
             },
-            _ => Err(format!("BiomeOS doesn't support capability: {:?}", request.capability).into()),
+            _ => Err(format_args!("BiomeOS doesn't support capability: {:?}", request.capability).to_string().into()),
         }
     }
 
     async fn execute_software_request(&self, request: PrimalRequest) -> BearDogResult<PrimalResponse> {
         info!("🔧 Executing with software provider: {:?}", request.capability);
-        
-        // Simulate software implementation
+
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
         
         Ok(PrimalResponse {
             success: true,
             data: request.data,
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
             provider_used: "Software".to_string(),
         })
     }
 
     async fn execute_local_request(&self, request: PrimalRequest) -> BearDogResult<PrimalResponse> {
         info!("🏠 Executing with local provider: {:?}", request.capability);
-        
-        // Simulate local implementation
+
         Ok(PrimalResponse {
             success: true,
             data: request.data,
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
             provider_used: "Local".to_string(),
         })
     }
@@ -235,22 +199,18 @@ impl UniversalAdapter {
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Simple logging setup (no external dependencies)
+
     println!("🔧 Initializing BearDog BiomeOS Migration Demo...");
 
     info!("🚀 BiomeOS Adapter Migration Demo");
     info!("==================================");
 
-    // Phase 1: Demonstrate Legacy BiomeOS Integration
     demonstrate_legacy_biome_integration().await?;
 
-    // Phase 2: Demonstrate Universal Adapter Migration
     demonstrate_universal_adapter_migration().await?;
 
-    // Phase 3: Demonstrate Capability-First Operations
     demonstrate_capability_first_operations().await?;
 
-    // Phase 4: Demonstrate Hot-Swappable Providers
     demonstrate_hot_swappable_providers().await?;
 
     info!("✅ BiomeOS Migration Demo completed successfully!");
@@ -261,7 +221,6 @@ async fn demonstrate_legacy_biome_integration() -> BearDogResult<()> {
     info!("\n📜 Phase 1: Legacy BiomeOS Integration");
     info!("-------------------------------------");
 
-    // This is how applications used to integrate with BiomeOS directly
     let config = BiomeOSAuthConfig {
         endpoint: "https://biome.example.com/api/v1".to_string(),
         api_key: "demo-api-key".to_string(),
@@ -271,7 +230,6 @@ async fn demonstrate_legacy_biome_integration() -> BearDogResult<()> {
     let mut biome_adapter = BiomeOSAdapter::new(config);
     biome_adapter.authenticate().await?;
 
-    // Direct BiomeOS operations (tightly coupled)
     let test_data = b"Legacy integration test data";
     
     info!("💾 Legacy storage operation...");
@@ -297,7 +255,6 @@ async fn demonstrate_universal_adapter_migration() -> BearDogResult<()> {
 
     let mut universal_adapter = UniversalAdapter::new();
 
-    // Register BiomeOS as a provider (not the only option)
     let biome_config = BiomeOSAuthConfig {
         endpoint: "https://biome.example.com/api/v1".to_string(),
         api_key: "demo-api-key".to_string(),
@@ -310,7 +267,6 @@ async fn demonstrate_universal_adapter_migration() -> BearDogResult<()> {
     info!("🔌 Registering fallback providers...");
     universal_adapter.register_fallback_providers().await?;
 
-    // Show available capabilities
     let capabilities = universal_adapter.list_available_capabilities();
     info!("✅ Available capabilities: {:?}", capabilities);
 
@@ -333,8 +289,7 @@ async fn demonstrate_capability_first_operations() -> BearDogResult<()> {
     info!("--------------------------------------");
 
     let mut universal_adapter = UniversalAdapter::new();
-    
-    // Setup providers
+
     let biome_config = BiomeOSAuthConfig {
         endpoint: "https://biome.example.com/api/v1".to_string(),
         api_key: "demo-api-key".to_string(),
@@ -343,7 +298,6 @@ async fn demonstrate_capability_first_operations() -> BearDogResult<()> {
     universal_adapter.register_biome_provider(biome_config).await?;
     universal_adapter.register_fallback_providers().await?;
 
-    // Test different capabilities
     let test_scenarios = vec![
         ("Storage Operation", CapabilityType::Storage, "store_document"),
         ("Encryption Operation", CapabilityType::Encryption, "encrypt_sensitive"),
@@ -354,13 +308,13 @@ async fn demonstrate_capability_first_operations() -> BearDogResult<()> {
     for (scenario_name, capability, operation) in test_scenarios {
         info!("🧪 Testing: {}", scenario_name);
 
-        let mut params = HashMap::new();
+        let mut params = HashMap::with_capacity(16);
         params.insert("key".to_string(), "test_key".to_string());
 
         let request = PrimalRequest {
             capability,
             operation: operation.to_string(),
-            data: format!("Test data for {}", scenario_name).into_bytes(),
+            data: format_args!("Test data for {}", scenario_name).to_string().into_bytes(),
             parameters: params,
         };
 

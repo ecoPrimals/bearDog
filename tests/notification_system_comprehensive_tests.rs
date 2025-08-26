@@ -1,18 +1,3 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
 use std::collections::HashMap;
@@ -26,7 +11,6 @@ use beardog_workflows::workflows::types::{
 };
 use beardog_errors::BearDogResult;
 
-/// Mock HTTP server for testing webhooks
 struct MockWebhookServer {
     port: u16,
     should_fail: bool,
@@ -48,7 +32,7 @@ impl MockWebhookServer {
     }
 
     async fn start(&self) -> String {
-        format!("http://localhost:{}/webhook", self.port)
+        format_args!("http://localhost:{}/webhook", self.port).to_string()
     }
 }
 
@@ -58,12 +42,11 @@ async fn test_webhook_notification_success() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Test security alert";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("alert_type".to_string(), json!("security_breach"));
     metadata.insert("severity".to_string(), json!("high"));
     metadata.insert("incident_id".to_string(), json!("INC-2024-001"));
 
-    // Test webhook notification
     let result = engine.send_notification(
         &NotificationMessage {
             content: message.to_string(),
@@ -90,10 +73,9 @@ async fn test_webhook_notification_with_signature() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Test webhook with signature";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("test_type".to_string(), json!("signature_verification"));
 
-    // Test webhook with signature
     let result = engine.send_notification(
         &NotificationMessage {
             content: message.to_string(),
@@ -120,10 +102,9 @@ async fn test_webhook_retry_mechanism() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Test webhook retry";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("test_type".to_string(), json!("retry_test"));
 
-    // Test webhook retry on failure
     let start_time = std::time::Instant::now();
     let result = engine.send_notification(
         &NotificationMessage {
@@ -133,10 +114,9 @@ async fn test_webhook_retry_mechanism() -> BearDogResult<()> {
     ).await;
 
     let elapsed = start_time.elapsed();
-    
-    // Should fail after retries
+
     assert!(result.is_err());
-    // Should take at least 2 seconds due to retry delays (1s + 2s)
+
     assert!(elapsed >= Duration::from_secs(2));
     println!("✅ Webhook retry mechanism working, took {:.2}s", elapsed.as_secs_f64());
 
@@ -149,11 +129,10 @@ async fn test_email_notification_configuration() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Test email notification";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("alert_type".to_string(), json!("email_test"));
     metadata.insert("priority".to_string(), json!("medium"));
 
-    // Test email notification
     let result = engine.send_notification(
         &NotificationMessage {
             content: message.to_string(),
@@ -180,11 +159,10 @@ async fn test_sms_notification_twilio() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Test SMS via Twilio";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("provider".to_string(), json!("twilio"));
     metadata.insert("incident_id".to_string(), json!("SMS-001"));
 
-    // Test SMS notification
     let result = engine.send_notification(
         &NotificationMessage {
             content: message.to_string(),
@@ -211,11 +189,10 @@ async fn test_sms_notification_aws_sns() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Test SMS via AWS SNS";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("provider".to_string(), json!("aws_sns"));
     metadata.insert("incident_id".to_string(), json!("SMS-002"));
 
-    // Test SMS notification
     let result = engine.send_notification(
         &NotificationMessage {
             content: message.to_string(),
@@ -242,12 +219,11 @@ async fn test_slack_notification() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Test Slack notification";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("channel".to_string(), json!("#security-alerts"));
     metadata.insert("severity".to_string(), json!("high"));
     metadata.insert("affected_systems".to_string(), json!("authentication"));
 
-    // Test Slack notification
     let result = engine.send_notification(
         &NotificationMessage {
             content: message.to_string(),
@@ -274,12 +250,11 @@ async fn test_teams_notification() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Test Teams notification";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("team".to_string(), json!("Security Team"));
     metadata.insert("priority".to_string(), json!("critical"));
     metadata.insert("action_required".to_string(), json!("immediate"));
 
-    // Test Teams notification
     let result = engine.send_notification(
         &NotificationMessage {
             content: message.to_string(),
@@ -306,13 +281,12 @@ async fn test_multi_channel_notification() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Critical security incident requiring immediate attention";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("severity".to_string(), json!("critical"));
     metadata.insert("incident_type".to_string(), json!("data_breach"));
     metadata.insert("affected_users".to_string(), json!(1000));
     metadata.insert("estimated_impact".to_string(), json!("high"));
 
-    // Test multi-channel notification
     let result = engine.send_notification(
         &NotificationMessage {
             content: message.to_string(),
@@ -341,10 +315,9 @@ async fn test_multi_channel_notification() -> BearDogResult<()> {
 async fn test_notification_filtering() -> BearDogResult<()> {
     let config = create_filtered_config();
     let engine = NotificationEngine::new(config);
-    
-    // Test low severity (should be filtered)
+
     let low_severity_message = "Low severity event";
-    let mut low_metadata = HashMap::new();
+    let mut low_metadata = HashMap::with_capacity(16);
     low_metadata.insert("severity".to_string(), json!("low"));
     
     let result = engine.send_notification(
@@ -357,7 +330,7 @@ async fn test_notification_filtering() -> BearDogResult<()> {
     match result {
         Ok(notification_result) => {
             println!("✅ Low severity notification filtered appropriately");
-            // Should not send to high-priority channels
+
             assert!(!notification_result.sms_sent); // SMS typically for critical only
         }
         Err(e) => {
@@ -365,9 +338,8 @@ async fn test_notification_filtering() -> BearDogResult<()> {
         }
     }
 
-    // Test high severity (should not be filtered)
     let high_severity_message = "High severity security event";
-    let mut high_metadata = HashMap::new();
+    let mut high_metadata = HashMap::with_capacity(16);
     high_metadata.insert("severity".to_string(), json!("critical"));
     
     let result = engine.send_notification(
@@ -395,10 +367,9 @@ async fn test_notification_rate_limiting() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Rate limit test message";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("test_type".to_string(), json!("rate_limit"));
 
-    // Send multiple notifications rapidly
     let mut results = Vec::new();
     for i in 0..10 {
         let mut test_metadata = metadata.clone();
@@ -406,22 +377,19 @@ async fn test_notification_rate_limiting() -> BearDogResult<()> {
         
         let result = engine.send_notification(
             &NotificationMessage {
-                content: format!("{} #{}", message, i),
+                content: format_args!("{} #{}", message, i).to_string(),
                 metadata: test_metadata,
             }
         ).await;
         
         results.push(result);
-        
-        // Small delay to avoid overwhelming the system
+
         sleep(Duration::from_millis(10)).await;
     }
 
-    // Check results
     let success_count = results.iter().filter(|r| r.is_ok()).count();
     println!("✅ Rate limiting test completed: {}/10 notifications successful", success_count);
-    
-    // Should have some rate limiting in place
+
     assert!(success_count <= 10);
 
     Ok(())
@@ -433,12 +401,11 @@ async fn test_notification_template_rendering() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Security alert for {{user}} in {{system}}";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("user".to_string(), json!("admin"));
     metadata.insert("system".to_string(), json!("production"));
     metadata.insert("timestamp".to_string(), json!("2024-01-01T12:00:00Z"));
 
-    // Test template rendering
     let result = engine.send_notification(
         &NotificationMessage {
             content: message.to_string(),
@@ -449,7 +416,7 @@ async fn test_notification_template_rendering() -> BearDogResult<()> {
     match result {
         Ok(notification_result) => {
             println!("✅ Template rendering successful");
-            // The rendered message should contain the substituted values
+
         }
         Err(e) => {
             println!("⚠️  Template rendering failed: {}", e);
@@ -461,15 +428,14 @@ async fn test_notification_template_rendering() -> BearDogResult<()> {
 
 #[tokio::test]
 async fn test_notification_error_handling() -> BearDogResult<()> {
-    // Test with malformed configuration
+
     let config = create_malformed_config();
     let engine = NotificationEngine::new(config);
     
     let message = "Test error handling";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("test_type".to_string(), json!("error_handling"));
 
-    // Test error handling
     let result = engine.send_notification(
         &NotificationMessage {
             content: message.to_string(),
@@ -477,14 +443,13 @@ async fn test_notification_error_handling() -> BearDogResult<()> {
         }
     ).await;
 
-    // Should handle errors gracefully
     match result {
         Ok(_) => {
             println!("✅ Error handling test passed (unexpected success)");
         }
         Err(e) => {
             println!("✅ Error handling test passed: {}", e);
-            // Error should be properly structured
+
             assert!(e.to_string().contains("Configuration") || e.to_string().contains("Notification"));
         }
     }
@@ -498,10 +463,9 @@ async fn test_notification_metrics_collection() -> BearDogResult<()> {
     let engine = NotificationEngine::new(config);
     
     let message = "Metrics collection test";
-    let mut metadata = HashMap::new();
+    let mut metadata = HashMap::with_capacity(16);
     metadata.insert("test_type".to_string(), json!("metrics"));
 
-    // Send notification and collect metrics
     let start_time = std::time::Instant::now();
     let result = engine.send_notification(
         &NotificationMessage {
@@ -530,14 +494,13 @@ async fn test_notification_metrics_collection() -> BearDogResult<()> {
 async fn test_concurrent_notifications() -> BearDogResult<()> {
     let config = create_concurrent_config();
     let engine = std::sync::Arc::new(NotificationEngine::new(config));
-    
-    // Send multiple notifications concurrently
+
     let mut handles = Vec::new();
     for i in 0..10 {
         let engine_clone = std::sync::Arc::clone(&engine);
         let handle = tokio::spawn(async move {
-            let message = format!("Concurrent notification #{}", i);
-            let mut metadata = HashMap::new();
+            let message = format_args!("Concurrent notification #{}", i).to_string();
+            let mut metadata = HashMap::with_capacity(16);
             metadata.insert("sequence".to_string(), json!(i));
             metadata.insert("test_type".to_string(), json!("concurrent"));
             
@@ -551,24 +514,21 @@ async fn test_concurrent_notifications() -> BearDogResult<()> {
         handles.push(handle);
     }
 
-    // Wait for all notifications to complete
     let mut results = Vec::new();
     for handle in handles {
         let result = handle.await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         results.push(result);
     }
 
-    // Check results
     let success_count = results.iter().filter(|r| r.is_ok()).count();
     println!("✅ Concurrent notifications test: {}/10 successful", success_count);
 
     Ok(())
 }
 
-// Helper functions for test configuration
 fn create_webhook_config() -> NotificationConfig {
     NotificationConfig {
         webhook_enabled: true,

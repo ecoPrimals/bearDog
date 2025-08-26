@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// HSM Capability Detection
-///
-/// This module analyzes HSM capabilities by probing their interfaces and testing
-/// their features, providing detailed capability reports for various HSM types.
 
 use crate::tunnel::hsm::types::capability::{
     AdvancedFeatureCapabilities, ApiSupportCapabilities, ComplianceCapabilities,
@@ -36,14 +16,14 @@ use beardog_errors::BearDogResult;
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::{debug, error, info, warn};
-// Import required types
+
 use crate::tunnel::hsm::types::{HsmInterfaceType, TamperResistanceLevel};
 use cloud_kms_prober::CloudKmsCapabilityProber;
 use mobile_hsm_prober::MobileHsmCapabilityProber;
 use performance_benchmarker::PerformanceBenchmarker;
 use pkcs11_prober::Pkcs11CapabilityProber;
 use software_hsm_prober::SoftwareHsmCapabilityProber;
-/// Main capability detection coordinator
+
 #[derive(Debug)]
 pub struct CapabilityDetector {
     pkcs11_prober: Pkcs11CapabilityProber,
@@ -54,7 +34,6 @@ pub struct CapabilityDetector {
 }
 impl CapabilityDetector {}
 
-
     pub fn new() -> BearDogResult<Self> {
         Ok(Self {
             pkcs11_prober: Pkcs11CapabilityProber::new()?,
@@ -64,7 +43,7 @@ impl CapabilityDetector {}
             performance_benchmarker: PerformanceBenchmarker::new()?,
         })
     }
-    /// Detect comprehensive capabilities for an HSM interface
+
     pub async fn detect_capabilities(
         &self,
         interface_type: &HsmInterfaceType,
@@ -78,15 +57,15 @@ impl CapabilityDetector {}
             HsmInterfaceType::Pkcs11 { library_path, .. } => {
                 self.pkcs11_prober.probe_capabilities(library_path).await?
             }
-            // Handle all other HSM interface types with a default capability set
+
             _ => self.create_default_hsm_capabilities().await?,
         };
-        // Return capabilities directly - performance benchmarking handled separately
+
         let final_capabilities = capabilities;
         let detection_time = start_time.elapsed();
         info!("✅ Capability detection completed in {:?}", detection_time);
         Ok(final_capabilities)
-    // Network HSM capabilities
+
     async fn create_network_hsm_capabilities(
         endpoint: &str,
         protocol: &str,
@@ -192,14 +171,13 @@ impl CapabilityDetector {}
                 sox_compliant: true,
                 compliance_reports: vec![
                     "PCI DSS Level 1".to_string(),
-    // USB HSM capabilities (simplified implementation)
+
     async fn create_usb_hsm_capabilities(
         device_path: &str,
         debug!("🔌 Analyzing USB HSM: {}", device_path);
-        // This would contain a comprehensive USB HSM capability analysis
-        // For brevity, using basic capabilities
+
         Ok(HsmCapabilities::default())
-    // Other capability creation methods (simplified)
+
     async fn create_smart_card_capabilities(
         reader_name: &str,
         debug!("💳 Analyzing Smart Card: {}", reader_name);
@@ -223,7 +201,7 @@ impl CapabilityDetector {}
             driver_path, driver_version
     async fn create_default_hsm_capabilities(
         debug!("Creating default HSM capabilities");
-        // Return canonical beardog_types::HsmCapabilities
+
         Ok(beardog_types::HsmCapabilities {
             vendor: "Generic".to_string(),
             model: "Default HSM".to_string(),
@@ -237,7 +215,7 @@ impl CapabilityDetector {}
                 "sign".to_string(),
             ],
             security_features: vec!["Software-based".to_string()],
-            performance_metrics: std::collections::HashMap::new(),
+            performance_metrics: std::collections::HashMap::with_capacity(16),
             certifications: vec![],
             key_generation:
                 beardog_types::canonical::hsm::capabilities::KeyGenerationCapabilities {
@@ -310,5 +288,5 @@ impl CapabilityDetector {}
                 encryption_at_rest: false,
                 encryption_in_transit: false,
                 access_control: false,
-            vendor_capabilities: std::collections::HashMap::new(),
-            custom_capabilities: std::collections::HashMap::new(),
+            vendor_capabilities: std::collections::HashMap::with_capacity(16),
+            custom_capabilities: std::collections::HashMap::with_capacity(16),

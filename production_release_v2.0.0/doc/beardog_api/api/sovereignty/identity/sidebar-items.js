@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AttestorType","PrivacyLevel"],"struct":["Ed25519KeyPair","SelfSovereignIdentityEngine"]};

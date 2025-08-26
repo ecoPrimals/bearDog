@@ -1,29 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BearDog Comprehensive API System Demo
-//!
-//! Demonstrates all major API modules and their key capabilities:
-//! - Individual Sovereignty APIs (Human Digital Empowerment)
-//! - Security & Threat Detection (ML-powered security)
-//! - Genetics & Spawning (Decentralized node management)
-//! - Monitoring & Observability (System health and metrics)
-//! - Compliance & Audit Management (Enterprise regulatory compliance)
-//! - Authentication & Authorization (User management and RBAC)
 
 use serde_json::json;
 use std::time::Duration;
@@ -36,31 +11,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Showcasing the complete BearDog API ecosystem");
     println!();
 
-    // Demo 1: Individual Sovereignty APIs
     demo_sovereignty_apis().await?;
-    
-    // Demo 2: Security & Threat Detection
+
     demo_security_apis().await?;
-    
-    // Demo 3: Compliance & Audit Management  
+
     demo_compliance_apis().await?;
-    
-    // Demo 4: Authentication & Authorization
+
     demo_authentication_apis().await?;
-    
-    // Demo 5: Genetics & Node Management
+
     demo_genetics_apis().await?;
-    
-    // Demo 6: Monitoring & Observability
+
     demo_monitoring_apis().await?;
-    
-    // Final Summary
+
     demo_summary().await;
     
     Ok(())
 }
 
-/// Demo Individual Sovereignty APIs - Human Digital Empowerment
 async fn demo_sovereignty_apis() -> Result<(), Box<dyn std::error::Error>> {
     println!("🏛️ INDIVIDUAL SOVEREIGNTY APIS - Human Digital Empowerment");
     println!("─────────────────────────────────────────────────────────");
@@ -102,7 +69,6 @@ async fn demo_sovereignty_apis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demo Security & Threat Detection APIs
 async fn demo_security_apis() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔐 SECURITY & THREAT DETECTION APIS - ML-Powered Protection");
     println!("──────────────────────────────────────────────────────");
@@ -142,7 +108,6 @@ async fn demo_security_apis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demo Compliance & Audit Management APIs
 async fn demo_compliance_apis() -> Result<(), Box<dyn std::error::Error>> {
     println!("📋 COMPLIANCE & AUDIT MANAGEMENT APIS - Enterprise Governance");
     println!("────────────────────────────────────────────────────────────");
@@ -188,7 +153,6 @@ async fn demo_compliance_apis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demo Authentication & Authorization APIs
 async fn demo_authentication_apis() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔑 AUTHENTICATION & AUTHORIZATION APIS - Identity & Access Management");
     println!("─────────────────────────────────────────────────────────────────");
@@ -237,7 +201,6 @@ async fn demo_authentication_apis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demo Genetics & Node Management APIs
 async fn demo_genetics_apis() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧬 GENETICS & NODE MANAGEMENT APIS - Decentralized Infrastructure");
     println!("──────────────────────────────────────────────────────────────");
@@ -285,7 +248,6 @@ async fn demo_genetics_apis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Demo Monitoring & Observability APIs
 async fn demo_monitoring_apis() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 MONITORING & OBSERVABILITY APIS - System Intelligence");
     println!("────────────────────────────────────────────────────────");
@@ -326,7 +288,6 @@ async fn demo_monitoring_apis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Display comprehensive demo summary
 async fn demo_summary() {
     println!("🎉 BEARDOG COMPREHENSIVE API SYSTEM - DEMONSTRATION COMPLETE");
     println!("═══════════════════════════════════════════════════════════");
@@ -410,7 +371,7 @@ mod tests {
     
     #[tokio::test]
     async fn test_comprehensive_api_demo() {
-        // Test that the demo runs without panicking
+
         assert!(demo_sovereignty_apis().await.is_ok());
         assert!(demo_security_apis().await.is_ok());
         assert!(demo_compliance_apis().await.is_ok());
@@ -423,7 +384,7 @@ mod tests {
     
     #[test]
     fn test_demo_data_structures() {
-        // Test that our demo JSON structures are valid
+
         let sharing_request = json!({
             "from_node_id": "node_alice_123",
             "resource_type": {"CPU": {"cores": 4}},
@@ -439,7 +400,7 @@ mod tests {
     
     #[test]
     fn test_api_endpoint_coverage() {
-        // Verify we're demonstrating all major API categories
+
         let demonstrated_endpoints = vec![
             "/api/v1/sovereignty/sharing/request",
             "/api/v1/sovereignty/privacy/status", 

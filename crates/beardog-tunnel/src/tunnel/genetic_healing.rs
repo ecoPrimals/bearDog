@@ -1,29 +1,4 @@
-// PHASE 5 OPTIMIZED: Performance patterns applied
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-
-/// # Genetic Healing System
-///
-/// This module implements a self-adaptive genetic healing system that can
-/// automatically repair and evolve BearDog security configurations based
-/// on ecosystem feedback and performance metrics. Uses universal capability
-/// discovery to leverage any available optimization modules.
 
 use beardog_errors::BearDogResult;
 use beardog_genetics::genetics::DefaultBearDogGeneticsEngine;
@@ -31,17 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::SystemTime;
-// Note: Performance optimization and genetic algorithm modules
-// will be implemented in future versions as needed
-/// Main genetic security healing system
-/// Coordinates autonomous security healing across the BearDog network using genetic algorithms.
-/// This system continuously monitors network conditions, identifies security issues, and
-/// automatically implements optimized countermeasures.
-/// ## Operation Modes
-/// - **Reactive Mode**: Responds to detected security issues
-/// - **Proactive Mode**: Predicts and prevents potential security problems
-/// - **Emergency Mode**: Rapid response to critical security events
-/// - **Maintenance Mode**: Routine optimization during low activity periods
+
 pub struct GeneticSecurityHealing {
     genetics_engine: Arc<DefaultBearDogGeneticsEngine>,
     healing_chromosome: SecurityHealingChromosome,
@@ -50,33 +15,17 @@ pub struct GeneticSecurityHealing {
     current_generation: u64,
 }
 impl GeneticSecurityHealing {
-    /// Create a new genetic security healing instance
-    ///
-    /// Initializes the healing system with the provided genetics engine and begins
-    /// monitoring for security issues that require autonomous healing.
-    /// # Arguments
-    /// * `genetics_engine` - The genetics engine for evolutionary optimization
-    /// # Returns
-    /// * `Ok(GeneticSecurityHealing)` - Successfully initialized healing system
-    /// * `Err(BearDogError)` - Initialization failure
-    /// # Example
-    /// ```rust,no_run
-    /// use beardog::tunnel::genetic_healing::GeneticSecurityHealing;
-    /// use beardog::core::DefaultBearDogGeneticsEngine;
-    /// use std::sync::Arc;
-    /// let genetics_engine = Arc::new(DefaultBearDogGeneticsEngine::new());
-    /// let healing_system = GeneticSecurityHealing::new(genetics_engine).await?;
-    /// ```
+
     pub async fn new(genetics_engine: Arc<DefaultBearDogGeneticsEngine>) -> BearDogResult<Self> {
         Ok(Self {
             genetics_engine,
             healing_chromosome: SecurityHealingChromosome::default(),
-            active_healings: HashMap::new(),
+            active_healings: HashMap::with_capacity(16),
             healing_active: true,
             current_generation: 0,
         })
     }
-    /// Heal security issues using genetic algorithms
+
     pub async fn heal_security_issue(
         &mut self,
         issue: SecurityIssue,
@@ -98,7 +47,7 @@ impl GeneticSecurityHealing {
             SecurityIssueType::PerformanceDegradation => self.heal_performance_issues().await,
             SecurityIssueType::NetworkAnomaly => self.heal_network_security().await,
         }
-    /// Respond to Songbird network events with genetic healing
+
     pub async fn heal_from_network_event(&mut self, event: NetworkEvent) -> BearDogResult<()> {
         match event {
             NetworkEvent::PeerDisconnected { reason: _ } => {
@@ -125,50 +74,30 @@ impl GeneticSecurityHealing {
                 genes.performance_healing = true; // Full healing for network anomalies
         Ok(genes)}
 
-
     async fn heal_crypto_compromise(&mut self) -> BearDogResult<HealingResult> {
-        // Genetic healing for crypto compromise
-        // 1. Trigger immediate key rotation
-        // 2. Strengthen encryption parameters
-        // 3. Adapt crypto algorithm selection
-        // Strengthen authentication as first response
+
         self.healing_chromosome.strengthen_authentication().await?;
-        // Log the healing action
+
         tracing::info!("🧬 Genetic healing activated for crypto compromise");
-        // Return success - in a full implementation, this would:
-        // - Trigger key rotation across all sessions
-        // - Update crypto algorithm preferences
-        // - Evolve new security parameters using genetics
+
         Ok(HealingResult::Success)
     async fn heal_auth_breach(&mut self) -> BearDogResult<HealingResult> {
-        // Genetic healing for authentication breach
-        // 1. Increase authentication strength
-        // 2. Rotate all session keys
-        // 3. Enhance monitoring
+
         self.healing_chromosome.threat_sensitivity =
             (self.healing_chromosome.threat_sensitivity * 1.5).min(1.0);
         tracing::warn!("🧬 Genetic healing responding to authentication breach");
-        // In a full implementation, this would:
-        // - Force rotation of all active session keys
-        // - Increase authentication requirements
-        // - Evolve stronger authentication genes}
-
 
     async fn heal_performance_issues(&mut self) -> BearDogResult<HealingResult> {
-        // Universal performance healing through ecosystem service discovery
-        // 1. Reduce monitoring overhead
-        // 2. Request optimization from available ecosystem services
+
         if self.healing_chromosome.monitoring_frequency > 0.1 {
             self.healing_chromosome.monitoring_frequency *= 0.8;
         tracing::info!(
             "🧬 Performance healing activated - discovering ecosystem optimization services"
         );
-        // Use ecosystem service discovery instead of hardcoding specific primals
+
         let _optimization_services = self.discover_performance_optimization_services().await;
     async fn heal_network_security(&mut self) -> BearDogResult<HealingResult> {
-        // Universal network security healing through ecosystem coordination
-        // 1. Strengthen local security parameters
-        // 2. Coordinate with ecosystem security services
+
         self.healing_chromosome
             .adapt_to_threat("network_anomaly".to_string())
             .await?;
@@ -176,16 +105,14 @@ impl GeneticSecurityHealing {
             (self.healing_chromosome.monitoring_frequency * 1.2).min(1.0);
         tracing::error!(
             "🧬 Network security healing activated - coordinating with ecosystem security services"
-        // Use ecosystem service discovery for security coordination
-        let _security_services = self.discover_security_coordination_services().await;
-    /// Discover performance optimization modules in ecosystem primals}
 
+        let _security_services = self.discover_security_coordination_services().await;
 
     async fn discover_performance_optimization_services(&self) -> BearDogResult<Vec<String>> {
-        // Universal capability-based discovery - finds ANY module with performance optimization
+
         tracing::debug!(
             "🔍 Discovering modules with performance optimization capabilities in ecosystem"
-        // Query ecosystem by capabilities, not by hardcoded primal names
+
         let discovered_modules = self
             .query_ecosystem_by_capability(&[
                 "performance.optimization",
@@ -195,39 +122,34 @@ impl GeneticSecurityHealing {
             "🔍 Discovered {} modules with performance optimization capabilities",
             discovered_modules.len()
         Ok(discovered_modules)
-    /// Discover security coordination modules in ecosystem primals
+
     async fn discover_security_coordination_services(&self) -> BearDogResult<Vec<String>> {
-        // Universal capability-based discovery for security coordination
+
             "🔍 Discovering modules with security coordination capabilities in ecosystem"
                 "security.coordination",
                 "threat.analysis",
                 "healing.security",
             "🔍 Discovered {} modules with security coordination capabilities",
-    /// Query ecosystem for modules by required capabilities
+
     async fn query_ecosystem_by_capability(
         &self,
         required_capabilities: &[&str],
     ) -> BearDogResult<Vec<String>> {
-        // Universal capability query - no hardcoded primal names or types
-        // This would integrate with the ecosystem registry through Songbird
-        // Simulate capability-based discovery
+
         let mut available_modules = Vec::new();
-        // Check each capability against the ecosystem registry
+
         for capability in required_capabilities {
             if let Some(modules) = self.find_modules_with_capability(capability).await? {
                 available_modules.extend(modules);
-        // Remove duplicates
+
         available_modules.sort();
         available_modules.dedup();
         Ok(available_modules)
-    /// Find modules in ecosystem that provide a specific capability}
-
 
     async fn find_modules_with_capability(
         capability: &str,
     ) -> BearDogResult<Option<Vec<String>>> {
-        // In production: query Songbird ecosystem registry
-        // For now: simulate capability-based module discovery without hardcoding primal types
+
         let modules = match capability {
             "performance.optimization" => Some(vec![
                 "module-instance-perf-a1".to_string(), // Anonymous performance modules
@@ -249,181 +171,165 @@ impl GeneticSecurityHealing {
             "healing.security" => Some(vec!["module-instance-heal-sec-l3".to_string()]),
             _ => None,
         Ok(modules)
-/// Security issue detected by the genetic healing system
+
 #[derive(Debug, Clone)]}
 
-
 pub struct SecurityIssue {
-    /// Type of security issue detected
+
     pub issue_type: SecurityIssueType,
-    /// Severity level of the issue
+
     pub severity: Severity,
-    /// Human-readable description of the issue
+
     pub description: String,
-    /// Timestamp when the issue was detected
+
     pub timestamp: SystemTime,
-/// Types of security issues that can be detected
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum SecurityIssueType {
-    /// Encryption system has been compromised
-    EncryptionCompromised,
-    /// Authentication system has been breached
-    AuthenticationBreach,
-    /// System performance has degraded significantly
-    PerformanceDegradation,
-    /// Network anomaly detected
-    NetworkAnomaly,
-/// Severity levels for security issues}
 
+    EncryptionCompromised,
+
+    AuthenticationBreach,
+
+    PerformanceDegradation,
+
+    NetworkAnomaly,
 
 pub enum Severity {
-    /// Critical security issue requiring immediate attention
-    Critical,
-    /// High severity issue needing prompt action
-    High,
-    /// Medium severity issue for scheduled resolution
-    Medium,
-    /// Low severity issue for routine maintenance
-    Low,
-/// Results of genetic healing operations
-pub enum HealingResult {
-    /// Healing operation completed successfully
-    Success,
-    /// Healing operation partially completed
-    Partial,
-    /// Healing operation failed
-    Failed,
-/// Network events that can trigger genetic healing}
 
+    Critical,
+
+    High,
+
+    Medium,
+
+    Low,
+
+pub enum HealingResult {
+
+    Success,
+
+    Partial,
+
+    Failed,
 
 pub enum NetworkEvent {
-    /// Peer disconnected from the network
+
     PeerDisconnected {
-        /// Reason for disconnection
+
         reason: String,
     },
-    /// Network congestion detected
+
     NetworkCongestion {
-        /// Latency in milliseconds
+
         latency_ms: u64,
-    /// Suspicious traffic detected
+
     SuspiciousTraffic {
-        /// Source of suspicious traffic
+
         source: String,
-/// Genetic chromosome for security healing parameters
+
 #[derive(Debug, Clone, Default)]
 pub struct SecurityHealingChromosome {
-    /// Authentication strength level (0.0 to 1.0)
+
     auth_strength: f64,
-    /// Monitoring frequency (0.0 to 1.0)
+
     monitoring_frequency: f64,
-    /// Threat sensitivity level (0.0 to 1.0)
+
     threat_sensitivity: f64,}
 
-
 impl SecurityHealingChromosome {
-    /// Strengthen authentication parameters in response to security threats
+
     pub async fn strengthen_authentication(&mut self) -> BearDogResult<()> {
         self.auth_strength = (self.auth_strength * 1.2).min(1.0);
-    /// Optimize parameters for reduced latency}
-
 
     pub async fn optimize_for_latency(&mut self, latency_ms: u64) -> BearDogResult<()> {
         if latency_ms > 100 {
             self.monitoring_frequency *= 0.8; // Reduce monitoring to improve performance
-    /// Adapt threat sensitivity based on detected threats
-    pub async fn adapt_to_threat(&mut self, _source: String) -> BearDogResult<()> {
-        self.threat_sensitivity = (self.threat_sensitivity * 1.1).min(1.0);
-/// Extension trait for universal ecosystem integration
-/// This provides the interface for distributed genetic healing across any ecosystem services}
 
+    pub async fn adapt_to_threat(&mut self, _source: &str) -> BearDogResult<()> {
+        self.threat_sensitivity = (self.threat_sensitivity * 1.1).min(1.0);
 
 pub trait EcosystemComputeExtension: Send + Sync {
-    /// Network-wide genetic healing coordination
+
     async fn coordinate_network_healing(
         issue_type: SecurityIssueType,
         local_healing: &HealingResult,
     ) -> BearDogResult<NetworkHealingResult>;
-    /// Distributed crypto algorithm optimization
+
     async fn optimize_crypto_algorithms(
         performance_metrics: &PerformanceMetrics,
     ) -> BearDogResult<CryptoOptimization>;
-    /// Cross-node genetic evolution
+
     async fn evolve_network_genetics(
         mutation_trigger: MutationTrigger,
     ) -> BearDogResult<NetworkGenetics>;
-/// Results of network-wide healing operations
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkHealingResult {
-    /// Whether network consensus was reached
-    pub network_consensus: bool,
-    /// List of affected node identifiers
-    pub affected_nodes: Vec<String>,
-    /// Strength of healing applied (0.0 to 1.0)
-    pub healing_strength: f64,
-    /// Estimated time to complete recovery
-    pub estimated_recovery_time: std::time::Duration,
-/// Performance metrics for universal compute optimization
-pub struct PerformanceMetrics {
-    /// Average encryption latency
-    pub avg_encryption_latency: std::time::Duration,
-    /// Average decryption latency
-    pub avg_decryption_latency: std::time::Duration,
-    /// Throughput in megabits per second
-    pub throughput_mbps: f64,
-    /// Error rate as a percentage (0.0 to 1.0)
-    pub error_rate: f64,
-    /// Network jitter variance
-    pub jitter_variance: std::time::Duration,
-/// Crypto optimization results from discovered optimization modules
-pub struct CryptoOptimization {
-    /// List of recommended cryptographic algorithms
-    pub recommended_algorithms: Vec<String>,
-    /// Recommended key rotation frequency
-    pub key_rotation_frequency: std::time::Duration,
-    /// Expected performance improvement (0.0 to 1.0)
-    pub performance_improvement: f64,
-    /// Security impact assessment (-1.0 to 1.0)
-    pub security_impact: f64,
-/// Network-wide genetic evolution results
-pub struct NetworkGenetics {
-    /// Consensus genome identifier
-    pub consensus_genome: String,
-    /// Genetic diversity index (0.0 to 1.0)
-    pub diversity_index: f64,
-    /// Current evolution generation number
-    pub evolution_generation: u64,
-    /// Network fitness score (0.0 to 1.0)
-    pub network_fitness: f64,
-/// Triggers for genetic mutations across the network
-pub enum MutationTrigger {
-    /// Security breach detected
-    SecurityBreach,
-    /// Performance degradation occurred
-    /// Network expansion event
-    NetworkExpansion,
-    /// Threat escalation detected
-    ThreatEscalation,
-    /// Compliance requirement changed
-    ComplianceRequirement,
-/// Universal ecosystem extension implementation
-/// Works with any ecosystem services through service discovery}
 
+    pub network_consensus: bool,
+
+    pub affected_nodes: Vec<String>,
+
+    pub healing_strength: f64,
+
+    pub estimated_recovery_time: std::time::Duration,
+
+pub struct PerformanceMetrics {
+
+    pub avg_encryption_latency: std::time::Duration,
+
+    pub avg_decryption_latency: std::time::Duration,
+
+    pub throughput_mbps: f64,
+
+    pub error_rate: f64,
+
+    pub jitter_variance: std::time::Duration,
+
+pub struct CryptoOptimization {
+
+    pub recommended_algorithms: Vec<String>,
+
+    pub key_rotation_frequency: std::time::Duration,
+
+    pub performance_improvement: f64,
+
+    pub security_impact: f64,
+
+pub struct NetworkGenetics {
+
+    pub consensus_genome: String,
+
+    pub diversity_index: f64,
+
+    pub evolution_generation: u64,
+
+    pub network_fitness: f64,
+
+pub enum MutationTrigger {
+
+    SecurityBreach,
+
+    NetworkExpansion,
+
+    ThreatEscalation,
+
+    ComplianceRequirement,
 
 pub struct UniversalEcosystemExtension;}
 
-
 impl EcosystemComputeExtension for UniversalEcosystemExtension {
-    /// Coordinate network healing across multiple ecosystem services
+
         _issue_type: SecurityIssueType,
     ) -> BearDogResult<NetworkHealingResult> {
-        // Use service discovery to find healing coordination services
+
         let coordination_services = self.discover_healing_services().await?;
-        // Distribute healing coordination across available services
+
         let mut affected_nodes = Vec::new();
         let mut healing_strength: f64 = 0.0;
         for service in coordination_services {
-            // Simulate coordination with ecosystem service
+
             affected_nodes.push(service);
             healing_strength += 0.2; // Each service contributes to healing strength
         let network_consensus = matches!(local_healing, HealingResult::Success);
@@ -432,16 +338,16 @@ impl EcosystemComputeExtension for UniversalEcosystemExtension {
             affected_nodes,
             healing_strength: healing_strength.min(1.0),
             estimated_recovery_time: std::time::Duration::from_secs(30),
-    /// Optimize cryptographic algorithms based on ecosystem performance metrics
+
         _performance_metrics: &PerformanceMetrics,
     ) -> BearDogResult<CryptoOptimization> {
-        // Use service discovery to find crypto optimization services
+
         let optimization_services = self.discover_crypto_optimization_services().await?;
-        // Aggregate optimization results from multiple services
+
         let mut algorithms = Vec::new();
         let mut improvement: f64 = 0.0;
         for _service in optimization_services {
-            // Simulate optimization from ecosystem service
+
             algorithms.push("ChaCha20Poly1305".to_string());
             algorithms.push("AES-256-GCM".to_string());
             improvement += 0.1;
@@ -450,107 +356,91 @@ impl EcosystemComputeExtension for UniversalEcosystemExtension {
             key_rotation_frequency: std::time::Duration::from_secs(3600),
             performance_improvement: improvement.min(1.0),
             security_impact: 0.0,
-    /// Evolve network genetics based on mutation triggers
+
         _mutation_trigger: MutationTrigger,
     ) -> BearDogResult<NetworkGenetics> {
-        // Use service discovery to find genetic evolution services
+
         let evolution_services = self.discover_genetic_evolution_services().await?;
-        // Aggregate genetic evolution from ecosystem services
+
         let diversity_index = 0.5 + (evolution_services.len() as f64 * 0.1);
         let network_fitness = 0.7 + (evolution_services.len() as f64 * 0.05);
         Ok(NetworkGenetics {
-            consensus_genome: format!("ecosystem_v{}", evolution_services.len()),
+            consensus_genome: format_args!("ecosystem_v{}", evolution_services.len().to_string()),
             diversity_index: diversity_index.min(1.0),
             evolution_generation: evolution_services.len() as u64,
             network_fitness: network_fitness.min(1.0),
 impl UniversalEcosystemExtension {
-    /// Discover healing services in the ecosystem
+
     async fn discover_healing_services(&self) -> BearDogResult<Vec<String>> {
-        // Universal service discovery for healing services
+
         Ok(vec![
             "ecosystem-healer-1".to_string(),
             "distributed-recovery-2".to_string(),
         ])
-    /// Discover crypto optimization services in the ecosystem}
-
 
     async fn discover_crypto_optimization_services(&self) -> BearDogResult<Vec<String>> {
-        // Universal service discovery for crypto optimization
+
             "crypto-optimizer-1".to_string(),
             "algorithm-tuner-2".to_string(),
-    /// Discover genetic evolution services in the ecosystem
+
     async fn discover_genetic_evolution_services(&self) -> BearDogResult<Vec<String>> {
-        // Universal service discovery for genetic evolution
+
             "genetic-evolver-1".to_string(),
             "mutation-engine-2".to_string(),
-    /// Get the ecosystem compute extension for network operations}
-
 
     pub fn get_ecosystem_extension(&self) -> Box<dyn EcosystemComputeExtension> {
         UniversalEcosystemExtension
-    /// Use the genetics engine for security optimization}
-
 
     pub async fn optimize_with_genetics(&self, data: &[u8]) -> BearDogResult<Vec<u8>> {
-        // Use the genetics_engine field for genetic optimization
+
         let _ = &self.genetics_engine;
         Ok(data.to_vec())
-    /// Check if healing is currently active
+
     pub fn is_healing_active(&self) -> bool {
         self.healing_active
-    /// Get the current generation number}
-
 
     pub fn get_current_generation(&self) -> u64 {
         self.current_generation
-/// Genetic configuration for healing capabilities
-pub struct HealingGenes {
-    /// Whether crypto healing is enabled
-    crypto_healing: bool,
-    /// Whether authentication healing is enabled
-    auth_healing: bool,
-    /// Whether performance healing is enabled
-    performance_healing: bool,
-/// Process for genetic healing of security issues
-pub struct HealingProcess {
-    /// Unique identifier for the healing process
-    id: String,
-    /// Security issue being addressed
-    issue: SecurityIssue,
-    /// Healing genes configuration
-    healing_genes: HealingGenes,
-    /// Timestamp when healing started
-    started_at: SystemTime,
-    /// Current status of the healing process
-    status: HealingStatus,
-/// Status of genetic healing processes
-pub enum HealingStatus {
-    /// Healing process is currently in progress
-    InProgress,
-    /// Healing process has completed successfully
-    Completed,
-    /// Healing process has failed}
 
+pub struct HealingGenes {
+
+    crypto_healing: bool,
+
+    auth_healing: bool,
+
+    performance_healing: bool,
+
+pub struct HealingProcess {
+
+    id: String,
+
+    issue: SecurityIssue,
+
+    healing_genes: HealingGenes,
+
+    started_at: SystemTime,
+
+    status: HealingStatus,
+
+pub enum HealingStatus {
+
+    InProgress,
+
+    Completed,
 
 impl HealingProcess {
-    /// Get the healing process ID}
-
 
     pub fn get_id(&self) -> &str {
         &self.id
-    /// Get the security issue being addressed}
-
 
     pub fn get_issue(&self) -> &SecurityIssue {
         &self.issue
-    /// Get the healing genes configuration
+
     pub fn get_healing_genes(&self) -> &HealingGenes {
         &self.healing_genes
-    /// Get when the healing process started}
-
 
     pub fn get_started_at(&self) -> SystemTime {
         self.started_at
-    /// Get the current status of the healing process
+
     pub fn get_status(&self) -> &HealingStatus {
         &self.status

@@ -1,181 +1,109 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// Threat action and response types
-///
-/// This module contains types for threat actions, status tracking, and mitigation steps.
-/// ## Features
-/// - Threat action enumeration
-/// - Status tracking for threat lifecycle
-/// - Mitigation step recording
-/// - Response action types
-/// - Status transitions and validation
-/// ## Example
-/// ```rust
-/// use beardog::threat::types::{ThreatAction, ThreatStatus, MitigationStep};
-/// use chrono::Utc;
-/// let action = ThreatAction::BlockSource;
-/// let status = ThreatStatus::Investigating;
-/// let mitigation = MitigationStep {
-///     description: "Blocked malicious IP address".to_string(),
-///     executed_at: Utc::now(),
-///     success: true,
-///     executor: "security-system".to_string(),
-///     ..Default::default()
-/// };
-/// ```
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-/// Threat action enumeration
-/// Defines the various actions that can be taken in response to
-/// detected threats, from blocking to notification.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ThreatAction {
-    /// Block the source
-    ///
-    /// Prevents further communication from the threat source.
+
     BlockSource,
-    /// Quarantine affected systems
-    /// Isolates compromised systems to prevent lateral movement.
+
     QuarantineSystem,
-    /// Alert security team
-    /// Notifies security personnel about the threat.
+
     AlertSecurityTeam,
-    /// Isolate network segment
-    /// Isolates network segments to contain the threat.
+
     IsolateNetwork,
-    /// Reset user credentials
-    /// Forces password reset for potentially compromised accounts.
+
     ResetCredentials,
-    /// Update security policies
-    /// Modifies security policies to address the threat.
+
     UpdatePolicies,
-    /// Deploy patches
-    /// Applies security patches to vulnerable systems.
+
     DeployPatches,
-    /// Backup critical data
-    /// Creates backups of critical data before remediation.
+
     BackupData,
-    /// Initiate incident response
-    /// Triggers formal incident response procedures.
+
     InitiateIncidentResponse,
-    /// Notify law enforcement
-    /// Contacts appropriate law enforcement agencies.
+
     NotifyLawEnforcement,
-    /// Engage threat hunting team
-    /// Activates threat hunting activities.
+
     EngageThreatHunting,
-    /// Update threat intelligence
-    /// Updates threat intelligence feeds with new indicators.
+
     UpdateThreatIntelligence,
 }
-/// Threat status enumeration
-/// Tracks the current status of a threat through its lifecycle
-/// from detection to resolution.
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum ThreatStatus {
-    /// New threat detected and awaiting initial assessment
+
     #[default]
     New,
-    /// Threat under active investigation
+
     Investigating,
-    /// Threat confirmed as genuine security issue
+
     Confirmed,
-    /// Threat determined to be false positive
+
     FalsePositive,
-    /// Threat has been mitigated
+
     Mitigated,
-    /// Threat has been fully resolved
+
     Resolved,
-    /// Threat escalated to higher security level
+
     Escalated,
-    /// Threat alerts suppressed due to noise
+
     Suppressed,
-    /// Threat is currently active and ongoing
+
     Active,
-    /// Threat acknowledged by security team
+
     Acknowledged,
-    /// Threat contained but not yet eliminated
+
     Contained,
-    /// Threat fully eradicated from systems
+
     Eradicated,
-    /// System recovery in progress after threat
+
     Recovery,
-    /// Post-incident analysis phase
+
     PostIncidentAnalysis,
 }
 
-/// Mitigation step structure
-/// Represents a single step taken to mitigate a threat,
-/// including execution details and success status.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MitigationStep {
-    /// Step description
+
     pub description: String,
-    /// Execution timestamp
+
     pub executed_at: DateTime<Utc>,
-    /// Success status
+
     pub success: bool,
-    /// Additional details
+
     pub details: Option<String>,
-    /// Executing system/user
+
     pub executor: String,
 }
 
-/// Response action types
-/// Defines specific response actions that can be taken
-/// during automated threat response.
 pub enum ResponseAction {
-    /// Log alert message
+
     LogAlert(String),
-    /// Block IP address
+
     BlockIp(String),
-    /// Quarantine user account
+
     QuarantineUser(String),
-    /// Notify administrator
+
     NotifyAdmin(String),
-    /// Isolate system
+
     IsolateSystem(String),
 }
 
 impl Default for MitigationStep {
     fn default() -> Self {
         Self {
-            description: String::new(),
+            description: String::with_capacity(64),
             executed_at: Utc::now(),
             success: false,
             details: None,
-            executor: String::new(),
+            executor: String::with_capacity(64),
         }
     }
 }
-// Utility implementations
-impl ThreatAction {
-    /// Get the severity level of this action
-    /// # Returns
-    /// Severity level (1-5, where 5 is most severe)
-    /// # Example
-    /// ```rust
-    /// use beardog::threat::types::ThreatAction;
-    /// assert_eq!(ThreatAction::BlockSource.severity_level(), 3);
-    /// assert_eq!(ThreatAction::NotifyLawEnforcement.severity_level(), 5);
-    /// ```
 
+impl ThreatAction {
 
     pub fn severity_level(&self) -> u8 {
         match self {
@@ -194,11 +122,6 @@ impl ThreatAction {
         }
     }
 
-    /// Check if action is automated
-    /// `true` if action can be performed automatically
-    /// assert!(ThreatAction::BlockSource.is_automated());
-    /// assert!(!ThreatAction::NotifyLawEnforcement.is_automated());
-    /// ```
     pub fn is_automated(&self) -> bool {
         matches!(
             self,
@@ -210,17 +133,6 @@ impl ThreatAction {
         )
     }
 
-    /// Check if action is reversible
-    /// 
-    /// # Returns
-    /// `true` if action can be easily reversed
-    /// 
-    /// # Example
-    /// ```rust
-    /// # use beardog_threat::threat::types::ThreatAction;
-    /// assert!(ThreatAction::BlockSource.is_reversible());
-    /// assert!(!ThreatAction::NotifyLawEnforcement.is_reversible());
-    /// ```
     pub fn is_reversible(&self) -> bool {
         matches!(
             self,
@@ -232,17 +144,6 @@ impl ThreatAction {
         )
     }
 
-    /// Get estimated execution time in minutes
-    /// 
-    /// # Returns
-    /// Estimated time to complete the action
-    /// 
-    /// # Example
-    /// ```rust
-    /// # use beardog_threat::threat::types::ThreatAction;
-    /// assert_eq!(ThreatAction::BlockSource.estimated_duration_minutes(), 1);
-    /// assert_eq!(ThreatAction::DeployPatches.estimated_duration_minutes(), 30);
-    /// ```
     pub fn estimated_duration_minutes(&self) -> u32 {
         match self {
             ThreatAction::BlockSource => 1,
@@ -261,17 +162,7 @@ impl ThreatAction {
     }
 }
 impl ThreatStatus {
-    /// Check if status is terminal (final)
-    /// 
-    /// # Returns
-    /// `true` if status represents a final state
-    /// 
-    /// # Example
-    /// ```rust
-    /// # use beardog_threat::threat::types::ThreatStatus;
-    /// assert!(ThreatStatus::Resolved.is_terminal());
-    /// assert!(!ThreatStatus::Investigating.is_terminal());
-    /// ```
+
     pub fn is_terminal(&self) -> bool {
         matches!(
             self,
@@ -282,17 +173,6 @@ impl ThreatStatus {
         )
     }
 
-    /// Check if status is active (requires attention)
-    /// 
-    /// # Returns
-    /// `true` if status requires active attention
-    /// 
-    /// # Example
-    /// ```rust
-    /// # use beardog_threat::threat::types::ThreatStatus;
-    /// assert!(ThreatStatus::Active.is_active());
-    /// assert!(!ThreatStatus::Resolved.is_active());
-    /// ```
     pub fn is_active(&self) -> bool {
         matches!(
             self,
@@ -307,18 +187,6 @@ impl ThreatStatus {
         )
     }
 
-    /// Get valid next statuses
-    /// 
-    /// # Returns
-    /// Vector of valid next status transitions
-    /// 
-    /// # Example
-    /// ```rust
-    /// # use beardog_threat::threat::types::ThreatStatus;
-    /// let next_statuses = ThreatStatus::New.valid_next_statuses();
-    /// assert!(next_statuses.contains(&ThreatStatus::Investigating));
-    /// assert!(next_statuses.contains(&ThreatStatus::FalsePositive));
-    /// ```
     pub fn valid_next_statuses(&self) -> Vec<ThreatStatus> {
         match self {
             ThreatStatus::New => vec![
@@ -368,30 +236,14 @@ impl ThreatStatus {
             ThreatStatus::FalsePositive => vec![],
             ThreatStatus::Suppressed => vec![],
             ThreatStatus::PostIncidentAnalysis => vec![],
+            ThreatStatus::Eradicated => vec![], // Complete elimination achieved
         }
     }
-    /// Check if transition to new status is valid
-    /// # Arguments
-    /// * `new_status` - Target status for transition
-    /// `true` if transition is valid
-    /// let current = ThreatStatus::New;
-    /// assert!(current.can_transition_to(&ThreatStatus::Investigating));
-    /// assert!(!current.can_transition_to(&ThreatStatus::Resolved));
+
     pub fn can_transition_to(&self, new_status: &ThreatStatus) -> bool {
         self.valid_next_statuses().contains(new_status)
     }
 
-    /// Get priority level for this status
-    /// 
-    /// # Returns
-    /// Priority level (1-5, where 5 is highest priority)
-    /// 
-    /// # Example
-    /// ```rust
-    /// # use beardog_threat::threat::types::ThreatStatus;
-    /// assert_eq!(ThreatStatus::Active.priority_level(), 5);
-    /// assert_eq!(ThreatStatus::Resolved.priority_level(), 1);
-    /// ```
     pub fn priority_level(&self) -> u8 {
         match self {
             ThreatStatus::Resolved | ThreatStatus::FalsePositive | ThreatStatus::Suppressed => 1,
@@ -402,77 +254,43 @@ impl ThreatStatus {
             | ThreatStatus::Contained
             | ThreatStatus::Mitigated => 4,
             ThreatStatus::Active | ThreatStatus::Escalated => 5,
+            ThreatStatus::Eradicated => 0, // Completely eliminated
         }
     }
 }
 impl MitigationStep {
-    /// Create a new mitigation step
-    /// * `description` - Description of the mitigation step
-    /// * `executor` - Who or what executed the step
-    /// A new `MitigationStep` instance
-    /// use beardog::threat::types::MitigationStep;
-    /// let step = MitigationStep::new(
-    ///     "Blocked malicious IP".to_string(),
-    ///     "firewall-system".to_string()
-    /// );}
 
-
-    pub fn new(description: String, executor: String) -> Self {
+    pub fn new(description: &str, executor: &str) -> Self {
         Self {
-            description,
-            executor,
+            description: description.to_string(),
+            executor: executor.to_string(),
             success: false,
             details: None,
             executed_at: chrono::Utc::now(),
         }
     }
 
-    /// Mark step as successful
-    /// * `details` - Optional additional details
-    /// let mut step = MitigationStep::new(
-    ///     "Block IP".to_string(),
-    ///     "firewall".to_string()
-    /// step.mark_success(Some("IP 1.2.3.4 blocked".to_string()));
-    /// assert!(step.success);}
-
-
-    pub fn mark_success(&mut self, details: Option<String>) {
+    pub fn mark_success(&mut self, details: Option<&str>) {
         self.success = true;
-        self.details = details;
+        self.details = details.map(|s| s.to_string());
     }
 
-    /// Mark step as failed
-    /// * `details` - Optional failure details
-    /// step.mark_failure(Some("Firewall unreachable".to_string()));
-    /// assert!(!step.success);
-    pub fn mark_failure(&mut self, details: Option<String>) {
+    pub fn mark_failure(&mut self, details: Option<&str>) {
         self.success = false;
-        self.details = details;
+        self.details = details.map(|s| s.to_string());
     }
 
-    /// Get step duration in minutes
-    /// Duration from execution to now in minutes
-    /// use chrono::{Utc, Duration};
-    /// step.executed_at = Utc::now() - Duration::minutes(15);
-    /// assert_eq!(step.duration_minutes(), 15);
     pub fn duration_minutes(&self) -> i64 {
         let now = Utc::now();
         (now - self.executed_at).num_minutes()
     }
 
-    /// Check if step is recent
-    /// * `minutes` - Maximum age in minutes to consider recent
-    /// `true` if step was executed within the specified time
-    /// assert!(step.is_recent(60)); // Within last hour
     pub fn is_recent(&self, minutes: i64) -> bool {
         self.duration_minutes() <= minutes
     }
 }
 impl ResponseAction {
-    /// Get the severity level of this response action
-    /// use beardog::threat::types::ResponseAction;
-    /// let action = ResponseAction::BlockIp("1.2.3.4".to_string());
-    /// assert_eq!(action.severity_level(), 3);
+
     pub fn severity_level(&self) -> u8 {
         match self {
             ResponseAction::LogAlert(_) => 1,
@@ -483,8 +301,6 @@ impl ResponseAction {
         }
     }
 
-    /// Check if action is reversible
-    /// assert!(action.is_reversible());
     pub fn is_reversible(&self) -> bool {
         matches!(
             self,
@@ -494,9 +310,6 @@ impl ResponseAction {
         )
     }
 
-    /// Get the target of this action
-    /// Target identifier (IP, user, system, etc.)
-    /// assert_eq!(action.get_target(), "1.2.3.4");
     pub fn get_target(&self) -> &str {
         match self {
             ResponseAction::LogAlert(msg) => msg,
@@ -508,7 +321,6 @@ impl ResponseAction {
     }
 }
 
-// Display implementations
 impl std::fmt::Display for ThreatAction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

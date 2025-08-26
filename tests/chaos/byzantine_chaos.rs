@@ -1,33 +1,10 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Byzantine Chaos Testing Module
-//!
-//! Focused chaos engineering tests for Byzantine fault tolerance including:
-//! - Malicious node simulation
-//! - Consensus disruption scenarios
-//! - Fault tolerance validation
 
 use super::{ChaosConfig, TestMetrics, TestResult};
 use beardog_errors::{BearDogError, BearDogResult};
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
-/// Byzantine chaos testing controller
 #[derive(Debug)]
 pub struct ByzantineChaosController {
     config: ChaosConfig,
@@ -38,7 +15,6 @@ impl ByzantineChaosController {
         Self { config }
     }
 
-    /// Test Byzantine fault tolerance
     pub async fn test_byzantine_failures(&self) -> BearDogResult<TestResult> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
@@ -49,7 +25,6 @@ impl ByzantineChaosController {
         while start_time.elapsed() < self.config.test_duration {
             operations_attempted += 1;
 
-            // Simulate Byzantine behavior
             let byzantine_result = self.simulate_byzantine_behavior().await;
 
             match byzantine_result {
@@ -84,18 +59,17 @@ impl ByzantineChaosController {
         })
     }
 
-    /// Simulate Byzantine node behavior
     async fn simulate_byzantine_behavior(&self) -> BearDogResult<()> {
-        // Simulate different Byzantine failure modes
+
         let failure_mode = fastrand::u32(0..4);
 
         match failure_mode {
             0 => {
-                // Honest behavior (no failure)
+
                 Ok(())
             }
             1 => {
-                // Fail-stop behavior
+
                 if fastrand::f64() < self.config.failure_rate {
                     Err(BearDogError::Node {
                         message: "Byzantine node stopped".to_string(),
@@ -105,7 +79,7 @@ impl ByzantineChaosController {
                 }
             }
             2 => {
-                // Arbitrary behavior (data corruption)
+
                 if fastrand::f64() < self.config.failure_rate {
                     Err(BearDogError::DataCorruption {
                         message: "Byzantine data corruption".to_string(),
@@ -115,7 +89,7 @@ impl ByzantineChaosController {
                 }
             }
             _ => {
-                // Malicious behavior (security violation)
+
                 if fastrand::f64() < self.config.failure_rate {
                     Err(BearDogError::Security {
                         message: "Byzantine security violation".to_string(),
@@ -128,7 +102,6 @@ impl ByzantineChaosController {
     }
 }
 
-/// Byzantine failure test implementation
 pub struct ByzantineFailureTest;
 
 impl ByzantineFailureTest {

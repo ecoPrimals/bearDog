@@ -1,13 +1,4 @@
-//! Universal Service Mesh Integration Demo
-//!
-//! Demonstrates how BearDog discovers and integrates with any available
-//! service mesh primal in the ecosystem, not just Songbird.
-//!
-//! This shows the ecosystem-agnostic approach where BearDog can work with:
-//! - Songbird (current primary mesh)
-//! - Future service mesh primals  
-//! - Custom mesh implementations
-//! - Automatic failover between meshes
+
 
 use beardog_core::{
     UniversalServiceMeshClient, UniversalServiceMesh, BearDogCore,
@@ -23,48 +14,37 @@ use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Initialize logging
+
     tracing_subscriber::fmt::init();
 
     info!("🌍 BearDog Universal Service Mesh Integration Demo");
 
-    // Initialize BearDog core
     let config = BearDogConfig::default();
     let beardog_core = Arc::new(BearDogCore::new(config).await?);
-    
-    // Create universal service mesh client (mesh-agnostic!)
+
     let mesh_client = UniversalServiceMeshClient::new()?;
 
-    // Step 1: Discover available service mesh primals
     demonstrate_mesh_discovery(&mesh_client).await?;
 
-    // Step 2: Connect to best available mesh
     demonstrate_mesh_selection(&mesh_client).await?;
 
-    // Step 3: Register BearDog with selected mesh
     demonstrate_mesh_registration(&mesh_client, &beardog_core).await?;
 
-    // Step 4: Use mesh for service discovery
     demonstrate_service_discovery(&mesh_client).await?;
 
-    // Step 5: Send requests through mesh routing
     demonstrate_mesh_routing(&mesh_client).await?;
 
-    // Step 6: Demonstrate mesh failover
     demonstrate_mesh_failover(&mesh_client).await?;
 
-    // Step 7: Integration with multiple mesh types
     demonstrate_multi_mesh_support().await?;
 
     info!("✅ Universal Service Mesh Demo completed successfully!");
     Ok(())
 }
 
-/// Demonstrate discovery of multiple service mesh types
 async fn demonstrate_mesh_discovery(mesh_client: &UniversalServiceMeshClient) -> BearDogResult<()> {
     info!("🔍 === Step 1: Universal Service Mesh Discovery ===");
 
-    // Discover all available service meshes in the ecosystem
     let discovered_meshes = mesh_client.discover_service_meshes().await?;
 
     info!("Found {} service mesh primals:", discovered_meshes.len());
@@ -84,7 +64,6 @@ async fn demonstrate_mesh_discovery(mesh_client: &UniversalServiceMeshClient) ->
     Ok(())
 }
 
-/// Demonstrate intelligent mesh selection
 async fn demonstrate_mesh_selection(mesh_client: &UniversalServiceMeshClient) -> BearDogResult<()> {
     info!("🎯 === Step 2: Intelligent Mesh Selection ===");
 
@@ -104,14 +83,12 @@ async fn demonstrate_mesh_selection(mesh_client: &UniversalServiceMeshClient) ->
     Ok(())
 }
 
-/// Demonstrate mesh-agnostic registration
 async fn demonstrate_mesh_registration(
     mesh_client: &UniversalServiceMeshClient,
     core: &Arc<BearDogCore>
 ) -> BearDogResult<()> {
     info!("📝 === Step 3: Universal Mesh Registration ===");
 
-    // Get BearDog metadata and services
     let metadata = PrimalMetadata::default();
     let services = vec![]; // Would be populated with actual services
 
@@ -130,11 +107,9 @@ async fn demonstrate_mesh_registration(
     Ok(())
 }
 
-/// Demonstrate service discovery across different meshes
 async fn demonstrate_service_discovery(mesh_client: &UniversalServiceMeshClient) -> BearDogResult<()> {
     info!("🕵️ === Step 4: Universal Service Discovery ===");
 
-    // Discover different types of services
     let capabilities_to_find = vec![
         "compute.optimization",
         "storage.distributed", 
@@ -164,11 +139,9 @@ async fn demonstrate_service_discovery(mesh_client: &UniversalServiceMeshClient)
     Ok(())
 }
 
-/// Demonstrate routing through universal mesh
 async fn demonstrate_mesh_routing(mesh_client: &UniversalServiceMeshClient) -> BearDogResult<()> {
     info!("🌐 === Step 5: Universal Mesh Routing ===");
 
-    // Create example service requests
     let requests = vec![
         create_example_request("compute-service", "ToadStool", "optimize"),
         create_example_request("storage-service", "NestGate", "store"),
@@ -192,15 +165,12 @@ async fn demonstrate_mesh_routing(mesh_client: &UniversalServiceMeshClient) -> B
     Ok(())
 }
 
-/// Demonstrate automatic mesh failover
 async fn demonstrate_mesh_failover(mesh_client: &UniversalServiceMeshClient) -> BearDogResult<()> {
     info!("🔄 === Step 6: Mesh Failover Demonstration ===");
 
-    // Show current mesh
     if let Some(current_mesh) = mesh_client.get_active_mesh().await {
         info!("Current mesh: {} at {}", current_mesh.name, current_mesh.endpoint);
-        
-        // Simulate mesh failure and demonstrate failover
+
         info!("Simulating mesh failure and testing failover...");
         
         match mesh_client.failover_to_alternative().await {
@@ -220,11 +190,9 @@ async fn demonstrate_mesh_failover(mesh_client: &UniversalServiceMeshClient) -> 
     Ok(())
 }
 
-/// Demonstrate support for multiple mesh types
 async fn demonstrate_multi_mesh_support() -> BearDogResult<()> {
     info!("🌟 === Step 7: Multi-Mesh Type Support ===");
 
-    // Show how BearDog can work with different mesh implementations
     let mesh_examples = vec![
         ("Songbird", "Primary ecosystem mesh - rich features"),
         ("LightMesh", "Hypothetical lightweight mesh for edge computing"),
@@ -249,7 +217,6 @@ async fn demonstrate_multi_mesh_support() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Helper function to create example service requests
 fn create_example_request(service_id: &str, target_primal: &str, operation: &str) -> ServiceRequest {
     ServiceRequest {
         request_id: Uuid::new_v4(),
@@ -261,7 +228,7 @@ fn create_example_request(service_id: &str, target_primal: &str, operation: &str
             "data": "example_data_for_processing"
         }),
         metadata: {
-            let mut meta = HashMap::new();
+            let mut meta = HashMap::with_capacity(16);
             meta.insert("source".to_string(), "BearDog".to_string());
             meta.insert("demo_mode".to_string(), "true".to_string());
             meta

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["integration","network","performance","providers","security","storage","workflows"],"struct":["AppConfig","BearDogConfig","EnvironmentConfig","FeatureConfig"]};

@@ -1,38 +1,15 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Genetic Integration Tests
-//!
-//! Tests for HSM integration with genetic spawning
 
 use super::HsmTestHarness;
 use beardog::{BearDogError, BearDogResult};
 
-/// Test genetic spawning integration
 pub async fn test_genetic_spawning_integration(harness: &mut HsmTestHarness) -> BearDogResult<()> {
     println!("🧬 Testing Genetic Spawning Integration");
 
-    // Test HSM-backed genetic spawning
     test_hsm_genetic_spawning(harness).await?;
-    
-    // Test entropy hierarchy with HSM
+
     test_entropy_hierarchy_integration(harness).await?;
-    
-    // Test genetic key derivation
+
     test_genetic_key_derivation(harness).await?;
     
     harness.test_metrics.genetic_integrations += 1;
@@ -44,8 +21,7 @@ async fn test_hsm_genetic_spawning(harness: &mut HsmTestHarness) -> BearDogResul
     println!("  🧪 Testing HSM-backed genetic spawning");
     
     let start_time = std::time::Instant::now();
-    
-    // Test genetic spawn with HSM backing
+
     let spawn_request = harness.genetics_api.create_spawn_request().await?;
     let spawn_result = harness.genetics_api.execute_spawn(spawn_request).await?;
     
@@ -63,8 +39,7 @@ async fn test_entropy_hierarchy_integration(harness: &mut HsmTestHarness) -> Bea
     println!("  🌊 Testing entropy hierarchy integration");
     
     let start_time = std::time::Instant::now();
-    
-    // Test entropy generation with HSM
+
     let entropy = harness.genetics_api.generate_entropy_with_hsm().await?;
     assert!(entropy.len() >= 32, "Should generate sufficient entropy");
     assert!(entropy.hsm_source, "Entropy should be HSM-sourced");
@@ -80,8 +55,7 @@ async fn test_genetic_key_derivation(harness: &mut HsmTestHarness) -> BearDogRes
     println!("  🔑 Testing genetic key derivation");
     
     let start_time = std::time::Instant::now();
-    
-    // Test key derivation from genetic material
+
     let derived_key = harness.genetics_api.derive_key_from_genetics().await?;
     assert!(derived_key.is_secure(), "Derived key should be secure");
     assert!(derived_key.hsm_protected, "Key should be HSM-protected");

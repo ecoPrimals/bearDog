@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! BearDog Systematic Unwrap Migrator - CLI Tool
-//!
-//! Command-line interface for the systematic migration tool that eliminates
-//! unwrap/expect calls using BearDog's graceful error handling patterns.
 
 use clap::{Arg, Command};
 use std::path::Path;
@@ -34,7 +14,7 @@ use refined_migrator::{RefinedBearDogMigrator, MigratorConfig, SafetyLevel};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging
+
     tracing_subscriber::fmt()
         .with_env_filter("info")
         .init();
@@ -158,7 +138,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let examples_strategy = matches.get_one::<String>("examples-strategy");
     let benchmarks_strategy = matches.get_one::<String>("benchmarks-strategy");
 
-    // Parse refined migrator options
     let confidence: f32 = matches.get_one::<String>("confidence")
         .and_then(|s| s.parse().ok())
         .unwrap_or(0.8);
@@ -170,8 +149,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Some("production") => SafetyLevel::Production,
         _ => SafetyLevel::Safe,
     };
-
-    // safety_level is already parsed above
 
     let migrate_tests = matches.get_flag("migrate-tests");
     let migrate_examples = matches.get_flag("migrate-examples");
@@ -189,8 +166,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         info!("🧠 Using refined migrator with enhanced context analysis");
         info!("📊 Confidence threshold: {:.1}%", confidence * 100.0);
         info!("🛡️ Safety level: {:?}", safety_level);
-        
-        // Use refined migrator
+
         let config = MigratorConfig {
             min_confidence: confidence,
             migrate_tests,
@@ -209,7 +185,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         
     } else {
-        // Use legacy migrator
+
         if context_aware {
             info!("🧠 Using enhanced context-aware migration");
             if let Some(strategy) = examples_strategy {
@@ -245,8 +221,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     },
                     category, count);
             }
-            
-            // Enhanced context analysis
+
             if context_aware {
                 println!("\n🧠 Context Analysis:");
                 println!("   📚 Example files detected: {}", count_files_by_pattern(root_path, "examples")?);
@@ -296,7 +271,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Run refined analysis
 async fn run_refined_analysis(
     migrator: &mut RefinedBearDogMigrator,
     root_path: &str,
@@ -306,8 +280,7 @@ async fn run_refined_analysis(
     
     let mut total_candidates = 0;
     let mut files_processed = 0;
-    
-    // Walk through all Rust files
+
     for entry in walkdir::WalkDir::new(root_path) {
         let entry = entry?;
         let path = entry.path();
@@ -349,7 +322,6 @@ async fn run_refined_analysis(
     Ok(())
 }
 
-/// Run refined migration
 async fn run_refined_migration(
     migrator: &mut RefinedBearDogMigrator,
     root_path: &str,
@@ -360,8 +332,7 @@ async fn run_refined_migration(
     
     let mut total_applied = 0;
     let mut files_modified = 0;
-    
-    // Walk through all Rust files
+
     for entry in walkdir::WalkDir::new(root_path) {
         let entry = entry?;
         let path = entry.path();
@@ -398,7 +369,6 @@ async fn run_refined_migration(
     Ok(())
 }
 
-/// Count files matching a pattern (examples, benchmarks, tests)
 fn count_files_by_pattern(root_path: &str, pattern: &str) -> Result<usize, Box<dyn std::error::Error>> {
     use std::fs;
     use std::path::Path;
@@ -422,7 +392,6 @@ fn count_files_by_pattern(root_path: &str, pattern: &str) -> Result<usize, Box<d
     Ok(count)
 }
 
-/// Count Rust files in a directory recursively
 fn count_rust_files(dir: &std::path::Path) -> Result<usize, Box<dyn std::error::Error>> {
     use std::fs;
     

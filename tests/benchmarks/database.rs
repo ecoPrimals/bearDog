@@ -1,41 +1,19 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Database Operations Benchmarking
-//!
-//! Benchmarks for database queries, reads, writes, and transaction processing.
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
 use beardog::BearDogResult;
 use std::time::Instant;
 use tracing::info;
 
-/// Benchmark database operations
 pub async fn benchmark_database_operations(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
-    // Database query benchmark
     let query_result = benchmark_database_queries(suite).await?;
     results.push(query_result);
 
     Ok(results)
 }
 
-/// Benchmark database queries
 async fn benchmark_database_queries(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
     info!("  💾 Benchmarking database queries");
 
@@ -45,15 +23,14 @@ async fn benchmark_database_queries(suite: &PerformanceBenchmarkSuite) -> BearDo
     let benchmark_start = Instant::now();
     for _i in 0..suite.config.iterations {
         let op_start = Instant::now();
-        
-        // Simulate database query via health check (which likely queries internal state)
+
         match suite.core.health_check().await {
             Ok(_) => {
                 successful_ops += 1;
                 latencies.push(op_start.elapsed().as_nanos() as f64 / 1_000_000.0);
             }
             Err(_) => {
-                // Record failed operation
+
             }
         }
     }

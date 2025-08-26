@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ComponentStatus","HealthStatus","KeyStatus","OperationStatus","WorkflowStatus"]};

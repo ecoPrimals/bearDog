@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Standalone Adapter Test
-//!
-//! This example demonstrates comprehensive testing of the adapter system
-//! for routing operations across different providers.
 
 use beardog_errors::BearDogResult;
 use std::collections::HashMap;
@@ -43,7 +23,6 @@ struct AdapterProvider {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 struct TestRequest {
     operation: String,
     data: Vec<u8>,
@@ -52,7 +31,6 @@ struct TestRequest {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 struct TestResponse {
     success: bool,
     provider_used: String,
@@ -69,22 +47,18 @@ struct StandaloneAdapter {
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Initialize tracing
+
     tracing_subscriber::fmt::init();
 
     info!("🧪 Standalone Universal Vendor Adapter Test");
     info!("============================================");
 
-    // Test 1: Basic adapter functionality
     test_basic_adapter_functionality().await?;
 
-    // Test 2: Provider selection logic
     test_provider_selection_logic().await?;
 
-    // Test 3: Error handling and fallbacks
     test_error_handling_and_fallbacks().await?;
 
-    // Test 4: Performance and reliability metrics
     test_performance_and_reliability().await?;
 
     info!("✅ All Standalone Adapter Tests Passed!");
@@ -97,18 +71,16 @@ async fn test_basic_adapter_functionality() -> BearDogResult<()> {
 
     let mut adapter = StandaloneAdapter::new();
 
-    // Register test providers
     let providers = create_test_providers();
     for provider in providers {
         adapter.register_provider(provider.clone()).await?;
         info!("✅ Registered provider: {}", provider.name);
     }
 
-    // Test basic request routing
     let request = TestRequest {
         operation: "encrypt".to_string(),
         data: b"test data".to_vec(),
-        parameters: HashMap::new(),
+        parameters: HashMap::with_capacity(16),
         required_capability: AdapterCapability::Encryption,
     };
 
@@ -138,7 +110,6 @@ async fn test_provider_selection_logic() -> BearDogResult<()> {
 
     let adapter = create_configured_adapter().await?;
 
-    // Test different capability requirements
     let test_cases = vec![
         (AdapterCapability::Encryption, "encrypt"),
         (AdapterCapability::Signing, "sign"),
@@ -174,12 +145,11 @@ async fn test_error_handling_and_fallbacks() -> BearDogResult<()> {
 
     let mut adapter = create_configured_adapter().await?;
 
-    // Simulate provider failure
     info!("🔄 Normal operation:");
     let request = TestRequest {
         operation: "encrypt".to_string(),
         data: b"test data".to_vec(),
-        parameters: HashMap::new(),
+        parameters: HashMap::with_capacity(16),
         required_capability: AdapterCapability::Encryption,
     };
 
@@ -192,7 +162,6 @@ async fn test_error_handling_and_fallbacks() -> BearDogResult<()> {
         }
     }
 
-    // Simulate provider failure and test fallback
     info!("\n⚠️  Simulating provider failure:");
     adapter.simulate_provider_failure("Premium Cloud HSM").await;
 
@@ -205,12 +174,11 @@ async fn test_error_handling_and_fallbacks() -> BearDogResult<()> {
         }
     }
 
-    // Test with no capable providers
     info!("\n🚫 Testing with no capable providers:");
     let impossible_request = TestRequest {
         operation: "impossible_operation".to_string(),
         data: b"test".to_vec(),
-        parameters: HashMap::new(),
+        parameters: HashMap::with_capacity(16),
         required_capability: AdapterCapability::Authentication, // Assume no providers support this
     };
 
@@ -232,7 +200,6 @@ async fn test_performance_and_reliability() -> BearDogResult<()> {
 
     let mut adapter = create_configured_adapter().await?;
 
-    // Run multiple requests to test performance consistency
     let mut response_times = Vec::new();
     let test_count = 10;
 
@@ -242,7 +209,7 @@ async fn test_performance_and_reliability() -> BearDogResult<()> {
         let request = TestRequest {
             operation: format!("test_operation_{i}"),
             data: format!("test data {i}").into_bytes(),
-            parameters: HashMap::new(),
+            parameters: HashMap::with_capacity(16),
             required_capability: AdapterCapability::Encryption,
         };
 
@@ -262,7 +229,6 @@ async fn test_performance_and_reliability() -> BearDogResult<()> {
         }
     }
 
-    // Calculate performance statistics
     if !response_times.is_empty() {
         let avg_time = response_times.iter().sum::<u64>() as f64 / response_times.len() as f64;
         let min_time = response_times.iter().min().copied().unwrap_or(0);
@@ -298,31 +264,27 @@ impl StandaloneAdapter {
     async fn process_request(&mut self, request: &TestRequest) -> BearDogResult<TestResponse> {
         self.request_count += 1;
 
-        // Find capable providers
         let capable_providers = self
             .find_capable_providers(&request.required_capability)
             .await?;
 
         if capable_providers.is_empty() {
-            return Err(beardog_errors::BearDogError::configuration(format!("No providers capable of {:?)", request.required_capability),
+            return Err(beardog_errors::BearDogError::configuration(format_args!("No providers capable of {:?)", request.required_capability).to_string(),
             });
         }
 
-        // Select best provider (clone to avoid borrow conflicts)
         let selected_provider = self.select_best_provider(&capable_providers).clone();
 
-        // Update success count early to avoid borrow issues
         self.success_count += 1;
 
-        // Simulate processing
         let processing_time = simulate_processing_time(&selected_provider);
         let result_data = simulate_operation(&request.operation, &request.data);
 
-        let mut metadata = HashMap::new();
+        let mut metadata = HashMap::with_capacity(16);
         metadata.insert("provider_id".to_string(), selected_provider.id.clone());
         metadata.insert(
             "capability".to_string(),
-            format!("{:?}", request.required_capability),
+            format_args!("{:?}", request.required_capability).to_string(),
         );
 
         Ok(TestResponse {
@@ -419,7 +381,7 @@ async fn create_configured_adapter() -> BearDogResult<StandaloneAdapter> {
 }
 
 fn simulate_processing_time(provider: &AdapterProvider) -> u64 {
-    // Simulate different processing times based on provider characteristics
+
     let base_time = (100.0 / provider.performance_score) as u64;
     base_time + (rand::random::<u64>() % 20)
 }
@@ -427,12 +389,12 @@ fn simulate_processing_time(provider: &AdapterProvider) -> u64 {
 fn simulate_operation(operation: &str, input_data: &[u8]) -> Vec<u8> {
     match operation {
         op if op.starts_with("encrypt") => {
-            format!("ENCRYPTED[{}]", String::from_utf8_lossy(input_data)).into_bytes()
+            format_args!("ENCRYPTED[{}]", String::from_utf8_lossy(input_data).to_string()).into_bytes()
         }
         op if op.starts_with("sign") => {
-            format!("SIGNATURE[{}]", String::from_utf8_lossy(input_data)).into_bytes()
+            format_args!("SIGNATURE[{}]", String::from_utf8_lossy(input_data).to_string()).into_bytes()
         }
         op if op.starts_with("generate_key") => b"GENERATED_KEY_256_BITS".to_vec(),
-        _ => format!("PROCESSED[{}]", String::from_utf8_lossy(input_data)).into_bytes(),
+        _ => format_args!("PROCESSED[{}]", String::from_utf8_lossy(input_data).to_string()).into_bytes(),
     }
 }

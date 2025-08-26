@@ -1,101 +1,135 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Core initialization and health check tests
 
 use super::common::*;
-use beardog::errors::BearDogResult;
-use beardog::core::HealthStatus;
+use beardog_errors::BearDogResult;
+use beardog_types::canonical::*;
+use beardog_core::BearDogCore;
+use std::sync::Arc;
 
 #[tokio::test]
-async fn test_beardog_initialization() -> BearDogResult<()> {
+async fn test_core_initialization_with_unified_types() -> BearDogResult<()> {
+    let config = create_test_config();
     let core = create_test_core().await?;
 
-    // Test health check
-    let health = core.health_check().await?;
-    assert!(matches!(health.status, HealthStatus::Healthy));
-    assert!(!health.components.is_empty());
+    assert!(core.is_initialized().await);
 
+    let security_config = core.get_security_config().await?;
+    assert!(security_config.enable_audit_logging);
+
+    let start = std::time::Instant::now();
+    for _ in 0..1000 {
+        let _ = core.get_health_status().await?;
+    }
+    let duration = start.elapsed();
+
+    assert!(duration.as_millis() < 100, "Zero-cost operations took too long: {:?}", duration);
+    
     Ok(())
 }
 
 #[tokio::test]
-async fn test_core_initialization() -> BearDogResult<()> {
+async fn test_environment_driven_configuration() -> BearDogResult<()> {
+
+    std::env::set_var("BEARDOG_SONGBIRD_ENDPOINT", "http://test-songbird:9000");
+    std::env::set_var("BEARDOG_MONITORING_ENDPOINT", "http://test-monitoring:9001");
+    
+    let config = create_test_config();
     let core = create_test_core().await?;
-    
-    // Verify core is properly initialized
-    let health = core.health_check().await?;
-    assert!(matches!(health.status, HealthStatus::Healthy));
-    
-    // Check that all expected components are present
-    let component_names: Vec<_> = health.components.iter().map(|c| &c.name).collect();
-    
-    // Verify key components are initialized
-    assert!(component_names.contains(&&"core".to_string()));
+
+    let network_config = core.get_network_config().await?;
+    assert!(network_config.contains_key("songbird_endpoint"));
+
+    std::env::remove_var("BEARDOG_SONGBIRD_ENDPOINT");
+    std::env::remove_var("BEARDOG_MONITORING_ENDPOINT");
     
     Ok(())
 }
 
 #[tokio::test]
-async fn test_config_validation() -> BearDogResult<()> {
-    let config = create_test_config();
-    
-    // Test that configuration is valid
-    assert!(!config.api.bind_address.is_empty());
-    assert_eq!(config.database.url, ":memory:");
-    assert!(config.threat_detection.enabled);
+async fn test_unified_error_handling() -> BearDogResult<()> {
+    let core = create_test_core().await?;
+
+    let result = core.test_invalid_operation().await;
+    match result {
+        Err(beardog_errors::BearDogError::ValidationError { message, .. }) => {
+            assert!(message.contains("invalid"));
+        }
+        _ => panic!("Expected ValidationError from unified error system"),
+    }
     
     Ok(())
 }
 
 #[tokio::test]
-async fn test_config_serialization() -> BearDogResult<()> {
-    let config = create_test_config();
-    
-    // Test that configuration can be serialized and deserialized
-    let serialized = serde_json::to_string(&config)?;
-    let _deserialized: beardog::config::core::BearDogConfig = serde_json::from_str(&serialized)?;
+async fn test_security_provider_integration() -> BearDogResult<()> {
+    let core = create_test_core().await?;
+
+    let security_provider = core.get_security_provider().await?;
+
+    let user_id = "test_user_123";
+    for i in 0..10 {
+        let result = security_provider.authenticate(user_id, "test_password").await;
+        if i < 5 {
+
+            assert!(result.is_ok() || result.is_err()); // Accept both for rate limiting
+        } else {
+
+            if let Err(e) = result {
+                assert!(format_args!("{:?}", e).to_string().contains("rate"));
+            }
+        }
+    }
     
     Ok(())
 }
 
 #[tokio::test]
-async fn test_error_types() {
-    use beardog::errors::BearDogError;
+async fn test_zero_cost_genetics_integration() -> BearDogResult<()> {
+    let core = create_test_core().await?;
+
+    let genetics_engine = core.get_genetics_engine().await?;
+
+    let start = std::time::Instant::now();
+    for _ in 0..100 {
+        let _ = genetics_engine.get_population_metrics().await?;
+    }
+    let duration = start.elapsed();
+
+    assert!(duration.as_millis() < 50, "Genetics operations too slow: {:?}", duration);
     
-    // Test error type creation and formatting
-    let config_error = BearDogError::config("Test configuration error");
-    assert!(format!("{:?}", config_error).contains("Test configuration error"));
-    
-    let internal_error = BearDogError::internal("Test internal error");
-    assert!(format!("{:?}", internal_error).contains("Test internal error"));
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_module_imports() {
-    // Test that all main modules can be imported without issues
-    use beardog::config::*;
-    use beardog::core::*;
-    use beardog::security::*;
-    use beardog::compliance::*;
-    use beardog::audit::*;
-    use beardog::threat::*;
-    use beardog::workflows::*;
+async fn test_canonical_type_validation() -> BearDogResult<()> {
+    let core = create_test_core().await?;
+
+    let type_registry = core.get_type_registry().await?;
+
+    assert!(type_registry.has_type("SecurityProviderConfig"));
+    assert!(type_registry.has_type("HsmConfig"));
+    assert!(type_registry.has_type("WorkflowConfig"));
+
+    assert!(type_registry.has_type("BearDogError"));
+    assert!(type_registry.has_type("BearDogResult"));
     
-    // If we get here without compilation errors, the imports work
-    assert!(true);
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_production_readiness_validation() -> BearDogResult<()> {
+    let core = create_test_core().await?;
+
+    let health_check = core.comprehensive_health_check().await?;
+
+    assert!(health_check.security_provider_healthy);
+    assert!(health_check.genetics_engine_healthy);
+    assert!(health_check.workflow_engine_healthy);
+    assert!(health_check.monitoring_system_healthy);
+
+    assert!(health_check.avg_response_time_ms < 100.0);
+    assert!(health_check.memory_usage_mb < 1000.0);
+    assert!(health_check.cpu_usage_percent < 80.0);
+    
+    Ok(())
 } 

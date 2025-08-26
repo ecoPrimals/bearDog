@@ -1,46 +1,26 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-/// # Health and Status Types
-///
-/// **CANONICAL HEALTH & STATUS TYPES** - Single source of truth for all health status enums
-// DateTime imports removed - not used in this module
 use serde::{Deserialize, Serialize};
 
-/// **CANONICAL** Health Status - Single source of truth for ALL health status enums
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HealthStatus {
-    /// System is operating normally
+
     Healthy,
-    /// System is functional but degraded
+
     Degraded,
-    /// System is not functional
+
     Unhealthy,
-    /// System status is unknown
+
     Unknown,
-    /// System is starting up
+
     Starting,
-    /// System is shutting down
+
     Stopping,
-    /// System is unavailable
+
     Unavailable,
-    /// System is in critical state
+
     Critical,
-    /// System has warnings
+
     Warning,
 }
 impl Default for HealthStatus {
@@ -65,7 +45,6 @@ impl std::fmt::Display for HealthStatus {
     }
 }
 
-/// **CANONICAL** Component Status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ComponentStatus {
     Active,
@@ -80,7 +59,6 @@ impl Default for ComponentStatus {
     }
 }
 
-/// **CANONICAL** Operation Status  
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum OperationStatus {
     Pending,
@@ -96,7 +74,6 @@ impl Default for OperationStatus {
     }
 }
 
-/// **CANONICAL** Workflow Status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum WorkflowStatus {
     Created,
@@ -114,7 +91,6 @@ impl Default for WorkflowStatus {
     }
 }
 
-/// **CANONICAL** Key Status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum KeyStatus {
     Compromised,
@@ -128,4 +104,3 @@ impl Default for KeyStatus {
     }
 }
 
-// ProviderHealthStatus moved to canonical/providers.rs to avoid duplication

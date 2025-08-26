@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Integration Tests for Universal HSM Discovery System
-///
-/// These tests demonstrate the complete workflow of the Universal HSM Discovery System,
-/// showing how HSMs are discovered, classified, tiered, and used for operations.
 
 #[cfg(test)]
 mod integration_tests {
@@ -26,15 +6,15 @@ mod integration_tests {
     use crate::universal_hsm_discovery::tier_manager;
     use std::time::Duration;
     use tokio;
-    /// Comprehensive integration test showing the full HSM discovery and usage workflow
+
     #[tokio::test]
     async fn test_complete_hsm_discovery_workflow() -> beardog_errors::BearDogResult<()> {
         println!("🚀 Starting Universal HSM Discovery System Integration Test");
-        // Step 1: Initialize the discovery system
+
         let mut discovery = UniversalHsmDiscovery::new()
-            .map_err(|e| BearDogError::internal(format!("Failed to initialize Universal HSM Discovery System: {:?}", e)))?;
+            .map_err(|e| BearDogError::internal(format_args!("Failed to initialize Universal HSM Discovery System: {:?}", e).to_string()))?;
         println!("✅ Universal HSM Discovery System initialized");
-        // Step 2: Configure discovery with human entropy priority
+
         let config = DiscoveryConfig {
             auto_discovery_enabled: true,
             discovery_interval: Duration::from_secs(60),
@@ -47,18 +27,18 @@ mod integration_tests {
         };
         discovery.update_config(config);
         println!("✅ Discovery configured with human entropy priority");
-        // Step 3: Perform universal HSM discovery
+
         println!("🔍 Discovering all available HSMs...");
         let discovered_hsms = discovery
             .discover_all_hsms()
             .await
-            .map_err(|e| BearDogError::internal(format!("HSM discovery failed: {:?}", e)))?;
+            .map_err(|e| BearDogError::internal(format_args!("HSM discovery failed: {:?}", e).to_string()))?;
         assert!(
             !discovered_hsms.is_empty(),
             "Should discover at least one HSM"
         );
         println!("✅ Discovered {} HSMs total", discovered_hsms.len());
-        // Step 4: Analyze discovery results
+
         let stats = discovery.get_discovery_stats();
         println!("\n📊 Discovery Statistics:");
         println!("  Total HSMs: {}", stats.total_hsms);
@@ -68,7 +48,7 @@ mod integration_tests {
         for (tier, count) in &stats.tier_distribution {
             println!("  {:?}: {} HSMs", tier, count);
         }
-        // Step 5: Verify human entropy HSMs are properly elevated
+
         let human_entropy_hsms = discovery.get_human_entropy_hsms();
             !human_entropy_hsms.is_empty(),
             "Should find HSMs with human entropy support"
@@ -78,7 +58,7 @@ mod integration_tests {
                 "  {} ({}): Tier {:?}",
                 hsm.hsm_id, hsm.vendor, hsm.assigned_tier
             );
-            // Verify human entropy capabilities
+
             assert!(
                 hsm.supports_human_entropy,
                 "HSM should support human entropy"
@@ -86,10 +66,10 @@ mod integration_tests {
                 "Capabilities should indicate human entropy support"
                 hsm.capabilities.human_entropy.supports_ephemeral_seeds,
                 "Should support ephemeral seeds"
-            // Human entropy HSMs should be elevated to at least BasicHardware tier
+
                 hsm.assigned_tier >= HsmTier::BasicHardware,
                 "Human entropy HSMs should be tier-elevated"
-            // Print entropy collection methods
+
             if !hsm
                 .capabilities
                 .human_entropy
@@ -101,12 +81,12 @@ mod integration_tests {
                     hsm.capabilities.human_entropy.entropy_collection_methods
                 );
             }
-        // Step 6: Test operation-specific HSM selection
+
         println!("\n🎯 Testing Operation-Specific HSM Selection:");
-        // Critical operation requiring human entropy
+
         if let Some(root_key_hsm) = discovery
             .get_best_hsm_for_operation("root_key_generation")
-            .map_err(|e| BearDogError::internal(format!("Failed to select HSM: {:?}", e)))?
+            .map_err(|e| BearDogError::internal(format_args!("Failed to select HSM: {:?}", e).to_string()))?
         {
                 "  Root Key Generation → {} (Tier: {:?})",
                 root_key_hsm.hsm_id, root_key_hsm.assigned_tier
@@ -114,26 +94,26 @@ mod integration_tests {
                 "Root key generation should use human entropy HSM"
                 root_key_hsm.assigned_tier >= HsmTier::CertifiedHardware,
                 "Should use high-tier HSM"
-        // Performance-oriented operation
+
         if let Some(bulk_hsm) = discovery
             .get_best_hsm_for_operation("bulk_encryption")
                 "  Bulk Encryption → {} (Tier: {:?})",
                 bulk_hsm.hsm_id, bulk_hsm.assigned_tier
                 bulk_hsm.assigned_tier >= HsmTier::BasicHardware,
                 "Should use at least basic hardware"
-        // Step 7: Test universal adapter integration
+
         println!("\n🔧 Testing Universal Adapter Integration:");
         let adapter = discovery.get_universal_adapter();
         let available_adapters = adapter.get_available_adapters();
         println!("  Available Adapters: {}", available_adapters.len());
         for adapter_name in &available_adapters {
             println!("    - {}", adapter_name);
-        // Verify key adapters are present
+
             available_adapters.contains(&"beardog_native".to_string()),
             "Should have BearDog Native adapter"
             available_adapters.contains(&"android_strongbox".to_string()),
             "Should have Android StrongBox adapter"
-        // Step 8: Test human entropy seed generation (premium operation)
+
         if !human_entropy_hsms.is_empty() {
             println!("\n🌟 Testing Human Entropy Ephemeral Seed Generation:");
             let entropy_requirements = universal_adapter::HumanEntropyRequirements {
@@ -151,7 +131,7 @@ mod integration_tests {
                 verification_required: true,
                 real_time_collection: true,
             };
-            // Try to generate human entropy seed using the best available HSM
+
             match adapter
                 .generate_human_entropy_seed(entropy_requirements, None)
                 .await
@@ -162,7 +142,7 @@ mod integration_tests {
                     println!("    Generated At: {}", seed.generated_at);
                     println!("    Expires At: {}", seed.expires_at);
                     println!("    Verified: {}", seed.verification_signature.is_some());
-                    // Verify seed properties
+
                     assert!(!seed.seed_data.is_empty(), "Should have seed data");
                     assert!(seed.entropy_quality > 0.0, "Should have quality rating");
                     assert!(
@@ -174,10 +154,9 @@ mod integration_tests {
                 }
                 Err(e) => {
                     println!("  ⚠️  Human entropy seed generation failed (expected in test environment): {}", e);
-                    // This is expected in test environment without real HSMs
-        // Step 9: Test tier-based HSM ranking
+
         println!("\n📈 Testing HSM Ranking by Tier:");
-        // Get all tiers with HSMs
+
         let all_tiers = [
             HsmTier::Software,
             HsmTier::BasicHardware,
@@ -193,7 +172,7 @@ mod integration_tests {
                     println!(
                         "    - {} ({}) - Human Entropy: {}",
                         hsm.hsm_id, hsm.vendor, hsm.supports_human_entropy
-        // Step 10: Verify human entropy tier elevation is working
+
         let premium_hsms = discovery.get_hsms_by_tier(HsmTier::HumanEntropyPremium);
         if !premium_hsms.is_empty() {
             println!("\n🏆 Premium Tier HSMs (Human Entropy Elevated):");
@@ -202,7 +181,7 @@ mod integration_tests {
                     hsm.hsm_id,
                     hsm.supports_human_entropy,
                     hsm.capabilities.human_entropy.supports_ephemeral_seeds
-                // All premium tier HSMs should support human entropy
+
                 assert!(
                     "Premium tier HSMs must support human entropy"
                     hsm.capabilities.human_entropy.supports_ephemeral_seeds,
@@ -211,12 +190,12 @@ mod integration_tests {
         println!("🎉 System successfully discovered, classified, and tiered HSMs with human entropy priority!");
         Ok(())
     }
-    /// Test the human entropy classification pipeline in detail
+
     async fn test_human_entropy_classification_pipeline() -> beardog_errors::BearDogResult<()> {
         println!("🧠 Testing Human Entropy Classification Pipeline");
         let classifier = human_entropy_classifier::HumanEntropyClassifier::new()
-            .map_err(|e| BearDogError::internal(format!("Failed to create human entropy classifier: {:?}", e)))?;
-        // Test different levels of human entropy capabilities
+            .map_err(|e| BearDogError::internal(format_args!("Failed to create human entropy classifier: {:?}", e).to_string()))?;
+
         let test_cases = vec![
             ("No Human Entropy", create_no_entropy_capabilities()),
             ("Basic Human Entropy", create_basic_entropy_capabilities()),
@@ -230,7 +209,7 @@ mod integration_tests {
         for (name, capabilities) in test_cases {
             let assessment = classifier
                 .assess_human_entropy_capabilities(&capabilities)
-                .map_err(|e| BearDogError::internal(format!("Failed to assess human entropy capabilities: {:?}", e)))?;
+                .map_err(|e| BearDogError::internal(format_args!("Failed to assess human entropy capabilities: {:?}", e).to_string()))?;
             println!("\n  {} Assessment:", name);
             println!("    Overall Score: {:.2}", assessment.overall_score);
                 "    Supports Ephemeral Seeds: {}",
@@ -249,7 +228,7 @@ mod integration_tests {
                 "    Meets Tier Elevation: {}",
                 assessment.meets_tier_elevation_criteria
             println!("    Recommended Tier: {:?}", assessment.recommended_tier);
-            // Verify that higher entropy capabilities get higher scores
+
             if name == "Premium Human Entropy" {
                     assessment.overall_score > 0.8,
                     "Premium should have high score"
@@ -259,21 +238,21 @@ mod integration_tests {
                     assessment.recommended_tier,
                     HsmTier::HumanEntropyPremium,
                     "Premium should recommend top tier"
-    /// Test multi-HSM operation scenarios
+
     async fn test_multi_hsm_operation_scenarios() -> beardog_errors::BearDogResult<()> {
         println!("🚀 Testing Multi-HSM Operation Scenarios");
         let mut discovery =
-            UniversalHsmDiscovery::new().map_err(|e| BearDogError::internal(format!("Failed to create discovery system: {:?}", e)))?;
+            UniversalHsmDiscovery::new().map_err(|e| BearDogError::internal(format_args!("Failed to create discovery system: {:?}", e).to_string()))?;
         let _discovered_hsms = discovery
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Discovery failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Discovery failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Discovery failed", e).to_string())
 })?;
         let tier_manager = tier_manager::TierManager::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create tier manager", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Failed to create tier manager", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failed to create tier manager", e).to_string())
 })?;
-        // Test different operation types and their HSM requirements
+
         let operations = vec![
             "root_key_generation",
             "critical_signing",
@@ -285,7 +264,7 @@ mod integration_tests {
                 Ok(Some(hsm)) => {
                         "  {} → {} (Tier: {:?}, Human Entropy: {})",
                         operation, hsm.hsm_id, hsm.assigned_tier, hsm.supports_human_entropy
-                    // Verify operation-specific requirements
+
                     match operation {
                         "root_key_generation" => {
                             assert!(
@@ -301,13 +280,12 @@ mod integration_tests {
                 Ok(None) => {
                     println!("  {} → No suitable HSM found", operation);
                     println!("  {} → Error: {}", operation, e);
-    // Helper functions for creating test capabilities
+
     fn create_no_entropy_capabilities() -> HsmCapabilities {
         let mut capabilities = HsmCapabilities::default();
         capabilities.human_entropy.supports_human_entropy = false;
         capabilities.human_entropy.supports_ephemeral_seeds = false;
         capabilities}
-
 
     fn create_basic_entropy_capabilities() -> HsmCapabilities {
         capabilities.human_entropy = HumanEntropyCapabilities {

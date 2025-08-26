@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AccessCondition","AuthMethod","OperationType","ResourcePermission"],"struct":["AuthorizationProof","ConsensusResult","CrossNodeAuthConfig","CrossNodeAuthorization","CrossNodeOperation"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ApprovalDecision","NotificationStatus","NotificationType","WorkflowAction","WorkflowExecutionState","WorkflowPriority","WorkflowStatus","WorkflowTarget","WorkflowType"]};

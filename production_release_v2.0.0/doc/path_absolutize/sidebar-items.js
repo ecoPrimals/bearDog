@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"externcrate":["path_dedot"],"trait":["Absolutize"]};

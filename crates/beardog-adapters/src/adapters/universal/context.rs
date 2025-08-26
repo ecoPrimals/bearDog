@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Security Context Management
-///
-/// **Context-based routing and security management for ecosystem components**
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -29,24 +10,20 @@ use beardog_errors::BearDogError;
 use serde::{Serialize, Deserialize};
 use tracing::{info, warn, debug};
 use chrono::{DateTime, Utc};
-/// Security Context Manager
-/// 
-/// Provides comprehensive context-based routing and security management for ecosystem components.
-/// This system enables adaptive security policies based on user identity, device characteristics,
-/// network conditions, and threat intelligence.
+
 pub struct SecurityContextManager {
-    /// Active security contexts indexed by context ID
+
     contexts: Arc<RwLock<HashMap<String, ActiveSecurityContext>>>,
-    /// Security policies for different context types
+
     policies: Arc<RwLock<HashMap<String, SecurityPolicy>>>,
-    /// Context validation rules
+
     validation_rules: Arc<RwLock<Vec<ContextValidationRule>>>,
-    /// Maximum context lifetime
+
     max_context_lifetime: Duration,
-    /// Context cleanup interval
+
     cleanup_interval: Duration,
 }
-/// Active security context with metadata
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct ActiveSecurityContext {
     context: SecurityContext,
@@ -55,7 +32,7 @@ struct ActiveSecurityContext {
     access_count: u64,
     risk_score: f64,
     validation_status: ContextValidationStatus,
-/// Security policy for context types
+
 struct SecurityPolicy {
     policy_id: String,
     context_type: String,
@@ -66,14 +43,14 @@ struct SecurityPolicy {
     requires_mfa: bool,
     max_session_duration: Duration,
     network_restrictions: Vec<String>,
-/// Context validation rule
+
 struct ContextValidationRule {
     rule_id: String,
     rule_type: ValidationRuleType,
     condition: String,
     action: ValidationAction,
     severity: ValidationSeverity,
-/// Types of validation rules
+
 enum ValidationRuleType {
     DeviceFingerprint,
     NetworkLocation,
@@ -81,8 +58,6 @@ enum ValidationRuleType {
     ThreatIntelligence,
     TimeBasedAccess,
     GeolocationCheck,
-/// Action to take when validation rule triggers}
-
 
 enum ValidationAction {
     Allow,
@@ -90,14 +65,12 @@ enum ValidationAction {
     RequireAdditionalAuth,
     LogAndContinue,
     EscalateToAdmin,
-/// Severity of validation failures
+
 enum ValidationSeverity {
     Low,
     Medium,
     High,
     Critical,
-/// Status of context validation}
-
 
 enum ContextValidationStatus {
     Valid,
@@ -109,31 +82,30 @@ impl SecurityContextManager {
         info!("🛡️ Initializing Security Context Manager");
         
         let manager = Self {
-            contexts: Arc::new(RwLock::new(HashMap::new())),
-            policies: Arc::new(RwLock::new(HashMap::new())),
+            contexts: Arc::new(RwLock::new(HashMap::with_capacity(16))),
+            policies: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             validation_rules: Arc::new(RwLock::new(Vec::new())),
             max_context_lifetime: Duration::from_secs(3600), // 1 hour
             cleanup_interval: Duration::from_secs(300), // 5 minutes
         };
-        // Initialize default security policies
+
         manager.initialize_default_policies().await?;
-        // Initialize default validation rules
+
         manager.initialize_default_validation_rules().await?;
-        // Start context cleanup task
+
         manager.start_cleanup_task().await;
         info!("✅ Security Context Manager initialized successfully");
         Ok(manager)
     }
-    
-    /// Create a new security context for user and device
+
     pub async fn create_context(&self, user_id: &str, device_id: &str) -> BearDogResult<SecurityContext> {
         debug!("🔐 Creating security context for user: {}, device: {}", user_id, device_id);
-        // Generate unique context ID
-        let context_id = format!("ctx_{}_{}_{}", user_id, device_id, uuid::Uuid::new_v4());
-        // Analyze device and user characteristics
+
+        let context_id = format_args!("ctx_{}_{}_{}", user_id, device_id, uuid::Uuid::new_v4().to_string());
+
         let device_fingerprint = self.generate_device_fingerprint(device_id).await?;
         let user_risk_profile = self.assess_user_risk(user_id).await?;
-        // Create base security context
+
         let mut context = SecurityContext::default();
         context.context_id = context_id.clone();
         context.user_id = user_id.to_string();
@@ -143,14 +115,14 @@ impl SecurityContextManager {
         context.risk_score = user_risk_profile.base_risk_score;
         context.device_trust_level = device_fingerprint.trust_level;
         context.network_zone = self.determine_network_zone().await?;
-        // Apply context-specific policies
+
         let applicable_policies = self.get_applicable_policies(&context).await?;
         context.allowed_operations = applicable_policies.iter()
             .flat_map(|p| p.allowed_operations.clone())
             .collect();
         context.denied_operations = applicable_policies.iter()
             .flat_map(|p| p.denied_operations.clone())
-        // Create active context record
+
         let active_context = ActiveSecurityContext {
             context: context.clone(),
             created_at: Utc::now(),
@@ -158,17 +130,17 @@ impl SecurityContextManager {
             access_count: 0,
             risk_score: user_risk_profile.base_risk_score,
             validation_status: ContextValidationStatus::Valid,
-        // Store active context
+
         {
             let mut contexts = self.contexts.write().await;
             contexts.insert(context_id.clone(), active_context);
         }
         info!("✅ Created security context: {} for user: {}", context_id, user_id);
         Ok(context)
-    /// Validate security context against current policies and rules
+
     pub async fn validate_context(&self, context: &SecurityContext) -> BearDogResult<bool> {
         debug!("🔍 Validating security context: {}", context.context_id);
-        // Check if context exists and is still valid
+
         let mut active_context = {
             match contexts.get_mut(&context.context_id) {
                 Some(ctx) => {
@@ -181,14 +153,14 @@ impl SecurityContextManager {
                     return Ok(false);
                 }
             }
-        // Check context expiration
+
         let now = Utc::now();
         let age = now.signed_duration_since(active_context.created_at);
         if age > chrono::Duration::from_std(self.max_context_lifetime)? {
             warn!("Context expired: {}", context.context_id);
             self.invalidate_context(&context.context_id).await?;
             return Ok(false);
-        // Run validation rules
+
         let validation_rules = self.validation_rules.read().await;
         for rule in validation_rules.iter() {
             match self.evaluate_validation_rule(rule, context, &active_context).await? {
@@ -196,37 +168,34 @@ impl SecurityContextManager {
                     warn!("Context validation denied by rule: {}", rule.rule_id);
                 ValidationAction::RequireAdditionalAuth => {
                     info!("Context requires additional authentication: {}", context.context_id);
-                    // Mark for revalidation
+
                     active_context.validation_status = ContextValidationStatus::RequiresRevalidation;
                 ValidationAction::EscalateToAdmin => {
                     warn!("Context validation escalated to admin: {}", context.context_id);
-                    // Log security event for admin review
+
                 ValidationAction::LogAndContinue => {
                     debug!("Context validation logged: rule {}", rule.rule_id);
                 ValidationAction::Allow => {
-                    // Continue validation
-        // Update active context with validation results
+
             if let Some(ctx) = contexts.get_mut(&context.context_id) {
                 ctx.validation_status = active_context.validation_status;
                 ctx.risk_score = active_context.risk_score;
         debug!("✅ Context validation completed for: {}", context.context_id);
         Ok(true)
-    /// Get security context by ID
+
     pub async fn get_context(&self, context_id: &str) -> BearDogResult<Option<SecurityContext>> {
         let contexts = self.contexts.read().await;
         Ok(contexts.get(context_id).map(|ctx| ctx.context.clone()))
-    /// Invalidate security context}
-
 
     pub async fn invalidate_context(&self, context_id: &str) -> BearDogResult<()> {
         info!("🚫 Invalidating security context: {}", context_id);
         let mut contexts = self.contexts.write().await;
         contexts.remove(context_id);
         Ok(())
-    /// Initialize default security policies
+
     async fn initialize_default_policies(&self) -> BearDogResult<()> {
         let mut policies = self.policies.write().await;
-        // High security policy
+
         policies.insert("high_security".to_string(), SecurityPolicy {
             policy_id: "high_security".to_string(),
             context_type: "administrative".to_string(),
@@ -238,7 +207,7 @@ impl SecurityContextManager {
             max_session_duration: Duration::from_secs(1800), // 30 minutes
             network_restrictions: vec!["internal".to_string()],
         });
-        // Standard security policy
+
         policies.insert("standard_security".to_string(), SecurityPolicy {
             policy_id: "standard_security".to_string(),
             context_type: "user".to_string(),
@@ -249,7 +218,7 @@ impl SecurityContextManager {
             requires_mfa: false,
             max_session_duration: Duration::from_secs(3600), // 1 hour
             network_restrictions: vec![],
-        // Guest security policy
+
         policies.insert("guest_security".to_string(), SecurityPolicy {
             policy_id: "guest_security".to_string(),
             context_type: "guest".to_string(),
@@ -259,7 +228,7 @@ impl SecurityContextManager {
             risk_threshold: 0.8,
             max_session_duration: Duration::from_secs(900), // 15 minutes
             network_restrictions: vec!["public".to_string()],
-    /// Initialize default validation rules
+
     async fn initialize_default_validation_rules(&self) -> BearDogResult<()> {
         let mut rules = self.validation_rules.write().await;
         rules.push(ContextValidationRule {
@@ -278,28 +247,24 @@ impl SecurityContextManager {
             condition: "network_zone == 'external'".to_string(),
             action: ValidationAction::LogAndContinue,
             severity: ValidationSeverity::Medium,
-    /// Generate device fingerprint for trust assessment}
-
 
     async fn generate_device_fingerprint(&self, device_id: &str) -> BearDogResult<DeviceFingerprint> {
-        // In a real implementation, this would analyze device characteristics
+
         Ok(DeviceFingerprint {
             device_id: device_id.to_string(),
             trust_level: 0.8, // Default trust level
-            characteristics: HashMap::new(),
+            characteristics: HashMap::with_capacity(16),
         })
-    /// Assess user risk profile
+
     async fn assess_user_risk(&self, user_id: &str) -> BearDogResult<UserRiskProfile> {
-        // In a real implementation, this would analyze user behavior patterns
+
         Ok(UserRiskProfile {
             user_id: user_id.to_string(),
             base_risk_score: 0.3, // Default risk score
-            behavior_patterns: HashMap::new(),
-    /// Determine security clearance level for user}
-
+            behavior_patterns: HashMap::with_capacity(16),
 
     async fn determine_clearance_level(&self, _user_id: &str, risk_profile: &UserRiskProfile) -> BearDogResult<u8> {
-        // Base clearance level determination on risk score
+
         let clearance = if risk_profile.base_risk_score < 0.2 {
             8 // High clearance
         } else if risk_profile.base_risk_score < 0.5 {
@@ -307,12 +272,10 @@ impl SecurityContextManager {
         } else {
             2 // Low clearance
         Ok(clearance)
-    /// Determine network zone
-    async fn determine_network_zone(&self) -> BearDogResult<String> {
-        // In a real implementation, this would analyze network characteristics
-        Ok("internal".to_string())
-    /// Get applicable security policies for context}
 
+    async fn determine_network_zone(&self) -> BearDogResult<String> {
+
+        Ok("internal".to_string())
 
     async fn get_applicable_policies(&self, context: &SecurityContext) -> BearDogResult<Vec<SecurityPolicy>> {
         let policies = self.policies.read().await;
@@ -321,14 +284,14 @@ impl SecurityContextManager {
             if context.security_clearance_level >= policy.required_clearance_level {
                 applicable.push(policy.clone());
         Ok(applicable)
-    /// Evaluate validation rule against context
+
     async fn evaluate_validation_rule(
         &self,
         rule: &ContextValidationRule,
         context: &SecurityContext,
         active_context: &ActiveSecurityContext,
     ) -> BearDogResult<ValidationAction> {
-        // Simple rule evaluation - in a real implementation, this would be more sophisticated
+
         match rule.rule_type {
             ValidationRuleType::DeviceFingerprint => {
                 if context.device_trust_level < 0.3 {
@@ -341,7 +304,7 @@ impl SecurityContextManager {
             ValidationRuleType::NetworkLocation => {
                 if context.network_zone == "external" {
             _ => Ok(ValidationAction::Allow),
-    /// Start background cleanup task
+
     async fn start_cleanup_task(&self) {
         let contexts = Arc::clone(&self.contexts);
         let cleanup_interval = self.cleanup_interval;
@@ -362,13 +325,13 @@ impl SecurityContextManager {
                         true
                     }
                 });
-/// Device fingerprint for trust assessment
+
 #[derive(Debug, Clone)]
 struct DeviceFingerprint {
     device_id: String,
     trust_level: f64,
     characteristics: HashMap<String, String>,
-/// User risk profile
+
 struct UserRiskProfile {
     user_id: String,
     base_risk_score: f64,

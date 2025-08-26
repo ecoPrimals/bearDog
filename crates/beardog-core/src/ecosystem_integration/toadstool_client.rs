@@ -1,26 +1,4 @@
-// PHASE 5 CORE OPTIMIZED: Ecosystem performance patterns applied
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// ToadStool Compute Client for Ecosystem Integration
-///
-/// This module provides a client for integrating with ToadStool's compute
-/// infrastructure, enabling cross-ecosystem genetic spawning that combines
-/// BearDog's security genetics with ToadStool's compute genetics.
 
 use super::ecosystem_genetic_spawner::{
     EcosystemPrimalClient, GeneticTrait, TraitCategory, EcosystemCapability,
@@ -34,18 +12,17 @@ use tokio::time::timeout;
 use tracing::{debug, info, warn, error};
 use uuid::Uuid;
 
-/// ToadStool compute client configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToadStoolClientConfig {
-    /// ToadStool endpoint URL
+
     pub endpoint: String,
-    /// API timeout in milliseconds
+
     pub timeout_ms: u64,
-    /// Authentication token
+
     pub auth_token: String,
-    /// Retry attempts for failed requests
+
     pub retry_attempts: u32,
-    /// Client identifier
+
     pub client_id: String,
 }
 
@@ -56,21 +33,20 @@ impl Default for ToadStoolClientConfig {
             timeout_ms: 30000,
             auth_token: "beardog_toadstool_integration".to_string(),
             retry_attempts: 3,
-            client_id: format!("beardog-{}", Uuid::new_v4()),
+            client_id: format_args!("beardog-{}", Uuid::new_v4().to_string()),
         }
     }
 }
 
-/// ToadStool compute genetics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToadStoolComputeGenetics {
-    /// Compute architecture support
+
     pub supported_architectures: Vec<ComputeArchitecture>,
-    /// Processing capabilities
+
     pub processing_capabilities: Vec<ProcessingCapability>,
-    /// Resource optimization traits
+
     pub optimization_traits: Vec<OptimizationTrait>,
-    /// Platform compatibility
+
     pub platform_compatibility: Vec<PlatformCompatibility>,
 }
 
@@ -132,7 +108,6 @@ pub enum PlatformCompatibility {
     IoTDevices,
 }
 
-/// ToadStool compute allocation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToadStoolComputeRequest {
     pub request_id: String,
@@ -170,7 +145,6 @@ pub struct GeneticSpawningContext {
     pub cross_primal_requirements: HashMap<String, serde_json::Value>,
 }
 
-/// ToadStool compute allocation response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToadStoolComputeResponse {
     pub allocation_id: String,
@@ -199,7 +173,6 @@ pub struct CostEstimate {
     pub cost_breakdown: HashMap<String, f64>,
 }
 
-/// ToadStool hybrid component
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToadStoolHybridComponent {
     pub component_id: String,
@@ -239,7 +212,6 @@ pub enum ComponentStatus {
     Terminated,
 }
 
-/// ToadStool compute client
 #[derive(Debug)]
 pub struct ToadStoolComputeClient {
     config: ToadStoolClientConfig,
@@ -249,7 +221,7 @@ pub struct ToadStoolComputeClient {
 }
 
 impl ToadStoolComputeClient {
-    /// Create a new ToadStool compute client
+
     pub fn new(config: ToadStoolClientConfig) -> Self {
         Self {
             config,
@@ -262,12 +234,11 @@ impl ToadStoolComputeClient {
         }
     }
 
-    /// Request compute allocation from ToadStool
     pub async fn request_compute_allocation(
         &self,
         request: ToadStoolComputeRequest,
     ) -> BearDogResult<ToadStoolComputeResponse> {
-        let allocation_url = format!("{}/api/v1/compute/allocate", self.config.endpoint);
+        let allocation_url = format_args!("{}/api/v1/compute/allocate", self.config.endpoint).to_string();
         let timeout_duration = Duration::from_millis(self.config.timeout_ms);
 
         let payload = serde_json::json!({
@@ -284,7 +255,7 @@ impl ToadStoolComputeClient {
                 timeout_duration,
                 self.http_client
                     .post(&allocation_url)
-                    .header("Authorization", format!("Bearer {}", self.config.auth_token))
+                    .header("Authorization", format_args!("Bearer {}", self.config.auth_token).to_string())
                     .json(&payload)
                     .send(),
             ).await {
@@ -293,8 +264,7 @@ impl ToadStoolComputeClient {
                         match response.json::<ToadStoolComputeResponse>().await {
                             Ok(allocation_response) => {
                                 info!("🍄 ToadStool compute allocation successful: {}", allocation_response.allocation_id);
-                                
-                                // Store active allocation
+
                                 {
                                     let mut allocations = self.active_allocations.write().await;
                                     allocations.insert(allocation_response.allocation_id.clone(), allocation_response.clone());
@@ -328,23 +298,21 @@ impl ToadStoolComputeClient {
         ))
     }
 
-    /// Release compute allocation
     pub async fn release_compute_allocation(&self, allocation_id: &str) -> BearDogResult<()> {
-        let release_url = format!("{}/api/v1/compute/release/{}", self.config.endpoint, allocation_id);
+        let release_url = format_args!("{}/api/v1/compute/release/{}", self.config.endpoint, allocation_id).to_string();
         let timeout_duration = Duration::from_millis(self.config.timeout_ms);
 
         match timeout(
             timeout_duration,
             self.http_client
                 .delete(&release_url)
-                .header("Authorization", format!("Bearer {}", self.config.auth_token))
+                .header("Authorization", format_args!("Bearer {}", self.config.auth_token).to_string())
                 .send(),
         ).await {
             Ok(Ok(response)) => {
                 if response.status().is_success() {
                     info!("🍄 ToadStool compute allocation released: {}", allocation_id);
-                    
-                    // Remove from active allocations
+
                     {
                         let mut allocations = self.active_allocations.write().await;
                         allocations.remove(allocation_id);
@@ -368,9 +336,8 @@ impl ToadStoolComputeClient {
         }
     }
 
-    /// Get ToadStool compute genetics
     pub async fn get_compute_genetics(&self) -> BearDogResult<ToadStoolComputeGenetics> {
-        // Check cache first
+
         {
             let cache = self.genetics_cache.read().await;
             if let Some(genetics) = cache.as_ref() {
@@ -378,15 +345,14 @@ impl ToadStoolComputeClient {
             }
         }
 
-        // Fetch genetics from ToadStool
-        let genetics_url = format!("{}/api/v1/genetics/compute", self.config.endpoint);
+        let genetics_url = format_args!("{}/api/v1/genetics/compute", self.config.endpoint).to_string();
         let timeout_duration = Duration::from_millis(self.config.timeout_ms);
 
         match timeout(
             timeout_duration,
             self.http_client
                 .get(&genetics_url)
-                .header("Authorization", format!("Bearer {}", self.config.auth_token))
+                .header("Authorization", format_args!("Bearer {}", self.config.auth_token).to_string())
                 .send(),
         ).await {
             Ok(Ok(response)) => {
@@ -394,8 +360,7 @@ impl ToadStoolComputeClient {
                     match response.json::<ToadStoolComputeGenetics>().await {
                         Ok(genetics) => {
                             info!("🍄 Retrieved ToadStool compute genetics");
-                            
-                            // Cache the genetics
+
                             {
                                 let mut cache = self.genetics_cache.write().await;
                                 *cache = Some(genetics.clone());
@@ -425,15 +390,13 @@ impl ToadStoolComputeClient {
         }
     }
 
-    /// Convert ToadStool genetics to generic genetic traits
     fn convert_to_genetic_traits(&self, genetics: &ToadStoolComputeGenetics) -> Vec<GeneticTrait> {
         let mut traits = Vec::new();
 
-        // Convert compute architectures to traits
         for arch in &genetics.supported_architectures {
             traits.push(GeneticTrait {
-                trait_id: format!("compute_arch_{:?}", arch),
-                trait_name: format!("{:?} Architecture Support", arch),
+                trait_id: format_args!("compute_arch_{:?}", arch).to_string(),
+                trait_name: format_args!("{:?} Architecture Support", arch).to_string(),
                 category: TraitCategory::Compute,
                 strength: 0.8,
                 dominance: 0.7,
@@ -444,11 +407,10 @@ impl ToadStoolComputeClient {
             });
         }
 
-        // Convert processing capabilities to traits
         for capability in &genetics.processing_capabilities {
             traits.push(GeneticTrait {
-                trait_id: format!("processing_{:?}", capability),
-                trait_name: format!("{:?} Processing", capability),
+                trait_id: format_args!("processing_{:?}", capability).to_string(),
+                trait_name: format_args!("{:?} Processing", capability).to_string(),
                 category: TraitCategory::Compute,
                 strength: 0.9,
                 dominance: 0.8,
@@ -459,11 +421,10 @@ impl ToadStoolComputeClient {
             });
         }
 
-        // Convert optimization traits
         for optimization in &genetics.optimization_traits {
             traits.push(GeneticTrait {
-                trait_id: format!("optimization_{:?}", optimization.optimization_type),
-                trait_name: format!("{:?} Optimization", optimization.optimization_type),
+                trait_id: format_args!("optimization_{:?}", optimization.optimization_type).to_string(),
+                trait_name: format_args!("{:?} Optimization", optimization.optimization_type).to_string(),
                 category: TraitCategory::Compute,
                 strength: optimization.efficiency_score,
                 dominance: optimization.performance_boost,
@@ -480,14 +441,12 @@ impl ToadStoolComputeClient {
         traits
     }
 
-    /// Get active allocations
     pub async fn get_active_allocations(&self) -> BearDogResult<Vec<ToadStoolComputeResponse>> {
         let allocations = self.active_allocations.read().await;
         Ok(allocations.values().cloned().collect())
     }
 }
 
-// ✅ MODERNIZATION: Removed async_trait - using native async fn
 impl EcosystemPrimalClient for ToadStoolComputeClient {
     fn get_primal_id(&self) -> &str {
         "toadstool"
@@ -501,22 +460,21 @@ impl EcosystemPrimalClient for ToadStoolComputeClient {
     }
 
     async fn allocate_resources(&self, requirements: &serde_json::Value) -> BearDogResult<serde_json::Value> {
-        // Parse requirements as ToadStool compute request
+
         let compute_request: ToadStoolComputeRequest = serde_json::from_value(requirements.clone())
-            .map_err(|e| BearDogError::invalid_input(&format!("Invalid ToadStool compute requirements: {}", e)))?;
+            .map_err(|e| BearDogError::invalid_input(&format_args!("Invalid ToadStool compute requirements: {}", e).to_string()))?;
 
         let response = self.request_compute_allocation(compute_request).await?;
         Ok(serde_json::to_value(response)?)
     }
 
     async fn create_hybrid_component(&self, blueprint: &EcosystemGeneticBlueprint) -> BearDogResult<serde_json::Value> {
-        // Extract ToadStool-specific traits from blueprint
+
         let toadstool_traits = blueprint.hybrid_traits.iter()
             .filter(|trait_| trait_.category == TraitCategory::Compute)
             .cloned()
             .collect::<Vec<_>>();
 
-        // Create hybrid component based on genetic traits
         let component = ToadStoolHybridComponent {
             component_id: Uuid::new_v4().to_string(),
             component_type: HybridComponentType::ComputeEngine,
@@ -544,7 +502,7 @@ impl EcosystemPrimalClient for ToadStoolComputeClient {
     }
 
     async fn health_check(&self) -> BearDogResult<bool> {
-        let health_url = format!("{}/api/v1/health", self.config.endpoint);
+        let health_url = format_args!("{}/api/v1/health", self.config.endpoint).to_string();
         let timeout_duration = Duration::from_millis(5000); // Shorter timeout for health checks
 
         match timeout(
@@ -573,8 +531,7 @@ impl EcosystemPrimalClient for ToadStoolComputeClient {
 
     async fn get_resource_utilization(&self) -> BearDogResult<HashMap<String, f64>> {
         let mut utilization = ahash::HashMap::default();
-        
-        // Get utilization for all active allocations
+
         let allocations = self.active_allocations.read().await;
         let mut total_cpu_cores = 0u32;
         let mut total_memory_gb = 0u64;
@@ -595,21 +552,18 @@ impl EcosystemPrimalClient for ToadStoolComputeClient {
     }
 }
 
-/// Factory for creating ToadStool compute clients
 pub struct ToadStoolClientFactory;
 
 impl ToadStoolClientFactory {
-    /// Create a ToadStool client with default configuration
+
     pub fn create_default() -> ToadStoolComputeClient {
         ToadStoolComputeClient::new(ToadStoolClientConfig::default())
     }
 
-    /// Create a ToadStool client with custom configuration
     pub fn create_with_config(config: ToadStoolClientConfig) -> ToadStoolComputeClient {
         ToadStoolComputeClient::new(config)
     }
 
-    /// Create a ToadStool client configured for development
     pub fn create_for_development() -> ToadStoolComputeClient {
         let mut config = ToadStoolClientConfig::default();
         config.endpoint = "http://localhost:9090".to_string();
@@ -617,8 +571,7 @@ impl ToadStoolClientFactory {
         ToadStoolComputeClient::new(config)
     }
 
-    /// Create a ToadStool client configured for production
-    pub fn create_for_production(endpoint: String, auth_token: String) -> ToadStoolComputeClient {
+    pub fn create_for_production(endpoint: &str, auth_token: &str) -> ToadStoolComputeClient {
         let mut config = ToadStoolClientConfig::default();
         config.endpoint = endpoint;
         config.auth_token = auth_token;

@@ -1,25 +1,4 @@
-//! # Pixel 8 GrapheneOS BearDog Demo
-//!
-//! This example demonstrates how to set up and use BearDog's hardware security
-//! module (HSM) on a Pixel 8 device running GrapheneOS.
-//!
-//! ## Features Demonstrated
-//!
-//! - **Hardware detection and validation**
-//! - **Titan M security chip integration**
-//! - **StrongBox HSM initialization**
-//! - **Hardware-backed key generation**
-//! - **Security anchor key creation**
-//! - **Digital signatures with hardware keys**
-//! - **Key attestation verification**
-//!
-//! ## Usage
-//!
-//! Run this example on your Pixel 8 with GrapheneOS:
-//!
-//! ```bash
-//! cargo run --example pixel8_grapheneos_demo --features android-hsm
-//! ```
+
 
 use beardog::tunnel::hsm::android_strongbox::{
     setup_pixel8_beardog, Pixel8GrapheneOSConfig, Pixel8GrapheneOSSetup,
@@ -32,7 +11,7 @@ use tracing::{info, Level};
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Initialize logging
+
     tracing_subscriber::fmt()
         .with_max_level(Level::INFO)
         .init();
@@ -40,44 +19,36 @@ async fn main() -> BearDogResult<()> {
     info!("🚀 BearDog Pixel 8 GrapheneOS Demo Starting");
     info!("==================================================");
 
-    // Demo 1: Quick setup (easiest way to get started)
     demo_quick_setup().await?;
 
-    // Demo 2: Custom configuration setup (more control)
     demo_custom_setup().await?;
 
-    // Demo 3: Advanced security operations
     demo_advanced_operations().await?;
 
     info!("🎉 All demos completed successfully!");
     Ok(())
 }
 
-/// Demonstration of quick setup for Pixel 8 GrapheneOS
 async fn demo_quick_setup() -> BearDogResult<()> {
     info!("📱 Demo 1: Quick Setup");
     info!("---------------------");
 
-    // This is the simplest way to get BearDog running on Pixel 8
     let (hsm, anchor_key) = setup_pixel8_beardog().await?;
 
     info!("✅ Quick setup complete!");
     info!("   HSM initialized: {}", hsm.get_info().await?.instance_id);
     info!("   Anchor key created: {}", anchor_key.id);
 
-    // Test basic operations
     test_basic_operations(&hsm, &anchor_key).await?;
 
     info!("✅ Demo 1 complete!\n");
     Ok(())
 }
 
-/// Demonstration of custom configuration setup
 async fn demo_custom_setup() -> BearDogResult<()> {
     info!("⚙️ Demo 2: Custom Configuration Setup");
     info!("-------------------------------------");
 
-    // Create custom configuration for your security requirements
     let config = Pixel8GrapheneOSConfig {
         require_titan_m: true,                              // Require Titan M chip
         require_green_boot: true,                           // Require verified boot
@@ -86,11 +57,9 @@ async fn demo_custom_setup() -> BearDogResult<()> {
         performance_mode: Pixel8PerformanceMode::Balanced, // Balance security/performance
     };
 
-    // Initialize with custom config
     let setup = Pixel8GrapheneOSSetup::new(config).await?;
     let hsm = setup.initialize_hsm().await?;
 
-    // Create custom anchor key with specific requirements
     let anchor_key = setup.create_anchor_key(&hsm).await?;
 
     info!("✅ Custom setup complete!");
@@ -98,7 +67,6 @@ async fn demo_custom_setup() -> BearDogResult<()> {
     info!("   Performance mode: Balanced");
     info!("   Anchor key: {}", anchor_key.id);
 
-    // Generate ecosystem identity for this device
     let identity = setup.generate_ecosystem_identity(&hsm).await?;
     info!("🌐 Device identity: {}", identity.device_id);
     info!("   GrapheneOS version: {}", identity.grapheneos_version);
@@ -108,18 +76,15 @@ async fn demo_custom_setup() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstration of advanced security operations
 async fn demo_advanced_operations() -> BearDogResult<()> {
     info!("🔐 Demo 3: Advanced Security Operations");
     info!("---------------------------------------");
 
     let (hsm, _anchor_key) = setup_pixel8_beardog().await?;
 
-    // Create different types of keys for different purposes
     let signing_key = create_signing_key(&hsm).await?;
     let encryption_key = create_encryption_key(&hsm).await?;
 
-    // Demonstrate various cryptographic operations
     demo_digital_signatures(&hsm, &signing_key).await?;
     demo_data_encryption(&hsm, &encryption_key).await?;
     demo_key_attestation(&signing_key).await?;
@@ -128,18 +93,14 @@ async fn demo_advanced_operations() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Test basic HSM operations
 async fn test_basic_operations(hsm: &Arc<dyn HsmProvider>, anchor_key: &HsmKey) -> BearDogResult<()> {
     info!("🧪 Testing basic operations with anchor key...");
 
-    // Test data to sign
     let test_data = b"Hello from BearDog on Pixel 8 GrapheneOS!";
 
-    // Sign data with hardware-backed key
     let signature = hsm.sign(&anchor_key.id, test_data).await?;
     info!("✅ Data signed successfully ({} byte signature)", signature.len());
 
-    // Verify the signature
     let is_valid = hsm.verify(&anchor_key.id, test_data, &signature).await?;
     if is_valid {
         info!("✅ Signature verification passed");
@@ -149,7 +110,6 @@ async fn test_basic_operations(hsm: &Arc<dyn HsmProvider>, anchor_key: &HsmKey) 
         });
     }
 
-    // Get HSM information
     let hsm_info = hsm.get_info().await?;
     info!("📋 HSM Info:");
     info!("   Vendor: {}", hsm_info.vendor);
@@ -159,7 +119,6 @@ async fn test_basic_operations(hsm: &Arc<dyn HsmProvider>, anchor_key: &HsmKey) 
     Ok(())
 }
 
-/// Create a dedicated signing key
 async fn create_signing_key(hsm: &Arc<dyn HsmProvider>) -> BearDogResult<HsmKey> {
     info!("🔑 Creating dedicated signing key...");
 
@@ -192,7 +151,6 @@ async fn create_signing_key(hsm: &Arc<dyn HsmProvider>) -> BearDogResult<HsmKey>
     Ok(key)
 }
 
-/// Create a dedicated encryption key
 async fn create_encryption_key(hsm: &Arc<dyn HsmProvider>) -> BearDogResult<HsmKey> {
     info!("🔑 Creating dedicated encryption key...");
 
@@ -225,7 +183,6 @@ async fn create_encryption_key(hsm: &Arc<dyn HsmProvider>) -> BearDogResult<HsmK
     Ok(key)
 }
 
-/// Demonstrate digital signatures
 async fn demo_digital_signatures(hsm: &Arc<dyn HsmProvider>, signing_key: &HsmKey) -> BearDogResult<()> {
     info!("✍️ Demonstrating digital signatures...");
 
@@ -251,18 +208,15 @@ async fn demo_digital_signatures(hsm: &Arc<dyn HsmProvider>, signing_key: &HsmKe
     Ok(())
 }
 
-/// Demonstrate data encryption
 async fn demo_data_encryption(hsm: &Arc<dyn HsmProvider>, encryption_key: &HsmKey) -> BearDogResult<()> {
     info!("🔐 Demonstrating data encryption...");
 
     let sensitive_data = b"This is sensitive data protected by Pixel 8 StrongBox";
-    
-    // Encrypt data
+
     let ciphertext = hsm.encrypt(&encryption_key.id, sensitive_data).await?;
     info!("   Original: {} bytes", sensitive_data.len());
     info!("   Encrypted: {} bytes", ciphertext.len());
 
-    // Decrypt data
     let plaintext = hsm.decrypt(&encryption_key.id, &ciphertext).await?;
     
     if plaintext == sensitive_data {
@@ -278,7 +232,6 @@ async fn demo_data_encryption(hsm: &Arc<dyn HsmProvider>, encryption_key: &HsmKe
     Ok(())
 }
 
-/// Demonstrate key attestation
 async fn demo_key_attestation(key: &HsmKey) -> BearDogResult<()> {
     info!("📜 Demonstrating key attestation...");
 
@@ -304,7 +257,6 @@ async fn demo_key_attestation(key: &HsmKey) -> BearDogResult<()> {
     Ok(())
 }
 
-/// Display system information
 fn display_system_info() {
     info!("📱 System Information:");
     info!("   OS: Detected as Android-based");

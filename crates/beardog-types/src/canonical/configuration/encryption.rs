@@ -1,50 +1,26 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Canonical Encryption Configuration
-///
-/// **UNIFIED ENCRYPTION CONFIGURATION** - Single source of truth for all encryption settings
-/// This module consolidates encryption configuration from:
-/// - beardog-security/src/encryption.rs::UnifiedSecurityConfig
-/// - beardog-security/src/types/crypto_types.rs::ContextAwareKeyConfig
-/// - Various scattered encryption settings across the ecosystem
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-/// **CANONICAL ENCRYPTION CONFIGURATION** - Main encryption settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionConfig {
-    /// Enable encryption globally
+
     pub enable_encryption: bool,
-    /// Default encryption algorithm
+
     pub algorithm: EncryptionAlgorithm,
-    /// Key size in bits
+
     pub key_size: u32,
-    /// Encryption mode
+
     pub mode: EncryptionMode,
-    /// Key derivation configuration
+
     pub key_derivation: KeyDerivationConfig,
-    /// Context-aware key management
+
     pub context_aware_keys: ContextAwareKeyConfig,
-    /// Entropy adjustment settings
+
     pub entropy_adjustment: EntropyAdjustmentConfig,
-    /// Key rotation settings
+
     pub key_rotation: KeyRotationConfig,
 }
 
@@ -63,46 +39,43 @@ impl Default for EncryptionConfig {
     }
 }
 
-/// **CANONICAL ENCRYPTION ALGORITHMS** - Supported encryption algorithms
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum EncryptionAlgorithm {
-    /// AES-256 in GCM mode (recommended for most use cases)
+
     Aes256Gcm,
-    /// AES-256 in CBC mode
+
     Aes256Cbc,
-    /// AES-128 in GCM mode
+
     Aes128Gcm,
-    /// ChaCha20-Poly1305
+
     ChaCha20Poly1305,
-    /// XChaCha20-Poly1305
+
     XChaCha20Poly1305,
 }
 
-/// **CANONICAL ENCRYPTION MODES** - Supported encryption modes
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum EncryptionMode {
-    /// Galois/Counter Mode (authenticated encryption)
+
     Gcm,
-    /// Cipher Block Chaining mode
+
     Cbc,
-    /// Counter mode
+
     Ctr,
-    /// Electronic Codebook mode (not recommended for production)
+
     Ecb,
 }
 
-/// **CANONICAL KEY DERIVATION CONFIGURATION** - Key derivation settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyDerivationConfig {
-    /// Key derivation function
+
     pub kdf: KeyDerivationFunction,
-    /// Number of iterations for PBKDF2
+
     pub iterations: u32,
-    /// Salt size in bytes
+
     pub salt_size: u32,
-    /// Memory cost for Argon2 (in KB)
+
     pub memory_cost: u32,
-    /// Parallelism for Argon2
+
     pub parallelism: u32,
 }
 
@@ -118,31 +91,29 @@ impl Default for KeyDerivationConfig {
     }
 }
 
-/// **CANONICAL KEY DERIVATION FUNCTIONS** - Supported KDFs
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum KeyDerivationFunction {
-    /// PBKDF2 with SHA-256
+
     Pbkdf2Sha256,
-    /// Argon2i
+
     Argon2i,
-    /// Argon2d
+
     Argon2d,
-    /// Argon2id (recommended)
+
     Argon2id,
-    /// scrypt
+
     Scrypt,
 }
 
-/// **CANONICAL CONTEXT-AWARE KEY CONFIGURATION** - Context-based key management
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContextAwareKeyConfig {
-    /// Enable context-aware key generation
+
     pub enabled: bool,
-    /// Context factors to consider
+
     pub context_factors: Vec<ContextFactor>,
-    /// Key versioning settings
+
     pub versioning: KeyVersioningConfig,
-    /// Context-specific key policies
+
     pub policies: HashMap<String, KeyPolicy>,
 }
 
@@ -156,38 +127,36 @@ impl Default for ContextAwareKeyConfig {
                 ContextFactor::Timestamp,
             ],
             versioning: KeyVersioningConfig::default(),
-            policies: HashMap::new(),
+            policies: HashMap::with_capacity(16),
         }
     }
 }
 
-/// **CANONICAL CONTEXT FACTORS** - Factors considered in context-aware keys
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ContextFactor {
-    /// User identifier
+
     UserId,
-    /// Device identifier
+
     DeviceId,
-    /// Timestamp
+
     Timestamp,
-    /// Geographic location
+
     Location,
-    /// Application context
+
     Application,
-    /// Security level
+
     SecurityLevel,
 }
 
-/// **CANONICAL KEY VERSIONING CONFIGURATION** - Key version management
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyVersioningConfig {
-    /// Enable key versioning
+
     pub enabled: bool,
-    /// Maximum number of key versions to retain
+
     pub max_versions: u32,
-    /// Version retention period
+
     pub retention_period: Duration,
-    /// Automatic version cleanup
+
     pub auto_cleanup: bool,
 }
 
@@ -202,31 +171,29 @@ impl Default for KeyVersioningConfig {
     }
 }
 
-/// **CANONICAL KEY POLICY** - Security policies for keys
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyPolicy {
-    /// Minimum key strength
+
     pub min_strength: KeyStrength,
-    /// Key usage restrictions
+
     pub usage_restrictions: Vec<KeyUsage>,
-    /// Expiration policy
+
     pub expiration: KeyExpirationPolicy,
-    /// Access control
+
     pub access_control: KeyAccessControl,
 }
 
-/// **CANONICAL ENTROPY ADJUSTMENT CONFIGURATION** - Entropy management settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyAdjustmentConfig {
-    /// Enable entropy adjustment
+
     pub enabled: bool,
-    /// Minimum entropy threshold
+
     pub min_entropy: f64,
-    /// Entropy sources
+
     pub sources: Vec<EntropySource>,
-    /// Adjustment strategies
+
     pub adjustment_strategies: Vec<EntropyAdjustmentStrategy>,
-    /// Quality assessment settings
+
     pub quality_assessment: EntropyQualityConfig,
 }
 
@@ -249,18 +216,17 @@ impl Default for EntropyAdjustmentConfig {
     }
 }
 
-/// **CANONICAL KEY ROTATION CONFIGURATION** - Automatic key rotation settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyRotationConfig {
-    /// Enable automatic key rotation
+
     pub enabled: bool,
-    /// Rotation frequency
+
     pub frequency: KeyRotationFrequency,
-    /// Rotation triggers
+
     pub triggers: Vec<RotationTrigger>,
-    /// Overlap period for smooth transition
+
     pub overlap_period: Duration,
-    /// Notification settings
+
     pub notifications: RotationNotifications,
 }
 
@@ -278,8 +244,6 @@ impl Default for KeyRotationConfig {
         }
     }
 }
-
-// Supporting enums and structs
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum KeyStrength {

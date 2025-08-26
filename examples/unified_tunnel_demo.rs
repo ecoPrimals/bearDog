@@ -1,31 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # Unified Tunnel Architecture Demo
-//!
-//! **BEARDOG TUNNEL MODERNIZATION COMPLETE**
-//!
-//! This example demonstrates the unified tunnel architecture that eliminates
-//! fragmentation and provides a clean, modern interface for human entropy
-//! collection and HSM management.
 
 use beardog_errors::BearDogResult;
 use beardog_tunnel::tunnel::{
-    // Configuration
+
     config::BStpConfig,
     create_gaming_tunnel_manager,
 
@@ -35,11 +12,11 @@ use beardog_tunnel::tunnel::{
 
     HumanEntropyMethod,
     TierElevationCriteria,
-    // Unified HSM Management
+
     UnifiedHsmManager,
-    // Human Entropy System (Unified)
+
     UnifiedHumanEntropyClassifier,
-    // Tunnel Management
+
     UnifiedTunnelManager,
 };
 use beardog_types::canonical::{KeyMetadata, KeyType};
@@ -49,13 +26,12 @@ use tracing::{info, warn};
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Initialize logging
+
     tracing_subscriber::init();
 
     info!("🚀 BearDog Unified Tunnel Architecture Demo");
     info!("============================================");
 
-    // Demonstrate the unified architecture benefits
     demonstrate_unified_hsm_management().await?;
     demonstrate_human_entropy_system().await?;
     demonstrate_tunnel_integration().await?;
@@ -64,17 +40,14 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate the unified HSM management system
 async fn demonstrate_unified_hsm_management() -> BearDogResult<()> {
     info!("🔧 Demonstrating Unified HSM Management");
     info!("--------------------------------------");
 
-    // Create unified HSM manager with human entropy optimization
     let hsm_manager = create_human_entropy_hsm_manager().await?;
 
     info!("✅ Created unified HSM manager with human entropy optimization");
 
-    // Get statistics about the HSM ecosystem
     let stats = hsm_manager.get_statistics().await?;
     info!("📊 HSM Statistics:");
     info!("   - Total providers: {}", stats.total_providers);
@@ -84,7 +57,6 @@ async fn demonstrate_unified_hsm_management() -> BearDogResult<()> {
     );
     info!("   - Healthy providers: {}", stats.healthy_providers);
 
-    // Demonstrate tier-based provider selection
     for tier in [
         HsmTier::Premium,
         HsmTier::EnhancedHardware,
@@ -95,7 +67,6 @@ async fn demonstrate_unified_hsm_management() -> BearDogResult<()> {
         info!("   - {:?} tier: {} providers", tier, providers.len());
     }
 
-    // Demonstrate intelligent provider selection
     match hsm_manager.get_best_provider(true).await? {
         Some(_provider) => {
             info!("🧠 Found human entropy capable provider");
@@ -109,12 +80,10 @@ async fn demonstrate_unified_hsm_management() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate the unified human entropy system
 async fn demonstrate_human_entropy_system() -> BearDogResult<()> {
     info!("🧠 Demonstrating Unified Human Entropy System");
     info!("---------------------------------------------");
 
-    // Create human entropy classifier with custom criteria
     let criteria = TierElevationCriteria {
         min_entropy_methods: 2,
         min_overall_score: 0.8,
@@ -126,7 +95,6 @@ async fn demonstrate_human_entropy_system() -> BearDogResult<()> {
     let classifier = UnifiedHumanEntropyClassifier::with_criteria(criteria)?;
     info!("✅ Created unified human entropy classifier with custom criteria");
 
-    // Demonstrate entropy method evaluation
     let entropy_methods = vec![
         HumanEntropyMethod::TouchPatterns {
             pressure_sensitive: true,
@@ -175,16 +143,13 @@ async fn demonstrate_human_entropy_system() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate the complete tunnel integration
 async fn demonstrate_tunnel_integration() -> BearDogResult<()> {
     info!("🛡️ Demonstrating Unified Tunnel Integration");
     info!("-------------------------------------------");
 
-    // Create gaming-optimized tunnel manager
     let tunnel_manager = create_gaming_tunnel_manager().await?;
     info!("✅ Created unified tunnel manager with gaming optimization");
 
-    // Demonstrate the clean, unified API
     let hsm_manager = tunnel_manager.hsm_manager();
     let config = tunnel_manager.config();
 
@@ -195,7 +160,6 @@ async fn demonstrate_tunnel_integration() -> BearDogResult<()> {
     );
     info!("   - Latency target: {:?}", config.latency_target_us);
 
-    // Demonstrate key generation with human entropy preference
     info!("🔑 Demonstrating key generation with unified architecture:");
 
     let metadata = KeyMetadata {
@@ -206,12 +170,10 @@ async fn demonstrate_tunnel_integration() -> BearDogResult<()> {
         expires_at: None,
     };
 
-    // This would work with actual HSM providers registered
     info!("   - Key generation would use best available HSM provider");
     info!("   - Human entropy would be collected if available");
     info!("   - Tier elevation would be applied automatically");
 
-    // Demonstrate architecture benefits
     info!("🏆 Unified architecture benefits:");
     info!("   - Single source of truth for all HSM operations");
     info!("   - Eliminated fragmentation across {} modules", 4);
@@ -223,8 +185,6 @@ async fn demonstrate_tunnel_integration() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate the migration from fragmented to unified architecture
-#[allow(dead_code)]
 async fn demonstrate_architecture_migration() -> BearDogResult<()> {
     info!("🔄 Architecture Migration Benefits");
     info!("=================================");
@@ -258,16 +218,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_unified_architecture_demo() {
-        // This test validates that the unified architecture compiles
-        // and basic functionality works
+
         let result = tokio::spawn(async {
-            // Test HSM manager creation
+
             let _hsm_manager = create_human_entropy_hsm_manager().await;
 
-            // Test tunnel manager creation
             let _tunnel_manager = create_gaming_tunnel_manager().await;
 
-            // Test human entropy classifier
             let _classifier = UnifiedHumanEntropyClassifier::new();
         })
         .await;
@@ -280,7 +237,7 @@ mod tests {
 
     #[test]
     fn test_entropy_methods() {
-        // Test that entropy methods can be created and used
+
         let methods = vec![
             HumanEntropyMethod::TouchPatterns {
                 pressure_sensitive: true,
@@ -293,7 +250,6 @@ mod tests {
 
         assert_eq!(methods.len(), 3);
 
-        // Test pattern matching works
         for method in methods {
             match method {
                 HumanEntropyMethod::TouchPatterns { .. } => (),

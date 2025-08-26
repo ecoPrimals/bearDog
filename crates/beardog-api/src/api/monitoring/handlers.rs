@@ -1,36 +1,17 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Monitoring API Handlers
-///
-/// Handler functions for monitoring API endpoints
 
 use super::*;
 use axum::{extract::State, http::StatusCode, Json};
 use beardog_monitoring::service::{MonitoringConfig, MonitoringService};
 use serde_json::json;
 use std::sync::Arc;
-// Create a shared monitoring service instance
+
 lazy_static::lazy_static! {
     static ref MONITORING_SERVICE: Arc<MonitoringService> = Arc::new(
         MonitoringService::new(MonitoringConfig::default())
     );
 }
-/// Get system health status
+
 pub async fn get_system_health(
     State(_state): State<AppState>,
 ) -> Result<Json<super::models::SystemHealthResponse>, StatusCode> {
@@ -70,7 +51,7 @@ pub async fn get_system_health(
         }
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
-/// Get detailed system health information
+
 pub async fn get_detailed_health(
 ) -> Result<Json<serde_json::Value>, StatusCode> {
             let detailed_health = json!({
@@ -109,7 +90,7 @@ pub async fn get_detailed_health(
                 "timestamp": chrono::Utc::now().to_rfc3339()
             });
             Ok(Json(detailed_health))
-/// Get component health status
+
 pub async fn get_component_health(
     let components = json!({
         "success": true,
@@ -131,7 +112,7 @@ pub async fn get_component_health(
         "timestamp": chrono::Utc::now().to_rfc3339()
     });
     Ok(Json(components))
-/// Get system status overview
+
 pub async fn get_system_status(
             let status = json!({
                 "status": "operational",
@@ -145,14 +126,14 @@ pub async fn get_system_status(
                     "monitoring": true,
                     "security_provider": true
                 "performance_summary": {
-                    "cpu_usage": format!("{:.1}%", metrics.performance.cpu_usage_percent),
-                    "memory_usage": format!("{:.1}MB", metrics.performance.memory_usage_bytes / 1024 / 1024),
+                    "cpu_usage": format_args!("{:.1}%", metrics.performance.cpu_usage_percent).to_string(),
+                    "memory_usage": format_args!("{:.1}MB", metrics.performance.memory_usage_bytes / 1024 / 1024).to_string(),
                     "active_connections": metrics.performance.active_connections,
                     "total_requests": metrics.performance.request_count
             Ok(Json(status))
-/// Get readiness probe
+
 pub async fn get_readiness(
-    // Check if system is ready to serve traffic
+
     let ready = json!({
         "ready": true,
         "timestamp": chrono::Utc::now().to_rfc3339(),
@@ -162,16 +143,14 @@ pub async fn get_readiness(
             "crypto_engine": true,
             "zero_copy_buffers": true
     Ok(Json(ready))
-/// Get liveness probe  }
-
 
 pub async fn get_liveness(
-    // Simple liveness check
+
     let alive = json!({
         "alive": true,
         "uptime_seconds": 3600
     Ok(Json(alive))
-/// Get system metrics
+
 pub async fn get_system_metrics(
             let system_metrics = json!({
                 "metrics": {
@@ -180,7 +159,7 @@ pub async fn get_system_metrics(
                     "custom_metrics": metrics.custom_metrics
                 }
             Ok(Json(system_metrics))
-/// Get real-time metrics
+
 pub async fn get_realtime_metrics(
         Ok(current) => {
             let realtime = json!({

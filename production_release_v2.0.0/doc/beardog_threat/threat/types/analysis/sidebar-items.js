@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["correlation","events","metrics","results","session"]};

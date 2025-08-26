@@ -1,22 +1,4 @@
-//! Comprehensive Capability Advertisement System Demo
-//!
-//! **Showcasing advanced capability management features**
-//!
-//! This demo illustrates the enhanced capability advertisement system with:
-//! - Real-time capability monitoring and health tracking
-//! - Genetic spawning capability merging with trait inheritance
-//! - Emergent capability discovery from ecosystem interactions
-//! - Advanced capability matching with AI-driven algorithms
-//! - Complex dependency resolution with circular detection
-//!
-//! ## Demo Scenarios
-//!
-//! 1. **Multi-Provider Registration** - Register capabilities from different ecosystems
-//! 2. **Real-Time Monitoring** - Track capability health and performance in real-time
-//! 3. **Genetic Capability Merging** - Merge capabilities during genetic spawning
-//! 4. **Emergent Discovery** - Discover new capabilities from ecosystem interactions
-//! 5. **Advanced Matching** - Use AI algorithms to find optimal capability matches
-//! 6. **Dependency Resolution** - Resolve complex capability dependency chains
+
 
 use beardog::adapters::universal::*;
 use beardog::core::BearDogCore;
@@ -29,16 +11,14 @@ use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging
+
     tracing_subscriber::fmt::init();
 
     println!("🚀 Comprehensive Capability Advertisement System Demo");
     println!("================================================================");
 
-    // Initialize the enhanced capability system
     let capability_system = initialize_capability_system().await?;
 
-    // Run demonstration scenarios
     run_multi_provider_registration(&capability_system).await?;
     run_real_time_monitoring_demo(&capability_system).await?;
     run_genetic_capability_merging_demo(&capability_system).await?;
@@ -52,7 +32,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Enhanced capability system components
 struct CapabilitySystemDemo {
     pub capability_manager: Arc<CapabilityManager>,
     pub registry: Arc<CapabilityRegistry>,
@@ -60,22 +39,17 @@ struct CapabilitySystemDemo {
     pub core: Arc<BearDogCore>,
 }
 
-/// Initialize the comprehensive capability system
 async fn initialize_capability_system() -> Result<CapabilitySystemDemo, Box<dyn std::error::Error>>
 {
     info!("🔧 Initializing Comprehensive Capability Advertisement System");
 
-    // Initialize BearDog core
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
 
-    // Initialize capability registry
     let registry = Arc::new(CapabilityRegistry::new().await?);
 
-    // Initialize universal ecosystem manager
     let universal_manager = Arc::new(UniversalEcosystemManager::new(core.clone()).await?);
 
-    // Initialize comprehensive capability manager
     let capability_config = CapabilityManagerConfig {
         monitoring_interval: Duration::from_secs(5), // Fast monitoring for demo
         health_check_timeout: Duration::from_secs(2),
@@ -105,14 +79,12 @@ async fn initialize_capability_system() -> Result<CapabilitySystemDemo, Box<dyn 
     })
 }
 
-/// Demo 1: Multi-Provider Registration
 async fn run_multi_provider_registration(
     system: &CapabilitySystemDemo,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📋 Demo 1: Multi-Provider Registration");
     println!("====================================");
 
-    // Register BearDog Security Provider
     let beardog_capabilities = create_beardog_security_capabilities();
     system
         .registry
@@ -123,7 +95,6 @@ async fn run_multi_provider_registration(
         beardog_capabilities.len()
     );
 
-    // Register ToadStool Compute Provider
     let toadstool_capabilities = create_toadstool_compute_capabilities();
     system
         .registry
@@ -138,7 +109,6 @@ async fn run_multi_provider_registration(
         toadstool_capabilities.len()
     );
 
-    // Register SongBird Communication Provider
     let songbird_capabilities = create_songbird_communication_capabilities();
     system
         .registry
@@ -149,7 +119,6 @@ async fn run_multi_provider_registration(
         songbird_capabilities.len()
     );
 
-    // Register NestGate Storage Provider
     let nestgate_capabilities = create_nestgate_storage_capabilities();
     system
         .registry
@@ -160,7 +129,6 @@ async fn run_multi_provider_registration(
         nestgate_capabilities.len()
     );
 
-    // Register Squirrel AI Provider
     let squirrel_capabilities = create_squirrel_ai_capabilities();
     system
         .registry
@@ -171,7 +139,6 @@ async fn run_multi_provider_registration(
         squirrel_capabilities.len()
     );
 
-    // Show registry stats
     let stats = system.registry.get_stats().await?;
     println!("\n📊 Registry Statistics:");
     println!("   - Total Providers: {}", stats.total_providers);
@@ -184,7 +151,6 @@ async fn run_multi_provider_registration(
     Ok(())
 }
 
-/// Demo 2: Real-Time Monitoring
 async fn run_real_time_monitoring_demo(
     system: &CapabilitySystemDemo,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -193,7 +159,6 @@ async fn run_real_time_monitoring_demo(
 
     println!("Starting real-time monitoring (10 seconds)...");
 
-    // Monitor for 10 seconds to show real-time updates
     for i in 1..=10 {
         sleep(Duration::from_secs(1)).await;
 
@@ -205,7 +170,6 @@ async fn run_real_time_monitoring_demo(
                 monitoring_status.len()
             );
 
-            // Show sample monitoring data
             for (key, monitor) in monitoring_status.iter().take(2) {
                 println!(
                     "   📈 {}: {} - Response: {}ms, Quality: {:.2}",
@@ -223,14 +187,12 @@ async fn run_real_time_monitoring_demo(
     Ok(())
 }
 
-/// Demo 3: Genetic Capability Merging
 async fn run_genetic_capability_merging_demo(
     system: &CapabilitySystemDemo,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧬 Demo 3: Genetic Capability Merging");
     println!("====================================");
 
-    // Simulate genetic spawning between BearDog and ToadStool
     let parent_genetics = vec![
         "beardog-security-genetics".to_string(),
         "toadstool-compute-genetics".to_string(),
@@ -260,7 +222,6 @@ async fn run_genetic_capability_merging_demo(
             format_capability_category(&capability.category)
         );
 
-        // Show genetic attributes
         if let Some(expression) = capability.attributes.get("expression_level") {
             println!("      • Expression Level: {}", expression.value);
         }
@@ -274,7 +235,6 @@ async fn run_genetic_capability_merging_demo(
         );
     }
 
-    // Show genetic tracking data
     let genetic_data = system.capability_manager.get_genetic_capabilities().await?;
     println!("\n🔍 Genetic Tracking Data:");
     println!("   - Tracked genetic profiles: {}", genetic_data.len());
@@ -291,17 +251,14 @@ async fn run_genetic_capability_merging_demo(
     Ok(())
 }
 
-/// Demo 4: Emergent Capability Discovery
 async fn run_emergent_discovery_demo(
     system: &CapabilitySystemDemo,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Demo 4: Emergent Capability Discovery");
     println!("========================================");
 
-    // Simulate ecosystem interactions that lead to emergent capabilities
-    let mut interaction_history = HashMap::new();
+    let mut interaction_history = HashMap::with_capacity(16);
 
-    // Create interaction history between different components
     interaction_history.insert(
         "beardog-toadstool".to_string(),
         vec![
@@ -344,7 +301,6 @@ async fn run_emergent_discovery_demo(
         println!("           to analyze interaction patterns and discover new capabilities");
         println!("           that emerge from ecosystem component combinations.");
 
-        // Show what emergent capabilities might look like
         println!("\n🎯 Example Emergent Capabilities:");
         println!("   1. 'Secure Compute Orchestration' - From BearDog + ToadStool interactions");
         println!("      • Combines encryption with compute scheduling");
@@ -379,14 +335,12 @@ async fn run_emergent_discovery_demo(
     Ok(())
 }
 
-/// Demo 5: Advanced Capability Matching
 async fn run_advanced_matching_demo(
     system: &CapabilitySystemDemo,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎯 Demo 5: Advanced Capability Matching");
     println!("======================================");
 
-    // Create complex capability requirements
     let security_requirement = CapabilityRequirement {
         requirement_id: Uuid::new_v4().to_string(),
         capability_category: CapabilityCategory::Security,
@@ -501,14 +455,12 @@ async fn run_advanced_matching_demo(
     Ok(())
 }
 
-/// Demo 6: Complex Dependency Resolution
 async fn run_dependency_resolution_demo(
     system: &CapabilitySystemDemo,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔗 Demo 6: Complex Dependency Resolution");
     println!("=======================================");
 
-    // Create a complex dependency scenario
     let required_capabilities = vec![
         "secure_data_pipeline".to_string(),
         "ai_threat_analysis".to_string(),
@@ -572,8 +524,6 @@ async fn run_dependency_resolution_demo(
 
     Ok(())
 }
-
-/// Helper Functions
 
 fn create_beardog_security_capabilities() -> Vec<Capability> {
     vec![
@@ -939,7 +889,7 @@ fn create_service_request(request_type: &str, target_capability: &str) -> Servic
             transaction_id: None,
             source_ecosystem: "beardog".to_string(),
             target_ecosystem: Some("ecosystem".to_string()),
-            metadata: HashMap::new(),
+            metadata: HashMap::with_capacity(16),
         },
     }
 }

@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Encrypted Task Distribution
-//!
-//! Coordinates encrypted AI task distribution across the Squirrel network,
-//! enabling BearDog to operate as a fleet of encrypted AI subtasks.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -31,7 +11,6 @@ use crate::ai_automation::{
     mod::{AIAutomationResult, FleetCoordination},
 };
 
-/// Encrypted fleet operation request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FleetOperationRequest {
     pub operation_id: String,
@@ -103,7 +82,6 @@ pub struct EncryptionMetrics {
     pub encryption_efficiency: f64,
 }
 
-/// Run fleet operations with encrypted task distribution
 pub async fn run_fleet_operations(
     ai_core: &BearDogAICore,
     network: &SquirrelNetwork,
@@ -111,7 +89,7 @@ pub async fn run_fleet_operations(
     mode: FleetMode,
     output_file: &PathBuf,
 ) -> BearDogResult<FleetOperationResult> {
-    // Load fleet operation requests from file
+
     let task_data = fs::read_to_string(task_file).await?;
     let operation_request: FleetOperationRequest = serde_json::from_str(&task_data)?;
     
@@ -119,25 +97,21 @@ pub async fn run_fleet_operations(
         operation_request.operation_type, mode);
     
     let start_time = std::time::Instant::now();
-    
-    // Create distributed tasks based on operation type
+
     let distributed_tasks = create_distributed_tasks(ai_core, &operation_request).await?;
-    
-    // Encrypt tasks for secure distribution
+
     let encrypted_tasks = encrypt_tasks_for_distribution(
         &distributed_tasks,
         &operation_request.encryption_level,
         network
     ).await?;
-    
-    // Distribute tasks across the fleet
+
     let task_results = distribute_and_execute_tasks(
         network,
         &encrypted_tasks,
         &operation_request.coordination_mode
     ).await?;
-    
-    // Aggregate results with AI insights
+
     let aggregated_result = aggregate_fleet_results(
         ai_core,
         &task_results,
@@ -147,8 +121,7 @@ pub async fn run_fleet_operations(
     let execution_time = start_time.elapsed().as_millis() as u64;
     let mut final_result = aggregated_result;
     final_result.execution_time_ms = execution_time;
-    
-    // Save results
+
     let result_json = serde_json::to_string_pretty(&final_result)?;
     fs::write(output_file, result_json).await?;
     
@@ -165,12 +138,12 @@ async fn create_distributed_tasks(
     
     match request.operation_type {
         FleetOperationType::DistributedSecurityScan => {
-            // Create security scanning tasks
+
             for i in 0..request.task_distribution.total_tasks {
                 tasks.push(DistributedTask {
-                    task_id: format!("security_scan_{}", i),
+                    task_id: format_args!("security_scan_{}", i).to_string(),
                     task_type: crate::ai_automation::network_effects::TaskType::SecurityAnalysis,
-                    data: format!("scan_target_{}", i).into_bytes(),
+                    data: format_args!("scan_target_{}", i).to_string().into_bytes(),
                     target_nodes: Vec::new(), // Will be assigned during distribution
                     encryption_required: true,
                     ai_enhancement_level: 0.8,
@@ -178,12 +151,12 @@ async fn create_distributed_tasks(
             }
         }
         FleetOperationType::ParallelThreatAnalysis => {
-            // Create threat analysis tasks
+
             for i in 0..request.task_distribution.total_tasks {
                 tasks.push(DistributedTask {
-                    task_id: format!("threat_analysis_{}", i),
+                    task_id: format_args!("threat_analysis_{}", i).to_string(),
                     task_type: crate::ai_automation::network_effects::TaskType::ThreatDetection,
-                    data: format!("threat_data_{}", i).into_bytes(),
+                    data: format_args!("threat_data_{}", i).to_string().into_bytes(),
                     target_nodes: Vec::new(),
                     encryption_required: true,
                     ai_enhancement_level: 0.9,
@@ -191,7 +164,7 @@ async fn create_distributed_tasks(
             }
         }
         FleetOperationType::CoordinatedIncidentResponse => {
-            // Create incident response coordination tasks
+
             tasks.push(DistributedTask {
                 task_id: "incident_coordination".to_string(),
                 task_type: crate::ai_automation::network_effects::TaskType::SecurityAnalysis,
@@ -202,12 +175,12 @@ async fn create_distributed_tasks(
             });
         }
         FleetOperationType::FleetWidePerformanceOptimization => {
-            // Create performance optimization tasks
+
             for i in 0..request.task_distribution.total_tasks {
                 tasks.push(DistributedTask {
-                    task_id: format!("perf_opt_{}", i),
+                    task_id: format_args!("perf_opt_{}", i).to_string(),
                     task_type: crate::ai_automation::network_effects::TaskType::PerformanceOptimization,
-                    data: format!("perf_data_{}", i).into_bytes(),
+                    data: format_args!("perf_data_{}", i).to_string().into_bytes(),
                     target_nodes: Vec::new(),
                     encryption_required: true,
                     ai_enhancement_level: 0.85,
@@ -215,12 +188,12 @@ async fn create_distributed_tasks(
             }
         }
         FleetOperationType::DistributedGeneticEvolution => {
-            // Create genetic evolution tasks
+
             for i in 0..request.task_distribution.total_tasks {
                 tasks.push(DistributedTask {
-                    task_id: format!("genetic_evolution_{}", i),
+                    task_id: format_args!("genetic_evolution_{}", i).to_string(),
                     task_type: crate::ai_automation::network_effects::TaskType::GeneticEnhancement,
-                    data: format!("genetic_params_{}", i).into_bytes(),
+                    data: format_args!("genetic_params_{}", i).to_string().into_bytes(),
                     target_nodes: Vec::new(),
                     encryption_required: true,
                     ai_enhancement_level: 0.9,
@@ -228,7 +201,7 @@ async fn create_distributed_tasks(
             }
         }
         FleetOperationType::NetworkComplianceAudit => {
-            // Create compliance audit tasks
+
             tasks.push(DistributedTask {
                 task_id: "compliance_audit".to_string(),
                 task_type: crate::ai_automation::network_effects::TaskType::SecurityAnalysis,
@@ -253,7 +226,7 @@ async fn encrypt_tasks_for_distribution(
     println!("🔐 Encrypting {} tasks with {:?} encryption", tasks.len(), encryption_level);
     
     for task in tasks {
-        // Simulate encryption based on level
+
         let encrypted_task = network.encryption_manager.encrypt_task(task).await?;
         encrypted_tasks.push(encrypted_task);
     }
@@ -275,7 +248,7 @@ async fn distribute_and_execute_tasks(
     
     match coordination_mode {
         CoordinationMode::Centralized => {
-            // Central coordinator distributes all tasks
+
             for task in tasks {
                 let target_nodes = network.fleet_coordinator
                     .select_optimal_nodes(task).await?;
@@ -287,7 +260,7 @@ async fn distribute_and_execute_tasks(
             }
         }
         CoordinationMode::Distributed => {
-            // Nodes coordinate among themselves
+
             let chunk_size = tasks.len() / network.fleet_coordinator.connected_nodes.len().max(1);
             
             for chunk in tasks.chunks(chunk_size) {
@@ -303,11 +276,11 @@ async fn distribute_and_execute_tasks(
             }
         }
         CoordinationMode::Hierarchical => {
-            // Hierarchical task distribution
+
             execute_hierarchical_distribution(network, tasks).await?
         }
         CoordinationMode::Mesh => {
-            // Mesh network coordination
+
             execute_mesh_coordination(network, tasks).await?
         }
     };
@@ -319,10 +292,9 @@ async fn execute_hierarchical_distribution(
     network: &SquirrelNetwork,
     tasks: &[DistributedTask],
 ) -> BearDogResult<Vec<TaskResult>> {
-    // Simulate hierarchical task distribution
+
     let mut results = Vec::new();
-    
-    // Level 1: Primary coordinators
+
     let primary_coordinators = network.fleet_coordinator.connected_nodes
         .iter()
         .take(2)
@@ -349,7 +321,7 @@ async fn execute_mesh_coordination(
     network: &SquirrelNetwork,
     tasks: &[DistributedTask],
 ) -> BearDogResult<Vec<TaskResult>> {
-    // Simulate mesh network coordination
+
     let mut results = Vec::new();
     
     for (i, task) in tasks.iter().enumerate() {
@@ -374,18 +346,18 @@ async fn aggregate_fleet_results(
     task_results: &[TaskResult],
     request: &FleetOperationRequest,
 ) -> BearDogResult<FleetOperationResult> {
-    // Generate AI insights about fleet operation
+
     let ai_insights = vec![
         AIInsight {
             category: "Fleet Operations".to_string(),
             confidence: 0.93,
-            recommendation: format!("Fleet operation {} completed successfully with {} tasks", 
-                request.operation_id, task_results.len()),
+            recommendation: format_args!("Fleet operation {} completed successfully with {} tasks", 
+                request.operation_id, task_results.len().to_string()),
             evidence: vec![
-                format!("Average task confidence: {:.2}", 
-                    task_results.iter().map(|r| r.ai_confidence).sum::<f64>() / task_results.len() as f64),
-                format!("Total execution time: {}ms", 
-                    task_results.iter().map(|r| r.execution_time_ms).sum::<u64>()),
+                format_args!("Average task confidence: {:.2}", 
+                    task_results.iter().to_string().map(|r| r.ai_confidence).sum::<f64>() / task_results.len() as f64),
+                format_args!("Total execution time: {}ms", 
+                    task_results.iter().to_string().map(|r| r.execution_time_ms).sum::<u64>()),
             ],
             suggested_actions: vec![
                 "Monitor fleet performance".to_string(),
@@ -397,7 +369,7 @@ async fn aggregate_fleet_results(
     let fleet_coordination = FleetCoordination {
         connected_nodes: task_results.len() as u32,
         distributed_tasks: task_results.len() as u32,
-        encryption_level: format!("{:?}", request.encryption_level),
+        encryption_level: format_args!("{:?}", request.encryption_level).to_string(),
         network_efficiency: 0.88,
     };
     
@@ -422,8 +394,6 @@ async fn aggregate_fleet_results(
     })
 }
 
-/// Utility functions for encrypted task management
-
 pub async fn create_sample_fleet_operation() -> BearDogResult<FleetOperationRequest> {
     Ok(FleetOperationRequest {
         operation_id: uuid::Uuid::new_v4().to_string(),
@@ -442,7 +412,7 @@ pub async fn create_sample_fleet_operation() -> BearDogResult<FleetOperationRequ
 pub async fn validate_fleet_operation_result(
     result: &FleetOperationResult,
 ) -> BearDogResult<bool> {
-    // Validate that the fleet operation completed successfully
+
     let valid = result.success &&
         result.task_results.len() > 0 &&
         result.fleet_coordination.network_efficiency > 0.5 &&

@@ -1,0 +1,45 @@
+{
+  "provider_traits": {
+    "migrated": 7,
+    "deprecated": 7,
+    "files_updated": [
+      "crates/beardog-adapters/src/adapters/universal/mod.rs",
+      "crates/beardog-adapters/src/universal/capability_adapter.rs",
+      "crates/beardog-tunnel/src/tunnel/security_provider.rs",
+      "crates/beardog-tunnel/src/tunnel/hsm/android_strongbox/safe_keystore_replacement.rs",
+      "crates/beardog-tunnel/src/tunnel/hsm/ios_secure_enclave/mod.rs",
+      "crates/beardog-api/src/api/cache.rs",
+      "crates/beardog-core/src/ecosystem_simple.rs"
+    ]
+  },
+  "config_structs": {
+    "migrated": 19,
+    "deprecated": 24,
+    "files_updated": [
+      "crates/beardog-auth/src/verification/types.rs",
+      "crates/beardog-auth/src/auth/handlers.rs",
+      "crates/beardog-workflows/src/workflows/processors/registry.rs",
+      "crates/beardog-workflows/src/workflows/processors/system.rs",
+      "crates/beardog-workflows/src/workflows/processors/security.rs",
+      "crates/beardog-workflows/src/workflows/processors/key_management.rs",
+      "crates/beardog-workflows/src/workflows/processors/policy.rs",
+      "crates/beardog-types/src/config/mod.rs",
+      "crates/beardog-types/src/config/unified_consolidation.rs",
+      "crates/beardog-types/src/canonical/configuration/mod.rs",
+      "crates/beardog-types/src/canonical/configuration/workflows.rs",
+      "crates/beardog-types/src/canonical/configuration/security.rs",
+      "crates/beardog-security/src/recovery/mod.rs",
+      "crates/beardog-security/src/recovery/federation.rs",
+      "crates/beardog-security/src/recovery/social.rs",
+      "crates/beardog-security/src/types/mod.rs",
+      "crates/beardog-production/src/production/performance.rs",
+      "crates/beardog-production/src/production/security.rs",
+      "archive/fromNestGate/source_code_references/config.rs"
+    ]
+  },
+  "imports": {
+    "updated": 0,
+    "files_updated": []
+  },
+  "errors": []
+}

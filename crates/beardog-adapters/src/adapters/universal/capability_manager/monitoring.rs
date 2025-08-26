@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Real-time capability monitoring and performance tracking
-///
-/// This module provides comprehensive monitoring capabilities for tracking
-/// capability health, performance metrics, availability, and alert thresholds.
 
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
@@ -28,89 +8,86 @@ use tracing::debug;
 use super::super::traits::*;
 use super::config::CapabilityManagerConfig;
 use beardog_errors::BearDogResult;
-/// Real-time capability monitoring
+
 #[derive(Debug, Clone)]
 pub struct CapabilityMonitor {
-    /// Unique identifier for the capability being monitored
+
     pub capability_id: String,
-    /// Key identifying the provider offering this capability
+
     pub provider_key: String,
-    /// Timestamp of the last health check
+
     pub last_health_check: DateTime<Utc>,
-    /// Current performance metrics
+
     pub current_performance: PerformanceMetrics,
-    /// Historical availability snapshots
+
     pub availability_history: Vec<AvailabilitySnapshot>,
-    /// Alert thresholds for monitoring
+
     pub alert_thresholds: AlertThresholds,
-    /// Current status of the capability
+
     pub status: CapabilityStatus,
 }
-/// Performance metrics for capability monitoring
+
 pub struct PerformanceMetrics {
-    /// Average response time in milliseconds
+
     pub response_time_ms: u64,
-    /// Throughput per second
+
     pub throughput_per_sec: u64,
-    /// Error rate as percentage
+
     pub error_rate_percent: f64,
-    /// Current resource utilization levels
+
     pub resource_utilization: ResourceUtilization,
-    /// Overall quality score (0.0 to 1.0)
+
     pub quality_score: f64,
-/// Resource utilization metrics
+
 pub struct ResourceUtilization {
-    /// CPU utilization percentage
+
     pub cpu_percent: f64,
-    /// Memory utilization percentage
+
     pub memory_percent: f64,
-    /// Network utilization in megabits per second
+
     pub network_mbps: f64,
-    /// Storage I/O operations per second
+
     pub storage_iops: u64,
-/// Snapshot of capability availability at a point in time
+
 pub struct AvailabilitySnapshot {
-    /// Timestamp when snapshot was taken
+
     pub timestamp: DateTime<Utc>,
-    /// Whether the capability was available
+
     pub available: bool,
-    /// Response time in milliseconds
-    /// Quality score at this timestamp
-/// Alert thresholds for capability monitoring
+
 pub struct AlertThresholds {
-    /// Maximum acceptable response time in milliseconds
+
     pub max_response_time_ms: u64,
-    /// Minimum availability percentage required
+
     pub min_availability_percent: f64,
-    /// Maximum error rate percentage allowed
+
     pub max_error_rate_percent: f64,
-    /// Minimum quality score required
+
     pub min_quality_score: f64,
-/// Current status of a capability
+
 pub enum CapabilityStatus {
-    /// Capability is functioning normally
+
     Healthy,
-    /// Capability is functioning but with reduced performance
+
     Degraded,
-    /// Capability is in critical condition
+
     Critical,
-    /// Capability is offline or unavailable
+
     Offline,
-    /// Capability status is unknown
+
     Unknown,}
 
-
 impl CapabilityMonitor {
-    /// Update capability monitor with new performance data
+
     pub async fn update_capability_monitor(
-        monitors: &Arc<RwLock<HashMap<String, CapabilityMonitor>>>,
+        monitors: &Arc<RwLock<HashMap<&str, CapabilityMonitor>>>,
         provider_key: &str,
         capability: &Capability,
         config: &CapabilityManagerConfig,
     ) -> BearDogResult<()> {
         let mut monitors_guard = monitors.write().await;
-        let monitor_key = format!("{}:{}", provider_key, capability.id);
-        // Get or create monitor
+        let monitor_key = format_args!("{}:{}", provider_key, capability.id).to_string();
+
         let monitor = monitors_guard
             .entry(monitor_key.clone())
             .or_insert_with(|| CapabilityMonitor {
@@ -137,7 +114,7 @@ impl CapabilityMonitor {
                     min_quality_score: 0.8,
                 status: CapabilityStatus::Unknown,
             });
-        // Update performance metrics (mock implementation)
+
         let new_performance = PerformanceMetrics {
             response_time_ms: 50 + (capability.id.len() as u64 * 10) % 200,
             throughput_per_sec: 100 + (capability.id.len() as u64 * 20) % 500,
@@ -150,21 +127,21 @@ impl CapabilityMonitor {
             },
             quality_score: 0.8 + (capability.id.len() as f64 * 0.01) % 0.2,
         };
-        // Create availability snapshot
+
         let snapshot = AvailabilitySnapshot {
             timestamp: Utc::now(),
             available: new_performance.error_rate_percent < 10.0,
             response_time_ms: new_performance.response_time_ms,
             quality_score: new_performance.quality_score,
-        // Update monitor
+
         monitor.last_health_check = Utc::now();
         monitor.current_performance = new_performance;
         monitor.availability_history.push(snapshot);
-        // Maintain history size
+
         if monitor.availability_history.len() > config.performance_history_size {
             monitor.availability_history.remove(0);
         }
-        // Update status
+
         monitor.status = Self::calculate_capability_status(
             &monitor.current_performance,
             &monitor.alert_thresholds,
@@ -172,18 +149,18 @@ impl CapabilityMonitor {
         debug!("📊 Updated monitor for capability {}", capability.id);
         Ok(())
     }
-    /// Calculate capability status based on performance and thresholds
+
     fn calculate_capability_status(
         performance: &PerformanceMetrics,
         thresholds: &AlertThresholds,
     ) -> CapabilityStatus {
-        // Check for critical conditions
+
         if performance.error_rate_percent > thresholds.max_error_rate_percent * 2.0
             || performance.response_time_ms > thresholds.max_response_time_ms * 2
             || performance.quality_score < thresholds.min_quality_score * 0.5
         {
             CapabilityStatus::Critical
-        // Check for degraded conditions
+
         else if performance.error_rate_percent > thresholds.max_error_rate_percent
             || performance.response_time_ms > thresholds.max_response_time_ms
             || performance.quality_score < thresholds.min_quality_score

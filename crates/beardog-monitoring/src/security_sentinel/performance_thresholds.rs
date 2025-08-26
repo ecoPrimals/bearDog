@@ -1,25 +1,8 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// Performance thresholds configuration and validation
 
 use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
-/// Performance monitoring thresholds with comprehensive validation
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceThresholds {
     pub max_cpu_percent: f64,
@@ -29,7 +12,6 @@ pub struct PerformanceThresholds {
     pub max_error_rate: f64,
 }
 impl Default for PerformanceThresholds {}
-
 
     fn default() -> Self {
         Self {
@@ -41,8 +23,6 @@ impl Default for PerformanceThresholds {}
         }
     }
 impl PerformanceThresholds {
-    /// Comprehensive threshold validation - Deep safety architecture}
-
 
     pub fn validate(&self) -> BearDogResult<()> {
         if self.max_cpu_percent < 0.0 || self.max_cpu_percent > 100.0 {
@@ -64,7 +44,7 @@ impl PerformanceThresholds {
                 "Invalid error rate threshold: {}% (must be 0-100)",
                 self.max_error_rate
         Ok(())
-    /// Create validated thresholds
+
     pub fn new(
         max_cpu_percent: f64,
         max_memory_mb: f64,

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["DatabaseHealthChecker","ExternalServiceHealthChecker","RedisHealthChecker"],"trait":["HealthChecker"]};

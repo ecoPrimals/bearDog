@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["OutputFormat","StreamType"],"struct":["BatchResult","BatchStatus","CliError","CliResponse","OperationContext"]};

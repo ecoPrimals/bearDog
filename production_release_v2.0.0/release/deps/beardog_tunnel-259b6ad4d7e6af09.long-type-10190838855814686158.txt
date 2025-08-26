@@ -1,1 +1,0 @@
-tokio::sync::RwLockWriteGuard<'_, beardog_core::HsmHealthStatus>

@@ -1,29 +1,9 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! World-Class Testing Framework - Verification Implementations
-//!
-//! This module provides canonical implementations of verification components.
 
 use super::traits::*;
 use super::metrics::*;
 use beardog_errors::*;
 
-/// Canonical formal verifier implementation
 #[derive(Debug)]
 pub struct CanonicalFormalVerifier {
     verification_engine: VerificationEngine,
@@ -34,18 +14,18 @@ impl CanonicalFormalVerifier {
     pub fn new() -> Self {
         Self {
             verification_engine: VerificationEngine::ModelChecker,
-            proof_cache: std::collections::HashMap::new(),
+            proof_cache: std::collections::HashMap::with_capacity(16),
         }
     }
 }
 
 impl FormalVerifier for CanonicalFormalVerifier {
     fn verify_correctness(&self, component: &str) -> FormalVerificationResult {
-        // Canonical implementation of formal verification
+
         match component {
             "beardog_core" => {
                 let proof = MathematicalProof {
-                    theorem: format!("Component {} is mathematically correct", component),
+                    theorem: format_args!("Component {} is mathematically correct", component).to_string(),
                     proof_steps: vec![
                         ProofStep {
                             step_number: 1,
@@ -64,14 +44,14 @@ impl FormalVerifier for CanonicalFormalVerifier {
                 FormalVerificationResult::Verified { proof }
             }
             _ => FormalVerificationResult::Failed {
-                reason: format!("Component {} not supported for verification", component),
+                reason: format_args!("Component {} not supported for verification", component).to_string(),
             },
         }
     }
 
     fn generate_proof(&self, property: &str) -> MathematicalProof {
         MathematicalProof {
-            theorem: format!("Property: {}", property),
+            theorem: format_args!("Property: {}", property).to_string(),
             proof_steps: vec![ProofStep {
                 step_number: 1,
                 description: "Property verification".to_string(),
@@ -83,12 +63,11 @@ impl FormalVerifier for CanonicalFormalVerifier {
     }
 
     fn validate_invariants(&self, _system_state: &SystemState) -> InvariantValidationResult {
-        // Canonical invariant validation
+
         InvariantValidationResult::Valid
     }
 }
 
-/// Canonical property generator implementation
 #[derive(Debug)]
 pub struct CanonicalPropertyGenerator {
     test_case_limit: usize,
@@ -106,7 +85,7 @@ impl CanonicalPropertyGenerator {
 
 impl PropertyGenerator for CanonicalPropertyGenerator {
     fn generate_test_cases(&self, property: &SecurityProperty) -> Vec<TestCase> {
-        // Generate canonical test cases based on property
+
         let mut test_cases = Vec::new();
         
         for i in 0..self.test_case_limit.min(100) {
@@ -114,7 +93,7 @@ impl PropertyGenerator for CanonicalPropertyGenerator {
                 input_data: vec![i as u8; 32], // Generate varied input data
                 expected_output: None,
                 test_metadata: {
-                    let mut metadata = std::collections::HashMap::new();
+                    let mut metadata = std::collections::HashMap::with_capacity(16);
                     metadata.insert("property".to_string(), property.name.clone());
                     metadata.insert("test_id".to_string(), i.to_string());
                     metadata
@@ -126,7 +105,7 @@ impl PropertyGenerator for CanonicalPropertyGenerator {
     }
 
     fn validate_property(&self, _property: &SecurityProperty, _input: &TestInput) -> PropertyResult {
-        // Canonical property validation - assumes properties are satisfied
+
         PropertyResult::Satisfied
     }
 
@@ -139,7 +118,6 @@ impl PropertyGenerator for CanonicalPropertyGenerator {
     }
 }
 
-/// Canonical mutation tester implementation
 #[derive(Debug)]
 pub struct CanonicalMutationTester {
     mutation_operators: Vec<MutationType>,
@@ -200,7 +178,7 @@ impl MutationTester for CanonicalMutationTester {
     }
 
     fn execute_mutant(&self, _mutation: &CodeMutation) -> MutationResult {
-        // Canonical mutation execution - assume tests kill most mutants
+
         MutationResult::Killed
     }
 
@@ -217,7 +195,6 @@ impl MutationTester for CanonicalMutationTester {
     }
 }
 
-/// Canonical invariant validator implementation
 #[derive(Debug)]
 pub struct CanonicalInvariantValidator {
     safety_invariants: Vec<SafetyInvariant>,
@@ -244,7 +221,7 @@ impl CanonicalInvariantValidator {
 
 impl InvariantValidator for CanonicalInvariantValidator {
     fn validate_invariants(&self, _state: &SystemState) -> InvariantValidationResult {
-        // Canonical invariant validation
+
         InvariantValidationResult::Valid
     }
 
@@ -257,7 +234,6 @@ impl InvariantValidator for CanonicalInvariantValidator {
     }
 }
 
-/// Canonical exhaustive tester implementation
 #[derive(Debug)]
 pub struct CanonicalExhaustiveTester {
     boundary_conditions: Vec<BoundaryCondition>,
@@ -298,7 +274,6 @@ impl ExhaustiveTester for CanonicalExhaustiveTester {
     }
 }
 
-/// Canonical quantum resistance validator implementation
 #[derive(Debug)]
 pub struct CanonicalQuantumValidator {
     quantum_algorithms: Vec<String>,
@@ -353,7 +328,6 @@ enum VerificationEngine {
     SymbolicExecutor,
 }
 
-// Default implementations for canonical testing
 impl Default for CanonicalFormalVerifier {
     fn default() -> Self {
         Self::new()

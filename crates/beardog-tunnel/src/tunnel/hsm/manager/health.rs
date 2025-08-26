@@ -1,27 +1,4 @@
-// PHASE 5 MODERNIZED: Comprehensive Arc<dyn> elimination
-// MODERNIZED: Removed async_trait - now uses native async fn in trait
 
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-
-/// # HSM Health Monitoring
-///
-/// This module provides health monitoring capabilities for HSM providers,
-/// including health status tracking and periodic health checks.
 
 use super::config::HealthConfig;
 use super::{HsmHealthMonitor, HsmProvider};
@@ -33,22 +10,22 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::time::{interval, timeout};
 use tracing::{debug, error, info, warn};
-/// Default HSM health monitor
+
 pub struct DefaultHsmHealthMonitor {
     pub(crate) provider_health: Arc<RwLock<HashMap<String, HsmHealthStatus>>>,
     pub(crate) health_config: HealthConfig,
     pub(crate) monitoring_active: Arc<RwLock<bool>>,
 }
 impl DefaultHsmHealthMonitor {
-    /// Create a new HSM health monitor with the specified configuration
+
     pub async fn new(config: HealthConfig) -> BearDogResult<Self> {
         Ok(Self {
-            provider_health: Arc::new(RwLock::new(HashMap::new())),
+            provider_health: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             health_config: config,
             monitoring_active: Arc::new(RwLock::new(false)),
         })
     }
-    /// Get the health status of a specific HSM provider
+
     pub async fn get_provider_health(
         &self,
         provider_id: &str,
@@ -57,7 +34,6 @@ impl DefaultHsmHealthMonitor {
         Ok(health.get(provider_id).cloned())
 
 impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
-
 
     async fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> BearDogResult<()> {
         let mut is_active = self.monitoring_active.write().await;
@@ -71,7 +47,7 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
             "🏥 Starting HSM health monitoring for {} providers",
             providers.len()
         );
-        // Initialize health status for all providers
+
         {
             let mut health_map = self.provider_health.write().await;
             for provider in &providers {
@@ -86,13 +62,13 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
                     },
                 );
             }
-        // Start monitoring task
+
         let provider_health = self.provider_health.clone();
         let monitoring_active = self.monitoring_active.clone();
         let health_config = self.health_config.clone();
         tokio::spawn(async move {
             let mut interval = interval(health_config.check_interval);
-            let mut failure_counts: HashMap<String, u32> = HashMap::new();
+            let mut failure_counts: HashMap<String, u32> = HashMap::with_capacity(16);
             loop {
                 {
                     let is_active = monitoring_active.read().await;
@@ -110,7 +86,7 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
                         }
                     };
                     let provider_id = provider_info.vendor;
-                    // Perform health check with timeout
+
                     let health_result = timeout(
                         health_config.timeout,
                         Self::perform_health_check(provider.clone()),
@@ -118,11 +94,11 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
                     .await;
                     let health_status = match health_result {
                         Ok(Ok(status)) => {
-                            // Reset failure count on success
+
                             failure_counts.remove(&provider_id);
                             status
                         Ok(Err(e)) => {
-                            // Increment failure count
+
                             let count = failure_counts.entry(provider_id.clone()).or_insert(0);
                             *count += 1;
                             let healthy = *count < health_config.failure_threshold;
@@ -132,9 +108,9 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
                                 error_message: Some(format!("Health check failed: {e:?}")),
                             }
                         Err(_) => {
-                            // Timeout
+
                                 error_message: Some("Health check timeout".to_string()),
-                    // Update health status
+
                     {
                         let mut health_map = provider_health.write().await;
                         let previous_status =
@@ -157,7 +133,6 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
     async fn get_health_status(&self) -> BearDogResult<HashMap<String, HsmHealthStatus>> {
         Ok(health.clone())}
 
-
     async fn filter_healthy_providers(
         providers: Vec<impl HsmProvider + Send + Sync + 'static>,
     ) -> BearDogResult<Vec<impl HsmProvider + Send + Sync + 'static>> {
@@ -175,7 +150,7 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
     async fn perform_health_check(
         provider: impl HsmProvider + Send + Sync + 'static,
     ) -> BearDogResult<HsmHealthStatus> {
-        // Simple health check - try to get provider info
+
         match provider.get_info().await {
             Ok(_) => Ok(HsmHealthStatus { is_healthy: true }),
             Err(e) => {

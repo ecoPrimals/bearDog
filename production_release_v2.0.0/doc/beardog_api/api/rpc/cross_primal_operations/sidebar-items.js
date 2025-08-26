@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["broadcast_to_ecosystem","call_ecosystem_service","request_compute_resources","request_storage_resources"]};

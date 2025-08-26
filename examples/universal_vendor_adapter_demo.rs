@@ -1,24 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Universal Vendor Adapter Demo
-//!
-//! This example demonstrates BearDog's universal adapter system that allows
-//! to working with different providers through a unified interface.
 
 use beardog_errors::BearDogResult;
 use std::collections::HashMap;
@@ -43,7 +23,6 @@ struct VendorCapability {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 struct AdapterRequest {
     operation: String,
     data: Vec<u8>,
@@ -51,7 +30,6 @@ struct AdapterRequest {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 struct AdapterResponse {
     success: bool,
     result: Vec<u8>,
@@ -59,7 +37,6 @@ struct AdapterResponse {
     processing_time_ms: u64,
 }
 
-#[allow(dead_code)]
 struct UniversalVendorAdapter {
     registered_vendors: Vec<VendorCapability>,
     request_history: HashMap<String, Vec<AdapterResponse>>,
@@ -67,22 +44,18 @@ struct UniversalVendorAdapter {
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Initialize tracing
+
     tracing_subscriber::fmt::init();
 
     info!("🔌 BearDog Universal Vendor Adapter Demo");
     info!("========================================");
 
-    // Demonstrate vendor registration
     demonstrate_vendor_registration().await?;
 
-    // Show capability discovery
     demonstrate_capability_discovery().await?;
 
-    // Demonstrate unified operations
     demonstrate_unified_operations().await?;
 
-    // Show vendor failover
     demonstrate_vendor_failover().await?;
 
     info!("✅ Universal Vendor Adapter Demo Complete!");
@@ -95,7 +68,6 @@ async fn demonstrate_vendor_registration() -> BearDogResult<()> {
 
     let mut adapter = UniversalVendorAdapter::new();
 
-    // Register different types of vendors
     let vendors = create_sample_vendors();
 
     for vendor in &vendors {
@@ -122,7 +94,6 @@ async fn demonstrate_capability_discovery() -> BearDogResult<()> {
 
     let adapter = create_configured_adapter().await?;
 
-    // Discover capabilities for different operations
     let operations = vec!["encrypt", "sign", "hash", "generate_key"];
 
     for operation in operations {
@@ -148,7 +119,6 @@ async fn demonstrate_unified_operations() -> BearDogResult<()> {
 
     let adapter = create_configured_adapter().await?;
 
-    // Demonstrate how the same operation can be performed across different vendors
     let operations = vec![
         ("encrypt", "Hello, World!".as_bytes().to_vec()),
         ("sign", "Document to sign".as_bytes().to_vec()),
@@ -161,7 +131,7 @@ async fn demonstrate_unified_operations() -> BearDogResult<()> {
         let request = AdapterRequest {
             operation: operation.to_string(),
             data: data.clone(),
-            parameters: HashMap::new(),
+            parameters: HashMap::with_capacity(16),
         };
 
         match adapter.execute_operation(&request).await {
@@ -198,7 +168,7 @@ async fn demonstrate_vendor_failover() -> BearDogResult<()> {
     let request = AdapterRequest {
         operation: "encrypt".to_string(),
         data: "Test data".as_bytes().to_vec(),
-        parameters: HashMap::new(),
+        parameters: HashMap::with_capacity(16),
     };
 
     match adapter.execute_operation(&request).await {
@@ -216,7 +186,6 @@ async fn demonstrate_vendor_failover() -> BearDogResult<()> {
         }
     }
 
-    // Simulate vendor failure
     info!("\n⚠️  Simulating vendor failure:");
     adapter.simulate_vendor_failure("AWS CloudHSM").await;
 
@@ -242,7 +211,7 @@ impl UniversalVendorAdapter {
     fn new() -> Self {
         Self {
             registered_vendors: Vec::new(),
-            request_history: HashMap::new(),
+            request_history: HashMap::with_capacity(16),
         }
     }
 
@@ -270,15 +239,14 @@ impl UniversalVendorAdapter {
     }
 
     async fn execute_operation(&self, request: &AdapterRequest) -> BearDogResult<AdapterResponse> {
-        // Find the best vendor for this operation
+
         let capable_vendors = self.discover_capable_vendors(&request.operation).await?;
 
         if capable_vendors.is_empty() {
-            return Err(beardog_errors::BearDogError::configuration(format!("No vendors capable of '{)'", request.operation),
+            return Err(beardog_errors::BearDogError::configuration(format_args!("No vendors capable of '{)'", request.operation).to_string(),
             });
         }
 
-        // Select the best vendor (highest availability)
         let selected_vendor = capable_vendors
             .iter()
             .max_by(|a, b| {
@@ -289,15 +257,14 @@ impl UniversalVendorAdapter {
             .ok_or_else(|| beardog_errors::BearDogError::configuration("No providers available for selection".to_string(),
             ))?;
 
-        // Simulate operation execution
         let processing_time = simulate_operation_time(&selected_vendor.vendor_type);
         let result = simulate_operation_result(&request.operation, &request.data);
 
-        let mut metadata = HashMap::new();
+        let mut metadata = HashMap::with_capacity(16);
         metadata.insert("vendor".to_string(), selected_vendor.name.clone());
         metadata.insert(
             "vendor_type".to_string(),
-            format!("{:?}", selected_vendor.vendor_type),
+            format_args!("{:?}", selected_vendor.vendor_type).to_string(),
         );
 
         Ok(AdapterResponse {
@@ -406,8 +373,8 @@ fn simulate_operation_result(operation: &str, input_data: &[u8]) -> Vec<u8> {
             result.reverse(); // Simple "encryption"
             result
         }
-        "sign" => format!("SIGNATURE_OF_{}", String::from_utf8_lossy(input_data)).into_bytes(),
-        "hash" => format!("HASH_{}", input_data.len()).into_bytes(),
+        "sign" => format_args!("SIGNATURE_OF_{}", String::from_utf8_lossy(input_data).to_string()).into_bytes(),
+        "hash" => format_args!("HASH_{}", input_data.len().to_string()).into_bytes(),
         "generate_key" => b"GENERATED_KEY_256_BITS".to_vec(),
         _ => input_data.to_vec(),
     }

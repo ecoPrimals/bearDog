@@ -1,11 +1,20 @@
-# Rust/Cargo build artifacts
+# BearDog Unified Rust Ecosystem - .gitignore
+# Version: 3.0.0 - Canonical Modernization Complete
+
+# ============================================================================
+# RUST BUILD ARTIFACTS
+# ============================================================================
+
+# Primary build artifacts
 **/target/
 **/*.rs.bk
 *.pdb
-Cargo.lock  # Keep root Cargo.lock, ignore in subdirectories
+
+# Cargo lock files (keep root, ignore in subdirectories)
+Cargo.lock  # Keep root Cargo.lock for reproducible builds
 **/Cargo.lock
 
-# Rust build artifacts
+# Rust compilation artifacts
 **/.fingerprint/
 **/incremental/
 **/*.rlib
@@ -16,115 +25,354 @@ Cargo.lock  # Keep root Cargo.lock, ignore in subdirectories
 **/*.d
 **/*.o
 
-# IDE files
+# ============================================================================
+# IDE AND EDITOR FILES
+# ============================================================================
+
+# VSCode
 .vscode/
 !.vscode/settings.json
 !.vscode/tasks.json  
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# IntelliJ/CLion
 .idea/
-*.swp
-*.swo
-*~
 *.iml
 *.iws
 *.ipr
 
-# OS generated files
+# Vim/Neovim
+*.swp
+*.swo
+*~
+.vim/
+.nvim/
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ============================================================================
+# OPERATING SYSTEM FILES
+# ============================================================================
+
+# macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
+
+# Windows
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Logs and temporary files
-*.log
-*.tmp
-*.temp
-logs/
-*.log.*
+# Linux
+*~
+.nfs*
 
-# Environment and configuration files
+# ============================================================================
+# CONFIGURATION AND ENVIRONMENT
+# ============================================================================
+
+# Environment files
 .env
 .env.*
+.envrc
+
+# Legacy configuration files (replaced by unified system)
 config.toml
 beardog-config.toml
+*-config.toml
+!configs/beardog-config-template.toml  # Keep our unified template
+
+# Unified configuration system (keep templates, ignore instances)
 !configs/
 !configs/*.toml
+!configs/environments/*.env
+configs/environments/local.env  # Ignore local overrides
+configs/environments/personal.env
+
+# Runtime configuration instances
+runtime-config.toml
+local-config.toml
+
+# ============================================================================
+# LOGS AND TEMPORARY FILES
+# ============================================================================
+
+# Log files
+*.log
+*.log.*
+logs/
+!logs/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+.cache/
+
+# Modernization temporary files (cleanup artifacts)
+*_TEMP.md
+*_BACKUP.md
+TEMP_*.md
+CLEANUP_*.md
+
+# ============================================================================
+# SECURITY SENSITIVE FILES
+# ============================================================================
+
+# Cryptographic keys and certificates
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.csr
+private_keys/
+certificates/
+keys/
+
+# Security configuration
+secrets.json
+secrets.toml
+*.secret
+hsm-config.json
+
+# Authentication tokens
+.token
+*.jwt
+auth_tokens/
+
+# ============================================================================
+# DATABASE AND STORAGE
+# ============================================================================
 
 # Database files
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
 
-# Build and distribution
+# Storage artifacts
+storage/
+data/
+!data/.gitkeep
+
+# ============================================================================
+# BUILD AND DISTRIBUTION
+# ============================================================================
+
+# Build directories
 /dist/
 /build/
 **/build/
 /book/
+/pkg/
 
-# Backup files
-*.bak
-*.backup
+# Distribution artifacts
+*.tar.gz
+*.zip
+*.deb
+*.rpm
+*.dmg
+*.msi
 
-# Security sensitive files
-*.key
-*.pem
-*.p12
-*.pfx
-secrets.json
-*.crt
-*.csr
-private_keys/
-certificates/
+# ============================================================================
+# TESTING AND COVERAGE
+# ============================================================================
 
-# Test coverage and reports
+# Test coverage reports
 tarpaulin-report.html
 cobertura.xml
 lcov.info
 coverage/
 test-results/
+junit.xml
 
-# Benchmarking and profiling
+# Test artifacts
+test-output/
+.test_artifacts/
+
+# ============================================================================
+# BENCHMARKING AND PROFILING
+# ============================================================================
+
+# Criterion benchmarks
 criterion/
 benchmark_results*/
+target/criterion/
+
+# Profiling artifacts
 flamegraph.svg
 perf.data*
+*.prof
+callgrind.out.*
 
-# Documentation
+# ============================================================================
+# DOCUMENTATION BUILD ARTIFACTS
+# ============================================================================
+
+# Generated documentation
 /target/doc/
 docs/_build/
+docs/site/
+_site/
 
-# Package manager files
+# Documentation temporary files
+docs/**/*_temp.md
+docs/**/*.backup
+
+# ============================================================================
+# PACKAGE MANAGERS AND DEPENDENCIES
+# ============================================================================
+
+# Node.js (for documentation tooling)
+node_modules/
 package-lock.json
 yarn.lock
-node_modules/
+.npm/
+.yarn/
 
-# Python artifacts (if any Python tooling)
+# Python (for automation scripts)
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
 *.egg-info/
+venv/
+.venv/
 
-# Archive and outdated files
-archive/
-*.old
-*.orig
-*_backup
+# ============================================================================
+# DEVELOPMENT TOOLS
+# ============================================================================
 
-# Development artifacts
+# Rust development
 .cargo/
 .rustup/
 rust-project.json
+rust-analyzer.json
 
-# Container and deployment
+# Git hooks and local tools
+.git/hooks/local-*
+.githooks/
+
+# ============================================================================
+# DEPLOYMENT AND CONTAINERIZATION
+# ============================================================================
+
+# Docker
 .dockerignore
 docker-compose.override.yml
-k8s-secrets.yml
+.docker/
 
-# Generated files
+# Kubernetes
+k8s-secrets.yml
+*.k8s.local.yml
+
+# Deployment artifacts
+deployment-output/
+.deploy/
+
+# ============================================================================
+# MOBILE AND PLATFORM SPECIFIC
+# ============================================================================
+
+# Android
+*.apk
+*.aab
+local.properties
+android/app/release/
+
+# iOS
+*.ipa
+ios/build/
+
+# ============================================================================
+# ARCHIVE AND LEGACY
+# ============================================================================
+
+# Archive directories (keep structure, ignore contents)
+archive/
+!archive/.gitkeep
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*_backup
+*~
+
+# Legacy migration artifacts
+migration_*.json
+legacy_*.toml
+
+# ============================================================================
+# GENERATED AND PROCESSED FILES
+# ============================================================================
+
+# Code generation
 **/*_generated.rs
-**/*.generated.* 
+**/*.generated.*
+**/gen/
+
+# Processed documentation
+**/*.processed.md
+**/*.compiled.md
+
+# Build metadata
+build_info.json
+version_info.rs
+
+# ============================================================================
+# LOCAL DEVELOPMENT OVERRIDES
+# ============================================================================
+
+# Personal development files
+.personal/
+.local/
+local_*
+personal_*
+
+# Development databases
+dev.db
+local.sqlite
+
+# Local scripts
+local_*.sh
+personal_*.py
+
+# ============================================================================
+# MODERNIZATION ARTIFACTS (CLEANUP COMPLETE)
+# ============================================================================
+
+# These patterns catch any remaining modernization artifacts
+MODERNIZATION_*.md
+PHASE_*.md
+*_MIGRATION_*.md
+*_COMPLETION_*.md
+FINAL_*.md
+*_ACHIEVEMENT_*.md
+*_VALIDATION_*.md
+
+# Temporary reports (all moved to docs/)
+*_REPORT.md
+*_SUMMARY.md
+*.report.json
+
+# Mission logs (cleanup complete)
+MISSION_*.log
+ECOSYSTEM_*.log
+*_STATUS.log 

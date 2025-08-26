@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["CommunicationMeshConfig","NetworkConfig","NetworkSecurityConfig","PortConfig"]};

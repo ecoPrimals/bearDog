@@ -1,32 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Distributed BearDog Demo
-//!
-//! This example demonstrates:
-//! 1. Local BearDog instances with software HSM (always available)
-//! 2. Mobile HSM integration for high-security operations
-//! 3. Graceful degradation when HSM unavailable
-//! 4. Low-latency local operations
-//!
-//! Usage:
-//! ```bash
-//! cargo run --example distributed_beardog_demo
-//! ```
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -44,49 +16,40 @@ use beardog_errors::BearDogResult;
 
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
-    // Initialize logging
+
     tracing_subscriber::fmt::init();
     
     info!("🏠 Starting Distributed BearDog Demo");
     info!("📱 HSM for human identity, local instances for routine ops");
-    
-    // Initialize distributed BearDog instances
+
     let local_instances = initialize_local_instances().await?;
-    
-    // Demonstrate operation routing
+
     demo_operation_routing(&local_instances).await?;
-    
-    // Demonstrate HSM failover
+
     demo_hsm_failover(&local_instances).await?;
-    
-    // Demonstrate genetic spawning without HSM
+
     demo_offline_genetic_spawning(&local_instances).await?;
-    
-    // Demonstrate local instance coordination
+
     demo_local_coordination(&local_instances).await?;
     
     Ok(())
 }
 
-/// Initialize local BearDog instances for different devices
 async fn initialize_local_instances() -> BearDogResult<Vec<Arc<BearDogCore>>> {
     info!("🔧 Initializing local BearDog instances...");
     
     let mut instances = Vec::new();
-    
-    // Tower/Desktop instance - Main processing
+
     let tower_config = create_local_config("tower", "192.168.1.10:8080").await?;
     let tower_instance = Arc::new(BearDogCore::new(tower_config).await?);
     tower_instance.start().await?;
     instances.push(tower_instance);
-    
-    // Laptop instance - Portable access
+
     let laptop_config = create_local_config("laptop", "192.168.1.11:8080").await?;
     let laptop_instance = Arc::new(BearDogCore::new(laptop_config).await?);
     laptop_instance.start().await?;
     instances.push(laptop_instance);
-    
-    // Server instance - Storage and backup
+
     let server_config = create_local_config("server", "192.168.1.12:8080").await?;
     let server_instance = Arc::new(BearDogCore::new(server_config).await?);
     server_instance.start().await?;
@@ -96,44 +59,34 @@ async fn initialize_local_instances() -> BearDogResult<Vec<Arc<BearDogCore>>> {
     Ok(instances)
 }
 
-/// Create optimized config for local instance
 async fn create_local_config(instance_name: &str, bind_address: &str) -> BearDogResult<BearDogConfig> {
     let mut config = BearDogConfig::default();
-    
-    // Enable standalone mode for local operation
+
     config.app.standalone_mode = true;
     config.app.environment = "distributed".to_string();
-    config.app.name = format!("BearDog-{}", instance_name);
-    
-    // Local network configuration
+    config.app.name = format_args!("BearDog-{}", instance_name).to_string();
+
     config.network.http.bind_address = bind_address.to_string();
     config.network.node_communication.enabled = true;
-    
-    // HSM configuration with fallback
-    // Mobile HSM available but not required for routine operations
-    
+
     Ok(config)
 }
 
-/// Demonstrate intelligent operation routing
 async fn demo_operation_routing(instances: &[Arc<BearDogCore>]) -> BearDogResult<()> {
     info!("🔀 Demonstrating operation routing...");
     
     let tower_instance = &instances[0];
-    
-    // Create HSM manager for routing decisions
+
     let hsm_config = HsmManagerConfig::default();
     let hsm_manager = Arc::new(HsmManager::with_config(hsm_config).await?);
-    
-    // Scenario 1: Routine file encryption (uses local software HSM)
+
     info!("📄 Scenario 1: Routine file encryption (local software HSM)");
     let file_encryption_req = SecurityRequirements::new(SecurityLevel::Standard);
     
     match hsm_manager.get_best_provider(&file_encryption_req).await {
         Ok(provider) => {
             info!("✅ Routing to local software HSM for file encryption");
-            
-            // Generate key for file encryption
+
             let key_request = GenerateKeyRequest {
                 key_id: "file_encryption_key".to_string(),
                 algorithm: KeyAlgorithm::Aes256,
@@ -148,8 +101,7 @@ async fn demo_operation_routing(instances: &[Arc<BearDogCore>]) -> BearDogResult
         }
         Err(e) => warn!("No suitable provider for file encryption: {}", e),
     }
-    
-    // Scenario 2: Human identity operation (would prefer mobile HSM)
+
     info!("👤 Scenario 2: Human identity operation (mobile HSM preferred)");
     let identity_req = SecurityRequirements::new(SecurityLevel::High);
     
@@ -167,21 +119,17 @@ async fn demo_operation_routing(instances: &[Arc<BearDogCore>]) -> BearDogResult
     Ok(())
 }
 
-/// Demonstrate HSM failover scenarios
 async fn demo_hsm_failover(instances: &[Arc<BearDogCore>]) -> BearDogResult<()> {
     info!("🔄 Demonstrating HSM failover...");
     
     let tower_instance = &instances[0];
-    
-    // Simulate mobile HSM unavailable
+
     info!("📱 Simulating mobile HSM unavailable...");
-    
-    // Operations continue with software HSM
+
     info!("✅ Operations continue with local software HSM");
     info!("🔐 Security level: Standard (graceful degradation)");
     info!("⚡ Latency: Low (local operations)");
-    
-    // Simulate mobile HSM coming back online
+
     sleep(Duration::from_secs(2)).await;
     info!("📱 Mobile HSM back online - upgrading security level");
     info!("🔐 Security level: High (enhanced operations)");
@@ -189,13 +137,11 @@ async fn demo_hsm_failover(instances: &[Arc<BearDogCore>]) -> BearDogResult<()> 
     Ok(())
 }
 
-/// Demonstrate genetic spawning without HSM
 async fn demo_offline_genetic_spawning(instances: &[Arc<BearDogCore>]) -> BearDogResult<()> {
     info!("🧬 Demonstrating offline genetic spawning...");
     
     let tower_instance = &instances[0];
-    
-    // Create genetics API with offline capability
+
     let genetics_store = Arc::new(beardog_genetics::genetics::types::InMemoryGeneticsStore::new());
     let genetics_config = beardog_genetics::genetics::GeneticsConfig {
         base_mutation_rate: 0.05,
@@ -207,8 +153,7 @@ async fn demo_offline_genetic_spawning(instances: &[Arc<BearDogCore>]) -> BearDo
     };
     
     let genetics_api = GeneticsAPI::new(genetics_store, genetics_config);
-    
-    // Create spawn request for local processing
+
     let spawn_request = SpawnRequest {
         request_id: uuid::Uuid::new_v4().to_string(),
         requesting_parent: "tower_instance".to_string(),
@@ -229,10 +174,9 @@ async fn demo_offline_genetic_spawning(instances: &[Arc<BearDogCore>]) -> BearDo
         },
         created_at: chrono::Utc::now(),
         expires_at: chrono::Utc::now() + chrono::Duration::hours(24),
-        metadata: std::collections::HashMap::new(),
+        metadata: std::collections::HashMap::with_capacity(16),
     };
-    
-    // Process spawn without HSM
+
     match genetics_api.spawn_node(spawn_request).await {
         Ok(result) => {
             info!("✅ Genetic spawning successful without HSM");
@@ -245,27 +189,21 @@ async fn demo_offline_genetic_spawning(instances: &[Arc<BearDogCore>]) -> BearDo
     Ok(())
 }
 
-/// Demonstrate local instance coordination
 async fn demo_local_coordination(instances: &[Arc<BearDogCore>]) -> BearDogResult<()> {
     info!("🤝 Demonstrating local instance coordination...");
-    
-    // Tower processes heavy computation
+
     info!("🏠 Tower: Processing heavy computation locally");
-    
-    // Laptop handles quick access
+
     info!("💻 Laptop: Providing quick access to encrypted data");
-    
-    // Server manages backup and storage
+
     info!("🖥️ Server: Managing backup and storage operations");
-    
-    // Show local network benefits
+
     info!("🌐 Local network benefits:");
     info!("  ⚡ Low latency: <1ms between instances");
     info!("  🔒 Local security: No internet dependency");
     info!("  📈 High bandwidth: Gigabit local network");
     info!("  🔄 Auto-sync: Background coordination");
-    
-    // Demonstrate load balancing
+
     info!("⚖️ Load balancing across local instances:");
     for (i, instance) in instances.iter().enumerate() {
         let health = instance.health_check().await?;
@@ -275,23 +213,19 @@ async fn demo_local_coordination(instances: &[Arc<BearDogCore>]) -> BearDogResul
     Ok(())
 }
 
-/// Demonstrate operation performance comparison
 async fn demo_performance_comparison() -> BearDogResult<()> {
     info!("📊 Performance comparison:");
-    
-    // Local software HSM
+
     info!("🏠 Local Software HSM:");
     info!("  ⚡ Latency: 0.1ms - 1ms");
     info!("  🔄 Throughput: 10,000+ ops/sec");
     info!("  📈 Availability: 99.9%");
-    
-    // Mobile HSM (when available)
+
     info!("📱 Mobile HSM:");
     info!("  ⚡ Latency: 50ms - 200ms");
     info!("  🔄 Throughput: 100-500 ops/sec");
     info!("  📈 Availability: 95% (user dependent)");
-    
-    // Optimal routing strategy
+
     info!("🎯 Optimal routing:");
     info!("  👤 Human identity → Mobile HSM");
     info!("  📄 File encryption → Local software HSM");

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["StreamingCommand","StreamingPhase"],"struct":["EncryptionContext","StreamingProgress","ZeroCopyConfig","ZeroCryptoStats"],"type":["CommandReceiver","CommandSender","ProgressSender","ProgressStream"]};

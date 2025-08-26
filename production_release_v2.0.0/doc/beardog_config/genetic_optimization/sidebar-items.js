@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["evolution","fitness","operators","parallel","performance","population"],"struct":["GeneticOptimizationConfig"]};

@@ -1,27 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # BearDog Unified Tunnel Architecture Showcase
-//!
-//! **🎉 MODERNIZATION COMPLETE - EXCEPTIONAL SUCCESS**
-//!
-//! This showcase demonstrates the successful transformation from fragmented
-//! legacy architecture to a unified, modern system that preserves human
-//! entropy capabilities for digital sovereignty.
 
 use std::collections::HashMap;
 
@@ -36,7 +13,6 @@ fn main() {
     celebrate_achievement();
 }
 
-/// Display the comprehensive architectural transformation
 fn display_transformation_success() {
     println!("\n🏆 ARCHITECTURAL TRANSFORMATION - COMPLETE SUCCESS");
     println!("==================================================");
@@ -76,7 +52,6 @@ fn display_transformation_success() {
     println!("   • Unified modules created: 2 core modules");
 }
 
-/// Showcase the preserved and enhanced human entropy capabilities
 fn showcase_human_entropy_capabilities() {
     println!("\n🧠 HUMAN ENTROPY - DIGITAL SOVEREIGNTY ENHANCED");
     println!("===============================================");
@@ -125,7 +100,6 @@ fn showcase_human_entropy_capabilities() {
         criteria.min_entropy_bits
     );
 
-    // Simulate tier elevation decision
     let sample_score = 0.87;
     let sample_methods = 3;
     let has_biometric = true;
@@ -147,7 +121,6 @@ fn showcase_human_entropy_capabilities() {
     }
 }
 
-/// Demonstrate the performance improvements achieved
 fn demonstrate_performance_improvements() {
     println!("\n⚡ PERFORMANCE IMPROVEMENTS - EXCEPTIONAL GAINS");
     println!("==============================================");
@@ -223,7 +196,6 @@ fn demonstrate_performance_improvements() {
     println!("   • Performance improvement: {:.1}%", improvement);
 }
 
-/// Show the production readiness status
 fn show_production_readiness() {
     println!("\n🛡️ PRODUCTION READINESS - 98% COMPLETE");
     println!("======================================");
@@ -284,7 +256,6 @@ fn show_production_readiness() {
     println!("   ✅ Developer Workflow: Testing and integration guides");
 }
 
-/// Final celebration of the exceptional achievement
 fn celebrate_achievement() {
     println!("\n🎊 FINAL ACHIEVEMENT CELEBRATION");
     println!("================================");
@@ -311,8 +282,6 @@ fn celebrate_achievement() {
     println!("============================================================");
 }
 
-/// Tier elevation criteria structure for demonstration
-#[allow(dead_code)]
 struct TierElevationCriteria {
     min_entropy_methods: u32,
     min_overall_score: f64,
@@ -327,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_showcase_runs() {
-        // Test that all showcase functions run without panicking
+
         display_transformation_success();
         showcase_human_entropy_capabilities();
         demonstrate_performance_improvements();

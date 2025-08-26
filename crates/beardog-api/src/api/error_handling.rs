@@ -1,50 +1,14 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// **CANONICAL ERROR HANDLING** ✅ **COMPLETE**
-/// 
-/// This module now uses the unified BearDogError system exclusively.
-/// All API errors are handled through BearDogError::Api variant with proper categorization.
-/// 
-/// **Usage Pattern**:
-/// ```rust
-/// use beardog_errors::{BearDogError, BearDogResult};
-/// 
-/// // Authentication error
-/// BearDogError::api("Invalid credentials", Some(401), Some("/auth/login"))
-/// 
-/// // Validation error  
-/// BearDogError::api("Invalid input data", Some(400), Some("/api/users"))
-/// 
-/// // Not found error
-/// BearDogError::api("Resource not found", Some(404), Some("/api/resource/123"))
-/// ```
 
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::network::HttpStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// **CANONICAL API ERROR HANDLING** ✅
-/// Modern error handling using the unified BearDogError system
 pub struct ApiErrorHandler;
 
 impl ApiErrorHandler {
-    /// Convert BearDogError to HTTP status code
+
     pub fn to_status_code(error: &BearDogError) -> StatusCode {
         match error {
             BearDogError::Api { category, .. } => {
@@ -68,7 +32,6 @@ impl ApiErrorHandler {
         }
     }
 
-    /// Get error code string from BearDogError
     pub fn error_code(error: &BearDogError) -> &'static str {
         match error {
             BearDogError::Api { category, .. } => {
@@ -92,68 +55,59 @@ impl ApiErrorHandler {
         }
     }
 
-    /// Create API authentication error
-    pub fn authentication_error(message: impl Into<String>) -> BearDogError {
+    pub fn authentication_error(message: impl Into<&str>) -> BearDogError {
         BearDogError::api(message.into(), beardog_errors::ApiErrorCategory::Authentication)
     }
 
-    /// Create API authorization error
-    pub fn authorization_error(message: impl Into<String>) -> BearDogError {
+    pub fn authorization_error(message: impl Into<&str>) -> BearDogError {
         BearDogError::api(message.into(), beardog_errors::ApiErrorCategory::Authorization)
     }
 
-    /// Create API validation error
-    pub fn validation_error(message: impl Into<String>) -> BearDogError {
+    pub fn validation_error(message: impl Into<&str>) -> BearDogError {
         BearDogError::api(message.into(), beardog_errors::ApiErrorCategory::Validation)
     }
 
-    /// Create API not found error
-    pub fn not_found_error(message: impl Into<String>) -> BearDogError {
+    pub fn not_found_error(message: impl Into<&str>) -> BearDogError {
         BearDogError::api(message.into(), beardog_errors::ApiErrorCategory::NotFound)
     }
 
-    /// Create API conflict error
-    pub fn conflict_error(message: impl Into<String>) -> BearDogError {
+    pub fn conflict_error(message: impl Into<&str>) -> BearDogError {
         BearDogError::api(message.into(), beardog_errors::ApiErrorCategory::Conflict)
     }
 
-    /// Create API rate limit error
-    pub fn rate_limit_error(message: impl Into<String>) -> BearDogError {
+    pub fn rate_limit_error(message: impl Into<&str>) -> BearDogError {
         BearDogError::api(message.into(), beardog_errors::ApiErrorCategory::RateLimit)
     }
 
-    /// Create API internal error
-    pub fn internal_error(message: impl Into<String>) -> BearDogError {
+    pub fn internal_error(message: impl Into<&str>) -> BearDogError {
         BearDogError::api(message.into(), beardog_errors::ApiErrorCategory::Internal)
     }
 
-    /// Create API service unavailable error
-    pub fn service_unavailable_error(message: impl Into<String>) -> BearDogError {
+    pub fn service_unavailable_error(message: impl Into<&str>) -> BearDogError {
         BearDogError::api(message.into(), beardog_errors::ApiErrorCategory::ServiceUnavailable)
     }
 }
 
-/// Standard API error response format
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiError {
-    /// Error code for programmatic handling
+
     pub error_code: String,
-    /// Human-readable error message
+
     pub message: String,
-    /// Additional error details
+
     pub details: Option<HashMap<String, String>>,
-    /// Request ID for tracing
+
     pub request_id: Option<String>,
-    /// Timestamp of the error
+
     pub timestamp: String,
 }
 
 impl ApiError {
-    /// Create a new API error
+
     pub fn new(
         error_type: BearDogError,
-        message: impl Into<String>,
-        request_id: Option<String>,
+        message: impl Into<&str>,
+        request_id: Option<&str>,
     ) -> Self {
         Self {
             error_code: ApiErrorHandler::error_code(&error_type).to_string(),
@@ -163,13 +117,13 @@ impl ApiError {
             timestamp: chrono::Utc::now().to_rfc3339(),
         }
     }
-    /// Add error details
-    pub fn with_details(mut self, details: HashMap<String, String>) -> Self {
+
+    pub fn with_details(mut self, details: HashMap<&str, &str>) -> Self {
         self.details = Some(details);
         self
     }
-    /// Add a single detail
-    pub fn with_detail(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+
+    pub fn with_detail(mut self, key: impl Into<&str>, value: impl Into<&str>) -> Self {
         let mut details = self.details.unwrap_or_default();
         details.insert(key.into(), value.into());
         self
@@ -192,48 +146,47 @@ impl IntoResponse for ApiError {
     }
 }
 
-/// Helper functions for common error responses
 pub mod helpers {
     use super::*;
-    /// Create an authentication error
+
     pub fn authentication_error(
-        message: impl Into<String>,
-        request_id: Option<String>,
+        message: impl Into<&str>,
+        request_id: Option<&str>,
     ) -> BearDogError {
         ApiErrorHandler::authentication_error(message.into())
     }
-    /// Create an authorization error
+
     pub fn authorization_error(
-        message: impl Into<String>,
-        request_id: Option<String>,
+        message: impl Into<&str>,
+        request_id: Option<&str>,
     ) -> BearDogError {
         ApiErrorHandler::authorization_error(message.into())
     }
-    /// Create a validation error
+
     pub fn validation_error(
-        message: impl Into<String>,
-        request_id: Option<String>,
+        message: impl Into<&str>,
+        request_id: Option<&str>,
     ) -> BearDogError {
         ApiErrorHandler::validation_error(message.into())
     }
-    /// Create a not found error
+
     pub fn not_found_error(
-        message: impl Into<String>,
-        request_id: Option<String>,
+        message: impl Into<&str>,
+        request_id: Option<&str>,
     ) -> BearDogError {
         ApiErrorHandler::not_found_error(message.into())
     }
-    /// Create an internal error
+
     pub fn internal_error(
-        message: impl Into<String>,
-        request_id: Option<String>,
+        message: impl Into<&str>,
+        request_id: Option<&str>,
     ) -> BearDogError {
         ApiErrorHandler::internal_error(message.into())
     }
-    /// Create a rate limit error
+
     pub fn rate_limit_error(
-        message: impl Into<String>,
-        request_id: Option<String>,
+        message: impl Into<&str>,
+        request_id: Option<&str>,
     ) -> BearDogError {
         ApiErrorHandler::rate_limit_error(message.into())
     }

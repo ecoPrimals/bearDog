@@ -1,28 +1,7 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Benchmark Utilities and Helper Functions
-//!
-//! Shared utilities for system info collection, performance analysis,
-//! and recommendation generation.
 
 use super::{BenchmarkResult, PerformanceMetrics, SystemInfo};
 
-/// Collect system information
 pub async fn collect_system_info() -> SystemInfo {
     SystemInfo {
         os: std::env::consts::OS.to_string(),
@@ -33,7 +12,6 @@ pub async fn collect_system_info() -> SystemInfo {
     }
 }
 
-/// Calculate performance grade based on results
 pub fn calculate_performance_grade(results: &[BenchmarkResult], metrics: &PerformanceMetrics) -> String {
     let pass_count = results.iter().filter(|r| r.meets_threshold).count();
     let total_count = results.len();
@@ -57,11 +35,9 @@ pub fn calculate_performance_grade(results: &[BenchmarkResult], metrics: &Perfor
     }
 }
 
-/// Generate performance recommendations based on results
 pub fn generate_performance_recommendations(results: &[BenchmarkResult]) -> Vec<String> {
     let mut recommendations = Vec::new();
 
-    // Analyze encryption performance
     let encryption_results: Vec<_> = results.iter()
         .filter(|r| r.name.starts_with("Encryption"))
         .collect();
@@ -71,7 +47,6 @@ pub fn generate_performance_recommendations(results: &[BenchmarkResult]) -> Vec<
         recommendations.push("Evaluate AES-NI or similar CPU optimizations".to_string());
     }
 
-    // Analyze concurrency performance
     let concurrency_results: Vec<_> = results.iter()
         .filter(|r| r.name.starts_with("Concurrent"))
         .collect();
@@ -87,7 +62,6 @@ pub fn generate_performance_recommendations(results: &[BenchmarkResult]) -> Vec<
         }
     }
 
-    // Analyze memory usage
     let high_memory_tests: Vec<_> = results.iter()
         .filter(|r| r.memory_usage_mb > 256.0)
         .collect();

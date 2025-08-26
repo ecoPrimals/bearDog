@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["EntropyCollectionMethod","SecurityLevel"],"struct":["BiometricCapabilities","CapabilityRequirements","ComplianceCapabilities","EntropyRequirements","EnvironmentalCapabilities","HardwareRequirements","HumanEntropyCapabilities","MotionCapabilities","PerformanceCapabilities","TouchCapabilities","UniversalHsmCapabilities"]};

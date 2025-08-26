@@ -1,0 +1,175 @@
+# BearDog Unified Configuration Template
+# Environment-driven configuration eliminating hardcoded values
+# Use environment variables to customize for different deployment environments
+
+[app]
+name = "${BEARDOG_APP_NAME:-BearDog}"
+version = "${BEARDOG_VERSION:-1.0.0}"
+standalone_mode = "${BEARDOG_STANDALONE_MODE:-true}"
+environment = "${BEARDOG_ENVIRONMENT:-development}"
+debug = "${BEARDOG_DEBUG:-false}"
+
+[network]
+[network.http]
+enabled = "${BEARDOG_HTTP_ENABLED:-true}"
+bind_address = "${BEARDOG_HTTP_BIND:-127.0.0.1:8080}"
+port = "${BEARDOG_HTTP_PORT:-8080}"
+max_request_size = "${BEARDOG_MAX_REQUEST_SIZE:-16777216}"
+keep_alive_timeout = "${BEARDOG_KEEPALIVE_TIMEOUT:-300}"
+
+[network.https]
+enabled = "${BEARDOG_HTTPS_ENABLED:-false}"
+bind_address = "${BEARDOG_HTTPS_BIND:-0.0.0.0:8443}"
+port = "${BEARDOG_HTTPS_PORT:-8443}"
+cert_path = "${BEARDOG_CERT_PATH:-/etc/ssl/certs/beardog-api.crt}"
+key_path = "${BEARDOG_KEY_PATH:-/etc/ssl/private/beardog-api.key}"
+cert_chain_path = "${BEARDOG_CERT_CHAIN_PATH:-/etc/ssl/certs/beardog-chain.crt}"
+client_cert_verification = "${BEARDOG_CLIENT_CERT_VERIFICATION:-false}"
+
+[network.rate_limiting]
+enabled = "${BEARDOG_RATE_LIMITING_ENABLED:-true}"
+requests_per_minute = "${BEARDOG_RATE_LIMIT_RPM:-1000}"
+burst_size = "${BEARDOG_RATE_LIMIT_BURST:-100}"
+window_seconds = "${BEARDOG_RATE_LIMIT_WINDOW:-60}"
+
+[network.cors]
+enabled = "${BEARDOG_CORS_ENABLED:-true}"
+allowed_origins = "${BEARDOG_CORS_ORIGINS:-http://localhost:3000,http://localhost:8080}"
+allowed_methods = "${BEARDOG_CORS_METHODS:-GET,POST,PUT,DELETE,OPTIONS}"
+allowed_headers = "${BEARDOG_CORS_HEADERS:-Authorization,Content-Type,X-API-Key}"
+
+[network.timeout]
+request_timeout = "${BEARDOG_REQUEST_TIMEOUT:-30}"
+connect_timeout = "${BEARDOG_CONNECT_TIMEOUT:-10}"
+read_timeout = "${BEARDOG_READ_TIMEOUT:-30}"
+write_timeout = "${BEARDOG_WRITE_TIMEOUT:-30}"
+
+[security]
+level = "${BEARDOG_SECURITY_LEVEL:-Standard}"
+enable_hsm = "${BEARDOG_HSM_ENABLED:-false}"
+token_expiration_seconds = "${BEARDOG_TOKEN_EXPIRATION:-3600}"
+max_failed_logins = "${BEARDOG_MAX_FAILED_LOGINS:-3}"
+rate_limit_requests_per_minute = "${BEARDOG_SECURITY_RATE_LIMIT:-1000}"
+max_session_duration = "${BEARDOG_MAX_SESSION_DURATION:-4h}"
+
+[security.password_policy]
+min_length = "${BEARDOG_PASSWORD_MIN_LENGTH:-12}"
+require_uppercase = "${BEARDOG_PASSWORD_REQUIRE_UPPERCASE:-true}"
+require_lowercase = "${BEARDOG_PASSWORD_REQUIRE_LOWERCASE:-true}"
+require_numbers = "${BEARDOG_PASSWORD_REQUIRE_NUMBERS:-true}"
+require_special = "${BEARDOG_PASSWORD_REQUIRE_SPECIAL:-true}"
+history_count = "${BEARDOG_PASSWORD_HISTORY:-5}"
+max_age = "${BEARDOG_PASSWORD_MAX_AGE:-90d}"
+
+[security.mfa]
+required = "${BEARDOG_MFA_REQUIRED:-false}"
+methods = "${BEARDOG_MFA_METHODS:-TOTP}"
+
+[security.session]
+timeout = "${BEARDOG_SESSION_TIMEOUT:-1h}"
+cleanup_interval = "${BEARDOG_SESSION_CLEANUP:-5m}"
+secure_cookies = "${BEARDOG_SECURE_COOKIES:-true}"
+
+[security.hsm]
+enabled = "${BEARDOG_HSM_ENABLED:-false}"
+provider = "${BEARDOG_HSM_PROVIDER:-SoftHSM}"
+library_path = "${BEARDOG_HSM_LIBRARY_PATH:-/usr/lib/pkcs11/opensc-pkcs11.so}"
+slot = "${BEARDOG_HSM_SLOT:-0}"
+pin = "${BEARDOG_HSM_PIN}"
+key_cache_size = "${BEARDOG_HSM_CACHE_SIZE:-1000}"
+key_cache_ttl_secs = "${BEARDOG_HSM_CACHE_TTL:-300}"
+
+[ecosystem]
+[ecosystem.storage]
+provider_discovery_method = "${BEARDOG_STORAGE_DISCOVERY:-local}"
+fallback_discovery = "${BEARDOG_STORAGE_FALLBACK:-memory}"
+capabilities_required = "${BEARDOG_STORAGE_CAPABILITIES:-database_operations,secure_storage,audit_logging}"
+
+[ecosystem.storage.retention_policies]
+security = { retention_days = "${BEARDOG_SECURITY_RETENTION_DAYS:-365}", archive_after_retention = "${BEARDOG_SECURITY_ARCHIVE:-true}", compliance = "${BEARDOG_SECURITY_COMPLIANCE:-GDPR}" }
+audit = { retention_days = "${BEARDOG_AUDIT_RETENTION_DAYS:-2555}", archive_after_retention = "${BEARDOG_AUDIT_ARCHIVE:-true}", compliance = "${BEARDOG_AUDIT_COMPLIANCE:-SOX,HIPAA}" }
+sessions = { retention_days = "${BEARDOG_SESSION_RETENTION_DAYS:-30}", archive_after_retention = "${BEARDOG_SESSION_ARCHIVE:-false}", compliance = "${BEARDOG_SESSION_COMPLIANCE:-GDPR}" }
+workflows = { retention_days = "${BEARDOG_WORKFLOW_RETENTION_DAYS:-365}", archive_after_retention = "${BEARDOG_WORKFLOW_ARCHIVE:-true}", compliance = "${BEARDOG_WORKFLOW_COMPLIANCE:-SOX}" }
+
+[ecosystem.storage.zfs]
+encryption_enabled = "${BEARDOG_ZFS_ENCRYPTION:-true}"
+compression_enabled = "${BEARDOG_ZFS_COMPRESSION:-true}"
+snapshot_enabled = "${BEARDOG_ZFS_SNAPSHOTS:-true}"
+snapshot_frequency_hours = "${BEARDOG_ZFS_SNAPSHOT_FREQUENCY:-24}"
+snapshot_retention_count = "${BEARDOG_ZFS_SNAPSHOT_RETENTION:-30}"
+
+[database]
+max_connections = "${BEARDOG_DB_MAX_CONNECTIONS:-10}"
+connection_timeout_secs = "${BEARDOG_DB_CONNECTION_TIMEOUT:-30}"
+idle_timeout_secs = "${BEARDOG_DB_IDLE_TIMEOUT:-300}"
+max_lifetime_secs = "${BEARDOG_DB_MAX_LIFETIME:-3600}"
+
+[external_services]
+songbird_endpoint = "${BEARDOG_SONGBIRD_ENDPOINT:-https://songbird.beardog.local:8443}"
+nestgate_endpoint = "${BEARDOG_NESTGATE_ENDPOINT:-https://nestgate.beardog.local:8443}"
+squirrel_endpoint = "${BEARDOG_SQUIRREL_ENDPOINT:-https://squirrel.beardog.local:8443}"
+toadstool_endpoint = "${BEARDOG_TOADSTOOL_ENDPOINT:-https://toadstool.beardog.local:8443}"
+biomeos_endpoint = "${BEARDOG_BIOMEOS_ENDPOINT:-https://biomeos.beardog.local:8443}"
+smtp_server = "${BEARDOG_SMTP_SERVER:-localhost}"
+smtp_port = "${BEARDOG_SMTP_PORT:-587}"
+
+[monitoring]
+health_check_interval_secs = "${BEARDOG_HEALTH_CHECK_INTERVAL:-30}"
+health_check_timeout_secs = "${BEARDOG_HEALTH_CHECK_TIMEOUT:-5}"
+failure_threshold = "${BEARDOG_FAILURE_THRESHOLD:-3}"
+recovery_threshold = "${BEARDOG_RECOVERY_THRESHOLD:-2}"
+heartbeat_interval_secs = "${BEARDOG_HEARTBEAT_INTERVAL:-60}"
+metrics_interval_secs = "${BEARDOG_METRICS_INTERVAL:-60}"
+metrics_retention_secs = "${BEARDOG_METRICS_RETENTION:-86400}"
+max_log_files = "${BEARDOG_MAX_LOG_FILES:-10}"
+max_log_file_size = "${BEARDOG_MAX_LOG_FILE_SIZE:-10485760}"
+
+[performance]
+request_timeout_secs = "${BEARDOG_PERF_REQUEST_TIMEOUT:-30}"
+connection_timeout_secs = "${BEARDOG_PERF_CONNECTION_TIMEOUT:-10}"
+keepalive_timeout_secs = "${BEARDOG_PERF_KEEPALIVE_TIMEOUT:-75}"
+max_connections = "${BEARDOG_PERF_MAX_CONNECTIONS:-100}"
+max_request_size = "${BEARDOG_PERF_MAX_REQUEST_SIZE:-1048576}"
+max_response_size = "${BEARDOG_PERF_MAX_RESPONSE_SIZE:-1048576}"
+worker_threads = "${BEARDOG_WORKER_THREADS:-4}"
+queue_size = "${BEARDOG_QUEUE_SIZE:-1000}"
+buffer_size = "${BEARDOG_BUFFER_SIZE:-4096}"
+batch_size = "${BEARDOG_BATCH_SIZE:-100}"
+rate_limit_per_minute = "${BEARDOG_PERF_RATE_LIMIT:-60}"
+rate_limit_window_secs = "${BEARDOG_PERF_RATE_WINDOW:-60}"
+cache_size = "${BEARDOG_CACHE_SIZE:-1000}"
+response_time_threshold_ms = "${BEARDOG_RESPONSE_THRESHOLD:-1000}"
+
+[performance.genetic]
+mutation_rate = "${BEARDOG_GENETIC_MUTATION_RATE:-0.01}"
+crossover_rate = "${BEARDOG_GENETIC_CROSSOVER_RATE:-0.8}"
+population_size = "${BEARDOG_GENETIC_POPULATION_SIZE:-100}"
+max_generations = "${BEARDOG_GENETIC_MAX_GENERATIONS:-1000}"
+fitness_threshold = "${BEARDOG_GENETIC_FITNESS_THRESHOLD:-0.95}"
+
+[performance.threat_detection]
+threat_threshold = "${BEARDOG_THREAT_THRESHOLD:-0.8}"
+anomaly_threshold = "${BEARDOG_ANOMALY_THRESHOLD:-0.9}"
+
+[features]
+enable_genetic_optimization = "${BEARDOG_FEATURE_GENETIC:-true}"
+enable_threat_detection = "${BEARDOG_FEATURE_THREAT_DETECTION:-true}"
+enable_real_time_monitoring = "${BEARDOG_FEATURE_MONITORING:-true}"
+enable_advanced_caching = "${BEARDOG_FEATURE_CACHING:-true}"
+enable_distributed_mode = "${BEARDOG_FEATURE_DISTRIBUTED:-false}"
+
+# Network configuration
+[network.trusted_hosts]
+hosts = "${BEARDOG_TRUSTED_HOSTS:-localhost,127.0.0.1,beardog.local}"
+
+[network.trusted_ip_ranges]
+ranges = "${BEARDOG_TRUSTED_IP_RANGES:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
+
+# Cryptographic parameters
+[crypto]
+encryption_key_size = "${BEARDOG_CRYPTO_KEY_SIZE:-32}"
+nonce_size = "${BEARDOG_CRYPTO_NONCE_SIZE:-12}"
+signature_size = "${BEARDOG_CRYPTO_SIGNATURE_SIZE:-64}"
+public_key_size = "${BEARDOG_CRYPTO_PUBLIC_KEY_SIZE:-32}"
+private_key_size = "${BEARDOG_CRYPTO_PRIVATE_KEY_SIZE:-32}"
+hash_size = "${BEARDOG_CRYPTO_HASH_SIZE:-32}" 

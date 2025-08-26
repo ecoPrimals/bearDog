@@ -1,23 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// User Management Handlers
-///
-/// Handles user CRUD operations, activation/deactivation, and password reset.
 
 use super::models::*;
 use crate::api::*;
@@ -29,8 +10,7 @@ use axum::{
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::info;
-// ====== USER MANAGEMENT HANDLERS ======
-/// List all users with filtering and pagination
+
 pub async fn list_users(
     State(_state): State<AppState>,
     Query(params): Query<UserListQuery>,
@@ -79,7 +59,7 @@ pub async fn list_users(
         true,
     )))
 }
-/// Create new user account
+
 pub async fn create_user(
     Json(request): Json<CreateUserRequest>,
 ) -> Result<Json<ApiResponse<CreateUserResponse>>, StatusCode> {
@@ -96,7 +76,7 @@ pub async fn create_user(
         default_roles: vec!["user".to_string()],
         password_reset_required: request.temporary_password.is_some(),
         false,
-/// Get detailed user information
+
 pub async fn get_user(
     Path(user_id): Path<String>,
 ) -> Result<Json<ApiResponse<UserDetailsResponse>>, StatusCode> {
@@ -132,12 +112,11 @@ pub async fn get_user(
             login_count: 1247,
             password_change_count: 5,
         metadata: {
-            let mut metadata = HashMap::new();
+            let mut metadata = HashMap::with_capacity(16);
             metadata.insert("created_by".to_string(), "system".to_string());
             metadata.insert("source".to_string(), "initial_setup".to_string());
             metadata
-// ====== PLACEHOLDER USER OPERATIONS ======
-/// Update user (placeholder)
+
 pub async fn update_user(
     State(_): State<AppState>,
     Path(_user_id): Path<String>,
@@ -145,18 +124,18 @@ pub async fn update_user(
 ) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
         serde_json::json!({"message": "User updated"}),
         45,
-/// Delete user (placeholder)
+
 pub async fn delete_user(
         serde_json::json!({"message": "User deleted"}),
         35,
-/// Activate user (placeholder)
+
 pub async fn activate_user(
         serde_json::json!({"message": "User activated"}),
         25,
-/// Deactivate user (placeholder)
+
 pub async fn deactivate_user(
         serde_json::json!({"message": "User deactivated"}),
-/// Reset user password (placeholder)
+
 pub async fn reset_password(
         serde_json::json!({"message": "Password reset initiated"}),
         40,

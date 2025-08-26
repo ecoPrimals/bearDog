@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["AdapterConfig","AdapterConfigs","EmailConfig","ExternalSystemConfig","ExternalSystemsConfig","NotificationConfig","PolicyConfig","RustEcosystemConfig","RustProjectConfig","SlackNotificationConfig","WebhookConfig","WorkflowConfig","WorkflowNotificationConfig","WorkflowStorageConfig"]};

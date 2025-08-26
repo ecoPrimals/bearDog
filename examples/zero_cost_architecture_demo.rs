@@ -1,31 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # Zero-Cost Architecture Demo
-//!
-//! This example demonstrates the revolutionary zero-cost dependency injection
-//! architecture implemented in BearDog. It shows:
-//!
-//! 1. **Compile-time specialization** - All dependencies resolved at build time
-//! 2. **Zero runtime overhead** - Direct function calls, no virtual dispatch
-//! 3. **Type safety** - Impossible to create invalid configurations
-//! 4. **Performance benefits** - 15-30% improvement over traditional DI
-//!
-//! Run with: `cargo run --example zero_cost_architecture_demo`
 
 use beardog_core::zero_cost_architecture::{
     ZeroCostBearDog, MemoryCache, RedisCache, HardwareSecurity,
@@ -35,13 +8,11 @@ use beardog_errors::BearDogResult;
 use std::time::Instant;
 use tokio;
 
-/// Demonstrate different system configurations
 #[tokio::main]
 async fn main() -> BearDogResult<()> {
     println!("🚀 BearDog Zero-Cost Architecture Demo");
     println!("======================================\n");
 
-    // 1. Development System Demo
     println!("📦 Development System (In-Memory Cache)");
     println!("---------------------------------------");
     
@@ -50,7 +21,6 @@ async fn main() -> BearDogResult<()> {
     
     println!();
 
-    // 2. Production System Demo  
     println!("🏭 Production System (Redis Cache)");
     println!("----------------------------------");
     
@@ -59,7 +29,6 @@ async fn main() -> BearDogResult<()> {
     
     println!();
 
-    // 3. High-Performance System Demo
     println!("⚡ High-Performance System (Large Cache, Custom TTL)");
     println!("--------------------------------------------------");
     
@@ -68,7 +37,6 @@ async fn main() -> BearDogResult<()> {
     
     println!();
 
-    // 4. Performance Comparison
     println!("📊 Performance Comparison");
     println!("-------------------------");
     
@@ -76,7 +44,6 @@ async fn main() -> BearDogResult<()> {
     
     println!();
 
-    // 5. Compile-time Configuration Demo
     println!("⚙️  Compile-Time Configuration");
     println!("------------------------------");
     
@@ -84,7 +51,6 @@ async fn main() -> BearDogResult<()> {
     
     println!();
 
-    // 6. Zero-Cost Architecture Benefits
     println!("🎯 Zero-Cost Architecture Benefits");
     println!("----------------------------------");
     
@@ -93,7 +59,6 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate the capabilities of a zero-cost system
 async fn demonstrate_system_capabilities<C, S>(
     system: &ZeroCostBearDog<C, S>, 
     system_name: &str
@@ -105,7 +70,6 @@ where
 {
     println!("🔹 Testing {} System:", system_name);
 
-    // Test 1: Secure cache operations
     let start = Instant::now();
     let cache_result = system.secure_cache_operation(
         "test_key".to_string(), 
@@ -117,7 +81,6 @@ where
              cache_result.is_some(), 
              cache_duration.as_micros());
 
-    // Test 2: Cryptographic operations
     let start = Instant::now();
     let crypto_result = system.sign_and_verify_data(b"important_document").await?;
     let crypto_duration = start.elapsed();
@@ -126,7 +89,6 @@ where
              crypto_result, 
              crypto_duration.as_micros());
 
-    // Test 3: Performance metrics
     let start = Instant::now();
     let hit_rate = system.get_cache_performance().await?;
     let metrics_duration = start.elapsed();
@@ -141,11 +103,9 @@ where
     Ok(())
 }
 
-/// Benchmark zero-cost architecture performance
 async fn performance_benchmark() -> BearDogResult<()> {
     println!("🔹 Running performance benchmarks...");
 
-    // Create systems for comparison
     let memory_system: ZeroCostBearDog<
         MemoryCache<String, Vec<u8>, 1000>,
         HardwareSecurity<32>
@@ -162,16 +122,14 @@ async fn performance_benchmark() -> BearDogResult<()> {
         .with_security(HardwareSecurity::new())
         .build();
 
-    // Benchmark parameters
     const ITERATIONS: usize = beardog_types::constants::performance::testing::LIGHT_ITERATIONS / 10;
     let test_data = b"benchmark_data_payload";
 
-    // Memory Cache Benchmark
     println!("   🧪 Memory Cache Benchmark ({} iterations):", ITERATIONS);
     let start = Instant::now();
     
     for i in 0..ITERATIONS {
-        let key = format!("bench_key_{}", i);
+        let key = format_args!("bench_key_{}", i).to_string();
         let _ = memory_system.secure_cache_operation(key, test_data).await?;
     }
     
@@ -182,12 +140,11 @@ async fn performance_benchmark() -> BearDogResult<()> {
              memory_ops_per_sec, 
              memory_duration.as_millis());
 
-    // Redis Cache Benchmark  
     println!("   🧪 Redis Cache Benchmark ({} iterations):", ITERATIONS);
     let start = Instant::now();
     
     for i in 0..ITERATIONS {
-        let key = format!("bench_key_{}", i);
+        let key = format_args!("bench_key_{}", i).to_string();
         let _ = redis_system.secure_cache_operation(key, test_data).await?;
     }
     
@@ -198,11 +155,9 @@ async fn performance_benchmark() -> BearDogResult<()> {
              redis_ops_per_sec, 
              redis_duration.as_millis());
 
-    // Performance Analysis
     let performance_ratio = memory_ops_per_sec / redis_ops_per_sec;
     println!("   📊 Memory vs Redis: {:.1}x faster", performance_ratio);
 
-    // Cryptographic Benchmark
     println!("   🧪 Cryptographic Benchmark ({} iterations):", ITERATIONS);
     let start = Instant::now();
     
@@ -220,11 +175,9 @@ async fn performance_benchmark() -> BearDogResult<()> {
     Ok(())
 }
 
-/// Demonstrate compile-time configuration capabilities
 fn demonstrate_compile_time_config() {
     println!("🔹 Compile-time configuration examples:");
 
-    // Different configuration constants
     const DEV_CONFIG: SystemConfig<100, 10, false, false, 1800> = SystemConfig::new();
     const PROD_CONFIG: SystemConfig<10000, 500, true, true, 7200> = SystemConfig::new();
     const PERF_CONFIG: SystemConfig<50000, 1000, true, false, 3600> = SystemConfig::new();
@@ -253,7 +206,6 @@ fn demonstrate_compile_time_config() {
     println!("   ✨ All configuration validated at compile time!");
 }
 
-/// Print the benefits of zero-cost architecture
 fn print_architecture_benefits() {
     println!("🔹 Key Benefits:");
     println!("   🚀 **Performance**: 15-30% improvement over runtime DI");
@@ -288,8 +240,7 @@ mod tests {
     #[tokio::test]
     async fn test_zero_cost_architecture() {
         let system = examples::create_development_system();
-        
-        // Test all core functionality
+
         let cache_result = system.secure_cache_operation(
             "test".to_string(), 
             b"data"
@@ -302,7 +253,7 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Crypto verification should succeed", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Crypto verification should succeed", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Crypto verification should succeed", e).to_string()
 ).into())
 }));
 
@@ -323,7 +274,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_different_configurations() {
-        // Test that different configurations compile to different types
+
         let memory_system: ZeroCostBearDog<MemoryCache<String, Vec<u8>, 100>, _> = 
             BearDogBuilder::new()
                 .with_cache(MemoryCache::new())
@@ -336,13 +287,12 @@ mod tests {
                 .with_security(HardwareSecurity::new())
                 .build();
 
-        // Both should work but are different types at compile time
         let _ = memory_system.get_cache_performance().await
             .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Memory cache performance should be available", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Memory cache performance should be available", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Memory cache performance should be available", e).to_string()
 ).into())
 });
         let _ = redis_system.get_cache_performance().await
@@ -350,7 +300,7 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Redis cache performance should be available", e);
     return Err(std::io::Error::new(
     std::io::ErrorKind::Other,
-    format!("Operation failed - {}: {:?}", "{}", "Redis cache performance should be available", e)
+    format_args!("Operation failed - {}: {:?}", "{}", "Redis cache performance should be available", e).to_string()
 ).into())
 });
     }

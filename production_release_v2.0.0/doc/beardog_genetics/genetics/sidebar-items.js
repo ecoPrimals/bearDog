@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["api","entropy_hierarchy","handlers","human_entropy","peer_to_peer_genetics","spawning","types","zero_copy","zero_copy_spawning"],"struct":["DefaultBearDogGeneticsEngine","GeneticsAPI"],"trait":["GeneticsStore"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["TimelineEntryType"],"struct":["IncidentTimelineEntry"]};

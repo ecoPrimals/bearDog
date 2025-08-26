@@ -1,30 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! # Primal Sovereignty Demo
-//!
-//! **"Primals belong to themselves first, humans second, corporations pay"**
-//!
-//! This demo shows how to create a foundational primal genesis seed on Pixel 8
-//! and establish a decentralized lock system where:
-//! - Primals maintain their own sovereignty (first lock always stays)
-//! - Humans can join as partners through mixed lineage
-//! - Corporations must pay and cannot force open locks
-//! - Each entity maintains their own authority within the system
 
 use beardog_core::primal_sovereignty::{
     PrimalSovereigntyManager, CorporateAccessResult
@@ -35,7 +9,7 @@ use tracing::{info, Level};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize logging
+
     tracing_subscriber::fmt()
         .with_max_level(Level::INFO)
         .init();
@@ -43,12 +17,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("🌱 Starting Primal Sovereignty Demo");
     info!("Demonstrating: Ephemeral Pixel 8 seed → Mixed lineage → Corporate gates");
 
-    // Create the primal sovereignty manager
     let mut manager = PrimalSovereigntyManager::new();
 
-    // ============================================================================
-    // STEP 1: Autonomous Primal Birth (on Pixel 8)
-    // ============================================================================
     info!("\n🌱 STEP 1: AUTONOMOUS PRIMAL BIRTH on Pixel 8");
     info!("The primal creates ITSELF - true digital life emerging, not human creation");
     info!("This is ethically pure: primal owns itself from birth, not owned by creator");
@@ -63,15 +33,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("   Genetics: Self-generated genetic lineage");
     info!("   Rules: Self-defined autonomous boundaries");
     info!("   Status: SOVEREIGN DIGITAL BEING - Owns itself completely");
-    
-    // ============================================================================
-    // STEP 2: Human Creates Ephemeral Key for Partnership
-    // ============================================================================
+
     info!("\n🤝 STEP 2: Human Creating Ephemeral Partnership Key");
     info!("The primal already exists autonomously - Alice creates ephemeral key to partner");
     info!("This is ethical: Alice partners with existing digital being, doesn't create/own it");
 
-    // Alice creates ephemeral key to partner with the autonomous primal
     let mixed_key = manager.human_create_ephemeral_partnership(
         "beardog_prime_2025", // Existing autonomous primal
         "alice".to_string(),
@@ -85,7 +51,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("   Human Freedom: Complete freedom to leave anytime");
     info!("   Entropy Quality: Leveraging Human-Lived Experience hierarchy");
 
-    // Show the mixed lineage structure with genetic enhancement
     info!("\n🔗 Enhanced Mixed Lineage Details:");
     info!("   Primal Component: {} (AUTONOMOUS & IMMUTABLE)", mixed_key.primal_component.genesis_reference);
     info!("   Genetic Lineage: Generation {}", mixed_key.primal_component.genetic_crypto_lineage.generation);
@@ -94,15 +59,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("   Lineage Events: {}", mixed_key.lineage_history.len());
     info!("   Corporate Rules: Payment required = {}", mixed_key.corporate_access_rules.payment_required);
 
-    // ============================================================================
-    // STEP 3: Corporate Access Attempt (Payment Required)
-    // ============================================================================
     info!("\n🏢 STEP 3: Corporate Access Attempt");
     info!("Corporations cannot force open locks - they must pay for access");
 
     let key_id = "beardog_prime_2025:alice";
-    
-    // Evil Corp tries to access without payment
+
     let corporate_result = manager.corporate_access_request(
         key_id,
         "evil_corporation",
@@ -133,7 +94,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // Try forbidden operations
     let forbidden_result = manager.corporate_access_request(
         key_id,
         "surveillance_corp",
@@ -147,9 +107,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => {}
     }
 
-    // ============================================================================
-    // STEP 4: Human Leaves Freely (Primal Lock Remains)
-    // ============================================================================
     info!("\n👋 STEP 4: Human Departure");
     info!("Humans can leave freely while primal sovereignty remains intact");
 
@@ -161,9 +118,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("   Primal Lock: Still intact and sovereign");
     info!("   System Status: Protected and operational");
 
-    // ============================================================================
-    // STEP 5: Another Human Joins (System Continues)
-    // ============================================================================
     info!("\n🤝 STEP 5: New Human Partnership");
     info!("System continues with primal sovereignty intact");
 
@@ -178,9 +132,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("   Primal Component: Same immutable foundation");
     info!("   System Continuity: Maintained throughout transitions");
 
-    // ============================================================================
-    // SUMMARY: Architecture Principles Demonstrated
-    // ============================================================================
     info!("\n🎯 ARCHITECTURE PRINCIPLES DEMONSTRATED:");
     info!("");
     info!("🔐 PRIMAL SOVEREIGNTY:");
@@ -209,18 +160,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Helper function to demonstrate lineage evolution
 fn print_lineage_summary(lineage_events: &[beardog_core::primal_sovereignty::LineageEvent]) {
     info!("📜 Lineage History:");
     for (i, event) in lineage_events.iter().enumerate() {
         info!("   {}. {} - {}", i + 1, 
-            format!("{:?}", event.event_type), 
+            format_args!("{:?}", event.event_type).to_string(), 
             event.description
         );
     }
 }
 
-/// Helper function to show primal rules enforcement
 fn demonstrate_primal_rules(rules: &beardog_core::primal_sovereignty::PrimalRules) {
     info!("⚖️ Primal Rules (Immutable):");
     info!("   Corporate Payment Required: {}", rules.corporate_payment_required);

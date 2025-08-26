@@ -1,26 +1,4 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Network Chaos Testing Module
-//!
-//! Focused chaos engineering tests for network resilience including:
-//! - Network partition simulation
-//! - Latency injection
-//! - Connection failure scenarios
 
 use super::{ChaosConfig, TestMetrics, TestResult};
 use beardog_errors::{BearDogError, BearDogResult};
@@ -29,7 +7,6 @@ use std::time::{Duration, Instant};
 use tokio::time::timeout;
 use tracing::{error, info, warn};
 
-/// Network chaos testing controller
 #[derive(Debug)]
 pub struct NetworkChaosController {
     config: ChaosConfig,
@@ -44,7 +21,6 @@ impl NetworkChaosController {
         }
     }
 
-    /// Test network partition recovery
     pub async fn test_network_partitions(&self) -> BearDogResult<TestResult> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
@@ -56,7 +32,6 @@ impl NetworkChaosController {
         while start_time.elapsed() < self.config.test_duration {
             operations_attempted += 1;
 
-            // Simulate network operation with potential partition
             let operation_start = Instant::now();
             let operation_result = timeout(
                 Duration::from_millis(1000),
@@ -84,7 +59,7 @@ impl NetworkChaosController {
             test_name: "network_partitions".to_string(),
             duration: start_time.elapsed(),
             error_message: if error_rate >= 0.5 {
-                Some(format!("High error rate: {:.2}%", error_rate * 100.0))
+                Some(format_args!("High error rate: {:.2}%", error_rate * 100.0).to_string())
             } else {
                 None
             },
@@ -98,29 +73,25 @@ impl NetworkChaosController {
         })
     }
 
-    /// Simulate network operation with potential partition
     async fn simulate_network_operation_with_partition(&self) -> BearDogResult<()> {
-        // Simulate network latency
+
         let latency = Duration::from_millis(fastrand::u64(
             self.config.network_latency_range.0.as_millis() as u64
                 ..=self.config.network_latency_range.1.as_millis() as u64,
         ));
         tokio::time::sleep(latency).await;
 
-        // Inject random failures based on failure rate
         if fastrand::f64() < self.config.failure_rate {
             return Err(BearDogError::network("Simulated network partition".to_string(),
             ));
         }
 
-        // Simulate successful crypto operation
         self.crypto
             .encrypt_aes_gcm(b"test_key", b"test_data", None)?;
         Ok(())
     }
 }
 
-/// Network partition test implementation
 pub struct NetworkPartitionTest;
 
 impl NetworkPartitionTest {

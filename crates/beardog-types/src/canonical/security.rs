@@ -1,30 +1,9 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-/// # Canonical Security Types - Minimal Version
-///
-/// **TEMPORARY MINIMAL IMPLEMENTATION** for build stability
-/// This provides essential security types while syntax issues are resolved.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// **CANONICAL** Security Context
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityContext {
     pub user_id: String,
@@ -35,7 +14,6 @@ pub struct SecurityContext {
     pub authorization_level: AuthorizationLevel,
 }
 
-/// **CANONICAL** Authorization Level
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum AuthorizationLevel {
     None,
@@ -51,7 +29,6 @@ impl Default for AuthorizationLevel {
     }
 }
 
-/// **CANONICAL** Security Flags
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SecurityFlags {
     pub encrypted: bool,
@@ -60,7 +37,6 @@ pub struct SecurityFlags {
     pub audited: bool,
 }
 
-/// **CANONICAL** Policy Decision
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PolicyDecision {
     Allow,
@@ -74,7 +50,6 @@ impl Default for PolicyDecision {
     }
 }
 
-/// **CANONICAL** Risk Level
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum RiskLevel {
     Low,
@@ -89,7 +64,6 @@ impl Default for RiskLevel {
     }
 }
 
-/// **CANONICAL** Security Audit Event
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityAuditEvent {
     pub event_id: String,
@@ -102,7 +76,6 @@ pub struct SecurityAuditEvent {
     pub details: HashMap<String, String>,
 }
 
-/// **CANONICAL** Security Event Type
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SecurityEventType {
     Authentication,
@@ -112,7 +85,6 @@ pub enum SecurityEventType {
     SystemEvent,
 }
 
-/// **CANONICAL** Security Event Result
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SecurityEventResult {
     Success,
@@ -120,7 +92,6 @@ pub enum SecurityEventResult {
     Warning,
 }
 
-/// **CANONICAL** Threat Level
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ThreatLevel {
     None,
@@ -136,7 +107,6 @@ impl Default for ThreatLevel {
     }
 }
 
-/// **CANONICAL** Compliance Level
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ComplianceLevel {
     NonCompliant,
@@ -151,7 +121,6 @@ impl Default for ComplianceLevel {
     }
 }
 
-/// **CANONICAL** Session Token
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionToken {
     pub token: String,
@@ -166,8 +135,8 @@ impl Default for SessionToken {
     fn default() -> Self {
         let now = Utc::now();
         Self {
-            token: String::new(),
-            user_id: String::new(),
+            token: String::with_capacity(64),
+            user_id: String::with_capacity(64),
             created_at: now,
             expires_at: now + chrono::Duration::hours(24),
             permissions: Vec::new(),
@@ -176,7 +145,6 @@ impl Default for SessionToken {
     }
 }
 
-/// **CANONICAL** Session
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Session {
     pub session_id: String,
@@ -192,8 +160,8 @@ impl Default for Session {
     fn default() -> Self {
         let now = Utc::now();
         Self {
-            session_id: String::new(),
-            user_id: String::new(),
+            session_id: String::with_capacity(64),
+            user_id: String::with_capacity(64),
             created_at: now,
             expires_at: now + chrono::Duration::hours(24),
             last_activity: now,

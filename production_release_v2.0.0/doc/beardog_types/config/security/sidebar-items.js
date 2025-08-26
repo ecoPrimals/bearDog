@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["AuthFactor","MfaCombinationStrategy","MfaMethod"],"struct":["AuthProviderConfig","BiometricConfig","EmailConfig","EncryptionProfile","HardwareTokenConfig","MfaToken","SecurityConfig","SecurityHeadersConfig","SecurityRateLimitConfig","SmsConfig","TotpConfig"]};

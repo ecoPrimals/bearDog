@@ -1,38 +1,16 @@
-// BearDog - Enterprise Security Ecosystem
-// Copyright (C) 2025 EcoPrimals
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Production Operational Procedures Tests
-//!
-//! Tests for operational procedures, maintenance operations,
-//! backup/restore procedures, and operational safety checks.
 
 use beardog::production::*;
 
-/// Test production operational procedures
 pub async fn test_operational_procedures(prod_manager: &mut ProductionManager) {
     println!("🔧 Testing operational procedures...");
 
-    // Test backup procedures
     let backup_test = prod_manager
         .test_backup_procedures()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Backup procedures should work", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Backup procedures should work", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Backup procedures should work", e).to_string())
 })?;
 
     assert!(
@@ -44,13 +22,12 @@ pub async fn test_operational_procedures(prod_manager: &mut ProductionManager) {
         "Backup integrity should be verified"
     );
 
-    // Test maintenance procedures
     let maintenance_test = prod_manager
         .test_maintenance_procedures()
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Maintenance procedures should work", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Maintenance procedures should work", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Maintenance procedures should work", e).to_string())
 })?;
 
     assert!(
@@ -76,7 +53,7 @@ async fn test_operational_procedures_standalone() {
             .await
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Core initialization failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
 })?,
     );
 
@@ -84,7 +61,7 @@ async fn test_operational_procedures_standalone() {
         .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
-    beardog_errors::BearDogError::internal(format!("Operation failed ({}): {:?}", "Production manager creation failed", e))
+    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Production manager creation failed", e).to_string())
 })?;
         
     test_operational_procedures(&mut production_manager).await;
