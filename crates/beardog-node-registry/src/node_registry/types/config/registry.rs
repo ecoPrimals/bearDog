@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -109,7 +109,7 @@ impl RegistryConfig {
     pub fn health_check_interval(&self) -> Duration {
         Duration::from_secs(self.health_check_interval_seconds)
 
-    pub fn validate(&self) -> crate::BearDogResult<()> {
+    pub fn validate(&self) -> crate::Result<(), BearDogError> {
         if self.registry_id.is_empty() {
             return Err(crate::error::BearDogError::validation("registry_id", "Registry ID cannot be empty"));
         if self.registry_name.is_empty() {

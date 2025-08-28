@@ -7,7 +7,7 @@ use tokio::sync::RwLock;
 use tracing::debug;
 use super::super::traits::*;
 use super::config::CapabilityManagerConfig;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone)]
 pub struct CapabilityMonitor {
@@ -84,7 +84,7 @@ impl CapabilityMonitor {
         provider_key: &str,
         capability: &Capability,
         config: &CapabilityManagerConfig,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut monitors_guard = monitors.write().await;
         let monitor_key = format_args!("{}:{}", provider_key, capability.id).to_string();
 

@@ -5,7 +5,7 @@ use crate::universal_hsm::traits::{
     Platform, ProviderHealth, ProviderInfo, ProviderType, UniversalHsmProvider,
 };
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::traits::SecurityLevel;
 use beardog_types::canonical::{KeyMetadata, KeyType};
 use chrono::Utc;
@@ -14,7 +14,7 @@ pub struct Pkcs11Provider {
     provider_info: ProviderInfo,
 }
 impl Pkcs11Provider {
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let provider_info = ProviderInfo {
             provider_id: "pkcs11_hsm".to_string(),
             name: "PKCS#11 HSM".to_string(),
@@ -36,7 +36,7 @@ impl Pkcs11Provider {
         };
         Ok(Self { provider_info })
     }
-    pub async fn is_available() -> BearDogResult<bool> {
+    pub async fn is_available() -> Result<bool, BearDogError> {
 
         Ok(false) // Placeholder - would check actual PKCS#11 availability
     }
@@ -48,7 +48,7 @@ impl UniversalHsmProvider for Pkcs11Provider {
         &self,
         key_type: KeyType,
         metadata: KeyMetadata,
-    ) -> BearDogResult<beardog_types::HsmKey> {
+    ) -> Result<beardog_types::HsmKey, BearDogError> {
 
         info!("🔑 Generating PKCS#11 key using BearDog crypto fallback");
         
@@ -72,7 +72,7 @@ impl UniversalHsmProvider for Pkcs11Provider {
             metadata: metadata.additional_properties,
             created_at: chrono::Utc::now(),
         })
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         info!("✍️ Signing data with PKCS#11 key using BearDog crypto fallback: {}", key_id);
         match beardog_security::crypto_utils::BearDogCrypto::generate_ed25519_keypair() {
@@ -85,12 +85,12 @@ impl UniversalHsmProvider for Pkcs11Provider {
         key_id: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
         info!("🔍 Verifying PKCS#11 signature using BearDog crypto fallback: {}", key_id);
 
         Ok(!signature.is_empty() && signature.len() >= 64 && !data.is_empty())
-    async fn get_human_entropy_capabilities(&self) -> BearDogResult<HumanEntropyCapabilities> {
+    async fn get_human_entropy_capabilities(&self) -> Result<HumanEntropyCapabilities, BearDogError> {
         Ok(HumanEntropyCapabilities {
             supports_ephemeral_seeds: false,
             collection_methods: Vec::new(),
@@ -103,19 +103,19 @@ impl UniversalHsmProvider for Pkcs11Provider {
     async fn collect_human_entropy(
         _method: &HumanEntropyMethod,
         _bits: u32,
-    ) -> BearDogResult<HumanEntropyData> {
+    ) -> Result<HumanEntropyData, BearDogError> {
         Err(BearDogError::NotSupported {
             feature: "PKCS#11 does not support human entropy collection".to_string(),
     async fn create_ephemeral_seed(
         _entropy: &HumanEntropyData,
         _seed_size: u32,
-    ) -> BearDogResult<EphemeralSeed> {
+    ) -> Result<EphemeralSeed, BearDogError> {
             feature: "PKCS#11 does not support ephemeral seed creation".to_string(),}
 
     fn get_provider_info(&self) -> ProviderInfo {
         self.provider_info.clone()}
 
-    async fn health_check(&self) -> BearDogResult<ProviderHealth> {
+    async fn health_check(&self) -> Result<ProviderHealth, BearDogError> {
 
         let is_available = Self::is_available().await.unwrap_or(false);
         Ok(ProviderHealth {
@@ -128,19 +128,19 @@ impl UniversalHsmProvider for Pkcs11Provider {
             last_check: Utc::now(),
             response_time_ms: if is_available { Some(5.0) } else { None }, // Hardware `HSM` response time
             capabilities_verified: is_available,
-    async fn get_hardware_attestation(&self) -> BearDogResult<Option<AttestationData>> {
+    async fn get_hardware_attestation(&self) -> Result<Option<AttestationData>, BearDogError>> {
 
         Ok(None) // Would return PKCS#11 attestation when implemented}
 
-    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
 
         Ok(Vec::new()) // Would return actual key list when implemented
-    async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
+    async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
 
         info!("🗑️ Deleting PKCS#11 key: {}", key_id);
 
         Ok(())
-    async fn get_key_metadata(&self, key_id: &str) -> BearDogResult<KeyMetadata> {
+    async fn get_key_metadata(&self, key_id: &str) -> Result<KeyMetadata, BearDogError> {
 
         info!("📋 Retrieving PKCS#11 key metadata: {}", key_id);
 

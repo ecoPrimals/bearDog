@@ -1,13 +1,13 @@
 
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog::workflows::*;
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::info;
 
-pub async fn benchmark_workflow_operations(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
+pub async fn benchmark_workflow_operations(suite: &mut PerformanceBenchmarkSuite) -> Result<Vec<BenchmarkResult, BearDogError>> {
     let mut results = Vec::new();
 
     let initiation_result = benchmark_workflow_initiation(suite).await?;
@@ -16,7 +16,7 @@ pub async fn benchmark_workflow_operations(suite: &mut PerformanceBenchmarkSuite
     Ok(results)
 }
 
-async fn benchmark_workflow_initiation(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_workflow_initiation(suite: &PerformanceBenchmarkSuite) -> Result<BenchmarkResult, BearDogError> {
     info!("  🔄 Benchmarking workflow initiation");
 
     let mut latencies = Vec::new();

@@ -2,7 +2,7 @@
 
 use super::types::*;
 use crate::tunnel::hsm::types::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use tracing::info;
 impl AndroidDeviceInfo {
 
@@ -26,7 +26,7 @@ impl AndroidDeviceInfo {
         }
     }
 
-    pub async fn detect() -> BearDogResult<Self> {
+    pub async fn detect() -> Result<Self, BearDogError> {
         info!("Detecting Android device configuration");
 
         super::native_device_detection::NativeAndroidDeviceDetector::detect_device_info().await

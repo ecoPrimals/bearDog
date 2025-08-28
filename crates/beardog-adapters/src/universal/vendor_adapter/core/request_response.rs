@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use beardog_types::canonical::capabilities::CapabilityType;
 use chrono::{DateTime, Utc};
@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 use uuid::Uuid;
 
-pub use beardog_types::config::RetryConfig;
+pub use beardog_types::canonical::configuration::production::RetryConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalVendorRequest {

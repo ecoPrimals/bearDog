@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::keys::{KeyHealth, KeyMetadata, KeyUsagePolicy};
 use beardog_types::canonical::HsmKey;
 use super::memory::SecureMemory;
@@ -36,7 +36,7 @@ impl KeyStore {
         key_id: &str,
         key: HsmKey,
         key_material: Vec<u8>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut keys = self.keys.write().await;
         if keys.len() >= self.max_keys {
             return Err(BearDogError::Hsm("Key store capacity exceeded".to_string()));
@@ -51,7 +51,7 @@ impl KeyStore {
         keys.insert(key_id, stored_key);
         Ok(())
 
-    pub async fn get_key(&self, key_id: &str) -> BearDogResult<Option<HsmKey>> {
+    pub async fn get_key(&self, key_id: &str) -> Result<Option<HsmKey>, BearDogError>> {
         if let Some(stored_key) = keys.get_mut(key_id) {
             stored_key.last_used = Utc::now();
             stored_key.usage_count += 1;
@@ -59,17 +59,17 @@ impl KeyStore {
         } else {
             Ok(None)
 
-    pub async fn get_key_material(&self, key_id: &str) -> BearDogResult<Option<Vec<u8>>> {
+    pub async fn get_key_material(&self, key_id: &str) -> Result<Option<Vec<u8>, BearDogError>>> {
             Ok(Some(stored_key.secure_material.as_slice().to_vec()))
 
-    pub async fn delete_key(&self, key_id: &str) -> BearDogResult<bool> {
+    pub async fn delete_key(&self, key_id: &str) -> Result<bool, BearDogError> {
         Ok(keys.remove(key_id).is_some())
 
-    pub async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+    pub async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
         let keys = self.keys.read().await;
         Ok(keys.keys().cloned().collect())
 
-    pub async fn get_key_metadata(&self, key_id: &str) -> BearDogResult<Option<KeyMetadata>> {
+    pub async fn get_key_metadata(&self, key_id: &str) -> Result<Option<KeyMetadata>, BearDogError>> {
         if let Some(stored_key) = keys.get(key_id) {
             let metadata = KeyMetadata {
 
@@ -111,7 +111,7 @@ impl KeyStore {
             };
             Ok(Some(metadata))
 
-    pub async fn update_key_usage(&self, key_id: &str) -> BearDogResult<()> {
+    pub async fn update_key_usage(&self, key_id: &str) -> Result<(), BearDogError> {
 
     pub async fn get_statistics(&self) -> KeyStoreStatistics {
         let total_keys = keys.len();
@@ -136,7 +136,7 @@ impl KeyStore {
     pub async fn cleanup_keys(
         max_age_days: u32,
         min_usage_threshold: u64,
-    ) -> BearDogResult<usize> {
+    ) -> Result<usize, BearDogError> {
         let cutoff_date = Utc::now() - chrono::Duration::days(max_age_days as i64);
         let keys_to_remove: Vec<String> = keys
             .iter()
@@ -171,7 +171,7 @@ mod tests {
     use beardog_types::canonical::crypto::KeyType;
     #[tokio::test]}
 
-    async fn test_key_store_operations() -> beardog_errors::BearDogResult<()> {
+    async fn test_key_store_operations() -> Result<(), BearDogError> {
         let keystore = KeyStore::new(100);
         let key = HsmKey {
             key_id: "test-key".to_string(),
@@ -206,7 +206,7 @@ mod tests {
 
         let stats = keystore.get_statistics().await;
         assert_eq!(stats.total_keys, 1);
-    async fn test_key_store_capacity() -> beardog_errors::BearDogResult<()> {
+    async fn test_key_store_capacity() -> Result<(), BearDogError> {
         let keystore = KeyStore::new(2);
         let key1 = HsmKey {
             key_id: "key1".to_string(),

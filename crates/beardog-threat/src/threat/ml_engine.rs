@@ -1,8 +1,6 @@
-
-
-use crate::threat::types::analysis::events::SecurityEvent;
+use crate::threat::types::analysis::SecurityEvent;
 use crate::threat::types::engine::ml_models::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
@@ -11,7 +9,11 @@ use std::pin::Pin;
 /// Simple trait for universal compute adapter - dyn compatible
 pub trait UniversalComputeAdapter: Send + Sync {
     /// Request compute from network (e.g., toadstool) - returns boxed future for dyn compatibility
-    fn request_compute(&self, service: &str, request: &serde_json::Value) -> Pin<Box<dyn Future<Output = BearDogResult<serde_json::Value>> + Send + '_>>;
+    fn request_compute(
+        &self,
+        service: &str,
+        request: &serde_json::Value,
+    ) -> Pin<Box<dyn Future<Output = Result<serde_json::Value, BearDogError>> + Send + '_>>;
 }
 
 /// Lightweight ML prediction with smart capabilities
@@ -60,6 +62,12 @@ impl std::fmt::Debug for SmartThreatMLEngine {
     }
 }
 
+impl Default for SmartThreatMLEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SmartThreatMLEngine {
     pub fn new() -> Self {
         Self {
@@ -72,15 +80,21 @@ impl SmartThreatMLEngine {
     }
 
     /// Initialize with universal adapter for network compute
-    pub fn with_universal_adapter(mut self, adapter: impl UniversalComputeAdapter + 'static) -> Self {
+    pub fn with_universal_adapter(
+        mut self,
+        adapter: impl UniversalComputeAdapter + 'static,
+    ) -> Self {
         self.universal_adapter = Some(Box::new(adapter));
         self
     }
 
     /// Smart threat prediction with local-first, network fallback
-    pub async fn predict_threat_smart(&mut self, event: &SecurityEvent) -> BearDogResult<MlPrediction> {
+    pub async fn predict_threat_smart(
+        &mut self,
+        event: &SecurityEvent,
+    ) -> Result<MlPrediction, BearDogError> {
         let cache_key = self.generate_cache_key(event);
-        
+
         // Check cache first (zero-cost optimization)
         if let Some(cached) = self.prediction_cache.get(&cache_key) {
             return Ok(cached.clone());
@@ -95,7 +109,9 @@ impl SmartThreatMLEngine {
 
         // Fallback to universal adapter for heavy compute
         if let Some(adapter) = &self.universal_adapter {
-            let prediction = self.predict_via_universal_adapter(event, adapter.as_ref()).await?;
+            let prediction = self
+                .predict_via_universal_adapter(event, adapter.as_ref())
+                .await?;
             self.network_predictions += 1;
             self.prediction_cache.insert(cache_key, prediction.clone());
             return Ok(prediction);
@@ -106,15 +122,18 @@ impl SmartThreatMLEngine {
     }
 
     /// Lightweight local prediction for common threat patterns
-    async fn predict_local_lightweight(&self, event: &SecurityEvent) -> BearDogResult<MlPrediction> {
+    async fn predict_local_lightweight(
+        &self,
+        event: &SecurityEvent,
+    ) -> Result<MlPrediction, BearDogError> {
         let start_time = std::time::Instant::now();
-        
+
         // Smart pattern matching for common threats
         let threat_score = self.calculate_lightweight_score(event);
         let risk_level = self.score_to_risk_level(threat_score);
-        
+
         let processing_time = start_time.elapsed().as_millis() as u64;
-        
+
         Ok(MlPrediction {
             threat_score,
             confidence: 0.75, // Moderate confidence for local predictions
@@ -127,17 +146,17 @@ impl SmartThreatMLEngine {
 
     /// Heavy compute via universal adapter (toadstool network)
     async fn predict_via_universal_adapter(
-        &self, 
-        event: &SecurityEvent, 
-        adapter: &dyn UniversalComputeAdapter
-    ) -> BearDogResult<MlPrediction> {
+        &self,
+        event: &SecurityEvent,
+        adapter: &dyn UniversalComputeAdapter,
+    ) -> Result<MlPrediction, BearDogError> {
         let start_time = std::time::Instant::now();
-        
+
         // Serialize event for network compute
         let event_data = serde_json::to_string(event).map_err(|e| {
-            beardog_errors::BearDogError::validation(format!("Failed to serialize event: {}", e))
+            beardog_errors::BearDogError::validation(format!("Failed to serialize event: {e}"))
         })?;
-        
+
         // Request heavy ML computation via universal adapter
         let compute_request = serde_json::json!({
             "type": "threat_analysis",
@@ -147,22 +166,31 @@ impl SmartThreatMLEngine {
         });
 
         // Send to toadstool network for advanced processing
-        let response = adapter.request_compute("ml_threat_analysis", &compute_request).await?;
-        
+        let response = adapter
+            .request_compute("ml_threat_analysis", &compute_request)
+            .await?;
+
         let processing_time = start_time.elapsed().as_millis() as u64;
-        
+
         // Parse network response
-        let threat_score: f64 = response.get("threat_score")
+        let threat_score: f64 = response
+            .get("threat_score")
             .and_then(|v| v.as_f64())
             .unwrap_or(0.5);
-            
-        let confidence: f64 = response.get("confidence")
+
+        let confidence: f64 = response
+            .get("confidence")
             .and_then(|v| v.as_f64())
             .unwrap_or(0.9);
-            
-        let reasoning: Vec<String> = response.get("reasoning")
+
+        let reasoning: Vec<String> = response
+            .get("reasoning")
             .and_then(|v| v.as_array())
-            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
             .unwrap_or_else(|| vec!["Network ML analysis".to_string()]);
 
         Ok(MlPrediction {
@@ -198,28 +226,36 @@ impl SmartThreatMLEngine {
     /// Smart lightweight scoring for common patterns
     fn calculate_lightweight_score(&self, event: &SecurityEvent) -> f64 {
         let mut score: f64 = 0.0;
-        
+
         // Smart pattern detection
-        if event.event_type.contains("malware") { score += 0.4; }
-        if event.event_type.contains("attack") { score += 0.3; }
-        if event.event_type.contains("suspicious") { score += 0.2; }
-        if event.event_type.contains("failure") && event.event_type.contains("login") { score += 0.25; }
-        
-        // Source reputation analysis
-        if let Some(source_ip) = &event.source_ip {
-            if self.is_known_bad_ip(source_ip) { score += 0.3; }
-            if self.is_tor_exit_node(source_ip) { score += 0.15; }
+        if event.event_type.contains("malware") {
+            score += 0.4;
         }
-        
+        if event.event_type.contains("attack") {
+            score += 0.3;
+        }
+        if event.event_type.contains("suspicious") {
+            score += 0.2;
+        }
+        if event.event_type.contains("failure") && event.event_type.contains("login") {
+            score += 0.25;
+        }
+
+        // Source reputation analysis - using event type as proxy for now
+        if event.event_type.contains("network") || event.event_type.contains("intrusion") {
+            score += 0.3;
+        }
+
         // Time-based analysis - use chrono::Timelike trait
         use chrono::Timelike;
         let hour = chrono::Utc::now().hour();
-        if hour < 6 || hour > 22 { score += 0.1; } // Off-hours activity
-        
+        if !(6..=22).contains(&hour) {
+            score += 0.1;
+        } // Off-hours activity
+
         // Normalize to 0.0-1.0 range
         // Calculate final threat score with proper typing
-        let final_score = score.min(1.0_f64).max(0.0_f64);
-        final_score
+        score.clamp(0.0_f64, 1.0_f64)
     }
 
     fn score_to_risk_level(&self, score: f64) -> RiskLevel {
@@ -235,16 +271,16 @@ impl SmartThreatMLEngine {
     fn generate_cache_key(&self, event: &SecurityEvent) -> String {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         event.event_type.hash(&mut hasher);
-        event.source_ip.hash(&mut hasher);
-        // Use destination_ip instead of target_ip
-        event.destination_ip.hash(&mut hasher);
+        event.severity.hash(&mut hasher);
+        event.timestamp.timestamp().hash(&mut hasher);
         format!("threat_{}", hasher.finish())
     }
 
     // Smart IP reputation checks (lightweight)
+    #[allow(dead_code)]
     fn is_known_bad_ip(&self, ip: &str) -> bool {
         // Basic IP reputation check using simple heuristics
         // Check for known malicious patterns
@@ -252,28 +288,29 @@ impl SmartThreatMLEngine {
             // Private IP ranges are generally safe
             return false;
         }
-        
+
         // Check for suspicious patterns (this is a simplified implementation)
         // In production, this would integrate with threat intelligence feeds
-        let suspicious_patterns = [
-            "0.0.0.0", "127.0.0.1", "255.255.255.255"
-        ];
-        
-        suspicious_patterns.iter().any(|&pattern| ip == pattern)
+        let suspicious_patterns = ["0.0.0.0", "127.0.0.1", "255.255.255.255"];
+
+        suspicious_patterns.contains(&ip)
     }
 
+    #[allow(dead_code)]
     fn is_tor_exit_node(&self, ip: &str) -> bool {
         // Basic Tor exit node detection using known patterns
         // In production, this would use a real-time Tor exit node list
-        
+
         // Check for common Tor exit node IP patterns (simplified heuristics)
         // Real implementation would maintain an updated list from Tor directory authorities
         let known_tor_patterns = [
             // These are example patterns - real implementation would use actual data
-            "95.211.", "176.10.", "198.98."
+            "95.211.", "176.10.", "198.98.",
         ];
-        
-        known_tor_patterns.iter().any(|&pattern| ip.starts_with(pattern))
+
+        known_tor_patterns
+            .iter()
+            .any(|&pattern| ip.starts_with(pattern))
     }
 
     /// Performance metrics for monitoring

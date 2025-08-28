@@ -1,19 +1,13 @@
-
-
 #![allow(clippy::needless_doctest_main)]
 
 use super::core::ThreatDetectionEngine;
-use crate::threat::types::*;
-use chrono::Utc;
-use std::collections::HashMap;
-use uuid::Uuid;
-use beardog_errors::BearDogResult;
 use crate::threat::types::engine::rules::ThreatRuleType;
-use tracing::{info, warn};
+use crate::threat::types::*;
+use beardog_errors::BearDogError;
+use tracing::info;
 impl ThreatDetectionEngine {
-
-    pub fn add_detection_rule(&mut self, rule: ThreatDetectionRule) {
-        info!("Adding detection rule: {} - {}", rule.rule_id, rule.name);
+    pub fn add_detection_rule(&mut self, rule: DetectionRule) {
+        info!("Adding detection rule: {} - {}", rule.id, rule.name);
         self.detection_rules.push(rule);
     }
 
@@ -48,15 +42,11 @@ impl ThreatDetectionEngine {
         info!("Threat detection statistics reset");
     }
 
-    pub fn get_detection_rules(&self) -> &Vec<ThreatDetectionRule> {
+    pub fn get_detection_rules(&self) -> &Vec<DetectionRule> {
         &self.detection_rules
     }
 
-    pub fn update_detection_rule(
-        &mut self,
-        rule_id: &str,
-        updated_rule: DetectionRule,
-    ) -> bool {
+    pub fn update_detection_rule(&mut self, rule_id: &str, updated_rule: DetectionRule) -> bool {
         for rule in &mut self.detection_rules {
             if rule.id == rule_id {
                 *rule = updated_rule;
@@ -67,13 +57,13 @@ impl ThreatDetectionEngine {
         false
     }
 
-    pub async fn load_default_rules(&mut self) -> BearDogResult<()> {
+    pub async fn load_default_rules(&mut self) -> Result<(), BearDogError> {
         let mut brute_force_rule = DetectionRule::new(
             "Brute Force Attack Detection",
             "Detects multiple failed login attempts from the same source",
             ThreatRuleType::Behavioral,
             ThreatSeverity::High,
-            "failed_attempts > 5"
+            "failed_attempts > 5",
         );
         brute_force_rule.id = "brute_force_detection".to_string();
         brute_force_rule.threat_type = ThreatType::BruteForce;
@@ -83,11 +73,11 @@ impl ThreatDetectionEngine {
         };
 
         let mut anomaly_rule = DetectionRule::new(
-            "Network Anomaly Detection", 
+            "Network Anomaly Detection",
             "Detects unusual network traffic patterns",
             ThreatRuleType::Statistical,
             ThreatSeverity::Medium,
-            "network_anomaly_score > 0.8"
+            "network_anomaly_score > 0.8",
         );
         anomaly_rule.id = "network_anomaly_detection".to_string();
         anomaly_rule.threat_type = ThreatType::Anomaly;
@@ -97,11 +87,11 @@ impl ThreatDetectionEngine {
         };
 
         let default_rules = vec![brute_force_rule, anomaly_rule];
-        
+
         for rule in default_rules {
             self.detection_rules.push(rule);
         }
-        
+
         info!(
             "Loaded {} default detection rules",
             self.detection_rules.len()
@@ -125,7 +115,7 @@ impl ThreatDetectionEngine {
         }
     }
 
-    pub async fn perform_maintenance(&mut self) -> BearDogResult<()> {
+    pub async fn perform_maintenance(&mut self) -> Result<(), BearDogError> {
         info!("Starting system maintenance");
 
         {
@@ -146,10 +136,8 @@ impl ThreatDetectionEngine {
             }
         }
 
-        for _rule in &mut self.detection_rules {
+        for _rule in &mut self.detection_rules {}
 
-        }
-        
         info!("System maintenance completed");
         Ok(())
     }
@@ -157,7 +145,6 @@ impl ThreatDetectionEngine {
 
 #[derive(Debug, Clone)]
 pub struct SystemHealth {
-
     pub active_rules: usize,
 
     pub total_rules: usize,

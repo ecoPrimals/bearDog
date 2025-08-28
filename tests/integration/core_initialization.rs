@@ -1,13 +1,13 @@
 
 
 use super::common::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::*;
 use beardog_core::BearDogCore;
 use std::sync::Arc;
 
 #[tokio::test]
-async fn test_core_initialization_with_unified_types() -> BearDogResult<()> {
+async fn test_core_initialization_with_unified_types() -> Result<(), BearDogError> {
     let config = create_test_config();
     let core = create_test_core().await?;
 
@@ -28,7 +28,7 @@ async fn test_core_initialization_with_unified_types() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_environment_driven_configuration() -> BearDogResult<()> {
+async fn test_environment_driven_configuration() -> Result<(), BearDogError> {
 
     std::env::set_var("BEARDOG_SONGBIRD_ENDPOINT", "http://test-songbird:9000");
     std::env::set_var("BEARDOG_MONITORING_ENDPOINT", "http://test-monitoring:9001");
@@ -46,7 +46,7 @@ async fn test_environment_driven_configuration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_unified_error_handling() -> BearDogResult<()> {
+async fn test_unified_error_handling() -> Result<(), BearDogError> {
     let core = create_test_core().await?;
 
     let result = core.test_invalid_operation().await;
@@ -61,7 +61,7 @@ async fn test_unified_error_handling() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_security_provider_integration() -> BearDogResult<()> {
+async fn test_security_provider_integration() -> Result<(), BearDogError> {
     let core = create_test_core().await?;
 
     let security_provider = core.get_security_provider().await?;
@@ -84,7 +84,7 @@ async fn test_security_provider_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_zero_cost_genetics_integration() -> BearDogResult<()> {
+async fn test_zero_cost_genetics_integration() -> Result<(), BearDogError> {
     let core = create_test_core().await?;
 
     let genetics_engine = core.get_genetics_engine().await?;
@@ -101,7 +101,7 @@ async fn test_zero_cost_genetics_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_canonical_type_validation() -> BearDogResult<()> {
+async fn test_canonical_type_validation() -> Result<(), BearDogError> {
     let core = create_test_core().await?;
 
     let type_registry = core.get_type_registry().await?;
@@ -111,13 +111,13 @@ async fn test_canonical_type_validation() -> BearDogResult<()> {
     assert!(type_registry.has_type("WorkflowConfig"));
 
     assert!(type_registry.has_type("BearDogError"));
-    assert!(type_registry.has_type("BearDogResult"));
+    assert!(type_registry.has_type("Result<T, BearDogError>"));
     
     Ok(())
 }
 
 #[tokio::test]
-async fn test_production_readiness_validation() -> BearDogResult<()> {
+async fn test_production_readiness_validation() -> Result<(), BearDogError> {
     let core = create_test_core().await?;
 
     let health_check = core.comprehensive_health_check().await?;

@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::{
@@ -43,7 +44,7 @@ pub struct ChaosTestFramework {
 
 impl ChaosTestFramework {
 
-    pub async fn new(core: Arc<BearDogCore>) -> BearDogResult<Self> {
+    pub async fn new(core: Arc<BearDogCore>) -> Result<Self, BearDogError> {
         let config = ChaosTestConfig::default();
         let chaos_controller = Arc::new(ChaosController::new(config.clone()));
         let metrics_collector = Arc::new(ChaosMetricsCollector::new(config.metrics_interval_ms));
@@ -71,7 +72,7 @@ impl ChaosTestFramework {
         })
     }
 
-    pub async fn run_chaos_testing(&mut self) -> BearDogResult<ChaosTestReport> {
+    pub async fn run_chaos_testing(&mut self) -> Result<ChaosTestReport, BearDogError> {
         info!("🌪️  Starting Comprehensive Chaos Testing");
 
         self.metrics_collector.start_collection().await?;
@@ -94,19 +95,19 @@ impl ChaosTestFramework {
         Ok(report)
     }
 
-    pub async fn run_chaos_scenario(&mut self, scenario: &ChaosScenario) -> BearDogResult<ScenarioResult> {
+    pub async fn run_chaos_scenario(&mut self, scenario: &ChaosScenario) -> Result<ScenarioResult, BearDogError> {
         scenarios::run_chaos_scenario(self, scenario).await
     }
 
-    pub async fn generate_chaos_report(&self, scenario_results: Vec<ScenarioResult>) -> BearDogResult<ChaosTestReport> {
+    pub async fn generate_chaos_report(&self, scenario_results: Vec<ScenarioResult>) -> Result<ChaosTestReport, BearDogError> {
         reporting::generate_chaos_report(self, scenario_results).await
     }
 
-    pub async fn inject_and_monitor_fault(&mut self, fault: FaultType) -> BearDogResult<FaultResult> {
+    pub async fn inject_and_monitor_fault(&mut self, fault: FaultType) -> Result<FaultResult, BearDogError> {
         fault_injection::inject_and_monitor_fault(self, fault).await
     }
 
-    pub async fn wait_for_recovery(&self, component: &str) -> BearDogResult<u64> {
+    pub async fn wait_for_recovery(&self, component: &str) -> Result<u64, BearDogError> {
         recovery::wait_for_recovery(self, component).await
     }
 
@@ -122,19 +123,19 @@ impl ChaosTestFramework {
         fault_injection::determine_fault_severity(fault)
     }
 
-    pub async fn collect_baseline_metrics(&self) -> BearDogResult<SystemImpact> {
+    pub async fn collect_baseline_metrics(&self) -> Result<SystemImpact, BearDogError> {
         metrics::collect_baseline_metrics().await
     }
 
-    pub async fn collect_current_metrics(&self) -> BearDogResult<SystemImpact> {
+    pub async fn collect_current_metrics(&self) -> Result<SystemImpact, BearDogError> {
         metrics::collect_current_metrics().await
     }
 
-    pub async fn measure_fault_impact(&self) -> BearDogResult<SystemImpact> {
+    pub async fn measure_fault_impact(&self) -> Result<SystemImpact, BearDogError> {
         metrics::measure_fault_impact().await
     }
 
-    pub async fn validate_all_recoveries(&self) -> BearDogResult<Vec<RecoveryResult>> {
+    pub async fn validate_all_recoveries(&self) -> Result<Vec<RecoveryResult, BearDogError>> {
         recovery::validate_all_recoveries(self).await
     }
 
@@ -144,7 +145,7 @@ impl ChaosTestFramework {
         baseline: &SystemImpact,
         post_chaos: &SystemImpact,
         recovery_results: &[RecoveryResult],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         scenarios::evaluate_scenario_success(scenario, baseline, post_chaos, recovery_results).await
     }
 } 

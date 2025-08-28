@@ -1,49 +1,85 @@
+use beardog_errors::BearDogError;
+use beardog_types::canonical::{ComponentStatus, HealthStatus};
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
+pub type SystemError = BearDogError;
 
-use super::BearDogCore;
-use crate::types::{ComponentStatus, CoreState, HealthStatus};
-use beardog_errors::BearDogResult;
-use beardog_errors::idiomatic::SystemResult;
-use chrono::Utc;
-impl BearDogCore {
+#[derive(Debug)]
+pub struct ComponentManager {
+    components: Arc<RwLock<HashMap<String, ComponentStatus>>>,
+}
 
-    pub(crate) async fn register_component(
-        &self,
-        state: &mut CoreState,
-        name: &str,
-        healthy: bool,
-        error_message: Option<&str>,
-    ) {
-        let now = Utc::now();
-        let error_msg_clone = error_message.clone();
-        let status = if healthy {
-            ComponentStatus::Running
-        } else {
-            ComponentStatus::Error(error_message.unwrap_or_default())
-        };
-        state.components.insert(name.to_string(), status.clone());
-        state.component_status.insert(name.to_string(), status);
-        if healthy {
-            state.health_status = HealthStatus::healthy();
-            state.health_status = HealthStatus::unhealthy(
-                error_msg_clone.unwrap_or_else(|| format_args!("Component {} unhealthy", name).to_string()),
-            );
+impl ComponentManager {
+    pub fn new() -> Self {
+        Self {
+            components: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
-    pub async fn get_component_health(&self) -> BearDogResult<Vec<String>> {
-        let state = self.state.read().await;
-        let mut health_summary = Vec::new();
-        for (name, status) in &state.components {
-            let is_healthy = status.healthy();
-            health_summary.push(format!(
-                "{}: {}",
-                name,
-                if is_healthy { "Healthy" } else { "Unhealthy" }
-            ));
-        Ok(health_summary)
+    pub async fn register_component(
+        &self,
+        name: String,
+        status: ComponentStatus,
+    ) -> Result<(), SystemError> {
+        let mut components = self.components.write().await;
+        components.insert(name, status);
+        Ok(())
+    }
+
+    pub async fn update_component_status(
+        &self,
+        name: &str,
+        status: ComponentStatus,
+    ) -> Result<(), SystemError> {
+        let mut components = self.components.write().await;
+        if let Some(component_status) = components.get_mut(name) {
+            *component_status = status;
+            Ok(())
+        } else {
+            Err(BearDogError::system(&format!(
+                "Component '{}' not found",
+                name
+            )))
+        }
+    }
+
+    pub async fn get_component_status(&self, name: &str) -> Result<ComponentStatus, SystemError> {
+        let components = self.components.read().await;
+        components
+            .get(name)
+            .cloned()
+            .ok_or_else(|| BearDogError::system(&format!("Component '{}' not found", name)))
+    }
+
+    pub async fn get_all_components(
+        &self,
+    ) -> Result<HashMap<String, ComponentStatus>, SystemError> {
+        let components = self.components.read().await;
+        Ok(components.clone())
+    }
 
     pub async fn all_components_healthy(&self) -> Result<bool, SystemError> {
-        let all_healthy = state.components.values().all(|status| status.healthy());
+        let components = self.components.read().await;
+        let all_healthy = components
+            .values()
+            .all(|status| matches!(status, ComponentStatus::Running));
         Ok(all_healthy)
+    }
+
+    pub async fn get_system_health(&self) -> Result<HealthStatus, SystemError> {
+        let all_healthy = self.all_components_healthy().await?;
+        Ok(if all_healthy {
+            HealthStatus::Healthy
+        } else {
+            HealthStatus::Degraded
+        })
+    }
+}
+
+impl Default for ComponentManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }

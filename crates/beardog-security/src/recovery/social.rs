@@ -5,25 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use super::policies::*;
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(since = "3.1.0", note = "Use UnifiedRecoveryConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedRecoveryConfig instead")]
-pub struct SocialRecoveryConfig {
-
-    pub user_id: String,
-
-    pub trusted_contacts: Vec<TrustedContact>,
-
-    pub min_contacts_required: u32,
-
-    pub recovery_window_hours: u32,
-
-    pub enabled: bool,
-
-    pub policy: RecoveryPolicy,
-}
+use beardog_errors::BearDogError;
 
 pub struct TrustedContact {
 

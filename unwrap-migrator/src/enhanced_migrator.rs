@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -241,7 +241,7 @@ impl EnhancedUnwrapMigrator {
             context.is_example_file = true;
         }
 
-        if content.contains("BearDogResult") || content.contains("beardog_errors::BearDogResult") {
+        if content.contains("Result<T, BearDogError>") || content.contains("beardog_errors::BearDogResult") {
             context.has_beardog_result = true;
         }
 

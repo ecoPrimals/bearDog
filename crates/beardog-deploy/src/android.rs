@@ -1,7 +1,5 @@
-
-
-use beardog_errors::BearDogError;
 use anyhow::Result;
+use beardog_errors::BearDogError;
 use std::{
     env,
     path::{Path, PathBuf},
@@ -11,7 +9,7 @@ use tokio::process::Command;
 use tracing::{debug, info, warn};
 
 #[derive(Debug)]
-#[allow(dead_code)] // Future deployment functionality
+
 pub struct AndroidManager {
     project_root: PathBuf,
     ndk_home: Option<PathBuf>,
@@ -77,9 +75,11 @@ impl AndroidManager {
             .as_ref()
             .ok_or_else(|| BearDogError::system("ANDROID_NDK_HOME not set"))?;
         if !ndk_home.exists() {
-            return Err(BearDogError::system(
-                format!("NDK directory does not exist: {}", ndk_home.display())
-            ).into());
+            return Err(BearDogError::system(format!(
+                "NDK directory does not exist: {}",
+                ndk_home.display()
+            ))
+            .into());
         }
 
         let toolchain_dir = ndk_home.join("toolchains/llvm/prebuilt");
@@ -91,11 +91,7 @@ impl AndroidManager {
     }
 
     async fn check_cargo_ndk(&self) -> Result<()> {
-        match Command::new("cargo-ndk")
-            .arg("--version")
-            .output()
-            .await
-        {
+        match Command::new("cargo-ndk").arg("--version").output().await {
             Ok(output) if output.status.success() => {
                 debug!(
                     "cargo-ndk version: {}",
@@ -115,14 +111,14 @@ impl AndroidManager {
             .args(["install", "cargo-ndk"])
             .output()
             .await
-            .map_err(|e| {
-                BearDogError::system(format!("Failed to install cargo-ndk: {e}"))
-            })?;
-        
+            .map_err(|e| BearDogError::system(format!("Failed to install cargo-ndk: {e}")))?;
+
         if !output.status.success() {
-            return Err(BearDogError::system(
-                format!("cargo-ndk installation failed: {}", String::from_utf8_lossy(&output.stderr))
-            ).into());
+            return Err(BearDogError::system(format!(
+                "cargo-ndk installation failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ))
+            .into());
         }
         Ok(())
     }
@@ -133,7 +129,7 @@ impl AndroidManager {
             .output()
             .await
             .map_err(|_| BearDogError::system("adb not found in PATH"))?;
-        
+
         if !output.status.success() {
             return Err(BearDogError::system("adb command failed").into());
         }
@@ -152,61 +148,69 @@ impl AndroidManager {
             debug!("Target {} already installed", target);
             return Ok(());
         }
-        
+
         info!("📱 Adding Android target: {}", target);
         let output = Command::new("rustup")
             .args(["target", "add", target])
             .output()
             .await
             .map_err(|e| BearDogError::system(format!("Failed to add target: {e}")))?;
-        
+
         if !output.status.success() {
-            return Err(BearDogError::system(
-                format!("Failed to add target {}: {}", target, String::from_utf8_lossy(&output.stderr))
-            ).into());
+            return Err(BearDogError::system(format!(
+                "Failed to add target {}: {}",
+                target,
+                String::from_utf8_lossy(&output.stderr)
+            ))
+            .into());
         }
         Ok(())
     }
 
     fn setup_ndk_environment(&self) -> Result<()> {
-        let ndk_home = self.ndk_home.as_ref()
+        let ndk_home = self
+            .ndk_home
+            .as_ref()
             .ok_or_else(|| BearDogError::system("NDK not available"))?;
 
         #[cfg(not(target_os = "linux"))]
         {
-            return Err(BearDogError::system(
-                format!("Toolchain not found for host: {host_arch}")
-            ).into());
+            return Err(
+                BearDogError::system(format!("Toolchain not found for host: {host_arch}")).into(),
+            );
         }
 
         let host_arch = std::env::consts::ARCH;
         if host_arch != "x86_64" {
-            return Err(BearDogError::system(
-                format!("Toolchain not found for host: {host_arch}")
-            ).into());
+            return Err(
+                BearDogError::system(format!("Toolchain not found for host: {host_arch}")).into(),
+            );
         }
         let toolchain_path = ndk_home.join(format!("toolchains/llvm/prebuilt/{host_arch}"));
         if !toolchain_path.exists() {
-            return Err(BearDogError::system(
-                format!("Toolchain not found for host: {host_arch}")
-            ).into());
+            return Err(
+                BearDogError::system(format!("Toolchain not found for host: {host_arch}")).into(),
+            );
         }
         debug!("NDK toolchain path: {}", toolchain_path.display());
         Ok(())
     }
 
+    #[allow(dead_code)] // Future NDK management functionality
     fn get_ndk_home(&self) -> Result<&PathBuf, BearDogError> {
-        self.ndk_home.as_ref()
+        self.ndk_home
+            .as_ref()
             .ok_or_else(|| BearDogError::system("NDK not available"))
     }
 
-    #[allow(dead_code)] // Future deployment functionality
+    #[allow(dead_code)] // Future NDK toolchain functionality
     pub fn get_ndk_toolchain_path(&self, host_arch: &str) -> Result<PathBuf, BearDogError> {
         let ndk_home = self.get_ndk_home()?;
         Ok(ndk_home.join(format!("toolchains/llvm/prebuilt/{host_arch}")))
     }
 
-        pub fn get_project_root(&self) -> &Path {
+    #[allow(dead_code)]
+    pub fn get_project_root(&self) -> &Path {
         &self.project_root
     }
 }

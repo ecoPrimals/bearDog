@@ -5,7 +5,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 use super::traits::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 pub struct CapabilityRegistry {
 
@@ -56,7 +56,7 @@ pub struct CapabilityMatch {
 
 impl CapabilityRegistry {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("📋 Initializing Universal Capability Registry");
         Ok(Self {
             capabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
@@ -75,7 +75,7 @@ impl CapabilityRegistry {
         ecosystem_id: &str,
         instance_id: &str,
         capabilities: Vec<Capability>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let provider_key = format!("{ecosystem_id}:{instance_id}");
         info!(
             "📋 Registering {} capabilities for {}",
@@ -130,7 +130,7 @@ impl CapabilityRegistry {
 
     pub async fn search_capabilities(
         criteria: CapabilitySearchCriteria,
-    ) -> BearDogResult<Vec<CapabilityMatch>> {
+    ) -> Result<Vec<CapabilityMatch>, BearDogError>> {
         debug!("🔍 Searching capabilities with criteria: {:?}", criteria);
         let mut matches = Vec::new();
 
@@ -166,7 +166,7 @@ impl CapabilityRegistry {
         Ok(matches)
 
     pub async fn get_provider_capabilities(
-    ) -> BearDogResult<Vec<Capability>> {
+    ) -> Result<Vec<Capability>, BearDogError>> {
         Ok(capabilities.get(&provider_key).cloned().unwrap_or_default())
 
     pub async fn get_capabilities_by_category(

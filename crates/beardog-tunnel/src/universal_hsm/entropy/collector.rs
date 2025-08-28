@@ -4,7 +4,7 @@ use super::traits::{
     EphemeralSeed, HumanEntropyCapabilities, HumanEntropyData, HumanEntropyMethod,
 };
 use super::{EntropyCollectionConfig, EntropyCollectionStats, EntropyQualityAssessor, TierElevationEngine};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
@@ -41,7 +41,7 @@ impl HumanEntropyCollector {
         &mut self,
         method: HumanEntropyMethod,
         capabilities: &HumanEntropyCapabilities,
-    ) -> BearDogResult<HumanEntropyData> {
+    ) -> Result<HumanEntropyData, BearDogError> {
         let start_time = std::time::Instant::now();
         info!("🎲 Collecting human entropy using method: {:?}", method);
 
@@ -84,7 +84,7 @@ impl HumanEntropyCollector {
         &self,
         entropy_data: &HumanEntropyData,
         seed_size: usize,
-    ) -> BearDogResult<EphemeralSeed> {
+    ) -> Result<EphemeralSeed, BearDogError> {
         debug!("🌱 Creating ephemeral seed of size {} bytes", seed_size);
         if entropy_data.entropy_bits < self.config.min_entropy_bits {
             return Err(BearDogError::InsufficientEntropy {
@@ -111,7 +111,7 @@ impl HumanEntropyCollector {
         self.config = new_config.clone();
         self.quality_assessor.update_config(new_config);
 
-    fn validate_capabilities(&self, capabilities: &HumanEntropyCapabilities) -> BearDogResult<()> {
+    fn validate_capabilities(&self, capabilities: &HumanEntropyCapabilities) -> Result<(), BearDogError> {
         if !capabilities.biometric_available && !capabilities.behavioral_available 
             && !capabilities.environmental_available && !capabilities.interactive_available {
             return Err(BearDogError::NoEntropySource {
@@ -222,7 +222,7 @@ impl HumanEntropyCollector {
             collection_method: HumanEntropyMethod::Hybrid,
             quality_indicators,
 
-    fn derive_seed_from_entropy(&self, entropy_data: &[u8], seed_size: usize) -> BearDogResult<Vec<u8>> {
+    fn derive_seed_from_entropy(&self, entropy_data: &[u8], seed_size: usize) -> Result<Vec<u8>, BearDogError>> {
         use sha2::{Sha256, Digest};
         let mut hasher = Sha256::new();
         hasher.update(entropy_data);

@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use crate::types::BearDogError;
 
@@ -18,7 +18,7 @@ impl From<Box<dyn std::error::Error + Send + Sync>> for BearDogError {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::BearDogResult;
+    use beardog_errors::BearDogError;
 
     #[test]
     fn test_configuration_error() {
@@ -95,7 +95,7 @@ mod tests {
 
     fn test_beardog_result_ok() {
         let success = "Success".to_string();
-        let result: BearDogResult<String> = Ok(success.clone());
+        let result: Result<String, BearDogError> = Ok(success.clone());
         assert!(result.is_ok());
         if let Ok(value) = result {
             assert_eq!(value, success);
@@ -103,7 +103,7 @@ mod tests {
             panic!("Expected Ok result");
 
     fn test_beardog_result_err() {
-        let result: BearDogResult<String> = Err(BearDogError::Network {
+        let result: Result<String, BearDogError> = Err(BearDogError::Network {
             message: "Connection failed".to_string(),
         ));
         assert!(result.is_err());
@@ -114,12 +114,12 @@ mod tests {
             Ok(_) => panic!("Expected error result"),
 
     fn test_error_chaining() {
-        fn inner_operation() -> BearDogResult<()> {
+        fn inner_operation() -> Result<(), BearDogError> {
             Err(BearDogError::Hsm {
                 message: "HSM initialization failed".to_string(),
             ))}
 
-        fn outer_operation() -> BearDogResult<()> {
+        fn outer_operation() -> Result<(), BearDogError> {
             inner_operation().map_err(|_| BearDogError::configuration("Failed to configure security system".to_string(),
             ))
         let result = outer_operation();
@@ -149,7 +149,7 @@ mod tests {
     fn test_error_mappings() {
         let config_error = BearDogError::configuration("Config error".to_string(),
 
-        let network_error: BearDogResult<()> =
+        let network_error: Result<(), BearDogError> =
             Err(config_error).map_err(|_| BearDogError::Network {
                 message: "Network configuration failed".to_string(),
             ));

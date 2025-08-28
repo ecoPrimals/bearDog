@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::{
     crypto::KeyType,
     hsm::{
@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use tracing::{info, warn};
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     tracing_subscriber::init();
     
     info!("🚀 Starting Universal HSM Architecture Demo");
@@ -173,7 +173,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn simulate_ios_provider() -> BearDogResult<()> {
+async fn simulate_ios_provider() -> Result<(), BearDogError> {
     info!("📱 iOS Secure Enclave would be detected here");
     info!("   - Face ID / Touch ID integration");
     info!("   - Hardware-backed key generation");
@@ -182,7 +182,7 @@ async fn simulate_ios_provider() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn simulate_pkcs11_provider() -> BearDogResult<()> {
+async fn simulate_pkcs11_provider() -> Result<(), BearDogError> {
     info!("🏭 PKCS#11 HSM would be detected here");
     info!("   - Thales, Utimaco, AWS CloudHSM, etc.");
     info!("   - FIPS 140-2 Level 3+ certification");
@@ -191,7 +191,7 @@ async fn simulate_pkcs11_provider() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn simulate_tpm_provider() -> BearDogResult<()> {
+async fn simulate_tpm_provider() -> Result<(), BearDogError> {
     info!("🔐 TPM 2.0 would be detected here");
     info!("   - Platform attestation");
     info!("   - Measured boot");

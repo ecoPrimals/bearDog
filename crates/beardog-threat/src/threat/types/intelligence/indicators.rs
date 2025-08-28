@@ -1,12 +1,10 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
 // Import from enums module to avoid duplication
-use super::enums::{IndicatorType, ConfidenceLevel};
+use super::enums::{ConfidenceLevel, IndicatorType};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatIndicator {
@@ -17,6 +15,7 @@ pub struct ThreatIndicator {
     pub first_seen: DateTime<Utc>,
     pub last_seen: DateTime<Utc>,
     pub tags: Vec<String>,
+    pub source: String,
     pub metadata: HashMap<String, String>,
     pub threat_types: Vec<String>,
 }
@@ -38,7 +37,6 @@ impl Default for ThreatIndicator {
     }
 }
 impl ThreatIndicator {
-
     pub fn new(indicator_type: IndicatorType, value: &str, confidence: f64) -> Self {
         Self {
             indicator_id: Uuid::new_v4().to_string(),
@@ -48,6 +46,7 @@ impl ThreatIndicator {
             first_seen: Utc::now(),
             last_seen: Utc::now(),
             tags: Vec::new(),
+            source: "unknown".to_string(),
             metadata: HashMap::new(),
             threat_types: vec![],
         }
@@ -80,7 +79,10 @@ impl ThreatIndicator {
     }
 
     pub fn is_high_confidence(&self) -> bool {
-        matches!(self.confidence, ConfidenceLevel::High | ConfidenceLevel::Critical)
+        matches!(
+            self.confidence,
+            ConfidenceLevel::High | ConfidenceLevel::Critical
+        )
     }
 
     pub fn is_recent(&self, hours: i64) -> bool {
@@ -93,7 +95,6 @@ impl ThreatIndicator {
     }
 }
 impl IndicatorType {
-
     pub fn is_network_related(&self) -> bool {
         matches!(
             self,

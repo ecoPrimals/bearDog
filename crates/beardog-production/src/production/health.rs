@@ -1,19 +1,8 @@
 
 
+use beardog_types::canonical::HealthStatus;
 use std::collections::HashMap;
 use std::time::SystemTime;
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum HealthStatus {
-
-    Healthy,
-
-    Warning,
-
-    Critical,
-
-    Unknown,
-}
 
 #[derive(Debug, Clone)]
 pub struct SystemHealthStatus {

@@ -2,7 +2,7 @@
 
 use crate::tunnel::hsm::types::Algorithm; // Use Algorithm instead of SigningAlgorithm
 use crate::tunnel::hsm::types::{HsmKey, KeyType};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_utils::utils::safe_memory_enhanced::{GlobalBufferPools, SafePinnedBuffer};
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -53,7 +53,7 @@ pub struct SafeIOSSecureEnclaveOps<T: IOSCapability> {
 
 impl<T: IOSCapability> SafeIOSSecureEnclaveOps<T> {
 
-    pub async fn new(capability: T) -> BearDogResult<Self> {
+    pub async fn new(capability: T) -> Result<Self, BearDogError> {
         info!("🛡️ Initializing SafeIOSSecureEnclaveOps - ZERO UNSAFE CODE");
         let device_info = Self::detect_device_info().await?;
         let buffer_pools = Arc::new(GlobalBufferPools::new());
@@ -65,7 +65,7 @@ impl<T: IOSCapability> SafeIOSSecureEnclaveOps<T> {
             active_keys,
         })
 
-    async fn detect_device_info() -> BearDogResult<IOSDeviceInfo> {
+    async fn detect_device_info() -> Result<IOSDeviceInfo, BearDogError> {
         info!("🔍 Safe iOS device detection starting");
 
         let device_info = IOSDeviceInfo {
@@ -82,7 +82,7 @@ impl<T: IOSCapability> SafeIOSSecureEnclaveOps<T> {
         key_id: &str,
         key_type: &crate::tunnel::hsm::types::KeyType,
         biometric_required: bool,
-    ) -> BearDogResult<IOSKeyHandle> {
+    ) -> Result<IOSKeyHandle, BearDogError> {
         info!("🔐 Safe iOS: Generating Secure Enclave key: {}", key_id);
 
         if biometric_required && !self.device_info.biometric_available {
@@ -108,7 +108,7 @@ impl<T: IOSCapability> SafeIOSSecureEnclaveOps<T> {
     pub async fn safe_sign_with_secure_enclave(
         data: &[u8],
         algorithm: Algorithm,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Safe iOS: Signing with Secure Enclave key: {}", key_id);
 
         let key_handle = self
@@ -179,7 +179,7 @@ pub enum SecurityLevel {
 
 impl SafeIOSSecureEnclaveOps<SecureEnclaveAvailable> {
 
-    pub async fn create_secure_enclave_provider() -> BearDogResult<Option<Self>> {
+    pub async fn create_secure_enclave_provider() -> Result<Option<Self>, BearDogError>> {
         if IOSDeviceInfo::safe_check_secure_enclave() {
             let capability = SecureEnclaveAvailable {
                 device_info: IOSDeviceInfo {
@@ -195,7 +195,7 @@ impl SafeIOSSecureEnclaveOps<SecureEnclaveAvailable> {
             Ok(None)
 impl SafeIOSSecureEnclaveOps<KeychainAvailable> {
 
-    pub async fn create_keychain_provider() -> BearDogResult<Self> {
+    pub async fn create_keychain_provider() -> Result<Self, BearDogError> {
         let capability = KeychainAvailable {
             device_info: IOSDeviceInfo {
                 device_model: IOSDeviceInfo::safe_get_device_model(),

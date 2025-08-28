@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use super::traits::PrimalProvider;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone)]
 pub struct DefaultPrimalProvider {
@@ -106,7 +106,7 @@ impl<P: PrimalProvider> UniversalPrimalRegistry<P> {
         id: PrimalId,
         discovery_endpoint: &str,
         metadata: HashMap<&str, &str>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let registration = PrimalRegistration {
             id: id.clone(),
             discovery_endpoint,
@@ -119,7 +119,7 @@ impl<P: PrimalProvider> UniversalPrimalRegistry<P> {
         Ok(())
     }
 
-    pub async fn register_provider(&self, provider: Arc<P>) -> BearDogResult<()> {
+    pub async fn register_provider(&self, provider: Arc<P>) -> Result<(), BearDogError> {
         let ecosystem_id = provider.ecosystem_id().to_string();
         let instance_id = provider.instance_id().to_string();
         let key = format!("{ecosystem_id}:{instance_id}");
@@ -128,7 +128,7 @@ impl<P: PrimalProvider> UniversalPrimalRegistry<P> {
         Ok(())
     }
 
-    pub async fn discover_primal(&self, id: &str) -> BearDogResult<Option<PrimalRegistration>> {
+    pub async fn discover_primal(&self, id: &str) -> Result<Option<PrimalRegistration>, BearDogError>> {
         let primals = self.primals.read().await;
         Ok(primals.get(id).cloned())
     }
@@ -137,23 +137,23 @@ impl<P: PrimalProvider> UniversalPrimalRegistry<P> {
         &self,
         ecosystem_id: &str,
         instance_id: &str,
-    ) -> BearDogResult<Option<Arc<P>>> {
+    ) -> Result<Option<Arc<P>, BearDogError>>> {
         let key = format!("{ecosystem_id}:{instance_id}");
         let providers = self.providers.read().await;
         Ok(providers.get(&key).cloned())
     }
 
-    pub async fn list_primals(&self) -> BearDogResult<Vec<PrimalRegistration>> {
+    pub async fn list_primals(&self) -> Result<Vec<PrimalRegistration>, BearDogError>> {
         let primals = self.primals.read().await;
         Ok(primals.values().cloned().collect())
     }
 
-    pub async fn list_providers(&self) -> BearDogResult<Vec<Arc<P>>> {
+    pub async fn list_providers(&self) -> Result<Vec<Arc<P>, BearDogError>>> {
         let providers = self.providers.read().await;
         Ok(providers.values().cloned().collect())
     }
 
-    pub async fn unregister_primal(&self, id: &str) -> BearDogResult<()> {
+    pub async fn unregister_primal(&self, id: &str) -> Result<(), BearDogError> {
         let mut primals = self.primals.write().await;
         primals.remove(id);
         Ok(())
@@ -163,14 +163,14 @@ impl<P: PrimalProvider> UniversalPrimalRegistry<P> {
         &self,
         ecosystem_id: &str,
         instance_id: &str,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let key = format!("{ecosystem_id}:{instance_id}");
         let mut providers = self.providers.write().await;
         providers.remove(&key);
         Ok(())
     }
 
-    pub async fn update_last_seen(&self, id: &str) -> BearDogResult<()> {
+    pub async fn update_last_seen(&self, id: &str) -> Result<(), BearDogError> {
         let mut primals = self.primals.write().await;
         if let Some(registration) = primals.get_mut(id) {
             registration.last_seen = chrono::Utc::now();
@@ -199,19 +199,19 @@ pub async fn register_primal_type(
     id: PrimalId,
     discovery_endpoint: &str,
     metadata: HashMap<&str, &str>,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     let registry = global_registry().await;
     registry
         .register_primal(id, discovery_endpoint, metadata)
         .await
 }
 
-pub async fn register_provider(provider: Arc<DefaultPrimalProvider>) -> BearDogResult<()> {
+pub async fn register_provider(provider: Arc<DefaultPrimalProvider>) -> Result<(), BearDogError> {
     let registry = global_registry().await;
     registry.register_provider(provider).await
 }
 
-pub async fn discover_primal_type(id: &str) -> BearDogResult<Option<PrimalRegistration>> {
+pub async fn discover_primal_type(id: &str) -> Result<Option<PrimalRegistration>, BearDogError>> {
     let registry = global_registry().await;
     registry.discover_primal(id).await
 }

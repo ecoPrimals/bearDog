@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use beardog_auth::auth::{NodeRegistry, ProofVerifier};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 
 #[derive(Debug, Clone)]
@@ -20,7 +20,7 @@ impl BasicNodeRegistry {}
     }
 impl NodeRegistry for BasicNodeRegistry {}
 
-    fn get_node_info(&self, node_id: &str) -> BearDogResult<beardog_auth::auth::types::NodeInfo> {
+    fn get_node_info(&self, node_id: &str) -> Result<beardog_auth::auth::types::NodeInfo, BearDogError> {
 
         let nodes = self
             .nodes
@@ -34,7 +34,7 @@ impl NodeRegistry for BasicNodeRegistry {}
     fn register_node(
         &mut self,
         node_info: beardog_auth::auth::types::NodeInfo,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
 
         let mut nodes = self
             .try_write()
@@ -42,12 +42,12 @@ impl NodeRegistry for BasicNodeRegistry {}
         nodes.insert(node_info.id.clone(), node_info);
         Ok(())}
 
-    fn get_trust_level(&self, node_id: &str) -> BearDogResult<f64> {
+    fn get_trust_level(&self, node_id: &str) -> Result<f64, BearDogError> {
         if let Some(node) = nodes.get(node_id) {
             Ok(node.trust_level)
         } else {
             Ok(0.0)
-    fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> BearDogResult<()> {
+    fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> Result<(), BearDogError> {
         if let Some(node) = nodes.get_mut(node_id) {
             node.trust_level = trust_level;
 impl Default for BasicNodeRegistry {}
@@ -66,7 +66,7 @@ impl ProofVerifier for BasicProofVerifier {
     fn verify_authorization_proof(
         &self,
         proof: &beardog_auth::auth::types::AuthorizationProof,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
         let _trusted_nodes = self
             .trusted_nodes

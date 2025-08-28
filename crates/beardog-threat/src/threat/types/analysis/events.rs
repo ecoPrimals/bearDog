@@ -1,9 +1,7 @@
-
-
+use super::super::core::ThreatSeverity;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use super::super::core::ThreatSeverity;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityEvent {
@@ -19,7 +17,12 @@ pub struct SecurityEvent {
     pub metadata: HashMap<String, String>,
 }
 impl SecurityEvent {
-    pub fn new(event_id: &str, event_type: &str, source_ip: Option<String>, destination_ip: &str) -> Self {
+    pub fn new(
+        event_id: &str,
+        event_type: &str,
+        source_ip: Option<String>,
+        destination_ip: &str,
+    ) -> Self {
         Self {
             event_id: event_id.to_string(),
             event_type: event_type.to_string(),
@@ -59,7 +62,10 @@ impl SecurityEvent {
     }
 
     pub fn is_high_risk(&self) -> bool {
-        matches!(self.severity, ThreatSeverity::High | ThreatSeverity::Critical)
+        matches!(
+            self.severity,
+            ThreatSeverity::High | ThreatSeverity::Critical
+        )
     }
 
     pub fn is_external_source(&self) -> bool {
@@ -69,6 +75,24 @@ impl SecurityEvent {
         } else {
             false
         }
+    }
+
+    pub fn is_internal_source(&self) -> bool {
+        !self.is_external_source()
+    }
+
+    pub fn is_recent(&self, minutes: i64) -> bool {
+        let now = Utc::now();
+        let duration = now.signed_duration_since(self.timestamp);
+        duration.num_minutes() <= minutes
+    }
+
+    pub fn is_large_data_transfer(&self) -> bool {
+        self.data_size > 10_000_000.0 // 10MB threshold
+    }
+
+    pub fn severity_score(&self) -> f64 {
+        self.get_risk_score()
     }
 
     pub fn get_risk_score(&self) -> f64 {
@@ -86,14 +110,19 @@ impl SecurityEvent {
 
         // Normalize data size to reasonable range
         let normalized_size = (self.data_size / 1024.0_f64).min(1000.0_f64);
-        if normalized_size > 100.0_f64 { // > 100MB
+        if normalized_size > 100.0_f64 {
+            // > 100MB
             score += 0.1_f64;
         }
 
         score.min(1.0_f64)
     }
 
-    pub fn new_with_data(event_type: &str, source_ip: Option<String>, metadata: HashMap<String, String>) -> Self {
+    pub fn new_with_data(
+        event_type: &str,
+        source_ip: Option<String>,
+        metadata: HashMap<String, String>,
+    ) -> Self {
         Self {
             event_id: uuid::Uuid::new_v4().to_string(),
             event_type: event_type.to_string(),

@@ -1,22 +1,17 @@
-
-
 use super::core::ThreatDetectionEngine;
 use crate::threat::types::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
-use chrono::Utc;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use uuid::Uuid;
 impl ThreatDetectionEngine {
-
     pub async fn analyze_with_ml(
         &self,
         event_data: &HashMap<&str, &str>,
-    ) -> BearDogResult<Vec<ThreatEvent>> {
+    ) -> Result<Vec<ThreatEvent>, BearDogError> {
         let mut ml_threats = Vec::new();
-        
+
         // Define source and target for ML analysis
         let source = ThreatSource {
             id: format!("ml_source_{}", uuid::Uuid::new_v4()),
@@ -65,7 +60,8 @@ impl ThreatDetectionEngine {
                     source: source.clone(),
                     target: target.clone(),
                     description: "ML-detected threat event".to_string(),
-                    detection_method: crate::threat::types::detection::DetectionMethod::MachineLearning,
+                    detection_method:
+                        crate::threat::types::detection::DetectionMethod::MachineLearning,
                     evidence: Vec::new(),
                     recommended_actions: Vec::new(),
                     status: crate::threat::types::actions::ThreatStatus::Active,
@@ -87,7 +83,7 @@ impl ThreatDetectionEngine {
         &self,
         _model: &MlModel,
         event_data: &HashMap<&str, &str>,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64, BearDogError> {
         let mut hasher = DefaultHasher::new();
 
         for (key, value) in event_data {

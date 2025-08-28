@@ -12,7 +12,7 @@ use beardog_tunnel::universal_hsm_discovery::universal_adapter::{
     HumanEntropyRequirements
 };
 use beardog_tunnel::universal_hsm_discovery::{DiscoveredHsm, HsmInterfaceType, HsmTier};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use tokio_test;
 use std::collections::HashMap;
 

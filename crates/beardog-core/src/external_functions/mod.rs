@@ -1,7 +1,7 @@
 
 
 use crate::licensing::LicenseManager;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -25,7 +25,7 @@ pub trait ExternalFunctionHandler: Send + Sync + Clone {
         license_manager: &LicenseManager,
         operation: &str,
         payload: Value,
-    ) -> BearDogResult<Value>;
+    ) -> Result<Value, BearDogError>;
 }
 
 pub struct ExternalFunctionRegistry<H: ExternalFunctionHandler> {
@@ -50,7 +50,7 @@ impl<H: ExternalFunctionHandler> ExternalFunctionRegistry<H> {
         license_manager: &LicenseManager,
         operation: &str,
         payload: Value,
-    ) -> BearDogResult<Value> {
+    ) -> Result<Value, BearDogError> {
         let handler = self.handlers
             .get(function_name)
             .ok_or_else(|| BearDogError::not_found(format_args!("Function handler not found: {}", function_name).to_string()))?;
@@ -96,7 +96,7 @@ impl ExternalFunctionHandler for UnifiedExternalHandler {
         license_manager: &LicenseManager,
         operation: &str,
         payload: Value,
-    ) -> BearDogResult<Value> {
+    ) -> Result<Value, BearDogError> {
         match self {
             UnifiedExternalHandler::Kubernetes(h) => h.execute(license_manager, operation, payload).await,
             UnifiedExternalHandler::Prometheus(h) => h.execute(license_manager, operation, payload).await,

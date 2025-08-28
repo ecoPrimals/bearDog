@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use super::HsmTestHarness;
@@ -5,9 +6,9 @@ use beardog::tunnel::hsm::types::{
     GenerateKeyRequest, HsmOperation, HsmTier, KeyMetadata, KeyType, KeyUsagePolicy,
     SecureEnclaveType, SmartphoneType, SoftwareHsmType, StrongBoxImplementation,
 };
-use beardog::{BearDogError, BearDogResult};
+use beardog::{{BearDogError, BearDogError}};
 
-pub async fn test_hsm_providers(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+pub async fn test_hsm_providers(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("🔧 Testing HSM Provider Implementations");
 
     test_android_strongbox_provider(harness).await?;
@@ -20,7 +21,7 @@ pub async fn test_hsm_providers(harness: &mut HsmTestHarness) -> BearDogResult<(
     Ok(())
 }
 
-async fn test_android_strongbox_provider(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_android_strongbox_provider(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("📱 Testing Android StrongBox HSM Provider");
 
     let start_time = std::time::Instant::now();
@@ -69,7 +70,7 @@ async fn test_android_strongbox_provider(harness: &mut HsmTestHarness) -> BearDo
     Ok(())
 }
 
-async fn test_software_hsm_provider(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_software_hsm_provider(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("💾 Testing Software HSM Provider");
 
     let start_time = std::time::Instant::now();
@@ -137,7 +138,7 @@ async fn test_software_hsm_provider(harness: &mut HsmTestHarness) -> BearDogResu
     Ok(())
 }
 
-async fn test_provider_compatibility(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_provider_compatibility(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("🔗 Testing HSM Provider Compatibility");
 
     let start_time = std::time::Instant::now();
@@ -167,7 +168,7 @@ async fn test_provider_compatibility(harness: &mut HsmTestHarness) -> BearDogRes
     Ok(())
 }
 
-pub async fn test_strongbox_specific_features(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+pub async fn test_strongbox_specific_features(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("🔒 Testing StrongBox-specific features");
 
     let info = harness.android_strongbox.get_info().await?;
@@ -196,7 +197,7 @@ pub async fn test_strongbox_specific_features(harness: &mut HsmTestHarness) -> B
 }
 
 #[tokio::test]
-async fn test_hsm_providers_standalone() -> BearDogResult<()> {
+async fn test_hsm_providers_standalone() -> Result<(), BearDogError> {
     let mut harness = super::HsmTestHarness::new().await?;
     test_hsm_providers(&mut harness).await
 } 

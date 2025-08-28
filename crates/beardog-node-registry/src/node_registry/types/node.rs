@@ -1,8 +1,8 @@
-
+use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
 use std::time::SystemTime;
-use crate::BearDogResult;
+use beardog_errors::BearDogError;
 use super::trust::TrustLevel;
 
 #[derive(Debug, Clone)]
@@ -87,7 +87,7 @@ impl NodeInfo {
     pub fn update_trust_level(&mut self, trust_level: TrustLevel) {
         self.trust_level = trust_level;
 
-    pub fn validate(&self) -> BearDogResult<()> {
+    pub fn validate(&self) -> Result<(), BearDogError> {
         if self.id.is_empty() {
             return Err(crate::error::BearDogError::validation("id", "Node ID cannot be empty"));
         if self.name.is_empty() {
@@ -111,7 +111,7 @@ impl NodeRegistration {
     pub fn new(node_info: NodeInfo, proof: Vec<u8>) -> Self {
         Self { node_info, proof }
 
-    pub fn validate_proof(&self) -> BearDogResult<bool> {
+    pub fn validate_proof(&self) -> Result<bool, BearDogError> {
 
         Ok(!self.proof.is_empty())
 
@@ -243,7 +243,7 @@ impl NodeType {
         self.optional_capabilities.push(capability);
     pub fn with_metadata(mut self, key: &str, value: &str) -> Self {
 
-    pub fn validate_capabilities(&self, capabilities: &[&str]) -> BearDogResult<bool> {
+    pub fn validate_capabilities(&self, capabilities: &[&str]) -> Result<bool, BearDogError> {
 
         for required in &self.required_capabilities {
             if !capabilities.contains(required) {
@@ -287,7 +287,7 @@ impl NodeTypeRegistry {
     pub fn get_all_types(&self) -> Vec<&NodeType> {
         self.types.values().collect()
 
-    pub fn validate_node(&self, node: &NodeInfo) -> BearDogResult<bool> {
+    pub fn validate_node(&self, node: &NodeInfo) -> Result<bool, BearDogError> {
         if let Some(node_type) = self.get_type(&node.node_type) {
             node_type.validate_capabilities(&node.capabilities)
             Ok(false) // Unknown node type

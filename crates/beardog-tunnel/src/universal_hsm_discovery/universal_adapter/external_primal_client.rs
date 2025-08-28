@@ -2,7 +2,7 @@
 
 use super::core_types::*;
 use super::external_primal_service::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -82,7 +82,7 @@ pub struct PooledConnection {
 
     pub connection_id: Uuid,
 
-    pub connection: Arc<dyn ExternalPrimalConnection>,
+    pub connection: impl ExternalPrimalConnection,
 
     pub created_at: Instant,
 
@@ -172,13 +172,13 @@ impl Default for HealthCheckConfig {
 
 pub trait ExternalPrimalConnection: Send + Sync + std::fmt::Debug {
 
-    async fn send_request(&self, request: Vec<u8>) -> BearDogResult<Vec<u8>>;
+    async fn send_request(&self, request: Vec<u8>) -> Result<Vec<u8>, BearDogError>>;
 
-    async fn health_check(&self) -> BearDogResult<bool>;
+    async fn health_check(&self) -> Result<bool, BearDogError>;
 
     fn get_connection_info(&self) -> ConnectionInfo;
 
-    async fn close(&self) -> BearDogResult<()>;
+    async fn close(&self) -> Result<(), BearDogError>;
 
     fn is_alive(&self) -> bool;
 
@@ -221,7 +221,7 @@ impl TarpcPrimalConnection {
             last_activity: Arc::new(RwLock::new(SystemTime::now())),
 impl ExternalPrimalConnection for TarpcPrimalConnection {}
 
-    async fn send_request(&self, request: Vec<u8>) -> BearDogResult<Vec<u8>> {
+    async fn send_request(&self, request: Vec<u8>) -> Result<Vec<u8>, BearDogError>> {
         debug!("📤 Sending request to {} ({} bytes)", self.endpoint, request.len());
 
         {
@@ -238,7 +238,7 @@ impl ExternalPrimalConnection for TarpcPrimalConnection {}
             stats.bytes_received += response.len() as u64;
         debug!("📥 Received response from {} ({} bytes)", self.endpoint, response.len());
         Ok(response)
-    async fn health_check(&self) -> BearDogResult<bool> {
+    async fn health_check(&self) -> Result<bool, BearDogError> {
         debug!("🏥 Health checking connection to {}", self.endpoint);
 
         let is_healthy = true; // Placeholder
@@ -257,7 +257,7 @@ impl ExternalPrimalConnection for TarpcPrimalConnection {}
             last_activity: SystemTime::now(), // Would get actual last activity
             stats: ConnectionStats::default(), // Would get actual stats}
 
-    async fn close(&self) -> BearDogResult<()> {
+    async fn close(&self) -> Result<(), BearDogError> {
         info!("🔌 Closing connection to {}", self.endpoint);
             *status = ConnectionStatus::Closed;
 
@@ -282,7 +282,7 @@ impl ExternalPrimalClient {
                 last_check: Instant::now(),
                 config: HealthCheckConfig::default(),
 
-    pub async fn get_connection(&self, endpoint: &str) -> BearDogResult<Arc<dyn ExternalPrimalConnection>> {
+    pub async fn get_connection(&self, endpoint: &str) -> Result<ZeroCostExternalPrimalConnection<impl ExternalPrimalConnection, BearDogError>> {
         debug!("🔍 Getting connection to {}", endpoint);
 
             let active = self.active_connections.read().await;
@@ -300,7 +300,7 @@ impl ExternalPrimalClient {
         info!("🆕 Created new connection to {}", endpoint);
         Ok(connection)
 
-    pub async fn send_request(&self, endpoint: &str, request: Vec<u8>) -> BearDogResult<Vec<u8>> {
+    pub async fn send_request(&self, endpoint: &str, request: Vec<u8>) -> Result<Vec<u8>, BearDogError>> {
         debug!("📨 Sending request to {} with retry logic", endpoint);
         let mut attempts = 0;
         let mut last_error = None;
@@ -330,11 +330,11 @@ impl ExternalPrimalClient {
             stats.last_updated = SystemTime::now();
         Err(last_error.unwrap_or_else(|| BearDogError::internal("All retry attempts failed")))
 
-    async fn try_send_request(&self, endpoint: &str, request: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn try_send_request(&self, endpoint: &str, request: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         let connection = self.get_connection(endpoint).await?;
         connection.send_request(request.to_vec()).await
 
-    pub async fn health_check(&self) -> BearDogResult<HashMap<String, bool>> {
+    pub async fn health_check(&self) -> Result<HashMap<String, bool, BearDogError>> {
         debug!("🏥 Performing health check on all connections");
         let mut results = HashMap::with_capacity(16);
         let active = self.active_connections.read().await;
@@ -349,7 +349,7 @@ impl ExternalPrimalClient {
     pub async fn get_statistics(&self) -> ClientStats {
         self.stats.read().await.clone()
 
-    pub async fn cleanup_connections(&self) -> BearDogResult<u32> {
+    pub async fn cleanup_connections(&self) -> Result<u32, BearDogError> {
         debug!("🧹 Cleaning up inactive connections");
         let mut cleaned_count = 0;
         let mut active = self.active_connections.write().await;

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use super::{HsmHealth, HsmHealthStatus};
@@ -71,10 +71,10 @@ impl HsmManager {
     pub fn new() -> Self {
         Self::default()
 
-    pub async fn health_check(&self) -> BearDogResult<HsmHealth> {
+    pub async fn health_check(&self) -> Result<HsmHealth, BearDogError> {
         Ok(self.health.clone())
 
-    pub async fn get_available_tiers(&self) -> BearDogResult<Vec<HsmTier>> {
+    pub async fn get_available_tiers(&self) -> Result<Vec<HsmTier>, BearDogError>> {
         Ok(vec![
             HsmTier::Software,
             HsmTier::Hardware,
@@ -83,6 +83,6 @@ impl HsmManager {
             HsmTier::Hybrid,
         ])
 
-    pub async fn select_tier(&mut self, tier: HsmTier) -> BearDogResult<()> {
+    pub async fn select_tier(&mut self, tier: HsmTier) -> Result<(), BearDogError> {
         self.config.default_tier = tier;
         Ok(())

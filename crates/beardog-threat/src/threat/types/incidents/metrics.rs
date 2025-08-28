@@ -1,13 +1,8 @@
-
-
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use beardog_errors::BearDogResult;
-
 // Define local types instead of importing from beardog_types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum IncidentSeverity {
     Low,
     Medium,
@@ -15,7 +10,7 @@ pub enum IncidentSeverity {
     Critical,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum IncidentStatus {
     Open,
     InProgress,
@@ -30,9 +25,35 @@ pub struct SecurityIncident {
     pub incident_type: String,
 }
 
+impl SecurityIncident {
+    pub fn new(incident_type: String, severity: IncidentSeverity, status: IncidentStatus) -> Self {
+        Self {
+            incident_type,
+            severity,
+            status,
+        }
+    }
+
+    pub fn start_investigation(&mut self) {
+        self.status = IncidentStatus::InProgress;
+    }
+
+    pub fn escalate(&mut self) {
+        self.severity = match self.severity {
+            IncidentSeverity::Low => IncidentSeverity::Medium,
+            IncidentSeverity::Medium => IncidentSeverity::High,
+            IncidentSeverity::High => IncidentSeverity::Critical,
+            IncidentSeverity::Critical => IncidentSeverity::Critical,
+        };
+    }
+
+    pub fn resolve(&mut self, _resolution: String) {
+        self.status = IncidentStatus::Resolved;
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct IncidentMetrics {
-
     pub total_incidents: u32,
 
     pub open_incidents: u32,
@@ -64,7 +85,6 @@ pub struct IncidentMetrics {
     pub estimated_cost: Option<f64>,
 }
 impl IncidentMetrics {
-
     pub fn new() -> Self {
         Self {
             total_incidents: 0,
@@ -108,7 +128,7 @@ impl IncidentMetrics {
 
     pub fn update_with_incident(&mut self, incident: &SecurityIncident) {
         self.total_incidents += 1;
-        
+
         match incident.status {
             IncidentStatus::Open | IncidentStatus::InProgress => {
                 self.open_incidents += 1;
@@ -118,10 +138,16 @@ impl IncidentMetrics {
             }
         }
 
-        let severity_count = self.severity_breakdown.entry(incident.severity.to_string()).or_insert(0);
+        let severity_count = self
+            .severity_breakdown
+            .entry(incident.severity.to_string())
+            .or_insert(0);
         *severity_count += 1;
 
-        let type_count = self.type_breakdown.entry(incident.incident_type.clone()).or_insert(0);
+        let type_count = self
+            .type_breakdown
+            .entry(incident.incident_type.clone())
+            .or_insert(0);
         *type_count += 1;
     }
 
@@ -147,7 +173,6 @@ impl std::fmt::Display for IncidentSeverity {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CostBreakdown {
-
     pub investigation_cost: f64,
 
     pub containment_cost: f64,

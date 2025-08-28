@@ -5,7 +5,7 @@ use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 pub struct SongBirdDiscoveryClient {
 
@@ -19,7 +19,7 @@ pub struct SongBirdDiscoveryClient {
 }
 impl SongBirdDiscoveryClient {
 
-    pub async fn new(endpoint: &str, api_key: &str) -> BearDogResult<Self> {
+    pub async fn new(endpoint: &str, api_key: &str) -> Result<Self, BearDogError> {
         info!("🔗 Initializing Universal SongBird Discovery Client");
 
         let client = reqwest::Client::builder()
@@ -51,7 +51,7 @@ impl SongBirdDiscoveryClient {
     pub async fn register_service(
         &self,
         service: &AdvertisedService,
-    ) -> BearDogResult<ServiceRegistrationResult> {
+    ) -> Result<ServiceRegistrationResult, BearDogError> {
         debug!(
             "📝 Registering service: {}",
             service.registration.service_id
@@ -92,7 +92,7 @@ impl SongBirdDiscoveryClient {
         self.update_health_status(true, 0).await;
         Ok(registration_result)
 
-    pub async fn send_heartbeat(&self) -> BearDogResult<()> {
+    pub async fn send_heartbeat(&self) -> Result<(), BearDogError> {
         debug!("💓 Sending heartbeat to SongBird");
         let heartbeat_url = format_args!("{}/api/v1/heartbeat", self.endpoint).to_string();
 
@@ -111,7 +111,7 @@ impl SongBirdDiscoveryClient {
         debug!("✅ Heartbeat sent successfully");
         Ok(())
 
-    pub async fn update_service_health(&self, service_id: &str) -> BearDogResult<()> {
+    pub async fn update_service_health(&self, service_id: &str) -> Result<(), BearDogError> {
         debug!("🏥 Updating service health for: {}", service_id);
         let health_url = format_args!("{}/api/v1/services/{}/health", self.endpoint, service_id).to_string();
 
@@ -135,7 +135,7 @@ impl SongBirdDiscoveryClient {
                 "Health update failed with status {status}: {error_text}"
         debug!("✅ Service health updated successfully");
 
-    pub async fn unregister_service(&self, service_id: &str) -> BearDogResult<()> {
+    pub async fn unregister_service(&self, service_id: &str) -> Result<(), BearDogError> {
         debug!("🗑️ Unregistering service: {}", service_id);
         let unregister_url = format_args!("{}/api/v1/services/{}", self.endpoint, service_id).to_string();
             .delete(&unregister_url)
@@ -146,7 +146,7 @@ impl SongBirdDiscoveryClient {
                 "Unregister failed with status {status}: {error_text}"
         info!("✅ Service unregistered successfully: {}", service_id);
 
-    pub async fn get_service_info(&self, service_id: &str) -> BearDogResult<AdvertisedService> {
+    pub async fn get_service_info(&self, service_id: &str) -> Result<AdvertisedService, BearDogError> {
         debug!("📋 Getting service info for: {}", service_id);
         let info_url = format_args!("{}/api/v1/services/{}", self.endpoint, service_id).to_string();
             .get(&info_url)
@@ -160,7 +160,7 @@ impl SongBirdDiscoveryClient {
         debug!("✅ Service info retrieved successfully");
         Ok(service_info)
 
-    pub async fn test_connection(&self) -> BearDogResult<()> {
+    pub async fn test_connection(&self) -> Result<(), BearDogError> {
         debug!("🔍 Testing connection to SongBird");
         let health_url = format_args!("{}/api/v1/health", self.endpoint).to_string();
             .get(&health_url)

@@ -2,7 +2,7 @@
 
 use beardog_core::BearDogCore;
 use beardog_types::config::BearDogConfig;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_security::MemoryKeyManager;
 use beardog_compliance::ComplianceEngine;
 use beardog_monitoring::SecuritySentinel;
@@ -10,7 +10,7 @@ use std::time::Duration;
 use tokio::time::timeout;
 
 #[tokio::test]
-async fn test_full_system_initialization() -> BearDogResult<()> {
+async fn test_full_system_initialization() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
@@ -25,7 +25,7 @@ async fn test_full_system_initialization() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_security_compliance_integration() -> BearDogResult<()> {
+async fn test_security_compliance_integration() -> Result<(), BearDogError> {
 
     let key_config = beardog_security::memory_key_manager::MemoryKeyConfig::default();
     let key_manager = MemoryKeyManager::new(key_config).await?;
@@ -63,7 +63,7 @@ async fn test_security_compliance_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_monitoring_integration() -> BearDogResult<()> {
+async fn test_monitoring_integration() -> Result<(), BearDogError> {
 
     let sentinel = SecuritySentinel::new();
 
@@ -77,7 +77,7 @@ async fn test_monitoring_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_error_handling_integration() -> BearDogResult<()> {
+async fn test_error_handling_integration() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
@@ -98,7 +98,7 @@ async fn test_error_handling_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_concurrent_operations() -> BearDogResult<()> {
+async fn test_concurrent_operations() -> Result<(), BearDogError> {
 
     let key_config = beardog_security::memory_key_manager::MemoryKeyConfig::default();
     let key_manager = MemoryKeyManager::new(key_config).await?;
@@ -137,7 +137,7 @@ async fn test_concurrent_operations() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_performance_under_load() -> BearDogResult<()> {
+async fn test_performance_under_load() -> Result<(), BearDogError> {
 
     let key_config = beardog_security::memory_key_manager::MemoryKeyConfig::default();
     let key_manager = MemoryKeyManager::new(key_config).await?;
@@ -168,7 +168,7 @@ async fn test_performance_under_load() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_system_recovery() -> BearDogResult<()> {
+async fn test_system_recovery() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
@@ -188,7 +188,7 @@ async fn test_system_recovery() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_data_consistency() -> BearDogResult<()> {
+async fn test_data_consistency() -> Result<(), BearDogError> {
 
     let key_config = beardog_security::memory_key_manager::MemoryKeyConfig::default();
     let key_manager = MemoryKeyManager::new(key_config).await?;

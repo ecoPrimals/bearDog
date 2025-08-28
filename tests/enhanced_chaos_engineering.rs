@@ -2,7 +2,7 @@
 
 use beardog_types::config::*;
 use beardog_core::*;
-use beardog_errors::*;
+use beardog_errors::{BearDogError, *};
 use beardog_security::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -89,7 +89,7 @@ pub struct ByzantineNode {
 }
 
 impl EnhancedChaosFramework {
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let test_harness = Arc::new(RwLock::new(ChaosTestHarness::new()));
         
         Ok(Self {
@@ -169,7 +169,7 @@ impl EnhancedChaosFramework {
         baselines
     }
 
-    pub async fn execute_scenario(&self, scenario_name: &str) -> BearDogResult<ChaosTestResults> {
+    pub async fn execute_scenario(&self, scenario_name: &str) -> Result<ChaosTestResults, BearDogError> {
         let start_time = Instant::now();
         let scenario = self.byzantine_scenarios.iter()
             .find(|s| s.name == scenario_name)
@@ -202,7 +202,7 @@ impl EnhancedChaosFramework {
         })
     }
 
-    async fn measure_baseline_performance(&self) -> BearDogResult<SystemMetrics> {
+    async fn measure_baseline_performance(&self) -> Result<SystemMetrics, BearDogError> {
         println!("📊 Measuring baseline performance...");
         
         let start_time = Instant::now();
@@ -243,7 +243,7 @@ impl EnhancedChaosFramework {
         })
     }
 
-    async fn inject_byzantine_faults(&self, scenario: &ByzantineScenario) -> BearDogResult<()> {
+    async fn inject_byzantine_faults(&self, scenario: &ByzantineScenario) -> Result<(), BearDogError> {
         println!("💉 Injecting Byzantine faults...");
         
         let mut harness = self.test_harness.write().await;
@@ -275,7 +275,7 @@ impl EnhancedChaosFramework {
         Ok(())
     }
 
-    async fn monitor_system_under_fault(&self, duration: Duration) -> BearDogResult<SystemMetrics> {
+    async fn monitor_system_under_fault(&self, duration: Duration) -> Result<SystemMetrics, BearDogError> {
         println!("🔍 Monitoring system under fault for {:?}...", duration);
         
         let start_time = Instant::now();
@@ -311,7 +311,7 @@ impl EnhancedChaosFramework {
         })
     }
 
-    async fn simulate_operation_under_fault(&self) -> BearDogResult<()> {
+    async fn simulate_operation_under_fault(&self) -> Result<(), BearDogError> {
         let harness = self.test_harness.read().await;
 
         for (node_id, node) in &harness.byzantine_nodes {
@@ -359,7 +359,7 @@ impl EnhancedChaosFramework {
         Ok(())
     }
 
-    async fn validate_recovery(&self, scenario: &ByzantineScenario) -> BearDogResult<RecoveryMetrics> {
+    async fn validate_recovery(&self, scenario: &ByzantineScenario) -> Result<RecoveryMetrics, BearDogError> {
         println!("🔄 Validating system recovery...");
 
         let mut harness = self.test_harness.write().await;
@@ -411,7 +411,7 @@ impl EnhancedChaosFramework {
         })
     }
 
-    async fn test_system_health(&self) -> BearDogResult<()> {
+    async fn test_system_health(&self) -> Result<(), BearDogError> {
 
         let key = BearDogCrypto::generate_secure_random(32)?;
         let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(&key, b"health check", None)?;
@@ -429,7 +429,7 @@ impl EnhancedChaosFramework {
         &self,
         baseline: &SystemMetrics,
         under_fault: &SystemMetrics,
-    ) -> BearDogResult<PerformanceImpact> {
+    ) -> Result<PerformanceImpact, BearDogError> {
         let throughput_degradation = 
             ((baseline.throughput_ops_per_sec - under_fault.throughput_ops_per_sec) / baseline.throughput_ops_per_sec) * 100.0;
         
@@ -499,12 +499,12 @@ pub struct ChaosTestResults {
 }
 
 pub trait FaultInjector {
-    fn inject_fault(&self, fault_type: &str) -> BearDogResult<String>;
-    fn remove_fault(&self, fault_id: &str) -> BearDogResult<()>;
+    fn inject_fault(&self, fault_type: &str) -> Result<String, BearDogError>;
+    fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError>;
 }
 
 pub trait RecoveryValidator {
-    fn validate_recovery(&self) -> BearDogResult<bool>;
+    fn validate_recovery(&self) -> Result<bool, BearDogError>;
 }
 
 pub struct NetworkFaultInjector;
@@ -517,11 +517,11 @@ impl NetworkFaultInjector {
 }
 
 impl FaultInjector for NetworkFaultInjector {
-    fn inject_fault(&self, fault_type: &str) -> BearDogResult<String> {
+    fn inject_fault(&self, fault_type: &str) -> Result<String, BearDogError> {
         Ok(format_args!("network_fault_{}", fault_type).to_string())
     }
     
-    fn remove_fault(&self, _fault_id: &str) -> BearDogResult<()> {
+    fn remove_fault(&self, _fault_id: &str) -> Result<(), BearDogError> {
         Ok(())
     }
 }
@@ -531,11 +531,11 @@ impl MemoryFaultInjector {
 }
 
 impl FaultInjector for MemoryFaultInjector {
-    fn inject_fault(&self, fault_type: &str) -> BearDogResult<String> {
+    fn inject_fault(&self, fault_type: &str) -> Result<String, BearDogError> {
         Ok(format_args!("memory_fault_{}", fault_type).to_string())
     }
     
-    fn remove_fault(&self, _fault_id: &str) -> BearDogResult<()> {
+    fn remove_fault(&self, _fault_id: &str) -> Result<(), BearDogError> {
         Ok(())
     }
 }
@@ -545,11 +545,11 @@ impl CryptoFaultInjector {
 }
 
 impl FaultInjector for CryptoFaultInjector {
-    fn inject_fault(&self, fault_type: &str) -> BearDogResult<String> {
+    fn inject_fault(&self, fault_type: &str) -> Result<String, BearDogError> {
         Ok(format_args!("crypto_fault_{}", fault_type).to_string())
     }
     
-    fn remove_fault(&self, _fault_id: &str) -> BearDogResult<()> {
+    fn remove_fault(&self, _fault_id: &str) -> Result<(), BearDogError> {
         Ok(())
     }
 }
@@ -559,11 +559,11 @@ impl AuthFaultInjector {
 }
 
 impl FaultInjector for AuthFaultInjector {
-    fn inject_fault(&self, fault_type: &str) -> BearDogResult<String> {
+    fn inject_fault(&self, fault_type: &str) -> Result<String, BearDogError> {
         Ok(format_args!("auth_fault_{}", fault_type).to_string())
     }
     
-    fn remove_fault(&self, _fault_id: &str) -> BearDogResult<()> {
+    fn remove_fault(&self, _fault_id: &str) -> Result<(), BearDogError> {
         Ok(())
     }
 }
@@ -577,7 +577,7 @@ impl SystemHealthValidator {
 }
 
 impl RecoveryValidator for SystemHealthValidator {
-    fn validate_recovery(&self) -> BearDogResult<bool> {
+    fn validate_recovery(&self) -> Result<bool, BearDogError> {
 
         Ok(true)
     }
@@ -588,7 +588,7 @@ impl DataIntegrityValidator {
 }
 
 impl RecoveryValidator for DataIntegrityValidator {
-    fn validate_recovery(&self) -> BearDogResult<bool> {
+    fn validate_recovery(&self) -> Result<bool, BearDogError> {
 
         Ok(true)
     }
@@ -599,14 +599,14 @@ impl PerformanceValidator {
 }
 
 impl RecoveryValidator for PerformanceValidator {
-    fn validate_recovery(&self) -> BearDogResult<bool> {
+    fn validate_recovery(&self) -> Result<bool, BearDogError> {
 
         Ok(true)
     }
 }
 
 #[tokio::test]
-async fn test_byzantine_conflicting_messages() -> BearDogResult<()> {
+async fn test_byzantine_conflicting_messages() -> Result<(), BearDogError> {
     let framework = EnhancedChaosFramework::new().await?;
     let results = framework.execute_scenario("conflicting_auth_responses").await?;
     
@@ -625,7 +625,7 @@ async fn test_byzantine_conflicting_messages() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_byzantine_delayed_responses() -> BearDogResult<()> {
+async fn test_byzantine_delayed_responses() -> Result<(), BearDogError> {
     let framework = EnhancedChaosFramework::new().await?;
     let results = framework.execute_scenario("delayed_crypto_operations").await?;
     
@@ -644,7 +644,7 @@ async fn test_byzantine_delayed_responses() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_byzantine_corrupted_data() -> BearDogResult<()> {
+async fn test_byzantine_corrupted_data() -> Result<(), BearDogError> {
     let framework = EnhancedChaosFramework::new().await?;
     let results = framework.execute_scenario("corrupted_key_material").await?;
     
@@ -661,7 +661,7 @@ async fn test_byzantine_corrupted_data() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_concurrent_multiple_byzantine_faults() -> BearDogResult<()> {
+async fn test_concurrent_multiple_byzantine_faults() -> Result<(), BearDogError> {
     let framework = EnhancedChaosFramework::new().await?;
 
     let scenarios = vec![
@@ -715,7 +715,7 @@ async fn test_concurrent_multiple_byzantine_faults() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_system_resilience_under_extreme_load() -> BearDogResult<()> {
+async fn test_system_resilience_under_extreme_load() -> Result<(), BearDogError> {
     let framework = EnhancedChaosFramework::new().await?;
 
     let mut harness = framework.test_harness.write().await;

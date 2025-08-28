@@ -1,13 +1,13 @@
 
 
 use beardog_utils::zero_copy::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::info;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🚀 BearDog Zero-Copy Optimization Demo");
     println!("====================================");
 
@@ -59,7 +59,7 @@ async fn main() -> BearDogResult<()> {
 async fn test_zero_copy_optimization_for_capability(
     optimizer: &ZeroCopyOptimizationSystem,
     capability: &str,
-) -> BearDogResult<OptimizationResult> {
+) -> Result<OptimizationResult, BearDogError> {
 
     let registry = global_registry();
     let services = registry
@@ -114,7 +114,7 @@ async fn test_zero_copy_optimization_for_capability(
     })
 }
 
-async fn demo_id_optimization() -> BearDogResult<()> {
+async fn demo_id_optimization() -> Result<(), BearDogError> {
     info!("🆔 Demo 1: ID Optimization - Eliminating ID String Cloning");
 
     let request_id = generate_request_id("api");
@@ -142,7 +142,7 @@ async fn demo_id_optimization() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_config_sharing() -> BearDogResult<()> {
+async fn demo_config_sharing() -> Result<(), BearDogError> {
     info!("⚙️  Demo 2: Configuration Sharing - Eliminating Config Cloning");
 
     let api_config = shared_api_config(|| ApiConfig {
@@ -193,7 +193,7 @@ async fn demo_config_sharing() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_request_caching() -> BearDogResult<()> {
+async fn demo_request_caching() -> Result<(), BearDogError> {
     info!("📨 Demo 3: Request/Response Caching - Eliminating Request Cloning");
 
     let request = ApiRequest {
@@ -234,7 +234,7 @@ async fn demo_request_caching() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_performance_comparison() -> BearDogResult<()> {
+async fn demo_performance_comparison() -> Result<(), BearDogError> {
     info!("⚡ Demo 4: Performance Comparison - Before vs After Optimization");
 
     const ITERATIONS: usize = beardog_types::constants::performance::testing::LIGHT_ITERATIONS;
@@ -280,7 +280,7 @@ async fn demo_performance_comparison() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_memory_optimization() -> BearDogResult<()> {
+async fn demo_memory_optimization() -> Result<(), BearDogError> {
     info!("🧠 Demo 5: Memory Optimization - Overall System Benefits");
 
     let common_ids = vec![

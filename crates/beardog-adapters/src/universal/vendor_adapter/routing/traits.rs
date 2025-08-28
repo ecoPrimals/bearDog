@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -16,7 +16,7 @@ pub trait RoutingStrategy: Send + Sync + std::fmt::Debug {
         &self,
         request: &UniversalVendorRequest,
         available_handlers: &[(Box<dyn CapabilityHandler>, f64)], // (handler, confidence)
-    ) -> BearDogResult<Option<usize>>; // Returns index of selected handler
+    ) -> Result<Option<usize>, BearDogError>>; // Returns index of selected handler
 
     async fn update_with_result(
         &self,
@@ -24,9 +24,9 @@ pub trait RoutingStrategy: Send + Sync + std::fmt::Debug {
         success: bool,
         response_time_ms: u64,
         error: Option<&str>,
-    ) -> BearDogResult<()>;
+    ) -> Result<(), BearDogError>;
 
-    async fn get_statistics(&self) -> BearDogResult<serde_json::Value>;
+    async fn get_statistics(&self) -> Result<serde_json::Value, BearDogError>;
 }
 
 #[derive(Debug, Clone)]

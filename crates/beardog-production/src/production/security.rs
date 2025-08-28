@@ -56,13 +56,7 @@ pub struct VulnerabilityScanResults {
 
     pub security_policy_violations: Vec<String>,
 
-#[deprecated(since = "3.1.0", note = "Use UnifiedTestingConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedTestingConfig instead")]
-pub struct PenetrationTestConfiguration {
-
-    pub test_types: Vec<String>,
-
-    pub test_intensity: IntensityLevel,
+// PenetrationTestConfiguration removed - use UnifiedTestingConfig instead
 
     pub safe_mode: bool,
 

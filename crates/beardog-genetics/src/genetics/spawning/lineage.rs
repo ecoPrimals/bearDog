@@ -1,13 +1,13 @@
 
 
 use beardog_auth::auth::BearDogGenetics;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use tracing::info;
 
 use super::{GeneticLineage, LineageProof, ParentSignature, SpawnRequest, WitnessSignature};
 use crate::genetics::spawning::engine::GeneticSpawningEngine;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 pub async fn create_lineage_record(
     _engine: &GeneticSpawningEngine,

@@ -1,7 +1,7 @@
 
 
 use super::core_types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
@@ -26,24 +26,8 @@ pub struct OperationRouter {
     failover_manager: Arc<RwLock<FailoverManager>>,
 }
 
-#[derive(Debug, Clone)]
-pub struct RouterConfig {
-
-    pub default_strategy: RoutingStrategy,
-
-    pub pool_size_per_endpoint: usize,
-
-    pub connection_timeout: Duration,
-
-    pub operation_timeout: Duration,
-
-    pub health_check_interval: Duration,
-
-    pub enable_failover: bool,
-
-    pub max_retry_attempts: u32,
-
-    pub load_balancing: LoadBalancingAlgorithm,}
+// UNIFIED: Use canonical RouterConfig
+pub use beardog_types::canonical::configuration::RouterConfig;
 
 impl Default for RouterConfig {}
 
@@ -385,7 +369,7 @@ pub struct RetryConfig {
 
 impl OperationRouter {
 
-    pub fn new(config: RouterConfig) -> BearDogResult<Self> {
+    pub fn new(config: RouterConfig) -> Result<Self, BearDogError> {
         info!("🚦 Initializing Operation Router");
         
         Ok(Self {
@@ -412,7 +396,7 @@ impl OperationRouter {
                 recovery_attempts: HashMap::with_capacity(16),
         })
 
-    pub async fn add_routing_rule(&self, rule: RoutingRule) -> BearDogResult<()> {
+    pub async fn add_routing_rule(&self, rule: RoutingRule) -> Result<(), BearDogError> {
         info!("📋 Adding routing rule: {}", rule.name);
         let mut rules = self.routing_rules.write().await;
         rules.push(rule);
@@ -420,7 +404,7 @@ impl OperationRouter {
         rules.sort_by(|a, b| b.priority.cmp(&a.priority));
         Ok(())
 
-    pub async fn route_operation(&self, operation: &RoutingOperation) -> BearDogResult<RoutingTarget> {
+    pub async fn route_operation(&self, operation: &RoutingOperation) -> Result<RoutingTarget, BearDogError> {
         debug!("🎯 Routing operation: {}", operation.operation_id);
         let start_time = Instant::now();
 
@@ -447,7 +431,7 @@ impl OperationRouter {
         info!("✅ Routed operation {} to target {}", operation.operation_id, target.endpoint);
         Ok(target)
 
-    pub async fn get_connection(&self, endpoint: &str) -> BearDogResult<PooledConnection> {
+    pub async fn get_connection(&self, endpoint: &str) -> Result<PooledConnection, BearDogError> {
         debug!("🔗 Getting connection to {}", endpoint);
         let mut pools = self.connection_pools.write().await;
         let pool = pools.entry(endpoint.to_string()).or_insert_with(|| {
@@ -490,7 +474,7 @@ impl OperationRouter {
             info!("🆕 Created new connection to {}", endpoint);
             Err(BearDogError::internal(format_args!("Connection pool exhausted for {}", endpoint).to_string()))
 
-    pub async fn return_connection(&self, endpoint: &str, connection: PooledConnection) -> BearDogResult<()> {
+    pub async fn return_connection(&self, endpoint: &str, connection: PooledConnection) -> Result<(), BearDogError> {
         debug!("🔙 Returning connection {} to pool", connection.connection_id);
         if let Some(pool) = pools.get_mut(endpoint) {
             pool.active.remove(&connection.connection_id);
@@ -508,14 +492,14 @@ impl OperationRouter {
 
         true // Placeholder
 
-    async fn select_target_from_rule(&self, rule: &RoutingRule, operation: &RoutingOperation) -> BearDogResult<RoutingTarget> {
+    async fn select_target_from_rule(&self, rule: &RoutingRule, operation: &RoutingOperation) -> Result<RoutingTarget, BearDogError> {
 
         rule.targets.iter()
             .find(|t| t.health_status == TargetHealth::Healthy)
             .cloned()
             .ok_or_else(|| BearDogError::internal("No healthy targets available"))
 
-    async fn select_default_target(&self, operation: &RoutingOperation) -> BearDogResult<RoutingTarget> {
+    async fn select_default_target(&self, operation: &RoutingOperation) -> Result<RoutingTarget, BearDogError> {
 
         Ok(RoutingTarget {
             target_id: Uuid::new_v4(),

@@ -1,6 +1,6 @@
+use beardog_errors::BearDogError;
 
-
-use beardog::error::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog::tunnel::hsm::manager::SimpleHsmTier;
 use beardog::tunnel::hsm::types::{GenerateKeyRequest, StrongBoxImplementation};
 use beardog::tunnel::hsm::{
@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use tokio;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🚀 BearDog HSM Demo for GrapheneOS/Pixel 8a");
     println!("====================================================");
 

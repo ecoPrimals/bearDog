@@ -3,10 +3,10 @@
 use super::engine::GeneticSpawningEngine;
 use beardog_auth::auth::BearDogGenetics;
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use sha3::{Digest, Sha3_256};
 use tracing::info;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 pub async fn apply_directed_evolution(
     _engine: &GeneticSpawningEngine,

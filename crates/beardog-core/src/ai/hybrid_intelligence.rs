@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 use beardog_types::{AuthorizationLevel, SecurityContext};
 
@@ -122,7 +122,7 @@ pub trait UniversalAdapter: Send + Sync {
         &mut self,
         capability: &str, // Universal capability identifier
         request: CapabilityRequest,
-    ) -> BearDogResult<CapabilityResponse>;
+    ) -> Result<CapabilityResponse, BearDogError>;
 
 pub enum CapabilityRequest {
 
@@ -156,7 +156,7 @@ pub use beardog_types::canonical::WorkflowStatus;}
 
 impl HybridIntelligenceManager {
 
-    pub async fn new(universal_adapter: Arc<Mutex<dyn UniversalAdapter>>) -> BearDogResult<Self> {
+    pub async fn new(universal_adapter: Arc<Mutex<dyn UniversalAdapter>>) -> Result<Self, BearDogError> {
         info!("🧠 Initializing `BearDog` Hybrid AI Intelligence Manager");
         let internal_ml_engine = Arc::new(SecurityMLEngine::new().await?);
         let ai_architecture = Arc::new(RwLock::new(BearDogAIArchitecture::default()));
@@ -171,7 +171,7 @@ impl HybridIntelligenceManager {
     pub async fn analyze_threat_internal(
         &self,
         threat_data: &ThreatData,
-    ) -> BearDogResult<SecurityMLResult> {
+    ) -> Result<SecurityMLResult, BearDogError> {
         info!("🔍 Analyzing threat with `BearDog` internal ML");
 
         let pattern_result = self
@@ -197,7 +197,7 @@ impl HybridIntelligenceManager {
 
     pub async fn analyze_with_squirrel_ai(
         ai_request: ExternalAIRequest,
-    ) -> BearDogResult<ExternalAIResult> {
+    ) -> Result<ExternalAIResult, BearDogError> {
         info!("🐿️ Routing AI analysis to Squirrel via universal adapter");
 
         let capability_request = CapabilityRequest::AIIntelligence(ai_request.clone());
@@ -220,7 +220,7 @@ impl HybridIntelligenceManager {
     pub async fn execute_hybrid_workflow(
         workflow_name: &str,
         input_data: &WorkflowInputData,
-    ) -> BearDogResult<HybridWorkflowResult> {
+    ) -> Result<HybridWorkflowResult, BearDogError> {
         info!("🔄 Executing hybrid workflow: {}", workflow_name);
 
         let workflow = HybridAIWorkflow {
@@ -307,7 +307,7 @@ impl HybridIntelligenceManager {
         &self,
         workflow: &HybridAIWorkflow,
         input_data: &WorkflowInputData,
-    ) -> BearDogResult<HybridWorkflowResult> {
+    ) -> Result<HybridWorkflowResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
         let mut tasks = Vec::new();
@@ -343,7 +343,7 @@ impl HybridIntelligenceManager {
         &self,
         workflow: &HybridAIWorkflow,
         input_data: &WorkflowInputData,
-    ) -> BearDogResult<HybridWorkflowResult> {
+    ) -> Result<HybridWorkflowResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
         if input_data.parameters.is_empty() {
@@ -377,7 +377,7 @@ impl HybridIntelligenceManager {
         &self,
         workflow: &HybridAIWorkflow,
         input_data: &WorkflowInputData,
-    ) -> BearDogResult<HybridWorkflowResult> {
+    ) -> Result<HybridWorkflowResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
         let enhanced_input = self.enhance_input_with_beardog_context(input_data, &[]).await?;
@@ -406,7 +406,7 @@ impl HybridIntelligenceManager {
     async fn execute_internal_step(
         step: &HybridAIStep,
         input_data: &WorkflowInputData,
-    ) -> BearDogResult<StepResult> {
+    ) -> Result<StepResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
         let (success, result_data, confidence) = match step.step_type.as_str() {
@@ -461,7 +461,7 @@ impl HybridIntelligenceManager {
         &self,
         input_data: &WorkflowInputData,
         internal_results: &[serde_json::Value],
-    ) -> BearDogResult<WorkflowInputData> {
+    ) -> Result<WorkflowInputData, BearDogError> {
         let mut enhanced_params = input_data.parameters.clone();
 
         enhanced_params.insert("beardog_context".to_string(), serde_json::json!({
@@ -491,7 +491,7 @@ impl HybridIntelligenceManager {
         &self,
         step: &HybridAIStep,
         input_data: &WorkflowInputData,
-    ) -> BearDogResult<StepResult> {
+    ) -> Result<StepResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
         let external_result = match step.step_type.as_str() {
@@ -529,7 +529,7 @@ impl HybridIntelligenceManager {
         })
     }
 
-    fn calculate_security_score(parameters: &std::collections::HashMap<&str, serde_json::Value>) -> BearDogResult<f32> {
+    fn calculate_security_score(parameters: &std::collections::HashMap<&str, serde_json::Value>) -> Result<f32, BearDogError> {
         let mut score = 0.8; // Base security score
 
         if parameters.contains_key("hsm_enabled") {
@@ -545,7 +545,7 @@ impl HybridIntelligenceManager {
         Ok(score.min(1.0))
     }
 
-    fn calculate_performance_score(parameters: &std::collections::HashMap<&str, serde_json::Value>) -> BearDogResult<f32> {
+    fn calculate_performance_score(parameters: &std::collections::HashMap<&str, serde_json::Value>) -> Result<f32, BearDogError> {
         let mut score = 0.7; // Base performance score
 
         if parameters.contains_key("async_enabled") {
@@ -562,7 +562,7 @@ impl HybridIntelligenceManager {
     }
 
     pub async fn analyze_threat_with_semantic_enhancement(
-    ) -> BearDogResult<EnhancedThreatAnalysis> {
+    ) -> Result<EnhancedThreatAnalysis, BearDogError> {
 
         let internal_analysis = self.analyze_threat_internal(threat_data).await?;
 
@@ -597,19 +597,19 @@ impl HybridIntelligenceManager {
         _internal_analysis: &SecurityMLResult,
         _semantic_analysis: &ExternalAIResult,
     ) -> f64 {
-
         0.75
-    const fn calculate_hybrid_confidence(
+    }
 
-        0.85}
+    const fn calculate_hybrid_confidence() -> f64 {
+        0.85
+    }
 
-    fn generate_hybrid_recommendations(
-    ) -> Vec<String> {
-
+    fn generate_hybrid_recommendations() -> Vec<String> {
         vec![
             "Monitor system behavior".to_string(),
             "Review security logs".to_string(),
         ]
+    }
 
 pub struct ThreatData {
     pub threat_indicators: Vec<String>,
@@ -638,7 +638,7 @@ pub struct EnhancedThreatAnalysis {
     pub recommended_actions: Vec<String>,
 
 impl SecurityMLEngine {
-    async fn new() -> BearDogResult<Self> {
+    async fn new() -> Result<Self, BearDogError> {
             threat_models: ahash::HashMap::default(),
             anomaly_detector: BehavioralAnomalyDetector::new(),
             crypto_optimizer: CryptographicMLOptimizer::new(),
@@ -661,7 +661,7 @@ struct RiskAssessment {
     recommendations: Vec<String>,
 
 impl ThreatModel {
-    async fn analyze(&self, _threat_data: &ThreatData) -> BearDogResult<ThreatAnalysisResult> {
+    async fn analyze(&self, _threat_data: &ThreatData) -> Result<ThreatAnalysisResult, BearDogError> {
 
         Ok(ThreatAnalysisResult {
             threat_type: "behavioral_anomaly".to_string(),
@@ -673,7 +673,7 @@ impl BehavioralAnomalyDetector {
 
     async fn detect_anomaly(
         _behavioral_patterns: &HashMap<&str, f64>,
-    ) -> BearDogResult<AnomalyResult> {
+    ) -> Result<AnomalyResult, BearDogError> {
 
         Ok(AnomalyResult {
             anomaly_score: 0.1,
@@ -723,6 +723,8 @@ pub struct MonitoringRequest {
     pub metric_type: String,
     pub target: String,
     pub parameters: HashMap<String, serde_json::Value>,
+}
 
 pub struct ContainerRequest {
     pub container_id: String,
+}

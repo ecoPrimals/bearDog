@@ -43,45 +43,8 @@ pub struct UniversalServiceMetadata {
     pub priority: u32,
 }
 
-pub struct UniversalRequest {
-
-    pub request_id: Uuid,
-
-    pub system_id: String,
-
-    pub operation: String,
-
-    pub parameters: HashMap<String, serde_json::Value>,
-
-    pub data: Vec<u8>,
-
-    pub timestamp: DateTime<Utc>,
-
-    pub source: Option<String>,
-
-    pub target: Option<String>,
-
-    pub auth_token: Option<String>,
-
-    pub metadata: HashMap<String, String>,
-
-    pub priority: RequestPriority,
-
-    pub timeout_seconds: Option<u64>,
-
-pub struct UniversalResponse {
-
-    pub success: bool,
-
-    pub data: HashMap<String, serde_json::Value>,
-
-    pub binary_data: Vec<u8>,
-
-    pub error_message: Option<String>,
-
-    pub error_code: Option<String>,
-
-    pub processing_time_ms: u64,
+// Use canonical types instead of duplicates
+pub use crate::canonical::services::{UniversalRequest, UniversalResponse, RequestPriority, ResponseStatus};
 
 pub struct ServiceCapability {
 

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -169,15 +169,15 @@ pub trait UniversalOptimizationService: Send + Sync {
     async fn request_optimization(
         &self,
         request: OptimizationRequest,
-    ) -> BearDogResult<OptimizationResponse>;
+    ) -> Result<OptimizationResponse, BearDogError>;
 
-    async fn get_available_capabilities(&self) -> BearDogResult<Vec<CapabilityType>>;
+    async fn get_available_capabilities(&self) -> Result<Vec<CapabilityType>, BearDogError>;
 
-    async fn check_optimization_health(&self) -> BearDogResult<HashMap<String, String>>;
+    async fn check_optimization_health(&self) -> Result<HashMap<String, String, BearDogError>;
 
 pub struct EcosystemOptimizationService {
-    discovery_service: Arc<dyn UniversalCapabilityDiscovery>,
-    fallback_optimizer: Arc<dyn LocalOptimizer>,
+    discovery_service: impl UniversalCapabilityDiscovery,
+    fallback_optimizer: impl LocalOptimizer,
 
 pub trait LocalOptimizer: Send + Sync {}
 
@@ -188,8 +188,8 @@ pub trait LocalOptimizer: Send + Sync {}
 impl EcosystemOptimizationService {
 
     pub fn new(
-        discovery_service: Arc<dyn UniversalCapabilityDiscovery>,
-        fallback_optimizer: Arc<dyn LocalOptimizer>,
+        discovery_service: impl UniversalCapabilityDiscovery,
+        fallback_optimizer: impl LocalOptimizer,
     ) -> Self {
         Self {
             discovery_service,
@@ -252,7 +252,7 @@ impl EcosystemOptimizationService {
             }
             _ => PerformanceRequirements::default(),
 impl UniversalOptimizationService for EcosystemOptimizationService {
-    ) -> BearDogResult<OptimizationResponse> {
+    ) -> Result<OptimizationResponse, BearDogError> {
         let start_time = Instant::now();
         info!("🔧 Requesting universal optimization: {:?}", request);
 
@@ -321,7 +321,7 @@ impl UniversalOptimizationService for EcosystemOptimizationService {
             _ => {
                 info!("No optimization modules found, using local implementation");
                 self.fallback_to_local_optimization(request).await
-    async fn get_available_capabilities(&self) -> BearDogResult<Vec<CapabilityType>> {
+    async fn get_available_capabilities(&self) -> Result<Vec<CapabilityType>, BearDogError> {
         let all_optimization_capabilities = vec![
             CapabilityType::GeneticAlgorithms,
             CapabilityType::PerformanceAcceleration,
@@ -343,7 +343,7 @@ impl UniversalOptimizationService for EcosystemOptimizationService {
                 _ => continue,
         Ok(available_capabilities)}
 
-    async fn check_optimization_health(&self) -> BearDogResult<HashMap<String, String>> {
+    async fn check_optimization_health(&self) -> Result<HashMap<String, String, BearDogError> {
         let mut health_map = ahash::HashMap::default();
         let capabilities_to_check = vec![
         for capability in capabilities_to_check {

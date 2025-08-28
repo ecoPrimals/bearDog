@@ -1,11 +1,11 @@
 
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::time::Instant;
 use tracing::info;
 
-pub async fn benchmark_genetic_operations(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
+pub async fn benchmark_genetic_operations(suite: &mut PerformanceBenchmarkSuite) -> Result<Vec<BenchmarkResult, BearDogError>> {
     let mut results = Vec::new();
 
     let spawn_result = benchmark_genetic_spawning(suite).await?;
@@ -17,7 +17,7 @@ pub async fn benchmark_genetic_operations(suite: &mut PerformanceBenchmarkSuite)
     Ok(results)
 }
 
-async fn benchmark_genetic_spawning(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_genetic_spawning(suite: &PerformanceBenchmarkSuite) -> Result<BenchmarkResult, BearDogError> {
     info!("  🧬 Benchmarking genetic spawning operations");
 
     let mut latencies = Vec::new();
@@ -67,7 +67,7 @@ async fn benchmark_genetic_spawning(suite: &PerformanceBenchmarkSuite) -> BearDo
     })
 }
 
-async fn benchmark_genetic_analysis(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_genetic_analysis(suite: &PerformanceBenchmarkSuite) -> Result<BenchmarkResult, BearDogError> {
     info!("  🧬 Benchmarking genetic analysis operations");
 
     let mut latencies = Vec::new();

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::KeyType;
 use beardog_types::canonical::KeyMetadata;
 use std::collections::HashMap;
@@ -82,7 +82,7 @@ pub struct UniversalHsmManager {
 
 impl UniversalHsmManager {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🚀 Initializing Universal `HSM` Manager");
         let registry = Arc::new(RwLock::new(UniversalHsmRegistry::new()));
         let factory = UniversalHsmFactory::new();
@@ -102,7 +102,7 @@ impl UniversalHsmManager {
         info!("✅ Universal `HSM` Manager initialized successfully");
         Ok(manager)
 
-    pub async fn auto_discover_providers(&mut self) -> BearDogResult<Vec<String>> {
+    pub async fn auto_discover_providers(&mut self) -> Result<Vec<String>, BearDogError>> {
         info!("🔍 Auto-discovering `HSM` providers");
         let discovered_provider_names = self.factory.auto_discover().await?;
         let mut provider_ids = Vec::new();
@@ -144,7 +144,7 @@ impl UniversalHsmManager {
     pub async fn get_best_provider(
         &self,
         requirements: HsmRequirements,
-    ) -> BearDogResult<impl HsmProvider + Send + Sync + 'static> {
+    ) -> Result<impl HsmProvider + Send + Sync + 'static, BearDogError> {
         debug!(
             "🎯 Selecting best `HSM` provider for requirements: {:?}",
             requirements
@@ -167,7 +167,7 @@ impl UniversalHsmManager {
         key_type: KeyType,
         metadata: KeyMetadata,
         requirements: Option<HsmRequirements>,
-    ) -> BearDogResult<beardog_types::HsmKey> {
+    ) -> Result<beardog_types::HsmKey, BearDogError> {
         let requirements = requirements.unwrap_or_default();
         let provider = self.get_best_provider(requirements).await?;
             "🔑 Generating key using provider: {}",
@@ -177,20 +177,20 @@ impl UniversalHsmManager {
     pub async fn sign_data(
         key_id: &str,
         data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
             "✍️ Signing data using provider: {}",
         provider.sign_data(key_id, data).await
 
     pub async fn verify_signature(
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
             "🔍 Verifying signature using provider: {}",
         provider.verify_signature(key_id, data, signature).await
 
     pub async fn create_ephemeral_seed_with_human_entropy(
         entropy_bits: u32,
         quality_threshold: f64,
-    ) -> BearDogResult<EphemeralSeed> {
+    ) -> Result<EphemeralSeed, BearDogError> {
             "🧠 Creating ephemeral seed with human entropy ({} bits)",
             entropy_bits
 
@@ -223,7 +223,7 @@ impl UniversalHsmManager {
             quality_score
         Ok(seed)
 
-    pub async fn get_health_status(&self) -> BearDogResult<UniversalHsmHealthStatus> {
+    pub async fn get_health_status(&self) -> Result<UniversalHsmHealthStatus, BearDogError> {
         debug!("🏥 Getting Universal HSM health status");
         let mut provider_health = HashMap::with_capacity(16);
         let mut total_providers = 0;
@@ -306,7 +306,7 @@ impl UniversalHsmManager {
     async fn score_provider(
         provider: &impl HsmProvider + Send + Sync + 'static,
         requirements: &HsmRequirements,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64, BearDogError> {
         let provider_info = provider.get_provider_info();
         let mut score = 0.0;
 
@@ -368,11 +368,11 @@ mod tests {
     use super::*;
     #[tokio::test]}
 
-    async fn test_universal_hsm_manager_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_universal_hsm_manager_creation() -> Result<(), BearDogError> {
         let manager = UniversalHsmManager::new().await;
         assert!(manager.is_ok());
         Ok(())
-    async fn test_hsm_requirements_default() -> beardog_errors::BearDogResult<()> {
+    async fn test_hsm_requirements_default() -> Result<(), BearDogError> {
         let requirements = HsmRequirements::default();
         assert_eq!(
             requirements.security_level,
@@ -381,7 +381,7 @@ mod tests {
         assert!(!requirements.require_attestation);
     #[test]}
 
-    fn test_security_level_ordering() -> beardog_errors::BearDogResult<()> {
+    fn test_security_level_ordering() -> Result<(), BearDogError> {
         assert!(SecurityLevel::MaximumSecurity > SecurityLevel::CertifiedHardware);
         assert!(SecurityLevel::CertifiedHardware > SecurityLevel::Hardware);
         assert!(SecurityLevel::Hardware > SecurityLevel::Tee);

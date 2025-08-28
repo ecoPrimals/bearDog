@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::fs;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use crate::ai_automation::standalone_ai::{BearDogAICore, AIInsight};
 use crate::ai_automation::network_effects::SquirrelNetwork;
 
@@ -97,7 +97,7 @@ pub async fn run_performance_optimization(
     benchmark_file: &PathBuf,
     ai_optimize: bool,
     output_file: &PathBuf,
-) -> BearDogResult<Vec<PerformanceOptimizationResult>> {
+) -> Result<Vec<PerformanceOptimizationResult, BearDogError>> {
 
     let requests_data = fs::read_to_string(benchmark_file).await?;
     let requests: Vec<PerformanceOptimizationRequest> = serde_json::from_str(&requests_data)?;
@@ -138,7 +138,7 @@ async fn execute_standalone_optimization(
     ai_core: &BearDogAICore,
     request: &PerformanceOptimizationRequest,
     ai_optimize: bool,
-) -> BearDogResult<PerformanceOptimizationResult> {
+) -> Result<PerformanceOptimizationResult, BearDogError> {
     println!("🔧 Running standalone optimization: {:?}", request.optimization_target);
 
     let baseline_metrics = collect_baseline_metrics(&request.optimization_target).await?;
@@ -183,7 +183,7 @@ async fn execute_network_distributed_optimization(
     network: &SquirrelNetwork,
     request: &PerformanceOptimizationRequest,
     ai_optimize: bool,
-) -> BearDogResult<PerformanceOptimizationResult> {
+) -> Result<PerformanceOptimizationResult, BearDogError> {
     println!("🌐 Running network-distributed optimization: {:?}", request.optimization_target);
 
     let distributed_analysis = distribute_optimization_analysis(network, request).await?;
@@ -227,7 +227,7 @@ async fn execute_network_distributed_optimization(
     })
 }
 
-async fn collect_baseline_metrics(target: &OptimizationTarget) -> BearDogResult<HashMap<String, f64>> {
+async fn collect_baseline_metrics(target: &OptimizationTarget) -> Result<HashMap<String, f64, BearDogError>> {
 
     let mut metrics = HashMap::with_capacity(16);
     
@@ -270,7 +270,7 @@ async fn analyze_optimization_opportunities_with_ai(
     ai_core: &BearDogAICore,
     request: &PerformanceOptimizationRequest,
     baseline_metrics: &HashMap<&str, f64>,
-) -> BearDogResult<Vec<OptimizationAction>> {
+) -> Result<Vec<OptimizationAction, BearDogError>> {
 
     let mut actions = Vec::new();
 
@@ -323,7 +323,7 @@ async fn analyze_optimization_opportunities_with_ai(
 async fn generate_basic_optimization_actions(
     request: &PerformanceOptimizationRequest,
     _baseline_metrics: &HashMap<&str, f64>,
-) -> BearDogResult<Vec<OptimizationAction>> {
+) -> Result<Vec<OptimizationAction, BearDogError>> {
 
     Ok(vec![
         OptimizationAction {
@@ -340,7 +340,7 @@ async fn generate_basic_optimization_actions(
 async fn apply_optimization_actions(
     actions: &[OptimizationAction],
     baseline_metrics: &HashMap<&str, f64>,
-) -> BearDogResult<HashMap<String, f64>> {
+) -> Result<HashMap<String, f64, BearDogError>> {
 
     let mut optimized_metrics = baseline_metrics.clone();
     
@@ -358,7 +358,7 @@ async fn apply_optimization_actions(
 async fn apply_network_enhanced_optimizations(
     actions: &[OptimizationAction],
     baseline_metrics: &HashMap<&str, f64>,
-) -> BearDogResult<HashMap<String, f64>> {
+) -> Result<HashMap<String, f64, BearDogError>> {
 
     let mut optimized_metrics = apply_optimization_actions(actions, baseline_metrics).await?;
 
@@ -390,7 +390,7 @@ async fn generate_performance_ai_insights(
     _ai_core: &BearDogAICore,
     actions: &[OptimizationAction],
     achieved_improvement: f64,
-) -> BearDogResult<Vec<AIInsight>> {
+) -> Result<Vec<AIInsight, BearDogError>> {
     Ok(vec![
         AIInsight {
             category: "Performance Optimization".to_string(),
@@ -413,7 +413,7 @@ async fn generate_performance_ai_insights(
 async fn distribute_optimization_analysis(
     _network: &SquirrelNetwork,
     request: &PerformanceOptimizationRequest,
-) -> BearDogResult<Vec<Vec<OptimizationAction>>> {
+) -> Result<Vec<Vec<OptimizationAction, BearDogError>>> {
 
     let baseline_metrics = collect_baseline_metrics(&request.optimization_target).await?;
     
@@ -429,7 +429,7 @@ async fn distribute_optimization_analysis(
 
 async fn combine_distributed_optimizations(
     distributed_results: Vec<Vec<OptimizationAction>>,
-) -> BearDogResult<Vec<OptimizationAction>> {
+) -> Result<Vec<OptimizationAction, BearDogError>> {
 
     let mut combined_actions = Vec::new();
     
@@ -447,7 +447,7 @@ async fn generate_network_optimization_insights(
     _ai_core: &BearDogAICore,
     actions: &[OptimizationAction],
     network_benefits: &NetworkPerformanceBenefits,
-) -> BearDogResult<Vec<AIInsight>> {
+) -> Result<Vec<AIInsight, BearDogError>> {
     Ok(vec![
         AIInsight {
             category: "Network-Enhanced Performance".to_string(),

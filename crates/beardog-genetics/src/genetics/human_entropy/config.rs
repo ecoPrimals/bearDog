@@ -23,29 +23,23 @@ pub struct HumanEntropyConfig {
 }
 
 pub struct AudioConfig {
-
     pub enabled: bool,
-
     pub sample_rate: u32,
-
     pub bit_depth: u8,
-
     pub privacy_filter: String,
+}
 
 pub struct VisualConfig {
-
     pub resolution: (u32, u32),
-
     pub fps: u32,
+}
 
 pub struct HapticConfig {
-
     pub touch_sensitivity: String,
-
     pub motion_sensitivity: String,
+}
 
 pub struct BiometricConfig {
-
     pub require_explicit_consent: bool,
-
     pub privacy_protection: String,
+}

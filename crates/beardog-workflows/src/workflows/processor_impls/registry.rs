@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::workflow::WorkflowType;
 use super::core::WorkflowProcessor;
 use super::{

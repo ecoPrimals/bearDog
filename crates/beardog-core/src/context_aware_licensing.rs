@@ -11,6 +11,7 @@ pub enum IndividualType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContextualClassification {
     pub subtype: IndividualType,
+}
 
 pub struct ClassificationEvidence;
 pub struct ContextAwareLicense;

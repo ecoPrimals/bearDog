@@ -5,7 +5,7 @@ use super::types::AndroidDeviceInfo;
 use crate::tunnel::hsm::types::*;
 use beardog_traits::canonical::HsmProvider;
 use beardog_core::{HsmHealthStatus, HsmKey}; // Use canonical types for trait compatibility
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -13,7 +13,7 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 impl AndroidStrongBoxHsm {
 
-    pub async fn new(config: AndroidHsmConfig) -> BearDogResult<Self> {
+    pub async fn new(config: AndroidHsmConfig) -> Result<Self, BearDogError> {
         info!("🔐 Initializing Android StrongBox HSM");
 
         let device_info = Arc::new(AndroidDeviceInfo::detect().await?);
@@ -62,7 +62,7 @@ impl AndroidStrongBoxHsm {
     pub async fn generate_strongbox_key(
         &self,
         request: &GenerateKeyRequest,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         info!("🔐 Generating StrongBox key: {}", request.key_id);
 
         let key_params = self.configure_strongbox_parameters(request)?;
@@ -105,7 +105,7 @@ impl AndroidStrongBoxHsm {
         Ok(hsm_key)
 
     fn configure_strongbox_parameters(
-    ) -> BearDogResult<AndroidKeyParams> {
+    ) -> Result<AndroidKeyParams, BearDogError> {
         let mut params = AndroidKeyParams::new();
 
         match &request.key_type {
@@ -175,7 +175,7 @@ impl AndroidStrongBoxHsm {
             params.set_attestation_challenge(challenge);
         Ok(params)
 
-    fn generate_attestation_challenge(&self) -> BearDogResult<Vec<u8>> {
+    fn generate_attestation_challenge(&self) -> Result<Vec<u8>, BearDogError>> {
         self.attestation_service
             .challenge_generator
             .generate_challenge(32)
@@ -183,7 +183,7 @@ impl AndroidStrongBoxHsm {
     async fn generate_key_attestation(
         key_id: &str,
         challenge: &[u8],
-    ) -> BearDogResult<KeyAttestation> {
+    ) -> Result<KeyAttestation, BearDogError> {
         info!("🔐 Generating key attestation for: {}", key_id);
 
         let certificate_chain = self.keystore.get_certificate_chain(key_id).await?;
@@ -213,7 +213,7 @@ impl AndroidStrongBoxHsm {
             verified: true,
         })
 
-    async fn cache_key_info(&self, hsm_key: &HsmKey) -> BearDogResult<()> {
+    async fn cache_key_info(&self, hsm_key: &HsmKey) -> Result<(), BearDogError> {
         debug!("Caching key info for key: {}", hsm_key.id);
         let mut cache = self.key_cache.write().await;
         let cache_info = CachedKeyInfo {
@@ -246,12 +246,12 @@ impl AndroidStrongBoxHsm {
         cache.insert(hsm_key.id.clone(), cache_info);
         Ok(())
 
-    async fn update_key_usage(&self, key_id: &str) -> BearDogResult<()> {
+    async fn update_key_usage(&self, key_id: &str) -> Result<(), BearDogError> {
         if let Some(cache_info) = cache.get_mut(key_id) {
             cache_info.last_used = Utc::now();
             cache_info.usage_count += 1;
 
-    async fn validate_key_access(&self, key_id: &str) -> BearDogResult<()> {
+    async fn validate_key_access(&self, key_id: &str) -> Result<(), BearDogError> {
 
         let cache = self.key_cache.read().await;
         if !cache.contains_key(key_id) {
@@ -259,7 +259,7 @@ impl AndroidStrongBoxHsm {
 }
 
 impl HsmProvider for AndroidStrongBoxHsm {
-    async fn initialize(&self, _config: HsmConfig) -> BearDogResult<()> {
+    async fn initialize(&self, _config: HsmConfig) -> Result<(), BearDogError> {
         info!("🔐 Initializing Android StrongBox HSM Provider");
 
         self.keystore.test_keystore_access().await?;
@@ -268,31 +268,31 @@ impl HsmProvider for AndroidStrongBoxHsm {
         self.health_monitor.start_monitoring().await?;
         info!("✅ Android StrongBox HSM Provider initialized");}
 
-    async fn generate_key(&self, request: GenerateKeyRequest) -> BearDogResult<HsmKey> {
+    async fn generate_key(&self, request: GenerateKeyRequest) -> Result<HsmKey, BearDogError> {
         self.generate_strongbox_key(&request).await
-    async fn import_key(&self, _key_data: &[u8], _metadata: KeyMetadata) -> BearDogResult<HsmKey> {
+    async fn import_key(&self, _key_data: &[u8], _metadata: KeyMetadata) -> Result<HsmKey, BearDogError> {
 
         Err(BearDogError::unsupported_operation("StrongBox keys must be generated in hardware".to_string(),
         ))}
 
-    async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         self.validate_key_access(key_id).await?;
         self.update_key_usage(key_id).await?;
         info!("🔐 Encrypting with StrongBox key: {}", key_id);
         let ciphertext = self.keystore.encrypt(key_id, plaintext).await?;
         info!("✅ Encryption completed successfully");
         Ok(ciphertext)
-    async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("🔐 Decrypting with StrongBox key: {}", key_id);
         let plaintext = self.keystore.decrypt(key_id, ciphertext).await?;
         info!("✅ Decryption completed successfully");
         Ok(plaintext)
-    async fn sign(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("🔐 Signing with StrongBox key: {}", key_id);
         let signature = self.keystore.sign(key_id, data).await?;
         info!("✅ Signing completed successfully");
         Ok(signature)
-    async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
+    async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> Result<bool, BearDogError> {
         info!("🔐 Verifying signature with StrongBox key: {}", key_id);
         let valid = self.keystore.verify(key_id, data, signature).await?;
         info!("✅ Signature verification completed: {}", valid);
@@ -302,7 +302,7 @@ impl HsmProvider for AndroidStrongBoxHsm {
         _derivation_data: &[u8],
 
         Err(BearDogError::unsupported_operation("Key derivation not supported in StrongBox".to_string(),
-    async fn get_info(&self) -> BearDogResult<HsmInfo> {
+    async fn get_info(&self) -> Result<HsmInfo, BearDogError> {
         debug!("Getting Android StrongBox HSM info");
         let device_info = AndroidDeviceInfo::detect().await?;
         Ok(HsmInfo {
@@ -335,7 +335,7 @@ impl HsmProvider for AndroidStrongBoxHsm {
             max_key_size: Some(4096),
             certification: Some("Android StrongBox".to_string()),
             tamper_resistance: crate::tunnel::hsm::types::tier::TamperResistanceLevel::Hardware,
-    async fn list_keys(&self) -> BearDogResult<Vec<HsmKeyInfo>> {
+    async fn list_keys(&self) -> Result<Vec<HsmKeyInfo>, BearDogError>> {
         debug!("Listing Android StrongBox keys");
         let mut keys = Vec::new();
 
@@ -367,19 +367,19 @@ impl HsmProvider for AndroidStrongBoxHsm {
             };
             keys.push(key_info);
         Ok(keys)
-    async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
+    async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         info!("🗑️ Deleting StrongBox key: {}", key_id);
         self.keystore.delete_key(key_id).await?;
 
         cache.remove(key_id);
         info!("✅ StrongBox key deleted successfully: {}", key_id);
-    async fn backup(&self) -> BearDogResult<Option<Vec<u8>>> {
+    async fn backup(&self) -> Result<Option<Vec<u8>, BearDogError>>> {
 
         warn!("⚠️ StrongBox keys cannot be backed up - they are hardware-bound");
         Ok(None)}
 
-    async fn restore(&self, _backup_data: &[u8]) -> BearDogResult<()> {
+    async fn restore(&self, _backup_data: &[u8]) -> Result<(), BearDogError> {
 
         Err(BearDogError::unsupported_operation("StrongBox keys cannot be restored - they are hardware-bound".to_string(),
-    async fn health_check(&self) -> BearDogResult<HsmHealthStatus> {
+    async fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
         self.health_monitor.get_health_status().await

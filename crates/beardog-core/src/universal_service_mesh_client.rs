@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 use reqwest::Client as HttpClient;
 use serde::{Deserialize, Serialize};
@@ -132,7 +132,7 @@ impl UniversalServiceMeshClient {
             timeout: config.discovery_timeout,
             config,
 
-    pub async fn discover_service_meshes(&self) -> BearDogResult<Vec<ServiceMeshCapability>> {
+    pub async fn discover_service_meshes(&self) -> Result<Vec<ServiceMeshCapability>, BearDogError> {
         info!("🔍 Discovering service mesh capabilities in ecosystem");
         let mut discovered_meshes = Vec::new();
 
@@ -160,7 +160,7 @@ impl UniversalServiceMeshClient {
             info!("🎯 Selected service mesh: {}", discovered_meshes[0].primal_id);
         Ok(discovered_meshes)
 
-    async fn get_discovery_endpoints(&self) -> BearDogResult<Vec<String>> {
+    async fn get_discovery_endpoints(&self) -> Result<Vec<String>, BearDogError> {
         let mut endpoints = Vec::new();
 
         if let Ok(discovery_url) = std::env::var("ECOSYSTEM_DISCOVERY_URL") {
@@ -177,7 +177,7 @@ impl UniversalServiceMeshClient {
             ));
         Ok(endpoints)
 
-    async fn probe_service_mesh_capability(&self, endpoint: &str) -> BearDogResult<ServiceMeshCapability> {
+    async fn probe_service_mesh_capability(&self, endpoint: &str) -> Result<ServiceMeshCapability, BearDogError> {
         debug!("🔍 Probing service mesh capability at: {}", endpoint);
 
         let capability_url = format_args!("{}/ecosystem/capabilities", endpoint).to_string();
@@ -232,7 +232,7 @@ impl UniversalServiceMeshClient {
             last_success: Some(chrono::Utc::now()),
         })
 
-    async fn select_best_mesh(&self, meshes: &[ServiceMeshCapability]) -> BearDogResult<Option<ServiceMeshCapability>> {
+    async fn select_best_mesh(&self, meshes: &[ServiceMeshCapability]) -> Result<Option<ServiceMeshCapability>, BearDogError> {
         if meshes.is_empty() {
             return Ok(None);
 
@@ -268,7 +268,7 @@ impl UniversalServiceMeshClient {
         warn!("⚠️ No service mesh meets quality threshold {:.2}", self.config.quality_threshold);
         Ok(None)
 
-    pub async fn register_with_ecosystem(&self) -> BearDogResult<BearDogRegistration> {
+    pub async fn register_with_ecosystem(&self) -> Result<BearDogRegistration, BearDogError> {
         let active_mesh = {
             let mesh_guard = self.active_mesh.read().await;
             mesh_guard.clone().ok_or_else(|| BearDogError::State {
@@ -321,7 +321,7 @@ impl UniversalServiceMeshClient {
         info!("✅ Successfully registered BearDog with ecosystem");
         Ok(registration)
 
-    async fn create_registration_request(&self) -> BearDogResult<serde_json::Value> {
+    async fn create_registration_request(&self) -> Result<serde_json::Value, BearDogError> {
         Ok(serde_json::json!({
             "primal_id": "beardog",
             "instance_id": Uuid::new_v4().to_string(),
@@ -345,7 +345,7 @@ impl UniversalServiceMeshClient {
                 "instance_type": "security_provider"
         }))
 
-    pub async fn send_service_request(&self, request: UniversalServiceRequest) -> BearDogResult<UniversalServiceResponse> {
+    pub async fn send_service_request(&self, request: UniversalServiceRequest) -> Result<UniversalServiceResponse, BearDogError> {
                 message: "No active service mesh available for request routing".to_string(),
         debug!(
             "📤 Sending service request {} to {} via {}",
@@ -372,7 +372,7 @@ impl UniversalServiceMeshClient {
             processing_time,
             source_primal: active_mesh.primal_id,
 
-    pub async fn discover_services(&self, service_type: Option<&str>) -> BearDogResult<Vec<DiscoveredService>> {
+    pub async fn discover_services(&self, service_type: Option<&str>) -> Result<Vec<DiscoveredService>, BearDogError> {
                 message: "No active service mesh available for service discovery".to_string(),
         let mut discovery_url = format_args!("{}/ecosystem/services", active_mesh.endpoint).to_string();
         if let Some(svc_type) = service_type {

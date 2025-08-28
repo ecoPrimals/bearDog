@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
-pub use beardog_errors::{BearDogError, BearDogResult};
+pub use beardog_errors::BearDogError;
 

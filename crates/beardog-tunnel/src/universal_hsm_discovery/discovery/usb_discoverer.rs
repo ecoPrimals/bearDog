@@ -1,17 +1,17 @@
 
 
 use super::super::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use tracing::{debug, info};
 
 #[derive(Debug)]
 pub struct UsbDiscoverer;
 impl UsbDiscoverer {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn discover(&self, config: &DiscoveryConfig) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("🔌 Discovering USB HSMs");
         let mut hsms = Vec::new();
         
@@ -27,7 +27,7 @@ impl UsbDiscoverer {}
         info!("Found {} USB HSMs", hsms.len());
         Ok(hsms)
 
-    async fn discover_yubikeys(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    async fn discover_yubikeys(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("🔍 Checking for YubiKey devices");
         let mut yubikeys = Vec::new();
 
@@ -51,7 +51,7 @@ impl UsbDiscoverer {}
             });
         Ok(yubikeys)
 
-    async fn discover_safenet_tokens(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    async fn discover_safenet_tokens(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("🔍 Checking for SafeNet tokens");
         let mut tokens = Vec::new();
 

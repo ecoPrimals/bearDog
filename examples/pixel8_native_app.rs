@@ -7,7 +7,7 @@ use beardog::tunnel::hsm::android_strongbox::{
     Pixel8PerformanceMode,
 };
 use beardog::tunnel::hsm::types::*;
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{info, Level};
 
@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn run_beardog_hsm() -> BearDogResult<()> {
+async fn run_beardog_hsm() -> Result<(), BearDogError> {
     info!("🔐 Initializing BearDog HSM System");
     info!("=================================");
 
@@ -71,7 +71,7 @@ async fn run_beardog_hsm() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn initialize_pixel8_hsm() -> BearDogResult<(Arc<AndroidStrongBoxHsm>, HsmKey)> {
+async fn initialize_pixel8_hsm() -> Result<(Arc<AndroidStrongBoxHsm, BearDogError>, HsmKey)> {
     info!("📱 Phase 1: Pixel 8 HSM Initialization");
     info!("--------------------------------------");
 
@@ -103,7 +103,7 @@ async fn initialize_pixel8_hsm() -> BearDogResult<(Arc<AndroidStrongBoxHsm>, Hsm
     Ok((hsm, anchor_key))
 }
 
-async fn test_hsm_operations(hsm: &Arc<AndroidStrongBoxHsm>, anchor_key: &HsmKey) -> BearDogResult<()> {
+async fn test_hsm_operations(hsm: &Arc<AndroidStrongBoxHsm>, anchor_key: &HsmKey) -> Result<(), BearDogError> {
     info!("🧪 Phase 2: Core HSM Operations Testing");
     info!("---------------------------------------");
 
@@ -157,7 +157,7 @@ async fn test_hsm_operations(hsm: &Arc<AndroidStrongBoxHsm>, anchor_key: &HsmKey
     Ok(())
 }
 
-async fn generate_test_keys(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResult<Vec<HsmKey>> {
+async fn generate_test_keys(hsm: &Arc<AndroidStrongBoxHsm>) -> Result<Vec<HsmKey, BearDogError>> {
     info!("🔑 Generating test keys for comprehensive testing");
     
     let mut keys = Vec::new();
@@ -207,7 +207,7 @@ async fn generate_test_keys(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResult<Vec
     Ok(keys)
 }
 
-async fn create_ecosystem_identity(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResult<()> {
+async fn create_ecosystem_identity(hsm: &Arc<AndroidStrongBoxHsm>) -> Result<(), BearDogError> {
     info!("🌐 Phase 3: Ecosystem Identity Creation");
     info!("--------------------------------------");
 
@@ -227,7 +227,7 @@ async fn create_ecosystem_identity(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogRes
     Ok(())
 }
 
-async fn run_comprehensive_tests(hsm: &Arc<AndroidStrongBoxHsm>) -> BearDogResult<()> {
+async fn run_comprehensive_tests(hsm: &Arc<AndroidStrongBoxHsm>) -> Result<(), BearDogError> {
     info!("🔬 Phase 4: Comprehensive HSM Testing");
     info!("------------------------------------");
 

@@ -1,10 +1,7 @@
-
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticsConfig {
-
     pub max_population_size: usize,
 
     pub population_size: usize,
@@ -38,22 +35,21 @@ pub struct GeneticsConfig {
 impl Default for GeneticsConfig {
     fn default() -> Self {
         Self {
-
             max_population_size: 1000,
             population_size: 100,
             max_generations: 1000,
 
-            mutation_rate: 0.05,      // Conservative for security
-            crossover_rate: 0.8,      // High for diversity
-            selection_pressure: 0.7,   // Moderate selection
+            mutation_rate: 0.05,     // Conservative for security
+            crossover_rate: 0.8,     // High for diversity
+            selection_pressure: 0.7, // Moderate selection
 
-            max_genetic_diversity: 0.8,        // Allow significant diversity
-            diversity_threshold: 0.3,          // Maintain minimum diversity
-            min_security_threshold: 0.7,       // High security requirement
-            fitness_threshold: 0.5,            // Moderate fitness requirement
+            max_genetic_diversity: 0.8,  // Allow significant diversity
+            diversity_threshold: 0.3,    // Maintain minimum diversity
+            min_security_threshold: 0.7, // High security requirement
+            fitness_threshold: 0.5,      // Moderate fitness requirement
 
-            capability_inheritance_weight: 0.8,  // Favor inheritance
-            trait_blending_factor: 0.6,          // Moderate blending
+            capability_inheritance_weight: 0.8, // Favor inheritance
+            trait_blending_factor: 0.6,         // Moderate blending
 
             enable_directed_evolution: true,
             enable_adaptive_mutations: true,
@@ -62,33 +58,32 @@ impl Default for GeneticsConfig {
     }
 }
 impl GeneticsConfig {
-
     pub fn security_focused() -> Self {
         Self {
-            mutation_rate: 0.02,                    // Very conservative mutations
-            min_security_threshold: 0.9,            // Very high security requirement
-            capability_inheritance_weight: 0.9,     // Heavily favor proven capabilities
-            enable_directed_evolution: true,        // Enable security-directed evolution
+            mutation_rate: 0.02,                // Very conservative mutations
+            min_security_threshold: 0.9,        // Very high security requirement
+            capability_inheritance_weight: 0.9, // Heavily favor proven capabilities
+            enable_directed_evolution: true,    // Enable security-directed evolution
             ..Default::default()
         }
     }
 
     pub fn performance_focused() -> Self {
         Self {
-            mutation_rate: 0.1,                     // Higher mutation for innovation
-            selection_pressure: 0.9,                // Strong performance selection
-            fitness_threshold: 0.7,                 // High fitness requirement
-            parallel_processing: true,              // Enable performance optimizations
+            mutation_rate: 0.1,        // Higher mutation for innovation
+            selection_pressure: 0.9,   // Strong performance selection
+            fitness_threshold: 0.7,    // High fitness requirement
+            parallel_processing: true, // Enable performance optimizations
             ..Default::default()
         }
     }
 
     pub fn experimental() -> Self {
         Self {
-            population_size: 50,                    // Smaller for speed
-            max_generations: 100,                   // Fewer generations
-            mutation_rate: 0.15,                    // High mutation for diversity
-            min_security_threshold: 0.5,            // Lower security for experimentation
+            population_size: 50,         // Smaller for speed
+            max_generations: 100,        // Fewer generations
+            mutation_rate: 0.15,         // High mutation for diversity
+            min_security_threshold: 0.5, // Lower security for experimentation
             ..Default::default()
         }
     }
@@ -108,4 +103,4 @@ impl GeneticsConfig {
         }
         Ok(())
     }
-} 
+}

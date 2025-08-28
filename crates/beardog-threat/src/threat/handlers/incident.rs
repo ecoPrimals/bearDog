@@ -1,24 +1,20 @@
-
-
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 use uuid::Uuid;
 
-use crate::threat::types::incidents::response::{IncidentResponse, ResponseType, IncidentStatus, IncidentType};
 use crate::threat::types::core::ThreatEvent;
-use beardog_errors::BearDogResult;
-use beardog_errors::BearDogError;
+use crate::threat::types::incidents::response::{
+    IncidentResponse, IncidentStatus, IncidentType, ResponseType,
+};
 use crate::threat::types::ThreatDetectionEngine;
+use beardog_errors::BearDogError;
 
 impl ThreatDetectionEngine {
-
     pub async fn create_incident_response(
         &mut self,
         threat_event: &ThreatEvent,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
         let incident_id = Uuid::new_v4().to_string();
         let timestamp = Utc::now();
         let incident_response = IncidentResponse {
@@ -34,6 +30,11 @@ impl ThreatDetectionEngine {
             incident_type: IncidentType::Security,
             estimated_cost: None,
             actual_cost: None,
+            containment_actions: Vec::new(),
+            remediation_actions: Vec::new(),
+            lessons_learned: Vec::new(),
+            severity: threat_event.severity.clone(),
+            assigned_to: None,
         };
 
         {
@@ -51,7 +52,7 @@ impl ThreatDetectionEngine {
         &self,
         incident_id: &str,
         status: IncidentStatus,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut incidents = self.active_incidents.write().await;
         if let Some(incident) = incidents.get_mut(incident_id) {
             incident.status = status;
@@ -69,7 +70,10 @@ impl ThreatDetectionEngine {
         }
     }
 
-    pub async fn get_incident(&self, incident_id: &str) -> BearDogResult<Option<IncidentResponse>> {
+    pub async fn get_incident(
+        &self,
+        incident_id: &str,
+    ) -> Result<Option<IncidentResponse>, BearDogError> {
         let incidents = self.active_incidents.read().await;
         Ok(incidents.get(incident_id).cloned())
     }
@@ -78,11 +82,12 @@ impl ThreatDetectionEngine {
         &self,
         incident_id: &str,
         action: &str,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut incidents = self.active_incidents.write().await;
         if let Some(incident) = incidents.get_mut(incident_id) {
             let timestamp = Utc::now();
-            let timestamped_action = format!("[{}] {}", timestamp.format("%Y-%m-%d %H:%M:%S UTC"), action);
+            let timestamped_action =
+                format!("[{}] {}", timestamp.format("%Y-%m-%d %H:%M:%S UTC"), action);
             incident.actions_taken.push(timestamped_action);
             incident.updated_at = timestamp;
             info!("Added action to incident {}: {}", incident_id, action);
@@ -98,7 +103,7 @@ impl ThreatDetectionEngine {
         &self,
         incident_id: &str,
         team: &str,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut incidents = self.active_incidents.write().await;
         if let Some(incident) = incidents.get_mut(incident_id) {
             let previous_team = incident.assigned_team.clone();
@@ -120,7 +125,7 @@ impl ThreatDetectionEngine {
         }
     }
 
-    pub async fn get_active_incidents(&self) -> BearDogResult<Vec<IncidentResponse>> {
+    pub async fn get_active_incidents(&self) -> Result<Vec<IncidentResponse>, BearDogError> {
         let incidents = self.active_incidents.read().await;
         let active_incidents: Vec<IncidentResponse> = incidents
             .values()
@@ -139,7 +144,7 @@ impl ThreatDetectionEngine {
         &self,
         incident_id: &str,
         escalation_reason: &str,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!(
             "[{}] Incident escalated: {}",
             incident_id, escalation_reason
@@ -153,7 +158,7 @@ impl ThreatDetectionEngine {
         &self,
         incident_id: &str,
         resolution_summary: &str,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("Closing incident {}: {}", incident_id, resolution_summary);
 
         Ok(())

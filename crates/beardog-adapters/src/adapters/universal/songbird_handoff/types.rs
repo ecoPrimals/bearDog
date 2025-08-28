@@ -108,27 +108,8 @@ pub struct SecurityContext {
 
     pub session_id: Option<String>,
 
-pub struct SongBirdHandoffConfig {
-
-    pub songbird_endpoint: String,
-
-    pub api_key: String,
-
-    pub registration_timeout_seconds: u64,
-
-    pub heartbeat_interval_seconds: u64,
-
-    pub max_registration_retries: u32,
-
-    pub enable_auto_reregistration: bool,
-
-    pub discovery_tags: Vec<String>,
-
-    pub load_balancer_algorithm: LoadBalancingAlgorithm,
-
-    pub enable_circuit_breaker: bool,
-
-    pub health_check_interval_seconds: u64,}
+// UNIFIED: Use canonical SongBirdHandoffConfig
+pub use beardog_types::canonical::configuration::HandoffConfig;
 
 impl Default for SongBirdHandoffConfig {}
 
@@ -217,9 +198,8 @@ pub struct ServiceHealth {
 
     pub error_details: Option<String>,
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HealthStatus {
-
+// UNIFIED: Use canonical HealthStatus from beardog-types
+pub use beardog_types::canonical::HealthStatus;
     Healthy,
 
     Degraded,

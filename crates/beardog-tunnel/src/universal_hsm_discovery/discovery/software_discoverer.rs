@@ -1,7 +1,7 @@
 
 
 use super::super::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::*;
 use std::collections::HashMap;
 use tracing::{debug, info};
@@ -10,10 +10,10 @@ use tracing::{debug, info};
 pub struct SoftwareDiscoverer;
 impl SoftwareDiscoverer {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn discover(&self, config: &DiscoveryConfig) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("💾 Discovering Software HSMs");
         let mut hsms = Vec::new();
 
@@ -64,7 +64,7 @@ impl SoftwareDiscoverer {}
         info!("Found {} Software HSMs", hsms.len());
         Ok(hsms)
 
-    async fn detect_softhsm(&self) -> BearDogResult<bool> {
+    async fn detect_softhsm(&self) -> Result<bool, BearDogError> {
 
         debug!("Checking for SoftHSM installation");
 
@@ -80,7 +80,7 @@ impl SoftwareDiscoverer {}
             }
         Ok(false)
 
-    async fn detect_openssl_engines(&self) -> BearDogResult<bool> {
+    async fn detect_openssl_engines(&self) -> Result<bool, BearDogError> {
         debug!("Checking for OpenSSL engine support");
 
         Ok(true)

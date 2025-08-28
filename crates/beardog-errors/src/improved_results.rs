@@ -1,6 +1,6 @@
+use beardog_errors::BearDogError;
 
-
-use crate::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -580,11 +580,11 @@ impl<T> OperationOutcome<T> {
     }
 }
 
-pub type AuthenticationOutcome = BearDogResult<super::AuthenticationOutcome>;
-pub type ValidationOutcome = BearDogResult<super::ValidationOutcome>;
-pub type ConfigurationOutcome<T> = BearDogResult<super::ConfigurationOutcome<T>>;
-pub type ProcessingOutcome<T> = BearDogResult<super::ProcessingOutcome<T>>;
-pub type GeneticsOutcome = BearDogResult<super::GeneticsRegistrationOutcome>;
-pub type SpawnOutcome = BearDogResult<super::SpawningOutcome>;
-pub type TerminationOutcome = BearDogResult<super::SpawnTerminationOutcome>;
+pub type AuthenticationOutcome = Result<super::AuthenticationOutcome, BearDogError>;
+pub type ValidationOutcome = Result<super::ValidationOutcome, BearDogError>;
+pub type ConfigurationOutcome<T> = Result<super::ConfigurationOutcome<T, BearDogError>>;
+pub type ProcessingOutcome<T> = Result<super::ProcessingOutcome<T, BearDogError>>;
+pub type GeneticsOutcome = Result<super::GeneticsRegistrationOutcome, BearDogError>;
+pub type SpawnOutcome = Result<super::SpawningOutcome, BearDogError>;
+pub type TerminationOutcome = Result<super::SpawnTerminationOutcome, BearDogError>;
 }

@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -10,7 +10,7 @@ use super::genetics::{GeneticBlueprint, GeneticTrait, HybridCapability, ParentGe
 use super::operations::{SpawningOperation, SpawningStage, SpawningStatus};
 use crate::adapters::universal::manager::HybridNode;
 use crate::adapters::universal::traits::*;
-use crate::{BearDogCore, BearDogError, BearDogResult};
+use crate::{{BearDogCore, BearDogError}};
 
 pub struct CrossEcosystemGeneticSpawner {
 
@@ -26,7 +26,7 @@ pub struct CrossEcosystemGeneticSpawner {
 }
 impl CrossEcosystemGeneticSpawner {
 
-    pub async fn new(core: Arc<BearDogCore>) -> BearDogResult<Self> {
+    pub async fn new(core: Arc<BearDogCore>) -> Result<Self, BearDogError> {
         info!("🧬 Initializing Cross-Ecosystem Genetic Spawner");
         
         Ok(Self {
@@ -41,7 +41,7 @@ impl CrossEcosystemGeneticSpawner {
     pub async fn with_genetic_config(
         core: Arc<BearDogCore>,
         genetic_config: GeneticAlgorithmConfig,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         info!("🧬 Initializing Cross-Ecosystem Genetic Spawner with custom config");
 
         genetic_config.validate()
@@ -54,7 +54,7 @@ impl CrossEcosystemGeneticSpawner {
         target_capabilities: Vec<HybridCapability>,
         security_requirements: SecurityRequirements,
         resource_constraints: ResourceConstraints,
-    ) -> BearDogResult<HybridNode> {
+    ) -> Result<HybridNode, BearDogError> {
         let start_time = std::time::Instant::now();
 
         let mut spawning_operation = SpawningOperation::new(
@@ -117,7 +117,7 @@ impl CrossEcosystemGeneticSpawner {
     pub async fn get_hybrid_node(&self, node_id: &str) -> Option<HybridNode> {
         hybrid_nodes.get(node_id).cloned()
 
-    pub async fn cancel_spawning(&self, spawn_id: Uuid) -> BearDogResult<()> {
+    pub async fn cancel_spawning(&self, spawn_id: Uuid) -> Result<(), BearDogError> {
         self.update_spawning_status(
             spawn_id,
             SpawningStatus::Cancelled,
@@ -132,7 +132,7 @@ impl CrossEcosystemGeneticSpawner {
     pub async fn get_spawning_statistics(&self) -> SpawningStatistics {
         self.statistics.read().await.clone()
 
-    pub async fn update_genetic_config(&mut self, config: GeneticAlgorithmConfig) -> BearDogResult<()> {
+    pub async fn update_genetic_config(&mut self, config: GeneticAlgorithmConfig) -> Result<(), BearDogError> {
         config.validate()
         self.genetic_config = config;
         info!("🧬 Updated genetic algorithm configuration");
@@ -140,7 +140,7 @@ impl CrossEcosystemGeneticSpawner {
     pub fn get_genetic_config(&self) -> &GeneticAlgorithmConfig {
         &self.genetic_config
 
-    async fn execute_spawning_process(&self, spawn_id: Uuid) -> BearDogResult<HybridNode> {
+    async fn execute_spawning_process(&self, spawn_id: Uuid) -> Result<HybridNode, BearDogError> {
 
         self.update_spawning_status(spawn_id, SpawningStatus::InProgress, SpawningStage::Validation, 10.0, None).await;
         self.validate_spawning_requirements(spawn_id).await?;
@@ -166,7 +166,7 @@ impl CrossEcosystemGeneticSpawner {
         let hybrid_node = self.create_hybrid_node_instance(spawn_id, node_id).await?;
         Ok(hybrid_node)
 
-    async fn validate_spawning_requirements(&self, spawn_id: Uuid) -> BearDogResult<()> {
+    async fn validate_spawning_requirements(&self, spawn_id: Uuid) -> Result<(), BearDogError> {
         let spawning_op = {
             let active_spawns = self.active_spawns.read().await;
             active_spawns.get(&spawn_id).cloned()
@@ -189,7 +189,7 @@ impl CrossEcosystemGeneticSpawner {
                 return Err(BearDogError::invalid_input("Memory must be positive"));
         debug!("✅ Validated spawning requirements for {}", spawn_id);
 
-    async fn perform_genetic_recombination(&self, spawn_id: Uuid) -> BearDogResult<GeneticBlueprint> {
+    async fn perform_genetic_recombination(&self, spawn_id: Uuid) -> Result<GeneticBlueprint, BearDogError> {
         let mut blueprint = GeneticBlueprint::new(1);
 
         for parent_node in &spawning_op.parent_nodes {
@@ -210,7 +210,7 @@ impl CrossEcosystemGeneticSpawner {
         debug!("🧬 Performed genetic recombination for {}", spawn_id);
         Ok(blueprint)
 
-    async fn extract_genetic_traits(&self, capabilities: &[SecurityCapability]) -> BearDogResult<Vec<GeneticTrait>> {
+    async fn extract_genetic_traits(&self, capabilities: &[SecurityCapability]) -> Result<Vec<GeneticTrait>, BearDogError>> {
         let mut traits = Vec::new();
         for capability in capabilities {
             let capability_traits = GeneticTrait::from_security_capability(capability);
@@ -220,7 +220,7 @@ impl CrossEcosystemGeneticSpawner {
     async fn merge_ecosystem_capabilities(
         spawn_id: Uuid,
         blueprint: GeneticBlueprint,
-    ) -> BearDogResult<Vec<HybridCapability>> {
+    ) -> Result<Vec<HybridCapability>, BearDogError>> {
         let mut merged_capabilities = Vec::new();
 
         for capability in &spawning_op.target_capabilities {
@@ -232,7 +232,7 @@ impl CrossEcosystemGeneticSpawner {
         debug!("🔗 Merged {} capabilities for {}", merged_capabilities.len(), spawn_id);
         Ok(merged_capabilities)
 
-    async fn discover_emergent_capabilities(&self, blueprint: &GeneticBlueprint) -> BearDogResult<Vec<HybridCapability>> {
+    async fn discover_emergent_capabilities(&self, blueprint: &GeneticBlueprint) -> Result<Vec<HybridCapability>, BearDogError>> {
         let mut emergent_capabilities = Vec::new();
 
         let high_traits: Vec<_> = blueprint.hybrid_traits.iter()
@@ -252,7 +252,7 @@ impl CrossEcosystemGeneticSpawner {
                 emergent_capabilities.push(HybridCapability::CrossNodeThreatDetection);
         Ok(emergent_capabilities)
 
-    async fn configure_hybrid_security(&self, spawn_id: Uuid) -> BearDogResult<SecurityContext> {
+    async fn configure_hybrid_security(&self, spawn_id: Uuid) -> Result<SecurityContext, BearDogError> {
 
         let mut security_context = SecurityContext::default();
 
@@ -271,7 +271,7 @@ impl CrossEcosystemGeneticSpawner {
         debug!("🔐 Configured hybrid security context for {}", spawn_id);
         Ok(security_context)
 
-    async fn allocate_hybrid_resources(&self, spawn_id: Uuid) -> BearDogResult<ResourceAllocation> {
+    async fn allocate_hybrid_resources(&self, spawn_id: Uuid) -> Result<ResourceAllocation, BearDogError> {
 
         let cpu_cores = spawning_op.resource_constraints.max_cpu_cores.unwrap_or(4);
         let memory_gb = spawning_op.resource_constraints.max_memory_gb.unwrap_or(8.0);
@@ -291,19 +291,19 @@ impl CrossEcosystemGeneticSpawner {
         capabilities: Vec<HybridCapability>,
         security_context: SecurityContext,
         resource_allocation: ResourceAllocation,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
         let node_id = format_args!("hybrid-{}", spawn_id.simple().to_string());
 
         self.secure_node_initialization(&node_id, &capabilities, &security_context, &resource_allocation).await?;
         debug!("🚀 Initialized hybrid node: {}", node_id);
         Ok(node_id)
 
-    async fn verify_hybrid_node_health(&self, node_id: &str) -> BearDogResult<()> {
+    async fn verify_hybrid_node_health(&self, node_id: &str) -> Result<(), BearDogError> {
 
         self.perform_health_diagnostics(node_id).await?;
         debug!("🏥 Verified health of hybrid node: {}", node_id);
 
-    async fn create_hybrid_node_instance(&self, spawn_id: Uuid, node_id: &str) -> BearDogResult<HybridNode> {
+    async fn create_hybrid_node_instance(&self, spawn_id: Uuid, node_id: &str) -> Result<HybridNode, BearDogError> {
         let hybrid_node = HybridNode {
             node_id,
             ecosystem_ids: spawning_op.parent_nodes.iter().map(|p| p.ecosystem_id.clone()).collect(),
@@ -339,7 +339,7 @@ impl CrossEcosystemGeneticSpawner {
             if let Some(error_msg) = error {
                 spawning_op.set_error(error_msg);
 
-    async fn generate_cryptographic_lineage_proof(&self, spawning_op: &SpawningOperation) -> BearDogResult<Vec<u8>> {
+    async fn generate_cryptographic_lineage_proof(&self, spawning_op: &SpawningOperation) -> Result<Vec<u8>, BearDogError>> {
         use sha2::{Sha256, Digest};
 
         let mut lineage_data = Vec::new();
@@ -373,7 +373,7 @@ impl CrossEcosystemGeneticSpawner {
         capabilities: &[HybridCapability],
         security_context: &SecurityContext,
         resource_allocation: &ResourceAllocation,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("🔒 Starting secure initialization for node: {}", node_id);
 
         self.validate_security_context(security_context).await?;
@@ -403,7 +403,7 @@ impl CrossEcosystemGeneticSpawner {
         self.establish_secure_channels(node_id, security_context).await?;
         info!("✅ Secure initialization completed for node: {}", node_id);
 
-    async fn perform_health_diagnostics(&self, node_id: &str) -> BearDogResult<()> {
+    async fn perform_health_diagnostics(&self, node_id: &str) -> Result<(), BearDogError> {
         info!("🏥 Starting health diagnostics for node: {}", node_id);
 
         self.check_node_responsiveness(node_id).await?;
@@ -415,33 +415,33 @@ impl CrossEcosystemGeneticSpawner {
         self.monitor_resource_health(node_id).await?;
         info!("✅ Health diagnostics passed for node: {}", node_id);
 
-    async fn validate_security_context(&self, _security_context: &SecurityContext) -> BearDogResult<()> {
+    async fn validate_security_context(&self, _security_context: &SecurityContext) -> Result<(), BearDogError> {
 
         debug!("🔐 Validated security context");}
 
-    async fn verify_resource_allocation(&self, resource_allocation: &ResourceAllocation) -> BearDogResult<()> {
+    async fn verify_resource_allocation(&self, resource_allocation: &ResourceAllocation) -> Result<(), BearDogError> {
 
         debug!("💾 Verified resource allocation: {} CPU cores, {} GB memory", 
                resource_allocation.cpu_cores, resource_allocation.memory_gb);
-    async fn validate_security_capability(&self, capability: &str, level: &str) -> BearDogResult<()> {
+    async fn validate_security_capability(&self, capability: &str, level: &str) -> Result<(), BearDogError> {
 
         debug!("🛡️ Validated security capability: {} at level {}", capability, level);
-    async fn setup_storage_encryption_keys(&self, capability: &str, backends: &[&str]) -> BearDogResult<()> {
+    async fn setup_storage_encryption_keys(&self, capability: &str, backends: &[&str]) -> Result<(), BearDogError> {
 
         debug!("🔑 Set up encryption keys for capability {} with backends: {:?}", capability, backends);
-    async fn establish_secure_channels(&self, node_id: &str, _security_context: &SecurityContext) -> BearDogResult<()> {
+    async fn establish_secure_channels(&self, node_id: &str, _security_context: &SecurityContext) -> Result<(), BearDogError> {
 
         debug!("🔗 Established secure channels for node: {}", node_id);
-    async fn check_node_responsiveness(&self, node_id: &str) -> BearDogResult<()> {
+    async fn check_node_responsiveness(&self, node_id: &str) -> Result<(), BearDogError> {
 
         debug!("📡 Verified responsiveness for node: {}", node_id);
-    async fn verify_capability_health(&self, node_id: &str) -> BearDogResult<()> {
+    async fn verify_capability_health(&self, node_id: &str) -> Result<(), BearDogError> {
 
         debug!("⚡ Verified capability health for node: {}", node_id);
-    async fn validate_security_health(&self, node_id: &str) -> BearDogResult<()> {
+    async fn validate_security_health(&self, node_id: &str) -> Result<(), BearDogError> {
 
         debug!("🔒 Validated security health for node: {}", node_id);
-    async fn monitor_resource_health(&self, node_id: &str) -> BearDogResult<()> {
+    async fn monitor_resource_health(&self, node_id: &str) -> Result<(), BearDogError> {
 
         debug!("📊 Monitored resource health for node: {}", node_id);
 } 

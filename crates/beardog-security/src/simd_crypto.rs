@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::{KeyType, EncryptionAlgorithm};
 use std::arch::x86_64::*;
 use std::simd::{u8x32, u8x16, u32x8, Simd};
@@ -16,7 +16,7 @@ pub struct SimdCryptoEngine {
 
 impl SimdCryptoEngine {
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
 
         let has_avx2 = is_x86_feature_detected!("avx2");
         let has_aes_ni = is_x86_feature_detected!("aes");
@@ -35,7 +35,7 @@ impl SimdCryptoEngine {
         })
     }
 
-    pub fn simd_sha256(&self, data: &[u8]) -> BearDogResult<[u8; 32]> {
+    pub fn simd_sha256(&self, data: &[u8]) -> Result<[u8; 32], BearDogError> {
         self.operations_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         
         if self.has_sha_ext && self.has_avx2 {
@@ -51,7 +51,7 @@ impl SimdCryptoEngine {
     }
 
     #[target_feature(enable = "sha,avx2")]
-    unsafe fn sha256_hardware_accelerated(&self, data: &[u8]) -> BearDogResult<[u8; 32]> {
+    unsafe fn sha256_hardware_accelerated(&self, data: &[u8]) -> Result<[u8; 32], BearDogError> {
 
         let mut state = [
             0x6a09e667u32, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
@@ -166,7 +166,7 @@ impl SimdCryptoEngine {
     }
 
     #[target_feature(enable = "avx2")]
-    unsafe fn sha256_avx2_vectorized(&self, data: &[u8]) -> BearDogResult<[u8; 32]> {
+    unsafe fn sha256_avx2_vectorized(&self, data: &[u8]) -> Result<[u8; 32], BearDogError> {
 
         let simd_data: Simd<u8, 32> = Simd::from_slice(&data[..32.min(data.len())]);
 
@@ -175,7 +175,7 @@ impl SimdCryptoEngine {
         self.sha256_scalar_optimized(data)
     }
 
-    fn sha256_scalar_optimized(&self, data: &[u8]) -> BearDogResult<[u8; 32]> {
+    fn sha256_scalar_optimized(&self, data: &[u8]) -> Result<[u8; 32], BearDogError> {
 
         use sha2::{Sha256, Digest};
         let mut hasher = Sha256::new();
@@ -183,7 +183,7 @@ impl SimdCryptoEngine {
         Ok(hasher.finalize().into())
     }
 
-    pub fn simd_chacha20(&self, data: &[u8], key: &[u8; 32], nonce: &[u8; 12]) -> BearDogResult<Vec<u8>> {
+    pub fn simd_chacha20(&self, data: &[u8], key: &[u8; 32], nonce: &[u8; 12]) -> Result<Vec<u8>, BearDogError> {
         self.operations_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         
         if self.has_avx2 {
@@ -194,7 +194,7 @@ impl SimdCryptoEngine {
     }
 
     #[target_feature(enable = "avx2")]
-    unsafe fn chacha20_avx2_parallel(&self, data: &[u8], key: &[u8; 32], nonce: &[u8; 12]) -> BearDogResult<Vec<u8>> {
+    unsafe fn chacha20_avx2_parallel(&self, data: &[u8], key: &[u8; 32], nonce: &[u8; 12]) -> Result<Vec<u8>, BearDogError> {
         let mut output = vec![0u8; data.len()];
 
         let blocks = data.chunks(64 * 4);
@@ -221,7 +221,7 @@ impl SimdCryptoEngine {
         Ok(output)
     }
 
-    fn chacha20_scalar_optimized(&self, data: &[u8], key: &[u8; 32], nonce: &[u8; 12]) -> BearDogResult<Vec<u8>> {
+    fn chacha20_scalar_optimized(&self, data: &[u8], key: &[u8; 32], nonce: &[u8; 12]) -> Result<Vec<u8>, BearDogError> {
 
         use chacha20::{ChaCha20, KeyInit, StreamCipher};
         let mut cipher = ChaCha20::new(key.into(), nonce.into());
@@ -349,7 +349,7 @@ pub struct SimdCryptoStats {
     pub estimated_speedup: f64,
 }
 
-pub fn benchmark_simd_performance() -> BearDogResult<SimdBenchmarkResults> {
+pub fn benchmark_simd_performance() -> Result<SimdBenchmarkResults, BearDogError> {
     let engine = SimdCryptoEngine::new()?;
     let test_data = vec![0u8; 1024 * 1024]; // 1MB test data
 

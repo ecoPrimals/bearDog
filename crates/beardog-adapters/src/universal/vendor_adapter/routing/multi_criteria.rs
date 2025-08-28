@@ -2,7 +2,7 @@
 
 use super::traits::RoutingStrategy;
 use crate::universal::vendor_adapter::{CapabilityHandler, UniversalVendorRequest};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::CapabilityType;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -71,7 +71,7 @@ impl RoutingStrategy for MultiCriteriaRouting {}
         &self,
         _request: &UniversalVendorRequest,
         available_handlers: &[(Box<dyn CapabilityHandler>, f64)],
-    ) -> BearDogResult<Option<usize>> {
+    ) -> Result<Option<usize>, BearDogError>> {
         if available_handlers.is_empty() {
             return Ok(None);
 
@@ -90,11 +90,11 @@ impl RoutingStrategy for MultiCriteriaRouting {}
         _success: bool,
         _response_time_ms: u64,
         _error: Option<&str>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
 
         Ok(())}
 
-    async fn get_statistics(&self) -> BearDogResult<serde_json::Value> {
+    async fn get_statistics(&self) -> Result<serde_json::Value, BearDogError> {
         Ok(serde_json::json!({
             "strategy_name": self.strategy_name(),
             "weights": self.weights

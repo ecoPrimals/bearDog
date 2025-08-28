@@ -3,7 +3,7 @@
 use super::types::*;
 use super::traits::EcosystemPrimalClient;
 use crate::ecosystem_integration::{UniversalHsmProvider, SongbirdServiceDiscovery};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::genetics::GeneticsConfig;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -49,7 +49,7 @@ impl EcosystemGeneticSpawner {
         &self,
         primal_id: &str,
         client: Box<dyn EcosystemPrimalClient + Send + Sync>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut clients = self.primal_clients.write().await;
         clients.insert(primal_id.clone(), client);
         info!("🌐 Registered ecosystem primal client: {}", primal_id);
@@ -59,7 +59,7 @@ impl EcosystemGeneticSpawner {
     pub async fn spawn_ecosystem_hybrid_node(
         &self,
         requirements: EcosystemSpawningRequirements,
-    ) -> BearDogResult<EcosystemHybridNode> {
+    ) -> Result<EcosystemHybridNode, BearDogError> {
         let operation_id = Uuid::new_v4().to_string();
         info!("🧬 Starting ecosystem hybrid node spawning: {}", operation_id);
 
@@ -127,7 +127,7 @@ impl EcosystemGeneticSpawner {
     async fn execute_ecosystem_spawning(
         &self,
         operation: &mut EcosystemSpawningOperation,
-    ) -> BearDogResult<EcosystemHybridNode> {
+    ) -> Result<EcosystemHybridNode, BearDogError> {
 
         self.update_operation_stage(operation, SpawningStage::RequirementAnalysis, 10.0).await?;
         let analyzed_requirements = self.analyze_spawning_requirements(&operation.requirements).await?;
@@ -161,7 +161,7 @@ impl EcosystemGeneticSpawner {
         operation: &mut EcosystemSpawningOperation,
         stage: SpawningStage,
         progress: f64,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         operation.current_stage = stage.clone();
         operation.progress_percentage = progress;
 
@@ -181,7 +181,7 @@ impl EcosystemGeneticSpawner {
     async fn analyze_spawning_requirements(
         &self,
         requirements: &EcosystemSpawningRequirements,
-    ) -> BearDogResult<EcosystemSpawningRequirements> {
+    ) -> Result<EcosystemSpawningRequirements, BearDogError> {
         debug!("🔍 Analyzing spawning requirements for {} capabilities", 
                requirements.required_capabilities.len());
 
@@ -191,7 +191,7 @@ impl EcosystemGeneticSpawner {
     async fn generate_genetic_blueprints(
         &self,
         requirements: &EcosystemSpawningRequirements,
-    ) -> BearDogResult<Vec<EcosystemGeneticBlueprint>> {
+    ) -> Result<Vec<EcosystemGeneticBlueprint>, BearDogError> {
         debug!("🧬 Generating genetic blueprints");
         
         let mut blueprints = Vec::new();
@@ -218,7 +218,7 @@ impl EcosystemGeneticSpawner {
         &self,
         blueprints: &[EcosystemGeneticBlueprint],
         _requirements: &EcosystemSpawningRequirements,
-    ) -> BearDogResult<EcosystemGeneticBlueprint> {
+    ) -> Result<EcosystemGeneticBlueprint, BearDogError> {
         if blueprints.is_empty() {
             return Err(BearDogError::system("No genetic blueprints available"));
         }
@@ -231,7 +231,7 @@ impl EcosystemGeneticSpawner {
     async fn calculate_resource_requirements(
         &self,
         requirements: &EcosystemSpawningRequirements,
-    ) -> BearDogResult<EcosystemResourceAllocation> {
+    ) -> Result<EcosystemResourceAllocation, BearDogError> {
         Ok(EcosystemResourceAllocation {
             security: SecurityResourceAllocation {
                 hsm_slots: 4,
@@ -263,7 +263,7 @@ impl EcosystemGeneticSpawner {
         &self,
         blueprint: &EcosystemGeneticBlueprint,
         requirements: &EcosystemSpawningRequirements,
-    ) -> BearDogResult<EcosystemResourceAllocation> {
+    ) -> Result<EcosystemResourceAllocation, BearDogError> {
         debug!("💾 Allocating ecosystem resources");
 
         let mut allocation = blueprint.resource_requirements.clone();
@@ -282,7 +282,7 @@ impl EcosystemGeneticSpawner {
         &self,
         blueprint: &EcosystemGeneticBlueprint,
         resource_allocation: &EcosystemResourceAllocation,
-    ) -> BearDogResult<EcosystemHybridNode> {
+    ) -> Result<EcosystemHybridNode, BearDogError> {
         let node_id = Uuid::new_v4().to_string();
         debug!("🏗️ Creating hybrid node: {}", node_id);
         
@@ -303,7 +303,7 @@ impl EcosystemGeneticSpawner {
         Ok(hybrid_node)
     }
 
-    async fn validate_hybrid_node_health(&self, node: &EcosystemHybridNode) -> BearDogResult<()> {
+    async fn validate_hybrid_node_health(&self, node: &EcosystemHybridNode) -> Result<(), BearDogError> {
         debug!("🏥 Validating hybrid node health: {}", node.node_id);
 
         if node.health_status == NodeHealthStatus::Critical || node.health_status == NodeHealthStatus::Offline {
@@ -331,17 +331,17 @@ impl EcosystemGeneticSpawner {
         Ok(())
     }
 
-    pub async fn get_spawning_statistics(&self) -> BearDogResult<EcosystemSpawningStatistics> {
+    pub async fn get_spawning_statistics(&self) -> Result<EcosystemSpawningStatistics, BearDogError> {
         let stats = self.statistics.read().await;
         Ok(stats.clone())
     }
 
-    pub async fn get_active_spawns(&self) -> BearDogResult<Vec<EcosystemSpawningOperation>> {
+    pub async fn get_active_spawns(&self) -> Result<Vec<EcosystemSpawningOperation>, BearDogError> {
         let active_spawns = self.active_spawns.read().await;
         Ok(active_spawns.values().cloned().collect())
     }
 
-    pub async fn get_hybrid_nodes(&self) -> BearDogResult<Vec<EcosystemHybridNode>> {
+    pub async fn get_hybrid_nodes(&self) -> Result<Vec<EcosystemHybridNode>, BearDogError> {
         let nodes = self.hybrid_nodes.read().await;
         Ok(nodes.values().cloned().collect())
     }

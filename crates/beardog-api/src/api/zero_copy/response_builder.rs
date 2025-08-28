@@ -6,7 +6,7 @@ use axum::{
     http::{HeaderValue, StatusCode},
     response::Response,
 };
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::{
@@ -50,7 +50,7 @@ impl ZeroCopyResponseBuilder {
         &self,
         data: &T,
         status: StatusCode,
-    ) -> BearDogResult<Response> {
+    ) -> Result<Response, BearDogError> {
         self.stats.responses_built.fetch_add(1, Ordering::Relaxed);
 
         let json_bytes = self.serializer.serialize_zero_copy(data).await?;

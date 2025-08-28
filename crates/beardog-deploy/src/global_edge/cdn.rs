@@ -1,7 +1,7 @@
 
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -27,7 +27,7 @@ impl CDNManager {
         }
     }
 
-    pub async fn initialize(&self) -> BearDogResult<()> {
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
         info!("Initializing CDN management system");
 
         info!("CDN providers initialized");
@@ -42,7 +42,7 @@ impl CDNManager {
         &self,
         paths: Vec<&str>,
         priority: InvalidationPriority,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
         info!("Starting global cache invalidation for {} paths", paths.len());
         
         let invalidation_id = format_args!("inv_{}_{}", 
@@ -92,7 +92,7 @@ impl CDNManager {
         Ok(invalidation_id)
     }
 
-    pub async fn set_cache_policy(&self, pattern: &str, policy: CachePolicy) -> BearDogResult<()> {
+    pub async fn set_cache_policy(&self, pattern: &str, policy: CachePolicy) -> Result<(), BearDogError> {
         info!("Setting cache policy for pattern: {}", pattern);
 
         debug!("Cache policy configured: TTL={:?}, Max-Age={:?}", 
@@ -105,12 +105,12 @@ impl CDNManager {
         self.analytics.read().await.clone()
     }
 
-    pub async fn get_invalidation_queue_status(&self) -> BearDogResult<Vec<InvalidationRequest>> {
+    pub async fn get_invalidation_queue_status(&self) -> Result<Vec<InvalidationRequest>, BearDogError>> {
         let queue = self.invalidation_queue.read().await;
         Ok(queue.clone())
     }
 
-    pub async fn purge_content(&self, urls: Vec<&str>) -> BearDogResult<String> {
+    pub async fn purge_content(&self, urls: Vec<&str>) -> Result<String, BearDogError> {
         info!("Purging {} URLs from CDN", urls.len());
         
         let purge_id = format_args!("purge_{}_{}", 
@@ -129,7 +129,7 @@ impl CDNManager {
         Ok(purge_id)
     }
 
-    pub async fn get_cache_hit_ratio(&self, region_id: &str) -> BearDogResult<f64> {
+    pub async fn get_cache_hit_ratio(&self, region_id: &str) -> Result<f64, BearDogError> {
         debug!("Getting cache hit ratio for region: {}", region_id);
 
         let hit_ratio = 0.85 + (rand::random::<f64>() * 0.1); // 85-95%
@@ -137,7 +137,7 @@ impl CDNManager {
         Ok(hit_ratio)
     }
 
-    pub async fn preload_content(&self, urls: Vec<&str>, regions: Vec<&str>) -> BearDogResult<String> {
+    pub async fn preload_content(&self, urls: Vec<&str>, regions: Vec<&str>) -> Result<String, BearDogError> {
         info!("Preloading {} URLs to {} regions", urls.len(), regions.len());
         
         let preload_id = format_args!("preload_{}_{}", 
@@ -156,7 +156,7 @@ impl CDNManager {
         Ok(preload_id)
     }
 
-    pub async fn get_bandwidth_usage(&self, region_id: Option<&str>) -> BearDogResult<BandwidthUsage> {
+    pub async fn get_bandwidth_usage(&self, region_id: Option<&str>) -> Result<BandwidthUsage, BearDogError> {
         debug!("Getting bandwidth usage for region: {:?}", region_id);
 
         let usage = BandwidthUsage {
@@ -170,7 +170,7 @@ impl CDNManager {
         Ok(usage)
     }
 
-    pub async fn shutdown(&self) -> BearDogResult<()> {
+    pub async fn shutdown(&self) -> Result<(), BearDogError> {
         info!("Shutting down CDN management system");
 
         let queue = self.invalidation_queue.read().await;

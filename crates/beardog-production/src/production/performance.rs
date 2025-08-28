@@ -34,15 +34,7 @@ pub struct PerformanceRegressionCheck {
 
     pub performance_trends: Vec<String>,
 
-#[deprecated(since = "3.1.0", note = "Use UnifiedTestingConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedTestingConfig instead")]
-pub struct LoadTestConfiguration {
-
-    pub concurrent_users: u32,
-
-    pub test_duration_seconds: u64,
-
-    pub ramp_up_time_seconds: u64,
+// LoadTestConfiguration removed - use UnifiedTestingConfig instead
 
     pub target_operations_per_second: u64,
 
@@ -67,20 +59,6 @@ pub struct OptimizationRecommendation {
     pub description: String,
 
     pub impact_score: f64,
-
-#[deprecated(since = "3.1.0", note = "Use UnifiedTestingConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedTestingConfig instead")]
-pub struct StressTestConfiguration {
-
-    pub cpu_stress_percentage: u8,
-
-    pub memory_stress_percentage: u8,
-
-    pub network_stress_mbps: u32,
-
-    pub concurrent_operations: u32,
-
-    pub stress_duration_seconds: u64,
 
 pub struct StressTestResults {
 

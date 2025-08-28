@@ -5,7 +5,7 @@ use crate::universal_hsm::traits::{
     Platform, ProviderHealth, ProviderInfo, ProviderType, UniversalHsmProvider,
 };
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::{KeyMetadata, KeyType};
 use chrono::Utc;
 use tracing::info;
@@ -18,7 +18,7 @@ pub struct MobileHardwareProvider {
 }
 impl MobileHardwareProvider {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🔧 Initializing Android StrongBox `HSM` Provider");
         let is_available = Self::check_strongbox_availability().await?;
         if !is_available {
@@ -47,7 +47,7 @@ impl MobileHardwareProvider {
         })
     }
 
-    pub async fn is_available() -> BearDogResult<bool> {
+    pub async fn is_available() -> Result<bool, BearDogError> {
         #[cfg(target_os = "android")]
         {
 
@@ -79,14 +79,14 @@ impl MobileHardwareProvider {
         #[cfg(not(target_os = "android"))]
         Ok(false)
 
-    async fn check_strongbox_availability() -> BearDogResult<bool> {
+    async fn check_strongbox_availability() -> Result<bool, BearDogError> {
         Self::is_available().await
 
     async fn generate_strongbox_key(
         &self,
         _key_type: KeyType,
         _metadata: KeyMetadata,
-    ) -> BearDogResult<beardog_types::HsmKey> {
+    ) -> Result<beardog_types::HsmKey, BearDogError> {
             info!("🔑 Generating StrongBox key: {:?}", _key_type);
 
             let key_id = format!(
@@ -116,7 +116,7 @@ impl MobileHardwareProvider {
                 feature: "Android StrongBox is only available on Android devices".to_string(),
             })
 
-    async fn sign_with_strongbox(&self, _key_id: &str, _data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_with_strongbox(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             debug!("✍️ Signing with StrongBox key: {}", _key_id);
 
             use sha2::{Digest, Sha256};
@@ -132,7 +132,7 @@ impl MobileHardwareProvider {
         _key_id: &str,
         _data: &[u8],
         _signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
             debug!("🔍 Verifying StrongBox signature for key: {}", _key_id);
 
             let expected_signature = hasher.finalize().to_vec();
@@ -145,7 +145,7 @@ impl MobileHardwareProvider {
     async fn collect_android_entropy(
         _method: &HumanEntropyMethod,
         _bits: u32,
-    ) -> BearDogResult<HumanEntropyData> {
+    ) -> Result<HumanEntropyData, BearDogError> {
             info!(
                 "🎲 Collecting Android entropy: {:?} ({} bits)",
                 _method, _bits
@@ -180,7 +180,7 @@ impl MobileHardwareProvider {
                 feature: "Android entropy collection is only available on Android devices"
                     .to_string(),
 
-        async fn simulate_touch_entropy(&self, bytes_needed: u32) -> BearDogResult<Vec<u8>> {
+        async fn simulate_touch_entropy(&self, bytes_needed: u32) -> Result<Vec<u8>, BearDogError>> {
         use rand::RngCore;
         let mut rng = rand::thread_rng();
         let mut entropy = vec![0u8; bytes_needed as usize];
@@ -200,7 +200,7 @@ impl MobileHardwareProvider {
     async fn create_strongbox_seed(
         _entropy: &HumanEntropyData,
         _seed_size: u32,
-    ) -> BearDogResult<EphemeralSeed> {
+    ) -> Result<EphemeralSeed, BearDogError> {
                 "🌱 Creating StrongBox ephemeral seed ({} bytes)",
                 _seed_size
 
@@ -218,7 +218,7 @@ impl MobileHardwareProvider {
                 seed.quality_score
             Ok(seed)
 
-    async fn get_strongbox_attestation(&self) -> BearDogResult<Option<AttestationData>> {
+    async fn get_strongbox_attestation(&self) -> Result<Option<AttestationData>, BearDogError>> {
             info!("🛡️ Retrieving StrongBox hardware attestation");
 
             use crate::universal_hsm::traits::AttestationLevel;
@@ -254,11 +254,11 @@ impl UniversalHsmProvider for MobileHardwareProvider {
         &self,
         key_type: KeyType,
         metadata: KeyMetadata,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         self.generate_strongbox_key(key_type, metadata).await
     }
 
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         self.sign_with_strongbox(key_id, data).await
     }
 
@@ -267,11 +267,11 @@ impl UniversalHsmProvider for MobileHardwareProvider {
         key_id: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         self.verify_strongbox_signature(key_id, data, signature).await
     }
 
-    async fn get_human_entropy_capabilities(&self) -> BearDogResult<HumanEntropyCapabilities> {
+    async fn get_human_entropy_capabilities(&self) -> Result<HumanEntropyCapabilities, BearDogError> {
         Ok(HumanEntropyCapabilities {
             supports_ephemeral_seeds: true,
             collection_methods: vec![
@@ -299,7 +299,7 @@ impl UniversalHsmProvider for MobileHardwareProvider {
         &self,
         method: &HumanEntropyMethod,
         bits: u32,
-    ) -> BearDogResult<HumanEntropyData> {
+    ) -> Result<HumanEntropyData, BearDogError> {
         self.collect_android_entropy(method, bits).await
     }
 
@@ -307,7 +307,7 @@ impl UniversalHsmProvider for MobileHardwareProvider {
         &self,
         entropy: &HumanEntropyData,
         seed_size: u32,
-    ) -> BearDogResult<EphemeralSeed> {
+    ) -> Result<EphemeralSeed, BearDogError> {
         self.create_strongbox_seed(entropy, seed_size).await
     }
 
@@ -315,7 +315,7 @@ impl UniversalHsmProvider for MobileHardwareProvider {
         self.provider_info.clone()
     }
 
-    async fn health_check(&self) -> BearDogResult<ProviderHealth> {
+    async fn health_check(&self) -> Result<ProviderHealth, BearDogError> {
         let is_healthy = self.is_available;
         Ok(ProviderHealth {
             is_healthy,
@@ -330,21 +330,21 @@ impl UniversalHsmProvider for MobileHardwareProvider {
         })
     }
 
-    async fn get_hardware_attestation(&self) -> BearDogResult<Option<AttestationData>> {
+    async fn get_hardware_attestation(&self) -> Result<Option<AttestationData>, BearDogError>> {
         self.get_strongbox_attestation().await
     }
 
-    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
 
             info!("📋 Listing StrongBox keys");
 
             Ok(Vec::new())
-    async fn delete_key(&self, _key_id: &str) -> BearDogResult<()> {
+    async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
             info!("🗑️ Deleting StrongBox key: {}", _key_id);
 
             info!("✅ StrongBox key deleted: {}", _key_id);
             Ok(())
-    async fn get_key_metadata(&self, _key_id: &str) -> BearDogResult<KeyMetadata> {
+    async fn get_key_metadata(&self, _key_id: &str) -> Result<KeyMetadata, BearDogError> {
             debug!("📊 Retrieving StrongBox key metadata: {}", _key_id);
 
             Ok(KeyMetadata::default())
@@ -352,7 +352,7 @@ impl UniversalHsmProvider for MobileHardwareProvider {
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_mobile_hardware_availability() -> beardog_errors::BearDogResult<()> {
+    async fn test_mobile_hardware_availability() -> Result<(), BearDogError> {
         let is_available = MobileHardwareProvider::is_available()
             })?;
 
@@ -361,7 +361,7 @@ mod tests {
         println!("StrongBox available: {}", is_available);
         Ok(())
     #[cfg(target_os = "android")]
-    async fn test_strongbox_key_generation() -> beardog_errors::BearDogResult<()> {
+    async fn test_strongbox_key_generation() -> Result<(), BearDogError> {
         if let Ok(provider) = MobileHardwareProvider::new().await {
             let metadata = KeyMetadata::default();
             let result = provider.generate_key(KeyType::EccP256, metadata).await;
@@ -371,7 +371,7 @@ mod tests {
                     assert!(!key.key_id.is_empty());
                     assert_eq!(key.key_type, KeyType::EccP256);
                 Err(e) => println!("⚠️ StrongBox key generation failed: {}", e),
-    async fn test_android_entropy_collection() -> beardog_errors::BearDogResult<()> {
+    async fn test_android_entropy_collection() -> Result<(), BearDogError> {
             let result = provider
                 .collect_human_entropy(&HumanEntropyMethod::TouchInteraction, 256)
                 .await;

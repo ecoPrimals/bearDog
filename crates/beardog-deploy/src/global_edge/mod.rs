@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -36,7 +36,7 @@ impl GlobalEdgeManager {
         }
     }
 
-    pub async fn initialize(&self) -> BearDogResult<()> {
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
 
         self.deployment_manager.initialize().await?;
         self.monitoring_system.start_monitoring().await?;
@@ -46,15 +46,15 @@ impl GlobalEdgeManager {
         Ok(())
     }
 
-    pub async fn deploy_globally(&self) -> BearDogResult<()> {
+    pub async fn deploy_globally(&self) -> Result<(), BearDogError> {
         self.deployment_manager.deploy_all_regions().await
     }
 
-    pub async fn get_global_health(&self) -> BearDogResult<GlobalHealthStatus> {
+    pub async fn get_global_health(&self) -> Result<GlobalHealthStatus, BearDogError> {
         self.monitoring_system.get_global_health().await
     }
 
-    pub async fn shutdown(&self) -> BearDogResult<()> {
+    pub async fn shutdown(&self) -> Result<(), BearDogError> {
         self.cdn_manager.shutdown().await?;
         self.load_balancer.shutdown().await?;
         self.monitoring_system.shutdown().await?;

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::KeyType;
 use beardog_types::canonical::hsm::keys::{KeyHealth, KeyMaterial, KeyMetadata, KeyUsagePolicy};
 use beardog_types::canonical::HsmKey;
@@ -26,7 +26,7 @@ impl CryptoEngine {
         }
     }
 
-    pub async fn generate_key(&self, key_type: KeyType, entropy: &[u8]) -> BearDogResult<HsmKey> {
+    pub async fn generate_key(&self, key_type: KeyType, entropy: &[u8]) -> Result<HsmKey, BearDogError> {
         match key_type {
             KeyType::Ed25519 => self.generate_ed25519_key(entropy).await,
             KeyType::Aes256 => self.generate_aes256_key(entropy).await,
@@ -34,7 +34,7 @@ impl CryptoEngine {
                 feature: format!("Key type not supported: {key_type:?}"),
             }),
 
-    async fn generate_ed25519_key(&self, _entropy: &[u8]) -> BearDogResult<HsmKey> {
+    async fn generate_ed25519_key(&self, _entropy: &[u8]) -> Result<HsmKey, BearDogError> {
         let mut csprng = OsRng;
         let signing_key = SigningKey::generate(&mut csprng);
         let verifying_key = signing_key.verifying_key();
@@ -97,7 +97,7 @@ impl CryptoEngine {
             derivation_path: None,
         })
 
-    async fn generate_aes256_key(&self, _entropy: &[u8]) -> BearDogResult<HsmKey> {
+    async fn generate_aes256_key(&self, _entropy: &[u8]) -> Result<HsmKey, BearDogError> {
         let mut key_bytes = [0u8; 32];
         rand::RngCore::fill_bytes(&mut OsRng, &mut key_bytes);
             key_type: KeyType::Aes256,
@@ -112,12 +112,12 @@ impl CryptoEngine {
         &self,
         key_material: Vec<u8>,
         key_type: KeyType,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
             KeyType::Ed25519 => self.import_ed25519_key(key_material).await,
             KeyType::Aes256 => self.import_aes256_key(key_material).await,
                 feature: format!("Key type not supported for import: {key_type:?}"),
 
-    async fn import_ed25519_key(&self, key_material: Vec<u8>) -> BearDogResult<HsmKey> {
+    async fn import_ed25519_key(&self, key_material: Vec<u8>) -> Result<HsmKey, BearDogError> {
         if key_material.len() != 64 {
             return Err(BearDogError::Validation("Ed25519 key material must be 64 bytes (32 secret + 32 public)"
                     .to_string()));
@@ -154,14 +154,14 @@ impl CryptoEngine {
             key_name: format!("imported_ed25519_key_{key_id}"),
             key_material: KeyMaterial::PublicKey(public_bytes.to_vec()),
 
-    async fn import_aes256_key(&self, key_material: Vec<u8>) -> BearDogResult<HsmKey> {
+    async fn import_aes256_key(&self, key_material: Vec<u8>) -> Result<HsmKey, BearDogError> {
         if key_material.len() != 32 {
             return Err(BearDogError::Validation("AES-256 key material must be 32 bytes".to_string()));
             material: KeyMaterial::PrivateKey(key_material.clone()),
             key_name: format!("imported_aes256_key_{key_id}"),
             key_material: KeyMaterial::PrivateKey(key_material.clone()),
 
-    pub async fn export_key_material(&self, key: &HsmKey) -> BearDogResult<Vec<u8>> {
+    pub async fn export_key_material(&self, key: &HsmKey) -> Result<Vec<u8>, BearDogError>> {
         match &key.material {
             KeyMaterial::PublicKey(material) => {
 
@@ -172,7 +172,7 @@ impl CryptoEngine {
                     key.material
                 ),
 
-    pub async fn sign_data(&self, key_material: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn sign_data(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         if key_material.len() == 32 {
 
             return Err(BearDogError::Validation("Cannot sign with public key only - secret key required".to_string()));
@@ -207,7 +207,7 @@ impl CryptoEngine {
         public_key: &[u8],
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         if public_key.len() != 32 {
             return Err(BearDogError::Validation("Ed25519 public key must be 32 bytes".to_string()));
         if signature.len() != 64 {
@@ -222,7 +222,7 @@ impl CryptoEngine {
                 return Err(BearDogError::Crypto(format!("Invalid signature: {e}"),
         Ok(public_key.verify(data, &signature).is_ok())
 
-    pub async fn encrypt_data(&self, key_material: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn encrypt_data(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             return Err(BearDogError::Validation("AES-256 key must be 32 bytes".to_string()));
         let cipher = Aes256Gcm::new(aes_gcm::Key::<Aes256Gcm>::from_slice(key_material));
 
@@ -240,7 +240,7 @@ impl CryptoEngine {
     pub async fn decrypt_data(
         key_material: &[u8],
         encrypted_data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         if encrypted_data.len() < 12 {
             return Err(BearDogError::Validation("Encrypted data too short - missing nonce".to_string()));
 
@@ -251,7 +251,7 @@ impl CryptoEngine {
             .map_err(|e| BearDogError::Crypto(format!("Decryption failed: {e}"),
         Ok(plaintext)
 
-    pub async fn health_check(&self) -> BearDogResult<bool> {
+    pub async fn health_check(&self) -> Result<bool, BearDogError> {
 
         let test_data = b"health check test";
 
@@ -267,7 +267,7 @@ mod tests {
     use super::*;
     #[tokio::test]}
 
-    async fn test_ed25519_key_generation() -> beardog_errors::BearDogResult<()> {
+    async fn test_ed25519_key_generation() -> Result<(), BearDogError> {
         let config = SoftwareHsmConfig::default();
         let engine = CryptoEngine::new(&config);
         let entropy = vec![0u8; 32];
@@ -280,11 +280,11 @@ mod tests {
         assert_eq!(key.key_type, KeyType::Ed25519);
         assert_eq!(key.public_key.len(), 32);
         Ok(())
-    async fn test_aes256_key_generation() -> beardog_errors::BearDogResult<()> {
+    async fn test_aes256_key_generation() -> Result<(), BearDogError> {
             .generate_key(KeyType::Aes256, &entropy)
         assert_eq!(key.key_type, KeyType::Aes256);}
 
-    async fn test_aes256_encryption_decryption() -> beardog_errors::BearDogResult<()> {
+    async fn test_aes256_encryption_decryption() -> Result<(), BearDogError> {
         let key_material = vec![1u8; 32];
         let test_data = b"test encryption data";
         let encrypted = engine

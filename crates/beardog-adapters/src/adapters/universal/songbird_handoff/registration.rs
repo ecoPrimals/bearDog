@@ -16,7 +16,7 @@ use super::types::{
     RegistrationState, RegistrationStatus, ResourceSpec, RoutingRule, ScalingAction, ScalingPolicy,
     SecurityConfig, SecurityLevel, ServiceCapabilities, ServiceEndpoint, ServiceEndpoints,
     ServiceHealth, SongBirdHandoffConfig,
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 pub struct SongBirdRegistrationManager<T> {
 
@@ -38,7 +38,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
         core: Arc<T>,
         capability_manager: Arc<CapabilityManager>,
         config: SongBirdHandoffConfig,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         info!("🔗 Initializing Universal SongBird Registration Manager");
 
         let client = Arc::new(
@@ -64,7 +64,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
         })
     }
 
-    pub async fn register_with_songbird(&self) -> BearDogResult<()> {
+    pub async fn register_with_songbird(&self) -> Result<(), BearDogError> {
         info!("📡 Registering ecosystem component with SongBird for universal discovery");
 
         {
@@ -112,7 +112,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
         emergent_capabilities: &HashMap<
             super::super::capability_manager::EmergentCapability,
         _monitoring_status: &HashMap<&str, super::super::capability_manager::CapabilityMonitor>,
-    ) -> BearDogResult<AdvertisedService> {
+    ) -> Result<AdvertisedService, BearDogError> {
 
         let service_id = format_args!("universal-component-{}", uuid::Uuid::new_v4().to_string());
 
@@ -285,7 +285,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
             qos: QualityOfService::default(),
             resource_requirements: ResourceRequirements::default(),
 
-    async fn create_universal_service_endpoints(&self) -> BearDogResult<Vec<ServiceEndpoint>> {
+    async fn create_universal_service_endpoints(&self) -> Result<Vec<ServiceEndpoint>, BearDogError>> {
         let endpoints = vec![
 
             ServiceEndpoint {
@@ -308,7 +308,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
 
     async fn create_universal_orchestration_metadata(
         _capabilities: &[Capability],
-    ) -> BearDogResult<OrchestrationMetadata> {
+    ) -> Result<OrchestrationMetadata, BearDogError> {
 
         let routing_rules = vec![
             RoutingRule {
@@ -336,7 +336,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
             scaling_policies,
             affinity_rules: Vec::new(),
 
-    async fn start_heartbeat_task(&self) -> BearDogResult<()> {
+    async fn start_heartbeat_task(&self) -> Result<(), BearDogError> {
         debug!("💓 Starting universal heartbeat task");
         let client = Arc::clone(&self.client);
         let primal_id = self
@@ -360,7 +360,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
             }
         });
 
-    async fn start_health_monitoring_task(&self) -> BearDogResult<()> {
+    async fn start_health_monitoring_task(&self) -> Result<(), BearDogError> {
         debug!("🏥 Starting universal health monitoring task");
             let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
 
@@ -374,7 +374,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
 
                         client.update_health_status(false, 1).await;
 
-    pub async fn update_capability_advertisement(&self) -> BearDogResult<()> {
+    pub async fn update_capability_advertisement(&self) -> Result<(), BearDogError> {
         debug!("🔄 Updating universal capability advertisement");
 
         let _capabilities = self.get_current_capabilities().await?;
@@ -387,7 +387,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
     pub async fn get_advertised_services(&self) -> HashMap<String, AdvertisedService> {
         self.advertised_services.read().await.clone()
 
-    pub async fn send_heartbeat(&self) -> BearDogResult<()> {
+    pub async fn send_heartbeat(&self) -> Result<(), BearDogError> {
         debug!("💓 Sending heartbeat to SongBird");
         match self.client.send_heartbeat().await {
             Ok(_) => {
@@ -397,7 +397,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
                 warn!("❌ Heartbeat failed: {}", e);
                 Err(e)
 
-    pub async fn deregister(&self) -> BearDogResult<()> {
+    pub async fn deregister(&self) -> Result<(), BearDogError> {
         info!("🔄 Deregistering from SongBird");
 
         info!("✅ Successfully deregistered from SongBird");
@@ -406,7 +406,7 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
 
         format_args!("Core instance: {:p}", self.core.as_ref().to_string())
 
-    async fn perform_health_check(primal_id: &&str) -> BearDogResult<super::types::HealthStatus> {
+    async fn perform_health_check(primal_id: &&str) -> Result<super::types::HealthStatus, BearDogError> {
         let mut health_status = super::types::HealthStatus::Healthy;
 
         if let Err(e) = Self::check_component_health().await {
@@ -421,15 +421,15 @@ impl<T: Send + Sync> SongBirdRegistrationManager<T> {
             primal_id, health_status
         Ok(health_status)
 
-    async fn check_component_health() -> BearDogResult<()> {
+    async fn check_component_health() -> Result<(), BearDogError> {
 
         debug!("🔍 Checking component health");
 
-    async fn check_resource_utilization() -> BearDogResult<()> {
+    async fn check_resource_utilization() -> Result<(), BearDogError> {
 
         debug!("📊 Checking resource utilization");
 
-    async fn get_current_capabilities(&self) -> BearDogResult<Vec<Capability>> {
+    async fn get_current_capabilities(&self) -> Result<Vec<Capability>, BearDogError>> {
         debug!("🔍 Getting current capabilities");
 
         Ok(Self::get_default_capabilities())

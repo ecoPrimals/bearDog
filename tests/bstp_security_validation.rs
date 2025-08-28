@@ -8,12 +8,12 @@ use beardog::tunnel::{
     key_manager::CryptoAlgorithm,
     BStpConfig, BStpKeyManager, GamingCryptoEngine, GeneticSecurityHealing,
 };
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
 #[tokio::test]
-async fn test_key_isolation_security() -> BearDogResult<()> {
+async fn test_key_isolation_security() -> Result<(), BearDogError> {
 
     println!("🔐 Testing session key isolation security...");
 
@@ -56,7 +56,7 @@ async fn test_key_isolation_security() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_encryption_tamper_resistance() -> BearDogResult<()> {
+async fn test_encryption_tamper_resistance() -> Result<(), BearDogError> {
 
     println!("🛡️ Testing encryption tamper resistance...");
 
@@ -143,7 +143,7 @@ async fn test_encryption_tamper_resistance() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_timing_attack_resistance() -> BearDogResult<()> {
+async fn test_timing_attack_resistance() -> Result<(), BearDogError> {
 
     println!("⏱️ Testing timing attack resistance...");
 
@@ -220,7 +220,7 @@ async fn test_timing_attack_resistance() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_session_hijacking_protection() -> BearDogResult<()> {
+async fn test_session_hijacking_protection() -> Result<(), BearDogError> {
 
     println!("🔒 Testing session hijacking protection...");
 
@@ -299,7 +299,7 @@ async fn test_session_hijacking_protection() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_genetic_healing_security() -> BearDogResult<()> {
+async fn test_genetic_healing_security() -> Result<(), BearDogError> {
 
     println!("🧬 Testing genetic healing security...");
 
@@ -363,7 +363,7 @@ async fn test_genetic_healing_security() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_key_rotation_security() -> BearDogResult<()> {
+async fn test_key_rotation_security() -> Result<(), BearDogError> {
 
     println!("🔄 Testing key rotation security...");
 
@@ -411,7 +411,7 @@ async fn test_key_rotation_security() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_session_validation() -> BearDogResult<()> {
+async fn test_session_validation() -> Result<(), BearDogError> {
 
     println!("🔒 Testing session validation security...");
 
@@ -481,7 +481,7 @@ async fn test_session_validation() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_simplified_validation() -> BearDogResult<()> {
+async fn test_simplified_validation() -> Result<(), BearDogError> {
     let config = BStpConfig::maximum_security();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());

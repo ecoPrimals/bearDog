@@ -5,7 +5,7 @@ use serde_json::json;
 use std::collections::HashMap;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🤖 AI Error System Demo");
     println!("========================");
     
@@ -14,7 +14,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_ai_understanding() -> BearDogResult<()> {
+async fn demonstrate_ai_understanding() -> Result<(), BearDogError> {
     println!("\n🔐 Creating a crypto error that an AI can understand...\n");
 
     let crypto_error = BearDogError::enhanced("CRYPTO_001")

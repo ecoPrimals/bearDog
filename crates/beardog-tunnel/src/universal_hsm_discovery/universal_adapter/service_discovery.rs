@@ -1,7 +1,7 @@
 
 
 use super::core_types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::network::NetworkConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -100,17 +100,17 @@ pub struct NetworkService {
 
 pub trait DiscoveryBackend: Send + Sync {
 
-    async fn discover_by_capability(&self, capability: &str) -> BearDogResult<Vec<BearDogServiceRegistration>>;
+    async fn discover_by_capability(&self, capability: &str) -> Result<Vec<BearDogServiceRegistration>, BearDogError>>;
 
-    async fn register_service(&self, registration: &BearDogServiceRegistration) -> BearDogResult<()>;
+    async fn register_service(&self, registration: &BearDogServiceRegistration) -> Result<(), BearDogError>;
 
-    async fn unregister_service(&self, service_id: Uuid) -> BearDogResult<()>;
+    async fn unregister_service(&self, service_id: Uuid) -> Result<(), BearDogError>;
 
-    async fn health_check(&self) -> BearDogResult<bool>;}
+    async fn health_check(&self) -> Result<bool, BearDogError>;}
 
 impl ServiceDiscoveryClient {
 
-    pub fn new(config: DiscoveryConfig) -> BearDogResult<Self> {
+    pub fn new(config: DiscoveryConfig) -> Result<Self, BearDogError> {
         info!("🔍 Initializing Canonical Service Discovery Client");
         
         Ok(Self {
@@ -127,7 +127,7 @@ impl ServiceDiscoveryClient {
         info!("📡 Adding discovery backend");
         self.backends.push(backend);
 
-    pub async fn discover_by_capability(&self, capability: &str) -> BearDogResult<Vec<BearDogServiceRegistration>> {
+    pub async fn discover_by_capability(&self, capability: &str) -> Result<Vec<BearDogServiceRegistration>, BearDogError>> {
         debug!("🔍 Discovering services for capability: {}", capability);
 
         {
@@ -168,7 +168,7 @@ impl ServiceDiscoveryClient {
         info!("🎯 Discovered {} services for capability: {}", results.len(), capability);
         Ok(results)
 
-    pub async fn register_service(&self, registration: &BearDogServiceRegistration) -> BearDogResult<()> {
+    pub async fn register_service(&self, registration: &BearDogServiceRegistration) -> Result<(), BearDogError> {
         info!("📝 Registering service: {}", registration.service_name);
         let mut success_count = 0;
             match backend.register_service(registration).await {
@@ -185,7 +185,7 @@ impl ServiceDiscoveryClient {
         info!("✅ Service registration completed: {}", registration.service_name);
         Ok(())
 
-    pub async fn discover_via_dns(&self) -> BearDogResult<Vec<BearDogServiceRegistration>> {
+    pub async fn discover_via_dns(&self) -> Result<Vec<BearDogServiceRegistration>, BearDogError>> {
         debug!("🔍 Discovering services via DNS");
         let mut discovered = Vec::new();
 
@@ -201,12 +201,12 @@ impl ServiceDiscoveryClient {
                 discovered.extend(services);
         Ok(discovered)
 
-    async fn query_dns_service(&self, service_name: &str) -> BearDogResult<Vec<BearDogServiceRegistration>> {
+    async fn query_dns_service(&self, service_name: &str) -> Result<Vec<BearDogServiceRegistration>, BearDogError>> {
         debug!("🔍 Querying DNS service: {}", service_name);
 
         Ok(Vec::new())
 
-    pub async fn health_check(&self) -> BearDogResult<HashMap<String, bool>> {
+    pub async fn health_check(&self) -> Result<HashMap<String, bool, BearDogError>> {
         debug!("🏥 Performing discovery backend health checks");
         let mut health_status = HashMap::with_capacity(16);
         for (index, backend) in self.backends.iter().enumerate() {

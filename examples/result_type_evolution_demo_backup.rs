@@ -1,12 +1,12 @@
 
 
-use beardog_errors::{improved_results::*, migration_helpers::*, BearDogError, BearDogResult};
+use beardog_errors::{{improved_results::*, migration_helpers::*, BearDogError}};
 use chrono::Utc;
 use serde_json::json;
 use std::collections::HashMap;
 use std::time::Duration;
 
-async fn authenticate_user_old(username: &str, password: &str) -> BearDogResult<()> {
+async fn authenticate_user_old(username: &str, password: &str) -> Result<(), BearDogError> {
 
     if username == "admin" && password == "secure123" {
         println!("✅ Authentication successful for {}", username);
@@ -18,7 +18,7 @@ async fn authenticate_user_old(username: &str, password: &str) -> BearDogResult<
     }
 }
 
-async fn process_items_old(items: Vec<&str>) -> BearDogResult<()> {
+async fn process_items_old(items: Vec<&str>) -> Result<(), BearDogError> {
     for item in items {
         if item.is_empty() {
             return Err(BearDogError::invalid_input("Empty item found".to_string()));
@@ -29,7 +29,7 @@ async fn process_items_old(items: Vec<&str>) -> BearDogResult<()> {
     Ok(()) // How many succeeded? Which ones failed? Performance metrics?
 }
 
-async fn load_config_old(path: &str) -> BearDogResult<()> {
+async fn load_config_old(path: &str) -> Result<(), BearDogError> {
 
     if path.ends_with(".toml") {
         println!("✅ Configuration loaded from {}", path);
@@ -44,7 +44,7 @@ async fn load_config_old(path: &str) -> BearDogResult<()> {
 async fn authenticate_user_rich(
     username: &str,
     password: &str,
-) -> BearDogResult<AuthenticationOutcome> {
+) -> Result<AuthenticationOutcome, BearDogError> {
     let start_time = Utc::now();
 
     if username == "admin" && password == "secure123" {
@@ -65,7 +65,7 @@ async fn authenticate_user_rich(
     }
 }
 
-async fn process_items_rich(items: Vec<&str>) -> BearDogResult<ProcessingOutcome<Vec<String>>> {
+async fn process_items_rich(items: Vec<&str>) -> Result<ProcessingOutcome<Vec<String, BearDogError>>> {
     let start_time = Utc::now();
     let mut successful = Vec::new();
     let mut failures = Vec::new();
@@ -93,7 +93,7 @@ async fn process_items_rich(items: Vec<&str>) -> BearDogResult<ProcessingOutcome
     )
 }
 
-async fn load_config_rich(path: &str) -> BearDogResult<ConfigurationOutcome<AppConfig>> {
+async fn load_config_rich(path: &str) -> Result<ConfigurationOutcome<AppConfig, BearDogError>> {
     let start_time = Utc::now();
 
     if path.ends_with(".toml") {

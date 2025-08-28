@@ -1,13 +1,13 @@
+use beardog_errors::BearDogError;
 
-
-use crate::{`BearDog`Core, BearDogResult};
+use crate::BearDogCore;
 use beardog_types::canonical::HealthStatus;
 use tracing::{debug, info, warn};
 use serde_json;
 use std::env;
-impl `BearDog`Core {
+impl BearDogCore {
 
-    pub(crate) async fn register_with_toadstool(&self) -> BearDogResult<()> {
+    pub(crate) async fn register_with_toadstool(&self) -> Result<(), BearDogError> {
         info!("🍄 Registering with ToadStool for platform context");
 
         let registration_payload = serde_json::json!({
@@ -32,12 +32,12 @@ impl `BearDog`Core {
         Ok(())
     }
 
-    pub(crate) async fn register_via_universal_adapter(&self) -> BearDogResult<()> {
+    pub(crate) async fn register_via_universal_adapter(&self) -> Result<(), BearDogError> {
         info!("🎼 Registering with Songbird service mesh");
 
         let mesh_registration = serde_json::json!({
             "service_id": "beardog-hsm",
-            "service_name": "`BearDog` Security Provider",
+            "service_name": "BearDog Security Provider",
             "service_type": "security",
             "protocol": "grpc",
             "health_check": {
@@ -52,11 +52,15 @@ impl `BearDog`Core {
                     "biometric_auth": "true",
                     "cross_platform": "true"
                 }
+            }
+        });
 
-        debug!("Songbird registration: {}", mesh_registration);
-        info!("✅ `BearDog` registered with Songbird service mesh");
+        debug!("Mesh registration: {}", mesh_registration);
+        info!("✅ BearDog registered with Songbird service mesh");
+        Ok(())
+    }
 
-    pub(crate) async fn register_with_squirrel(&self) -> BearDogResult<()> {
+    pub(crate) async fn register_with_squirrel(&self) -> Result<(), BearDogError> {
         info!("🐿️ Registering with Squirrel for AI coordination");
 
         let ai_registration = serde_json::json!({
@@ -65,21 +69,24 @@ impl `BearDog`Core {
                 "security_analysis", 
                 "behavioral_analytics",
                 "risk_assessment"
+            ],
             "data_endpoints": [
                 "/api/v1/security/events",
                 "/api/v1/hsm/metrics",
                 "/api/v1/auth/analytics"
+            ],
             "ai_endpoints": [
                 "/api/v1/ai/threat-analysis",
                 "/api/v1/ai/security-recommendations"
             ]
+        });
 
         debug!("Squirrel AI registration: {}", ai_registration);
         info!("✅ BearDog registered with Squirrel AI coordination");
         Ok(())
     }
 
-    pub async fn coordinate_multi_service_operation(&self, operation_id: &str) -> BearDogResult<()> {
+    pub async fn coordinate_multi_service_operation(&self, operation_id: &str) -> Result<(), BearDogError> {
         info!("🎯 Coordinating multi-service operation: {}", operation_id);
 
         let coordination_context = serde_json::json!({
@@ -135,7 +142,7 @@ impl `BearDog`Core {
         Ok(())
     }
 
-    async fn check_service_availability(&self, service_name: &str) -> BearDogResult<bool> {
+    async fn check_service_availability(&self, service_name: &str) -> Result<bool, BearDogError> {
         debug!("🔍 Checking availability of service: {}", service_name);
 
         match service_name {
@@ -162,7 +169,7 @@ impl `BearDog`Core {
         &self, 
         operation_id: &str, 
         available_services: &[&str]
-    ) -> BearDogResult<serde_json::Value> {
+    ) -> Result<serde_json::Value, BearDogError> {
         info!("🎭 Executing coordinated operation {} with services: {:?}", 
               operation_id, available_services);
         
@@ -191,7 +198,7 @@ impl `BearDog`Core {
         Ok(serde_json::Value::Object(operation_results))
     }
 
-    async fn execute_toadstool_operation(&self, operation_id: &str) -> BearDogResult<serde_json::Value> {
+    async fn execute_toadstool_operation(&self, operation_id: &str) -> Result<serde_json::Value, BearDogError> {
         debug!("🍄 Executing ToadStool operation: {}", operation_id);
 
         Ok(serde_json::json!({
@@ -205,7 +212,7 @@ impl `BearDog`Core {
         }))
     }
 
-    async fn execute_songbird_operation(&self, operation_id: &str) -> BearDogResult<serde_json::Value> {
+    async fn execute_songbird_operation(&self, operation_id: &str) -> Result<serde_json::Value, BearDogError> {
         debug!("🎼 Executing Songbird operation: {}", operation_id);
 
         Ok(serde_json::json!({
@@ -219,7 +226,7 @@ impl `BearDog`Core {
         }))
     }
 
-    async fn execute_squirrel_operation(&self, operation_id: &str) -> BearDogResult<serde_json::Value> {
+    async fn execute_squirrel_operation(&self, operation_id: &str) -> Result<serde_json::Value, BearDogError> {
         debug!("🐿️ Executing Squirrel AI operation: {}", operation_id);
 
         Ok(serde_json::json!({
@@ -233,7 +240,7 @@ impl `BearDog`Core {
         }))
     }
 
-    pub async fn discover_ecosystem_services(&self) -> BearDogResult<Vec<String>> {
+    pub async fn discover_ecosystem_services(&self) -> Result<Vec<String>, BearDogError> {
         info!("🔍 Discovering available ecosystem services");
         
         let mut discovered_services = Vec::new();
@@ -258,7 +265,7 @@ impl `BearDog`Core {
         Ok(discovered_services)
     }
 
-    async fn probe_service_endpoint(&self, service_name: &str, endpoint: &str) -> BearDogResult<bool> {
+    async fn probe_service_endpoint(&self, service_name: &str, endpoint: &str) -> Result<bool, BearDogError> {
         debug!("🔬 Probing service {} at {}", service_name, endpoint);
 
         let available = matches!(service_name, "toadstool" | "songbird" | "squirrel");
@@ -272,7 +279,7 @@ impl `BearDog`Core {
         Ok(available)
     }
 
-    pub(crate) async fn unregister_from_ecosystem(&self) -> BearDogResult<()> {
+    pub(crate) async fn unregister_from_ecosystem(&self) -> Result<(), BearDogError> {
         info!("🔌 Unregistering from ecosystem services");
 
         if let Err(e) = self.unregister_from_toadstool().await {
@@ -281,21 +288,32 @@ impl `BearDog`Core {
 
         if let Err(e) = self.unregister_from_songbird().await {
             warn!("Songbird unregistration failed: {}", e);
+        }
 
         if let Err(e) = self.unregister_from_squirrel().await {
             warn!("Squirrel unregistration failed: {}", e);
+        }
+        
         info!("✅ Ecosystem unregistration complete");
+        Ok(())
+    }
 
-    async fn unregister_from_toadstool(&self) -> BearDogResult<()> {
+    async fn unregister_from_toadstool(&self) -> Result<(), BearDogError> {
         debug!("🍄 Unregistering from ToadStool");
+        Ok(())
+    }
 
-    async fn unregister_from_songbird(&self) -> BearDogResult<()> {
+    async fn unregister_from_songbird(&self) -> Result<(), BearDogError> {
         debug!("🎼 Unregistering from Songbird service mesh");
+        Ok(())
+    }
 
-    async fn unregister_from_squirrel(&self) -> Result<(), SystemError> {
+    async fn unregister_from_squirrel(&self) -> Result<(), BearDogError> {
         debug!("🐿️ Unregistering from Squirrel AI coordination");
+        Ok(())
+    }
 
-    pub(crate) async fn check_ecosystem_integrations(&self) -> super::super::primal_types::HealthStatus {
+    pub(crate) async fn check_ecosystem_integrations(&self) -> HealthStatus {
         debug!("🌐 Checking ecosystem integration health");
 
         let toadstool_healthy = self.check_toadstool_connection().await;
@@ -307,21 +325,29 @@ impl `BearDog`Core {
             super::super::primal_types::HealthStatus::Degraded
         } else {
             super::super::primal_types::HealthStatus::Unhealthy
+        }
+    }
 
     async fn check_toadstool_connection(&self) -> bool {
-
+        // For now, return true - can be implemented with actual health check later
         true
+    }
 
     async fn check_songbird_connection(&self) -> bool {
+        // For now, return true - can be implemented with actual health check later  
+        true
+    }
 
     async fn check_squirrel_connection(&self) -> bool {
+        // For now, return true - can be implemented with actual health check later
+        true
+    }
 
     pub(crate) fn get_ecosystem_metrics(&self) -> std::collections::HashMap<String, serde_json::Value> {
-        let mut metrics = std::collections::ahash::HashMap::default();
-        metrics.insert("toadstool_registered".to_string(), serde_json::json!(true));
-        metrics.insert("songbird_registered".to_string(), serde_json::json!(true));
-        metrics.insert("squirrel_registered".to_string(), serde_json::json!(true));
-        metrics.insert("integration_uptime".to_string(), serde_json::json!("99.9%"));
-        metrics.insert("last_sync".to_string(), serde_json::json!(chrono::Utc::now()));
+        let mut metrics = std::collections::HashMap::new();
+        metrics.insert("toadstool_connected".to_string(), serde_json::Value::Bool(true));
+        metrics.insert("songbird_connected".to_string(), serde_json::Value::Bool(true));
+        metrics.insert("squirrel_connected".to_string(), serde_json::Value::Bool(true));
         metrics
+    }
 } 

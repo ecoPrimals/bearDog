@@ -1,12 +1,9 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentHealth {
-
     pub name: String,
 
     pub status: beardog_types::canonical::health_status::HealthStatus,
@@ -22,7 +19,6 @@ pub struct ComponentHealth {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemHealth {
-
     pub status: beardog_types::canonical::health_status::HealthStatus,
 
     pub components: Vec<ComponentHealth>,
@@ -34,7 +30,6 @@ pub struct SystemHealth {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceMetrics {
-
     pub cpu_usage_percent: f64,
 
     pub memory_usage_bytes: u64,
@@ -72,7 +67,6 @@ impl Default for ResourceMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
-
     pub avg_request_time_ms: f64,
 
     pub requests_per_second: f64,
@@ -104,7 +98,6 @@ impl Default for PerformanceMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
-
     pub timestamp: DateTime<Utc>,
 
     pub resources: ResourceMetrics,
@@ -114,7 +107,6 @@ pub struct SystemMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertThresholds {
-
     pub cpu_threshold: f64,
 
     pub memory_threshold: f64,
@@ -140,7 +132,6 @@ impl Default for AlertThresholds {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InternalMetricsSummary {
-
     pub security_events: u64,
 
     pub encryption_operations: u64,
@@ -158,35 +149,13 @@ pub struct InternalMetricsSummary {
     pub last_updated: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PrometheusConfig {
+// UNIFIED: Use canonical PrometheusConfig
+pub use beardog_types::canonical::monitoring::PrometheusConfig;
 
-    pub enabled: bool,
-
-    pub endpoint: String,
-
-    pub port: u16,
-
-    pub path: String,
-
-    pub update_interval_seconds: u64,
-}
-
-impl Default for PrometheusConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            endpoint: "localhost".to_string(),
-            port: 9090,
-            path: "/metrics".to_string(),
-            update_interval_seconds: 30,
-        }
-    }
-}
+// Default implementation moved to canonical PrometheusConfig in beardog-types
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MetricValue {
-
     Counter(u64),
 
     Gauge(f64),
@@ -199,7 +168,6 @@ pub enum MetricValue {
 }
 
 impl MetricValue {
-
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             MetricValue::Counter(v) => Some(*v as f64),
@@ -216,4 +184,3 @@ impl MetricValue {
         }
     }
 }
-

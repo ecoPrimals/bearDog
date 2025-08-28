@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::time::Instant;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_core::BearDogCore;
 use beardog_config::BearDogConfig;
 
@@ -64,7 +64,7 @@ pub struct AIInsight {
     pub suggested_actions: Vec<String>,
 }
 
-pub async fn initialize_ai_core(config_path: &Option<PathBuf>) -> BearDogResult<BearDogAICore> {
+pub async fn initialize_ai_core(config_path: &Option<PathBuf>) -> Result<BearDogAICore, BearDogError> {
     let config = if let Some(path) = config_path {
         BearDogConfig::from_file(path).await?
     } else {
@@ -109,7 +109,7 @@ pub async fn initialize_ai_core(config_path: &Option<PathBuf>) -> BearDogResult<
 
 impl BearDogAICore {
 
-    pub async fn analyze_security_patterns(&self, data: &[u8]) -> BearDogResult<Vec<SecurityPattern>> {
+    pub async fn analyze_security_patterns(&self, data: &[u8]) -> Result<Vec<SecurityPattern, BearDogError>> {
         let patterns = self.ai_models.pattern_recognition_model
             .detect_patterns(data).await?;
         
@@ -132,7 +132,7 @@ impl BearDogAICore {
         Ok(analyzed_patterns)
     }
 
-    pub async fn generate_hybrid_insights(&self) -> BearDogResult<Vec<AIInsight>> {
+    pub async fn generate_hybrid_insights(&self) -> Result<Vec<AIInsight, BearDogError>> {
         let mut insights = Vec::new();
 
         let security_insight = AIInsight {
@@ -155,7 +155,7 @@ impl BearDogAICore {
         Ok(insights)
     }
 
-    pub async fn check_standalone_health(&self) -> BearDogResult<StandaloneHealth> {
+    pub async fn check_standalone_health(&self) -> Result<StandaloneHealth, BearDogError> {
         Ok(StandaloneHealth {
             ai_models_loaded: true,
             security_analyzer_active: true,
@@ -179,11 +179,11 @@ pub struct StandaloneHealth {
 pub struct ThreatDetectionModel;
 
 impl ThreatDetectionModel {
-    async fn initialize() -> BearDogResult<Self> {
+    async fn initialize() -> Result<Self, BearDogError> {
         Ok(Self)
     }
     
-    async fn assess_threat_level(&self, _pattern: &DetectedPattern) -> BearDogResult<f64> {
+    async fn assess_threat_level(&self, _pattern: &DetectedPattern) -> Result<f64, BearDogError> {
 
         Ok(0.5)
     }
@@ -193,11 +193,11 @@ impl ThreatDetectionModel {
 pub struct PatternRecognitionModel;
 
 impl PatternRecognitionModel {
-    async fn initialize() -> BearDogResult<Self> {
+    async fn initialize() -> Result<Self, BearDogError> {
         Ok(Self)
     }
     
-    async fn detect_patterns(&self, _data: &[u8]) -> BearDogResult<Vec<DetectedPattern>> {
+    async fn detect_patterns(&self, _data: &[u8]) -> Result<Vec<DetectedPattern, BearDogError>> {
 
         Ok(vec![])
     }
@@ -207,7 +207,7 @@ impl PatternRecognitionModel {
 pub struct OptimizationModel;
 
 impl OptimizationModel {
-    async fn initialize() -> BearDogResult<Self> {
+    async fn initialize() -> Result<Self, BearDogError> {
         Ok(Self)
     }
 }
@@ -216,7 +216,7 @@ impl OptimizationModel {
 pub struct GeneticFitnessModel;
 
 impl GeneticFitnessModel {
-    async fn initialize() -> BearDogResult<Self> {
+    async fn initialize() -> Result<Self, BearDogError> {
         Ok(Self)
     }
 }
@@ -225,7 +225,7 @@ impl GeneticFitnessModel {
 pub struct AnomalyDetector;
 
 impl AnomalyDetector {
-    async fn initialize() -> BearDogResult<Self> {
+    async fn initialize() -> Result<Self, BearDogError> {
         Ok(Self)
     }
 }
@@ -234,7 +234,7 @@ impl AnomalyDetector {
 pub struct PerformanceBaseline;
 
 impl PerformanceBaseline {
-    async fn collect(_core: &BearDogCore) -> BearDogResult<Self> {
+    async fn collect(_core: &BearDogCore) -> Result<Self, BearDogError> {
         Ok(Self)
     }
 }
@@ -243,7 +243,7 @@ impl PerformanceBaseline {
 pub struct PredictiveModel;
 
 impl PredictiveModel {
-    async fn initialize() -> BearDogResult<Self> {
+    async fn initialize() -> Result<Self, BearDogError> {
         Ok(Self)
     }
 }
@@ -252,7 +252,7 @@ impl PredictiveModel {
 pub struct FitnessEvaluator;
 
 impl FitnessEvaluator {
-    async fn initialize() -> BearDogResult<Self> {
+    async fn initialize() -> Result<Self, BearDogError> {
         Ok(Self)
     }
 }
@@ -261,7 +261,7 @@ impl FitnessEvaluator {
 pub struct MutationPredictor;
 
 impl MutationPredictor {
-    async fn initialize() -> BearDogResult<Self> {
+    async fn initialize() -> Result<Self, BearDogError> {
         Ok(Self)
     }
 }
@@ -270,7 +270,7 @@ impl MutationPredictor {
 pub struct CrossoverOptimizer;
 
 impl CrossoverOptimizer {
-    async fn initialize() -> BearDogResult<Self> {
+    async fn initialize() -> Result<Self, BearDogError> {
         Ok(Self)
     }
 }
@@ -286,7 +286,7 @@ pub struct DetectedPattern {
 pub struct OptimizationAction;
 
 impl PerformanceOptimizer {
-    async fn generate_performance_insight(&self) -> BearDogResult<AIInsight> {
+    async fn generate_performance_insight(&self) -> Result<AIInsight, BearDogError> {
         Ok(AIInsight {
             category: "Performance".to_string(),
             confidence: 0.8,
@@ -298,7 +298,7 @@ impl PerformanceOptimizer {
 }
 
 impl GeneticEnhancer {
-    async fn generate_genetic_insight(&self) -> BearDogResult<AIInsight> {
+    async fn generate_genetic_insight(&self) -> Result<AIInsight, BearDogError> {
         Ok(AIInsight {
             category: "Genetics".to_string(),
             confidence: 0.85,

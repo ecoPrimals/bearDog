@@ -1,12 +1,12 @@
 
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use rand::{thread_rng, RngCore};
 use std::time::Instant;
 use tracing::info;
 
-pub async fn benchmark_network_operations(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
+pub async fn benchmark_network_operations(suite: &mut PerformanceBenchmarkSuite) -> Result<Vec<BenchmarkResult, BearDogError>> {
     let mut results = Vec::new();
 
     let latency_result = benchmark_network_latency(suite).await?;
@@ -20,7 +20,7 @@ pub async fn benchmark_network_operations(suite: &mut PerformanceBenchmarkSuite)
     Ok(results)
 }
 
-async fn benchmark_network_latency(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_network_latency(suite: &PerformanceBenchmarkSuite) -> Result<BenchmarkResult, BearDogError> {
     info!("  🌐 Benchmarking network latency");
 
     let mut latencies = Vec::new();
@@ -66,7 +66,7 @@ async fn benchmark_network_latency(suite: &PerformanceBenchmarkSuite) -> BearDog
     })
 }
 
-async fn benchmark_network_throughput(suite: &PerformanceBenchmarkSuite, data_size: usize) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_network_throughput(suite: &PerformanceBenchmarkSuite, data_size: usize) -> Result<BenchmarkResult, BearDogError> {
     info!("  🌐 Benchmarking network throughput for {} bytes", data_size);
 
     let mut data = vec![0u8; data_size];
@@ -115,7 +115,7 @@ async fn benchmark_network_throughput(suite: &PerformanceBenchmarkSuite, data_si
     })
 }
 
-async fn simulate_network_data_processing(suite: &PerformanceBenchmarkSuite, data: &[u8]) -> BearDogResult<bool> {
+async fn simulate_network_data_processing(suite: &PerformanceBenchmarkSuite, data: &[u8]) -> Result<bool, BearDogError> {
 
     let _hash = suite.security_provider.hash_data(data).await?;
     Ok(true)

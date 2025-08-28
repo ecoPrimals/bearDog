@@ -1,27 +1,44 @@
-//! # BearDog Error Handling System
-//! 
-//! This crate provides a unified error handling system for the BearDog ecosystem.
+//! # `BearDog` Error Handling System
+//!
+//! This crate provides a unified error handling system for the `BearDog` ecosystem.
 //! It implements a comprehensive error taxonomy with domain-specific error types,
 //! idiomatic Rust error patterns, and zero-cost abstractions for error propagation.
-//! 
+//!
 //! ## Features
-//! 
+//!
 //! - **Unified Error Types**: Single `BearDogError` enum covering all error domains
 //! - **Domain-Specific Errors**: Specialized error types for security, HSM, networking, etc.
 //! - **Idiomatic Patterns**: Full `std::error::Error` trait implementation
 //! - **Zero-Cost Abstractions**: Efficient error propagation with `?` operator
 //! - **Rich Context**: Detailed error messages with contextual information
-//! 
-//! ## Usage
-//! 
+//!
+//! ## Idiomatic Usage (Recommended)
+//!
 //! ```rust
-//! use beardog_errors::{BearDogError, BearDogResult};
-//! 
-//! fn example_operation() -> BearDogResult<String> {
+//! use beardog_errors::BearDogError;
+//!
+//! // Use Result<T, BearDogError> directly for maximum clarity
+//! fn example_operation() -> Result<String, BearDogError> {
 //!     // Operations that may fail
 //!     Ok("Success".to_string())
 //! }
+//!
+//! // Use the ResultExt trait for rich error context
+//! use beardog_errors::ResultExt;
+//!
+//! fn with_context() -> Result<(), BearDogError> {
+//!     std::fs::read_to_string("config.toml")
+//!         .system_context("Failed to load configuration file")?;
+//!     Ok(())
+//! }
 //! ```
+//!
+//! ## Migration from Type Aliases
+//!
+//! The `Result<T, BearDogError>` type alias is deprecated in favor of the more idiomatic
+//! `Result<T, BearDogError>` pattern. This follows Rust ecosystem best practices
+//! and provides better tooling support.
+//!
 
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
@@ -42,7 +59,7 @@ pub mod error_types;
 /// Idiomatic Rust error patterns and trait implementations
 pub mod idiomatic;
 
-pub use core::{BearDogError, BearDogResult};
+pub use core::BearDogError;
 
 pub use categories::*;
 
@@ -51,62 +68,62 @@ use std::fmt::Display;
 /// Extension trait for `Result` types to provide additional error handling utilities
 pub trait ResultExt<T, E> {
     /// Adds security-specific context to an error result
-    /// 
+    ///
     /// # Arguments
     /// * `context` - Security context description to add to the error
-    /// 
+    ///
     /// # Returns
-    /// A `BearDogResult<T>` with the security context applied
-    fn security_context(self, context: &str) -> BearDogResult<T>;
+    /// A `Result<T, BearDogError>` with the security context applied
+    fn security_context(self, context: &str) -> Result<T, BearDogError>;
 
     /// Adds system-specific context to an error result
-    /// 
+    ///
     /// # Arguments
     /// * `context` - System context description to add to the error
-    /// 
+    ///
     /// # Returns
-    /// A `BearDogResult<T>` with the system context applied
-    fn system_context(self, context: &str) -> BearDogResult<T>;
+    /// A `Result<T, BearDogError>` with the system context applied
+    fn system_context(self, context: &str) -> Result<T, BearDogError>;
 
     /// Adds business logic context to an error result
-    /// 
+    ///
     /// # Arguments
     /// * `context` - Business context description to add to the error
-    /// 
+    ///
     /// # Returns
-    /// A `BearDogResult<T>` with the business context applied
-    fn business_context(self, context: &str) -> BearDogResult<T>;
+    /// A `Result<T, BearDogError>` with the business context applied
+    fn business_context(self, context: &str) -> Result<T, BearDogError>;
 
     /// Adds network-specific context to an error result
-    /// 
+    ///
     /// # Arguments
     /// * `context` - Network context description to add to the error
-    /// 
+    ///
     /// # Returns
-    /// A `BearDogResult<T>` with the network context applied
-    fn network_context(self, context: &str) -> BearDogResult<T>;
+    /// A `Result<T, BearDogError>` with the network context applied
+    fn network_context(self, context: &str) -> Result<T, BearDogError>;
 }
 
 impl<T, E: Display> ResultExt<T, E> for Result<T, E> {
-    fn security_context(self, context: &str) -> BearDogResult<T> {
-        self.map_err(|e| BearDogError::security(format_args!("{}: {}", context, e).to_string()))
+    fn security_context(self, context: &str) -> Result<T, BearDogError> {
+        self.map_err(|e| BearDogError::security(format_args!("{context}: {e}").to_string()))
     }
-    
-    fn system_context(self, context: &str) -> BearDogResult<T> {
-        self.map_err(|e| BearDogError::system(format_args!("{}: {}", context, e).to_string()))
+
+    fn system_context(self, context: &str) -> Result<T, BearDogError> {
+        self.map_err(|e| BearDogError::system(format_args!("{context}: {e}").to_string()))
     }
-    
-    fn business_context(self, context: &str) -> BearDogResult<T> {
-        self.map_err(|e| BearDogError::business(format_args!("{}: {}", context, e).to_string()))
+
+    fn business_context(self, context: &str) -> Result<T, BearDogError> {
+        self.map_err(|e| BearDogError::business(format_args!("{context}: {e}").to_string()))
     }
-    
-    fn network_context(self, context: &str) -> BearDogResult<T> {
-        self.map_err(|e| BearDogError::network(format_args!("{}: {}", context, e).to_string()))
+
+    fn network_context(self, context: &str) -> Result<T, BearDogError> {
+        self.map_err(|e| BearDogError::network(format_args!("{context}: {e}").to_string()))
     }
 }
 
 /// Error validation and consistency checking utilities
-/// 
+///
 /// This module provides utilities for validating error usage patterns,
 /// ensuring consistency across the BearDog ecosystem, and maintaining
 /// error handling best practices.
@@ -114,23 +131,20 @@ pub mod validation {
     use crate::*;
 
     /// Validates error usage patterns and configurations
-    /// 
+    ///
     /// # Returns
     /// `Ok(())` if error usage is valid, `Err(BearDogError)` if validation fails
-    pub fn validate_error_usage() -> BearDogResult<()> {
+    pub fn validate_error_usage() -> Result<(), BearDogError> {
         // Validation logic would go here
         Ok(())
     }
 
     /// Returns information about the error system configuration
-    /// 
+    ///
     /// # Returns
     /// A vector of tuples containing (component_name, version) pairs
     pub fn error_system_info() -> Vec<(&'static str, &'static str)> {
-        vec![
-            ("beardog-errors", "3.0.0"),
-            ("error-system", "unified"),
-        ]
+        vec![("beardog-errors", "3.0.0"), ("error-system", "unified")]
     }
 }
 
@@ -158,10 +172,10 @@ mod tests {
     #[test]
     fn test_error_categories() {
         let security_error = BearDogError::security_with_category(
-            "auth failed", 
-            SecurityErrorCategory::Authentication
+            "auth failed",
+            SecurityErrorCategory::Authentication,
         );
-        
+
         if let BearDogError::Security { category, .. } = security_error {
             assert!(matches!(category, SecurityErrorCategory::Authentication));
         } else {
@@ -172,13 +186,13 @@ mod tests {
     #[test]
     fn test_result_extensions() {
         let result: Result<(), std::io::Error> = Err(std::io::Error::new(
-            std::io::ErrorKind::NotFound, 
-            "file not found"
+            std::io::ErrorKind::NotFound,
+            "file not found",
         ));
-        
+
         let beardog_result = result.system_context("Failed to read file");
         assert!(beardog_result.is_err());
-        
+
         if let Err(BearDogError::System { message, category }) = beardog_result {
             assert!(message.contains("Failed to read file"));
             assert!(matches!(category, SystemErrorCategory::General));
@@ -191,7 +205,7 @@ mod tests {
     fn test_validation_system() {
         let result = validation::validate_error_usage();
         assert!(result.is_ok(), "Error usage validation should pass");
-        
+
         let info = validation::error_system_info();
         assert!(!info.is_empty());
         let system_names: Vec<&str> = info.iter().map(|(name, _)| *name).collect();
@@ -209,10 +223,10 @@ mod tests {
         let _config = BearDogError::configuration("test");
         let _init = BearDogError::initialization("test");
         let _validation = BearDogError::validation("test");
-        
+
         // Test HSM and domain-specific errors
         let _hsm = BearDogError::hsm("test");
-        let _api = BearDogError::api("test");
+        let _api = BearDogError::api("test", ApiErrorCategory::General);
         let _workflow = BearDogError::workflow("test");
         let _genetics = BearDogError::genetics("test");
         let _deployment = BearDogError::deployment("test");

@@ -1,6 +1,6 @@
+use beardog_errors::BearDogError;
 
-
-use crate::{BearDogError, BearDogResult};
+use crate::{{BearDogError}};
 use crate::node_registry::types::{NodeInfo, TrustLevel};
 use super::types::BootstrapConfig;
 use std::collections::HashMap;
@@ -31,7 +31,7 @@ impl NodeVerification {
         }
     }
 
-    pub async fn verify_node(&self, node_info: &NodeInfo) -> BearDogResult<bool> {
+    pub async fn verify_node(&self, node_info: &NodeInfo) -> Result<bool, BearDogError> {
         debug!("🔍 Verifying bootstrap node: {}", node_info.node_id);
 
         if let Some((verified, timestamp)) = self.get_cached_verification(&node_info.node_id) {
@@ -44,7 +44,7 @@ impl NodeVerification {
         self.cache_verification_result(&node_info.node_id, result.is_ok());
         result
 
-    async fn perform_node_verification(&self, node_info: &NodeInfo) -> BearDogResult<bool> {
+    async fn perform_node_verification(&self, node_info: &NodeInfo) -> Result<bool, BearDogError> {
 
         if !self.test_connectivity(node_info).await? {
             return Ok(false);
@@ -59,7 +59,7 @@ impl NodeVerification {
         info!("✅ Node {} verified with trust level: {:?}", node_info.node_id, trust_level);
         Ok(trust_level >= TrustLevel::Low)
 
-    async fn test_connectivity(&self, node_info: &NodeInfo) -> BearDogResult<bool> {
+    async fn test_connectivity(&self, node_info: &NodeInfo) -> Result<bool, BearDogError> {
         let health_url = format_args!("{}/health", node_info.address).to_string();
         match timeout(
             Duration::from_secs(10),
@@ -74,7 +74,7 @@ impl NodeVerification {
             Err(_) => {
                 warn!("⏰ Connectivity test timed out for {}", node_info.node_id);
 
-    async fn validate_node_info(&self, node_info: &NodeInfo) -> BearDogResult<bool> {
+    async fn validate_node_info(&self, node_info: &NodeInfo) -> Result<bool, BearDogError> {
 
         if node_info.node_id.is_empty() || node_info.address.is_empty() {
 
@@ -92,7 +92,7 @@ impl NodeVerification {
                 debug!("⚠️ Could not retrieve remote node info for {}", node_info.node_id);
                 Ok(true) // Don't fail verification just for this
 
-    async fn validate_remote_node_info(&self, local_info: &NodeInfo, remote_info: &Value) -> BearDogResult<bool> {
+    async fn validate_remote_node_info(&self, local_info: &NodeInfo, remote_info: &Value) -> Result<bool, BearDogError> {
 
         if let Some(remote_id) = remote_info.get("node_id").and_then(|v| v.as_str()) {
             if remote_id != local_info.node_id {
@@ -107,7 +107,7 @@ impl NodeVerification {
         debug!("✅ Remote node info validation passed for {}", local_info.node_id);
         Ok(true)
 
-    async fn verify_node_identity(&self, node_info: &NodeInfo) -> BearDogResult<bool> {
+    async fn verify_node_identity(&self, node_info: &NodeInfo) -> Result<bool, BearDogError> {
         if node_info.public_key.is_empty() {
             debug!("⚠️ No public key for {}, skipping identity verification", node_info.node_id);
             return Ok(true);
@@ -137,7 +137,7 @@ impl NodeVerification {
         challenge: &str,
         response: &Value,
         node_info: &NodeInfo,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         let signature = response.get("signature")
             .and_then(|v| v.as_str())
             .ok_or_else(|| BearDogError::validation("Missing signature in challenge response"))?;
@@ -147,7 +147,7 @@ impl NodeVerification {
 
         debug!("✅ Challenge response verified for {}", node_info.node_id);
 
-    async fn verify_node_capabilities(&self, node_info: &NodeInfo) -> BearDogResult<bool> {
+    async fn verify_node_capabilities(&self, node_info: &NodeInfo) -> Result<bool, BearDogError> {
         let capabilities_url = format_args!("{}/api/v1/node/capabilities", node_info.address).to_string();
             self.client.get(&capabilities_url).send()
                     if let Ok(remote_caps) = response.json::<Value>().await {
@@ -156,7 +156,7 @@ impl NodeVerification {
                 Ok(true)
                 debug!("⚠️ Could not verify capabilities for {}", node_info.node_id);
 
-    async fn validate_advertised_capabilities(&self, node_info: &NodeInfo, remote_caps: &Value) -> BearDogResult<bool> {
+    async fn validate_advertised_capabilities(&self, node_info: &NodeInfo, remote_caps: &Value) -> Result<bool, BearDogError> {
         if let Some(capabilities_array) = remote_caps.get("capabilities").and_then(|v| v.as_array()) {
             let remote_caps: Vec<String> = capabilities_array
                 .iter()
@@ -174,7 +174,7 @@ impl NodeVerification {
                     warn!("❌ No capability overlap for {}", node_info.node_id);
         debug!("✅ Capability validation passed for {}", node_info.node_id);
 
-    async fn assess_trust_level(&self, node_info: &NodeInfo) -> BearDogResult<TrustLevel> {
+    async fn assess_trust_level(&self, node_info: &NodeInfo) -> Result<TrustLevel, BearDogError> {
         let mut trust_score = 0;
 
         trust_score += 1;

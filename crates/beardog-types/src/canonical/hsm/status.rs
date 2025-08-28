@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,7 +9,6 @@ use super::capabilities::{
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmHealth {
-
     pub status: HsmHealthStatus,
 
     pub last_check: DateTime<Utc>,
@@ -23,10 +20,8 @@ pub struct HsmHealth {
     pub errors: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum HsmHealthStatus {
-
     Healthy,
 
     Degraded,
@@ -37,22 +32,47 @@ pub enum HsmHealthStatus {
     Unknown,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum HsmStatusType {
+    Healthy,
+    Degraded,
+    Unhealthy,
+    Unknown,
+    Maintenance,
+}
+
+impl Default for HsmStatusType {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
 pub struct HsmStatus {
+    pub status: HsmStatusType,
+    pub last_check: chrono::DateTime<chrono::Utc>,
+    pub metrics: HealthMetrics,
+    pub config: HsmHealthCheckConfig,
+}
 
-    pub hsm_id: String,
+impl Default for HsmStatus {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
-    pub health: HsmHealth,
-
-    pub connected: bool,
-
-    pub last_updated: DateTime<Utc>,
-
-    pub metadata: HashMap<String, String>,
+impl HsmStatus {
+    pub fn new() -> Self {
+        Self {
+            status: HsmStatusType::Unknown,
+            last_check: chrono::Utc::now(),
+            metrics: HealthMetrics::default(),
+            config: HsmHealthCheckConfig::default(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthMetrics {
-
     pub ops_per_second: f64,
 
     pub avg_response_time_ms: f64,
@@ -66,21 +86,53 @@ pub struct HealthMetrics {
     pub active_connections: u32,
 }
 
-pub struct HsmOperationResult<T> {
+impl Default for HealthMetrics {
+    fn default() -> Self {
+        Self {
+            ops_per_second: 0.0,
+            avg_response_time_ms: 0.0,
+            error_rate_percent: 0.0,
+            memory_usage_percent: 0.0,
+            cpu_usage_percent: 0.0,
+            active_connections: 0,
+        }
+    }
+}
 
+pub struct HsmOperationResult<T> {
     pub success: bool,
 
     pub data: Option<T>,
 
-    pub error: Option<HsmError>,
+    pub error: Option<String>,
 
     pub duration_ms: u64,
 
     pub timestamp: DateTime<Utc>,
+
+    pub config: HsmHealthCheckConfig,
+}
+
+impl<T> Default for HsmOperationResult<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T> HsmOperationResult<T> {
+    pub fn new() -> Self {
+        Self {
+            success: false,
+            data: None,
+            error: None,
+            duration_ms: 0,
+            timestamp: Utc::now(),
+            config: HsmHealthCheckConfig::default(),
+        }
+    }
 }
 
 pub struct HsmError {
-
     pub code: String,
 
     pub message: String,
@@ -91,7 +143,6 @@ pub struct HsmError {
 }
 
 pub enum ErrorCategory {
-
     Connection,
 
     Authentication,
@@ -110,70 +161,29 @@ pub enum ErrorCategory {
 }
 
 pub struct HealthCheck {
-
     pub check_type: HealthCheckType,
-
-    pub config: HealthCheckConfig,
-
+    pub config: HsmHealthCheckConfig,
     pub last_result: Option<HealthCheckResult>,
 }
 
 pub enum HealthCheckType {
-
     Connectivity,
-
-    KeyOperation,
-
     Performance,
-
     Security,
-
     Memory,
-
     Diagnostic,
 }
 
-pub struct HealthCheckConfig {
-
+// HSM-specific health check configuration (different from general monitoring)
+#[derive(Debug, Clone)]
+pub struct HsmHealthCheckConfig {
     pub interval_seconds: u64,
-
     pub timeout_seconds: u64,
-
     pub retry_count: u32,
-
     pub thresholds: HealthThresholds,
 }
 
-pub struct HealthCheckResult {
-
-    pub warnings: Vec<String>,
-}
-
-pub struct HealthThresholds {
-
-    pub degraded_response_time_ms: u64,
-
-    pub unhealthy_response_time_ms: u64,
-
-    pub degraded_error_rate_percent: f64,
-
-    pub unhealthy_error_rate_percent: f64,
-}
-
-impl Default for HealthMetrics {
-    fn default() -> Self {
-        Self {
-            ops_per_second: 0.0,
-            avg_response_time_ms: 0.0,
-            error_rate_percent: 0.0,
-            memory_usage_percent: 0.0,
-            cpu_usage_percent: 0.0,
-            active_connections: 0,
-        }
-    }
-}
-
-impl Default for HealthCheckConfig {
+impl Default for HsmHealthCheckConfig {
     fn default() -> Self {
         Self {
             interval_seconds: 30,
@@ -182,6 +192,18 @@ impl Default for HealthCheckConfig {
             thresholds: HealthThresholds::default(),
         }
     }
+}
+
+pub struct HealthCheckResult {
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct HealthThresholds {
+    pub degraded_response_time_ms: u64,
+    pub unhealthy_response_time_ms: u64,
+    pub degraded_error_rate_percent: f64,
+    pub unhealthy_error_rate_percent: f64,
 }
 
 impl Default for HealthThresholds {
@@ -194,20 +216,8 @@ impl Default for HealthThresholds {
         }
     }
 }
-impl<T> Default for HsmOperationResult<T> {
-    fn default() -> Self {
-        Self {
-            success: false,
-            data: None,
-            error: None,
-            duration_ms: 0,
-            timestamp: Utc::now(),
-        }
-    }
-}
 
 pub enum HsmTier {
-
     Mobile,
 
     Cloud,
@@ -216,7 +226,6 @@ pub enum HsmTier {
 }
 
 pub struct HsmCapabilities {
-
     pub vendor: String,
 
     pub model: String,

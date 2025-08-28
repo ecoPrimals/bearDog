@@ -1,9 +1,10 @@
+use beardog_errors::BearDogError;
 
 
 use super::HsmTestHarness;
-use beardog::{BearDogError, BearDogResult};
+use beardog::{{BearDogError, BearDogError}};
 
-pub async fn test_performance_benchmarks(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+pub async fn test_performance_benchmarks(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("⚡ Testing Performance Benchmarks");
 
     test_key_generation_performance(harness).await?;
@@ -16,7 +17,7 @@ pub async fn test_performance_benchmarks(harness: &mut HsmTestHarness) -> BearDo
     Ok(())
 }
 
-async fn test_key_generation_performance(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_key_generation_performance(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🔑 Testing key generation performance");
     
     let iterations = 10;
@@ -43,7 +44,7 @@ async fn test_key_generation_performance(harness: &mut HsmTestHarness) -> BearDo
     Ok(())
 }
 
-async fn test_signing_performance(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_signing_performance(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  ✍️ Testing signing performance");
     
     let iterations = 100;
@@ -70,7 +71,7 @@ async fn test_signing_performance(harness: &mut HsmTestHarness) -> BearDogResult
     Ok(())
 }
 
-async fn test_encryption_performance(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_encryption_performance(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🔐 Testing encryption performance");
     
     let iterations = 100;
@@ -98,7 +99,7 @@ async fn test_encryption_performance(harness: &mut HsmTestHarness) -> BearDogRes
 }
 
 #[tokio::test]
-async fn test_performance_benchmarks_standalone() -> BearDogResult<()> {
+async fn test_performance_benchmarks_standalone() -> Result<(), BearDogError> {
     let mut harness = super::HsmTestHarness::new().await?;
     test_performance_benchmarks(&mut harness).await
 } 

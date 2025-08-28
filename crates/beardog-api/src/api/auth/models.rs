@@ -10,6 +10,8 @@ pub struct LoginRequest {
     pub mfa_code: Option<String>,
     pub remember_device: Option<bool>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticationResponse {
     pub success: bool,
     pub user: AuthenticatedUser,
@@ -19,6 +21,7 @@ pub struct AuthenticationResponse {
     pub security_notices: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthenticatedUser {
     pub user_id: String,
     pub display_name: String,
@@ -28,6 +31,9 @@ pub struct AuthenticatedUser {
     pub mfa_enabled: bool,
     pub last_login: String,
     pub account_status: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthTokens {
     pub access_token: String,
     pub refresh_token: String,
@@ -35,6 +41,7 @@ pub struct AuthTokens {
     pub token_type: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionInfo {
     pub session_id: String,
     pub created_at: String,
@@ -42,175 +49,179 @@ pub struct SessionInfo {
     pub client_ip: String,
     pub user_agent: String,
     pub device_fingerprint: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogoutRequest {
     pub logout_all_devices: Option<bool>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogoutResponse {
     pub logged_out_at: String,
-    pub message: String,
-    pub redirect_url: Option<String>,
-pub struct RefreshTokenRequest {
-pub struct RefreshTokenResponse {
-    pub issued_at: String,
-    pub scope: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RefreshTokenRequest {
+    pub refresh_token: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenValidationRequest {
     pub token: String,
-pub struct TokenValidationResponse {
-    pub valid: bool,
-    pub warnings: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurrentSessionResponse {
-    pub last_activity: String,
-    pub active_permissions: Vec<String>,
-    pub session_status: String,
-    pub concurrent_sessions: u32,
-    pub session_metadata: HashMap<String, String>,
+    pub session: SessionInfo,
+    pub user: AuthenticatedUser,
+    pub permissions: Vec<String>,
+}
 
-pub struct SetupMfaRequest {
-    pub mfa_method: String, // "totp", "sms", "email"
-pub struct SetupMfaResponse {
-    pub mfa_secret: String,
-    pub qr_code_url: String,
-    pub backup_codes: Vec<String>,
-    pub setup_instructions: String,
-    pub supported_methods: Vec<String>,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PasswordChangeRequest {
+    pub current_password: String,
+    pub new_password: String,
+    pub confirm_password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PasswordResetRequest {
+    pub email: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PasswordResetConfirmRequest {
+    pub token: String,
+    pub new_password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserRegistrationRequest {
+    pub username: String,
+    pub email: String,
+    pub password: String,
+    pub confirm_password: String,
+    pub terms_accepted: bool,
+    pub newsletter_subscription: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserRegistrationResponse {
+    pub user_id: String,
+    pub username: String,
+    pub email: String,
     pub verification_required: bool,
+    pub message: String,
 }
 
-pub struct VerifyMfaRequest {
-    pub mfa_method: String,
-    pub mfa_code: String,
-    pub trust_device: Option<bool>,
-pub struct VerifyMfaResponse {
-    pub verified: bool,
-    pub verification_timestamp: String,
-    pub remaining_backup_codes: Option<u32>,
-    pub trust_device_token: Option<String>,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EmailVerificationRequest {
+    pub token: String,
 }
 
-pub struct MfaStatusResponse {
-    pub enabled_methods: Vec<String>,
-    pub primary_method: String,
-    pub backup_codes_remaining: u32,
-    pub trusted_devices: u32,
-    pub last_mfa_verification: String,
-    pub enforcement_policy: String,
-
-pub struct UserListQuery {
-    pub page: Option<u32>,
-    pub per_page: Option<u32>,
-    pub status: Option<String>,
-    pub role: Option<String>,
-    pub search: Option<String>,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResendVerificationRequest {
+    pub email: String,
 }
 
-pub struct UserListResponse {
-    pub users: Vec<UserSummary>,
-    pub total_count: u32,
-    pub page: u32,
-    pub per_page: u32,
-    pub total_pages: u32,
-    pub has_more: bool,
-    pub filters_applied: UserListFilters,
-pub struct UserListFilters {
-pub struct UserSummary {
-    pub status: String,
-    pub last_login: Option<String>,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityQuestion {
+    pub question_id: String,
+    pub question_text: String,
 }
 
-pub struct CreateUserRequest {
-    pub temporary_password: Option<String>,
-    pub roles: Option<Vec<String>>,
-    pub send_welcome_email: Option<bool>,
-pub struct CreateUserResponse {
-    pub verification_email_sent: bool,
-    pub default_roles: Vec<String>,
-    pub password_reset_required: bool,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityQuestionAnswer {
+    pub question_id: String,
+    pub answer: String,
 }
 
-pub struct UserDetailsResponse {
-    pub profile: UserProfile,
-    pub security: UserSecurityInfo,
-    pub activity: UserActivity,
-    pub metadata: HashMap<String, String>,
-pub struct UserProfile {
-    pub first_name: Option<String>,
-    pub last_name: Option<String>,
-    pub phone: Option<String>,
-    pub department: Option<String>,
-    pub title: Option<String>,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityQuestionsSetupRequest {
+    pub questions_and_answers: Vec<SecurityQuestionAnswer>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccountLockoutInfo {
+    pub is_locked: bool,
+    pub lockout_until: Option<String>,
+    pub failed_attempts: u32,
+    pub max_attempts: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeviceInfo {
+    pub device_id: String,
+    pub device_name: String,
+    pub device_type: String,
+    pub last_seen: String,
+    pub is_trusted: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TrustedDevicesResponse {
+    pub devices: Vec<DeviceInfo>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RevokeDeviceRequest {
+    pub device_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoginHistoryEntry {
+    pub login_time: String,
+    pub ip_address: String,
+    pub user_agent: String,
+    pub location: Option<String>,
+    pub success: bool,
+    pub failure_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoginHistoryResponse {
+    pub entries: Vec<LoginHistoryEntry>,
+    pub total_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserProfileUpdateRequest {
+    pub display_name: Option<String>,
+    pub email: Option<String>,
+    pub phone_number: Option<String>,
     pub timezone: Option<String>,
-    pub locale: Option<String>,
+    pub language: Option<String>,
+    pub notification_preferences: Option<HashMap<String, bool>>,
 }
 
-pub struct UserSecurityInfo {
-    pub password_last_changed: String,
-    pub failed_login_attempts: u32,
-    pub account_locked: bool,
-    pub lock_reason: Option<String>,
-    pub active_sessions: u32,
-pub struct UserActivity {
-    pub last_password_change: String,
-    pub login_count: u32,
-    pub password_change_count: u32,
-
-pub struct RoleListResponse {
-    pub roles: Vec<RoleSummary>,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserProfile {
+    pub user_id: String,
+    pub username: String,
+    pub display_name: String,
+    pub email: String,
+    pub phone_number: Option<String>,
+    pub timezone: String,
+    pub language: String,
+    pub created_at: String,
+    pub last_updated: String,
+    pub email_verified: bool,
+    pub phone_verified: bool,
+    pub notification_preferences: HashMap<String, bool>,
 }
 
-pub struct RoleSummary {
-    pub role_id: String,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiKeyCreateRequest {
     pub name: String,
-    pub description: String,
-    pub permission_count: u32,
-    pub user_count: u32,
-    pub system_role: bool,
-pub struct PermissionListQuery {
-    pub category: Option<String>,
-    pub resource: Option<String>,
-}
-
-pub struct PermissionListResponse {
-    pub permissions: Vec<PermissionSummary>,
-    pub categories: Vec<String>,
-    pub filters_applied: PermissionListFilters,
-pub struct PermissionListFilters {
-pub struct PermissionSummary {
-    pub permission_id: String,
-    pub resource: String,
-    pub action: String,
-    pub category: String,
-}
-
-pub struct PermissionCheckRequest {
-    pub permission: String,
-    pub context: Option<HashMap<String, String>>,
-pub struct PermissionCheckResponse {
-    pub granted: bool,
-    pub reason: String,
-    pub source: Option<String>,
-    pub expires_at: Option<String>,
-    pub context_restrictions: HashMap<String, String>,
-
-pub struct ApiKeyListResponse {
-    pub api_keys: Vec<ApiKeySummary>,
-}
-
-pub struct ApiKeySummary {
-    pub key_id: String,
-    pub prefix: String,
     pub scopes: Vec<String>,
-    pub last_used: Option<String>,
-    pub usage_count: u32,
-pub struct CreateApiKeyRequest {
+    pub expires_at: Option<String>,
     pub description: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateApiKeyResponse {
     pub api_key: String,
     pub warning: String,
     pub usage_instructions: String,
+}

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
@@ -38,7 +38,7 @@ impl Default for CpuFeatures {}
     }
 impl SimdGeneticsProcessor {
 
-    pub fn new(population_size: usize, chromosome_length: usize) -> BearDogResult<Self> {
+    pub fn new(population_size: usize, chromosome_length: usize) -> Result<Self, BearDogError> {
         if population_size == 0 || chromosome_length == 0 {
             return Err(BearDogError::invalid_input("Population size and chromosome length must be positive".to_string(),
             ));
@@ -62,7 +62,7 @@ impl SimdGeneticsProcessor {
     pub fn evaluate_population_fitness(
         &mut self,
         fitness_fn: impl Fn(&[f64]) -> f64,
-    ) -> BearDogResult<&[f64]> {
+    ) -> Result<&[f64], BearDogError> {
         const CHUNK_SIZE: usize = 8; // Process 8 chromosomes at once for optimal cache usage
 
         for chunk_start in (0..self.population_size).step_by(CHUNK_SIZE) {
@@ -105,7 +105,7 @@ impl SimdGeneticsProcessor {
         parent1_indices: &[usize],
         parent2_indices: &[usize],
         crossover_rate: f64,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         if parent1_indices.len() != parent2_indices.len() {
             return Err(BearDogError::invalid_input("Parent index arrays must have equal length".to_string(),
 
@@ -234,13 +234,13 @@ mod tests {
         println!("CPU Features: {features:?}");
 
         assert!(features.avx2 || features.sse4_1); // At least one should be available on modern CPUs
-    fn test_processor_creation() -> BearDogResult<()> {
+    fn test_processor_creation() -> Result<(), BearDogError> {
         let processor = SimdGeneticsProcessor::new(100, 50)?;
 
         assert_eq!(processor.population_size, 104); // 100 -> 104 (next multiple of 8)
         assert_eq!(processor.chromosome_length, 56); // 50 -> 56 (next multiple of 8)}
 
-    fn test_fitness_evaluation() -> BearDogResult<()> {
+    fn test_fitness_evaluation() -> Result<(), BearDogError> {
         let mut processor = SimdGeneticsProcessor::new(8, 16)?;
 
         let population_buffer = processor.population_buffer_mut();
@@ -252,7 +252,7 @@ mod tests {
         assert_eq!(fitness_results.len(), 8);
 
         assert!(fitness_results.iter().all(|&f| f > 0.0));
-    fn test_crossover_operation() -> BearDogResult<()> {
+    fn test_crossover_operation() -> Result<(), BearDogError> {
         let mut processor = SimdGeneticsProcessor::new(4, 8)?;
 
         for item in population_buffer.iter_mut().take(8) {
@@ -289,7 +289,7 @@ mod tests {
 
         assert!(buffer.iter().all(|&gene| (-10.0..=10.0).contains(&gene)));}
 
-    fn test_population_stats() -> BearDogResult<()> {
+    fn test_population_stats() -> Result<(), BearDogError> {
 
         processor.fitness_buffer[0] = 1.0;
         processor.fitness_buffer[1] = 2.0;

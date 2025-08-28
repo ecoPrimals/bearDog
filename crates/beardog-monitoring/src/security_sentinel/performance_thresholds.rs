@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,7 +24,7 @@ impl Default for PerformanceThresholds {}
     }
 impl PerformanceThresholds {
 
-    pub fn validate(&self) -> BearDogResult<()> {
+    pub fn validate(&self) -> Result<(), BearDogError> {
         if self.max_cpu_percent < 0.0 || self.max_cpu_percent > 100.0 {
             return Err(BearDogError::validation(format!(
                 "Invalid CPU threshold: {}% (must be 0-100)",
@@ -51,7 +51,7 @@ impl PerformanceThresholds {
         max_latency_ms: u64,
         min_success_rate: f64,
         max_error_rate: f64,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         let thresholds = Self {
             max_cpu_percent,
             max_memory_mb,

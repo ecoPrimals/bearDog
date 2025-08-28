@@ -6,7 +6,9 @@ use super::genetics::HybridCapability;
 
 pub use beardog_genetics::genetics::types::GeneticsConfig;
 
-pub use beardog_types::config::tunnel::GeneticHealingConfig;
+// Note: GeneticHealingConfig is available in beardog_types::canonical::configuration::consolidated::TunnelConfig
+// For now, we'll create a type alias to maintain compatibility
+pub type GeneticHealingConfig = beardog_types::canonical::configuration::consolidated::TunnelConfig;
 
 pub use beardog_genetics::genetics::spawning::genesis::GenesisConfig;
 

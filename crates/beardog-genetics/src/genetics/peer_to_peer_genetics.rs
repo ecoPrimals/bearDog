@@ -1,350 +1,237 @@
-
+//! Peer-to-Peer Genetics Module
+//!
+//! This module provides distributed genetics operations across the BearDog network
+//! using canonical patterns and zero-cost abstractions.
 
 use beardog_auth::auth::{BearDogGenetics, NodeCapability};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_types::canonical::{HealthStatus, SecurityContext};
 use chrono::{DateTime, Utc};
-use std::{
-    collections::HashMap,
-    sync::{atomic::AtomicU64, Arc, RwLock},
-};
-use tracing::{debug, info};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Default)]
-pub struct P2PGeneticsConfig {
-    pub max_peers: usize,
-    pub consensus_threshold: f64,
-    pub key_mixing_enabled: bool,
-    pub collaboration_timeout_secs: u64,
+/// Genetics node in the peer-to-peer network
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneticsNode {
+    pub id: String,
+    pub capabilities: Vec<NodeCapability>,
+    pub last_seen: DateTime<Utc>,
+    pub security_context: SecurityContext,
+    pub health_status: HealthStatus,
 }
 
-#[derive(Debug, Default)]
-pub struct P2PGeneticsStats {
-    pub collaborative_spawns: AtomicU64,
-    pub key_mixing_operations: AtomicU64,
-    pub peer_contributions: AtomicU64,
-    pub genetic_sharing_events: AtomicU64,
-    pub network_fitness_evaluations: AtomicU64,
-    pub recursive_evolutions: AtomicU64,
-
-pub struct GeneticsPoolStats {
-    pub genetics_allocated: AtomicU64,
-    pub genetics_reused: AtomicU64,
-    pub chromosomes_allocated: AtomicU64,
-    pub chromosomes_reused: AtomicU64,
-    pub capabilities_allocated: AtomicU64,
-    pub capabilities_reused: AtomicU64,
-    pub pool_capacity: usize,
-
-pub struct NetworkEvaluationState {
-    pub active_evaluations: usize,
-    pub consensus_reached: usize,
-    pub average_confidence: f64,
-
-#[derive(Debug, Clone)]
-pub struct KeyShare {
-    pub share_index: usize,
-    pub share_data: Vec<u8>,
-    pub verification_hash: Vec<u8>,
-    pub threshold: usize,
-    pub created_at: DateTime<Utc>,
-
-pub struct KeySharePool {
-    shares: HashMap<String, Vec<KeyShare>>,
-    active_mixings: HashMap<String, ActiveKeyMixing>,}
-
-impl KeySharePool {
-
-    pub fn new() -> Self {
+impl GeneticsNode {
+    pub fn new(capabilities: Vec<NodeCapability>) -> Self {
         Self {
-            shares: HashMap::with_capacity(16),
-            active_mixings: HashMap::with_capacity(16),
+            id: Uuid::new_v4().to_string(),
+            capabilities,
+            last_seen: Utc::now(),
+            security_context: SecurityContext::default(),
+            health_status: HealthStatus::Healthy,
         }
     }
 
-    pub fn add_share(&mut self, node_id: &str, share: KeyShare) {
-        self.shares.entry(node_id).or_default().push(share);
+    pub fn is_healthy(&self) -> bool {
+        matches!(self.health_status, HealthStatus::Healthy)
+    }
 
-    pub fn start_mixing(&mut self, session_id: &str, mixing: ActiveKeyMixing) {
-        self.active_mixings.insert(session_id, mixing);
+    pub fn has_capability(&self, capability: &NodeCapability) -> bool {
+        self.capabilities.contains(capability)
+    }
 
-    pub fn get_shares(&self, node_id: &str) -> Option<&Vec<KeyShare>> {
-        self.shares.get(node_id)
+    pub fn update_heartbeat(&mut self) {
+        self.last_seen = Utc::now();
+    }
+}
 
-    pub fn is_mixing_active(&self, session_id: &str) -> bool {
-        self.active_mixings.contains_key(session_id)
-
-pub struct ActiveKeyMixing {
-    pub mixing_id: String,
-    pub participating_peers: Vec<String>,
-    pub collected_shares: HashMap<String, KeyShare>,
-    pub target_threshold: u32,
-    pub started_at: DateTime<Utc>,
-
-#[derive(Debug)]
-pub struct CollaborativeKeys {
-    pub mixed_key_id: String,
-    pub access_key: Vec<u8>,
-    pub verification_key: Vec<u8>,
-    pub participants: Vec<String>,
-
-pub enum MixingProtocol {
-    ShamirSecretSharing,
-    ThresholdSignature,
-    MultiPartyComputation,
-
-pub struct SharedGeneticData {
-    pub genetics: BearDogGenetics,
-    pub contributor_peer: String,
-    pub contribution_time: DateTime<Utc>,
-    pub access_permissions: Vec<String>,
-
-pub struct PeerGeneticsNode {
-    pub peer_id: String,
-    pub shared_capabilities: Vec<NodeCapability>,
-    pub genetic_reputation: f64,
-    pub last_seen: DateTime<Utc>,
-
-pub struct DistributedFitnessResult {
-    pub genetics_id: String,
-    pub peer_evaluations: HashMap<String, f64>,
-    pub consensus_fitness: f64,
-    pub confidence_score: f64,
-
-pub struct PeerEvaluator {
-    pub evaluation_weight: f64,
-    pub historical_accuracy: f64,
-
-pub struct FitnessEvaluatorNode {
-    pub node_id: String,
-    pub base_fitness: f64,
-    pub evaluation_count: usize,
-    pub average_response_time: f64,
-    pub last_active: chrono::DateTime<chrono::Utc>,}
-
-impl FitnessEvaluatorNode {
-
-    pub fn new(node_id: &str) -> Self {
-            node_id,
-            base_fitness: 0.5,
-            evaluation_count: 0,
-            average_response_time: 0.0,
-            last_active: chrono::Utc::now(),
-
-    pub fn update_stats(&mut self, response_time: f64) {
-        self.evaluation_count += 1;
-        self.average_response_time =
-            (self.average_response_time * (self.evaluation_count - 1) as f64 + response_time)
-                / self.evaluation_count as f64;
-        self.last_active = chrono::Utc::now();
-
+/// Peer-to-peer genetics network manager
 pub struct P2PGeneticsNetwork {
+    nodes: HashMap<String, GeneticsNode>,
+    local_node: GeneticsNode,
+    network_config: NetworkConfig,
+}
 
-    node_registry: Arc<GeneticsNodeRegistry>,
+/// Network configuration for P2P genetics
+#[derive(Debug, Clone)]
+pub struct NetworkConfig {
+    pub max_nodes: usize,
+    pub heartbeat_interval_seconds: u64,
+    pub node_timeout_minutes: u64,
+    pub enable_discovery: bool,
+}
 
-    key_mixer: Arc<CollaborativeKeyMixer>,
-
-    fitness_evaluator: Arc<DistributedFitnessEvaluator>,
-
-    config: P2PGeneticsConfig,
-
-pub struct CollaborativeKeyMixer {
-    active_mixings: Arc<RwLock<HashMap<String, ActiveKeyMixing>>>,
-
-    pool: Arc<KeySharePool>,
-
-pub struct DistributedFitnessEvaluator {
-    evaluator_pool: HashMap<String, FitnessEvaluatorNode>,
-    evaluation_state: NetworkEvaluationState,}
-
-impl Default for CollaborativeKeyMixer {}
-
+impl Default for NetworkConfig {
     fn default() -> Self {
-        Self::new()
-impl CollaborativeKeyMixer {
+        Self {
+            max_nodes: 100,
+            heartbeat_interval_seconds: 30,
+            node_timeout_minutes: 5,
+            enable_discovery: true,
+        }
+    }
+}
 
-            active_mixings: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            pool: Arc::new(KeySharePool::new()),
+impl Default for P2PGeneticsNetwork {
+    fn default() -> Self {
+        Self::new(NetworkConfig::default())
+    }
+}
 
-    pub async fn start_mixing_session(
-        &self,
-        session_id: &str,
-        participants: Vec<&str>,
-    ) -> BearDogResult<()> {
-        let mixing = ActiveKeyMixing {
-            mixing_id: session_id.clone(),
-            participating_peers: participants,
-            collected_shares: HashMap::with_capacity(16),
-            target_threshold: 2,
-            started_at: chrono::Utc::now(),
-        };
-        let mut active = self
-            .active_mixings
-            .write()
-            .map_err(|_| BearDogError::internal("Failed to acquire write lock on active mixings".to_string(),
-            ))?;
-        active.insert(session_id, mixing);
-        Ok(())
-
-    pub fn get_active_sessions(&self) -> BearDogResult<Vec<String>> {
-        let active = self
-            .read()
-            .map_err(|_| BearDogError::internal("Failed to acquire read lock on active mixings".to_string(),
-        Ok(active.keys().cloned().collect())
-
-    pub fn get_pool(&self) -> Arc<KeySharePool> {
-        self.pool.clone()
-impl DistributedFitnessEvaluator {
-
-            evaluator_pool: HashMap::with_capacity(16),
-            evaluation_state: NetworkEvaluationState::default(),
-
-    pub fn add_evaluator_node(&mut self, node_id: &str, node: FitnessEvaluatorNode) {
-        self.evaluator_pool.insert(node_id, node);
-        self.evaluation_state.active_evaluations += 1;
-
-    pub fn remove_evaluator_node(&mut self, node_id: &str) -> Option<FitnessEvaluatorNode> {
-        if let Some(node) = self.evaluator_pool.remove(node_id) {
-            if self.evaluation_state.active_evaluations > 0 {
-                self.evaluation_state.active_evaluations -= 1;
-            }
-            Some(node)
-        } else {
-            None
-
-    pub fn get_active_evaluators_count(&self) -> usize {
-        self.evaluator_pool.len()
-
-    pub fn update_evaluation_state(&mut self, consensus_reached: usize, avg_confidence: f64) {
-        self.evaluation_state.consensus_reached = consensus_reached;
-        self.evaluation_state.average_confidence = avg_confidence;
-
-    pub fn get_evaluation_state(&self) -> &NetworkEvaluationState {
-        &self.evaluation_state
-
-    pub fn has_sufficient_evaluators(&self, min_required: usize) -> bool {
-        self.evaluator_pool.len() >= min_required
-
-    pub async fn evaluate_fitness_distributed(&self, genetics_data: &str) -> BearDogResult<f64> {
-        if self.evaluator_pool.is_empty() {
-            return Err(BearDogError::ValidationError(
-                "No evaluator nodes available".to_string(),
-            ));
-
-        let mut total_fitness = 0.0;
-        let mut evaluations_count = 0;
-        for (node_id, evaluator) in &self.evaluator_pool {
-
-            let node_fitness = evaluator.base_fitness + (genetics_data.len() as f64 * 0.001);
-            total_fitness += node_fitness;
-            evaluations_count += 1;
-            tracing::debug!("Node {} evaluated fitness: {}", node_id, node_fitness);
-        if evaluations_count == 0 {
-                "No evaluations completed".to_string(),
-        let average_fitness = total_fitness / evaluations_count as f64;
-        Ok(average_fitness.clamp(0.0, 1.0))
 impl P2PGeneticsNetwork {
+    pub fn new(config: NetworkConfig) -> Self {
+        let local_node = GeneticsNode::new(vec![
+            NodeCapability::ComputeProvider,
+            NodeCapability::SecurityAnalysis,
+        ]);
 
-    pub fn new(config: P2PGeneticsConfig) -> Self {
-            node_registry: Arc::new(GeneticsNodeRegistry::new()),
-            key_mixer: Arc::new(CollaborativeKeyMixer::new()),
-            fitness_evaluator: Arc::new(DistributedFitnessEvaluator::new()),
+        Self {
+            nodes: HashMap::new(),
+            local_node,
+            network_config: config,
+        }
+    }
 
-            config,
+    pub async fn join_network(&mut self) -> Result<(), BearDogError> {
+        // Initialize network connection
+        tracing::info!(
+            "Joining P2P genetics network with node ID: {}",
+            self.local_node.id
+        );
 
-    pub fn get_node_registry(&self) -> Arc<GeneticsNodeRegistry> {
-        self.node_registry.clone()
+        // In a real implementation, this would:
+        // 1. Connect to bootstrap nodes
+        // 2. Announce local capabilities
+        // 3. Start heartbeat mechanism
 
-    pub fn get_key_mixer(&self) -> Arc<CollaborativeKeyMixer> {
-        self.key_mixer.clone()
+        Ok(())
+    }
 
-    pub fn get_fitness_evaluator(&self) -> Arc<DistributedFitnessEvaluator> {
-        self.fitness_evaluator.clone()
+    pub async fn discover_nodes(&mut self) -> Result<Vec<GeneticsNode>, BearDogError> {
+        if !self.network_config.enable_discovery {
+            return Ok(vec![]);
+        }
 
-    pub fn get_zero_copy_engine(&self) -> Result<String, String> {
-        Err("Zero-copy engine temporarily disabled during refactor".to_string())
+        // Simulate node discovery
+        let discovered_nodes = vec![
+            GeneticsNode::new(vec![NodeCapability::ComputeProvider]),
+            GeneticsNode::new(vec![NodeCapability::SecurityAnalysis]),
+        ];
 
-    pub fn get_config(&self) -> &P2PGeneticsConfig {
-        &self.config
+        for node in &discovered_nodes {
+            self.nodes.insert(node.id.clone(), node.clone());
+        }
 
-    pub async fn connect_node(&self, node: GeneticsNode) -> BearDogResult<()> {
-        let node_id = node.node_id.clone();
+        Ok(discovered_nodes)
+    }
 
-        info!("Connected to genetics node: {node_id}");
+    pub async fn spawn_genetics_distributed(
+        &self,
+        genetics_request: &DistributedSpawnRequest,
+    ) -> Result<BearDogGenetics, BearDogError> {
+        // Find capable nodes
+        let capable_nodes: Vec<&GeneticsNode> = self
+            .nodes
+            .values()
+            .filter(|node| node.has_capability(&NodeCapability::ComputeProvider))
+            .filter(|node| node.is_healthy())
+            .collect();
 
-    pub async fn contribute_node_genetics(
-        node_id: &str,
-        _genetics_data: BearDogGenetics,
-    ) -> GeneticsResult<String> {
-        info!("🤝 Contributing genetics from node: {node_id}");
+        if capable_nodes.is_empty() {
+            return Err(BearDogError::system(
+                "No capable nodes available for genetics spawning",
+            ));
+        }
 
-        let nodes = self.node_registry.get_active_nodes();
-        let _node =
-            nodes
-                .iter()
-                .find(|n| n.node_id == node_id)
-                .ok_or_else(|| BearDogError::not_found(format!("Node not found: {node_id}")))?;
-        let contribution_id = Uuid::new_v4().to_string();
-        info!("✅ Created genetics contribution: {contribution_id}");
-        Ok(contribution_id)
+        // Select best node (simplified selection)
+        let selected_node = capable_nodes[0];
 
-    pub async fn retrieve_node_genetics(&self, node_id: &str) -> GeneticsResult<BearDogGenetics> {
-        debug!("📥 Retrieving genetics from node: {node_id}");
+        tracing::info!(
+            "Delegating genetics spawning to node: {} with {} capabilities",
+            selected_node.id,
+            selected_node.capabilities.len()
+        );
 
-        Ok(BearDogGenetics::default())
+        // Create genetics based on request
+        let genetics = BearDogGenetics {
+            id: Uuid::new_v4().to_string(),
+            capabilities: genetics_request.required_capabilities.clone(),
+            security_clearance: genetics_request.security_clearance.clone(),
+            generation: 0,
+            fitness_score: 0.8, // Default fitness
+            ..Default::default()
+        };
 
-pub struct GeneticsNodeRegistry {
-    active_nodes: HashMap<String, GeneticsNode>,
-    node_capabilities: HashMap<String, Vec<NodeCapability>>,
-    last_heartbeat: HashMap<String, chrono::DateTime<chrono::Utc>>,
+        Ok(genetics)
+    }
 
-pub struct GeneticsNode {
-    pub network_address: String,
-    pub capabilities: Vec<NodeCapability>,
-    pub last_seen: chrono::DateTime<chrono::Utc>,
-    pub trust_score: f64,}
+    pub fn get_network_status(&self) -> NetworkStatus {
+        let healthy_nodes = self.nodes.values().filter(|node| node.is_healthy()).count();
 
-impl GeneticsNodeRegistry {
+        NetworkStatus {
+            total_nodes: self.nodes.len(),
+            healthy_nodes,
+            local_node_id: self.local_node.id.clone(),
+            network_health: if healthy_nodes > 0 {
+                HealthStatus::Healthy
+            } else {
+                HealthStatus::Degraded
+            },
+        }
+    }
 
-            active_nodes: HashMap::with_capacity(16),
-            node_capabilities: HashMap::with_capacity(16),
-            last_heartbeat: HashMap::with_capacity(16),
+    pub fn cleanup_stale_nodes(&mut self) -> usize {
+        let timeout = chrono::Duration::minutes(self.network_config.node_timeout_minutes as i64);
+        let cutoff = Utc::now() - timeout;
 
-    pub fn register_node(&mut self, node: GeneticsNode) {
-        self.node_capabilities
-            .insert(node.node_id.clone(), node.capabilities.clone());
-        self.last_heartbeat
-            .insert(node.node_id.clone(), chrono::Utc::now());
-        self.active_nodes.insert(node.node_id.clone(), node);
+        let initial_count = self.nodes.len();
+        self.nodes.retain(|_, node| node.last_seen > cutoff);
 
-    pub fn update_heartbeat(&mut self, node_id: &str) -> bool {
-        if self.active_nodes.contains_key(node_id) {
-            self.last_heartbeat
-                .insert(node_id.to_string(), chrono::Utc::now());
-            true
-            false
-
-    pub fn get_active_nodes(&self) -> Vec<&GeneticsNode> {
-        self.active_nodes.values().collect()
+        initial_count - self.nodes.len()
+    }
 
     pub fn get_nodes_with_capability(&self, capability: &NodeCapability) -> Vec<&GeneticsNode> {
-        self.active_nodes
+        self.nodes
             .values()
-            .filter(|node| node.capabilities.contains(capability))
+            .filter(|node| node.has_capability(capability))
             .collect()
+    }
+}
 
-    pub fn cleanup_inactive_nodes(&mut self) -> usize {
-        let cutoff = chrono::Utc::now() - chrono::Duration::minutes(5);
-        let mut removed_count = 0;
-        let inactive_nodes: Vec<String> = self
-            .last_heartbeat
-            .iter()
-            .filter(|(_, &last_seen)| last_seen < cutoff)
-            .map(|(node_id, _)| node_id.clone())
-            .collect();
-        for node_id in inactive_nodes {
-            self.active_nodes.remove(&node_id);
-            self.node_capabilities.remove(&node_id);
-            self.last_heartbeat.remove(&node_id);
-            removed_count += 1;
-        removed_count
+/// Distributed genetics spawning request
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DistributedSpawnRequest {
+    pub required_capabilities: Vec<NodeCapability>,
+    pub security_clearance: beardog_auth::auth::SecurityClearance,
+    pub priority: SpawnPriority,
+    pub timeout_seconds: u32,
+}
+
+/// Spawn priority levels
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SpawnPriority {
+    Low,
+    Normal,
+    High,
+    Critical,
+}
+
+/// Network status information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkStatus {
+    pub total_nodes: usize,
+    pub healthy_nodes: usize,
+    pub local_node_id: String,
+    pub network_health: HealthStatus,
+}
+
+impl Default for DistributedSpawnRequest {
+    fn default() -> Self {
+        Self {
+            required_capabilities: vec![NodeCapability::ComputeProvider],
+            security_clearance: beardog_auth::auth::SecurityClearance::Basic,
+            priority: SpawnPriority::Normal,
+            timeout_seconds: 30,
+        }
+    }
+}

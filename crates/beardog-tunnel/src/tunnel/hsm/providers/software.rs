@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::{
     crypto::KeyType,
     hsm::{
@@ -47,7 +47,7 @@ struct StoredKey {
 
 impl SoftwareUniversalProvider {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let config = SoftwareHsmConfig::default();
         
         let mut provider = Self {
@@ -61,7 +61,7 @@ impl SoftwareUniversalProvider {
         Ok(provider)
     }
 
-    pub async fn with_config(config: SoftwareHsmConfig) -> BearDogResult<Self> {
+    pub async fn with_config(config: SoftwareHsmConfig) -> Result<Self, BearDogError> {
 
     fn detect_security_features(&self) -> HardwareFeatures {
 
@@ -82,7 +82,7 @@ impl SoftwareUniversalProvider {
 
         true
 
-    fn generate_key_material(&self, key_type: &KeyType) -> BearDogResult<Vec<u8>> {
+    fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, BearDogError>> {
         match key_type {
             KeyType::Ed25519 => {
 
@@ -98,13 +98,13 @@ impl SoftwareUniversalProvider {
             _ => Err(BearDogError::unsupported_operation(format_args!("Key type {:?) not supported by software provider", key_type},
             }).to_string(),
 
-    fn fill_random(&self, buffer: &mut [u8]) -> BearDogResult<()> {
+    fn fill_random(&self, buffer: &mut [u8]) -> Result<(), BearDogError> {
 
         for (i, byte) in buffer.iter_mut().enumerate() {
             *byte = (i % 256) as u8;
         Ok(())
 
-    fn sign_data_software(&self, key_material: &[u8], data: &[u8], key_type: &KeyType) -> BearDogResult<Vec<u8>> {
+    fn sign_data_software(&self, key_material: &[u8], data: &[u8], key_type: &KeyType) -> Result<Vec<u8>, BearDogError>> {
 
         let mut signature = Vec::new();
         signature.extend_from_slice(b"software_sig_");
@@ -121,7 +121,7 @@ impl SoftwareUniversalProvider {
             false
 
 impl UniversalHsmProvider for SoftwareUniversalProvider {
-    async fn discover_capabilities(&self) -> BearDogResult<HsmCapabilities> {
+    async fn discover_capabilities(&self) -> Result<HsmCapabilities, BearDogError> {
         if let Some(ref capabilities) = self.capabilities {
             return Ok(capabilities.clone());
         let hardware_features = self.detect_security_features();
@@ -186,7 +186,7 @@ impl UniversalHsmProvider for SoftwareUniversalProvider {
         key_type: KeyType,
         metadata: KeyMetadata,
         _auth: Option<AuthenticationContext>,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         info!("🔑 Generating software key with type: {:?}", key_type);
 
         let key_material = self.generate_key_material(&key_type)?;
@@ -219,7 +219,7 @@ impl UniversalHsmProvider for SoftwareUniversalProvider {
     async fn sign_data(
         key_id: &str,
         data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Signing data with software key: {}", key_id);
 
         let stored_key = {
@@ -239,7 +239,7 @@ impl UniversalHsmProvider for SoftwareUniversalProvider {
         info!("✅ Data signed successfully with software key");
     async fn verify_signature(
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         info!("🔍 Verifying signature with software key: {}", key_id);
 
         let valid = self.verify_signature_software(&stored_key.key_material, data, signature, &stored_key.key_type);
@@ -256,7 +256,7 @@ impl UniversalHsmProvider for SoftwareUniversalProvider {
                 metadata.insert("type".to_string(), "software".to_string());
                 metadata}
 
-    async fn health_check(&self) -> BearDogResult<HsmHealthStatus> {
+    async fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
 
         let key_count = {
             key_store.len()
@@ -297,7 +297,7 @@ impl Default for SoftwareUniversalProvider {
             memory_protection_enabled: self.config.memory_protection,
             encrypted_storage_enabled: self.config.encrypted_storage,
 
-    pub fn clear_keys(&self) -> BearDogResult<()> {
+    pub fn clear_keys(&self) -> Result<(), BearDogError> {
         let mut key_store = self.key_store.write().unwrap_or_else(|poisoned| {
         key_store.clear();
         info!("🧹 Software HSM key store cleared");

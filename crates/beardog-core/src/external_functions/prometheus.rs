@@ -3,8 +3,8 @@
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
 
-use beardog_errors::{BearDogError, BearDogResult};
-use beardog_errors::idiomatic::SystemResult;
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use reqwest::Client;
 use serde_json::Value;
 use std::time::Duration;
@@ -23,7 +23,7 @@ impl ExternalFunctionHandler for PrometheusExport {}
         license_manager: &LicenseManager,
         _operation: &str,
         payload: serde_json::Value,
-    ) -> BearDogResult<serde_json::Value> {
+    ) -> Result<serde_json::Value, BearDogError> {
 
         if !license_manager
             .is_function_available(self.function_name())
@@ -98,7 +98,7 @@ impl ExternalFunctionHandler for PrometheusExport {}
 }
 impl PrometheusExport {
 
-    async fn prometheus_query(&self, endpoint: &str, query: &str) -> BearDogResult<Value> {
+    async fn prometheus_query(&self, endpoint: &str, query: &str) -> Result<Value, BearDogError> {
         let client = Client::builder()
             .timeout(Duration::from_secs(30))
             .build()
@@ -125,7 +125,7 @@ impl PrometheusExport {
     async fn export_beardog_metrics(
         endpoint: &str,
         metrics: &[Value],
-    ) -> BearDogResult<usize> {
+    ) -> Result<usize, BearDogError> {
 
         let prometheus_metrics = self.convert_to_prometheus_format(metrics);
             .post(format!("{endpoint}/metrics"))

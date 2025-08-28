@@ -70,7 +70,7 @@ impl EphemeralRecoveryKey {
     pub fn generate_possession_proof(&self, challenge: &[u8]) -> Result<String, String> {
         use hmac::{Hmac, Mac};
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
         let key_bytes = base64::engine::general_purpose::STANDARD_NO_PAD
 
         let mut mac =

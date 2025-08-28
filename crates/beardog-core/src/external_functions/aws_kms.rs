@@ -3,7 +3,7 @@
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 use serde_json::Value;
 use std::process::Stdio;
@@ -23,14 +23,14 @@ impl ExternalFunctionHandler for AwsKmsIntegration {}
         license_manager: &LicenseManager,
         operation: &str,
         payload: serde_json::Value,
-    ) -> BearDogResult<serde_json::Value> {
+    ) -> Result<serde_json::Value, BearDogError> {
 
         if !license_manager
             .is_function_available(self.function_name())
             .await?
         {
             return Err(BearDogError::configuration(format!(
-                    "🔒 AWS KMS integration '}' requires licensing or individual/small-team classification.\n\n\
+                    "🔒 AWS KMS integration '{}' requires licensing or individual/small-team classification.\n\n\
                     🏠 Individual developers: Automatically granted access\n\
                     👥 Small teams: Automatically granted access\n\
                     🏢 Corporate usage: External adapters locked - acquire unlock certificate",
@@ -98,7 +98,7 @@ impl ExternalFunctionHandler for AwsKmsIntegration {}
 }
 impl AwsKmsIntegration {
 
-    async fn kms_encrypt(&self, key_id: &str, plaintext: &str) -> BearDogResult<String> {
+    async fn kms_encrypt(&self, key_id: &str, plaintext: &str) -> Result<String, BearDogError> {
 
         let output = self
             .aws_cli_exec(&[
@@ -125,7 +125,7 @@ impl AwsKmsIntegration {
                 Err(BearDogError::configuration(format!("Failed to parse KMS encrypt response: {parse_err)"},
                 })
 
-    async fn kms_decrypt(&self, key_id: &str, ciphertext_blob: &str) -> BearDogResult<String> {
+    async fn kms_decrypt(&self, key_id: &str, ciphertext_blob: &str) -> Result<String, BearDogError> {
 
                 "decrypt",
                 "--ciphertext-blob",
@@ -137,7 +137,7 @@ impl AwsKmsIntegration {
                 tracing::error!("Failed to parse KMS decrypt response: {}", parse_err);
                 Err(BearDogError::configuration(format!("Failed to parse KMS decrypt response: {parse_err)"},
 
-    async fn kms_list_keys(&self) -> BearDogResult<Vec<Value>> {
+    async fn kms_list_keys(&self) -> Result<Vec<Value>, BearDogError> {
             .aws_cli_exec(&["kms", "list-keys", "--output", "json"])
                 if let Some(keys) = json.get("Keys").and_then(|v| v.as_array()) {
                     Ok(keys.clone())
@@ -151,7 +151,7 @@ impl AwsKmsIntegration {
                 Err(BearDogError::External {
                     message: format_args!("Failed to parse AWS KMS response: {} - refusing to use mock keys for security", parse_error).to_string(),
 
-    async fn kms_create_key(&self, description: &str) -> BearDogResult<Value> {
+    async fn kms_create_key(&self, description: &str) -> Result<Value, BearDogError> {
                 "create-key",
                 "--description",
                 description,

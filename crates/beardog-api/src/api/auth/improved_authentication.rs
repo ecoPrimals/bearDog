@@ -2,7 +2,7 @@
 
 use crate::api::*;
 use axum::{extract::State, http::HeaderMap, Json};
-use beardog_errors::{improved_results::*, success_outcome, BearDogError, BearDogResult};
+use beardog_errors::{{improved_results::*, success_outcome, BearDogError}};
 use std::time::Instant;
 use tracing::{info, warn};
 
@@ -37,7 +37,7 @@ pub async fn authenticate_user_improved(
     State(_state): State<AppState>,
     headers: HeaderMap,
     Json(request): Json<super::models::LoginRequest>,
-) -> BearDogResult<AuthenticationOutcome> {
+) -> Result<AuthenticationOutcome, BearDogError> {
     let _start_time = Instant::now();
     info!(
         "🔐 Authenticating user with improved patterns: {}",
@@ -157,7 +157,7 @@ pub async fn logout_user_improved(
 
 pub async fn refresh_token_improved(
     Json(request): Json<super::models::RefreshTokenRequest>,
-) -> BearDogResult<TokenRefreshOutcome> {
+) -> Result<TokenRefreshOutcome, BearDogError> {
     info!("🔄 Refreshing token: {}", &request.refresh_token[..8]);
 
     if request.refresh_token.is_empty() {
@@ -181,7 +181,7 @@ pub async fn refresh_token_improved(
 
 pub async fn validate_session_improved(
     session_id: &str,
-) -> BearDogResult<SessionValidationOutcome> {
+) -> Result<SessionValidationOutcome, BearDogError> {
     info!("🔍 Validating session: {}", session_id);
 
     if session_id.is_empty() {

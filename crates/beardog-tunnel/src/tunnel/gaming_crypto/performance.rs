@@ -17,21 +17,15 @@ pub struct NetworkPerformanceMetrics {
 }
 
 pub struct PerformanceAnalysis {
-
     pub encryption_latency_us: f64,
-
     pub decryption_latency_us: f64,
-
     pub throughput_mbps: f64,
-
     pub cpu_utilization: f64,
-
     pub memory_usage_bytes: u64,
+    pub performance_score: f64,
+}
 
-    pub performance_score: f64,}
-
-impl Default for NetworkPerformanceMetrics {}
-
+impl Default for NetworkPerformanceMetrics {
     fn default() -> Self {
         Self {
             avg_latency_us: 50.0,
@@ -41,10 +35,17 @@ impl Default for NetworkPerformanceMetrics {}
             rtt_variance_us: 10.0,
         }
     }
+}
+
 impl Default for PerformanceAnalysis {
+    fn default() -> Self {
+        Self {
             encryption_latency_us: 80.0,
             decryption_latency_us: 75.0,
             throughput_mbps: 1000.0,
             cpu_utilization: 0.25,
             memory_usage_bytes: 1024 * 1024, // 1MB
             performance_score: 0.85,
+        }
+    }
+}

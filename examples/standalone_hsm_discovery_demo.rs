@@ -6,12 +6,12 @@ use beardog_tunnel::universal_hsm_discovery::{
     StandaloneHsmInfo,
     DevicePlatform,
 };
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use tracing::{info, error};
 use std::env;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
     
@@ -38,7 +38,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_quick_discovery() -> BearDogResult<()> {
+async fn demo_quick_discovery() -> Result<(), BearDogError> {
     info!("🔍 === QUICK DISCOVERY MODE ===");
     info!("📱 Perfect for mobile deployment (Pixel 8) and failsafe scenarios");
 
@@ -92,7 +92,7 @@ async fn demo_quick_discovery() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_ecosystem_aware_discovery() -> BearDogResult<()> {
+async fn demo_ecosystem_aware_discovery() -> Result<(), BearDogError> {
     info!("🌐 === ECOSYSTEM-AWARE DISCOVERY MODE ===");
     info!("🔗 Attempting ecosystem integration (songbird + toadstool)");
 
@@ -153,7 +153,7 @@ async fn demo_ecosystem_aware_discovery() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_platform_detection() -> BearDogResult<()> {
+async fn demo_platform_detection() -> Result<(), BearDogError> {
     info!("📱 === PLATFORM DETECTION MODE ===");
     info!("🔍 Analyzing device platform and security capabilities");
 
@@ -227,7 +227,7 @@ async fn demo_platform_detection() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_full_integration() -> BearDogResult<()> {
+async fn demo_full_integration() -> Result<(), BearDogError> {
     info!("🚀 === FULL INTEGRATION DEMO ===");
     info!("🌟 Complete standalone + ecosystem integration showcase");
     

@@ -2,7 +2,7 @@
 
 use super::config::FailoverConfig;
 use super::{HsmFailoverManager, HsmProvider, SecurityRequirements};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -32,7 +32,7 @@ pub struct DefaultHsmFailoverManager {
 
 impl DefaultHsmFailoverManager {
 
-    pub async fn new(config: FailoverConfig) -> BearDogResult<Self> {
+    pub async fn new(config: FailoverConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             circuit_breakers: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             failover_config: config,
@@ -45,7 +45,7 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
         &self,
         provider: &impl HsmProvider + Send + Sync + 'static,
         error: &BearDogError,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
 
         let provider_info = provider.get_info().await?;
         let provider_id = provider_info.vendor;
@@ -69,12 +69,12 @@ impl HsmFailoverManager for DefaultHsmFailoverManager {
     async fn get_failover_provider(
         _failed_provider: &impl HsmProvider + Send + Sync + 'static,
         requirements: &SecurityRequirements,
-    ) -> BearDogResult<impl HsmProvider + Send + Sync + 'static> {
+    ) -> Result<impl HsmProvider + Send + Sync + 'static, BearDogError> {
 
         Err(BearDogError::no_suitable_provider(format!("No suitable provider found for requirements: {requirements:?)"},
     async fn perform_with_failover<T, F>(
         _operation: F,
-    ) -> BearDogResult<T>
+    ) -> Result<T, BearDogError>
     where
         F: Fn(impl HsmProvider + Send + Sync + 'static) -> Result<T, BearDogError> + Send + Sync + 'static,
         T: Send + 'static,

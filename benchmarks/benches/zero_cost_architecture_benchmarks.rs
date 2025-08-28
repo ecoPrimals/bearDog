@@ -1,6 +1,4 @@
-
-
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::KeyType;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::sync::Arc;
@@ -9,7 +7,6 @@ use tokio::runtime::Runtime;
 fn benchmark_zero_cost_abstractions(c: &mut Criterion) {
     c.bench_function("zero_cost_type_safety", |b| {
         b.iter(|| {
-
             let key_type = KeyType::Ed25519;
             let processed = match key_type {
                 KeyType::Ed25519 => "ed25519_processed",
@@ -35,13 +32,13 @@ fn benchmark_arc_cloning(c: &mut Criterion) {
 }
 
 fn benchmark_result_propagation(c: &mut Criterion) {
-    fn propagate_result() -> BearDogResult<u32> {
+    fn propagate_result() -> Result<u32, BearDogError> {
         let value = some_operation()?;
         let processed = value * 2;
         Ok(processed)
     }
 
-    const fn some_operation() -> BearDogResult<u32> {
+    const fn some_operation() -> Result<u32, BearDogError> {
         Ok(42)
     }
 
@@ -62,7 +59,6 @@ fn benchmark_async_overhead(c: &mut Criterion) {
     c.bench_function("async_function_call", |b| {
         b.iter(|| {
             rt.block_on(async {
-
                 tokio::task::yield_now().await;
                 42
             })

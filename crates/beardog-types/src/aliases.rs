@@ -1,113 +1,148 @@
+//! Type aliases for BearDog ecosystem
+//!
+//! This module provides convenient type aliases for commonly used types.
+//! Result-based aliases have been removed in favor of using
+//! Result<T, BearDogError> directly for better type clarity.
 
-
+// BearDogError used in migration helper
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::Duration;
 
-pub use beardog_errors::BearDogResult;
+// Core type aliases (non-deprecated)
+pub type JsonValue = serde_json::Value;
+pub type JsonMap = serde_json::Map<String, serde_json::Value>;
+pub type StringMap = HashMap<String, String>;
+pub type MetricsMap = HashMap<String, JsonValue>;
 
-pub type TestResult<T = ()> = BearDogResult<T>;
+// Configuration aliases
+pub type ConfigMap = HashMap<String, JsonValue>;
+pub type EnvironmentMap = HashMap<String, String>;
 
-pub type AssertionResult<T = ()> = BearDogResult<T>;
+// Network and service aliases
+pub type ServiceId = String;
+pub type EndpointUrl = String;
+pub type ApiVersion = String;
 
-pub type ProviderMetrics = HashMap<String, f64>;
+// Security and crypto aliases
+pub type KeyId = String;
+pub type Signature = Vec<u8>;
+pub type PublicKey = Vec<u8>;
+pub type PrivateKey = Vec<u8>;
 
-pub type SystemMetrics = HashMap<String, f64>;
+// Monitoring and health aliases
+pub type HealthScore = f64;
+pub type MetricValue = f64;
+pub type Timestamp = chrono::DateTime<chrono::Utc>;
 
-pub type BenchmarkMetrics = HashMap<String, Duration>;
+// Workflow and process aliases
+pub type WorkflowId = String;
+pub type ProcessId = String;
+pub type TaskId = String;
 
-pub type CacheResult<T> = BearDogResult<T>;
+// HSM and hardware aliases
+pub type HsmId = String;
+pub type DeviceId = String;
+pub type ProviderId = String;
 
-pub type CacheStats = HashMap<String, u64>;
-
-pub type MemoryCache<K, V> = HashMap<K, V>;
-
-pub type ConfigResult<T> = BearDogResult<T>;
-
-pub type ConfigMap = HashMap<String, String>;
-
-pub type SettingsMap = HashMap<String, String>;
-
-pub type NetworkResult<T> = BearDogResult<T>;
-
-pub type ConnectionPool<T> = Vec<T>;
-
-pub type EndpointMap = HashMap<String, String>;
-
-pub type SecurityResult<T> = BearDogResult<T>;
-
-pub type CryptoResult<T> = BearDogResult<T>;
-
-pub type KeyStore = HashMap<String, Vec<u8>>;
-
-pub type WorkflowResult<T> = BearDogResult<T>;
-
-pub type WorkflowRegistry = HashMap<String, String>;
-
-pub type ProcessResult<T> = BearDogResult<T>;
-
-pub type HsmResult<T> = BearDogResult<T>;
-
-pub type KeyResult<T> = BearDogResult<T>;
-
-pub type HsmRegistry = HashMap<String, String>;
-
-pub type MigrationResult<T> = BearDogResult<T>;
-
-pub type RefactorResult<T> = BearDogResult<T>;
-
-pub fn validate_type_aliases() -> BearDogResult<()> {
-
-    let _test_result: BearDogResult<()> = Ok(());
-    let _test_result2: TestResult<()> = Ok(());
-    let _assertion_result: AssertionResult<()> = Ok(());
-
-    let _provider_metrics: ProviderMetrics = HashMap::with_capacity(16);
-    let _system_metrics: SystemMetrics = HashMap::with_capacity(16);
-
-    let _cache_stats: CacheStats = HashMap::with_capacity(16);
-    let _memory_cache: MemoryCache<String, String> = HashMap::with_capacity(16);
-
-    let _config_map: ConfigMap = HashMap::with_capacity(16);
-    let _settings_map: SettingsMap = HashMap::with_capacity(16);
-
-    let _endpoint_map: EndpointMap = HashMap::with_capacity(16);
-
-    let _key_store: KeyStore = HashMap::with_capacity(16);
-
-    let _workflow_registry: WorkflowRegistry = HashMap::with_capacity(16);
-
-    let _hsm_registry: HsmRegistry = HashMap::with_capacity(16);
-    
-    Ok(())
+// Serialization helpers
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TypedValue<T> {
+    pub value: T,
+    pub type_name: &'static str,
 }
 
-pub fn get_alias_info() -> Vec<(&'static str, &'static str)> {
-    vec![
-        ("BearDogResult<T>", "Primary result type for all BearDog operations"),
-        ("TestResult<T>", "Specialized result type for testing operations"),
-        ("AssertionResult<T>", "Result type for test assertions and validations"),
-        ("ProviderMetrics", "Performance and operational metrics collection"),
-        ("SystemMetrics", "System-wide performance metrics"),
-        ("BenchmarkMetrics", "Performance benchmarking data"),
-        ("CacheResult<T>", "Cache operation results"),
-        ("CacheStats", "Cache performance statistics"),
-        ("MemoryCache<K,V>", "Generic in-memory cache"),
-        ("ConfigResult<T>", "Configuration operation results"),
-        ("ConfigMap", "Configuration key-value storage"),
-        ("SettingsMap", "Application settings storage"),
-        ("NetworkResult<T>", "Network operation results"),
-        ("ConnectionPool<T>", "Network connection pool"),
-        ("EndpointMap", "Service endpoint registry"),
-        ("SecurityResult<T>", "Security operation results"),
-        ("CryptoResult<T>", "Cryptographic operation results"),
-        ("KeyStore", "Cryptographic key storage"),
-        ("WorkflowResult<T>", "Workflow operation results"),
-        ("WorkflowRegistry", "Active workflow registry"),
-        ("ProcessResult<T>", "Process execution results"),
-        ("HsmResult<T>", "HSM operation results"),
-        ("KeyResult<T>", "Key management operation results"),
-        ("HsmRegistry", "HSM provider registry"),
-        ("MigrationResult<T>", "Code migration operation results"),
-        ("RefactorResult<T>", "Code refactoring operation results"),
-    ]
-} 
+impl<T> TypedValue<T> {
+    pub fn new(value: T, type_name: &'static str) -> Self {
+        Self { value, type_name }
+    }
+}
+
+// Migration utilities for deprecated types
+pub struct TypeMigrationHelper;
+
+impl TypeMigrationHelper {
+    /// Check if a type alias is deprecated
+    pub fn is_deprecated(alias_name: &str) -> bool {
+        matches!(
+            alias_name,
+            "BearDogResult"
+                | "SecurityResult"
+                | "HsmResult"
+                | "NetworkResult"
+                | "ConfigResult"
+                | "WorkflowResult"
+                | "CryptoResult"
+                | "MonitoringResult"
+                | "ValidationResult"
+        )
+    }
+
+    /// Get the canonical replacement for a deprecated alias
+    pub fn get_canonical_replacement(deprecated_alias: &str) -> Option<&'static str> {
+        match deprecated_alias {
+            "BearDogResult" => Some("Result<T, BearDogError>"),
+            "SecurityResult" => Some("Result<T, BearDogError>"),
+            "HsmResult" => Some("Result<T, BearDogError>"),
+            "NetworkResult" => Some("Result<T, BearDogError>"),
+            "ConfigResult" => Some("Result<T, BearDogError>"),
+            "WorkflowResult" => Some("Result<T, BearDogError>"),
+            "CryptoResult" => Some("Result<T, BearDogError>"),
+            "MonitoringResult" => Some("Result<T, BearDogError>"),
+            "ValidationResult" => Some("Result<T, BearDogError>"),
+            _ => None,
+        }
+    }
+
+    /// Generate migration script for deprecated aliases
+    pub fn generate_migration_script() -> String {
+        let mut script = String::new();
+        script.push_str("# BearDog Type Alias Migration Script\n");
+        script.push_str("# Replace deprecated Result aliases with canonical forms\n\n");
+
+        let deprecated_aliases = [
+            "BearDogResult",
+            "SecurityResult",
+            "HsmResult",
+            "NetworkResult",
+            "ConfigResult",
+            "WorkflowResult",
+            "CryptoResult",
+            "MonitoringResult",
+            "ValidationResult",
+        ];
+
+        for alias in &deprecated_aliases {
+            script.push_str(&format!("# Replace: {alias} -> Result<T, BearDogError>\n"));
+        }
+
+        script
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_type_migration_helper() {
+        assert!(TypeMigrationHelper::is_deprecated("BearDogResult"));
+        assert!(!TypeMigrationHelper::is_deprecated("JsonValue"));
+
+        assert_eq!(
+            TypeMigrationHelper::get_canonical_replacement("BearDogResult"),
+            Some("Result<T, BearDogError>")
+        );
+
+        assert_eq!(
+            TypeMigrationHelper::get_canonical_replacement("NonExistent"),
+            None
+        );
+    }
+
+    #[test]
+    fn test_typed_value() {
+        let typed_val = TypedValue::new(42, "i32");
+        assert_eq!(typed_val.value, 42);
+        assert_eq!(typed_val.type_name, "i32");
+    }
+}

@@ -3,7 +3,7 @@
 pub mod tunnel;
 pub mod universal_hsm_discovery;
 
-pub use beardog_errors::{BearDogError, BearDogResult};
+pub use beardog_errors::BearDogError;
 pub use tunnel::hsm::types::*;
 pub use tunnel::hsm::HsmError;
 pub use beardog_traits::canonical::HsmProvider;

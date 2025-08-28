@@ -4,12 +4,12 @@ use crate::common::test_patterns::{
     execute_test_with_context, test_across_platforms, setup_test_harness,
     test_hsm_operation, TestHarnessContext,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_utils::utils::error_patterns::with_operation_context;
 use tracing::{debug, info};
 
 #[tokio::test]
-async fn test_cross_platform_key_generation() -> BearDogResult<()> {
+async fn test_cross_platform_key_generation() -> Result<(), BearDogError> {
     execute_test_with_context("cross_platform_key_generation", || async {
         let _harness = setup_test_harness("key_generation").await?;
         let platforms = vec!["software", "android", "ios"];
@@ -25,7 +25,7 @@ async fn test_cross_platform_key_generation() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_hsm_signing_operations() -> BearDogResult<()> {
+async fn test_hsm_signing_operations() -> Result<(), BearDogError> {
     execute_test_with_context("hsm_signing_operations", || async {
         let harness = setup_test_harness("signing_operations").await?;
         
@@ -41,7 +41,7 @@ async fn test_hsm_signing_operations() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_hsm_encryption_decryption() -> BearDogResult<()> {
+async fn test_hsm_encryption_decryption() -> Result<(), BearDogError> {
     execute_test_with_context("hsm_encryption_decryption", || async {
         let harness = setup_test_harness("encryption_decryption").await?;
         
@@ -59,7 +59,7 @@ async fn test_hsm_encryption_decryption() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_hsm_provider_compatibility() -> BearDogResult<()> {
+async fn test_hsm_provider_compatibility() -> Result<(), BearDogError> {
     execute_test_with_context("hsm_provider_compatibility", || async {
         let harness = setup_test_harness("provider_compatibility").await?;
 

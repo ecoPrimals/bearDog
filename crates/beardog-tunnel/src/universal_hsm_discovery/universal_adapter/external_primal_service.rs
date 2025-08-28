@@ -1,7 +1,7 @@
 
 
 use super::core_types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
@@ -9,19 +9,19 @@ use uuid::Uuid;
 
 pub trait ExternalPrimalService: Send + Sync {
 
-    async fn register_service(&self, req: RegistrationRequest) -> BearDogResult<RegistrationResult>;
+    async fn register_service(&self, req: RegistrationRequest) -> Result<RegistrationResult, BearDogError>;
 
-    async fn request_capabilities(&self, req: CapabilityRequest) -> BearDogResult<CapabilityResponse>;
+    async fn request_capabilities(&self, req: CapabilityRequest) -> Result<CapabilityResponse, BearDogError>;
 
-    async fn conduct_key_ceremony(&self, req: KeyCeremonyRequest) -> BearDogResult<KeyCeremonyResult>;
+    async fn conduct_key_ceremony(&self, req: KeyCeremonyRequest) -> Result<KeyCeremonyResult, BearDogError>;
 
-    async fn submit_metrics(&self, metrics: HsmMetricsSnapshot) -> BearDogResult<MetricsAckResult>;
+    async fn submit_metrics(&self, metrics: HsmMetricsSnapshot) -> Result<MetricsAckResult, BearDogError>;
 
-    async fn health_check(&self) -> BearDogResult<ServiceHealthStatus>;
+    async fn health_check(&self) -> Result<ServiceHealthStatus, BearDogError>;
 
-    async fn request_genetic_spawning(&self, req: GeneticSpawningRequest) -> BearDogResult<GeneticSpawningResult>;
+    async fn request_genetic_spawning(&self, req: GeneticSpawningRequest) -> Result<GeneticSpawningResult, BearDogError>;
 
-    async fn submit_audit_event(&self, event: SecurityAuditEvent) -> BearDogResult<AuditAckResult>;
+    async fn submit_audit_event(&self, event: SecurityAuditEvent) -> Result<AuditAckResult, BearDogError>;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -200,8 +200,8 @@ pub enum AckStatus {
 
     Processing,
 
-pub enum HealthStatus {
-
+// UNIFIED: Use canonical HealthStatus from beardog-types
+pub use beardog_types::canonical::HealthStatus;
     Healthy,
 
     Degraded,

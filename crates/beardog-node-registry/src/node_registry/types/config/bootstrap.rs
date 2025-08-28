@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -84,7 +84,7 @@ impl BootstrapNodeConfig {
     pub fn full_address(&self) -> String {
         format_args!("{}:{}", self.address, self.port).to_string()
 
-    pub fn validate(&self) -> crate::BearDogResult<()> {
+    pub fn validate(&self) -> crate::Result<(), BearDogError> {
         if self.address.is_empty() {
             return Err(crate::error::BearDogError::validation("address", "Address cannot be empty"));
         if self.port == 0 {
@@ -95,7 +95,7 @@ impl BootstrapNodeConfig {
             return Err(crate::error::BearDogError::validation("retry_delay_seconds", "Retry delay cannot be zero"));
         Ok(())
 
-    pub fn to_node_info(&self) -> crate::BearDogResult<crate::node_registry::types::node::NodeInfo> {
+    pub fn to_node_info(&self) -> crate::Result<crate::node_registry::types::node::NodeInfo, BearDogError> {
         let mut node_info = crate::node_registry::types::node::NodeInfo::new(
             self.node_id.clone(),
             format_args!("Bootstrap Node {}", self.node_id).to_string(),

@@ -3,7 +3,7 @@
 use super::super::types::Workflow;
 use super::core::{WorkflowProcessingResult, WorkflowProcessor};
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::time::Duration;
 use uuid::Uuid;
 
@@ -13,7 +13,7 @@ impl WorkflowProcessor for KeyRotationProcessor {
     async fn process_workflow(
         &self,
         workflow: &Workflow,
-    ) -> BearDogResult<WorkflowProcessingResult> {
+    ) -> Result<WorkflowProcessingResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
         let key_id = workflow
@@ -61,7 +61,7 @@ impl WorkflowProcessor for KeyRotationProcessor {
 
     fn can_handle(&self, workflow: &Workflow) -> bool {
         matches!(workflow.workflow_type, WorkflowType::KeyRotation | WorkflowType::KeyGeneration)
-    async fn validate_workflow(&self, workflow: &Workflow) -> BearDogResult<()> {
+    async fn validate_workflow(&self, workflow: &Workflow) -> Result<(), BearDogError> {
 
         if !workflow.parameters.contains_key("key_id") {
             return Err(BearDogError::invalid_input(
@@ -77,7 +77,7 @@ impl WorkflowProcessor for KeyRotationProcessor {
         if key_id.is_empty() {
                 message: "key_id cannot be empty".to_string(),
         Ok(())
-    async fn estimate_processing_time(&self, _workflow: &Workflow) -> BearDogResult<Duration> {
+    async fn estimate_processing_time(&self, _workflow: &Workflow) -> Result<Duration, BearDogError> {
 
         Ok(Duration::from_secs(180))
 }

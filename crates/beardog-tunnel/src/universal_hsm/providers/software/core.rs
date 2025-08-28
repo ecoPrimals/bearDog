@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 use tracing::{debug, info};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::KeyType;
 use crate::universal_hsm::traits::{
     Platform, ProviderHealth, ProviderInfo, ProviderType, UniversalHsmProvider,
@@ -22,14 +22,14 @@ pub struct SoftwareHsmProvider {
 }
 impl SoftwareHsmProvider {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         Self::new_with_config(&SoftwareHsmConfig::default()).await
     }
 
-    pub async fn new_with_config(config: &SoftwareHsmConfig) -> BearDogResult<Self> {
+    pub async fn new_with_config(config: &SoftwareHsmConfig) -> Result<Self, BearDogError> {
         Self::with_config(config.clone()).await}
 
-    async fn with_config(config: SoftwareHsmConfig) -> BearDogResult<Self> {
+    async fn with_config(config: SoftwareHsmConfig) -> Result<Self, BearDogError> {
 
         config.validate().map_err(|e| BearDogError::Configuration(format!("Invalid software HSM configuration: {e}"),
         })?;
@@ -70,7 +70,7 @@ impl UniversalHsmProvider for SoftwareHsmProvider {
         &self,
         key_type: KeyType,
         _metadata: beardog_types::canonical::KeyMetadata,
-    ) -> BearDogResult<beardog_types::HsmKey> {
+    ) -> Result<beardog_types::HsmKey, BearDogError> {
         debug!("🔑 Generating key of type: {:?}", key_type);
 
         let entropy = self.entropy_collector.collect_entropy(32).await?;
@@ -83,20 +83,20 @@ impl UniversalHsmProvider for SoftwareHsmProvider {
             .await?;
         info!("✅ Generated and stored key: {}", key.id);
         Ok(key)
-    async fn get_human_entropy_capabilities(&self) -> BearDogResult<HumanEntropyCapabilities> {
+    async fn get_human_entropy_capabilities(&self) -> Result<HumanEntropyCapabilities, BearDogError> {
         Ok(self.entropy_collector.get_capabilities().await?)}
 
     async fn collect_human_entropy(
         method: &HumanEntropyMethod,
         _bits: u32,
-    ) -> BearDogResult<HumanEntropyData> {
+    ) -> Result<HumanEntropyData, BearDogError> {
         self.entropy_collector
             .collect_human_entropy(method.clone())
             .await
     async fn create_ephemeral_seed(
         entropy: &HumanEntropyData,
         _seed_size: u32,
-    ) -> BearDogResult<EphemeralSeed> {
+    ) -> Result<EphemeralSeed, BearDogError> {
         self.entropy_collector.create_ephemeral_seed(entropy).await}
 
     fn get_provider_info(&self) -> ProviderInfo {
@@ -117,7 +117,7 @@ impl UniversalHsmProvider for SoftwareHsmProvider {
             ],
             platforms: vec![Platform::Linux, Platform::Windows, Platform::MacOs],
         }
-    async fn health_check(&self) -> BearDogResult<ProviderHealth> {
+    async fn health_check(&self) -> Result<ProviderHealth, BearDogError> {
         let start_time = std::time::Instant::now();
 
         let status = "healthy";
@@ -132,11 +132,11 @@ impl UniversalHsmProvider for SoftwareHsmProvider {
             last_check: chrono::Utc::now(),
             response_time_ms: Some(response_time.as_millis() as f64),
             capabilities_verified: true,
-    async fn get_hardware_attestation(&self) -> BearDogResult<Option<AttestationData>> {
+    async fn get_hardware_attestation(&self) -> Result<Option<AttestationData>, BearDogError>> {
 
         Ok(None)}
 
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         debug!("✍️ Signing data with key: {}", key_id);
         let key_material = self
             .keystore
@@ -153,7 +153,7 @@ impl UniversalHsmProvider for SoftwareHsmProvider {
         key_id: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         debug!("🔍 Verifying signature with key: {}", key_id);
         let key = self
             .get_key(key_id)
@@ -185,12 +185,12 @@ mod tests {
     use super::*;
     use beardog_types::canonical::crypto::KeyType;
     #[tokio::test]
-    async fn test_software_hsm_provider_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_software_hsm_provider_creation() -> Result<(), BearDogError> {
         let provider = SoftwareHsmProvider::new().await;
         assert!(provider.is_ok());
         Ok(())}
 
-    async fn test_key_generation_and_operations() -> beardog_errors::BearDogResult<()> {
+    async fn test_key_generation_and_operations() -> Result<(), BearDogError> {
         let provider = SoftwareHsmProvider::new().await.map_err(|e| {
             tracing::error!("Operation failed: {e:?}");
             beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
@@ -215,6 +215,6 @@ mod tests {
         provider.delete_key(&key.key_id).await.map_err(|e| {
         let keys_after = provider.list_keys().await.map_err(|e| {
         assert!(!keys_after.contains(&key.key_id));
-    async fn test_health_check() -> beardog_errors::BearDogResult<()> {
+    async fn test_health_check() -> Result<(), BearDogError> {
         let health = provider.health_check().await.map_err(|e| {
         assert!(health.is_healthy);

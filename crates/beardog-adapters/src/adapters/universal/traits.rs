@@ -3,22 +3,22 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 #[allow(async_fn_in_trait)]
 pub trait UniversalEcosystemAdapter: Send + Sync {
 
-    async fn initialize(&self, config: &HashMap<&str, &str>) -> BearDogResult<()>;
+    async fn initialize(&self, config: &HashMap<&str, &str>) -> Result<(), BearDogError>;
 
-    async fn process_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse>;
+    async fn process_request(&self, request: ServiceRequest) -> Result<ServiceResponse, BearDogError>;
 
-    async fn health_check(&self) -> BearDogResult<HealthStatus>;
+    async fn health_check(&self) -> Result<HealthStatus, BearDogError>;
 
-    async fn get_capabilities(&self) -> BearDogResult<Vec<Capability>>;
+    async fn get_capabilities(&self) -> Result<Vec<Capability>, BearDogError>>;
 
-    async fn register(&self, registration: EcosystemRegistration) -> BearDogResult<String>;
+    async fn register(&self, registration: EcosystemRegistration) -> Result<String, BearDogError>;
 
-    async fn shutdown(&self) -> BearDogResult<()>;
+    async fn shutdown(&self) -> Result<(), BearDogError>;
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -199,16 +199,8 @@ pub struct ServiceEndpoints {
 
     pub custom: HashMap<String, String>,
 
-pub enum HealthStatus {
-
-    Healthy,
-
-    Degraded {
-
-        issues: Vec<String>,
-
-        impact: HealthImpact,
-    },
+// UNIFIED: Use canonical HealthStatus from beardog-types
+pub use beardog_types::canonical::HealthStatus;,
 
     Unhealthy {
 
@@ -335,11 +327,11 @@ pub enum RegistrationStatus {
 
     Standalone,
 
-pub use beardog_types::config::network::NetworkSecurityConfig as NetworkConfig;
+pub use beardog_types::canonical::configuration::network::NetworkSecurityConfig as NetworkConfig;
 
-pub use beardog_types::config::network::ConnectionPoolConfig;
+pub use beardog_types::canonical::configuration::network::ConnectionPoolConfig;
 
-pub use beardog_types::config::monitoring::MonitoringConfig;
+pub use beardog_types::canonical::configuration::consolidated::MonitoringConfig;
 
 pub use beardog_types::canonical::providers::ProviderMetadata;
 

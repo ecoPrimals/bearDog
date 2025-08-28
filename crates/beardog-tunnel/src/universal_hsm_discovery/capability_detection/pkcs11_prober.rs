@@ -1,7 +1,7 @@
 
 
 use super::super::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use tracing::debug;
 
 use beardog_types::canonical::capabilities::*;
@@ -11,10 +11,10 @@ use beardog_types::SecurityLevel as TamperResistanceLevel;
 pub struct Pkcs11CapabilityProber;
 impl Pkcs11CapabilityProber {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn probe_capabilities(&self, library_path: &str) -> BearDogResult<HsmCapabilities> {
+    pub async fn probe_capabilities(&self, library_path: &str) -> Result<HsmCapabilities, BearDogError> {
         debug!("🔍 Probing PKCS#11 library: {}", library_path);
 
         Ok(HsmCapabilities {

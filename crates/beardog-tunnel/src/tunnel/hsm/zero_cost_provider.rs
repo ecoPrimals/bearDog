@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::{HsmKey, HsmOperation};
 use std::marker::PhantomData;
 
@@ -26,12 +26,12 @@ where
         P::CAPABILITIES
     }
 
-    pub async fn execute_operation(&self, operation: HsmOperation) -> BearDogResult<HsmKey> {
+    pub async fn execute_operation(&self, operation: HsmOperation) -> Result<HsmKey, BearDogError> {
 
         self.provider.execute_operation(operation).await
     }
 
-    pub async fn generate_key<A>(&self, algorithm: A) -> BearDogResult<HsmKey> 
+    pub async fn generate_key<A>(&self, algorithm: A) -> Result<HsmKey, BearDogError> 
     where
         A: KeyAlgorithm,
         P: SupportsAlgorithm<A>,
@@ -41,29 +41,25 @@ where
     }
 }
 
-pub trait HsmProviderTrait: Send + Sync + \'static {
-
+pub trait HsmProviderTrait: Send + Sync + 'static {
     type Capabilities: HsmCapabilities;
     const CAPABILITIES: &'static Self::Capabilities;
 
-    async fn execute_operation(&self, operation: HsmOperation) -> BearDogResult<HsmKey>;
+    async fn execute_operation(&self, operation: HsmOperation) -> Result<HsmKey, BearDogError>;
 
-    async fn generate_key_typed<A>(&self, algorithm: A) -> BearDogResult<HsmKey>
+    async fn generate_key_typed<A>(&self, algorithm: A) -> Result<HsmKey, BearDogError>
     where
         A: KeyAlgorithm,
         Self: SupportsAlgorithm<A>;
 }
 
-pub trait HsmCapabilities: Send + Sync + \'static {
-
+pub trait HsmCapabilities: Send + Sync + 'static {
     const ALGORITHMS: &'static [&'static str];
-
     const MAX_KEY_SIZE: usize;
-
     const SECURITY_LEVEL: SecurityLevel;
 }
 
-pub trait KeyAlgorithm: Send + Sync + \'static {
+pub trait KeyAlgorithm: Send + Sync + 'static {
     const NAME: &'static str;
     const KEY_SIZE: usize;
 }

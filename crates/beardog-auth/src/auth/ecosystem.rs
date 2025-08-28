@@ -1,7 +1,7 @@
 
 
 use std::collections::HashMap;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use super::types::*;
 impl CrossNodeAuthEngine {
 
@@ -34,7 +34,7 @@ impl CrossNodeAuthEngine {
     pub async fn evaluate_network_effects(
         &self,
         operation: &NetworkOperation,
-    ) -> BearDogResult<NetworkEffectAnalysis> {
+    ) -> Result<NetworkEffectAnalysis, BearDogError> {
 
         let mut affected_nodes = Vec::new();
         let mut resource_requirements = HashMap::with_capacity(16);
@@ -69,7 +69,7 @@ impl CrossNodeAuthEngine {
             security_implications,
         })
 
-    pub async fn discover_node_capabilities(&self, node_id: &str) -> BearDogResult<Vec<NodeCapability>> {
+    pub async fn discover_node_capabilities(&self, node_id: &str) -> Result<Vec<NodeCapability>, BearDogError>> {
 
         let capabilities = if node_id.starts_with("hsm_") {
             vec![
@@ -85,7 +85,7 @@ impl CrossNodeAuthEngine {
                 NodeCapability::NetworkCommunication,
         Ok(capabilities)
 
-    pub async fn analyze_network_effects(&self, capabilities: &[NodeCapability]) -> BearDogResult<f64> {
+    pub async fn analyze_network_effects(&self, capabilities: &[NodeCapability]) -> Result<f64, BearDogError> {
 
         let base_score = capabilities.len() as f64 * 0.1;
 

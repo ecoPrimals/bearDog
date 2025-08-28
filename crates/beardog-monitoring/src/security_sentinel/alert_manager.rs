@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -111,7 +111,7 @@ impl AlertManager {
 
         manager
 
-    pub async fn trigger_alert(&self, alert: PerformanceAlert) -> BearDogResult<()> {
+    pub async fn trigger_alert(&self, alert: PerformanceAlert) -> Result<(), BearDogError> {
         let config = self.config.read().await;
 
         if !self.meets_severity_threshold(&alert.severity, &config.min_severity) {
@@ -149,7 +149,7 @@ impl AlertManager {
         &self,
         message: &str,
         assessment: &super::SecurityAssessmentReport,
-    ) -> beardog_errors::BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         tracing::warn!(
             "🚨 Security Alert: {} (Overall Score: {:.2}, Threat Level: {:?})",
             message,
@@ -157,11 +157,11 @@ impl AlertManager {
             assessment.threat_level
         );
 
-    pub async fn get_active_alerts(&self) -> BearDogResult<Vec<PerformanceAlert>> {
+    pub async fn get_active_alerts(&self) -> Result<Vec<PerformanceAlert>, BearDogError>> {
         let active_alerts = self.active_alerts.read().await;
         Ok(active_alerts.values().cloned().collect())
 
-    pub async fn get_alert_statistics(&self) -> BearDogResult<AlertStatistics> {
+    pub async fn get_alert_statistics(&self) -> Result<AlertStatistics, BearDogError> {
         let history = self.alert_history.read().await;
         let stats = AlertStatistics {
             total_active_alerts: active_alerts.len(),
@@ -179,7 +179,7 @@ impl AlertManager {
     ) -> bool {
         alert_severity >= min_severity
 
-    async fn is_in_cooldown(&self, alert: &PerformanceAlert) -> BearDogResult<bool> {
+    async fn is_in_cooldown(&self, alert: &PerformanceAlert) -> Result<bool, BearDogError> {
         let cooldown_duration = chrono::Duration::seconds(config.alert_cooldown_seconds as i64);
         let cutoff_time = chrono::Utc::now() - cooldown_duration;
 
@@ -191,7 +191,7 @@ impl AlertManager {
                 return Ok(true);
         Ok(false)
 
-    async fn send_alert_notifications(&self, alert: &PerformanceAlert) -> BearDogResult<()> {
+    async fn send_alert_notifications(&self, alert: &PerformanceAlert) -> Result<(), BearDogError> {
         let channels = self.notification_channels.read().await;
         for channel in channels.iter() {
             match channel {

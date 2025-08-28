@@ -1,18 +1,14 @@
-
-
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 pub use beardog_types::canonical::configuration::{
-    ComplianceConfig, ComplianceStandard, ReportingConfig,
-    PrivacyAuditConfig, DataSovereigntyConfig
+    ComplianceConfig, ComplianceStandard, DataSovereigntyConfig, PrivacyAuditConfig,
+    ReportingConfig,
 };
 
-pub use beardog_types::canonical::configuration::compliance::{
-    ReportFormat, ReportFrequency
-};
+pub use beardog_types::canonical::configuration::compliance::{ReportFormat, ReportFrequency};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceEvent {
@@ -35,6 +31,8 @@ pub enum ComplianceEventType {
     SecurityIncident,
     ComplianceCheck,
     ReportGeneration,
+    FinancialTransaction,
+    SystemAccess,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]

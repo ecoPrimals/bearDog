@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_tunnel::tunnel::{
 
     config::BStpConfig,
@@ -25,7 +25,7 @@ use std::sync::Arc;
 use tracing::{info, warn};
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::init();
 
@@ -40,7 +40,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_unified_hsm_management() -> BearDogResult<()> {
+async fn demonstrate_unified_hsm_management() -> Result<(), BearDogError> {
     info!("🔧 Demonstrating Unified HSM Management");
     info!("--------------------------------------");
 
@@ -80,7 +80,7 @@ async fn demonstrate_unified_hsm_management() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_human_entropy_system() -> BearDogResult<()> {
+async fn demonstrate_human_entropy_system() -> Result<(), BearDogError> {
     info!("🧠 Demonstrating Unified Human Entropy System");
     info!("---------------------------------------------");
 
@@ -143,7 +143,7 @@ async fn demonstrate_human_entropy_system() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_tunnel_integration() -> BearDogResult<()> {
+async fn demonstrate_tunnel_integration() -> Result<(), BearDogError> {
     info!("🛡️ Demonstrating Unified Tunnel Integration");
     info!("-------------------------------------------");
 
@@ -185,7 +185,7 @@ async fn demonstrate_tunnel_integration() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_architecture_migration() -> BearDogResult<()> {
+async fn demonstrate_architecture_migration() -> Result<(), BearDogError> {
     info!("🔄 Architecture Migration Benefits");
     info!("=================================");
 

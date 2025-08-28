@@ -1,12 +1,12 @@
 
 
 use beardog_auth::auth::BearDogGenetics;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 use super::{GeneticsPool, LineageTracker, ZeroCopyGeneticsStats};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 #[derive(Debug)]
 pub struct ZeroCopyGeneticSpawning {

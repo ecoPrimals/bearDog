@@ -2,7 +2,7 @@
 
 use super::types::*;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use sha3::{Digest, Sha3_256};
 
@@ -23,7 +23,7 @@ impl EntropyValidator {
         &self,
         owner_identity: &HumanIdentity,
         entropy_data: &[u8],
-    ) -> BearDogResult<OwnershipProof> {
+    ) -> Result<OwnershipProof, BearDogError> {
 
         let proof_data = self.create_ownership_proof_data(owner_identity, entropy_data)?;
 
@@ -41,7 +41,7 @@ impl EntropyValidator {
 
     pub async fn generate_irreproducibility_proof(
         entropy_class: &EntropyClass,
-    ) -> BearDogResult<IrreproducibilityProof> {
+    ) -> Result<IrreproducibilityProof, BearDogError> {
 
         let entropy_commitment = self.generate_entropy_commitment(entropy_data)?;
 
@@ -56,7 +56,7 @@ impl EntropyValidator {
             uniqueness_proof,
 
     fn create_ownership_proof_data(
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         let mut hasher = Sha3_256::new();
 
         hasher.update(owner_identity.identity_id.as_bytes());
@@ -73,7 +73,7 @@ impl EntropyValidator {
         hasher.update(b"entropy_ownership_proof");
         Ok(hasher.finalize().to_vec())
 
-    fn generate_entropy_commitment(&self, entropy_data: &[u8]) -> BearDogResult<Vec<u8>> {
+    fn generate_entropy_commitment(&self, entropy_data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         hasher.update(entropy_data);
         hasher.update(b"entropy_commitment");
 
@@ -172,7 +172,7 @@ impl EntropyValidator {
             hasher.update(&uniqueness_data);
             hasher.update(b"uniqueness_signature");
 
-    pub fn validate_entropy_quality(&self, entropy_class: &EntropyClass) -> BearDogResult<f64> {
+    pub fn validate_entropy_quality(&self, entropy_class: &EntropyClass) -> Result<f64, BearDogError> {
         let quality_score = match entropy_class {
             EntropyClass::HumanLivedExperience { source_type, .. } => {
                 self.calculate_human_entropy_quality(source_type)?
@@ -188,7 +188,7 @@ impl EntropyValidator {
                 )));
         Ok(quality_score)
 
-    fn calculate_human_entropy_quality(&self, source: &HumanEntropySource) -> BearDogResult<f64> {
+    fn calculate_human_entropy_quality(&self, source: &HumanEntropySource) -> Result<f64, BearDogError> {
         let quality = match source {
             HumanEntropySource::MultiModalHuman {
                 confidence_score,
@@ -226,7 +226,7 @@ impl EntropyValidator {
         _proof: &OwnershipProof,
         _owner_identity: &HumanIdentity,
         _entropy_data: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
         Ok(true)
 
@@ -242,7 +242,7 @@ impl EntropyValidator {
 
     pub fn validate_usage_policy(
         policy: &SeedUsagePolicy,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
 
             EntropyClass::HumanLivedExperience { .. } => {
 
@@ -263,7 +263,7 @@ impl EntropyValidator {
                 if !policy.requires_approval {
                     return Err(BearDogError::invalid_input("Machine entropy operations require approval".to_string(),
 
-    pub fn check_security_requirements(&self, entropy_class: &EntropyClass) -> BearDogResult<u8> {
+    pub fn check_security_requirements(&self, entropy_class: &EntropyClass) -> Result<u8, BearDogError> {
         let security_level = match entropy_class {
             EntropyClass::HumanLivedExperience { .. } => 100, // SecurityLevel::Maximum,
             EntropyClass::HumanSupervisedMachine { .. } => 80, // SecurityLevel::High,

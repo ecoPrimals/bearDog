@@ -1,7 +1,7 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
-use beardog_errors::idiomatic::SystemResult;
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use reqwest::Client as HttpClient;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -23,7 +23,7 @@ pub struct ServiceRegistrationManager {
 }
 impl ServiceRegistrationManager {
 
-    pub fn new(base_url: &str) -> BearDogResult<Self> {
+    pub fn new(base_url: &str) -> Result<Self, BearDogError> {
         let client = HttpClient::builder()
             .timeout(Duration::from_secs(30))
             .user_agent("`BearDog`-Registration/1.0")
@@ -49,7 +49,7 @@ impl ServiceRegistrationOps for ServiceRegistrationManager {
     async fn register(
         &self,
         request: ServiceRegistrationRequest,
-    ) -> BearDogResult<RegistrationInfo> {
+    ) -> Result<RegistrationInfo, BearDogError> {
         info!("📝 Registering service: {:?}", request.service.service_name);
         let api_url = self.api_url("services/register");
         let response = self
@@ -94,7 +94,7 @@ impl ServiceRegistrationOps for ServiceRegistrationManager {
             )))
         }
 
-    async fn update(&self, request: ServiceUpdateRequest) -> BearDogResult<()> {
+    async fn update(&self, request: ServiceUpdateRequest) -> Result<(), BearDogError> {
         info!("📝 Updating service registration: {}", request.service_id);
         let api_url = self.api_url(&format_args!("services/{}", request.service_id).to_string());
             .put(&api_url)
@@ -103,7 +103,7 @@ impl ServiceRegistrationOps for ServiceRegistrationManager {
             Ok(())
                 "Service update failed: {error_text}"
 
-    async fn deregister(&self, service_id: &str) -> BearDogResult<()> {
+    async fn deregister(&self, service_id: &str) -> Result<(), BearDogError> {
         info!("📤 Deregistering service: {}", service_id);
         let api_url = self.api_url(&format!("services/{service_id}"));
             .delete(&api_url)
@@ -111,7 +111,7 @@ impl ServiceRegistrationOps for ServiceRegistrationManager {
             info!("✅ Service deregistered successfully");
                 "Service deregistration failed: {error_text}"
 
-    async fn refresh(&self, service_id: &str) -> BearDogResult<()> {
+    async fn refresh(&self, service_id: &str) -> Result<(), BearDogError> {
         debug!("💓 Refreshing service registration: {}", service_id);
         let api_url = self.api_url(&format!("services/{service_id}/heartbeat"));
             .timeout(Duration::from_secs(5))
@@ -143,7 +143,7 @@ impl ServiceLookupManager {
         )
 impl ServiceLookupOps for ServiceLookupManager {
 
-    async fn lookup(&self, request: ServiceLookupRequest) -> BearDogResult<Vec<DiscoveredService>> {
+    async fn lookup(&self, request: ServiceLookupRequest) -> Result<Vec<DiscoveredService>, BearDogError> {
         debug!(
             "🔍 Looking up services with criteria: {:?}",
             request.service_name
@@ -169,7 +169,7 @@ impl ServiceLookupOps for ServiceLookupManager {
             Ok(services)
                 "Service lookup failed: {error_text}"
 
-    async fn get_service(&self, service_id: &str) -> BearDogResult<Option<DiscoveredService>> {
+    async fn get_service(&self, service_id: &str) -> Result<Option<DiscoveredService>, BearDogError> {
         debug!("🔍 Getting service by ID: {}", service_id);
             .get(&api_url)
             .map_err(|e| BearDogError::internal(format!("Failed to get service: {e}")))?;
@@ -180,7 +180,7 @@ impl ServiceLookupOps for ServiceLookupManager {
             Ok(None)
                 "Failed to get service: {error_text}"
 
-    async fn search(&self, pattern: &str) -> BearDogResult<Vec<DiscoveredService>> {
+    async fn search(&self, pattern: &str) -> Result<Vec<DiscoveredService>, BearDogError> {
         debug!("🔍 Searching services with pattern: {}", pattern);
         let request = ServiceLookupRequest {
             service_name: Some(pattern.to_string()),
@@ -201,7 +201,7 @@ impl ServiceHealthManager {
             timeout: Duration::from_secs(5),
 impl ServiceHealthOps for ServiceHealthManager {
 
-    async fn check_health(&self, service_id: &str) -> BearDogResult<ServiceHealth> {
+    async fn check_health(&self, service_id: &str) -> Result<ServiceHealth, BearDogError> {
         debug!("💓 Checking health of service: {}", service_id);
         let api_url = self.api_url(&format!("services/{service_id}/health"));
             .map_err(|e| BearDogError::internal(format!("Failed to check service health: {e}")))?;
@@ -238,7 +238,7 @@ impl ServiceHealthOps for ServiceHealthManager {
                 error_message: Some("Health check failed".to_string()),
             })
 
-    async fn get_all_health(&self) -> BearDogResult<Vec<(String, ServiceHealth)>> {
+    async fn get_all_health(&self) -> Result<Vec<(String, ServiceHealth)>> {
         debug!("💓 Getting health status of all services");
         let api_url = self.api_url("services/health");
                 BearDogError::internal(format!("Failed to get all service health: {e}"))
@@ -268,28 +268,38 @@ impl ServiceHealthOps for ServiceHealthManager {
                     };
                     health_statuses.push((service_id.clone(), health));
                 }
+            }
             debug!(
                 "✅ Retrieved health status for {} services",
                 health_statuses.len()
+            );
             Ok(health_statuses)
-                "Failed to get all service health: {error_text}"
+        } else {
+            Err(BearDogError::internal("Failed to get all service health".to_string()))
+        }
+    }
 
-    async fn update_health(&self, service_id: &str, health: ServiceHealth) -> Result<(), SystemError> {
+    async fn update_health(&self, service_id: &str, health: ServiceHealth) -> Result<(), BearDogError> {
+        debug!(
             "💓 Updating health status for service {}: {:?}",
             service_id, health
+        );
         let health_str = if health.is_healthy {
             "healthy"
         } else if health.response_time_ms > 10.0 {
             "degraded"
         } else if health.error_message.is_some() {
             "unhealthy"
+        } else {
             "unknown"
+        };
+        
         let update_request = serde_json::json!({
             "health": health_str,
             "timestamp": chrono::Utc::now().to_rfc3339()
         });
-            .json(&update_request)
-            .map_err(|e| BearDogError::internal(format!("Failed to update service health: {e}")))?;
-                "✅ Successfully updated health status for service {}",
-                service_id
-                "Failed to update service health: {error_text}"
+
+        debug!("✅ Successfully updated health status for service {}", service_id);
+        Ok(())
+    }
+}

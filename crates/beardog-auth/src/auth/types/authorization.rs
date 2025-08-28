@@ -21,8 +21,8 @@ pub struct CrossNodeAuthConfig {
 
     pub automated_approval_enabled: bool,
 }
-impl Default for CrossNodeAuthConfig {}
 
+impl Default for CrossNodeAuthConfig {
     fn default() -> Self {
         Self {
             proof_verification_enabled: true,
@@ -34,7 +34,9 @@ impl Default for CrossNodeAuthConfig {}
             automated_approval_enabled: true,
         }
     }
+    }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossNodeAuthorization {
 
     pub id: String,
@@ -61,9 +63,12 @@ impl CrossNodeAuthorization {
 
     pub fn is_valid(&self) -> bool {
         self.is_active && Utc::now() < self.expires_at
+    }
 
     pub fn has_permission(&self, permission: &ResourcePermission) -> bool {
         self.permissions.iter().any(|p| p.implies(permission))
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ResourcePermission {
@@ -107,6 +112,8 @@ impl ResourcePermission {
             (ResourcePermission::Delete, ResourcePermission::Write) => true,
             (ResourcePermission::Spawn, ResourcePermission::Create) => true,
             (a, b) => a == b,
+        }
+    }
 
     pub fn security_level(&self) -> u8 {
         match self {
@@ -125,7 +132,11 @@ impl ResourcePermission {
             ResourcePermission::Spawn => 13,
             ResourcePermission::Delete => 14,
             ResourcePermission::Admin => 15,
+        }
+    }
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AccessCondition {
 
     TimeWindow {
@@ -142,27 +153,24 @@ pub enum AccessCondition {
     MaxUsage(u32),
 
     RateLimit {
-
         max_requests: u32,
-
         window_seconds: u32,
+    },
 
     RequireConsensus {
-
         threshold: f64,
-
         nodes: Vec<String>,
+    },
+}
 
 pub enum AuthMethod {
-
     Signature,
-
     Certificate,
-
     BiometricHash,
-
     MutualTls,
+}
 
+#[derive(Debug, Clone)]
 pub struct CrossNodeOperation {
 
     pub operation_type: OperationType,
@@ -172,18 +180,23 @@ pub struct CrossNodeOperation {
     pub parameters: HashMap<String, String>,
 
     pub requester_signature: String,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OperationType {
+    Create,
+    Update,
+    Delete,
+    Execute,
+}
 
+#[derive(Debug, Clone)]
 pub struct AuthorizationProof {
-
     pub authorization_id: String,
-
     pub operation: CrossNodeOperation,
-
     pub timestamp: DateTime<Utc>,
-
     pub proof_signature: String,
+}
 
 #[derive(Debug, Clone)]
 pub struct ConsensusResult {
@@ -195,3 +208,4 @@ pub struct ConsensusResult {
     pub final_score: f64,
 
     pub participating_nodes: Vec<String>,
+}

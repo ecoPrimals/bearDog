@@ -1,6 +1,4 @@
-
-
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -70,7 +68,6 @@ pub struct AuditEvent {
 }
 
 impl AuditEvent {
-
     pub fn new(
         event_type: AuditEventType,
         severity: AuditSeverity,
@@ -125,19 +122,18 @@ pub struct AuditEngine {
 }
 
 impl AuditEngine {
-
     pub fn new() -> Self {
         Self {
             events: Arc::new(RwLock::new(Vec::new())),
         }
     }
 
-    pub async fn log_event(&self, event: AuditEvent) -> BearDogResult<()> {
+    pub async fn log_event(&self, event: AuditEvent) -> Result<(), BearDogError> {
         self.events.write().await.push(event);
         Ok(())
     }
 
-    pub async fn get_recent_events(&self, limit: usize) -> BearDogResult<Vec<AuditEvent>> {
+    pub async fn get_recent_events(&self, limit: usize) -> Result<Vec<AuditEvent>, BearDogError> {
         let events = self.events.read().await;
         let start = events.len().saturating_sub(limit);
         Ok(events[start..].to_vec())
@@ -149,7 +145,7 @@ impl AuditEngine {
         severity: Option<AuditSeverity>,
         user_id: Option<&str>,
         limit: Option<usize>,
-    ) -> BearDogResult<Vec<AuditEvent>> {
+    ) -> Result<Vec<AuditEvent>, BearDogError> {
         let events = self.events.read().await;
         let mut filtered: Vec<AuditEvent> = events
             .iter()
@@ -207,11 +203,8 @@ pub struct AuditLog {
 }
 
 impl AuditLog {
-
     pub fn new() -> Self {
-        Self {
-            events: Vec::new(),
-        }
+        Self { events: Vec::new() }
     }
 
     pub fn add_event(&mut self, event: AuditEvent) {
@@ -227,7 +220,7 @@ impl AuditLog {
         event_type: Option<AuditEventType>,
         severity: Option<AuditSeverity>,
         user_id: Option<&str>,
-    ) -> BearDogResult<Vec<AuditEvent>> {
+    ) -> Result<Vec<AuditEvent>, BearDogError> {
         let filtered: Vec<AuditEvent> = self
             .events
             .iter()
@@ -260,9 +253,7 @@ impl AuditLog {
     }
 
     pub fn placeholder() -> Self {
-        Self {
-            events: Vec::new(),
-        }
+        Self { events: Vec::new() }
     }
 }
 

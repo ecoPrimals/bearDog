@@ -2,7 +2,7 @@
 
 use crate::tunnel::config::UnifiedProcessorConfig;
 use crate::tunnel::hsm::{PerformanceRequirements, SecurityRequirements};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -26,17 +26,16 @@ pub struct CryptoKey {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CryptoAlgorithm {
-
     Aes256Gcm,
-
     ChaCha20Poly1305,
-
     GeneticHybrid,
+}
 
 pub struct BStpKeyManager {
     config: UnifiedProcessorConfig,
     keys: Arc<RwLock<HashMap<String, CryptoKey>>>,
-    rotation_handles: Arc<RwLock<Vec<tokio::task::JoinHandle<()>>>>,}
+    rotation_handles: Arc<RwLock<Vec<tokio::task::JoinHandle<()>>>>,
+}
 
 impl BStpKeyManager {
 
@@ -50,14 +49,17 @@ impl BStpKeyManager {
         for handle in handles.drain(..) {
             handle.abort();
         }
+    }
 
-    pub async fn new(config: UnifiedProcessorConfig) -> BearDogResult<Self> {
+    pub async fn new(config: UnifiedProcessorConfig) -> Result<Self, BearDogError> {
         info!("🔑 Initializing BearDog Key Manager");
 
         if config.session_key_length < 16 {
             return Err(BearDogError::config("Key length must be at least 16 bytes"));
+        }
         if config.key_derivation_rounds < 1000 {
             warn!("⚠️ Low key derivation rounds may impact security");
+        }
         let key_manager = Self {
             config,
             keys: Arc::new(RwLock::new(HashMap::with_capacity(16))),
@@ -74,7 +76,7 @@ impl BStpKeyManager {
         &self,
         session_id: &str,
         algorithm: CryptoAlgorithm,
-    ) -> BearDogResult<CryptoKey> {
+    ) -> Result<CryptoKey, BearDogError> {
         info!("🔐 Generating session key for: {}", session_id);
 
         let key_material = self.generate_secure_key_material(algorithm.clone()).await?;
@@ -124,7 +126,7 @@ impl BStpKeyManager {
     pub async fn derive_contextual_key(
         base_key: &CryptoKey,
         context: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
 
         use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
@@ -163,7 +165,7 @@ impl BStpKeyManager {
         debug!("🔐 Generated software-based key material");
         Ok(key_material)
 
-    async fn generate_hardware_key(&self, length: usize) -> BearDogResult<Vec<u8>> {
+    async fn generate_hardware_key(&self, length: usize) -> Result<Vec<u8>, BearDogError>> {
         debug!("🔧 Generating hardware key material using HSM");
 
         let security_requirements = SecurityRequirements {
@@ -251,7 +253,7 @@ impl BStpKeyManager {
 
         self.generate_software_fallback_key(length).await
 
-    async fn get_hsm_manager(&self) -> BearDogResult<Arc<crate::tunnel::hsm::manager::HsmManager>> {
+    async fn get_hsm_manager(&self) -> Result<Arc<crate::tunnel::hsm::manager::HsmManager, BearDogError>> {
 
         let hsm_config = crate::tunnel::hsm::HsmConfig {
             hsm_type: crate::tunnel::hsm::HsmType::Software,
@@ -274,7 +276,7 @@ impl BStpKeyManager {
         let hash = hasher.finalize();
         Ok(hash.to_vec())
 
-    async fn generate_software_fallback_key(&self, length: usize) -> BearDogResult<Vec<u8>> {
+    async fn generate_software_fallback_key(&self, length: usize) -> Result<Vec<u8>, BearDogError>> {
         info!("🔧 Generating software fallback key material with enhanced entropy");
 
         let mut key_material = vec![0u8; length];
@@ -291,7 +293,7 @@ impl BStpKeyManager {
             "✅ Generated software fallback key material ({} bytes)",
             length
 
-    async fn gather_system_entropy(&self) -> BearDogResult<Vec<u8>> {
+    async fn gather_system_entropy(&self) -> Result<Vec<u8>, BearDogError>> {
 
         hasher.update(
             chrono::Utc::now()
@@ -310,14 +312,19 @@ impl Drop for BStpKeyManager {
 
     fn drop(&mut self) {
         info!("🧹 Securely cleaning up key manager");
+    }
+}
 
 pub struct KeyRotationTask {
     key_manager: Arc<BStpKeyManager>,
-    rotation_interval: std::time::Duration,}
+    rotation_interval: std::time::Duration,
+}
 
 impl KeyRotationTask {
-
     pub fn new(key_manager: Arc<BStpKeyManager>, rotation_interval: std::time::Duration) -> Self {
         Self {
             key_manager,
             rotation_interval,
+        }
+    }
+}

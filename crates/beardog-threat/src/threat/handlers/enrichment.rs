@@ -1,20 +1,16 @@
-
-
 use super::core::ThreatDetectionEngine;
 use crate::threat::types::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
-use chrono::Utc;
-use serde::{Serialize, Deserialize};
 use crate::threat::types::sources::{AssetCriticality, ProtectionLevel};
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
 
 impl ThreatDetectionEngine {
-
     pub async fn enrich_threat_event(
         &mut self,
         threat_event: &mut ThreatEvent,
-    ) -> BearDogResult<()> {
-
+    ) -> Result<(), BearDogError> {
         self.add_geolocation_context(threat_event).await?;
 
         self.add_asset_context(threat_event).await?;
@@ -25,12 +21,15 @@ impl ThreatDetectionEngine {
 
         self.add_network_context(threat_event).await?;
 
-        threat_event.description = format_args!("{} [ENRICHED]", threat_event.description).to_string();
+        threat_event.description =
+            format_args!("{} [ENRICHED]", threat_event.description).to_string();
         Ok(())
     }
 
-    async fn add_geolocation_context(&self, threat_event: &mut ThreatEvent) -> BearDogResult<()> {
-
+    async fn add_geolocation_context(
+        &self,
+        threat_event: &mut ThreatEvent,
+    ) -> Result<(), BearDogError> {
         if let Some(ref ip_address) = threat_event.source.ip_address {
             if !ip_address.is_empty() {
                 let geolocation_str = self.simulate_geolocation_lookup(ip_address).await?;
@@ -72,8 +71,7 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    async fn add_asset_context(&self, threat_event: &mut ThreatEvent) -> BearDogResult<()> {
-
+    async fn add_asset_context(&self, threat_event: &mut ThreatEvent) -> Result<(), BearDogError> {
         let asset_info = self.simulate_asset_lookup(&threat_event.target).await?;
 
         threat_event.target.asset_criticality = asset_info.criticality;
@@ -82,7 +80,10 @@ impl ThreatDetectionEngine {
         let hostname_display = threat_event.target.hostname.as_deref().unwrap_or("Unknown");
         threat_event.evidence.push(ThreatEvidence {
             evidence_type: EvidenceType::SystemLogs, // Using existing enum variant
-            description: format!("Asset criticality: {:?}", threat_event.target.asset_criticality),
+            description: format!(
+                "Asset criticality: {:?}",
+                threat_event.target.asset_criticality
+            ),
             data: EvidenceData::Text(format!(
                 "Asset: {}, Criticality: {:?}, Protection: {:?}",
                 hostname_display,
@@ -93,12 +94,14 @@ impl ThreatDetectionEngine {
             chain_of_custody: vec!["asset-management-system".to_string()],
             reliability: 0.95,
         });
-        
+
         Ok(())
     }
 
-    async fn add_historical_context(&self, threat_event: &mut ThreatEvent) -> BearDogResult<()> {
-
+    async fn add_historical_context(
+        &self,
+        threat_event: &mut ThreatEvent,
+    ) -> Result<(), BearDogError> {
         if let Some(ref ip_address) = threat_event.source.ip_address {
             let historical_count = self.simulate_historical_threat_count(ip_address).await?;
             if historical_count > 0 {
@@ -119,8 +122,10 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    async fn add_external_intelligence(&self, threat_event: &mut ThreatEvent) -> BearDogResult<()> {
-
+    async fn add_external_intelligence(
+        &self,
+        threat_event: &mut ThreatEvent,
+    ) -> Result<(), BearDogError> {
         if let Some(ref ip_address) = threat_event.source.ip_address {
             let intelligence_info = self
                 .simulate_external_intelligence_lookup(ip_address)
@@ -128,7 +133,8 @@ impl ThreatDetectionEngine {
             if let Some(info) = intelligence_info {
                 threat_event.evidence.push(ThreatEvidence {
                     evidence_type: EvidenceType::ThreatIntelligence,
-                    description: format_args!("External intelligence: {}", info.description).to_string(),
+                    description: format_args!("External intelligence: {}", info.description)
+                        .to_string(),
                     data: EvidenceData::Text(format!(
                         "Source: {}, Intelligence: {}, Confidence: {}",
                         ip_address, info.description, info.confidence
@@ -138,20 +144,19 @@ impl ThreatDetectionEngine {
                     reliability: info.confidence,
                 });
 
-                if info.confidence > 0.8 {
-
-                }
+                if info.confidence > 0.8 {}
             }
         }
         Ok(())
     }
 
-    async fn add_network_context(&self, threat_event: &mut ThreatEvent) -> BearDogResult<()> {
-
+    async fn add_network_context(
+        &self,
+        threat_event: &mut ThreatEvent,
+    ) -> Result<(), BearDogError> {
         if let Some(ref ip_address) = threat_event.target.ip_address {
             let network_info = self.simulate_network_context_lookup(ip_address).await?;
             if let Some(info) = network_info {
-
                 threat_event.evidence.push(ThreatEvidence {
                     evidence_type: EvidenceType::NetworkTraffic,
                     description: format!("Network context: {} zone", info.security_zone),
@@ -168,8 +173,7 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    async fn simulate_geolocation_lookup(&self, ip_address: &str) -> BearDogResult<String> {
-
+    async fn simulate_geolocation_lookup(&self, ip_address: &str) -> Result<String, BearDogError> {
         let location = if ip_address.starts_with("192.168")
             || ip_address.starts_with("10.")
             || ip_address.starts_with("172.")
@@ -185,8 +189,10 @@ impl ThreatDetectionEngine {
         Ok(location.to_string())
     }
 
-    async fn simulate_asset_lookup(&self, target: &ThreatTarget) -> BearDogResult<AssetInfo> {
-
+    async fn simulate_asset_lookup(
+        &self,
+        target: &ThreatTarget,
+    ) -> Result<AssetInfo, BearDogError> {
         let service_str = target.service.as_deref().unwrap_or("");
         let criticality = if service_str.contains("database") {
             AssetCriticality::Critical
@@ -195,21 +201,23 @@ impl ThreatDetectionEngine {
         } else {
             AssetCriticality::Medium
         };
-        
+
         let protection_level = match criticality {
             AssetCriticality::Critical => ProtectionLevel::Maximum,
             AssetCriticality::High => ProtectionLevel::Enhanced,
             _ => ProtectionLevel::Standard,
         };
-        
+
         Ok(AssetInfo {
             criticality,
             protection_level,
         })
     }
 
-    async fn simulate_historical_threat_count(&self, ip_address: &str) -> BearDogResult<u32> {
-
+    async fn simulate_historical_threat_count(
+        &self,
+        ip_address: &str,
+    ) -> Result<u32, BearDogError> {
         let count = if ip_address.contains("192.168") {
             0 // Internal IPs typically have no historical threats
         } else if ip_address.ends_with(".1") {
@@ -223,8 +231,7 @@ impl ThreatDetectionEngine {
     async fn simulate_external_intelligence_lookup(
         &self,
         ip_address: &str,
-    ) -> BearDogResult<Option<ExternalIntelligence>> {
-
+    ) -> Result<Option<ExternalIntelligence>, BearDogError> {
         if ip_address.contains("malicious") || ip_address.ends_with(".666") {
             Ok(Some(ExternalIntelligence {
                 description: "Known malicious IP reported by multiple sources".to_string(),
@@ -243,8 +250,7 @@ impl ThreatDetectionEngine {
     async fn simulate_network_context_lookup(
         &self,
         ip_address: &str,
-    ) -> BearDogResult<Option<NetworkContextInfo>> {
-
+    ) -> Result<Option<NetworkContextInfo>, BearDogError> {
         if ip_address.starts_with("192.168") {
             Ok(Some(NetworkContextInfo {
                 network_segment: "LAN".to_string(),
@@ -272,7 +278,6 @@ impl ThreatDetectionEngine {
 
 #[derive(Debug, Clone)]
 pub struct AssetInfo {
-
     pub criticality: AssetCriticality,
 
     pub protection_level: ProtectionLevel,
@@ -298,7 +303,6 @@ impl Default for NetworkContextInfo {
 }
 
 pub struct ExternalIntelligence {
-
     pub description: String,
 
     pub confidence: f64,

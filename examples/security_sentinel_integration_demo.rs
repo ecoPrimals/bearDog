@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::{
@@ -13,7 +14,7 @@ use tokio::time::{sleep, Duration};
 use tracing::{error, info, warn};
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
 
@@ -264,7 +265,7 @@ async fn simulate_beardog_operations() {
     }
 }
 
-async fn integrate_with_existing_services(core: Arc<BearDogCore>) -> BearDogResult<SecuritySentinel> {
+async fn integrate_with_existing_services(core: Arc<BearDogCore>) -> Result<SecuritySentinel, BearDogError> {
     info!("🔗 Integrating Security Sentinel with existing BearDog services");
 
     let sentinel = SecuritySentinel::new();

@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::tunnel::hsm::{AndroidStrongBoxHsm, RustSoftwareHsm};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -37,7 +37,7 @@ impl HsmManager {
     pub async fn create_hsm_provider(
         &self,
         hsm_type: &str,
-    ) -> BearDogResult<Arc<dyn super::HsmProvider>> {
+    ) -> Result<ZeroCostsuper<impl super, BearDogError>> {
         let config = &self.config;
 
         let provider_type = "software"; // Default fallback
@@ -61,7 +61,7 @@ impl HsmManager {
 
     pub async fn get_best_provider(
         requirements: &SecurityRequirements,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
         info!(
             "🔍 Selecting best HSM provider for requirements: {:?}",
             requirements
@@ -81,7 +81,7 @@ impl HsmManager {
 
     async fn calculate_provider_score(
         provider_id: &str,
-    ) -> BearDogResult<u32> {
+    ) -> Result<u32, BearDogError> {
         let mut score = 0;
 
         score += 10;
@@ -93,7 +93,7 @@ impl HsmManager {
             score += 30;
         Ok(score)
 
-    pub async fn get_routing_metrics(&self) -> BearDogResult<RoutingMetrics> {
+    pub async fn get_routing_metrics(&self) -> Result<RoutingMetrics, BearDogError> {
         info!("📊 Getting HSM routing metrics");
         Ok(RoutingMetrics {
             total_requests: 42,
@@ -106,8 +106,8 @@ impl HsmManager {
     pub async fn register_hsm_provider(
         &mut self,
         tier: &str,
-        provider: Arc<dyn super::HsmProvider>,
-    ) -> BearDogResult<()> {
+        provider: impl super,
+    ) -> Result<(), BearDogError> {
         info!("Registering HSM provider for tier: {}", tier);
         self.hsm_providers.insert(tier.to_string(), provider);
         Ok(())

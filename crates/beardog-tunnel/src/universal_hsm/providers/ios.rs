@@ -5,7 +5,7 @@ use crate::universal_hsm::traits::{
     Platform, ProviderHealth, ProviderInfo, ProviderType, UniversalHsmProvider,
 };
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::{KeyMetadata, KeyType};
 use chrono::Utc;
 
@@ -14,7 +14,7 @@ pub struct DesktopHardwareProvider {
     is_available: bool,
 }
 impl DesktopHardwareProvider {
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let is_available = Self::is_available().await?;
         if !is_available {
             return Err(BearDogError::NotSupported {
@@ -40,7 +40,7 @@ impl DesktopHardwareProvider {
             is_available,
         })
     }
-    pub async fn is_available() -> BearDogResult<bool> {
+    pub async fn is_available() -> Result<bool, BearDogError> {
         #[cfg(any(target_os = "ios", target_os = "macos"))]
         {
 
@@ -70,7 +70,7 @@ impl DesktopHardwareProvider {
         &self,
         key_type: KeyType,
         metadata: KeyMetadata,
-    ) -> BearDogResult<beardog_types::HsmKey> {
+    ) -> Result<beardog_types::HsmKey, BearDogError> {
             info!("🔑 Generating Secure Enclave key: {:?}", key_type);
 
             if key_type != KeyType::EccP256 {
@@ -101,7 +101,7 @@ impl DesktopHardwareProvider {
                     .to_string(),
             })
 
-    async fn sign_with_secure_enclave(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_with_secure_enclave(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             debug!("✍️ Signing with Secure Enclave key: {}", key_id);
 
             use sha2::{Digest, Sha256};
@@ -117,7 +117,7 @@ impl DesktopHardwareProvider {
         key_id: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
             debug!("🔍 Verifying Secure Enclave signature for key: {}", key_id);
 
             let expected_signature = hasher.finalize().to_vec();
@@ -130,7 +130,7 @@ impl DesktopHardwareProvider {
     async fn collect_ios_entropy(
         method: &HumanEntropyMethod,
         _bits: u32,
-    ) -> BearDogResult<HumanEntropyData> {
+    ) -> Result<HumanEntropyData, BearDogError> {
             info!("🎲 Collecting iOS entropy: {:?} ({} bits)", method, _bits);
             let start_time = std::time::Instant::now();
             let bytes_needed = (_bits + 7) / 8;
@@ -169,7 +169,7 @@ impl DesktopHardwareProvider {
     async fn create_secure_enclave_seed(
         _entropy: &HumanEntropyData,
         _seed_size: u32,
-    ) -> BearDogResult<EphemeralSeed> {
+    ) -> Result<EphemeralSeed, BearDogError> {
                 "🌱 Creating Secure Enclave ephemeral seed ({} bytes)",
                 _seed_size
 
@@ -185,7 +185,7 @@ impl DesktopHardwareProvider {
                 seed.quality_score
             Ok(seed)
 
-    async fn get_secure_enclave_attestation(&self) -> BearDogResult<Option<AttestationData>> {
+    async fn get_secure_enclave_attestation(&self) -> Result<Option<AttestationData>, BearDogError>> {
             info!("🛡️ Retrieving Secure Enclave hardware attestation");
 
             use crate::universal_hsm::traits::AttestationLevel;
@@ -220,11 +220,11 @@ impl UniversalHsmProvider for DesktopHardwareProvider {
         &self,
         key_type: KeyType,
         metadata: KeyMetadata,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         self.generate_secure_enclave_key(key_type, metadata).await
     }
 
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         self.sign_with_secure_enclave(key_id, data).await
     }
 
@@ -233,10 +233,10 @@ impl UniversalHsmProvider for DesktopHardwareProvider {
         key_id: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         self.verify_secure_enclave_signature(key_id, data, signature).await
     }
-    async fn get_human_entropy_capabilities(&self) -> BearDogResult<HumanEntropyCapabilities> {
+    async fn get_human_entropy_capabilities(&self) -> Result<HumanEntropyCapabilities, BearDogError> {
         Ok(HumanEntropyCapabilities {
             supports_ephemeral_seeds: true,
             collection_methods: vec![
@@ -263,27 +263,27 @@ impl UniversalHsmProvider for DesktopHardwareProvider {
     fn get_provider_info(&self) -> ProviderInfo {
         self.provider_info.clone()}
 
-    async fn health_check(&self) -> BearDogResult<ProviderHealth> {
+    async fn health_check(&self) -> Result<ProviderHealth, BearDogError> {
         Ok(ProviderHealth {
             is_healthy: self.is_available,
             error_message: None,
             last_check: Utc::now(),
             response_time_ms: Some(1.0),
             capabilities_verified: self.is_available,
-    async fn get_hardware_attestation(&self) -> BearDogResult<Option<AttestationData>> {
+    async fn get_hardware_attestation(&self) -> Result<Option<AttestationData>, BearDogError>> {
         self.get_secure_enclave_attestation().await}
 
-    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
 
             info!("📋 Listing Secure Enclave keys");
 
             Ok(Vec::new())
-    async fn delete_key(&self, _key_id: &str) -> BearDogResult<()> {
+    async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
             info!("🗑️ Deleting Secure Enclave key: {}", _key_id);
 
             info!("✅ Secure Enclave key deleted: {}", _key_id);
             Ok(())
-    async fn get_key_metadata(&self, _key_id: &str) -> BearDogResult<KeyMetadata> {
+    async fn get_key_metadata(&self, _key_id: &str) -> Result<KeyMetadata, BearDogError> {
             debug!("📊 Retrieving Secure Enclave key metadata: {}", _key_id);
 
             Ok(KeyMetadata::default())
@@ -291,7 +291,7 @@ impl UniversalHsmProvider for DesktopHardwareProvider {
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_desktop_hardware_availability() -> beardog_errors::BearDogResult<()> {
+    async fn test_desktop_hardware_availability() -> Result<(), BearDogError> {
         let is_available = DesktopHardwareProvider::is_available()
             .map_err(|e| {
                 tracing::error!("Operation failed: {e:?}");
@@ -303,7 +303,7 @@ mod tests {
         println!("Secure Enclave available: {}", is_available);
         Ok(())
     #[cfg(any(target_os = "ios", target_os = "macos"))]
-    async fn test_secure_enclave_key_generation() -> beardog_errors::BearDogResult<()> {
+    async fn test_secure_enclave_key_generation() -> Result<(), BearDogError> {
         if let Ok(provider) = DesktopHardwareProvider::new().await {
             let metadata = KeyMetadata::default();
             let result = provider.generate_key(KeyType::EccP256, metadata).await;
@@ -313,7 +313,7 @@ mod tests {
                     assert!(!key.key_id.is_empty());
                     assert_eq!(key.key_type, KeyType::EccP256);
                 Err(e) => println!("⚠️ Secure Enclave key generation failed: {}", e),
-    async fn test_ios_entropy_collection() -> beardog_errors::BearDogResult<()> {
+    async fn test_ios_entropy_collection() -> Result<(), BearDogError> {
             let result = provider
                 .collect_human_entropy(&HumanEntropyMethod::TouchInteraction, 256)
                 .await;

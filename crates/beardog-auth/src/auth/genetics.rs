@@ -3,13 +3,16 @@
 use chrono::{Duration, Utc};
 use std::collections::HashMap;
 use uuid::Uuid;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::improved_results::*;
 
 use super::types::*;
 impl CrossNodeAuthEngine {
 
-    pub async fn register_genetics(&mut self, genetics: BearDogGenetics) -> BearDogResult<GeneticsRegistrationOutcome> {
+    /// Registers genetics for cross-node authentication
+    /// 
+    /// Uses idiomatic `Result<T, BearDogError>` for clear error handling
+    pub async fn register_genetics(&mut self, genetics: BearDogGenetics) -> Result<GeneticsRegistrationOutcome, BearDogError> {
         let start_time = Utc::now();
 
         let genetics_id = genetics.id.clone();
@@ -35,6 +38,7 @@ impl CrossNodeAuthEngine {
                 generation_lineage_verified: true,
                 fitness_score_acceptable: fitness_score >= 0.5,
                 validation_warnings: Vec::new(),
+            },
             context: OperationContext {
                 operation_id: Uuid::new_v4().to_string(),
                 component: "genetics-registration".to_string(),
@@ -45,6 +49,7 @@ impl CrossNodeAuthEngine {
                 transaction_id: None,
                 correlation_id: None,
                 initiator: "CrossNodeAuthEngine".to_string(),
+            },
             metrics: OperationMetrics {
                 duration: (Utc::now() - start_time).to_std().unwrap_or_default(),
                 items_processed: 1,
@@ -57,6 +62,7 @@ impl CrossNodeAuthEngine {
                 cache_misses: 0,
                 database_queries: 0,
                 average_item_processing_time: Duration::from_millis(0),
+            },
             warnings: Vec::new(),
         };
 
@@ -67,11 +73,14 @@ impl CrossNodeAuthEngine {
         Ok(outcome)
     }
 
+    /// Spawns a new BearDog instance from parent genetics
+    /// 
+    /// Uses idiomatic `Result<T, BearDogError>` for clear error handling
     pub async fn spawn_beardog(
         &mut self,
         parent_genetics: Vec<&str>,
         spawn_config: SpawnConfig,
-    ) -> BearDogResult<SpawningOutcome> {
+    ) -> Result<SpawningOutcome, BearDogError> {
 
         for parent_id in &parent_genetics {
             if !self.genetics_registry.contains_key(parent_id) {
@@ -123,7 +132,8 @@ impl CrossNodeAuthEngine {
             "consensus_enabled".to_string(),
             serde_json::json!(spawn_config.consensus_enabled),
 
-    pub async fn combine_genetics(&self, parent_ids: &[&str]) -> BearDogResult<BearDogGenetics> {
+    /// Combines genetics from multiple parent BearDogs
+    pub async fn combine_genetics(&self, parent_ids: &[&str]) -> Result<BearDogGenetics, BearDogError> {
         if parent_ids.is_empty() {
             return Err(BearDogError::authorization("At least one parent required for genetic combination".to_string(),
             ));
@@ -166,7 +176,7 @@ impl CrossNodeAuthEngine {
         &self,
         parent1_chromosomes: &[CryptoChromosome],
         parent2_chromosomes: &[CryptoChromosome],
-    ) -> BearDogResult<Vec<CryptoChromosome>> {
+    ) -> Result<Vec<CryptoChromosome>, BearDogError> {
         let mut combined = Vec::new();
 
         for chromosome in parent1_chromosomes.iter().chain(parent2_chromosomes.iter()) {
@@ -184,7 +194,7 @@ impl CrossNodeAuthEngine {
     fn combine_security_traits(
         parent1_traits: &SecurityTraits,
         parent2_traits: &SecurityTraits,
-    ) -> BearDogResult<SecurityTraits> {
+    ) -> Result<SecurityTraits, BearDogError> {
         Ok(SecurityTraits {
 
             tamper_resistance: parent1_traits.tamper_resistance.max(parent2_traits.tamper_resistance),
@@ -203,7 +213,8 @@ impl CrossNodeAuthEngine {
             (SecurityClearance::Medium, SecurityClearance::Medium) => SecurityClearance::Basic,
             _ => SecurityClearance::Basic, // Conservative default
 
-    pub async fn terminate_spawn(&mut self, spawn_id: &str) -> BearDogResult<SpawnTerminationOutcome> {
+    /// Terminates a spawned BearDog instance
+    pub async fn terminate_spawn(&mut self, spawn_id: &str) -> Result<SpawnTerminationOutcome, BearDogError> {
         if let Some(spawn) = self.spawned_beardogs.get_mut(spawn_id) {
 
             let total_runtime = (Utc::now() - spawn.spawn_time).to_std().unwrap_or_default();

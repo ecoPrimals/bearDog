@@ -1,12 +1,9 @@
-
-
 use serde::{Deserialize, Serialize};
 
-pub use beardog_types::canonical::workflow::{WorkflowStatus, AuditAction};
+pub use beardog_types::canonical::workflow::{AuditAction, WorkflowStatus};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum WorkflowType {
-
     KeyRotation,
 
     KeyDeletion,
@@ -26,7 +23,6 @@ pub enum WorkflowType {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ApprovalDecision {
-
     Granted,
 
     Rejected(String),
@@ -48,7 +44,6 @@ impl std::fmt::Display for ApprovalDecision {
 }
 
 pub enum WorkflowAction {
-
     Create,
 
     Update,
@@ -72,7 +67,6 @@ pub enum WorkflowAction {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum WorkflowPriority {
-
     Low,
 
     Normal,
@@ -85,7 +79,6 @@ pub enum WorkflowPriority {
 }
 
 pub enum WorkflowExecutionState {
-
     NotStarted,
 
     Preparing,
@@ -133,7 +126,6 @@ pub enum WorkflowTarget {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum NotificationStatus {
-
     Pending,
 
     Delivered,
@@ -162,7 +154,6 @@ impl std::fmt::Display for WorkflowType {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ExecutionStatus {
-
     Pending,
 
     Running,
@@ -224,7 +215,6 @@ pub struct PendingApproval {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ApprovalStatus {
-
     Pending,
 
     Submitted,
@@ -235,4 +225,3 @@ pub enum ApprovalStatus {
 
     Expired,
 }
-

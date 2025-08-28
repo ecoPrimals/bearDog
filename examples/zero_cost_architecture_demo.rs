@@ -4,12 +4,12 @@ use beardog_core::zero_cost_architecture::{
     ZeroCostBearDog, MemoryCache, RedisCache, HardwareSecurity,
     BearDogBuilder, SystemConfig, examples
 };
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::time::Instant;
 use tokio;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🚀 BearDog Zero-Cost Architecture Demo");
     println!("======================================\n");
 
@@ -62,7 +62,7 @@ async fn main() -> BearDogResult<()> {
 async fn demonstrate_system_capabilities<C, S>(
     system: &ZeroCostBearDog<C, S>, 
     system_name: &str
-) -> BearDogResult<()> 
+) -> Result<(), BearDogError> 
 where
     C: beardog_core::zero_cost_architecture::ZeroCostCache<Key = String, Value = Vec<u8>>,
     S: beardog_core::zero_cost_architecture::ZeroCostSecurity,
@@ -103,7 +103,7 @@ where
     Ok(())
 }
 
-async fn performance_benchmark() -> BearDogResult<()> {
+async fn performance_benchmark() -> Result<(), BearDogError> {
     println!("🔹 Running performance benchmarks...");
 
     let memory_system: ZeroCostBearDog<

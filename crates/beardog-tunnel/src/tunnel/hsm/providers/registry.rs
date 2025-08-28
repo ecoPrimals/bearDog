@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::{
     traits::{
         CapabilityDiscoveryEngine, CryptoOperation, HsmCapabilities, HsmRequirements,
@@ -56,12 +56,12 @@ pub struct RegistryStatistics {
 
 impl UniversalProviderRegistry {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let config = RegistryConfig::default();
         Self::with_config(config).await
     }
 
-    pub async fn with_config(config: RegistryConfig) -> BearDogResult<Self> {
+    pub async fn with_config(config: RegistryConfig) -> Result<Self, BearDogError> {
         let mut registry = Self {
             discovery_engine: CapabilityDiscoveryEngine::new(),
             providers: Arc::new(RwLock::new(HashMap::with_capacity(16))),
@@ -74,7 +74,7 @@ impl UniversalProviderRegistry {
         }
         Ok(registry)
 
-    pub async fn auto_register_providers(&mut self) -> BearDogResult<()> {
+    pub async fn auto_register_providers(&mut self) -> Result<(), BearDogError> {
         info!("🔍 Auto-registering platform HSM providers...");
         let mut registered_count = 0;
 
@@ -112,7 +112,7 @@ impl UniversalProviderRegistry {
         &mut self,
         provider_id: &str,
         provider: impl HsmProvider + Send + Sync,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
 
         let capabilities = provider.discover_capabilities().await?;
         info!("📝 Registering provider: {} ({})", 
@@ -128,7 +128,7 @@ impl UniversalProviderRegistry {
             providers.insert(provider_id.clone(), provider);
         info!("✅ Provider registered successfully: {}", provider_id);
 
-    pub async fn get_provider(&self, provider_id: &str) -> BearDogResult<&dyn HsmProvider> {
+    pub async fn get_provider(&self, provider_id: &str) -> Result<&dyn HsmProvider, BearDogError> {
         let providers = self.providers.read().map_err(|e| {
     tracing::error!("Operation failed: {e:?}");
     beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
@@ -141,7 +141,7 @@ impl UniversalProviderRegistry {
     pub async fn select_provider(
         &self,
         strategy: ProviderSelectionStrategy,
-    ) -> BearDogResult<&dyn HsmProvider> {
+    ) -> Result<&dyn HsmProvider, BearDogError> {
         match strategy {
             ProviderSelectionStrategy::HighestSecurity => {
                 self.select_highest_security_provider().await
@@ -152,7 +152,7 @@ impl UniversalProviderRegistry {
             ProviderSelectionStrategy::Specific(provider_id) => {
                 self.get_provider(&provider_id).await
 
-    async fn select_highest_security_provider(&self) -> BearDogResult<&dyn HsmProvider> {
+    async fn select_highest_security_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
         let discovered_providers = self.discovery_engine.discover_all().await?;
         let mut best_provider = None;
         let mut best_security_level = SecurityLevel::Software;
@@ -165,7 +165,7 @@ impl UniversalProviderRegistry {
         best_provider.ok_or_else(|| BearDogError::no_suitable_provider("No providers available for highest security selection".to_string(),
         ))
 
-    async fn select_best_performance_provider(&self) -> BearDogResult<&dyn HsmProvider> {
+    async fn select_best_performance_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
         let mut best_score = 0.0;
 
             let score = capabilities.performance_profile.key_generation_speed +
@@ -176,7 +176,7 @@ impl UniversalProviderRegistry {
                 best_score = score;
         best_provider.ok_or_else(|| BearDogError::no_suitable_provider("No providers available for performance selection".to_string(),
 
-    async fn get_provider_by_vendor_info(&self, vendor_info: &VendorInfo) -> BearDogResult<&dyn HsmProvider> {
+    async fn get_provider_by_vendor_info(&self, vendor_info: &VendorInfo) -> Result<&dyn HsmProvider, BearDogError> {
         for provider in providers.values() {
             let provider_info = provider.get_provider_info();
             if provider_info.name == vendor_info.name && 
@@ -185,7 +185,7 @@ impl UniversalProviderRegistry {
         Err(BearDogError::no_suitable_provider(format_args!("Provider not found for vendor: }", vendor_info.name).to_string(),
         })
 
-    pub async fn health_check_all(&self) -> BearDogResult<HashMap<String, HsmHealthStatus>> {
+    pub async fn health_check_all(&self) -> Result<HashMap<String, HsmHealthStatus, BearDogError>> {
         let mut health_status = HashMap::with_capacity(16);
         for (provider_id, provider) in providers.iter() {
 
@@ -217,7 +217,7 @@ impl UniversalProviderRegistry {
             health_status.insert(provider_id.clone(), health);
         Ok(health_status)
 
-    pub async fn get_statistics(&self) -> BearDogResult<RegistryStatistics> {
+    pub async fn get_statistics(&self) -> Result<RegistryStatistics, BearDogError> {
         let health_status = self.health_check_all().await?;
         let mut security_levels = HashMap::with_capacity(16);
         let mut vendor_distribution = HashMap::with_capacity(16);
@@ -235,14 +235,14 @@ impl UniversalProviderRegistry {
             vendor_distribution,
             total_capabilities,
 
-    pub async fn list_providers(&self) -> BearDogResult<Vec<(String, VendorInfo, HsmCapabilities)>> {
+    pub async fn list_providers(&self) -> Result<Vec<(String, VendorInfo, HsmCapabilities), BearDogError>> {
         let mut provider_list = Vec::new();
             let vendor_info = provider.get_provider_info();
             let capabilities = provider.discover_capabilities().await?;
             provider_list.push((provider_id.clone(), vendor_info, capabilities));
         Ok(provider_list)
 
-    pub fn unregister_provider(&mut self, provider_id: &str) -> BearDogResult<()> {
+    pub fn unregister_provider(&mut self, provider_id: &str) -> Result<(), BearDogError> {
         let mut providers = self.providers.write().unwrap_or_else(|poisoned| {
         if providers.remove(provider_id).is_some() {
             info!("🗑️ Provider unregistered: {}", provider_id);
@@ -266,7 +266,7 @@ impl Default for RegistryConfig {}
             include_software_fallback: true,
             preferred_security_level: SecurityLevel::Hardware,
 
-    pub async fn select_default_provider(&self) -> BearDogResult<&dyn HsmProvider> {
+    pub async fn select_default_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
         let requirements = HsmRequirements {
             min_security_level: self.config.preferred_security_level.clone(),
             required_operations: vec![
@@ -279,18 +279,18 @@ impl Default for RegistryConfig {}
             performance_requirements: None,
         self.select_provider(ProviderSelectionStrategy::RequirementsBased(requirements)).await
 
-    pub async fn select_mobile_provider(&self) -> BearDogResult<&dyn HsmProvider> {
+    pub async fn select_mobile_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
             min_security_level: SecurityLevel::Tee,
                 CryptoOperation::Attestation,
             preferred_key_types: vec![KeyType::EcdsaP256, KeyType::Ed25519],
 
-    pub async fn select_high_security_provider(&self) -> BearDogResult<&dyn HsmProvider> {
+    pub async fn select_high_security_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
             min_security_level: SecurityLevel::Hardware,
                 CryptoOperation::KeyDerivation,
             preferred_key_types: vec![KeyType::EcdsaP256],
             authentication_preference: Some(AuthenticationMethod::MultiFactor),
 
-    pub async fn select_performance_provider(&self) -> BearDogResult<&dyn HsmProvider> {
+    pub async fn select_performance_provider(&self) -> Result<&dyn HsmProvider, BearDogError> {
             min_security_level: SecurityLevel::Software,
                 CryptoOperation::Encryption,
                 CryptoOperation::Decryption,

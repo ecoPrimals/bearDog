@@ -7,7 +7,7 @@ use super::{
     EcosystemHsmProvider,
     ProviderHealthStatus,
 };
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::{KeyType, KeyMetadata};
 use beardog_types::canonical::hsm::{HsmCapabilities, HsmProvider};
 use beardog_traits::canonical::CanonicalHsmProvider;
@@ -16,7 +16,7 @@ use std::sync::Arc;
 use tracing::{info, warn};
 use uuid::Uuid;
 
-pub async fn example_universal_hsm_setup() -> BearDogResult<()> {
+pub async fn example_universal_hsm_setup() -> Result<(), BearDogError> {
     info!("🚀 Example: Universal HSM Architecture Setup");
 
     let mut integration_engine = IntegrationEngine::new();
@@ -44,7 +44,7 @@ pub async fn example_universal_hsm_setup() -> BearDogResult<()> {
     Ok(())
 }
 
-pub async fn example_vendor_agnostic_operations() -> BearDogResult<()> {
+pub async fn example_vendor_agnostic_operations() -> Result<(), BearDogError> {
     info!("🔐 Example: Vendor-Agnostic HSM Operations");
 
     let universal_hsm = UniversalHsmProvider::new();
@@ -83,7 +83,7 @@ pub async fn example_vendor_agnostic_operations() -> BearDogResult<()> {
     Ok(())
 }
 
-pub async fn example_ecosystem_provider_registration() -> BearDogResult<()> {
+pub async fn example_ecosystem_provider_registration() -> Result<(), BearDogError> {
     info!("🌐 Example: Ecosystem HSM Provider Registration");
 
     let mut songbird_discovery = SongbirdServiceDiscoveryFactory::create_for_development();
@@ -128,7 +128,7 @@ pub async fn example_ecosystem_provider_registration() -> BearDogResult<()> {
     Ok(())
 }
 
-pub async fn example_failover_and_high_availability() -> BearDogResult<()> {
+pub async fn example_failover_and_high_availability() -> Result<(), BearDogError> {
     info!("🛡️ Example: Failover and High Availability");
 
     let universal_hsm = UniversalHsmProvider::new();
@@ -211,7 +211,7 @@ impl MockHsmProvider {
 }
 
 impl HsmProvider for MockHsmProvider {
-    async fn generate_key(&self, key_type: KeyType, metadata: KeyMetadata) -> BearDogResult<beardog_types::canonical::crypto::HsmKey> {
+    async fn generate_key(&self, key_type: KeyType, metadata: KeyMetadata) -> Result<beardog_types::canonical::crypto::HsmKey, BearDogError> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM operation failed".to_string()));
         }
@@ -232,7 +232,7 @@ impl HsmProvider for MockHsmProvider {
         Ok(hsm_key)
     }
 
-    async fn import_key(&self, _key_data: &[u8], key_type: KeyType, metadata: KeyMetadata) -> BearDogResult<beardog_types::canonical::crypto::HsmKey> {
+    async fn import_key(&self, _key_data: &[u8], key_type: KeyType, metadata: KeyMetadata) -> Result<beardog_types::canonical::crypto::HsmKey, BearDogError> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM import failed".to_string()));
         }
@@ -240,7 +240,7 @@ impl HsmProvider for MockHsmProvider {
         self.generate_key(key_type, metadata).await
     }
 
-    async fn derive_key(&self, _parent_key_id: &str, _derivation_path: &str, derived_key_type: KeyType) -> BearDogResult<beardog_types::canonical::crypto::HsmKey> {
+    async fn derive_key(&self, _parent_key_id: &str, _derivation_path: &str, derived_key_type: KeyType) -> Result<beardog_types::canonical::crypto::HsmKey, BearDogError> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM derivation failed".to_string()));
         }
@@ -258,7 +258,7 @@ impl HsmProvider for MockHsmProvider {
         self.generate_key(derived_key_type, metadata).await
     }
 
-    async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
+    async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM deletion failed".to_string()));
         }
@@ -268,7 +268,7 @@ impl HsmProvider for MockHsmProvider {
         Ok(())
     }
 
-    async fn list_keys(&self) -> BearDogResult<Vec<beardog_types::canonical::crypto::HsmKeyInfo>> {
+    async fn list_keys(&self) -> Result<Vec<beardog_types::canonical::crypto::HsmKeyInfo>, BearDogError> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM listing failed".to_string()));
         }
@@ -289,7 +289,7 @@ impl HsmProvider for MockHsmProvider {
         Ok(key_infos)
     }
 
-    async fn get_key_info(&self, key_id: &str) -> BearDogResult<beardog_types::canonical::crypto::HsmKeyInfo> {
+    async fn get_key_info(&self, key_id: &str) -> Result<beardog_types::canonical::crypto::HsmKeyInfo, BearDogError> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM key info failed".to_string()));
         }
@@ -310,7 +310,7 @@ impl HsmProvider for MockHsmProvider {
         }
     }
 
-    async fn sign_data(&self, _key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, _key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM signing failed".to_string()));
         }
@@ -320,7 +320,7 @@ impl HsmProvider for MockHsmProvider {
         Ok(signature)
     }
 
-    async fn verify_signature(&self, _key_id: &str, _data: &[u8], _signature: &[u8]) -> BearDogResult<bool> {
+    async fn verify_signature(&self, _key_id: &str, _data: &[u8], _signature: &[u8]) -> Result<bool, BearDogError> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM verification failed".to_string()));
         }
@@ -328,7 +328,7 @@ impl HsmProvider for MockHsmProvider {
         Ok(true)
     }
 
-    async fn encrypt_with_key(&self, _key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt_with_key(&self, _key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM encryption failed".to_string()));
         }
@@ -338,7 +338,7 @@ impl HsmProvider for MockHsmProvider {
         Ok(encrypted)
     }
 
-    async fn decrypt_with_key(&self, _key_id: &str, encrypted_data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn decrypt_with_key(&self, _key_id: &str, encrypted_data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         if !self.should_succeed() {
             return Err(beardog_errors::BearDogError::hsm_error("Mock HSM decryption failed".to_string()));
         }
@@ -350,7 +350,7 @@ impl HsmProvider for MockHsmProvider {
         }
     }
 
-    async fn get_capabilities(&self) -> BearDogResult<beardog_types::canonical::hsm::HsmCapabilities> {
+    async fn get_capabilities(&self) -> Result<beardog_types::canonical::hsm::HsmCapabilities, BearDogError> {
         Ok(beardog_types::canonical::hsm::HsmCapabilities {
             supported_key_types: vec![KeyType::EcdsaP256, KeyType::Rsa2048],
             max_keys: 1000,
@@ -362,7 +362,7 @@ impl HsmProvider for MockHsmProvider {
         })
     }
 
-    async fn get_hardware_status(&self) -> BearDogResult<beardog_types::canonical::hsm::HsmHardwareStatus> {
+    async fn get_hardware_status(&self) -> Result<beardog_types::canonical::hsm::HsmHardwareStatus, BearDogError> {
         Ok(beardog_types::canonical::hsm::HsmHardwareStatus {
             is_available: true,
             temperature_celsius: None,
@@ -378,7 +378,7 @@ impl HsmProvider for MockHsmProvider {
     }
 }
 
-pub async fn run_all_examples() -> BearDogResult<()> {
+pub async fn run_all_examples() -> Result<(), BearDogError> {
     info!("🚀 Running all Universal HSM Architecture examples");
 
     example_universal_hsm_setup().await?;

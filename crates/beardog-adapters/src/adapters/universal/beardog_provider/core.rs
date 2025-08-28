@@ -5,7 +5,7 @@ use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use super::super::songbird_handoff::health::UniversalHealthMonitor;
 use super::super::songbird_handoff::registration::SongBirdRegistrationManager;
-use beardog_types::config::BearDogConfig;
+use beardog_types::canonical::BearDogConfig;
 
 #[derive(Debug, Clone)]
 pub struct ProviderMetadata {

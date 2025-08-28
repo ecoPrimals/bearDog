@@ -1,7 +1,7 @@
 
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use sha3::{Digest, Sha3_256};
@@ -16,7 +16,7 @@ impl EntropyMixingEngine {
         Self { config }
     }
 
-    pub fn mix_entropy_sources(&self, sources: Vec<EntropyClass>) -> BearDogResult<EntropyClass> {
+    pub fn mix_entropy_sources(&self, sources: Vec<EntropyClass>) -> Result<EntropyClass, BearDogError> {
         if sources.is_empty() {
             return Err(BearDogError::invalid_input("Cannot mix empty list of entropy sources".to_string(),
             ));
@@ -52,7 +52,7 @@ impl EntropyMixingEngine {
     fn mix_human_supervised_sources(
         &self,
         sources: &[EntropyClass],
-    ) -> BearDogResult<EntropyClass> {
+    ) -> Result<EntropyClass, BearDogError> {
 
         let supervised_sources: Vec<_> = sources
             .filter(|s| matches!(s, EntropyClass::HumanSupervisedMachine { .. }))
@@ -75,7 +75,7 @@ impl EntropyMixingEngine {
             Err(BearDogError::internal("No human-supervised sources found".to_string(),
             ))
 
-    fn mix_machine_sources(&self, sources: &[EntropyClass]) -> BearDogResult<EntropyClass> {
+    fn mix_machine_sources(&self, sources: &[EntropyClass]) -> Result<EntropyClass, BearDogError> {
 
         let mut total_reproducibility = 0.0f64;
         let mut machine_count = 0;
@@ -104,7 +104,7 @@ impl EntropyMixingEngine {
                     state_size: 256,
                 },
 
-    pub fn validate_entropy_quality(&self, entropy_class: &EntropyClass) -> BearDogResult<f64> {
+    pub fn validate_entropy_quality(&self, entropy_class: &EntropyClass) -> Result<f64, BearDogError> {
         let quality_score = match entropy_class {
             EntropyClass::HumanLivedExperience { source_type, .. } => {
                 self.calculate_human_entropy_quality(source_type)
@@ -144,14 +144,14 @@ impl EntropyMixingEngine {
                 let complexity = motion_patterns.len() as f64 / 50.0; // Normalize
                 complexity.clamp(0.7, 1.0)
 
-    pub fn generate_entropy_commitment(&self, entropy_data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub fn generate_entropy_commitment(&self, entropy_data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         let mut hasher = Sha3_256::new();
         hasher.update(entropy_data);
         hasher.update(b"entropy_commitment");
         hasher.update(chrono::Utc::now().timestamp().to_le_bytes());
         Ok(hasher.finalize().to_vec())
 
-    pub fn mix_entropy_bytes(&self, entropy_sources: &[(Vec<u8>, f64)]) -> BearDogResult<Vec<u8>> {
+    pub fn mix_entropy_bytes(&self, entropy_sources: &[(Vec<u8>, f64)]) -> Result<Vec<u8>, BearDogError>> {
         if entropy_sources.is_empty() {
             return Err(BearDogError::invalid_input("Cannot mix empty entropy sources".to_string(),
 
@@ -192,7 +192,7 @@ impl EntropyMixingEngine {
             );
         recommendations
 
-    pub fn validate_entropy_combination(&self, sources: &[EntropyClass]) -> BearDogResult<()> {
+    pub fn validate_entropy_combination(&self, sources: &[EntropyClass]) -> Result<(), BearDogError> {
 
             return Err(BearDogError::invalid_input("At least one entropy source required".to_string(),
 

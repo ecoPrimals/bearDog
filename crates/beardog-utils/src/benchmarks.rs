@@ -1,14 +1,11 @@
-
-
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use tracing::{debug, info, warn};
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub struct BenchmarkSuite {
-
     benchmarks: HashMap<String, BenchmarkResult>,
 
     config: BenchmarkConfig,
@@ -18,7 +15,6 @@ pub struct BenchmarkSuite {
 
 #[derive(Debug, Clone)]
 pub struct BenchmarkConfig {
-
     pub warmup_iterations: u32,
 
     pub measurement_iterations: u32,
@@ -32,7 +28,6 @@ pub struct BenchmarkConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkResult {
-
     pub name: String,
 
     pub total_time: Duration,
@@ -61,7 +56,6 @@ pub struct LatencyPercentiles {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryStats {
-
     pub peak_memory: u64,
 
     pub total_allocations: u64,
@@ -73,11 +67,11 @@ pub struct MemoryStats {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum PerformanceGrade {
-    Excellent,  // > 1M ops/sec
-    Good,       // > 100K ops/sec
-    Average,    // > 10K ops/sec
-    Poor,       // > 1K ops/sec
-    Critical,   // < 1K ops/sec
+    Excellent, // > 1M ops/sec
+    Good,      // > 100K ops/sec
+    Average,   // > 10K ops/sec
+    Poor,      // > 1K ops/sec
+    Critical,  // < 1K ops/sec
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -102,7 +96,6 @@ impl Default for BenchmarkConfig {
 }
 
 impl BenchmarkSuite {
-
     pub fn new(config: BenchmarkConfig) -> Self {
         Self {
             benchmarks: HashMap::with_capacity(16),
@@ -111,23 +104,29 @@ impl BenchmarkSuite {
         }
     }
 
-    pub fn benchmark<F, R>(&mut self, name: &str, mut benchmark_fn: F) -> BearDogResult<()>
+    pub fn benchmark<F, R>(&mut self, name: &str, mut benchmark_fn: F) -> Result<(), BearDogError>
     where
         F: FnMut() -> R,
     {
         info!("🏁 Running benchmark: {}", name);
-        
+
         let start_time = Instant::now();
 
-        debug!("🔥 Warmup phase: {} iterations", self.config.warmup_iterations);
+        debug!(
+            "🔥 Warmup phase: {} iterations",
+            self.config.warmup_iterations
+        );
         for _ in 0..self.config.warmup_iterations {
             let _ = benchmark_fn();
         }
 
-        debug!("📊 Measurement phase: {} iterations", self.config.measurement_iterations);
+        debug!(
+            "📊 Measurement phase: {} iterations",
+            self.config.measurement_iterations
+        );
         let mut latencies = Vec::with_capacity(self.config.measurement_iterations as usize);
         let measurement_start = Instant::now();
-        
+
         for _ in 0..self.config.measurement_iterations {
             let iter_start = Instant::now();
             let _ = benchmark_fn();
@@ -139,19 +138,19 @@ impl BenchmarkSuite {
                 break;
             }
         }
-        
+
         let total_time = start_time.elapsed();
         let measurement_time = measurement_start.elapsed();
 
         let iterations = latencies.len() as u64;
         let ops_per_second = iterations as f64 / measurement_time.as_secs_f64();
         let avg_latency = Duration::from_nanos(
-            latencies.iter().map(|d| d.as_nanos() as u64).sum::<u64>() / iterations
+            latencies.iter().map(|d| d.as_nanos() as u64).sum::<u64>() / iterations,
         );
 
         let mut sorted_latencies = latencies.clone();
         sorted_latencies.sort();
-        
+
         let latency_percentiles = LatencyPercentiles {
             p50: sorted_latencies[sorted_latencies.len() * 50 / 100],
             p90: sorted_latencies[sorted_latencies.len() * 90 / 100],
@@ -178,7 +177,7 @@ impl BenchmarkSuite {
         } else {
             PerformanceGrade::Critical
         };
-        
+
         let result = BenchmarkResult {
             name: name.to_string(),
             total_time,
@@ -194,11 +193,10 @@ impl BenchmarkSuite {
             "✅ Benchmark complete: {} - {:.0} ops/sec ({:?})",
             name, ops_per_second, performance_grade
         );
-        
+
         debug!(
             "📈 Latency P95: {:?}, P99: {:?}",
-            result.latency_percentiles.p95,
-            result.latency_percentiles.p99
+            result.latency_percentiles.p95, result.latency_percentiles.p99
         );
 
         self.suite_stats.total_benchmarks += 1;
@@ -208,12 +206,16 @@ impl BenchmarkSuite {
             self.suite_stats.passed_benchmarks += 1;
         }
         self.suite_stats.total_execution_time += total_time;
-        
+
         self.benchmarks.insert(name.to_string(), result);
         Ok(())
     }
 
-    pub fn benchmark_throughput<F, R>(&mut self, name: &str, benchmark_fn: F) -> BearDogResult<f64>
+    pub fn benchmark_throughput<F, R>(
+        &mut self,
+        name: &str,
+        benchmark_fn: F,
+    ) -> Result<f64, BearDogError>
     where
         F: Fn() -> R + Clone,
     {
@@ -222,7 +224,11 @@ impl BenchmarkSuite {
         Ok(result.ops_per_second)
     }
 
-    pub fn benchmark_latency<F, R>(&mut self, name: &str, benchmark_fn: F) -> BearDogResult<Duration>
+    pub fn benchmark_latency<F, R>(
+        &mut self,
+        name: &str,
+        benchmark_fn: F,
+    ) -> Result<Duration, BearDogError>
     where
         F: Fn() -> R + Clone,
     {
@@ -245,7 +251,7 @@ impl BenchmarkSuite {
         let mut average_count = 0;
         let mut poor_count = 0;
         let mut critical_count = 0;
-        
+
         for result in self.benchmarks.values() {
             match result.performance_grade {
                 PerformanceGrade::Excellent => excellent_count += 1,
@@ -255,17 +261,15 @@ impl BenchmarkSuite {
                 PerformanceGrade::Critical => critical_count += 1,
             }
         }
-        
-        let total_ops_per_second: f64 = self.benchmarks.values()
-            .map(|r| r.ops_per_second)
-            .sum();
-        
+
+        let total_ops_per_second: f64 = self.benchmarks.values().map(|r| r.ops_per_second).sum();
+
         let avg_ops_per_second = if !self.benchmarks.is_empty() {
             total_ops_per_second / self.benchmarks.len() as f64
         } else {
             0.0
         };
-        
+
         PerformanceReport {
             suite_stats: self.suite_stats.clone(),
             grade_distribution: GradeDistribution {
@@ -283,28 +287,49 @@ impl BenchmarkSuite {
 
     pub fn print_summary(&self) {
         let report = self.generate_report();
-        
+
         println!("\n🎯 BearDog Performance Benchmark Report");
         println!("==========================================");
         println!("Total Benchmarks: {}", report.suite_stats.total_benchmarks);
-        println!("Passed: {} | Failed: {}", 
-                 report.suite_stats.passed_benchmarks,
-                 report.suite_stats.failed_benchmarks);
-        println!("Total Execution Time: {:?}", report.suite_stats.total_execution_time);
-        println!("Average Performance: {:.0} ops/sec", report.avg_ops_per_second);
-        
+        println!(
+            "Passed: {} | Failed: {}",
+            report.suite_stats.passed_benchmarks, report.suite_stats.failed_benchmarks
+        );
+        println!(
+            "Total Execution Time: {:?}",
+            report.suite_stats.total_execution_time
+        );
+        println!(
+            "Average Performance: {:.0} ops/sec",
+            report.avg_ops_per_second
+        );
+
         println!("\n📊 Performance Grade Distribution:");
-        println!("🟢 Excellent (>1M ops/sec): {}", report.grade_distribution.excellent);
-        println!("🔵 Good (>100K ops/sec): {}", report.grade_distribution.good);
-        println!("🟡 Average (>10K ops/sec): {}", report.grade_distribution.average);
+        println!(
+            "🟢 Excellent (>1M ops/sec): {}",
+            report.grade_distribution.excellent
+        );
+        println!(
+            "🔵 Good (>100K ops/sec): {}",
+            report.grade_distribution.good
+        );
+        println!(
+            "🟡 Average (>10K ops/sec): {}",
+            report.grade_distribution.average
+        );
         println!("🟠 Poor (>1K ops/sec): {}", report.grade_distribution.poor);
-        println!("🔴 Critical (<1K ops/sec): {}", report.grade_distribution.critical);
-        
+        println!(
+            "🔴 Critical (<1K ops/sec): {}",
+            report.grade_distribution.critical
+        );
+
         if report.grade_distribution.critical > 0 {
-            println!("\n⚠️  WARNING: {} benchmarks have critical performance issues!", 
-                     report.grade_distribution.critical);
+            println!(
+                "\n⚠️  WARNING: {} benchmarks have critical performance issues!",
+                report.grade_distribution.critical
+            );
         }
-        
+
         println!("\n🏆 Top Performers:");
         let mut sorted_results: Vec<_> = self.benchmarks.values().collect();
         sorted_results.sort_by(|a, b| {
@@ -312,10 +337,15 @@ impl BenchmarkSuite {
                 .partial_cmp(&a.ops_per_second)
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
-        
+
         for (i, result) in sorted_results.iter().take(5).enumerate() {
-            println!("  {}. {} - {:.0} ops/sec ({:?})",
-                     i + 1, result.name, result.ops_per_second, result.performance_grade);
+            println!(
+                "  {}. {} - {:.0} ops/sec ({:?})",
+                i + 1,
+                result.name,
+                result.ops_per_second,
+                result.performance_grade
+            );
         }
     }
 }
@@ -348,13 +378,13 @@ macro_rules! benchmark {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_benchmark_suite_creation() {
         let suite = BenchmarkSuite::new(BenchmarkConfig::default());
         assert_eq!(suite.benchmarks.len(), 0);
     }
-    
+
     #[test]
     fn test_simple_benchmark() -> Result<(), Box<dyn std::error::Error>> {
         let mut suite = BenchmarkSuite::new(BenchmarkConfig {
@@ -363,22 +393,29 @@ mod tests {
             ..BenchmarkConfig::default()
         });
 
-        suite.benchmark("simple_add", || {
-            let _result = 1 + 1;
-        }).map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Benchmark should succeed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark should succeed", e).to_string())
-})?;
-        
+        suite
+            .benchmark("simple_add", || {
+                let _result = 1 + 1;
+            })
+            .map_err(|e| {
+                tracing::error!("Operation failed ({}): {:?}", "Benchmark should succeed", e);
+                beardog_errors::BearDogError::internal(
+                    format_args!("Operation failed ({}): {:?}", "Benchmark should succeed", e)
+                        .to_string(),
+                )
+            })?;
+
         let result = suite.get_result("simple_add").ok_or_else(|| {
-    tracing::error!("Operation failed ({})", "Result should exist");
-    beardog_errors::BearDogError::internal("Operation failed: Result should exist".to_string())
-})?;
+            tracing::error!("Operation failed ({})", "Result should exist");
+            beardog_errors::BearDogError::internal(
+                "Operation failed: Result should exist".to_string(),
+            )
+        })?;
         assert!(result.ops_per_second > 0.0);
         assert_eq!(result.iterations, 100);
         Ok(())
     }
-    
+
     #[test]
     fn test_performance_grading() -> Result<(), Box<dyn std::error::Error>> {
         let mut suite = BenchmarkSuite::new(BenchmarkConfig {
@@ -387,20 +424,25 @@ mod tests {
             ..BenchmarkConfig::default()
         });
 
-        suite.benchmark("fast_op", || {
+        suite.benchmark("fast_op", || {}).map_err(|e| {
+            tracing::error!("Operation failed ({}): {:?}", "Benchmark should succeed", e);
+            beardog_errors::BearDogError::internal(
+                format_args!("Operation failed ({}): {:?}", "Benchmark should succeed", e)
+                    .to_string(),
+            )
+        })?;
 
-        }).map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Benchmark should succeed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark should succeed", e).to_string())
-})?;
-        
         let result = suite.get_result("fast_op").ok_or_else(|| {
-    tracing::error!("Operation failed ({})", "Result should exist");
-    beardog_errors::BearDogError::internal("Operation failed: Result should exist".to_string())
-})?;
+            tracing::error!("Operation failed ({})", "Result should exist");
+            beardog_errors::BearDogError::internal(
+                "Operation failed: Result should exist".to_string(),
+            )
+        })?;
 
-        assert!(matches!(result.performance_grade, 
-                        PerformanceGrade::Excellent | PerformanceGrade::Good));
+        assert!(matches!(
+            result.performance_grade,
+            PerformanceGrade::Excellent | PerformanceGrade::Good
+        ));
         Ok(())
     }
-} 
+}

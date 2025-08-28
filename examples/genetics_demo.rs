@@ -2,11 +2,11 @@
 
 use beardog_genetics::genetics::{GeneticSpawningEngine, SpawnRequest, SpawnResult};
 use beardog_auth::auth::{BearDogGenetics, SpawnPurpose};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::config::BearDogConfig;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🧬 BearDog Genetics Engine Demo");
     println!("===============================");
 
@@ -24,7 +24,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_basic_spawning(engine: &GeneticSpawningEngine) -> BearDogResult<()> {
+async fn demo_basic_spawning(engine: &GeneticSpawningEngine) -> Result<(), BearDogError> {
     println!("\n🧬 Basic Genetic Spawning:");
     
     let request = SpawnRequest {
@@ -44,7 +44,7 @@ async fn demo_basic_spawning(engine: &GeneticSpawningEngine) -> BearDogResult<()
     Ok(())
 }
 
-async fn demo_performance_spawning(engine: &GeneticSpawningEngine) -> BearDogResult<()> {
+async fn demo_performance_spawning(engine: &GeneticSpawningEngine) -> Result<(), BearDogError> {
     println!("\n⚡ Performance Optimization Spawning:");
     
     let request = SpawnRequest {
@@ -63,7 +63,7 @@ async fn demo_performance_spawning(engine: &GeneticSpawningEngine) -> BearDogRes
     Ok(())
 }
 
-async fn demo_security_spawning(engine: &GeneticSpawningEngine) -> BearDogResult<()> {
+async fn demo_security_spawning(engine: &GeneticSpawningEngine) -> Result<(), BearDogError> {
     println!("\n🔒 Security Enhancement Spawning:");
     
     let request = SpawnRequest {

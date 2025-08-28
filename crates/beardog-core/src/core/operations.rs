@@ -1,7 +1,7 @@
 
 
 use super::BearDogCore;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 use tracing;
 impl BearDogCore {
@@ -10,7 +10,7 @@ impl BearDogCore {
         &self,
         data: &[u8],
         _additional_data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError> {
 
         use beardog_security::encryption::EncryptionAlgorithm;
 
@@ -44,7 +44,7 @@ impl BearDogCore {
             .decrypt(&encrypted_data_struct)
         Ok(decrypted_data)
 
-    pub async fn sign_data(&self, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
         use beardog_security::crypto_utils::BearDogCrypto;
 
@@ -61,7 +61,7 @@ impl BearDogCore {
         let signature = BearDogCrypto::sign_ed25519(&private_key, data)?;
         Ok(signature)
 
-    pub async fn verify_signature(&self, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
+    pub async fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, BearDogError> {
 
         let _key_material = BearDogCrypto::derive_key_pbkdf2(
 
@@ -70,7 +70,7 @@ impl BearDogCore {
         let is_valid = BearDogCrypto::verify_ed25519_signature(&public_key, data, signature)?;
         Ok(is_valid)
 
-    pub async fn generate_key(&self, key_type: &str) -> BearDogResult<String> {
+    pub async fn generate_key(&self, key_type: &str) -> Result<String, BearDogError> {
 
         let key_id = format_args!("{}_{}", key_type, uuid::Uuid::new_v4().to_string());
 
@@ -82,7 +82,7 @@ impl BearDogCore {
     pub async fn spawn_node(
         parent_id: &str,
         config: &serde_json::Value,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
 
         let node_id = format_args!("beardog_node_{}_{}", parent_id, uuid::Uuid::new_v4().to_string());
 
@@ -133,7 +133,7 @@ impl BearDogCore {
                 })
         }
 
-    pub async fn get_spawn_status(&self, node_id: &str) -> BearDogResult<String> {
+    pub async fn get_spawn_status(&self, node_id: &str) -> Result<String, BearDogError> {
 
         if node_id.starts_with("beardog_node_") {
             tracing::debug!("Checking spawn status for BearDog node: {}", node_id);
@@ -144,7 +144,7 @@ impl BearDogCore {
                 "Node {node_id} status unknown - not a BearDog managed node"
             ))
 
-    pub async fn get_hsm_status(&self) -> BearDogResult<String> {
+    pub async fn get_hsm_status(&self) -> Result<String, BearDogError> {
 
         match self.hsm_manager.health_check().await {
             Ok(health_status) => {
@@ -161,7 +161,7 @@ impl BearDogCore {
                 tracing::error!("HSM health check failed: {}", e);
                 Ok(format!("HSM: Health check failed - {e}"))
 
-    pub async fn get_hsm_tiers(&self) -> BearDogResult<Vec<String>> {
+    pub async fn get_hsm_tiers(&self) -> Result<Vec<String>, BearDogError> {
 
         match self.hsm_manager.get_available_tiers().await {
             Ok(tiers) => {

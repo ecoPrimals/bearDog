@@ -2,9 +2,9 @@
 
 pub mod versions {
 
-    pub use beardog_types::constants::unified::api::VERSION as API_VERSION;
+    pub use crate::constants::unified::api::VERSION as API_VERSION;
 
-    pub use beardog_types::constants::unified::api::VERSION as API_VERSION_HEADER;
+    pub use crate::constants::unified::api::VERSION as API_VERSION_HEADER;
 
     pub const HSM_FOUNDATION_VERSION: &str = "2.0.0-clean";
 
@@ -84,4 +84,4 @@ pub mod auth {
 
 pub use endpoints::{API_BASE_PATH, HEALTH_ENDPOINT, METRICS_ENDPOINT};
 pub use project_info::{MSRV, PROJECT_NAME};
-pub use beardog_types::constants::unified::api::VERSION as {API_VERSION, API_VERSION_HEADER};
+pub use crate::constants::unified::api::VERSION as {API_VERSION, API_VERSION_HEADER};

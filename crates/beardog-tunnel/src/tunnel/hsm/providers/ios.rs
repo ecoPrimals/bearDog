@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::{
     crypto::KeyType,
     hsm::{
@@ -29,7 +29,7 @@ pub struct IosUniversalProvider {
 }
 impl IosUniversalProvider {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let mut provider = Self {
             capabilities: None,
             secure_enclave_available: false,
@@ -112,7 +112,7 @@ impl IosUniversalProvider {
             latency,
 
 impl UniversalHsmProvider for IosUniversalProvider {
-    async fn discover_capabilities(&self) -> BearDogResult<HsmCapabilities> {
+    async fn discover_capabilities(&self) -> Result<HsmCapabilities, BearDogError> {
         if let Some(ref capabilities) = self.capabilities {
             return Ok(capabilities.clone());
 
@@ -195,7 +195,7 @@ impl UniversalHsmProvider for IosUniversalProvider {
         key_type: KeyType,
         metadata: KeyMetadata,
         _auth: Option<AuthenticationContext>,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         info!("🔑 Generating iOS key with type: {:?}", key_type);
             return Err(BearDogError::Unavailable {
                 message: "iOS provider not available on non-iOS platform".to_string(),
@@ -219,7 +219,7 @@ impl UniversalHsmProvider for IosUniversalProvider {
     async fn sign_data(
         key_id: &str,
         data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Signing data with iOS key: {}", key_id);
 
         let mut signature = Vec::new();
@@ -229,7 +229,7 @@ impl UniversalHsmProvider for IosUniversalProvider {
         Ok(signature)
     async fn verify_signature(
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         info!("🔍 Verifying signature with iOS key: {}", key_id);
 
         let expected_prefix = b"ios_signature_";
@@ -243,14 +243,14 @@ impl UniversalHsmProvider for IosUniversalProvider {
             version: "1.0.0".to_string(),
             metadata: self.device_metadata.clone(),}
 
-    async fn health_check(&self) -> BearDogResult<HsmHealthStatus> {
+    async fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
             return Ok(HsmHealthStatus::Unavailable);
             Ok(HsmHealthStatus::Healthy)
             Ok(HsmHealthStatus::Warning {
                 message: "Only Keychain Services available (no Secure Enclave)".to_string(),
             })
 impl MobileHsmProvider for IosUniversalProvider {
-    async fn authenticate_biometric(&self) -> BearDogResult<AuthenticationToken> {
+    async fn authenticate_biometric(&self) -> Result<AuthenticationToken, BearDogError> {
         if !self.biometric_available {
             return Err(BearDogError::unsupported_operation("Biometric authentication not available on this iOS device".to_string(),
             ));
@@ -263,12 +263,12 @@ impl MobileHsmProvider for IosUniversalProvider {
         info!("✅ iOS biometric authentication successful");
         Ok(token)}
 
-    async fn require_user_presence(&self, message: &str) -> BearDogResult<()> {
+    async fn require_user_presence(&self, message: &str) -> Result<(), BearDogError> {
         info!("👆 Requiring user presence: {}", message);
 
         info!("✅ User presence confirmed via iOS authentication");
         Ok(())
-    async fn get_device_attestation(&self) -> BearDogResult<AttestationData> {
+    async fn get_device_attestation(&self) -> Result<AttestationData, BearDogError> {
         if !self.secure_enclave_available {
             return Err(BearDogError::unsupported_operation("Device attestation requires Secure Enclave".to_string(),
         info!("📜 Generating iOS device attestation");
@@ -284,7 +284,7 @@ impl MobileHsmProvider for IosUniversalProvider {
 impl AttestationProvider for IosUniversalProvider {
     async fn generate_attestation(
         challenge: &[u8],
-    ) -> BearDogResult<AttestationData> {
+    ) -> Result<AttestationData, BearDogError> {
             return Err(BearDogError::unsupported_operation("Key attestation requires Secure Enclave".to_string(),
         info!("🔏 Generating iOS key attestation for: {}", key_id);
 
@@ -298,7 +298,7 @@ impl AttestationProvider for IosUniversalProvider {
         info!("✅ iOS key attestation generated");
     async fn verify_attestation(
         attestation: &AttestationData,
-    ) -> BearDogResult<AttestationResult> {
+    ) -> Result<AttestationResult, BearDogError> {
         info!("🔍 Verifying iOS attestation");
 
         let valid = attestation.attestation_record.starts_with(b"ios_key_attestation_");

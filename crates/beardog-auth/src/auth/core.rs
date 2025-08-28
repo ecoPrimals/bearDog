@@ -3,7 +3,7 @@
 use chrono::{Duration, Utc};
 use std::collections::HashMap;
 use uuid::Uuid;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_security::{
     Action, AuthorizationResult, Resource, ResourceClassification, RiskLevel, Subject,
 };
@@ -39,7 +39,7 @@ impl CrossNodeAuthEngine {
         resource: &Resource,
         _action: &Action,
         requested_permission: &str,
-    ) -> BearDogResult<AuthorizationResult> {
+    ) -> Result<AuthorizationResult, BearDogError> {
 
         let trust_level = self
             .node_registry
@@ -126,7 +126,7 @@ impl CrossNodeAuthEngine {
         metrics.insert("expired_authorizations".to_string(), expired_count);
         metrics
 
-    pub async fn cleanup_expired_data(&mut self) -> BearDogResult<()> {
+    pub async fn cleanup_expired_data(&mut self) -> Result<(), BearDogError> {
 
             .retain(|_, auth| auth.expires_at > now);
 
@@ -134,7 +134,7 @@ impl CrossNodeAuthEngine {
             .retain(|_, spawn| spawn.expected_lifetime.map_or(true, |exp| exp > now));
         Ok(())
 
-    async fn generate_session_signature(&self, session_data: &str) -> BearDogResult<String> {
+    async fn generate_session_signature(&self, session_data: &str) -> Result<String, BearDogError> {
         use beardog_security::crypto_utils::BearDogCrypto;
 
         let (private_key, _public_key) = BearDogCrypto::generate_ed25519_keypair()?;
@@ -143,7 +143,7 @@ impl CrossNodeAuthEngine {
 
         Ok(hex::encode(signature))
 
-    fn get_resource_owner(&self, resource_id: &str) -> BearDogResult<String> {
+    fn get_resource_owner(&self, resource_id: &str) -> Result<String, BearDogError> {
 
         if resource_id.starts_with("system_") {
             Ok("system_node".to_string())
@@ -152,7 +152,7 @@ impl CrossNodeAuthEngine {
         } else {
             Ok("default_node".to_string())
 
-    fn parse_permissions(&self, permission_str: &str) -> BearDogResult<Vec<ResourcePermission>> {
+    fn parse_permissions(&self, permission_str: &str) -> Result<Vec<ResourcePermission>, BearDogError>> {
         match permission_str.to_lowercase().as_str() {
             "read" => Ok(vec![ResourcePermission::Read]),
             "write" => Ok(vec![ResourcePermission::Write]),

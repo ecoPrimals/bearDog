@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use std::sync::Arc;
@@ -37,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn initialize_standalone_beardog() -> BearDogResult<Arc<BearDogCore>> {
+async fn initialize_standalone_beardog() -> Result<Arc<BearDogCore, BearDogError>> {
     info!("🔧 Initializing standalone BearDog with memory key manager");
 
     let mut config = BearDogConfig::default();
@@ -57,7 +58,7 @@ async fn initialize_standalone_beardog() -> BearDogResult<Arc<BearDogCore>> {
     Ok(beardog_core)
 }
 
-async fn demo_key_management(beardog: &Arc<BearDogCore>) -> BearDogResult<()> {
+async fn demo_key_management(beardog: &Arc<BearDogCore>) -> Result<(), BearDogError> {
     info!("🔑 Demo: In-Memory Key Management");
 
     let security_provider = beardog.security_provider();
@@ -115,7 +116,7 @@ async fn demo_key_management(beardog: &Arc<BearDogCore>) -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_vault_sharing(beardog: &Arc<BearDogCore>) -> BearDogResult<()> {
+async fn demo_vault_sharing(beardog: &Arc<BearDogCore>) -> Result<(), BearDogError> {
     info!("🤝 Demo: Vault Sharing for Network Effects");
 
     let security_provider = beardog.security_provider();
@@ -140,7 +141,7 @@ async fn demo_vault_sharing(beardog: &Arc<BearDogCore>) -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_vault_backup(beardog: &Arc<BearDogCore>) -> BearDogResult<()> {
+async fn demo_vault_backup(beardog: &Arc<BearDogCore>) -> Result<(), BearDogError> {
     info!("📦 Demo: Vault Backup and Restore");
 
     let security_provider = beardog.security_provider();
@@ -166,7 +167,7 @@ async fn demo_vault_backup(beardog: &Arc<BearDogCore>) -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_metrics(beardog: &Arc<BearDogCore>) -> BearDogResult<()> {
+async fn demo_metrics(beardog: &Arc<BearDogCore>) -> Result<(), BearDogError> {
     info!("📊 Demo: Metrics and Monitoring");
 
     let security_provider = beardog.security_provider();
@@ -188,7 +189,7 @@ async fn demo_metrics(beardog: &Arc<BearDogCore>) -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_network_effects(beardog: &Arc<BearDogCore>) -> BearDogResult<()> {
+async fn demo_network_effects(beardog: &Arc<BearDogCore>) -> Result<(), BearDogError> {
     info!("🌐 Demo: Network Effects");
 
     info!("🔗 BearDog enables powerful network effects:");

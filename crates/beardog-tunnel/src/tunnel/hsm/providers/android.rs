@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::{
     crypto::KeyType,
     hsm::{
@@ -29,7 +29,7 @@ pub struct AndroidUniversalProvider {
 }
 impl AndroidUniversalProvider {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let mut provider = Self {
             capabilities: None,
             strongbox_available: false,
@@ -121,7 +121,7 @@ impl AndroidUniversalProvider {
             latency,
 
 impl UniversalHsmProvider for AndroidUniversalProvider {
-    async fn discover_capabilities(&self) -> BearDogResult<HsmCapabilities> {
+    async fn discover_capabilities(&self) -> Result<HsmCapabilities, BearDogError> {
         if let Some(ref capabilities) = self.capabilities {
             return Ok(capabilities.clone());
 
@@ -199,7 +199,7 @@ impl UniversalHsmProvider for AndroidUniversalProvider {
         key_type: KeyType,
         metadata: KeyMetadata,
         _auth: Option<AuthenticationContext>,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         info!("🔑 Generating Android key with type: {:?}", key_type);
             return Err(BearDogError::Unavailable {
                 message: "Android provider not available on non-Android platform".to_string(),
@@ -223,7 +223,7 @@ impl UniversalHsmProvider for AndroidUniversalProvider {
     async fn sign_data(
         key_id: &str,
         data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Signing data with Android key: {}", key_id);
 
         let mut signature = Vec::new();
@@ -233,7 +233,7 @@ impl UniversalHsmProvider for AndroidUniversalProvider {
         Ok(signature)
     async fn verify_signature(
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         info!("🔍 Verifying signature with Android key: {}", key_id);
 
         let expected_prefix = b"android_signature_";
@@ -247,7 +247,7 @@ impl UniversalHsmProvider for AndroidUniversalProvider {
             version: "1.0.0".to_string(),
             metadata: self.device_metadata.clone(),}
 
-    async fn health_check(&self) -> BearDogResult<HsmHealthStatus> {
+    async fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
             return Ok(HsmHealthStatus::Unavailable);
         if self.strongbox_available || self.tee_available {
             Ok(HsmHealthStatus::Healthy)
@@ -255,7 +255,7 @@ impl UniversalHsmProvider for AndroidUniversalProvider {
                 message: "Only software security available".to_string(),
             })
 impl MobileHsmProvider for AndroidUniversalProvider {
-    async fn authenticate_biometric(&self) -> BearDogResult<AuthenticationToken> {
+    async fn authenticate_biometric(&self) -> Result<AuthenticationToken, BearDogError> {
         if !self.strongbox_available && !self.tee_available {
             return Err(BearDogError::unsupported_operation("Biometric authentication requires hardware security".to_string(),
             ));
@@ -268,12 +268,12 @@ impl MobileHsmProvider for AndroidUniversalProvider {
         info!("✅ Android biometric authentication successful");
         Ok(token)}
 
-    async fn require_user_presence(&self, message: &str) -> BearDogResult<()> {
+    async fn require_user_presence(&self, message: &str) -> Result<(), BearDogError> {
         info!("👆 Requiring user presence: {}", message);
 
         info!("✅ User presence confirmed");
         Ok(())
-    async fn get_device_attestation(&self) -> BearDogResult<AttestationData> {
+    async fn get_device_attestation(&self) -> Result<AttestationData, BearDogError> {
         if !self.strongbox_available {
             return Err(BearDogError::unsupported_operation("Device attestation requires StrongBox".to_string(),
         info!("📜 Generating Android device attestation");
@@ -289,7 +289,7 @@ impl MobileHsmProvider for AndroidUniversalProvider {
 impl AttestationProvider for AndroidUniversalProvider {
     async fn generate_attestation(
         challenge: &[u8],
-    ) -> BearDogResult<AttestationData> {
+    ) -> Result<AttestationData, BearDogError> {
             return Err(BearDogError::unsupported_operation("Key attestation requires StrongBox".to_string(),
         info!("🔏 Generating Android key attestation for: {}", key_id);
 
@@ -303,7 +303,7 @@ impl AttestationProvider for AndroidUniversalProvider {
         info!("✅ Android key attestation generated");
     async fn verify_attestation(
         attestation: &AttestationData,
-    ) -> BearDogResult<AttestationResult> {
+    ) -> Result<AttestationResult, BearDogError> {
         info!("🔍 Verifying Android attestation");
 
         let valid = attestation.attestation_record.starts_with(b"android_key_attestation_");

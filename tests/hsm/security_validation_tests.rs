@@ -1,9 +1,10 @@
+use beardog_errors::BearDogError;
 
 
 use super::HsmTestHarness;
-use beardog::{BearDogError, BearDogResult};
+use beardog::{{BearDogError, BearDogError}};
 
-pub async fn test_security_validation(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+pub async fn test_security_validation(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("🔒 Testing Security Validation");
 
     test_signature_validation(harness).await?;
@@ -16,7 +17,7 @@ pub async fn test_security_validation(harness: &mut HsmTestHarness) -> BearDogRe
     Ok(())
 }
 
-async fn test_signature_validation(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_signature_validation(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  ✍️ Testing signature validation");
     
     let start_time = std::time::Instant::now();
@@ -37,7 +38,7 @@ async fn test_signature_validation(harness: &mut HsmTestHarness) -> BearDogResul
     Ok(())
 }
 
-async fn test_key_security_properties(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_key_security_properties(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🔐 Testing key security properties");
     
     let start_time = std::time::Instant::now();
@@ -55,7 +56,7 @@ async fn test_key_security_properties(harness: &mut HsmTestHarness) -> BearDogRe
     Ok(())
 }
 
-async fn test_error_handling(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_error_handling(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  ⚠️ Testing error handling");
     
     let start_time = std::time::Instant::now();
@@ -76,7 +77,7 @@ async fn test_error_handling(harness: &mut HsmTestHarness) -> BearDogResult<()> 
 }
 
 #[tokio::test]
-async fn test_security_validation_standalone() -> BearDogResult<()> {
+async fn test_security_validation_standalone() -> Result<(), BearDogError> {
     let mut harness = super::HsmTestHarness::new().await?;
     test_security_validation(&mut harness).await
 } 

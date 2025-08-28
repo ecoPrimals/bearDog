@@ -1,9 +1,8 @@
 
 
 use super::{UniversalHsmProvider, SongbirdServiceDiscovery, SongbirdServiceDiscoveryFactory};
-use beardog_types::config::monitoring::IntegrationConfig;
-use beardog_errors::BearDogResult;
-use beardog_errors::idiomatic::SystemResult;
+use beardog_types::canonical::configuration::consolidated::IntegrationConfig;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, warn, error};
@@ -46,14 +45,14 @@ impl IntegrationEngine {
         }
     }
 
-    pub async fn initialize_universal_hsm(&mut self) -> BearDogResult<()> {
+    pub async fn initialize_universal_hsm(&mut self) -> Result<(), BearDogError> {
         info!("🔐 Initializing Universal HSM Architecture");
 
         let songbird_discovery = SongbirdServiceDiscoveryFactory::create_default();
         let songbird_arc = Arc::new(RwLock::new(songbird_discovery));
 
         let universal_hsm = UniversalHsmProvider::with_service_discovery(
-            songbird_arc.clone() as Arc<dyn super::EcosystemServiceDiscovery + Send + Sync>
+            songbird_arc.clone() as ZeroCostsuper<impl super>
         );
 
         self.universal_hsm = Some(Arc::new(universal_hsm));
@@ -63,7 +62,7 @@ impl IntegrationEngine {
         Ok(())
     }
 
-    pub async fn integrate_with_ecosystem(&mut self) -> BearDogResult<()> {
+    pub async fn integrate_with_ecosystem(&mut self) -> Result<(), BearDogError> {
         info!("🌐 Starting Phase 4: Ecosystem Integration");
 
         if self.universal_hsm.is_none() {
@@ -114,7 +113,7 @@ impl IntegrationEngine {
         self.ecosystem_integrated
     }
 
-    pub async fn get_service_health(&self) -> SystemResult<serde_json::Value> {
+    pub async fn get_service_health(&self) -> Result<serde_json::Value, BearDogError> {
         let mut health_status = serde_json::Map::new();
 
         health_status.insert("integration_engine".to_string(), serde_json::json!({
@@ -184,7 +183,7 @@ impl IntegrationEngine {
         Ok(serde_json::Value::Object(health_status))
     }
 
-    pub async fn refresh_ecosystem_services(&self) -> BearDogResult<()> {
+    pub async fn refresh_ecosystem_services(&self) -> Result<(), BearDogError> {
         info!("🔄 Refreshing ecosystem services");
 
         if let Some(universal_hsm) = &self.universal_hsm {
@@ -201,7 +200,7 @@ impl IntegrationEngine {
         Ok(())
     }
 
-    async fn get_discovered_services_count(&self) -> BearDogResult<u32> {
+    async fn get_discovered_services_count(&self) -> Result<u32, BearDogError> {
         if let Some(universal_hsm) = &self.universal_hsm {
             match universal_hsm.discover_ecosystem_providers().await {
                 Ok(providers) => Ok(providers.len() as u32),

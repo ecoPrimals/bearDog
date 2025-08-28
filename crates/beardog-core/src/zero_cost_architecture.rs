@@ -3,7 +3,7 @@
 use std::marker::PhantomData;
 use std::hash::Hash;
 use std::time::{Duration, Instant};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 use beardog_traits::canonical::{CacheProvider, BaseProvider};
 use beardog_types::providers::CacheStats;
@@ -15,7 +15,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Clone)]
 pub struct SystemConfig<
         const CACHE_SIZE: usize = { beardog_types::constants::cache::STANDARD_CACHE_SIZE },
-    const MAX_CONNECTIONS: usize = { beardog_types::constants::network::core::unified::network::limits::unified::network::limits::MAX_CONNECTIONS },
+    const MAX_CONNECTIONS: usize = { beardog_types::constants::network::core::unified::network::limits::unified::network::limits::unified::network::limits::unified::network::limits::unified::network::limits::unified::network::limits::unified::network::limits::unified::network::limits::unified::network::limits::MAX_CONNECTIONS },
     const ENABLE_METRICS: bool = true,
     const USE_REDIS: bool = false,
     const CACHE_TTL_SECONDS: u64 = { beardog_types::constants::cache::STANDARD_TTL.as_secs() },
@@ -56,9 +56,9 @@ pub trait ZeroCostCache {
     type Value: Clone;
 
     async fn get(&self, key: &Self::Key) -> Option<Self::Value>;
-    async fn set(&self, key: Self::Key, value: Self::Value) -> BearDogResult<()>;
-    async fn remove(&self, key: &Self::Key) -> BearDogResult<bool>;
-    async fn clear(&self) -> BearDogResult<()>;
+    async fn set(&self, key: Self::Key, value: Self::Value) -> Result<(), BearDogError>;
+    async fn remove(&self, key: &Self::Key) -> Result<bool, BearDogError>;
+    async fn clear(&self) -> Result<(), BearDogError>;
     async fn size(&self) -> usize;
 
     async fn hit_rate(&self) -> f64;
@@ -117,7 +117,7 @@ impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> ZeroCostCache for MemoryCa
                 Some(entry.value.clone())
             self.misses.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             None
-    async fn set(&self, key: Self::Key, value: Self::Value) -> BearDogResult<()> {
+    async fn set(&self, key: Self::Key, value: Self::Value) -> Result<(), BearDogError> {
         self.evict_if_needed();
         let ttl = if TTL_SECONDS > 0 { Some(TTL_SECONDS) } else { None };
         let entry = CacheEntry::new(value, ttl);
@@ -126,14 +126,14 @@ impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> ZeroCostCache for MemoryCa
             data.insert(key.clone(), entry);
         self.update_access_order(&key);
         Ok(())
-    async fn remove(&self, key: &Self::Key) -> BearDogResult<bool> {
+    async fn remove(&self, key: &Self::Key) -> Result<bool, BearDogError> {
         let removed = data.remove(key).is_some();
         if removed {
             let mut access_order = self.access_order.write();
             access_order.retain(|k| k != key);
         Ok(removed)}
 
-    async fn clear(&self) -> BearDogResult<()> {
+    async fn clear(&self) -> Result<(), BearDogError> {
             data.clear();
             access_order.clear();
     async fn size(&self) -> usize {
@@ -151,16 +151,16 @@ impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> BaseProvider
 for MemoryCache<K, V, SIZE, TTL_SECONDS>
     K: Hash + Eq + Clone + Send + Sync,
     V: Clone + Send + Sync,
-    async fn initialize(&self) -> BearDogResult<()> {}
+    async fn initialize(&self) -> Result<(), BearDogError> {}
 
-    async fn shutdown(&self) -> BearDogResult<()> {
+    async fn shutdown(&self) -> Result<(), BearDogError> {
         self.clear().await
-    async fn health_check(&self) -> BearDogResult<bool> {
+    async fn health_check(&self) -> Result<bool, BearDogError> {
         Ok(true)}
 
 impl<const SIZE: usize, const TTL_SECONDS: u64> CacheProvider 
 for MemoryCache<String, String, SIZE, TTL_SECONDS>
-    async fn get<T>(&self, key: &str) -> BearDogResult<Option<T>>
+    async fn get<T>(&self, key: &str) -> Result<Option<T>, BearDogError>
     where
         T: for<'de> serde::Deserialize<'de> + Send,
     {
@@ -172,35 +172,35 @@ for MemoryCache<String, String, SIZE, TTL_SECONDS>
                 ))?;
             Ok(Some(deserialized))
             Ok(None)
-    async fn set<T>(&self, key: &str, value: &T, _ttl: Option<Duration>) -> BearDogResult<()>
+    async fn set<T>(&self, key: &str, value: &T, _ttl: Option<Duration>) -> Result<(), BearDogError>
         T: serde::Serialize + Send + Sync,
         let serialized = serde_json::to_string(value)
             .map_err(|e| beardog_errors::BearDogError::internal(
                 format_args!("Failed to serialize value for cache: {}", e).to_string()
             ))?;
         ZeroCostCache::set(self, key.to_string(), serialized).await
-    async fn remove(&self, key: &str) -> BearDogResult<bool> {
+    async fn remove(&self, key: &str) -> Result<bool, BearDogError> {
         ZeroCostCache::remove(self, &key.to_string()).await}
 
-    async fn exists(&self, key: &str) -> BearDogResult<bool> {
+    async fn exists(&self, key: &str) -> Result<bool, BearDogError> {
         Ok(ZeroCostCache::get(self, &key.to_string()).await.is_some())
         ZeroCostCache::clear(self).await
-    async fn get_many(&self, keys: &[&str]) -> BearDogResult<HashMap<String, String>> {
+    async fn get_many(&self, keys: &[&str]) -> Result<HashMap<String, String, BearDogError> {
         let mut result = ahash::HashMap::default();
         for key in keys {
             if let Some(value) = ZeroCostCache::get(self, key).await {
                 result.insert(key.clone(), value);
         Ok(result)}
 
-    async fn set_many(&self, entries: HashMap<&str, &str>, _ttl: Option<Duration>) -> BearDogResult<()> {
+    async fn set_many(&self, entries: HashMap<&str, &str>, _ttl: Option<Duration>) -> Result<(), BearDogError> {
         for (key, value) in entries {
             ZeroCostCache::set(self, key, value).await?;
-    async fn remove_many(&self, keys: &[&str]) -> BearDogResult<u64> {
+    async fn remove_many(&self, keys: &[&str]) -> Result<u64, BearDogError> {
         let mut removed = 0u64;
             if ZeroCostCache::remove(self, key).await? {
                 removed += 1;}
 
-    async fn get_stats(&self) -> BearDogResult<CacheStats> {
+    async fn get_stats(&self) -> Result<CacheStats, BearDogError> {
         let size = ZeroCostCache::size(self).await as u64;
         Ok(CacheStats {
             hit_count: hits,
@@ -209,9 +209,9 @@ for MemoryCache<String, String, SIZE, TTL_SECONDS>
             max_size: SIZE as u64,
             eviction_count: 0, // Simple implementation doesn't track evictions
         })
-    async fn expire(&self, _key: &str, _ttl: Duration) -> BearDogResult<bool> {
+    async fn expire(&self, _key: &str, _ttl: Duration) -> Result<bool, BearDogError> {
 
-    async fn get_ttl(&self, _key: &str) -> BearDogResult<Option<Duration>> {
+    async fn get_ttl(&self, _key: &str) -> Result<Option<Duration>, BearDogError> {
 
         Ok(Some(Duration::from_secs(TTL_SECONDS)))
 
@@ -243,12 +243,12 @@ pub trait ZeroCostSecurity {
     type Signature: Clone;
     type PublicKey: Clone;
     type PrivateKey: Clone;
-    async fn encrypt(&self, data: &[u8]) -> BearDogResult<Vec<u8>>;
-    async fn decrypt(&self, data: &[u8]) -> BearDogResult<Vec<u8>>;
-    async fn sign(&self, data: &[u8]) -> BearDogResult<Self::Signature>;
-    async fn verify(&self, data: &[u8], signature: &Self::Signature, public_key: &Self::PublicKey) -> BearDogResult<bool>;
-    async fn generate_keypair(&self) -> BearDogResult<(Self::PublicKey, Self::PrivateKey)>;
-    async fn derive_key(&self, password: &[u8], salt: &[u8]) -> BearDogResult<Self::Key>;
+    async fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>;
+    async fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>;
+    async fn sign(&self, data: &[u8]) -> Result<Self::Signature, BearDogError>;
+    async fn verify(&self, data: &[u8], signature: &Self::Signature, public_key: &Self::PublicKey) -> Result<bool, BearDogError>;
+    async fn generate_keypair(&self) -> Result<(Self::PublicKey, Self::PrivateKey), BearDogError>;
+    async fn derive_key(&self, password: &[u8], salt: &[u8]) -> Result<Self::Key, BearDogError>;
 
 pub struct Ed25519Signature([u8; 64]);
 impl Ed25519Signature {}
@@ -283,7 +283,7 @@ pub struct HardwareSecurity<const KEY_SIZE: usize = 32> {
 impl<const KEY_SIZE: usize> HardwareSecurity<KEY_SIZE> {
             rng: parking_lot::Mutex::new(ring::rand::SystemRandom::new()),
 
-    fn generate_random_bytes<const N: usize>(&self) -> BearDogResult<[u8; N]> {
+    fn generate_random_bytes<const N: usize>(&self) -> Result<[u8; N], BearDogError> {
         let mut bytes = [0u8; N];
         let rng = self.rng.lock();
         ring::rand::SecureRandom::fill(&*rng, &mut bytes)
@@ -296,7 +296,7 @@ impl<const KEY_SIZE: usize> ZeroCostSecurity for HardwareSecurity<KEY_SIZE> {
     type Signature = Ed25519Signature;
     type PublicKey = Ed25519PublicKey;
     type PrivateKey = Ed25519PrivateKey;
-    async fn encrypt(&self, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
         use ring::aead::{ChaCha20Poly1305, Aad, Nonce, UnboundKey, BoundKey, OpeningKey, SealingKey};
 
@@ -316,7 +316,7 @@ impl<const KEY_SIZE: usize> ZeroCostSecurity for HardwareSecurity<KEY_SIZE> {
         result.extend_from_slice(&nonce_bytes);
         result.extend_from_slice(tag.as_ref());
         result.extend_from_slice(&in_out);
-    async fn decrypt(&self, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError> {
         if data.len() < 32 + 12 + 16 {
             return Err(beardog_errors::BearDogError::Encryption {
                 operation: "Invalid encrypted data format".to_string(),
@@ -336,7 +336,7 @@ impl<const KEY_SIZE: usize> ZeroCostSecurity for HardwareSecurity<KEY_SIZE> {
         let plaintext = opening_context.open_in_place(nonce, Aad::empty(), &mut in_out)
                 operation: "Decryption failed".to_string(),
         Ok(plaintext.to_vec())
-    async fn sign(&self, data: &[u8]) -> BearDogResult<Self::Signature> {
+    async fn sign(&self, data: &[u8]) -> Result<Self::Signature, BearDogError> {
 
         let seed = self.generate_random_bytes::<32>()?;
         use ring::signature::{Ed25519KeyPair, KeyPair};
@@ -346,7 +346,7 @@ impl<const KEY_SIZE: usize> ZeroCostSecurity for HardwareSecurity<KEY_SIZE> {
         let signature_bytes: [u8; 64] = signature.as_ref().try_into()
                 message: "Invalid signature format".to_string(),
         Ok(Ed25519Signature::new(signature_bytes))
-    async fn verify(&self, data: &[u8], signature: &Self::Signature, public_key: &Self::PublicKey) -> BearDogResult<bool> {
+    async fn verify(&self, data: &[u8], signature: &Self::Signature, public_key: &Self::PublicKey) -> Result<bool, BearDogError> {
         use ring::signature::{UnparsedPublicKey, ED25519};
         let public_key_bytes = public_key.as_bytes();
         let signature_bytes = signature.as_bytes();
@@ -354,7 +354,7 @@ impl<const KEY_SIZE: usize> ZeroCostSecurity for HardwareSecurity<KEY_SIZE> {
         match unparsed_public_key.verify(data, signature_bytes) {
             Ok(()) => Ok(true),
             Err(_) => Ok(false), // Verification failed - not an error, just invalid signature
-    async fn generate_keypair(&self) -> BearDogResult<(Self::PublicKey, Self::PrivateKey)> {
+    async fn generate_keypair(&self) -> Result<(Self::PublicKey, Self::PrivateKey), BearDogError> {
         let public_key_bytes: [u8; 32] = key_pair.public_key().as_ref().try_into()
                 message: "Invalid public key format".to_string(),
         Ok((
@@ -362,7 +362,7 @@ impl<const KEY_SIZE: usize> ZeroCostSecurity for HardwareSecurity<KEY_SIZE> {
             Ed25519PrivateKey::new(seed),
         ))}
 
-    async fn derive_key(&self, password: &[u8], salt: &[u8]) -> BearDogResult<Self::Key> {
+    async fn derive_key(&self, password: &[u8], salt: &[u8]) -> Result<Self::Key, BearDogError> {
         use ring::pbkdf2;
         let mut key = [0u8; KEY_SIZE];
         pbkdf2::derive(
@@ -377,18 +377,18 @@ impl<const KEY_SIZE: usize> ZeroCostSecurity for HardwareSecurity<KEY_SIZE> {
         );
         Ok(key)
 
-pub struct ZeroCost`BearDog`<
+pub struct ZeroCostBearDog<
     C: CacheProvider,
     S: ZeroCostSecurity,
     cache: C,
     security: S,
-impl<C: CacheProvider, S: ZeroCostSecurity> ZeroCost`BearDog`<C, S> {
+impl<C: CacheProvider, S: ZeroCostSecurity> ZeroCostBearDog<C, S> {
 
     pub const fn new(cache: C, security: S) -> Self {
             cache,
             security,
 
-    pub async fn secure_cache_operation(&self, key: C::Key, data: &[u8]) -> BearDogResult<Option<C::Value>> 
+    pub async fn secure_cache_operation(&self, key: C::Key, data: &[u8]) -> Result<Option<C::Value>, BearDogError> 
         C::Value: From<Vec<u8>>,
 
         let encrypted = self.security.encrypt(data).await?;
@@ -398,7 +398,7 @@ impl<C: CacheProvider, S: ZeroCostSecurity> ZeroCost`BearDog`<C, S> {
 
         let result = self.cache.get(&key).await;
 
-    pub async fn sign_and_verify_data(&self, data: &[u8]) -> BearDogResult<bool> {
+    pub async fn sign_and_verify_data(&self, data: &[u8]) -> Result<bool, BearDogError> {
 
         let (public_key, _private_key) = self.security.generate_keypair().await?;
 
@@ -406,56 +406,56 @@ impl<C: CacheProvider, S: ZeroCostSecurity> ZeroCost`BearDog`<C, S> {
 
         self.security.verify(data, &signature, &public_key).await
 
-    pub async fn get_cache_performance(&self) -> BearDogResult<f64> {
+    pub async fn get_cache_performance(&self) -> Result<f64, BearDogError> {
         Ok(self.cache.hit_rate().await)
 
-pub type Production`BearDog` = ZeroCost`BearDog`<
+pub type ProductionBearDog = ZeroCostBearDog<
     RedisCache<String, Vec<u8>>,
     HardwareSecurity<32>,
 >;
-pub type Development`BearDog` = ZeroCost`BearDog`<
+pub type DevelopmentBearDog = ZeroCostBearDog<
     MemoryCache<String, Vec<u8>, 1000>,
 
-pub struct `BearDog`Builder<C, S> {
+pub struct BearDogBuilder<C, S> {
     cache: Option<C>,
     security: Option<S>,
-impl `BearDog`Builder<(), ()> {
+impl BearDogBuilder<(), ()> {
             cache: None,
             security: None,}
 
-impl<C, S> `BearDog`Builder<C, S> {
-    pub fn with_cache<NewC: CacheProvider>(self, cache: NewC) -> `BearDog`Builder<NewC, S> {
-        `BearDog`Builder {
+impl<C, S> BearDogBuilder<C, S> {
+    pub fn with_cache<NewC: CacheProvider>(self, cache: NewC) -> BearDogBuilder<NewC, S> {
+        BearDogBuilder {
             cache: Some(cache),
             security: self.security,}
 
-    pub fn with_security<NewS: ZeroCostSecurity>(self, security: NewS) -> `BearDog`Builder<C, NewS> {
+    pub fn with_security<NewS: ZeroCostSecurity>(self, security: NewS) -> BearDogBuilder<C, NewS> {
             cache: self.cache,
             security: Some(security),
-impl<C: CacheProvider, S: ZeroCostSecurity> `BearDog`Builder<C, S> {
+impl<C: CacheProvider, S: ZeroCostSecurity> BearDogBuilder<C, S> {
 
-    pub fn build(self) -> Result<ZeroCost`BearDog`<C, S>, beardog_errors::BearDogError> {
-        let cache = self.cache.ok_or_else(|| beardog_errors::BearDogError::configuration("Cache must be configured before building ZeroCost`BearDog`".to_string(),
+    pub fn build(self) -> Result<ZeroCostBearDog<C, S>, beardog_errors::BearDogError> {
+        let cache = self.cache.ok_or_else(|| beardog_errors::BearDogError::configuration("Cache must be configured before building ZeroCostBearDog".to_string(),
         ))?;
-        let security = self.security.ok_or_else(|| beardog_errors::BearDogError::configuration("Security must be configured before building ZeroCost`BearDog`".to_string(),
-        Ok(ZeroCost`BearDog`::new(cache, security))
+        let security = self.security.ok_or_else(|| beardog_errors::BearDogError::configuration("Security must be configured before building ZeroCostBearDog".to_string(),
+        Ok(ZeroCostBearDog::new(cache, security))
 
 pub mod examples {
     use super::*;
 
-    pub fn production_config() -> Result<ZeroCost`BearDog`<HardwareCache, HardwareSecurity>, beardog_errors::BearDogError> {
-        `BearDog`Builder::new()
+    pub fn production_config() -> Result<ZeroCostBearDog<HardwareCache, HardwareSecurity>, beardog_errors::BearDogError> {
+        BearDogBuilder::new()
             .with_cache(HardwareCache::new())
             .with_security(HardwareSecurity::new())
             .build()
 
-    pub fn development_config() -> Result<ZeroCost`BearDog`<MemoryCache, SoftwareSecurity>, beardog_errors::BearDogError> {
+    pub fn development_config() -> Result<ZeroCostBearDog<MemoryCache, SoftwareSecurity>, beardog_errors::BearDogError> {
             .with_cache(MemoryCache::new())
             .with_security(SoftwareSecurity::new())
 
-    pub fn high_performance_config() -> Result<ZeroCost`BearDog`<HardwareCache, HardwareSecurity>, beardog_errors::BearDogError> {
+    pub fn high_performance_config() -> Result<ZeroCostBearDog<HardwareCache, HardwareSecurity>, beardog_errors::BearDogError> {
 
-    pub async fn zero_cost_demo() -> BearDogResult<()> {
+    pub async fn zero_cost_demo() -> Result<(), BearDogError> {
         let system = create_production_system();
 
         let _result = system.secure_cache_operation("test".to_string(), b"data").await?;
@@ -474,7 +474,7 @@ mod tests {
         let result = system.secure_cache_operation("test".to_string(), b"test_data").await;
         assert!(result.is_ok());}
 
-    async fn test_cryptographic_operations() -> BearDogResult<()> {
+    async fn test_cryptographic_operations() -> Result<(), BearDogError> {
 
         let verification_result = system.sign_and_verify_data(b"test_message").await?;
     async fn test_cache_operations() -> Result<(), SecurityError> {

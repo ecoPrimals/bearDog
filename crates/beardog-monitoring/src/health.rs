@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{improved_results::*, BearDogError, BearDogResult};
+use beardog_errors::{{improved_results::*, BearDogError}};
 use std::time::Instant;
 use tracing::{debug, info};
 use uuid::Uuid;
@@ -9,7 +9,7 @@ use crate::types::{MonitoringConfig, SystemHealthResult, ComponentHealthResult};
 pub async fn monitor_system_health_improved(
     components: Vec<&str>,
     monitoring_config: &MonitoringConfig,
-) -> BearDogResult<ProcessingOutcome<SystemHealthResult>> {
+) -> Result<ProcessingOutcome<SystemHealthResult, BearDogError>> {
     let _start_time = Instant::now();
     info!(
         "🔍 Monitoring {} system components with improved patterns",
@@ -116,7 +116,7 @@ pub async fn monitor_system_health_improved(
 pub async fn monitor_component_health(
     component: &str,
     config: &MonitoringConfig,
-) -> BearDogResult<ComponentHealthResult> {
+) -> Result<ComponentHealthResult, BearDogError> {
     debug!("🔍 Checking health for component: {}", component);
 
     tokio::time::sleep(std::time::Duration::from_millis(10)).await;

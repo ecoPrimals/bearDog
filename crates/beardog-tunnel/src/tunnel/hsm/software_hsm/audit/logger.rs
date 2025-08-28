@@ -3,7 +3,7 @@
 use super::super::types::{AuditLogEntry, AuditLogFilter, AuditLogger, OperationResult}; // Import from software_hsm types
 use super::storage::PersistentAuditStorage;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_security::handlers::audit_management::AuditStatistics;
 use std::sync::Arc;
 
@@ -25,12 +25,12 @@ pub struct DefaultAuditLogger {
 
 impl DefaultAuditLogger {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let storage_path = std::path::PathBuf::from("audit.log");
         Self::with_storage_path(storage_path).await
     }
 
-    pub async fn with_storage_path(storage_path: std::path::PathBuf) -> BearDogResult<Self> {
+    pub async fn with_storage_path(storage_path: std::path::PathBuf) -> Result<Self, BearDogError> {
         let storage = Arc::new(PersistentAuditStorage::new(storage_path, 1000).await?);
         Ok(Self { storage })
 
@@ -42,7 +42,7 @@ impl DefaultAuditLogger {
         success: bool,
         error_message: Option<&str>,
         details: std::collections::HashMap<&str, &str>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let entry = AuditLogEntry {
             id: uuid::Uuid::new_v4().to_string(),
             timestamp: chrono::Utc::now(),
@@ -94,7 +94,7 @@ impl DefaultAuditLogger {
             "key_deletion".to_string(),
             error_message.map(|s| s.to_string()),
 
-    pub async fn log_crypto_operation(&self, operation: CryptoOperationLog) -> BearDogResult<()> {
+    pub async fn log_crypto_operation(&self, operation: CryptoOperationLog) -> Result<(), BearDogError> {
         details.insert("algorithm".to_string(), operation.algorithm.clone());
         details.insert(
             "data_size_bytes".to_string(),
@@ -119,22 +119,22 @@ impl DefaultAuditLogger {
             format!("security_{event_type}"),
             true, // Security events are logged as successful by default
 
-    pub async fn get_audit_statistics(&self) -> BearDogResult<AuditStatistics> {
+    pub async fn get_audit_statistics(&self) -> Result<AuditStatistics, BearDogError> {
         self.generate_statistics().await
 
     pub async fn purge_old_entries(
         older_than: chrono::DateTime<chrono::Utc>,
-    ) -> BearDogResult<u64> {
+    ) -> Result<u64, BearDogError> {
         self.purge_entries_older_than(older_than).await
 
-    pub async fn export_audit_log(&self, format: &str) -> BearDogResult<Vec<u8>> {
+    pub async fn export_audit_log(&self, format: &str) -> Result<Vec<u8>, BearDogError>> {
         match format.to_lowercase().as_str() {
             "json" => self.export_as_json().await,
             "csv" => self.export_as_csv().await,
             _ => Err(BearDogError::invalid_input(format!("Unsupported export format: {format)"),
             }),
 
-    async fn generate_statistics(&self) -> BearDogResult<AuditStatistics> {
+    async fn generate_statistics(&self) -> Result<AuditStatistics, BearDogError> {
 
         Ok(AuditStatistics {
             period_hours: 24,
@@ -150,7 +150,7 @@ impl DefaultAuditLogger {
 
         Ok(10)
 
-    async fn export_as_json(&self) -> BearDogResult<Vec<u8>> {
+    async fn export_as_json(&self) -> Result<Vec<u8>, BearDogError>> {
         let filter = AuditLogFilter::default();
         let entries = self.storage.get_entries(&filter).await?;
         let json =
@@ -159,7 +159,7 @@ impl DefaultAuditLogger {
             })?;
         Ok(json.into_bytes())
 
-    async fn export_as_csv(&self) -> BearDogResult<Vec<u8>> {
+    async fn export_as_csv(&self) -> Result<Vec<u8>, BearDogError>> {
         let mut csv = "timestamp,operation,user_id,key_id,success,error_message\n";
         for entry in entries {
             csv.push_str(&format!(
@@ -178,8 +178,8 @@ impl DefaultAuditLogger {
 
 impl AuditLogger for DefaultAuditLogger {
 
-    async fn log_operation(&self, operation: &AuditLogEntry) -> BearDogResult<()> {
+    async fn log_operation(&self, operation: &AuditLogEntry) -> Result<(), BearDogError> {
         self.storage.log_entry(operation.clone()).await
 
-    async fn get_audit_log(&self, filter: &AuditLogFilter) -> BearDogResult<Vec<AuditLogEntry>> {
+    async fn get_audit_log(&self, filter: &AuditLogFilter) -> Result<Vec<AuditLogEntry>, BearDogError>> {
         self.storage.get_entries(filter).await

@@ -1,10 +1,10 @@
 
 
 use crate::tunnel::hsm::types::{DeviceModel, StrongBoxCapabilities, StrongBoxImplementation};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use tracing::info;
 
-pub async fn detect_strongbox_implementation() -> BearDogResult<StrongBoxImplementation> {
+pub async fn detect_strongbox_implementation() -> Result<StrongBoxImplementation, BearDogError> {
 
     if !cfg!(target_os = "android") {
         info!("Not on Android platform, using generic fallback");
@@ -40,7 +40,7 @@ pub async fn detect_strongbox_implementation() -> BearDogResult<StrongBoxImpleme
         }),
 }
 
-pub async fn check_strongbox_availability() -> BearDogResult<bool> {
+pub async fn check_strongbox_availability() -> Result<bool, BearDogError> {
     info!("🔍 Checking StrongBox availability using safe detection");
     let available = detect_knox_availability().await?;
     if available {
@@ -49,14 +49,14 @@ pub async fn check_strongbox_availability() -> BearDogResult<bool> {
         info!("⚠️ StrongBox not available, will use software fallback");
     Ok(available)
 
-async fn detect_device_model() -> BearDogResult<DeviceModel> {
+async fn detect_device_model() -> Result<DeviceModel, BearDogError> {
 
     if cfg!(target_os = "android") {
 
         info!("Simulating device model detection");
         Ok(DeviceModel::Other)
 
-async fn detect_knox_availability() -> BearDogResult<bool> {
+async fn detect_knox_availability() -> Result<bool, BearDogError> {
 
     info!("Simulating Knox availability check");
     Ok(false)
@@ -108,7 +108,7 @@ fn has_hardware_security_indicators() -> bool {
         .iter()
         .any(|path| std::path::Path::new(path).exists())
 
-pub async fn get_strongbox_capabilities() -> BearDogResult<StrongBoxCapabilities> {
+pub async fn get_strongbox_capabilities() -> Result<StrongBoxCapabilities, BearDogError> {
     let implementation = detect_strongbox_implementation().await?;
     let available = check_strongbox_availability().await?;
     Ok(StrongBoxCapabilities {
@@ -124,17 +124,17 @@ pub async fn get_strongbox_capabilities() -> BearDogResult<StrongBoxCapabilities
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_safe_strongbox_detection() -> beardog_errors::BearDogResult<()> {
+    async fn test_safe_strongbox_detection() -> Result<(), BearDogError> {
         let implementation = detect_strongbox_implementation().await;
         assert!(implementation.is_ok());
         Ok(())}
 
-    async fn test_safe_availability_check() -> beardog_errors::BearDogResult<()> {
+    async fn test_safe_availability_check() -> Result<(), BearDogError> {
         let available = check_strongbox_availability().await;
         assert!(available.is_ok());}
 
     #[test]
-    fn test_pixel_generation_detection() -> beardog_errors::BearDogResult<()> {
+    fn test_pixel_generation_detection() -> Result<(), BearDogError> {
         assert_eq!(detect_pixel_generation("Pixel 8 Pro"), 8);
         assert_eq!(detect_pixel_generation("Pixel 6a"), 6);
         assert_eq!(detect_pixel_generation("Pixel"), 1);

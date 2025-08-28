@@ -1,19 +1,16 @@
-
-
 use crate::compliance::types::{
-    ComplianceConfig, ComplianceStandard, ComplianceEvent, ComplianceEventType,
-    ComplianceResult, ComplianceViolation, ComplianceSeverity, ComplianceMetrics,
-    AuditEntry, AuditOutcome,
+    AuditEntry, AuditOutcome, ComplianceConfig, ComplianceEvent, ComplianceEventType,
+    ComplianceMetrics, ComplianceResult, ComplianceSeverity, ComplianceStandard,
+    ComplianceViolation,
 };
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::collections::HashMap;
-use tracing::{info, error};
+use tracing::{error, info};
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct ComplianceHandler {
-
     pub config: ComplianceConfig,
 
     pub enabled_standards: Vec<ComplianceStandard>,
@@ -22,10 +19,9 @@ pub struct ComplianceHandler {
 }
 
 impl ComplianceHandler {
-
     pub fn new(config: ComplianceConfig) -> Self {
         let enabled_standards = config.enabled_standards.clone();
-        
+
         Self {
             config,
             enabled_standards,
@@ -33,11 +29,14 @@ impl ComplianceHandler {
         }
     }
 
-    pub async fn evaluate_event(&mut self, event: &ComplianceEvent) -> BearDogResult<ComplianceResult> {
+    pub async fn evaluate_event(
+        &mut self,
+        event: &ComplianceEvent,
+    ) -> Result<ComplianceResult, BearDogError> {
         info!("Evaluating compliance for event: {:?}", event.event_type);
-        
+
         let mut violations = Vec::new();
-        let mut overall_score = 100.0;
+        let mut overall_score: f64 = 100.0;
 
         for standard in &self.enabled_standards {
             match self.evaluate_standard(event, standard).await {
@@ -60,7 +59,11 @@ impl ComplianceHandler {
             user_id: None,
             action: format_args!("compliance_evaluation_{:?}", event.event_type).to_string(),
             resource: event.description.clone(),
-            outcome: if violations.is_empty() { AuditOutcome::Success } else { AuditOutcome::Failure },
+            outcome: if violations.is_empty() {
+                AuditOutcome::Success
+            } else {
+                AuditOutcome::Failure
+            },
             details: serde_json::json!({
                 "event_id": event.id,
                 "violations_count": violations.len(),
@@ -82,7 +85,7 @@ impl ComplianceHandler {
         &self,
         event: &ComplianceEvent,
         standard: &ComplianceStandard,
-    ) -> BearDogResult<Vec<ComplianceViolation>> {
+    ) -> Result<Vec<ComplianceViolation>, BearDogError> {
         let mut violations = Vec::new();
 
         match standard {
@@ -112,25 +115,28 @@ impl ComplianceHandler {
         Ok(violations)
     }
 
-    async fn evaluate_gdpr_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_gdpr_compliance(
+        &self,
+        event: &ComplianceEvent,
+    ) -> Result<Vec<ComplianceViolation>, BearDogError> {
         let mut violations = Vec::new();
 
         match event.event_type {
             ComplianceEventType::DataAccess => {
-
                 if self.is_consent_required_missing(event) {
                     violations.push(ComplianceViolation {
                         id: Uuid::new_v4(),
                         rule: "GDPR Article 6 - Lawful Basis".to_string(),
-                        description: "Data access without proper consent or lawful basis".to_string(),
+                        description: "Data access without proper consent or lawful basis"
+                            .to_string(),
                         severity: ComplianceSeverity::High,
-                        remediation: "Ensure proper consent is obtained before data access".to_string(),
+                        remediation: "Ensure proper consent is obtained before data access"
+                            .to_string(),
                         affected_data: Some("Personal data".to_string()),
                     });
                 }
             }
             ComplianceEventType::DataModification => {
-
                 violations.extend(self.check_data_minimization(event));
             }
             _ => {}
@@ -139,11 +145,13 @@ impl ComplianceHandler {
         Ok(violations)
     }
 
-    async fn evaluate_sox_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_sox_compliance(
+        &self,
+        event: &ComplianceEvent,
+    ) -> Result<Vec<ComplianceViolation>, BearDogError> {
         let mut violations = Vec::new();
 
         if event.event_type == ComplianceEventType::SecurityIncident {
-
             violations.push(ComplianceViolation {
                 id: Uuid::new_v4(),
                 rule: "SOX Section 302 - Financial Controls".to_string(),
@@ -157,47 +165,53 @@ impl ComplianceHandler {
         Ok(violations)
     }
 
-    async fn evaluate_pci_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_pci_compliance(
+        &self,
+        event: &ComplianceEvent,
+    ) -> Result<Vec<ComplianceViolation>, BearDogError> {
         let mut violations = Vec::new();
 
-        if event.event_type == ComplianceEventType::DataAccess {
-
-            if self.involves_payment_data(event) {
-                violations.push(ComplianceViolation {
-                    id: Uuid::new_v4(),
-                    rule: "PCI DSS Requirement 3 - Protect Stored Data".to_string(),
-                    description: "Unencrypted payment card data access".to_string(),
-                    severity: ComplianceSeverity::Critical,
-                    remediation: "Encrypt payment card data at rest and in transit".to_string(),
-                    affected_data: Some("Payment card data".to_string()),
-                });
-            }
+        if event.event_type == ComplianceEventType::DataAccess && self.involves_payment_data(event)
+        {
+            violations.push(ComplianceViolation {
+                id: Uuid::new_v4(),
+                rule: "PCI DSS Requirement 3 - Protect Stored Data".to_string(),
+                description: "Unencrypted payment card data access".to_string(),
+                severity: ComplianceSeverity::Critical,
+                remediation: "Encrypt payment card data at rest and in transit".to_string(),
+                affected_data: Some("Payment card data".to_string()),
+            });
         }
 
         Ok(violations)
     }
 
-    async fn evaluate_hipaa_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_hipaa_compliance(
+        &self,
+        event: &ComplianceEvent,
+    ) -> Result<Vec<ComplianceViolation>, BearDogError> {
         let mut violations = Vec::new();
 
-        if event.event_type == ComplianceEventType::DataAccess {
-
-            if self.violates_minimum_necessary(event) {
-                violations.push(ComplianceViolation {
-                    id: Uuid::new_v4(),
-                    rule: "HIPAA Minimum Necessary Standard".to_string(),
-                    description: "Access to PHI beyond minimum necessary".to_string(),
-                    severity: ComplianceSeverity::High,
-                    remediation: "Implement minimum necessary access controls".to_string(),
-                    affected_data: Some("Protected Health Information".to_string()),
-                });
-            }
+        if event.event_type == ComplianceEventType::DataAccess
+            && self.violates_minimum_necessary(event)
+        {
+            violations.push(ComplianceViolation {
+                id: Uuid::new_v4(),
+                rule: "HIPAA Minimum Necessary Standard".to_string(),
+                description: "Access to PHI beyond minimum necessary".to_string(),
+                severity: ComplianceSeverity::High,
+                remediation: "Implement minimum necessary access controls".to_string(),
+                affected_data: Some("Protected Health Information".to_string()),
+            });
         }
 
         Ok(violations)
     }
 
-    async fn evaluate_iso27001_compliance(&self, event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_iso27001_compliance(
+        &self,
+        event: &ComplianceEvent,
+    ) -> Result<Vec<ComplianceViolation>, BearDogError> {
         let mut violations = Vec::new();
 
         if event.event_type == ComplianceEventType::SecurityIncident {
@@ -214,13 +228,19 @@ impl ComplianceHandler {
         Ok(violations)
     }
 
-    async fn evaluate_soc2_compliance(&self, _event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_soc2_compliance(
+        &self,
+        _event: &ComplianceEvent,
+    ) -> Result<Vec<ComplianceViolation>, BearDogError> {
         let violations = Vec::new();
 
         Ok(violations)
     }
 
-    async fn evaluate_ccpa_compliance(&self, _event: &ComplianceEvent) -> BearDogResult<Vec<ComplianceViolation>> {
+    async fn evaluate_ccpa_compliance(
+        &self,
+        _event: &ComplianceEvent,
+    ) -> Result<Vec<ComplianceViolation>, BearDogError> {
         let violations = Vec::new();
 
         Ok(violations)
@@ -228,7 +248,7 @@ impl ComplianceHandler {
 
     pub fn generate_metrics(&self) -> ComplianceMetrics {
         let recent_violations: Vec<ComplianceViolation> = Vec::new(); // Would be populated from recent evaluations
-        
+
         let mut standards_compliance = HashMap::with_capacity(16);
         for standard in &self.enabled_standards {
             standards_compliance.insert(standard.clone(), 95.0); // Would be calculated from actual data
@@ -247,21 +267,18 @@ impl ComplianceHandler {
     pub async fn analyze_privacy_violations(
         &self,
         _event: &ComplianceEvent,
-    ) -> BearDogResult<Vec<ComplianceViolation>> {
-
+    ) -> Result<Vec<ComplianceViolation>, BearDogError> {
         Ok(vec![])
     }
 
     pub async fn analyze_data_protection_violations(
         &self,
         _event: &ComplianceEvent,
-    ) -> BearDogResult<Vec<ComplianceViolation>> {
-
+    ) -> Result<Vec<ComplianceViolation>, BearDogError> {
         Ok(vec![])
     }
 
     fn is_consent_required_missing(&self, _event: &ComplianceEvent) -> bool {
-
         false
     }
 
@@ -270,26 +287,40 @@ impl ComplianceHandler {
     }
 
     fn involves_payment_data(&self, _event: &ComplianceEvent) -> bool {
-
         false
     }
 
     fn violates_minimum_necessary(&self, _event: &ComplianceEvent) -> bool {
-
         false
     }
 
+    /// Generate recommendations based on event type
     fn generate_recommendations(&self, event_type: &ComplianceEventType) -> Vec<String> {
         match event_type {
             ComplianceEventType::DataAccess => vec![
-                "Implement proper access logging".to_string(),
-                "Review data access permissions regularly".to_string(),
+                "Implement access logging".to_string(),
+                "Regular access review".to_string(),
+                "Verify user permissions".to_string(),
+            ],
+            ComplianceEventType::FinancialTransaction => vec![
+                "Implement dual approval".to_string(),
+                "Maintain transaction audit trail".to_string(),
+                "Regular financial controls review".to_string(),
             ],
             ComplianceEventType::SecurityIncident => vec![
                 "Follow incident response procedures".to_string(),
                 "Conduct post-incident review".to_string(),
+                "Update security controls".to_string(),
             ],
-            _ => vec!["Review compliance policies".to_string()],
+            ComplianceEventType::SystemAccess => vec![
+                "Implement proper access logging".to_string(),
+                "Review data access permissions regularly".to_string(),
+                "Monitor for unusual access patterns".to_string(),
+            ],
+            _ => vec![
+                "Review compliance policies".to_string(),
+                "Enhance monitoring and logging".to_string(),
+            ],
         }
     }
 }

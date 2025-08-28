@@ -16,7 +16,7 @@ use beardog_errors::{
 use chrono::Utc;
 use std::collections::HashMap;
 
-fn authenticate_user_legacy(user_id: &str) -> BearDogResult<String> {
+fn authenticate_user_legacy(user_id: &str) -> Result<String, BearDogError> {
     if user_id.is_empty() {
         return Err(BearDogError::authentication("User ID cannot be empty"));
     }
@@ -156,7 +156,7 @@ fn demonstrate_migration() {
     }
 
     println!("\n🔄 MIGRATION HELPER (backward compatibility):");
-    let legacy_result: BearDogResult<String> = authenticate_user_legacy("invalid_user");
+    let legacy_result: Result<String, BearDogError> = authenticate_user_legacy("invalid_user");
     let migrated_result: SecurityResult<String> = migrate_security_result(legacy_result);
     
     match migrated_result {

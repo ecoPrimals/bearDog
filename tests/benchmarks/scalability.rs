@@ -1,7 +1,7 @@
 
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::{
     atomic::{AtomicU64, Ordering},
     Arc, Mutex,
@@ -9,7 +9,7 @@ use std::sync::{
 use std::time::Instant;
 use tracing::info;
 
-pub async fn benchmark_scalability(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
+pub async fn benchmark_scalability(suite: &mut PerformanceBenchmarkSuite) -> Result<Vec<BenchmarkResult, BearDogError>> {
     let mut results = Vec::new();
 
     for &concurrency in &suite.config.concurrency_levels {
@@ -20,7 +20,7 @@ pub async fn benchmark_scalability(suite: &mut PerformanceBenchmarkSuite) -> Bea
     Ok(results)
 }
 
-async fn benchmark_concurrent_operations(suite: &PerformanceBenchmarkSuite, concurrency: usize) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_concurrent_operations(suite: &PerformanceBenchmarkSuite, concurrency: usize) -> Result<BenchmarkResult, BearDogError> {
     info!("  📈 Benchmarking concurrent operations with {} threads", concurrency);
 
     let successful_ops = Arc::new(AtomicU64::new(0));

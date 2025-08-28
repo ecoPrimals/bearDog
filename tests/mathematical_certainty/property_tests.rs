@@ -1,10 +1,10 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_security::crypto_utils::BearDogCrypto;
 
 #[tokio::test]
-async fn test_signature_verification_property() -> BearDogResult<()> {
+async fn test_signature_verification_property() -> Result<(), BearDogError> {
 
     for i in 0..10 {
         let (private_key, public_key) = BearDogCrypto::generate_ed25519_keypair()?;
@@ -23,7 +23,7 @@ async fn test_signature_verification_property() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_nonce_uniqueness_property() -> BearDogResult<()> {
+async fn test_nonce_uniqueness_property() -> Result<(), BearDogError> {
 
     let mut nonces = std::collections::HashSet::new();
 
@@ -39,7 +39,7 @@ async fn test_nonce_uniqueness_property() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_key_derivation_consistency_property() -> BearDogResult<()> {
+async fn test_key_derivation_consistency_property() -> Result<(), BearDogError> {
 
     let test_cases = vec![
         (b"seed1".as_slice(), b"context1".as_slice()),

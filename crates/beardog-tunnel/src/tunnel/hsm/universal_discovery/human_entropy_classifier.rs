@@ -1,7 +1,7 @@
 
 
 use super::{DiscoveryHsmCapabilities, HumanEntropyCapabilities, HumanEntropyMethod};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
 
@@ -82,7 +82,7 @@ impl Default for TierElevationCriteria {}
     }
 impl HumanEntropyClassifier {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🧠 Initializing Human Entropy Classifier");
         let quality_assessor = EntropyQualityAssessor::new().await?;
         let method_evaluator = HumanEntropyMethodEvaluator::new().await?;
@@ -93,14 +93,14 @@ impl HumanEntropyClassifier {
             elevation_criteria,
         })
 
-    pub async fn with_criteria(criteria: TierElevationCriteria) -> BearDogResult<Self> {
+    pub async fn with_criteria(criteria: TierElevationCriteria) -> Result<Self, BearDogError> {
         info!("🧠 Initializing Human Entropy Classifier with custom criteria");
             elevation_criteria: criteria,
 
     pub async fn classify_human_entropy_support(
         &self,
         capabilities: &DiscoveryHsmCapabilities,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         debug!("🧠 Classifying human entropy support");
         let assessment = self.assess_human_entropy_capabilities(capabilities).await?;
         
@@ -114,7 +114,7 @@ impl HumanEntropyClassifier {
         Ok(supports_entropy)
 
     pub async fn assess_human_entropy_capabilities(
-    ) -> BearDogResult<HumanEntropyAssessment> {
+    ) -> Result<HumanEntropyAssessment, BearDogError> {
         debug!("🧠 Performing comprehensive human entropy assessment");
         let human_entropy = &capabilities.human_entropy;
 
@@ -172,7 +172,7 @@ impl HumanEntropyClassifier {
 
     async fn evaluate_collection_efficiency(
         human_entropy: &HumanEntropyCapabilities,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64, BearDogError> {
         let mut efficiency_score = 0.0;
 
         let method_diversity = human_entropy.collection_methods.len() as f64 / 8.0; // Max 8 methods
@@ -206,7 +206,7 @@ impl HumanEntropyClassifier {
         Ok(biometric_score.min(1.0))
 
     pub async fn get_ranked_entropy_methods(
-    ) -> BearDogResult<Vec<(HumanEntropyMethod, f64)>> {
+    ) -> Result<Vec<(HumanEntropyMethod, f64)>> {
         let mut ranked_methods: Vec<(HumanEntropyMethod, f64)> = assessment.method_scores
             .into_iter()
             .collect();
@@ -289,7 +289,7 @@ impl HumanEntropyMethodEvaluator {
 
     pub async fn evaluate_entropy_methods(
         methods: &[HumanEntropyMethod],
-    ) -> BearDogResult<HashMap<HumanEntropyMethod, f64>> {
+    ) -> Result<HashMap<HumanEntropyMethod, f64, BearDogError>> {
         let mut scores = HashMap::with_capacity(16);
         for method in methods {
             let base_weight = self.method_weights.get(method).unwrap_or(&0.5);

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::capabilities::CapabilityType;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -15,11 +15,11 @@ pub trait DiscoveryStrategy: Send + Sync + std::fmt::Debug {
 
     fn strategy_name(&self) -> &str;
 
-    async fn discover_capabilities(&self) -> BearDogResult<Vec<DiscoveredCapability>>;
+    async fn discover_capabilities(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>>;
 
     async fn can_discover(&self, capability: &CapabilityType) -> bool;
 
-    async fn health_check(&self) -> BearDogResult<bool> {
+    async fn health_check(&self) -> Result<bool, BearDogError> {
         Ok(true) // Default implementation
     }
 }
@@ -39,7 +39,7 @@ impl EnvironmentDiscoveryStrategy {}
             name: "environment".to_string(),
         }
 
-    fn parse_capability_type(&self, type_str: &str) -> BearDogResult<CapabilityType> {
+    fn parse_capability_type(&self, type_str: &str) -> Result<CapabilityType, BearDogError> {
         match type_str.to_uppercase().as_str() {
             "ENCRYPTION" => Ok(CapabilityType::Encryption),
             "STORAGE" => Ok(CapabilityType::Storage),
@@ -54,7 +54,7 @@ impl EnvironmentDiscoveryStrategy {}
     fn build_connection_spec(
         &self,
         config: &HashMap<&str, &str>,
-    ) -> BearDogResult<ConnectionSpec> {
+    ) -> Result<ConnectionSpec, BearDogError> {
 
         if let Some(endpoint) = config.get("ENDPOINT") {
             let auth = self.build_auth_spec(config);
@@ -188,7 +188,7 @@ impl DiscoveryStrategy for EnvironmentDiscoveryStrategy {}
     fn strategy_name(&self) -> &str {
         &self.name}
 
-    async fn discover_capabilities(&self) -> BearDogResult<Vec<DiscoveredCapability>> {
+    async fn discover_capabilities(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
         let mut capabilities = Vec::new();
         let mut capability_configs: HashMap<String, HashMap<String, String>> = HashMap::with_capacity(16);
 
@@ -274,7 +274,7 @@ impl Default for HardwareDiscoveryStrategy {}
 impl HardwareDiscoveryStrategy {
             name: "hardware".to_string(),
 
-    async fn scan_tpm_devices(&self) -> BearDogResult<Vec<DiscoveredCapability>> {
+    async fn scan_tpm_devices(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
 
         if std::path::Path::new("/dev/tpm0").exists() {
             let capability = DiscoveredCapability {
@@ -333,7 +333,7 @@ impl HardwareDiscoveryStrategy {
                 capabilities.push(capability);
                 tracing::info!("🔧 Hardware discovery found TPM device at {}", device_path);
 
-    async fn scan_hsm_devices(&self) -> BearDogResult<Vec<DiscoveredCapability>> {
+    async fn scan_hsm_devices(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
 
         let pkcs11_paths = vec![
             "/usr/lib/softhsm/libsofthsm2.so",

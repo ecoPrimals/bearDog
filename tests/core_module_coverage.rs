@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::config::*;
@@ -7,7 +8,7 @@ use std::time::Duration;
 use tokio::time::timeout;
 
 #[tokio::test]
-async fn test_beardog_config_validation() -> BearDogResult<()> {
+async fn test_beardog_config_validation() -> Result<(), BearDogError> {
 
     let mut config = BearDogConfig::default();
 
@@ -36,7 +37,7 @@ async fn test_beardog_config_validation() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_beardog_core_lifecycle() -> BearDogResult<()> {
+async fn test_beardog_core_lifecycle() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
@@ -111,7 +112,7 @@ fn test_error_type_coverage() {
 }
 
 #[tokio::test]
-async fn test_component_status_management() -> BearDogResult<()> {
+async fn test_component_status_management() -> Result<(), BearDogError> {
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
 
@@ -130,7 +131,7 @@ async fn test_component_status_management() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_system_metrics_update() -> BearDogResult<()> {
+async fn test_system_metrics_update() -> Result<(), BearDogError> {
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
 
@@ -195,7 +196,7 @@ fn test_config_defaults() {
 }
 
 #[tokio::test]
-async fn test_concurrent_core_operations() -> BearDogResult<()> {
+async fn test_concurrent_core_operations() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
@@ -224,7 +225,7 @@ async fn test_concurrent_core_operations() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_timeout_handling() -> BearDogResult<()> {
+async fn test_timeout_handling() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
 

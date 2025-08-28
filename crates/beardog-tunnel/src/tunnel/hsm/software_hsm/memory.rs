@@ -1,7 +1,7 @@
 
 
 use super::types::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 pub struct DefaultMemoryProtector {
 
@@ -17,13 +17,13 @@ impl DefaultMemoryProtector {
 
         true // Default implementation}
 
-    pub async fn new(config: MemoryProtectionConfig) -> BearDogResult<Self> {
+    pub async fn new(config: MemoryProtectionConfig) -> Result<Self, BearDogError> {
         Ok(Self { config })
-    pub async fn protect_memory(&self, _data: &[u8]) -> BearDogResult<()> {
+    pub async fn protect_memory(&self, _data: &[u8]) -> Result<(), BearDogError> {
 
         Ok(())}
 
-    pub async fn clear_memory(&self, _data: &mut [u8]) -> BearDogResult<()> {
+    pub async fn clear_memory(&self, _data: &mut [u8]) -> Result<(), BearDogError> {
 
 #[derive(Clone, Debug)]
 pub struct MemoryProtectionConfig {
@@ -69,16 +69,16 @@ pub fn create_memory_protection_stats() -> MemoryProtectionStats {
     MemoryProtectionStats::default()
 
 impl crate::tunnel::hsm::software_hsm::health::MemoryProtector for DefaultMemoryProtector {
-    async fn initialize(&self) -> BearDogResult<()> {
+    async fn initialize(&self) -> Result<(), BearDogError> {
 
-    async fn protect_key_material(&self, key_material: &[u8]) -> BearDogResult<ProtectedMemory> {
+    async fn protect_key_material(&self, key_material: &[u8]) -> Result<ProtectedMemory, BearDogError> {
 
         Ok(ProtectedMemory::new(key_material.to_vec(), true))
-    async fn unprotect_key_material(&self, protected: &ProtectedMemory) -> BearDogResult<Vec<u8>> {
+    async fn unprotect_key_material(&self, protected: &ProtectedMemory) -> Result<Vec<u8>, BearDogError>> {
 
         Ok(protected.data().to_vec())}
 
-    async fn zeroize_key_material(&self, _key_material: &[u8]) -> BearDogResult<()> {
+    async fn zeroize_key_material(&self, _key_material: &[u8]) -> Result<(), BearDogError> {
 
     fn protect_memory(
         &self,
@@ -86,9 +86,9 @@ impl crate::tunnel::hsm::software_hsm::health::MemoryProtector for DefaultMemory
     ) -> std::pin::Pin<
         Box<
             dyn std::future::Future<
-                    Output = BearDogResult<
+                    Output = Result<
                         crate::tunnel::hsm::software_hsm::health::ProtectedMemory,
-                    >,
+                    , BearDogError>,
                 > + Send
                 + '_,
         >,
@@ -100,7 +100,7 @@ impl crate::tunnel::hsm::software_hsm::health::MemoryProtector for DefaultMemory
         })
     fn clear_memory(
         protected: &crate::tunnel::hsm::software_hsm::health::ProtectedMemory,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<()>> + Send + '_>> {
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BearDogError>> + Send + '_>> {
             debug!(
                 "🧹 Clearing protected memory of {} bytes",
                 protected.data().len()

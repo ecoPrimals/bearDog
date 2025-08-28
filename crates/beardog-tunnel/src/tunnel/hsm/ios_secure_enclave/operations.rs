@@ -1,7 +1,7 @@
 
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_security::crypto_utils::BearDogCrypto;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -29,7 +29,7 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
         }
     }
 
-    pub async fn sign_with_biometric(&self, data: &[u8]) -> BearDogResult<Vec<u8>>
+    pub async fn sign_with_biometric(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>>
     where
         A: SecureEnclaveConstraint,
     {
@@ -42,7 +42,7 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
             ));
         self.sign_with_biometric_auth(data).await
 
-    pub async fn sign_with_biometric_auth(&self, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn sign_with_biometric_auth(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("🔐 Signing data with Secure Enclave key: {}", self.key_id);
 
         let keys = self.enclave.keychain_keys.read().await;
@@ -58,7 +58,7 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
         } else {
             self.software_fallback_sign(data, key).await
 
-    pub async fn verify_signature(&self, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
+    pub async fn verify_signature(&self, data: &[u8], signature: &[u8]) -> Result<bool, BearDogError> {
         info!(
             "🔍 Verifying signature with Secure Enclave key: {}",
             self.key_id
@@ -66,7 +66,7 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
 
         BearDogCrypto::verify_ed25519_signature(&key.public_key, data, signature)
 
-    pub async fn key_agreement(&self, peer_public_key: &[u8]) -> BearDogResult<Vec<u8>>
+    pub async fn key_agreement(&self, peer_public_key: &[u8]) -> Result<Vec<u8>, BearDogError>>
         A: KeyAgreementCapable,
             "🤝 Performing key agreement with Secure Enclave key: {}",
 
@@ -77,7 +77,7 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
                 .await
             self.software_fallback_key_agreement(peer_public_key, key)
 
-    async fn authenticate_biometric(&self) -> BearDogResult<()> {
+    async fn authenticate_biometric(&self) -> Result<(), BearDogError> {
         match &self.biometric_policy {
             BiometricPolicy::NoBiometric => {
                 debug!("🔓 No biometric authentication required");
@@ -88,7 +88,7 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
 
                 self.simulate_biometric_auth(policy).await
 
-    async fn simulate_biometric_auth(&self, policy: &BiometricPolicy) -> BearDogResult<()> {
+    async fn simulate_biometric_auth(&self, policy: &BiometricPolicy) -> Result<(), BearDogError> {
 
         match policy {
             BiometricPolicy::TouchIDRequired | BiometricPolicy::TouchIDOnly => {
@@ -104,7 +104,7 @@ impl<'a, A: SecureEnclaveConstraint> TypeSafeSecureEnclaveKey<'a, A> {
         &self,
         data: &[u8],
         key: &SecureKeychainKey,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         info!("🔐 Using Secure Enclave for signing");
 
         match key.private_key {
@@ -145,7 +145,7 @@ pub struct TypeSafeSecureEnclave {
 
 impl TypeSafeSecureEnclave {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🚀 Initializing Type-Safe Secure Enclave");
         let capability = super::capability::CapabilityDetector::detect_capability().await?;
         Ok(Self {
@@ -156,7 +156,7 @@ impl TypeSafeSecureEnclave {
 
     pub async fn generate_secure_key<A: SecureEnclaveConstraint>(
         key_id: &str,
-    ) -> BearDogResult<TypeSafeSecureEnclaveKey<'_, A>> {
+    ) -> Result<TypeSafeSecureEnclaveKey<'_, A, BearDogError>> {
             "🔑 Generating secure key: {} with algorithm: {:?}",
             algorithm.algorithm()
 
@@ -174,7 +174,7 @@ impl TypeSafeSecureEnclave {
 
     pub async fn generate_secure_key_enum(
         algorithm: SecureEnclaveAlgorithm,
-    ) -> BearDogResult<SecureKeyReference> {
+    ) -> Result<SecureKeyReference, BearDogError> {
             key_id, algorithm
             self.secure_enclave_generation(key_id, &algorithm, &biometric_policy)
             self.software_secure_generation(key_id, &algorithm, &biometric_policy)
@@ -249,7 +249,7 @@ impl TypeSafeSecureEnclave {
     pub fn get_capability(&self) -> Option<&SecureEnclaveCapability> {
         self.capability.as_ref()
 
-pub async fn safe_secure_enclave_example() -> BearDogResult<()> {
+pub async fn safe_secure_enclave_example() -> Result<(), BearDogError> {
 
     let enclave = TypeSafeSecureEnclave::new().await?;
 

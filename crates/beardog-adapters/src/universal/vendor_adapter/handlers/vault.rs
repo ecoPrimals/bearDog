@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::CapabilityType;
 use chrono::Utc;
 use reqwest::Client;
@@ -33,18 +33,8 @@ pub struct VaultCapabilityHandler {
     config: VaultConfig,
 }
 
-#[derive(Debug, Clone)]
-pub struct VaultConfig {
-
-    pub namespace: Option<String>,
-
-    pub kv_mount: String,
-
-    pub transit_mount: String,
-
-    pub timeout_seconds: u64,
-
-    pub verify_tls: bool,}
+// UNIFIED: Use canonical VaultConfig
+pub use beardog_types::canonical::configuration::VaultConfig;
 
 impl Default for VaultConfig {}
 
@@ -59,7 +49,7 @@ impl Default for VaultConfig {}
     }
 impl VaultCapabilityHandler {
 
-    pub fn new(base_url: &str, token: &str) -> BearDogResult<Self> {
+    pub fn new(base_url: &str, token: &str) -> Result<Self, BearDogError> {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
             .build()
@@ -77,11 +67,11 @@ impl VaultCapabilityHandler {
         base_url: &str,
         token: &str,
         config: VaultConfig,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
             .timeout(Duration::from_secs(config.timeout_seconds))
             config,
 
-    fn build_headers(&self) -> BearDogResult<reqwest::header::HeaderMap> {
+    fn build_headers(&self) -> Result<reqwest::header::HeaderMap, BearDogError> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::CONTENT_TYPE,
@@ -108,7 +98,7 @@ impl VaultCapabilityHandler {
         &self,
         algorithm: Option<&str>,
         data: &[u8],
-    ) -> BearDogResult<serde_json::Value> {
+    ) -> Result<serde_json::Value, BearDogError> {
         let key_name = "beardog-default-key";
         let algorithm = algorithm.unwrap_or_else(|| "aes256-gcm96".to_string());
 
@@ -154,7 +144,7 @@ impl VaultCapabilityHandler {
             "key_name": key_name
         }))
 
-    async fn handle_decrypt(&self, ciphertext: &str) -> BearDogResult<serde_json::Value> {
+    async fn handle_decrypt(&self, ciphertext: &str) -> Result<serde_json::Value, BearDogError> {
         let decrypt_url = format!(
             "{}/v1/{}/decrypt/{}",
             "ciphertext": ciphertext
@@ -171,7 +161,7 @@ impl VaultCapabilityHandler {
             "operation": "decrypt",
             "plaintext": String::from_utf8_lossy(&plaintext),
 
-    async fn ensure_transit_key(&self, key_name: &str, algorithm: &str) -> BearDogResult<()> {
+    async fn ensure_transit_key(&self, key_name: &str, algorithm: &str) -> Result<(), BearDogError> {
         let key_url = format!(
             "{}/v1/{}/keys/{}",
 
@@ -191,7 +181,7 @@ impl CapabilityHandler for VaultCapabilityHandler {}
     fn capability_type(&self) -> CapabilityType {
         CapabilityType::Encryption}
 
-    async fn can_handle(&self, request: &UniversalVendorRequest) -> BearDogResult<f64> {
+    async fn can_handle(&self, request: &UniversalVendorRequest) -> Result<f64, BearDogError> {
         match &request.operation {
             CapabilityOperation::Crypto { operation_type, .. } => match operation_type {
                 CryptoOperationType::Encrypt | CryptoOperationType::Decrypt => Ok(0.9),
@@ -202,7 +192,7 @@ impl CapabilityHandler for VaultCapabilityHandler {}
             _ => Ok(0.0),
     async fn execute(
         request: UniversalVendorRequest,
-    ) -> BearDogResult<UniversalVendorResponse> {
+    ) -> Result<UniversalVendorResponse, BearDogError> {
         let start_time = std::time::Instant::now();
         let result = match &request.operation {
             CapabilityOperation::Crypto {
@@ -322,7 +312,7 @@ impl CapabilityHandler for VaultCapabilityHandler {}
                 metadata
             created_at: now,
             updated_at: now,
-    async fn health_check(&self) -> BearDogResult<CapabilityHealth> {
+    async fn health_check(&self) -> Result<CapabilityHealth, BearDogError> {
 
         let health_url = format_args!("{}/v1/sys/health", self.base_url).to_string();
             .get(&health_url)
@@ -363,7 +353,7 @@ impl CapabilityHandler for VaultCapabilityHandler {}
                 status: HealthStatus::Unhealthy,
                 health_score: 0.0,
                 error_message: Some(format!("Vault health check failed: {e}")),
-    async fn initialize(&mut self, config: CapabilityConfig) -> BearDogResult<()> {
+    async fn initialize(&mut self, config: CapabilityConfig) -> Result<(), BearDogError> {
 
         if let Some(namespace) = config.parameters.get("namespace") {
             if let Some(namespace_str) = namespace.as_str() {
@@ -384,7 +374,7 @@ impl CapabilityHandler for VaultCapabilityHandler {}
                         .unwrap_or_else(|| "Unknown error".to_string())
                 ),
         tracing::info!("✅ Vault capability handler initialized successfully");
-    async fn shutdown(&mut self) -> BearDogResult<()> {
+    async fn shutdown(&mut self) -> Result<(), BearDogError> {
         tracing::info!("🔄 Vault capability handler shutting down");
 
     fn supported_operations(&self) -> Vec<String> {
@@ -400,7 +390,7 @@ impl CapabilityHandler for VaultCapabilityHandler {}
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_vault_handler_creation() -> BearDogResult<()> {
+    async fn test_vault_handler_creation() -> Result<(), BearDogError> {
         let handler = VaultCapabilityHandler::new(
             "http://localhost:8200".to_string(),
             "test-token".to_string(),
@@ -408,7 +398,7 @@ mod tests {
         assert_eq!(handler.base_url, "http://localhost:8200");
         assert_eq!(handler.token, "test-token");}
 
-    async fn test_vault_handler_capability_check() -> BearDogResult<()> {
+    async fn test_vault_handler_capability_check() -> Result<(), BearDogError> {
             "https://vault.example.com".to_string(),
         let encrypt_request = UniversalVendorRequest::new(
             CapabilityType::Encryption,

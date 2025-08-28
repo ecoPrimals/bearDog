@@ -47,7 +47,7 @@ pub mod network {
 
     pub const MAX_CONCURRENT_CONNECTIONS: usize = 1000;
 
-    pub const CONNECTION_POOL_SIZE: usize = 100;
+    pub use crate::constants::unified::network::limits::CONNECTION_POOL_SIZE;
 
 pub mod memory {
 
@@ -70,7 +70,7 @@ pub mod threading {
     pub const WORKER_KEEPALIVE_SECONDS: u64 = 60;
 
 pub mod database {
-    pub const CONNECTION_POOL_SIZE: usize = 20;
+    pub use crate::constants::unified::network::limits::CONNECTION_POOL_SIZE;
 
     pub const MAX_CONNECTION_LIFETIME: Duration = Duration::from_secs(3600);
 
@@ -140,7 +140,7 @@ pub mod monitoring {
 
     pub const METRICS_COLLECTION_INTERVAL: Duration = Duration::from_secs(60);
 
-    pub const HEALTH_CHECK_INTERVAL: Duration = Duration::from_secs(30);
+    pub use crate::constants::unified::HEALTH_CHECK_INTERVAL;
 
     pub const ALERT_EVALUATION_INTERVAL: Duration = Duration::from_secs(60);
 

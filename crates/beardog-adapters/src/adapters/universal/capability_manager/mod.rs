@@ -13,7 +13,7 @@ pub use self::genetic::*;
 pub use self::matching::*;
 pub use self::monitoring::*;
 use super::registry::CapabilityRegistry;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 pub mod config;
 pub mod dependency;
@@ -43,7 +43,7 @@ impl CapabilityManager {
     pub async fn new(
         registry: Arc<CapabilityRegistry>,
         config: CapabilityManagerConfig,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         info!("🚀 Initializing Comprehensive Capability Manager");
         let manager = Self {
             registry,
@@ -60,13 +60,13 @@ impl CapabilityManager {
         Ok(manager)
     }
 
-    pub async fn placeholder() -> BearDogResult<Self> {
+    pub async fn placeholder() -> Result<Self, BearDogError> {
         Ok(Self {
             registry: Arc::new(CapabilityRegistry::placeholder()),
             config: CapabilityManagerConfig::default(),
         })
 
-    async fn start_monitoring_task(&self) -> BearDogResult<()> {
+    async fn start_monitoring_task(&self) -> Result<(), BearDogError> {
         let monitors = Arc::clone(&self.capability_monitors);
         let registry = Arc::clone(&self.registry);
         let config = self.config.clone();
@@ -85,20 +85,20 @@ impl CapabilityManager {
         _monitors: &Arc<RwLock<HashMap<&str, CapabilityMonitor>>>,
         _registry: &Arc<CapabilityRegistry>,
         _config: &CapabilityManagerConfig,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
 
         debug!("🔄 Running capability monitoring cycle");
 
-    pub async fn get_monitoring_status(&self) -> BearDogResult<HashMap<String, CapabilityMonitor>> {
+    pub async fn get_monitoring_status(&self) -> Result<HashMap<String, CapabilityMonitor, BearDogError>> {
         Ok(self.capability_monitors.read().await.clone())
 
     pub async fn get_genetic_capabilities(
         &self,
-    ) -> BearDogResult<HashMap<String, GeneticCapabilityProfile>> {
+    ) -> Result<HashMap<String, GeneticCapabilityProfile, BearDogError>> {
         Ok(self.genetic_capabilities.read().await.clone())
 
     pub async fn get_emergent_capabilities(
-    ) -> BearDogResult<HashMap<String, EmergentCapability>> {
+    ) -> Result<HashMap<String, EmergentCapability, BearDogError>> {
         Ok(self
             .discovery_engine
             .emergent_capabilities

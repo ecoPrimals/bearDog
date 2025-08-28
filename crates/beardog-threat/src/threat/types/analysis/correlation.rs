@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -17,7 +15,6 @@ pub struct EventCorrelationResult {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CorrelationType {
-
     Temporal,
 
     Spatial,
@@ -38,11 +35,13 @@ pub enum CorrelationType {
 impl Default for EventCorrelationResult {
     fn default() -> Self {
         Self {
-            primary_event_id: String::with_capacity(64),
-            correlation_type: CorrelationType::Temporal,
-            related_event_ids: Vec::new(),
+            event_id: String::with_capacity(64),
+            correlation_type: "temporal".to_string(),
+            confidence: 0.0,
+            related_events: Vec::new(),
+            timestamp: Utc::now(),
+            metadata: HashMap::new(),
             confidence_score: 0.0,
-            time_window_minutes: 60,
         }
     }
 }
@@ -85,7 +84,8 @@ impl EventCorrelationResult {
 
     pub fn set_time_window(&mut self, minutes: u64) {
         // Store time window in metadata since it's not a direct field
-        self.metadata.insert("time_window_minutes".to_string(), minutes.to_string());
+        self.metadata
+            .insert("time_window_minutes".to_string(), minutes.to_string());
     }
 
     pub fn get_correlation_strength(&self) -> f64 {
@@ -112,7 +112,6 @@ impl EventCorrelationResult {
 }
 
 impl std::fmt::Display for CorrelationType {
-
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             CorrelationType::Temporal => write!(f, "Temporal"),

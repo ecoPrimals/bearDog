@@ -59,9 +59,9 @@ pub enum SpawnPurpose {
     NetworkExpansion,
 
     PerformanceOptimization,
+}
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]}
-
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum TaskType {
 
     DataStorage,
@@ -85,7 +85,9 @@ pub enum TaskType {
     ThreatHunting,
 
     BackupOperation,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceLimits {
 
     pub max_memory_mb: u64,
@@ -96,10 +98,10 @@ pub struct ResourceLimits {
 
     pub max_network_mbps: u32,
 
-    pub max_concurrent_connections: u32,}
+    pub max_concurrent_connections: u32,
+}
 
-impl Default for ResourceLimits {}
-
+impl Default for ResourceLimits {
     fn default() -> Self {
         Self {
             max_memory_mb: 1024,
@@ -109,7 +111,9 @@ impl Default for ResourceLimits {}
             max_concurrent_connections: 1000,
         }
     }
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SpawnStatus {
 
     Initializing,
@@ -125,11 +129,11 @@ pub enum SpawnStatus {
     Upgrading,
 
     Hibernating,
+}
 
+#[derive(Debug, Clone)]
 pub struct SpawnRequest {
-
     pub parent_genetics: Vec<BearDogGenetics>,
-
     pub required_capabilities: Vec<NodeCapability>,
-
     pub target_environment: String,
+}

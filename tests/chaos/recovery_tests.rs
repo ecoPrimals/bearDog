@@ -1,7 +1,7 @@
 
 
 use super::{ChaosConfig, TestMetrics, TestResult};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_security::crypto_utils::BearDogCrypto;
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
@@ -20,7 +20,7 @@ impl RecoveryTestSuite {
         }
     }
 
-    pub async fn test_system_recovery(&self) -> BearDogResult<TestResult> {
+    pub async fn test_system_recovery(&self) -> Result<TestResult, BearDogError> {
         let start_time = Instant::now();
         let mut recovery_attempts = 0u64;
         let mut successful_recoveries = 0u64;
@@ -72,14 +72,14 @@ impl RecoveryTestSuite {
         })
     }
 
-    async fn inject_controlled_failure(&self) -> BearDogResult<()> {
+    async fn inject_controlled_failure(&self) -> Result<(), BearDogError> {
 
         Err(BearDogError::System {
             message: "Controlled failure injection".to_string(),
         })
     }
 
-    async fn attempt_system_recovery(&self) -> BearDogResult<()> {
+    async fn attempt_system_recovery(&self) -> Result<(), BearDogError> {
 
         tokio::time::sleep(Duration::from_millis(50)).await;
 

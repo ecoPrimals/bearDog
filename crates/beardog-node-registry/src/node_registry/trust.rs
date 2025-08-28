@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -7,7 +7,7 @@ use tracing::{debug, info, warn};
 use super::types::{
     TrustStore, TrustPropagationConfig, TrustLevel, TrustRelationship,
 };
-use crate::BearDogResult;
+use beardog_errors::BearDogError;
 
 pub struct TrustManager {
 
@@ -29,7 +29,7 @@ impl TrustManager {
         from_node: &str,
         to_node: &str,
         trust_level: TrustLevel,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         debug!(
             "🤝 Setting trust relationship: {} -> {} = {:?}",
             from_node, to_node, trust_level
@@ -45,7 +45,7 @@ impl TrustManager {
         Ok(())
 
     pub async fn get_trust_relationship(
-    ) -> BearDogResult<TrustLevel> {
+    ) -> Result<TrustLevel, BearDogError> {
         let trust_store = self.trust_store.read().await;
 
         if let Some(trust_level) = trust_store
@@ -70,10 +70,10 @@ impl TrustManager {
         self.set_trust_relationship("system", node_id, trust_level)
             .await
 
-    pub async fn get_trust_level(&self, node_id: &str) -> BearDogResult<TrustLevel> {
+    pub async fn get_trust_level(&self, node_id: &str) -> Result<TrustLevel, BearDogError> {
         self.get_trust_relationship("system", node_id).await
 
-    pub async fn nodes_trust_each_other(&self, node1: &str, node2: &str) -> BearDogResult<bool> {
+    pub async fn nodes_trust_each_other(&self, node1: &str, node2: &str) -> Result<bool, BearDogError> {
         let trust1 = self.get_trust_relationship(node1, node2).await?;
         let trust2 = self.get_trust_relationship(node2, node1).await?;
 
@@ -85,7 +85,7 @@ impl TrustManager {
     pub async fn get_trusted_nodes(&self, node_id: &str) -> Vec<String> {
         trust_store.get_trusted_nodes(node_id)
 
-    pub async fn remove_node(&self, node_id: &str) -> BearDogResult<()> {
+    pub async fn remove_node(&self, node_id: &str) -> Result<(), BearDogError> {
         debug!("🗑️ Removing trust relationships for node: {}", node_id);
 
         trust_store.relationships.remove(node_id);
@@ -142,11 +142,11 @@ impl TrustManager {
 
     pub async fn validate_trust_relationship(
         required_trust_level: TrustLevel,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         let trust_level = self.get_trust_relationship(from_node, to_node).await?;
         Ok(trust_level >= required_trust_level)
 
-    pub async fn clear_all_relationships(&self) -> BearDogResult<()> {
+    pub async fn clear_all_relationships(&self) -> Result<(), BearDogError> {
         warn!("🧹 Clearing all trust relationships");
         trust_store.clear_all();
         info!("✅ All trust relationships cleared");

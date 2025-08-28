@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::{info, warn};
 
@@ -43,7 +43,7 @@ struct UniversalVendorAdapter {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
 
@@ -62,7 +62,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_vendor_registration() -> BearDogResult<()> {
+async fn demonstrate_vendor_registration() -> Result<(), BearDogError> {
     info!("🔧 Vendor Registration");
     info!("---------------------");
 
@@ -88,7 +88,7 @@ async fn demonstrate_vendor_registration() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_capability_discovery() -> BearDogResult<()> {
+async fn demonstrate_capability_discovery() -> Result<(), BearDogError> {
     info!("\n🔍 Capability Discovery");
     info!("----------------------");
 
@@ -113,7 +113,7 @@ async fn demonstrate_capability_discovery() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_unified_operations() -> BearDogResult<()> {
+async fn demonstrate_unified_operations() -> Result<(), BearDogError> {
     info!("\n⚡ Unified Operations");
     info!("-------------------");
 
@@ -158,7 +158,7 @@ async fn demonstrate_unified_operations() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_vendor_failover() -> BearDogResult<()> {
+async fn demonstrate_vendor_failover() -> Result<(), BearDogError> {
     info!("\n🔄 Vendor Failover");
     info!("-----------------");
 
@@ -215,7 +215,7 @@ impl UniversalVendorAdapter {
         }
     }
 
-    async fn register_vendor(&mut self, vendor: VendorCapability) -> BearDogResult<()> {
+    async fn register_vendor(&mut self, vendor: VendorCapability) -> Result<(), BearDogError> {
         self.registered_vendors.push(vendor);
         Ok(())
     }
@@ -227,7 +227,7 @@ impl UniversalVendorAdapter {
     async fn discover_capable_vendors(
         &self,
         operation: &str,
-    ) -> BearDogResult<Vec<VendorCapability>> {
+    ) -> Result<Vec<VendorCapability, BearDogError>> {
         let capable = self
             .registered_vendors
             .iter()
@@ -238,7 +238,7 @@ impl UniversalVendorAdapter {
         Ok(capable)
     }
 
-    async fn execute_operation(&self, request: &AdapterRequest) -> BearDogResult<AdapterResponse> {
+    async fn execute_operation(&self, request: &AdapterRequest) -> Result<AdapterResponse, BearDogError> {
 
         let capable_vendors = self.discover_capable_vendors(&request.operation).await?;
 
@@ -346,7 +346,7 @@ fn create_sample_vendors() -> Vec<VendorCapability> {
     ]
 }
 
-async fn create_configured_adapter() -> BearDogResult<UniversalVendorAdapter> {
+async fn create_configured_adapter() -> Result<UniversalVendorAdapter, BearDogError> {
     let mut adapter = UniversalVendorAdapter::new();
     let vendors = create_sample_vendors();
 

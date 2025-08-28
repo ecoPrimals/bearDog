@@ -6,7 +6,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use super::primal_registry::{global_registry, PrimalId, PrimalRegistration};
 use super::traits::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 
@@ -44,7 +44,7 @@ pub struct ConnectionMetrics {
 
 impl UniversalAdapter {
 
-    pub async fn new(config: UniversalAdapterConfig) -> BearDogResult<Self> {
+    pub async fn new(config: UniversalAdapterConfig) -> Result<Self, BearDogError> {
 
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(config.timeout_seconds))
@@ -65,7 +65,7 @@ impl UniversalAdapter {
         })
     }
 
-    pub async fn connect(&self) -> BearDogResult<()> {
+    pub async fn connect(&self) -> Result<(), BearDogError> {
 
         let registry = global_registry().await;
         let primal_registration = registry
@@ -103,7 +103,7 @@ impl UniversalAdapter {
             })
         }
 
-    pub async fn send_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse> {
+    pub async fn send_request(&self, request: ServiceRequest) -> Result<ServiceResponse, BearDogError> {
 
         {
             let state = self.connection_state.read().await;
@@ -170,7 +170,7 @@ impl UniversalAdapter {
     pub async fn get_target_primal(&self) -> Option<PrimalRegistration> {
         self.target_primal.read().await.clone()
 
-    pub async fn disconnect(&self) -> BearDogResult<()> {
+    pub async fn disconnect(&self) -> Result<(), BearDogError> {
         let mut state = self.connection_state.write().await;
         state.connected = false;
         state.last_connected = None;
@@ -183,7 +183,7 @@ impl UniversalAdapterFactory {
         target_primal: PrimalId,
         endpoint: &str,
         auth: UnifiedAuthConfig,
-    ) -> BearDogResult<UniversalAdapter> {
+    ) -> Result<UniversalAdapter, BearDogError> {
         let config = UniversalAdapterConfig {
             target_primal,
             endpoint,

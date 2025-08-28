@@ -15,7 +15,7 @@ use std::sync::{Arc, Weak};
 use std::time::{Duration, Instant};
 use tracing::{debug, trace};
 
-pub use beardog_types::constants::hsm::{
+pub use beardog_types::constants::unified::hsm::{
     COMMUNICATION_MESH_CAPABILITY, STORAGE_SERVICES_CAPABILITY, COMPUTE_ORCHESTRATION_CAPABILITY,
     AI_INTELLIGENCE_CAPABILITY, SECURITY_PROVIDER_CAPABILITY, SYSTEM_INTEGRATION_CAPABILITY,
     HSM_CAPABILITY, KEY_MANAGEMENT_CAPABILITY, SECURE_ENCLAVE_CAPABILITY

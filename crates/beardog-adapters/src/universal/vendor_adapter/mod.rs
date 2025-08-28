@@ -13,7 +13,7 @@ pub use self::core::{
 };
 pub use self::discovery::{VendorDiscoveryEngine, VendorDiscoveryStrategy};
 pub use self::routing::{RoutingStrategy, UniversalRequestRouter};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::CapabilityType;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -64,7 +64,7 @@ impl Default for UniversalAdapterConfig {}
     }
 impl UniversalVendorAdapter {
 
-    pub async fn new(config: UniversalAdapterConfig) -> BearDogResult<Self> {
+    pub async fn new(config: UniversalAdapterConfig) -> Result<Self, BearDogError> {
         let adapter_id = Uuid::new_v4();
         info!("🌌 Creating Universal Vendor Adapter: {}", adapter_id);
         let discovery_engine = Arc::new(
@@ -90,7 +90,7 @@ impl UniversalVendorAdapter {
     #[must_use] pub const fn adapter_id(&self) -> Uuid {
         self.adapter_id
 
-    pub async fn register_capability_handler<T>(&self, handler: T) -> BearDogResult<()>
+    pub async fn register_capability_handler<T>(&self, handler: T) -> Result<(), BearDogError>
     where
         T: CapabilityHandler + 'static,
     {
@@ -110,7 +110,7 @@ impl UniversalVendorAdapter {
     pub async fn execute_request(
         &self,
         request: UniversalVendorRequest,
-    ) -> BearDogResult<UniversalVendorResponse> {
+    ) -> Result<UniversalVendorResponse, BearDogError> {
         let _start_time = std::time::Instant::now();
             "🎯 Executing universal vendor request: {} (capability: {:?})",
             request.request_id, request.required_capability
@@ -149,12 +149,12 @@ impl UniversalVendorAdapter {
 
     async fn get_handlers_for_capability(
         _capability: &CapabilityType,
-    ) -> BearDogResult<Vec<(Box<dyn CapabilityHandler>, f64)>> {
+    ) -> Result<Vec<(Box<dyn CapabilityHandler>, BearDogError>, f64)>> {
         let matching_handlers = Vec::new();
 
         Ok(matching_handlers)
 
-    async fn start_auto_discovery(&self) -> BearDogResult<()> {
+    async fn start_auto_discovery(&self) -> Result<(), BearDogError> {
         info!("🔍 Starting automatic capability discovery");
         let discovery_engine = self.discovery_engine.clone();
         let _capability_handlers = self.capability_handlers.clone();
@@ -178,7 +178,7 @@ impl UniversalVendorAdapter {
             }
         });
 
-    pub async fn get_statistics(&self) -> BearDogResult<AdapterStatistics> {
+    pub async fn get_statistics(&self) -> Result<AdapterStatistics, BearDogError> {
         let handlers = self.capability_handlers.read().await;
         let total_handlers: usize = handlers.values().map(|v| v.len()).sum();
         let metrics = self.metrics.get_summary().await?;

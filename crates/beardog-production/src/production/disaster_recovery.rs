@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{error, info, warn};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 pub use beardog_types::canonical::configuration::production::{
     DisasterRecoveryConfig, BackupConfig, FailoverConfig, CommunicationConfig,
@@ -187,7 +187,7 @@ impl DisasterRecoveryManager {
             stats: DisasterRecoveryStats::default(),
         }
 
-    pub async fn validate_disaster_recovery(&self) -> BearDogResult<DisasterRecoveryValidation> {
+    pub async fn validate_disaster_recovery(&self) -> Result<DisasterRecoveryValidation, BearDogError> {
         info!("🔍 Validating disaster recovery readiness");
         let mut validation = DisasterRecoveryValidation::new();
 
@@ -203,7 +203,7 @@ impl DisasterRecoveryManager {
               validation.readiness_percentage());
         Ok(validation)
 
-    pub async fn execute_disaster_recovery_test(&mut self) -> BearDogResult<DisasterRecoveryTestResult> {
+    pub async fn execute_disaster_recovery_test(&mut self) -> Result<DisasterRecoveryTestResult, BearDogError> {
         info!("🧪 Executing comprehensive disaster recovery test");
         let test_id = uuid::Uuid::new_v4().to_string();
         let start_time = chrono::Instant::now();
@@ -243,7 +243,7 @@ impl DisasterRecoveryManager {
         info!("✅ Disaster recovery test complete: success={}", test_result.overall_success);
         Ok(test_result)
 
-    pub async fn create_backup(&mut self) -> BearDogResult<BackupRecord> {
+    pub async fn create_backup(&mut self) -> Result<BackupRecord, BearDogError> {
         info!("💾 Creating system backup");
         let backup_record = self.backup_manager.create_backup().await?;
         self.state.last_backup = Some(backup_record.created_at);
@@ -253,7 +253,7 @@ impl DisasterRecoveryManager {
         info!("✅ Backup created: {}", backup_record.backup_id);
         Ok(backup_record)
 
-    pub async fn restore_from_backup(&mut self, backup_id: &str) -> BearDogResult<RestoreResult> {
+    pub async fn restore_from_backup(&mut self, backup_id: &str) -> Result<RestoreResult, BearDogError> {
         info!("🔄 Restoring from backup: {}", backup_id);
         let restore_result = self.backup_manager.restore_from_backup(backup_id).await?;
         self.stats.total_restores_performed += 1;
@@ -262,7 +262,7 @@ impl DisasterRecoveryManager {
         info!("✅ Restore completed: success={}", restore_result.success);
         Ok(restore_result)
 
-    pub async fn execute_failover(&mut self) -> BearDogResult<FailoverResult> {
+    pub async fn execute_failover(&mut self) -> Result<FailoverResult, BearDogError> {
         info!("🔄 Executing failover to secondary system");
         let failover_result = self.failover_manager.execute_failover().await?;
         self.stats.total_failovers += 1;
@@ -273,7 +273,7 @@ impl DisasterRecoveryManager {
         info!("✅ Failover completed: success={}", failover_result.success);
         Ok(failover_result)
 
-    pub async fn health_check_systems(&mut self) -> BearDogResult<SystemHealth> {
+    pub async fn health_check_systems(&mut self) -> Result<SystemHealth, BearDogError> {
         debug!("🏥 Performing system health checks");
         let health_results = self.failover_manager.check_system_health().await?;
         
@@ -285,7 +285,7 @@ impl DisasterRecoveryManager {
             last_check: Utc::now(),
         Ok(self.state.system_health.clone())
 
-    pub async fn send_emergency_notification(&mut self, message: &str, severity: IncidentSeverity) -> BearDogResult<()> {
+    pub async fn send_emergency_notification(&mut self, message: &str, severity: IncidentSeverity) -> Result<(), BearDogError> {
         warn!("🚨 Sending emergency notification: {}", message);
         self.communication_manager.send_emergency_notification(message, severity).await?;
         Ok(())
@@ -296,7 +296,7 @@ impl DisasterRecoveryManager {
     pub fn get_state(&self) -> &DisasterRecoveryState {
         &self.state
 
-    async fn check_documentation(&self) -> BearDogResult<bool> {
+    async fn check_documentation(&self) -> Result<bool, BearDogError> {
 
         let doc_paths = [
             "/opt/beardog/docs/disaster-recovery.md",
@@ -308,7 +308,7 @@ impl DisasterRecoveryManager {
                 return Ok(true);
         Ok(false)}
 
-    async fn check_failover_tests(&self) -> BearDogResult<bool> {
+    async fn check_failover_tests(&self) -> Result<bool, BearDogError> {
 
         if let Some(last_test) = self.state.last_failover_test {
             let thirty_days_ago = Utc::now() - chrono::Duration::days(30);
@@ -343,18 +343,18 @@ impl BackupManager {}
     fn new(config: BackupConfig) -> Self {
             backup_history: vec![],}
 
-    async fn check_backup_systems(&self) -> BearDogResult<bool> {
+    async fn check_backup_systems(&self) -> Result<bool, BearDogError> {
 
         tokio::fs::create_dir_all(&self.config.primary_backup_path).await?;
         tokio::fs::create_dir_all(&self.config.secondary_backup_path).await?;
         Ok(true)
-    async fn test_backup_procedures(&self) -> BearDogResult<BackupRestoreTest> {
+    async fn test_backup_procedures(&self) -> Result<BackupRestoreTest, BearDogError> {
 
         let mut test = BackupRestoreTest::new();
         test.update(true, true, true, true, true);
         Ok(test)}
 
-    async fn create_backup(&mut self) -> BearDogResult<BackupRecord> {
+    async fn create_backup(&mut self) -> Result<BackupRecord, BearDogError> {
         let backup_id = uuid::Uuid::new_v4().to_string();
         let backup_record = BackupRecord {
             backup_id,
@@ -365,7 +365,7 @@ impl BackupManager {}
             location: self.config.primary_backup_path.clone(),
             status: BackupStatus::Completed,
         self.backup_history.push(backup_record.clone());
-    async fn restore_from_backup(&self, _backup_id: &str) -> BearDogResult<RestoreResult> {
+    async fn restore_from_backup(&self, _backup_id: &str) -> Result<RestoreResult, BearDogError> {
         Ok(RestoreResult {
             restore_id: uuid::Uuid::new_v4().to_string(),
             backup_id: _backup_id.to_string(),
@@ -381,9 +381,9 @@ impl FailoverManager {}
             health_checks: HashMap::with_capacity(16),
             last_health_check: None,}
 
-    async fn test_failover_procedures(&self) -> BearDogResult<FailoverTest> {
+    async fn test_failover_procedures(&self) -> Result<FailoverTest, BearDogError> {
         let mut test = FailoverTest::new();
-    async fn execute_failover(&mut self) -> BearDogResult<FailoverResult> {
+    async fn execute_failover(&mut self) -> Result<FailoverResult, BearDogError> {
         Ok(FailoverResult {
             failover_id: uuid::Uuid::new_v4().to_string(),
             failover_time: Utc::now(),
@@ -391,7 +391,7 @@ impl FailoverManager {}
             from_endpoint: self.config.primary_endpoint.clone(),
             to_endpoint: self.config.secondary_endpoint.clone(),}
 
-    async fn check_system_health(&mut self) -> BearDogResult<HashMap<String, HealthStatus>> {
+    async fn check_system_health(&mut self) -> Result<HashMap<String, HealthStatus, BearDogError>> {
         let mut health_results = HashMap::with_capacity(16);
         health_results.insert("primary".to_string(), HealthStatus::Healthy);
         health_results.insert("secondary".to_string(), HealthStatus::Healthy);
@@ -403,10 +403,10 @@ impl CommunicationManager {}
     fn new(config: CommunicationConfig) -> Self {
             notification_history: vec![],}
 
-    async fn test_communication_procedures(&self) -> BearDogResult<CommunicationTest> {
+    async fn test_communication_procedures(&self) -> Result<CommunicationTest, BearDogError> {
         let mut test = CommunicationTest::new();
         test.update(true, true, true, true);
-    async fn send_emergency_notification(&mut self, message: &str, _severity: IncidentSeverity) -> BearDogResult<()> {
+    async fn send_emergency_notification(&mut self, message: &str, _severity: IncidentSeverity) -> Result<(), BearDogError> {
         let notification = NotificationRecord {
             notification_id: uuid::Uuid::new_v4().to_string(),
             channel: "emergency".to_string(),

@@ -2,8 +2,8 @@
 
 use beardog_types::config::core::BearDogConfig;
 use beardog_core::BearDogCore;
-use beardog_errors::{BearDogError, BearDogResult};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use beardog_types::*;
 use beardog_types::*;
 use std::collections::HashMap;
@@ -21,7 +21,7 @@ pub struct E2ETestHarness {
 }
 
 impl E2ETestHarness {
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
 
         Ok(Self {
             security_provider: Arc::new(MockSecurityProvider::new()),
@@ -32,7 +32,7 @@ impl E2ETestHarness {
         })
     }
 
-    pub async fn run_comprehensive_workflow(&self) -> BearDogResult<()> {
+    pub async fn run_comprehensive_workflow(&self) -> Result<(), BearDogError> {
         info!("🚀 Starting comprehensive E2E workflow test");
 
         self.test_security_operations().await?;
@@ -43,7 +43,7 @@ impl E2ETestHarness {
         Ok(())
     }
 
-    pub async fn run_chaos_engineering_tests(&self) -> BearDogResult<()> {
+    pub async fn run_chaos_engineering_tests(&self) -> Result<(), BearDogError> {
         info!("🌪️  Starting chaos engineering tests");
 
         let chaos_scenarios = vec![
@@ -60,7 +60,7 @@ impl E2ETestHarness {
         Ok(())
     }
 
-    pub async fn run_scalability_tests(&self) -> BearDogResult<()> {
+    pub async fn run_scalability_tests(&self) -> Result<(), BearDogError> {
         info!("📈 Starting scalability tests");
 
         let concurrency_levels = vec![10, 50, 100, 200];
@@ -73,7 +73,7 @@ impl E2ETestHarness {
         Ok(())
     }
 
-    pub async fn run_security_validation(&self) -> BearDogResult<()> {
+    pub async fn run_security_validation(&self) -> Result<(), BearDogError> {
         info!("🔒 Starting security validation tests");
 
         self.test_authentication_security().await?;
@@ -84,42 +84,42 @@ impl E2ETestHarness {
         Ok(())
     }
 
-    async fn test_security_operations(&self) -> BearDogResult<()> {
+    async fn test_security_operations(&self) -> Result<(), BearDogError> {
 
         Ok(())
     }
 
-    async fn test_genetics_operations(&self) -> BearDogResult<()> {
+    async fn test_genetics_operations(&self) -> Result<(), BearDogError> {
 
         Ok(())
     }
 
-    async fn test_workflow_operations(&self) -> BearDogResult<()> {
+    async fn test_workflow_operations(&self) -> Result<(), BearDogError> {
 
         Ok(())
     }
 
-    async fn execute_chaos_scenario(&self, scenario: ChaosScenario) -> BearDogResult<()> {
+    async fn execute_chaos_scenario(&self, scenario: ChaosScenario) -> Result<(), BearDogError> {
 
         Ok(())
     }
 
-    async fn test_concurrent_operations(&self, concurrency: usize) -> BearDogResult<()> {
+    async fn test_concurrent_operations(&self, concurrency: usize) -> Result<(), BearDogError> {
 
         Ok(())
     }
 
-    async fn test_authentication_security(&self) -> BearDogResult<()> {
+    async fn test_authentication_security(&self) -> Result<(), BearDogError> {
 
         Ok(())
     }
 
-    async fn test_authorization_controls(&self) -> BearDogResult<()> {
+    async fn test_authorization_controls(&self) -> Result<(), BearDogError> {
 
         Ok(())
     }
 
-    async fn test_encryption_integrity(&self) -> BearDogResult<()> {
+    async fn test_encryption_integrity(&self) -> Result<(), BearDogError> {
 
         Ok(())
     }

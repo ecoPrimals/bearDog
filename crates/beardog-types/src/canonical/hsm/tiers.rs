@@ -1,11 +1,9 @@
-
-
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, Default,
+)]
 pub enum HsmSecurityTier {
-
     #[default]
     Software,
 
@@ -22,7 +20,6 @@ pub enum HsmSecurityTier {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum AttestationLevel {
-
     None,
 
     Basic,
@@ -39,7 +36,6 @@ pub enum AttestationLevel {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 
 pub enum TamperResistanceLevel {
-
     None,
 
     Basic,

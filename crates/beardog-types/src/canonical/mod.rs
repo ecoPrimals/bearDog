@@ -1,5 +1,3 @@
-
-
 use serde::{Deserialize, Serialize};
 
 pub mod capabilities;
@@ -22,50 +20,58 @@ pub use capabilities::{
     SecurityLevel as CapabilitiesSecurityLevel,
 };
 
-pub use configuration::{
-    BearDogConfig,
-    DatabaseConfig,
-    NetworkSecurityConfig,
-    SecurityConfig,
+// PRIMARY CONFIGURATION EXPORT - Use consolidated configuration
+pub use configuration::consolidated::{
+    AppConfig, BearDogCanonicalConfig as BearDogConfig, ComplianceConfig, ComplianceStandard,
+    ConfigBuilder, ConfigManagerConfig, ConfigMigrator, ConfigValidator, DatabaseConfig,
+    DiscoveryConfig, Environment, HsmConfig, HsmProvider, LoadTestingConfig, LogLevel,
+    MonitoringConfig, NetworkConfig, NodeRegistryConfig, PerformanceConfig, PlatformConfig,
+    PlatformType, ProductionConfig, SecurityConfig, SecurityLevel, TunnelConfig, WorkflowConfig,
+    WorkflowEngineType,
 };
 
+pub use crate::constants::unified::network::limits::CONNECTION_POOL_SIZE;
+pub use crypto::{CryptoParams, EncryptionAlgorithm, KeyType, KeyUsage};
 pub use genetics::*;
-pub use crate::constants::unified::network::limits::MAX_CONNECTIONS;
-pub use crypto::{KeyType, EncryptionAlgorithm, KeyUsage, CryptoParams};
 pub use health_status::*;
 pub use hsm::{HsmCapabilities, HsmKey, KeyMetadata};
 
 pub use metrics::*;
 pub use monitoring::{
-    AlertConfig, AlertSeverity, HealthCheckConfig, HealthCheckResult, MonitoringMetrics,
-    NetworkUsage, RequestMetrics, ServiceHealthMonitor, MonitoringConfig,
-    MetricsConfig, LoggingConfig, TracingConfig, PrometheusConfig,
-    SecurityMonitoringConfig, PerformanceMonitoringConfig, IntegrationMonitoringConfig,
-    PerformanceThresholds, ThreatDetectionConfig, SensitivityLevel,
+    AlertConfig, AlertSeverity, HealthCheckConfig, HealthCheckResult, IntegrationMonitoringConfig,
+    LoggingConfig, MetricsConfig, MonitoringConfig as CanonicalMonitoringConfig, MonitoringMetrics,
+    NetworkUsage, PerformanceMonitoringConfig, PerformanceThresholds, PrometheusConfig,
+    RequestMetrics, SecurityMonitoringConfig, SensitivityLevel, ServiceHealthMonitor,
+    ThreatDetectionConfig, TracingConfig,
 };
 
 pub use services::*;
 
 pub use network::{
-    CircuitBreakerConfig, ConnectionPoolConfig as NetworkConnectionPoolConfig,
+    CircuitBreakerConfig, ConnectionPoolConfig,
+    ConnectionPoolConfig as NetworkConnectionPoolConfig, FailoverConfig,
     FailoverConfig as NetworkFailoverConfig, HealthCheckConfig as NetworkHealthCheckConfig,
-    LoadBalancingConfig as NetworkLoadBalancingConfig, ServiceDiscoveryConfig,
+    LoadBalancingConfig, LoadBalancingConfig as NetworkLoadBalancingConfig, ServiceDiscoveryConfig,
 };
 
 pub use providers::{
-    ProviderCapability, ProviderConfig, ProviderHealth,
-    ProviderRegistryEntry, ProviderStatus, ProviderType,
-    UniversalAdapterConfig, TargetPrimalConfig, ExternalServicesConfig,
-    HsmKeyInfo, HsmHardwareStatus, HsmInfo,
-    TimeoutConfig, RetryConfig,
+    ExternalServicesConfig, HsmHardwareStatus, HsmInfo, HsmKeyInfo, ProviderCapability,
+    ProviderConfig, ProviderHealth, ProviderRegistryEntry, ProviderStatus, ProviderType,
+    RetryConfig, TargetPrimalConfig, TimeoutConfig, UniversalAdapterConfig,
 };
 pub use security::*;
 
-pub use workflow::WorkflowRetryConfig as WorkflowRetryConfiguration;
+pub use workflow::WorkflowRetryConfig as CanonicalWorkflowRetryConfig;
+
+// Workflow types and enums
+pub use workflow::{WorkflowExecutionState, WorkflowStatus, WorkflowType};
+
+// Additional canonical exports for backward compatibility
+pub type CanonicalConfig = BearDogConfig;
+pub type UnifiedConfig = BearDogConfig;
 
 pub struct CanonicalTypeRegistry;
 impl CanonicalTypeRegistry {
-
     #[must_use]
     pub fn status_types() -> Vec<&'static str> {
         vec![
@@ -106,7 +112,6 @@ impl CanonicalTypeRegistry {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityCapabilities {
-
     pub authentication_methods: Vec<String>,
 
     pub rbac: bool,

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde_json::Value as JsonValue;
 use std::{
     collections::HashMap,

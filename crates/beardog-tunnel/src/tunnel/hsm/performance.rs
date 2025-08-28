@@ -3,7 +3,7 @@
 use super::types::{HsmCapabilities, HsmHealthStatus, HsmTier, SystemMetrics};
 use super::HsmProvider;
 use crate::tunnel::hsm::config::PerformanceConfig;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -33,13 +33,13 @@ pub struct HsmProviderSelection {
     pub estimated_latency_ms: f64,}
 
 impl HsmPerformanceTracker {
-    pub async fn new(config: PerformanceConfig) -> BearDogResult<Self> {
+    pub async fn new(config: PerformanceConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             operation_metrics: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             performance_config: config,
         })
     }
-    pub async fn record_success(&self, provider_id: &str, latency_ms: f64) -> BearDogResult<()> {
+    pub async fn record_success(&self, provider_id: &str, latency_ms: f64) -> Result<(), BearDogError> {
         let mut metrics_map = self.operation_metrics.write().await;
         let metrics = metrics_map
             .entry(provider_id.to_string())
@@ -47,16 +47,16 @@ impl HsmPerformanceTracker {
         metrics.record_success(latency_ms);
         Ok(())}
 
-    pub async fn record_failure(&self, provider_id: &str, latency_ms: f64) -> BearDogResult<()> {
+    pub async fn record_failure(&self, provider_id: &str, latency_ms: f64) -> Result<(), BearDogError> {
         metrics.record_failure(latency_ms);
     pub async fn get_provider_metrics(
         &self,
         provider_id: &str,
-    ) -> BearDogResult<Option<OperationMetrics>> {
+    ) -> Result<Option<OperationMetrics>, BearDogError>> {
         let metrics_map = self.operation_metrics.read().await;
         Ok(metrics_map.get(provider_id).cloned())}
 
-    pub async fn get_all_metrics(&self) -> BearDogResult<HashMap<String, OperationMetrics>> {
+    pub async fn get_all_metrics(&self) -> Result<HashMap<String, OperationMetrics, BearDogError>> {
         Ok(metrics_map.clone())
 impl OperationMetrics {}
 

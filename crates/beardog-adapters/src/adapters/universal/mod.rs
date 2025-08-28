@@ -1,10 +1,11 @@
-
-
-use beardog_errors::{BearDogError, BearDogResult};
-use serde::{Deserialize, Serialize};
+use beardog_errors::BearDogError;
+use beardog_traits::canonical::UniversalProvider;
+use beardog_traits::ProviderMetrics;
+use beardog_types::canonical::providers::UniversalAdapterConfig;
+use beardog_types::canonical::{HealthStatus, ProviderConfig};
 use std::collections::HashMap;
 use std::time::Duration;
-use tracing::{debug, error, info, warn};
+use tracing::{info, warn};
 
 pub mod authentication;
 pub mod protocols;
@@ -15,172 +16,283 @@ pub use protocols::*;
 pub use providers::*;
 pub use transformers::*;
 
-pub struct UniversalExternalAdapter {
-    providers: HashMap<String, Box<dyn UniversalProvider>>,
-    config: UniversalAdapterConfig,
+// Use an enum instead of Box<dyn> to avoid dyn compatibility issues
+#[derive(Debug)]
+pub enum UniversalProviderImpl {
+    Kubernetes(providers::KubernetesProvider),
+    Prometheus(providers::PrometheusProvider),
 }
 
-#[derive(Debug, Clone)]
-
-impl Default for UniversalAdapterConfig {}
-
-    fn default() -> Self {
-        Self {
-            timeout_seconds: 30,
-            retry_attempts: 3,
-            retry_backoff_ms: 1000,
-            max_concurrent_connections: 100,
-            enable_circuit_breaker: true,
-            circuit_breaker_failure_threshold: 5,
-            circuit_breaker_reset_timeout_seconds: 60,
+impl UniversalProvider for UniversalProviderImpl {
+    fn provider_type(&self) -> &str {
+        match self {
+            Self::Kubernetes(p) => p.provider_type(),
+            Self::Prometheus(p) => p.provider_type(),
         }
     }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UniversalRequest {
-    pub system_id: String,
-    pub operation: String,
-    pub payload: serde_json::Value,
-    pub metadata: HashMap<String, String>,
-    pub timeout_override: Option<u64>,
+    async fn discover_capabilities(&self) -> Result<Vec<String>, BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.discover_capabilities().await,
+            Self::Prometheus(p) => p.discover_capabilities().await,
+        }
+    }
 
-pub struct UniversalResponse {
-    pub success: bool,
-    pub processing_time_ms: u64,
-
-#[deprecated(since = "3.1.0", note = "Use UniversalProvider instead")]
-#[deprecated(since = "3.1.0", note = "Use UniversalProvider instead")]
-pub trait ExternalSystemProvider: Send + Sync {
-
-    fn system_id(&self) -> &str;
-
-    fn protocol(&self) -> &dyn Protocol;
-
-    fn authentication(&self) -> &dyn Authentication;
-
-    async fn execute(
+    async fn execute_operation(
         &self,
         operation: &str,
-        payload: serde_json::Value,
-    ) -> BearDogResult<serde_json::Value>;
+        parameters: HashMap<String, serde_json::Value>,
+    ) -> Result<serde_json::Value, BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.execute_operation(operation, parameters).await,
+            Self::Prometheus(p) => p.execute_operation(operation, parameters).await,
+        }
+    }
 
-    async fn health_check(&self) -> BearDogResult<bool>;
+    async fn connection_status(
+        &self,
+    ) -> Result<beardog_traits::canonical::ConnectionStatus, BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.connection_status().await,
+            Self::Prometheus(p) => p.connection_status().await,
+        }
+    }
 
-    fn capabilities(&self) -> Vec<String>;}
+    async fn validate_compatibility(&self, target_version: &str) -> Result<bool, BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.validate_compatibility(target_version).await,
+            Self::Prometheus(p) => p.validate_compatibility(target_version).await,
+        }
+    }
+}
+
+impl beardog_traits::canonical::BaseProvider for UniversalProviderImpl {
+    fn provider_info(&self) -> beardog_traits::canonical::ProviderInfo {
+        match self {
+            Self::Kubernetes(p) => p.provider_info(),
+            Self::Prometheus(p) => p.provider_info(),
+        }
+    }
+
+    fn id(&self) -> &str {
+        match self {
+            Self::Kubernetes(p) => p.id(),
+            Self::Prometheus(p) => p.id(),
+        }
+    }
+
+    fn version(&self) -> &str {
+        match self {
+            Self::Kubernetes(p) => p.version(),
+            Self::Prometheus(p) => p.version(),
+        }
+    }
+
+    async fn validate_config(&self, config: &ProviderConfig) -> Result<bool, BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.validate_config(config).await,
+            Self::Prometheus(p) => p.validate_config(config).await,
+        }
+    }
+
+    async fn status(
+        &self,
+    ) -> Result<beardog_types::canonical::providers::ProviderStatus, BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.status().await,
+            Self::Prometheus(p) => p.status().await,
+        }
+    }
+
+    async fn reload_config(&self, config: &ProviderConfig) -> Result<(), BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.reload_config(config).await,
+            Self::Prometheus(p) => p.reload_config(config).await,
+        }
+    }
+
+    async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.health_check().await,
+            Self::Prometheus(p) => p.health_check().await,
+        }
+    }
+
+    async fn capabilities(&self) -> Result<Vec<String>, BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.capabilities().await,
+            Self::Prometheus(p) => p.capabilities().await,
+        }
+    }
+
+    async fn initialize(&self, config: &ProviderConfig) -> Result<(), BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.initialize(config).await,
+            Self::Prometheus(p) => p.initialize(config).await,
+        }
+    }
+
+    async fn shutdown(&self) -> Result<(), BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.shutdown().await,
+            Self::Prometheus(p) => p.shutdown().await,
+        }
+    }
+
+    async fn metrics(&self) -> Result<ProviderMetrics, BearDogError> {
+        match self {
+            Self::Kubernetes(p) => p.metrics().await,
+            Self::Prometheus(p) => p.metrics().await,
+        }
+    }
+}
+
+pub struct UniversalExternalAdapter {
+    providers: HashMap<String, UniversalProviderImpl>,
+    config: UniversalAdapterConfig,
+}
+
+// Use canonical types from beardog-types
+pub use beardog_types::canonical::services::{
+    RequestPriority, ResponseStatus, UniversalRequest, UniversalResponse,
+};
+
+// Default implementation is provided by the canonical module
 
 impl UniversalExternalAdapter {
-
     pub fn new(config: UniversalAdapterConfig) -> Self {
+        Self {
             providers: HashMap::with_capacity(16),
             config,
+        }
+    }
 
-    pub fn register_provider(&mut self, provider: Box<dyn UniversalProvider>) {
-        let system_id = provider.system_id().to_string();
+    pub fn register_provider(&mut self, provider: UniversalProviderImpl) {
+        let system_id = provider.provider_type().to_string();
         info!("🔌 Registering external system provider: {}", system_id);
         self.providers.insert(system_id, provider);
+    }
 
-    pub async fn execute(&self, request: UniversalRequest) -> BearDogResult<UniversalResponse> {
+    /// Get adapter configuration
+    pub fn config(&self) -> &UniversalAdapterConfig {
+        &self.config
+    }
+
+    pub async fn execute_request(
+        &self,
+        request: &UniversalRequest,
+    ) -> Result<UniversalResponse, BearDogError> {
         let start_time = std::time::Instant::now();
-        debug!(
-            "🌐 Universal adapter executing: {} -> {}",
-            request.system_id, request.operation
-        );
-        let provider = self.providers.get(&request.system_id).ok_or_else(|| {
-            BearDogError::configuration(format_args!("External system provider not found: {}", request.system_id).to_string())
+        // Map service_type to string for provider lookup
+        let service_key = format!("{:?}", request.service_type).to_lowercase();
+        let provider = self.providers.get(&service_key).ok_or_else(|| {
+            BearDogError::system(format!(
+                "No provider found for service type: {:?}",
+                request.service_type
+            ))
         })?;
 
-        let timeout = Duration::from_secs(
-            request
-                .timeout_override
-                .unwrap_or(self.config.timeout_seconds),
+        let timeout = Duration::from_secs(30);
 
-        let result = self
-            .execute_with_retry(provider.as_ref(), &request, timeout)
-            .await;
-        let processing_time = start_time.elapsed().as_millis() as u64;
-        match result {
-            Ok(payload) => Ok(UniversalResponse {
-                success: true,
-                payload,
-                metadata: HashMap::with_capacity(16),
-                processing_time_ms: processing_time,
-                system_id: request.system_id,
-                operation: request.operation,
+        match self.execute_with_retry(provider, request, timeout).await {
+            Ok(result) => Ok(UniversalResponse {
+                request_id: request.request_id.clone(),
+                status: ResponseStatus::Success,
+                payload: result,
+                timestamp: chrono::Utc::now(),
+                processing_time_ms: start_time.elapsed().as_millis() as u64,
             }),
-            Err(e) => {
-                error!("🚨 Universal adapter execution failed: {}", e);
-                Ok(UniversalResponse {
-                    success: false,
-                    payload: serde_json::json!({
-                        "error": e.to_string(),
-                        "error_type": "external_system_error"
-                    }),
-                    metadata: HashMap::with_capacity(16),
-                    processing_time_ms: processing_time,
-                    system_id: request.system_id,
-                    operation: request.operation,
-                })
-            }
+            Err(e) => Ok(UniversalResponse {
+                request_id: request.request_id.clone(),
+                status: ResponseStatus::Error,
+                payload: serde_json::Value::String(e.to_string()),
+                timestamp: chrono::Utc::now(),
+                processing_time_ms: start_time.elapsed().as_millis() as u64,
+            }),
+        }
+    }
 
-    async fn execute_with_retry(
-        provider: &dyn ExternalSystemProvider,
+    pub async fn execute_with_retry(
+        &self,
+        provider: &UniversalProviderImpl,
         request: &UniversalRequest,
         timeout: Duration,
-    ) -> BearDogResult<serde_json::Value> {
-        let mut last_error = None;
-        for attempt in 1..=self.config.retry_attempts {
+    ) -> Result<serde_json::Value, BearDogError> {
+        let max_retries = 3; // Use default retry count
+
+        for attempt in 1..=max_retries {
             match tokio::time::timeout(
                 timeout,
-                provider.execute(&request.operation, request.payload.clone()),
+                provider.execute_operation(
+                    &request.operation,
+                    HashMap::from([("payload".to_string(), request.payload.clone())]),
+                ),
             )
             .await
             {
-                Ok(Ok(result)) => {
-                    if attempt > 1 {
-                        info!("✅ External system recovered on attempt {}", attempt);
-                    }
-                    return Ok(result);
-                }
+                Ok(Ok(result)) => return Ok(result),
                 Ok(Err(e)) => {
-                    warn!("⚠️ External system attempt {} failed: {}", attempt, e);
-                    last_error = Some(e);
+                    warn!(
+                        "🔄 Attempt {}/{} failed for {:?}: {}",
+                        attempt, max_retries, request.service_type, e
+                    );
+                    if attempt < max_retries {
+                        let backoff_ms = 1000 * attempt as u64; // Simple backoff
+                        tokio::time::sleep(Duration::from_millis(backoff_ms)).await;
+                    } else {
+                        return Err(e);
+                    }
+                }
                 Err(_) => {
-                    let timeout_error = BearDogError::network(format_args!("External system timeout after {}s", timeout.as_secs().to_string()));
-                    warn!("⏰ External system timeout on attempt {}", attempt);
-                    last_error = Some(timeout_error);
+                    return Err(BearDogError::network("Request timeout".to_string()));
+                }
+            }
+        }
 
-            if attempt < self.config.retry_attempts {
-                tokio::time::sleep(Duration::from_millis(
-                    self.config.retry_backoff_ms * attempt as u64,
-                ))
-                .await;
+        Err(BearDogError::system("Max retries exceeded".to_string()))
+    }
 
-        Err(
-            last_error.unwrap_or_else(|| BearDogError::internal(format_args!("All retry attempts failed for service: {}", request.system_id).to_string())),
-        )
-
-    pub async fn health_check_all(&self) -> HashMap<String, bool> {
+    pub async fn health_check(&self) -> Result<HashMap<String, bool>, BearDogError> {
         let mut results = HashMap::with_capacity(16);
         for (system_id, provider) in &self.providers {
-            match provider.health_check().await {
-                Ok(healthy) => {
-                    results.insert(system_id.clone(), healthy);
-                Err(e) => {
-                    warn!("🏥 Health check failed for {}: {}", system_id, e);
+            match provider.connection_status().await {
+                Ok(beardog_traits::canonical::ConnectionStatus {
+                    connected: true, ..
+                }) => {
+                    results.insert(system_id.clone(), true);
+                }
+                _ => {
+                    warn!("🏥 Health check failed for {}: {}", system_id, "Unhealthy");
                     results.insert(system_id.clone(), false);
-        results
+                }
+            }
+        }
+        Ok(results)
+    }
 
     pub fn get_systems_info(&self) -> HashMap<String, Vec<String>> {
         self.providers
             .iter()
-            .map(|(id, provider)| (id.clone(), provider.capabilities()))
+            .map(|(id, provider)| {
+                let capabilities = match provider {
+                    UniversalProviderImpl::Kubernetes(_) => vec!["kubernetes".to_string()],
+                    UniversalProviderImpl::Prometheus(_) => vec!["prometheus".to_string()],
+                };
+                (id.clone(), capabilities)
+            })
             .collect()
+    }
 
     pub fn unregister_provider(&mut self, system_id: &str) -> bool {
         match self.providers.remove(system_id) {
             Some(_) => {
                 info!("🔌 Unregistered external system provider: {}", system_id);
                 true
+            }
             None => {
                 warn!("⚠️ Attempted to unregister unknown provider: {}", system_id);
                 false
+            }
+        }
+    }
+}

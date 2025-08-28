@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::production::*;

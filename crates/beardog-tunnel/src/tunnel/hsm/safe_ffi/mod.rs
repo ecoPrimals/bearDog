@@ -4,7 +4,7 @@ pub mod android_safe;
 pub mod ios_safe;
 pub mod traits;
 use crate::tunnel::hsm::types::{HsmKey, KeyType};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_security::crypto_utils::BearDogCrypto;
 pub use traits::*;
 
@@ -14,7 +14,7 @@ pub struct SafePlatformSecurity {
 }
 impl SafePlatformSecurity {
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         let android_provider = if cfg!(target_os = "android") {
             Some(android_safe::SafeAndroidProvider::new()?)
         } else {
@@ -28,7 +28,7 @@ impl SafePlatformSecurity {
         })
     }
 
-    pub async fn generate_key(&self, key_id: &str, key_type: &KeyType) -> BearDogResult<HsmKey> {
+    pub async fn generate_key(&self, key_id: &str, key_type: &KeyType) -> Result<HsmKey, BearDogError> {
         if let Some(ref provider) = self.android_provider {
             return provider.generate_key(key_id, key_type).await;
         }
@@ -63,7 +63,7 @@ impl SafePlatformSecurity {
             _ => Err(BearDogError::unsupported_operation(format_args!("Key type {:?) not supported in safe fallback", key_type},
             }).to_string(),
 
-    pub async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             return provider.sign_data(key_id, data).await;
         info!("🔧 Using software fallback for data signing");
 
@@ -79,7 +79,7 @@ impl SafePlatformSecurity {
         key_id: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
             return provider.verify_signature(key_id, data, signature).await;
 
         info!("🔧 Using software fallback for signature verification");

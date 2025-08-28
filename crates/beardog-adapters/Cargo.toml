@@ -12,26 +12,22 @@ default = []
 advanced-nestgate = []
 
 [dependencies]
-anyhow = "1.0"
-beardog-errors = { workspace = true }
-# beardog-config removed - use beardog-types::config::complete_unified
-beardog-types = { workspace = true }
-serde = { workspace = true }
-tokio = { workspace = true }
-tracing = { workspace = true }
-uuid.workspace = true
-thiserror = { workspace = true }
-# async-trait.workspace = true  # REMOVED: Modernized to native async fn
+beardog-errors = { path = "../beardog-errors" }
+beardog-traits = { path = "../beardog-traits" }
+beardog-types = { path = "../beardog-types" }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-reqwest = { version = "0.11", features = ["json"] }
-rand = "0.8"
-base64 = "0.21"
-beardog-security = { workspace = true }
-beardog-threat = { workspace = true }
-sha2 = "0.10"
-chrono = { workspace = true }
-semver = { version = "1.0", features = ["serde"] }
 serde_yaml = "0.9"
+tokio = { version = "1.0", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"] }
+tracing = "0.1"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+futures = "0.3"
+async-trait = "0.1"
+semver = "1.0"
+sha2 = "0.10"
+# kube = { version = "0.87", features = ["client", "runtime"] }  # Commented out for now
 
 # Dev dependencies for testing
 [dev-dependencies]

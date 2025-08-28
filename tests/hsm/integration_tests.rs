@@ -1,10 +1,11 @@
+use beardog_errors::BearDogError;
 
 
 use super::HsmTestHarness;
-use beardog::{BearDogError, BearDogResult};
+use beardog::{{BearDogError, BearDogError}};
 
 #[tokio::test]
-async fn test_hsm_error_handling() -> BearDogResult<()> {
+async fn test_hsm_error_handling() -> Result<(), BearDogError> {
     println!("🚨 Testing HSM Error Handling and Resilience");
     
     let mut harness = HsmTestHarness::new().await?;
@@ -17,7 +18,7 @@ async fn test_hsm_error_handling() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn test_invalid_key_operations(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_invalid_key_operations(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  ❌ Testing invalid key operations");
 
     let result = harness.android_strongbox.sign("non_existent_key", b"test").await;
@@ -30,7 +31,7 @@ async fn test_invalid_key_operations(harness: &mut HsmTestHarness) -> BearDogRes
     Ok(())
 }
 
-async fn test_provider_unavailability(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_provider_unavailability(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🔌 Testing provider unavailability");
 
     let result = harness.hsm_manager.handle_provider_failure().await?;
@@ -40,7 +41,7 @@ async fn test_provider_unavailability(harness: &mut HsmTestHarness) -> BearDogRe
     Ok(())
 }
 
-async fn test_resource_exhaustion(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_resource_exhaustion(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  💾 Testing resource exhaustion scenarios");
 
     let result = harness.hsm_manager.test_resource_limits().await?;
@@ -51,7 +52,7 @@ async fn test_resource_exhaustion(harness: &mut HsmTestHarness) -> BearDogResult
 }
 
 #[tokio::test]
-async fn test_hsm_system_integration_e2e() -> BearDogResult<()> {
+async fn test_hsm_system_integration_e2e() -> Result<(), BearDogError> {
     println!("🔄 Testing HSM System Integration End-to-End");
     
     let mut harness = HsmTestHarness::new().await?;
@@ -65,7 +66,7 @@ async fn test_hsm_system_integration_e2e() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn test_complete_workflow(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_complete_workflow(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🔄 Testing complete HSM workflow");
 
     let system_status = harness.hsm_manager.get_system_status().await?;
@@ -87,7 +88,7 @@ async fn test_complete_workflow(harness: &mut HsmTestHarness) -> BearDogResult<(
     Ok(())
 }
 
-async fn test_cross_provider_operations(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_cross_provider_operations(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🔀 Testing cross-provider operations");
 
     let result = harness.hsm_manager.execute_cross_provider_operation().await?;
@@ -97,7 +98,7 @@ async fn test_cross_provider_operations(harness: &mut HsmTestHarness) -> BearDog
     Ok(())
 }
 
-async fn test_system_recovery(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_system_recovery(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🔧 Testing system recovery");
 
     let recovery_result = harness.hsm_manager.test_system_recovery().await?;
@@ -107,7 +108,7 @@ async fn test_system_recovery(harness: &mut HsmTestHarness) -> BearDogResult<()>
     Ok(())
 }
 
-pub async fn run_comprehensive_hsm_tests() -> BearDogResult<()> {
+pub async fn run_comprehensive_hsm_tests() -> Result<(), BearDogError> {
     println!("🔐 Running Comprehensive HSM Test Suite");
     println!("═══════════════════════════════════════");
 

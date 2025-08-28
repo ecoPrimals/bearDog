@@ -1,13 +1,14 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
-use beardog_errors::idiomatic::SystemResult;
+use beardog_errors::BearDogError;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info};
 use uuid::Uuid;
+use std::time::Duration;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CapabilityType {
@@ -91,6 +92,7 @@ impl CapabilityType {
             CapabilityType::AgentFramework => "ai.agent_framework".to_string(),
             CapabilityType::NaturalLanguageProcessing => {
                 "ai.natural_language_processing".to_string()
+            }
             CapabilityType::MachineLearning => "ai.machine_learning".to_string(),
             CapabilityType::PatternRecognition => "ai.pattern_recognition".to_string(),
             CapabilityType::ResourceManagement => "system.resource_management".to_string(),
@@ -103,10 +105,13 @@ impl CapabilityType {
                 simd_acceleration,
             } => {
                 format!("gaming.optimization:low_latency={low_latency},simd={simd_acceleration}")
+            }
             CapabilityType::GeneticHealing {
                 adaptive,
                 evolutionary,
+            } => {
                 format!("genetic.healing:adaptive={adaptive},evolutionary={evolutionary}")
+            }
             CapabilityType::Custom(name) => format_args!("custom.{}", name.to_lowercase().to_string()),
         }
     }
@@ -195,14 +200,14 @@ pub trait UniversalCapabilityDiscovery: Send + Sync {
         capabilities: &[CapabilityType],
         quality_requirements: Option<QualityRequirements>,
         performance_requirements: Option<PerformanceRequirements>,
-    ) -> BearDogResult<Vec<ModuleInstance>>;
+    ) -> Result<Vec<ModuleInstance>, BearDogError>;
 
     async fn request_by_capability(
         request: UniversalModuleRequest,
-    ) -> BearDogResult<UniversalModuleResponse>;
+    ) -> Result<UniversalModuleResponse, BearDogError>;
 
     async fn broadcast_by_capability(
-    ) -> BearDogResult<Vec<UniversalModuleResponse>>;
+    ) -> Result<Vec<UniversalModuleResponse>, BearDogError>;
 
     async fn check_capability_health(
         capability: CapabilityType,
@@ -212,10 +217,8 @@ pub struct EcosystemCapabilityDiscovery {
 
     registry_client: impl EcosystemRegistryClient + Send + Sync + \'static,
 
-    #[allow(dead_code)] // Will be used for caching discovered capabilities
     module_cache: Arc<tokio::sync::RwLock<HashMap<CapabilityType, Vec<ModuleInstance>>>>,
 
-    #[allow(dead_code)] // Will be used for cache TTL management
     cache_ttl_seconds: u64,
 
 pub trait EcosystemRegistryClient: Send + Sync {
@@ -290,7 +293,7 @@ impl EcosystemCapabilityDiscovery {
             + (performance_score * performance_weight)
             + (quality_score * quality_weight)
 impl UniversalCapabilityDiscovery for EcosystemCapabilityDiscovery {
-    ) -> BearDogResult<Vec<ModuleInstance>> {
+    ) -> Result<Vec<ModuleInstance>, BearDogError> {
         info!(
             "🔍 Discovering modules with capabilities: {:?}",
             capabilities
@@ -323,7 +326,7 @@ impl UniversalCapabilityDiscovery for EcosystemCapabilityDiscovery {
         discovered_modules = self.rank_modules(discovered_modules);
             "✅ Discovered {} suitable modules",
         Ok(discovered_modules)
-    ) -> BearDogResult<UniversalModuleResponse> {
+    ) -> Result<UniversalModuleResponse, BearDogError> {
 
         let modules = self
             .discover_by_capabilities(
@@ -346,7 +349,7 @@ impl UniversalCapabilityDiscovery for EcosystemCapabilityDiscovery {
         self.registry_client
             .send_module_request(&target_module.instance_id, request)
             .await
-    ) -> BearDogResult<Vec<UniversalModuleResponse>> {
+    ) -> Result<Vec<UniversalModuleResponse>, BearDogError> {
             "📢 Broadcasting request to all modules with capability: {:?}",
             request.target_capability
         let capability_string = request.target_capability.as_capability_string();
@@ -399,3 +402,37 @@ impl QualityRequirements {}
             minimum_reliability: 0.999,
             minimum_availability: 0.9999,
             fault_tolerance_required: true,
+
+pub struct CapabilityCache {
+    pub capabilities: HashMap<String, Vec<String>>,
+    pub last_updated: chrono::DateTime<chrono::Utc>,
+    pub ttl: Duration,
+}
+
+pub struct CacheManager {
+    pub cache_ttl: Duration,
+    pub max_entries: usize,
+    pub cleanup_interval: Duration,
+}
+
+impl CapabilityCache {
+    pub fn new(ttl: Duration) -> Self {
+        Self {
+            capabilities: HashMap::new(),
+            last_updated: chrono::Utc::now(),
+            ttl,
+        }
+    }
+
+    pub fn is_expired(&self) -> bool {
+        chrono::Utc::now() - self.last_updated > chrono::Duration::from_std(self.ttl).unwrap_or_default()
+    }
+
+    pub fn update_capabilities(&mut self, service: String, capabilities: Vec<String>) {
+        self.capabilities.insert(service, capabilities);
+        self.last_updated = chrono::Utc::now();
+    }
+}
+
+impl CacheManager {
+    // ... existing code ...

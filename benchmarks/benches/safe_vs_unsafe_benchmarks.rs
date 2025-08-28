@@ -1,5 +1,3 @@
-
-
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::hint::black_box as std_black_box;
 
@@ -71,7 +69,6 @@ fn benchmark_encryption_operations(c: &mut Criterion) {
 
     group.bench_function("safe_encryption_simulation", |b| {
         b.iter(|| {
-
             let mut encrypted = test_data.clone();
             for byte in &mut encrypted {
                 *byte ^= 0xAA; // Simple XOR "encryption"
@@ -88,7 +85,6 @@ fn benchmark_memory_patterns(c: &mut Criterion) {
 
     group.bench_function("stack_allocation", |b| {
         b.iter(|| {
-
             let buffer = [0u8; 256];
             let sum: u32 = buffer.iter().map(|&x| u32::from(x)).sum();
             std_black_box(sum)
@@ -97,7 +93,6 @@ fn benchmark_memory_patterns(c: &mut Criterion) {
 
     group.bench_function("heap_allocation", |b| {
         b.iter(|| {
-
             let buffer = vec![0u8; 256];
             let sum: u32 = buffer.iter().map(|&x| u32::from(x)).sum();
             std_black_box(sum)
@@ -112,7 +107,6 @@ mod tests {
 
     #[test]
     fn test_safe_implementations_work() {
-
         let buffer = vec![1, 2, 3, 4];
         assert_eq!(buffer.as_slice(), &[1, 2, 3, 4]);
 

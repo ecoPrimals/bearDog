@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -114,7 +114,7 @@ impl PerformanceMetricsCollector {
             thresholds: Arc::new(RwLock::new(PerformanceThresholds::default())),
             max_history_size: 1000,
 
-    pub async fn collect_metrics(&self) -> BearDogResult<PerformanceMetrics> {
+    pub async fn collect_metrics(&self) -> Result<PerformanceMetrics, BearDogError> {
 
         let metrics = PerformanceMetrics {
             timestamp: Utc::now(),
@@ -139,7 +139,7 @@ impl PerformanceMetricsCollector {
         );
         Ok(metrics)
 
-    pub async fn get_recent_metrics(&self, count: usize) -> BearDogResult<Vec<PerformanceMetrics>> {
+    pub async fn get_recent_metrics(&self, count: usize) -> Result<Vec<PerformanceMetrics>, BearDogError>> {
         let history = self.metrics_history.read().await;
         let start_index = if history.len() > count {
             history.len() - count
@@ -147,7 +147,7 @@ impl PerformanceMetricsCollector {
             0
         Ok(history[start_index..].to_vec())
 
-    pub async fn analyze_trends(&self, window_size: usize) -> BearDogResult<PerformanceTrends> {
+    pub async fn analyze_trends(&self, window_size: usize) -> Result<PerformanceTrends, BearDogError> {
         let recent_metrics = self.get_recent_metrics(window_size).await?;
         if recent_metrics.len() < 2 {
             return Ok(PerformanceTrends::default());
@@ -184,7 +184,7 @@ impl PerformanceMetricsCollector {
     pub async fn check_thresholds(
         &self,
         metrics: &PerformanceMetrics,
-    ) -> BearDogResult<Vec<String>> {
+    ) -> Result<Vec<String>, BearDogError>> {
         let thresholds = self.thresholds.read().await;
         let mut violations = Vec::new();
         if metrics.cpu_usage > thresholds.cpu_threshold {
@@ -203,16 +203,16 @@ impl PerformanceMetricsCollector {
                 metrics.error_rate, thresholds.error_rate_threshold
         Ok(violations)
 
-    async fn collect_cpu_usage(&self) -> BearDogResult<f64> {
+    async fn collect_cpu_usage(&self) -> Result<f64, BearDogError> {
 
         Ok(45.0)}
 
-    async fn collect_memory_usage(&self) -> BearDogResult<f64> {
+    async fn collect_memory_usage(&self) -> Result<f64, BearDogError> {
         Ok(62.0)
-    async fn collect_response_time(&self) -> BearDogResult<f64> {
+    async fn collect_response_time(&self) -> Result<f64, BearDogError> {
         Ok(250.0)}
 
-    async fn collect_error_rate(&self) -> BearDogResult<f64> {
+    async fn collect_error_rate(&self) -> Result<f64, BearDogError> {
         Ok(1.5)
-    async fn collect_throughput(&self) -> BearDogResult<f64> {
+    async fn collect_throughput(&self) -> Result<f64, BearDogError> {
         Ok(150.0)

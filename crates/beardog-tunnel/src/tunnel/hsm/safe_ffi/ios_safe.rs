@@ -1,54 +1,26 @@
 
 
-use super::traits::PlatformProvider;
-use crate::tunnel::hsm::types::{HsmKey, KeyType};
-use beardog_errors::{BearDogError, BearDogResult};
-use tracing::{debug, info, warn};
+use beardog_errors::BearDogError;
+use beardog_traits::canonical::PlatformProvider;
+use std::collections::HashMap;
 
 pub struct SafeIosProvider {
-
-    secure_enclave_available: bool,
+    capabilities: HashMap<String, bool>,
 }
-impl SafeIosProvider {
 
-    pub fn new() -> BearDogResult<Self> {
-        let secure_enclave_available = Self::check_secure_enclave_availability();
+impl SafeIosProvider {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
-            secure_enclave_available,
+            capabilities: HashMap::new(),
         })
     }
-
-    fn check_secure_enclave_availability() -> bool {
-        if !cfg!(target_os = "ios") {
-            info!("Not on iOS platform, Secure Enclave not available");
-            return false;
-        }
-        info!("Simulating Secure Enclave availability check on iOS");
-        true
-
-    async fn generate_key_safe(&self, _key_id: &str, _key_type: &KeyType) -> BearDogResult<HsmKey> {
-
-        Err(BearDogError::NotImplemented {
-            message: "iOS Secure Enclave key generation not yet implemented safely".to_string(),
-
-    async fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> BearDogResult<Vec<u8>> {
-
-            message: "iOS Secure Enclave signing not yet implemented safely".to_string(),
-
-    async fn verify_signature_safe(
-        &self,
-        _key_id: &str,
-        _data: &[u8],
-        _signature: &[u8],
-    ) -> BearDogResult<bool> {
-
-            message: "iOS Secure Enclave verification not yet implemented safely".to_string(),}
+}
 
 impl PlatformProvider for SafeIosProvider {
-    async fn generate_key(&self, key_id: &str, key_type: &KeyType) -> BearDogResult<HsmKey> {
+    async fn generate_key(&self, key_id: &str, key_type: &crate::tunnel::hsm::types::KeyType) -> Result<crate::tunnel::hsm::types::HsmKey, BearDogError> {
         self.generate_key_safe(key_id, key_type).await}
 
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         self.sign_data_safe(key_id, data).await
     async fn verify_signature(
         key_id: &str,

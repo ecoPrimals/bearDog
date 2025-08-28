@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -51,7 +51,7 @@ impl LocalOptimizer {
         }
     }
 
-    pub async fn optimize(&mut self) -> BearDogResult<OptimizationResult> {
+    pub async fn optimize(&mut self) -> Result<OptimizationResult, BearDogError> {
         let start_time = Instant::now();
         let mut result = OptimizationResult::default();
 
@@ -124,7 +124,7 @@ impl LocalOptimizer {
         Ok(result)
     }
 
-    async fn optimize_cpu(&self) -> BearDogResult<CpuOptimizationResult> {
+    async fn optimize_cpu(&self) -> Result<CpuOptimizationResult, BearDogError> {
 
         tokio::time::sleep(Duration::from_millis(100)).await;
         
@@ -134,7 +134,7 @@ impl LocalOptimizer {
         })
     }
 
-    async fn optimize_memory(&self) -> BearDogResult<MemoryOptimizationResult> {
+    async fn optimize_memory(&self) -> Result<MemoryOptimizationResult, BearDogError> {
 
         tokio::time::sleep(Duration::from_millis(150)).await;
         
@@ -144,7 +144,7 @@ impl LocalOptimizer {
         })
     }
 
-    async fn optimize_io(&self) -> BearDogResult<IoOptimizationResult> {
+    async fn optimize_io(&self) -> Result<IoOptimizationResult, BearDogError> {
 
         tokio::time::sleep(Duration::from_millis(200)).await;
         
@@ -162,19 +162,19 @@ impl LocalOptimizer {
 #[allow(async_fn_in_trait)]
 pub trait SystemOptimizer: Send + Sync {
 
-    async fn optimize_system(&mut self) -> BearDogResult<OptimizationResult>;
+    async fn optimize_system(&mut self) -> Result<OptimizationResult, BearDogError>;
 
-    async fn get_performance_metrics(&self) -> BearDogResult<PerformanceMetrics>;
+    async fn get_performance_metrics(&self) -> Result<PerformanceMetrics, BearDogError>;
 
-    async fn needs_optimization(&self) -> BearDogResult<bool>;
+    async fn needs_optimization(&self) -> Result<bool, BearDogError>;
 }
 
 impl SystemOptimizer for LocalOptimizer {
-    async fn optimize_system(&mut self) -> BearDogResult<OptimizationResult> {
+    async fn optimize_system(&mut self) -> Result<OptimizationResult, BearDogError> {
         self.optimize().await
     }
 
-    async fn get_performance_metrics(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn get_performance_metrics(&self) -> Result<PerformanceMetrics, BearDogError> {
         Ok(PerformanceMetrics {
             cpu_usage: 45.2,
             memory_usage: 62.8,
@@ -184,7 +184,7 @@ impl SystemOptimizer for LocalOptimizer {
         })
     }
 
-    async fn needs_optimization(&self) -> BearDogResult<bool> {
+    async fn needs_optimization(&self) -> Result<bool, BearDogError> {
         let metrics = self.get_performance_metrics().await?;
         
         Ok(metrics.cpu_usage > self.config.max_cpu_usage || 

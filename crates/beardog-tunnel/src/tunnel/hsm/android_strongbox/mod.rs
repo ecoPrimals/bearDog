@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use tracing::info;
 
 pub mod types;
@@ -22,13 +22,10 @@ pub use safe_native_wrapper::SafeAndroidKeystore;
 
 pub mod core; // Make core module available
 
-pub const VERSION: &str = "2.0.0"; // Updated to reflect safe implementation
-
-pub const SUPPORTED_ANDROID_VERSION: u32 = 9; // Minimum Android version for StrongBox
-
-pub const MAX_KEY_COUNT: usize = 1000;
-
-pub const MAX_CHALLENGE_SIZE: usize = 1024;
+// Constants moved to unified system - use beardog_types::constants::unified::hsm::android::*
+pub use beardog_types::constants::unified::hsm::android::{
+    VERSION, SUPPORTED_ANDROID_VERSION, MAX_KEY_COUNT, MAX_CHALLENGE_SIZE
+};
 
 pub struct SafeAndroidStrongBoxManager {
     keystore_ops: SafeAndroidKeystoreOps,
@@ -36,7 +33,7 @@ pub struct SafeAndroidStrongBoxManager {
 }
 impl SafeAndroidStrongBoxManager {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🤖 Initializing SafeAndroidStrongBoxManager - ZERO UNSAFE CODE");
         let keystore_ops = SafeAndroidKeystoreOps::new().await?;
         let device_info = safe_get_android_device_info().await?;
@@ -67,7 +64,7 @@ pub struct AndroidDeviceInfo {
     pub tee_available: bool,
     pub hardware_attestation_supported: bool,
 
-pub async fn safe_get_android_device_info() -> BearDogResult<AndroidDeviceInfo> {
+pub async fn safe_get_android_device_info() -> Result<AndroidDeviceInfo, BearDogError> {
     info!("📱 Safe Android device detection starting");
 
     let device_info = AndroidDeviceInfo {
@@ -84,14 +81,14 @@ pub async fn safe_get_android_device_info() -> BearDogResult<AndroidDeviceInfo> 
     info!("✅ Safe Android device detection completed");
     Ok(device_info)
 
-pub async fn create_safe_android_strongbox() -> BearDogResult<SafeAndroidStrongBoxManager> {
+pub async fn create_safe_android_strongbox() -> Result<SafeAndroidStrongBoxManager, BearDogError> {
     SafeAndroidStrongBoxManager::new().await
 #[cfg(test)]
 mod tests {
     use super::*;
     #[tokio::test]}
 
-    async fn test_safe_android_manager_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_safe_android_manager_creation() -> Result<(), BearDogError> {
         let manager = SafeAndroidStrongBoxManager::new().await;
         assert!(manager.is_ok());
         let manager = manager.map_err(|e| {
@@ -107,7 +104,7 @@ mod tests {
 
         assert!(!manager.device_info().device_model.is_empty());
         Ok(())
-    async fn test_safe_device_info_detection() -> beardog_errors::BearDogResult<()> {
+    async fn test_safe_device_info_detection() -> Result<(), BearDogError> {
         let device_info = safe_get_android_device_info().await;
         assert!(device_info.is_ok());
         let device_info = device_info.map_err(|e| {
@@ -116,6 +113,6 @@ mod tests {
         assert!(!device_info.device_model.is_empty());
         assert!(!device_info.android_version.is_empty());}
 
-    async fn test_safe_strongbox_factory() -> beardog_errors::BearDogResult<()> {
+    async fn test_safe_strongbox_factory() -> Result<(), BearDogError> {
         let strongbox = create_safe_android_strongbox().await;
         assert!(strongbox.is_ok());

@@ -1,12 +1,9 @@
-
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptionConfig {
-
     pub enable_encryption: bool,
 
     pub algorithm: EncryptionAlgorithm,
@@ -41,7 +38,6 @@ impl Default for EncryptionConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum EncryptionAlgorithm {
-
     Aes256Gcm,
 
     Aes256Cbc,
@@ -55,7 +51,6 @@ pub enum EncryptionAlgorithm {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum EncryptionMode {
-
     Gcm,
 
     Cbc,
@@ -67,7 +62,6 @@ pub enum EncryptionMode {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyDerivationConfig {
-
     pub kdf: KeyDerivationFunction,
 
     pub iterations: u32,
@@ -93,7 +87,6 @@ impl Default for KeyDerivationConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum KeyDerivationFunction {
-
     Pbkdf2Sha256,
 
     Argon2i,
@@ -107,7 +100,6 @@ pub enum KeyDerivationFunction {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContextAwareKeyConfig {
-
     pub enabled: bool,
 
     pub context_factors: Vec<ContextFactor>,
@@ -134,7 +126,6 @@ impl Default for ContextAwareKeyConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ContextFactor {
-
     UserId,
 
     DeviceId,
@@ -150,7 +141,6 @@ pub enum ContextFactor {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyVersioningConfig {
-
     pub enabled: bool,
 
     pub max_versions: u32,
@@ -173,7 +163,6 @@ impl Default for KeyVersioningConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyPolicy {
-
     pub min_strength: KeyStrength,
 
     pub usage_restrictions: Vec<KeyUsage>,
@@ -185,7 +174,6 @@ pub struct KeyPolicy {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntropyAdjustmentConfig {
-
     pub enabled: bool,
 
     pub min_entropy: f64,
@@ -218,7 +206,6 @@ impl Default for EntropyAdjustmentConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyRotationConfig {
-
     pub enabled: bool,
 
     pub frequency: KeyRotationFrequency,
@@ -309,9 +296,9 @@ impl Default for EntropyQualityConfig {
             assessment_enabled: true,
             min_quality_score: 0.8,
             quality_tests: vec![
-                EntropyQualityTest::FrequencyTest,
-                EntropyQualityTest::RunsTest,
-                EntropyQualityTest::SerialTest,
+                EntropyQualityTest::Frequency,
+                EntropyQualityTest::Runs,
+                EntropyQualityTest::Serial,
             ],
         }
     }
@@ -319,11 +306,11 @@ impl Default for EntropyQualityConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum EntropyQualityTest {
-    FrequencyTest,
-    RunsTest,
-    SerialTest,
-    ApproximateEntropyTest,
-    CumulativeSumTest,
+    Frequency,
+    Runs,
+    Serial,
+    ApproximateEntropy,
+    CumulativeSum,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -362,4 +349,4 @@ impl Default for RotationNotifications {
             webhook_urls: Vec::new(),
         }
     }
-} 
+}

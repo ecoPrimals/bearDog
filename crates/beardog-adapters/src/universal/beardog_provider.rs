@@ -1,10 +1,10 @@
-
+use beardog_errors::BearDogError;
 
 use chrono::Utc;
 use std::collections::HashMap;
 use uuid::Uuid;
 use super::*;
-use crate::{AIFirstResponse, EcosystemResult};
+use crate::{{AIFirstResponse}};
 
 #[derive(Debug)]
 pub struct BearDogEcosystemProvider {
@@ -221,7 +221,7 @@ impl BearDogEcosystemProvider {
 #[allow(async_fn_in_trait)]
 impl EcosystemIntegration for BearDogEcosystemProvider {
 
-    async fn register(&self) -> EcosystemResult<UniversalServiceRegistration> {
+    async fn register(&self) -> Result<UniversalServiceRegistration, BearDogError> {
         Ok(UniversalServiceRegistration {
             service_id: self.service_id,
             metadata: ServiceMetadata {
@@ -262,11 +262,11 @@ impl EcosystemIntegration for BearDogEcosystemProvider {
     async fn discover_by_capability(
         &self,
         _capability: &str,
-    ) -> EcosystemResult<Vec<UniversalServiceRegistration>> {
+    ) -> Result<Vec<UniversalServiceRegistration, BearDogError>> {
 
         Ok(Vec::new())
 
-    async fn health_check(&self) -> EcosystemResult<HealthStatus> {
+    async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
 
         Ok(HealthStatus {
             status: HealthLevel::Healthy,
@@ -288,7 +288,7 @@ impl EcosystemIntegration for BearDogEcosystemProvider {
 
     async fn handle_request(
         request: EcosystemRequest,
-    ) -> EcosystemResult<AIFirstResponse<serde_json::Value>> {
+    ) -> Result<AIFirstResponse<serde_json::Value, BearDogError>> {
 
         Ok(AIFirstResponse {
             success: true,

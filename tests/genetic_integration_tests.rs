@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::{
@@ -41,19 +42,19 @@ impl MockNodeRegistry {
 }
 
 impl beardog::auth::NodeRegistry for MockNodeRegistry {
-    fn get_node_info(&self, node_id: &str) -> BearDogResult<NodeInfo> {
+    fn get_node_info(&self, node_id: &str) -> Result<NodeInfo, BearDogError> {
         self.nodes.get(node_id).cloned().ok_or_else(|| BearDogError::NotFound {
             resource_type: "Node".to_string(),
             id: node_id.to_string(),
         })
     }
 
-    fn register_node(&mut self, node_info: NodeInfo) -> BearDogResult<()> {
+    fn register_node(&mut self, node_info: NodeInfo) -> Result<(), BearDogError> {
         self.nodes.insert(node_info.id.clone(), node_info);
         Ok(())
     }
 
-    fn get_trust_level(&self, node_id: &str) -> BearDogResult<f64> {
+    fn get_trust_level(&self, node_id: &str) -> Result<f64, BearDogError> {
         self.nodes.get(node_id).map(|n| n.trust_level as f64)
             .ok_or_else(|| BearDogError::NotFound {
                 resource_type: "Node".to_string(),
@@ -61,7 +62,7 @@ impl beardog::auth::NodeRegistry for MockNodeRegistry {
             })
     }
 
-    fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> BearDogResult<()> {
+    fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> Result<(), BearDogError> {
         if let Some(node) = self.nodes.get_mut(node_id) {
             node.trust_level = trust_level;
             Ok(())
@@ -77,7 +78,7 @@ impl beardog::auth::NodeRegistry for MockNodeRegistry {
 struct MockProofVerifier;
 
 impl ProofVerifier for MockProofVerifier {
-    fn verify_authorization_proof(&self, _proof: &AuthorizationProof) -> BearDogResult<bool> {
+    fn verify_authorization_proof(&self, _proof: &AuthorizationProof) -> Result<bool, BearDogError> {
         Ok(true) // Always verify for testing
     }
 
@@ -85,7 +86,7 @@ impl ProofVerifier for MockProofVerifier {
         &self,
         authorization: &beardog::auth::CrossNodeAuthorization,
         operation: &beardog::auth::CrossNodeOperation,
-    ) -> BearDogResult<AuthorizationProof> {
+    ) -> Result<AuthorizationProof, BearDogError> {
         Ok(AuthorizationProof {
             authorization_id: authorization.id.clone(),
             operation: operation.clone(),
@@ -114,7 +115,7 @@ pub struct IntegrationMetrics {
 }
 
 impl GeneticIntegrationHarness {
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🧪 Initializing Genetic Integration Test Harness");
 
         let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -136,7 +137,7 @@ impl GeneticIntegrationHarness {
         })
     }
 
-    pub async fn create_test_node(&mut self, node_id: &str) -> BearDogResult<String> {
+    pub async fn create_test_node(&mut self, node_id: &str) -> Result<String, BearDogError> {
         info!("🧬 Creating test node with genetics: {}", node_id);
 
         let node_registry = Box::new(MockNodeRegistry::new());
@@ -161,7 +162,7 @@ impl GeneticIntegrationHarness {
         &mut self,
         parent_node_id: &str,
         spawn_purpose: SpawnPurpose,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
         info!("🧬 Testing genetic spawning from parent: {}", parent_node_id);
 
         let spawn_request = SpawnRequest {
@@ -186,7 +187,7 @@ impl GeneticIntegrationHarness {
     pub async fn test_multi_party_workflow(
         &mut self,
         workflow_type: BearDogWorkflowType,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
         info!("🔄 Testing multi-party workflow: {:?}", workflow_type);
 
         let wf_type = match workflow_type {
@@ -220,7 +221,7 @@ impl GeneticIntegrationHarness {
 }
 
 #[tokio::test]
-async fn test_genetic_spawning_integration() -> BearDogResult<()> {
+async fn test_genetic_spawning_integration() -> Result<(), BearDogError> {
     init_tracing();
 
     let mut harness = GeneticIntegrationHarness::new().await?;
@@ -240,7 +241,7 @@ async fn test_genetic_spawning_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_multi_party_workflow_integration() -> BearDogResult<()> {
+async fn test_multi_party_workflow_integration() -> Result<(), BearDogError> {
     init_tracing();
 
     let mut harness = GeneticIntegrationHarness::new().await?;
@@ -271,7 +272,7 @@ async fn test_multi_party_workflow_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_cross_node_genetic_operations() -> BearDogResult<()> {
+async fn test_cross_node_genetic_operations() -> Result<(), BearDogError> {
     init_tracing();
 
     let mut harness = GeneticIntegrationHarness::new().await?;
@@ -297,7 +298,7 @@ async fn test_cross_node_genetic_operations() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_genetic_lineage_tracking() -> BearDogResult<()> {
+async fn test_genetic_lineage_tracking() -> Result<(), BearDogError> {
     init_tracing();
 
     let mut harness = GeneticIntegrationHarness::new().await?;
@@ -324,7 +325,7 @@ async fn test_genetic_lineage_tracking() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_genetic_capability_inheritance() -> BearDogResult<()> {
+async fn test_genetic_capability_inheritance() -> Result<(), BearDogError> {
     init_tracing();
 
     let mut harness = GeneticIntegrationHarness::new().await?;
@@ -347,7 +348,7 @@ async fn test_genetic_capability_inheritance() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_workflow_approval_integration() -> BearDogResult<()> {
+async fn test_workflow_approval_integration() -> Result<(), BearDogError> {
     init_tracing();
 
     let mut harness = GeneticIntegrationHarness::new().await?;
@@ -389,7 +390,7 @@ async fn test_workflow_approval_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_genetic_integration_error_handling() -> BearDogResult<()> {
+async fn test_genetic_integration_error_handling() -> Result<(), BearDogError> {
     init_tracing();
 
     let mut harness = GeneticIntegrationHarness::new().await?;
@@ -422,7 +423,7 @@ async fn test_genetic_integration_error_handling() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_genetic_integration_comprehensive() -> BearDogResult<()> {
+async fn test_genetic_integration_comprehensive() -> Result<(), BearDogError> {
     init_tracing();
 
     let mut harness = GeneticIntegrationHarness::new().await?;

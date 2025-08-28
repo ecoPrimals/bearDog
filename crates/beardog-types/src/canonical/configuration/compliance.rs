@@ -1,11 +1,8 @@
-
-
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceConfig {
-
     pub enabled_standards: Vec<ComplianceStandard>,
 
     pub monitoring_interval: Duration,
@@ -41,7 +38,6 @@ impl Default for ComplianceConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ComplianceStandard {
-
     Gdpr,
 
     Sox,
@@ -59,7 +55,6 @@ pub enum ComplianceStandard {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReportingConfig {
-
     pub enabled: bool,
 
     pub frequency: ReportFrequency,
@@ -88,7 +83,6 @@ impl Default for ReportingConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyAuditConfig {
-
     pub enabled: bool,
 
     pub track_data_access: bool,
@@ -114,7 +108,6 @@ impl Default for PrivacyAuditConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataSovereigntyConfig {
-
     pub enforce_residency: bool,
 
     pub allowed_regions: Vec<String>,
@@ -137,7 +130,6 @@ impl Default for DataSovereigntyConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ReportFrequency {
-
     Hourly,
 
     Daily,
@@ -153,7 +145,6 @@ pub enum ReportFrequency {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ReportFormat {
-
     Json,
 
     Pdf,
@@ -163,4 +154,4 @@ pub enum ReportFormat {
     Html,
 
     Xml,
-} 
+}

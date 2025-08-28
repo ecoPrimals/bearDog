@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use super::models::{SurveillanceIndicator, TrafficPattern};
 use super::types::IndicatorType;
@@ -168,7 +168,7 @@ impl SurveillanceDetector {
     async fn analyze_behavioral_patterns(
         &self,
         context: &SurveillanceContext,
-    ) -> BearDogResult<Vec<SurveillanceIndicator>> {
+    ) -> Result<Vec<SurveillanceIndicator>, BearDogError>> {
         let mut indicators = Vec::new();
 
         for pattern in &context.data_patterns {
@@ -189,7 +189,7 @@ impl SurveillanceDetector {
     async fn generate_privacy_recommendations(
         &self,
         indicators: &[SurveillanceIndicator],
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         for indicator in indicators {
             match indicator.severity {
                 s if s > 0.8 => {
@@ -222,7 +222,7 @@ impl SurveillanceDetector {
     async fn detect_network_scanning(
         &self,
         context: &SurveillanceContext,
-    ) -> BearDogResult<Vec<SurveillanceIndicator>> {
+    ) -> Result<Vec<SurveillanceIndicator>, BearDogError>> {
         let mut indicators = Vec::new();
 
         for pattern in &context.traffic_patterns {

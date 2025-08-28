@@ -1,10 +1,6 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-use super::core::ThreatSeverity;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatSource {
@@ -82,7 +78,7 @@ impl Default for ThreatTarget {
             resource_type: String::new(),
             criticality: AssetCriticality::Medium,
             ip_address: None,
-            hostname: None,
+            hostname: Some(String::new()),
         }
     }
 }
@@ -218,6 +214,14 @@ impl ThreatSource {
         )
     }
 
+    pub fn is_malicious(&self) -> bool {
+        matches!(self.classification, SourceClassification::Malicious)
+    }
+
+    pub fn is_trustworthy(&self) -> bool {
+        self.is_trusted()
+    }
+
     pub fn hours_since_last_seen(&self) -> i64 {
         let now = Utc::now();
         match self.last_seen {
@@ -275,6 +279,16 @@ impl ThreatTarget {
             ProtectionLevel::Enhanced | ProtectionLevel::Maximum
         )
     }
+
+    pub fn is_high_value(&self) -> bool {
+        self.is_critical()
+    }
+
+    pub fn risk_score(&self) -> f64 {
+        let criticality_score = self.asset_criticality.risk_score();
+        let protection_score = self.protection_level.protection_score();
+        criticality_score * (1.0 - protection_score)
+    }
 }
 
 impl GeoLocation {
@@ -293,10 +307,7 @@ impl GeoLocation {
 
     pub fn is_high_risk_country(&self) -> bool {
         // List of countries commonly associated with cyber threats
-        matches!(
-            self.country.as_str(),
-            "CN" | "RU" | "KP" | "IR" | "Unknown"
-        )
+        matches!(self.country.as_str(), "CN" | "RU" | "KP" | "IR" | "Unknown")
     }
 
     pub fn is_anonymized(&self) -> bool {
@@ -305,15 +316,15 @@ impl GeoLocation {
 
     pub fn risk_score(&self) -> f64 {
         let mut score: f64 = 0.0;
-        
+
         if self.is_high_risk_country() {
             score += 0.3;
         }
-        
+
         if self.is_anonymized() {
             score += 0.4;
         }
-        
+
         score.min(1.0)
     }
 }
@@ -336,7 +347,6 @@ impl SourceClassification {
 }
 
 impl AssetCriticality {
-
     pub fn criticality_score(&self) -> f64 {
         match self {
             AssetCriticality::Mission => 1.0,
@@ -346,10 +356,13 @@ impl AssetCriticality {
             AssetCriticality::Low => 0.2,
         }
     }
+
+    pub fn risk_score(&self) -> f64 {
+        self.criticality_score()
+    }
 }
 
 impl ProtectionLevel {
-
     pub fn protection_score(&self) -> f64 {
         match self {
             ProtectionLevel::None => 0.0,
@@ -401,5 +414,3 @@ impl std::fmt::Display for ProtectionLevel {
         }
     }
 }
-
-

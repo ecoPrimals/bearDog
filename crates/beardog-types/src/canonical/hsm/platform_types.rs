@@ -1,10 +1,7 @@
-
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MemoryProtectionLevel {
-
     None,
 
     Low,
@@ -24,7 +21,6 @@ impl Default for MemoryProtectionLevel {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum HsmType {
-
     Software,
 
     Network,
@@ -42,7 +38,6 @@ pub enum HsmType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SmartphoneType {
-
     Android,
 
     Ios,
@@ -52,7 +47,6 @@ pub enum SmartphoneType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SecureEnclaveType {
-
     AppleSecureEnclave,
 
     AndroidStrongBox,
@@ -66,7 +60,6 @@ pub enum SecureEnclaveType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SoftwareHsmType {
-
     SoftHsm,
 
     OpenSsl,
@@ -78,7 +71,6 @@ pub enum SoftwareHsmType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EntropyQualityRating {
-
     None,
 
     Insufficient,
@@ -106,7 +98,6 @@ impl Default for EntropyQualityRating {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EntropyCollectionMethod {
-
     TouchPressure,
 
     TypingRhythm,
@@ -126,7 +117,6 @@ pub enum EntropyCollectionMethod {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum KeyStorageType {
-
     Software,
 
     Hardware,
@@ -140,7 +130,6 @@ pub enum KeyStorageType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum AndroidKeyAlgorithm {
-
     Rsa,
 
     Ec,
@@ -152,7 +141,6 @@ pub enum AndroidKeyAlgorithm {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum StrongBoxImplementation {
-
     Qualcomm,
 
     Samsung,
@@ -164,7 +152,6 @@ pub enum StrongBoxImplementation {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
-
     pub operations_per_second: f64,
 
     pub average_latency_ms: f64,
@@ -192,4 +179,4 @@ impl Default for PerformanceMetrics {
             uptime_seconds: 0,
         }
     }
-} 
+}

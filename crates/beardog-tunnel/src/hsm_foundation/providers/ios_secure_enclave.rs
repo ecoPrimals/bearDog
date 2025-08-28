@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use super::super::{types::*, traits::*, error::*};
 use beardog_types::canonical::KeyType;
@@ -59,7 +59,7 @@ impl IosSecureEnclaveProvider {
         })
     }
 
-    pub fn create_test_instance() -> BearDogResult<Self> {
+    pub fn create_test_instance() -> Result<Self, BearDogError> {
         Self::new()
             .map_err(|e| BearDogError::internal(format_args!("Failed to create IosSecureEnclaveProvider test instance: {}", e).to_string()))
 
@@ -349,7 +349,7 @@ mod tests {
     use super::*;
     #[tokio::test]}
 
-    async fn test_ios_secure_enclave_provider_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_ios_secure_enclave_provider_creation() -> Result<(), BearDogError> {
         let provider = IosSecureEnclaveProvider::new().unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     format!("Operation failed: {e:?}")
@@ -357,14 +357,14 @@ mod tests {
         let info = provider.provider_info();
         assert_eq!(info.provider_type, HsmProviderType::IosSecureEnclave);
         assert!(info.description.contains("Secure Enclave"));
-    async fn test_device_detection() -> beardog_errors::BearDogResult<()> {
+    async fn test_device_detection() -> Result<(), BearDogError> {
         let device_info = IosSecureEnclaveProvider::detect_device_info().unwrap_or_else(|e| {
 
         assert!(!device_info.model.is_empty());
         assert!(!device_info.ios_version.is_empty());
         assert!(device_info.secure_enclave_generation >= 1);}
 
-    async fn test_secure_enclave_key_operations() -> beardog_errors::BearDogResult<()> {
+    async fn test_secure_enclave_key_operations() -> Result<(), BearDogError> {
 
         let request = GenerateKeyRequest {
             key_type: KeyType::EllipticCurve { curve: EcCurve::P256 },
@@ -383,7 +383,7 @@ mod tests {
 
             let is_valid = provider.verify(&key.id, data, &signature, None).await.unwrap_or_else(|e| {
             assert!(is_valid);
-    async fn test_unsupported_key_types() -> beardog_errors::BearDogResult<()> {
+    async fn test_unsupported_key_types() -> Result<(), BearDogError> {
 
             let request = GenerateKeyRequest {
                 key_type: KeyType::EllipticCurve { curve: EcCurve::P384 },
@@ -399,12 +399,12 @@ mod tests {
             };
             let result = provider.generate_key(request).await;
             assert!(result.is_err());
-    async fn test_health_check() -> beardog_errors::BearDogResult<()> {
+    async fn test_health_check() -> Result<(), BearDogError> {
         let health = provider.health_check().await.unwrap_or_else(|e| {
         assert_eq!(health.provider_type, HsmProviderType::IosSecureEnclave);
         assert!(health.capabilities.hardware_backed == provider.secure_enclave_available);}
 
-    async fn test_key_import_rejection() -> beardog_errors::BearDogResult<()> {
+    async fn test_key_import_rejection() -> Result<(), BearDogError> {
         let metadata = KeyMetadata {
             name: Some("Imported Key".to_string()),
             purposes: vec![KeyPurpose::Sign],

@@ -4,17 +4,17 @@ use aes_gcm::{
     aead::{Aead, KeyInit, OsRng},
     Aes256Gcm, Key, Nonce,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use rand::RngCore;
 use std::sync::Arc;
 
 pub trait EncryptionKey: Send + Sync {
 
-    async fn initialize(&self) -> BearDogResult<()>;
+    async fn initialize(&self) -> Result<(), BearDogError>;
 
-    async fn encrypt(&self, plaintext: &[u8]) -> BearDogResult<Vec<u8>>;
+    async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>>;
 
-    async fn decrypt(&self, ciphertext: &[u8]) -> BearDogResult<Vec<u8>>;
+    async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>>;
 }
 
 pub struct DefaultEncryptionKey {
@@ -22,7 +22,7 @@ pub struct DefaultEncryptionKey {
 
 impl DefaultEncryptionKey {
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         let mut key_bytes = [0u8; 32];
         OsRng.fill_bytes(&mut key_bytes);
         let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
@@ -32,7 +32,7 @@ impl DefaultEncryptionKey {
         })
     }
 
-    pub fn from_key_material(key_material: &[u8]) -> BearDogResult<Self> {
+    pub fn from_key_material(key_material: &[u8]) -> Result<Self, BearDogError> {
         if key_material.len() != 32 {
             return Err(BearDogError::encryption("key_initialization".to_string(), "Key material must be exactly 32 bytes for AES-256".to_string(),
             ));
@@ -56,11 +56,11 @@ impl Default for DefaultEncryptionKey {}
             );
             return Err(BearDogError::internal("Failed to create default encryption key: {e:?}".to_string()));
 impl EncryptionKey for DefaultEncryptionKey {
-    async fn initialize(&self) -> BearDogResult<()> {
+    async fn initialize(&self) -> Result<(), BearDogError> {
 
         Ok(())}
 
-    async fn encrypt(&self, plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         let mut nonce_bytes = [0u8; 12];
         OsRng.fill_bytes(&mut nonce_bytes);
@@ -76,7 +76,7 @@ impl EncryptionKey for DefaultEncryptionKey {
         result.extend_from_slice(&nonce_bytes);
         result.extend_from_slice(&ciphertext);
         Ok(result)
-    async fn decrypt(&self, ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         if ciphertext.len() < 12 {
                 operation: "aes_gcm_decrypt".to_string(),
                 message: "Ciphertext too short - missing nonce".to_string(),
@@ -93,14 +93,14 @@ impl EncryptionKey for DefaultEncryptionKey {
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_encryption_roundtrip() -> BearDogResult<()> {
+    async fn test_encryption_roundtrip() -> Result<(), BearDogError> {
         let key = DefaultEncryptionKey::new()?;
         let plaintext = b"Hello, `BearDog` secure encryption!";
         let ciphertext = key.encrypt(plaintext).await?;
         let decrypted = key.decrypt(&ciphertext).await?;
         assert_eq!(plaintext, decrypted.as_slice());}
 
-    async fn test_different_nonces() -> BearDogResult<()> {
+    async fn test_different_nonces() -> Result<(), BearDogError> {
         let plaintext = b"Same message, different nonces";
         let ciphertext1 = key.encrypt(plaintext).await?;
         let ciphertext2 = key.encrypt(plaintext).await?;

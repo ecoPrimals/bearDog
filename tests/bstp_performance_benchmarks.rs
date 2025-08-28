@@ -9,12 +9,12 @@ use beardog::tunnel::{
     BStpConfig, BStpKeyManager, CryptoAlgorithm, GamingCryptoEngine, GeneticSecurityHealing,
     SecurityGenetics,
 };
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 #[tokio::test]
-async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
+async fn benchmark_starcraft2_gaming_scenario() -> Result<(), BearDogError> {
 
     println!("🎮 Benchmarking StarCraft 2 gaming performance...");
 
@@ -154,7 +154,7 @@ async fn benchmark_starcraft2_gaming_scenario() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn benchmark_age_of_empires2_scenario() -> BearDogResult<()> {
+async fn benchmark_age_of_empires2_scenario() -> Result<(), BearDogError> {
 
     println!("🏰 Benchmarking Age of Empires 2 gaming performance...");
 
@@ -228,7 +228,7 @@ async fn benchmark_age_of_empires2_scenario() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn benchmark_throughput_stress_test() -> BearDogResult<()> {
+async fn benchmark_throughput_stress_test() -> Result<(), BearDogError> {
 
     println!("⚡ Benchmarking throughput under stress...");
 
@@ -307,7 +307,7 @@ async fn benchmark_throughput_stress_test() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn benchmark_genetic_healing_performance() -> BearDogResult<()> {
+async fn benchmark_genetic_healing_performance() -> Result<(), BearDogError> {
 
     println!("🧬 Benchmarking genetic healing performance...");
 
@@ -370,7 +370,7 @@ async fn benchmark_genetic_healing_performance() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn benchmark_key_management_performance() -> BearDogResult<()> {
+async fn benchmark_key_management_performance() -> Result<(), BearDogError> {
 
     println!("🔑 Benchmarking key management performance...");
 

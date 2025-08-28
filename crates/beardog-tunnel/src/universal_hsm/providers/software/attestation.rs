@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::HsmKey;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -19,7 +19,7 @@ impl AttestationEngine {
         }
     }
 
-    pub async fn attest_key(&self, key: &HsmKey) -> BearDogResult<AttestationData> {
+    pub async fn attest_key(&self, key: &HsmKey) -> Result<AttestationData, BearDogError> {
         if !self.config.enable_attestation {
             return Err(BearDogError::NotSupported {
                 feature: "Attestation is disabled in configuration".to_string(),
@@ -53,7 +53,7 @@ impl AttestationEngine {
             attestation_time: chrono::Utc::now(),
         })
 
-    async fn generate_attestation_certificate(&self, key: &HsmKey) -> BearDogResult<Vec<u8>> {
+    async fn generate_attestation_certificate(&self, key: &HsmKey) -> Result<Vec<u8>, BearDogError>> {
 
         let mut cert_data = Vec::new();
 
@@ -97,7 +97,7 @@ impl AttestationEngine {
         &self,
         key: &HsmKey,
         certificate: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
 
         let mut signature_data = Vec::new();
         signature_data.extend_from_slice(certificate);
@@ -114,7 +114,7 @@ impl AttestationEngine {
 
     pub async fn verify_attestation(
         attestation: &AttestationData,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
         if attestation.certificate.len() < 16 {
             return Ok(false);
@@ -144,7 +144,7 @@ impl AttestationEngine {
 
     pub async fn generate_batch_attestation(
         keys: &[HsmKey],
-    ) -> BearDogResult<BatchAttestationReport> {
+    ) -> Result<BatchAttestationReport, BearDogError> {
         let mut attestations = Vec::new();
         let mut successful = 0;
         let mut failed = 0;
@@ -206,23 +206,23 @@ mod tests {
             public_key: vec![1, 2, 3, 4, 5, 6, 7, 8],
             tags: HashMap::with_capacity(16),
     #[tokio::test]
-    async fn test_attestation_engine_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_attestation_engine_creation() -> Result<(), BearDogError> {
         let config = SoftwareHsmConfig::default();
         let engine = AttestationEngine::new(&config);
         let capabilities = engine.get_attestation_capabilities();
         assert!(capabilities.supports_key_attestation);
         Ok(())}
 
-    async fn test_key_attestation() -> beardog_errors::BearDogResult<()> {
+    async fn test_key_attestation() -> Result<(), BearDogError> {
         let key = create_test_key();
         let attestation = engine.attest_key(&key).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?;
         assert!(!attestation.certificate.is_empty());
         assert!(!attestation.signature.is_empty());
         assert!(!attestation.metadata.is_empty());
-    async fn test_attestation_verification() -> beardog_errors::BearDogResult<()> {
+    async fn test_attestation_verification() -> Result<(), BearDogError> {
         let is_valid = engine.verify_attestation(&attestation, &key).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?;
         assert!(is_valid);
-    async fn test_batch_attestation() -> beardog_errors::BearDogResult<()> {
+    async fn test_batch_attestation() -> Result<(), BearDogError> {
         let keys = vec![
             create_test_key(),
             HsmKey {
@@ -236,7 +236,7 @@ mod tests {
         assert_eq!(report.total_keys, 2);
         assert_eq!(report.successful_attestations, 2);
         assert_eq!(report.failed_attestations, 0);
-    async fn test_attestation_disabled() -> beardog_errors::BearDogResult<()> {
+    async fn test_attestation_disabled() -> Result<(), BearDogError> {
         let mut config = SoftwareHsmConfig::default();
         config.enable_attestation = false;
         let result = engine.attest_key(&key).await;

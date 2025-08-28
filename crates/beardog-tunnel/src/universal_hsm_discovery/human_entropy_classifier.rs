@@ -1,7 +1,7 @@
 
 
 use super::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tracing::{debug, error, info, warn};
@@ -17,7 +17,7 @@ pub struct HumanEntropyClassifier {
 }
 impl HumanEntropyClassifier {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             quality_assessor: EntropyQualityAssessor::new()?,
             method_evaluator: HumanEntropyMethodEvaluator::new()?,
@@ -28,7 +28,7 @@ impl HumanEntropyClassifier {}
     pub async fn classify_human_entropy_support(
         &self,
         capabilities: &HsmCapabilities,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         debug!("🧠 Classifying human entropy support");
         let assessment = self.assess_human_entropy_capabilities(capabilities).await?;
         let supports_entropy = self.evaluate_tier_elevation(&assessment).await?;
@@ -40,7 +40,7 @@ impl HumanEntropyClassifier {}
         Ok(supports_entropy)
 
     pub async fn assess_human_entropy_capabilities(
-    ) -> BearDogResult<HumanEntropyAssessment> {
+    ) -> Result<HumanEntropyAssessment, BearDogError> {
         debug!("🔍 Assessing human entropy capabilities");
         let entropy_caps = &capabilities.human_entropy;
 
@@ -182,7 +182,7 @@ impl HumanEntropyClassifier {}
         verification_strength: f64,
         quality_rating: EntropyQualityRating,
         entropy_caps: &HumanEntropyCapabilities,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64, BearDogError> {
 
         let mut score: f64 = 0.0;
         if entropy_caps.supports_ephemeral_seeds {
@@ -195,7 +195,7 @@ impl HumanEntropyClassifier {}
             score += 0.1;
         Ok(score.min(1.0))}
 
-    async fn determine_recommended_tier(&self, overall_score: f64) -> BearDogResult<HsmTier> {
+    async fn determine_recommended_tier(&self, overall_score: f64) -> Result<HsmTier, BearDogError> {
         if overall_score >= 0.9 {
             Ok(HsmTier::HumanEntropyPremium)
         } else if overall_score >= 0.7 {
@@ -208,7 +208,7 @@ impl HumanEntropyClassifier {}
 
     pub async fn get_ranked_entropy_methods(
         methods: &[EntropyCollectionMethod],
-    ) -> BearDogResult<Vec<(EntropyCollectionMethod, f64)>> {
+    ) -> Result<Vec<(EntropyCollectionMethod, f64)>> {
         let mut ranked = Vec::new();
         for method in methods {
             let score = self
@@ -317,7 +317,7 @@ impl EntropyQualityAssessor {
             0.2
         Ok(biometric_score)
     pub async fn calculate_quality_rating(
-    ) -> BearDogResult<EntropyQualityRating> {
+    ) -> Result<EntropyQualityRating, BearDogError> {
 
         let quality_score = if entropy_caps.supports_ephemeral_seeds {
             if entropy_caps.supports_biometric_entropy && entropy_caps.supports_behavioral_entropy {
@@ -392,7 +392,7 @@ impl HumanEntropyMethodEvaluator {
             EntropyCollectionMethod::TouchPatternsAdvanced { .. } => "touch_advanced",
 
     pub async fn analyze_capability_requirements(
-    ) -> BearDogResult<CapabilityRequirements> {
+    ) -> Result<CapabilityRequirements, BearDogError> {
         debug!("🔍 Analyzing capability requirements for: {:?}", method);
         let requirements = match method {
             EntropyCollectionMethod::TouchPatterns { .. } => CapabilityRequirements::default(),

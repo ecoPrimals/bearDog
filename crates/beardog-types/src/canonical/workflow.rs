@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -28,7 +26,6 @@ impl Default for WorkflowType {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum WorkflowStatus {
-
     Created,
 
     Pending,
@@ -83,7 +80,6 @@ impl std::fmt::Display for WorkflowStatus {
 }
 
 impl WorkflowStatus {
-
     pub fn is_terminal(&self) -> bool {
         matches!(
             self,
@@ -92,17 +88,11 @@ impl WorkflowStatus {
     }
 
     pub fn is_active(&self) -> bool {
-        matches!(
-            self,
-            Self::Running | Self::InProgress | Self::Retrying
-        )
+        matches!(self, Self::Running | Self::InProgress | Self::Retrying)
     }
 
     pub fn is_waiting(&self) -> bool {
-        matches!(
-            self,
-            Self::PendingApprovals | Self::Paused
-        )
+        matches!(self, Self::PendingApprovals | Self::Paused)
     }
 
     pub fn is_successful(&self) -> bool {
@@ -197,7 +187,6 @@ impl Default for WorkflowRetryConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum AuditAction {
-
     WorkflowCreated,
 
     WorkflowSubmitted,
@@ -271,7 +260,6 @@ impl std::fmt::Display for AuditAction {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowAuditEntry {
-
     pub id: String,
 
     pub workflow_id: String,
@@ -300,13 +288,7 @@ pub struct WorkflowAuditEntry {
 }
 
 impl WorkflowAuditEntry {
-
-    pub fn new(
-        workflow_id: &str,
-        action: AuditAction,
-        user: &str,
-        description: &str,
-    ) -> Self {
+    pub fn new(workflow_id: &str, action: AuditAction, user: &str, description: &str) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             workflow_id: workflow_id.to_string(),
@@ -325,12 +307,18 @@ impl WorkflowAuditEntry {
     }
 
     pub fn with_context(mut self, context: HashMap<&str, serde_json::Value>) -> Self {
-        self.context = context.into_iter().map(|(k, v)| (k.to_string(), v)).collect();
+        self.context = context
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect();
         self
     }
 
     pub fn with_metadata(mut self, metadata: HashMap<&str, &str>) -> Self {
-        self.metadata = metadata.into_iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
+        self.metadata = metadata
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
         self
     }
 

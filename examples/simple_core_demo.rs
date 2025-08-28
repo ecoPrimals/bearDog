@@ -2,10 +2,10 @@
 
 use beardog_core::BearDogCore;
 use beardog_types::config::BearDogConfig;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🐻🐕 BearDog Simple Core Demo");
     println!("=============================");
 
@@ -22,7 +22,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_system_info(core: &BearDogCore) -> BearDogResult<()> {
+async fn demo_system_info(core: &BearDogCore) -> Result<(), BearDogError> {
     println!("\n📊 System Information:");
     println!("   Status: OPERATIONAL");
     println!("   Version: v1.0.0");
@@ -30,7 +30,7 @@ async fn demo_system_info(core: &BearDogCore) -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_security_status(_core: &BearDogCore) -> BearDogResult<()> {
+async fn demo_security_status(_core: &BearDogCore) -> Result<(), BearDogError> {
     println!("\n🔒 Security Status:");
     println!("   Encryption: ACTIVE");
     println!("   Memory Safety: GUARANTEED");

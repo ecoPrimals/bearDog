@@ -1,5 +1,3 @@
-
-
 pub mod canonical;
 
 pub mod aliases;
@@ -13,12 +11,7 @@ pub mod zero_cost;
 
 pub use canonical::*;
 
-pub use aliases::{
-    BearDogResult, TestResult, AssertionResult,
-    ProviderMetrics, SystemMetrics, CacheResult,
-    ConfigResult, NetworkResult, SecurityResult,
-    WorkflowResult, HsmResult, KeyResult
-};
+// Deprecated Result aliases removed - use Result<T, BearDogError> directly
 
 pub fn validate_canonical_usage() -> Result<(), Vec<String>> {
     let errors = Vec::new();
@@ -43,7 +36,6 @@ pub fn canonical_type_info() -> Vec<(&'static str, &'static str)> {
         ("PolicyDecision", "Canonical policy decision enum"),
         ("KeyStatus", "Canonical key status enum"),
         ("WorkflowStatus", "Canonical workflow status enum"),
-
     ]
 }
 #[cfg(test)]
@@ -51,20 +43,17 @@ mod tests {
     use super::*;
     #[test]
     fn test_canonical_types_available() {
-
         let _health = HealthStatus::Healthy;
         let _security_context = SecurityContext::default();
         let _policy_decision = PolicyDecision::Allow;
     }
     #[test]
     fn test_canonical_types_direct_access() {
-
         let _health: HealthStatus = HealthStatus::Healthy;
         let _context: SecurityContext = SecurityContext::default();
     }
     #[test]
     fn test_canonical_validation() {
-
         assert!(canonical::CanonicalTypeRegistry::is_canonical_type(
             "HealthStatus"
         ));
@@ -80,7 +69,6 @@ mod tests {
     }
     #[test]
     fn test_configuration_helpers() {
-
         let api_host = canonical::constants::default_api_host();
         assert!(!api_host.is_empty());
         let api_port = canonical::constants::default_api_port();
@@ -91,7 +79,6 @@ mod tests {
     }
     #[test]
     fn test_timeout_configurations() {
-
         let timeout = canonical::constants::default_timeout_ms();
         assert!(timeout <= 300_000); // Max 5 minutes is reasonable
         assert!(timeout > 0); // Must be positive
@@ -100,7 +87,6 @@ mod tests {
     }
     #[test]
     fn test_canonical_type_info() {
-
         let type_info = canonical_type_info();
         assert!(!type_info.is_empty());
 
@@ -110,7 +96,6 @@ mod tests {
     }
     #[test]
     fn test_canonical_usage_validation() {
-
         let result = validate_canonical_usage();
         assert!(result.is_ok(), "Canonical usage validation should pass");
     }

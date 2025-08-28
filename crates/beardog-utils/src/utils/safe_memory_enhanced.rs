@@ -1,11 +1,9 @@
-
-
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub mod buffer_sizes {
     pub const SMALL: usize = 1024;
-    pub const MEDIUM: usize = 4096; 
+    pub const MEDIUM: usize = 4096;
     pub const LARGE: usize = 16384;
 }
 
@@ -15,7 +13,6 @@ pub struct SafePinnedBuffer {
 }
 
 impl SafePinnedBuffer {
-
     pub fn new(size: usize) -> Self {
         Self {
             data: vec![0u8; size],
@@ -31,7 +28,7 @@ impl SafePinnedBuffer {
         self.size
     }
 
-    pub fn with_slice<F, R>(&self, f: F) -> R 
+    pub fn with_slice<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&[u8]) -> R,
     {
@@ -57,7 +54,6 @@ impl<const SIZE: usize> Default for SafePooledBuffer<SIZE> {
 }
 
 impl<const SIZE: usize> SafePooledBuffer<SIZE> {
-
     pub fn new() -> Self {
         Self {
             buffer: SafePinnedBuffer::new(SIZE),
@@ -114,7 +110,6 @@ pub struct SafeBufferPool<const SIZE: usize> {
 }
 
 impl<const SIZE: usize> SafeBufferPool<SIZE> {
-
     pub fn new(initial_capacity: usize) -> Self {
         let mut available = Vec::with_capacity(initial_capacity);
         for _ in 0..initial_capacity {
@@ -128,7 +123,6 @@ impl<const SIZE: usize> SafeBufferPool<SIZE> {
     }
 
     pub async fn get_buffer(&self) -> SafePooledBuffer<SIZE> {
-
         if let Some(_buffer) = self.available.lock().await.pop() {
             let mut metrics = self.metrics.lock().await;
             metrics.total_requests += 1;
@@ -160,7 +154,6 @@ impl Default for EnhancedMemoryPools {
 }
 
 impl EnhancedMemoryPools {
-
     pub fn new() -> Self {
         Self {
             small_pool: SafeBufferPool::new(10),
@@ -187,9 +180,15 @@ impl EnhancedMemoryPools {
         let large_metrics = self.large_pool.metrics().await;
 
         BufferPoolMetrics {
-            total_requests: small_metrics.total_requests + medium_metrics.total_requests + large_metrics.total_requests,
-            cache_hits: small_metrics.cache_hits + medium_metrics.cache_hits + large_metrics.cache_hits,
-            cache_misses: small_metrics.cache_misses + medium_metrics.cache_misses + large_metrics.cache_misses,
+            total_requests: small_metrics.total_requests
+                + medium_metrics.total_requests
+                + large_metrics.total_requests,
+            cache_hits: small_metrics.cache_hits
+                + medium_metrics.cache_hits
+                + large_metrics.cache_hits,
+            cache_misses: small_metrics.cache_misses
+                + medium_metrics.cache_misses
+                + large_metrics.cache_misses,
         }
     }
 }

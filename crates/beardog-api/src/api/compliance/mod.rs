@@ -47,42 +47,44 @@ pub fn create_routes() -> Router<AppState> {
             "/gdpr/data-subject-request",
             post(gdpr::handle_data_subject_request),
         )
+        .route(
             "/gdpr/right-to-be-forgotten",
             post(gdpr::handle_right_to_be_forgotten),
+        )
         .route("/gdpr/consent-tracking", get(gdpr::get_consent_tracking))
         .route("/hipaa/status", get(hipaa::get_hipaa_compliance))
         .route("/hipaa/phi-access", post(hipaa::log_phi_access))
+        .route(
             "/hipaa/breach-assessment",
             post(hipaa::conduct_breach_assessment),
+        )
         .route("/sox/status", get(sox::get_sox_compliance))
         .route("/sox/controls", get(sox::get_sox_controls))
+        .route(
             "/sox/financial-reporting",
             get(sox::get_financial_reporting_compliance),
+        )
         .route("/pci/status", get(pci::get_pci_compliance))
+        .route(
             "/pci/cardholder-data",
             get(pci::audit_cardholder_data_handling),
+        )
 
         .route("/policies", get(policies::list_compliance_policies))
         .route("/policies", post(policies::create_compliance_policy))
         .route("/policies/:policy_id", get(policies::get_compliance_policy))
-            "/policies/:policy_id",
-            put(policies::update_compliance_policy),
-            delete(policies::delete_compliance_policy),
+        .route("/policies/:policy_id", put(policies::update_compliance_policy))
+        .route("/policies/:policy_id", delete(policies::delete_compliance_policy))
 
         .route("/violations", get(violations::list_compliance_violations))
-            "/violations/:violation_id",
-            get(violations::get_violation_details),
-            "/violations/:violation_id/remediate",
-            post(violations::remediate_violation),
+        .route("/violations/:violation_id", get(violations::get_violation_details))
+        .route("/violations/:violation_id/remediate", post(violations::remediate_violation))
 
         .route("/risk/assessment", get(risk::get_risk_assessment))
         .route("/risk/assessment", post(risk::conduct_risk_assessment))
         .route("/risk/mitigation", get(risk::get_risk_mitigation_plan))
-
-            "/reports/executive",
-            get(reporting::generate_executive_report),
-            "/reports/detailed",
-            get(reporting::generate_detailed_report),
+        .route("/reports/executive", get(reporting::generate_executive_report))
+        .route("/reports/detailed", get(reporting::generate_detailed_report))
         .route("/reports/custom", post(reporting::generate_custom_report))
         .route("/analytics/trends", get(reporting::get_compliance_trends))
         .route("/analytics/metrics", get(reporting::get_compliance_metrics))

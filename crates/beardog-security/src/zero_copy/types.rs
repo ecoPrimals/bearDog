@@ -3,7 +3,7 @@
 use bytes::Bytes;
 use futures::stream::Stream;
 use std::{pin::Pin, sync::atomic::AtomicU64, time::Instant};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone)]
 pub struct ZeroCopyConfig {

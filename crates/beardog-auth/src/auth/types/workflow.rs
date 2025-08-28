@@ -28,6 +28,7 @@ pub struct CrossNodeWorkflowRequest {
     pub expires_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BearDogWorkflowType {
 
     DataBackup {
@@ -40,29 +41,25 @@ pub enum BearDogWorkflowType {
     },
 
     ComplianceAudit {
-
         audit_scope: Vec<String>,
-
         standards: Vec<String>,
-
         automated_remediation: bool,
+    },
 
     SecurityIncidentResponse {
-
         threat_level: u8,
-
         affected_resources: Vec<String>,
-
         response_team: Vec<String>,
+    },
 
     GeneticSpawning {
-
         parent_genetics: Vec<String>,
-
         spawn_purpose: SpawnPurpose,
-
         target_capabilities: Vec<NodeCapability>,
+    },
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AutomatedCheck {
 
     ResourceAvailability,
@@ -74,7 +71,9 @@ pub enum AutomatedCheck {
     TrustVerification,
 
     CapabilityMatch,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EscalationCondition {
 
     HighRiskOperation,
@@ -86,6 +85,7 @@ pub enum EscalationCondition {
     ResourceExhaustion,
 
     SecurityThreat,
+}
 
 pub enum WorkflowStatus {
 
@@ -98,3 +98,4 @@ pub enum WorkflowStatus {
     Failed(String),
 
     RequiresApproval,
+}

@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -50,25 +48,30 @@ impl Default for IncidentTimelineEntry {
 }
 
 impl IncidentTimelineEntry {
-
     pub fn new(action: &str, actor: &str) -> Self {
         Self {
             entry_id: Uuid::new_v4().to_string(),
             incident_id: String::new(), // Will be set when added to incident
-            event_type: action.to_string(),
-            description: actor.to_string(),
             timestamp: Utc::now(),
+            action: action.to_string(),
+            actor: actor.to_string(),
+            entry_type: TimelineEntryType::Administrative,
+            event_type: TimelineEntryType::Administrative, // Alias for entry_type
+            description: format!("{action} performed by {actor}"),
+            details: None,
             metadata: HashMap::new(),
         }
     }
 
     pub fn with_details(mut self, details: &str) -> Self {
-        self.metadata.insert("details".to_string(), details.to_string());
+        self.metadata
+            .insert("details".to_string(), details.to_string());
         self
     }
 
     pub fn set_details(&mut self, details: &str) {
-        self.metadata.insert("details".to_string(), details.to_string());
+        self.metadata
+            .insert("details".to_string(), details.to_string());
     }
 
     pub fn age_minutes(&self) -> i64 {
@@ -92,4 +95,3 @@ impl std::fmt::Display for TimelineEntryType {
         }
     }
 }
-

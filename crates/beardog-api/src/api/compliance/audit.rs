@@ -64,6 +64,7 @@ pub async fn get_audit_trail(
             event_type: params.event_type.clone(),
             severity: params.severity.clone(),
             actor: params.actor.clone(),
+        },
     };
     let processing_time = start_time.elapsed().as_millis() as u64;
     Ok(Json(success_response(
@@ -89,15 +90,22 @@ pub async fn log_audit_event(
         compliance_frameworks: vec!["GDPR".to_string(), "HIPAA".to_string(), "SOX".to_string()],
         encrypted: true,
         tamper_proof: true,
-        false,
+    };
+    
+    Ok(Json(ApiResponse::success(response)))
+}
 
 pub async fn search_audit_trail(
     State(_): State<AppState>,
     Json(_): Json<serde_json::Value>,
 ) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
-        serde_json::json!({"message": "Audit search functionality"}),
-        25,
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "message": "Audit search functionality"
+    }))))
+}
 
-pub async fn export_audit_trail(
-        serde_json::json!({"export_url": "https://api.beardog.com/exports/audit_12345.csv"}),
-        150,
+pub async fn export_audit_trail() -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "export_url": "https://api.beardog.com/exports/audit_12345.csv"
+    }))))
+}

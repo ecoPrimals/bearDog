@@ -1,7 +1,7 @@
 
 
 use crate::monitoring::SystemMetrics;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_utils::utils::safe_ops::SafeOps; // DEEP DEBT FIX: SafeOps for all operations
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -62,7 +62,7 @@ impl PerformanceSentinel {
     pub fn new(
         thresholds: PerformanceThresholds,
         alert_manager: Arc<AlertManager>,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         info!("🎯 Initializing Production-Safe Performance Sentinel");
 
         Self::validate_thresholds(&thresholds)?;
@@ -74,7 +74,7 @@ impl PerformanceSentinel {
             last_check_time: Arc::new(RwLock::new(None)),
         })
 
-    fn validate_thresholds(thresholds: &PerformanceThresholds) -> BearDogResult<()> {
+    fn validate_thresholds(thresholds: &PerformanceThresholds) -> Result<(), BearDogError> {
         if thresholds.max_cpu_percent < 0.0 || thresholds.max_cpu_percent > 100.0 {
             return Err(BearDogError::validation(format!(
                 "Invalid CPU threshold: {}% (must be 0-100)",
@@ -94,7 +94,7 @@ impl PerformanceSentinel {
     pub async fn analyze_metrics(
         &self,
         metrics: SystemMetrics,
-    ) -> BearDogResult<Vec<PerformanceAlert>> {
+    ) -> Result<Vec<PerformanceAlert>, BearDogError>> {
         info!("📊 Safe performance analysis starting");
 
         let thresholds = SafeOps::safe_read_lock(&self.thresholds, Duration::from_secs(5))
@@ -137,7 +137,7 @@ impl PerformanceSentinel {
     async fn check_cpu_threshold(
         metrics: &SystemMetrics,
         thresholds: &PerformanceThresholds,
-    ) -> BearDogResult<Option<PerformanceAlert>> {
+    ) -> Result<Option<PerformanceAlert>, BearDogError>> {
         if metrics.performance.cpu_usage_percent > thresholds.max_cpu_percent {
             info!(
                 "🚨 CPU threshold exceeded: {}% > {}%",
@@ -228,7 +228,7 @@ impl PerformanceSentinel {
                     ("failed_requests".to_string(), failed_requests.to_string()),
                     ("total_requests".to_string(), total_requests.to_string()),
 
-    async fn store_metrics_safely(&self, metrics: SystemMetrics) -> BearDogResult<()> {
+    async fn store_metrics_safely(&self, metrics: SystemMetrics) -> Result<(), BearDogError> {
         let mut history = SafeOps::safe_write_lock(&self.metrics_history, Duration::from_secs(5))
                 BearDogError::internal(format!("Failed to acquire metrics history lock: {e}"))
 
@@ -242,7 +242,7 @@ impl PerformanceSentinel {
 
     pub async fn get_performance_trends(
         window_minutes: u64,
-    ) -> BearDogResult<PerformanceTrends> {
+    ) -> Result<PerformanceTrends, BearDogError> {
             "📈 Calculating safe performance trends for {} minutes",
             window_minutes
         let history = SafeOps::safe_read_lock(&self.metrics_history, Duration::from_secs(5))

@@ -10,5 +10,5 @@ pub use beardog_types::canonical::hsm::HsmKey;
 pub use beardog_types::canonical::hsm::tiers::{
     AttestationLevel, HsmSecurityTier, HsmTier, TamperResistanceLevel,
 
-pub use beardog_errors::{BearDogError, BearDogResult};
+pub use beardog_errors::BearDogError;
 

@@ -5,34 +5,14 @@ use crate::workflows::canonical::{
     Workflow, WorkflowExecutionStatus, WorkflowMetrics, WorkflowProcessingResult,
 };
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_types::{
+    canonical::configuration::workflows::WorkflowMetadata,
+    config::UnifiedProcessorConfig,
+};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
-use tracing::{info, warn};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
-pub struct KeyManagementConfig {
-
-    pub max_key_size: u32,
-
-    pub default_expiration_hours: u64,
-
-    pub require_approval: bool,
-
-    pub backup_location: Option<String>,
-}
-impl Default for KeyManagementConfig {}
-
-    fn default() -> Self {
-        Self {
-            max_key_size: 4096,
-            default_expiration_hours: 8760, // 1 year
-            require_approval: true,
-            backup_location: None,
-        }
-    }
+use tracing::info;
 
 #[derive(Debug)]
 pub struct KeyManagementProcessor {
@@ -47,12 +27,14 @@ impl KeyManagementProcessor {
         Self { config }
 
     pub fn new_default() -> Self {
-        Self::new(KeyManagementConfig::default())
+        let mut config = UnifiedProcessorConfig::default();
+        config.processor_type = beardog_types::canonical::configuration::consolidated::ProcessorType::KeyManagement;
+        Self::new(config)
 
     async fn process_key_rotation(
         &self,
         workflow: &Workflow,
-    ) -> BearDogResult<WorkflowProcessingResult> {
+    ) -> Result<WorkflowProcessingResult, BearDogError> {
         let start_time = Instant::now();
         info!("Processing key rotation workflow: {}", workflow.id);
 
@@ -137,7 +119,7 @@ mod tests {
     use crate::workflows::canonical::WorkflowStatus;
     use std::collections::HashMap;
     #[tokio::test]
-    async fn test_key_rotation_processor() -> BearDogResult<()> {
+    async fn test_key_rotation_processor() -> Result<(), BearDogError> {
         let processor = KeyManagementProcessor::new_default();
         let mut parameters = HashMap::with_capacity(16);
         parameters.insert(

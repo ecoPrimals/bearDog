@@ -1,16 +1,14 @@
-
-
 mod android;
 mod builder;
 mod device;
 mod error;
 
+use crate::{android::AndroidManager, builder::RustBuilder, device::DeviceManager};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use console::{style, Term};
 use std::path::PathBuf;
 use tracing::Level;
-use crate::{android::AndroidManager, builder::RustBuilder, device::DeviceManager};
 #[derive(Parser)]
 #[command(name = "deploy-pixel8")]
 #[command(about = "Pure Rust deployment tool for BearDog on Pixel 8 devices")]
@@ -26,15 +24,12 @@ struct Cli {
 }
 #[derive(Subcommand)]
 enum Commands {
-
     Check {
-
         #[arg(short, long)]
         device_only: bool,
     },
 
     Build {
-
         #[arg(short, long)]
         release: bool,
 
@@ -43,7 +38,6 @@ enum Commands {
     },
 
     Deploy {
-
         #[arg(short, long)]
         release: bool,
 
@@ -52,12 +46,10 @@ enum Commands {
     },
 
     Run {
-
         args: Vec<String>,
     },
 
     Logs {
-
         #[arg(short, long, default_value = "BearDog")]
         filter: String,
 
@@ -66,7 +58,6 @@ enum Commands {
     },
 
     Full {
-
         #[arg(short, long)]
         release: bool,
     },
@@ -148,7 +139,6 @@ async fn check_command(
             .to_string(),
     )?;
     if !device_only {
-
         android_manager.check_prerequisites().await?;
         term.write_line(&style("✅ Build prerequisites OK").green().to_string())?;
     }
@@ -178,12 +168,16 @@ async fn check_command(
                 .green()
                 .to_string(),
         )?;
-        
-        if device_info.metadata.get("has_grapheneos").is_some() {
-            term.write_line(&style("✅ GrapheneOS detected - enhanced security").green().to_string())?;
+
+        if device_info.metadata.contains_key("has_grapheneos") {
+            term.write_line(
+                &style("✅ GrapheneOS detected - enhanced security")
+                    .green()
+                    .to_string(),
+            )?;
         }
     }
-    
+
     term.write_line(&style("🎉 All checks passed!").green().bold().to_string())?;
     Ok(())
 }
@@ -195,16 +189,22 @@ async fn build_command(
     target: &str,
 ) -> Result<()> {
     let term = Term::stdout();
-    term.write_line(&style("🔨 Building BearDog Android application...").blue().to_string())?;
+    term.write_line(
+        &style("🔨 Building BearDog Android application...")
+            .blue()
+            .to_string(),
+    )?;
 
     android_manager.setup_build_environment().await?;
 
     builder.build_android_app(release, target).await?;
-    
-    term.write_line(&style("✅ Build completed successfully!")
-        .green()
-        .bold()
-        .to_string())?;
+
+    term.write_line(
+        &style("✅ Build completed successfully!")
+            .green()
+            .bold()
+            .to_string(),
+    )?;
     Ok(())
 }
 
@@ -216,9 +216,8 @@ async fn deploy_command(
     skip_build: bool,
 ) -> Result<()> {
     let term = Term::stdout();
-    
-    if !skip_build {
 
+    if !skip_build {
         build_command(builder, android_manager, release, "aarch64-linux-android").await?;
         term.write_line("")?;
     }
@@ -229,7 +228,7 @@ async fn deploy_command(
         .get("manufacturer")
         .unwrap_or(&device_info.name);
     let model = device_info.metadata.get("model").unwrap_or(&device_info.id);
-    
+
     term.write_line(&style("📲 Deploying to device...").yellow().to_string())?;
     term.write_line(&format!("📱 Target: {manufacturer} {model}"))?;
 
@@ -239,7 +238,7 @@ async fn deploy_command(
     Ok(())
 }
 
-async fn run_command(device_manager: &DeviceManager, args: Vec<&str>) -> Result<()> {
+async fn run_command(device_manager: &DeviceManager, _args: Vec<&str>) -> Result<()> {
     let term = Term::stdout();
     term.write_line(&style("🚀 Running BearDog on device...").blue().to_string())?;
     device_manager.run_app("com.beardog.app").await?;
@@ -261,7 +260,11 @@ async fn full_command(
     release: bool,
 ) -> Result<()> {
     let term = Term::stdout();
-    term.write_line(&style("🚀 Starting full deployment workflow...").bold().to_string())?;
+    term.write_line(
+        &style("🚀 Starting full deployment workflow...")
+            .bold()
+            .to_string(),
+    )?;
 
     term.write_line(&style("Step 1: System Check").bold().to_string())?;
     check_command(android_manager, device_manager, false).await?;
@@ -272,7 +275,12 @@ async fn full_command(
     term.write_line(&style("Step 3: Deploy to Device").bold().to_string())?;
     deploy_command(builder, android_manager, device_manager, release, true).await?;
 
-    term.write_line(&style("🎉 BearDog deployed successfully to Pixel 8!").green().bold().to_string())?;
+    term.write_line(
+        &style("🎉 BearDog deployed successfully to Pixel 8!")
+            .green()
+            .bold()
+            .to_string(),
+    )?;
     term.write_line(&style("Next steps:").bold().to_string())?;
     term.write_line("  • Run 'deploy-pixel8 run' to execute the application")?;
     term.write_line("  • Run 'deploy-pixel8 logs' to monitor output")?;

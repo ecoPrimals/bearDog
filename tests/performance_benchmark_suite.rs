@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 mod benchmarks;
@@ -5,7 +6,7 @@ mod benchmarks;
 pub use benchmarks::*;
 
 #[tokio::test]
-async fn test_benchmark_suite_initialization() -> beardog::BearDogResult<()> {
+async fn test_benchmark_suite_initialization() -> beardog::Result<(), BearDogError> {
     let benchmark_suite = PerformanceBenchmarkSuite::new().await?;
     
     assert!(!benchmark_suite.config.data_sizes.is_empty());
@@ -17,7 +18,7 @@ async fn test_benchmark_suite_initialization() -> beardog::BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_crypto_benchmark_basic() -> beardog::BearDogResult<()> {
+async fn test_crypto_benchmark_basic() -> beardog::Result<(), BearDogError> {
     let mut benchmark_suite = PerformanceBenchmarkSuite::new().await?;
 
     benchmark_suite.config.iterations = 10;
@@ -34,7 +35,7 @@ async fn test_crypto_benchmark_basic() -> beardog::BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_scalability_benchmark_basic() -> beardog::BearDogResult<()> {
+async fn test_scalability_benchmark_basic() -> beardog::Result<(), BearDogError> {
     let mut benchmark_suite = PerformanceBenchmarkSuite::new().await?;
 
     benchmark_suite.config.iterations = 10;
@@ -50,7 +51,7 @@ async fn test_scalability_benchmark_basic() -> beardog::BearDogResult<()> {
 }
 
 #[tokio::test]  
-async fn test_comprehensive_benchmark_suite_small() -> beardog::BearDogResult<()> {
+async fn test_comprehensive_benchmark_suite_small() -> beardog::Result<(), BearDogError> {
     let mut benchmark_suite = PerformanceBenchmarkSuite::new().await?;
 
     benchmark_suite.config.iterations = 5;

@@ -1,321 +1,262 @@
-
-
-use crate::core::BearDogCore;
-use beardog_errors::BearDogResult;
+// Fixed ecosystem_simple.rs - Simplified ecosystem integration
+use beardog_errors::BearDogError;
+// use crate::core::BearDogCore; // Unused import
 use beardog_types::canonical::HealthStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
-use uuid::Uuid;
+use tracing::{debug, info};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum PrimalType {
-    ToadStool,
-    Songbird,
-    BearDog,
-    NestGate,
-    Squirrel,
-    BiomeOS,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SimpleEcosystemConfig {
+    pub enabled_services: Vec<String>,
+    pub discovery_timeout_ms: u64,
+    pub health_check_interval_ms: u64,
+    pub retry_attempts: u32,
 }
-impl PrimalType {}
 
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            PrimalType::ToadStool => "toadstool",
-            PrimalType::Songbird => "songbird",
-            PrimalType::BearDog => "beardog",
-            PrimalType::NestGate => "nestgate",
-            PrimalType::Squirrel => "squirrel",
-            PrimalType::BiomeOS => "biomeos",
+impl Default for SimpleEcosystemConfig {
+    fn default() -> Self {
+        Self {
+            enabled_services: vec![
+                "toadstool".to_string(),
+                "songbird".to_string(),
+                "squirrel".to_string(),
+            ],
+            discovery_timeout_ms: 5000,
+            health_check_interval_ms: 30000,
+            retry_attempts: 3,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EcosystemService {
+    pub service_name: String,
+    pub endpoint: String,
+    pub health_status: HealthStatus,
+    pub last_check: chrono::DateTime<chrono::Utc>,
+    pub capabilities: Vec<String>,
+}
+
+pub struct SimpleEcosystemManager {
+    config: SimpleEcosystemConfig,
+    services: HashMap<String, EcosystemService>,
+}
+
+impl SimpleEcosystemManager {
+    pub fn new(config: SimpleEcosystemConfig) -> Self {
+        Self {
+            config,
+            services: HashMap::new(),
         }
     }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModuleRequest {
-    pub request_id: Uuid,
-    pub source_primal: String,
-    pub target_primal: String,
-}
+    pub async fn initialize(&mut self) -> Result<(), BearDogError> {
+        info!("🌐 Initializing simple ecosystem manager");
 
-    pub module_name: String,
-    pub operation: String,
-    pub payload: serde_json::Value,
-    pub metadata: HashMap<String, String>,
+        let enabled_services = self.config.enabled_services.clone();
+        for service_name in &enabled_services {
+            self.discover_service(service_name).await?;
+        }
 
-pub struct ModuleResponse {
-    pub status: String,
+        info!(
+            "✅ Simple ecosystem manager initialized with {} services",
+            self.services.len()
+        );
+        Ok(())
+    }
 
-pub enum PrimalCapability {
+    async fn discover_service(&mut self, service_name: &str) -> Result<(), BearDogError> {
+        debug!("🔍 Discovering service: {}", service_name);
 
-    SecurityAuthentication { methods: Vec<String> },
-    SecurityEncryption { algorithms: Vec<String> },
-    SecurityCompliance { frameworks: Vec<String> },
-    SecurityThreatDetection { ml_enabled: bool },
-    SecurityGamingCrypto { features: Vec<String> },
+        let endpoint = match service_name {
+            "toadstool" => "http://toadstool.ecosystem:8080",
+            "songbird" => "http://songbird.mesh:9090",
+            "squirrel" => "http://squirrel.ai:8080",
+            _ => {
+                return Err(BearDogError::business(format!(
+                    "Unknown service: {}",
+                    service_name
+                )))
+            }
+        };
 
-    ComputeOptimization { types: Vec<String> },
-    ComputeContainers { orchestrators: Vec<String> },
-    ComputeGeneticAlgorithms { population_size: u32 },
+        let service = EcosystemService {
+            service_name: service_name.to_string(),
+            endpoint: endpoint.to_string(),
+            health_status: HealthStatus::Healthy,
+            last_check: chrono::Utc::now(),
+            capabilities: self.get_service_capabilities(service_name),
+        };
 
-    StorageVolumes { protocols: Vec<String> },
-    StorageBackup { incremental: bool },
+        self.services.insert(service_name.to_string(), service);
+        Ok(())
+    }
 
-    AiInference { models: Vec<String> },
-    AiAgents { mcp_support: bool },
+    fn get_service_capabilities(&self, service_name: &str) -> Vec<String> {
+        match service_name {
+            "toadstool" => vec!["platform".to_string(), "orchestration".to_string()],
+            "songbird" => vec!["mesh".to_string(), "discovery".to_string()],
+            "squirrel" => vec!["ai".to_string(), "analytics".to_string()],
+            _ => vec![],
+        }
+    }
 
-    OrchestrationManifests { formats: Vec<String> },
-    OrchestrationDeployment { strategies: Vec<String> },
+    pub async fn health_check_all(&mut self) -> HashMap<String, HealthStatus> {
+        let mut results = HashMap::new();
 
-    NetworkServiceDiscovery { protocols: Vec<String> },
-    NetworkRouting { load_balancing: bool },
+        let service_names: Vec<String> = self.services.keys().cloned().collect();
+        for service_name in service_names {
+            if let Some(service) = self.services.get(&service_name) {
+                let health = self.check_service_health(service).await;
+                if let Some(service) = self.services.get_mut(&service_name) {
+                    service.health_status = health.clone();
+                    service.last_check = chrono::Utc::now();
+                }
+                results.insert(service_name, health);
+            }
+        }
 
-#[allow(async_fn_in_trait)]
-#[deprecated(since = "3.1.0", note = "Use UniversalProvider instead")]
-#[deprecated(since = "3.1.0", note = "Use UniversalProvider instead")]
-pub trait UniversalPrimalProvider: Send + Sync {
+        results
+    }
 
-    fn primal_id(&self) -> &str;
+    async fn check_service_health(&self, service: &EcosystemService) -> HealthStatus {
+        debug!("🏥 Checking health for service: {}", service.service_name);
 
-    fn instance_id(&self) -> &str;
+        // In a real implementation, this would make HTTP health check requests
+        match service.service_name.as_str() {
+            "toadstool" | "songbird" | "squirrel" => HealthStatus::Healthy,
+            _ => HealthStatus::Unhealthy,
+        }
+    }
 
-    fn primal_type(&self) -> PrimalType;
+    pub fn get_service_status(&self, service_name: &str) -> Option<&EcosystemService> {
+        self.services.get(service_name)
+    }
 
-    fn available_modules(&self) -> HashMap<String, Vec<PrimalCapability>>;
+    pub fn get_all_services(&self) -> &HashMap<String, EcosystemService> {
+        &self.services
+    }
 
-    async fn handle_module_request(&self, request: ModuleRequest) -> BearDogResult<ModuleResponse>;
+    pub async fn execute_on_service(
+        &self,
+        service_name: &str,
+        operation: &str,
+        _payload: serde_json::Value,
+    ) -> Result<serde_json::Value, BearDogError> {
+        let service = self.services.get(service_name).ok_or_else(|| {
+            BearDogError::business(format!("Service not found: {}", service_name))
+        })?;
 
-    async fn module_health_check(&self) -> HashMap<String, String>;
+        if !matches!(service.health_status, HealthStatus::Healthy) {
+            return Err(BearDogError::business(format!(
+                "Service {} is not healthy",
+                service_name
+            )));
+        }
 
-    async fn initialize(&mut self, config: serde_json::Value) -> BearDogResult<()>;
+        info!("🚀 Executing {} on service {}", operation, service_name);
 
-    async fn shutdown(&mut self) -> BearDogResult<()>;
+        // Mock response - in reality would make HTTP request
+        Ok(serde_json::json!({
+            "service": service_name,
+            "operation": operation,
+            "status": "success",
+            "timestamp": chrono::Utc::now().to_rfc3339()
+        }))
+    }
 
-pub struct BearDogEcosystemProvider {}
+    pub async fn send_ecosystem_message(
+        &self,
+        target_service: &str,
+        message_type: &str,
+        _payload: serde_json::Value,
+    ) -> Result<serde_json::Value, BearDogError> {
+        let service = self.services.get(target_service).ok_or_else(|| {
+            BearDogError::business(format!("Service not found: {}", target_service))
+        })?;
 
-    #[allow(dead_code)] // Will be used for advanced ecosystem integration
-    core: Arc<BearDogCore>,
-    instance_id: String,}
+        if !matches!(service.health_status, HealthStatus::Healthy) {
+            return Err(BearDogError::business(format!(
+                "Service {} is not healthy",
+                target_service
+            )));
+        }
 
-impl BearDogEcosystemProvider {
-
-    pub fn new(core: Arc<BearDogCore>, instance_id: &str) -> Self {
-        Self { core, instance_id }
-impl UniversalProvider for BearDogEcosystemProvider {}
-
-    fn primal_id(&self) -> &str {
-        "beardog"}
-
-    fn instance_id(&self) -> &str {
-        &self.instance_id
-    fn primal_type(&self) -> PrimalType {
-        PrimalType::BearDog}
-
-    fn available_modules(&self) -> HashMap<String, Vec<PrimalCapability>> {
-        let mut modules = ahash::HashMap::default();
-
-        modules.insert(
-            "security".to_string(),
-            vec![
-                PrimalCapability::SecurityAuthentication {
-                    methods: vec![
-                        "oauth2".to_string(),
-                        "jwt".to_string(),
-                        "biometric".to_string(),
-                    ],
-                },
-                PrimalCapability::SecurityEncryption {
-                    algorithms: vec![
-                        "aes-256-gcm".to_string(),
-                        "chacha20-poly1305".to_string(),
-                        "genetic-hybrid".to_string(),
-                PrimalCapability::SecurityCompliance {
-                    frameworks: vec!["gdpr".to_string(), "hipaa".to_string(), "sox".to_string()],
-            ],
+        info!(
+            "🚀 Sending message {} to service {}",
+            message_type, target_service
         );
 
-            "threat-detection".to_string(),
-            vec![PrimalCapability::SecurityThreatDetection { ml_enabled: true }],
+        // Mock response - in reality would make HTTP request
+        Ok(serde_json::json!({
+            "service": target_service,
+            "message_type": message_type,
+            "status": "success",
+            "timestamp": chrono::Utc::now().to_rfc3339()
+        }))
+    }
 
-            "gaming-crypto".to_string(),
-            vec![PrimalCapability::SecurityGamingCrypto {
-                features: vec![
-                    "low-latency".to_string(),
-                    "genetic-optimization".to_string(),
-                    "simd-acceleration".to_string(),
-                ],
-            }],
+    pub fn get_healthy_services(&self) -> Vec<&str> {
+        self.services
+            .iter()
+            .filter(|(_, service)| matches!(service.health_status, HealthStatus::Healthy))
+            .map(|(name, _)| name.as_str())
+            .collect()
+    }
 
-            "genetic-healing".to_string(),
-            vec![PrimalCapability::ComputeGeneticAlgorithms {
-                population_size: 100,
-        modules
-    async fn handle_module_request(&self, request: ModuleRequest) -> BearDogResult<ModuleResponse> {
-        info!(
-            "📦 BearDog handling module request: {} -> {}",
-            request.module_name, request.operation
-        let payload = match (request.module_name.as_str(), request.operation.as_str()) {
-            ("security", "authenticate") => serde_json::json!({
-                "authenticated": true,
-                "method": "jwt",
-                "token": "bearer_token_example"
-            }),
-            ("security", "encrypt") => serde_json::json!({
-                "encrypted": true,
-                "algorithm": "aes-256-gcm",
-                "key_id": "key_12345"
-            ("threat-detection", "scan") => serde_json::json!({
-                "threats_found": 0,
-                "scan_time_ms": 150,
-                "status": "clean"
-            ("gaming-crypto", "optimize") => serde_json::json!({
-                "optimization_applied": true,
-                "performance_improvement": 0.25,
-                "latency_reduction_ms": 5
-            ("genetic-healing", "heal") => serde_json::json!({
-                "healing_applied": true,
-                "adaptation_level": 0.85,
-                "generation": 42
-            _ => serde_json::json!({
-                "error": format_args!("Unknown module operation: {}:{}", request.module_name, request.operation).to_string()
-        };
-        Ok(ModuleResponse {
-            request_id: request.request_id,
-            status: "success".to_string(),
-            payload,
-            metadata: ahash::HashMap::default(),
-        })
-    async fn module_health_check(&self) -> HashMap<String, String> {
-        let mut health = ahash::HashMap::default();
-        health.insert("security".to_string(), "healthy".to_string());
-        health.insert("threat-detection".to_string(), "healthy".to_string());
-        health.insert("gaming-crypto".to_string(), "healthy".to_string());
-        health.insert("genetic-healing".to_string(), "healthy".to_string());
-        health}
+    pub fn get_ecosystem_metrics(&self) -> HashMap<String, serde_json::Value> {
+        let mut metrics = HashMap::new();
 
-    async fn initialize(&mut self, _config: serde_json::Value) -> BearDogResult<()> {
-        info!("🚀 Initializing BearDog primal modules");
-        info!("📦 Available modules: security, threat-detection, gaming-crypto, genetic-healing");
-        Ok(())
-    async fn shutdown(&mut self) -> BearDogResult<()> {
-        info!("🛑 Shutting down BearDog primal modules");
+        metrics.insert(
+            "total_services".to_string(),
+            serde_json::json!(self.services.len()),
+        );
+        metrics.insert(
+            "healthy_services".to_string(),
+            serde_json::json!(self.get_healthy_services().len()),
+        );
+        metrics.insert(
+            "enabled_services".to_string(),
+            serde_json::json!(self.config.enabled_services),
+        );
+        metrics.insert(
+            "last_updated".to_string(),
+            serde_json::json!(chrono::Utc::now().to_rfc3339()),
+        );
 
-pub struct ModuleDiscoveryService;
-impl ModuleDiscoveryService {
+        metrics
+    }
+}
 
-    pub async fn discover_modules_with_capability(
-        &self,
-        capability_type: &str,
-    ) -> BearDogResult<Vec<(String, String, PrimalCapability)>> {
-            "🔍 Discovering modules with capability: {}",
-            capability_type
+impl Default for SimpleEcosystemManager {
+    fn default() -> Self {
+        Self::new(SimpleEcosystemConfig::default())
+    }
+}
 
-        let discovered_modules = match capability_type {
-            "compute" => vec![
-                (
-                    "toadstool-1".to_string(),
-                    "compute-optimization".to_string(),
-                    PrimalCapability::ComputeOptimization {
-                        types: vec!["genetic".to_string(), "crypto".to_string()],
-                    },
-                ),
-                    "squirrel-1".to_string(),
-                    "ai-compute".to_string(),
-                    PrimalCapability::AiInference {
-                        models: vec!["llm".to_string(), "ml".to_string()],
-            "security" => vec![
-                    "beardog-1".to_string(),
-                    "security".to_string(),
-                    PrimalCapability::SecurityEncryption {
-                        algorithms: vec!["aes-256-gcm".to_string()],
-                    "nestgate-1".to_string(),
-                    "storage-security".to_string(),
-                    PrimalCapability::StorageBackup { incremental: true },
-            "network" => vec![(
-                "songbird-1".to_string(),
-                "service-discovery".to_string(),
-                PrimalCapability::NetworkServiceDiscovery {
-                    protocols: vec!["http".to_string(), "grpc".to_string()],
-            )],
-            _ => vec![],
-            "🔍 Discovered {} modules with {} capability",
-            discovered_modules.len(),
-        Ok(discovered_modules)
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    pub async fn send_module_request(
-        target_primal: &str,
-        module_name: &str,
-        operation: &str,
-        payload: serde_json::Value,
-    ) -> BearDogResult<ModuleResponse> {
-            "📤 Sending module request to {}:{} -> {}",
-            target_primal, module_name, operation
-        let request = ModuleRequest {
-            request_id: Uuid::new_v4(),
-            source_primal: "beardog".to_string(),
-            target_primal: target_primal.to_string(),
-            module_name: module_name.to_string(),
-            operation: operation.to_string(),
+    #[test]
+    fn test_simple_ecosystem_config() {
+        let config = SimpleEcosystemConfig::default();
+        assert_eq!(config.enabled_services.len(), 3);
+        assert!(config.enabled_services.contains(&"toadstool".to_string()));
+    }
 
-            payload: serde_json::json!({
-                "processed_by": format_args!("{}:{}", target_primal, module_name).to_string(),
-                "operation": operation,
-                "simulated": true
+    #[tokio::test]
+    async fn test_simple_ecosystem_manager() {
+        let mut manager = SimpleEcosystemManager::default();
+        assert!(manager.initialize().await.is_ok());
+        assert_eq!(manager.get_all_services().len(), 3);
+    }
 
-pub async fn demonstrate_ecosystem_integration() -> BearDogResult<()> {
-    info!("🌍 Demonstrating Universal Ecosystem Integration");
-
-    let core_config = beardog_types::config::BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(core_config).await?);
-    let beardog_provider = BearDogEcosystemProvider::new(core, "beardog-demo-1".to_string());
-
-    let modules = beardog_provider.available_modules();
-    info!("📦 BearDog available modules: {}", modules.len());
-    for (module_name, capabilities) in modules {
-        info!("  📦 {}: {} capabilities", module_name, capabilities.len());
-
-    let discovery = ModuleDiscoveryService;
-
-    let compute_modules = discovery
-        .discover_modules_with_capability("compute")
-        .await?;
-    info!(
-        "🔍 Found {} compute modules across ecosystem",
-        compute_modules.len()
-    );
-
-    for (primal, module, _capability) in compute_modules {
-        let response = discovery
-            .send_module_request(
-                &primal,
-                &module,
-                "optimize",
-                serde_json::json!({"data": "crypto_optimization_request"}),
-            )
-            .await?;
-            "✅ Response from {}:{}: {}",
-            primal, module, response.status
-
-    let test_request = ModuleRequest {
-        request_id: Uuid::new_v4(),
-        source_primal: "toadstool-1".to_string(),
-        target_primal: "beardog".to_string(),
-        module_name: "security".to_string(),
-        operation: "encrypt".to_string(),
-        payload: serde_json::json!({"data": "test_data_to_encrypt"}),
-        metadata: ahash::HashMap::default(),
-    };
-    let response = beardog_provider.handle_module_request(test_request).await?;
-    info!("🔐 BearDog security module response: {}", response.status);
-    info!("✅ Ecosystem integration demonstration completed successfully");
-    Ok(())
-
-pub struct BearDogEcosystemFactory;
-impl BearDogEcosystemFactory {
-
-    pub async fn create_provider() -> Result<BearDogEcosystemProvider, SystemError> {
-        let core_config = beardog_types::config::BearDogConfig::default();
-        let core = Arc::new(BearDogCore::new(core_config).await?);
-        let instance_id = format_args!("beardog-{}", Uuid::new_v4().to_string());
-        Ok(BearDogEcosystemProvider::new(core, instance_id))
+    #[test]
+    fn test_service_capabilities() {
+        let manager = SimpleEcosystemManager::default();
+        let capabilities = manager.get_service_capabilities("toadstool");
+        assert!(capabilities.contains(&"platform".to_string()));
+    }
+}

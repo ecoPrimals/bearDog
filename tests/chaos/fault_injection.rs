@@ -1,8 +1,9 @@
+use beardog_errors::BearDogError;
 
 
 use super::models::*;
 use super::ChaosTestFramework;
-use beardog::{BearDogError, BearDogResult};
+use beardog::{{BearDogError, BearDogError}};
 use std::time::Instant;
 use tracing::{error, info};
 use uuid::Uuid;
@@ -10,16 +11,16 @@ use uuid::Uuid;
 #[allow(async_fn_in_trait)]
 pub trait FaultInjector: Send + Sync {
 
-    async fn inject_fault(&self, fault: FaultType) -> BearDogResult<String>;
+    async fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError>;
 
-    async fn remove_fault(&self, fault_id: &str) -> BearDogResult<()>;
+    async fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError>;
 
-    async fn is_fault_active(&self, fault_id: &str) -> BearDogResult<bool>;
+    async fn is_fault_active(&self, fault_id: &str) -> Result<bool, BearDogError>;
 
     fn target_component(&self) -> String;
 }
 
-pub async fn inject_and_monitor_fault(framework: &mut ChaosTestFramework, fault: FaultType) -> BearDogResult<FaultResult> {
+pub async fn inject_and_monitor_fault(framework: &mut ChaosTestFramework, fault: FaultType) -> Result<FaultResult, BearDogError> {
     let fault_id = Uuid::new_v4().to_string();
     let component = determine_target_component(&fault);
     
@@ -114,7 +115,7 @@ impl NetworkFaultInjector {
 
 #[allow(async_fn_in_trait)]
 impl FaultInjector for NetworkFaultInjector {
-    async fn inject_fault(&self, fault: FaultType) -> BearDogResult<String> {
+    async fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
         match fault {
             FaultType::NetworkPartition { .. } => {
                 info!("🌐 Simulating network partition");
@@ -130,12 +131,12 @@ impl FaultInjector for NetworkFaultInjector {
         }
     }
 
-    async fn remove_fault(&self, fault_id: &str) -> BearDogResult<()> {
+    async fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
         info!("🌐 Removing network fault: {}", fault_id);
         Ok(())
     }
 
-    async fn is_fault_active(&self, _fault_id: &str) -> BearDogResult<bool> {
+    async fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
         Ok(false)
     }
 
@@ -154,7 +155,7 @@ impl SecurityFaultInjector {
 
 #[allow(async_fn_in_trait)]
 impl FaultInjector for SecurityFaultInjector {
-    async fn inject_fault(&self, fault: FaultType) -> BearDogResult<String> {
+    async fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
         match fault {
             FaultType::AuthenticationFailure { failure_rate } => {
                 info!("🔐 Injecting authentication failures at {:.2}% rate", failure_rate * 100.0);
@@ -168,12 +169,12 @@ impl FaultInjector for SecurityFaultInjector {
         }
     }
 
-    async fn remove_fault(&self, fault_id: &str) -> BearDogResult<()> {
+    async fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
         info!("🔐 Removing security fault: {}", fault_id);
         Ok(())
     }
 
-    async fn is_fault_active(&self, _fault_id: &str) -> BearDogResult<bool> {
+    async fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
         Ok(false)
     }
 
@@ -192,7 +193,7 @@ impl DatabaseFaultInjector {
 
 #[allow(async_fn_in_trait)]
 impl FaultInjector for DatabaseFaultInjector {
-    async fn inject_fault(&self, fault: FaultType) -> BearDogResult<String> {
+    async fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
         match fault {
             FaultType::DatabaseTimeout { timeout_ms } => {
                 info!("💾 Injecting database timeout of {}ms", timeout_ms);
@@ -206,12 +207,12 @@ impl FaultInjector for DatabaseFaultInjector {
         }
     }
 
-    async fn remove_fault(&self, fault_id: &str) -> BearDogResult<()> {
+    async fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
         info!("💾 Removing database fault: {}", fault_id);
         Ok(())
     }
 
-    async fn is_fault_active(&self, _fault_id: &str) -> BearDogResult<bool> {
+    async fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
         Ok(false)
     }
 
@@ -230,7 +231,7 @@ impl ResourceFaultInjector {
 
 #[allow(async_fn_in_trait)]
 impl FaultInjector for ResourceFaultInjector {
-    async fn inject_fault(&self, fault: FaultType) -> BearDogResult<String> {
+    async fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
         match fault {
             FaultType::MemoryExhaustion { memory_mb, .. } => {
                 info!("💾 Injecting memory exhaustion: {}MB", memory_mb);
@@ -246,12 +247,12 @@ impl FaultInjector for ResourceFaultInjector {
         }
     }
 
-    async fn remove_fault(&self, fault_id: &str) -> BearDogResult<()> {
+    async fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
         info!("🔧 Removing resource fault: {}", fault_id);
         Ok(())
     }
 
-    async fn is_fault_active(&self, _fault_id: &str) -> BearDogResult<bool> {
+    async fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
         Ok(false)
     }
 

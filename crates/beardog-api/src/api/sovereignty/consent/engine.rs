@@ -25,7 +25,6 @@ pub struct ConsentManagementEngine {
 
     request_processor: Arc<ConsentRequestProcessor>,
 
-    #[allow(dead_code)] // Manager for future consent record operations
     record_manager: Arc<ConsentRecordManager>,
 
     template_manager: Arc<ConsentTemplateManager>,

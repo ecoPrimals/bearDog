@@ -1,37 +1,50 @@
-
-
 pub mod components;
 pub mod lifecycle;
-use beardog_errors::{BearDogError, BearDogResult};
-use beardog_types::canonical::HealthStatus;
-use beardog_types::config::unified::BearDogConfig; // Use canonical unified config
-use beardog_errors::idiomatic::SystemResult;
-
+use crate::types::{BearDogConfig, BearDogSecurityProvider, GeneticOptimizer, SystemMonitor};
+use beardog_errors::BearDogError;
+use beardog_types::canonical::{ComponentStatus, HealthStatus};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{error, info, warn};
+use tracing::info;
 
-pub struct BearDogCore {
-    pub state: Arc<RwLock<CoreState>>,
-    pub config: BearDogConfig,
-    pub security: Arc<BearDogSecurityProvider>,
-    pub monitor: Arc<SystemMonitor>,
-    pub genetic_optimizer: Arc<GeneticOptimizer>,
+pub type SystemError = BearDogError;
+
+#[derive(Debug)]
+pub struct CoreState {
+    pub components: HashMap<String, ComponentStatus>,
+    pub overall_health: HealthStatus,
+    pub start_time: std::time::Instant,
 }
-impl BearDogCore {
 
-    pub async fn new(config: BearDogConfig) -> BearDogResult<Self> {
-        let state = Arc::new(RwLock::new(CoreState::default()));
-        let security = Arc::new(BearDogSecurityProvider::new()?);
-        let monitor = Arc::new(SystemMonitor::new()?);
-        let genetic_optimizer = Arc::new(GeneticOptimizer::new()?);
-        Ok(Self {
-            state,
+impl Default for CoreState {
+    fn default() -> Self {
+        Self {
+            components: HashMap::new(),
+            overall_health: HealthStatus::Healthy,
+            start_time: std::time::Instant::now(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct BearDogCore {
+    pub config: BearDogConfig,
+    pub state: Arc<RwLock<CoreState>>,
+    pub security: BearDogSecurityProvider,
+    pub monitor: SystemMonitor,
+    pub genetic_optimizer: GeneticOptimizer,
+}
+
+impl BearDogCore {
+    pub fn new(config: BearDogConfig) -> Self {
+        Self {
             config,
-            security,
-            monitor,
-            genetic_optimizer,
-        })
+            state: Arc::new(RwLock::new(CoreState::default())),
+            security: BearDogSecurityProvider::new(),
+            monitor: SystemMonitor::new().unwrap_or_default(),
+            genetic_optimizer: GeneticOptimizer::new(),
+        }
     }
 
     pub async fn initialize(&self) -> Result<(), SystemError> {
@@ -44,12 +57,21 @@ impl BearDogCore {
                 .insert("core".to_string(), ComponentStatus::Starting);
         }
 
-        self.security.initialize().await?;
+        // Initialize components
         self.monitor.start().await?;
         self.genetic_optimizer.initialize().await?;
 
+        {
+            let mut state = self.state.write().await;
+            state
+                .components
                 .insert("core".to_string(), ComponentStatus::Running);
-            state.overall_health = HealthStatus::healthy();
+            state.overall_health = HealthStatus::Healthy;
+        }
+
         info!("✅ BearDog Core initialized successfully");
         Ok(())
+    }
 
+    // shutdown and health_check methods moved to lifecycle.rs
+}

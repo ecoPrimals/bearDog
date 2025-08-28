@@ -3,13 +3,13 @@
 use beardog_security::crypto_utils::BearDogCrypto;
 use beardog_genetics::genetics::entropy_hierarchy::validation::EntropyValidator;
 use beardog_core::licensing::LicenseManager;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use rand::RngCore;
 use std::collections::HashMap;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🚀 BearDog Production Security Demo");
     println!("=====================================");
 
@@ -31,7 +31,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_ed25519_verification() -> BearDogResult<()> {
+async fn demonstrate_ed25519_verification() -> Result<(), BearDogError> {
     println!("\n🔐 Ed25519 Signature Verification Demo");
     println!("--------------------------------------");
 
@@ -76,7 +76,7 @@ async fn demonstrate_ed25519_verification() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_secure_nonce_generation() -> BearDogResult<()> {
+async fn demonstrate_secure_nonce_generation() -> Result<(), BearDogError> {
     println!("\n🎲 Secure Nonce Generation Demo");
     println!("--------------------------------");
 
@@ -113,7 +113,7 @@ async fn demonstrate_secure_nonce_generation() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_licensing_security() -> BearDogResult<()> {
+async fn demonstrate_licensing_security() -> Result<(), BearDogError> {
     println!("\n📜 Licensing System Security Demo");
     println!("----------------------------------");
     
@@ -156,7 +156,7 @@ async fn demonstrate_licensing_security() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_entropy_validation() -> BearDogResult<()> {
+async fn demonstrate_entropy_validation() -> Result<(), BearDogError> {
     println!("\n🧬 Entropy Validation Security Demo");
     println!("-----------------------------------");
 
@@ -189,7 +189,7 @@ async fn demonstrate_entropy_validation() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_error_handling() -> BearDogResult<()> {
+async fn demonstrate_error_handling() -> Result<(), BearDogError> {
     println!("\n🛡️  Error Handling Security Demo");
     println!("--------------------------------");
 
@@ -222,7 +222,7 @@ async fn demonstrate_error_handling() -> BearDogResult<()> {
     Ok(())
 }
 
-fn generate_secure_nonce(size: usize) -> BearDogResult<Vec<u8>> {
+fn generate_secure_nonce(size: usize) -> Result<Vec<u8, BearDogError>> {
     if size == 0 {
         return Err(BearDogError::Crypto {
             message: "Nonce size must be greater than 0".to_string(),

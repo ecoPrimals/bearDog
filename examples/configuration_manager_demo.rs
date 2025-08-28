@@ -1,12 +1,12 @@
 
 
 use beardog_types::config::{ConfigManager, ConfigSource, NewBearDogConfig};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::info;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     info!("🔧 BearDog Configuration Manager Demo");
 
     demo_basic_usage().await?;
@@ -23,7 +23,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_basic_usage() -> BearDogResult<()> {
+async fn demo_basic_usage() -> Result<(), BearDogError> {
     info!("📝 Demo 1: Basic Configuration Manager Usage");
 
     let mut config_manager = ConfigManager::new();
@@ -51,7 +51,7 @@ async fn demo_basic_usage() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_environment_config() -> BearDogResult<()> {
+async fn demo_environment_config() -> Result<(), BearDogError> {
     info!("🌍 Demo 2: Environment Variable Configuration");
 
     std::env::set_var("BEARDOG_API_PORT", "9080");
@@ -78,7 +78,7 @@ async fn demo_environment_config() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_file_config() -> BearDogResult<()> {
+async fn demo_file_config() -> Result<(), BearDogError> {
     info!("📄 Demo 3: File-Based Configuration");
 
     let config_content = r#"
@@ -136,7 +136,7 @@ enable_distributed_mode = true
     Ok(())
 }
 
-async fn demo_runtime_updates() -> BearDogResult<()> {
+async fn demo_runtime_updates() -> Result<(), BearDogError> {
     info!("⚡ Demo 4: Runtime Configuration Updates");
 
     let config_manager = ConfigManager::new();
@@ -173,7 +173,7 @@ async fn demo_runtime_updates() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_service_integration() -> BearDogResult<()> {
+async fn demo_service_integration() -> Result<(), BearDogError> {
     info!("🔗 Demo 5: Service Integration");
 
     let config_manager = ConfigManager::new();
@@ -243,7 +243,7 @@ impl ApiServer {
         }
     }
 
-    pub async fn start(&self) -> BearDogResult<()> {
+    pub async fn start(&self) -> Result<(), BearDogError> {
         let bind_address = &self.config.network.api_bind_address;
         let max_connections = self.config.performance.max_connections;
         let request_timeout = self.config.performance.request_timeout_secs;

@@ -9,13 +9,13 @@ use beardog::tunnel::{
     BStpConfig, BStpKeyManager, BStpSecurityProvider, GamingCryptoEngine, GeneticSecurityHealing,
     SecurityGenetics,
 };
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 use tokio;
 
 #[tokio::test]
-async fn test_key_manager_security() -> BearDogResult<()> {
+async fn test_key_manager_security() -> Result<(), BearDogError> {
 
     let config = BStpConfig::default();
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
@@ -53,7 +53,7 @@ async fn test_key_manager_security() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_gaming_crypto_performance() -> BearDogResult<()> {
+async fn test_gaming_crypto_performance() -> Result<(), BearDogError> {
 
     let config = BStpConfig::competitive_gaming();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
@@ -115,7 +115,7 @@ async fn test_gaming_crypto_performance() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_crypto_algorithm_selection() -> BearDogResult<()> {
+async fn test_crypto_algorithm_selection() -> Result<(), BearDogError> {
 
     let config = BStpConfig::default();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
@@ -160,7 +160,7 @@ async fn test_crypto_algorithm_selection() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_session_security() -> BearDogResult<()> {
+async fn test_session_security() -> Result<(), BearDogError> {
 
     let config = BStpConfig::maximum_security();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
@@ -194,7 +194,7 @@ async fn test_session_security() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_genetic_healing_adaptation() -> BearDogResult<()> {
+async fn test_genetic_healing_adaptation() -> Result<(), BearDogError> {
 
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
     let genetics = Arc::new(DefaultBearDogGeneticsEngine::new(
@@ -227,7 +227,7 @@ async fn test_genetic_healing_adaptation() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_configuration_profiles() -> BearDogResult<()> {
+async fn test_configuration_profiles() -> Result<(), BearDogError> {
 
     let competitive = BStpConfig::competitive_gaming();
     assert_eq!(
@@ -255,7 +255,7 @@ async fn test_configuration_profiles() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_key_expiration_and_rotation() -> BearDogResult<()> {
+async fn test_key_expiration_and_rotation() -> Result<(), BearDogError> {
 
     let mut config = BStpConfig::default();
     config.key_management.key_rotation_interval = Duration::from_millis(100); // Short interval for testing
@@ -278,7 +278,7 @@ async fn test_key_expiration_and_rotation() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_contextual_key_derivation() -> BearDogResult<()> {
+async fn test_contextual_key_derivation() -> Result<(), BearDogError> {
 
     let config = BStpConfig::default();
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
@@ -310,7 +310,7 @@ async fn test_contextual_key_derivation() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_stress_performance() -> BearDogResult<()> {
+async fn test_stress_performance() -> Result<(), BearDogError> {
 
     let config = BStpConfig::competitive_gaming();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
@@ -376,7 +376,7 @@ async fn test_stress_performance() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_security_context_isolation() -> BearDogResult<()> {
+async fn test_security_context_isolation() -> Result<(), BearDogError> {
 
     println!("🔒 Testing security context isolation...");
 

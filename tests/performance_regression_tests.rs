@@ -12,7 +12,7 @@ use beardog_api::api::zero_cost_server::examples as api_examples;
 use beardog_workflows::workflows::zero_cost_workflows::examples as workflow_examples;
 use beardog_security::zero_cost_security_simplified::examples as security_examples;
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use tokio;

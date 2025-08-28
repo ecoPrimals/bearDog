@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +7,6 @@ use super::sources::{ThreatSource, ThreatTarget};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, Default)]
 pub enum ThreatSeverity {
-
     Info,
 
     Low,
@@ -24,7 +21,6 @@ pub enum ThreatSeverity {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ThreatType {
-
     Malware,
 
     Malicious,
@@ -101,7 +97,6 @@ pub struct ThreatEvent {
 }
 
 impl ThreatSeverity {
-
     pub fn to_score(&self) -> u8 {
         match self {
             ThreatSeverity::Info => 10,
@@ -129,7 +124,6 @@ impl ThreatSeverity {
 }
 
 impl ThreatType {
-
     pub fn typical_severity(&self) -> ThreatSeverity {
         match self {
             ThreatType::Phishing | ThreatType::SocialEngineering => ThreatSeverity::Medium,
@@ -169,8 +163,33 @@ impl ThreatType {
     }
 }
 
-impl ThreatEvent {
+impl Default for ThreatEvent {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            threat_type: ThreatType::Unknown,
+            severity: ThreatSeverity::Medium,
+            score: 50,
+            timestamp: Utc::now(),
+            source: ThreatSource::default(),
+            target: ThreatTarget::default(),
+            description: String::new(),
+            detection_method: DetectionMethod::Signature,
+            evidence: Vec::new(),
+            recommended_actions: Vec::new(),
+            status: ThreatStatus::New,
+            assigned_analyst: None,
+            related_events: Vec::new(),
+            mitigation_steps: Vec::new(),
+            confidence: 0.5,
+            raw_data: None,
+            mitigated: false,
+            mitigation_actions: Vec::new(),
+        }
+    }
+}
 
+impl ThreatEvent {
     pub fn is_high_priority(&self) -> bool {
         self.severity >= ThreatSeverity::High || self.score >= 80
     }

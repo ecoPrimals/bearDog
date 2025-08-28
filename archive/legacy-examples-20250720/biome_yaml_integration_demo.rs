@@ -5,12 +5,12 @@ use beardog_core::{
     UniversalPrimalProvider, PrimalService,
 };
 use beardog_config::BearDogConfig;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{info, warn, error};
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
 
@@ -40,7 +40,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_manifest_parsing() -> BearDogResult<BiomeManifest> {
+async fn demonstrate_manifest_parsing() -> Result<BiomeManifest, BearDogError> {
     info!("📖 === Step 1: Manifest Parsing ===");
 
     let manifest = BiomeYamlParser::parse_file("examples/biome.yaml").await?;
@@ -70,7 +70,7 @@ async fn demonstrate_manifest_parsing() -> BearDogResult<BiomeManifest> {
     Ok(manifest)
 }
 
-async fn demonstrate_beardog_config_extraction(manifest: &BiomeManifest) -> BearDogResult<()> {
+async fn demonstrate_beardog_config_extraction(manifest: &BiomeManifest) -> Result<(), BearDogError> {
     info!("🐻 === Step 2: BearDog Configuration Extraction ===");
 
     if let Some(beardog_config) = BiomeYamlParser::extract_beardog_config(manifest).await? {
@@ -136,7 +136,7 @@ async fn demonstrate_beardog_config_extraction(manifest: &BiomeManifest) -> Bear
     Ok(())
 }
 
-async fn demonstrate_security_validation(manifest: &BiomeManifest) -> BearDogResult<()> {
+async fn demonstrate_security_validation(manifest: &BiomeManifest) -> Result<(), BearDogError> {
     info!("🛡️ === Step 3: Security & Compliance Validation ===");
 
     match manifest.biome.environment {
@@ -191,7 +191,7 @@ async fn demonstrate_security_validation(manifest: &BiomeManifest) -> BearDogRes
     Ok(())
 }
 
-async fn demonstrate_beardog_configuration(manifest: &BiomeManifest) -> BearDogResult<Arc<BearDogCore>> {
+async fn demonstrate_beardog_configuration(manifest: &BiomeManifest) -> Result<Arc<BearDogCore, BearDogError>> {
     info!("⚙️ === Step 4: BearDog Configuration ===");
 
     let mut beardog_config = BearDogConfig::default();
@@ -226,7 +226,7 @@ async fn demonstrate_beardog_configuration(manifest: &BiomeManifest) -> BearDogR
     Ok(beardog_core)
 }
 
-async fn demonstrate_service_generation(manifest: &BiomeManifest) -> BearDogResult<()> {
+async fn demonstrate_service_generation(manifest: &BiomeManifest) -> Result<(), BearDogError> {
     info!("🌐 === Step 5: Service Generation ===");
 
     if let Some(beardog_config) = BiomeYamlParser::extract_beardog_config(manifest).await? {
@@ -248,7 +248,7 @@ async fn demonstrate_service_generation(manifest: &BiomeManifest) -> BearDogResu
     Ok(())
 }
 
-async fn demonstrate_resource_management(manifest: &BiomeManifest) -> BearDogResult<()> {
+async fn demonstrate_resource_management(manifest: &BiomeManifest) -> Result<(), BearDogError> {
     info!("💾 === Step 6: Resource Management ===");
 
     info!("🏗️ Total Biome Resources:");
@@ -288,7 +288,7 @@ async fn demonstrate_resource_management(manifest: &BiomeManifest) -> BearDogRes
     Ok(())
 }
 
-async fn demonstrate_network_security(manifest: &BiomeManifest) -> BearDogResult<()> {
+async fn demonstrate_network_security(manifest: &BiomeManifest) -> Result<(), BearDogError> {
     info!("🔒 === Step 7: Network Security Integration ===");
 
     info!("🌐 Networking Mode: {}", manifest.networking.mode);
@@ -327,7 +327,7 @@ async fn demonstrate_network_security(manifest: &BiomeManifest) -> BearDogResult
     Ok(())
 }
 
-async fn demonstrate_deployment_lifecycle(manifest: &BiomeManifest) -> BearDogResult<()> {
+async fn demonstrate_deployment_lifecycle(manifest: &BiomeManifest) -> Result<(), BearDogError> {
     info!("🚀 === Step 8: Deployment Lifecycle ===");
 
     info!("📋 Deployment Strategy: {}", manifest.deployment.strategy);
@@ -363,7 +363,7 @@ async fn demonstrate_deployment_lifecycle(manifest: &BiomeManifest) -> BearDogRe
     Ok(())
 }
 
-async fn demonstrate_environment_handling(manifest: &BiomeManifest) -> BearDogResult<()> {
+async fn demonstrate_environment_handling(manifest: &BiomeManifest) -> Result<(), BearDogError> {
     info!("🌍 === Step 9: Environment Configuration ===");
 
     info!("🎯 Environment: {:?}", manifest.biome.environment);
@@ -428,7 +428,7 @@ async fn demonstrate_environment_handling(manifest: &BiomeManifest) -> BearDogRe
 async fn demonstrate_primal_provider_integration(
     beardog_core: &Arc<BearDogCore>,
     manifest: &BiomeManifest
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     info!("🔌 === Step 10: Universal Primal Provider Integration ===");
 
     let metadata = beardog_core.metadata();

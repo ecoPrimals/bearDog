@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -122,7 +122,7 @@ pub struct AndroidKeystore {
 
 impl AndroidKeystore {}
 
-    pub fn new(config: AndroidHsmConfig) -> BearDogResult<Self> {
+    pub fn new(config: AndroidHsmConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             config,
             capabilities: AndroidDeviceCapabilities {
@@ -132,24 +132,24 @@ impl AndroidKeystore {}
                 verified_boot: true,
             },
         })
-    pub async fn test_keystore_access(&self) -> BearDogResult<()> {
+    pub async fn test_keystore_access(&self) -> Result<(), BearDogError> {
 
         Ok(())}
 
-    pub async fn generate_key(&self, key_id: &str, params: &AndroidKeyParams) -> BearDogResult<()> {
+    pub async fn generate_key(&self, key_id: &str, params: &AndroidKeyParams) -> Result<(), BearDogError> {
         Err(BearDogError::NotImplemented {
             message: "Android keystore key generation".to_string(),
-    pub async fn encrypt(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn encrypt(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             message: "Android keystore encryption".to_string(),}
 
-    pub async fn decrypt(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn decrypt(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             message: "Android keystore decryption".to_string(),
-    pub async fn sign(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             message: "Android keystore signing".to_string(),}
 
-    pub async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
+    pub async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> Result<bool, BearDogError> {
             message: "Android keystore verification".to_string(),
-    pub async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
+    pub async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
             message: "Android keystore key deletion".to_string(),}
 
 pub struct AndroidAttestationService {
@@ -163,7 +163,7 @@ pub struct ChallengeGenerator {
 impl ChallengeGenerator {
             entropy_source: "system_random".to_string(),}
 
-    pub fn generate_challenge(&self, size: usize) -> BearDogResult<Vec<u8>> {
+    pub fn generate_challenge(&self, size: usize) -> Result<Vec<u8>, BearDogError>> {
         use rand::RngCore;
         let mut challenge = vec![0u8; size];
         rand::thread_rng().fill_bytes(&mut challenge);
@@ -176,7 +176,7 @@ impl AndroidAttestationService {}
             attestation_level,
             challenge_generator: ChallengeGenerator::new(),}
 
-    pub async fn initialize(&self) -> BearDogResult<()> {
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
         tracing::info!("Initializing Android attestation service with level: {:?}", self.attestation_level);
 
         if !self.enabled {
@@ -187,7 +187,7 @@ pub struct AndroidHealthMonitor {
 
 impl AndroidHealthMonitor {
             check_interval_seconds: 60,
-    pub async fn start_monitoring(&self) -> BearDogResult<()> {
+    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
             return Err(BearDogError::configuration("Health monitoring is disabled".to_string()));
         tracing::info!("Starting Android health monitoring with {}-second intervals", self.check_interval_seconds);
 
@@ -200,7 +200,7 @@ impl AndroidHealthMonitor {
 
             }
         });
-    pub async fn get_health_status(&self) -> BearDogResult<beardog_core::HsmHealthStatus> {
+    pub async fn get_health_status(&self) -> Result<beardog_core::HsmHealthStatus, BearDogError> {
         tracing::debug!("Getting Android HSM health status");
         let mut is_healthy = true;
         let mut error_message = None;
@@ -242,7 +242,7 @@ impl AndroidHealthMonitor {
                 error_rate,
                 network_throughput_bps: operations_per_second * 1024.0, // Rough estimate
 
-    async fn get_performance_metrics(&self) -> BearDogResult<(f64, u32)> {
+    async fn get_performance_metrics(&self) -> Result<(f64, u32), BearDogError> {
 
         let operations_per_second = 100.0;
         let error_count = 0;

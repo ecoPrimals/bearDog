@@ -1,13 +1,13 @@
 
 
 use clap::Parser;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 mod ai_automation;
 use ai_automation::*;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt()
         .with_env_filter("beardog=info")
@@ -43,7 +43,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn run_standalone_fallback() -> BearDogResult<()> {
+async fn run_standalone_fallback() -> Result<(), BearDogError> {
     println!("🚀 Demonstrating BearDog standalone AI capabilities...");
 
     let ai_core = standalone_ai::initialize_ai_core(&None).await?;
@@ -68,7 +68,7 @@ async fn run_standalone_fallback() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn showcase_ai_automation_modes() -> BearDogResult<()> {
+async fn showcase_ai_automation_modes() -> Result<(), BearDogError> {
     println!("📋 BearDog AI Automation Modes Showcase");
     println!("═══════════════════════════════════════");
 
@@ -95,7 +95,7 @@ mod dev_utils {
     use super::*;
     use std::path::PathBuf;
 
-    pub async fn generate_sample_files() -> BearDogResult<()> {
+    pub async fn generate_sample_files() -> Result<(), BearDogError> {
 
         let sample_ops = serde_json::json!([
             {
@@ -151,7 +151,7 @@ struct DevCli {
     standalone_demo: bool,
 }
 
-async fn run_dev_mode() -> BearDogResult<()> {
+async fn run_dev_mode() -> Result<(), BearDogError> {
     let cli = DevCli::parse();
     
     if cli.generate_samples {

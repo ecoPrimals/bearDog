@@ -1,8 +1,6 @@
-
-
 use crate::threat::ml_engine::SmartThreatMLEngine;
 use crate::threat::types::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
@@ -10,7 +8,6 @@ use tokio::sync::RwLock;
 use tracing::info;
 
 pub struct ThreatDetectionEngine {
-
     pub config: ThreatDetectionConfig,
 
     pub active_threats: HashMap<String, ThreatEvent>,
@@ -34,8 +31,7 @@ pub struct ThreatDetectionEngine {
     pub active_incidents: Arc<RwLock<HashMap<String, IncidentResponse>>>,
 }
 impl ThreatDetectionEngine {
-
-    pub async fn new(config: ThreatDetectionConfig) -> BearDogResult<Self> {
+    pub async fn new(config: ThreatDetectionConfig) -> Result<Self, BearDogError> {
         let ml_enhancement = config.ml_enhancement;
         let mut engine = Self {
             config,

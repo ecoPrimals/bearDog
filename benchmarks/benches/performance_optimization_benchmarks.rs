@@ -1,5 +1,4 @@
-
-
+use beardog_errors::BearDogError;
 use beardog_types::config::*;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use std::time::Duration;
@@ -21,9 +20,11 @@ fn benchmark_database_config(c: &mut Criterion) {
             |b, config| {
                 b.iter(|| {
                     config.validate().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
+                        tracing::error!("Operation failed: {:?}", e);
+                        beardog_errors::BearDogError::internal(
+                            format_args!("Operation failed: {:?}", e).to_string(),
+                        )
+                    })?;
                 });
             },
         );
@@ -34,9 +35,11 @@ fn benchmark_database_config(c: &mut Criterion) {
             |b, config| {
                 b.iter(|| {
                     toml::to_string(&config).map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
+                        tracing::error!("Operation failed: {:?}", e);
+                        beardog_errors::BearDogError::internal(
+                            format_args!("Operation failed: {:?}", e).to_string(),
+                        )
+                    })?;
                 });
             },
         );
@@ -145,9 +148,11 @@ fn benchmark_unified_config(c: &mut Criterion) {
             |b, config| {
                 b.iter(|| {
                     config.validate().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
+                        tracing::error!("Operation failed: {:?}", e);
+                        beardog_errors::BearDogError::internal(
+                            format_args!("Operation failed: {:?}", e).to_string(),
+                        )
+                    })?;
                 });
             },
         );
@@ -180,9 +185,19 @@ fn benchmark_parallel_processing_simulation(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_processing");
 
     let rt = Runtime::new().map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Benchmark runtime creation failed", e).to_string())
-})?;
+        tracing::error!(
+            "Operation failed ({}): {:?}",
+            "Benchmark runtime creation failed",
+            e
+        );
+        beardog_errors::BearDogError::internal(
+            format_args!(
+                "Operation failed ({}): {:?}",
+                "Benchmark runtime creation failed", e
+            )
+            .to_string(),
+        )
+    })?;
     let configs = vec![
         ("default", AsyncOptimizationConfig::default()),
         ("production", AsyncOptimizationConfig::production()),
@@ -213,7 +228,6 @@ async fn simulate_parallel_work(worker_count: usize) {
     let tasks: Vec<_> = (0..worker_count)
         .map(|i| {
             tokio::spawn(async move {
-
                 let mut sum = 0;
                 for j in 0..1000 {
                     sum += i * j;
@@ -267,7 +281,6 @@ fn create_large_cache_config() -> MemoryOptimizationConfig {
 }
 
 fn simulate_cache_operations(config: &MemoryOptimizationConfig) {
-
     let l1_operations = config.cache.l1_cache.size_kb * 10;
     let l2_operations = config.cache.l2_cache.size_mb * 100;
 
@@ -336,7 +349,6 @@ fn simulate_monitoring_overhead(config: &PerformanceConfig) {
     let mut collected_metrics = Vec::new();
 
     for i in 0..metrics_count {
-
         let metric_value = i as f64 * 1.5;
         collected_metrics.push(metric_value);
     }

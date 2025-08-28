@@ -1,11 +1,11 @@
 
 
 use beardog_security::BearDogCrypto;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::time::Instant;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🔐 BearDog Cryptographic Showcase");
     println!("=================================");
 
@@ -21,7 +21,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_simd_hashing() -> BearDogResult<()> {
+async fn demo_simd_hashing() -> Result<(), BearDogError> {
     println!("\n⚡ SIMD-Accelerated Hashing:");
     
     let test_data = b"BearDog: Revolutionary decentralized security platform with genetic algorithms";
@@ -39,7 +39,7 @@ async fn demo_simd_hashing() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_encryption_features() -> BearDogResult<()> {
+async fn demo_encryption_features() -> Result<(), BearDogError> {
     println!("\n🔒 Advanced Encryption Features:");
     
     let plaintext = b"Confidential BearDog system data";
@@ -65,7 +65,7 @@ async fn demo_encryption_features() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_digital_signatures() -> BearDogResult<()> {
+async fn demo_digital_signatures() -> Result<(), BearDogError> {
     println!("\n✍️ Digital Signature System:");
     
     let message = b"BearDog genetic spawning request #12345";
@@ -92,7 +92,7 @@ async fn demo_digital_signatures() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_performance_metrics() -> BearDogResult<()> {
+async fn demo_performance_metrics() -> Result<(), BearDogError> {
     println!("\n📊 Performance Metrics:");
     
     let iterations = 1000;

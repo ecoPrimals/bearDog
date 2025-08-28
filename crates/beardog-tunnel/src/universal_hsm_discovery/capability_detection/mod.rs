@@ -12,7 +12,7 @@ pub mod performance_benchmarker;
 pub mod pkcs11_prober;
 pub mod software_hsm_prober;
 use super::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::{debug, error, info, warn};
@@ -34,7 +34,7 @@ pub struct CapabilityDetector {
 }
 impl CapabilityDetector {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             pkcs11_prober: Pkcs11CapabilityProber::new()?,
             cloud_kms_prober: CloudKmsCapabilityProber::new()?,
@@ -47,7 +47,7 @@ impl CapabilityDetector {}
     pub async fn detect_capabilities(
         &self,
         interface_type: &HsmInterfaceType,
-    ) -> BearDogResult<beardog_types::HsmCapabilities> {
+    ) -> Result<beardog_types::HsmCapabilities, BearDogError> {
         debug!(
             "🔍 Detecting capabilities for interface: {:?}",
             interface_type
@@ -69,7 +69,7 @@ impl CapabilityDetector {}
     async fn create_network_hsm_capabilities(
         endpoint: &str,
         protocol: &str,
-    ) -> BearDogResult<HsmCapabilities> {
+    ) -> Result<HsmCapabilities, BearDogError> {
         debug!("🌐 Analyzing Network HSM: {} ({})", endpoint, protocol);
         Ok(HsmCapabilities {
             key_generation: KeyGenerationCapabilities {
@@ -181,7 +181,7 @@ impl CapabilityDetector {}
     async fn create_smart_card_capabilities(
         reader_name: &str,
         debug!("💳 Analyzing Smart Card: {}", reader_name);
-    async fn create_tpm_capabilities(&self, version: &str) -> BearDogResult<HsmCapabilities> {
+    async fn create_tpm_capabilities(&self, version: &str) -> Result<HsmCapabilities, BearDogError> {
         debug!("🔒 Analyzing TPM: {}", version);
     async fn create_windows_cng_capabilities(
         provider_name: &str,

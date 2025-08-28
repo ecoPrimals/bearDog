@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 #[derive(Debug)]
 pub struct SecureMemory {
@@ -101,16 +101,16 @@ impl Drop for SecureMemoryPool {
 mod tests {
     use super::*;
     #[test]
-    fn test_secure_memory_creation() -> beardog_errors::BearDogResult<()> {
+    fn test_secure_memory_creation() -> Result<(), BearDogError> {
         let memory = SecureMemory::new(1024);
         assert_eq!(memory.len(), 1024);
         assert!(!memory.is_empty());}
 
-    fn test_secure_memory_zero() -> beardog_errors::BearDogResult<()> {
+    fn test_secure_memory_zero() -> Result<(), BearDogError> {
         let mut memory = SecureMemory::from_data(vec![1, 2, 3, 4, 5]);
         memory.zero();
         assert_eq!(memory.as_slice(), &[0, 0, 0, 0, 0]);
-    fn test_secure_memory_pool() -> beardog_errors::BearDogResult<()> {
+    fn test_secure_memory_pool() -> Result<(), BearDogError> {
         let mut pool = SecureMemoryPool::new(2048);
         let index1 = pool.allocate(512).map_err(|e| {
             tracing::error!("Operation failed: {e:?}");

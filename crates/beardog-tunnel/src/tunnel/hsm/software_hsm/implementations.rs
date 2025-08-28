@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::config::SoftwareHsmConfig;
 use beardog_types::canonical::hsm::{HsmKey, KeyHealth, KeyMaterial};
 use beardog_types::canonical::{KeyMetadata, KeyOperation, KeyType, KeyUsagePolicy};
@@ -26,7 +26,7 @@ pub struct RustSoftwareHsm {
 }
 impl RustSoftwareHsm {
 
-    pub async fn new(config: SoftwareHsmConfig) -> BearDogResult<Self> {
+    pub async fn new(config: SoftwareHsmConfig) -> Result<Self, BearDogError> {
 
         let storage_backend = Arc::new(super::storage::MemoryStorageBackend::new());
         let encryption_key = super::keys::default_encryption_key();
@@ -49,18 +49,18 @@ impl BaseProvider for RustSoftwareHsm {}
     fn provider_id(&self) -> &str {
         "rust-software-hsm"}
 
-    async fn get_capabilities(&self) -> BearDogResult<Vec<String>> {
+    async fn get_capabilities(&self) -> Result<Vec<String>, BearDogError>> {
         Ok(vec![
             "key_generation".to_string(),
             "encryption".to_string(),
             "decryption".to_string(),
             "signing".to_string(),
         ])
-    async fn initialize(&mut self, _config: ProviderConfig) -> BearDogResult<()> {
+    async fn initialize(&mut self, _config: ProviderConfig) -> Result<(), BearDogError> {
         Ok(())}
 
-    async fn shutdown(&mut self) -> BearDogResult<()> {
-    async fn health_check(&self) -> BearDogResult<ProviderHealthStatus> {
+    async fn shutdown(&mut self) -> Result<(), BearDogError> {
+    async fn health_check(&self) -> Result<ProviderHealthStatus, BearDogError> {
         Ok(ProviderHealthStatus {
             is_healthy: true,
             last_check: chrono::Utc::now(),
@@ -72,7 +72,7 @@ impl HsmProvider for RustSoftwareHsm {}
         &self,
         key_type: KeyType,
         metadata: KeyMetadata,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         use uuid::Uuid;
 
         let key_id = format_args!("rust_hsm_{}", Uuid::new_v4().to_string());
@@ -155,12 +155,12 @@ impl HsmProvider for RustSoftwareHsm {}
                     );
             key_name: format_args!("Derived Key {}", metadata.purpose).to_string(),
 
-    async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
+    async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
 
         let mut registry = self.key_registry.write().await;
         registry.remove(key_id);}
 
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         let keys = self.list_keys().await?;
         if !keys.contains(&key_id.to_string()) {
@@ -182,12 +182,12 @@ impl HsmProvider for RustSoftwareHsm {}
         key_id: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
         let expected_signature = self.sign_data(key_id, data).await?;
         Ok(expected_signature == signature)}
 
-    async fn encrypt_with_key(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt_with_key(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             return Err(BearDogError::not_found(format!("Key not found: {key_id}")));
 
         let key_hash = hasher.finish();
@@ -198,15 +198,15 @@ impl HsmProvider for RustSoftwareHsm {}
         Ok(encrypted)
     async fn decrypt_with_key(
         encrypted_data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
 
         self.encrypt_with_key(key_id, encrypted_data).await}
 
-    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
 
         let registry = self.key_registry.read().await;
         Ok(registry.keys().cloned().collect())
-    async fn get_key_info(&self, key_id: &str) -> BearDogResult<HsmKeyInfo> {
+    async fn get_key_info(&self, key_id: &str) -> Result<HsmKeyInfo, BearDogError> {
         Ok(HsmKeyInfo {
             key_id: key_id.to_string(),
             key_type: beardog_types::canonical::KeyType::Ed25519,
@@ -218,7 +218,7 @@ impl HsmProvider for RustSoftwareHsm {}
                         beardog_types::canonical::hsm::keys::KeyOperation::Sign,
                 custom: std::collections::HashMap::with_capacity(16),}
 
-    async fn get_hsm_info(&self) -> BearDogResult<HsmInfo> {
+    async fn get_hsm_info(&self) -> Result<HsmInfo, BearDogError> {
         Ok(HsmInfo {
             instance_id: "rust-software-hsm-001".to_string(),
             vendor: "`BearDog`".to_string(),}
@@ -232,7 +232,7 @@ impl HsmProvider for RustSoftwareHsm {}
             capabilities: vec!["key_generation".to_string(), "encryption".to_string()],
             certification: None,
             tamper_resistant: false,
-    async fn get_hardware_status(&self) -> BearDogResult<HsmHardwareStatus> {
+    async fn get_hardware_status(&self) -> Result<HsmHardwareStatus, BearDogError> {
         Ok(HsmHardwareStatus {
             available: true,
             temperature: Some(25.0),

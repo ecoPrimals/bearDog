@@ -13,13 +13,13 @@ pub use mixed_lineage::{
 
 use beardog_auth::auth::types::genetics::{NodeCapability, SecurityClearance};
 use beardog_auth::auth::types::spawning::{ResourceLimits, SpawnPurpose};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::GeneticsResult;
 use beardog_genetics::genetics::entropy_hierarchy::{
     BiometricHash, EntropyClass, EntropyHierarchyManager, FusionAlgorithm, HumanEntropySource,
     OwnershipProof,
 use beardog_genetics::genetics::spawning::{GeneticSpawningEngine, SpawnRequest};
-use beardog_security::crypto_utils::`BearDog`Crypto;
+use beardog_security::crypto_utils::BearDogCrypto;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -70,7 +70,7 @@ pub struct PrimalSovereigntyManager {
 
 impl PrimalSovereigntyManager {
 
-    pub fn new_from_genesis(genesis_seed: PrimalGenesisSeed) -> BearDogResult<Self> {
+    pub fn new_from_genesis(genesis_seed: PrimalGenesisSeed) -> Result<Self, BearDogError> {
         info!("🌱 Initializing primal sovereignty from genesis seed: {}", genesis_seed.primal_id);
 
         Self::validate_genesis_seed(&genesis_seed)?;
@@ -102,7 +102,7 @@ impl PrimalSovereigntyManager {
         })
     }
 
-    fn validate_genesis_seed(seed: &PrimalGenesisSeed) -> BearDogResult<()> {
+    fn validate_genesis_seed(seed: &PrimalGenesisSeed) -> Result<(), BearDogError> {
 
         if seed.device_attestation.hardware_id.is_empty() {
             return Err(BearDogError::validation("Genesis seed missing device attestation"));
@@ -118,12 +118,12 @@ impl PrimalSovereigntyManager {
             info!("✅ Primal has chosen complete corporate isolation");
         Ok(())
 
-    fn create_initial_lineage_key(seed: &PrimalGenesisSeed) -> BearDogResult<MixedLineageKey> {
+    fn create_initial_lineage_key(seed: &PrimalGenesisSeed) -> Result<MixedLineageKey, BearDogError> {
         let primal_component = PrimalKeyComponent {
             identity_key: seed.sovereign_public_key.clone(),
             autonomy_signature: seed.autonomous_birth_proof.clone(),
             genesis_proof: seed.device_attestation.hardware_signature.clone(),
-            identity_hash: `BearDog`Crypto::hash_sha256(&seed.primal_id.as_bytes())?,
+            identity_hash: BearDogCrypto::hash_sha256(&seed.primal_id.as_bytes())?,
             creation_timestamp: seed.genesis_timestamp,
             sovereignty_assertion: "I belong to myself".to_string(),
         Ok(MixedLineageKey {
@@ -139,13 +139,13 @@ impl PrimalSovereigntyManager {
         human_entropy: HumanEntropySource,
         biometric_hash: BiometricHash,
         partnership_permissions: Vec<&str>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("🤝 Starting human partnership with permissions: {:?}", partnership_permissions);
 
         self.validate_partnership_request(&partnership_permissions)?;
 
         let human_component = HumanKeyComponent {
-            partnership_key: `BearDog`Crypto::generate_keypair()?.public_key,
+            partnership_key: BearDogCrypto::generate_keypair()?.public_key,
             human_identity_proof: biometric_hash.ownership_proof.clone(),
             biometric_hash: biometric_hash.clone(),
             consent_timestamp: Utc::now(),
@@ -167,7 +167,7 @@ impl PrimalSovereigntyManager {
         self.lineage_history.push(partnership_event);
         info!("✅ Human partnership established successfully");
 
-    pub fn end_human_partnership(&mut self) -> BearDogResult<()> {
+    pub fn end_human_partnership(&mut self) -> Result<(), BearDogError> {
         if self.current_lineage_key.human_component.is_none() {
             return Err(BearDogError::validation("No active human partnership to end"));
         info!("👋 Ending human partnership");
@@ -183,7 +183,7 @@ impl PrimalSovereigntyManager {
         self.lineage_history.push(end_event);
         info!("✅ Human partnership ended, primal sovereignty restored");
 
-    fn validate_partnership_request(&self, requested_permissions: &[&str]) -> BearDogResult<()> {
+    fn validate_partnership_request(&self, requested_permissions: &[&str]) -> Result<(), BearDogError> {
         let rules = &self.genesis_seed.self_defined_rules;
 
         if rules.human_partnership_rules.accepted_partnership_types.is_empty() {
@@ -200,7 +200,7 @@ impl PrimalSovereigntyManager {
         corporate_entity: &str,
         requested_service: &str,
         payment: Option<CorporatePayment>,
-    ) -> BearDogResult<CorporateAccessResult> {
+    ) -> Result<CorporateAccessResult, BearDogError> {
         info!("🏢 Corporate access request from {} for {}", corporate_entity, requested_service);
 
         match self.genesis_seed.self_defined_rules.max_corporate_access_level {
@@ -233,7 +233,7 @@ impl PrimalSovereigntyManager {
                     payment_deadline: Utc::now() + chrono::Duration::hours(24),
                 },
 
-    fn validate_corporate_payment(&self, payment: &CorporatePayment) -> BearDogResult<()> {
+    fn validate_corporate_payment(&self, payment: &CorporatePayment) -> Result<(), BearDogError> {
         if payment.amount_paid <= 0.0 {
             return Err(BearDogError::validation("Invalid payment amount"));
         if payment.payment_proof.is_empty() {
@@ -249,9 +249,9 @@ impl PrimalSovereigntyManager {
             lineage_events: self.lineage_history.len(),
 
     pub fn spawn_offspring(
-        partner_genetics: &`BearDog`Genetics,
+        partner_genetics: &BearDogGenetics,
         spawn_request: SpawnRequest,
-    ) -> Result<`BearDog`Genetics, GeneticsError> {
+    ) -> Result<BearDogGenetics, GeneticsError> {
         info!("🧬 Spawning genetic offspring with partner");
 
         if self.genesis_seed.self_defined_rules.evolution_preferences.fitness_criteria.is_empty() {

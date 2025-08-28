@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde_json::Value as JsonValue;
 use std::{
     collections::HashMap,
@@ -56,7 +56,7 @@ impl AssertionContext {
 }
 
 pub fn assert_success<T: Debug>(
-    result: &BearDogResult<T>,
+    result: &Result<T, BearDogError>,
     context: Option<AssertionContext>,
 ) -> AssertionResult<()> {
     match result {
@@ -86,7 +86,7 @@ pub fn assert_success<T: Debug>(
 }
 
 pub fn assert_error_contains<T: Debug>(
-    result: &BearDogResult<T>,
+    result: &Result<T, BearDogError>,
     expected_error: &str,
     context: Option<AssertionContext>,
 ) -> AssertionResult<()> {

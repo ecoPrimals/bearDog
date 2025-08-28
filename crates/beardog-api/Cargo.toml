@@ -33,7 +33,7 @@ beardog-errors = { workspace = true }
 beardog-genetics = { workspace = true }
 beardog-monitoring = { workspace = true }
 beardog-security = { workspace = true }
-beardog-tunnel = { workspace = true }
+# beardog-tunnel = { workspace = true } # Temporarily disabled
 beardog-utils = { workspace = true }
 beardog-threat = { workspace = true }
 # beardog-workflows = { path = "../beardog-workflows" } # Disabled

@@ -1,9 +1,10 @@
+use beardog_errors::BearDogError;
 
 
 use super::HsmTestHarness;
-use beardog::{BearDogError, BearDogResult};
+use beardog::{{BearDogError, BearDogError}};
 
-pub async fn test_hsm_manager(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+pub async fn test_hsm_manager(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("🏗️ Testing HSM Manager Functionality");
 
     test_manager_initialization(harness).await?;
@@ -16,7 +17,7 @@ pub async fn test_hsm_manager(harness: &mut HsmTestHarness) -> BearDogResult<()>
     Ok(())
 }
 
-async fn test_manager_initialization(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_manager_initialization(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🚀 Testing manager initialization");
     
     let start_time = std::time::Instant::now();
@@ -34,7 +35,7 @@ async fn test_manager_initialization(harness: &mut HsmTestHarness) -> BearDogRes
     Ok(())
 }
 
-async fn test_tier_selection(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_tier_selection(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🎯 Testing tier selection logic");
     
     let start_time = std::time::Instant::now();
@@ -51,7 +52,7 @@ async fn test_tier_selection(harness: &mut HsmTestHarness) -> BearDogResult<()> 
     Ok(())
 }
 
-async fn test_failover_mechanisms(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_failover_mechanisms(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🔄 Testing failover mechanisms");
     
     let start_time = std::time::Instant::now();
@@ -70,7 +71,7 @@ async fn test_failover_mechanisms(harness: &mut HsmTestHarness) -> BearDogResult
 }
 
 #[tokio::test]
-async fn test_hsm_manager_standalone() -> BearDogResult<()> {
+async fn test_hsm_manager_standalone() -> Result<(), BearDogError> {
     let mut harness = super::HsmTestHarness::new().await?;
     test_hsm_manager(&mut harness).await
 } 

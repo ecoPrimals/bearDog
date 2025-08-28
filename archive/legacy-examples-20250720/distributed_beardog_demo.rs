@@ -12,10 +12,10 @@ use beardog_tunnel::tunnel::hsm::{
     GenerateKeyRequest, KeyMetadata, KeyUsage, KeyAlgorithm,
 };
 use beardog_genetics::genetics::{GeneticsAPI, SpawnRequest, SpawnPurpose, ResourceLimits};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
     
@@ -35,7 +35,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn initialize_local_instances() -> BearDogResult<Vec<Arc<BearDogCore>>> {
+async fn initialize_local_instances() -> Result<Vec<Arc<BearDogCore, BearDogError>>> {
     info!("🔧 Initializing local BearDog instances...");
     
     let mut instances = Vec::new();
@@ -59,7 +59,7 @@ async fn initialize_local_instances() -> BearDogResult<Vec<Arc<BearDogCore>>> {
     Ok(instances)
 }
 
-async fn create_local_config(instance_name: &str, bind_address: &str) -> BearDogResult<BearDogConfig> {
+async fn create_local_config(instance_name: &str, bind_address: &str) -> Result<BearDogConfig, BearDogError> {
     let mut config = BearDogConfig::default();
 
     config.app.standalone_mode = true;
@@ -72,7 +72,7 @@ async fn create_local_config(instance_name: &str, bind_address: &str) -> BearDog
     Ok(config)
 }
 
-async fn demo_operation_routing(instances: &[Arc<BearDogCore>]) -> BearDogResult<()> {
+async fn demo_operation_routing(instances: &[Arc<BearDogCore>]) -> Result<(), BearDogError> {
     info!("🔀 Demonstrating operation routing...");
     
     let tower_instance = &instances[0];
@@ -119,7 +119,7 @@ async fn demo_operation_routing(instances: &[Arc<BearDogCore>]) -> BearDogResult
     Ok(())
 }
 
-async fn demo_hsm_failover(instances: &[Arc<BearDogCore>]) -> BearDogResult<()> {
+async fn demo_hsm_failover(instances: &[Arc<BearDogCore>]) -> Result<(), BearDogError> {
     info!("🔄 Demonstrating HSM failover...");
     
     let tower_instance = &instances[0];
@@ -137,7 +137,7 @@ async fn demo_hsm_failover(instances: &[Arc<BearDogCore>]) -> BearDogResult<()> 
     Ok(())
 }
 
-async fn demo_offline_genetic_spawning(instances: &[Arc<BearDogCore>]) -> BearDogResult<()> {
+async fn demo_offline_genetic_spawning(instances: &[Arc<BearDogCore>]) -> Result<(), BearDogError> {
     info!("🧬 Demonstrating offline genetic spawning...");
     
     let tower_instance = &instances[0];
@@ -189,7 +189,7 @@ async fn demo_offline_genetic_spawning(instances: &[Arc<BearDogCore>]) -> BearDo
     Ok(())
 }
 
-async fn demo_local_coordination(instances: &[Arc<BearDogCore>]) -> BearDogResult<()> {
+async fn demo_local_coordination(instances: &[Arc<BearDogCore>]) -> Result<(), BearDogError> {
     info!("🤝 Demonstrating local instance coordination...");
 
     info!("🏠 Tower: Processing heavy computation locally");
@@ -213,7 +213,7 @@ async fn demo_local_coordination(instances: &[Arc<BearDogCore>]) -> BearDogResul
     Ok(())
 }
 
-async fn demo_performance_comparison() -> BearDogResult<()> {
+async fn demo_performance_comparison() -> Result<(), BearDogError> {
     info!("📊 Performance comparison:");
 
     info!("🏠 Local Software HSM:");

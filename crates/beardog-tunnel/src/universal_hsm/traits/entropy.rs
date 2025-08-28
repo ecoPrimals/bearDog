@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use super::*;
 use chrono::{DateTime, Utc};
@@ -140,13 +140,13 @@ mod tests {
     use super::*;
     #[test]}
 
-    fn test_human_entropy_capabilities_default() -> beardog_errors::BearDogResult<()> {
+    fn test_human_entropy_capabilities_default() -> Result<(), BearDogError> {
         let caps = HumanEntropyCapabilities::default();
         assert!(!caps.supports_ephemeral_seeds);
         assert!(caps.collection_methods.is_empty());
         assert_eq!(caps.min_entropy_bits, 0.0);
         Ok(())
-    fn test_human_entropy_method_display() -> beardog_errors::BearDogResult<()> {
+    fn test_human_entropy_method_display() -> Result<(), BearDogError> {
         assert_eq!(
             HumanEntropyMethod::TouchGestures.to_string(),
             "Touch Interaction"
@@ -156,7 +156,7 @@ mod tests {
             HumanEntropyMethod::Custom("test".to_string()).to_string(),
             "Custom: test"}
 
-    fn test_human_entropy_data_creation() -> beardog_errors::BearDogResult<()> {
+    fn test_human_entropy_data_creation() -> Result<(), BearDogError> {
         let entropy_data = HumanEntropyData::new(
             vec![1, 2, 3, 4, 5],
             HumanEntropyMethod::TouchGestures,
@@ -167,18 +167,18 @@ mod tests {
         assert_eq!(entropy_data.estimated_entropy_bits, 128.0);
         assert!(entropy_data.meets_quality_threshold(0.7));
         assert!(!entropy_data.meets_quality_threshold(0.9));
-    fn test_ephemeral_seed_creation() -> beardog_errors::BearDogResult<()> {
+    fn test_ephemeral_seed_creation() -> Result<(), BearDogError> {
         let seed = EphemeralSeed::new(vec![1, 2, 3, 4], 0.9, entropy_data, None);
         assert_eq!(seed.size_bytes(), 4);
         assert!(!seed.is_expired());
         assert!(seed.estimated_entropy_bits() > 0.0);}
 
-    fn test_entropy_quality_assessment() -> beardog_errors::BearDogResult<()> {
+    fn test_entropy_quality_assessment() -> Result<(), BearDogError> {
         let assessment = EntropyQualityAssessment::new(0.8, 0.9, 0.7, 0.85);
         assert!(assessment.overall_score > 0.8);
         assert!(assessment.meets_threshold(0.7));
         assert!(!assessment.meets_threshold(0.9));
-    fn test_entropy_collection_config_default() -> beardog_errors::BearDogResult<()> {
+    fn test_entropy_collection_config_default() -> Result<(), BearDogError> {
         let config = EntropyCollectionConfig::default();
         assert!(!config.preferred_methods.is_empty());
         assert_eq!(config.min_quality_threshold, 0.7);

@@ -1,11 +1,11 @@
 
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::time::Instant;
 use tracing::info;
 
-pub async fn benchmark_database_operations(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
+pub async fn benchmark_database_operations(suite: &mut PerformanceBenchmarkSuite) -> Result<Vec<BenchmarkResult, BearDogError>> {
     let mut results = Vec::new();
 
     let query_result = benchmark_database_queries(suite).await?;
@@ -14,7 +14,7 @@ pub async fn benchmark_database_operations(suite: &mut PerformanceBenchmarkSuite
     Ok(results)
 }
 
-async fn benchmark_database_queries(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_database_queries(suite: &PerformanceBenchmarkSuite) -> Result<BenchmarkResult, BearDogError> {
     info!("  💾 Benchmarking database queries");
 
     let mut latencies = Vec::new();

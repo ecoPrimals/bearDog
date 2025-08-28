@@ -3,7 +3,7 @@
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 use serde_json;
 use std::process::Stdio;
@@ -23,7 +23,7 @@ impl ExternalFunctionHandler for KubernetesIntegration {}
         license_manager: &LicenseManager,
         _operation: &str,
         payload: serde_json::Value,
-    ) -> BearDogResult<serde_json::Value> {
+    ) -> Result<serde_json::Value, BearDogError> {
 
         if !license_manager
             .is_function_available(self.function_name())
@@ -107,7 +107,7 @@ impl ExternalFunctionHandler for KubernetesIntegration {}
 }
 impl KubernetesIntegration {
 
-    async fn kubectl_exec(&self, args: &[&str]) -> BearDogResult<String> {
+    async fn kubectl_exec(&self, args: &[&str]) -> Result<String, BearDogError> {
         let output = Command::new("kubectl")
             .args(args)
             .stdout(Stdio::piped())

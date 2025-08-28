@@ -15,26 +15,33 @@ pub async fn generate_executive_report(
     )))
 }
 
-pub async fn generate_detailed_report(
-        serde_json::json!({"report_url": "https://api.beardog.com/reports/detailed_2025_q1.pdf"}),
-        350,
+pub async fn generate_detailed_report() -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "report_url": "https://api.beardog.com/reports/detailed_2025_q1.pdf"
+    }))))
+}
 
 pub async fn generate_custom_report(
     Json(_): Json<serde_json::Value>,
-        serde_json::json!({"report_id": "custom_12345", "status": "generating"}),
-        180,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "report_id": "custom_12345", 
+        "status": "generating"
+    }))))
+}
 
-pub async fn get_compliance_trends(
-        serde_json::json!({
-            "trend": "improving",
-            "score_change": 2.3,
-            "violation_trend": "decreasing"
-        }),
-        45,
-        true,
+pub async fn get_compliance_trends() -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "trend": "improving",
+        "score_change": 2.3,
+        "violation_trend": "decreasing"
+    }))))
+}
 
-pub async fn get_compliance_metrics(
-            "overall_score": 94.2,
-            "policy_adherence": 96.8,
-            "audit_readiness": 92.1
-        30,
+pub async fn get_compliance_metrics() -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "overall_score": 94.2,
+        "policy_adherence": 96.8,
+        "audit_readiness": 92.1
+    }))))
+}

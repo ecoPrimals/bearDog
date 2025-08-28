@@ -76,13 +76,8 @@ pub struct CommercialExtractionDetector {
 
     pub state: Arc<RwLock<HashMap<String, UsagePattern>>>,
 
-pub struct DetectorConfig {
-
-    pub enabled: bool,
-
-    pub sensitivity: f64,
-
-    pub max_patterns: usize,}
+// UNIFIED: Use canonical DetectorConfig
+pub use beardog_types::canonical::configuration::DetectorConfig;
 
 impl CommercialExtractionDetector {
 

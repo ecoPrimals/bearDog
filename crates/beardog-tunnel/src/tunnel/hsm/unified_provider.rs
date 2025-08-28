@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_traits::canonical::HsmProvider;
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
@@ -67,20 +67,20 @@ pub trait UnifiedHsmProvider: HsmProvider + Send + Sync {
         &self,
         method: &HumanEntropyMethod,
         target_bits: u32,
-    ) -> BearDogResult<HumanEntropyData>;
+    ) -> Result<HumanEntropyData, BearDogError>;
 
     async fn get_human_entropy_capabilities(
-    ) -> BearDogResult<UnifiedHumanEntropyCapabilities>;
+    ) -> Result<UnifiedHumanEntropyCapabilities, BearDogError>;
 
     async fn create_ephemeral_seed(
         entropy_data: &HumanEntropyData,
         seed_length: u32,
-    ) -> BearDogResult<EphemeralSeed>;
+    ) -> Result<EphemeralSeed, BearDogError>;
 
     async fn assess_entropy_quality(
-    ) -> BearDogResult<EntropyQualityReport>;
+    ) -> Result<EntropyQualityReport, BearDogError>;
 
-    async fn get_tier_recommendation(&self) -> BearDogResult<HsmTier>;
+    async fn get_tier_recommendation(&self) -> Result<HsmTier, BearDogError>;
 
 pub struct HumanEntropyData {
 
@@ -151,7 +151,7 @@ impl UnifiedProviderRegistry {
         &mut self,
         instance_id: &str,
         provider: Box<dyn UnifiedHsmProvider>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         self.providers.insert(instance_id, provider);
         Ok(())
 
@@ -159,7 +159,7 @@ impl UnifiedProviderRegistry {
         self.providers.get(instance_id).map(|p| p.as_ref())
 
     pub async fn get_best_entropy_provider(
-    ) -> BearDogResult<Option<&dyn UnifiedHsmProvider>> {
+    ) -> Result<Option<&dyn UnifiedHsmProvider>, BearDogError>> {
         let mut best_provider = None;
         let mut best_score = 0.0;
         for provider in self.providers.values() {
@@ -184,7 +184,7 @@ pub struct HumanEntropyQualityAssessor;
 impl HumanEntropyQualityAssessor {
 
     pub async fn assess_quality(
-    ) -> BearDogResult<EntropyQualityReport> {
+    ) -> Result<EntropyQualityReport, BearDogError> {
         debug!("🧠 Assessing human entropy quality");
 
         let shannon_entropy = Self::calculate_shannon_entropy(&entropy_data.data);
@@ -328,7 +328,7 @@ impl HumanEntropyQualityAssessor {
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_entropy_quality_assessment() -> beardog_errors::BearDogResult<()> {
+    async fn test_entropy_quality_assessment() -> Result<(), BearDogError> {
 
         let entropy_data = HumanEntropyData {
             data: (0..1000).map(|i| (i % 256) as u8).collect(),
@@ -347,6 +347,6 @@ mod tests {
         assert!(report.quality_score > 0.0);
         assert!(report.shannon_entropy > 0.0);
     #[test]
-    fn test_unified_provider_registry() -> beardog_errors::BearDogResult<()> {
+    fn test_unified_provider_registry() -> Result<(), BearDogError> {
         let registry = UnifiedProviderRegistry::new();
         assert_eq!(registry.providers.len(), 0);

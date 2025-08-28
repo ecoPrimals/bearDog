@@ -1,10 +1,8 @@
-
-
+use super::enums::*;
+use super::indicators::ThreatIndicator;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use super::enums::*;
-use super::indicators::ThreatIndicator;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatIntelligenceFeed {
@@ -36,7 +34,6 @@ impl Default for ThreatIntelligenceFeed {
     }
 }
 impl ThreatIntelligenceFeed {
-
     pub fn new(id: &str, name: &str, url: &str, update_frequency: UpdateFrequency) -> Self {
         Self {
             id: id.to_string(),

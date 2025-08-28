@@ -6,82 +6,76 @@ use std::time::SystemTime;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SecurityLevel {
-
     Ultimate,
-
     High,
-
     Medium,
-
     Low,
-
     Adaptive,
-
     Optimized,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ThreatLevel {
-
     Critical,
+    High,
+    Medium,
+    Low,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NetworkThreatLevel {
+    Critical,
+    High,
+    Medium,
+    Low,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PerformanceImpact {
-
     Negligible,
-
+    Minor,
+    Moderate,
     Severe,
+}
 
-#[derive(Debug, Clone, Serialize, Deserialize)]}
-
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SecurityEvolution {
-
     CryptoUpgraded,
-
     PerformanceOptimized,
-
     ThreatAdapted,
+    ComplianceUpdated,
+}
 
-    GeneticHybridEvolved,
-
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityMetrics {
+    pub encryption_strength: u32,
+    pub authentication_level: SecurityLevel,
+    pub threat_detection_accuracy: f64,
+    pub performance_overhead: f64,
+}
 
-    pub encryption_latency: std::time::Duration,
-
-    pub threat_level: ThreatLevel,
-
-    pub performance_score: f64,
-
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkEvidence {
-
-    pub evidence_type: String,
-
-    pub data: HashMap<String, String>,
-
     pub timestamp: SystemTime,
+    pub source_ip: String,
+    pub destination_ip: String,
+    pub packet_size: u32,
+    pub protocol: String,
+    pub metadata: HashMap<String, String>,
+}
 
-    pub confidence: f64,
-
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OptimizationType {
+    Latency,
+    Bandwidth,
+    Security,
+    Reliability,
+}
 
-    LatencyOptimization,
-
-    ThroughputOptimization,
-
-    LoadBalancing,
-
-    FailoverRecovery,
-
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DisconnectReason {
-
-    NetworkError,
-
-    SecurityBreach,
-
     UserRequested,
-
     Timeout,
-
     ResourceLimit,
-
     Unknown,
+}

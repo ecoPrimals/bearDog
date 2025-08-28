@@ -1,3 +1,4 @@
+// Removed unused imports: DiscoveryConfig, SecurityConfig
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -5,12 +6,13 @@ use std::time::Duration;
 /// Consolidated router configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RouterConfig {
-    pub routing_strategy: RoutingStrategy,
-    pub load_balancing: LoadBalancingConfig,
-    pub health_checks: HealthCheckConfig,
-    pub timeout_config: TimeoutConfig,
-    pub retry_policy: RetryPolicy,
+    pub strategy: RoutingStrategy,
+    pub health_check_interval: Duration,
+    pub timeout: Duration,
 }
+
+// Re-export canonical CircuitBreakerConfig
+pub use crate::canonical::providers::CircuitBreakerConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum RoutingStrategy {
@@ -24,10 +26,9 @@ pub enum RoutingStrategy {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LoadBalancingConfig {
-    pub algorithm: String,
-    pub weights: HashMap<String, f64>,
-    pub sticky_sessions: bool,
-    pub session_affinity_timeout: Duration,
+    pub strategy: LoadBalancingStrategy,
+    pub health_check_interval: Duration,
+    pub max_failures: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -55,26 +56,13 @@ pub struct RetryPolicy {
     pub retry_conditions: Vec<String>,
 }
 
-/// Consolidated circuit breaker configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct CircuitBreakerConfig {
-    pub failure_threshold: u32,
-    pub recovery_timeout: Duration,
-    pub success_threshold: u32,
-    pub request_volume_threshold: u32,
-    pub error_percentage_threshold: f64,
-    pub metrics_window: Duration,
-}
-
 /// Consolidated model configuration for ML/AI routing
+/// Model configuration for routing decisions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ModelConfig {
     pub model_type: String,
-    pub model_path: String,
-    pub inference_timeout: Duration,
-    pub batch_size: usize,
-    pub gpu_enabled: bool,
-    pub model_parameters: HashMap<String, serde_json::Value>,
+    pub parameters: HashMap<String, serde_json::Value>,
+    pub update_interval: Duration,
 }
 
 /// Consolidated capability configuration
@@ -105,14 +93,20 @@ pub struct RateLimitConfig {
 }
 
 /// Consolidated OAuth2 configuration
+/// OAuth2 configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct OAuth2Config {
     pub client_id: String,
     pub client_secret: String,
     pub auth_url: String,
     pub token_url: String,
-    pub scopes: Vec<String>,
-    pub redirect_uri: String,
-    pub token_expiry: Duration,
-    pub refresh_token_enabled: bool,
-} 
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub enum LoadBalancingStrategy {
+    #[default]
+    RoundRobin,
+    LeastConnections,
+    WeightedRoundRobin,
+    IpHash,
+}

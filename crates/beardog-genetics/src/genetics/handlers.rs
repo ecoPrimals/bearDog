@@ -4,7 +4,7 @@ use crate::{GeneticsConfig, GeneticsStore};
 use beardog_auth::auth::{
     BearDogGenetics, NodeCapability, NodeSpecialization, SecurityClearance, SpawnPurpose,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use tracing::info;
 
 pub struct DefaultBearDogGeneticsEngine<S: GeneticsStore> {
@@ -54,7 +54,7 @@ impl<S: GeneticsStore> DefaultBearDogGeneticsEngine<S> {
         &self,
         parent_genetics: &[BearDogGenetics],
         purpose: &SpawnPurpose,
-    ) -> BearDogResult<BearDogGenetics> {
+    ) -> Result<BearDogGenetics, BearDogError> {
         if parent_genetics.is_empty() {
             return Err(BearDogError::validation("No parent genetics provided for recombination".to_string(),
             ));
@@ -180,19 +180,19 @@ impl<S: GeneticsStore> DefaultBearDogGeneticsEngine<S> {
 
     pub async fn calculate_fitness_score(
         _genetics: &BearDogGenetics,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64, BearDogError> {
 
         Ok(0.8)
 
     pub async fn determine_specializations(
-    ) -> BearDogResult<Vec<NodeSpecialization>> {
+    ) -> Result<Vec<NodeSpecialization>, BearDogError>> {
 
     pub async fn mutate_capabilities(
-    ) -> BearDogResult<Vec<NodeCapability>> {
+    ) -> Result<Vec<NodeCapability>, BearDogError>> {
 
     fn select_optimal_parent<'a>(
         parent_genetics: &'a [BearDogGenetics],
-    ) -> BearDogResult<&'a BearDogGenetics> {
+    ) -> Result<&'a BearDogGenetics, BearDogError> {
 
             .max_by(|a, b| {
                 let fitness_a = self.calculate_purpose_fitness(a, purpose);

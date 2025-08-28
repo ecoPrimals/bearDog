@@ -1,6 +1,6 @@
+use beardog_errors::BearDogError;
 
-
-use crate::{BearDogError, BearDogResult};
+use crate::{{BearDogError}};
 use crate::node_registry::types::{NodeInfo, TrustLevel};
 use super::types::{BootstrapConfig, FederationDiscoveryResult};
 use std::collections::HashMap;
@@ -31,7 +31,7 @@ impl FederationBootstrap {
         }
     }
 
-    pub async fn bootstrap_from_federation(&self) -> BearDogResult<Vec<NodeInfo>> {
+    pub async fn bootstrap_from_federation(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
         if !self.config.enable_federation_discovery {
             debug!("🚫 Federation discovery disabled");
             return Ok(Vec::new());
@@ -55,7 +55,7 @@ impl FederationBootstrap {
         info!("🌐 Total discovered {} nodes from federation", all_nodes.len());
         Ok(all_nodes)
 
-    async fn bootstrap_from_federation_endpoint(&self, endpoint: &str) -> BearDogResult<Vec<NodeInfo>> {
+    async fn bootstrap_from_federation_endpoint(&self, endpoint: &str) -> Result<Vec<NodeInfo>, BearDogError>> {
 
         let federation_network = self.discover_federation_network(endpoint).await?;
         let mut nodes = Vec::new();
@@ -73,7 +73,7 @@ impl FederationBootstrap {
                         }
         Ok(nodes)
 
-    async fn discover_federation_network(&self, endpoint: &str) -> BearDogResult<Value> {
+    async fn discover_federation_network(&self, endpoint: &str) -> Result<Value, BearDogError> {
         let discovery_url = format_args!("{}/api/v1/federation/network", endpoint).to_string();
 
         if let Some((cached_results, timestamp)) = self.get_cached_federation(endpoint) {
@@ -99,7 +99,7 @@ impl FederationBootstrap {
         self.cache_federation_results(endpoint, &federation_info).await;
         Ok(federation_info)
 
-    async fn bootstrap_from_registry_endpoint(&self, endpoint: &str) -> BearDogResult<Vec<NodeInfo>> {
+    async fn bootstrap_from_registry_endpoint(&self, endpoint: &str) -> Result<Vec<NodeInfo>, BearDogError>> {
         let registry_url = format_args!("{}/api/v1/registry/nodes", endpoint).to_string();
         debug!("🔗 Bootstrapping from registry endpoint: {}", endpoint);
             self.client.get(&registry_url).send()
@@ -115,7 +115,7 @@ impl FederationBootstrap {
                     nodes.push(node_info);
         info!("📋 Discovered {} nodes from registry {}", nodes.len(), endpoint);
 
-    async fn parse_registry_node(&self, node_value: &Value) -> BearDogResult<NodeInfo> {
+    async fn parse_registry_node(&self, node_value: &Value) -> Result<NodeInfo, BearDogError> {
         let node_id = node_value.get("node_id")
             .and_then(|v| v.as_str())
             .ok_or_else(|| BearDogError::parsing("Missing node_id in registry response"))?
@@ -161,7 +161,7 @@ impl FederationBootstrap {
             metadata,
         })
 
-    pub async fn discover_federation_partners(&self, registry_endpoint: &str) -> BearDogResult<Vec<FederationDiscoveryResult>> {
+    pub async fn discover_federation_partners(&self, registry_endpoint: &str) -> Result<Vec<FederationDiscoveryResult>, BearDogError>> {
         let partners_url = format_args!("{}/api/v1/federation/partners", registry_endpoint).to_string();
         debug!("🤝 Discovering federation partners from {}", registry_endpoint);
             self.client.get(&partners_url).send()
@@ -178,7 +178,7 @@ impl FederationBootstrap {
         info!("🤝 Discovered {} federation partners", partners.len());
         Ok(partners)
 
-    async fn parse_federation_partner(&self, partner_value: &Value) -> BearDogResult<FederationDiscoveryResult> {
+    async fn parse_federation_partner(&self, partner_value: &Value) -> Result<FederationDiscoveryResult, BearDogError> {
         let partner_info = NodeInfo {
             node_id: partner_value.get("node_id")
                 .and_then(|v| v.as_str())
@@ -219,7 +219,7 @@ impl FederationBootstrap {
                 let cutoff = std::time::Instant::now() - Duration::from_secs(1200);
                 cache.retain(|_, (_, timestamp)| *timestamp > cutoff);
 
-    pub fn validate_federation_node(&self, node: &NodeInfo) -> BearDogResult<bool> {
+    pub fn validate_federation_node(&self, node: &NodeInfo) -> Result<bool, BearDogError> {
 
         if node.node_id.is_empty() || node.address.is_empty() {
             return Ok(false);

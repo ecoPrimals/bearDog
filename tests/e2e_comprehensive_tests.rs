@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::{
@@ -68,7 +69,7 @@ pub enum ChaosFault {
 
 impl E2ETestHarness {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🚀 Initializing Comprehensive E2E Test Harness");
 
         let mut config = BearDogConfig::default();
@@ -122,7 +123,7 @@ impl E2ETestHarness {
         })
     }
 
-    pub async fn test_complete_user_workflow(&mut self) -> BearDogResult<()> {
+    pub async fn test_complete_user_workflow(&mut self) -> Result<(), BearDogError> {
         info!("👤 Testing Complete User Workflow");
         let start_time = Instant::now();
 
@@ -159,7 +160,7 @@ impl E2ETestHarness {
         Ok(())
     }
 
-    pub async fn test_chaos_resilience(&mut self) -> BearDogResult<()> {
+    pub async fn test_chaos_resilience(&mut self) -> Result<(), BearDogError> {
         info!("🌪️  Testing System Resilience Under Chaos");
 
         let chaos_scenarios = vec![
@@ -199,7 +200,7 @@ impl E2ETestHarness {
         Ok(())
     }
 
-    pub async fn test_concurrent_load(&mut self, concurrent_users: u32) -> BearDogResult<()> {
+    pub async fn test_concurrent_load(&mut self, concurrent_users: u32) -> Result<(), BearDogError> {
         info!("⚡ Testing Concurrent Load with {} users", concurrent_users);
 
         let semaphore = Arc::new(Semaphore::new(concurrent_users as usize));
@@ -277,7 +278,7 @@ impl E2ETestHarness {
         Ok(())
     }
 
-    pub async fn test_cross_component_integration(&mut self) -> BearDogResult<()> {
+    pub async fn test_cross_component_integration(&mut self) -> Result<(), BearDogError> {
         info!("🔄 Testing Cross-Component Integration");
 
         let security_context = self.create_security_context().await?;
@@ -327,7 +328,7 @@ impl E2ETestHarness {
         }
     }
 
-    async fn test_user_registration(&mut self) -> BearDogResult<String> {
+    async fn test_user_registration(&mut self) -> Result<String, BearDogError> {
         let user_id = format_args!("e2e_user_{}", Uuid::new_v4().to_string());
         
         let user_info = UserInfo {
@@ -344,7 +345,7 @@ impl E2ETestHarness {
         Ok(user_id)
     }
 
-    async fn test_user_authentication(&mut self, user_id: &str) -> BearDogResult<String> {
+    async fn test_user_authentication(&mut self, user_id: &str) -> Result<String, BearDogError> {
         let mut credentials = HashMap::with_capacity(16);
         credentials.insert("username".to_string(), user_id.to_string());
         credentials.insert("password".to_string(), "test_password_123".to_string());
@@ -367,7 +368,7 @@ impl E2ETestHarness {
         Ok(session.id)
     }
 
-    async fn test_security_operations(&mut self, _auth_token: &str) -> BearDogResult<Vec<String>> {
+    async fn test_security_operations(&mut self, _auth_token: &str) -> Result<Vec<String, BearDogError>> {
         let mut results = Vec::new();
 
         let data = b"test data for encryption";
@@ -387,7 +388,7 @@ impl E2ETestHarness {
         Ok(results)
     }
 
-    async fn test_workflow_execution(&mut self, _auth_token: &str) -> BearDogResult<String> {
+    async fn test_workflow_execution(&mut self, _auth_token: &str) -> Result<String, BearDogError> {
         let workflow_request = WorkflowRequest {
             workflow_type: WorkflowType::SystemMaintenance,
             initiator: "e2e_test_user".to_string(),
@@ -402,7 +403,7 @@ impl E2ETestHarness {
         Ok(response.workflow_id)
     }
 
-    async fn test_genetic_operations(&mut self, _auth_token: &str) -> BearDogResult<Vec<String>> {
+    async fn test_genetic_operations(&mut self, _auth_token: &str) -> Result<Vec<String, BearDogError>> {
         let mut results = Vec::new();
 
         let spawn_request = SpawnRequest {
@@ -426,7 +427,7 @@ impl E2ETestHarness {
         Ok(results)
     }
 
-    async fn test_compliance_validation(&mut self, _auth_token: &str) -> BearDogResult<Vec<String>> {
+    async fn test_compliance_validation(&mut self, _auth_token: &str) -> Result<Vec<String, BearDogError>> {
         let mut results = Vec::new();
 
         let gdpr_result = self.compliance_engine.validate_gdpr_compliance("test_data_processor").await?;
@@ -438,14 +439,14 @@ impl E2ETestHarness {
         Ok(results)
     }
 
-    async fn test_user_cleanup(&mut self, user_id: &str) -> BearDogResult<()> {
+    async fn test_user_cleanup(&mut self, user_id: &str) -> Result<(), BearDogError> {
 
         self.security_provider.cleanup_user_sessions(user_id).await?;
         info!("🧹 User cleanup completed for: {}", user_id);
         Ok(())
     }
 
-    async fn inject_chaos_fault(&mut self, fault: ChaosFault) -> BearDogResult<()> {
+    async fn inject_chaos_fault(&mut self, fault: ChaosFault) -> Result<(), BearDogError> {
         self.chaos_controller.active_faults.push(fault.clone());
         
         match fault {
@@ -480,7 +481,7 @@ impl E2ETestHarness {
         Ok(())
     }
 
-    async fn test_system_under_fault(&mut self) -> BearDogResult<()> {
+    async fn test_system_under_fault(&mut self) -> Result<(), BearDogError> {
 
         let health = self.core.health_check().await;
 
@@ -500,7 +501,7 @@ impl E2ETestHarness {
         }
     }
 
-    async fn recover_from_chaos_fault(&mut self, fault: ChaosFault) -> BearDogResult<()> {
+    async fn recover_from_chaos_fault(&mut self, fault: ChaosFault) -> Result<(), BearDogError> {
         info!("🔄 Recovering from chaos fault: {:?}", fault);
 
         self.chaos_controller.active_faults.retain(|f| {
@@ -512,18 +513,18 @@ impl E2ETestHarness {
         Ok(())
     }
 
-    async fn validate_system_recovery(&mut self) -> BearDogResult<bool> {
+    async fn validate_system_recovery(&mut self) -> Result<bool, BearDogError> {
         let health = self.core.health_check().await?;
         Ok(matches!(health.status, HealthStatus::Healthy))
     }
 
-    async fn simulate_cpu_load(&self) -> BearDogResult<()> {
+    async fn simulate_cpu_load(&self) -> Result<(), BearDogError> {
 
         let _result: u64 = (0..1_000_000).map(|i| i * i).sum();
         Ok(())
     }
 
-    async fn create_security_context(&mut self) -> BearDogResult<SecurityContext> {
+    async fn create_security_context(&mut self) -> Result<SecurityContext, BearDogError> {
         Ok(SecurityContext {
             user_id: "system".to_string(),
             session_id: Uuid::new_v4().to_string(),
@@ -533,7 +534,7 @@ impl E2ETestHarness {
         })
     }
 
-    async fn trigger_genetic_spawn_from_security(&mut self, _context: SecurityContext) -> BearDogResult<String> {
+    async fn trigger_genetic_spawn_from_security(&mut self, _context: SecurityContext) -> Result<String, BearDogError> {
         let spawn_request = SpawnRequest {
             parent_id: "security_triggered_parent".to_string(),
             purpose: SpawnPurpose::SecurityResponse,
@@ -550,7 +551,7 @@ impl E2ETestHarness {
         Ok(result.child_id)
     }
 
-    async fn create_workflow_for_genetic_spawn(&mut self, spawn_id: &str) -> BearDogResult<String> {
+    async fn create_workflow_for_genetic_spawn(&mut self, spawn_id: &str) -> Result<String, BearDogError> {
         let mut parameters = HashMap::with_capacity(16);
         parameters.insert("spawn_id".to_string(), serde_json::Value::String(spawn_id));
 
@@ -568,19 +569,19 @@ impl E2ETestHarness {
         Ok(response.workflow_id)
     }
 
-    async fn simulate_compliance_event(&mut self) -> BearDogResult<String> {
+    async fn simulate_compliance_event(&mut self) -> Result<String, BearDogError> {
         let event_id = Uuid::new_v4().to_string();
         info!("🚨 Simulating compliance violation event: {}", event_id);
         Ok(event_id)
     }
 
-    async fn create_audit_trail_for_violation(&mut self, event_id: &str) -> BearDogResult<String> {
+    async fn create_audit_trail_for_violation(&mut self, event_id: &str) -> Result<String, BearDogError> {
         let audit_id = format_args!("audit_{}", event_id).to_string();
         info!("📋 Creating audit trail: {}", audit_id);
         Ok(audit_id)
     }
 
-    async fn create_remediation_workflow(&mut self, audit_id: &str) -> BearDogResult<String> {
+    async fn create_remediation_workflow(&mut self, audit_id: &str) -> Result<String, BearDogError> {
         let mut parameters = HashMap::with_capacity(16);
         parameters.insert("audit_id".to_string(), serde_json::Value::String(audit_id));
 
@@ -598,7 +599,7 @@ impl E2ETestHarness {
         Ok(response.workflow_id)
     }
 
-    async fn create_complex_api_request(&mut self) -> BearDogResult<ApiRequest> {
+    async fn create_complex_api_request(&mut self) -> Result<ApiRequest, BearDogError> {
         Ok(ApiRequest {
             endpoint: "/api/v1/complex_operation".to_string(),
             method: "POST".to_string(),
@@ -614,7 +615,7 @@ impl E2ETestHarness {
         })
     }
 
-    async fn process_api_across_backends(&mut self, request: ApiRequest) -> BearDogResult<Vec<String>> {
+    async fn process_api_across_backends(&mut self, request: ApiRequest) -> Result<Vec<String, BearDogError>> {
         let mut results = Vec::new();
 
         let backends = ["security", "genetics", "workflow", "compliance"];
@@ -664,7 +665,7 @@ pub struct ApiTestClient {
 }
 
 impl ApiTestClient {
-    pub async fn new(_core: &Arc<BearDogCore>) -> BearDogResult<Self> {
+    pub async fn new(_core: &Arc<BearDogCore>) -> Result<Self, BearDogError> {
         Ok(Self {
             base_url: "http://127.0.0.1:8080".to_string(),
         })
@@ -682,7 +683,7 @@ pub struct ApiRequest {
 async fn simulate_user_authentication(
     user_id: &str,
     security_provider: &Arc<BearDogSecurityProvider>,
-) -> BearDogResult<String> {
+) -> Result<String, BearDogError> {
     let mut credentials = HashMap::with_capacity(16);
     credentials.insert("username".to_string(), user_id.to_string());
     credentials.insert("password".to_string(), "concurrent_test_pass".to_string());
@@ -697,7 +698,7 @@ async fn simulate_user_authentication(
 
 async fn simulate_security_operation(
     _genetics_engine: &Arc<DefaultBearDogGeneticsEngine>,
-) -> BearDogResult<String> {
+) -> Result<String, BearDogError> {
 
     sleep(Duration::from_millis(50)).await;
     Ok("security_operation_completed".to_string())
@@ -705,7 +706,7 @@ async fn simulate_security_operation(
 
 async fn simulate_workflow_operation(
     workflow_engine: &Arc<MultiPartyWorkflowEngine>,
-) -> BearDogResult<String> {
+) -> Result<String, BearDogError> {
     let workflow_request = WorkflowRequest {
         workflow_type: WorkflowType::SystemMaintenance,
         initiator: "concurrent_test".to_string(),
@@ -722,7 +723,7 @@ async fn simulate_workflow_operation(
 
 async fn simulate_genetic_operation(
     genetics_engine: &Arc<DefaultBearDogGeneticsEngine>,
-) -> BearDogResult<String> {
+) -> Result<String, BearDogError> {
     let spawn_request = SpawnRequest {
         parent_id: "concurrent_parent".to_string(),
         purpose: SpawnPurpose::NetworkExpansion,
@@ -740,7 +741,7 @@ async fn simulate_genetic_operation(
 }
 
 #[tokio::test]
-async fn test_comprehensive_e2e_user_workflow() -> BearDogResult<()> {
+async fn test_comprehensive_e2e_user_workflow() -> Result<(), BearDogError> {
     let mut harness = E2ETestHarness::new().await?;
     harness.test_complete_user_workflow().await?;
     
@@ -752,7 +753,7 @@ async fn test_comprehensive_e2e_user_workflow() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_comprehensive_e2e_chaos_resilience() -> BearDogResult<()> {
+async fn test_comprehensive_e2e_chaos_resilience() -> Result<(), BearDogError> {
     let mut harness = E2ETestHarness::new().await?;
     harness.test_chaos_resilience().await?;
     
@@ -764,7 +765,7 @@ async fn test_comprehensive_e2e_chaos_resilience() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_comprehensive_e2e_concurrent_load() -> BearDogResult<()> {
+async fn test_comprehensive_e2e_concurrent_load() -> Result<(), BearDogError> {
     let mut harness = E2ETestHarness::new().await?;
     harness.test_concurrent_load(10).await?; // Test with 10 concurrent users
     
@@ -777,7 +778,7 @@ async fn test_comprehensive_e2e_concurrent_load() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_comprehensive_e2e_cross_component_integration() -> BearDogResult<()> {
+async fn test_comprehensive_e2e_cross_component_integration() -> Result<(), BearDogError> {
     let mut harness = E2ETestHarness::new().await?;
     harness.test_cross_component_integration().await?;
     
@@ -789,7 +790,7 @@ async fn test_comprehensive_e2e_cross_component_integration() -> BearDogResult<(
 }
 
 #[tokio::test]
-async fn test_comprehensive_e2e_full_system() -> BearDogResult<()> {
+async fn test_comprehensive_e2e_full_system() -> Result<(), BearDogError> {
     let mut harness = E2ETestHarness::new().await?;
 
     harness.test_complete_user_workflow().await?;

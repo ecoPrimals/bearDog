@@ -33,6 +33,9 @@ pub struct ComplianceOverviewResponse {
     pub audit_findings: AuditFindings,
     pub recent_activities: Vec<String>,
     pub upcoming_milestones: Vec<ComplianceMilestone>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditFindings {
     pub total_findings: u32,
     pub critical: u32,
@@ -43,10 +46,14 @@ pub struct AuditFindings {
     pub pending: u32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceMilestone {
     pub due_date: String,
     pub priority: String,
     pub owner: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceHealthResponse {
     pub system_status: String,
     pub monitoring_active: bool,
@@ -57,10 +64,14 @@ pub struct ComplianceHealthResponse {
     pub metrics: ComplianceMetrics,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceComponentHealth {
     pub health_percentage: f64,
     pub last_check: String,
     pub issues: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceMetrics {
     pub audit_events_per_hour: u32,
     pub policy_evaluations_per_minute: u32,
@@ -68,6 +79,7 @@ pub struct ComplianceMetrics {
     pub system_uptime_percentage: f64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditTrailResponse {
     pub events: Vec<AuditEvent>,
     pub total_count: u32,
@@ -76,6 +88,9 @@ pub struct AuditTrailResponse {
     pub total_pages: u32,
     pub has_more: bool,
     pub filters_applied: AuditFilters,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEvent {
     pub id: String,
     pub timestamp: String,
@@ -91,12 +106,16 @@ pub struct AuditEvent {
     pub metadata: HashMap<String, String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditFilters {
     pub start_date: Option<String>,
     pub end_date: Option<String>,
     pub event_type: Option<String>,
     pub severity: Option<String>,
     pub actor: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GdprComplianceResponse {
     pub compliance_status: String,
     pub compliance_score: f64,
@@ -106,11 +125,15 @@ pub struct GdprComplianceResponse {
     pub international_transfers: InternationalTransfers,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataProcessingActivities {
     pub total_activities: u32,
     pub lawful_basis_documented: u32,
     pub consent_mechanisms_active: u32,
     pub legitimate_interest_assessments: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataSubjectRights {
     pub requests_this_month: u32,
     pub access_requests: u32,
@@ -121,24 +144,39 @@ pub struct DataSubjectRights {
     pub compliance_rate: f64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyByDesign {
     pub impact_assessments_completed: u32,
     pub data_minimization_score: f64,
     pub purpose_limitation_score: f64,
     pub storage_limitation_score: f64,
     pub security_measures_score: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InternationalTransfers {
     pub adequacy_decisions_used: u32,
     pub standard_contractual_clauses: u32,
     pub binding_corporate_rules: u32,
     pub derogations_used: u32,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditTrailQuery {
     pub page: Option<u32>,
     pub per_page: Option<u32>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogAuditEventRequest {
+    pub event_type: String,
+    pub actor: String,
+    pub resource: String,
+    pub action: String,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogAuditEventResponse {
     pub event_id: String,
     pub retention_period_days: u32,
@@ -147,6 +185,7 @@ pub struct LogAuditEventResponse {
     pub tamper_proof: bool,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataSubjectRequest {
     pub data_subject_id: String,
     pub request_type: String, // "access", "rectification", "erasure", "portability"
@@ -154,6 +193,9 @@ pub struct DataSubjectRequest {
     pub identity_verification: String,
     pub specific_data_categories: Option<Vec<String>>,
     pub reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataSubjectRequestResponse {
     pub request_id: String,
     pub estimated_completion: String,
@@ -171,6 +213,9 @@ pub struct RightToBeForgottenRequest {
     pub specific_categories: Option<Vec<String>>,
     pub time_period_start: Option<String>,
     pub time_period_end: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RightToBeForgottenResponse {
     pub erasure_id: String,
     pub data_categories_identified: Vec<String>,
@@ -178,3 +223,4 @@ pub struct RightToBeForgottenResponse {
     pub verification_required: bool,
     pub third_party_notifications: Vec<String>,
     pub exceptions_identified: Vec<String>,
+}

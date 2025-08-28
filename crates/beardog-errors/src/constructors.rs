@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use crate::BearDogError;
 impl BearDogError {

@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -8,8 +6,7 @@ pub use crate::canonical::hsm::{HsmKey, KeyMetadata, KeyType};
 pub use crate::canonical::providers::ProviderConfig;
 
 pub use crate::canonical::providers::{
-    ProviderType, ProviderStatus, ProviderHealth,
-    ProviderCapability, ProviderRegistryEntry,
+    ProviderCapability, ProviderHealth, ProviderRegistryEntry, ProviderStatus, ProviderType,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -30,7 +27,7 @@ pub struct PrimalRequest {
     pub metadata: HashMap<String, String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)] 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrimalResponse {
     pub request_id: String,
     pub success: bool,

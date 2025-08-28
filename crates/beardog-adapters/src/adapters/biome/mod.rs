@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::{
     canonical::providers::{ProviderConfig, ProviderHealthStatus},
     capabilities::CapabilityType,
@@ -19,23 +19,10 @@ pub struct BiomeOSAdapter {
     pub connection_config: BiomeOSConnectionConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BiomeOSAuthConfig {
+// DEPRECATED: Use canonical configuration instead
+pub use beardog_types::canonical::configuration::adapters::{BiomeOSAuthConfig, BiomeOSConnectionConfig};
 
-    pub auth_method: String,
-
-    pub credentials: HashMap<String, String>,
-
-pub struct BiomeOSConnectionConfig {
-
-    pub timeout_seconds: u64,
-
-    pub max_retries: u32,
-
-    pub health_check_interval_seconds: u64,}
-
-impl Default for BiomeOSConnectionConfig {}
-
+impl Default for BiomeOSConnectionConfig {
     fn default() -> Self {
         Self {
             timeout_seconds: 30,
@@ -43,29 +30,30 @@ impl Default for BiomeOSConnectionConfig {}
             health_check_interval_seconds: 60,
         }
     }
+}
 
-impl BaseProvider for BiomeOSAdapter {}
-
+impl BaseProvider for BiomeOSAdapter {
     fn provider_id(&self) -> &str {
-        "biome_adapter"}
+        "biome_adapter"
+    }
 
-    async fn get_capabilities(&self) -> BearDogResult<Vec<String>> {
+    async fn get_capabilities(&self) -> Result<Vec<String>, BearDogError>> {
         Ok(vec![
             "container_orchestration".to_string(),
             "resource_management".to_string(),
             "environment_configuration".to_string(),
         ])
-    async fn initialize(&mut self, _config: ProviderConfig) -> BearDogResult<()> {
+    async fn initialize(&mut self, _config: ProviderConfig) -> Result<(), BearDogError> {
         Ok(())}
 
-    async fn health_check(&self) -> BearDogResult<ProviderHealthStatus> {
+    async fn health_check(&self) -> Result<ProviderHealthStatus, BearDogError> {
         Ok(ProviderHealthStatus {
             is_healthy: true,
             last_check: chrono::Utc::now(),
             details: Some("Biome adapter healthy".to_string()),
             response_time_ms: Some(10),
         })
-    async fn shutdown(&mut self) -> BearDogResult<()> {
+    async fn shutdown(&mut self) -> Result<(), BearDogError> {
 impl BiomeOSAdapter {
 
     #[must_use] pub fn new(endpoint: &str, auth_config: BiomeOSAuthConfig) -> Self {
@@ -76,7 +64,7 @@ impl BiomeOSAdapter {
     async fn handle_container_orchestration(
         &self,
         request: PrimalRequest,
-    ) -> BearDogResult<PrimalResponse> {
+    ) -> Result<PrimalResponse, BearDogError> {
         tracing::info!("🐳 Processing container orchestration request for BiomeOS");
 
         let biome_request = self.convert_to_biome_api_request(&request)?;
@@ -105,7 +93,7 @@ impl BiomeOSAdapter {
 
     fn convert_to_biome_api_request(
         request: &PrimalRequest,
-    ) -> BearDogResult<serde_json::Value> {
+    ) -> Result<serde_json::Value, BearDogError> {
 
         let biome_request = serde_json::json!({
             "request_id": request.request_id,
@@ -159,7 +147,7 @@ impl BiomeOSAdapter {
 
     pub fn convert_biome_manifest_to_requests(
         manifest_content: &str,
-    ) -> BearDogResult<Vec<PrimalRequest>> {
+    ) -> Result<Vec<PrimalRequest>, BearDogError>> {
         tracing::info!("🔄 Converting legacy biome.yaml manifest to capability requests");
 
         let manifest: serde_yaml::Value = serde_yaml::from_str(manifest_content).map_err(|e| {
@@ -209,7 +197,7 @@ impl BiomeOSAdapter {
                 requests.push(primal_request);
     fn convert_resources_section_to_request(
         resources: &serde_yaml::Value,
-    ) -> BearDogResult<PrimalRequest> {
+    ) -> Result<PrimalRequest, BearDogError> {
         Ok(PrimalRequest {
             request_id: Uuid::new_v4().to_string(),
             capability: CapabilityType::ResourceManagement,

@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::config::EncryptionConfig;
@@ -7,12 +8,12 @@ use beardog::tunnel::{
     genetic_healing::{HealingResult, NetworkEvent, SecurityIssue, SecurityIssueType, Severity},
     BStpConfig, BStpKeyManager, GamingCryptoEngine, GeneticSecurityHealing, SecurityGenetics,
 };
-use beardog::{BearDogError, BearDogResult};
+use beardog::{{BearDogError, BearDogError}};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime};
 
 #[tokio::test]
-async fn test_full_bstp_integration() -> BearDogResult<()> {
+async fn test_full_bstp_integration() -> Result<(), BearDogError> {
 
     let config = BStpConfig::competitive_gaming();
     let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
@@ -88,7 +89,7 @@ async fn test_full_bstp_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_krogan_resilience_scenario() -> BearDogResult<()> {
+async fn test_krogan_resilience_scenario() -> Result<(), BearDogError> {
 
     println!("🦎 Testing krogan-grade resilience to multiple threats...");
 
@@ -144,7 +145,7 @@ async fn test_krogan_resilience_scenario() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_toadstool_extension_interfaces() -> BearDogResult<()> {
+async fn test_toadstool_extension_interfaces() -> Result<(), BearDogError> {
 
     println!("🍄 Testing basic toadstool-compute interface...");
 
@@ -171,7 +172,7 @@ async fn test_toadstool_extension_interfaces() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_concurrent_gaming_sessions() -> BearDogResult<()> {
+async fn test_concurrent_gaming_sessions() -> Result<(), BearDogError> {
 
     println!("🕹️ Testing concurrent gaming sessions...");
 
@@ -238,7 +239,7 @@ async fn test_concurrent_gaming_sessions() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_gaming_crypto_optimization() -> BearDogResult<()> {
+async fn test_gaming_crypto_optimization() -> Result<(), BearDogError> {
 
     println!("🎯 Testing gaming crypto optimization...");
 
@@ -282,7 +283,7 @@ async fn test_gaming_crypto_optimization() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_error_resilience() -> BearDogResult<()> {
+async fn test_error_resilience() -> Result<(), BearDogError> {
 
     println!("🛡️ Testing error resilience...");
 

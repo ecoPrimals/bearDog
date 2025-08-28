@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::{
     crypto::KeyType,
     hsm::{
@@ -88,7 +88,7 @@ pub struct ServiceHealth {
 
 impl ProductionHsmService {
 
-    pub async fn new(config: HsmServiceConfig) -> BearDogResult<Self> {
+    pub async fn new(config: HsmServiceConfig) -> Result<Self, BearDogError> {
         info!("🏭 Initializing Production HSM Service");
         info!("   Preferred Security Level: {:?}", config.preferred_security_level);
         info!("   Provider Selection: {:?}", config.provider_selection);
@@ -106,7 +106,7 @@ impl ProductionHsmService {
     pub async fn generate_key(
         &mut self,
         request: KeyGenerationRequest,
-    ) -> BearDogResult<KeyGenerationResponse> {
+    ) -> Result<KeyGenerationResponse, BearDogError> {
         info!("🔑 Processing key generation request: {}", request.request_id);
         
         let start_time = std::time::Instant::now();
@@ -147,7 +147,7 @@ impl ProductionHsmService {
     pub async fn sign_data(
         &mut self,
         request: SigningRequest,
-    ) -> BearDogResult<SigningResponse> {
+    ) -> Result<SigningResponse, BearDogError> {
         info!("✍️ Processing signing request: {}", request.request_id);
         
         let start_time = std::time::Instant::now();
@@ -176,7 +176,7 @@ impl ProductionHsmService {
         Ok(response)
     }
 
-    pub async fn health_check(&mut self) -> BearDogResult<ServiceHealthReport> {
+    pub async fn health_check(&mut self) -> Result<ServiceHealthReport, BearDogError> {
         info!("💚 Performing service health check");
 
         let mut provider_health = HashMap::with_capacity(16);
@@ -224,7 +224,7 @@ impl ProductionHsmService {
         &self.config
     }
 
-    fn build_requirements_from_request(&self, request: &KeyGenerationRequest) -> BearDogResult<SimpleHsmRequirements> {
+    fn build_requirements_from_request(&self, request: &KeyGenerationRequest) -> Result<SimpleHsmRequirements, BearDogError> {
         let security_level = match request.security_level.as_deref() {
             Some("hardware") => SecurityLevel::Hardware,
             Some("tee") => SecurityLevel::Tee,
@@ -247,7 +247,7 @@ impl ProductionHsmService {
         })
     }
     
-    async fn select_provider_for_requirements(&self, requirements: &SimpleHsmRequirements) -> BearDogResult<String> {
+    async fn select_provider_for_requirements(&self, requirements: &SimpleHsmRequirements) -> Result<String, BearDogError> {
 
         match &self.config.provider_selection {
             ProviderSelectionStrategy::HighestSecurity => {
@@ -274,7 +274,7 @@ impl ProductionHsmService {
         &self,
         provider: &str,
         request: &KeyGenerationRequest,
-    ) -> BearDogResult<KeyGenerationResponse> {
+    ) -> Result<KeyGenerationResponse, BearDogError> {
 
         let key_id = format_args!("{}_{}", provider, uuid::Uuid::new_v4().to_string());
 
@@ -297,7 +297,7 @@ impl ProductionHsmService {
     async fn attempt_fallback_generation(
         &self,
         request: &KeyGenerationRequest,
-    ) -> BearDogResult<Option<KeyGenerationResponse>> {
+    ) -> Result<Option<KeyGenerationResponse, BearDogError>> {
         info!("🔄 Attempting fallback key generation");
 
         match self.attempt_key_generation("software_hsm", request).await {
@@ -316,7 +316,7 @@ impl ProductionHsmService {
         &self,
         provider: &str,
         request: &SigningRequest,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8, BearDogError>> {
 
         let mut signature = Vec::new();
         signature.extend_from_slice(provider.as_bytes());
@@ -383,7 +383,7 @@ pub struct ServiceHealthReport {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     tracing_subscriber::init();
     
     info!("🏭 Starting Production HSM Integration Demo");

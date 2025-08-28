@@ -17,8 +17,7 @@ pub struct PaginationParams {
 
     pub sort_order: Option<String>,
 }
-impl Default for PaginationParams {}
-
+impl Default for PaginationParams {
     fn default() -> Self {
         Self {
             page: Some(1),
@@ -27,7 +26,9 @@ impl Default for PaginationParams {}
             sort_order: Some("asc".to_string()),
         }
     }
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FilterParams {
 
     pub start_date: Option<String>,
@@ -42,6 +43,9 @@ pub struct FilterParams {
 
     pub filters: Option<HashMap<String, String>>,
 
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseMetadata {
 
     pub request_id: String,
@@ -57,21 +61,21 @@ pub struct ResponseMetadata {
 impl ResponseMetadata {
 
     pub fn new(request_id: &str, processing_time_ms: u64, cached: bool) -> Self {
-            request_id,
+            request_id: request_id.to_string(),
             processing_time_ms,
             timestamp: chrono::Utc::now().to_rfc3339(),
             api_version: API_VERSION.to_string(),
             cached,
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum HealthStatus {
-
+// UNIFIED: Use canonical HealthStatus from beardog-types
+pub use beardog_types::canonical::HealthStatus;
     Healthy,
 
     Degraded,
 
     Unhealthy,
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComponentHealth {
 
     pub name: String,
@@ -86,6 +90,9 @@ pub struct ComponentHealth {
 
     pub metadata: Option<HashMap<String, String>>,
 
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RateLimitInfo {
 
     pub limit: u32,
@@ -96,6 +103,9 @@ pub struct RateLimitInfo {
 
     pub window_seconds: u32,
 
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditEntry {
 
     pub id: String,
@@ -110,6 +120,9 @@ pub struct AuditEntry {
 
     pub context: Option<HashMap<String, String>>,
 
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeatureFlag {
 
     pub enabled: bool,
@@ -118,6 +131,9 @@ pub struct FeatureFlag {
 
     pub rollout_percentage: Option<f64>,
 
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EndpointInfo {
 
     pub method: String,
@@ -131,3 +147,5 @@ pub struct EndpointInfo {
     pub permissions: Vec<String>,
 
     pub rate_limit_tier: Option<String>,
+
+}

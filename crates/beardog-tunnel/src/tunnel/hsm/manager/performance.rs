@@ -1,7 +1,7 @@
 
 
 use super::config::PerformanceConfig;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -32,14 +32,14 @@ pub struct HsmPerformanceTracker {
 
 impl HsmPerformanceTracker {
 
-    pub async fn new(config: PerformanceConfig) -> BearDogResult<Self> {
+    pub async fn new(config: PerformanceConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             operation_metrics: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             performance_config: config,
         })
     }
 
-    pub async fn record_success(&self, provider_id: &str, latency_ms: f64) -> BearDogResult<()> {
+    pub async fn record_success(&self, provider_id: &str, latency_ms: f64) -> Result<(), BearDogError> {
         let mut metrics = self.operation_metrics.write().await;
         let entry = metrics
             .entry(provider_id.to_string())
@@ -47,23 +47,23 @@ impl HsmPerformanceTracker {
         entry.record_success(latency_ms);
         Ok(())
 
-    pub async fn record_failure(&self, provider_id: &str, latency_ms: f64) -> BearDogResult<()> {
+    pub async fn record_failure(&self, provider_id: &str, latency_ms: f64) -> Result<(), BearDogError> {
         entry.record_failure(latency_ms);
 
     pub async fn get_provider_metrics(
         &self,
         provider_id: &str,
-    ) -> BearDogResult<Option<OperationMetrics>> {
+    ) -> Result<Option<OperationMetrics>, BearDogError>> {
         let metrics = self.operation_metrics.read().await;
         Ok(metrics.get(provider_id).cloned())
 
-    pub async fn get_all_metrics(&self) -> BearDogResult<HashMap<String, OperationMetrics>> {
+    pub async fn get_all_metrics(&self) -> Result<HashMap<String, OperationMetrics, BearDogError>> {
         Ok(metrics.clone())
 
     pub fn get_performance_config(&self) -> &PerformanceConfig {
         &self.performance_config
 
-    pub async fn meets_performance_thresholds(&self, provider_id: &str) -> BearDogResult<bool> {
+    pub async fn meets_performance_thresholds(&self, provider_id: &str) -> Result<bool, BearDogError> {
         if let Some(provider_metrics) = metrics.get(provider_id) {
 
             let config = &self.performance_config;

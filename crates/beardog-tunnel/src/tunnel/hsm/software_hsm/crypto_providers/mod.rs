@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 pub mod factory;
 pub mod openssl_crypto;
@@ -20,7 +20,7 @@ mod tests {};
     use crate::tunnel::hsm::types::*;
     use tokio;
     #[tokio::test]
-    async fn test_all_crypto_providers() -> beardog_errors::BearDogResult<()> {
+    async fn test_all_crypto_providers() -> Result<(), BearDogError> {
         let backends = get_supported_crypto_backends();
         for backend in backends {
             let provider = create_crypto_provider(&backend).await.map_err(|e| {
@@ -34,7 +34,7 @@ mod tests {};
         }
         Ok(())
     }
-    async fn test_crypto_provider_operations() -> beardog_errors::BearDogResult<()> {
+    async fn test_crypto_provider_operations() -> Result<(), BearDogError> {
 
         let provider = create_crypto_provider(&CryptoBackend::RustCrypto)
             .await
@@ -59,7 +59,7 @@ mod tests {};
             .verify(&ecc_key, plaintext, &signature)
         assert!(is_valid);
     #[test]
-    fn test_capabilities_comparison() -> beardog_errors::BearDogResult<()> {
+    fn test_capabilities_comparison() -> Result<(), BearDogError> {
         let rust_caps = get_crypto_provider_capabilities(&CryptoBackend::RustCrypto);
         let ring_caps = get_crypto_provider_capabilities(&CryptoBackend::Ring);
         let openssl_caps = get_crypto_provider_capabilities(&CryptoBackend::OpenSsl);
@@ -72,7 +72,7 @@ mod tests {};
         assert!(ring_caps.supports_hardware_acceleration);
         assert!(openssl_caps.supports_hardware_acceleration);}
 
-    fn test_backend_utilities() -> beardog_errors::BearDogResult<()> {
+    fn test_backend_utilities() -> Result<(), BearDogError> {
         assert!(is_crypto_backend_supported(&CryptoBackend::Ring));
         assert!(!is_crypto_backend_supported(&CryptoBackend::Custom(
             "unknown".to_string()

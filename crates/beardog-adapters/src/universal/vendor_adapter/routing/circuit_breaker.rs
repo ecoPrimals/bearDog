@@ -2,7 +2,7 @@
 
 use super::traits::RoutingStrategy;
 use crate::universal::vendor_adapter::{CapabilityHandler, UniversalVendorRequest};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -18,10 +18,8 @@ pub enum CircuitState {
     Open,     // Failing, requests rejected
     HalfOpen, // Testing if service recovered
 
-pub struct CircuitConfig {
-    pub failure_threshold: u32,
-    pub recovery_timeout_ms: u64,
-    pub success_threshold: u32,}
+// UNIFIED: Use canonical CircuitConfig
+pub use beardog_types::canonical::configuration::CircuitConfig;
 
 impl Default for CircuitBreakerRouting {}
 
@@ -45,7 +43,7 @@ impl RoutingStrategy for CircuitBreakerRouting {}
         &self,
         _request: &UniversalVendorRequest,
         available_handlers: &[(Box<dyn CapabilityHandler>, f64)],
-    ) -> BearDogResult<Option<usize>> {
+    ) -> Result<Option<usize>, BearDogError>> {
         if available_handlers.is_empty() {
             return Ok(None);
 
@@ -55,11 +53,11 @@ impl RoutingStrategy for CircuitBreakerRouting {}
         _success: bool,
         _response_time_ms: u64,
         _error: Option<&str>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
 
         Ok(())}
 
-    async fn get_statistics(&self) -> BearDogResult<serde_json::Value> {
+    async fn get_statistics(&self) -> Result<serde_json::Value, BearDogError> {
         Ok(serde_json::json!({
             "strategy_name": self.strategy_name(),
             "config": self.config

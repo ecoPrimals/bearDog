@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::{
@@ -44,7 +45,7 @@ pub struct PerformanceBenchmarkSuite {
 
 impl PerformanceBenchmarkSuite {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🚀 Initializing Performance Benchmark Suite");
 
         let mut config = BearDogConfig::default();
@@ -86,7 +87,7 @@ impl PerformanceBenchmarkSuite {
         })
     }
 
-    pub async fn run_benchmark_suite(&mut self) -> BearDogResult<BenchmarkReport> {
+    pub async fn run_benchmark_suite(&mut self) -> Result<BenchmarkReport, BearDogError> {
         info!("🏁 Starting Comprehensive Performance Benchmark Suite");
         let suite_start = Instant::now();
 
@@ -153,31 +154,31 @@ impl PerformanceBenchmarkSuite {
         Ok(report)
     }
 
-    async fn benchmark_crypto_operations(&mut self) -> BearDogResult<Vec<BenchmarkResult>> {
+    async fn benchmark_crypto_operations(&mut self) -> Result<Vec<BenchmarkResult, BearDogError>> {
         crypto::benchmark_crypto_operations(self).await
     }
 
-    async fn benchmark_network_operations(&mut self) -> BearDogResult<Vec<BenchmarkResult>> {
+    async fn benchmark_network_operations(&mut self) -> Result<Vec<BenchmarkResult, BearDogError>> {
         network::benchmark_network_operations(self).await
     }
 
-    async fn benchmark_genetic_operations(&mut self) -> BearDogResult<Vec<BenchmarkResult>> {
+    async fn benchmark_genetic_operations(&mut self) -> Result<Vec<BenchmarkResult, BearDogError>> {
         genetic::benchmark_genetic_operations(self).await
     }
 
-    async fn benchmark_workflow_operations(&mut self) -> BearDogResult<Vec<BenchmarkResult>> {
+    async fn benchmark_workflow_operations(&mut self) -> Result<Vec<BenchmarkResult, BearDogError>> {
         workflow::benchmark_workflow_operations(self).await
     }
 
-    async fn benchmark_database_operations(&mut self) -> BearDogResult<Vec<BenchmarkResult>> {
+    async fn benchmark_database_operations(&mut self) -> Result<Vec<BenchmarkResult, BearDogError>> {
         database::benchmark_database_operations(self).await
     }
 
-    async fn benchmark_scalability(&mut self) -> BearDogResult<Vec<BenchmarkResult>> {
+    async fn benchmark_scalability(&mut self) -> Result<Vec<BenchmarkResult, BearDogError>> {
         scalability::benchmark_scalability(self).await
     }
 
-    async fn benchmark_resource_usage(&mut self) -> BearDogResult<Vec<BenchmarkResult>> {
+    async fn benchmark_resource_usage(&mut self) -> Result<Vec<BenchmarkResult, BearDogError>> {
         resource::benchmark_resource_usage(self).await
     }
 

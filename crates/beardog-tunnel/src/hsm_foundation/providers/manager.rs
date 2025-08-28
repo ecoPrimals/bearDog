@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use super::super::traits::HsmManager;
 use super::super::{
@@ -169,7 +169,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_manager_initialization() -> beardog_errors::BearDogResult<()> {
+    async fn test_manager_initialization() -> Result<(), BearDogError> {
         let manager = create_default_manager();
         let config = ManagerConfig::default();
         
@@ -181,7 +181,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_provider_scoring() -> beardog_errors::BearDogResult<()> {
+    async fn test_provider_scoring() -> Result<(), BearDogError> {
         let manager = create_default_manager();
         let config = ManagerConfig {
             preferred_providers: vec![HsmProviderType::Hardware, HsmProviderType::Software],
@@ -217,7 +217,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_metrics_update() -> beardog_errors::BearDogResult<()> {
+    async fn test_metrics_update() -> Result<(), BearDogError> {
         let manager = create_default_manager();
 
         manager.update_metrics("primary", 10.0, true).await;

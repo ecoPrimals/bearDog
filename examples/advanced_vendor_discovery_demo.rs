@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::env;
 use tracing::{info, warn};
@@ -52,7 +52,7 @@ impl UniversalVendorAdapter {
         }
     }
 
-    pub async fn discover_vendors(&mut self) -> BearDogResult<Vec<VendorInfo>> {
+    pub async fn discover_vendors(&mut self) -> Result<Vec<VendorInfo, BearDogError>> {
         let mut vendors = Vec::new();
 
         if self.config.scan_environment {
@@ -71,7 +71,7 @@ impl UniversalVendorAdapter {
         Ok(vendors)
     }
 
-    async fn scan_environment_vendors(&self) -> BearDogResult<Vec<VendorInfo>> {
+    async fn scan_environment_vendors(&self) -> Result<Vec<VendorInfo, BearDogError>> {
         info!("🔍 Scanning environment variables for vendor configurations...");
 
         let mut vendors = Vec::new();
@@ -129,7 +129,7 @@ impl UniversalVendorAdapter {
     }
 
     #[allow(clippy::vec_init_then_push)]
-    async fn scan_hardware_vendors(&self) -> BearDogResult<Vec<VendorInfo>> {
+    async fn scan_hardware_vendors(&self) -> Result<Vec<VendorInfo, BearDogError>> {
         info!("🔧 Scanning hardware for HSM and security devices...");
 
         let mut vendors = Vec::new();
@@ -186,7 +186,7 @@ impl UniversalVendorAdapter {
         Ok(vendors)
     }
 
-    async fn scan_cloud_vendors(&self) -> BearDogResult<Vec<VendorInfo>> {
+    async fn scan_cloud_vendors(&self) -> Result<Vec<VendorInfo, BearDogError>> {
         info!("☁️  Scanning cloud services for available HSM providers...");
 
         let mut vendors = Vec::new();
@@ -256,7 +256,7 @@ impl UniversalVendorAdapter {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     println!("🔧 Initializing BearDog Advanced Vendor Discovery Demo...");
 
@@ -286,7 +286,7 @@ async fn main() -> BearDogResult<()> {
 
 async fn demonstrate_comprehensive_discovery(
     adapter: &mut UniversalVendorAdapter,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     info!("\n📊 Phase 1: Comprehensive Vendor Discovery");
     info!("------------------------------------------");
 
@@ -305,7 +305,7 @@ async fn demonstrate_comprehensive_discovery(
     Ok(())
 }
 
-async fn demonstrate_capability_filtering(adapter: &UniversalVendorAdapter) -> BearDogResult<()> {
+async fn demonstrate_capability_filtering(adapter: &UniversalVendorAdapter) -> Result<(), BearDogError> {
     info!("\n🎯 Phase 2: Capability-Based Filtering");
     info!("--------------------------------------");
 
@@ -332,7 +332,7 @@ async fn demonstrate_capability_filtering(adapter: &UniversalVendorAdapter) -> B
     Ok(())
 }
 
-async fn demonstrate_crypto_type_filtering(adapter: &UniversalVendorAdapter) -> BearDogResult<()> {
+async fn demonstrate_crypto_type_filtering(adapter: &UniversalVendorAdapter) -> Result<(), BearDogError> {
     info!("\n🔐 Phase 3: Crypto-Type Filtering");
     info!("----------------------------------");
 
@@ -359,7 +359,7 @@ async fn demonstrate_crypto_type_filtering(adapter: &UniversalVendorAdapter) -> 
     Ok(())
 }
 
-async fn demonstrate_vendor_selection(adapter: &UniversalVendorAdapter) -> BearDogResult<()> {
+async fn demonstrate_vendor_selection(adapter: &UniversalVendorAdapter) -> Result<(), BearDogError> {
     info!("\n⚡ Phase 4: Intelligent Vendor Selection");
     info!("---------------------------------------");
 

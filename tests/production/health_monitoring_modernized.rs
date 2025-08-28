@@ -7,7 +7,7 @@ use crate::tests::common::{
 use beardog_types::canonical::HealthStatus;
 
 use beardog::production::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use tracing::{debug, info, warn};
 
 pub struct HealthMonitoringTestSuite {

@@ -1,19 +1,16 @@
-
-
-use beardog_errors::{BearDogError, BearDogResult};
-use std::sync::atomic::{AtomicPtr, AtomicUsize, AtomicU64, Ordering};
-use std::ptr;
-use std::hash::{Hash, Hasher};
+use beardog_errors::BearDogError;
 use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+use std::ptr;
+use std::sync::atomic::{AtomicPtr, AtomicU64, AtomicUsize, Ordering};
 
 use tracing::{debug, info};
 
-pub struct LockFreeHashMap<K, V> 
+pub struct LockFreeHashMap<K, V>
 where
     K: Hash + Eq + Clone,
     V: Clone,
 {
-
     buckets: Vec<AtomicPtr<HashEntry<K, V>>>,
 
     size: AtomicUsize,
@@ -33,7 +30,6 @@ struct HashEntry<K, V> {
 
 #[derive(Debug, Default)]
 pub struct LockFreeStats {
-
     pub insertions: AtomicU64,
 
     pub lookups: AtomicU64,
@@ -50,17 +46,16 @@ where
     K: Hash + Eq + Clone,
     V: Clone,
 {
-
     pub fn new(capacity: usize) -> Self {
         let capacity = capacity.next_power_of_two(); // Ensure power of 2 for fast modulo
         let mut buckets = Vec::with_capacity(capacity);
-        
+
         for _ in 0..capacity {
             buckets.push(AtomicPtr::new(ptr::null_mut()));
         }
-        
+
         info!("🔓 Lock-free HashMap created: {} buckets", capacity);
-        
+
         Self {
             buckets,
             size: AtomicUsize::new(0),
@@ -69,35 +64,33 @@ where
         }
     }
 
-    pub fn insert(&self, key: K, value: V) -> BearDogResult<Option<V>> {
+    pub fn insert(&self, key: K, value: V) -> Result<Option<V>, BearDogError> {
         let hash = self.hash_key(&key);
         let bucket_index = (hash as usize) & (self.capacity - 1); // Fast modulo for power of 2
-        
+
         let new_entry = Box::into_raw(Box::new(HashEntry {
             key: key.clone(),
             value: value.clone(),
             next: AtomicPtr::new(ptr::null_mut()),
             hash,
         }));
-        
+
         loop {
             let bucket = &self.buckets[bucket_index];
             let current_head = bucket.load(Ordering::Acquire);
 
             if let Some(_existing_value) = self.find_in_chain(current_head, &key, hash) {
-
                 unsafe {
                     (*new_entry).value = value.clone();
 
                     let mut current = current_head;
                     while !current.is_null() {
                         if (*current).key == key && (*current).hash == hash {
-
                             let old_value = (*current).value.clone();
                             (*current).value = value;
 
                             let _ = Box::from_raw(new_entry);
-                            
+
                             self.stats.insertions.fetch_add(1, Ordering::Relaxed);
                             return Ok(Some(old_value));
                         }
@@ -114,7 +107,7 @@ where
                 current_head,
                 new_entry,
                 Ordering::Release,
-                Ordering::Relaxed
+                Ordering::Relaxed,
             ) {
                 Ok(_) => {
                     self.size.fetch_add(1, Ordering::Relaxed);
@@ -123,7 +116,6 @@ where
                     return Ok(None);
                 }
                 Err(_) => {
-
                     continue;
                 }
             }
@@ -133,12 +125,12 @@ where
     pub fn get(&self, key: &K) -> Option<V> {
         let hash = self.hash_key(key);
         let bucket_index = (hash as usize) & (self.capacity - 1);
-        
+
         let bucket = &self.buckets[bucket_index];
         let head = bucket.load(Ordering::Acquire);
-        
+
         self.stats.lookups.fetch_add(1, Ordering::Relaxed);
-        
+
         if let Some(value) = self.find_in_chain(head, key, hash) {
             self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
             Some(value)
@@ -165,13 +157,13 @@ where
         let lookups = self.stats.lookups.load(Ordering::Relaxed);
         let cache_hits = self.stats.cache_hits.load(Ordering::Relaxed);
         let _cache_misses = self.stats.cache_misses.load(Ordering::Relaxed);
-        
+
         let hit_rate = if lookups > 0 {
             (cache_hits as f64 / lookups as f64) * 100.0
         } else {
             0.0
         };
-        
+
         LockFreeMapStats {
             size: self.len(),
             capacity: self.capacity,
@@ -212,7 +204,6 @@ pub struct LockFreeMapStats {
 }
 
 pub struct LockFreeQueue<T> {
-
     head: AtomicPtr<QueueNode<T>>,
 
     tail: AtomicPtr<QueueNode<T>>,
@@ -227,15 +218,14 @@ struct QueueNode<T> {
 }
 
 impl<T> LockFreeQueue<T> {
-
     pub fn new() -> Self {
         let dummy = Box::into_raw(Box::new(QueueNode {
             data: None,
             next: AtomicPtr::new(ptr::null_mut()),
         }));
-        
+
         info!("🔓 Lock-free Queue created");
-        
+
         Self {
             head: AtomicPtr::new(dummy),
             tail: AtomicPtr::new(dummy),
@@ -248,41 +238,43 @@ impl<T> LockFreeQueue<T> {
             data: Some(item),
             next: AtomicPtr::new(ptr::null_mut()),
         }));
-        
+
         loop {
             let tail = self.tail.load(Ordering::Acquire);
             let next = unsafe { (*tail).next.load(Ordering::Acquire) };
-            
+
             if tail == self.tail.load(Ordering::Acquire) {
                 if next.is_null() {
-
-                    if unsafe { (*tail).next.compare_exchange_weak(
-                        next,
-                        new_node,
-                        Ordering::Release,
-                        Ordering::Relaxed
-                    ).is_ok() } {
-
+                    if unsafe {
+                        (*tail)
+                            .next
+                            .compare_exchange_weak(
+                                next,
+                                new_node,
+                                Ordering::Release,
+                                Ordering::Relaxed,
+                            )
+                            .is_ok()
+                    } {
                         let _ = self.tail.compare_exchange_weak(
                             tail,
                             new_node,
                             Ordering::Release,
-                            Ordering::Relaxed
+                            Ordering::Relaxed,
                         );
                         break;
                     }
                 } else {
-
                     let _ = self.tail.compare_exchange_weak(
                         tail,
                         next,
                         Ordering::Release,
-                        Ordering::Relaxed
+                        Ordering::Relaxed,
                     );
                 }
             }
         }
-        
+
         self.size.fetch_add(1, Ordering::Relaxed);
         debug!("🔓 Enqueued item to lock-free queue");
     }
@@ -292,11 +284,10 @@ impl<T> LockFreeQueue<T> {
             let head = self.head.load(Ordering::Acquire);
             let tail = self.tail.load(Ordering::Acquire);
             let next = unsafe { (*head).next.load(Ordering::Acquire) };
-            
+
             if head == self.head.load(Ordering::Acquire) {
                 if head == tail {
                     if next.is_null() {
-
                         return None;
                     }
 
@@ -304,23 +295,20 @@ impl<T> LockFreeQueue<T> {
                         tail,
                         next,
                         Ordering::Release,
-                        Ordering::Relaxed
+                        Ordering::Relaxed,
                     );
                 } else {
-
                     let data = unsafe { (*next).data.take() };
 
-                    if self.head.compare_exchange_weak(
-                        head,
-                        next,
-                        Ordering::Release,
-                        Ordering::Relaxed
-                    ).is_ok() {
-
+                    if self
+                        .head
+                        .compare_exchange_weak(head, next, Ordering::Release, Ordering::Relaxed)
+                        .is_ok()
+                    {
                         unsafe {
                             let _ = Box::from_raw(head); // Free old head
                         }
-                        
+
                         self.size.fetch_sub(1, Ordering::Relaxed);
                         debug!("🔓 Dequeued item from lock-free queue");
                         return data;
@@ -352,7 +340,6 @@ pub struct LockFreeCounter {
 }
 
 impl LockFreeCounter {
-
     pub fn new(max_value: u64) -> Self {
         Self {
             value: AtomicU64::new(0),
@@ -360,18 +347,18 @@ impl LockFreeCounter {
         }
     }
 
-    pub fn increment(&self) -> BearDogResult<u64> {
+    pub fn increment(&self) -> Result<u64, BearDogError> {
         loop {
             let current = self.value.load(Ordering::Relaxed);
             if current >= self.max_value {
                 return Err(BearDogError::system("Counter overflow"));
             }
-            
+
             match self.value.compare_exchange_weak(
                 current,
                 current + 1,
                 Ordering::Relaxed,
-                Ordering::Relaxed
+                Ordering::Relaxed,
             ) {
                 Ok(_) => return Ok(current + 1),
                 Err(_) => continue,
@@ -379,18 +366,18 @@ impl LockFreeCounter {
         }
     }
 
-    pub fn decrement(&self) -> BearDogResult<u64> {
+    pub fn decrement(&self) -> Result<u64, BearDogError> {
         loop {
             let current = self.value.load(Ordering::Relaxed);
             if current == 0 {
                 return Err(BearDogError::business("Counter underflow"));
             }
-            
+
             match self.value.compare_exchange_weak(
                 current,
                 current - 1,
                 Ordering::Relaxed,
-                Ordering::Relaxed
+                Ordering::Relaxed,
             ) {
                 Ok(_) => return Ok(current - 1),
                 Err(_) => continue,
@@ -413,7 +400,6 @@ where
     V: Clone,
 {
     fn drop(&mut self) {
-
         for bucket in &self.buckets {
             let mut current = bucket.load(Ordering::Relaxed);
             while !current.is_null() {
@@ -429,7 +415,6 @@ where
 
 impl<T> Drop for LockFreeQueue<T> {
     fn drop(&mut self) {
-
         while self.dequeue().is_some() {}
 
         let head = self.head.load(Ordering::Relaxed);
@@ -444,31 +429,45 @@ impl<T> Drop for LockFreeQueue<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::thread;
     use std::sync::Arc;
-    
+    use std::thread;
+
     #[test]
     fn test_lock_free_hashmap() -> Result<(), Box<dyn std::error::Error>> {
         let map = LockFreeHashMap::new(16);
 
-        assert_eq!(map.insert("key1".to_string(), "value1".to_string()).map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?, None);
+        assert_eq!(
+            map.insert("key1".to_string(), "value1".to_string())
+                .map_err(|e| {
+                    tracing::error!("Operation failed: {:?}", e);
+                    beardog_errors::BearDogError::internal(
+                        format_args!("Operation failed: {:?}", e).to_string(),
+                    )
+                })?,
+            None
+        );
         assert_eq!(map.len(), 1);
 
         assert_eq!(map.get(&"key1".to_string()), Some("value1".to_string()));
         assert_eq!(map.get(&"nonexistent".to_string()), None);
 
-        assert_eq!(map.insert("key1".to_string(), "value2".to_string()).map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?, Some("value1".to_string()));
+        assert_eq!(
+            map.insert("key1".to_string(), "value2".to_string())
+                .map_err(|e| {
+                    tracing::error!("Operation failed: {:?}", e);
+                    beardog_errors::BearDogError::internal(
+                        format_args!("Operation failed: {:?}", e).to_string(),
+                    )
+                })?,
+            Some("value1".to_string())
+        );
         assert_eq!(map.get(&"key1".to_string()), Some("value2".to_string()));
+
+        Ok(())
     }
-    
+
     #[test]
-    fn test_lock_free_queue() {
+    fn test_lock_free_queue() -> Result<(), Box<dyn std::error::Error>> {
         let queue = LockFreeQueue::new();
 
         assert!(queue.is_empty());
@@ -477,66 +476,81 @@ mod tests {
         queue.enqueue(42);
         queue.enqueue(84);
         assert_eq!(queue.len(), 2);
-        
+
         assert_eq!(queue.dequeue(), Some(42));
         assert_eq!(queue.dequeue(), Some(84));
         assert_eq!(queue.dequeue(), None);
         assert!(queue.is_empty());
         Ok(())
     }
-    
+
     #[test]
     fn test_lock_free_counter() -> Result<(), Box<dyn std::error::Error>> {
         let counter = LockFreeCounter::new(100);
-        
+
         assert_eq!(counter.get(), 0);
-        assert_eq!(counter.increment().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?, 1);
-        assert_eq!(counter.increment().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?, 2);
-        assert_eq!(counter.decrement().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?, 1);
+        assert_eq!(
+            counter.increment().map_err(|e| {
+                tracing::error!("Operation failed: {:?}", e);
+                beardog_errors::BearDogError::internal(
+                    format_args!("Operation failed: {:?}", e).to_string(),
+                )
+            })?,
+            1
+        );
+        assert_eq!(
+            counter.increment().map_err(|e| {
+                tracing::error!("Operation failed: {:?}", e);
+                beardog_errors::BearDogError::internal(
+                    format_args!("Operation failed: {:?}", e).to_string(),
+                )
+            })?,
+            2
+        );
+        assert_eq!(
+            counter.decrement().map_err(|e| {
+                tracing::error!("Operation failed: {:?}", e);
+                beardog_errors::BearDogError::internal(
+                    format_args!("Operation failed: {:?}", e).to_string(),
+                )
+            })?,
+            1
+        );
         assert_eq!(counter.get(), 1);
         Ok(())
     }
-    
+
     #[test]
-    fn test_concurrent_hashmap() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_concurrent_hashmap() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let map = Arc::new(LockFreeHashMap::new(64));
         let mut handles = vec![];
 
         for i in 0..4 {
             let map_clone = Arc::clone(&map);
-            let handle = thread::spawn(move || {
+            let handle = thread::spawn(move || -> Result<(), Box<dyn std::error::Error + Send>> {
                 for j in 0..100 {
                     let key = format_args!("thread{}_key{}", i, j).to_string();
                     let value = format_args!("value{}", j).to_string();
                     map_clone.insert(key.clone(), value.clone()).map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
+                        tracing::error!("Operation failed: {:?}", e);
+                        Box::new(e) as Box<dyn std::error::Error + Send>
+                    })?;
                     assert_eq!(map_clone.get(&key), Some(value));
                 }
+                Ok(())
             });
             handles.push(handle);
         }
-        
+
         for handle in handles {
-            handle.join().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
+            let _ = handle.join().map_err(|_| {
+                std::io::Error::new(std::io::ErrorKind::Other, "Thread join failed")
+            })?;
         }
-        
+
         assert_eq!(map.len(), 400);
         let stats = map.get_stats();
         assert_eq!(stats.insertions, 400);
         Ok(())
     }
-} 
+}

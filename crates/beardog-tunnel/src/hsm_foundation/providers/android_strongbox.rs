@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use super::super::{error::*, traits::*, types::*};
 use beardog_types::canonical::hsm::status::HealthMetrics;
@@ -60,7 +60,7 @@ impl AndroidStrongBoxProvider {
         })
     }
 
-    pub fn create_test_instance() -> BearDogResult<Self> {
+    pub fn create_test_instance() -> Result<Self, BearDogError> {
         Self::new()
             .map_err(|e| BearDogError::internal(format_args!("Failed to create AndroidStrongBoxProvider test instance: {}", e).to_string()))
 
@@ -368,7 +368,7 @@ mod tests {
     use super::*;
     #[tokio::test]}
 
-    async fn test_android_strongbox_provider_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_android_strongbox_provider_creation() -> Result<(), BearDogError> {
         let provider = AndroidStrongBoxProvider::new()
             .unwrap_or_else(|e| {
     tracing::error!("Expect failed ({}): {:?}", "Failed to create AndroidStrongBox provider for testing", e);
@@ -377,7 +377,7 @@ mod tests {
         let info = provider.provider_info();
         assert_eq!(info.provider_type, HsmProviderType::AndroidStrongBox);
         assert!(info.description.contains("StrongBox"));
-    async fn test_device_detection() -> beardog_errors::BearDogResult<()> {
+    async fn test_device_detection() -> Result<(), BearDogError> {
         let device_info = AndroidStrongBoxProvider::detect_device_info()
     tracing::error!("Expect failed ({}): {:?}", "Device detection should work in test environment", e);
     format_args!("Device detection should work in test environment: {:?}", e).to_string()
@@ -385,7 +385,7 @@ mod tests {
         assert!(!device_info.manufacturer.is_empty());
         assert!(!device_info.model.is_empty());
         assert!(device_info.api_level >= 28); // Minimum for StrongBox
-    async fn test_strongbox_key_operations() -> beardog_errors::BearDogResult<()> {
+    async fn test_strongbox_key_operations() -> Result<(), BearDogError> {
         let provider = AndroidStrongBoxProvider::new().unwrap_or_else(|e| {
     tracing::error!("Unwrap failed: {:?}", e);
     format!("Operation failed: {e:?}")
@@ -414,7 +414,7 @@ mod tests {
     tracing::error!("Expect failed ({}): {:?}", "Signature verification should not fail", e);
     format_args!("Signature verification should not fail: {:?}", e).to_string()
             assert!(is_valid);
-    async fn test_health_check() -> beardog_errors::BearDogResult<()> {
+    async fn test_health_check() -> Result<(), BearDogError> {
         let health = provider.health_check().await
     tracing::error!("Expect failed ({}): {:?}", "Health check should not fail", e);
     format_args!("Health check should not fail: {:?}", e).to_string()

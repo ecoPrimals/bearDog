@@ -1,7 +1,4 @@
-
-
 fn main() {
-
     #[cfg(target_os = "android")]
     {
         println!("cargo:rerun-if-changed=build.rs");

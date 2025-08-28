@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde_json::json;
 
 use crate::adapters::universal::{
@@ -51,7 +51,7 @@ impl CapabilityHandler for AwsKmsCapabilityHandler {
         CapabilityType::Encryption
     }
 
-    async fn can_handle(&self, request: &UniversalVendorRequest) -> BearDogResult<f64> {
+    async fn can_handle(&self, request: &UniversalVendorRequest) -> Result<f64, BearDogError> {
 
         if let Some(operation) = &request.operation {
             match operation.as_str() {
@@ -73,7 +73,7 @@ impl CapabilityHandler for AwsKmsCapabilityHandler {
     async fn execute(
         &self,
         request: UniversalVendorRequest,
-    ) -> BearDogResult<UniversalVendorResponse> {
+    ) -> Result<UniversalVendorResponse, BearDogError> {
         let operation = request.operation.as_deref().unwrap_or("unknown");
         
         match operation {
@@ -89,7 +89,7 @@ impl CapabilityHandler for AwsKmsCapabilityHandler {
 }
 
 impl AwsKmsCapabilityHandler {
-    async fn handle_encrypt_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_encrypt_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
 
         Ok(UniversalVendorResponse {
             success: true,
@@ -114,7 +114,7 @@ impl AwsKmsCapabilityHandler {
         })
     }
     
-    async fn handle_decrypt_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_decrypt_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
         Ok(UniversalVendorResponse {
             success: true,
             payload: json!({
@@ -135,7 +135,7 @@ impl AwsKmsCapabilityHandler {
         })
     }
     
-    async fn handle_generate_key_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_generate_key_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
         Ok(UniversalVendorResponse {
             success: true,
             payload: json!({
@@ -157,7 +157,7 @@ impl AwsKmsCapabilityHandler {
         })
     }
     
-    async fn handle_get_key_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_get_key_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
         Ok(UniversalVendorResponse {
             success: true,
             payload: json!({

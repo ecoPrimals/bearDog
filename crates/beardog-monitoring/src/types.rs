@@ -1,11 +1,15 @@
-
-
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-pub use beardog_types::config::monitoring::UnifiedMonitoringConfig as MonitoringConfig;
+// Use canonical monitoring configuration
+pub use beardog_types::canonical::monitoring::{
+    MonitoringConfig, MetricsConfig, AlertConfig, AlertSeverity,
+    HealthCheckConfig, PrometheusConfig
+};
 
+// Consolidated metric collection config - use canonical or remove if duplicate
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricCollectionConfig {
     pub config_id: String,
@@ -15,8 +19,8 @@ pub struct MetricCollectionConfig {
     pub enable_compression: bool,
     pub collection_interval: u64,
 }
-impl Default for MetricCollectionConfig {}
 
+impl Default for MetricCollectionConfig {
     fn default() -> Self {
         Self {
             config_id: "default_collection".to_string(),
@@ -27,21 +31,33 @@ impl Default for MetricCollectionConfig {}
             collection_interval: 60,
         }
     }
+}
+
+// Consolidated alert processing config
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertProcessingConfig {
+    pub config_id: String,
     pub notification_channels: Vec<String>,
     pub escalation_enabled: bool,
     pub suppression_rules: Vec<String>,
     pub max_concurrent_alerts: usize,
-    pub enable_rate_limiting: bool,}
+    pub enable_rate_limiting: bool,
+}
 
 impl Default for AlertProcessingConfig {
+    fn default() -> Self {
+        Self {
             config_id: "default_alert_processing".to_string(),
             notification_channels: vec!["email".to_string()],
             escalation_enabled: true,
             suppression_rules: vec![],
             max_concurrent_alerts: 10,
-            enable_rate_limiting: true,}
+            enable_rate_limiting: true,
+        }
+    }
+}
 
+// Use canonical metric source definition
 pub struct MetricSource {
     pub source_id: String,
     pub name: String,
@@ -50,6 +66,7 @@ pub struct MetricSource {
     pub credentials: Option<String>,
 }
 
+// Use canonical alert definition  
 pub struct Alert {
     pub alert_id: String,
     pub alert_name: String,
@@ -61,21 +78,7 @@ pub struct Alert {
     pub acknowledged: bool,
     pub escalated: bool,
     pub processed_at: Option<chrono::DateTime<chrono::Utc>>,
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
-pub enum AlertSeverity {
-    Critical,
-    High,
-    Medium,
-    Low,}
-
-impl std::fmt::Display for AlertSeverity {}
-
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AlertSeverity::Critical => write!(f, "Critical"),
-            AlertSeverity::High => write!(f, "High"),
-            AlertSeverity::Medium => write!(f, "Medium"),
-            AlertSeverity::Low => write!(f, "Low"),}
+}
 
 pub struct SystemHealthResult {
     pub overall_status: String,

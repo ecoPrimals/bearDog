@@ -10,27 +10,11 @@ use std::sync::atomic::AtomicBool;
 
 use beardog_traits::canonical::CacheProvider as CanonicalCacheProvider;
 use beardog_traits::canonical::BaseProvider;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
-#[allow(async_fn_in_trait)]
-#[deprecated(since = "3.1.0", note = "Use EnhancedCacheProvider instead")]
-#[deprecated(since = "3.1.0", note = "Use EnhancedCacheProvider instead")]
-pub trait SimpleCacheProvider: Send + Sync {
+// SimpleCacheProvider removed - use EnhancedCacheProvider from beardog-traits instead
 
-    async fn get(&self, key: &str) -> Option<String>;
-
-    async fn set(&self, key: &str, value: &str, ttl: Duration) -> bool;
-
-    async fn delete(&self, key: &str) -> bool;
-
-    async fn exists(&self, key: &str) -> bool;
-
-    async fn clear(&self) -> bool;
-
-    async fn stats(&self) -> CacheStats;
-}
-
-pub use SimpleCacheProvider as CacheProvider;
+pub use beardog_traits::canonical::EnhancedCacheProvider as CacheProvider;
 
 #[derive(Clone)]
 pub enum CacheProviderType {
@@ -197,7 +181,6 @@ pub struct InMemoryCache {
 
     stats: Arc<RwLock<CacheStats>>,
 
-    #[allow(dead_code)] // Will be used for advanced cache configuration
     config: CacheConfig,
 }
 

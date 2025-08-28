@@ -1,8 +1,9 @@
+use beardog_errors::BearDogError;
 
 
 use super::models::*;
 use super::ChaosTestFramework;
-use beardog::{core::*, BearDogResult};
+use beardog::{{core::*, BearDogError}};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::time::{sleep, timeout};
@@ -11,12 +12,12 @@ use tracing::warn;
 #[allow(async_fn_in_trait)]
 pub trait RecoveryValidator: Send + Sync {
 
-    async fn validate_recovery(&self) -> BearDogResult<RecoveryStatus>;
+    async fn validate_recovery(&self) -> Result<RecoveryStatus, BearDogError>;
 
     fn target_component(&self) -> String;
 }
 
-pub async fn wait_for_recovery(framework: &ChaosTestFramework, component: &str) -> BearDogResult<u64> {
+pub async fn wait_for_recovery(framework: &ChaosTestFramework, component: &str) -> Result<u64, BearDogError> {
     let start_time = Instant::now();
     let timeout_duration = Duration::from_millis(framework.config.recovery_timeout_ms);
     
@@ -52,7 +53,7 @@ pub async fn wait_for_recovery(framework: &ChaosTestFramework, component: &str) 
     }
 }
 
-pub async fn validate_all_recoveries(framework: &ChaosTestFramework) -> BearDogResult<Vec<RecoveryResult>> {
+pub async fn validate_all_recoveries(framework: &ChaosTestFramework) -> Result<Vec<RecoveryResult, BearDogError>> {
     let mut results = Vec::new();
     
     for validator in &framework.recovery_validators {
@@ -78,7 +79,7 @@ impl CoreRecoveryValidator {
 
 #[allow(async_fn_in_trait)]
 impl RecoveryValidator for CoreRecoveryValidator {
-    async fn validate_recovery(&self) -> BearDogResult<RecoveryStatus> {
+    async fn validate_recovery(&self) -> Result<RecoveryStatus, BearDogError> {
         match self.core.health_check().await {
             Ok(health) => match health.status {
                 HealthStatus::Healthy => Ok(RecoveryStatus::FullyRecovered),
@@ -104,7 +105,7 @@ impl SecurityRecoveryValidator {
 
 #[allow(async_fn_in_trait)]
 impl RecoveryValidator for SecurityRecoveryValidator {
-    async fn validate_recovery(&self) -> BearDogResult<RecoveryStatus> {
+    async fn validate_recovery(&self) -> Result<RecoveryStatus, BearDogError> {
 
         Ok(RecoveryStatus::FullyRecovered)
     }

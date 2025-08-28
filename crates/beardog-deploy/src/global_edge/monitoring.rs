@@ -1,7 +1,7 @@
 
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -28,7 +28,7 @@ impl GlobalHealthMonitor {
         }
     }
 
-    pub async fn start_monitoring(&self) -> BearDogResult<()> {
+    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
         info!("Starting global health monitoring system");
 
         {
@@ -67,7 +67,7 @@ impl GlobalHealthMonitor {
         Ok(())
     }
 
-    pub async fn add_region_health_check(&self, region_id: &str, endpoint_url: &str) -> BearDogResult<()> {
+    pub async fn add_region_health_check(&self, region_id: &str, endpoint_url: &str) -> Result<(), BearDogError> {
         let health_check = HealthCheck {
             check_id: format_args!("health_check_{}", region_id).to_string(),
             region_id,
@@ -90,7 +90,7 @@ impl GlobalHealthMonitor {
         health_check: &HealthCheck,
         incidents: &Arc<RwLock<Vec<Incident>>>,
         alert_thresholds: &AlertThresholds,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         debug!("Performing health check for region: {}", health_check.region_id);
 
         let is_healthy = Self::simulate_health_check(health_check).await?;
@@ -120,12 +120,12 @@ impl GlobalHealthMonitor {
         Ok(())
     }
 
-    async fn simulate_health_check(_health_check: &HealthCheck) -> BearDogResult<bool> {
+    async fn simulate_health_check(_health_check: &HealthCheck) -> Result<bool, BearDogError> {
 
         Ok(rand::random::<f64>() < 0.95)
     }
 
-    pub async fn get_global_health(&self) -> BearDogResult<GlobalHealthStatus> {
+    pub async fn get_global_health(&self) -> Result<GlobalHealthStatus, BearDogError> {
         let checks = self.health_checks.read().await;
         let incidents = self.incidents.read().await;
         
@@ -160,7 +160,7 @@ impl GlobalHealthMonitor {
         self.incidents.read().await.clone()
     }
 
-    pub async fn resolve_incident(&self, incident_id: &str) -> BearDogResult<()> {
+    pub async fn resolve_incident(&self, incident_id: &str) -> Result<(), BearDogError> {
         let mut incidents = self.incidents.write().await;
         
         if let Some(incident) = incidents.iter_mut().find(|i| i.incident_id == incident_id) {
@@ -173,7 +173,7 @@ impl GlobalHealthMonitor {
         }
     }
 
-    pub async fn shutdown(&self) -> BearDogResult<()> {
+    pub async fn shutdown(&self) -> Result<(), BearDogError> {
         info!("Shutting down global health monitoring system");
 
         {

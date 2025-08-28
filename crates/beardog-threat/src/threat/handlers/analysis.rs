@@ -1,16 +1,13 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 
-use crate::threat::types::{DetectionRule as ThreatRule, *};
-use beardog_errors::{BearDogError, BearDogResult};
+use crate::threat::types::*;
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatDetectionConfig {
-
     pub ml_enhancement: bool,
 
     pub max_concurrent_analyses: usize,
@@ -33,7 +30,6 @@ impl Default for ThreatDetectionConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatDetectionStats {
-
     pub events_analyzed: u64,
 
     pub threats_detected: u64,
@@ -62,10 +58,9 @@ impl Default for ThreatDetectionStats {
 
 #[derive(Debug)]
 pub struct ThreatDetectionEngine {
-
     pub config: ThreatDetectionConfig,
 
-    pub detection_rules: Vec<ThreatRule>,
+    pub detection_rules: Vec<DetectionRule>,
 
     pub stats: ThreatDetectionStats,
 
@@ -73,7 +68,6 @@ pub struct ThreatDetectionEngine {
 }
 
 impl ThreatDetectionEngine {
-
     pub fn new(config: ThreatDetectionConfig) -> Self {
         Self {
             config,
@@ -86,17 +80,17 @@ impl ThreatDetectionEngine {
     pub async fn analyze_event(
         &mut self,
         event_data: &HashMap<&str, &str>,
-    ) -> BearDogResult<Vec<ThreatEvent>> {
+    ) -> Result<Vec<ThreatEvent>, BearDogError> {
         self.stats.events_analyzed += 1;
         self.stats.last_analysis = Utc::now();
-        
+
         let mut detected_threats = Vec::new();
 
         for rule in &self.detection_rules {
             if !rule.enabled {
                 continue;
             }
-            
+
             // Evaluate the rule condition against the event data
             if !rule.condition.evaluate(event_data) {
                 continue;
@@ -115,10 +109,11 @@ impl ThreatDetectionEngine {
         }
 
         self.stats.threats_detected += detected_threats.len() as u64;
-        
+
         Ok(detected_threats)
     }
 
+    #[allow(dead_code)]
     fn evaluate_condition(&self, field_value: &str, operator: &str, expected_value: &str) -> bool {
         match operator {
             "equals" => field_value == expected_value,
@@ -126,18 +121,21 @@ impl ThreatDetectionEngine {
             "starts_with" => field_value.starts_with(expected_value),
             "ends_with" => field_value.ends_with(expected_value),
             "regex" => {
-
                 field_value.contains(expected_value) // Simplified
             }
             "greater_than" => {
-                if let (Ok(field_num), Ok(expected_num)) = (field_value.parse::<f64>(), expected_value.parse::<f64>()) {
+                if let (Ok(field_num), Ok(expected_num)) =
+                    (field_value.parse::<f64>(), expected_value.parse::<f64>())
+                {
                     field_num > expected_num
                 } else {
                     false
                 }
             }
             "less_than" => {
-                if let (Ok(field_num), Ok(expected_num)) = (field_value.parse::<f64>(), expected_value.parse::<f64>()) {
+                if let (Ok(field_num), Ok(expected_num)) =
+                    (field_value.parse::<f64>(), expected_value.parse::<f64>())
+                {
                     field_num < expected_num
                 } else {
                     false
@@ -153,17 +151,16 @@ impl ThreatDetectionEngine {
     async fn ml_based_detection(
         &self,
         event_data: &HashMap<&str, &str>,
-    ) -> BearDogResult<Vec<ThreatEvent>> {
-
+    ) -> Result<Vec<ThreatEvent>, BearDogError> {
         let _event_data = event_data; // Avoid unused parameter warning
         Ok(Vec::new())
     }
 
     fn create_threat_event(
         &self,
-        rule: &ThreatRule,
+        rule: &DetectionRule,
         event_data: &HashMap<&str, &str>,
-    ) -> BearDogResult<ThreatEvent> {
+    ) -> Result<ThreatEvent, BearDogError> {
         let threat_event = ThreatEvent {
             id: uuid::Uuid::new_v4().to_string(),
             threat_type: rule.threat_type.clone(),
@@ -181,7 +178,7 @@ impl ThreatDetectionEngine {
             related_events: Vec::new(),
             mitigation_steps: Vec::new(),
             confidence: self.calculate_confidence(&rule.severity),
-            raw_data: Some(format!("{:?}", event_data)),
+            raw_data: Some(format!("{event_data:?}")),
             mitigated: false,
             mitigation_actions: Vec::new(),
         };
@@ -199,42 +196,39 @@ impl ThreatDetectionEngine {
         }
     }
 
-    fn load_default_rules() -> Vec<ThreatRule> {
+    fn load_default_rules() -> Vec<DetectionRule> {
         vec![
-            ThreatRule {
-                id: "failed_login_attempts".to_string(),
-                name: "Failed Login Attempts".to_string(),
-                description: "Multiple failed login attempts from same source".to_string(),
-                enabled: true,
-                threat_type: ThreatType::AuthenticationFailure,
-                severity: ThreatSeverity::Medium,
-                condition: RuleCondition::FieldEquals { 
-                    field: "event_type".to_string(), 
-                    value: "login_failure".to_string() 
+            DetectionRule::simple(
+                "failed_login_attempts",
+                "Failed Login Attempts",
+                "Multiple failed login attempts from same source",
+                ThreatType::AuthenticationFailure,
+                ThreatSeverity::Medium,
+                RuleCondition::FieldEquals {
+                    field: "event_type".to_string(),
+                    value: "login_failure".to_string(),
                 },
-                actions: vec!["log".to_string(), "alert".to_string()],
-            },
-            ThreatRule {
-                id: "suspicious_network_activity".to_string(),
-                name: "Suspicious Network Activity".to_string(),
-                description: "Unusual network traffic patterns detected".to_string(),
-                enabled: true,
-                threat_type: ThreatType::NetworkIntrusion,
-                severity: ThreatSeverity::High,
-                condition: RuleCondition::FieldEquals { 
-                    field: "event_type".to_string(), 
-                    value: "network_anomaly".to_string() 
+                vec!["log".to_string(), "alert".to_string()],
+            ),
+            DetectionRule::simple(
+                "suspicious_network_activity",
+                "Suspicious Network Activity",
+                "Unusual network traffic patterns detected",
+                ThreatType::NetworkIntrusion,
+                ThreatSeverity::High,
+                RuleCondition::FieldEquals {
+                    field: "event_type".to_string(),
+                    value: "network_anomaly".to_string(),
                 },
-                actions: vec!["log".to_string(), "alert".to_string(), "block".to_string()],
-            },
+                vec!["log".to_string(), "alert".to_string(), "block".to_string()],
+            ),
         ]
     }
 
-    pub fn add_rule(&mut self, rule: ThreatRule) -> BearDogResult<()> {
-
+    pub fn add_rule(&mut self, rule: DetectionRule) -> Result<(), BearDogError> {
         if self.detection_rules.iter().any(|r| r.id == rule.id) {
             return Err(BearDogError::configuration(
-                format_args!("Rule with ID '{}' already exists", rule.id).to_string()
+                format_args!("Rule with ID '{}' already exists", rule.id).to_string(),
             ));
         }
 
@@ -243,13 +237,13 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    pub fn remove_rule(&mut self, rule_id: &str) -> BearDogResult<()> {
+    pub fn remove_rule(&mut self, rule_id: &str) -> Result<(), BearDogError> {
         let initial_len = self.detection_rules.len();
         self.detection_rules.retain(|rule| rule.id != rule_id);
-        
+
         if self.detection_rules.len() == initial_len {
             return Err(BearDogError::configuration(
-                format_args!("Rule with ID '{}' not found", rule_id).to_string()
+                format_args!("Rule with ID '{rule_id}' not found").to_string(),
             ));
         }
 
@@ -261,13 +255,19 @@ impl ThreatDetectionEngine {
         &self.stats
     }
 
-    pub async fn update_threat_signatures(&mut self, signatures: HashMap<&str, &str>) -> BearDogResult<()> {
+    pub async fn update_threat_signatures(
+        &mut self,
+        signatures: HashMap<&str, &str>,
+    ) -> Result<(), BearDogError> {
         let string_signatures: HashMap<String, String> = signatures
             .into_iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
             .collect();
         self.threat_signatures.extend(string_signatures);
-        info!("Updated threat signatures database with {} entries", self.threat_signatures.len());
+        info!(
+            "Updated threat signatures database with {} entries",
+            self.threat_signatures.len()
+        );
         Ok(())
     }
 }

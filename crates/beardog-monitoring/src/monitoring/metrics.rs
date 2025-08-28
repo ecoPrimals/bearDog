@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -8,7 +6,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::warn;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MetricValue {
@@ -42,13 +40,8 @@ pub struct InternalMetricsSummary {
     pub last_updated: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PrometheusConfig {
-    pub enabled: bool,
-    pub endpoint: String,
-    pub port: u16,
-    pub path: String,
-}
+// UNIFIED: Use canonical PrometheusConfig
+pub use beardog_types::canonical::monitoring::PrometheusConfig;
 
 #[derive(Debug)]
 pub struct MetricsService<T> {
@@ -59,7 +52,6 @@ pub struct MetricsService<T> {
 }
 
 impl<T> MetricsService<T> {
-
     pub fn new() -> Self {
         Self {
             native_metrics: Arc::new(RwLock::new(HashMap::with_capacity(16))),
@@ -83,23 +75,40 @@ impl<T> MetricsService<T> {
 
     pub async fn get_internal_summary(&self) -> InternalMetricsSummary {
         InternalMetricsSummary {
-            security_events: self.internal_collector.security_events.load(Ordering::Relaxed),
-            encryption_operations: self.internal_collector.encryption_operations.load(Ordering::Relaxed),
-            threat_detections: self.internal_collector.threat_detections.load(Ordering::Relaxed),
-            compliance_checks: self.internal_collector.compliance_checks.load(Ordering::Relaxed),
+            security_events: self
+                .internal_collector
+                .security_events
+                .load(Ordering::Relaxed),
+            encryption_operations: self
+                .internal_collector
+                .encryption_operations
+                .load(Ordering::Relaxed),
+            threat_detections: self
+                .internal_collector
+                .threat_detections
+                .load(Ordering::Relaxed),
+            compliance_checks: self
+                .internal_collector
+                .compliance_checks
+                .load(Ordering::Relaxed),
             api_requests: self.internal_collector.api_requests.load(Ordering::Relaxed),
             error_count: self.internal_collector.error_count.load(Ordering::Relaxed),
-            active_sessions: self.internal_collector.active_sessions.load(Ordering::Relaxed),
+            active_sessions: self
+                .internal_collector
+                .active_sessions
+                .load(Ordering::Relaxed),
             last_updated: *self.internal_collector.last_updated.read().await,
         }
     }
 
-    pub async fn enable_prometheus_export(&mut self, config: PrometheusConfig) -> BearDogResult<()> {
-
+    pub async fn enable_prometheus_export(
+        &mut self,
+        config: PrometheusConfig,
+    ) -> Result<(), BearDogError> {
         if let Err(e) = self.validate_monitoring_license().await {
             warn!("License validation failed: {}, using basic monitoring", e);
             return Err(BearDogError::security(
-                "Prometheus export requires valid license".to_string()
+                "Prometheus export requires valid license".to_string(),
             ));
         }
 
@@ -116,40 +125,54 @@ impl<T> MetricsService<T> {
     }
 
     pub async fn record_histogram(&self, name: &str, values: Vec<f64>) {
-        self.record_metric(name, MetricValue::Histogram(values)).await;
+        self.record_metric(name, MetricValue::Histogram(values))
+            .await;
     }
 
-    async fn validate_monitoring_license(&self) -> BearDogResult<()> {
-
+    async fn validate_monitoring_license(&self) -> Result<(), BearDogError> {
         Ok(())
     }
 
     pub fn increment_security_events(&self) {
-        self.internal_collector.security_events.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .security_events
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     pub fn increment_encryption_operations(&self) {
-        self.internal_collector.encryption_operations.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .encryption_operations
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     pub fn increment_threat_detections(&self) {
-        self.internal_collector.threat_detections.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .threat_detections
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     pub fn increment_compliance_checks(&self) {
-        self.internal_collector.compliance_checks.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .compliance_checks
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     pub fn increment_api_requests(&self) {
-        self.internal_collector.api_requests.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .api_requests
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     pub fn increment_errors(&self) {
-        self.internal_collector.error_count.fetch_add(1, Ordering::Relaxed);
+        self.internal_collector
+            .error_count
+            .fetch_add(1, Ordering::Relaxed);
     }
 
     pub fn set_active_sessions(&self, count: u64) {
-        self.internal_collector.active_sessions.store(count, Ordering::Relaxed);
+        self.internal_collector
+            .active_sessions
+            .store(count, Ordering::Relaxed);
     }
 }
 
@@ -160,7 +183,6 @@ impl<T> Default for MetricsService<T> {
 }
 
 impl InternalMetricsCollector {
-
     pub fn new() -> Self {
         Self {
             security_events: Arc::new(AtomicU64::new(0)),
@@ -181,13 +203,4 @@ impl Default for InternalMetricsCollector {
     }
 }
 
-impl Default for PrometheusConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            endpoint: "localhost".to_string(),
-            port: 9090,
-            path: "/metrics".to_string(),
-        }
-    }
-}
+// Default implementation moved to canonical PrometheusConfig in beardog-types

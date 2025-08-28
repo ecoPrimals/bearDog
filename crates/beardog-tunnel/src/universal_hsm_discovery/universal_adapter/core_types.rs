@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use chrono;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -49,11 +49,9 @@ pub struct PerformanceMetrics {
     pub error_count: u64,
 }
 
-pub struct HealthStatus {
-    pub is_healthy: bool,
-    pub response_time_ms: f64,
-    pub error_message: Option<String>,
-    pub last_check: chrono::DateTime<chrono::Utc>,
+// Use canonical HealthStatus instead of duplicate
+pub use beardog_types::canonical::HealthStatus;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanEntropyRequirements {
     pub minimum_entropy_bits: u32,
@@ -64,3 +62,4 @@ pub struct EphemeralSeed {
     pub seed_data: Vec<u8>,
     pub entropy_estimate: f64,
     pub creation_timestamp: chrono::DateTime<chrono::Utc>,
+}

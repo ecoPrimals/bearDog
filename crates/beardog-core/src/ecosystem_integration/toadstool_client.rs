@@ -4,7 +4,7 @@ use super::ecosystem_genetic_spawner::{
     EcosystemPrimalClient, GeneticTrait, TraitCategory, EcosystemCapability,
     ComputeResourceAllocation, EcosystemGeneticBlueprint,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -237,7 +237,7 @@ impl ToadStoolComputeClient {
     pub async fn request_compute_allocation(
         &self,
         request: ToadStoolComputeRequest,
-    ) -> BearDogResult<ToadStoolComputeResponse> {
+    ) -> Result<ToadStoolComputeResponse, BearDogError> {
         let allocation_url = format_args!("{}/api/v1/compute/allocate", self.config.endpoint).to_string();
         let timeout_duration = Duration::from_millis(self.config.timeout_ms);
 
@@ -298,7 +298,7 @@ impl ToadStoolComputeClient {
         ))
     }
 
-    pub async fn release_compute_allocation(&self, allocation_id: &str) -> BearDogResult<()> {
+    pub async fn release_compute_allocation(&self, allocation_id: &str) -> Result<(), BearDogError> {
         let release_url = format_args!("{}/api/v1/compute/release/{}", self.config.endpoint, allocation_id).to_string();
         let timeout_duration = Duration::from_millis(self.config.timeout_ms);
 
@@ -336,7 +336,7 @@ impl ToadStoolComputeClient {
         }
     }
 
-    pub async fn get_compute_genetics(&self) -> BearDogResult<ToadStoolComputeGenetics> {
+    pub async fn get_compute_genetics(&self) -> Result<ToadStoolComputeGenetics, BearDogError> {
 
         {
             let cache = self.genetics_cache.read().await;
@@ -441,7 +441,7 @@ impl ToadStoolComputeClient {
         traits
     }
 
-    pub async fn get_active_allocations(&self) -> BearDogResult<Vec<ToadStoolComputeResponse>> {
+    pub async fn get_active_allocations(&self) -> Result<Vec<ToadStoolComputeResponse>, BearDogError> {
         let allocations = self.active_allocations.read().await;
         Ok(allocations.values().cloned().collect())
     }
@@ -452,14 +452,14 @@ impl EcosystemPrimalClient for ToadStoolComputeClient {
         "toadstool"
     }
 
-    async fn get_genetic_traits(&self) -> BearDogResult<Vec<GeneticTrait>> {
+    async fn get_genetic_traits(&self) -> Result<Vec<GeneticTrait>, BearDogError> {
         let genetics = self.get_compute_genetics().await?;
         let traits = self.convert_to_genetic_traits(&genetics);
         debug!("🍄 ToadStool provided {} genetic traits", traits.len());
         Ok(traits)
     }
 
-    async fn allocate_resources(&self, requirements: &serde_json::Value) -> BearDogResult<serde_json::Value> {
+    async fn allocate_resources(&self, requirements: &serde_json::Value) -> Result<serde_json::Value, BearDogError> {
 
         let compute_request: ToadStoolComputeRequest = serde_json::from_value(requirements.clone())
             .map_err(|e| BearDogError::invalid_input(&format_args!("Invalid ToadStool compute requirements: {}", e).to_string()))?;
@@ -468,7 +468,7 @@ impl EcosystemPrimalClient for ToadStoolComputeClient {
         Ok(serde_json::to_value(response)?)
     }
 
-    async fn create_hybrid_component(&self, blueprint: &EcosystemGeneticBlueprint) -> BearDogResult<serde_json::Value> {
+    async fn create_hybrid_component(&self, blueprint: &EcosystemGeneticBlueprint) -> Result<serde_json::Value, BearDogError> {
 
         let toadstool_traits = blueprint.hybrid_traits.iter()
             .filter(|trait_| trait_.category == TraitCategory::Compute)
@@ -501,7 +501,7 @@ impl EcosystemPrimalClient for ToadStoolComputeClient {
         Ok(serde_json::to_value(component)?)
     }
 
-    async fn health_check(&self) -> BearDogResult<bool> {
+    async fn health_check(&self) -> Result<bool, BearDogError> {
         let health_url = format_args!("{}/api/v1/health", self.config.endpoint).to_string();
         let timeout_duration = Duration::from_millis(5000); // Shorter timeout for health checks
 
@@ -529,7 +529,7 @@ impl EcosystemPrimalClient for ToadStoolComputeClient {
         }
     }
 
-    async fn get_resource_utilization(&self) -> BearDogResult<HashMap<String, f64>> {
+    async fn get_resource_utilization(&self) -> Result<HashMap<String, f64>, BearDogError> {
         let mut utilization = ahash::HashMap::default();
 
         let allocations = self.active_allocations.read().await;

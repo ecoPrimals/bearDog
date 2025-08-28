@@ -1,16 +1,16 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use tracing::{debug, info};
 
 use super::engine::GeneticSpawningEngine;
 use super::types::{SpawnRequest, SpawnResult};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 pub async fn process_automated_consensus(
     engine: &GeneticSpawningEngine,
     request: &SpawnRequest,
-) -> BearDogResult<SpawnResult> {
+) -> Result<SpawnResult, BearDogError> {
     info!("🤖 Processing automated consensus workflow");
     debug!("Request capabilities: {:?}", request.required_capabilities);
 

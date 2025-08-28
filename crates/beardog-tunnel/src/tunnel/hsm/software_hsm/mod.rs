@@ -1,7 +1,7 @@
 
 
 use crate::tunnel::hsm::types::{KeyStorageType, KeyType, MemoryProtectionLevel};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone)]
 pub enum CryptoBackend {
@@ -93,7 +93,7 @@ pub const BUILD_INFO: &str = concat!(
     " (built on unknown)"
 );
 
-pub async fn create_default_software_hsm() -> beardog_errors::BearDogResult<RustSoftwareHsm> {
+pub async fn create_default_software_hsm() -> Result<RustSoftwareHsm, BearDogError> {
     let config = SoftwareHsmConfig {};
 
         implementation: format_args!("{:?}", SoftwareHsmType::RustSoftwareHsm).to_string(),
@@ -126,14 +126,14 @@ pub async fn create_default_software_hsm() -> beardog_errors::BearDogResult<Rust
     };
     RustSoftwareHsm::new(config).await
 
-pub async fn create_file_software_hsm() -> beardog_errors::BearDogResult<RustSoftwareHsm> {
+pub async fn create_file_software_hsm() -> Result<RustSoftwareHsm, BearDogError> {
         implementation: "RustSoftwareHsm".to_string(),
         key_storage_path: "/tmp/beardog_file_hsm_keys".to_string(),
 
-pub async fn create_database_software_hsm() -> beardog_errors::BearDogResult<RustSoftwareHsm> {
+pub async fn create_database_software_hsm() -> Result<RustSoftwareHsm, BearDogError> {
         key_storage_path: "/tmp/beardog_database_hsm_keys".to_string(),
 
-pub fn validate_config(config: &SoftwareHsmConfig) -> beardog_errors::BearDogResult<()> {
+pub fn validate_config(config: &SoftwareHsmConfig) -> Result<(), BearDogError> {
 
     if config.key_store_config.cache_size == 0 {
         return Err(beardog_errors::BearDogError::configuration("Cache size must be greater than 0".to_string(),
@@ -217,12 +217,12 @@ mod tests {
     use *;
 
     #[tokio::test]
-    async fn test_create_default_software_hsm() -> beardog_errors::BearDogResult<()> {
+    async fn test_create_default_software_hsm() -> Result<(), BearDogError> {
         let hsm = create_default_software_hsm().await;
         assert!(hsm.is_ok());
         Ok(())}
 
-    async fn test_key_store_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_key_store_creation() -> Result<(), BearDogError> {
         let config = KeyStoreConfig {
             storage_type: KeyStorageType::InMemory,
             backup_enabled: false,
@@ -232,7 +232,7 @@ mod tests {
         let key_store = SoftwareKeyStore::new(&config).await;
         assert!(key_store.is_ok());
     #[test]
-    fn test_get_capabilities_summary() -> beardog_errors::BearDogResult<()> {
+    fn test_get_capabilities_summary() -> Result<(), BearDogError> {
         let capabilities = get_capabilities_summary();
         assert!(!capabilities.hardware_backed);
         assert!(capabilities.supports_key_generation);
@@ -240,6 +240,6 @@ mod tests {
         assert!(capabilities.memory_protection_available);
     #[allow(clippy::const_is_empty)]}
 
-    fn test_version_info() -> beardog_errors::BearDogResult<()> {
+    fn test_version_info() -> Result<(), BearDogError> {
         assert!(!VERSION.is_empty());
         assert!(!BUILD_INFO.is_empty());

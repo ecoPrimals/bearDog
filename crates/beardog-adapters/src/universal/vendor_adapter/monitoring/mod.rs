@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
@@ -20,7 +20,7 @@ struct VendorMetrics {
     total_response_time_ms: AtomicU64,
 impl VendorMetricsCollector {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let collector_id = Uuid::new_v4();
         tracing::info!("📊 Creating Vendor Metrics Collector: {}", collector_id);
         Ok(Self {
@@ -53,7 +53,7 @@ impl VendorMetricsCollector {
             .total_response_time_ms
             .fetch_add(elapsed_ms, Ordering::Relaxed);
 
-    pub async fn get_summary(&self) -> BearDogResult<MetricsSummary> {
+    pub async fn get_summary(&self) -> Result<MetricsSummary, BearDogError> {
         let total = self.metrics.total_requests.load(Ordering::Relaxed);
         let successful = self.metrics.successful_requests.load(Ordering::Relaxed);
         let failed = self.metrics.failed_requests.load(Ordering::Relaxed);

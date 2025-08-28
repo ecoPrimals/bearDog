@@ -1,11 +1,11 @@
 
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::time::Instant;
 use tracing::info;
 
-pub async fn benchmark_resource_usage(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
+pub async fn benchmark_resource_usage(suite: &mut PerformanceBenchmarkSuite) -> Result<Vec<BenchmarkResult, BearDogError>> {
     let mut results = Vec::new();
 
     let memory_result = benchmark_memory_allocation(suite).await?;
@@ -14,7 +14,7 @@ pub async fn benchmark_resource_usage(suite: &mut PerformanceBenchmarkSuite) -> 
     Ok(results)
 }
 
-async fn benchmark_memory_allocation(suite: &PerformanceBenchmarkSuite) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_memory_allocation(suite: &PerformanceBenchmarkSuite) -> Result<BenchmarkResult, BearDogError> {
     info!("  🧠 Benchmarking memory allocation patterns");
 
     let mut latencies = Vec::new();

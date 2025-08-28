@@ -2,7 +2,7 @@
 
 use crate::tunnel::hsm::types::canonical::KeyMetadata;
 use crate::tunnel::hsm::types::{HsmKey, KeyAttestation, KeyHealthStatus, KeyMaterial, KeyType};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use tracing::{info, warn};
 
 pub struct SafeSecureEnclave {
@@ -11,7 +11,7 @@ pub struct SafeSecureEnclave {
 }
 impl SafeSecureEnclave {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🍎 Initializing safe iOS Secure Enclave");
         let available = Self::safe_check_availability().await;
         Ok(Self { available })
@@ -95,7 +95,7 @@ impl SafeSecureEnclave {
         &self,
         key_id: &str,
         key_type: &KeyType,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         info!("🔐 Safe key generation for iOS Secure Enclave: {}", key_id);
         if !self.available {
             return Err(BearDogError::Unavailable {
@@ -142,7 +142,7 @@ impl SafeSecureEnclave {
             created_at: chrono::Utc::now(),
         })
 
-    pub async fn safe_sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn safe_sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Safe data signing for iOS Secure Enclave: {}", key_id);
                 message: "iOS Secure Enclave not available for signing".to_string(),
 
@@ -154,7 +154,7 @@ impl SafeSecureEnclave {
     pub async fn safe_verify_signature(
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
             "🔍 Safe signature verification for iOS Secure Enclave: {}",
             key_id
 
@@ -163,7 +163,7 @@ impl SafeSecureEnclave {
         info!("✅ Safe signature verification: {}", is_valid);
         Ok(is_valid)
 
-    fn derive_key_from_id(&self, key_id: &str) -> BearDogResult<ed25519_dalek::SigningKey> {
+    fn derive_key_from_id(&self, key_id: &str) -> Result<ed25519_dalek::SigningKey, BearDogError> {
 
         let seed = BearDogCrypto::derive_key_pbkdf2(
             key_id.as_bytes(),
@@ -180,7 +180,7 @@ impl SafeSecureEnclave {
             ));
         Ok(signing_key)
 
-    fn generate_safe_attestation_cert(&self, key_id: &str) -> BearDogResult<Vec<u8>> {
+    fn generate_safe_attestation_cert(&self, key_id: &str) -> Result<Vec<u8>, BearDogError>> {
         let mut cert_data = Vec::new();
 
         cert_data.extend_from_slice(b"iOS_SECURE_ENCLAVE_CERT");
@@ -196,12 +196,12 @@ impl SafeSecureEnclave {
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_safe_secure_enclave_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_safe_secure_enclave_creation() -> Result<(), BearDogError> {
         let enclave = SafeSecureEnclave::new().await;
         assert!(enclave.is_ok());
         Ok(())}
 
-    async fn test_safe_key_generation() -> beardog_errors::BearDogResult<()> {
+    async fn test_safe_key_generation() -> Result<(), BearDogError> {
         let enclave = SafeSecureEnclave::new().await.map_err(|e| {
             tracing::error!("Operation failed: {e:?}");
             beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
@@ -212,6 +212,6 @@ mod tests {
                 .await;
             assert!(key.is_ok());
     #[test]
-    fn test_device_version_parsing() -> beardog_errors::BearDogResult<()> {
+    fn test_device_version_parsing() -> Result<(), BearDogError> {
         assert_eq!(SafeSecureEnclave::parse_iphone_version("iPhone14,2"), 14);
         assert_eq!(SafeSecureEnclave::parse_ipad_version("iPad8,1"), 8);

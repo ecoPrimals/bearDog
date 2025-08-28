@@ -1,7 +1,7 @@
 
 
 use super::{ChaosConfig, TestMetrics, TestResult};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_security::crypto_utils::BearDogCrypto;
 use std::time::{Duration, Instant};
 use tokio::time::timeout;
@@ -21,7 +21,7 @@ impl CryptoChaosController {
         }
     }
 
-    pub async fn test_crypto_chaos(&self) -> BearDogResult<TestResult> {
+    pub async fn test_crypto_chaos(&self) -> Result<TestResult, BearDogError> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
         let mut operations_succeeded = 0u64;
@@ -74,7 +74,7 @@ impl CryptoChaosController {
         })
     }
 
-    async fn perform_chaotic_crypto_operation(&self) -> BearDogResult<()> {
+    async fn perform_chaotic_crypto_operation(&self) -> Result<(), BearDogError> {
 
         let test_data = format_args!("chaos_test_data_{}", fastrand::u64(..).to_string());
         let test_key = format_args!("chaos_key_{}", fastrand::u64(..).to_string());
