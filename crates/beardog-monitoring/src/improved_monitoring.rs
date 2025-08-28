@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{improved_results::*, BearDogError, BearDogResult};
+use beardog_errors::{{improved_results::*, BearDogError}};
 use serde_json;
 use std::collections::HashMap;
 use std::time::Instant;
@@ -9,7 +9,7 @@ use tracing::{debug, info};
 pub async fn monitor_system_health_improved(
     components: Vec<&str>,
     monitoring_config: &MonitoringConfig,
-) -> BearDogResult<ProcessingOutcome<SystemHealthResult>> {
+) -> Result<ProcessingOutcome<SystemHealthResult, BearDogError>> {
     let _start_time = Instant::now();
     info!(
         "🔍 Monitoring {} system components with improved patterns",
@@ -113,7 +113,7 @@ pub async fn monitor_system_health_improved(
 pub async fn collect_metrics_improved(
     metric_sources: Vec<MetricSource>,
     collection_config: &MetricCollectionConfig,
-) -> BearDogResult<ProcessingOutcome<MetricCollectionResult>> {
+) -> Result<ProcessingOutcome<MetricCollectionResult, BearDogError>> {
     let total_sources = metric_sources.len() as u64;
         "📊 Collecting metrics from {} sources with improved patterns",
         total_sources
@@ -151,7 +151,7 @@ pub async fn collect_metrics_improved(
 pub async fn process_alerts_improved(
     alerts: Vec<Alert>,
     alert_config: &AlertProcessingConfig,
-) -> BearDogResult<ProcessingOutcome<AlertProcessingResult>> {
+) -> Result<ProcessingOutcome<AlertProcessingResult, BearDogError>> {
     let total_alerts = alerts.len() as u64;
         "🚨 Processing {} alerts with improved patterns",
         total_alerts
@@ -190,7 +190,7 @@ pub async fn process_alerts_improved(
 
 async fn validate_monitoring_config_improved(
     config: &MonitoringConfig,
-) -> BearDogResult<ValidationOutcome> {
+) -> Result<ValidationOutcome, BearDogError> {
     debug!(
         "🔍 Validating monitoring configuration: {}",
         config.config_id
@@ -273,7 +273,7 @@ async fn validate_monitoring_config_improved(
 async fn monitor_component_health(
     component: &str,
     _config: &MonitoringConfig,
-) -> BearDogResult<SystemHealthResult> {
+) -> Result<SystemHealthResult, BearDogError> {
     debug!("🔍 Monitoring component health: {}", component);
 
     let health_status = match component {
@@ -311,7 +311,7 @@ async fn monitor_component_health(
 async fn collect_source_metrics(
     source: &MetricSource,
     _config: &MetricCollectionConfig,
-) -> BearDogResult<MetricCollectionResult> {
+) -> Result<MetricCollectionResult, BearDogError> {
     debug!("📊 Collecting metrics from source: {}", source.source_id);
 
     let collected_metrics = match source.source_type.as_str() {
@@ -357,7 +357,7 @@ async fn collect_source_metrics(
 async fn process_individual_alert(
     alert: &Alert,
     _config: &AlertProcessingConfig,
-) -> BearDogResult<AlertProcessingResult> {
+) -> Result<AlertProcessingResult, BearDogError> {
         "🚨 Processing alert: {} ({:?})",
         alert.alert_id, alert.severity
 

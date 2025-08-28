@@ -1,7 +1,7 @@
 
 
 use crate::tunnel::{GamingSecurityProfile, SecurityEvolution, SecurityLevel};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
@@ -29,7 +29,7 @@ impl SecureSession {
         peer_node_id: &str,
         security_genetics: SecurityGenetics,
         gaming_profile: GamingSecurityProfile,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         let created_at = SystemTime::now();
         let expires_at = created_at + Duration::from_secs(3600); // 1 hour default
         Ok(Self {
@@ -60,7 +60,7 @@ impl SecurityGenetics {
             threat_genes: ThreatResponseChromosome::default(),
             performance_genes: PerformanceChromosome::default(),
 
-fn validate_config(&self, config: &Config) -> BearDogResult<()> {
+fn validate_config(&self, config: &Config) -> Result<(), BearDogError> {
 
     if config.is_valid() {
         Ok(())
@@ -74,7 +74,7 @@ fn validate_config(&self, config: &Config) -> BearDogResult<()> {
     pub async fn evolve_for_performance(
         &mut self,
         performance_metrics: &crate::tunnel::SecurityMetrics,
-    ) -> BearDogResult<SecurityEvolution> {
+    ) -> Result<SecurityEvolution, BearDogError> {
 
         self.performance_genes
             .optimize_for_latency(performance_metrics.encryption_latency);
@@ -171,7 +171,7 @@ impl SessionManager {
     pub async fn create_session(
         peer_id: &str,
         peer_capabilities: &crate::tunnel::events::PeerCapabilities,
-    ) -> BearDogResult<SecureSession> {
+    ) -> Result<SecureSession, BearDogError> {
         let session_id = format_args!("bstp_session_{}", uuid::Uuid::new_v4().to_string().simple());
         let security_genetics = SecurityGenetics::new_for_peer(
             peer_id,

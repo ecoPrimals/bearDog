@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::api::BearDogApiServer;
@@ -10,12 +11,12 @@ use beardog::licensing::LicenseManager;
 use beardog::monitoring::MonitoringService;
 use beardog::threat::ThreatDetectionConfig; // Explicitly import from threat module
 use beardog::threat::ThreatDetectionEngine;
-use beardog::{BearDogCore, BearDogError, BearDogResult};
+use beardog::{{BearDogCore, BearDogError, BearDogError}};
 use std::collections::HashMap;
 use std::sync::Arc;
 
 #[tokio::test]
-async fn test_api_server_initialization() -> BearDogResult<()> {
+async fn test_api_server_initialization() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -32,7 +33,7 @@ async fn test_api_server_initialization() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_audit_engine_functionality() -> BearDogResult<()> {
+async fn test_audit_engine_functionality() -> Result<(), BearDogError> {
 
     let audit_engine = AuditEngine::new().await;
 
@@ -65,7 +66,7 @@ async fn test_audit_engine_functionality() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_threat_detection_engine() -> BearDogResult<()> {
+async fn test_threat_detection_engine() -> Result<(), BearDogError> {
 
     let config = ThreatDetectionConfig {
         enabled: true,
@@ -105,7 +106,7 @@ async fn test_threat_detection_engine() -> BearDogResult<()> {
 }
 
 #[test]
-fn test_licensing_functionality() -> BearDogResult<()> {
+fn test_licensing_functionality() -> Result<(), BearDogError> {
 
     let license_manager = LicenseManager::new(); // Use new() method
 
@@ -149,7 +150,7 @@ fn test_licensing_functionality() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_monitoring_system() -> BearDogResult<()> {
+async fn test_monitoring_system() -> Result<(), BearDogError> {
 
     let monitoring_service =
         MonitoringService::new(beardog::utils::env_utils::ObservabilityConfig {
@@ -175,7 +176,7 @@ async fn test_monitoring_system() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_adapter_system() -> BearDogResult<()> {
+async fn test_adapter_system() -> Result<(), BearDogError> {
 
     let adapter_config = AdapterConfig {
         rust_ecosystem: RustEcosystemConfig {
@@ -222,7 +223,7 @@ async fn test_adapter_system() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_production_readiness() -> BearDogResult<()> {
+async fn test_production_readiness() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
@@ -240,7 +241,7 @@ async fn test_production_readiness() -> BearDogResult<()> {
 }
 
 #[test]
-fn test_error_propagation() -> BearDogResult<()> {
+fn test_error_propagation() -> Result<(), BearDogError> {
 
     let test_error = BearDogError::configuration("Test configuration error".to_string(),
     );
@@ -254,7 +255,7 @@ fn test_error_propagation() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_concurrent_system_operations() -> BearDogResult<()> {
+async fn test_concurrent_system_operations() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -285,7 +286,7 @@ async fn test_concurrent_system_operations() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_ecosystem_network_effects() -> BearDogResult<()> {
+async fn test_ecosystem_network_effects() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
@@ -323,7 +324,7 @@ async fn test_ecosystem_network_effects() -> BearDogResult<()> {
 
 async fn test_security_integration(
     service_config: &EcosystemServiceConfig,
-) -> BearDogResult<SecurityIntegrationResult> {
+) -> Result<SecurityIntegrationResult, BearDogError> {
     Ok(SecurityIntegrationResult {
         compatible: service_config.trust_level > 0.8,
         security_level: service_config.trust_level,
@@ -356,11 +357,11 @@ struct AdapterManager {
 }
 
 impl AdapterManager {
-    async fn new(config: AdapterConfig) -> BearDogResult<Self> {
+    async fn new(config: AdapterConfig) -> Result<Self, BearDogError> {
         Ok(Self { config })
     }
 
-    async fn list_adapters(&self) -> BearDogResult<Vec<String>> {
+    async fn list_adapters(&self) -> Result<Vec<String, BearDogError>> {
         let mut adapters = Vec::new();
 
         if self
@@ -386,7 +387,7 @@ impl AdapterManager {
         Ok(adapters)
     }
 
-    async fn get_adapter_status(&self, name: &str) -> BearDogResult<String> {
+    async fn get_adapter_status(&self, name: &str) -> Result<String, BearDogError> {
         if self.has_adapter(name).await? {
             Ok("active".to_string())
         } else {
@@ -394,7 +395,7 @@ impl AdapterManager {
         }
     }
 
-    async fn has_adapter(&self, name: &str) -> BearDogResult<bool> {
+    async fn has_adapter(&self, name: &str) -> Result<bool, BearDogError> {
         match name {
             "nestgate" => Ok(self
                 .config

@@ -1,7 +1,7 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
-use beardog_types::canonical::network::{NetworkConfig, ServiceEndpoint};
+use beardog_errors::BearDogError;
+use beardog_types::canonical::{NetworkConfig, ServiceEndpoint};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -49,7 +49,7 @@ impl SongBirdClient {
         Self { config, client }
     }
 
-    pub async fn connect(&self) -> BearDogResult<()> {
+    pub async fn connect(&self) -> Result<(), BearDogError> {
         let url = format!(
             "{}://{}:{}/health",
             self.config.service_endpoint.scheme,
@@ -79,7 +79,7 @@ impl SongBirdClient {
         &self,
         service_name: &str,
         metadata: HashMap<&str, &str>,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
         if !self.config.enable_discovery {
             return Err(BearDogError::system(
                 "Service discovery is disabled".to_string(),
@@ -128,7 +128,7 @@ impl SongBirdClient {
         }
     }
 
-    pub async fn discover_service(&self, service_name: &str) -> BearDogResult<Vec<ServiceEndpoint>> {
+    pub async fn discover_service(&self, service_name: &str) -> Result<Vec<ServiceEndpoint>, BearDogError> {
         let url = format!(
             "{}://{}:{}/discover/{}",
             self.config.service_endpoint.scheme,
@@ -171,13 +171,13 @@ struct ServiceRegistration {
 #[allow(async_fn_in_trait)]
 pub trait SongBirdService: Send + Sync {
 
-    async fn initialize(&mut self) -> BearDogResult<()>;
+    async fn initialize(&mut self) -> Result<(), BearDogError>;
 
-    async fn handle_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse>;
+    async fn handle_request(&self, request: ServiceRequest) -> Result<ServiceResponse, BearDogError>;
 
-    async fn health_check(&self) -> BearDogResult<ServiceHealth>;
+    async fn health_check(&self) -> Result<ServiceHealth, BearDogError>;
 
-    async fn shutdown(&mut self) -> BearDogResult<()>;
+    async fn shutdown(&mut self) -> Result<(), BearDogError>;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

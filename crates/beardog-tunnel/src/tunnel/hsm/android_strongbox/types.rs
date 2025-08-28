@@ -3,7 +3,7 @@
 use crate::tunnel::hsm::types::*;
 use beardog_traits::canonical::HsmProvider;
 use beardog_core::{HsmHealthStatus, HsmKey};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -59,7 +59,7 @@ pub struct AndroidStrongBoxHsm {
 
 impl AndroidStrongBoxHsm {
 
-    pub async fn new(config: AndroidHsmConfig) -> BearDogResult<Self> {
+    pub async fn new(config: AndroidHsmConfig) -> Result<Self, BearDogError> {
 
         let keystore = Arc::new(AndroidKeystore::new(config.clone())?);
 
@@ -81,7 +81,7 @@ impl AndroidStrongBoxHsm {
             health_monitor,
         })
 
-    pub async fn initialize(&mut self) -> BearDogResult<()> {
+    pub async fn initialize(&mut self) -> Result<(), BearDogError> {
 
         self.keystore.test_keystore_access().await?;
         self.attestation_service.initialize().await?;
@@ -90,7 +90,7 @@ impl AndroidStrongBoxHsm {
         Ok(())
 impl HsmProvider for AndroidStrongBoxHsm {}
 
-    async fn generate_key(&mut self, key_type: &str, key_id: &str) -> BearDogResult<HsmKey> {
+    async fn generate_key(&mut self, key_type: &str, key_id: &str) -> Result<HsmKey, BearDogError> {
 
         let key_params = AndroidKeyParams::new().set_algorithm(match key_type {
             "EC" => "EcP256",
@@ -108,24 +108,24 @@ impl HsmProvider for AndroidStrongBoxHsm {}
             key_type: key_type.to_string(),
             created_at: chrono::Utc::now(),
             metadata: HashMap::with_capacity(16),
-    async fn sign(&mut self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign(&mut self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         self.keystore.sign(key_id, data).await}
 
-    async fn verify(&mut self, key_id: &str, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
+    async fn verify(&mut self, key_id: &str, data: &[u8], signature: &[u8]) -> Result<bool, BearDogError> {
         self.keystore.verify(key_id, data, signature).await
-    async fn encrypt(&mut self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt(&mut self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         self.keystore.encrypt(key_id, data).await}
 
-    async fn decrypt(&mut self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn decrypt(&mut self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         self.keystore.decrypt(key_id, data).await
-    async fn delete_key(&mut self, key_id: &str) -> BearDogResult<()> {
+    async fn delete_key(&mut self, key_id: &str) -> Result<(), BearDogError> {
         self.keystore.delete_key(key_id).await}
 
-    async fn list_keys(&mut self) -> BearDogResult<Vec<String>> {
+    async fn list_keys(&mut self) -> Result<Vec<String>, BearDogError>> {
 
         let cache = self.key_cache.read().await;
         Ok(cache.keys().cloned().collect())
-    async fn get_health_status(&mut self) -> BearDogResult<HsmHealthStatus> {
+    async fn get_health_status(&mut self) -> Result<HsmHealthStatus, BearDogError> {
         self.health_monitor.get_health_status().await
 
 pub struct AndroidKeystore {
@@ -170,7 +170,7 @@ pub struct AndroidDeviceInfo {
 
 impl AndroidDeviceInfo {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
             manufacturer: "Google".to_string(),}
 
             model: "Pixel 8".to_string(),
@@ -180,7 +180,7 @@ impl AndroidDeviceInfo {
             security_patch_level: "2024-01-01".to_string(),
             verified_boot_state: VerifiedBootState::Green,
 
-    pub async fn detect() -> BearDogResult<Self> {
+    pub async fn detect() -> Result<Self, BearDogError> {
 
         Self::new().await
 
@@ -217,11 +217,11 @@ pub struct AndroidHealthMonitor {
 
 pub struct ChallengeGenerator {
 
-    pub entropy_source: Arc<dyn EntropySource>,
+    pub entropy_source: impl EntropySource,
 
 pub trait EntropySource: Send + Sync {
 
-    fn generate_entropy(&self, length: usize) -> BearDogResult<Vec<u8>>;
+    fn generate_entropy(&self, length: usize) -> Result<Vec<u8>, BearDogError>>;
 
 pub struct AndroidEntropySource;
 

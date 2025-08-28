@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::network::HttpStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

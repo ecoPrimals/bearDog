@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::auth::types::SpawnStatus;
@@ -49,7 +50,7 @@ fn test_event_types() {
         NetworkSecurityEvent::PeerDiscovered { peer_id, .. } => {
             assert_eq!(peer_id, "test-peer");
         }
-        _ => panic!("Event type mismatch"),
+        other => assert!(false, "Expected Authentication event, got: {:?}", other),
     }
 }
 
@@ -65,7 +66,7 @@ fn test_spawn_status() {
         SpawnStatus::Failed(reason) => {
             assert_eq!(reason, "Access denied");
         }
-        _ => panic!("Expected Failed variant"),
+        other => assert!(false, "Expected Failed variant, got: {:?}", other),
     }
 }
 
@@ -143,7 +144,7 @@ fn test_forest_metaphor_consistency() {
         NetworkSecurityEvent::SuspiciousActivity { severity, .. } => {
             assert_eq!(severity, NetworkThreatLevel::High);
         }
-        _ => panic!("Protection event failed"),
+        other => assert!(false, "Expected Protection event, got: {:?}", other),
     }
 }
 

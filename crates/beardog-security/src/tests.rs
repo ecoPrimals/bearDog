@@ -5,7 +5,7 @@
 mod tests {
     use crate::types::*;
     use std::collections::HashMap;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
     use tokio;
     #[tokio::test]
     async fn test_security_provider_creation() {

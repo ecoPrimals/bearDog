@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -145,7 +143,7 @@ impl ThreatDetectionStats {
         if self.detections == 0 {
             self.avg_confidence = confidence;
         } else {
-            self.avg_confidence = (self.avg_confidence * self.detections as f64 + confidence) 
+            self.avg_confidence = (self.avg_confidence * self.detections as f64 + confidence)
                 / (self.detections + 1) as f64;
         }
     }
@@ -173,14 +171,11 @@ impl ThreatTrend {
         if self.threat_count == 0 {
             return 0.0;
         }
-        let count = self
-            .severity_distribution
-            .get(severity)
-            .unwrap_or(&0);
+        let count = self.severity_distribution.get(severity).unwrap_or(&0);
         (*count as f64 / self.threat_count as f64) * 100.0
     }
 
-    pub fn is_recent(&self, minutes: i64) -> bool {
+    pub fn is_recent(&self, _minutes: i64) -> bool {
         // Since we don't have timestamp, we'll use a simple heuristic
         // In a real implementation, you'd want to add a timestamp field
         true // Placeholder - always consider recent for now

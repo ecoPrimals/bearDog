@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 mod chaos;
@@ -5,7 +6,7 @@ mod chaos;
 pub use chaos::*;
 
 #[tokio::test]
-async fn test_chaos_framework_initialization() -> beardog::BearDogResult<()> {
+async fn test_chaos_framework_initialization() -> beardog::Result<(), BearDogError> {
     use beardog::{config::BearDogConfig, core::BearDogCore};
     use std::sync::Arc;
     
@@ -23,7 +24,7 @@ async fn test_chaos_framework_initialization() -> beardog::BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_network_fault_injection() -> beardog::BearDogResult<()> {
+async fn test_network_fault_injection() -> beardog::Result<(), BearDogError> {
     let network_injector = NetworkFaultInjector::new();
     
     let fault = FaultType::NetworkPartition {
@@ -41,7 +42,7 @@ async fn test_network_fault_injection() -> beardog::BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_chaos_scenario_execution() -> beardog::BearDogResult<()> {
+async fn test_chaos_scenario_execution() -> beardog::Result<(), BearDogError> {
     use beardog::{config::BearDogConfig, core::BearDogCore};
     use std::sync::Arc;
     
@@ -77,7 +78,7 @@ async fn test_chaos_scenario_execution() -> beardog::BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_comprehensive_chaos_testing() -> beardog::BearDogResult<()> {
+async fn test_comprehensive_chaos_testing() -> beardog::Result<(), BearDogError> {
     use beardog::{config::BearDogConfig, core::BearDogCore};
     use std::sync::Arc;
     

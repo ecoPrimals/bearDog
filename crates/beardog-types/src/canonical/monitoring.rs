@@ -1,5 +1,3 @@
-
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -279,6 +277,7 @@ impl Default for TracingConfig {
     }
 }
 
+/// Prometheus configuration for metrics collection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrometheusConfig {
     pub enabled: bool,
@@ -287,8 +286,10 @@ pub struct PrometheusConfig {
     pub query_timeout: Duration,
     pub retention_period: Duration,
     pub metrics_path: String,
-    pub labels: HashMap<String, String>,
-    pub authentication: Option<AuthenticationConfig>,
+    pub path: String,
+    pub port: u16,
+    pub labels: std::collections::HashMap<String, String>,
+    pub authentication: AuthenticationConfig,
 }
 
 impl Default for PrometheusConfig {
@@ -300,8 +301,10 @@ impl Default for PrometheusConfig {
             query_timeout: Duration::from_secs(30),
             retention_period: Duration::from_secs(86400 * 15), // 15 days
             metrics_path: "/metrics".to_string(),
-            labels: HashMap::with_capacity(8),
-            authentication: None,
+            path: "/metrics".to_string(),
+            port: 9090,
+            labels: std::collections::HashMap::new(),
+            authentication: AuthenticationConfig::default(),
         }
     }
 }
@@ -310,6 +313,15 @@ impl Default for PrometheusConfig {
 pub struct AuthenticationConfig {
     pub auth_type: String,
     pub credentials: HashMap<String, String>,
+}
+
+impl Default for AuthenticationConfig {
+    fn default() -> Self {
+        Self {
+            auth_type: "none".to_string(),
+            credentials: HashMap::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -568,13 +580,3 @@ pub trait ServiceHealthMonitor: Send + Sync {
     fn check_health(&self) -> impl std::future::Future<Output = HealthCheckResult> + Send;
     fn get_metrics(&self) -> impl std::future::Future<Output = RequestMetrics> + Send;
 }
-
-// Legacy compatibility types - to be removed after migration
-#[deprecated(note = "Use MonitoringConfig instead")]
-pub type LegacyMonitoringConfig = MonitoringConfig;
-
-#[deprecated(note = "Use MetricsConfig instead")]
-pub type LegacyMetricsConfig = MetricsConfig;
-
-#[deprecated(note = "Use AlertConfig instead")]
-pub type LegacyAlertConfig = AlertConfig;

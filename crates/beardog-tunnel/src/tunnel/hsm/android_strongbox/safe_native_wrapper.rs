@@ -2,7 +2,7 @@
 
 use crate::tunnel::hsm::types::KeyType; // Explicit import for KeyType
 use crate::tunnel::hsm::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
 
@@ -19,7 +19,7 @@ struct OperationMetrics {
     last_operation_time: std::time::Instant,
 impl SafeAndroidKeystore {
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         info!("🛡️ Initializing Safe Android Keystore wrapper");
         Ok(Self {
             operation_metrics: HashMap::with_capacity(16),
@@ -32,7 +32,7 @@ impl SafeAndroidKeystore {
         key_id: &str,
         key_type: &KeyType,
         strongbox_required: bool,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         info!(
             "🔐 Safe key generation: {} (strongbox: {})",
             key_id, strongbox_required
@@ -53,7 +53,7 @@ impl SafeAndroidKeystore {
         #[cfg(not(target_os = "android"))]
             self.mock_safe_generate_key(key_id, key_type, strongbox_required)
 
-    pub async fn safe_sign_data(&mut self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn safe_sign_data(&mut self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("🔏 Safe signing operation: {}", key_id);
         self.validate_signing_parameters(key_id, data)?;
             self.android_safe_sign(key_id, data).await
@@ -63,13 +63,13 @@ impl SafeAndroidKeystore {
         &self,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         info!("🔍 Safe signature verification: {}", key_id);
         self.validate_verification_parameters(key_id, data, signature)?;
             self.android_safe_verify(key_id, data, signature).await
             self.mock_safe_verify(key_id, data, signature).await
 
-    fn validate_key_parameters(&self, key_id: &str, key_type: &KeyType) -> BearDogResult<()> {
+    fn validate_key_parameters(&self, key_id: &str, key_type: &KeyType) -> Result<(), BearDogError> {
         if key_id.is_empty() {
             return Err(BearDogError::ValidationError(
                 "Key ID cannot be empty".to_string(),
@@ -83,7 +83,7 @@ impl SafeAndroidKeystore {
                 "Unsupported key type: {:?}",
                 key_type
             ))),
-    fn validate_signing_parameters(&self, key_id: &str, data: &[u8]) -> BearDogResult<()> {
+    fn validate_signing_parameters(&self, key_id: &str, data: &[u8]) -> Result<(), BearDogError> {
                 "Key ID cannot be empty for signing".to_string(),
         if data.is_empty() {
                 "Data cannot be empty for signing".to_string(),
@@ -92,13 +92,13 @@ impl SafeAndroidKeystore {
         Ok(())}
 
     fn validate_verification_parameters(
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         if signature.is_empty() {
                 "Signature cannot be empty".to_string(),
         if signature.len() > 1024 {
                 "Signature too large (max 1KB)".to_string(),
 
-    async fn verify_strongbox_capability(&self) -> BearDogResult<bool> {
+    async fn verify_strongbox_capability(&self) -> Result<bool, BearDogError> {
 
             info!("🔍 Safe StrongBox capability verification");
             Ok(false) // Conservative - only return true if definitely verified
@@ -157,14 +157,14 @@ impl SafeAndroidKeystore {
             hsm_tier: "development".to_string(), // Use String instead of enum
             health_status: KeyHealthStatus::Healthy,
 
-    async fn android_safe_sign(&mut self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn android_safe_sign(&mut self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("🔏 Android safe signing for: {}", key_id);
 
         let signature = vec![0u8; 64]; // Safe signature placeholder
         self.record_operation_success("sign_data");
         Ok(signature)
 
-    async fn mock_safe_sign(&mut self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn mock_safe_sign(&mut self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("🔏 Mock safe signing for: {}", key_id);
 
         use sha2::{Digest, Sha256};

@@ -3,14 +3,14 @@
 use beardog::genetics::entropy_hierarchy::*;
 use beardog::genetics::human_entropy::*;
 use beardog::tunnel::hsm::*;
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::{Duration, Utc};
 use std::collections::HashMap;
 use std::sync::Arc;
 use uuid::Uuid;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🎯 BearDog Entropy Hierarchy Demo");
     println!("🧬 Revolutionary Human-First Cryptographic Seeds");
     println!("=====================================\n");
@@ -322,7 +322,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn create_demo_hsm_manager() -> BearDogResult<HsmManager> {
+async fn create_demo_hsm_manager() -> Result<HsmManager, BearDogError> {
     let config = HsmManagerConfig {
         hsm_configs: vec![HsmConfig {
             hsm_type: HsmType::SoftwareRust,
@@ -349,7 +349,7 @@ async fn create_demo_hsm_manager() -> BearDogResult<HsmManager> {
     HsmManager::new(config).await
 }
 
-async fn create_demo_entropy_collector() -> BearDogResult<MultiModalHumanEntropyCollector> {
+async fn create_demo_entropy_collector() -> Result<MultiModalHumanEntropyCollector, BearDogError> {
     let config = HumanEntropyConfig {
         collection_duration: std::time::Duration::from_secs(30),
         max_collection_attempts: 3,
@@ -382,7 +382,7 @@ async fn create_demo_entropy_collector() -> BearDogResult<MultiModalHumanEntropy
     Ok(MultiModalHumanEntropyCollector::new(config))
 }
 
-fn create_demo_human_identity(username: &str, display_name: &str) -> BearDogResult<HumanIdentity> {
+fn create_demo_human_identity(username: &str, display_name: &str) -> Result<HumanIdentity, BearDogError> {
     Ok(HumanIdentity {
         identity_id: format_args!("{}_{}", username, Uuid::new_v4().to_string()),
         public_key: vec![0u8; 32],              // Demo public key
@@ -391,7 +391,7 @@ fn create_demo_human_identity(username: &str, display_name: &str) -> BearDogResu
     })
 }
 
-fn create_demo_human_entropy() -> BearDogResult<EntropyClass> {
+fn create_demo_human_entropy() -> Result<EntropyClass, BearDogError> {
     Ok(EntropyClass::HumanLivedExperience {
         source_type: HumanEntropySource::MultiModalHuman {
             sources: vec![

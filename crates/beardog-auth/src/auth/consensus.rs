@@ -3,7 +3,7 @@
 use chrono::{Duration, Utc};
 use std::collections::HashMap;
 use uuid::Uuid;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_security::{AuthorizationResult, RiskLevel};
 use super::types::*;
 impl CrossNodeAuthEngine {
@@ -13,7 +13,7 @@ impl CrossNodeAuthEngine {
         subject_id: &str,
         resource_id: &str,
         requested_permission: &str,
-    ) -> BearDogResult<AuthorizationResult> {
+    ) -> Result<AuthorizationResult, BearDogError> {
         let auth_id = Uuid::new_v4().to_string();
 
         let trusted_nodes = self.get_trusted_nodes().await?;
@@ -59,7 +59,7 @@ impl CrossNodeAuthEngine {
     pub async fn perform_consensus(
         auth_id: &str,
         consensus_data: &ConsensusData,
-    ) -> BearDogResult<ConsensusResult> {
+    ) -> Result<ConsensusResult, BearDogError> {
 
         let mut votes = HashMap::with_capacity(16);
         let threshold = self.config.consensus_threshold;
@@ -88,7 +88,7 @@ impl CrossNodeAuthEngine {
             final_score,
             participating_nodes,
 
-    async fn get_trusted_nodes(&self) -> BearDogResult<Vec<String>> {
+    async fn get_trusted_nodes(&self) -> Result<Vec<String>, BearDogError>> {
 
         let trusted_nodes: Vec<String> = self.known_nodes
             .iter()
@@ -100,7 +100,7 @@ impl CrossNodeAuthEngine {
             .collect();
         Ok(trusted_nodes)
 
-    fn parse_permissions(&self, permission_str: &str) -> BearDogResult<Vec<ResourcePermission>> {
+    fn parse_permissions(&self, permission_str: &str) -> Result<Vec<ResourcePermission>, BearDogError>> {
         match permission_str.to_lowercase().as_str() {
             "read" => Ok(vec![ResourcePermission::Read]),
             "write" => Ok(vec![ResourcePermission::Write]),

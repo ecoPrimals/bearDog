@@ -4,7 +4,7 @@ use super::*;
 use crate::tunnel::hsm::types::{
     capability::HsmCapabilities, status::HsmHealthStatus, tier::HsmTier,
 };
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::SecurityLevel as TamperResistanceLevel;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -18,7 +18,7 @@ pub struct TierManager {
 }
 impl TierManager {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         let mut operation_requirements = HashMap::with_capacity(16);
 
         operation_requirements.insert(
@@ -71,7 +71,7 @@ impl TierManager {}
         })
     }
 
-    pub async fn assign_tier(&self, capabilities: &HsmCapabilities) -> BearDogResult<HsmTier> {
+    pub async fn assign_tier(&self, capabilities: &HsmCapabilities) -> Result<HsmTier, BearDogError> {
         debug!("📊 Assigning tier based on HSM capabilities");
         let mut tier_score = 0.0;
 
@@ -109,7 +109,7 @@ impl TierManager {}
         &self,
         hsms: &'a HashMap<String, DiscoveredHsm>,
         operation_type: &str,
-    ) -> BearDogResult<Option<&'a DiscoveredHsm>> {
+    ) -> Result<Option<&'a DiscoveredHsm>, BearDogError>> {
         debug!("🎯 Selecting best HSM for operation: {}", operation_type);
         let requirements = match self.operation_requirements.get(operation_type) {
             Some(req) => req,
@@ -140,7 +140,7 @@ impl TierManager {}
 
     pub async fn get_ranked_hsms<'a>(
         operation_type: Option<&str>,
-    ) -> BearDogResult<Vec<(&'a DiscoveredHsm, f64)>> {
+    ) -> Result<Vec<(&'a DiscoveredHsm, f64)>> {
         debug!("📈 Ranking HSMs by tier and suitability");
         let mut ranked = Vec::new();
             let mut score = self
@@ -175,7 +175,7 @@ impl TierManager {}
 
     async fn evaluate_hardware_security(
         capabilities: &HsmCapabilities,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64, BearDogError> {
         let mut score = 0.0;
 
         match capabilities.security.fips_140_level {
@@ -240,14 +240,14 @@ impl TierManager {}
         if capabilities.compliance.pci_dss_compliant {
         if capabilities.compliance.hipaa_compliant {
         if capabilities.compliance.gdpr_compliant {
-    async fn score_to_tier(&self, score: f64) -> BearDogResult<HsmTier> {
+    async fn score_to_tier(&self, score: f64) -> Result<HsmTier, BearDogError> {
         match score {
             s if s >= 8.0 => Ok(HsmTier::HighSecurity),
             s if s >= 5.0 => Ok(HsmTier::CertifiedHardware),
             s if s >= 2.0 => Ok(HsmTier::BasicHardware),
             _ => Ok(HsmTier::Software),}
 
-    async fn apply_human_entropy_elevation(&self, base_tier: HsmTier) -> BearDogResult<HsmTier> {
+    async fn apply_human_entropy_elevation(&self, base_tier: HsmTier) -> Result<HsmTier, BearDogError> {
 
         match base_tier {
             HsmTier::Software => Ok(HsmTier::BasicHardware),
@@ -263,7 +263,7 @@ impl TierManager {}
     async fn meets_operation_requirements(
         hsm: &DiscoveredHsm,
         requirements: &OperationRequirements,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
         if hsm.assigned_tier < requirements.min_tier {
             return Ok(false);

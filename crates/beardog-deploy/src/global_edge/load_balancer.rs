@@ -1,7 +1,7 @@
 
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -16,7 +16,7 @@ pub struct IntelligentLoadBalancer {
 
 impl IntelligentLoadBalancer {
 
-    pub fn new(config: LoadBalancingConfig) -> BearDogResult<Self> {
+    pub fn new(config: LoadBalancingConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             routing_algorithm: config.algorithm,
             traffic_patterns: Arc::new(RwLock::new(TrafficPatterns::new())),
@@ -25,7 +25,7 @@ impl IntelligentLoadBalancer {
         })
     }
 
-    pub async fn initialize(&self) -> BearDogResult<()> {
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
         info!("Initializing intelligent load balancer with algorithm: {:?}", self.routing_algorithm);
 
         let mut patterns = self.traffic_patterns.write().await;
@@ -45,7 +45,7 @@ impl IntelligentLoadBalancer {
         &self,
         client_location: &GeographicalLocation,
         regions: &Arc<RwLock<HashMap<&str, EdgeRegion>>>,
-    ) -> BearDogResult<EdgeNode> {
+    ) -> Result<EdgeNode, BearDogError> {
         debug!("Finding optimal node for client at: {}, {}", 
                client_location.city, client_location.country);
         
@@ -74,7 +74,7 @@ impl IntelligentLoadBalancer {
         &self,
         client_location: &GeographicalLocation,
         regions: &HashMap<&str, EdgeRegion>,
-    ) -> BearDogResult<EdgeNode> {
+    ) -> Result<EdgeNode, BearDogError> {
         let mut best_node: Option<EdgeNode> = None;
         let mut min_distance = f64::MAX;
         
@@ -99,7 +99,7 @@ impl IntelligentLoadBalancer {
     async fn find_least_loaded_node(
         &self,
         regions: &HashMap<&str, EdgeRegion>,
-    ) -> BearDogResult<EdgeNode> {
+    ) -> Result<EdgeNode, BearDogError> {
         let mut best_node: Option<EdgeNode> = None;
         let mut min_load = f64::MAX;
         
@@ -123,7 +123,7 @@ impl IntelligentLoadBalancer {
         &self,
         client_location: &GeographicalLocation,
         regions: &HashMap<&str, EdgeRegion>,
-    ) -> BearDogResult<EdgeNode> {
+    ) -> Result<EdgeNode, BearDogError> {
         let latency_matrix = self.latency_matrix.read().await;
         let mut best_node: Option<EdgeNode> = None;
         let mut min_latency = f64::MAX;
@@ -150,7 +150,7 @@ impl IntelligentLoadBalancer {
         &self,
         client_location: &GeographicalLocation,
         regions: &HashMap<&str, EdgeRegion>,
-    ) -> BearDogResult<EdgeNode> {
+    ) -> Result<EdgeNode, BearDogError> {
         let latency_matrix = self.latency_matrix.read().await;
         let mut best_node: Option<EdgeNode> = None;
         let mut best_score = f64::MAX;
@@ -192,18 +192,18 @@ impl IntelligentLoadBalancer {
         6371.0 * c // Earth's radius in kilometers
     }
 
-    pub async fn update_traffic_patterns(&self, patterns: TrafficPatterns) -> BearDogResult<()> {
+    pub async fn update_traffic_patterns(&self, patterns: TrafficPatterns) -> Result<(), BearDogError> {
         let mut traffic_patterns = self.traffic_patterns.write().await;
         *traffic_patterns = patterns;
         Ok(())
     }
 
-    pub async fn get_load_prediction(&self) -> BearDogResult<LoadPredictionModel> {
+    pub async fn get_load_prediction(&self) -> Result<LoadPredictionModel, BearDogError> {
         let model = self.prediction_model.read().await;
         Ok(model.clone())
     }
 
-    pub async fn shutdown(&self) -> BearDogResult<()> {
+    pub async fn shutdown(&self) -> Result<(), BearDogError> {
         info!("Shutting down intelligent load balancer");
         Ok(())
     }

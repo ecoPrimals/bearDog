@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use std::sync::Arc;
 use base64::{engine::general_purpose, Engine as _};
@@ -13,33 +13,8 @@ use beardog_security::{
     SubjectType,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SongBirdConfig {
-
-    pub endpoint: String,
-
-    pub api_key: String,
-
-    pub timeout_seconds: u64,
-
-    pub max_retries: u32,
-
-    pub enable_security_provider: bool,
-
-    pub security_provider: SecurityProviderConfig,
-}
-impl Default for SongBirdConfig {}
-
-    fn default() -> Self {
-        Self {
-            endpoint: "https://songbird.orchestrator.internal".to_string(),
-            api_key: std::env::var("SONGBIRD_API_KEY").unwrap_or_default(),
-            timeout_seconds: 30,
-            max_retries: 3,
-            enable_security_provider: true,
-            security_provider: SecurityProviderConfig::default(),
-        }
-    }
+// DEPRECATED: Use canonical configuration instead
+pub use beardog_types::canonical::configuration::adapters::SongBirdConfig;
 
 pub struct SongBirdAdapter<T> {
     config: SongBirdConfig,
@@ -171,7 +146,7 @@ pub enum RecordingPolicy {
 
 impl<T> SongBirdAdapter<T> {
 
-    pub async fn new(core: Arc<T>, config: SongBirdConfig) -> BearDogResult<Self> {
+    pub async fn new(core: Arc<T>, config: SongBirdConfig) -> Result<Self, BearDogError> {
         info!("🎵 Initializing SongBird adapter with BearDog security integration");
 
         let security_provider =
@@ -186,7 +161,7 @@ impl<T> SongBirdAdapter<T> {
         info!("✅ SongBird adapter initialized successfully with security provider");
         Ok(adapter)
 
-    pub async fn establish_connection(&self, user_id: &str) -> BearDogResult<String> {
+    pub async fn establish_connection(&self, user_id: &str) -> Result<String, BearDogError> {
         info!("🔗 Establishing SongBird connection for user: {}", user_id);
 
         let subject = Subject {
@@ -271,7 +246,7 @@ impl<T> SongBirdAdapter<T> {
         &self,
         sender_id: &str,
         message: SecureMessage,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
         info!("📨 Sending secure message from: {}", sender_id);
             id: sender_id.to_string(),
             roles: vec!["user".to_string()],
@@ -368,7 +343,7 @@ impl<T> SongBirdAdapter<T> {
         password: &str,
         _ip_address: Option<&str>,
         _user_agent: Option<&str>,
-    ) -> BearDogResult<AuthenticationResult> {
+    ) -> Result<AuthenticationResult, BearDogError> {
         info!("🔐 Authenticating user for SongBird: {}", username);
 
             .authenticate(username, password)
@@ -378,7 +353,7 @@ impl<T> SongBirdAdapter<T> {
             warn!("🚫 SongBird authentication failed for: {}", username);
         Ok(auth_result)
 
-    pub async fn validate_session(&self, session_token: &str) -> BearDogResult<bool> {
+    pub async fn validate_session(&self, session_token: &str) -> Result<bool, BearDogError> {
         debug!("🔍 Validating SongBird session");
 
         let is_valid = self
@@ -389,7 +364,7 @@ impl<T> SongBirdAdapter<T> {
     pub async fn enforce_communication_policy(
         policy: &CommunicationPolicy,
         session_id: &str,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         info!("📋 Enforcing communication policy: {}", policy.name);
         let sessions = self.communication_sessions.read().await;
         if let Some(session) = sessions.get(session_id) {
@@ -413,7 +388,7 @@ impl<T> SongBirdAdapter<T> {
             })
 
     pub async fn get_security_health(
-    ) -> BearDogResult<beardog_security::SecurityProviderHealth> {
+    ) -> Result<beardog_security::SecurityProviderHealth, BearDogError> {
         self.security_provider.health().await
 
     async fn encrypt_message_content(

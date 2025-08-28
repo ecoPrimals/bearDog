@@ -3,14 +3,14 @@
 use beardog_core::universal_service_mesh_client::{
     UniversalMeshConfig, UniversalServiceMeshClient, UniversalServiceRequest,
 };
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::time::Duration;
 use tracing::{info, warn};
 use uuid::Uuid;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     tracing_subscriber::init();
 
     info!("🔄 Universal Service Mesh Migration Example");
@@ -25,7 +25,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_old_songbird_pattern() -> BearDogResult<()> {
+async fn demonstrate_old_songbird_pattern() -> Result<(), BearDogError> {
     warn!("❌ OLD PATTERN: Direct SongBird coupling (DEPRECATED)");
 
     println!("  🔗 Hardcoded SongBird endpoint: http://songbird:8080");
@@ -43,7 +43,7 @@ async fn demonstrate_old_songbird_pattern() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_universal_pattern() -> BearDogResult<()> {
+async fn demonstrate_universal_pattern() -> Result<(), BearDogError> {
     info!("✅ NEW PATTERN: Universal service mesh client");
 
     let config = UniversalMeshConfig {
@@ -143,7 +143,7 @@ async fn demonstrate_universal_pattern() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_migration_benefits() -> BearDogResult<()> {
+async fn demonstrate_migration_benefits() -> Result<(), BearDogError> {
     info!("🎯 MIGRATION BENEFITS:");
 
     info!("✅ ARCHITECTURAL IMPROVEMENTS:");

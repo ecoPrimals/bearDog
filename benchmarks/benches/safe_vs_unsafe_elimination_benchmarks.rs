@@ -1,16 +1,15 @@
-
-
+use beardog_errors::BearDogError;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use std::time::Duration;
 use tokio::runtime::Runtime;
 
 #[derive(Clone)]
 struct MockKeyData {
-        data: Vec<u8>,
+    data: Vec<u8>,
 }
 
 impl MockKeyData {
-        fn new(size: usize) -> Self {
+    fn new(size: usize) -> Self {
         Self {
             data: vec![0u8; size],
         }
@@ -19,9 +18,11 @@ impl MockKeyData {
 
 fn benchmark_key_generation(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Failed to create runtime", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failed to create runtime", e).to_string())
-})?;
+        tracing::error!("Operation failed ({}): {:?}", "Failed to create runtime", e);
+        beardog_errors::BearDogError::internal(
+            format_args!("Operation failed ({}): {:?}", "Failed to create runtime", e).to_string(),
+        )
+    })?;
     let mut group = c.benchmark_group("key_generation");
 
     for key_size in [256, 2048, 4096].iter() {
@@ -31,26 +32,14 @@ fn benchmark_key_generation(c: &mut Criterion) {
             BenchmarkId::new("unsafe_ffi_pattern", key_size),
             key_size,
             |b, &size| {
-                b.iter(|| {
-                    rt.block_on(async {
-
-                        unsafe_key_generation_simulation(size).await
-                    })
-                })
+                b.iter(|| rt.block_on(async { unsafe_key_generation_simulation(size).await }))
             },
         );
 
         group.bench_with_input(
             BenchmarkId::new("safe_zero_cost_pattern", key_size),
             key_size,
-            |b, &size| {
-                b.iter(|| {
-                    rt.block_on(async {
-
-                        safe_key_generation_optimized(size).await
-                    })
-                })
-            },
+            |b, &size| b.iter(|| rt.block_on(async { safe_key_generation_optimized(size).await })),
         );
     }
 
@@ -81,9 +70,11 @@ fn benchmark_memory_management(c: &mut Criterion) {
 
 fn benchmark_ffi_patterns(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Failed to create runtime", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failed to create runtime", e).to_string())
-})?;
+        tracing::error!("Operation failed ({}): {:?}", "Failed to create runtime", e);
+        beardog_errors::BearDogError::internal(
+            format_args!("Operation failed ({}): {:?}", "Failed to create runtime", e).to_string(),
+        )
+    })?;
     let mut group = c.benchmark_group("ffi_patterns");
 
     for data_size in [64, 256, 1024].iter() {
@@ -107,9 +98,11 @@ fn benchmark_ffi_patterns(c: &mut Criterion) {
 
 fn benchmark_error_handling(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Failed to create runtime", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failed to create runtime", e).to_string())
-})?;
+        tracing::error!("Operation failed ({}): {:?}", "Failed to create runtime", e);
+        beardog_errors::BearDogError::internal(
+            format_args!("Operation failed ({}): {:?}", "Failed to create runtime", e).to_string(),
+        )
+    })?;
     let mut group = c.benchmark_group("error_handling");
 
     for operation_count in [100, 1000, 10000].iter() {
@@ -136,12 +129,10 @@ fn benchmark_error_handling(c: &mut Criterion) {
 }
 
 async fn unsafe_key_generation_simulation(key_size: usize) -> MockKeyData {
-
     tokio::time::sleep(Duration::from_nanos(100)).await; // FFI boundary overhead
 
     let mut data = Vec::with_capacity(key_size);
     for i in 0..key_size {
-
         if i < key_size {
             data.push((i % 256) as u8);
         }
@@ -153,14 +144,12 @@ async fn unsafe_key_generation_simulation(key_size: usize) -> MockKeyData {
 }
 
 async fn safe_key_generation_optimized(key_size: usize) -> MockKeyData {
-
     let data = (0..key_size).map(|i| (i % 256) as u8).collect();
 
     MockKeyData { data }
 }
 
 fn unsafe_buffer_management_simulation(buffer_size: usize) -> Vec<u8> {
-
     let mut buffer = Vec::with_capacity(buffer_size);
 
     for i in 0..buffer_size {
@@ -173,12 +162,10 @@ fn unsafe_buffer_management_simulation(buffer_size: usize) -> Vec<u8> {
 }
 
 fn safe_buffer_management_optimized(buffer_size: usize) -> Vec<u8> {
-
     (0..buffer_size).map(|i| (i % 256) as u8).collect()
 }
 
 async fn unsafe_ffi_call_simulation(data_size: usize) -> Result<Vec<u8>, String> {
-
     tokio::time::sleep(Duration::from_nanos(200)).await;
 
     let error_code = 0; // Simulate success
@@ -195,7 +182,6 @@ async fn unsafe_ffi_call_simulation(data_size: usize) -> Result<Vec<u8>, String>
 }
 
 async fn safe_api_call_optimized(data_size: usize) -> Result<Vec<u8>, String> {
-
     Ok((0..data_size).map(|i| (i % 256) as u8).collect())
 }
 
@@ -203,7 +189,6 @@ async fn unsafe_error_handling_simulation(operation_count: usize) -> i32 {
     let mut error_count = 0;
 
     for i in 0..operation_count {
-
         let error_code = if i % 100 == 0 { -1 } else { 0 };
 
         if error_code != 0 {
@@ -220,7 +205,6 @@ async fn safe_error_handling_optimized(operation_count: usize) -> Result<usize, 
     let mut error_count = 0;
 
     for i in 0..operation_count {
-
         if i % 100 == 0 {
             error_count += 1;
         }
@@ -255,7 +239,6 @@ fn runtime_dispatch_simulation(operation_count: usize) -> usize {
     let mut result = 0;
 
     for i in 0..operation_count {
-
         result += match i % 3 {
             0 => operation_a(i),
             1 => operation_b(i),

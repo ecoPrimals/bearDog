@@ -1,17 +1,17 @@
 
 
 use super::super::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use tracing::{debug, info};
 
 #[derive(Debug)]
 pub struct PlatformDiscoverer;
 impl PlatformDiscoverer {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn discover(&self, config: &DiscoveryConfig) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("💻 Discovering Platform HSMs");
         let mut hsms = Vec::new();
 
@@ -26,7 +26,7 @@ impl PlatformDiscoverer {}
         info!("Found {} Platform HSMs", hsms.len());
         Ok(hsms)
 
-    async fn discover_tpm(&self) -> BearDogResult<DiscoveredHsm> {
+    async fn discover_tpm(&self) -> Result<DiscoveredHsm, BearDogError> {
         debug!("🔍 Checking for TPM 2.0");
 
         let tpm_paths = ["/dev/tpm0", "/dev/tpmrm0"];
@@ -48,7 +48,7 @@ impl PlatformDiscoverer {}
                 });
         Err(BearDogError::not_found("TPM 2.0 device not found"))
 
-    async fn discover_platform_hsms(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    async fn discover_platform_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("🔍 Checking for platform-specific HSMs");
 
         if self.check_intel_txt().await {

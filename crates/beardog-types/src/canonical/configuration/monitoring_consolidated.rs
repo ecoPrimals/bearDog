@@ -110,27 +110,12 @@ pub struct MonitoringConfigUnified {
     pub prometheus: PrometheusConfigUnified,
     pub metrics: MetricCollectionConfigUnified,
     pub security_sentinel: SecuritySentinelConfig,
-    pub health_checks: HealthCheckConfig,
+    pub health_checks: crate::canonical::monitoring::HealthCheckConfig,
     pub logging: LoggingConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct HealthCheckConfig {
-    pub enabled: bool,
-    pub check_interval: Duration,
-    pub timeout: Duration,
-    pub failure_threshold: u32,
-    pub endpoints: Vec<HealthCheckEndpoint>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct HealthCheckEndpoint {
-    pub name: String,
-    pub url: String,
-    pub method: String,
-    pub expected_status: u16,
-    pub timeout: Duration,
-}
+// Re-export the canonical HealthCheckConfig from monitoring module
+pub use crate::canonical::monitoring::{HealthCheckConfig, HealthCheckEndpoint};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LoggingConfig {
@@ -152,4 +137,4 @@ pub struct RotationPolicy {
     pub max_size: u64,
     pub max_age: Duration,
     pub max_files: u32,
-} 
+}

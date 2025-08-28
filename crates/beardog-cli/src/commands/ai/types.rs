@@ -104,7 +104,6 @@ impl<T> CliResponse<T> {
             data: None,
             error: Some(error),
 
-    #[allow(dead_code)] // Part of public API - may be used in future
     pub fn with_metadata(mut self, key: &str, value: serde_json::Value) -> Self {
         self.metadata.insert(key, value);
         self}

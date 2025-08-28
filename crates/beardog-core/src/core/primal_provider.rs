@@ -1,11 +1,11 @@
 
 
 use super::BearDogCore;
-use crate::universal_primal_provider::{
+use crate::ecosystem_simple::{
     EndpointSecurity, PrimalCapability, PrimalMetadata, PrimalService, ServiceContext,
-    ServiceEndpoint, ServiceHealth, UniversalPrimalProvider,
+    ServiceEndpoint, ServiceHealth, UniversalProvider,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 
 impl UniversalProvider for BearDogCore {
@@ -19,7 +19,7 @@ impl UniversalProvider for BearDogCore {
     }
 
     #[allow(clippy::vec_init_then_push)] // Complex service definitions are clearer with push
-    async fn services(&self) -> BearDogResult<Vec<PrimalService>> {
+    async fn services(&self) -> Result<Vec<PrimalService>, BearDogError> {
         let mut services = Vec::new();
 
         services.push(PrimalService {
@@ -129,7 +129,7 @@ impl UniversalProvider for BearDogCore {
         Ok(services)
     }
 
-    async fn register_with_ecosystem(&self, songbird_endpoint: &str) -> BearDogResult<()> {
+    async fn register_with_ecosystem(&self, songbird_endpoint: &str) -> Result<(), BearDogError> {
         use reqwest;
         use serde_json;
         
@@ -174,7 +174,7 @@ impl UniversalProvider for BearDogCore {
         service_id: &str,
         request_data: Vec<u8>,
         context: ServiceContext,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError> {
         tracing::info!(
             "Handling service request for {} from {} (request_id: {})",
             service_id,
@@ -231,7 +231,7 @@ impl UniversalProvider for BearDogCore {
         }
     }
 
-    async fn health_check(&self) -> BearDogResult<ServiceHealth> {
+    async fn health_check(&self) -> Result<ServiceHealth, BearDogError> {
         let state = self.state.read().await;
         match state.health_status {
             crate::types::HealthStatus::Healthy => Ok(ServiceHealth::Healthy),
@@ -241,7 +241,7 @@ impl UniversalProvider for BearDogCore {
         }
     }
 
-    async fn shutdown(&self) -> BearDogResult<()> {
+    async fn shutdown(&self) -> Result<(), BearDogError> {
         tracing::info!("Received shutdown notification from ecosystem");
         self.stop().await
     }

@@ -11,14 +11,14 @@ use beardog::tunnel::hsm::types::{
     HsmTier, SecureEnclaveType, SmartphoneType, StrongBoxImplementation,
 };
 use beardog::tunnel::hsm::{SecurityLevel, SecurityRequirements};
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::{Duration, Utc};
 use std::sync::Arc;
 use tokio;
 use uuid::Uuid;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🧬 BearDog Genetic Spawning with HSM Integration Demo");
     println!("=====================================================");
 
@@ -359,7 +359,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-fn setup_hsm_manager() -> BearDogResult<Arc<HsmManager>> {
+fn setup_hsm_manager() -> Result<Arc<HsmManager, BearDogError>> {
     let hsm_manager = HsmManager::new();
 
     let primary_tier = HsmTier::SmartphoneHsm {
@@ -402,7 +402,7 @@ struct GeneticDiversityMetrics {
 async fn analyze_genetic_diversity(
     genetics_api: &GeneticsAPI,
     node_ids: &[&str],
-) -> BearDogResult<GeneticDiversityMetrics> {
+) -> Result<GeneticDiversityMetrics, BearDogError> {
     let mut genetics_samples = Vec::new();
 
     for node_id in node_ids {

@@ -7,7 +7,7 @@ use tokio::runtime::Runtime;
 use beardog_security::simd_crypto::{SimdCryptoEngine, benchmark_simd_performance};
 use beardog_utils::memory_pools::{ObjectPool, global_pools};
 use beardog_utils::lock_free::{LockFreeHashMap};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::*;
 
 fn bench_simd_crypto(c: &mut Criterion) {
@@ -272,7 +272,7 @@ fn bench_zero_cost_abstractions(c: &mut Criterion) {
 fn bench_error_handling(c: &mut Criterion) {
     let mut group = c.benchmark_group("Error Handling");
 
-    fn beardog_operation(success: bool) -> BearDogResult<String> {
+    fn beardog_operation(success: bool) -> Result<String, BearDogError> {
         if success {
             Ok("success".to_string())
         } else {
@@ -288,14 +288,14 @@ fn bench_error_handling(c: &mut Criterion) {
         }
     }
     
-    group.bench_function("BearDogResult_Success", |b| {
+    group.bench_function("Result_Success", |b| {
         b.iter(|| beardog_operation(true).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
     beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?)
     });
     
-    group.bench_function("BearDogResult_Error", |b| {
+    group.bench_function("Result_Error", |b| {
         b.iter(|| beardog_operation(false).unwrap_err())
     });
     

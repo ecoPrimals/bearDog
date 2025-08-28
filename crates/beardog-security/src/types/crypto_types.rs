@@ -1,7 +1,7 @@
 
 
 use serde::{Deserialize, Serialize};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum KeyStatus {

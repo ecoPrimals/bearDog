@@ -7,7 +7,7 @@ use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 use super::super::traits::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 #[derive(Debug)]
 pub enum DiscoveryAlgorithmType {
@@ -87,11 +87,11 @@ pub trait DiscoveryAlgorithm: Send + Sync {
         &self,
         available_capabilities: &[Capability],
         interaction_history: &HashMap<&str, Vec<ServiceRequest>>,
-    ) -> BearDogResult<Vec<EmergentCapability>>;}
+    ) -> Result<Vec<EmergentCapability>, BearDogError>>;}
 
 impl EmergentCapabilityEngine {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             emergent_capabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             combination_patterns: Arc::new(RwLock::new(HashMap::with_capacity(16))),
@@ -102,7 +102,7 @@ impl EmergentCapabilityEngine {
     }
 
     pub async fn discover_capabilities(
-    ) -> BearDogResult<Vec<EmergentCapability>> {
+    ) -> Result<Vec<EmergentCapability>, BearDogError>> {
         info!(
             "🔍 Discovering emergent capabilities from {} available capabilities",
             available_capabilities.len()
@@ -141,7 +141,7 @@ impl EmergentCapabilityEngine {
 
     async fn update_combination_patterns(
         discovered: &[EmergentCapability],
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut patterns = self.combination_patterns.write().await;
         for capability in discovered {
 
@@ -168,11 +168,11 @@ impl EmergentCapabilityEngine {
         debug!("📊 Updated {} combination patterns", patterns.len());
         Ok(())
 
-    pub async fn get_all_emergent_capabilities(&self) -> BearDogResult<Vec<EmergentCapability>> {
+    pub async fn get_all_emergent_capabilities(&self) -> Result<Vec<EmergentCapability>, BearDogError>> {
         let capabilities = self.emergent_capabilities.read().await;
         Ok(capabilities.values().cloned().collect())
 
-    pub async fn get_combination_patterns(&self) -> BearDogResult<Vec<CombinationPattern>> {
+    pub async fn get_combination_patterns(&self) -> Result<Vec<CombinationPattern>, BearDogError>> {
         let patterns = self.combination_patterns.read().await;
         Ok(patterns.values().cloned().collect())
 impl EmergentCapability {

@@ -1,10 +1,10 @@
 [package]
 name = "beardog-types"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-description = "Canonical type definitions for BearDog - eliminates type fragmentation across the security ecosystem"
-authors.workspace = true
+version = "3.0.0"
+edition = "2021"
+authors = ["BearDog Security Team"]
+description = "Canonical type definitions for BearDog Security Manager"
+license = "AGPL-3.0-only"
 homepage.workspace = true
 repository.workspace = true
 readme = "README.md"
@@ -29,8 +29,8 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 # Error handling
 thiserror = "1.0"
 
-# Async runtime - minimal features for types
-tokio = { version = "1.0", features = ["rt", "macros"], optional = true }
+# Async runtime
+tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "time", "fs", "macros"], optional = true }
 
 # Configuration support (optional)
 serde_yaml = { version = "0.9", optional = true }
@@ -42,16 +42,16 @@ ring = { version = "0.17", optional = true }
 # Network support (optional)
 reqwest = { version = "0.12", features = ["json"], optional = true }
 
-# Random number generation for retry jitter
+# Logging
+tracing = "0.1"
 rand = "0.8"
 
-# Development dependencies
 [dev-dependencies]
 tokio-test = "0.4"
 
 # Feature flags for optional functionality
 [features]
-default = []
+default = ["config"]
 crypto = ["ring"]
 network = ["reqwest", "tokio"]
 config = ["serde_yaml", "toml", "tokio"]  # Configuration loading features 

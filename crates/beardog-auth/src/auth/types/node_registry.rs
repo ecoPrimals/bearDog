@@ -3,7 +3,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use super::authorization::{AuthorizationProof, CrossNodeAuthorization, CrossNodeOperation};
 use super::genetics::{BearDogGenetics, NodeCapability};
 use super::spawning::SpawnedBearDog;
@@ -27,29 +27,30 @@ pub struct NodeInfo {
 
 pub trait NodeRegistry: Send + Sync {
 
-    fn get_node_info(&self, node_id: &str) -> BearDogResult<NodeInfo>;
+    fn get_node_info(&self, node_id: &str) -> Result<NodeInfo, BearDogError>;
 
-    fn register_node(&mut self, node_info: NodeInfo) -> BearDogResult<()>;
+    fn register_node(&mut self, node_info: NodeInfo) -> Result<(), BearDogError>;
 
-    fn get_trust_level(&self, node_id: &str) -> BearDogResult<f64>;
+    fn get_trust_level(&self, node_id: &str) -> Result<f64, BearDogError>;
 
-    fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> BearDogResult<()>;
+    fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> Result<(), BearDogError>;
+}
 
 pub trait ProofVerifier: Send + Sync {
-
-    fn verify_authorization_proof(&self, proof: &AuthorizationProof) -> BearDogResult<bool>;
+    fn verify_authorization_proof(&self, proof: &AuthorizationProof) -> Result<bool, BearDogError>;
 
     fn generate_proof(
         &self,
         authorization: &CrossNodeAuthorization,
         operation: &CrossNodeOperation,
-    ) -> BearDogResult<AuthorizationProof>;
+    ) -> Result<AuthorizationProof, BearDogError>;
+}
 
-pub use beardog_traits::WorkflowProvider;
+pub trait WorkflowEngine: Send + Sync {
+    fn submit_workflow(&mut self, request: CrossNodeWorkflowRequest) -> Result<String, BearDogError>;
 
-    fn submit_workflow(&mut self, request: CrossNodeWorkflowRequest) -> BearDogResult<String>;
-
-    fn get_workflow_status(&self, workflow_id: &str) -> BearDogResult<WorkflowStatus>;
+    fn get_workflow_status(&self, workflow_id: &str) -> Result<WorkflowStatus, BearDogError>;
+}
 
 pub struct CrossNodeAuthEngine {
 
@@ -66,3 +67,4 @@ pub struct CrossNodeAuthEngine {
     pub proof_verifier: Box<dyn ProofVerifier + Send + Sync>,
 
     pub workflow_engine: Option<Box<dyn WorkflowEngine + Send + Sync>>,
+}

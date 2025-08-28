@@ -1,5 +1,3 @@
-
-
 pub mod android;
 pub mod capabilities;
 pub mod config;
@@ -14,10 +12,10 @@ pub use capabilities::{
 };
 pub use config::*;
 pub use keys::*;
+pub use platform_types::{
+    AndroidKeyAlgorithm, EntropyCollectionMethod, EntropyQualityRating, HsmType, KeyStorageType,
+    MemoryProtectionLevel, PerformanceMetrics, SecureEnclaveType, SmartphoneType, SoftwareHsmType,
+    StrongBoxImplementation,
+};
 pub use status::{HealthMetrics, HsmHealth, HsmHealthStatus};
 pub use tiers::{AttestationLevel, HsmSecurityTier, TamperResistanceLevel};
-pub use platform_types::{
-    AndroidKeyAlgorithm, EntropyCollectionMethod, EntropyQualityRating, HsmType,
-    KeyStorageType, MemoryProtectionLevel, PerformanceMetrics, SecureEnclaveType,
-    SmartphoneType, SoftwareHsmType, StrongBoxImplementation,
-};

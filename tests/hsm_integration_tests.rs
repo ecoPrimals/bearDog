@@ -16,7 +16,7 @@ use beardog_tunnel::universal_hsm_discovery::{
     HsmConnectionInfo, ConnectionType, AuthenticationMethod, RetryPolicy,
     IntegrationStatus
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use tokio_test;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};

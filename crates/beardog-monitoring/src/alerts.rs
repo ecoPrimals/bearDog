@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{improved_results::*, BearDogError, BearDogResult};
+use beardog_errors::{{improved_results::*, BearDogError}};
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::{debug, info, warn};
@@ -9,7 +9,7 @@ use crate::types::{Alert, AlertProcessingConfig, AlertProcessingResult, AlertSev
 pub async fn process_alerts_improved(
     alerts: Vec<Alert>,
     processing_config: &AlertProcessingConfig,
-) -> BearDogResult<ProcessingOutcome<AlertProcessingResult>> {
+) -> Result<ProcessingOutcome<AlertProcessingResult, BearDogError>> {
     let _start_time = Instant::now();
     info!(
         "🚨 Processing {} alerts with improved patterns",
@@ -110,7 +110,7 @@ pub async fn process_alerts_improved(
 pub async fn process_individual_alert(
     mut alert: Alert,
     config: &AlertProcessingConfig,
-) -> BearDogResult<Alert> {
+) -> Result<Alert, BearDogError> {
     debug!("🚨 Processing alert: {} ({})", alert.message, alert.severity);
 
     let processing_time = match alert.severity {

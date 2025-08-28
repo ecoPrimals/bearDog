@@ -3,7 +3,7 @@
 use super::super::types::*;
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::types::{Algorithm, KeyType}; // Explicit imports for missing types
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::rand::rand_bytes;
@@ -13,7 +13,7 @@ use tracing::{debug, info};
 
 impl OpenSslCryptoProvider {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("Creating OpenSSL crypto provider");
         Ok(Self)
     }
@@ -21,11 +21,11 @@ impl OpenSslCryptoProvider {
 
 impl CryptoProvider for OpenSslCryptoProvider {
 
-    async fn initialize(&self) -> BearDogResult<()> {
+    async fn initialize(&self) -> Result<(), BearDogError> {
         info!("Initializing OpenSSL crypto provider");
         Ok(())
 
-    async fn generate_key_material(&self, key_type: &KeyType) -> BearDogResult<Vec<u8>> {
+    async fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, BearDogError>> {
         use rand::RngCore;
         let key_size = match key_type {
             KeyType::Aes256 => 32,
@@ -44,7 +44,7 @@ impl CryptoProvider for OpenSslCryptoProvider {
         );
         Ok(key_material)
 
-    async fn encrypt(&self, key_material: &[u8], plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt(&self, key_material: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
             "Encrypting {} bytes with OpenSSL crypto provider (AES-256-GCM)",
             plaintext.len()
@@ -94,7 +94,7 @@ impl CryptoProvider for OpenSslCryptoProvider {
         result.extend(tag);
         Ok(result)
 
-    async fn decrypt(&self, key_material: &[u8], ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn decrypt(&self, key_material: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             "Decrypting {} bytes with OpenSSL crypto provider (AES-256-GCM)",
             ciphertext.len()
 
@@ -121,7 +121,7 @@ impl CryptoProvider for OpenSslCryptoProvider {
         plaintext.truncate(count);
         Ok(plaintext)
 
-    async fn sign(&self, key_material: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
             "Signing {} bytes with OpenSSL crypto provider (Ed25519)",
             data.len()
@@ -137,7 +137,7 @@ impl CryptoProvider for OpenSslCryptoProvider {
         key_material: &[u8],
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
             "Verifying signature for {} bytes with OpenSSL crypto provider (Ed25519)",
 
@@ -148,7 +148,7 @@ impl CryptoProvider for OpenSslCryptoProvider {
     async fn derive_key(
         master_key: &[u8],
         derivation_data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
 
         debug!("Deriving key with OpenSSL crypto provider (HMAC-SHA256)");
 
@@ -171,12 +171,12 @@ mod tests {
     use super::*;
     use tokio;
     #[tokio::test]
-    async fn test_openssl_crypto_provider_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_openssl_crypto_provider_creation() -> Result<(), BearDogError> {
         let provider = OpenSslCryptoProvider::new().await.map_err(|e| {
             tracing::error!("Operation failed: {e:?}");
             beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
         assert!(provider.initialize().await.is_ok());
-    async fn test_key_generation() -> beardog_errors::BearDogResult<()> {
+    async fn test_key_generation() -> Result<(), BearDogError> {
         let key_material = provider
             .generate_key_material(&KeyType::Aes256)
             .await
@@ -187,7 +187,7 @@ mod tests {
         let ecc_key = provider
             .generate_key_material(&KeyType::EccP256)
         assert_eq!(ecc_key.len(), 32);
-    async fn test_encryption_decryption() -> beardog_errors::BearDogResult<()> {
+    async fn test_encryption_decryption() -> Result<(), BearDogError> {
         let plaintext = b"Hello, World!";
         let ciphertext = provider
             .encrypt(&key_material, plaintext)
@@ -195,7 +195,7 @@ mod tests {
             .decrypt(&key_material, &ciphertext)
         assert_eq!(plaintext, decrypted.as_slice());}
 
-    async fn test_signing_verification() -> beardog_errors::BearDogResult<()> {
+    async fn test_signing_verification() -> Result<(), BearDogError> {
 
         let key_result = provider.generate_key_material(&KeyType::EccP256).await;
         if let Err(e) = key_result {
@@ -223,7 +223,7 @@ mod tests {
         let is_invalid = provider
             .verify(&key_material, different_data, &signature)
         assert!(!is_invalid);
-    async fn test_key_derivation() -> beardog_errors::BearDogResult<()> {
+    async fn test_key_derivation() -> Result<(), BearDogError> {
         let master_key = b"master_key_for_derivation_test";
         let derivation_data = b"derivation_context";
         let derived_key1 = provider

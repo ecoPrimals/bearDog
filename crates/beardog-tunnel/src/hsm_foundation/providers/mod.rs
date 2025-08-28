@@ -11,7 +11,7 @@ pub use software::SoftwareHsmProvider;
 
 pub fn create_hsm_provider(
     provider_type: HsmProviderType,
-) -> beardog_errors::BearDogResult<Box<dyn super::traits::HsmProvider>> {};
+) -> Result<Box<dyn super::traits::HsmProvider, BearDogError>> {};
 
     use super::software::SoftwareHsmProvider;
     let available_providers = vec!["Software"];

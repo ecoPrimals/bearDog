@@ -21,11 +21,19 @@ pub async fn get_risk_assessment(
 
 pub async fn conduct_risk_assessment(
     Json(_): Json<serde_json::Value>,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    let request_id = uuid::Uuid::new_v4().to_string();
+    Ok(Json(success_response(
         serde_json::json!({"assessment_id": "risk_12345", "status": "initiated"}),
+        request_id,
         120,
         false,
+    )))
+}
 
-pub async fn get_risk_mitigation_plan(
-            "mitigation_strategies": ["Enhanced monitoring", "Staff training"],
-            "timeline": "30 days"
-        35,
+pub async fn get_risk_mitigation_plan() -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "mitigation_strategies": ["Enhanced monitoring", "Staff training"],
+        "timeline": "30 days"
+    }))))
+}

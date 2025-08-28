@@ -3,7 +3,7 @@
 use super::ExternalFunctionHandler;
 use crate::licensing::LicenseManager;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 use reqwest::Client;
 use serde_json::Value;
@@ -23,7 +23,7 @@ impl ExternalFunctionHandler for GrafanaDashboards {}
         license_manager: &LicenseManager,
         _operation: &str,
         payload: serde_json::Value,
-    ) -> BearDogResult<serde_json::Value> {
+    ) -> Result<serde_json::Value, BearDogError> {
 
         if !license_manager
             .is_function_available(self.function_name())

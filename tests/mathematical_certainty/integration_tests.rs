@@ -1,11 +1,11 @@
 
 
 use super::framework::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::time::Duration;
 
 #[tokio::test]
-async fn test_achieve_mathematical_certainty() -> BearDogResult<()> {
+async fn test_achieve_mathematical_certainty() -> Result<(), BearDogError> {
     println!("🧮 Testing Mathematical Certainty Framework");
     
     let mut framework = MathematicalCertaintyFramework::new();
@@ -35,7 +35,7 @@ async fn test_achieve_mathematical_certainty() -> BearDogResult<()> {
 
 impl MathematicalCertaintyFramework {
 
-    pub async fn achieve_mathematical_certainty(&mut self) -> BearDogResult<MathematicalCertaintyReport> {
+    pub async fn achieve_mathematical_certainty(&mut self) -> Result<MathematicalCertaintyReport, BearDogError> {
         println!("🎯 INITIATING MATHEMATICAL CERTAINTY ANALYSIS");
         println!("📊 Target: 99.9% Statistical Confidence");
         
@@ -72,7 +72,7 @@ impl MathematicalCertaintyFramework {
         Ok(report)
     }
 
-    async fn execute_million_scale_property_testing(&mut self) -> BearDogResult<PropertyTestingResults> {
+    async fn execute_million_scale_property_testing(&mut self) -> Result<PropertyTestingResults, BearDogError> {
 
         let test_count = 10_000;
         
@@ -84,7 +84,7 @@ impl MathematicalCertaintyFramework {
         })
     }
 
-    async fn execute_exhaustive_cryptographic_testing(&mut self) -> BearDogResult<CryptographicTestingResults> {
+    async fn execute_exhaustive_cryptographic_testing(&mut self) -> Result<CryptographicTestingResults, BearDogError> {
         Ok(CryptographicTestingResults {
             algorithms_tested: 4,
             algorithm_results: vec![
@@ -98,7 +98,7 @@ impl MathematicalCertaintyFramework {
         })
     }
 
-    async fn execute_comprehensive_boundary_testing(&mut self) -> BearDogResult<BoundaryTestingResults> {
+    async fn execute_comprehensive_boundary_testing(&mut self) -> Result<BoundaryTestingResults, BearDogError> {
         Ok(BoundaryTestingResults {
             boundary_conditions_tested: 100,
             boundary_test_results: vec![
@@ -111,7 +111,7 @@ impl MathematicalCertaintyFramework {
         })
     }
 
-    async fn calculate_statistical_confidence(&mut self) -> BearDogResult<StatisticalConfidenceResults> {
+    async fn calculate_statistical_confidence(&mut self) -> Result<StatisticalConfidenceResults, BearDogError> {
         Ok(StatisticalConfidenceResults {
             confidence_level: 0.999,
             sample_size: 10_000,
@@ -119,7 +119,7 @@ impl MathematicalCertaintyFramework {
         })
     }
 
-    async fn execute_formal_verification(&mut self) -> BearDogResult<FormalVerificationResults> {
+    async fn execute_formal_verification(&mut self) -> Result<FormalVerificationResults, BearDogError> {
         Ok(FormalVerificationResults {
             properties_formally_verified: 10,
             verification_confidence: 1.0,
@@ -130,7 +130,7 @@ impl MathematicalCertaintyFramework {
         &mut self,
         _property_results: &PropertyTestingResults,
         _crypto_results: &CryptographicTestingResults,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64, BearDogError> {
 
         Ok(0.999)
     }

@@ -11,7 +11,7 @@ use beardog_adapters::adapters::universal::songbird_handoff::{
 };
 use beardog_adapters::adapters::universal::beardog_provider::BearDogProvider;
 use beardog_types::config::BearDogConfig;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 struct MockSongBirdServer {
     registration_success: bool,
@@ -46,7 +46,7 @@ impl MockSongBirdServer {
 }
 
 #[tokio::test]
-async fn test_songbird_registration_success() -> BearDogResult<()> {
+async fn test_songbird_registration_success() -> Result<(), BearDogError> {
 
     let config = create_test_config();
     let client = SongBirdClient::new(config.clone());
@@ -74,7 +74,7 @@ async fn test_songbird_registration_success() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_songbird_registration_fallback() -> BearDogResult<()> {
+async fn test_songbird_registration_fallback() -> Result<(), BearDogError> {
 
     let config = create_test_config_with_invalid_songbird();
     let client = SongBirdClient::new(config.clone());
@@ -100,7 +100,7 @@ async fn test_songbird_registration_fallback() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_heartbeat_task_functionality() -> BearDogResult<()> {
+async fn test_heartbeat_task_functionality() -> Result<(), BearDogError> {
     let config = create_test_config();
     let client = SongBirdClient::new(config.clone());
     let registration_manager = UniversalRegistrationManager::new(
@@ -126,7 +126,7 @@ async fn test_heartbeat_task_functionality() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_health_monitoring_comprehensive() -> BearDogResult<()> {
+async fn test_health_monitoring_comprehensive() -> Result<(), BearDogError> {
     let config = create_test_config();
     let client = SongBirdClient::new(config.clone());
     let health_monitor = UniversalHealthMonitor::new(
@@ -158,7 +158,7 @@ async fn test_health_monitoring_comprehensive() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_capability_advertisement_updates() -> BearDogResult<()> {
+async fn test_capability_advertisement_updates() -> Result<(), BearDogError> {
     let config = create_test_config();
     let client = SongBirdClient::new(config.clone());
     let registration_manager = UniversalRegistrationManager::new(
@@ -181,7 +181,7 @@ async fn test_capability_advertisement_updates() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_beardog_provider_full_lifecycle() -> BearDogResult<()> {
+async fn test_beardog_provider_full_lifecycle() -> Result<(), BearDogError> {
     let config = create_test_config();
     let primal_id = "test-primal-006".to_string();
     let mut provider = BearDogProvider::new(primal_id.clone(), config.clone());
@@ -215,7 +215,7 @@ async fn test_beardog_provider_full_lifecycle() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_concurrent_operations() -> BearDogResult<()> {
+async fn test_concurrent_operations() -> Result<(), BearDogError> {
     let config = create_test_config();
     let client = std::sync::Arc::new(SongBirdClient::new(config.clone()));
 
@@ -247,7 +247,7 @@ async fn test_concurrent_operations() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_background_task_lifecycle() -> BearDogResult<()> {
+async fn test_background_task_lifecycle() -> Result<(), BearDogError> {
     let config = create_test_config();
     let primal_id = "test-primal-background".to_string();
     let mut provider = BearDogProvider::new(primal_id.clone(), config.clone());
@@ -266,7 +266,7 @@ async fn test_background_task_lifecycle() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_error_handling_and_recovery() -> BearDogResult<()> {
+async fn test_error_handling_and_recovery() -> Result<(), BearDogError> {
     let config = create_test_config_with_invalid_songbird();
     let client = SongBirdClient::new(config.clone());
     let registration_manager = UniversalRegistrationManager::new(
@@ -290,7 +290,7 @@ async fn test_error_handling_and_recovery() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_metrics_and_monitoring() -> BearDogResult<()> {
+async fn test_metrics_and_monitoring() -> Result<(), BearDogError> {
     let config = create_test_config();
     let client = SongBirdClient::new(config.clone());
     let health_monitor = UniversalHealthMonitor::new(
@@ -335,7 +335,7 @@ fn create_test_config_with_invalid_songbird() -> BearDogConfig {
 }
 
 #[tokio::test]
-async fn test_primal_discovery_integration() -> BearDogResult<()> {
+async fn test_primal_discovery_integration() -> Result<(), BearDogError> {
     let config = create_test_config();
     let client = SongBirdClient::new(config.clone());
 
@@ -357,7 +357,7 @@ async fn test_primal_discovery_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_security_provider_registration() -> BearDogResult<()> {
+async fn test_security_provider_registration() -> Result<(), BearDogError> {
     let config = create_test_config();
     let primal_id = "beardog-security-provider".to_string();
     let mut provider = BearDogProvider::new(primal_id.clone(), config.clone());
@@ -381,7 +381,7 @@ async fn test_security_provider_registration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_ecosystem_resilience() -> BearDogResult<()> {
+async fn test_ecosystem_resilience() -> Result<(), BearDogError> {
     let config = create_test_config();
     let primal_id = "test-primal-resilience".to_string();
     let mut provider = BearDogProvider::new(primal_id.clone(), config.clone());

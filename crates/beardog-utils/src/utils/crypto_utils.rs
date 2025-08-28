@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use hmac::{Hmac, Mac};
 use ring::rand::{SecureRandom, SystemRandom};
 use sha2::{Digest, Sha256};
@@ -33,14 +33,14 @@ pub fn sha256_hash(data: &[u8]) -> String {
     hasher.update(data);
     bytes_to_hex(&hasher.finalize())
 
-pub fn hmac_sha256(key: &[u8], data: &[u8]) -> BearDogResult<String> {
+pub fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<String, BearDogError> {
     let mut mac = HmacSha256::new_from_slice(key).map_err(|e| BearDogError::Crypto {
         message: format!("Invalid HMAC key: {e}"),
     })?;
     mac.update(data);
     Ok(bytes_to_hex(&mac.finalize().into_bytes()))
 
-pub fn verify_hmac_sha256(key: &[u8], data: &[u8], signature: &str) -> BearDogResult<bool> {
+pub fn verify_hmac_sha256(key: &[u8], data: &[u8], signature: &str) -> Result<bool, BearDogError> {
     let computed = hmac_sha256(key, data)?;
     Ok(constant_time_compare(
         computed.as_bytes(),
@@ -82,7 +82,7 @@ pub fn pbkdf2_hmac_sha256(
     salt: &[u8],
     iterations: u32,
     output_len: usize,
-) -> BearDogResult<Vec<u8>> {
+) -> Result<Vec<u8>, BearDogError>> {
     use ring::pbkdf2;
     if iterations == 0 {
         return Err(BearDogError::Crypto {
@@ -103,7 +103,7 @@ pub fn pbkdf2_hmac_sha256(
 pub fn bytes_to_hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 
-pub fn hex_to_bytes(hex: &str) -> BearDogResult<Vec<u8>> {
+pub fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, BearDogError>> {
     if hex.len() % 2 != 0 {
         return Err(BearDogError::validation("Hex string must have even length"));
     let mut bytes = Vec::with_capacity(hex.len() / 2);

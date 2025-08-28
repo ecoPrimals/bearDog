@@ -1,16 +1,16 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info, warn};
 
 pub async fn execute_test_with_context<F, Fut, T>(
     test_name: &str,
     test_fn: F,
-) -> BearDogResult<T>
+) -> Result<T, BearDogError>
 where
     F: FnOnce() -> Fut,
-    Fut: std::future::Future<Output = BearDogResult<T>>,
+    Fut: std::future::Future<Output = Result<T, BearDogError>>,
 {
     info!("🧪 Starting test: {}", test_name);
     let start_time = Instant::now();
@@ -32,7 +32,7 @@ where
 pub fn create_adapter_safely<T, E>(
     adapter_result: Result<T, E>,
     adapter_name: &str,
-) -> BearDogResult<T>
+) -> Result<T, BearDogError>
 where
     E: std::fmt::Debug,
 {
@@ -48,10 +48,10 @@ pub async fn test_hsm_operation<F, Fut, T>(
     operation_name: &str,
     platform: &str,
     operation: F,
-) -> BearDogResult<T>
+) -> Result<T, BearDogError>
 where
     F: FnOnce() -> Fut,
-    Fut: std::future::Future<Output = BearDogResult<T>>,
+    Fut: std::future::Future<Output = Result<T, BearDogError>>,
 {
     info!("🔐 Testing {} on platform: {}", operation_name, platform);
     
@@ -69,10 +69,10 @@ pub async fn test_across_platforms<F, Fut>(
     platforms: &[&str],
     test_name: &str,
     test_fn: F,
-) -> BearDogResult<()>
+) -> Result<(), BearDogError>
 where
     F: Fn(&str) -> Fut,
-    Fut: std::future::Future<Output = BearDogResult<()>>,
+    Fut: std::future::Future<Output = Result<(), BearDogError>>,
 {
     for platform in platforms {
         test_hsm_operation(test_name, platform, || test_fn(platform)).await?;
@@ -80,7 +80,7 @@ where
     Ok(())
 }
 
-pub async fn setup_test_harness(test_name: &str) -> BearDogResult<TestHarnessContext> {
+pub async fn setup_test_harness(test_name: &str) -> Result<TestHarnessContext, BearDogError> {
     info!("⚙️ Setting up test harness for: {}", test_name);
     
     let config = beardog::config::BearDogConfig::default();
@@ -104,7 +104,7 @@ impl TestHarnessContext {
         self.start_time.elapsed()
     }
     
-    pub async fn cleanup(self) -> BearDogResult<()> {
+    pub async fn cleanup(self) -> Result<(), BearDogError> {
         debug!("🧹 Cleaning up test harness for: {} (ran for {:?})", 
                self.test_name, self.elapsed());
 

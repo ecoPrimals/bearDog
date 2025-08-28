@@ -1,7 +1,7 @@
 
 
 use super::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -19,7 +19,7 @@ pub struct EcosystemDiscovery<T> {
 }
 impl<T> EcosystemDiscovery<T> {
 
-    pub async fn new(core: Arc<T>) -> BearDogResult<Self> {
+    pub async fn new(core: Arc<T>) -> Result<Self, BearDogError> {
         info!("🔍 Initializing Ecosystem Discovery Service");
         let discovery = Self {
             core,
@@ -33,11 +33,11 @@ impl<T> EcosystemDiscovery<T> {
     pub async fn with_config(
         core: Arc<T>,
         config: EcosystemDiscoveryConfig,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         info!("🔍 Initializing Ecosystem Discovery Service with custom config");
             config,
 
-    pub async fn discover_services(&self) -> BearDogResult<Vec<EcosystemService>> {
+    pub async fn discover_services(&self) -> Result<Vec<EcosystemService>, BearDogError>> {
         debug!("🔍 Starting ecosystem service discovery");
         let mut discovered = Vec::new();
         for ecosystem_id in &self.config.enabled_ecosystems {
@@ -74,7 +74,7 @@ impl<T> EcosystemDiscovery<T> {
     async fn discover_ecosystem_services(
         &self,
         ecosystem_id: &str,
-    ) -> BearDogResult<Vec<EcosystemService>> {
+    ) -> Result<Vec<EcosystemService>, BearDogError>> {
 
         debug!("🔍 Discovering services for ecosystem: {}", ecosystem_id);
         Ok(Vec::new())

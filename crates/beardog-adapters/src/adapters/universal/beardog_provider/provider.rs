@@ -14,7 +14,7 @@ use super::super::traits::{
     ServiceResponse,
 };
 use super::core::BearDogPrimalProvider;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::sync::Arc;
 
@@ -66,7 +66,7 @@ impl<T: Send + Sync + \'static> PrimalProvider for BearDogPrimalProvider<T> {
                 reason: "Health check failed".to_string(),
                 recovery_time: None,
             },
-    async fn handle_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse> {
+    async fn handle_request(&self, request: ServiceRequest) -> Result<ServiceResponse, BearDogError> {
         let request_id = request.id.clone();
         info!("🔐 BearDog handling request: {}", request_id);
 
@@ -122,7 +122,7 @@ impl<T: Send + Sync + \'static> PrimalProvider for BearDogPrimalProvider<T> {
                         message: format_args!("Unsupported request type: {}", request.request_type).to_string(),
                         details: None,
                         retryable: false,
-    async fn register_with_ecosystem(&self) -> BearDogResult<EcosystemRegistration> {
+    async fn register_with_ecosystem(&self) -> Result<EcosystemRegistration, BearDogError> {
         info!("🌍 Registering BearDog with ecosystem...");
 
         match self.registration_manager.register_with_songbird().await {
@@ -142,7 +142,7 @@ impl<T: Send + Sync + \'static> PrimalProvider for BearDogPrimalProvider<T> {
                 warn!("⚠️  Failed to register with SongBird: {}", e);
                 info!("🔄 Falling back to standalone mode");
                     status: RegistrationStatus::Standalone,
-    async fn initialize(&mut self, _config: ProviderConfig) -> BearDogResult<()> {
+    async fn initialize(&mut self, _config: ProviderConfig) -> Result<(), BearDogError> {
         info!("🚀 Initializing BearDog PrimalProvider...");
 
         self.health_monitor.start_monitoring().await?;
@@ -153,7 +153,7 @@ impl<T: Send + Sync + \'static> PrimalProvider for BearDogPrimalProvider<T> {
         info!("✅ BearDog PrimalProvider initialized successfully");
         Ok(())}
 
-    async fn shutdown(&mut self) -> BearDogResult<()> {
+    async fn shutdown(&mut self) -> Result<(), BearDogError> {
         info!("🛑 Shutting down BearDog PrimalProvider...");
 
         self.stop_background_tasks().await?;
@@ -182,7 +182,7 @@ impl<T: Send + Sync + \'static> PrimalProvider for BearDogPrimalProvider<T> {
 }
 impl<T: Send + Sync + \'static> BearDogPrimalProvider<T> {
 
-    async fn start_background_tasks(&self) -> BearDogResult<()> {
+    async fn start_background_tasks(&self) -> Result<(), BearDogError> {
         let mut tasks = self.background_tasks.write().await;
 
         let heartbeat_task = {
@@ -211,14 +211,14 @@ impl<T: Send + Sync + \'static> BearDogPrimalProvider<T> {
         tasks.push(heartbeat_task);
         tasks.push(health_task);
         tasks.push(capability_task);
-    async fn stop_background_tasks(&self) -> BearDogResult<()> {
+    async fn stop_background_tasks(&self) -> Result<(), BearDogError> {
         for task in tasks.drain(..) {
             task.abort();
 
     pub async fn handle_generic_security_request(
         &self,
         request: ServiceRequest,
-    ) -> BearDogResult<ServiceResponse> {
+    ) -> Result<ServiceResponse, BearDogError> {
         info!(
             "🔐 Handling generic security request: {}",
             request.request_type

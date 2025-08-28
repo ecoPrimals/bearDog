@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::CapabilityType;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -12,20 +12,20 @@ pub trait CapabilityHandler: Send + Sync + std::fmt::Debug {
 
     fn capability_type(&self) -> CapabilityType;
 
-    async fn can_handle(&self, request: &UniversalVendorRequest) -> BearDogResult<f64>;
+    async fn can_handle(&self, request: &UniversalVendorRequest) -> Result<f64, BearDogError>;
 
     async fn execute(
         &self,
         request: UniversalVendorRequest,
-    ) -> BearDogResult<UniversalVendorResponse>;
+    ) -> Result<UniversalVendorResponse, BearDogError>;
 
     fn get_metadata(&self) -> CapabilityMetadata;
 
-    async fn health_check(&self) -> BearDogResult<CapabilityHealth>;
+    async fn health_check(&self) -> Result<CapabilityHealth, BearDogError>;
 
-    async fn initialize(&mut self, config: CapabilityConfig) -> BearDogResult<()>;
+    async fn initialize(&mut self, config: CapabilityConfig) -> Result<(), BearDogError>;
 
-    async fn shutdown(&mut self) -> BearDogResult<()>;
+    async fn shutdown(&mut self) -> Result<(), BearDogError>;
 
     fn supported_operations(&self) -> Vec<String>;
 
@@ -284,8 +284,8 @@ pub struct CapabilityHealth {
 
     pub error_message: Option<String>,
 
-pub enum HealthStatus {
-
+// UNIFIED: Use canonical HealthStatus from beardog-types
+pub use beardog_types::canonical::HealthStatus;
     Healthy,
 
     Degraded,

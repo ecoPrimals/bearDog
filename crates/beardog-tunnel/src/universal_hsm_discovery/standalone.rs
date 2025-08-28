@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn, error};
 use serde::{Deserialize, Serialize};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::capabilities::HsmCapabilities;
 use super::{DiscoveredHsm, HsmInterfaceType, HsmConnectionInfo, AuthenticationMethod, DiscoveryConfig};
 
@@ -95,7 +95,7 @@ pub struct EcosystemStatus {
 
 impl StandaloneHsmDiscovery {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🔍 Initializing Standalone HSM Discovery");
         
         let platform = Self::detect_platform().await?;
@@ -112,7 +112,7 @@ impl StandaloneHsmDiscovery {
         })
     }
 
-    pub async fn discover_basic(&self) -> BearDogResult<Vec<StandaloneHsmInfo>> {
+    pub async fn discover_basic(&self) -> Result<Vec<StandaloneHsmInfo>, BearDogError>> {
         info!("🔍 Starting basic standalone HSM discovery");
         let mut hsms = Vec::new();
 
@@ -131,7 +131,7 @@ impl StandaloneHsmDiscovery {
         info!("✅ Discovered {} HSMs in standalone mode", hsms.len());
         Ok(hsms)
 
-    async fn detect_platform() -> BearDogResult<DevicePlatform> {
+    async fn detect_platform() -> Result<DevicePlatform, BearDogError> {
         #[cfg(target_os = "android")]
             let version = Self::get_android_version().await?;
             let security_level = Self::detect_android_security_level().await?;
@@ -154,7 +154,7 @@ impl StandaloneHsmDiscovery {
             warn!("Unknown platform, using generic detection");
             Ok(DevicePlatform::Generic)
 
-    async fn discover_platform_hardware(&self) -> BearDogResult<Option<StandaloneHsmInfo>> {
+    async fn discover_platform_hardware(&self) -> Result<Option<StandaloneHsmInfo>, BearDogError>> {
         match &self.platform {
             DevicePlatform::Android { security_level, .. } => {
                 if *security_level == AndroidSecurityLevel::StrongBox {
@@ -207,7 +207,7 @@ impl StandaloneHsmDiscovery {
                 Ok(None)
             }
 
-    async fn discover_software_fallbacks(&self) -> BearDogResult<Vec<StandaloneHsmInfo>> {
+    async fn discover_software_fallbacks(&self) -> Result<Vec<StandaloneHsmInfo>, BearDogError>> {
 
         hsms.push(StandaloneHsmInfo {
             id: "beardog-native".to_string(),
@@ -230,7 +230,7 @@ impl StandaloneHsmDiscovery {
                 supports_human_entropy: false,
             });
 
-    async fn discover_ecosystem_hsms(&self) -> BearDogResult<Vec<StandaloneHsmInfo>> {
+    async fn discover_ecosystem_hsms(&self) -> Result<Vec<StandaloneHsmInfo>, BearDogError>> {
         let ecosystem_status = self.ecosystem_status.read().await;
         if !ecosystem_status.songbird_connected && !ecosystem_status.toadstool_connected {
             debug!("No ecosystem connection available");
@@ -252,7 +252,7 @@ impl StandaloneHsmDiscovery {
                     security_tier: SecurityTier::Trusted,
         info!("🌐 Found {} ecosystem HSMs", hsms.len());
 
-    pub async fn try_ecosystem_connection(&self) -> BearDogResult<()> {
+    pub async fn try_ecosystem_connection(&self) -> Result<(), BearDogError> {
         debug!("🌐 Attempting ecosystem connection");
 
         let songbird_ok = self.try_songbird_connection().await.is_ok();
@@ -270,7 +270,7 @@ impl StandaloneHsmDiscovery {
                 debug!("❌ No ecosystem connection available (standalone mode)");
         Ok(())
 
-    pub async fn to_discovered_hsms(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn to_discovered_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         let standalone_hsms = self.discover_basic().await?;
         let mut discovered_hsms = Vec::new();
         for hsm in standalone_hsms {
@@ -279,20 +279,20 @@ impl StandaloneHsmDiscovery {
 
     #[cfg(target_os = "android")]}
 
-    async fn get_android_version() -> BearDogResult<String> {
+    async fn get_android_version() -> Result<String, BearDogError> {
 
         Ok("Android 14".to_string()) // Placeholder - would use JNI calls
-    async fn detect_android_security_level() -> BearDogResult<AndroidSecurityLevel> {
+    async fn detect_android_security_level() -> Result<AndroidSecurityLevel, BearDogError> {
 
         Ok(AndroidSecurityLevel::StrongBox) // Placeholder
     #[cfg(any(target_os = "ios", target_os = "macos"))]}
 
-    async fn get_ios_version() -> BearDogResult<String> {
+    async fn get_ios_version() -> Result<String, BearDogError> {
         Ok("iOS 17".to_string()) // Placeholder
-    async fn get_macos_version() -> BearDogResult<String> {
+    async fn get_macos_version() -> Result<String, BearDogError> {
         Ok("macOS 14".to_string()) // Placeholder}
 
-    async fn has_secure_enclave() -> BearDogResult<bool> {
+    async fn has_secure_enclave() -> Result<bool, BearDogError> {
 
         use std::process::Command;
         let output = Command::new("system_profiler")
@@ -310,7 +310,7 @@ impl StandaloneHsmDiscovery {
 
                 Ok(true)
     #[cfg(target_os = "linux")]
-    async fn get_kernel_version() -> BearDogResult<String> {
+    async fn get_kernel_version() -> Result<String, BearDogError> {
         let output = tokio::process::Command::new("uname")
             .args(["-r"])
             .output()
@@ -318,7 +318,7 @@ impl StandaloneHsmDiscovery {
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
     #[cfg(target_os = "windows")]}
 
-    async fn get_windows_version() -> BearDogResult<String> {
+    async fn get_windows_version() -> Result<String, BearDogError> {
         let output = Command::new("cmd")
             .args(&["/C", "ver"])
                 let version_str = String::from_utf8_lossy(&output.stdout);
@@ -326,7 +326,7 @@ impl StandaloneHsmDiscovery {
 
                 Ok("Windows (version detection failed)".to_string())
     #[cfg(any(target_os = "linux", target_os = "windows"))]
-    async fn check_tpm_availability() -> BearDogResult<bool> {
+    async fn check_tpm_availability() -> Result<bool, BearDogError> {
 
             tokio::fs::metadata("/dev/tpm0").await.is_ok() || 
             tokio::fs::metadata("/dev/tpmrm0").await.is_ok()
@@ -349,19 +349,19 @@ impl StandaloneHsmDiscovery {
             .await
             .is_ok()
 
-    async fn try_songbird_connection(&self) -> BearDogResult<()> {
+    async fn try_songbird_connection(&self) -> Result<(), BearDogError> {
 
         debug!("🎼 Attempting songbird connection");
 
         Err(BearDogError::Ecosystem("Songbird connection not implemented".to_string()))}
 
-    async fn try_toadstool_connection(&self) -> BearDogResult<()> {
+    async fn try_toadstool_connection(&self) -> Result<(), BearDogError> {
 
         debug!("🍄 Attempting toadstool connection");
 
         Err(BearDogError::Ecosystem("ToadStool connection not implemented".to_string()))
 
-    async fn convert_to_full_format(&self, standalone: StandaloneHsmInfo) -> BearDogResult<DiscoveredHsm> {
+    async fn convert_to_full_format(&self, standalone: StandaloneHsmInfo) -> Result<DiscoveredHsm, BearDogError> {
         let interface_type = match standalone.hsm_type {
             StandaloneHsmType::MobileHardware => {
                 if standalone.id.contains("android") {
@@ -455,14 +455,14 @@ impl StandaloneHsmDiscovery {
 pub struct StandaloneHsmFactory;
 impl StandaloneHsmFactory {
 
-    pub async fn create() -> BearDogResult<StandaloneHsmDiscovery> {
+    pub async fn create() -> Result<StandaloneHsmDiscovery, BearDogError> {
         StandaloneHsmDiscovery::new().await
 
-    pub async fn quick_discover() -> BearDogResult<Vec<StandaloneHsmInfo>> {
+    pub async fn quick_discover() -> Result<Vec<StandaloneHsmInfo>, BearDogError>> {
         let discovery = Self::create().await?;
         discovery.discover_basic().await
 
-    pub async fn ecosystem_aware_discover() -> BearDogResult<Vec<StandaloneHsmInfo>> {
+    pub async fn ecosystem_aware_discover() -> Result<Vec<StandaloneHsmInfo>, BearDogError>> {
 
         let _ = discovery.try_ecosystem_connection().await;
 

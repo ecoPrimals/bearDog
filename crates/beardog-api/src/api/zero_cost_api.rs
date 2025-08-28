@@ -1,7 +1,7 @@
 
 
 use beardog_core::zero_cost_architecture::{ZeroCostBearDog, ZeroCostCache, ZeroCostSecurity};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -16,9 +16,9 @@ pub trait ZeroCostApiCache {
 
     async fn get_response(&self, key: &Self::Key) -> Option<Self::Value>;
 
-    async fn set_response(&self, key: Self::Key, value: Self::Value, ttl: Duration) -> BearDogResult<()>;
+    async fn set_response(&self, key: Self::Key, value: Self::Value, ttl: Duration) -> Result<(), BearDogError>;
 
-    async fn remove_response(&self, key: &Self::Key) -> BearDogResult<bool>;
+    async fn remove_response(&self, key: &Self::Key) -> Result<bool, BearDogError>;
 
     async fn response_exists(&self, key: &Self::Key) -> bool;
 
@@ -34,7 +34,7 @@ pub trait ZeroCostRateLimit {
 
     async fn get_quota(&self, client_id: &Self::ClientId) -> RateQuota;
 
-    async fn reset_client(&self, client_id: &Self::ClientId) -> BearDogResult<bool>;
+    async fn reset_client(&self, client_id: &Self::ClientId) -> Result<bool, BearDogError>;
 
     async fn rate_limit_stats(&self) -> RateLimitStats;
 
@@ -133,7 +133,7 @@ impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> ZeroCostApiCache for ZeroC
         } else {
             self.misses.fetch_add(1, Ordering::Relaxed);
             None
-    async fn set_response(&self, key: Self::Key, value: Self::Value, ttl: Duration) -> BearDogResult<()> {
+    async fn set_response(&self, key: Self::Key, value: Self::Value, ttl: Duration) -> Result<(), BearDogError> {
         self.evict_if_needed();
         let entry = CachedApiResponse::new(value, ttl);
         {
@@ -142,7 +142,7 @@ impl<K, V, const SIZE: usize, const TTL_SECONDS: u64> ZeroCostApiCache for ZeroC
         self.update_access_order(&key);
         Ok(())}
 
-    async fn remove_response(&self, key: &Self::Key) -> BearDogResult<bool> {
+    async fn remove_response(&self, key: &Self::Key) -> Result<bool, BearDogError> {
         let removed = data.remove(key).is_some();
         if removed {
             let mut access_order = self.access_order.write();
@@ -235,7 +235,7 @@ impl<C, const RATE: u32, const BURST: u32> ZeroCostRateLimit for ZeroCostTokenBu
             reset_time_seconds: 60, // Reset window is 1 minute based on RATE_PER_MINUTE
             throttled,}
 
-    async fn reset_client(&self, client_id: &Self::ClientId) -> BearDogResult<bool> {
+    async fn reset_client(&self, client_id: &Self::ClientId) -> Result<bool, BearDogError> {
         let removed = buckets.remove(client_id).is_some();
 
         let mut endpoint_buckets = self.endpoint_buckets.write();

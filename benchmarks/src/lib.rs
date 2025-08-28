@@ -1,6 +1,10 @@
-
-
 pub mod utils;
 
-pub use beardog_security::*;
-pub use beardog_types::config::*;
+// Avoid ambiguous re-exports by being explicit
+pub use beardog_security::{
+    encryption, memory_key_manager
+};
+pub use beardog_types::config::{
+    BearDogConfig, AppConfig, NetworkConfig, SecurityConfig,
+    HsmConfig, DatabaseConfig, MonitoringConfig
+};

@@ -5,37 +5,14 @@ use crate::workflows::canonical::{
     Workflow, WorkflowExecutionStatus, WorkflowMetrics, WorkflowProcessingResult,
 };
 
-use beardog_errors::{BearDogError, BearDogResult};
-use beardog_types::canonical::workflow::WorkflowType;
+use beardog_errors::BearDogError;
+use beardog_types::{
+    canonical::configuration::workflows::WorkflowMetadata,
+    config::UnifiedProcessorConfig,
+};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use tracing::info;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
-pub struct SecurityProcessorConfig {
-
-    pub auto_threat_detection: bool,
-
-    pub scan_depth: SecurityScanDepth,
-
-    pub enable_compliance: bool,
-}
-pub enum SecurityScanDepth {
-    Surface,
-    Deep,
-    Comprehensive,}
-
-impl Default for SecurityProcessorConfig {}
-
-    fn default() -> Self {
-        Self {
-            auto_threat_detection: true,
-            scan_depth: SecurityScanDepth::Deep,
-            enable_compliance: true,
-        }
-    }
 
 #[derive(Debug)]
 pub struct SecurityProcessor {
@@ -48,7 +25,9 @@ impl SecurityProcessor {
     }
 
     pub fn new_default() -> Self {
-        Self::new(SecurityProcessorConfig::default())
+        let mut config = UnifiedProcessorConfig::default();
+        config.processor_type = beardog_types::canonical::configuration::consolidated::ProcessorType::Security;
+        Self::new(config)
     }
 }
 
@@ -64,7 +43,7 @@ impl WorkflowProcessor for SecurityProcessor {
     async fn process_workflow(
         &self,
         workflow: &Workflow,
-    ) -> BearDogResult<WorkflowProcessingResult> {
+    ) -> Result<WorkflowProcessingResult, BearDogError> {
         let _start_time = Instant::now();
         info!("Processing security workflow: {}", workflow.id);
         match workflow.workflow_type {

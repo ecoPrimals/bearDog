@@ -1,7 +1,7 @@
 
 
 use super::{HttpBufferPool, ZeroCopyJsonSerializer};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use bytes::Bytes;
 use serde::Deserialize;
 use std::sync::{
@@ -10,7 +10,7 @@ use std::sync::{
 };
 
 pub struct ZeroCopyRequestParser {
-    #[allow(dead_code)] // Will be used when zero-copy request parsing is fully implemented
+    
     buffer_pool: Arc<HttpBufferPool>,
     serializer: Arc<ZeroCopyJsonSerializer>,
     stats: ZeroCopyRequestStats,
@@ -33,19 +33,21 @@ impl ZeroCopyRequestParser {
         }
     }
 
-    pub async fn parse_json<T: for<'de> Deserialize<'de>>(&self, body: Bytes) -> BearDogResult<T> {
+    pub async fn parse_json<T: for<'de> Deserialize<'de>>(&self, body: Bytes) -> Result<T, BearDogError> {
         self.stats.requests_parsed.fetch_add(1, Ordering::Relaxed);
         self.stats.json_parsed.fetch_add(1, Ordering::Relaxed);
         if body.is_empty() {
             return Err(BearDogError::validation("Request body is empty"));
+        }
         let result = self.serializer.deserialize_zero_copy(&body).await?;
         self.stats.zero_copy_parses.fetch_add(1, Ordering::Relaxed);
         Ok(result)
+    }
 
     pub async fn parse_query_zero_copy<T: for<'de> Deserialize<'de>>(
         &self,
         query_string: &str,
-    ) -> BearDogResult<T> {
+    ) -> Result<T, BearDogError> {
         match serde_urlencoded::from_str(query_string) {
             Ok(params) => {
                 self.stats.zero_copy_parses.fetch_add(1, Ordering::Relaxed);
@@ -54,14 +56,25 @@ impl ZeroCopyRequestParser {
             Err(e) => Err(BearDogError::validation(format!(
                 "Query parameter parsing failed: {e}"
             ))),
+        }
+    }
 
     pub async fn parse_form_data<T: for<'de> Deserialize<'de>>(
+        &self,
         form_data: &str,
+    ) -> Result<T, BearDogError> {
         self.stats.form_parsed.fetch_add(1, Ordering::Relaxed);
         match serde_urlencoded::from_str(form_data) {
             Ok(data) => {
                 Ok(data)
+            }
+            Err(e) => Err(BearDogError::validation(format!(
                 "Form data parsing failed: {e}"
+            ))),
+        }
+    }
 
     pub fn get_stats(&self) -> &ZeroCopyRequestStats {
         &self.stats
+    }
+}

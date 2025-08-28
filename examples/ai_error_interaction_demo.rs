@@ -5,7 +5,7 @@ use serde_json::json;
 use std::collections::HashMap;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🤖 AI Error Interaction Demo");
     println!("============================");
 
@@ -16,7 +16,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_crypto_error_ai_response() -> BearDogResult<()> {
+async fn demonstrate_crypto_error_ai_response() -> Result<(), BearDogError> {
     println!("\n🔐 SCENARIO 1: Cryptographic Operation Failure");
     println!("==============================================");
 
@@ -73,7 +73,7 @@ async fn demonstrate_crypto_error_ai_response() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_network_error_ai_response() -> BearDogResult<()> {
+async fn demonstrate_network_error_ai_response() -> Result<(), BearDogError> {
     println!("\n🌐 SCENARIO 2: Network Connectivity Issue");
     println!("=========================================");
     
@@ -122,7 +122,7 @@ async fn demonstrate_network_error_ai_response() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_resource_exhaustion_ai_response() -> BearDogResult<()> {
+async fn demonstrate_resource_exhaustion_ai_response() -> Result<(), BearDogError> {
     println!("\n💾 SCENARIO 3: Resource Exhaustion");
     println!("==================================");
     

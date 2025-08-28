@@ -21,12 +21,17 @@ pub async fn get_hipaa_compliance(
 
 pub async fn log_phi_access(
     Json(_): Json<serde_json::Value>,
-        serde_json::json!({"logged": true, "audit_id": "phi_audit_12345"}),
-        15,
-        false,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "logged": true, 
+        "audit_id": "phi_audit_12345"
+    }))))
+}
 
-pub async fn conduct_breach_assessment(
-            "assessment_id": "breach_assessment_12345",
-            "risk_level": "LOW",
-            "notification_required": false
-        85,
+pub async fn conduct_breach_assessment() -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "assessment_id": "breach_assessment_12345",
+        "risk_level": "LOW",
+        "notification_required": false
+    }))))
+}

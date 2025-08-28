@@ -7,7 +7,7 @@ use super::{
     types::{HsmKey, KeyHealthStatus, KeyMaterial, KeyMetadata, KeyType},
 };
 use crate::tunnel::key_manager::{BStpKeyManager as KeyManager, CryptoAlgorithm, CryptoKey};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_security::recovery::{EphemeralRecoveryKey, RecoveryProvider};
 use beardog_utils::utils::safe_ops::SafeOps;
 use serde::{Deserialize, Serialize};
@@ -84,7 +84,7 @@ impl MobileEphemeralKeyGenerator {
         config: MobileEphemeralConfig,
         key_manager: KeyManager,
         recovery_provider: RecoveryProvider,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         info!("🚀 Initializing Mobile Ephemeral Key Generator - CORE BEARDOG CAPABILITY");
 
         let android_keystore = match SafeAndroidKeystore::new() {
@@ -118,7 +118,7 @@ impl MobileEphemeralKeyGenerator {
         &self,
         live_input: LiveInputData,
         key_purpose: &str,
-    ) -> BearDogResult<EphemeralMobileKey> {
+    ) -> Result<EphemeralMobileKey, BearDogError> {
         info!("🔐 CORE BEARDOG: Generating ephemeral key with live input data");
 
         self.validate_live_input(&live_input).await?;
@@ -210,7 +210,7 @@ impl MobileEphemeralKeyGenerator {
         key_id: &str,
         operation_data: &[u8],
         live_validation_input: Option<LiveInputData>,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         info!("🔓 Using ephemeral key with live validation: {}", key_id);
 
         let mut key_entry = {
@@ -244,7 +244,7 @@ impl MobileEphemeralKeyGenerator {
             CryptoAlgorithm::GeneticHybrid => {
                 self.encrypt_with_genetic_hybrid(operation_data, &key_entry.key.key)
 
-    async fn validate_live_input(&self, input: &LiveInputData) -> BearDogResult<()> {
+    async fn validate_live_input(&self, input: &LiveInputData) -> Result<(), BearDogError> {
 
         SafeOps::safe_validate_string(&input.user_id, 1, 256, "user_id")?;
 
@@ -274,7 +274,7 @@ impl MobileEphemeralKeyGenerator {
 
     async fn process_live_input_safely(
         input: &LiveInputData,
-    ) -> BearDogResult<ProcessedEntropy> {
+    ) -> Result<ProcessedEntropy, BearDogError> {
         use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
 
@@ -300,7 +300,7 @@ impl MobileEphemeralKeyGenerator {
 
     async fn generate_hardware_backed_ephemeral(
         processed_entropy: &ProcessedEntropy,
-    ) -> BearDogResult<CryptoKey> {
+    ) -> Result<CryptoKey, BearDogError> {
         info!("🔧 Attempting hardware-backed ephemeral key generation");
 
         if let Some(ref android_keystore) = self.android_keystore {
@@ -339,7 +339,7 @@ impl MobileEphemeralKeyGenerator {
             .generate_session_key(key_id, CryptoAlgorithm::Aes256Gcm)
             .await
 
-    async fn estimate_entropy_bits(&self, input: &LiveInputData) -> BearDogResult<usize> {
+    async fn estimate_entropy_bits(&self, input: &LiveInputData) -> Result<usize, BearDogError> {
         let mut entropy_bits = 0;
 
         entropy_bits += input.user_entropy.len() * 4; // Simplified: 4 bits per byte
@@ -352,7 +352,7 @@ impl MobileEphemeralKeyGenerator {
 
         Ok(entropy_bits.min(512))
 
-    async fn get_device_context(&self) -> BearDogResult<DeviceContext> {
+    async fn get_device_context(&self) -> Result<DeviceContext, BearDogError> {
         Ok(DeviceContext {
             platform: if cfg!(target_os = "android") {
                 "android".to_string()
@@ -368,18 +368,18 @@ impl MobileEphemeralKeyGenerator {
             } else if self.ios_provider.is_some() {
                 Some("ios_secure_enclave".to_string())
 
-    async fn encrypt_with_aes_gcm(&self, data: &[u8], key: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt_with_aes_gcm(&self, data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         let mut result = Vec::new();
         result.extend_from_slice(b"AES256GCM:");
         result.extend_from_slice(data);
         Ok(result)
 
-    async fn encrypt_with_chacha20(&self, data: &[u8], key: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt_with_chacha20(&self, data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         result.extend_from_slice(b"CHACHA20:");
 
-    async fn encrypt_with_genetic_hybrid(&self, data: &[u8], key: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt_with_genetic_hybrid(&self, data: &[u8], key: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         result.extend_from_slice(b"GENETIC:");
 
@@ -416,7 +416,7 @@ struct ProcessedEntropy {
     entropy_bits: usize,
     processed_at: SystemTime,
 
-pub async fn demonstrate_core_beardog_capability() -> BearDogResult<()> {
+pub async fn demonstrate_core_beardog_capability() -> Result<(), BearDogError> {
     info!("🎯 DEMONSTRATING CORE BEARDOG CAPABILITY - EPHEMERAL KEYS ON MOBILE");
 
     let config = MobileEphemeralConfig::default();

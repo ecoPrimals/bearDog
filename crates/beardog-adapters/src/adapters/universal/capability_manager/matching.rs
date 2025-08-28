@@ -10,7 +10,7 @@ use uuid::Uuid;
 use super::super::registry::CapabilityMatch;
 use super::super::traits::*;
 use super::monitoring::PerformanceMetrics;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 #[derive(Debug)]
 pub enum MatchingAlgorithmType {
@@ -36,7 +36,7 @@ pub trait MatchingAlgorithm: Send + Sync {
         requirement: &CapabilityRequirement,
         capability: &Capability,
         context: &MatchingContext,
-    ) -> BearDogResult<f64>;
+    ) -> Result<f64, BearDogError>;
 
 #[derive(Debug, Clone)]
 pub struct CapabilityRequirement {
@@ -211,7 +211,7 @@ pub struct MatchingPreferences {
 
 impl AdvancedCapabilityMatcher {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             matching_algorithms: vec![
 
@@ -223,7 +223,7 @@ impl AdvancedCapabilityMatcher {
 
     pub async fn find_matches(
         available_capabilities: &[Capability],
-    ) -> BearDogResult<Vec<CapabilityMatch>> {
+    ) -> Result<Vec<CapabilityMatch>, BearDogError>> {
         info!(
             "🔍 Finding matches for requirement: {}",
             requirement.requirement_id
@@ -325,7 +325,7 @@ impl AdvancedCapabilityMatcher {
     async fn record_matching_outcome(
         matches: &[CapabilityMatch],
         _context: &MatchingContext,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let outcome = MatchingOutcome {
             match_id: Uuid::new_v4().to_string(),
             requirement: requirement.clone(),
@@ -354,7 +354,7 @@ impl AdvancedCapabilityMatcher {
             .insert(outcome.match_id.clone(), outcome);
         Ok(())
 
-    pub async fn get_matching_history(&self) -> BearDogResult<Vec<MatchingOutcome>> {
+    pub async fn get_matching_history(&self) -> Result<Vec<MatchingOutcome>, BearDogError>> {
         let history = self.matching_history.read().await;
         Ok(history.values().cloned().collect())
 
@@ -365,7 +365,7 @@ impl AdvancedCapabilityMatcher {
             .insert(ecosystem_id.to_string(), preferences);
 
     pub async fn get_preferences(
-    ) -> BearDogResult<Option<MatchingPreferences>> {
+    ) -> Result<Option<MatchingPreferences>, BearDogError>> {
         let preferences = self.ecosystem_preferences.read().await;
         Ok(preferences.get(ecosystem_id).cloned())
 

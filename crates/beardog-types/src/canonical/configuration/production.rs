@@ -1,12 +1,9 @@
-
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProductionConfig {
-
     pub environment: Environment,
 
     pub deployment_id: String,
@@ -15,15 +12,10 @@ pub struct ProductionConfig {
 
     pub cluster_config: Option<ClusterConfig>,
 
-    pub backup_config: BackupConfig,
-
-    pub maintenance_config: MaintenanceConfig,
-
-    pub circuit_breaker_config: CircuitBreakerConfig,
-
-    pub health_monitoring: HealthMonitoringConfig,
-
-    pub resource_limits: ResourceLimitsConfig,
+    pub monitoring: HealthMonitoringConfig,
+    pub maintenance: MaintenanceConfig,
+    pub backup: BackupConfig,
+    pub circuit_breaker_config: crate::canonical::providers::CircuitBreakerConfig,
 }
 
 impl Default for ProductionConfig {
@@ -33,18 +25,16 @@ impl Default for ProductionConfig {
             deployment_id: "default-deployment".to_string(),
             node_id: "node-001".to_string(),
             cluster_config: None,
-            backup_config: BackupConfig::default(),
-            maintenance_config: MaintenanceConfig::default(),
-            circuit_breaker_config: CircuitBreakerConfig::default(),
-            health_monitoring: HealthMonitoringConfig::default(),
-            resource_limits: ResourceLimitsConfig::default(),
+            monitoring: HealthMonitoringConfig::default(),
+            maintenance: MaintenanceConfig::default(),
+            backup: BackupConfig::default(),
+            circuit_breaker_config: crate::canonical::providers::CircuitBreakerConfig::default(),
         }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Environment {
-
     Development,
 
     Staging,
@@ -56,7 +46,6 @@ pub enum Environment {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterConfig {
-
     pub nodes: Vec<NodeConfig>,
 
     pub consensus_algorithm: ConsensusAlgorithm,
@@ -70,7 +59,6 @@ pub struct ClusterConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeConfig {
-
     pub id: String,
 
     pub hostname: String,
@@ -84,9 +72,25 @@ pub struct NodeConfig {
     pub config_overrides: HashMap<String, serde_json::Value>,
 }
 
+impl Default for NodeConfig {
+    fn default() -> Self {
+        Self {
+            id: "node-001".to_string(),
+            hostname: "localhost".to_string(),
+            port: 8080,
+            role: NodeRole::Leader,
+            resources: NodeResources {
+                cpu_cores: 4,
+                memory_gb: 8,
+                disk_gb: 100,
+            },
+            config_overrides: HashMap::new(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupConfig {
-
     pub enabled: bool,
 
     pub frequency: BackupFrequency,
@@ -115,7 +119,6 @@ impl Default for BackupConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MaintenanceConfig {
-
     pub enabled: bool,
 
     pub window: MaintenanceWindow,
@@ -140,34 +143,7 @@ impl Default for MaintenanceConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CircuitBreakerConfig {
-
-    pub enabled: bool,
-
-    pub failure_threshold: u32,
-
-    pub success_threshold: u32,
-
-    pub timeout: Duration,
-
-    pub retry_interval: Duration,
-}
-
-impl Default for CircuitBreakerConfig {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            failure_threshold: 5,
-            success_threshold: 3,
-            timeout: Duration::from_secs(60),
-            retry_interval: Duration::from_secs(30),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthMonitoringConfig {
-
     pub enabled: bool,
 
     pub check_interval: Duration,
@@ -193,7 +169,6 @@ impl Default for HealthMonitoringConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceLimitsConfig {
-
     pub max_memory: u64,
 
     pub max_cpu_percent: f64,
@@ -210,7 +185,7 @@ impl Default for ResourceLimitsConfig {
         Self {
             max_memory: 2_147_483_648, // 2GB
             max_cpu_percent: 80.0,
-            max_disk: 10_737_418_240, // 10GB
+            max_disk: 10_737_418_240,           // 10GB
             max_network_bandwidth: 104_857_600, // 100MB/s
             max_connections: 1000,
         }
@@ -322,7 +297,7 @@ impl Default for BackupVerification {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MaintenanceWindow {
     pub day_of_week: u8, // 0 = Sunday
-    pub start_hour: u8,   // 24-hour format
+    pub start_hour: u8,  // 24-hour format
     pub duration_hours: u8,
 }
 
@@ -394,4 +369,4 @@ impl Default for MaintenanceNotifications {
             advance_notice_hours: 24,
         }
     }
-} 
+}

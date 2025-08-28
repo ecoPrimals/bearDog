@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 
@@ -31,7 +31,7 @@ unsafe fn unsafe_android_key_generation_simulation(
 async fn safe_android_key_generation_optimized(
     key_id: &str,
     key_size: usize,
-) -> BearDogResult<Vec<u8>> {
+) -> Result<Vec<u8, BearDogError>> {
 
     let key_data: Vec<u8> = (0..key_size).map(|i| (i % 256) as u8).collect();
 
@@ -124,7 +124,7 @@ impl<C: HardwareCapability> SafeHardwareProvider<C> {
         &self,
         key_id: &str,
         algorithm: Algorithm,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8, BearDogError>> {
 
         if !C::supported_algorithms().contains(&algorithm) {
             return Err(BearDogError::internal("Unsupported operation")
@@ -194,7 +194,7 @@ fn multiply_by_five(x: usize) -> usize {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🛡️ BearDog Safe vs Unsafe Code Elimination Demo");
     println!("==============================================\n");
 

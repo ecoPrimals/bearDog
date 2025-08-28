@@ -1,9 +1,10 @@
+use beardog_errors::BearDogError;
 
 
 use super::HsmTestHarness;
-use beardog::{BearDogError, BearDogResult};
+use beardog::{{BearDogError, BearDogError}};
 
-pub async fn test_genetic_spawning_integration(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+pub async fn test_genetic_spawning_integration(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("🧬 Testing Genetic Spawning Integration");
 
     test_hsm_genetic_spawning(harness).await?;
@@ -17,7 +18,7 @@ pub async fn test_genetic_spawning_integration(harness: &mut HsmTestHarness) -> 
     Ok(())
 }
 
-async fn test_hsm_genetic_spawning(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_hsm_genetic_spawning(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🧪 Testing HSM-backed genetic spawning");
     
     let start_time = std::time::Instant::now();
@@ -35,7 +36,7 @@ async fn test_hsm_genetic_spawning(harness: &mut HsmTestHarness) -> BearDogResul
     Ok(())
 }
 
-async fn test_entropy_hierarchy_integration(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_entropy_hierarchy_integration(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🌊 Testing entropy hierarchy integration");
     
     let start_time = std::time::Instant::now();
@@ -51,7 +52,7 @@ async fn test_entropy_hierarchy_integration(harness: &mut HsmTestHarness) -> Bea
     Ok(())
 }
 
-async fn test_genetic_key_derivation(harness: &mut HsmTestHarness) -> BearDogResult<()> {
+async fn test_genetic_key_derivation(harness: &mut HsmTestHarness) -> Result<(), BearDogError> {
     println!("  🔑 Testing genetic key derivation");
     
     let start_time = std::time::Instant::now();
@@ -68,7 +69,7 @@ async fn test_genetic_key_derivation(harness: &mut HsmTestHarness) -> BearDogRes
 }
 
 #[tokio::test]
-async fn test_genetic_integration_standalone() -> BearDogResult<()> {
+async fn test_genetic_integration_standalone() -> Result<(), BearDogError> {
     let mut harness = super::HsmTestHarness::new().await?;
     test_genetic_spawning_integration(&mut harness).await
 } 

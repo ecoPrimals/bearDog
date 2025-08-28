@@ -1,10 +1,10 @@
-
+use beardog_errors::BearDogError;
 
 use std::sync::Arc;
 use tokio::time::Duration;
 use tracing::{debug, info, warn};
 use super::types::{RegistryConfig, NodeInfo};
-use crate::{BearDogError, BearDogResult};
+use crate::{{BearDogError}};
 
 use self::bootstrap::{
     BootstrapServices, BootstrapServiceFactory,
@@ -38,7 +38,7 @@ pub struct BootstrapManager {
 
 impl BootstrapManager {
 
-    pub async fn new(config: RegistryConfig) -> BearDogResult<Self> {
+    pub async fn new(config: RegistryConfig) -> Result<Self, BearDogError> {
         info!("🔄 Initializing Bootstrap Manager with modular architecture");
 
         let bootstrap_config = Self::load_bootstrap_config(&config).await?;
@@ -54,7 +54,7 @@ impl BootstrapManager {
     pub async fn bootstrap_registry(
         &self,
         registry: &super::core::BearDogNodeRegistry,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         if !self.bootstrap_config.enable_federation_discovery {
             info!("📄 Bootstrap disabled, skipping");
             return Ok(());
@@ -94,7 +94,7 @@ impl BootstrapManager {
             trusted_connections: comprehensive_stats.get("verification_verified_nodes").unwrap_or(&0),
             federation_partners_discovered: comprehensive_stats.get("federation_total_federation_partners").unwrap_or(&0),
 
-    pub async fn get_health_check(&self) -> BearDogResult<super::bootstrap::types::BootstrapHealthCheck> {
+    pub async fn get_health_check(&self) -> Result<super::bootstrap::types::BootstrapHealthCheck, BearDogError> {
         let stats = self.get_bootstrap_stats().await;
         let is_healthy = stats.success_rate() > 50.0 && 
                         comprehensive_stats.get("verification_verified_nodes").unwrap_or(&0) > &0;
@@ -115,7 +115,7 @@ impl BootstrapManager {
             status: if is_healthy { "Healthy".to_string() } else { "Warning".to_string() },
             warnings,
 
-    pub async fn bootstrap_single_node(&self, node_info: &NodeInfo) -> BearDogResult<bool> {
+    pub async fn bootstrap_single_node(&self, node_info: &NodeInfo) -> Result<bool, BearDogError> {
         info!("🎯 Bootstrapping single node: {}", node_info.node_id);
 
         self.services.discovery.validate_node(node_info)?;
@@ -129,7 +129,7 @@ impl BootstrapManager {
                 Ok(verified)
                 warn!("⚠️ Error bootstrapping node {}: {}", node_info.node_id, e);
 
-    pub async fn refresh_federation_cache(&self) -> BearDogResult<()> {
+    pub async fn refresh_federation_cache(&self) -> Result<(), BearDogError> {
         info!("🔄 Refreshing federation cache");
 
         self.services.verification.clear_cache();
@@ -140,7 +140,7 @@ impl BootstrapManager {
                 info!("✅ Refreshed federation cache with {} nodes", nodes.len());
                 warn!("⚠️ Failed to refresh federation cache: {}", e);
 
-    async fn load_bootstrap_config(config: &RegistryConfig) -> BearDogResult<BootstrapConfig> {
+    async fn load_bootstrap_config(config: &RegistryConfig) -> Result<BootstrapConfig, BearDogError> {
         debug!("📋 Loading bootstrap configuration");
 
         let mut bootstrap_config = BootstrapConfig::default();

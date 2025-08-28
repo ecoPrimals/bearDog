@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::net::TcpStream;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use crate::ai_automation::standalone_ai::{BearDogAICore, AIInsight};
 
 #[derive(Debug)]
@@ -103,7 +103,7 @@ enum EncryptionLevel {
     Military,
 }
 
-pub async fn check_squirrel_connectivity() -> BearDogResult<Option<SquirrelNetwork>> {
+pub async fn check_squirrel_connectivity() -> Result<Option<SquirrelNetwork, BearDogError>> {
 
     match try_connect_to_squirrel().await {
         Ok(connection) => {
@@ -126,7 +126,7 @@ pub async fn check_squirrel_connectivity() -> BearDogResult<Option<SquirrelNetwo
     }
 }
 
-async fn try_connect_to_squirrel() -> BearDogResult<SquirrelConnection> {
+async fn try_connect_to_squirrel() -> Result<SquirrelConnection, BearDogError> {
 
     if let Ok(_stream) = TcpStream::connect("127.0.0.1:7777").await {
         Ok(SquirrelConnection {
@@ -148,7 +148,7 @@ impl SquirrelNetwork {
         &mut self,
         ai_core: &BearDogAICore,
         tasks: Vec<DistributedTask>
-    ) -> BearDogResult<Vec<TaskResult>> {
+    ) -> Result<Vec<TaskResult, BearDogError>> {
         let mut results = Vec::new();
         
         for task in tasks {
@@ -188,7 +188,7 @@ impl SquirrelNetwork {
         ai_core: &BearDogAICore,
         operation: &str,
         data: &[u8]
-    ) -> BearDogResult<Vec<AIInsight>> {
+    ) -> Result<Vec<AIInsight, BearDogError>> {
 
         let standalone_insights = ai_core.analyze_security_patterns(data).await?;
 
@@ -257,7 +257,7 @@ pub struct TaskResult {
 }
 
 impl FleetCoordinator {
-    async fn initialize(_connection: &SquirrelConnection) -> BearDogResult<Self> {
+    async fn initialize(_connection: &SquirrelConnection) -> Result<Self, BearDogError> {
         Ok(Self {
             connected_nodes: Vec::new(),
             coordination_protocol: CoordinationProtocol,
@@ -265,14 +265,14 @@ impl FleetCoordinator {
         })
     }
     
-    async fn select_optimal_nodes(&self, _task: &DistributedTask) -> BearDogResult<Vec<FleetNode>> {
+    async fn select_optimal_nodes(&self, _task: &DistributedTask) -> Result<Vec<FleetNode, BearDogError>> {
 
         Ok(self.connected_nodes.clone())
     }
 }
 
 impl NetworkEncryptionManager {
-    async fn initialize(_connection: &SquirrelConnection) -> BearDogResult<Self> {
+    async fn initialize(_connection: &SquirrelConnection) -> Result<Self, BearDogError> {
         Ok(Self {
             encryption_level: EncryptionLevel::Enhanced,
             key_exchange: KeyExchange,
@@ -280,14 +280,14 @@ impl NetworkEncryptionManager {
         })
     }
     
-    async fn encrypt_task(&self, task: &DistributedTask) -> BearDogResult<DistributedTask> {
+    async fn encrypt_task(&self, task: &DistributedTask) -> Result<DistributedTask, BearDogError> {
 
         Ok(task.clone())
     }
 }
 
 impl TaskDistributor {
-    async fn initialize() -> BearDogResult<Self> {
+    async fn initialize() -> Result<Self, BearDogError> {
         Ok(Self {
             distribution_strategy: DistributionStrategy::AIOptimized,
             task_queue: Vec::new(),
@@ -299,7 +299,7 @@ impl TaskDistributor {
         &self,
         task: &DistributedTask,
         _nodes: &[FleetNode]
-    ) -> BearDogResult<Vec<TaskResult>> {
+    ) -> Result<Vec<TaskResult, BearDogError>> {
 
         Ok(vec![TaskResult {
             task_id: task.task_id.clone(),
@@ -316,7 +316,7 @@ impl ResultAggregator {
         &self,
         results: Vec<TaskResult>,
         _ai_core: &BearDogAICore
-    ) -> BearDogResult<TaskResult> {
+    ) -> Result<TaskResult, BearDogError> {
 
         Ok(results.into_iter().next().unwrap_or(TaskResult {
             task_id: "aggregated".to_string(),

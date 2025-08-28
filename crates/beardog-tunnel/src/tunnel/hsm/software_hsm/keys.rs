@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -49,7 +49,7 @@ where
         }
     }
 
-    pub async fn store_key(&self, key: &SoftwareKey) -> beardog_errors::BearDogResult<()> {
+    pub async fn store_key(&self, key: &SoftwareKey) -> Result<(), BearDogError> {
         let encrypted_data = self.encryption_key.encrypt(&key.key_data).await?;
 
         self.storage_backend
@@ -73,7 +73,7 @@ where
     pub async fn retrieve_key(
         &self,
         key_id: &str,
-    ) -> beardog_errors::BearDogResult<Option<SoftwareKey>> {
+    ) -> Result<Option<SoftwareKey>, BearDogError>> {
         // Check cache first
         {
             let cache = self.key_cache.read().await;
@@ -111,27 +111,27 @@ pub struct DefaultStorageBackend;
 pub struct DefaultEncryptionKey;
 
 impl StorageBackend for DefaultStorageBackend {
-    async fn store(&self, _key_id: &str, _data: &[u8]) -> beardog_errors::BearDogResult<()> {
+    async fn store(&self, _key_id: &str, _data: &[u8]) -> Result<(), BearDogError> {
         // In-memory storage for testing
         Ok(())
     }
 
-    async fn retrieve(&self, _key_id: &str) -> beardog_errors::BearDogResult<Option<Vec<u8>>> {
+    async fn retrieve(&self, _key_id: &str) -> Result<Option<Vec<u8>, BearDogError>>> {
         Ok(None)
     }
 
-    async fn delete(&self, _key_id: &str) -> beardog_errors::BearDogResult<()> {
+    async fn delete(&self, _key_id: &str) -> Result<(), BearDogError> {
         Ok(())
     }
 }
 
 impl EncryptionKey for DefaultEncryptionKey {
-    async fn encrypt(&self, data: &[u8]) -> beardog_errors::BearDogResult<Vec<u8>> {
+    async fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         // Simple XOR encryption for testing
         Ok(data.iter().map(|b| b ^ 0x42).collect())
     }
 
-    async fn decrypt(&self, data: &[u8]) -> beardog_errors::BearDogResult<Vec<u8>> {
+    async fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         // Simple XOR decryption
         Ok(data.iter().map(|b| b ^ 0x42).collect())
     }
@@ -171,7 +171,7 @@ impl SoftwareKeyBuilder {
         self
     }
 
-    pub fn build(self) -> beardog_errors::BearDogResult<SoftwareKey> {
+    pub fn build(self) -> Result<SoftwareKey, BearDogError> {
         let key_id = self.key_id.ok_or_else(|| {
             beardog_errors::BearDogError::Validation {
                 field: "key_id".to_string(),

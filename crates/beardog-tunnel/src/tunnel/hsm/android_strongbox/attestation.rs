@@ -2,12 +2,12 @@
 
 use super::types::*;
 use crate::tunnel::hsm::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{debug, info, warn};
 impl AndroidAttestationService {
 
-    pub async fn new(config: AttestationConfig) -> BearDogResult<Self> {
+    pub async fn new(config: AttestationConfig) -> Result<Self, BearDogError> {
         info!("🔐 Initializing Android Attestation Service");
 
         let trusted_certificates = Self::load_trusted_certificates(&config).await?;
@@ -26,7 +26,7 @@ impl AndroidAttestationService {
         Ok(service)
     }
 
-    pub async fn initialize(&self) -> BearDogResult<()> {
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
         info!("🔍 Initializing attestation service");
 
         for (i, cert) in self.trusted_certificates.iter().enumerate() {
@@ -45,7 +45,7 @@ impl AndroidAttestationService {
         &self,
         chain: &[Vec<u8>],
         challenge: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
             "🔍 Verifying certificate chain ({} certificates)",
             chain.len()
         if chain.is_empty() {
@@ -75,7 +75,7 @@ impl AndroidAttestationService {
     pub async fn create_attestation_data(
         key_id: &str,
         device_info: &AndroidDeviceInfo,
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         info!("📝 Creating attestation data for key: {}", key_id);
 
         let mut attestation_data = Vec::new();
@@ -113,7 +113,7 @@ impl AndroidAttestationService {
             attestation_data.len()
         Ok(attestation_data)
 
-    async fn is_certificate_trusted(&self, certificate: &[u8]) -> BearDogResult<bool> {
+    async fn is_certificate_trusted(&self, certificate: &[u8]) -> Result<bool, BearDogError> {
         debug!("🔍 Checking if certificate is trusted");
 
         for trusted_cert in &self.trusted_certificates {
@@ -127,7 +127,7 @@ impl AndroidAttestationService {
         debug!("❌ Certificate is not trusted");
         Ok(false)
 
-    async fn load_trusted_certificates(_config: &AttestationConfig) -> BearDogResult<Vec<Vec<u8>>> {
+    async fn load_trusted_certificates(_config: &AttestationConfig) -> Result<Vec<Vec<u8>, BearDogError>>> {
         info!("📜 Loading trusted certificates");
 
         let mut certificates = Vec::new();
@@ -136,7 +136,7 @@ impl AndroidAttestationService {
         info!("📜 Loaded {} trusted certificates", certificates.len());
         Ok(certificates)
 
-    async fn load_google_root_certificate() -> BearDogResult<Vec<u8>> {
+    async fn load_google_root_certificate() -> Result<Vec<u8>, BearDogError>> {
 
         Ok(vec![
             0x30, 0x82, 0x01,
@@ -144,7 +144,7 @@ impl AndroidAttestationService {
 
         ])
 
-    pub async fn load_certificate_from_path(path: &str) -> BearDogResult<Vec<u8>> {
+    pub async fn load_certificate_from_path(path: &str) -> Result<Vec<u8>, BearDogError>> {
         debug!("📜 Loading certificate from: {}", path);
 
         Ok(vec![0x30, 0x82, 0x01, 0x00])

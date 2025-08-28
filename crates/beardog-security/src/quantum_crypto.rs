@@ -1,6 +1,6 @@
+use beardog_errors::BearDogError;
 
-
-use crate::{BearDogError, BearDogResult};
+use crate::{{BearDogError}};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use zeroize::{Zeroize, ZeroizeOnDrop};
@@ -110,7 +110,7 @@ pub struct QuantumCryptoStats {
 
 impl QuantumCryptoEngine {
 
-    pub fn new(security_level: SecurityLevel) -> BearDogResult<Self> {
+    pub fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         let kyber_instance = Arc::new(KyberEngine::new(security_level)?);
         let dilithium_instance = Arc::new(DilithiumEngine::new(security_level)?);
         let sphincs_instance = Arc::new(SphincsEngine::new(security_level)?);
@@ -124,7 +124,7 @@ impl QuantumCryptoEngine {
         })
     }
 
-    pub fn generate_kem_keypair(&self, algorithm: KemAlgorithm) -> BearDogResult<QuantumKEM> {
+    pub fn generate_kem_keypair(&self, algorithm: KemAlgorithm) -> Result<QuantumKEM, BearDogError> {
         self.operations_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 
         match algorithm {
@@ -135,7 +135,7 @@ impl QuantumCryptoEngine {
         }
     }
 
-    pub fn generate_signature_keypair(&self, algorithm: SignatureAlgorithm) -> BearDogResult<QuantumSignature> {
+    pub fn generate_signature_keypair(&self, algorithm: SignatureAlgorithm) -> Result<QuantumSignature, BearDogError> {
         self.operations_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 
         match algorithm {
@@ -146,7 +146,7 @@ impl QuantumCryptoEngine {
         }
     }
 
-    pub fn encapsulate_key(&self, public_key: &QuantumKEM) -> BearDogResult<QuantumKeyExchange> {
+    pub fn encapsulate_key(&self, public_key: &QuantumKEM) -> Result<QuantumKeyExchange, BearDogError> {
         self.operations_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 
         match public_key.algorithm {
@@ -157,7 +157,7 @@ impl QuantumCryptoEngine {
         }
     }
 
-    pub fn decapsulate_key(&self, private_key: &QuantumKEM, encapsulated_key: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub fn decapsulate_key(&self, private_key: &QuantumKEM, encapsulated_key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         self.operations_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 
         let private_key_data = private_key.private_key.as_ref()
@@ -171,7 +171,7 @@ impl QuantumCryptoEngine {
         }
     }
 
-    pub fn sign_message(&self, private_key: &QuantumSignature, message: &[u8]) -> BearDogResult<QuantumSignatureResult> {
+    pub fn sign_message(&self, private_key: &QuantumSignature, message: &[u8]) -> Result<QuantumSignatureResult, BearDogError> {
         self.operations_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 
         let private_key_data = private_key.private_key.as_ref()
@@ -185,7 +185,7 @@ impl QuantumCryptoEngine {
         }
     }
 
-    pub fn verify_signature(&self, public_key: &QuantumSignature, message: &[u8], signature: &QuantumSignatureResult) -> BearDogResult<bool> {
+    pub fn verify_signature(&self, public_key: &QuantumSignature, message: &[u8], signature: &QuantumSignatureResult) -> Result<bool, BearDogError> {
         self.operations_count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 
         match public_key.algorithm {
@@ -196,7 +196,7 @@ impl QuantumCryptoEngine {
         }
     }
 
-    pub fn hybrid_encrypt(&self, data: &[u8], quantum_public_key: &QuantumKEM, classical_public_key: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub fn hybrid_encrypt(&self, data: &[u8], quantum_public_key: &QuantumKEM, classical_public_key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         if !self.hybrid_mode {
             return Err(BearDogError::Configuration("Hybrid mode not enabled".to_string()));
         }
@@ -218,16 +218,16 @@ impl QuantumCryptoEngine {
         }
     }
 
-    fn generate_mceliece_keypair(&self) -> BearDogResult<QuantumKEM> {
+    fn generate_mceliece_keypair(&self) -> Result<QuantumKEM, BearDogError> {
 
         Err(BearDogError::Cryptographic("McEliece implementation pending".to_string()))
     }
 
-    fn encapsulate_mceliece(&self, _public_key: &[u8]) -> BearDogResult<QuantumKeyExchange> {
+    fn encapsulate_mceliece(&self, _public_key: &[u8]) -> Result<QuantumKeyExchange, BearDogError> {
         Err(BearDogError::Cryptographic("McEliece implementation pending".to_string()))
     }
 
-    fn decapsulate_mceliece(&self, private_key: &[u8], encapsulated_key: &[u8]) -> BearDogResult<Vec<u8>> {
+    fn decapsulate_mceliece(&self, private_key: &[u8], encapsulated_key: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
         if private_key.len() < 32 || encapsulated_key.len() < 64 {
             return Err(BearDogError::Cryptographic("Invalid key sizes for McEliece".to_string()));
@@ -251,12 +251,12 @@ impl QuantumCryptoEngine {
         Ok(shared_secret)
     }
 
-    fn combine_secrets(&self, quantum_secret: &[u8], _classical_public_key: &[u8]) -> BearDogResult<Vec<u8>> {
+    fn combine_secrets(&self, quantum_secret: &[u8], _classical_public_key: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
         Ok(quantum_secret.to_vec())
     }
 
-    fn symmetric_encrypt_with_secret(&self, data: &[u8], secret: &[u8]) -> BearDogResult<Vec<u8>> {
+    fn symmetric_encrypt_with_secret(&self, data: &[u8], secret: &[u8]) -> Result<Vec<u8>, BearDogError> {
 
         let mut result = data.to_vec();
         for (i, byte) in result.iter_mut().enumerate() {
@@ -267,11 +267,11 @@ impl QuantumCryptoEngine {
 }
 
 impl KyberEngine {
-    fn new(security_level: SecurityLevel) -> BearDogResult<Self> {
+    fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         Ok(Self { security_level })
     }
 
-    fn generate_keypair_512(&self) -> BearDogResult<QuantumKEM> {
+    fn generate_keypair_512(&self) -> Result<QuantumKEM, BearDogError> {
 
         let public_key = vec![0u8; 800]; // Kyber-512 public key size
         let private_key = QuantumPrivateKey {
@@ -287,7 +287,7 @@ impl KyberEngine {
         })
     }
 
-    fn generate_keypair_768(&self) -> BearDogResult<QuantumKEM> {
+    fn generate_keypair_768(&self) -> Result<QuantumKEM, BearDogError> {
 
         let public_key = vec![0u8; 1184]; // Kyber-768 public key size
         let private_key = QuantumPrivateKey {
@@ -303,7 +303,7 @@ impl KyberEngine {
         })
     }
 
-    fn generate_keypair_1024(&self) -> BearDogResult<QuantumKEM> {
+    fn generate_keypair_1024(&self) -> Result<QuantumKEM, BearDogError> {
 
         let public_key = vec![0u8; 1568]; // Kyber-1024 public key size
         let private_key = QuantumPrivateKey {
@@ -319,7 +319,7 @@ impl KyberEngine {
         })
     }
 
-    fn encapsulate_512(&self, _public_key: &[u8]) -> BearDogResult<QuantumKeyExchange> {
+    fn encapsulate_512(&self, _public_key: &[u8]) -> Result<QuantumKeyExchange, BearDogError> {
         Ok(QuantumKeyExchange {
             shared_secret: vec![0u8; 32], // 256-bit shared secret
             encapsulated_key: vec![0u8; 768], // Kyber-512 ciphertext size
@@ -328,7 +328,7 @@ impl KyberEngine {
         })
     }
 
-    fn encapsulate_768(&self, _public_key: &[u8]) -> BearDogResult<QuantumKeyExchange> {
+    fn encapsulate_768(&self, _public_key: &[u8]) -> Result<QuantumKeyExchange, BearDogError> {
         Ok(QuantumKeyExchange {
             shared_secret: vec![0u8; 32], // 256-bit shared secret
             encapsulated_key: vec![0u8; 1088], // Kyber-768 ciphertext size
@@ -337,7 +337,7 @@ impl KyberEngine {
         })
     }
 
-    fn encapsulate_1024(&self, _public_key: &[u8]) -> BearDogResult<QuantumKeyExchange> {
+    fn encapsulate_1024(&self, _public_key: &[u8]) -> Result<QuantumKeyExchange, BearDogError> {
         Ok(QuantumKeyExchange {
             shared_secret: vec![0u8; 32], // 256-bit shared secret
             encapsulated_key: vec![0u8; 1568], // Kyber-1024 ciphertext size
@@ -346,25 +346,25 @@ impl KyberEngine {
         })
     }
 
-    fn decapsulate_512(&self, _private_key: &[u8], _encapsulated_key: &[u8]) -> BearDogResult<Vec<u8>> {
+    fn decapsulate_512(&self, _private_key: &[u8], _encapsulated_key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Ok(vec![0u8; 32]) // 256-bit shared secret
     }
 
-    fn decapsulate_768(&self, _private_key: &[u8], _encapsulated_key: &[u8]) -> BearDogResult<Vec<u8>> {
+    fn decapsulate_768(&self, _private_key: &[u8], _encapsulated_key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Ok(vec![0u8; 32]) // 256-bit shared secret
     }
 
-    fn decapsulate_1024(&self, _private_key: &[u8], _encapsulated_key: &[u8]) -> BearDogResult<Vec<u8>> {
+    fn decapsulate_1024(&self, _private_key: &[u8], _encapsulated_key: &[u8]) -> Result<Vec<u8>, BearDogError> {
         Ok(vec![0u8; 32]) // 256-bit shared secret
     }
 }
 
 impl DilithiumEngine {
-    fn new(security_level: SecurityLevel) -> BearDogResult<Self> {
+    fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         Ok(Self { security_level })
     }
 
-    fn generate_keypair_2(&self) -> BearDogResult<QuantumSignature> {
+    fn generate_keypair_2(&self) -> Result<QuantumSignature, BearDogError> {
         let public_key = vec![0u8; 1312]; // Dilithium2 public key size
         let private_key = QuantumPrivateKey {
             key_data: vec![0u8; 2528], // Dilithium2 private key size
@@ -379,7 +379,7 @@ impl DilithiumEngine {
         })
     }
 
-    fn generate_keypair_3(&self) -> BearDogResult<QuantumSignature> {
+    fn generate_keypair_3(&self) -> Result<QuantumSignature, BearDogError> {
         let public_key = vec![0u8; 1952]; // Dilithium3 public key size
         let private_key = QuantumPrivateKey {
             key_data: vec![0u8; 4000], // Dilithium3 private key size
@@ -394,7 +394,7 @@ impl DilithiumEngine {
         })
     }
 
-    fn generate_keypair_5(&self) -> BearDogResult<QuantumSignature> {
+    fn generate_keypair_5(&self) -> Result<QuantumSignature, BearDogError> {
         let public_key = vec![0u8; 2592]; // Dilithium5 public key size
         let private_key = QuantumPrivateKey {
             key_data: vec![0u8; 4864], // Dilithium5 private key size
@@ -409,7 +409,7 @@ impl DilithiumEngine {
         })
     }
 
-    fn sign_2(&self, _private_key: &[u8], _message: &[u8]) -> BearDogResult<QuantumSignatureResult> {
+    fn sign_2(&self, _private_key: &[u8], _message: &[u8]) -> Result<QuantumSignatureResult, BearDogError> {
         Ok(QuantumSignatureResult {
             signature: vec![0u8; 2420], // Dilithium2 signature size
             algorithm_used: SignatureAlgorithm::Dilithium2,
@@ -421,7 +421,7 @@ impl DilithiumEngine {
         })
     }
 
-    fn sign_3(&self, _private_key: &[u8], _message: &[u8]) -> BearDogResult<QuantumSignatureResult> {
+    fn sign_3(&self, _private_key: &[u8], _message: &[u8]) -> Result<QuantumSignatureResult, BearDogError> {
         Ok(QuantumSignatureResult {
             signature: vec![0u8; 3293], // Dilithium3 signature size
             algorithm_used: SignatureAlgorithm::Dilithium3,
@@ -433,7 +433,7 @@ impl DilithiumEngine {
         })
     }
 
-    fn sign_5(&self, _private_key: &[u8], _message: &[u8]) -> BearDogResult<QuantumSignatureResult> {
+    fn sign_5(&self, _private_key: &[u8], _message: &[u8]) -> Result<QuantumSignatureResult, BearDogError> {
         Ok(QuantumSignatureResult {
             signature: vec![0u8; 4595], // Dilithium5 signature size
             algorithm_used: SignatureAlgorithm::Dilithium5,
@@ -445,25 +445,25 @@ impl DilithiumEngine {
         })
     }
 
-    fn verify_2(&self, _public_key: &[u8], _message: &[u8], _signature: &[u8]) -> BearDogResult<bool> {
+    fn verify_2(&self, _public_key: &[u8], _message: &[u8], _signature: &[u8]) -> Result<bool, BearDogError> {
         Ok(true) // Simplified verification for demonstration
     }
 
-    fn verify_3(&self, _public_key: &[u8], _message: &[u8], _signature: &[u8]) -> BearDogResult<bool> {
+    fn verify_3(&self, _public_key: &[u8], _message: &[u8], _signature: &[u8]) -> Result<bool, BearDogError> {
         Ok(true) // Simplified verification for demonstration
     }
 
-    fn verify_5(&self, _public_key: &[u8], _message: &[u8], _signature: &[u8]) -> BearDogResult<bool> {
+    fn verify_5(&self, _public_key: &[u8], _message: &[u8], _signature: &[u8]) -> Result<bool, BearDogError> {
         Ok(true) // Simplified verification for demonstration
     }
 }
 
 impl SphincsEngine {
-    fn new(security_level: SecurityLevel) -> BearDogResult<Self> {
+    fn new(security_level: SecurityLevel) -> Result<Self, BearDogError> {
         Ok(Self { security_level })
     }
 
-    fn generate_keypair(&self) -> BearDogResult<QuantumSignature> {
+    fn generate_keypair(&self) -> Result<QuantumSignature, BearDogError> {
         let public_key = vec![0u8; 32]; // SPHINCS+ public key size
         let private_key = QuantumPrivateKey {
             key_data: vec![0u8; 64], // SPHINCS+ private key size
@@ -478,7 +478,7 @@ impl SphincsEngine {
         })
     }
 
-    fn sign(&self, _private_key: &[u8], _message: &[u8]) -> BearDogResult<QuantumSignatureResult> {
+    fn sign(&self, _private_key: &[u8], _message: &[u8]) -> Result<QuantumSignatureResult, BearDogError> {
         Ok(QuantumSignatureResult {
             signature: vec![0u8; 17088], // SPHINCS+ signature size
             algorithm_used: SignatureAlgorithm::SphincsPlus,
@@ -490,7 +490,7 @@ impl SphincsEngine {
         })
     }
 
-    fn verify(&self, _public_key: &[u8], _message: &[u8], _signature: &[u8]) -> BearDogResult<bool> {
+    fn verify(&self, _public_key: &[u8], _message: &[u8], _signature: &[u8]) -> Result<bool, BearDogError> {
         Ok(true) // Simplified verification for demonstration
     }
 }
@@ -504,7 +504,7 @@ impl std::fmt::Debug for QuantumPrivateKey {
     }
 }
 
-pub fn benchmark_quantum_performance() -> BearDogResult<()> {
+pub fn benchmark_quantum_performance() -> Result<(), BearDogError> {
     let engine = QuantumCryptoEngine::new(SecurityLevel::Level5)?;
 
     let start = std::time::Instant::now();

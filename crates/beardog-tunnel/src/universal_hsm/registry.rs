@@ -1,13 +1,13 @@
 
 
 use super::traits::{ProviderHealth, UniversalHsmProvider};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
-pub struct UniversalHsmRegistry<P: UniversalHsmProvider> {
+pub struct UniversalHsmRegistry<P: HsmProvider> {
 
     provider: P,
 
@@ -31,7 +31,7 @@ trait RegistryProvider: Send + Sync {
     fn update_preferences(&mut self, preferences: ProviderPreferences);
 }
 
-impl<P: UniversalHsmProvider> RegistryProvider for UniversalHsmRegistry<P> {
+impl<P: HsmProvider> RegistryProvider for UniversalHsmRegistry<P> {
     fn get_provider_id(&self) -> &str {
         &self.provider_id
     }
@@ -78,7 +78,7 @@ impl Default for ProviderPreferences {}
             max_latency_ms: 1000,
         }
     }
-impl<P: UniversalHsmProvider> UniversalHsmRegistry<P> {
+impl<P: HsmProvider> UniversalHsmRegistry<P> {
 
     pub fn new(provider_id: &str, provider: P) -> Self {
         Self {
@@ -102,7 +102,7 @@ impl<P: UniversalHsmProvider> UniversalHsmRegistry<P> {
         &self,
         id: &str,
         provider: impl HsmProvider + Send + Sync,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let provider_arc: impl HsmProvider + Send + Sync + 'static = Arc::from(provider);
 
         match provider_arc.health_check().await {
@@ -132,7 +132,7 @@ impl<P: UniversalHsmProvider> UniversalHsmRegistry<P> {
                     "Provider '{id}' health check error: {e}"
                 )))
 
-    pub async fn unregister_provider(&self, id: &str) -> BearDogResult<()> {
+    pub async fn unregister_provider(&self, id: &str) -> Result<(), BearDogError> {
         let mut providers = self.providers.write().await;
         let mut cache = self.health_cache.write().await;
         if providers.remove(id).is_some() {
@@ -146,12 +146,12 @@ impl<P: UniversalHsmProvider> UniversalHsmRegistry<P> {
 
     pub async fn get_provider(
         id: &str,
-    ) -> BearDogResult<Option<impl HsmProvider + Send + Sync + 'static>> {
+    ) -> Result<Option<impl HsmProvider + Send + Sync + 'static>, BearDogError>> {
         let providers = self.providers.read().await;
         Ok(providers.get(id).cloned())
 
     pub async fn get_healthy_providers(
-    ) -> BearDogResult<Vec<(String, impl HsmProvider + Send + Sync + 'static)>> {
+    ) -> Result<Vec<(String, impl HsmProvider + Send + Sync + 'static)>> {
         let mut healthy = Vec::new();
         for (id, provider) in providers.iter() {
             match provider.health_check().await {
@@ -171,7 +171,7 @@ impl<P: UniversalHsmProvider> UniversalHsmRegistry<P> {
         Ok(healthy)
 
     pub async fn get_best_provider(
-    ) -> BearDogResult<Option<(String, impl HsmProvider + Send + Sync + 'static)>> {
+    ) -> Result<Option<(String, impl HsmProvider + Send + Sync + 'static), BearDogError>> {
         let healthy_providers = self.get_healthy_providers().await?;
         if healthy_providers.is_empty() {
             return Ok(None);
@@ -192,7 +192,7 @@ impl<P: UniversalHsmProvider> UniversalHsmRegistry<P> {
 
     async fn score_provider(
         provider: &impl HsmProvider + Send + Sync + 'static,
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64, BearDogError> {
         let mut score = 0.0;
 
         let info = provider.get_provider_info();
@@ -256,7 +256,7 @@ mod tests {
     use crate::universal_hsm::providers::SoftwareHsmProvider;
     #[tokio::test]}
 
-    async fn test_registry_basic_operations() -> BearDogResult<()> {
+    async fn test_registry_basic_operations() -> Result<(), BearDogError> {
         let registry = UniversalHsmRegistry::new();
 
         assert_eq!(registry.provider_count().await, 0);
@@ -278,7 +278,7 @@ mod tests {
 
         registry.unregister_provider("test-software").await?;
         Ok(())
-    async fn test_provider_selection() -> BearDogResult<()> {
+    async fn test_provider_selection() -> Result<(), BearDogError> {
 
         let provider1 = SoftwareHsmProvider::new().await?;
         let provider2 = SoftwareHsmProvider::new().await?;

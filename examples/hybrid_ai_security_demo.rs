@@ -5,7 +5,7 @@ use beardog::core::ai::hybrid_intelligence::{
 };
 use beardog_types::canonical::SecurityContext;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{
     ExternalCapabilityType, ExternalAIRequest, NLPAnalysisType, SecurityContext,
     PatternAnalysisScope, AnalysisDepth, BearDogCapability
@@ -17,7 +17,7 @@ use tokio::time::{sleep, Duration};
 use tracing::{info, warn};
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     tracing_subscriber::init();
     
     println!("🎯 BearDog Hybrid AI Security Demo");
@@ -49,7 +49,7 @@ async fn main() -> BearDogResult<()> {
 
 async fn demonstrate_beardog_internal_ml(
     hybrid_ai: &HybridIntelligenceManager,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     println!("🔍 Demo 1: BearDog Internal Security ML");
     println!("========================================");
 
@@ -94,7 +94,7 @@ async fn demonstrate_beardog_internal_ml(
 
 async fn demonstrate_squirrel_ai_routing(
     hybrid_ai: &HybridIntelligenceManager,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     println!("🐿️  Demo 2: AI Intelligence Routing via Universal Adapter");
     println!("=======================================================");
 
@@ -133,7 +133,7 @@ async fn demonstrate_squirrel_ai_routing(
 
 async fn demonstrate_hybrid_ai_workflow(
     hybrid_ai: &HybridIntelligenceManager,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     println!("🔄 Demo 3: Hybrid AI Workflow (BearDog ML + AI Routing)");
     println!("====================================================");
     
@@ -184,7 +184,7 @@ async fn demonstrate_hybrid_ai_workflow(
 
 async fn demonstrate_realtime_security_pipeline(
     hybrid_ai: &HybridIntelligenceManager,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     println!("⚡ Demo 4: Real-Time Security Analysis Pipeline");
     println!("==============================================");
     
@@ -252,6 +252,6 @@ impl MockUniversalAdapter {
 // #[async_trait::async_trait]
 pub trait HybridAISecurityProvider {
     // Native async fn - no boxing overhead
-    fn analyze_threat(&self, data: &[u8]) -> impl std::future::Future<Output = BearDogResult<ThreatAnalysis>> + Send;
-    fn generate_response(&self, threat: &ThreatAnalysis) -> impl std::future::Future<Output = BearDogResult<SecurityResponse>> + Send;
+    fn analyze_threat(&self, data: &[u8]) -> impl std::future::Future<Output = Result<ThreatAnalysis, BearDogError>> + Send;
+    fn generate_response(&self, threat: &ThreatAnalysis) -> impl std::future::Future<Output = Result<SecurityResponse, BearDogError>> + Send;
 } 

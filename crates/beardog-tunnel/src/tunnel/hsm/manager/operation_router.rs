@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_traits::canonical::HsmProvider;
 use beardog_types::canonical::hsm::{HsmKey, HsmTier, KeyMetadata, KeyType};
 use serde::{Deserialize, Serialize};
@@ -96,10 +96,10 @@ impl<P: HsmProvider + Clone + 'static> HsmOperationRouter<P> {
         &mut self,
         context: RoutingContext,
         operation: F,
-    ) -> BearDogResult<T>
+    ) -> Result<T, BearDogError>
     where
         F: Fn(P) -> Fut + Send + Clone,
-        Fut: std::future::Future<Output = BearDogResult<T>> + Send,
+        Fut: std::future::Future<Output = Result<T, BearDogError>> + Send,
         T: Send,
     {
         debug!("Routing operation: {:?}", context.operation_type);
@@ -146,10 +146,10 @@ impl<P: HsmProvider + Clone + 'static> HsmOperationRouter<P> {
         &mut self,
         provider: &P,
         operation: &F,
-    ) -> BearDogResult<T>
+    ) -> Result<T, BearDogError>
     where
         F: Fn(P) -> Fut + Send + Clone,
-        Fut: std::future::Future<Output = BearDogResult<T>> + Send,
+        Fut: std::future::Future<Output = Result<T, BearDogError>> + Send,
         T: Send,
     {
         let start_time = std::time::Instant::now();

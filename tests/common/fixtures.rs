@@ -1,7 +1,7 @@
 
 
 use crate::common::TestResult;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog::{BearDogConfig, BearDogCore};
 use serde_json::{json, Value as JsonValue};
 use std::{

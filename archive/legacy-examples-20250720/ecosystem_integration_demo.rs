@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use serde_json::json;
@@ -16,7 +17,7 @@ use beardog::{
 };
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
 
@@ -46,7 +47,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn initialize_beardog_core() -> BearDogResult<Arc<BearDogCore>> {
+async fn initialize_beardog_core() -> Result<Arc<BearDogCore, BearDogError>> {
     info!("🚀 Initializing BearDog Core for Ecosystem Integration");
 
     let config = BearDogConfig::default();
@@ -60,7 +61,7 @@ async fn initialize_beardog_core() -> BearDogResult<Arc<BearDogCore>> {
 
 async fn create_ecosystem_provider(
     core: Arc<BearDogCore>,
-) -> BearDogResult<BearDogEcosystemProvider> {
+) -> Result<BearDogEcosystemProvider, BearDogError> {
     info!("🔧 Creating BearDog Ecosystem Provider");
 
     let instance_id = format_args!("beardog-security-{}", Uuid::new_v4().to_string());
@@ -72,7 +73,7 @@ async fn create_ecosystem_provider(
 
 async fn demonstrate_songbird_registration(
     provider: &BearDogEcosystemProvider,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     info!("🎼 Demonstrating Songbird Registration");
     info!("=====================================");
 
@@ -93,7 +94,7 @@ async fn demonstrate_songbird_registration(
     Ok(())
 }
 
-async fn demonstrate_ecosystem_requests(provider: &BearDogEcosystemProvider) -> BearDogResult<()> {
+async fn demonstrate_ecosystem_requests(provider: &BearDogEcosystemProvider) -> Result<(), BearDogError> {
     info!("📨 Demonstrating Ecosystem Request Handling");
     info!("===========================================");
 
@@ -192,7 +193,7 @@ async fn demonstrate_ecosystem_requests(provider: &BearDogEcosystemProvider) -> 
 
 async fn demonstrate_cross_primal_integration(
     provider: &BearDogEcosystemProvider,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     info!("🤝 Demonstrating Cross-Primal Integration");
     info!("=========================================");
 
@@ -227,7 +228,7 @@ async fn demonstrate_cross_primal_integration(
 
 async fn demonstrate_security_capabilities(
     provider: &BearDogEcosystemProvider,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     info!("🛡️ Demonstrating Security Capabilities");
     info!("======================================");
 
@@ -278,7 +279,7 @@ async fn demonstrate_security_capabilities(
     Ok(())
 }
 
-async fn demonstrate_health_monitoring(provider: &BearDogEcosystemProvider) -> BearDogResult<()> {
+async fn demonstrate_health_monitoring(provider: &BearDogEcosystemProvider) -> Result<(), BearDogError> {
     info!("🏥 Health Monitoring Capabilities");
     info!("================================");
 

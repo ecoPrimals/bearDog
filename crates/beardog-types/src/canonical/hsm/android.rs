@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 
 use serde::{Deserialize, Serialize};
@@ -7,7 +5,6 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidStrongBoxHsm {
-
     pub device_info: AndroidDeviceInfo,
 
     pub config: AndroidHsmConfig,
@@ -21,7 +18,6 @@ pub struct AndroidStrongBoxHsm {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidDeviceInfo {
-
     pub manufacturer: String,
 
     pub model: String,
@@ -35,7 +31,6 @@ pub struct AndroidDeviceInfo {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidHsmConfig {
-
     pub alias_prefix: String,
 
     pub enable_attestation: bool,
@@ -49,7 +44,6 @@ pub struct AndroidHsmConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidKeystore {
-
     pub strongbox_enabled: bool,
 
     pub available_algorithms: Vec<String>,
@@ -61,7 +55,6 @@ pub struct AndroidKeystore {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AttestationConfig {
-
     pub require_hardware_attestation: bool,
 
     pub accepted_attestation_levels: Vec<String>,
@@ -73,7 +66,6 @@ pub struct AttestationConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AttestationResult {
-
     pub valid: bool,
 
     pub device_verified: bool,
@@ -89,7 +81,6 @@ pub struct AttestationResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidHealthMonitor {
-
     pub monitoring_enabled: bool,
 
     pub check_interval_seconds: u64,
@@ -99,7 +90,6 @@ pub struct AndroidHealthMonitor {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AndroidCachedKey {
-
     pub key_id: String,
 
     pub key_type: String,

@@ -74,4 +74,4 @@ pub enum SecurityEventType {
     DataModification,
     ConfigurationChange,
 
-pub use beardog_types::canonical::providers::ProviderConfig as SecurityProviderConfig;
+pub use crate::canonical::providers::ProviderConfig as SecurityProviderConfig;

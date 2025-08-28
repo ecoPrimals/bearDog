@@ -17,7 +17,7 @@ chrono = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
 thiserror = { workspace = true }
-# async-trait = { workspace = true }  # REMOVED: Modernized to native async fn
+async-trait = "0.1"
 futures = { workspace = true }
 rand = { workspace = true }
 parking_lot = "0.12"
@@ -29,3 +29,6 @@ hmac = "0.12"
 sha2 = "0.10"
 lettre = "0.11"
 base64 = "0.22"
+
+[dev-dependencies]
+tokio-test = "0.4"

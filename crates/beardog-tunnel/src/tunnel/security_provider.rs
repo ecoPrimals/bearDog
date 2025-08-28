@@ -5,7 +5,7 @@ use crate::tunnel::{
     GamingSecurityProfile, GeneticSecurityHealing, LatencyMonitor, NetworkSecurityEvent,
     SecureSession, SecurityGenetics, SecurityResponse,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_genetics::genetics::DefaultBearDogGeneticsEngine;
 use beardog_security::encryption::EncryptionEngine;
 use beardog_threat::threat::ThreatDetectionEngine;
@@ -18,27 +18,18 @@ use tracing::debug;
 
 use beardog_traits::canonical::SecurityProvider;
 
-#[allow(async_fn_in_trait)]
-#[deprecated(since = "3.1.0", note = "Use PlatformProvider instead")]
-#[deprecated(since = "3.1.0", note = "Use PlatformProvider instead")]
-pub trait GamingSecurityProvider: SecurityProvider {
-
-    async fn encrypt_packet(&self, session_id: &str, data: &[u8])
-        -> BearDogResult<EncryptedPacket>;
-
-    async fn decrypt_packet(
-        &self,
+// GamingSecurityProvider removed - use PlatformProvider from beardog-traits instead
         session_id: &str,
         encrypted_data: &EncryptedPacket,
-    ) -> BearDogResult<Vec<u8>>;
+    ) -> Result<Vec<u8>, BearDogError>>;
 
     async fn handle_network_event(
         &self,
         event: NetworkSecurityEvent,
-    ) -> BearDogResult<SecurityResponse>;
+    ) -> Result<SecurityResponse, BearDogError>;
 }
 
-pub use GamingSecurityProvider as BStpSecurityProvider;
+pub use beardog_traits::canonical::PlatformProvider as BStpSecurityProvider;
 
 pub struct BStpSecurityManager {
 
@@ -63,7 +54,7 @@ impl BStpSecurityManager {
         config: BStpConfig,
         auth_engine: Arc<CrossNodeAuthEngine>,
         threat_engine: Arc<ThreatDetectionEngine>,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         let crypto_engine = Arc::new(
             GamingCryptoEngine::new(
                 encryption,
@@ -107,14 +98,14 @@ impl BStpSecurityManager {
     pub fn get_threat_engine(&self) -> &Arc<ThreatDetectionEngine> {
         &self.threat_engine
 
-    pub async fn perform_security_healing(&self, session_id: &str) -> BearDogResult<()> {
+    pub async fn perform_security_healing(&self, session_id: &str) -> Result<(), BearDogError> {
         let healing_engine = self.healing_engine.read().await;
 
         let _ = &*healing_engine; // Use the field
         debug!("Performing security healing for session: {}", session_id);
         Ok(())
 impl BStpSecurityProvider for BStpSecurityManager {
-    ) -> BearDogResult<SecureSession> {
+    ) -> Result<SecureSession, BearDogError> {
         let session_id = Self::generate_session_id();
         let start_time = Instant::now();
 
@@ -159,7 +150,7 @@ impl BStpSecurityProvider for BStpSecurityManager {
         Ok(session)
     async fn encrypt_packet(
         data: &[u8],
-    ) -> BearDogResult<EncryptedPacket> {
+    ) -> Result<EncryptedPacket, BearDogError> {
 
         let session = {
             let sessions = self.active_sessions.read().await;
@@ -187,7 +178,7 @@ impl BStpSecurityProvider for BStpSecurityManager {
                 );
             }
         Ok(encrypted_packet)
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
 
         let decrypted_data = self
             .ultra_fast_decrypt(session_id, encrypted_data, &session.security_genetics)
@@ -195,7 +186,7 @@ impl BStpSecurityProvider for BStpSecurityManager {
                     .record_decryption_latency(decryption_duration);
                 monitor.decryption_count += 1;
         Ok(decrypted_data)
-    ) -> BearDogResult<SecurityResponse> {
+    ) -> Result<SecurityResponse, BearDogError> {
         match event {
             NetworkSecurityEvent::PeerDiscovered {
                 peer_id,
@@ -230,7 +221,7 @@ impl BStpSecurityProvider for BStpSecurityManager {
                 reason: "Network event handled".to_string(),
                 new_security_level: SecurityLevel::Adaptive,
             }),
-    async fn terminate_session(&self, session_id: &str) -> BearDogResult<()> {
+    async fn terminate_session(&self, session_id: &str) -> Result<(), BearDogError> {
 
             sessions.remove(session_id);
             monitors.remove(session_id);

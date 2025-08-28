@@ -12,7 +12,7 @@ use crate::tunnel::hsm::types::{
     AndroidHsmConfig, AttestationLevel, HsmTier, KeyStorageType, MemoryProtectionLevel,
     Pixel8GrapheneOSConfig, SecureEnclaveType, SmartphoneType, SoftwareHsmConfig, SoftwareHsmType,
     StrongBoxImplementation,
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{info, warn};
 
@@ -37,7 +37,7 @@ impl Default for MobileHsmSetup {}
         }
     }
 
-pub async fn initialize_mobile_hsm_manager(setup: MobileHsmSetup) -> BearDogResult<HsmManager> {
+pub async fn initialize_mobile_hsm_manager(setup: MobileHsmSetup) -> Result<HsmManager, BearDogError> {
     info!("📱 Initializing mobile-first HSM manager");
     let mut hsm_manager = HsmManager::new();
 
@@ -98,7 +98,7 @@ pub async fn initialize_mobile_hsm_manager(setup: MobileHsmSetup) -> BearDogResu
     info!("🎯 Mobile-first HSM manager initialization complete");
     Ok(hsm_manager)
 
-async fn initialize_mobile_hsm(config: &AndroidHsmConfig) -> BearDogResult<AndroidStrongBoxHsm> {
+async fn initialize_mobile_hsm(config: &AndroidHsmConfig) -> Result<AndroidStrongBoxHsm, BearDogError> {
     info!("🔐 Initializing Android StrongBox HSM");
 
     if !cfg!(target_os = "android") {
@@ -112,7 +112,7 @@ async fn initialize_mobile_hsm(config: &AndroidHsmConfig) -> BearDogResult<Andro
     info!("✅ Android StrongBox HSM initialized and ready");
     Ok(strongbox_hsm)
 
-async fn initialize_software_hsm(config: &SoftwareHsmConfig) -> BearDogResult<RustSoftwareHsm> {
+async fn initialize_software_hsm(config: &SoftwareHsmConfig) -> Result<RustSoftwareHsm, BearDogError> {
     info!("💻 Initializing Rust Software HSM");
     let software_hsm = RustSoftwareHsm::new(config.clone()).await?;
     info!("✅ Rust Software HSM initialized and ready");
@@ -127,7 +127,7 @@ pub fn create_pixel8_graphene_config() -> MobileHsmSetup {
         software_hsm_config: SoftwareHsmConfig::default(),
         android_config: AndroidHsmConfig::default(),
 
-pub async fn setup_development_mobile_hsm() -> BearDogResult<HsmManager> {
+pub async fn setup_development_mobile_hsm() -> Result<HsmManager, BearDogError> {
     info!("🛠️ Setting up development mobile HSM environment");
     let config = MobileHsmSetup {
         require_mobile_for_critical: false, // Allow software fallback for development
@@ -136,11 +136,11 @@ pub async fn setup_development_mobile_hsm() -> BearDogResult<HsmManager> {
     };
     initialize_mobile_hsm_manager(config).await
 
-pub async fn setup_production_mobile_hsm() -> BearDogResult<HsmManager> {
+pub async fn setup_production_mobile_hsm() -> Result<HsmManager, BearDogError> {
     info!("🚀 Setting up production mobile HSM environment");
     let config = create_pixel8_graphene_config();
 
-pub async fn demo_mobile_operations(hsm_manager: &HsmManager) -> BearDogResult<()> {
+pub async fn demo_mobile_operations(hsm_manager: &HsmManager) -> Result<(), BearDogError> {
     info!("🎬 Demonstrating mobile HSM operation routing");
 
     let metrics = hsm_manager.get_routing_metrics().await?;

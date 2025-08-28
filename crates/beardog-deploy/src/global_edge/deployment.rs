@@ -1,7 +1,7 @@
 
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -24,7 +24,7 @@ impl DeploymentManager {
         }
     }
 
-    pub async fn initialize(&self) -> BearDogResult<()> {
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
         info!("Initializing global edge deployment manager");
 
         let mut regions = self.regions.write().await;
@@ -50,7 +50,7 @@ impl DeploymentManager {
         Ok(())
     }
 
-    pub async fn deploy_all_regions(&self) -> BearDogResult<()> {
+    pub async fn deploy_all_regions(&self) -> Result<(), BearDogError> {
         info!("Starting global deployment");
         
         let regions = self.regions.read().await;
@@ -96,7 +96,7 @@ impl DeploymentManager {
     async fn deploy_region(
         region_id: &str, 
         regions: Arc<RwLock<HashMap<&str, EdgeRegion>>>
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("Deploying to region: {}", region_id);
 
         {
@@ -144,7 +144,7 @@ impl DeploymentManager {
         self.deployment_stats.read().await.clone()
     }
 
-    pub async fn shutdown(&self) -> BearDogResult<()> {
+    pub async fn shutdown(&self) -> Result<(), BearDogError> {
         info!("Shutting down deployment manager");
         
         let mut regions = self.regions.write().await;

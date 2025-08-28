@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{improved_results::*, migration_helpers::*, BearDogError, BearDogResult};
+use beardog_errors::{{improved_results::*, migration_helpers::*, BearDogError}};
 use chrono::Utc;
 use std::collections::HashMap;
 
@@ -35,13 +35,13 @@ impl MockGeneticsRegistry {
 }
 
 impl MockGeneticsRegistry {
-    pub fn register_genetics_old(&mut self, genetics: BearDogGenetics) -> BearDogResult<()> {
+    pub fn register_genetics_old(&mut self, genetics: BearDogGenetics) -> Result<(), BearDogError> {
 
         self.genetics.insert(genetics.id.clone(), genetics);
         Ok(()) // What validation occurred? Performance metrics? Registry size?
     }
 
-    pub fn terminate_spawn_old(&mut self, spawn_id: &str) -> BearDogResult<()> {
+    pub fn terminate_spawn_old(&mut self, spawn_id: &str) -> Result<(), BearDogError> {
 
         if spawn_id == "valid_spawn" {
             Ok(()) // No cleanup info, performance metrics, or termination details
@@ -56,7 +56,7 @@ impl MockGeneticsRegistry {
     pub fn register_genetics_rich(
         &mut self,
         genetics: BearDogGenetics,
-    ) -> BearDogResult<GeneticsRegistrationOutcome> {
+    ) -> Result<GeneticsRegistrationOutcome, BearDogError> {
         let start_time = Utc::now();
 
         let genetics_id = genetics.id.clone();
@@ -96,7 +96,7 @@ impl MockGeneticsRegistry {
     pub fn terminate_spawn_rich(
         &mut self,
         spawn_id: &str,
-    ) -> BearDogResult<SpawnTerminationOutcome> {
+    ) -> Result<SpawnTerminationOutcome, BearDogError> {
         let start_time = Utc::now();
 
         if spawn_id == "valid_spawn" {

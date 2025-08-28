@@ -1,12 +1,9 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DetectionMethod {
-
     Signature,
 
     Anomaly,
@@ -30,7 +27,6 @@ pub enum DetectionMethod {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EvidenceType {
-
     NetworkTraffic,
 
     SystemLogs,
@@ -68,7 +64,6 @@ pub enum EvidenceType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EvidenceData {
-
     Text(String),
 
     Binary(Vec<u8>),
@@ -86,7 +81,6 @@ pub enum EvidenceData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatEvidence {
-
     pub evidence_type: EvidenceType,
 
     pub description: String,
@@ -102,7 +96,6 @@ pub struct ThreatEvidence {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkPacketData {
-
     pub source_ip: String,
 
     pub dest_ip: String,
@@ -120,7 +113,6 @@ pub struct NetworkPacketData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LogEntryData {
-
     pub log_level: String,
 
     pub message: String,
@@ -132,7 +124,6 @@ pub struct LogEntryData {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FileMetadataData {
-
     pub filename: String,
 
     pub file_size: u64,
@@ -173,7 +164,6 @@ impl Default for LogEntryData {
 }
 
 impl DetectionMethod {
-
     pub fn typical_accuracy(&self) -> f64 {
         match self {
             DetectionMethod::Signature => 0.95,
@@ -217,7 +207,6 @@ impl DetectionMethod {
 }
 
 impl EvidenceType {
-
     pub fn typical_reliability(&self) -> f64 {
         match self {
             EvidenceType::NetworkTraffic => 0.85,
@@ -253,7 +242,6 @@ impl EvidenceType {
 }
 
 impl ThreatEvidence {
-
     pub fn new(evidence_type: EvidenceType, description: &str, data: EvidenceData) -> Self {
         let reliability = evidence_type.typical_reliability();
         Self {
@@ -281,7 +269,6 @@ impl ThreatEvidence {
 }
 
 impl NetworkPacketData {
-
     pub fn new(
         source_ip: &str,
         dest_ip: &str,
@@ -307,7 +294,6 @@ impl NetworkPacketData {
 }
 
 impl LogEntryData {
-
     pub fn new(log_level: &str, message: &str, source: &str) -> Self {
         Self {
             log_level: log_level.to_string(),
@@ -326,7 +312,6 @@ impl LogEntryData {
 }
 
 impl FileMetadataData {
-
     pub fn new(filename: &str, file_size: u64, file_type: &str) -> Self {
         Self {
             filename: filename.to_string(),

@@ -1,7 +1,7 @@
 
 
 use super::{ChaosConfig, TestMetrics, TestResult};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_security::crypto_utils::BearDogCrypto;
 use std::time::{Duration, Instant};
 use tokio::time::timeout;
@@ -21,7 +21,7 @@ impl NetworkChaosController {
         }
     }
 
-    pub async fn test_network_partitions(&self) -> BearDogResult<TestResult> {
+    pub async fn test_network_partitions(&self) -> Result<TestResult, BearDogError> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
         let mut operations_succeeded = 0u64;
@@ -73,7 +73,7 @@ impl NetworkChaosController {
         })
     }
 
-    async fn simulate_network_operation_with_partition(&self) -> BearDogResult<()> {
+    async fn simulate_network_operation_with_partition(&self) -> Result<(), BearDogError> {
 
         let latency = Duration::from_millis(fastrand::u64(
             self.config.network_latency_range.0.as_millis() as u64

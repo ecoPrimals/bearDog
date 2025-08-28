@@ -2,12 +2,12 @@
 
 use beardog::tunnel::key_manager::{BStpKeyManager, CryptoAlgorithm};
 use beardog::tunnel::{config::BStpConfig, session::SessionManager};
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use std::time::Duration;
 
 #[tokio::test]
-async fn test_configuration_profiles() -> BearDogResult<()> {
+async fn test_configuration_profiles() -> Result<(), BearDogError> {
 
     let competitive = BStpConfig::competitive_gaming();
     assert!(competitive.performance.max_encryption_latency <= Duration::from_micros(100));
@@ -27,7 +27,7 @@ async fn test_configuration_profiles() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_key_management_basic() -> BearDogResult<()> {
+async fn test_key_management_basic() -> Result<(), BearDogError> {
     let config = BStpConfig::competitive_gaming();
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management).await?);
 
@@ -50,7 +50,7 @@ async fn test_key_management_basic() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_session_manager_basic() -> BearDogResult<()> {
+async fn test_session_manager_basic() -> Result<(), BearDogError> {
     let session_manager = SessionManager::new();
 
     let session_id = "test_session_lifecycle";
@@ -62,7 +62,7 @@ async fn test_session_manager_basic() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_algorithm_types() -> BearDogResult<()> {
+async fn test_algorithm_types() -> Result<(), BearDogError> {
     let config = BStpConfig::competitive_gaming();
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management).await?);
 
@@ -84,7 +84,7 @@ async fn test_algorithm_types() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_security_compliance_requirements() -> BearDogResult<()> {
+async fn test_security_compliance_requirements() -> Result<(), BearDogError> {
     let config = BStpConfig::maximum_security();
 
     assert!(config.key_management.key_derivation_rounds >= 10000);
@@ -96,7 +96,7 @@ async fn test_security_compliance_requirements() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_gaming_performance_requirements() -> BearDogResult<()> {
+async fn test_gaming_performance_requirements() -> Result<(), BearDogError> {
     let config = BStpConfig::competitive_gaming();
 
     assert!(config.performance.max_encryption_latency <= Duration::from_micros(100));
@@ -108,7 +108,7 @@ async fn test_gaming_performance_requirements() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_key_generation_security() -> BearDogResult<()> {
+async fn test_key_generation_security() -> Result<(), BearDogError> {
     let config = BStpConfig::competitive_gaming();
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management).await?);
 

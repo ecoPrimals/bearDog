@@ -32,6 +32,7 @@ pub struct InformedConsent {
     pub consent_timestamp: DateTime<Utc>,
 
     pub consent_signature: DigitalSignature,
+}
 
 pub struct WithdrawalRights {
 
@@ -40,6 +41,7 @@ pub struct WithdrawalRights {
     pub withdrawal_process: String,
 
     pub data_deletion_timeline: chrono::Duration,
+}
 
 pub struct DigitalSignature {
 
@@ -48,6 +50,7 @@ pub struct DigitalSignature {
     pub algorithm: String,
 
     pub key_id: String,
+}
 
 pub struct PrivacyProtection {
 
@@ -58,6 +61,7 @@ pub struct PrivacyProtection {
     pub anonymization_level: AnonymizationLevel,
 
     pub encryption_at_rest: bool,
+}
 
 pub enum AnonymizationLevel {
 
@@ -70,6 +74,7 @@ pub enum AnonymizationLevel {
     High,
 
     Maximum,
+}
 
 pub struct DataMinimization {
 
@@ -78,6 +83,7 @@ pub struct DataMinimization {
     pub feature_extraction_only: bool,
 
     pub raw_data_retention: chrono::Duration,
+}
 
 pub struct UserControl {
 
@@ -88,6 +94,7 @@ pub struct UserControl {
     pub can_delete_data: bool,
 
     pub granular_permissions: bool,
+}
 
 pub struct PurposeLimitation {
 
@@ -96,6 +103,7 @@ pub struct PurposeLimitation {
     pub secondary_purposes: Vec<String>,
 
     pub purpose_change_notification: bool,
+}
 
 pub struct TransparencyPolicy {
 
@@ -106,6 +114,7 @@ pub struct TransparencyPolicy {
     pub security_measures: String,
 
     pub audit_log_access: bool,
+}
 
 pub struct PrivacyMetadata {
 
@@ -114,3 +123,4 @@ pub struct PrivacyMetadata {
     pub raw_data_deleted: bool,
 
     pub processing_timestamp: DateTime<Utc>,
+}

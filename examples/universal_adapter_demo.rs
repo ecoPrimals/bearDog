@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use serde_json::json;
@@ -14,7 +15,7 @@ use beardog::{
 };
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
 
@@ -250,8 +251,8 @@ async fn main() -> BearDogResult<()> {
 // #[async_trait::async_trait]
 pub trait UniversalAdapter {
     // Native async fn - no boxing overhead
-    fn process_request(&self, request: &AdapterRequest) -> impl std::future::Future<Output = BearDogResult<AdapterResponse>> + Send;
-    fn health_check(&self) -> impl std::future::Future<Output = BearDogResult<HealthStatus>> + Send;
+    fn process_request(&self, request: &AdapterRequest) -> impl std::future::Future<Output = Result<AdapterResponse, BearDogError>> + Send;
+    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus, BearDogError>> + Send;
 }
 
 struct MockToadStoolProvider {
@@ -346,7 +347,7 @@ impl PrimalProvider for MockToadStoolProvider {
     async fn handle_request(
         &self,
         request: beardog::adapters::universal::ServiceRequest,
-    ) -> BearDogResult<ServiceResponse> {
+    ) -> Result<ServiceResponse, BearDogError> {
 
         Ok(ServiceResponse {
             request_id: request.request_id,
@@ -363,7 +364,7 @@ impl PrimalProvider for MockToadStoolProvider {
 
     async fn register_with_ecosystem(
         &self,
-    ) -> BearDogResult<beardog::adapters::universal::EcosystemRegistration> {
+    ) -> Result<beardog::adapters::universal::EcosystemRegistration, BearDogError> {
         Ok(beardog::adapters::universal::EcosystemRegistration {
             registration_id: Uuid::new_v4(),
             ecosystem_id: self.ecosystem_id().to_string(),
@@ -378,11 +379,11 @@ impl PrimalProvider for MockToadStoolProvider {
     async fn initialize(
         &mut self,
         _config: beardog::adapters::universal::ProviderConfig,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         Ok(())
     }
 
-    async fn shutdown(&mut self) -> BearDogResult<()> {
+    async fn shutdown(&mut self) -> Result<(), BearDogError> {
         Ok(())
     }
 

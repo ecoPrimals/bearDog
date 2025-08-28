@@ -10,7 +10,7 @@ use beardog_security::types::{
     SecurityCredentials, BearDogSecurityProvider
 };
 use beardog_types::canonical::{SecurityContext, PolicyDecision};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::time::Instant;
 use chrono::Utc;

@@ -7,7 +7,7 @@ use beardog_types::canonical::hsm::{
     MemoryProtectionLevel, HsmCapabilities, HsmType, KeyStorageType,
     KeyType, Algorithm, CertificationLevel,
 };
-use beardog_types::config::network::core::RetryConfig;
+use beardog_types::canonical::configuration::production::RetryConfig;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

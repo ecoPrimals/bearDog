@@ -1,147 +1,81 @@
-
-
+use crate::workflows::canonical_traits::Workflow;
 pub mod workflows;
 
+pub use beardog_types::canonical::configuration::consolidated::WorkflowConfig;
+
+// Modern canonical workflow system exports
 pub use workflows::{
+    // Example implementations
+    ExampleWorkflow,
+    ExampleWorkflowProcessor,
+    ExampleWorkflowStatus,
+    InMemoryWorkflowRepository,
+    LoggingWorkflowObserver,
 
-    CanonicalWorkflow, Workflow, WorkflowId, WorkflowAuditEntry,
+    ProcessingContext,
+    WorkflowCommand,
+    // Core traits
+    WorkflowId,
+    WorkflowObserver,
+    WorkflowProcessor,
+    WorkflowRepository,
+    // Legacy types for compatibility
+    WorkflowRequest,
+    WorkflowResponse,
+    WorkflowService,
 
-    ApprovalDecision, ApprovalRecord, ApprovalRequirements, ApprovalResponse,
-    ApprovalStore, ApprovalSubmission, ApprovalTier, InMemoryApprovalStore, PendingApproval,
-
-    WorkflowEngine, WorkflowExecution, WorkflowExecutionStatus, WorkflowStore,
-    WorkflowNotificationEngine, WorkflowScheduler, InMemoryWorkflowStore,
-
-    WorkflowHandler, WorkflowProcessingResult,
-
-    WorkflowEngineConfig, WorkflowPolicyConfig,
-
-    WorkflowStatus, WorkflowMetrics, AuditAction,
-
-    WorkflowRequest, WorkflowResponse,
-
-    WorkflowType, WorkflowPriority,
+    WorkflowStatus,
 };
 
-pub use workflows::{
-    zero_cost_engine::{ZeroCostWorkflowEngine, ProductionWorkflowEngine, DevelopmentWorkflowEngine},
-    zero_cost_processors::{ZeroCostKeyRotationProcessor, ZeroCostPolicyChangeProcessor},
-    zero_cost_storage::{ZeroCostMemoryWorkflowStore, ZeroCostMemoryApprovalStore},
-    zero_cost_traits::{ZeroCostWorkflowStore, ZeroCostApprovalStore, ZeroCostWorkflowProcessor},
-    zero_cost_engine::WorkflowEngineInterface,
-};
+pub const WORKFLOW_SYSTEM_VERSION: &str = "3.1.0";
 
-pub const WORKFLOW_SYSTEM_VERSION: &str = "2.0.0";
+// Version updated to reflect canonical trait system implementation
 
-// Simple processor for compilation
-pub struct DefaultWorkflowProcessor;
-
-impl crate::workflows::zero_cost_traits::ZeroCostWorkflowProcessor for DefaultWorkflowProcessor {
-    type Request = String;
-    type Response = String;
-    type Context = ();
-
-    async fn process(&self, request: Self::Request, _context: Self::Context) -> beardog_errors::BearDogResult<Self::Response> {
-        Ok(format!("Processed: {}", request))
-    }
-
-    async fn validate(&self, _request: &Self::Request) -> beardog_errors::BearDogResult<()> {
-        Ok(())
-    }
-
-    fn capabilities(&self) -> &'static [&'static str] {
-        &["basic"]
-    }
-
-    fn name(&self) -> &'static str {
-        "DefaultWorkflowProcessor"
-    }
-}
-
-pub struct BearDogWorkflowSystem<E = crate::workflows::zero_cost_engine::ZeroCostWorkflowEngine<
-    crate::workflows::zero_cost_storage::ZeroCostMemoryWorkflowStore<1000>,
-    crate::workflows::zero_cost_storage::ZeroCostMemoryApprovalStore<1000>, 
-    DefaultWorkflowProcessor
->> {
-    engine: E,
-}
-
-impl<T> BearDogWorkflowSystem<T>
+/// Modern workflow system using canonical traits
+pub struct BearDogWorkflowSystem<R, P, O>
 where
-    T: Send,
+    R: WorkflowRepository,
+    P: WorkflowProcessor<Workflow = R::Workflow>,
+    O: WorkflowObserver<Workflow = R::Workflow>,
 {
-    pub fn with_engine(engine: T) -> Self {
-        Self { engine }
+    service: WorkflowService<R, P, O>,
+}
+
+impl<R, P, O> BearDogWorkflowSystem<R, P, O>
+where
+    R: WorkflowRepository,
+    P: WorkflowProcessor<Workflow = R::Workflow>,
+    O: WorkflowObserver<Workflow = R::Workflow>,
+{
+    pub fn new(repository: R, processor: P, observer: O) -> Self {
+        let mut service = WorkflowService::new(repository, processor);
+        service.add_observer(observer);
+        Self { service }
     }
-    
-    pub async fn execute_workflow<W>(&self, workflow: W) -> beardog_errors::BearDogResult<()>
+
+    pub async fn execute_workflow(
+        &self,
+        workflow: R::Workflow,
+        context: P::Context,
+    ) -> Result<R::Workflow, R::Error>
     where
-        W: Send,
+        O::Error: std::fmt::Debug,
+        P::Error: std::fmt::Debug + Into<R::Error>,
     {
-        // Implementation placeholder
-        Ok(())
+        self.service.create_workflow(workflow.clone()).await?;
+        self.service.process_workflow(workflow.id(), context).await
     }
 }
 
-impl BearDogWorkflowSystem {
-    pub async fn new() -> beardog_errors::BearDogResult<Self> {
-        let workflow_store = crate::workflows::zero_cost_storage::ZeroCostMemoryWorkflowStore::<1000>::new();
-        let approval_store = crate::workflows::zero_cost_storage::ZeroCostMemoryApprovalStore::<1000>::new();
-        let processor = DefaultWorkflowProcessor;
-        let engine = crate::workflows::zero_cost_engine::ZeroCostWorkflowEngine::new(workflow_store, approval_store, processor);
-        Ok(Self {
-            engine,
-        })
-    }
+// Legacy implementation methods removed - use the new constructor with canonical traits
 
-    pub async fn with_config(_config: WorkflowEngineConfig) -> beardog_errors::BearDogResult<Self> {
-        let workflow_store = crate::workflows::zero_cost_storage::ZeroCostMemoryWorkflowStore::<1000>::new();
-        let approval_store = crate::workflows::zero_cost_storage::ZeroCostMemoryApprovalStore::<1000>::new();
-        let processor = DefaultWorkflowProcessor;
-        let engine = crate::workflows::zero_cost_engine::ZeroCostWorkflowEngine::new(workflow_store, approval_store, processor);
-        Ok(Self {
-            engine,
-        })
-    }
-
-    pub async fn submit_workflow(&self, workflow: Workflow) -> beardog_errors::BearDogResult<WorkflowId> {
-        self.engine.submit_workflow(workflow).await
-    }
-
-    pub async fn get_workflow_status(&self, workflow_id: &WorkflowId) -> beardog_errors::BearDogResult<WorkflowStatus> {
-        self.engine.get_workflow_status(workflow_id).await
-    }
-}
-
-pub struct WorkflowSystemBuilder {
-    _config: WorkflowEngineConfig,
-}
-
-impl WorkflowSystemBuilder {
-
-    pub fn new() -> Self {
-        Self {
-            _config: WorkflowEngineConfig::default(),
-        }
-    }
-
-    pub fn max_concurrent_workflows(mut self, max: usize) -> Self {
-        self._config.max_concurrent = max;
-        self
-    }
-
-    pub fn with_approvals(self, _enabled: bool) -> Self {
-
-        self
-    }
-
-    pub async fn build(self) -> beardog_errors::BearDogResult<BearDogWorkflowSystem> {
-        BearDogWorkflowSystem::with_config(self._config).await
-    }
-}
-
-impl Default for WorkflowSystemBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+// Example usage:
+// ```rust
+// use beardog_workflows::*;
+//
+// let repository = InMemoryWorkflowRepository::new();
+// let processor = ExampleWorkflowProcessor::new("MyProcessor");
+// let observer = LoggingWorkflowObserver::new("MyObserver");
+//
+// let system = BearDogWorkflowSystem::new(repository, processor, observer);
+// ```

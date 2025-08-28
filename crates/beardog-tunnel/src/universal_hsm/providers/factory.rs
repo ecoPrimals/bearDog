@@ -1,7 +1,7 @@
 
 
 use super::software::{SoftwareHsmConfig, SoftwareHsmProvider};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::KeyType;
 use tracing::{debug, info, warn};
 
@@ -18,10 +18,10 @@ impl ProviderFactory {
         }
     }
 
-    pub async fn create_software_provider(&self) -> BearDogResult<SoftwareHsmProvider> {
+    pub async fn create_software_provider(&self) -> Result<SoftwareHsmProvider, BearDogError> {
         SoftwareHsmProvider::new_with_config(&self.software_config).await
 
-    pub async fn create_best_provider(&self) -> BearDogResult<SoftwareHsmProvider> {
+    pub async fn create_best_provider(&self) -> Result<SoftwareHsmProvider, BearDogError> {
         info!("🔍 Detecting best available HSM provider for platform");
 
         let detected_providers = self.detect_platform_providers().await?;
@@ -57,7 +57,7 @@ impl ProviderFactory {
         debug!("📋 Available HSM providers: {:?}", providers);
         providers
 
-    pub async fn auto_discover(&self) -> BearDogResult<Vec<String>> {
+    pub async fn auto_discover(&self) -> Result<Vec<String>, BearDogError>> {
         info!("🔍 Auto-discovering HSM providers on system");
         let mut discovered = vec!["software".to_string()]; // Software is always available
 
@@ -78,7 +78,7 @@ impl ProviderFactory {
         );
         Ok(discovered)
 
-    async fn detect_platform_providers(&self) -> BearDogResult<Vec<String>> {
+    async fn detect_platform_providers(&self) -> Result<Vec<String>, BearDogError>> {
         let mut providers = Vec::new();
 
         Ok(providers)

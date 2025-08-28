@@ -1,11 +1,10 @@
-
-
 use beardog_errors::BearDogError;
 
+#[allow(dead_code)]
 pub struct DeploymentErrorHandler;
 
+#[allow(dead_code)]
 impl DeploymentErrorHandler {
-
     pub fn ndk_not_found<'a>(message: impl Into<&'a str>) -> BearDogError {
         BearDogError::system(format!("NDK Detection Error: {}", message.into()))
     }
@@ -15,7 +14,10 @@ impl DeploymentErrorHandler {
     }
 
     pub fn android_build_env(message: impl Into<String>) -> BearDogError {
-        BearDogError::system(format!("Android Build Environment Error: {}", message.into()))
+        BearDogError::system(format!(
+            "Android Build Environment Error: {}",
+            message.into()
+        ))
     }
 
     pub fn ios_build_env(message: impl Into<String>) -> BearDogError {
@@ -27,7 +29,9 @@ impl DeploymentErrorHandler {
     }
 
     pub fn multiple_devices() -> BearDogError {
-        BearDogError::system("Device Selection Error: Multiple devices connected - specify target device")
+        BearDogError::system(
+            "Device Selection Error: Multiple devices connected - specify target device",
+        )
     }
 
     pub fn build_failed<'a>(message: impl Into<&'a str>) -> BearDogError {
@@ -43,7 +47,10 @@ impl DeploymentErrorHandler {
     }
 
     pub fn unsupported_target<'a>(target: impl Into<&'a str>) -> BearDogError {
-        BearDogError::system(format!("Target Architecture Error: Unsupported target architecture: {}", target.into()))
+        BearDogError::system(format!(
+            "Target Architecture Error: Unsupported target architecture: {}",
+            target.into()
+        ))
     }
 
     pub fn prerequisites_not_met<'a>(message: impl Into<&'a str>) -> BearDogError {

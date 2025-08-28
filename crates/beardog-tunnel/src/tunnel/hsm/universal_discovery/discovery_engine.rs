@@ -3,7 +3,7 @@
 use super::{
     AuthenticationMethod, DiscoveredHsm, HsmConnectionInfo, HsmHealthStatus, HsmInterfaceType,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tracing::{debug, info, warn};
@@ -98,7 +98,7 @@ pub struct AndroidStrongBoxDiscoverer;
 pub struct IosSecureEnclaveDiscoverer;
 impl DiscoveryEngine {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🔍 Initializing HSM Discovery Engine");
         Ok(Self {
             pkcs11_discoverer: Pkcs11Discoverer::new().await?,
@@ -112,35 +112,35 @@ impl DiscoveryEngine {
         })
     }
 
-    pub async fn discover_pkcs11_hsms(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover_pkcs11_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         info!("🔍 Discovering PKCS#11 HSMs");
         self.pkcs11_discoverer.discover().await
 
-    pub async fn discover_cloud_kms_hsms(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover_cloud_kms_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         info!("☁️ Discovering Cloud KMS instances");
         self.cloud_kms_discoverer.discover().await
 
-    pub async fn discover_network_hsms(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover_network_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         info!("🌐 Discovering Network HSMs");
         self.network_hsm_discoverer.discover().await
 
-    pub async fn discover_usb_hsms(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover_usb_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         info!("🔌 Discovering USB HSMs");
         self.usb_hsm_discoverer.discover().await
 
-    pub async fn discover_software_hsms(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover_software_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         info!("💻 Discovering Software HSMs");
         self.software_hsm_discoverer.discover().await
 
-    pub async fn discover_mobile_hsms(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover_mobile_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         info!("📱 Discovering Mobile HSMs");
         self.mobile_hsm_discoverer.discover().await
 
-    pub async fn discover_tpm_hsms(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover_tpm_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         info!("🔐 Discovering TPMs");
         self.tpm_discoverer.discover().await
 
-    pub async fn discover_smartcard_hsms(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover_smartcard_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         info!("💳 Discovering Smart Cards");
         self.smartcard_discoverer.discover().await
 impl Pkcs11Discoverer {
@@ -150,7 +150,7 @@ impl Pkcs11Discoverer {
             search_paths,
             library_patterns,
 
-    pub async fn discover(&self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         let mut discovered = Vec::new();
         for search_path in &self.search_paths {
             if let Ok(entries) = std::fs::read_dir(search_path) {
@@ -204,7 +204,7 @@ impl Pkcs11Discoverer {
                 .any(|pattern| filename_str.contains(pattern));
         false
 
-    async fn probe_pkcs11_library(&self, path: &PathBuf) -> BearDogResult<DiscoveredHsm> {
+    async fn probe_pkcs11_library(&self, path: &PathBuf) -> Result<DiscoveredHsm, BearDogError> {
         debug!("🔍 Probing PKCS#11 library: {:?}", path);
 
         let library_name = path.file_name()
@@ -281,7 +281,7 @@ impl SoftwareHsmDiscoverer {
     async fn probe_software_hsm(
         &self,
         implementation: &SoftwareHsmImplementation,
-    ) -> BearDogResult<DiscoveredHsm> {
+    ) -> Result<DiscoveredHsm, BearDogError> {
         let (vendor, model, implementation_name) = match implementation {
             SoftwareHsmImplementation::BearDogNative => {
                 ("BearDog".to_string(), "Native Software HSM".to_string(), "beardog_native".to_string())

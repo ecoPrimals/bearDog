@@ -2,12 +2,12 @@
 
 use super::super::types::{AndroidHsmConfig, HsmHealthStatus, HsmKey, KeyType};
 use crate::tunnel::hsm::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::{debug, error, info, warn};
 impl AndroidKeystore {
 
-    pub async fn new(config: KeystoreConfig) -> BearDogResult<Self> {
+    pub async fn new(config: KeystoreConfig) -> Result<Self, BearDogError> {
         info!("🔐 Initializing Android Keystore integration");
 
         let strongbox_implementation = super::native_device_detection::NativeAndroidDeviceDetector::detect_strongbox_implementation().await?;
@@ -32,7 +32,7 @@ impl AndroidKeystore {
     }
 
     #[cfg(target_os = "android")]
-    pub fn initialize_native_handle(&mut self) -> BearDogResult<()> {
+    pub fn initialize_native_handle(&mut self) -> Result<(), BearDogError> {
         info!("🔌 Initializing native Android keystore handle");
         let handle = AndroidNativeHandle {
             device_context: "pixel8-strongbox".to_string(),
@@ -45,7 +45,7 @@ impl AndroidKeystore {
         key_id: &str,
         key_type: &KeyType,
         require_strongbox: bool,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("🔐 Native Android: Generating StrongBox key: {}", key_id);
 
         super::native_keystore_ops::NativeKeystoreOperations::generate_strongbox_key(
@@ -58,7 +58,7 @@ impl AndroidKeystore {
 
     async fn native_sign_with_strongbox_key(
         data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Native Android: Signing with StrongBox key: {}", key_id);
 
         let signature = super::native_keystore_ops::NativeKeystoreOperations::sign_with_keystore(
@@ -69,7 +69,7 @@ impl AndroidKeystore {
 
     async fn native_verify_with_strongbox_key(
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         info!(
             "🔍 Native Android: Verifying signature with StrongBox key: {}",
             key_id
@@ -81,11 +81,10 @@ impl AndroidKeystore {
             is_valid
         Ok(is_valid)
 
-    #[allow(dead_code)] // Will be used when Android Strongbox integration is fully implemented
     fn convert_algorithm_to_keytype(
         algorithm: &AndroidKeyAlgorithm,
         key_size: u32,
-    ) -> BearDogResult<KeyType> {
+    ) -> Result<KeyType, BearDogError> {
         match algorithm {
             AndroidKeyAlgorithm::Ec => match key_size {
                 256 => Ok(KeyType::EccP256),
@@ -105,7 +104,7 @@ impl AndroidKeystore {
     pub fn is_strongbox_available(&self) -> bool {
         self.strongbox_available
 
-    pub async fn test_keystore_access(&self) -> BearDogResult<()> {
+    pub async fn test_keystore_access(&self) -> Result<(), BearDogError> {
         info!("🔍 Testing Android Keystore access");
 
         if !self.strongbox_available {
@@ -114,7 +113,7 @@ impl AndroidKeystore {
             });
         info!("✅ Android Keystore access verified");
 
-    pub async fn generate_key(&self, key_id: &str, params: &AndroidKeyParams) -> BearDogResult<()> {
+    pub async fn generate_key(&self, key_id: &str, params: &AndroidKeyParams) -> Result<(), BearDogError> {
         info!("🔐 Generating key in Android Keystore: {}", key_id);
 
         if !params.strongbox_required && self.strongbox_available {
@@ -140,12 +139,12 @@ impl AndroidKeystore {
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
             "✅ Key generated successfully in Android Keystore: {}",
 
-    pub async fn get_certificate_chain(&self, key_id: &str) -> BearDogResult<Vec<Vec<u8>>> {
+    pub async fn get_certificate_chain(&self, key_id: &str) -> Result<Vec<Vec<u8>, BearDogError>>> {
         info!("📜 Retrieving certificate chain for key: {}", key_id);
 
         self.safe_get_certificate_chain(key_id).await
 
-    async fn safe_get_certificate_chain(&self, key_id: &str) -> BearDogResult<Vec<Vec<u8>>> {
+    async fn safe_get_certificate_chain(&self, key_id: &str) -> Result<Vec<Vec<u8>, BearDogError>>> {
         info!("📜 Safe certificate chain generation for: {}", key_id);
 
         let mock_cert = self.generate_safe_mock_certificate(key_id)?;
@@ -154,7 +153,7 @@ impl AndroidKeystore {
             certificate_chain.len()
         Ok(certificate_chain)
 
-    fn generate_safe_mock_certificate(&self, key_id: &str) -> BearDogResult<Vec<u8>> {
+    fn generate_safe_mock_certificate(&self, key_id: &str) -> Result<Vec<u8>, BearDogError>> {
 
         let mut cert_data = Vec::new();
 
@@ -165,12 +164,12 @@ impl AndroidKeystore {
         cert_data.resize(256, 0x00);
         Ok(cert_data)
 
-    pub async fn attest_key(&self, key_id: &str, challenge: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn attest_key(&self, key_id: &str, challenge: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("🔐 Safe key attestation for: {}", key_id);
 
         self.safe_attest_key(key_id, challenge).await
 
-    async fn safe_attest_key(&self, key_id: &str, challenge: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn safe_attest_key(&self, key_id: &str, challenge: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("🔐 Generating safe attestation for key: {}", key_id);
 
         use beardog_security::crypto_utils::BearDogCrypto;
@@ -213,7 +212,7 @@ impl AndroidKeystore {
         info!("✅ Real Android: Attestation verification completed");
         Ok(true)
 
-    pub async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn encrypt(&self, key_id: &str, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             "🔐 Encrypting {} bytes with key: {}",
             plaintext.len(),
 
@@ -223,7 +222,7 @@ impl AndroidKeystore {
         debug!("✅ Encryption completed: {} bytes output", ciphertext.len());
         Ok(ciphertext)
 
-    pub async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn decrypt(&self, key_id: &str, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             "🔐 Decrypting {} bytes with key: {}",
             ciphertext.len(),
 
@@ -235,7 +234,7 @@ impl AndroidKeystore {
         debug!("✅ Decryption completed: {} bytes output", plaintext.len());
         Ok(plaintext)
 
-    pub async fn sign(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn sign(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         debug!("🔐 Signing {} bytes with key: {}", data.len(), key_id);
 
                 return self.native_sign_with_strongbox_key(key_id, data).await;
@@ -248,7 +247,7 @@ impl AndroidKeystore {
             "✅ Mock signing completed: {} bytes signature",
             signature.len()
 
-    pub async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> BearDogResult<bool> {
+    pub async fn verify(&self, key_id: &str, data: &[u8], signature: &[u8]) -> Result<bool, BearDogError> {
         debug!("🔐 Verifying signature for key: {}", key_id);
                     .native_verify_with_strongbox_key(key_id, data, signature)
         debug!("Mock verification operation for key: {}", key_id);
@@ -262,14 +261,14 @@ impl AndroidKeystore {
         debug!("✅ Mock signature verification result: {}", valid);
         Ok(valid)
 
-    pub async fn sign_attestation_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn sign_attestation_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         debug!("🔐 Signing attestation data for key: {}", key_id);
 
         let mut signature = self.sign(key_id, data).await?;
         signature.extend_from_slice(b"ATTEST");
         debug!("✅ Attestation data signed");
 
-    pub async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
+    pub async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         info!("🗑️ Deleting key from Android Keystore: {}", key_id);
 
         tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;

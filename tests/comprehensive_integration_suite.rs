@@ -7,7 +7,7 @@ use beardog_auth::*;
 use beardog_compliance::*;
 use beardog_types::config::*;
 use beardog_core::*;
-use beardog_errors::*;
+use beardog_errors::{BearDogError, *};
 use beardog_security::*;
 use beardog_types::*;
 use std::collections::HashMap;
@@ -48,7 +48,7 @@ pub struct TestMetrics {
 }
 
 impl IntegrationTestHarness {
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let config = utils::create_production_config();
         let security_manager = Arc::new(RwLock::new(MemoryKeyManager::new()));
         let auth_handler = Arc::new(RwLock::new(MockAuthHandler::new()));
@@ -64,7 +64,7 @@ impl IntegrationTestHarness {
         })
     }
 
-    pub async fn test_auth_workflow(&self, user_id: &str, requested_resource: &str) -> BearDogResult<bool> {
+    pub async fn test_auth_workflow(&self, user_id: &str, requested_resource: &str) -> Result<bool, BearDogError> {
         let start_time = Instant::now();
 
         let mut auth_handler = self.auth_handler.write().await;
@@ -84,7 +84,7 @@ impl IntegrationTestHarness {
         Ok(authorized)
     }
 
-    pub async fn test_key_lifecycle_with_audit(&self, key_id: &str) -> BearDogResult<()> {
+    pub async fn test_key_lifecycle_with_audit(&self, key_id: &str) -> Result<(), BearDogError> {
         let start_time = Instant::now();
 
         let key_data = BearDogCrypto::generate_secure_random(32)?;
@@ -153,7 +153,7 @@ impl IntegrationTestHarness {
         Ok(())
     }
 
-    pub async fn test_encrypted_communication(&self, sender: &str, receiver: &str, message: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn test_encrypted_communication(&self, sender: &str, receiver: &str, message: &[u8]) -> Result<Vec<u8, BearDogError>> {
         let start_time = Instant::now();
 
         let (sender_private, sender_public) = BearDogCrypto::generate_ed25519_keypair()?;
@@ -210,7 +210,7 @@ impl IntegrationTestHarness {
         Ok(decrypted)
     }
 
-    pub async fn test_concurrent_operations(&self, num_operations: usize) -> BearDogResult<TestResults> {
+    pub async fn test_concurrent_operations(&self, num_operations: usize) -> Result<TestResults, BearDogError> {
         let start_time = Instant::now();
         let mut handles = Vec::new();
         
@@ -289,7 +289,7 @@ impl MockAuthHandler {
         }
     }
     
-    pub async fn authenticate(&mut self, user_id: &str) -> BearDogResult<AuthSession> {
+    pub async fn authenticate(&mut self, user_id: &str) -> Result<AuthSession, BearDogError> {
         if let Some(permissions) = self.authorized_users.get(user_id) {
             let session = AuthSession {
                 user_id: user_id.to_string(),
@@ -308,7 +308,7 @@ impl MockAuthHandler {
         }
     }
     
-    pub async fn authorize(&self, session: &AuthSession, resource: &str) -> BearDogResult<bool> {
+    pub async fn authorize(&self, session: &AuthSession, resource: &str) -> Result<bool, BearDogError> {
 
         if session.expires_at < Instant::now() {
             return Ok(false); // Session expired
@@ -351,7 +351,7 @@ pub struct TestResults {
 }
 
 #[tokio::test]
-async fn test_complete_authentication_workflow() -> BearDogResult<()> {
+async fn test_complete_authentication_workflow() -> Result<(), BearDogError> {
     let harness = IntegrationTestHarness::new().await?;
 
     let result = harness.test_auth_workflow("admin", "admin_resource").await?;
@@ -372,7 +372,7 @@ async fn test_complete_authentication_workflow() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_cryptographic_key_lifecycle() -> BearDogResult<()> {
+async fn test_cryptographic_key_lifecycle() -> Result<(), BearDogError> {
     let harness = IntegrationTestHarness::new().await?;
 
     harness.test_key_lifecycle_with_audit("test_key_001").await?;
@@ -389,7 +389,7 @@ async fn test_cryptographic_key_lifecycle() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_encrypted_communication_workflow() -> BearDogResult<()> {
+async fn test_encrypted_communication_workflow() -> Result<(), BearDogError> {
     let harness = IntegrationTestHarness::new().await?;
     
     let original_message = b"This is a secret message for testing encrypted communication";
@@ -406,7 +406,7 @@ async fn test_encrypted_communication_workflow() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_concurrent_system_load() -> BearDogResult<()> {
+async fn test_concurrent_system_load() -> Result<(), BearDogError> {
     let harness = IntegrationTestHarness::new().await?;
 
     let results = harness.test_concurrent_operations(50).await?;
@@ -430,7 +430,7 @@ async fn test_concurrent_system_load() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_system_resilience_and_recovery() -> BearDogResult<()> {
+async fn test_system_resilience_and_recovery() -> Result<(), BearDogError> {
     let harness = IntegrationTestHarness::new().await?;
 
     let result = harness.test_auth_workflow("nonexistent_user", "some_resource").await;
@@ -456,7 +456,7 @@ async fn test_system_resilience_and_recovery() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_compliance_audit_trail() -> BearDogResult<()> {
+async fn test_compliance_audit_trail() -> Result<(), BearDogError> {
     let harness = IntegrationTestHarness::new().await?;
 
     harness.test_auth_workflow("admin", "sensitive_resource").await?;
@@ -485,7 +485,7 @@ async fn test_compliance_audit_trail() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_configuration_integration() -> BearDogResult<()> {
+async fn test_configuration_integration() -> Result<(), BearDogError> {
     let harness = IntegrationTestHarness::new().await?;
 
     assert!(harness.config.database.pool.max_connections > 0);

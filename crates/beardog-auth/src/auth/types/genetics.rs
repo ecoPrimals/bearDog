@@ -27,8 +27,8 @@ pub struct BearDogGenetics {
 
     pub specializations: Vec<NodeSpecialization>,
 }
-impl Default for BearDogGenetics {}
 
+impl Default for BearDogGenetics {
     fn default() -> Self {
         Self {
             id: "default-genetics".to_string(),
@@ -44,7 +44,9 @@ impl Default for BearDogGenetics {}
             specializations: vec![NodeSpecialization::GeneralPurpose],
         }
     }
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoChromosome {
 
     pub algorithm_family: AlgorithmFamily,
@@ -56,7 +58,9 @@ pub struct CryptoChromosome {
     pub performance_factor: f64,
 
     pub security_level: u8,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlgorithmFamily {
 
     Encryption(EncryptionFamily),
@@ -68,19 +72,18 @@ pub enum AlgorithmFamily {
     KeyDerivation(KdfFamily),
 
     ZeroKnowledge(ZkFamily),
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EncryptionFamily {
-
     Aes,
-
     ChaCha,
-
     Blowfish,
-
     Rsa,
-
     Ecc,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SigningFamily {
 
     Ed25519,
@@ -88,34 +91,30 @@ pub enum SigningFamily {
     Ecdsa,
 
     Dilithium,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HashingFamily {
-
     Sha2,
-
     Sha3,
-
     Blake,
-
     Argon2,
-
     Scrypt,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KdfFamily {
-
     Pbkdf2,
-
     Hkdf,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ZkFamily {
-
     Bulletproofs,
-
     Zksnarks,
-
     Zkstarks,
-
     Plonk,
+}
 
 pub struct CapabilityGene {
 
@@ -128,6 +127,7 @@ pub struct CapabilityGene {
     pub mutable: bool,
 
     pub inheritance_weight: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum NodeCapability {
@@ -189,7 +189,9 @@ pub enum NodeCapability {
     ForensicAnalysis,
 
     ComplianceAuditing,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityTraits {
 
     pub trust_threshold: f64,
@@ -200,29 +202,32 @@ pub struct SecurityTraits {
 
     pub isolation_preference: f64,
 
-    pub audit_frequency: u32,}
+    pub audit_frequency: u32,
+}
 
 impl Default for SecurityTraits {
+    fn default() -> Self {
+        Self {
             trust_threshold: 0.5,
             paranoia_level: 5,
             consensus_requirement: false,
             isolation_preference: 0.3,
             audit_frequency: 24, // hours
+        }
+    }
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SpawnRestriction {
-
     MaxConcurrentSpawns(u32),
-
     RequiredCapabilities(Vec<NodeCapability>),
-
     ForbiddenCapabilities(Vec<NodeCapability>),
-
     MinimumTrustLevel(f64),
-
     GeographicRestriction(String),
-
     ResourceLimits(crate::auth::types::spawning::ResourceLimits),
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityMutation {
 
     pub trigger: MutationTrigger,
@@ -232,21 +237,18 @@ pub struct CapabilityMutation {
     pub affected_capabilities: Vec<NodeCapability>,
 
     pub fitness_impact: f64,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MutationTrigger {
-
     EnvironmentalStress,
-
     SecurityThreat,
-
     PerformanceOptimization,
-
     EcosystemIntegration,
-
     UserRequirement,
+}
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]}
-
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum SecurityClearance {
 
     Basic,
@@ -256,6 +258,7 @@ pub enum SecurityClearance {
     High,
 
     Maximum,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 pub enum NodeSpecialization {
@@ -277,3 +280,4 @@ pub enum NodeSpecialization {
     NetworkOptimized,
 
     SecurityResponse,
+}

@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use beardog_security::quantum_crypto::{QuantumCryptoEngine, SecurityLevel, KemAlgorithm, SignatureAlgorithm};
 use beardog_utils::ai_optimization::{AIOptimizationEngine, OptimizationRecommendation};
 use beardog_monitoring::advanced_observability::{AdvancedObservabilityEngine, SystemMetrics};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 #[wasm_bindgen]
 extern "C" {

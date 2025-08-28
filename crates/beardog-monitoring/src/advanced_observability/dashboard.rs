@@ -1,13 +1,13 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 pub struct RealTimeDashboard {}
 
 impl RealTimeDashboard {
-    pub fn new() -> BearDogResult<Self> { Ok(Self {}) }
-    pub async fn initialize(&self) -> BearDogResult<()> { Ok(()) }
-    pub async fn start(&self) -> BearDogResult<()> { Ok(()) }
-    pub async fn is_healthy(&self) -> BearDogResult<bool> { Ok(true) }
-    pub async fn shutdown(&self) -> BearDogResult<()> { Ok(()) }
+    pub fn new() -> Result<Self, BearDogError> { Ok(Self {}) }
+    pub async fn initialize(&self) -> Result<(), BearDogError> { Ok(()) }
+    pub async fn start(&self) -> Result<(), BearDogError> { Ok(()) }
+    pub async fn is_healthy(&self) -> Result<bool, BearDogError> { Ok(true) }
+    pub async fn shutdown(&self) -> Result<(), BearDogError> { Ok(()) }
 } 

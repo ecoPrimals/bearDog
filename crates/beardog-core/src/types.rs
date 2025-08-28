@@ -1,97 +1,151 @@
-
-
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::*;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-pub use beardog_types::canonical::crypto::KeyType;
-pub use beardog_types::canonical::hsm::{HsmCapabilities, HsmKey as CanonicalHsmKey};
-pub use beardog_traits::canonical::HsmProvider;
-pub use beardog_types::canonical::health_status::{ComponentStatus as CanonicalComponentStatus, HealthStatus as CanonicalHealthStatus};
-pub use beardog_types::canonical::hsm::tiers::HsmTier;
+use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CoreState {
-    pub components: HashMap<String, CanonicalComponentStatus>,
-    pub overall_health: HealthStatus,
-    pub startup_time: DateTime<Utc>,
-
-    pub health_status: HealthStatus,
-    pub component_status: HashMap<String, ComponentStatus>,
-    pub start_time: DateTime<Utc>,
+pub struct BearDogConfig {
+    pub enabled: bool,
+    pub max_connections: usize,
+    pub timeout_seconds: u64,
 }
 
+impl Default for BearDogConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            max_connections: 1000,
+            timeout_seconds: 30,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheck {
     pub component_name: String,
     pub status: ComponentStatus,
     pub last_check: DateTime<Utc>,
-    pub details: HashMap<String, String>,
-    pub uptime: Option<chrono::Duration>,
+    pub details: Option<String>,
+    pub uptime: Duration,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
     pub cpu_usage: f64,
     pub memory_usage: f64,
     pub disk_usage: f64,
-    pub network_activity: u64,
+    pub network_io: f64,
     pub timestamp: DateTime<Utc>,
+}
 
-impl Default for HsmHealthStatus {}
-
+impl Default for SystemMetrics {
     fn default() -> Self {
         Self {
-            is_healthy: true,
-            last_check: chrono::Utc::now(),
-            error_message: None,
+            cpu_usage: 0.0,
+            memory_usage: 0.0,
+            disk_usage: 0.0,
+            network_io: 0.0,
+            timestamp: Utc::now(),
         }
     }
-impl Default for HealthStatus {}
+}
 
-impl Default for ComponentStatus {
-        ComponentStatus::Stopped
-impl Default for CoreState {
-        let now = chrono::Utc::now();
-            components: ahash::HashMap::default(),
-            overall_health: HealthStatus::default(),
-            startup_time: now,
-            health_status: HealthStatus::default(),
-            component_status: ahash::HashMap::default(),
-            start_time: now,}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceInfo {
+    pub name: String,
+    pub version: String,
+    pub status: String,
+    pub endpoints: Vec<String>,
+}
 
-impl HsmHealthStatus {
-    pub fn healthy() -> Self {
-        Self::default()}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkConfig {
+    pub bind_address: String,
+    pub port: u16,
+    pub tls_enabled: bool,
+}
 
-    pub fn unhealthy(error: &str) -> Self {
-            is_healthy: false,
-            error_message: Some(error),
-impl HealthStatus {}}
-
-impl Default for HsmCapabilities {
-            supported_key_types: vec![KeyType::Ed25519, KeyType::EccP256R1],
-            max_key_size: 4096,
-            supports_attestation: false,
-            hardware_backed: false,
-
-#[derive(Debug, Clone)]
-pub struct SystemMonitor {
-    pub active: bool,}
-
-impl SystemMonitor {}
-
-    pub fn new() -> Result<Self, BearDogError> {
-        Ok(Self { active: true })
-    pub async fn start(&self) -> Result<(), BearDogError> {
-        Ok(())
-pub struct GeneticOptimizer {}
-
-impl GeneticOptimizer {
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
+impl Default for NetworkConfig {
+    fn default() -> Self {
+        Self {
+            bind_address: "127.0.0.1".to_string(),
+            port: 8080,
+            tls_enabled: true,
+        }
+    }
+}
 
 #[derive(Debug)]
-pub struct BearDogSecurityProvider {}
+pub struct SystemMonitor {
+    pub active: bool,
+}
+
+impl SystemMonitor {
+    pub fn new() -> Result<Self, BearDogError> {
+        Ok(Self { active: true })
+    }
+
+    pub async fn start(&self) -> Result<(), BearDogError> {
+        Ok(())
+    }
+
+    pub async fn collect_metrics(&self) -> Result<SystemMetrics, BearDogError> {
+        Ok(SystemMetrics::default())
+    }
+}
+
+impl Default for SystemMonitor {
+    fn default() -> Self {
+        Self { active: false }
+    }
+}
+
+#[derive(Debug)]
+pub struct GeneticOptimizer {
+    pub enabled: bool,
+}
+
+impl GeneticOptimizer {
+    pub fn new() -> Self {
+        Self { enabled: true }
+    }
+
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
+        Ok(())
+    }
+
+    pub async fn optimize(&self) -> Result<(), BearDogError> {
+        Ok(())
+    }
+}
+
+impl Default for GeneticOptimizer {
+    fn default() -> Self {
+        Self { enabled: false }
+    }
+}
+
+#[derive(Debug)]
+pub struct BearDogSecurityProvider {
+    pub config: HashMap<String, String>,
+}
 
 impl BearDogSecurityProvider {
+    pub fn new() -> Self {
+        Self {
+            config: HashMap::new(),
+        }
+    }
 
-use beardog_errors::BearDogError;
+    pub async fn authenticate(&self, _token: &str) -> Result<bool, BearDogError> {
+        Ok(true)
+    }
+}
+
+impl Default for BearDogSecurityProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}

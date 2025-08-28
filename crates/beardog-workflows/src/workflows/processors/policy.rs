@@ -5,34 +5,14 @@ use crate::workflows::canonical::{
     Workflow, WorkflowExecutionStatus, WorkflowMetrics, WorkflowProcessingResult,
 };
 
-use beardog_errors::{BearDogError, BearDogResult};
-use beardog_types::canonical::workflow::{WorkflowType, WorkflowStatus};
-use beardog_types::aliases::ProviderMetrics;
+use beardog_errors::BearDogError;
+use beardog_types::{
+    canonical::configuration::workflows::WorkflowMetadata,
+    config::UnifiedProcessorConfig,
+};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use tracing::info;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
-pub struct PolicyProcessorConfig {
-
-    pub auto_validation: bool,
-
-    pub approval_threshold: u32,
-
-    pub enable_rollback: bool,
-}
-
-impl Default for PolicyProcessorConfig {
-    fn default() -> Self {
-        Self {
-            auto_validation: true,
-            approval_threshold: 2,
-            enable_rollback: true,
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct PolicyProcessor {
@@ -46,13 +26,15 @@ impl PolicyProcessor {
     }
 
     pub fn new_default() -> Self {
-        Self::new(PolicyProcessorConfig::default())
+        let mut config = UnifiedProcessorConfig::default();
+        config.processor_type = beardog_types::canonical::configuration::consolidated::ProcessorType::Policy;
+        Self::new(config)
     }
 
     async fn process_policy_change(
         &self,
         workflow: &Workflow,
-    ) -> BearDogResult<WorkflowProcessingResult> {
+    ) -> Result<WorkflowProcessingResult, BearDogError> {
         let start_time = Instant::now();
         info!("Processing policy change for workflow: {}", workflow.id);
 
@@ -90,7 +72,7 @@ impl PolicyProcessor {
     async fn process_configuration_change(
         &self,
         workflow: &Workflow,
-    ) -> BearDogResult<WorkflowProcessingResult> {
+    ) -> Result<WorkflowProcessingResult, BearDogError> {
         let start_time = Instant::now();
         info!("Processing configuration change for workflow: {}", workflow.id);
 
@@ -111,7 +93,7 @@ impl PolicyProcessor {
         })
     }
 
-    fn validate_policy_change(&self, workflow: &Workflow) -> BearDogResult<()> {
+    fn validate_policy_change(&self, workflow: &Workflow) -> Result<(), BearDogError> {
 
         if workflow.payload.is_null() {
             return Err(BearDogError::validation(
@@ -145,7 +127,7 @@ impl WorkflowProcessor for PolicyProcessor {
     async fn process_workflow(
         &self,
         workflow: &WorkflowStatus,
-    ) -> BearDogResult<ProviderMetrics> {
+    ) -> Result<ProviderMetrics, BearDogError> {
         let start_time = Instant::now();
         info!("Processing policy workflow with status: {:?}", workflow);
 

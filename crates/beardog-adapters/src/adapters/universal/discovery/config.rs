@@ -1,8 +1,9 @@
 
 
-pub use beardog_types::config::discovery::DiscoveryConfig;
+pub use beardog_types::canonical::configuration::consolidated::DiscoveryConfig;
 
-pub use beardog_types::config::unified::ServiceDiscoveryConfig;
+pub use beardog_types::canonical::network::ServiceDiscoveryConfig;
 
-pub use beardog_types::config::discovery::EcosystemDiscoveryConfig;
+// Note: EcosystemDiscoveryConfig should be migrated to canonical configuration
+pub use beardog_types::canonical::configuration::consolidated::DiscoveryConfig as EcosystemDiscoveryConfig;
 

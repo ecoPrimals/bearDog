@@ -2,7 +2,7 @@
 
 use super::traits::PlatformProvider;
 use crate::tunnel::hsm::types::{HsmKey, KeyType};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use tracing::{info, warn};
 
 pub struct SafeAndroidProvider {
@@ -11,7 +11,7 @@ pub struct SafeAndroidProvider {
 }
 impl SafeAndroidProvider {
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         let strongbox_available = Self::check_strongbox_availability();
         Ok(Self {
             strongbox_available,
@@ -27,12 +27,12 @@ impl SafeAndroidProvider {
         info!("Simulating StrongBox availability check on Android");
         true
 
-    async fn generate_key_safe(&self, _key_id: &str, _key_type: &KeyType) -> BearDogResult<HsmKey> {
+    async fn generate_key_safe(&self, _key_id: &str, _key_type: &KeyType) -> Result<HsmKey, BearDogError> {
 
         Err(BearDogError::NotImplemented {
             message: "Android StrongBox key generation not yet implemented safely".to_string(),
 
-    async fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data_safe(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
             message: "Android StrongBox signing not yet implemented safely".to_string(),
 
@@ -41,15 +41,15 @@ impl SafeAndroidProvider {
         _key_id: &str,
         _data: &[u8],
         _signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
             message: "Android StrongBox verification not yet implemented safely".to_string(),}
 
 impl PlatformProvider for SafeAndroidProvider {
-    async fn generate_key(&self, key_id: &str, key_type: &KeyType) -> BearDogResult<HsmKey> {
+    async fn generate_key(&self, key_id: &str, key_type: &KeyType) -> Result<HsmKey, BearDogError> {
         self.generate_key_safe(key_id, key_type).await}
 
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         self.sign_data_safe(key_id, data).await
     async fn verify_signature(
         key_id: &str,

@@ -1,7 +1,7 @@
 
 
 use crate::common::{TestContext, TestResult, TestMetrics, TestPhase};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog::{BearDogConfig, BearDogCore};
 use serde_json::{json, Value as JsonValue};
 use std::{
@@ -93,8 +93,8 @@ pub struct TestArtifact {
 
 pub trait MockService: Send + Sync {
     fn service_name(&self) -> &str;
-    fn reset(&self) -> BearDogResult<()>;
-    fn configure(&self, config: JsonValue) -> BearDogResult<()>;
+    fn reset(&self) -> Result<(), BearDogError>;
+    fn configure(&self, config: JsonValue) -> Result<(), BearDogError>;
 }
 
 pub struct TestMetricsCollector {

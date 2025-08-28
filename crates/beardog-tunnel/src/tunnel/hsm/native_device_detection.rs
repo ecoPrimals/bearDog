@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,7 +19,7 @@ pub enum SmartphonePlatform {
     iOS,
     Other(String),
 
-pub async fn detect_device() -> BearDogResult<DeviceDetectionResult> {
+pub async fn detect_device() -> Result<DeviceDetectionResult, BearDogError> {
 
     Ok(DeviceDetectionResult {
         platform: SmartphonePlatform::Android, // Default for now, will detect properly
@@ -36,7 +36,7 @@ pub async fn detect_device() -> BearDogResult<DeviceDetectionResult> {
         },
     })
 
-pub async fn detect_android_capabilities() -> BearDogResult<SecurityCapabilities> {
+pub async fn detect_android_capabilities() -> Result<SecurityCapabilities, BearDogError> {
     Ok(SecurityCapabilities {
         hardware_security_module: true,
         strongbox_available: true,
@@ -44,6 +44,6 @@ pub async fn detect_android_capabilities() -> BearDogResult<SecurityCapabilities
         biometric_authentication: true,
         attestation_support: true,
 
-pub async fn detect_ios_capabilities() -> BearDogResult<SecurityCapabilities> {
+pub async fn detect_ios_capabilities() -> Result<SecurityCapabilities, BearDogError> {
         strongbox_available: false,
         secure_enclave_available: true, // iOS has Secure Enclave

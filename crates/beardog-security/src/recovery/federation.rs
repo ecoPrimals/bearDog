@@ -2,23 +2,9 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(since = "3.1.0", note = "Use UnifiedRecoveryConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedRecoveryConfig instead")]
-pub struct FederationRecoveryConfig {
-
-    pub user_id: String,
-
-    pub trusted_instances: Vec<TrustedInstance>,
-
-    pub min_instances_required: u32,
-
-    pub enabled: bool,
-
-    pub verification_settings: FederationVerificationSettings,
-}
+// FederationRecoveryConfig removed - use UnifiedRecoveryConfig from beardog-types instead
 
 pub struct TrustedInstance {
 

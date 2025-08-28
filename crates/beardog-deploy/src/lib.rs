@@ -1,5 +1,3 @@
-
-
 use beardog_errors::BearDogError;
 
 pub mod android;
@@ -18,7 +16,6 @@ pub struct DeploymentManager {
     config: DeploymentConfig,
 }
 impl DeploymentManager {
-
     pub fn new(config: DeploymentConfig) -> Self {
         Self { config }
     }

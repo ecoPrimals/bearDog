@@ -8,7 +8,7 @@ pub mod platform_discoverer;
 pub mod software_discoverer;
 pub mod usb_discoverer;
 use super::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::path::Path;
 use tracing::{debug, error, info, warn};
@@ -32,7 +32,7 @@ pub struct DiscoveryEngine {
 }
 impl DiscoveryEngine {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             pkcs11_discoverer: Pkcs11Discoverer::new()?,
             cloud_discoverer: CloudDiscoverer::new()?,
@@ -47,7 +47,7 @@ impl DiscoveryEngine {}
     pub async fn discover_hsms(
         &self,
         config: &DiscoveryConfig,
-    ) -> BearDogResult<Vec<DiscoveredHsm>> {
+    ) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         info!("🔍 Starting universal HSM discovery");
         let mut all_hsms = Vec::new();
 

@@ -1,7 +1,7 @@
 
 
 use super::super::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use tracing::debug;
 
 use crate::tunnel::hsm::types::HsmCapabilities;
@@ -9,13 +9,13 @@ use crate::tunnel::hsm::types::HsmCapabilities;
 pub struct SoftwareHsmCapabilityProber;
 impl SoftwareHsmCapabilityProber {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
     pub async fn probe_softhsm_capabilities(
         &self,
         config_path: &str,
-    ) -> BearDogResult<HsmCapabilities> {
+    ) -> Result<HsmCapabilities, BearDogError> {
         debug!("🖥️ Probing SoftHSM: {}", config_path);
 
         Ok(HsmCapabilities::default())

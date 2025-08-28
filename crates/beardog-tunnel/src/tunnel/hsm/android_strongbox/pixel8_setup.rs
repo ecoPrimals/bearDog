@@ -3,7 +3,7 @@
 use super::*;
 use crate::tunnel::hsm::types::*;
 use crate::tunnel::hsm::{HsmManager, SecurityLevel};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{info, warn};
 
@@ -44,12 +44,12 @@ impl Default for Pixel8GrapheneOSConfig {}
 pub struct Pixel8GrapheneOSSetup {
     config: Pixel8GrapheneOSConfig,
     device_info: Arc<AndroidDeviceInfo>,
-    #[allow(dead_code)] // Will be used when Pixel 8 HSM setup is fully implemented
+    
     hsm_manager: Arc<HsmManager>,}
 
 impl Pixel8GrapheneOSSetup {
 
-    pub async fn new(config: Pixel8GrapheneOSConfig) -> BearDogResult<Self> {
+    pub async fn new(config: Pixel8GrapheneOSConfig) -> Result<Self, BearDogError> {
         info!("🔐 Initializing Pixel 8 GrapheneOS HSM setup");
 
         let device_info = Arc::new(AndroidDeviceInfo::detect().await?);
@@ -68,7 +68,7 @@ impl Pixel8GrapheneOSSetup {
         info!("✅ Pixel 8 GrapheneOS HSM setup initialized");
         Ok(setup)
 
-    pub async fn initialize_hsm(&self) -> BearDogResult<Arc<AndroidStrongBoxHsm>> {
+    pub async fn initialize_hsm(&self) -> Result<Arc<AndroidStrongBoxHsm, BearDogError>> {
         info!("🚀 Initializing Android StrongBox HSM on Pixel 8");
 
         let android_config = self.create_pixel8_android_config()?;
@@ -81,7 +81,7 @@ impl Pixel8GrapheneOSSetup {
         info!("🎉 Android StrongBox HSM operational on Pixel 8!");
         Ok(android_hsm)
 
-    pub async fn create_anchor_key(&self, hsm: &AndroidStrongBoxHsm) -> BearDogResult<HsmKey> {
+    pub async fn create_anchor_key(&self, hsm: &AndroidStrongBoxHsm) -> Result<HsmKey, BearDogError> {
         info!("🔑 Creating BearDog security anchor key on Pixel 8");
         let key_request = GenerateKeyRequest {
             key_id: "beardog-anchor-key".to_string(),
@@ -126,7 +126,7 @@ impl Pixel8GrapheneOSSetup {
     pub async fn generate_ecosystem_identity(
         &self,
         hsm: &AndroidStrongBoxHsm,
-    ) -> BearDogResult<Pixel8EcosystemIdentity> {
+    ) -> Result<Pixel8EcosystemIdentity, BearDogError> {
         info!("🌐 Generating ecosystem identity for Pixel 8");
 
         let identity_key = self.create_device_identity_key(hsm).await?;
@@ -145,7 +145,7 @@ impl Pixel8GrapheneOSSetup {
             ecosystem_identity.device_id
         Ok(ecosystem_identity)
 
-    async fn test_hsm_operations(&self, hsm: &AndroidStrongBoxHsm) -> BearDogResult<()> {
+    async fn test_hsm_operations(&self, hsm: &AndroidStrongBoxHsm) -> Result<(), BearDogError> {
         info!("🧪 Testing HSM operations on Pixel 8");
 
         let test_key = GenerateKeyRequest {
@@ -179,7 +179,7 @@ impl Pixel8GrapheneOSSetup {
         info!("🎉 All HSM tests passed on Pixel 8!");
         Ok(())
 
-    fn validate_pixel8_device(device_info: &AndroidDeviceInfo) -> BearDogResult<()> {
+    fn validate_pixel8_device(device_info: &AndroidDeviceInfo) -> Result<(), BearDogError> {
         if device_info.manufacturer != "Google" {
             return Err(BearDogError::unsupported_operation(format!(
                     "Expected Google Pixel device, found: }",
@@ -191,7 +191,7 @@ impl Pixel8GrapheneOSSetup {
                 "⚠️ Not a Pixel 8 device: {}. Continuing but optimal security not guaranteed.",
                 device_info.model
             );
-    async fn validate_grapheneos_environment(&self) -> BearDogResult<()> {
+    async fn validate_grapheneos_environment(&self) -> Result<(), BearDogError> {
         info!("🔍 Validating GrapheneOS environment");
 
         if self.config.require_green_boot
@@ -203,7 +203,7 @@ impl Pixel8GrapheneOSSetup {
                     ),
                 });
         info!("✅ GrapheneOS environment validated");
-    async fn validate_security_requirements(&self) -> BearDogResult<()> {
+    async fn validate_security_requirements(&self) -> Result<(), BearDogError> {
         info!("🔍 Validating security requirements");
         if self.config.require_titan_m && self.device_info.titan_m_version.is_none() {
             return Err(BearDogError::configuration("Titan M security chip required but not detected".to_string(),
@@ -212,7 +212,7 @@ impl Pixel8GrapheneOSSetup {
                 message: "StrongBox HSM required but not available".to_string(),
         info!("✅ Security requirements validated");}
 
-    fn create_pixel8_android_config(&self) -> BearDogResult<AndroidHsmConfig> {
+    fn create_pixel8_android_config(&self) -> Result<AndroidHsmConfig, BearDogError> {
         info!("⚙️ Creating optimized Android HSM configuration for Pixel 8");
         let config = AndroidHsmConfig {
             manufacturer: self.device_info.manufacturer.clone(),
@@ -238,17 +238,17 @@ impl Pixel8GrapheneOSSetup {
         info!("✅ Android HSM configuration created for Pixel 8");
         Ok(config)}
 
-    fn generate_attestation_challenge(&self) -> BearDogResult<Vec<u8>> {
+    fn generate_attestation_challenge(&self) -> Result<Vec<u8>, BearDogError>> {
         use rand::RngCore;
         let mut challenge = vec![0u8; 32];
         rand::thread_rng().fill_bytes(&mut challenge);
         Ok(challenge)}
 
-    async fn verify_anchor_key_attestation(&self, _key: &HsmKey) -> BearDogResult<()> {
+    async fn verify_anchor_key_attestation(&self, _key: &HsmKey) -> Result<(), BearDogError> {
         info!("🔍 Verifying anchor key attestation");
 
         info!("✅ Anchor key attestation verified");
-    async fn create_device_identity_key(&self, hsm: &AndroidStrongBoxHsm) -> BearDogResult<HsmKey> {
+    async fn create_device_identity_key(&self, hsm: &AndroidStrongBoxHsm) -> Result<HsmKey, BearDogError> {
         let request = GenerateKeyRequest {
             key_id: "device-identity".to_string(),
                 exportable: false,
@@ -259,7 +259,7 @@ impl Pixel8GrapheneOSSetup {
     async fn generate_device_attestation(
         _hsm: &AndroidStrongBoxHsm,
         _identity_key: &HsmKey,
-    ) -> BearDogResult<DeviceAttestation> {
+    ) -> Result<DeviceAttestation, BearDogError> {
 
         Ok(DeviceAttestation {
             device_properties: DeviceProperties {
@@ -270,7 +270,7 @@ impl Pixel8GrapheneOSSetup {
             attestation_certificate: vec![], // Would contain actual certificate
             signature: vec![],               // Would contain actual signature
         })
-    async fn get_grapheneos_version(&self) -> BearDogResult<String> {
+    async fn get_grapheneos_version(&self) -> Result<String, BearDogError> {
 
         Ok("GrapheneOS-2024.01".to_string())}
 
@@ -309,7 +309,7 @@ use chrono;
 use rand;
 use uuid;
 
-pub async fn setup_pixel8_beardog() -> BearDogResult<(Arc<AndroidStrongBoxHsm>, HsmKey)> {
+pub async fn setup_pixel8_beardog() -> Result<(Arc<AndroidStrongBoxHsm, BearDogError>, HsmKey)> {
     info!("🚀 Quick setup: BearDog on Pixel 8 GrapheneOS");
 
     let config = Pixel8GrapheneOSConfig::default();

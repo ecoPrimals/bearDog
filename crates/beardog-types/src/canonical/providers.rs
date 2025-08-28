@@ -1,5 +1,3 @@
-
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -83,19 +81,19 @@ pub struct ProviderConfig {
     pub provider_id: String,
     pub provider_type: ProviderType,
     pub endpoint: Option<String>,
-    
+
     // Standardized timing configuration
     pub timeouts: TimeoutConfig,
     pub retries: RetryConfig,
     pub circuit_breaker: CircuitBreakerConfig,
-    
+
     // Health monitoring
     pub health_check_interval: Duration,
-    
+
     // Operational settings
     pub enabled: bool,
     pub priority: u32,
-    
+
     // Flexible configuration parameters
     pub config_params: HashMap<String, serde_json::Value>,
     pub metadata: HashMap<String, String>,
@@ -128,31 +126,31 @@ impl ProviderConfig {
             ..Default::default()
         }
     }
-    
+
     /// Set endpoint for the provider
     pub fn with_endpoint(mut self, endpoint: String) -> Self {
         self.endpoint = Some(endpoint);
         self
     }
-    
+
     /// Set timeout configuration
     pub fn with_timeouts(mut self, timeouts: TimeoutConfig) -> Self {
         self.timeouts = timeouts;
         self
     }
-    
+
     /// Set retry configuration
     pub fn with_retries(mut self, retries: RetryConfig) -> Self {
         self.retries = retries;
         self
     }
-    
+
     /// Set circuit breaker configuration
     pub fn with_circuit_breaker(mut self, circuit_breaker: CircuitBreakerConfig) -> Self {
         self.circuit_breaker = circuit_breaker;
         self
     }
-    
+
     /// Add configuration parameter
     pub fn with_config_param<T: serde::Serialize>(mut self, key: String, value: T) -> Self {
         if let Ok(json_value) = serde_json::to_value(value) {
@@ -160,20 +158,13 @@ impl ProviderConfig {
         }
         self
     }
-    
+
     /// Add metadata entry
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self
     }
 }
-
-// Legacy compatibility types - to be removed after migration
-#[deprecated(note = "Use ProviderConfig instead")]
-pub type LegacyProviderConfig = ProviderConfig;
-
-#[deprecated(note = "Use ProviderStatus instead")]
-pub type LegacyProviderStatus = ProviderStatus;
 
 /// Consolidated Universal Adapter Configuration
 /// Replaces all fragmented UniversalAdapterConfig definitions across crates
@@ -183,33 +174,33 @@ pub struct UniversalAdapterConfig {
     pub adapter_id: Option<String>,
     pub adapter_type: String,
     pub enabled: bool,
-    
+
     // Standardized timing configuration
     pub timeouts: TimeoutConfig,
     pub retries: RetryConfig,
     pub circuit_breaker: CircuitBreakerConfig,
-    
+
     // Connection limits
     pub max_concurrent_connections: u32,
     pub max_concurrent_operations: u32,
-    
+
     // Health monitoring
     pub health_check_interval: Duration,
-    
+
     // Discovery and monitoring
     pub auto_discovery: bool,
     pub discovery_interval_seconds: u64,
     pub enable_monitoring: bool,
     pub enable_health_checks: bool,
-    
+
     // Type system and protocol configuration
     pub auto_discover_types: bool,
     pub type_system_configs: HashMap<String, serde_json::Value>,
     pub protocol_configs: HashMap<String, serde_json::Value>,
-    
+
     // Target configuration
     pub target_primal: Option<TargetPrimalConfig>,
-    
+
     // Additional metadata
     pub metadata: HashMap<String, String>,
 }
@@ -247,31 +238,31 @@ impl UniversalAdapterConfig {
             ..Default::default()
         }
     }
-    
+
     /// Set target primal configuration
     pub fn with_target_primal(mut self, target: TargetPrimalConfig) -> Self {
         self.target_primal = Some(target);
         self
     }
-    
+
     /// Set timeout configuration
     pub fn with_timeouts(mut self, timeouts: TimeoutConfig) -> Self {
         self.timeouts = timeouts;
         self
     }
-    
+
     /// Set retry configuration
     pub fn with_retries(mut self, retries: RetryConfig) -> Self {
         self.retries = retries;
         self
     }
-    
+
     /// Set circuit breaker configuration
     pub fn with_circuit_breaker(mut self, circuit_breaker: CircuitBreakerConfig) -> Self {
         self.circuit_breaker = circuit_breaker;
         self
     }
-    
+
     /// Set discovery configuration
     pub fn with_discovery(mut self, auto_discover: bool, interval_seconds: u64) -> Self {
         self.auto_discovery = auto_discover;
@@ -280,28 +271,13 @@ impl UniversalAdapterConfig {
     }
 }
 
-// Legacy compatibility - to be removed after migration
-#[deprecated(note = "Use UniversalAdapterConfig instead")]
-pub type LegacyUniversalAdapterConfig = UniversalAdapterConfig;
-
 // External services configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExternalServicesConfig {
     pub songbird_endpoint: Option<String>,
     pub storage_endpoint: Option<String>,
     pub auth_endpoint: Option<String>,
     pub monitoring_endpoint: Option<String>,
-}
-
-impl Default for ExternalServicesConfig {
-    fn default() -> Self {
-        Self {
-            songbird_endpoint: None,
-            storage_endpoint: None,
-            auth_endpoint: None,
-            monitoring_endpoint: None,
-        }
-    }
 }
 
 // HSM-specific types
@@ -393,7 +369,7 @@ impl RetryConfig {
         let base_delay = self.initial_delay.as_millis() as f64;
         let delay_ms = base_delay * self.backoff_multiplier.powi(attempt as i32);
         let delay_ms = delay_ms.min(self.max_delay.as_millis() as f64);
-        
+
         let final_delay = if self.jitter_enabled {
             // Add up to 25% jitter
             let jitter = rand::random::<f64>() * 0.25;
@@ -401,10 +377,10 @@ impl RetryConfig {
         } else {
             delay_ms
         };
-        
+
         Duration::from_millis(final_delay as u64)
     }
-    
+
     /// Check if an error is retryable
     pub fn is_retryable(&self, error: &str) -> bool {
         self.retryable_errors.iter().any(|e| error.contains(e))

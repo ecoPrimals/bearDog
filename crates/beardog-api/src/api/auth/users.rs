@@ -13,129 +13,136 @@ use tracing::info;
 
 pub async fn list_users(
     State(_state): State<AppState>,
-    Query(params): Query<UserListQuery>,
-) -> Result<Json<ApiResponse<UserListResponse>>, StatusCode> {
-    let start_time = Instant::now();
-    let request_id = uuid::Uuid::new_v4().to_string();
-    info!("👥 Listing users with filters: {:?}", params);
+    Query(_params): Query<HashMap<String, String>>,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    info!("👥 Listing users");
+    
     let users = vec![
-        UserSummary {
-            user_id: "user_12345".to_string(),
-            username: "admin".to_string(),
-            display_name: "System Administrator".to_string(),
-            email: "admin@beardog.com".to_string(),
-            status: "active".to_string(),
-            roles: vec!["admin".to_string(), "user".to_string()],
-            created_at: chrono::Utc::now().to_rfc3339(),
-            last_login: Some(chrono::Utc::now().to_rfc3339()),
-            mfa_enabled: true,
-        },
-            user_id: "user_67890".to_string(),
-            username: "john.doe".to_string(),
-            display_name: "John Doe".to_string(),
-            email: "john.doe@example.com".to_string(),
-            roles: vec!["user".to_string()],
-            created_at: (chrono::Utc::now() - chrono::Duration::days(30)).to_rfc3339(),
-            last_login: Some((chrono::Utc::now() - chrono::Duration::days(1)).to_rfc3339()),
-            mfa_enabled: false,
+        serde_json::json!({
+            "user_id": "user_12345",
+            "username": "admin",
+            "display_name": "System Administrator",
+            "email": "admin@beardog.com",
+            "status": "active",
+            "roles": ["admin", "user"],
+            "created_at": chrono::Utc::now().to_rfc3339(),
+            "last_login": chrono::Utc::now().to_rfc3339()
+        }),
+        serde_json::json!({
+            "user_id": "user_67890",
+            "username": "user1",
+            "display_name": "Regular User",
+            "email": "user@beardog.com",
+            "status": "active",
+            "roles": ["user"],
+            "created_at": chrono::Utc::now().to_rfc3339(),
+            "last_login": chrono::Utc::now().to_rfc3339()
+        })
     ];
-    let response = UserListResponse {
-        users,
-        total_count: 2,
-        page: params.page.unwrap_or(1),
-        per_page: params.per_page.unwrap_or(20),
-        total_pages: 1,
-        has_more: false,
-        filters_applied: UserListFilters {
-            status: params.status,
-            role: params.role,
-            search: params.search,
-    };
-    let processing_time = start_time.elapsed().as_millis() as u64;
-    Ok(Json(success_response(
-        response,
-        request_id,
-        processing_time,
-        true,
-    )))
+    
+    let response = serde_json::json!({
+        "users": users,
+        "total_count": 2,
+        "page": 1,
+        "per_page": 50
+    });
+    
+    Ok(Json(ApiResponse::success(response)))
 }
 
 pub async fn create_user(
-    Json(request): Json<CreateUserRequest>,
-) -> Result<Json<ApiResponse<CreateUserResponse>>, StatusCode> {
-    info!("➕ Creating new user: {}", request.username);
-    let user_id = uuid::Uuid::new_v4().to_string();
-    let response = CreateUserResponse {
-        user_id: user_id.clone(),
+    State(_): State<AppState>,
+    Json(request): Json<UserRegistrationRequest>,
+) -> Result<Json<ApiResponse<UserRegistrationResponse>>, StatusCode> {
+    info!("👤 Creating new user: {}", request.username);
+    
+    let response = UserRegistrationResponse {
+        user_id: uuid::Uuid::new_v4().to_string(),
         username: request.username,
         email: request.email,
-        status: "pending_verification".to_string(),
-        created_at: chrono::Utc::now().to_rfc3339(),
         verification_required: true,
-        verification_email_sent: true,
-        default_roles: vec!["user".to_string()],
-        password_reset_required: request.temporary_password.is_some(),
-        false,
+        message: "User created successfully. Please check your email for verification.".to_string(),
+    };
+    
+    Ok(Json(ApiResponse::success(response)))
+}
 
 pub async fn get_user(
     Path(user_id): Path<String>,
-) -> Result<Json<ApiResponse<UserDetailsResponse>>, StatusCode> {
+) -> Result<Json<ApiResponse<UserProfile>>, StatusCode> {
     info!("🔍 Getting user details: {}", user_id);
-    let response = UserDetailsResponse {
+    
+    let profile = UserProfile {
+        user_id: user_id.clone(),
         username: "admin".to_string(),
         display_name: "System Administrator".to_string(),
         email: "admin@beardog.com".to_string(),
-        status: "active".to_string(),
-        roles: vec!["admin".to_string(), "user".to_string()],
-        permissions: vec![
-            "read:users".to_string(),
-            "write:users".to_string(),
-            "admin:system".to_string(),
-        ],
-        profile: UserProfile {
-            first_name: Some("System".to_string()),
-            last_name: Some("Administrator".to_string()),
-            phone: None,
-            department: Some("IT".to_string()),
-            title: Some("System Administrator".to_string()),
-            timezone: Some("UTC".to_string()),
-            locale: Some("en-US".to_string()),
-        security: UserSecurityInfo {
-            password_last_changed: chrono::Utc::now().to_rfc3339(),
-            failed_login_attempts: 0,
-            account_locked: false,
-            lock_reason: None,
-            trusted_devices: 2,
-            active_sessions: 1,
-        activity: UserActivity {
-            last_password_change: chrono::Utc::now().to_rfc3339(),
-            login_count: 1247,
-            password_change_count: 5,
-        metadata: {
-            let mut metadata = HashMap::with_capacity(16);
-            metadata.insert("created_by".to_string(), "system".to_string());
-            metadata.insert("source".to_string(), "initial_setup".to_string());
-            metadata
+        phone_number: Some("+1-555-0123".to_string()),
+        timezone: "UTC".to_string(),
+        language: "en".to_string(),
+        created_at: chrono::Utc::now().to_rfc3339(),
+        last_updated: chrono::Utc::now().to_rfc3339(),
+        email_verified: true,
+        phone_verified: false,
+        notification_preferences: HashMap::new(),
+    };
+    
+    Ok(Json(ApiResponse::success(profile)))
+}
 
 pub async fn update_user(
-    State(_): State<AppState>,
-    Path(_user_id): Path<String>,
-    Json(_): Json<serde_json::Value>,
+    Path(user_id): Path<String>,
+    Json(request): Json<UserProfileUpdateRequest>,
 ) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
-        serde_json::json!({"message": "User updated"}),
-        45,
+    info!("📝 Updating user: {}", user_id);
+    
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "message": "User updated successfully",
+        "user_id": user_id,
+        "updated_fields": request
+    }))))
+}
 
 pub async fn delete_user(
-        serde_json::json!({"message": "User deleted"}),
-        35,
+    Path(user_id): Path<String>,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    info!("🗑️ Deleting user: {}", user_id);
+    
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "message": "User deleted successfully",
+        "user_id": user_id
+    }))))
+}
 
 pub async fn activate_user(
-        serde_json::json!({"message": "User activated"}),
-        25,
+    Path(user_id): Path<String>,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    info!("✅ Activating user: {}", user_id);
+    
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "message": "User activated successfully",
+        "user_id": user_id
+    }))))
+}
 
 pub async fn deactivate_user(
-        serde_json::json!({"message": "User deactivated"}),
+    Path(user_id): Path<String>,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    info!("❌ Deactivating user: {}", user_id);
+    
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "message": "User deactivated successfully",
+        "user_id": user_id
+    }))))
+}
 
 pub async fn reset_password(
-        serde_json::json!({"message": "Password reset initiated"}),
-        40,
+    Path(user_id): Path<String>,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    info!("🔑 Resetting password for user: {}", user_id);
+    
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "message": "Password reset initiated. Check email for instructions.",
+        "user_id": user_id
+    }))))
+}

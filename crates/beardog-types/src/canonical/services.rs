@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -87,5 +85,26 @@ pub enum ResponseStatus {
 impl Default for ResponseStatus {
     fn default() -> Self {
         Self::Success
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UniversalServiceMetadata {
+    pub service_id: String,
+    pub version: String,
+    pub capabilities: Vec<String>,
+    pub tags: HashMap<String, String>,
+    pub health_endpoint: Option<String>,
+}
+
+impl Default for UniversalServiceMetadata {
+    fn default() -> Self {
+        Self {
+            service_id: String::new(),
+            version: "1.0.0".to_string(),
+            capabilities: Vec::new(),
+            tags: HashMap::new(),
+            health_endpoint: None,
+        }
     }
 }

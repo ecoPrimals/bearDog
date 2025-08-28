@@ -145,9 +145,8 @@ pub enum RegionStatus {
     Offline,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HealthStatus {
-    Healthy,
+// UNIFIED: Use canonical HealthStatus from beardog-types
+pub use beardog_types::canonical::HealthStatus;
     Warning,
     Critical,
     Offline,

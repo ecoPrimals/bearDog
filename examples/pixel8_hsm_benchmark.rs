@@ -1,7 +1,7 @@
 
 
 use beardog_types::canonical::{KeyType, HealthStatus, WorkflowType};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::time::{Instant, Duration};
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
@@ -91,7 +91,7 @@ impl Pixel8HsmBenchmark {
         }
     }
 
-    pub async fn run_comprehensive_benchmark(&self) -> BearDogResult<Vec<HsmBenchmarkResults>> {
+    pub async fn run_comprehensive_benchmark(&self) -> Result<Vec<HsmBenchmarkResults, BearDogError>> {
         println!("🚀 BearDog Pixel 8 HSM Benchmark Suite");
         println!("=====================================");
         println!();
@@ -124,7 +124,7 @@ impl Pixel8HsmBenchmark {
         Ok(results)
     }
 
-    async fn benchmark_titan_m_hsm(&self) -> BearDogResult<HsmBenchmarkResults> {
+    async fn benchmark_titan_m_hsm(&self) -> Result<HsmBenchmarkResults, BearDogError> {
         println!("🔐 Testing Titan M StrongBox HSM...");
 
         let key_gen_metrics = self.benchmark_key_generation_titan_m().await?;
@@ -146,7 +146,7 @@ impl Pixel8HsmBenchmark {
         })
     }
 
-    async fn benchmark_software_hsm(&self) -> BearDogResult<HsmBenchmarkResults> {
+    async fn benchmark_software_hsm(&self) -> Result<HsmBenchmarkResults, BearDogError> {
         println!("💻 Testing Software HSM (Pop!_OS)...");
 
         let key_gen_metrics = self.benchmark_key_generation_software().await?;
@@ -174,7 +174,7 @@ impl Pixel8HsmBenchmark {
         })
     }
 
-    async fn benchmark_distributed_hsm(&self) -> BearDogResult<HsmBenchmarkResults> {
+    async fn benchmark_distributed_hsm(&self) -> Result<HsmBenchmarkResults, BearDogError> {
         println!("🌐 Testing Distributed HSM across towers...");
 
         let key_gen_metrics = self.benchmark_key_generation_distributed().await?;
@@ -209,7 +209,7 @@ impl Pixel8HsmBenchmark {
         })
     }
 
-    async fn benchmark_key_generation_titan_m(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_key_generation_titan_m(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   🔑 Key Generation (Titan M)...");
         
         let start = Instant::now();
@@ -248,7 +248,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_signing_operations_titan_m(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_signing_operations_titan_m(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   ✍️ Signing Operations (Titan M)...");
         
         let start = Instant::now();
@@ -290,7 +290,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_verification_operations_titan_m(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_verification_operations_titan_m(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   ✅ Verification Operations (Titan M)...");
         
         let start = Instant::now();
@@ -332,7 +332,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_secure_storage_titan_m(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_secure_storage_titan_m(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   💾 Secure Storage (Titan M)...");
         
         let start = Instant::now();
@@ -374,7 +374,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_genetic_algorithms_mobile(&self) -> BearDogResult<GeneticPerformanceMetrics> {
+    async fn benchmark_genetic_algorithms_mobile(&self) -> Result<GeneticPerformanceMetrics, BearDogError> {
         println!("   🧬 SIMD Genetic Algorithms (Mobile)...");
         
         let start = Instant::now();
@@ -408,7 +408,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_key_generation_software(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_key_generation_software(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   🔑 Key Generation (Software HSM)...");
         
         let start = Instant::now();
@@ -435,7 +435,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_signing_operations_software(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_signing_operations_software(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   ✍️ Signing Operations (Software HSM)...");
         
         let start = Instant::now();
@@ -462,7 +462,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_verification_operations_software(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_verification_operations_software(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   ✅ Verification Operations (Software HSM)...");
         
         let start = Instant::now();
@@ -489,7 +489,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_secure_storage_software(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_secure_storage_software(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   💾 Secure Storage (Software HSM)...");
         
         let start = Instant::now();
@@ -516,7 +516,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_key_generation_distributed(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_key_generation_distributed(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   🔑 Key Generation (Distributed HSM)...");
         
         let start = Instant::now();
@@ -543,7 +543,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_signing_operations_distributed(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_signing_operations_distributed(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   ✍️ Signing Operations (Distributed HSM)...");
         
         let start = Instant::now();
@@ -570,7 +570,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_verification_operations_distributed(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_verification_operations_distributed(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   ✅ Verification Operations (Distributed HSM)...");
         
         let start = Instant::now();
@@ -597,7 +597,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    async fn benchmark_secure_storage_distributed(&self) -> BearDogResult<PerformanceMetrics> {
+    async fn benchmark_secure_storage_distributed(&self) -> Result<PerformanceMetrics, BearDogError> {
         println!("   💾 Secure Storage (Distributed HSM)...");
         
         let start = Instant::now();
@@ -624,7 +624,7 @@ impl Pixel8HsmBenchmark {
         Ok(metrics)
     }
 
-    fn generate_comparison_report(&self, results: &[HsmBenchmarkResults]) -> BearDogResult<()> {
+    fn generate_comparison_report(&self, results: &[HsmBenchmarkResults]) -> Result<(), BearDogError> {
         println!();
         println!("📊 COMPREHENSIVE HSM BENCHMARK RESULTS");
         println!("=====================================");
@@ -707,7 +707,7 @@ impl Pixel8HsmBenchmark {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🚀 Starting BearDog Pixel 8 HSM Benchmark Suite...");
     println!();
 

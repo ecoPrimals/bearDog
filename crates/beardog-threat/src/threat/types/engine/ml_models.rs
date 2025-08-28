@@ -1,11 +1,8 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MlModel {
-
     pub id: String,
 
     pub name: String,
@@ -49,7 +46,6 @@ impl Default for MlModel {
     }
 }
 impl MlModel {
-
     pub fn new(
         id: &str,
         name: &str,
@@ -68,7 +64,9 @@ impl MlModel {
     }
 
     pub fn get_age_days(&self) -> i64 {
-        Utc::now().signed_duration_since(self.last_trained).num_days()
+        Utc::now()
+            .signed_duration_since(self.last_trained)
+            .num_days()
     }
 
     pub fn feature_count(&self) -> usize {
@@ -126,10 +124,19 @@ impl MlModel {
         let mut metadata = std::collections::HashMap::with_capacity(16);
         metadata.insert("id".to_string(), self.id.clone());
         metadata.insert("name".to_string(), self.name.clone());
-        metadata.insert("type".to_string(), format_args!("{}", self.model_type).to_string());
-        metadata.insert("accuracy".to_string(), format_args!("{:.3}", self.accuracy).to_string());
+        metadata.insert(
+            "type".to_string(),
+            format_args!("{}", self.model_type).to_string(),
+        );
+        metadata.insert(
+            "accuracy".to_string(),
+            format_args!("{:.3}", self.accuracy).to_string(),
+        );
         metadata.insert("age_days".to_string(), self.get_age_days().to_string());
-        metadata.insert("feature_count".to_string(), self.feature_count().to_string());
+        metadata.insert(
+            "feature_count".to_string(),
+            self.feature_count().to_string(),
+        );
         metadata
     }
 }
@@ -139,6 +146,7 @@ impl std::fmt::Display for MlModelType {
         match self {
             MlModelType::NeuralNetwork => write!(f, "Neural Network"),
             MlModelType::RandomForest => write!(f, "Random Forest"),
+            MlModelType::SupportVector => write!(f, "Support Vector"),
             MlModelType::SupportVectorMachine => write!(f, "Support Vector Machine"),
             MlModelType::DecisionTree => write!(f, "Decision Tree"),
             MlModelType::LogisticRegression => write!(f, "Logistic Regression"),
@@ -149,10 +157,6 @@ impl std::fmt::Display for MlModelType {
             MlModelType::Classification => write!(f, "Classification"),
             MlModelType::Clustering => write!(f, "Clustering"),
             MlModelType::AnomalyDetection => write!(f, "Anomaly Detection"),
-            MlModelType::SupportVectorMachine => write!(f, "Support Vector Machine"),
-            MlModelType::LogisticRegression => write!(f, "Logistic Regression"),
-            MlModelType::KMeans => write!(f, "K-Means"),
-            MlModelType::ReinforcementLearning => write!(f, "Reinforcement Learning"),
         }
     }
 }

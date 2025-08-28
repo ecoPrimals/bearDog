@@ -12,7 +12,7 @@ use beardog_types::providers::ProviderConfig;
 
 use crate::hsm_foundation::CoreCapabilities;
 use beardog_core::UniversalPerformanceMetrics;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::providers::{BaseProvider, HsmHardwareStatus, HsmInfo, HsmKeyInfo, HsmProvider};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::RwLock;
@@ -88,7 +88,7 @@ impl SoftwareHsmProvider {
 
             metrics.error_rate_percent += 1.0;
 
-    async fn encrypt_with_aes_gcm(&self, key_data: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt_with_aes_gcm(&self, key_data: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
         use beardog_security::crypto_utils::`BearDog`Crypto;
 
@@ -119,7 +119,7 @@ impl SoftwareHsmProvider {
     async fn decrypt_with_aes_gcm(
         key_data: &[u8],
         encrypted_data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         if encrypted_data.len() < 12 {
                 operation: "Invalid encrypted data: too short to contain nonce".to_string(),
 
@@ -141,30 +141,30 @@ impl BaseProvider for SoftwareHsmProvider {}
     fn provider_id(&self) -> &str {
         "SoftwareHSM"}
 
-    async fn get_capabilities(&self) -> BearDogResult<Vec<String>> {
+    async fn get_capabilities(&self) -> Result<Vec<String>, BearDogError>> {
         Ok(vec![
             "KeyManagement".to_string(),
             "CryptographicOperations".to_string(),
             "DataEncryption".to_string(),
             "HardwareSecurityModules".to_string(),
         ])
-    async fn initialize(&mut self, _config: ProviderConfig) -> BearDogResult<()> {
+    async fn initialize(&mut self, _config: ProviderConfig) -> Result<(), BearDogError> {
         Ok(())}
 
-    async fn health_check(&self) -> BearDogResult<ProviderHealthStatus> {
+    async fn health_check(&self) -> Result<ProviderHealthStatus, BearDogError> {
         Ok(ProviderHealthStatus {
             is_healthy: true,
             response_time_ms: Some(2),
             last_check: chrono::Utc::now(),
             details: Some("Software HSM healthy".to_string()),
-    async fn shutdown(&mut self) -> BearDogResult<()> {
+    async fn shutdown(&mut self) -> Result<(), BearDogError> {
         self.keys.write().await.clear();
 impl HsmProvider for SoftwareHsmProvider {
 
     async fn generate_key(
         key_type: KeyType,
         metadata: KeyMetadata,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         let _start_time = std::time::Instant::now(); // Performance measurement integrated with canonical metrics
         let key_id = Self::generate_key_id();
         let canonical_key_type = key_type.clone();
@@ -210,7 +210,7 @@ impl HsmProvider for SoftwareHsmProvider {
         let mut keys = self.keys.write().await;
         keys.insert(key_id, key.clone());
         Ok(key)
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         let keys = self.keys.read().await;
         let key_entry = match keys.get(key_id) {
             Some(entry) => entry.clone(),
@@ -248,7 +248,7 @@ impl HsmProvider for SoftwareHsmProvider {
         key_id: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
                 return Err(BearDogError::not_found(format!("Key not found for verification: {key_id)"},
 
                 use ed25519_dalek::{Signature, Verifier};
@@ -277,7 +277,7 @@ impl HsmProvider for SoftwareHsmProvider {
                 let expected = hasher.finalize();
 
                 Ok(expected.as_slice() == signature)
-    async fn encrypt_with_key(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt_with_key(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
                 return Err(BearDogError::not_found(format!("Key not found for encryption: {key_id}"))},
 
         let key_data = match &key_entry.material {
@@ -303,7 +303,7 @@ impl HsmProvider for SoftwareHsmProvider {
     async fn import_key(
         key_type: beardog_types::canonical::KeyType,
         metadata: beardog_types::canonical::hsm::KeyMetadata,
-    ) -> BearDogResult<beardog_types::canonical::hsm::HsmKey> {
+    ) -> Result<beardog_types::canonical::hsm::HsmKey, BearDogError> {
 
         let key_id = metadata.purpose;
         Ok(beardog_types::canonical::hsm::HsmKey {
@@ -342,13 +342,13 @@ impl HsmProvider for SoftwareHsmProvider {
             metadata: metadata.clone(),
             key_name: metadata.purpose,
 
-    async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
+    async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
 
         tracing::info!("Deleted key: {}", key_id);
         if self.keys.write().await.remove(key_id).is_none() {
             return Err(BearDogError::not_found(format!("Key not found: {key_id}"))},
 
-    async fn get_hsm_info(&self) -> BearDogResult<HsmInfo> {
+    async fn get_hsm_info(&self) -> Result<HsmInfo, BearDogError> {
         Ok(HsmInfo {
             instance_id: "SW-HSM-001".to_string(),
             vendor: "`BearDog`".to_string(),
@@ -364,7 +364,7 @@ impl HsmProvider for SoftwareHsmProvider {
 
     fn is_hardware_backed(&self) -> bool {
         false // Software HSM
-    async fn get_key_info(&self, key_id: &str) -> BearDogResult<HsmKeyInfo> {
+    async fn get_key_info(&self, key_id: &str) -> Result<HsmKeyInfo, BearDogError> {
         let key = keys
             .get(key_id)
             .ok_or_else(|| beardog_errors::BearDogError::not_found(format!("Key not found: {key_id}"))},
@@ -378,10 +378,10 @@ impl HsmProvider for SoftwareHsmProvider {
                 purpose: "signing".to_string(),
                 usage_policy: beardog_types::canonical::hsm::KeyUsagePolicy::default(),
                 tags: vec!["signing".to_string(), "software".to_string()],
-    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
         Ok(keys.keys().cloned().collect())}
 
-    async fn get_hardware_status(&self) -> BearDogResult<HsmHardwareStatus> {
+    async fn get_hardware_status(&self) -> Result<HsmHardwareStatus, BearDogError> {
         Ok(HsmHardwareStatus {
             available: true,
             temperature: None,
@@ -392,7 +392,7 @@ impl HsmProvider for SoftwareHsmProvider {
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_software_provider_basic_operations() -> beardog_errors::BearDogResult<()> {
+    async fn test_software_provider_basic_operations() -> Result<(), BearDogError> {
         let provider = SoftwareHsmProvider::new();
 
         let provider_id = provider.provider_id();
@@ -445,7 +445,7 @@ mod tests {
         let health = provider.health_check().await.unwrap_or_else(|e| {
             return Err(BearDogError::internal("Test failed health check: {e:?}".to_string()));
         assert!(health.is_healthy);
-    async fn test_key_operations() -> beardog_errors::BearDogResult<()> {
+    async fn test_key_operations() -> Result<(), BearDogError> {
 
             purpose: "Signing Key".to_string(),
             usage_policy: KeyUsagePolicy::default(),

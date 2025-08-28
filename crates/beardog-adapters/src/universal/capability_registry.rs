@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use super::*;
-use crate::EcosystemResult;
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone)]
 pub struct CapabilityRegistry {
@@ -23,7 +23,7 @@ impl CapabilityRegistry {
     pub async fn register_service(
         &mut self,
         registration: UniversalServiceRegistration,
-    ) -> EcosystemResult<()> {
+    ) -> Result<(), BearDogError> {
 
         self.all_services
             .insert(registration.service_id, registration.clone());
@@ -38,17 +38,17 @@ impl CapabilityRegistry {
     pub async fn find_by_capability(
         &self,
         capability_id: &str,
-    ) -> EcosystemResult<Vec<UniversalServiceRegistration>> {
+    ) -> Result<Vec<UniversalServiceRegistration, BearDogError>> {
         Ok(self
             .services_by_capability
             .get(capability_id)
             .cloned()
             .unwrap_or_else(Vec::new))
 
-    pub async fn get_all_services(&self) -> EcosystemResult<Vec<UniversalServiceRegistration>> {
+    pub async fn get_all_services(&self) -> Result<Vec<UniversalServiceRegistration, BearDogError>> {
         Ok(self.all_services.values().cloned().collect())
 
-    pub async fn unregister_service(&mut self, service_id: uuid::Uuid) -> EcosystemResult<()> {
+    pub async fn unregister_service(&mut self, service_id: uuid::Uuid) -> Result<(), BearDogError> {
         if let Some(registration) = self.all_services.remove(&service_id) {
 
             for capability in &registration.capabilities {

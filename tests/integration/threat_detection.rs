@@ -1,12 +1,12 @@
-
+use beardog_errors::BearDogError;
 
 use super::common::*;
-use beardog::errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog::threat::{SecurityEvent, ThreatDetectionEngine, ThreatDetectionConfig};
 use beardog::tunnel::events::types::ThreatLevel;
 
 #[tokio::test]
-async fn test_threat_detection_engine() -> BearDogResult<()> {
+async fn test_threat_detection_engine() -> Result<(), BearDogError> {
     let core = create_test_core().await?;
 
     let threat_engine = core.threat_detection_engine();
@@ -34,7 +34,7 @@ async fn test_threat_detection_engine() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_threat_detection_file_integrity() -> BearDogResult<()> {
+async fn test_threat_detection_file_integrity() -> Result<(), BearDogError> {
     let core = create_test_core().await?;
     let threat_engine = core.threat_detection_engine();
 

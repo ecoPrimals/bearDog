@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use super::*;
@@ -199,24 +200,24 @@ impl AttestationVerificationResult {
 mod tests {
     use super::*;
     #[test]
-    fn test_attestation_level_ordering() -> beardog_errors::BearDogResult<()> {
+    fn test_attestation_level_ordering() -> Result<(), BearDogError> {
         assert!(AttestationLevel::SecureElement > AttestationLevel::HSM);
         assert!(AttestationLevel::HSM > AttestationLevel::TEE);
         assert!(AttestationLevel::TEE > AttestationLevel::Software);
         assert!(AttestationLevel::Software > AttestationLevel::None);
         Ok(())}
 
-    fn test_attestation_level_display() -> beardog_errors::BearDogResult<()> {
+    fn test_attestation_level_display() -> Result<(), BearDogError> {
         assert_eq!(AttestationLevel::None.to_string(), "No Attestation");
         assert_eq!(
             AttestationLevel::SecureElement.to_string(),
             "Secure Element Attestation"
         );
-    fn test_boot_state_color_display() -> beardog_errors::BearDogResult<()> {
+    fn test_boot_state_color_display() -> Result<(), BearDogError> {
         assert_eq!(BootStateColor::Green.to_string(), "Green (Verified)");
         assert_eq!(BootStateColor::Red.to_string(), "Red (Failed)");}
 
-    fn test_attestation_data_creation() -> beardog_errors::BearDogResult<()> {
+    fn test_attestation_data_creation() -> Result<(), BearDogError> {
         let hardware_info = HardwareInfo {
             model: "Test Device".to_string(),
             vendor: "Test Vendor".to_string(),
@@ -247,7 +248,7 @@ mod tests {
         assert!(!attestation.is_expired(3600)); // 1 hour validity
             attestation.get_device_certificate(),
             Some(&vec![1, 2, 3, 4])
-    fn test_attestation_verification_result() -> beardog_errors::BearDogResult<()> {
+    fn test_attestation_verification_result() -> Result<(), BearDogError> {
         let success_result = AttestationVerificationResult::success();
         assert!(success_result.is_valid);
         assert!(success_result.details.certificate_chain_valid);

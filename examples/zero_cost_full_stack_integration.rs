@@ -12,7 +12,7 @@ use beardog_api::api::zero_cost_server::examples as api_examples;
 use beardog_workflows::workflows::zero_cost_workflows::examples as workflow_examples;
 use beardog_security::zero_cost_security_simplified::examples as security_examples;
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::time::Instant;
 use tokio;
@@ -99,7 +99,7 @@ struct ZeroCostStack {
     config: ProductionConfig,
 }
 
-async fn initialize_zero_cost_stack() -> BearDogResult<ZeroCostStack> {
+async fn initialize_zero_cost_stack() -> Result<ZeroCostStack, BearDogError> {
     println!("   🔧 Initializing core zero-cost system...");
     let core_system = core_examples::create_high_performance_system().await?;
     
@@ -119,7 +119,7 @@ async fn initialize_zero_cost_stack() -> BearDogResult<ZeroCostStack> {
     })
 }
 
-async fn simulate_production_scenario(stack: &ZeroCostStack) -> BearDogResult<FullStackMetrics> {
+async fn simulate_production_scenario(stack: &ZeroCostStack) -> Result<FullStackMetrics, BearDogError> {
     println!("📈 Running production scenario simulation...");
     
     const CONCURRENT_USERS: usize = 1000;
@@ -229,7 +229,7 @@ async fn simulate_production_scenario(stack: &ZeroCostStack) -> BearDogResult<Fu
     })
 }
 
-async fn perform_load_testing(stack: &ZeroCostStack) -> BearDogResult<FullStackMetrics> {
+async fn perform_load_testing(stack: &ZeroCostStack) -> Result<FullStackMetrics, BearDogError> {
     println!("📈 Running comprehensive load testing...");
     
     const LOAD_TEST_DURATION_SECS: u64 = 10;
@@ -377,7 +377,7 @@ fn analyze_integration_benefits(scenario: &FullStackMetrics, load_test: &FullSta
     }
 }
 
-async fn assess_production_readiness(stack: &ZeroCostStack) -> BearDogResult<()> {
+async fn assess_production_readiness(stack: &ZeroCostStack) -> Result<(), BearDogError> {
     println!("🔍 Assessing production readiness...");
 
     println!("   🏥 Component health checks:");

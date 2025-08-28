@@ -1,8 +1,8 @@
 
 
-use beardog_errors::{improved_results::*, migration_helpers::*, BearDogError, BearDogResult};
+use beardog_errors::{{improved_results::*, migration_helpers::*, BearDogError}};
 
-fn authenticate_user_old(username: &str, password: &str) -> BearDogResult<()> {
+fn authenticate_user_old(username: &str, password: &str) -> Result<(), BearDogError> {
 
     if username == "admin" && password == "secure123" {
         println!("✅ Authentication successful for {}", username);
@@ -14,7 +14,7 @@ fn authenticate_user_old(username: &str, password: &str) -> BearDogResult<()> {
     }
 }
 
-fn authenticate_user_rich(username: &str, password: &str) -> BearDogResult<AuthenticationOutcome> {
+fn authenticate_user_rich(username: &str, password: &str) -> Result<AuthenticationOutcome, BearDogError> {
 
     if username == "admin" && password == "secure123" {
         let session_id = format_args!("session_{}", uuid::Uuid::new_v4().to_string());
@@ -33,7 +33,7 @@ fn authenticate_user_rich(username: &str, password: &str) -> BearDogResult<Authe
     }
 }
 
-fn process_items_old(items: Vec<&str>) -> BearDogResult<()> {
+fn process_items_old(items: Vec<&str>) -> Result<(), BearDogError> {
     for item in items {
         if item.is_empty() {
             return Err(BearDogError::invalid_input("Empty item found".to_string()));
@@ -44,7 +44,7 @@ fn process_items_old(items: Vec<&str>) -> BearDogResult<()> {
     Ok(()) // How many succeeded? Which ones failed? Performance metrics?
 }
 
-fn process_items_rich(items: Vec<&str>) -> BearDogResult<ProcessingOutcome<Vec<String>>> {
+fn process_items_rich(items: Vec<&str>) -> Result<ProcessingOutcome<Vec<String, BearDogError>>> {
     let mut successful = Vec::new();
     let mut failures = Vec::new();
 

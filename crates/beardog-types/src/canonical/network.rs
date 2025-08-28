@@ -1,5 +1,3 @@
-
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -128,11 +126,10 @@ impl Default for FailoverConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
 pub struct LoadBalancingConfig {
     pub strategy: LoadBalancingStrategy,
     pub health_check: HealthCheckConfig,
-    pub circuit_breaker: CircuitBreakerConfig,
+    pub circuit_breaker: crate::canonical::providers::CircuitBreakerConfig,
     pub failover: FailoverConfig,
 }
 
@@ -162,10 +159,30 @@ pub struct ServiceDiscoveryConfig {
 impl Default for ServiceDiscoveryConfig {
     fn default() -> Self {
         Self {
-            enabled: false,
+            enabled: true,
             discovery_type: ServiceDiscoveryType::Static,
             endpoints: Vec::new(),
             refresh_interval: Duration::from_secs(30),
         }
     }
+}
+
+impl Default for LoadBalancingConfig {
+    fn default() -> Self {
+        Self {
+            strategy: LoadBalancingStrategy::RoundRobin,
+            health_check: HealthCheckConfig::default(),
+            circuit_breaker: crate::canonical::providers::CircuitBreakerConfig::default(),
+            failover: FailoverConfig::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct NetworkConfig {
+    pub connection_pool: ConnectionPoolConfig,
+    pub load_balancing: LoadBalancingConfig,
+    pub service_discovery: ServiceDiscoveryConfig,
+    pub failover: FailoverConfig,
+    pub circuit_breaker: crate::canonical::providers::CircuitBreakerConfig,
 }

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
@@ -92,7 +92,7 @@ impl EntropyQualityAssessor {
     pub fn new(config: EntropyCollectionConfig) -> Self {
         Self { config }
 
-    pub fn assess_entropy_quality(&self, entropy_data: &HumanEntropyData) -> BearDogResult<f64> {
+    pub fn assess_entropy_quality(&self, entropy_data: &HumanEntropyData) -> Result<f64, BearDogError> {
         debug!("🔍 Assessing entropy quality for {} method", 
             match entropy_data.collection_method {
                 HumanEntropyMethod::Biometric => "biometric",
@@ -235,14 +235,14 @@ pub mod utils {
 
 mod tests {
     #[test]
-    fn test_entropy_config_default() -> beardog_errors::BearDogResult<()> {
+    fn test_entropy_config_default() -> Result<(), BearDogError> {
         let config = EntropyCollectionConfig::default();
         assert_eq!(config.min_quality_score, 0.7);
         assert_eq!(config.min_entropy_bits, 128.0);
         assert!(config.enable_biometric);
         Ok(())}
 
-    fn test_collection_stats() -> beardog_errors::BearDogResult<()> {
+    fn test_collection_stats() -> Result<(), BearDogError> {
         let mut stats = EntropyCollectionStats::default();
         stats.update_collection_stats(0.8, std::time::Duration::from_millis(100));
         stats.update_collection_stats(0.9, std::time::Duration::from_millis(150));
@@ -250,7 +250,7 @@ mod tests {
         assert_eq!(stats.successful_collections, 2);
         assert_eq!(stats.success_rate(), 100.0);
         assert!((stats.average_quality - 0.85).abs() < 0.01);
-    fn test_quality_assessor() -> beardog_errors::BearDogResult<()> {
+    fn test_quality_assessor() -> Result<(), BearDogError> {
         let assessor = EntropyQualityAssessor::new(config);
         let entropy_data = HumanEntropyData {
             raw_data: vec![0u8; 256],
@@ -263,7 +263,7 @@ mod tests {
     beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
 })?;
         assert!(quality > 0.0 && quality <= 1.0);
-    fn test_tier_elevation_engine() -> beardog_errors::BearDogResult<()> {
+    fn test_tier_elevation_engine() -> Result<(), BearDogError> {
         let mut engine = TierElevationEngine::new();
         engine.record_successful_collection(&HumanEntropyMethod::Biometric, 0.9);
         engine.record_successful_collection(&HumanEntropyMethod::Biometric, 0.8);
@@ -272,7 +272,7 @@ mod tests {
         let success_rate = engine.get_method_success_rate(&HumanEntropyMethod::Biometric);
         assert_eq!(success_rate, 100.0);}
 
-    fn test_utility_functions() -> beardog_errors::BearDogResult<()> {
+    fn test_utility_functions() -> Result<(), BearDogError> {
         let collector = utils::create_test_collector();
         assert!(collector.get_statistics().total_collections == 0);
         let capabilities = utils::create_test_capabilities();

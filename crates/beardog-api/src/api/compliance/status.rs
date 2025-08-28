@@ -72,16 +72,25 @@ pub async fn get_compliance_overview(
             "HIPAA security risk assessment updated".to_string(),
             "SOX financial controls review passed".to_string(),
             "PCI DSS quarterly scan completed".to_string(),
+        ],
         upcoming_milestones: vec![
             ComplianceMilestone {
                 name: "Annual GDPR compliance review".to_string(),
                 due_date: (chrono::Utc::now() + chrono::Duration::days(45)).to_rfc3339(),
                 priority: "HIGH".to_string(),
                 owner: "Chief Compliance Officer".to_string(),
+            },
+            ComplianceMilestone {
                 name: "HIPAA risk assessment update".to_string(),
                 due_date: (chrono::Utc::now() + chrono::Duration::days(30)).to_rfc3339(),
                 priority: "MEDIUM".to_string(),
                 owner: "Data Protection Officer".to_string(),
+            },
+        ],
+    };
+    
+    Ok(Json(ApiResponse::success(response)))
+}
 
 pub async fn get_compliance_health(
 ) -> Result<Json<ApiResponse<ComplianceHealthResponse>>, StatusCode> {
@@ -98,11 +107,22 @@ pub async fn get_compliance_health(
                 health_percentage: 99.2,
                 last_check: chrono::Utc::now().to_rfc3339(),
                 issues: vec![],
+            },
+            ComplianceComponentHealth {
                 name: "Policy Engine".to_string(),
+                status: "OPERATIONAL".to_string(),
                 health_percentage: 97.8,
+                last_check: chrono::Utc::now().to_rfc3339(),
                 issues: vec!["Minor performance degradation in policy evaluation".to_string()],
+            },
+        ],
         metrics: ComplianceMetrics {
             audit_events_per_hour: 1247,
             policy_evaluations_per_minute: 2845,
             violation_alerts_24h: 3,
             system_uptime_percentage: 99.97,
+        },
+    };
+    
+    Ok(Json(ApiResponse::success(response)))
+}

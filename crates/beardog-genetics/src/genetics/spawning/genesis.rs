@@ -3,13 +3,13 @@
 use super::types::{SpawnRequest, SpawnResult};
 use beardog_auth::auth::{`BearDog`Genetics, SecurityClearance};
 use crate::genetics::types::{GeneticsCapability, genetics_to_node_capabilities};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenesisConfig {
@@ -112,7 +112,7 @@ impl GenesisSpawningEngine {
     pub fn with_config(config: GenesisConfig) -> Self {
             config,
 
-    pub async fn initialize_genesis(&mut self) -> BearDogResult<Vec<GenesisSpawnResult>> {
+    pub async fn initialize_genesis(&mut self) -> Result<Vec<GenesisSpawnResult>, BearDogError>> {
         info!("🌱 Initializing Genesis - First Generation");
         let mut results = Vec::new();
         let mut created_genetics = Vec::new();
@@ -158,7 +158,7 @@ impl GenesisSpawningEngine {
         );
         Ok(results)
 
-    pub async fn evolve_generation(&mut self) -> BearDogResult<Vec<GenesisSpawnResult>> {
+    pub async fn evolve_generation(&mut self) -> Result<Vec<GenesisSpawnResult>, BearDogError>> {
         if self.population.is_empty() {
             return Err(beardog_errors::BearDogError::Storage {
                 message: "Cannot evolve: no genetics in population".to_string(),
@@ -230,7 +230,7 @@ impl GenesisSpawningEngine {
         Ok(genetics)
 
     async fn generate_diverse_capabilities(
-    ) -> BearDogResult<Vec<GeneticsCapability>> {
+    ) -> Result<Vec<GeneticsCapability>, BearDogError>> {
         let all_capabilities = vec![
             GeneticsCapability::new("Computation".to_string(), 0.7, 0.8),
             GeneticsCapability::new("Storage".to_string(), 0.7, 0.8),
@@ -247,7 +247,7 @@ impl GenesisSpawningEngine {
             _ => vec![GeneticsCapability::new("Networking".to_string(), 0.7, 0.8), GeneticsCapability::new("Monitoring".to_string(), 0.7, 0.8)],
         Ok(capabilities)
 
-    async fn calculate_genesis_fitness(&self, genetics: &`BearDog`Genetics) -> BearDogResult<f64> {
+    async fn calculate_genesis_fitness(&self, genetics: &`BearDog`Genetics) -> Result<f64, BearDogError> {
         let mut fitness = 0.0;
 
         fitness += genetics.capabilities.len() as f64 * 0.2;
@@ -262,7 +262,7 @@ impl GenesisSpawningEngine {
 
         Ok(fitness.min(1.0))
 
-    async fn select_parents(&self) -> BearDogResult<Vec<`BearDog`Genetics>> {
+    async fn select_parents(&self) -> Result<Vec<`BearDog`Genetics>, BearDogError>> {
         if self.population.len() < 2 {
             return Err(beardog_errors::BearDogError::Genetics {
                 message: "Not enough genetics for parent selection".to_string(),
@@ -288,7 +288,7 @@ impl GenesisSpawningEngine {
 
     async fn create_offspring(
         parents: &[`BearDog`Genetics],
-    ) -> BearDogResult<GenesisSpawnResult> {
+    ) -> Result<GenesisSpawnResult, BearDogError> {
         if parents.len() < 2 {
                 message: "Need at least 2 parents for crossover".to_string(),
 
@@ -335,7 +335,7 @@ impl GenesisSpawningEngine {
         parent_a: &`BearDog`Genetics,
         parent_b: &`BearDog`Genetics,
         offspring_id: &str,
-    ) -> BearDogResult<`BearDog`Genetics> {
+    ) -> Result<`BearDog`Genetics, BearDogError> {
         let mut offspring = `BearDog`Genetics {
             id: offspring_id,
             created_at: Some(Utc::now()),
@@ -351,7 +351,7 @@ impl GenesisSpawningEngine {
             parent_b.security_clearance.clone()
         Ok(offspring)
 
-    async fn mutate(&self, genetics: &mut `BearDog`Genetics) -> BearDogResult<Vec<MutationEvent>> {
+    async fn mutate(&self, genetics: &mut `BearDog`Genetics) -> Result<Vec<MutationEvent>, BearDogError>> {
         let mut mutations = Vec::new();
 
         if rand::random::<f64>() < self.config.mutation_rate {
@@ -384,7 +384,7 @@ impl GenesisSpawningEngine {
                 component: "security_clearance".to_string(),
         Ok(mutations)
 
-    async fn update_population_stats(&mut self) -> BearDogResult<()> {
+    async fn update_population_stats(&mut self) -> Result<(), BearDogError> {
             return Ok(());
 
         let total_fitness: f64 = self.population.iter().map(|g| g.fitness_score).sum();

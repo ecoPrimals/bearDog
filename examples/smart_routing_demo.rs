@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::{info, warn};
 
@@ -36,7 +36,7 @@ struct SmartRouter {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
 
@@ -53,7 +53,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_routing_strategies() -> BearDogResult<()> {
+async fn demonstrate_routing_strategies() -> Result<(), BearDogError> {
     info!("🎯 Routing Strategy Demonstrations");
     info!("----------------------------------");
 
@@ -90,7 +90,7 @@ async fn demonstrate_routing_strategies() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_adaptive_routing() -> BearDogResult<()> {
+async fn demonstrate_adaptive_routing() -> Result<(), BearDogError> {
     info!("\n🔄 Adaptive Routing Based on Performance");
     info!("----------------------------------------");
 
@@ -119,7 +119,7 @@ async fn demonstrate_adaptive_routing() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_circuit_breaker() -> BearDogResult<()> {
+async fn demonstrate_circuit_breaker() -> Result<(), BearDogError> {
     info!("\n⚡ Circuit Breaker Pattern");
     info!("-------------------------");
 

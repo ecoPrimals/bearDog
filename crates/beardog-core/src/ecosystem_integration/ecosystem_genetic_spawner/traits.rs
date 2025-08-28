@@ -1,7 +1,7 @@
 
 
 use super::types::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 
 #[allow(async_fn_in_trait)]
@@ -11,21 +11,21 @@ pub trait EcosystemPrimalClient: Send + Sync {
 
     fn get_primal_name(&self) -> String;
 
-    async fn get_available_genetic_traits(&self) -> BearDogResult<Vec<EcosystemGeneticTrait>>;
+    async fn get_available_genetic_traits(&self) -> Result<Vec<EcosystemGeneticTrait>, BearDogError>;
 
-    async fn supports_capabilities(&self, capabilities: &[EcosystemCapability]) -> BearDogResult<bool>;
+    async fn supports_capabilities(&self, capabilities: &[EcosystemCapability]) -> Result<bool, BearDogError>;
 
-    async fn get_resource_availability(&self) -> BearDogResult<EcosystemResourceAvailability>;
+    async fn get_resource_availability(&self) -> Result<EcosystemResourceAvailability, BearDogError>;
 
-    async fn reserve_resources(&self, allocation: &EcosystemResourceAllocation) -> BearDogResult<String>;
+    async fn reserve_resources(&self, allocation: &EcosystemResourceAllocation) -> Result<String, BearDogError>;
 
-    async fn release_resources(&self, reservation_id: &str) -> BearDogResult<()>;
+    async fn release_resources(&self, reservation_id: &str) -> Result<(), BearDogError>;
 
-    async fn create_hybrid_component(&self, blueprint: &EcosystemGeneticBlueprint) -> BearDogResult<serde_json::Value>;
+    async fn create_hybrid_component(&self, blueprint: &EcosystemGeneticBlueprint) -> Result<serde_json::Value, BearDogError>;
 
-    async fn health_check(&self) -> BearDogResult<bool>;
+    async fn health_check(&self) -> Result<bool, BearDogError>;
 
-    async fn get_resource_utilization(&self) -> BearDogResult<HashMap<String, f64>>;
+    async fn get_resource_utilization(&self) -> Result<HashMap<String, f64>, BearDogError>;
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

@@ -6,7 +6,7 @@ use super::types::*;
 use super::validation::EntropyValidator;
 use crate::genetics::human_entropy::MultiModalHumanEntropyCollector;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -52,7 +52,7 @@ impl EntropyHierarchyManager {
         lifetime_policy: SeedLifetimePolicy,
         owner_identity: HumanIdentity,
         seed_bytes: Vec<u8>,
-    ) -> BearDogResult<Uuid> {
+    ) -> Result<Uuid, BearDogError> {
 
         self.validator.validate_entropy_quality(&entropy_class)?;
 
@@ -85,14 +85,14 @@ impl EntropyHierarchyManager {
     pub fn get_seed_mut(&mut self, seed_id: &Uuid) -> Option<&mut EntropySeed> {
         self.active_seeds.get_mut(seed_id)
 
-    pub fn use_seed(&mut self, seed_id: &Uuid, operation: &str) -> BearDogResult<Vec<u8>> {
+    pub fn use_seed(&mut self, seed_id: &Uuid, operation: &str) -> Result<Vec<u8>, BearDogError>> {
         let seed =
             self.active_seeds
                 .get_mut(seed_id)
                 .ok_or_else(|| BearDogError::invalid_input(format!("Seed with ID {seed_id} not found")))?;
         seed.use_for_operation(operation)
 
-    pub async fn generate_signature(&self, data: &[u8], key_id: &str) -> BearDogResult<Vec<u8>> {
+    pub async fn generate_signature(&self, data: &[u8], key_id: &str) -> Result<Vec<u8>, BearDogError>> {
 
         use sha3::{Digest, Sha3_256};
         let mut hasher = Sha3_256::new();
@@ -104,34 +104,34 @@ impl EntropyHierarchyManager {
         &self,
         owner_identity: &HumanIdentity,
         entropy_data: &[u8],
-    ) -> BearDogResult<OwnershipProof> {
+    ) -> Result<OwnershipProof, BearDogError> {
         self.validator
             .generate_ownership_proof(owner_identity, entropy_data)
             .await
 
     pub async fn generate_irreproducibility_proof(
         entropy_class: &EntropyClass,
-    ) -> BearDogResult<IrreproducibilityProof> {
+    ) -> Result<IrreproducibilityProof, BearDogError> {
             .generate_irreproducibility_proof(entropy_data, entropy_class)
 
-    pub fn mix_entropy_sources(&self, sources: Vec<EntropyClass>) -> BearDogResult<EntropyClass> {
+    pub fn mix_entropy_sources(&self, sources: Vec<EntropyClass>) -> Result<EntropyClass, BearDogError> {
         self.mixing_engine.mix_entropy_sources(sources)
 
-    pub fn validate_entropy_quality(&self, entropy_class: &EntropyClass) -> BearDogResult<f64> {
+    pub fn validate_entropy_quality(&self, entropy_class: &EntropyClass) -> Result<f64, BearDogError> {
         self.validator.validate_entropy_quality(entropy_class)
 
     pub fn transfer_seed_ownership(
         seed_id: &Uuid,
         new_owner: HumanIdentity,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         if !self.config.enable_ownership_transfer {
                 message: "Ownership transfer is disabled in configuration".to_string(),
         seed.transfer_ownership(new_owner)
 
-    pub fn expire_seed_ownership(&mut self, seed_id: &Uuid) -> BearDogResult<()> {
+    pub fn expire_seed_ownership(&mut self, seed_id: &Uuid) -> Result<(), BearDogError> {
         seed.expire_ownership()
 
-    pub fn destroy_seed(&mut self, seed_id: &Uuid) -> BearDogResult<()> {
+    pub fn destroy_seed(&mut self, seed_id: &Uuid) -> Result<(), BearDogError> {
         if let Some(mut seed) = self.active_seeds.remove(seed_id) {
             seed.destroy();
             Ok(())
@@ -188,7 +188,7 @@ impl EntropyHierarchyManager {
 
     pub async fn verify_seed_ownership_proof(
         proof: &OwnershipProof,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         let seed = self
             .active_seeds
             .get(seed_id)
@@ -202,11 +202,11 @@ impl EntropyHierarchyManager {
     pub fn get_mixing_recommendations(&self, sources: &[EntropyClass]) -> Vec<String> {
         self.mixing_engine.get_mixing_recommendations(sources)
 
-    pub fn validate_entropy_combination(&self, sources: &[EntropyClass]) -> BearDogResult<()> {
+    pub fn validate_entropy_combination(&self, sources: &[EntropyClass]) -> Result<(), BearDogError> {
         self.mixing_engine.validate_entropy_combination(sources)
 
     pub fn assess_entropy_quality(
-    ) -> BearDogResult<EntropyQualityAssessment> {
+    ) -> Result<EntropyQualityAssessment, BearDogError> {
         let quality_score = self.validator.validate_entropy_quality(entropy_class)?;
         let _security_level = self.validator.check_security_requirements(entropy_class)?;
         let weighted_score = self
@@ -260,14 +260,13 @@ impl EntropyHierarchyManager {
 
     pub fn get_config(&self) -> &EntropyHierarchyConfig {
         &self.config
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct EntropyQualityAssessment {
-
     pub quality_score: f64,
-
     pub weighted_score: f64,
-
     pub entropy_tier: u8,
-
     pub recommendations: Vec<String>,
+}

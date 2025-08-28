@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde_json::json;
 
 use crate::adapters::universal::{
@@ -45,7 +45,7 @@ impl TpmCapabilityHandler {
         }
     }
 
-    pub async fn detect_tpm(&mut self) -> BearDogResult<bool> {
+    pub async fn detect_tpm(&mut self) -> Result<bool, BearDogError> {
 
         if let Some(path) = &self.device_path {
 
@@ -60,7 +60,7 @@ impl CapabilityHandler for TpmCapabilityHandler {
         CapabilityType::HardwareSecurity
     }
 
-    async fn can_handle(&self, request: &UniversalVendorRequest) -> BearDogResult<f64> {
+    async fn can_handle(&self, request: &UniversalVendorRequest) -> Result<f64, BearDogError> {
 
         if let Some(operation) = &request.operation {
             match operation.as_str() {
@@ -98,7 +98,7 @@ impl CapabilityHandler for TpmCapabilityHandler {
     async fn execute(
         &self,
         request: UniversalVendorRequest,
-    ) -> BearDogResult<UniversalVendorResponse> {
+    ) -> Result<UniversalVendorResponse, BearDogError> {
         if !self.tpm_available {
             return Err(BearDogError::security("TPM not available on this system".to_string()));
         }
@@ -121,7 +121,7 @@ impl CapabilityHandler for TpmCapabilityHandler {
 }
 
 impl TpmCapabilityHandler {
-    async fn handle_generate_key_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_generate_key_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
 
         Ok(UniversalVendorResponse {
             success: true,
@@ -147,7 +147,7 @@ impl TpmCapabilityHandler {
         })
     }
     
-    async fn handle_seal_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_seal_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
         Ok(UniversalVendorResponse {
             success: true,
             payload: json!({
@@ -169,7 +169,7 @@ impl TpmCapabilityHandler {
         })
     }
     
-    async fn handle_unseal_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_unseal_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
         Ok(UniversalVendorResponse {
             success: true,
             payload: json!({
@@ -190,7 +190,7 @@ impl TpmCapabilityHandler {
         })
     }
     
-    async fn handle_attest_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_attest_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
         Ok(UniversalVendorResponse {
             success: true,
             payload: json!({
@@ -212,7 +212,7 @@ impl TpmCapabilityHandler {
         })
     }
     
-    async fn handle_quote_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_quote_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
         Ok(UniversalVendorResponse {
             success: true,
             payload: json!({
@@ -234,7 +234,7 @@ impl TpmCapabilityHandler {
         })
     }
     
-    async fn handle_encrypt_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_encrypt_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
         Ok(UniversalVendorResponse {
             success: true,
             payload: json!({
@@ -255,7 +255,7 @@ impl TpmCapabilityHandler {
         })
     }
     
-    async fn handle_decrypt_request(&self, request: UniversalVendorRequest) -> BearDogResult<UniversalVendorResponse> {
+    async fn handle_decrypt_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
         Ok(UniversalVendorResponse {
             success: true,
             payload: json!({

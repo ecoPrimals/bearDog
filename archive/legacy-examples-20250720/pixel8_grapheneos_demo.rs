@@ -5,12 +5,12 @@ use beardog::tunnel::hsm::android_strongbox::{
     Pixel8PerformanceMode,
 };
 use beardog::tunnel::hsm::types::*;
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{info, Level};
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt()
         .with_max_level(Level::INFO)
@@ -29,7 +29,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_quick_setup() -> BearDogResult<()> {
+async fn demo_quick_setup() -> Result<(), BearDogError> {
     info!("📱 Demo 1: Quick Setup");
     info!("---------------------");
 
@@ -45,7 +45,7 @@ async fn demo_quick_setup() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_custom_setup() -> BearDogResult<()> {
+async fn demo_custom_setup() -> Result<(), BearDogError> {
     info!("⚙️ Demo 2: Custom Configuration Setup");
     info!("-------------------------------------");
 
@@ -76,7 +76,7 @@ async fn demo_custom_setup() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demo_advanced_operations() -> BearDogResult<()> {
+async fn demo_advanced_operations() -> Result<(), BearDogError> {
     info!("🔐 Demo 3: Advanced Security Operations");
     info!("---------------------------------------");
 
@@ -93,7 +93,7 @@ async fn demo_advanced_operations() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn test_basic_operations(hsm: &Arc<dyn HsmProvider>, anchor_key: &HsmKey) -> BearDogResult<()> {
+async fn test_basic_operations(hsm: &Arc<dyn HsmProvider>, anchor_key: &HsmKey) -> Result<(), BearDogError> {
     info!("🧪 Testing basic operations with anchor key...");
 
     let test_data = b"Hello from BearDog on Pixel 8 GrapheneOS!";
@@ -119,7 +119,7 @@ async fn test_basic_operations(hsm: &Arc<dyn HsmProvider>, anchor_key: &HsmKey) 
     Ok(())
 }
 
-async fn create_signing_key(hsm: &Arc<dyn HsmProvider>) -> BearDogResult<HsmKey> {
+async fn create_signing_key(hsm: &Arc<dyn HsmProvider>) -> Result<HsmKey, BearDogError> {
     info!("🔑 Creating dedicated signing key...");
 
     let request = GenerateKeyRequest {
@@ -151,7 +151,7 @@ async fn create_signing_key(hsm: &Arc<dyn HsmProvider>) -> BearDogResult<HsmKey>
     Ok(key)
 }
 
-async fn create_encryption_key(hsm: &Arc<dyn HsmProvider>) -> BearDogResult<HsmKey> {
+async fn create_encryption_key(hsm: &Arc<dyn HsmProvider>) -> Result<HsmKey, BearDogError> {
     info!("🔑 Creating dedicated encryption key...");
 
     let request = GenerateKeyRequest {
@@ -183,7 +183,7 @@ async fn create_encryption_key(hsm: &Arc<dyn HsmProvider>) -> BearDogResult<HsmK
     Ok(key)
 }
 
-async fn demo_digital_signatures(hsm: &Arc<dyn HsmProvider>, signing_key: &HsmKey) -> BearDogResult<()> {
+async fn demo_digital_signatures(hsm: &Arc<dyn HsmProvider>, signing_key: &HsmKey) -> Result<(), BearDogError> {
     info!("✍️ Demonstrating digital signatures...");
 
     let messages = vec![
@@ -208,7 +208,7 @@ async fn demo_digital_signatures(hsm: &Arc<dyn HsmProvider>, signing_key: &HsmKe
     Ok(())
 }
 
-async fn demo_data_encryption(hsm: &Arc<dyn HsmProvider>, encryption_key: &HsmKey) -> BearDogResult<()> {
+async fn demo_data_encryption(hsm: &Arc<dyn HsmProvider>, encryption_key: &HsmKey) -> Result<(), BearDogError> {
     info!("🔐 Demonstrating data encryption...");
 
     let sensitive_data = b"This is sensitive data protected by Pixel 8 StrongBox";
@@ -232,7 +232,7 @@ async fn demo_data_encryption(hsm: &Arc<dyn HsmProvider>, encryption_key: &HsmKe
     Ok(())
 }
 
-async fn demo_key_attestation(key: &HsmKey) -> BearDogResult<()> {
+async fn demo_key_attestation(key: &HsmKey) -> Result<(), BearDogError> {
     info!("📜 Demonstrating key attestation...");
 
     if let Some(attestation) = &key.attestation {

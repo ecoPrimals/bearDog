@@ -1,10 +1,10 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_security::crypto_utils::BearDogCrypto;
 
 #[tokio::test]
-async fn test_ed25519_signature_mathematical_certainty() -> BearDogResult<()> {
+async fn test_ed25519_signature_mathematical_certainty() -> Result<(), BearDogError> {
 
     let (private_key, public_key) = BearDogCrypto::generate_ed25519_keypair()?;
 
@@ -29,7 +29,7 @@ async fn test_ed25519_signature_mathematical_certainty() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_nonce_generation_entropy() -> BearDogResult<()> {
+async fn test_nonce_generation_entropy() -> Result<(), BearDogError> {
 
     let nonce1 = BearDogCrypto::generate_secure_nonce(32)?;
     let nonce2 = BearDogCrypto::generate_secure_nonce(32)?;
@@ -43,7 +43,7 @@ async fn test_nonce_generation_entropy() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_key_derivation_deterministic() -> BearDogResult<()> {
+async fn test_key_derivation_deterministic() -> Result<(), BearDogError> {
 
     let seed = b"test seed for key derivation";
     let context = b"test context";

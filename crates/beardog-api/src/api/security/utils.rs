@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::SecurityContext;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -16,16 +16,7 @@ pub struct BehavioralAnalysis {
     pub recommendations: Vec<String>,
 }
 
-const PRIVATE_IP_RANGES: &[&str] = &[
-    "10.0.0.0/8",
-    "172.16.0.0/12",
-    "192.168.0.0/16",
-    "127.0.0.0/8",
-    "169.254.0.0/16",
-    "::1/128",
-    "fc00::/7",
-    "fe80::/10",
-];
+use beardog_types::constants::unified::network::addresses::PRIVATE_IP_RANGES;
 use std::net::IpAddr;
 
 pub fn is_private_ip(ip: &str) -> bool {
@@ -169,7 +160,7 @@ mod tests {
         user_id: &str,
         request_patterns: &[&str],
         time_window_hours: u32,
-    ) -> BearDogResult<BehavioralAnalysis> {
+    ) -> Result<BehavioralAnalysis, BearDogError> {
 
         let pattern_count = request_patterns.len();
         let unique_patterns: std::collections::HashSet<_> = request_patterns.iter().collect();

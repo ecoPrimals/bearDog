@@ -8,7 +8,7 @@ pub mod service_registration;
 
 pub use ai_first_responses::{AIFirstResponse, AIFirstResponseBuilder};
 use beardog_types::canonical::HealthStatus;
-pub use primal_interface::EcoPrimal as `BearDog`EcoPrimalImplementation;
+pub use primal_interface::EcoPrimal as BearDogEcoPrimalImplementation;
 pub use primal_trait::EcoPrimal;
 pub use primal_types::{
     AuthenticationResult, AttestationVerificationResult, CapabilityHealthStatus,
@@ -21,3 +21,4 @@ pub use primal_types::{
 pub use service_registration::{
     HealthStatus as ServiceHealthStatus, ResourceSpec, ResourceUsage, ServiceCapability,
     ServiceMetadata, UniversalServiceRegistration, UniversalServiceRegistry,
+};

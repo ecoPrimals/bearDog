@@ -1,7 +1,7 @@
 
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tracing::{debug, info};
 impl ChallengeGenerator {
@@ -12,7 +12,7 @@ impl ChallengeGenerator {
         Self { entropy_source }
     }
 
-    pub fn generate_challenge(&self, length: usize) -> BearDogResult<Vec<u8>> {
+    pub fn generate_challenge(&self, length: usize) -> Result<Vec<u8>, BearDogError>> {
         debug!("🎲 Generating challenge of {} bytes", length);
         if length == 0 {
             return Err(BearDogError::invalid_input("Challenge length must be greater than 0".to_string(),
@@ -28,11 +28,11 @@ impl ChallengeGenerator {
         );
         Ok(challenge)
 
-    pub fn generate_nonce(&self) -> BearDogResult<Vec<u8>> {
+    pub fn generate_nonce(&self) -> Result<Vec<u8>, BearDogError>> {
         debug!("🎲 Generating nonce");
         self.generate_challenge(32)
 
-    pub fn generate_session_id(&self) -> BearDogResult<String> {
+    pub fn generate_session_id(&self) -> Result<String, BearDogError> {
         debug!("🎲 Generating session ID");
         let entropy = self.generate_challenge(16)?;
         let session_id = entropy
@@ -42,7 +42,7 @@ impl ChallengeGenerator {
         debug!("✅ Session ID generated: {}", session_id);
         Ok(session_id)
 
-    pub fn generate_timestamp_challenge(&self) -> BearDogResult<Vec<u8>> {
+    pub fn generate_timestamp_challenge(&self) -> Result<Vec<u8>, BearDogError>> {
         debug!("🎲 Generating timestamp challenge");
 
         let timestamp = chrono::Utc::now().timestamp() as u64;
@@ -55,7 +55,7 @@ impl ChallengeGenerator {
         challenge.extend_from_slice(&entropy);
             "✅ Timestamp challenge generated: {} bytes",
 
-    pub fn validate_challenge(&self, challenge: &[u8]) -> BearDogResult<bool> {
+    pub fn validate_challenge(&self, challenge: &[u8]) -> Result<bool, BearDogError> {
         debug!("🔍 Validating challenge of {} bytes", challenge.len());
 
         if challenge.len() < 16 {
@@ -99,7 +99,7 @@ impl Default for ChallengeGenerator {}
         Self::new()
 impl EntropySource for AndroidEntropySource {
 
-    fn generate_entropy(&self, length: usize) -> BearDogResult<Vec<u8>> {
+    fn generate_entropy(&self, length: usize) -> Result<Vec<u8>, BearDogError>> {
         debug!("🎲 Generating {} bytes of entropy", length);
             return Ok(Vec::new());
         if length > 4096 {
@@ -130,7 +130,7 @@ impl AndroidEntropySource {
         debug!("🎲 Creating Android entropy source");
         Self
 
-    pub fn test_entropy_quality(&self, entropy: &[u8]) -> BearDogResult<bool> {
+    pub fn test_entropy_quality(&self, entropy: &[u8]) -> Result<bool, BearDogError> {
         debug!("🔍 Testing entropy quality for {} bytes", entropy.len());
         if entropy.is_empty() {
 

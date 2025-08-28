@@ -1,7 +1,7 @@
 
 
 use super::{ChaosConfig, TestMetrics, TestResult};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
@@ -15,7 +15,7 @@ impl MemoryChaosController {
         Self { config }
     }
 
-    pub async fn test_memory_pressure(&self) -> BearDogResult<TestResult> {
+    pub async fn test_memory_pressure(&self) -> Result<TestResult, BearDogError> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
         let mut operations_succeeded = 0u64;
@@ -65,7 +65,7 @@ impl MemoryChaosController {
         })
     }
 
-    async fn simulate_memory_pressure(&self) -> BearDogResult<()> {
+    async fn simulate_memory_pressure(&self) -> Result<(), BearDogError> {
 
         let _memory_pressure: Vec<u8> = vec![0u8; self.config.memory_pressure_mb * 1024];
 

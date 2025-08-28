@@ -2,7 +2,7 @@
 
 use super::traits::*;
 use super::metrics::*;
-use beardog_errors::*;
+use beardog_errors::{BearDogError, *};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -32,7 +32,7 @@ impl WorldClassTestingFramework {
         }
     }
 
-    pub async fn run_comprehensive_testing(&self) -> BearDogResult<WorldClassTestResults> {
+    pub async fn run_comprehensive_testing(&self) -> Result<WorldClassTestResults, BearDogError> {
         let start_time = Instant::now();
 
         let formal_verification = self.run_formal_verification().await?;
@@ -74,7 +74,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_formal_verification(&self) -> BearDogResult<FormalVerificationResults> {
+    async fn run_formal_verification(&self) -> Result<FormalVerificationResults, BearDogError> {
         let mut proofs_generated = 0;
         let mut verified_components = Vec::new();
         let mut mathematical_proofs = Vec::new();
@@ -108,7 +108,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_property_based_testing(&self) -> BearDogResult<PropertyBasedTestResults> {
+    async fn run_property_based_testing(&self) -> Result<PropertyBasedTestResults, BearDogError> {
         let mut properties_verified = 0;
         let mut test_cases_generated = 0;
         let mut counterexamples_found = Vec::new();
@@ -153,7 +153,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_mutation_testing(&self) -> BearDogResult<MutationTestResults> {
+    async fn run_mutation_testing(&self) -> Result<MutationTestResults, BearDogError> {
         let mut mutations_tested = 0;
         let mut mutations_killed = 0;
         let mut surviving_mutants = Vec::new();
@@ -199,7 +199,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_invariant_validation(&self) -> BearDogResult<InvariantValidationResults> {
+    async fn run_invariant_validation(&self) -> Result<InvariantValidationResults, BearDogError> {
         let mut invariants_verified = 0;
         let mut violations_detected = Vec::new();
 
@@ -232,7 +232,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_exhaustive_testing(&self) -> BearDogResult<ExhaustiveTestResults> {
+    async fn run_exhaustive_testing(&self) -> Result<ExhaustiveTestResults, BearDogError> {
         let mut edge_cases_tested = 0;
         let mut boundary_violations = Vec::new();
 
@@ -261,7 +261,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_quantum_resistance_testing(&self) -> BearDogResult<QuantumResistanceResults> {
+    async fn run_quantum_resistance_testing(&self) -> Result<QuantumResistanceResults, BearDogError> {
         let mut quantum_attacks_simulated = 0;
         let mut vulnerable_algorithms = Vec::new();
 

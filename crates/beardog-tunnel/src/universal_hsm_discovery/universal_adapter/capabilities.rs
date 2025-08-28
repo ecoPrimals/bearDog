@@ -1,7 +1,7 @@
 
 
 use super::core_types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::{CapabilityRequirements as CanonicalCapabilityRequirements, CapabilityType};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -262,7 +262,7 @@ impl CapabilityManager {
         }
     }
 
-    pub fn register_capability(&mut self, capability: BearDogCapability) -> BearDogResult<()> {
+    pub fn register_capability(&mut self, capability: BearDogCapability) -> Result<(), BearDogError> {
         info!("📝 Registering capability: {}", capability.name);
 
         if self.by_name.contains_key(&capability.name) {
@@ -283,11 +283,11 @@ impl CapabilityManager {
         debug!("✅ Capability registered: {}", capability_id);
         Ok(())
 
-    pub fn get_capability(&self, capability_id: Uuid) -> BearDogResult<&BearDogCapability> {
+    pub fn get_capability(&self, capability_id: Uuid) -> Result<&BearDogCapability, BearDogError> {
         self.capabilities.get(&capability_id)
             .ok_or_else(|| BearDogError::not_found(format_args!("Capability not found: {}", capability_id).to_string()))
 
-    pub fn get_capability_by_name(&self, name: &str) -> BearDogResult<&BearDogCapability> {
+    pub fn get_capability_by_name(&self, name: &str) -> Result<&BearDogCapability, BearDogError> {
         let capability_id = self.by_name.get(name)
             .ok_or_else(|| BearDogError::not_found(format_args!("Capability not found: {}", name).to_string()))?;
         self.get_capability(*capability_id)
@@ -303,7 +303,7 @@ impl CapabilityManager {
     pub fn list_all_capabilities(&self) -> Vec<&BearDogCapability> {
         self.capabilities.values().collect()
 
-    pub fn match_requirements(&self, requirements: &CapabilityRequirements) -> BearDogResult<Vec<&BearDogCapability>> {
+    pub fn match_requirements(&self, requirements: &CapabilityRequirements) -> Result<Vec<&BearDogCapability>, BearDogError>> {
         let mut matches = Vec::new();
         for capability in self.capabilities.values() {
             if self.capability_matches_requirements(capability, requirements)? {
@@ -315,7 +315,7 @@ impl CapabilityManager {
         &self,
         capability: &BearDogCapability,
         requirements: &CapabilityRequirements,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
         if capability.security_level < requirements.min_security_level {
             return Ok(false);
@@ -334,7 +334,7 @@ impl CapabilityManager {
         capability_perf.min_throughput_ops_per_sec >= required_perf.min_throughput_ops_per_sec &&
         capability_perf.required_availability_percent >= required_perf.required_availability_percent
 
-    pub fn update_capability_status(&mut self, capability_id: Uuid, status: CapabilityStatus) -> BearDogResult<()> {
+    pub fn update_capability_status(&mut self, capability_id: Uuid, status: CapabilityStatus) -> Result<(), BearDogError> {
         if let Some(capability) = self.capabilities.get_mut(&capability_id) {
             capability.status = status;
             capability.updated_at = SystemTime::now();
@@ -343,7 +343,7 @@ impl CapabilityManager {
             Ok(())
             Err(BearDogError::not_found(format_args!("Capability not found: {}", capability_id).to_string()))
 
-    pub fn health_check(&self) -> BearDogResult<HashMap<Uuid, CapabilityStatus>> {
+    pub fn health_check(&self) -> Result<HashMap<Uuid, CapabilityStatus, BearDogError>> {
         debug!("🏥 Performing capability health check");
         let mut health_status = HashMap::with_capacity(16);
         for (id, capability) in &self.capabilities {

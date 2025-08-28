@@ -3,12 +3,12 @@
 use beardog::tunnel::config::BStpConfig;
 use beardog::tunnel::key_manager::{BStpKeyManager, CryptoAlgorithm};
 use beardog::tunnel::session::SessionManager;
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 #[tokio::test]
-async fn test_competitive_gaming_session_e2e() -> BearDogResult<()> {
+async fn test_competitive_gaming_session_e2e() -> Result<(), BearDogError> {
     println!("🎮 Testing competitive gaming session end-to-end");
 
     let config = BStpConfig::competitive_gaming();
@@ -54,7 +54,7 @@ async fn test_competitive_gaming_session_e2e() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_maximum_security_e2e() -> BearDogResult<()> {
+async fn test_maximum_security_e2e() -> Result<(), BearDogError> {
     println!("🔒 Testing maximum security end-to-end");
 
     let config = BStpConfig::maximum_security();
@@ -86,7 +86,7 @@ async fn test_maximum_security_e2e() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_multi_player_gaming_scenario() -> BearDogResult<()> {
+async fn test_multi_player_gaming_scenario() -> Result<(), BearDogError> {
     println!("👥 Testing multi-player gaming scenario");
 
     let config = BStpConfig::competitive_gaming();
@@ -131,7 +131,7 @@ async fn test_multi_player_gaming_scenario() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_system_stress_resilience() -> BearDogResult<()> {
+async fn test_system_stress_resilience() -> Result<(), BearDogError> {
     println!("💪 Testing system stress resilience");
 
     let config = BStpConfig::competitive_gaming();
@@ -174,7 +174,7 @@ async fn test_system_stress_resilience() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_configuration_compliance_e2e() -> BearDogResult<()> {
+async fn test_configuration_compliance_e2e() -> Result<(), BearDogError> {
     println!("📋 Testing configuration compliance end-to-end");
 
     let configs = vec![

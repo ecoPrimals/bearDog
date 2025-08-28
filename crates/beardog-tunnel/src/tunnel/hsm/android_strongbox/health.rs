@@ -2,14 +2,14 @@
 
 use super::types::*;
 use crate::tunnel::hsm::types::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 impl AndroidHealthMonitor {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🔍 Initializing Android Health Monitor");
         let default_status = HsmHealthStatus {
             healthy: true,
@@ -32,14 +32,14 @@ impl AndroidHealthMonitor {
         Ok(monitor)
     }
 
-    pub async fn start_monitoring(&self) -> BearDogResult<()> {
+    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
         info!("🔍 Starting Android StrongBox health monitoring");
 
         self.perform_health_check().await?;
         info!("✅ Health monitoring started");
         Ok(())
 
-    pub async fn get_health_status(&self) -> BearDogResult<HsmHealthStatus> {
+    pub async fn get_health_status(&self) -> Result<HsmHealthStatus, BearDogError> {
         debug!("🔍 Getting overall health status");
 
         let keystore_health = self.keystore_health.read().await.clone();
@@ -96,7 +96,7 @@ impl AndroidHealthMonitor {
         );
         Ok(overall_status)
 
-    async fn perform_health_check(&self) -> BearDogResult<()> {
+    async fn perform_health_check(&self) -> Result<(), BearDogError> {
         debug!("🔍 Performing comprehensive health check");
 
         let keystore_result = self.check_keystore_health().await;
@@ -159,7 +159,7 @@ impl AndroidHealthMonitor {
     async fn update_attestation_health(&self, result: Result<PerformanceMetrics, &str>) {
         let mut health = self.attestation_health.write().await;
 
-    async fn initialize_health_status(&self) -> BearDogResult<()> {
+    async fn initialize_health_status(&self) -> Result<(), BearDogError> {
         debug!("🔍 Initializing health status for all components");
         let now = Utc::now();
         let default_metrics = PerformanceMetrics {

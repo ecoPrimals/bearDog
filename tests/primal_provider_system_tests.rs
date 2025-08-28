@@ -1,7 +1,8 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::adapters::universal::*;
-use beardog::{BearDogConfig, BearDogCore, BearDogResult};
+use beardog::{{BearDogConfig, BearDogCore, BearDogError}};
 use serde_json::json;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -9,7 +10,7 @@ use tokio::time::{sleep, Duration};
 use uuid::Uuid;
 
 #[tokio::test]
-async fn test_beardog_primal_provider_basic() -> BearDogResult<()> {
+async fn test_beardog_primal_provider_basic() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -55,7 +56,7 @@ async fn test_beardog_primal_provider_basic() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_beardog_primal_provider_health() -> BearDogResult<()> {
+async fn test_beardog_primal_provider_health() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -102,7 +103,7 @@ async fn test_beardog_primal_provider_health() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_beardog_primal_provider_requests() -> BearDogResult<()> {
+async fn test_beardog_primal_provider_requests() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -174,7 +175,7 @@ async fn test_beardog_primal_provider_requests() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_universal_ecosystem_manager() -> BearDogResult<()> {
+async fn test_universal_ecosystem_manager() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -245,7 +246,7 @@ async fn test_universal_ecosystem_manager() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_cross_ecosystem_request_routing() -> BearDogResult<()> {
+async fn test_cross_ecosystem_request_routing() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -316,7 +317,7 @@ async fn test_cross_ecosystem_request_routing() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_primal_provider_registration_discovery() -> BearDogResult<()> {
+async fn test_primal_provider_registration_discovery() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -356,7 +357,7 @@ async fn test_primal_provider_registration_discovery() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_primal_provider_lifecycle() -> BearDogResult<()> {
+async fn test_primal_provider_lifecycle() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -434,7 +435,7 @@ async fn test_primal_provider_lifecycle() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_capability_attributes() -> BearDogResult<()> {
+async fn test_capability_attributes() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -572,7 +573,7 @@ mod test_helpers {
             HealthStatus::Healthy
         }
 
-        async fn handle_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse> {
+        async fn handle_request(&self, request: ServiceRequest) -> Result<ServiceResponse, BearDogError> {
             Ok(ServiceResponse {
                 request_id: request.request_id,
                 success: true,
@@ -583,7 +584,7 @@ mod test_helpers {
             })
         }
 
-        async fn register_with_ecosystem(&self) -> BearDogResult<EcosystemRegistration> {
+        async fn register_with_ecosystem(&self) -> Result<EcosystemRegistration, BearDogError> {
             Ok(EcosystemRegistration {
                 registration_id: Uuid::new_v4(),
                 ecosystem_id: self.ecosystem_id().to_string(),
@@ -595,11 +596,11 @@ mod test_helpers {
             })
         }
 
-        async fn initialize(&mut self, _config: ProviderConfig) -> BearDogResult<()> {
+        async fn initialize(&mut self, _config: ProviderConfig) -> Result<(), BearDogError> {
             Ok(())
         }
 
-        async fn shutdown(&mut self) -> BearDogResult<()> {
+        async fn shutdown(&mut self) -> Result<(), BearDogError> {
             Ok(())
         }
 
@@ -623,7 +624,7 @@ mod test_helpers {
 }
 
 #[tokio::test]
-async fn test_multi_provider_ecosystem() -> BearDogResult<()> {
+async fn test_multi_provider_ecosystem() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);
@@ -729,7 +730,7 @@ async fn test_multi_provider_ecosystem() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_primal_provider_performance() -> BearDogResult<()> {
+async fn test_primal_provider_performance() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).await?);

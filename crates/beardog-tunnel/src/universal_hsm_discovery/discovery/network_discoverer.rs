@@ -1,7 +1,7 @@
 
 
 use super::super::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::*;
 use std::collections::HashMap;
 use tracing::{debug, info};
@@ -10,10 +10,10 @@ use tracing::{debug, info};
 pub struct NetworkDiscoverer;
 impl NetworkDiscoverer {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn discover(&self, config: &DiscoveryConfig) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("🌐 Discovering Network HSMs");
         let mut hsms = Vec::new();
 
@@ -25,7 +25,7 @@ impl NetworkDiscoverer {}
         info!("Found {} Network HSMs", hsms.len());
         Ok(hsms)
 
-    async fn discover_pkcs11_hsms(&self, config: &DiscoveryConfig) -> BearDogResult<Vec<DiscoveredHsm>> {
+    async fn discover_pkcs11_hsms(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("Discovering PKCS#11 Network HSMs");
 
         let endpoints = vec![
@@ -54,7 +54,7 @@ impl NetworkDiscoverer {}
             }
         }
 
-    async fn discover_rest_hsms(&self, config: &DiscoveryConfig) -> BearDogResult<Vec<DiscoveredHsm>> {
+    async fn discover_rest_hsms(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("Discovering REST API HSMs");
 
             ("AWS CloudHSM", "https://cloudhsm.us-east-1.amazonaws.com"),
@@ -69,7 +69,7 @@ impl NetworkDiscoverer {}
                         ("protocol".to_string(), "https".to_string()),
                         ("provider".to_string(), name.to_lowercase().replace(" ", "_")),
 
-    async fn discover_grpc_hsms(&self, config: &DiscoveryConfig) -> BearDogResult<Vec<DiscoveredHsm>> {
+    async fn discover_grpc_hsms(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("Discovering gRPC HSMs");
 
             ("Google Cloud KMS", "grpc://cloudkms.googleapis.com:443"),
@@ -82,15 +82,15 @@ impl NetworkDiscoverer {}
                         tls_config: Some("TLS 1.3 + mTLS".to_string()),
                         ("protocol".to_string(), "grpc".to_string()),
 
-    async fn probe_pkcs11_endpoint(&self, endpoint: &str) -> BearDogResult<bool> {
+    async fn probe_pkcs11_endpoint(&self, endpoint: &str) -> Result<bool, BearDogError> {
         debug!("Probing PKCS#11 endpoint: {}", endpoint);
 
         Ok(false)
 
-    async fn probe_rest_endpoint(&self, endpoint: &str) -> BearDogResult<bool> {
+    async fn probe_rest_endpoint(&self, endpoint: &str) -> Result<bool, BearDogError> {
         debug!("Probing REST endpoint: {}", endpoint);
 
-    async fn probe_grpc_endpoint(&self, endpoint: &str) -> BearDogResult<bool> {
+    async fn probe_grpc_endpoint(&self, endpoint: &str) -> Result<bool, BearDogError> {
         debug!("Probing gRPC endpoint: {}", endpoint);
 
     fn get_network_pkcs11_capabilities(&self) -> HsmCapabilities {

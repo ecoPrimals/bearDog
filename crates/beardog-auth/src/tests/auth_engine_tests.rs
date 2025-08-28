@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use super::mocks::*;
@@ -81,7 +82,7 @@ async fn test_create_authorization_trusted_node() -> Result<(), Box<dyn std::err
 
     Ok(())
 
-async fn test_create_authorization_untrusted_node() -> beardog_errors::BearDogResult<()> {
+async fn test_create_authorization_untrusted_node() -> Result<(), BearDogError> {
         id: "untrusted-node".to_string(),
         name: "Untrusted Service".to_string(),
         user_id: "untrusted-node".to_string(),
@@ -102,7 +103,7 @@ async fn test_create_authorization_untrusted_node() -> beardog_errors::BearDogRe
             "Authorization should complete", e
     assert!(!auth_result.allowed); // Should be denied due to low trust
 
-async fn test_comprehensive_authorization_workflow() -> beardog_errors::BearDogResult<()> {
+async fn test_comprehensive_authorization_workflow() -> Result<(), BearDogError> {
 
     let scenarios = vec![
 
@@ -166,7 +167,7 @@ async fn test_comprehensive_authorization_workflow() -> beardog_errors::BearDogR
             i, subject_id, resource_class, expected, auth_result.allowed);
     }
 
-async fn test_proof_verification() -> beardog_errors::BearDogResult<()> {
+async fn test_proof_verification() -> Result<(), BearDogError> {
     let authorization = CrossNodeAuthorization {
         id: "test-authorization".to_string(),
         requester_node_id: "trusted-node".to_string(),

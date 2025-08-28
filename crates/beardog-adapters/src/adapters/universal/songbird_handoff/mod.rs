@@ -7,7 +7,7 @@ use tracing::{debug, info, warn};
 use uuid::Uuid;
 use super::capability_manager::CapabilityManager;
 use super::traits::{Capability, CapabilityCategory};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use crate::ecosystem_integration::EcosystemIntegration;
 
 pub mod client;
@@ -47,7 +47,7 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
         core: Arc<T>,
         capability_manager: Arc<CapabilityManager>,
         config: SongBirdHandoffConfig,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         let config = Arc::new(config);
 
         let registration_manager = Arc::new(
@@ -103,7 +103,7 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
         })
     }
 
-    pub async fn register_with_songbird(&self) -> BearDogResult<ServiceRegistrationResult> {
+    pub async fn register_with_songbird(&self) -> Result<ServiceRegistrationResult, BearDogError> {
         info!(
             "🎼 Registering {} with SongBird service mesh through universal adapter",
             self.primal_type.as_str()
@@ -157,14 +157,14 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
             *reg = Some(service_registration);
         Ok(result)
 
-    pub async fn start_monitoring(&self) -> BearDogResult<()> {
+    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
             "🔍 Starting health monitoring for {}",
 
         self.start_heartbeat_task().await?;
             "✅ Health monitoring started for {}",
         Ok(())
 
-    pub async fn stop_monitoring(&self) -> BearDogResult<()> {
+    pub async fn stop_monitoring(&self) -> Result<(), BearDogError> {
             "🛑 Stopping health monitoring for {}",
 
         self.deregister_from_songbird().await?;
@@ -173,7 +173,7 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
     pub async fn handle_ecosystem_request(
         &self,
         request: EcosystemRequest,
-    ) -> BearDogResult<EcosystemResponse> {
+    ) -> Result<EcosystemResponse, BearDogError> {
         debug!("📨 Handling ecosystem request: {:?}", request.operation);
 
         self.update_request_metrics().await;
@@ -236,7 +236,7 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
 
     async fn create_service_registration(
         capabilities: Vec<super::traits::Capability>,
-    ) -> BearDogResult<EcosystemServiceRegistration> {
+    ) -> Result<EcosystemServiceRegistration, BearDogError> {
         let service_id = format!(
             "{}-{}",
             self.primal_type.as_str(),
@@ -311,9 +311,9 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
             metadata,
             registered_at: chrono::Utc::now(),
 
-    async fn start_heartbeat_task(&self) -> BearDogResult<()> {
+    async fn start_heartbeat_task(&self) -> Result<(), BearDogError> {
 
-    async fn deregister_from_songbird(&self) -> BearDogResult<()> {
+    async fn deregister_from_songbird(&self) -> Result<(), BearDogError> {
             "🔄 Deregistering {} from SongBird",
 
             status.status = RegistrationState::Deregistered;
@@ -346,7 +346,7 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
     pub async fn get_service_registration(&self) -> Option<EcosystemServiceRegistration> {
         self.service_registration.read().await.clone()
 
-    async fn get_capabilities(&self) -> BearDogResult<Vec<super::traits::Capability>> {
+    async fn get_capabilities(&self) -> Result<Vec<super::traits::Capability>, BearDogError>> {
 
         let genetic_capabilities = self.capability_manager.get_genetic_capabilities().await?;
         Ok(genetic_capabilities
@@ -397,7 +397,7 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
     pub async fn get_registration_info(&self) -> String {
         self.registration_manager.get_core_info().await
 
-    pub async fn discover_services(&self) -> BearDogResult<Vec<String>> {
+    pub async fn discover_services(&self) -> Result<Vec<String>, BearDogError>> {
 
         let _ = &self.discovery_client;
         Ok(vec!["example-service".to_string()])
@@ -405,7 +405,7 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
 pub async fn create_beardog_handoff_manager<T: Send + Sync>(
     core: Arc<T>,
     config: Option<SongBirdHandoffConfig>,
-) -> BearDogResult<UniversalSongBirdHandoffManager<T>> {
+) -> Result<UniversalSongBirdHandoffManager<T, BearDogError>> {
     let config = config.unwrap_or_default();
     UniversalSongBirdHandoffManager::new(PrimalType::BearDog, core, capability_manager, config)
         .await

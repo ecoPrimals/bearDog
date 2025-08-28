@@ -3,7 +3,7 @@
 use super::super::types::Workflow;
 use super::core::{WorkflowProcessingResult, WorkflowProcessor};
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::time::Duration;
 use uuid::Uuid;
 
@@ -13,7 +13,7 @@ impl WorkflowProcessor for SystemMaintenanceProcessor {
     async fn process_workflow(
         &self,
         workflow: &Workflow,
-    ) -> BearDogResult<WorkflowProcessingResult> {
+    ) -> Result<WorkflowProcessingResult, BearDogError> {
         let start_time = std::time::Instant::now();
         let maintenance_type = workflow
             .parameters
@@ -69,11 +69,11 @@ impl WorkflowProcessor for SystemMaintenanceProcessor {
 
     fn can_handle(&self, workflow: &Workflow) -> bool {
         matches!(workflow.workflow_type, WorkflowType::SystemMaintenance)
-    async fn validate_workflow(&self, _workflow: &Workflow) -> BearDogResult<()> {
+    async fn validate_workflow(&self, _workflow: &Workflow) -> Result<(), BearDogError> {
 
         Ok(())}
 
-    async fn estimate_processing_time(&self, workflow: &Workflow) -> BearDogResult<Duration> {
+    async fn estimate_processing_time(&self, workflow: &Workflow) -> Result<Duration, BearDogError> {
             .unwrap_or("general");
         let duration = match maintenance_type {
             "security_update" => Duration::from_secs(1800), // 30 minutes

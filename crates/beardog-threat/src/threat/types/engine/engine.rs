@@ -1,18 +1,16 @@
-
-
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use tokio::sync::RwLock;
 
-use crate::threat::types::config::ThreatDetectionConfig;
-use crate::threat::types::core::ThreatEvent;
-use crate::threat::types::intelligence::ThreatIntelligenceFeed;
-use crate::threat::types::statistics::ThreatDetectionStats;
 use super::ml_models::MlModel;
 use super::rules::DetectionRule;
+use crate::threat::types::config::ThreatDetectionConfig;
+use crate::threat::types::core::ThreatEvent;
+use crate::threat::types::incidents::IncidentResponse;
+use crate::threat::types::intelligence::ThreatIntelligenceFeed;
+use crate::threat::types::statistics::ThreatDetectionStats;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug)]
 pub struct ThreatDetectionEngine {
-
     pub config: ThreatDetectionConfig,
 
     pub active_threats: HashMap<String, ThreatEvent>,
@@ -28,9 +26,10 @@ pub struct ThreatDetectionEngine {
     pub stats: ThreatDetectionStats,
 
     pub ml_models: HashMap<String, MlModel>,
+
+    pub active_incidents: RwLock<HashMap<String, IncidentResponse>>, // incident_id -> incident mapping
 }
 impl ThreatDetectionEngine {
-
     pub fn new(config: ThreatDetectionConfig) -> Self {
         Self {
             config,
@@ -41,6 +40,7 @@ impl ThreatDetectionEngine {
             detection_rules: Vec::new(),
             stats: ThreatDetectionStats::default(),
             ml_models: HashMap::with_capacity(16),
+            active_incidents: RwLock::new(HashMap::new()),
         }
     }
 
@@ -111,5 +111,21 @@ impl ThreatDetectionEngine {
 
     pub fn update_stats(&mut self, stats: ThreatDetectionStats) {
         self.stats = stats;
+    }
+}
+
+impl Default for ThreatDetectionEngine {
+    fn default() -> Self {
+        Self {
+            config: ThreatDetectionConfig::default(),
+            active_threats: HashMap::new(),
+            blocked_sources: HashSet::new(),
+            quarantined_systems: HashSet::new(),
+            threat_feeds: HashMap::new(),
+            detection_rules: Vec::new(),
+            stats: ThreatDetectionStats::default(),
+            ml_models: HashMap::new(),
+            active_incidents: RwLock::new(HashMap::new()),
+        }
     }
 }

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::configuration::SecuritySentinelConfig; // Use canonical security sentinel config
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

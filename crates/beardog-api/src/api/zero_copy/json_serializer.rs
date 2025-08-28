@@ -1,7 +1,7 @@
 
 
 use super::HttpBufferPool;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use bytes::{BufMut, Bytes};
 use serde::{Deserialize, Serialize};
 use std::sync::{
@@ -30,7 +30,7 @@ impl ZeroCopyJsonSerializer {
         }
     }
 
-    pub async fn serialize_zero_copy<T: Serialize>(&self, value: &T) -> BearDogResult<Bytes> {
+    pub async fn serialize_zero_copy<T: Serialize>(&self, value: &T) -> Result<Bytes, BearDogError> {
         self.stats.serializations.fetch_add(1, Ordering::Relaxed);
 
         let mut buffer = self.buffer_pool.get_medium_buffer().await;
@@ -50,7 +50,7 @@ impl ZeroCopyJsonSerializer {
     pub async fn deserialize_zero_copy<T: for<'de> Deserialize<'de>>(
         &self,
         data: &[u8],
-    ) -> BearDogResult<T> {
+    ) -> Result<T, BearDogError> {
         self.stats.deserializations.fetch_add(1, Ordering::Relaxed);
         self.stats
             .bytes_processed
@@ -62,7 +62,7 @@ impl ZeroCopyJsonSerializer {
                 Ok(value)
             Err(e) => Err(BearDogError::internal(format!("JSON deserialization failed: {e)"),
 
-    pub async fn batch_serialize<T: Serialize>(&self, items: &[T]) -> BearDogResult<Vec<Bytes>> {
+    pub async fn batch_serialize<T: Serialize>(&self, items: &[T]) -> Result<Vec<Bytes>, BearDogError>> {
         let mut results = Vec::with_capacity(items.len());
         for item in items {
             let serialized = self.serialize_zero_copy(item).await?;

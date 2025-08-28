@@ -5,7 +5,7 @@ use super::{
     SoftwareHsmType, KeyStorageType, MemoryProtectionLevel, SmartphoneType, SecureEnclaveType,
     StrongBoxImplementation, AttestationLevel,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -14,14 +14,14 @@ pub struct DefaultHsmCapabilityDetector {
     provider_capabilities: Arc<RwLock<HashMap<String, Vec<HsmCapability>>>>,
 }
 impl DefaultHsmCapabilityDetector {
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             provider_capabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
         })
     }
 
 impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
-    async fn detect_capabilities(&self) -> BearDogResult<Vec<HsmCapability>> {
+    async fn detect_capabilities(&self) -> Result<Vec<HsmCapability>, BearDogError>> {
 
         Ok(vec![
             HsmCapability::KeyGeneration,
@@ -31,7 +31,7 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
             HsmCapability::Verification,
         ])}
 
-    async fn is_hsm_available(&self, hsm_type: &HsmTier) -> BearDogResult<bool> {
+    async fn is_hsm_available(&self, hsm_type: &HsmTier) -> Result<bool, BearDogError> {
         match hsm_type {
             HsmTier::SoftwareHsm { .. } => Ok(true), // Always available
             HsmTier::SmartphoneHsm { .. } => {
@@ -44,7 +44,7 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
     async fn recommend_hsm_tier(
         &self,
         requirements: &SecurityRequirements,
-    ) -> BearDogResult<HsmTier> {
+    ) -> Result<HsmTier, BearDogError> {
         match requirements.security_level {
             SecurityLevel::Basic => Ok(HsmTier::SoftwareHsm {}
 

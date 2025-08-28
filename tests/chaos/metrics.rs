@@ -1,7 +1,7 @@
 
 
 use super::models::*;
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -27,13 +27,13 @@ impl ChaosMetricsCollector {
         }
     }
 
-    pub async fn start_collection(&self) -> BearDogResult<()> {
+    pub async fn start_collection(&self) -> Result<(), BearDogError> {
         self.is_collecting.store(true, Ordering::SeqCst);
         info!("📊 Started chaos metrics collection");
         Ok(())
     }
 
-    pub async fn stop_collection(&self) -> BearDogResult<()> {
+    pub async fn stop_collection(&self) -> Result<(), BearDogError> {
         self.is_collecting.store(false, Ordering::SeqCst);
         info!("📊 Stopped chaos metrics collection");
         Ok(())
@@ -45,17 +45,17 @@ impl ChaosMetricsCollector {
     }
 }
 
-pub async fn collect_baseline_metrics() -> BearDogResult<SystemImpact> {
+pub async fn collect_baseline_metrics() -> Result<SystemImpact, BearDogError> {
 
     Ok(SystemImpact::default())
 }
 
-pub async fn collect_current_metrics() -> BearDogResult<SystemImpact> {
+pub async fn collect_current_metrics() -> Result<SystemImpact, BearDogError> {
 
     Ok(SystemImpact::default())
 }
 
-pub async fn measure_fault_impact() -> BearDogResult<SystemImpact> {
+pub async fn measure_fault_impact() -> Result<SystemImpact, BearDogError> {
 
     Ok(SystemImpact {
         response_time_increase: 2.5,

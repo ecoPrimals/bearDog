@@ -1,11 +1,8 @@
-
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityRequirements {
-
     pub min_security_level: SecurityLevel,
 
     pub hardware_required: bool,
@@ -78,7 +75,6 @@ impl Default for CapabilityRequirements {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SecurityLevel {
-
     Basic,
 
     Standard,
@@ -101,7 +97,6 @@ impl Default for SecurityLevel {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalHsmCapabilities {
-
     pub vendor: String,
     pub model: String,
     pub firmware_version: String,
@@ -128,7 +123,6 @@ pub struct UniversalHsmCapabilities {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanEntropyCapabilities {
-
     pub supports_human_entropy: bool,
 
     pub supports_ephemeral_seeds: bool,
@@ -162,7 +156,6 @@ impl Default for HumanEntropyCapabilities {
 }
 
 impl HumanEntropyCapabilities {
-
     pub fn new() -> Self {
         Self::default()
     }
@@ -170,16 +163,19 @@ impl HumanEntropyCapabilities {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EntropyCollectionMethod {
-
     KeyboardTiming,
 
     MouseMovement,
 
-    TouchPatterns { pressure_sensitive: bool },
+    TouchPatterns {
+        pressure_sensitive: bool,
+    },
 
     DeviceMotion,
 
-    EnvironmentalSensors { sensor_types: Vec<String> },
+    EnvironmentalSensors {
+        sensor_types: Vec<String>,
+    },
 
     BiometricVariation,
 
@@ -200,7 +196,6 @@ pub struct TouchCapabilities {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MotionCapabilities {
-
     pub accelerometer: bool,
 
     pub gyroscope: bool,
@@ -212,7 +207,6 @@ pub struct MotionCapabilities {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BiometricCapabilities {
-
     pub fingerprint: bool,
 
     pub face_recognition: bool,

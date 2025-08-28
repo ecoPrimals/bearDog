@@ -10,8 +10,8 @@ use axum::{
     routing::get,
     Router,
 };
-use beardog_types::config::complete_unified::CompleteBearDogConfig as BearDogConfig;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_types::canonical::configuration::consolidated::BearDogCanonicalConfig as BearDogConfig;
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::net::TcpListener;
@@ -19,7 +19,7 @@ use tracing::{error, info, warn};
 use crate::api::rate_limiting::RateLimiter;
 
 pub struct BearDogApiServer {
-    core: Arc<dyn std::any::Any + Send + Sync>,
+    core: impl std,
     cache: Arc<crate::api::cache::CacheProviderType>,
     rate_limiter: Arc<crate::api::rate_limiting::RateLimiterType>,
     config: ApiServerConfig,
@@ -78,13 +78,13 @@ impl ApiServerConfig {
             caching_enabled: true, // Enable caching by default
 impl BearDogApiServer {
 
-    pub async fn new(core: Arc<dyn std::any::Any + Send + Sync>) -> BearDogResult<Self> {
+    pub async fn new(core: impl std) -> Result<Self, BearDogError> {
         Self::new_with_config(core, ApiServerConfig::default()).await
 
     pub async fn new_with_config(
-        core: Arc<dyn std::any::Any + Send + Sync>,
+        core: impl std,
         config: ApiServerConfig,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
 
         let cache = Arc::new(crate::api::cache::CacheProviderType::InMemory(
             crate::api::cache::InMemoryCache::new(),
@@ -143,7 +143,7 @@ impl BearDogApiServer {
 
             .nest("/rpc", crate::api::rpc::create_rpc_router())
 
-    pub async fn start(&self, bind_address: &str) -> BearDogResult<()> {
+    pub async fn start(&self, bind_address: &str) -> Result<(), BearDogError> {
         info!(
             "🚀 Starting high-performance BearDog API server on {}",
             bind_address
@@ -212,7 +212,7 @@ async fn zero_copy_stats_handler(State(state): State<AppState>) -> Result<Respon
 #[derive(Clone)]
 pub struct AppState {
 
-    pub core: Arc<dyn std::any::Any + Send + Sync>,
+    pub core: impl std,
 
     pub cache: Arc<crate::api::cache::CacheProviderType>,
 

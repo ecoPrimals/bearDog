@@ -1,5 +1,3 @@
-
-
 use std::time::Duration;
 
 pub fn calculate_stats(measurements: &[Duration]) -> BenchmarkStats {
@@ -24,8 +22,16 @@ pub fn calculate_stats(measurements: &[Duration]) -> BenchmarkStats {
     BenchmarkStats {
         mean_ns: mean,
         std_dev_ns: std_dev,
-        min_ns: measurements.iter().min().map(|d| d.as_nanos() as f64).unwrap_or(0.0),
-        max_ns: measurements.iter().max().map(|d| d.as_nanos() as f64).unwrap_or(0.0),
+        min_ns: measurements
+            .iter()
+            .min()
+            .map(|d| d.as_nanos() as f64)
+            .unwrap_or(0.0),
+        max_ns: measurements
+            .iter()
+            .max()
+            .map(|d| d.as_nanos() as f64)
+            .unwrap_or(0.0),
         count: measurements.len(),
     }
 }

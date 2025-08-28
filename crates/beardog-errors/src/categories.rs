@@ -1,9 +1,7 @@
-
-
 use serde::{Deserialize, Serialize};
 
 /// Security-related error categories for authentication, authorization, and cryptographic operations
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum SecurityErrorCategory {
     /// Authentication failures and credential issues
     Authentication,
@@ -34,17 +32,12 @@ pub enum SecurityErrorCategory {
     /// Security configuration errors
     Configuration,
     /// General security errors not covered by specific categories
+    #[default]
     General,
 }
 
-impl Default for SecurityErrorCategory {
-    fn default() -> Self {
-        SecurityErrorCategory::General
-    }
-}
-
 /// System-level error categories for infrastructure and resource management
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum SystemErrorCategory {
     /// File system operations and permissions
     FileSystem,
@@ -73,17 +66,12 @@ pub enum SystemErrorCategory {
     /// Performance and monitoring errors
     Performance,
     /// General system errors not covered by specific categories
+    #[default]
     General,
 }
 
-impl Default for SystemErrorCategory {
-    fn default() -> Self {
-        SystemErrorCategory::General
-    }
-}
-
 /// Business logic and application-level error categories
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum BusinessErrorCategory {
     /// Data validation and format errors
     Validation,
@@ -110,28 +98,23 @@ pub enum BusinessErrorCategory {
     /// Integration and external service errors
     Integration,
     /// General business logic errors
+    #[default]
     General,
 }
 
-impl Default for BusinessErrorCategory {
-    fn default() -> Self {
-        BusinessErrorCategory::General
-    }
-}
-
 /// Network communication and connectivity error categories
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum NetworkErrorCategory {
     /// Network connection establishment errors
     Connection,
     /// Request timeout errors
     Timeout,
     /// DNS resolution errors
-    DNS,
+    Dns,
     /// SSL/TLS certificate and handshake errors
-    SSL,
+    Ssl,
     /// HTTP protocol errors
-    HTTP,
+    Http,
     /// Proxy and gateway errors
     Proxy,
     /// Firewall and network security errors
@@ -147,17 +130,12 @@ pub enum NetworkErrorCategory {
     /// Network configuration errors
     Configuration,
     /// General network errors
+    #[default]
     General,
 }
 
-impl Default for NetworkErrorCategory {
-    fn default() -> Self {
-        NetworkErrorCategory::General
-    }
-}
-
 /// Configuration and setup error categories
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum ConfigurationErrorCategory {
     /// Configuration file parsing errors
     Parsing,
@@ -182,17 +160,12 @@ pub enum ConfigurationErrorCategory {
     /// Configuration versioning errors
     Versioning,
     /// General configuration errors
+    #[default]
     General,
 }
 
-impl Default for ConfigurationErrorCategory {
-    fn default() -> Self {
-        ConfigurationErrorCategory::General
-    }
-}
-
 /// Hardware Security Module (HSM) specific error categories
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum HsmErrorCategory {
     /// Key generation errors
     KeyGeneration,
@@ -217,17 +190,12 @@ pub enum HsmErrorCategory {
     /// HSM compliance and audit errors
     Compliance,
     /// General HSM errors
+    #[default]
     General,
 }
 
-impl Default for HsmErrorCategory {
-    fn default() -> Self {
-        HsmErrorCategory::General
-    }
-}
-
 /// Workflow execution and management error categories
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum WorkflowErrorCategory {
     /// Workflow execution errors
     Execution,
@@ -240,19 +208,15 @@ pub enum WorkflowErrorCategory {
     /// Workflow validation errors
     Validation,
     /// General workflow errors
+    #[default]
     General,
 }
 
-impl Default for WorkflowErrorCategory {
-    fn default() -> Self {
-        WorkflowErrorCategory::General
-    }
-}
-
 /// API and service interface error categories
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum ApiErrorCategory {
     /// General API errors
+    #[default]
     General,
     /// API authentication errors
     Authentication,
@@ -271,9 +235,3 @@ pub enum ApiErrorCategory {
     /// Service unavailable errors
     ServiceUnavailable,
 }
-
-impl Default for ApiErrorCategory {
-    fn default() -> Self {
-        ApiErrorCategory::General
-    }
-} 

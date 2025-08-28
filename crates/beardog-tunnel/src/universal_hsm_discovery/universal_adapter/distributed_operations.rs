@@ -1,7 +1,7 @@
 
 
 use super::core_types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::{KeyType, HealthStatus};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -218,12 +218,12 @@ impl DistributedOperationCoordinator {
         }
     }
 
-    pub fn register_participant(&mut self, participant: NetworkParticipant) -> BearDogResult<()> {
+    pub fn register_participant(&mut self, participant: NetworkParticipant) -> Result<(), BearDogError> {
         info!("📝 Registering participant: {}", participant.name);
         self.participants.insert(participant.participant_id, participant);
         Ok(())
 
-    pub async fn start_operation(&mut self, operation: DistributedHsmOperation) -> BearDogResult<Uuid> {
+    pub async fn start_operation(&mut self, operation: DistributedHsmOperation) -> Result<Uuid, BearDogError> {
         let operation_id = match &operation {
             DistributedHsmOperation::DistributedKeyGeneration { operation_id, .. } => *operation_id,
             DistributedHsmOperation::DistributedSigning { operation_id, .. } => *operation_id,
@@ -251,17 +251,17 @@ impl DistributedOperationCoordinator {
         debug!("✅ Operation {} initialized and tracking started", operation_id);
         Ok(operation_id)
 
-    pub fn get_operation_status(&self, operation_id: Uuid) -> BearDogResult<OperationStatus> {
+    pub fn get_operation_status(&self, operation_id: Uuid) -> Result<OperationStatus, BearDogError> {
         if let Some(result) = self.operation_results.get(&operation_id) {
             Ok(result.status.clone())
         } else {
             Err(BearDogError::not_found(format_args!("Operation not found: {}", operation_id).to_string()))
 
-    pub fn get_operation_result(&self, operation_id: Uuid) -> BearDogResult<DistributedOperationResult> {
+    pub fn get_operation_result(&self, operation_id: Uuid) -> Result<DistributedOperationResult, BearDogError> {
             Ok(result.clone())
             Err(BearDogError::not_found(format_args!("Operation result not found: {}", operation_id).to_string()))
 
-    pub async fn cancel_operation(&mut self, operation_id: Uuid) -> BearDogResult<()> {
+    pub async fn cancel_operation(&mut self, operation_id: Uuid) -> Result<(), BearDogError> {
         info!("🛑 Cancelling operation: {}", operation_id);
         if let Some(result) = self.operation_results.get_mut(&operation_id) {
             result.status = OperationStatus::Cancelled;
@@ -273,7 +273,7 @@ impl DistributedOperationCoordinator {
     pub fn list_active_operations(&self) -> Vec<Uuid> {
         self.active_operations.keys().copied().collect()
 
-    pub fn health_check(&self) -> BearDogResult<HealthStatus> {
+    pub fn health_check(&self) -> Result<HealthStatus, BearDogError> {
         let active_count = self.active_operations.len();
         let participant_count = self.participants.len();
         debug!("🏥 Coordinator health check: {} active operations, {} participants", 

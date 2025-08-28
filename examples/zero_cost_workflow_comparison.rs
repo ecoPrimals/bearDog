@@ -12,7 +12,7 @@ use beardog_workflows::workflows::types::{
     Workflow, WorkflowType, WorkflowStatus, WorkflowTarget, WorkflowPriority,
     ApprovalRequirements, WorkflowAuditEntry
 };
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::time::Instant;
 use chrono::Utc;

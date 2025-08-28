@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::{CryptoParams, KeyType};
 use std::collections::HashMap;
 

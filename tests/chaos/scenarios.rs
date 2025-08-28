@@ -2,7 +2,7 @@
 
 use super::models::*;
 use super::ChaosTestFramework;
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use std::time::Instant;
 use tokio::time::sleep;
 use tracing::info;
@@ -91,7 +91,7 @@ pub fn create_default_scenarios() -> Vec<ChaosScenario> {
     ]
 }
 
-pub async fn run_chaos_scenario(framework: &mut ChaosTestFramework, scenario: &ChaosScenario) -> BearDogResult<ScenarioResult> {
+pub async fn run_chaos_scenario(framework: &mut ChaosTestFramework, scenario: &ChaosScenario) -> Result<ScenarioResult, BearDogError> {
     info!("🎬 Executing scenario: {} - {}", scenario.name, scenario.description);
     
     let start_time = Instant::now();
@@ -138,7 +138,7 @@ pub async fn evaluate_scenario_success(
     baseline: &SystemImpact,
     post_chaos: &SystemImpact,
     recovery_results: &[RecoveryResult],
-) -> BearDogResult<bool> {
+) -> Result<bool, BearDogError> {
 
     let response_time_degradation = post_chaos.response_time_increase / baseline.response_time_increase.max(1.0);
     let error_rate = post_chaos.error_rate_increase;

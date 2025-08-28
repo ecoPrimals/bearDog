@@ -1,10 +1,7 @@
-
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatDetectionConfig {
-
     pub real_time_detection: bool,
 
     pub threat_threshold: u8,
@@ -54,7 +51,6 @@ impl Default for ThreatDetectionConfig {
     }
 }
 impl ThreatDetectionConfig {
-
     pub fn new() -> Self {
         Self::default()
     }

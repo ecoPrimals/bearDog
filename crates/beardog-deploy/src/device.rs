@@ -1,13 +1,10 @@
-
-
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum DeviceType {
-
     AndroidStrongBox,
 
     IosSecureEnclave,
@@ -27,12 +24,11 @@ impl Default for DeviceManager {
     }
 }
 impl DeviceManager {
-
     pub fn new() -> Self {
         Self
     }
 
-    pub async fn check_device(&self) -> BearDogResult<DeviceInfo> {
+    pub async fn check_device(&self) -> Result<DeviceInfo, BearDogError> {
         info!("Checking device availability...");
 
         Ok(DeviceInfo {
@@ -55,28 +51,29 @@ impl DeviceManager {
         })
     }
 
-    pub async fn deploy_app(&self, app_path: &str) -> BearDogResult<()> {
+    pub async fn deploy_app(&self, app_path: &str) -> Result<(), BearDogError> {
         info!("Deploying app from: {}", app_path);
 
         debug!("App deployment completed successfully");
         Ok(())
     }
 
-    pub async fn run_app(&self, package_name: &str) -> BearDogResult<()> {
+    pub async fn run_app(&self, package_name: &str) -> Result<(), BearDogError> {
         info!("Running app: {}", package_name);
 
         debug!("App started successfully");
         Ok(())
     }
 
-    pub async fn monitor_logs(&self, package_name: &str) -> BearDogResult<()> {
+    pub async fn monitor_logs(&self, package_name: &str) -> Result<(), BearDogError> {
         info!("Monitoring logs for: {}", package_name);
 
         debug!("Log monitoring started");
         Ok(())
     }
 
-    pub async fn detect_devices(&self) -> BearDogResult<Vec<DeviceInfo>> {
+    #[allow(dead_code)]
+    pub async fn detect_devices(&self) -> Result<Vec<DeviceInfo>, BearDogError> {
         info!("🔍 Detecting available devices");
         let mut devices = Vec::new();
 
@@ -95,11 +92,12 @@ impl DeviceManager {
         Ok(devices)
     }
 
+    #[allow(dead_code)]
     pub async fn deploy_to_device(
         &self,
         device_id: &str,
         config: &DeploymentConfig,
-    ) -> BearDogResult<DeploymentResult> {
+    ) -> Result<DeploymentResult, BearDogError> {
         info!("🚀 Deploying BearDog to device: {}", device_id);
 
         let devices = self.detect_devices().await?;
@@ -119,7 +117,7 @@ impl DeviceManager {
         }
     }
 
-    async fn detect_android_devices(&self) -> BearDogResult<Vec<DeviceInfo>> {
+    pub async fn detect_android_devices(&self) -> Result<Vec<DeviceInfo>, BearDogError> {
         debug!("Detecting Android devices");
 
         #[cfg(target_os = "android")]
@@ -139,7 +137,7 @@ impl DeviceManager {
         }
     }
 
-    async fn detect_ios_devices(&self) -> BearDogResult<Vec<DeviceInfo>> {
+    pub async fn detect_ios_devices(&self) -> Result<Vec<DeviceInfo>, BearDogError> {
         debug!("Detecting iOS devices");
 
         #[cfg(target_os = "ios")]
@@ -159,17 +157,18 @@ impl DeviceManager {
         }
     }
 
-    async fn detect_hardware_hsms(&self) -> BearDogResult<Vec<DeviceInfo>> {
+    pub async fn detect_hardware_hsms(&self) -> Result<Vec<DeviceInfo>, BearDogError> {
         debug!("Detecting hardware HSMs");
 
+        // TODO: Implement actual HSM detection
         Ok(Vec::new())
     }
 
-    async fn deploy_to_android(
+    pub async fn deploy_to_android(
         &self,
         device: &DeviceInfo,
         _config: &DeploymentConfig,
-    ) -> BearDogResult<DeploymentResult> {
+    ) -> Result<DeploymentResult, BearDogError> {
         info!("Deploying to Android device: {}", device.name);
 
         Ok(DeploymentResult {
@@ -181,11 +180,11 @@ impl DeviceManager {
         })
     }
 
-    async fn deploy_to_ios(
+    pub async fn deploy_to_ios(
         &self,
         device: &DeviceInfo,
         _config: &DeploymentConfig,
-    ) -> BearDogResult<DeploymentResult> {
+    ) -> Result<DeploymentResult, BearDogError> {
         info!("Deploying to iOS device: {}", device.name);
 
         Ok(DeploymentResult {
@@ -197,11 +196,11 @@ impl DeviceManager {
         })
     }
 
-    async fn deploy_to_hsm(
+    pub async fn deploy_to_hsm(
         &self,
         device: &DeviceInfo,
         _config: &DeploymentConfig,
-    ) -> BearDogResult<DeploymentResult> {
+    ) -> Result<DeploymentResult, BearDogError> {
         info!("Deploying to hardware HSM: {}", device.name);
 
         Ok(DeploymentResult {
@@ -213,11 +212,11 @@ impl DeviceManager {
         })
     }
 
-    async fn deploy_to_software(
+    pub async fn deploy_to_software(
         &self,
         device: &DeviceInfo,
         _config: &DeploymentConfig,
-    ) -> BearDogResult<DeploymentResult> {
+    ) -> Result<DeploymentResult, BearDogError> {
         info!("Deploying to software HSM: {}", device.name);
 
         Ok(DeploymentResult {
@@ -248,6 +247,7 @@ pub enum DeviceStatus {
     Error,
 }
 
+#[allow(dead_code)]
 pub struct DeploymentConfig {
     pub app_name: String,
     pub version: String,
@@ -256,12 +256,14 @@ pub struct DeploymentConfig {
     pub security_level: SecurityLevel,
 }
 
+#[allow(dead_code)]
 pub enum SecurityLevel {
     Development,
     Staging,
     Production,
 }
 
+#[allow(dead_code)]
 pub struct DeploymentResult {
     pub device_id: String,
     pub success: bool,

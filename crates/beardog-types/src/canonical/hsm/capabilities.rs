@@ -1,11 +1,8 @@
-
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmCapabilities {
-
     pub vendor: String,
 
     pub model: String,
@@ -49,7 +46,6 @@ pub struct HsmCapabilities {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyGenerationCapabilities {
-
     pub hardware_generation: bool,
 
     pub supported_key_sizes: Vec<u32>,
@@ -59,7 +55,6 @@ pub struct KeyGenerationCapabilities {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyManagementCapabilities {
-
     pub max_keys: Option<u32>,
 
     pub backup_recovery: bool,
@@ -73,7 +68,6 @@ pub struct KeyManagementCapabilities {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdvancedFeatureCapabilities {
-
     pub physical_security_level: String,
 
     pub tamper_resistance: bool,
@@ -89,7 +83,6 @@ pub struct AdvancedFeatureCapabilities {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiSupportCapabilities {
-
     pub pkcs11: bool,
 
     pub crypto_api: bool,
@@ -107,7 +100,6 @@ pub struct ApiSupportCapabilities {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityCapabilities {
-
     pub authentication_methods: Vec<String>,
 
     pub rbac: bool,
@@ -133,11 +125,7 @@ impl Default for HsmCapabilities {
                 "Ed25519".to_string(),
                 "ECDSA-P256".to_string(),
             ],
-            supported_key_types: vec![
-                "AES".to_string(),
-                "RSA".to_string(),
-                "ECDSA".to_string(),
-            ],
+            supported_key_types: vec!["AES".to_string(), "RSA".to_string(), "ECDSA".to_string()],
             max_keys: Some(1000),
             supported_operations: vec![
                 "encrypt".to_string(),

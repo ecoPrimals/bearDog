@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -14,7 +14,7 @@ use super::types::{
     ServiceAdvertisement,
 };
 use beardog_auth::auth::NodeRegistry;
-use crate::{BearDogError, BearDogResult};
+use crate::{{BearDogError}};
 
 pub struct BearDogNodeRegistry {
 
@@ -58,7 +58,7 @@ pub struct LocalRegistryInfo {
 
 impl BearDogNodeRegistry {
 
-    pub async fn new(config: RegistryConfig) -> BearDogResult<Self> {
+    pub async fn new(config: RegistryConfig) -> Result<Self, BearDogError> {
         info!("🚀 Initializing BearDog Node Registry with decentralized architecture");
 
         let local_info = Self::initialize_local_registry_info(&config).await?;
@@ -99,14 +99,14 @@ impl BearDogNodeRegistry {
         Ok(registry)
     }
 
-    pub async fn new_default() -> BearDogResult<Self> {
+    pub async fn new_default() -> Result<Self, BearDogError> {
         Self::new(RegistryConfig::default()).await
 
     pub async fn add_node_with_id(
         &self,
         node_id: &str,
         node_info: NodeInfo,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("📝 Adding node '{}' to registry", node_id);
 
         {
@@ -162,11 +162,11 @@ impl BearDogNodeRegistry {
         info!("✅ Node '{}' added to registry successfully", node_id);
         Ok(())
 
-    pub async fn add_node(&self, node_info: NodeInfo) -> BearDogResult<()> {
+    pub async fn add_node(&self, node_info: NodeInfo) -> Result<(), BearDogError> {
         let node_id = node_info.id.clone();
         self.add_node_with_id(node_id, node_info).await
 
-    pub async fn get_node(&self, node_id: &str) -> BearDogResult<Option<NodeInfo>> {
+    pub async fn get_node(&self, node_id: &str) -> Result<Option<NodeInfo>, BearDogError>> {
 
             if let Some(node) = nodes.get(node_id) {
                 return Ok(Some(node.clone()));
@@ -185,7 +185,7 @@ impl BearDogNodeRegistry {
                 }
         Ok(None)
 
-    pub async fn list_nodes(&self) -> BearDogResult<Vec<NodeInfo>> {
+    pub async fn list_nodes(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
         let mut all_nodes = Vec::new();
 
             all_nodes.extend(nodes.values().cloned());
@@ -194,7 +194,7 @@ impl BearDogNodeRegistry {
                     all_nodes.push(federated_node.node_info);
         Ok(all_nodes)
 
-    pub async fn update_node_last_seen(&self, node_id: &str) -> BearDogResult<()> {
+    pub async fn update_node_last_seen(&self, node_id: &str) -> Result<(), BearDogError> {
         let mut nodes = self.nodes.write().await;
         if let Some(node) = nodes.get_mut(node_id) {
             node.last_seen = SystemTime::now();
@@ -224,12 +224,12 @@ impl BearDogNodeRegistry {
             node_id, trust_level
         );
 
-    pub async fn get_trust_level(&self, node_id: &str) -> BearDogResult<TrustLevel> {
+    pub async fn get_trust_level(&self, node_id: &str) -> Result<TrustLevel, BearDogError> {
                 return Ok(node.trust_level);
 
         self.trust_manager.get_trust_level(node_id).await
 
-    pub async fn remove_node(&self, node_id: &str) -> BearDogResult<()> {
+    pub async fn remove_node(&self, node_id: &str) -> Result<(), BearDogError> {
         info!("🗑️ Removing node '{}' from registry", node_id);
         let removed_node = {
             nodes.remove(node_id)
@@ -252,7 +252,7 @@ impl BearDogNodeRegistry {
                     warn!("Failed to unregister node from phonebook: {}", e);
             info!("✅ Node '{}' removed from registry", node_id);
 
-    pub async fn bootstrap(&self) -> BearDogResult<()> {
+    pub async fn bootstrap(&self) -> Result<(), BearDogError> {
         info!("🔄 Bootstrapping node registry");
 
         self.bootstrap_manager.bootstrap_registry(self).await?;
@@ -262,7 +262,7 @@ impl BearDogNodeRegistry {
 
     pub async fn get_trusted_nodes(
         min_trust_level: TrustLevel,
-    ) -> BearDogResult<Vec<NodeInfo>> {
+    ) -> Result<Vec<NodeInfo>, BearDogError>> {
         let nodes = self.nodes.read().await;
         let trusted_nodes = nodes
             .values()
@@ -274,7 +274,7 @@ impl BearDogNodeRegistry {
     pub async fn verify_node_signature(
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         let node = self
             .get_node(node_id)
             .await?
@@ -308,7 +308,7 @@ impl BearDogNodeRegistry {
     pub async fn get_phonebook_status(&self) -> Option<super::phonebook::PhonebookStatus> {
             Some(phonebook.get_statistics().await)
 
-    pub async fn health_check(&self) -> BearDogResult<NodeRegistryHealthStatus> {
+    pub async fn health_check(&self) -> Result<NodeRegistryHealthStatus, BearDogError> {
         let mut health = NodeRegistryHealthStatus {
             overall_status: HealthStatus::Healthy,
             local_nodes: 0,
@@ -328,7 +328,7 @@ impl BearDogNodeRegistry {
 
     async fn initialize_local_registry_info(
         config: &RegistryConfig,
-    ) -> BearDogResult<LocalRegistryInfo> {
+    ) -> Result<LocalRegistryInfo, BearDogError> {
 
         let (public_key, private_key) =
             crate::crypto_utils::BearDogCrypto::generate_ed25519_keypair()?;
@@ -348,7 +348,7 @@ impl BearDogNodeRegistry {
             version: "1.0.0".to_string(),
             started_at: SystemTime::now(),
         })
-    async fn start_background_tasks(&self) -> BearDogResult<()> {
+    async fn start_background_tasks(&self) -> Result<(), BearDogError> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct NodeRegistryHealthStatus {
@@ -365,9 +365,8 @@ pub struct NodeRegistryHealthStatus {
 
     pub last_check: chrono::DateTime<chrono::Utc>,
 
-#[derive(PartialEq)]
-pub enum HealthStatus {
-
+// UNIFIED: Use canonical HealthStatus from beardog-types
+pub use beardog_types::canonical::HealthStatus;
     Healthy,
 
     Degraded,
@@ -378,7 +377,7 @@ pub enum HealthStatus {
 
 impl NodeRegistry for BearDogNodeRegistry {}
 
-    fn get_node_info(&self, node_id: &str) -> BearDogResult<crate::auth::types::NodeInfo> {
+    fn get_node_info(&self, node_id: &str) -> Result<crate::auth::types::NodeInfo, BearDogError> {
 
         let rt = tokio::runtime::Handle::try_current()
             .map_err(|_| BearDogError::config("No tokio runtime available for async operation"))?;
@@ -402,7 +401,7 @@ impl NodeRegistry for BearDogNodeRegistry {}
                         },
                     })
                 Err(e) => Err(e),
-    fn register_node(&mut self, node_info: crate::auth::types::NodeInfo) -> BearDogResult<()> {
+    fn register_node(&mut self, node_info: crate::auth::types::NodeInfo) -> Result<(), BearDogError> {
 
             self.register_node_with_key(
                 &node_info.node_id,
@@ -410,10 +409,10 @@ impl NodeRegistry for BearDogNodeRegistry {}
                 &node_info.address,
             ).await}
 
-    fn get_trust_level(&self, node_id: &str) -> BearDogResult<f64> {
+    fn get_trust_level(&self, node_id: &str) -> Result<f64, BearDogError> {
 
                 Ok(node_data) => Ok(node_data.trust_level),
-    fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> BearDogResult<()> {
+    fn update_trust_level(&mut self, node_id: &str, trust_level: f64) -> Result<(), BearDogError> {
 
             self.update_node_trust(node_id, trust_level).await
 
@@ -433,6 +432,6 @@ impl NodeRegistry for BearDogNodeRegistry {}
             registered_at: SystemTime::now(),
         self.add_node_with_id(node_id.to_string(), node_info).await
 
-    pub async fn is_trusted_node(&self, node_id: &str) -> BearDogResult<bool> {
+    pub async fn is_trusted_node(&self, node_id: &str) -> Result<bool, BearDogError> {
         let trust_level = self.get_trust_level(node_id).await?;
         Ok(trust_level >= TrustLevel::Basic)

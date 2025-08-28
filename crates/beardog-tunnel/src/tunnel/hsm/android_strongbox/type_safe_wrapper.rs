@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_security::crypto_utils::`BearDog`Crypto;
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -71,7 +71,7 @@ struct OperationMetrics {
 
 impl TypeSafeAndroidKeystore {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🔐 Initializing type-safe Android keystore");
 
         let capability = Self::detect_strongbox_capability().await?;
@@ -92,7 +92,7 @@ impl TypeSafeAndroidKeystore {
         })
     }
 
-    async fn detect_strongbox_capability() -> BearDogResult<Option<StrongBoxCapability>> {}
+    async fn detect_strongbox_capability() -> Result<Option<StrongBoxCapability>, BearDogError>> {}
 
         #[cfg(target_os = "android")]
         return Self::android_capability_detection().await;
@@ -100,7 +100,7 @@ impl TypeSafeAndroidKeystore {
         return Ok(None); // Non-Android platforms don't have StrongBox
 
     #[cfg(target_os = "android")]
-    async fn android_capability_detection() -> BearDogResult<Option<StrongBoxCapability>> {
+    async fn android_capability_detection() -> Result<Option<StrongBoxCapability>, BearDogError>> {
 
         info!("🔍 Detecting Android StrongBox using safe APIs");
 
@@ -128,7 +128,7 @@ impl TypeSafeAndroidKeystore {
                 warn!("⚠️ Could not detect Android capabilities safely: {}", e);
                 Ok(None) // Fall back to software
 
-    async fn safe_android_api_check() -> BearDogResult<bool> {
+    async fn safe_android_api_check() -> Result<bool, BearDogError> {
 
         let device_info = Self::get_safe_device_info().await?;
 
@@ -137,7 +137,7 @@ impl TypeSafeAndroidKeystore {
                            device_info.device_model.contains("Pixel");
         Ok(has_strongbox)
 
-    async fn get_safe_device_info() -> BearDogResult<DeviceInfo> {
+    async fn get_safe_device_info() -> Result<DeviceInfo, BearDogError> {
 
         let api_level = std::env::var("ANDROID_API_LEVEL")
             .unwrap_or_else(|_| "28".to_string())
@@ -158,7 +158,7 @@ impl TypeSafeAndroidKeystore {
         &self,
         key_id: &str,
         algorithm: A,
-    ) -> BearDogResult<TypeSafeKeyRef<A>> {
+    ) -> Result<TypeSafeKeyRef<A, BearDogError>> {
         info!(
             "🔐 Type-safe key generation: {} with {:?}",
             key_id,
@@ -197,7 +197,7 @@ impl TypeSafeAndroidKeystore {
 
     async fn safe_key_generation(
         algorithm: &SupportedAlgorithm,
-    ) -> BearDogResult<KeyHandle> {
+    ) -> Result<KeyHandle, BearDogError> {
         match &self.capability {
             Some(cap) if cap.security_level == SecurityLevel::StrongBox => {
                 self.strongbox_safe_generation(key_id, algorithm).await
@@ -218,7 +218,7 @@ impl TypeSafeAndroidKeystore {
             _ => Err(BearDogError::unsupported_operation(format!("Algorithm {algorithm:?) not supported in StrongBox"},
             }),
 
-    async fn safe_aes_generation(&self, key_id: &str) -> BearDogResult<KeyHandle> {
+    async fn safe_aes_generation(&self, key_id: &str) -> Result<KeyHandle, BearDogError> {
 
         let _key_material = `BearDog`Crypto::secure_random_bytes(32)?; // 32 bytes = 256 bits
 
@@ -226,7 +226,7 @@ impl TypeSafeAndroidKeystore {
             internal_id: format!("safe_aes_{key_id}"),
             security_level: SecurityLevel::StrongBox,
 
-    async fn safe_ecdsa_generation(&self, key_id: &str) -> BearDogResult<KeyHandle> {
+    async fn safe_ecdsa_generation(&self, key_id: &str) -> Result<KeyHandle, BearDogError> {
 
         let _keypair = `BearDog`Crypto::generate_ed25519_keypair()?; // Using Ed25519 as safe alternative
             internal_id: format!("safe_ecdsa_{key_id}"),
@@ -298,12 +298,12 @@ pub struct TypeSafeKeyRef<'a, A: AlgorithmConstraint> {
     _marker: PhantomData<A>,
 impl<'a, A: AlgorithmConstraint> TypeSafeKeyRef<'a, A> {
 
-    pub async fn sign_data(&self, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn sign_data(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         self.keystore
             .safe_sign_operation(&self.key_id, data, &self.algorithm.algorithm())
             .await
 
-    pub async fn encrypt_data(&self, data: &[u8]) -> BearDogResult<Vec<u8>>
+    pub async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>>
     where
         A: EncryptionCapable,
     {
@@ -315,7 +315,7 @@ impl EncryptionCapable for RsaPss2048Algorithm {}
 
     async fn safe_sign_operation(
         data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Safe signing operation: {} with {:?}", key_id, algorithm);
 
         let keys = self.keys.read().await;
@@ -365,7 +365,7 @@ struct DeviceInfo {
     device_model: String,
     has_hardware_keystore: bool,
 
-pub async fn safe_usage_example() -> BearDogResult<()> {
+pub async fn safe_usage_example() -> Result<(), BearDogError> {
 
     let keystore = TypeSafeAndroidKeystore::new().await?;
 
@@ -398,7 +398,7 @@ mod tests {
         Ok(())
     #[test]}
 
-    fn test_compile_time_algorithm_verification() -> beardog_errors::BearDogResult<()> {
+    fn test_compile_time_algorithm_verification() -> Result<(), BearDogError> {
 
         fn accepts_encryption_capable<A: AlgorithmConstraint + EncryptionCapable>(_: A) {}
 

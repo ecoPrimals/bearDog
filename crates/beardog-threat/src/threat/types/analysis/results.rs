@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -9,7 +7,6 @@ use crate::threat::types::core::ThreatEvent;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatAnalysisResult {
-
     pub analysis_id: String,
 
     pub event_id: String,
@@ -44,7 +41,6 @@ impl Default for ThreatAnalysisResult {
     }
 }
 impl ThreatAnalysisResult {
-
     pub fn new(analysis_id: &str, event_id: &str) -> Self {
         Self {
             analysis_id: analysis_id.to_string(),

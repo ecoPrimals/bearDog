@@ -1,16 +1,16 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::time::Duration;
 use tracing::{debug, error, warn};
 
 pub async fn with_operation_context<F, Fut, T>(
     operation_name: &str,
     operation: F,
-) -> BearDogResult<T>
+) -> Result<T, BearDogError>
 where
     F: FnOnce() -> Fut,
-    Fut: std::future::Future<Output = BearDogResult<T>>,
+    Fut: std::future::Future<Output = Result<T, BearDogError>>,
 {
     debug!("🔄 Starting operation: {}", operation_name);
     match operation().await {
@@ -25,11 +25,16 @@ where
 }
 
 pub async fn with_retry<F, Fut, T, E>(
+    operation_name: &str,
     max_retries: usize,
     base_delay: Duration,
+    operation: F,
+) -> Result<T, BearDogError>
+where
     F: Fn() -> Fut,
     Fut: std::future::Future<Output = Result<T, E>>,
     E: std::fmt::Display + std::fmt::Debug,
+{
     let mut last_error = None;
     for attempt in 0..=max_retries {
         let delay = base_delay * 2_u32.pow(attempt as u32);
@@ -49,35 +54,54 @@ pub async fn with_retry<F, Fut, T, E>(
                 if attempt < max_retries {
                     warn!(
                         "⚠️ Operation '{}' failed on attempt {}: {} (retrying in {:?})",
+                        operation_name,
                         attempt + 1,
                         e,
                         delay
+                    );
                     tokio::time::sleep(delay).await;
                 } else {
                     error!(
                         "❌ Operation '{}' failed after {} attempts: {}",
+                        operation_name,
                         max_retries + 1,
                         e
+                    );
+                }
+            }
+        }
+    }
+    
     Err(BearDogError::internal(format!(
-            "Operation '{)' failed after {} retries: {}",
-            operation_name,
-            max_retries + 1,
-            last_error.unwrap_or_else(|| "Unknown error".to_string())
-        ),
-    })
+        "Operation '{}' failed after {} retries: {}",
+        operation_name,
+        max_retries + 1,
+        last_error.unwrap_or_else(|| "Unknown error".to_string())
+    )))
+}
 
-pub fn validate_input<T, F>(value: T, validator: F, field_name: &str) -> BearDogResult<T>
+pub fn validate_input<T, F>(value: T, validator: F, field_name: &str) -> Result<T, BearDogError>
+where
     F: FnOnce(&T) -> bool,
+{
     if validator(&value) {
         Ok(value)
     } else {
-        Err(BearDogError::validation(format!("Invalid value for field '{field_name)'"),
-        })
+        Err(BearDogError::validation(format!("Invalid value for field '{field_name}'")))
+    }
+}
 
 pub async fn with_cleanup<F, Fut, C, CleanupFut, T>(
+    operation_name: &str,
+    operation: F,
     cleanup: C,
+) -> Result<T, BearDogError>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = Result<T, BearDogError>>,
     C: FnOnce() -> CleanupFut,
-    CleanupFut: std::future::Future<Output = BearDogResult<()>>,
+    CleanupFut: std::future::Future<Output = Result<(), BearDogError>>,
+{
     let result = operation().await;
 
     if let Err(cleanup_error) = cleanup().await {
@@ -85,13 +109,16 @@ pub async fn with_cleanup<F, Fut, C, CleanupFut, T>(
             "⚠️ Cleanup failed for operation '{}': {}",
             operation_name, cleanup_error
         );
+    }
+    
     result
+}
 
 pub fn load_config_with_fallback<T>(
-    primary_loader: impl FnOnce() -> BearDogResult<T>,
-    fallback_loader: impl FnOnce() -> BearDogResult<T>,
+    primary_loader: impl FnOnce() -> Result<T, BearDogError>,
+    fallback_loader: impl FnOnce() -> Result<T, BearDogError>,
     config_name: &str,
-) -> BearDogResult<T> {
+) -> Result<T, BearDogError> {
     match primary_loader() {
         Ok(config) => {
             debug!("✅ Loaded {} from primary source", config_name);
@@ -105,10 +132,18 @@ pub fn load_config_with_fallback<T>(
                 Ok(config) => {
                     debug!("✅ Loaded {} from fallback source", config_name);
                     Ok(config)
+                }
                 Err(fallback_error) => {
+                    error!(
                         "❌ Both primary and fallback {} loading failed",
                         config_name
+                    );
                     Err(BearDogError::configuration(format!(
-                            "Failed to load {config_name): primary error: {primary_error}, fallback error: {fallback_error}"
-                        ),
-                    })
+                        "Failed to load {}: primary error: {}, fallback error: {}",
+                        config_name, primary_error, fallback_error
+                    )))
+                }
+            }
+        }
+    }
+}

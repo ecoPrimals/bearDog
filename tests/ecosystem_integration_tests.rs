@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::auth::{
@@ -28,14 +29,14 @@ impl GeneticsEngine {
         _source_node: &str,
         _target_node: &str,
         _request: &CrossNodeOperation,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
         Ok("mock-authorization-proof".to_string())
     }
 
     pub async fn perform_genetic_recombination(
         &self,
         _spawn_request: &AuthSpawnRequest,
-    ) -> BearDogResult<BearDogGenetics> {
+    ) -> Result<BearDogGenetics, BearDogError> {
         Ok(BearDogGenetics {
             id: "child-genetics".to_string(),
             crypto_chromosomes: vec![],
@@ -56,7 +57,7 @@ impl GeneticsEngine {
 }
 
 #[tokio::test]
-async fn test_toadstool_compute_integration() -> BearDogResult<()> {
+async fn test_toadstool_compute_integration() -> Result<(), BearDogError> {
 
     let _config = BearDogConfig::default();
 
@@ -136,7 +137,7 @@ async fn test_toadstool_compute_integration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_genetic_spawning_network_effects() -> BearDogResult<()> {
+async fn test_genetic_spawning_network_effects() -> Result<(), BearDogError> {
 
     let spawn_request = AuthSpawnRequest {
         parent_genetics: vec![
@@ -233,7 +234,7 @@ async fn test_genetic_spawning_network_effects() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_ecosystem_service_discovery() -> BearDogResult<()> {
+async fn test_ecosystem_service_discovery() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let _core = BearDogCore::new(config).await?;
@@ -305,7 +306,7 @@ async fn test_ecosystem_service_discovery() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_comprehensive_toadstool_integration() -> BearDogResult<()> {
+async fn test_comprehensive_toadstool_integration() -> Result<(), BearDogError> {
     info!("🚀 Testing Comprehensive ToadStool Ecosystem Integration");
 
     let mut config = BearDogConfig::default();

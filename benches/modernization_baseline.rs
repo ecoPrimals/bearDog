@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};

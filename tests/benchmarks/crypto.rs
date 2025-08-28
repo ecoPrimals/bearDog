@@ -1,12 +1,12 @@
 
 
 use super::{BenchmarkResult, PerformanceBenchmarkSuite};
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 use rand::{thread_rng, RngCore};
 use std::time::Instant;
 use tracing::info;
 
-pub async fn benchmark_crypto_operations(suite: &mut PerformanceBenchmarkSuite) -> BearDogResult<Vec<BenchmarkResult>> {
+pub async fn benchmark_crypto_operations(suite: &mut PerformanceBenchmarkSuite) -> Result<Vec<BenchmarkResult, BearDogError>> {
     let mut results = Vec::new();
 
     for &data_size in &suite.config.data_sizes {
@@ -27,7 +27,7 @@ pub async fn benchmark_crypto_operations(suite: &mut PerformanceBenchmarkSuite) 
     Ok(results)
 }
 
-async fn benchmark_encryption(suite: &PerformanceBenchmarkSuite, data_size: usize) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_encryption(suite: &PerformanceBenchmarkSuite, data_size: usize) -> Result<BenchmarkResult, BearDogError> {
     info!("  🔐 Benchmarking encryption for {} bytes", data_size);
 
     let mut data = vec![0u8; data_size];
@@ -83,7 +83,7 @@ async fn benchmark_encryption(suite: &PerformanceBenchmarkSuite, data_size: usiz
     })
 }
 
-async fn benchmark_signing(suite: &PerformanceBenchmarkSuite, data_size: usize) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_signing(suite: &PerformanceBenchmarkSuite, data_size: usize) -> Result<BenchmarkResult, BearDogError> {
     info!("  ✍️ Benchmarking signing for {} bytes", data_size);
 
     let mut data = vec![0u8; data_size];
@@ -138,7 +138,7 @@ async fn benchmark_signing(suite: &PerformanceBenchmarkSuite, data_size: usize) 
     })
 }
 
-async fn benchmark_hashing(suite: &PerformanceBenchmarkSuite, data_size: usize) -> BearDogResult<BenchmarkResult> {
+async fn benchmark_hashing(suite: &PerformanceBenchmarkSuite, data_size: usize) -> Result<BenchmarkResult, BearDogError> {
     info!("  #️⃣ Benchmarking hashing for {} bytes", data_size);
 
     let mut data = vec![0u8; data_size];

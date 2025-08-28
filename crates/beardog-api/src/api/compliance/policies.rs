@@ -24,19 +24,32 @@ pub async fn list_compliance_policies(
 
 pub async fn create_compliance_policy(
     Json(_): Json<serde_json::Value>,
-        serde_json::json!({"policy_id": "policy_12345", "status": "created"}),
-        45,
-        false,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "policy_id": "policy_12345", 
+        "status": "created"
+    }))))
+}
 
 pub async fn get_compliance_policy(
     Path(_policy_id): Path<String>,
-        serde_json::json!({"policy": "Data Protection Policy", "version": "1.2"}),
-        15,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "policy": "Data Protection Policy", 
+        "version": "1.2"
+    }))))
+}
 
-pub async fn update_compliance_policy(
-        serde_json::json!({"policy_id": "policy_12345", "status": "updated"}),
-        35,
+pub async fn update_compliance_policy() -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "policy_id": "policy_12345", 
+        "status": "updated"
+    }))))
+}
 
-pub async fn delete_compliance_policy(
-        serde_json::json!({"policy_id": "policy_12345", "status": "deleted"}),
-        25,
+pub async fn delete_compliance_policy() -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "policy_id": "policy_12345", 
+        "status": "deleted"
+    }))))
+}

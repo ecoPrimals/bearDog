@@ -1,12 +1,12 @@
 
 
-use beardog_errors::{improved_results::*, BearDogResult};
+use beardog_errors::{{improved_results::*}};
 use tracing::debug;
 use crate::types::MonitoringConfig;
 
 pub async fn validate_monitoring_config_improved(
     config: &MonitoringConfig,
-) -> BearDogResult<ValidationOutcome> {
+) -> Result<ValidationOutcome, BearDogError> {
     debug!("🔍 Validating monitoring configuration: {}", config.config_id);
     let mut findings = Vec::new();
 

@@ -2,7 +2,7 @@
 
 use crate::universal::http_adapter::{UniversalRequest, UniversalResponse, ResponseStatus};
 use crate::universal::service_registration::types::UniversalServiceRegistration;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -86,7 +86,7 @@ where
         self.protocol_adapters.insert(protocol_id, adapter);
     }
 
-    pub async fn process_request(&self, request: &UniversalRequest) -> BearDogResult<UniversalResponse> {
+    pub async fn process_request(&self, request: &UniversalRequest) -> Result<UniversalResponse, BearDogError> {
         let start_time = std::time::Instant::now();
 
         let handler = self.find_type_handler(request).await?;
@@ -99,12 +99,12 @@ where
         Ok(response)
     }
 
-    pub async fn send_request(&self, endpoint: &str, request: &UniversalRequest) -> BearDogResult<UniversalResponse> {
+    pub async fn send_request(&self, endpoint: &str, request: &UniversalRequest) -> Result<UniversalResponse, BearDogError> {
         let protocol_adapter = self.find_protocol_adapter(endpoint).await?;
         protocol_adapter.send_request(endpoint, request).await
     }
 
-    pub async fn register_service(&self, metadata: UniversalServiceRegistration) -> BearDogResult<()> {
+    pub async fn register_service(&self, metadata: UniversalServiceRegistration) -> Result<(), BearDogError> {
         let service_id = metadata.service_id.clone();
         let mut registry = self.service_registry.write().await;
         registry.insert(service_id.clone(), metadata);
@@ -112,7 +112,7 @@ where
         Ok(())
     }
 
-    pub async fn discover_services(&self, capability: &str) -> BearDogResult<Vec<UniversalServiceRegistration>> {
+    pub async fn discover_services(&self, capability: &str) -> Result<Vec<UniversalServiceRegistration>, BearDogError>> {
         let registry = self.service_registry.read().await;
         let services: Vec<UniversalServiceRegistration> = registry
             .values()
@@ -122,7 +122,7 @@ where
         Ok(services)
     }
 
-    async fn find_type_handler(&self, request: &UniversalRequest) -> BearDogResult<&T> {
+    async fn find_type_handler(&self, request: &UniversalRequest) -> Result<&T, BearDogError> {
         for handler in self.type_handlers.values() {
             if handler.can_handle(request).await {
                 return Ok(handler);
@@ -131,7 +131,7 @@ where
         Err(BearDogError::not_found(format_args!("No type handler found for operation: {}", request.operation).to_string()))
     }
 
-    async fn find_protocol_adapter(&self, endpoint: &str) -> BearDogResult<&P> {
+    async fn find_protocol_adapter(&self, endpoint: &str) -> Result<&P, BearDogError> {
         for adapter in self.protocol_adapters.values() {
             if adapter.can_handle_endpoint(endpoint) {
                 return Ok(adapter);
@@ -174,7 +174,7 @@ pub trait TypeSystemHandler: Send + Sync {
 
     async fn can_handle(&self, request: &UniversalRequest) -> bool;
 
-    async fn handle_request(&self, request: &UniversalRequest) -> BearDogResult<UniversalResponse>;
+    async fn handle_request(&self, request: &UniversalRequest) -> Result<UniversalResponse, BearDogError>;
 }
 
 #[allow(async_fn_in_trait)]
@@ -184,7 +184,7 @@ pub trait ProtocolAdapter: Send + Sync {
 
     fn can_handle_endpoint(&self, endpoint: &str) -> bool;
 
-    async fn send_request(&self, endpoint: &str, request: &UniversalRequest) -> BearDogResult<UniversalResponse>;
+    async fn send_request(&self, endpoint: &str, request: &UniversalRequest) -> Result<UniversalResponse, BearDogError>;
 }
 
 #[derive(Clone)]
@@ -220,7 +220,7 @@ impl TypeSystemHandler for ExampleTypeSystemHandler {
         self.supported_operations().contains(&request.operation)
     }
 
-    async fn handle_request(&self, request: &UniversalRequest) -> BearDogResult<UniversalResponse> {
+    async fn handle_request(&self, request: &UniversalRequest) -> Result<UniversalResponse, BearDogError> {
 
         let result = match request.operation.as_str() {
             "create" => serde_json::json!({"created": true, "id": "example_id"}),
@@ -260,7 +260,7 @@ impl ProtocolAdapter for ExampleProtocolAdapter {
         endpoint.starts_with("http://") || endpoint.starts_with("https://")
     }
 
-    async fn send_request(&self, endpoint: &str, request: &UniversalRequest) -> BearDogResult<UniversalResponse> {
+    async fn send_request(&self, endpoint: &str, request: &UniversalRequest) -> Result<UniversalResponse, BearDogError> {
 
         tracing::info!("Sending request to {}: {:?}", endpoint, request);
         

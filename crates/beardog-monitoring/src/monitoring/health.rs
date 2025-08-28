@@ -1,17 +1,14 @@
-
-
 use chrono::Utc;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 use super::types::ComponentHealth;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::health_status::HealthStatus;
 
 #[allow(async_fn_in_trait)]
 pub trait HealthChecker: Send + Sync {
-
-    async fn check_health(&self) -> BearDogResult<ComponentHealth>;
+    async fn check_health(&self) -> Result<ComponentHealth, BearDogError>;
 
     fn component_name(&self) -> &str;
 }
@@ -25,7 +22,7 @@ pub enum HealthCheckerType {
 }
 
 impl HealthChecker for HealthCheckerType {
-    async fn check_health(&self) -> BearDogResult<ComponentHealth> {
+    async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         match self {
             HealthCheckerType::Database(checker) => checker.check_health().await,
             HealthCheckerType::Cache(checker) => checker.check_health().await,
@@ -54,18 +51,17 @@ impl Default for DatabaseHealthChecker {
 }
 
 impl DatabaseHealthChecker {
-
     pub fn new() -> Self {
         Self {}
     }
 }
 
 impl HealthChecker for DatabaseHealthChecker {
-    async fn check_health(&self) -> BearDogResult<ComponentHealth> {
+    async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
         tokio::time::sleep(Duration::from_millis(10)).await;
-        
+
         Ok(ComponentHealth {
             name: "Database".to_string(),
             status: HealthStatus::Healthy,
@@ -96,18 +92,17 @@ impl Default for CacheHealthChecker {
 }
 
 impl CacheHealthChecker {
-
     pub fn new() -> Self {
         Self {}
     }
 }
 
 impl HealthChecker for CacheHealthChecker {
-    async fn check_health(&self) -> BearDogResult<ComponentHealth> {
+    async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
         tokio::time::sleep(Duration::from_millis(5)).await;
-        
+
         Ok(ComponentHealth {
             name: "Cache".to_string(),
             status: HealthStatus::Healthy,
@@ -142,18 +137,19 @@ impl Default for ExternalApiHealthChecker {
 }
 
 impl ExternalApiHealthChecker {
-
     pub fn new(api_endpoint: &str) -> Self {
-        Self { api_endpoint }
+        Self {
+            api_endpoint: api_endpoint.to_string(),
+        }
     }
 }
 
 impl HealthChecker for ExternalApiHealthChecker {
-    async fn check_health(&self) -> BearDogResult<ComponentHealth> {
+    async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
         tokio::time::sleep(Duration::from_millis(50)).await;
-        
+
         Ok(ComponentHealth {
             name: "External API".to_string(),
             status: HealthStatus::Healthy,
@@ -184,18 +180,17 @@ impl Default for HsmHealthChecker {
 }
 
 impl HsmHealthChecker {
-
     pub fn new() -> Self {
         Self {}
     }
 }
 
 impl HealthChecker for HsmHealthChecker {
-    async fn check_health(&self) -> BearDogResult<ComponentHealth> {
+    async fn check_health(&self) -> Result<ComponentHealth, BearDogError> {
         let start = Instant::now();
 
         tokio::time::sleep(Duration::from_millis(20)).await;
-        
+
         Ok(ComponentHealth {
             name: "HSM".to_string(),
             status: HealthStatus::Healthy,
@@ -221,7 +216,6 @@ pub struct HealthCheckAggregator {
 }
 
 impl HealthCheckAggregator {
-
     pub fn new() -> Self {
         Self {
             checkers: Vec::new(),
@@ -232,18 +226,17 @@ impl HealthCheckAggregator {
         self.checkers.push(checker);
     }
 
-    pub async fn check_all(&self) -> BearDogResult<Vec<ComponentHealth>> {
+    pub async fn check_all(&self) -> Result<Vec<ComponentHealth>, BearDogError> {
         let mut results = Vec::new();
-        
+
         for checker in &self.checkers {
             match checker.check_health().await {
                 Ok(health) => results.push(health),
                 Err(e) => {
-
                     results.push(ComponentHealth {
                         name: checker.component_name().to_string(),
                         status: HealthStatus::Unhealthy,
-                        message: Some(format_args!("Health check failed: {}", e).to_string()),
+                        message: Some(format_args!("Health check failed: {e}").to_string()),
                         last_check: Utc::now(),
                         check_duration_ms: 0,
                         metadata: HashMap::with_capacity(16),
@@ -251,11 +244,11 @@ impl HealthCheckAggregator {
                 }
             }
         }
-        
+
         Ok(results)
     }
 
-    pub async fn get_overall_status(&self) -> BearDogResult<HealthStatus> {
+    pub async fn get_overall_status(&self) -> Result<HealthStatus, BearDogError> {
         let results = self.check_all().await?;
 
         for result in &results {
@@ -263,7 +256,7 @@ impl HealthCheckAggregator {
                 return Ok(HealthStatus::Unhealthy);
             }
         }
-        
+
         Ok(HealthStatus::Healthy)
     }
 }
@@ -273,4 +266,3 @@ impl Default for HealthCheckAggregator {
         Self::new()
     }
 }
-

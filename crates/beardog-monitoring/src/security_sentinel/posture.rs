@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -24,7 +24,7 @@ impl SecurityPostureMonitor {}
         }
     }
 
-    pub async fn assess_security_posture(&self) -> BearDogResult<SecurityPostureReport> {
+    pub async fn assess_security_posture(&self) -> Result<SecurityPostureReport, BearDogError> {
         self.stats
             .assessments_performed
             .fetch_add(1, Ordering::Relaxed);
@@ -75,7 +75,7 @@ impl SecurityPostureMonitor {}
         );
         Ok(report)
 
-    async fn assess_cryptographic_capabilities(&self) -> BearDogResult<PostureComponent> {
+    async fn assess_cryptographic_capabilities(&self) -> Result<PostureComponent, BearDogError> {
 
         let health_indicators = vec![
             ("AES-GCM Encryption", 0.95), // Hardware accelerated
@@ -105,7 +105,7 @@ impl SecurityPostureMonitor {}
                 vec![]
         })
 
-    async fn assess_authentication_systems(&self) -> BearDogResult<PostureComponent> {
+    async fn assess_authentication_systems(&self) -> Result<PostureComponent, BearDogError> {
             ("JWT Authentication", 0.92),
             ("Multi-Factor Auth", 0.88),
             ("Session Management", 0.90),
@@ -113,7 +113,7 @@ impl SecurityPostureMonitor {}
             component_name: "Authentication Systems".to_string(),
                 vec!["Review authentication configuration".to_string()]
 
-    async fn assess_access_controls(&self) -> BearDogResult<PostureComponent> {
+    async fn assess_access_controls(&self) -> Result<PostureComponent, BearDogError> {
             ("Role-Based Access Control", 0.89),
             ("API Authorization", 0.93),
             ("Resource Permissions", 0.87),
@@ -121,7 +121,7 @@ impl SecurityPostureMonitor {}
             component_name: "Access Controls".to_string(),
                 vec!["Strengthen access control policies".to_string()]
 
-    async fn assess_data_protection(&self) -> BearDogResult<PostureComponent> {
+    async fn assess_data_protection(&self) -> Result<PostureComponent, BearDogError> {
             ("Data Encryption at Rest", 0.95),
             ("Data Encryption in Transit", 0.98),
             ("Backup Security", 0.85),
@@ -129,7 +129,7 @@ impl SecurityPostureMonitor {}
             component_name: "Data Protection".to_string(),
                 vec!["Enhance data protection measures".to_string()]
 
-    async fn assess_incident_response_readiness(&self) -> BearDogResult<PostureComponent> {
+    async fn assess_incident_response_readiness(&self) -> Result<PostureComponent, BearDogError> {
             ("Threat Detection Systems", 0.91),
             ("Alert Mechanisms", 0.88),
             ("Response Procedures", 0.84),

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_traits::canonical::WorkflowProcessor;
 use beardog_types::canonical::health_status::WorkflowStatus;
 use beardog_types::canonical::hsm::{KeyMetadata, KeyOperation, KeyUsagePolicy};

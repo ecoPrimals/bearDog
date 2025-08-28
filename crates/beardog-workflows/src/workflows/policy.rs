@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -12,7 +12,7 @@ use super::canonical::{Workflow, WorkflowPolicyConfig, WorkflowScheduler};
 
 impl WorkflowScheduler {
 
-    pub async fn start(&mut self) -> BearDogResult<()> {
+    pub async fn start(&mut self) -> Result<(), BearDogError> {
         if self.cleanup_enabled {
             info!("Starting workflow scheduler with cleanup enabled");
 
@@ -48,7 +48,7 @@ impl WorkflowScheduler {
     async fn run_cleanup_cycle(
         workflows: &Arc<RwLock<HashMap<&str, Workflow>>>,
         _policy_config: &WorkflowPolicyConfig,
-    ) -> BearDogResult<u32> {
+    ) -> Result<u32, BearDogError> {
         let now = chrono::Utc::now();
         let max_age = chrono::Duration::seconds(
             30i64 // Default retention days
@@ -100,7 +100,7 @@ impl WorkflowScheduler {
         Ok(cleanup_count)
     }
 
-    pub async fn stop(&mut self) -> BearDogResult<()> {
+    pub async fn stop(&mut self) -> Result<(), BearDogError> {
         info!("Stopping workflow scheduler");
 
         if let Some(handle) = self.cleanup_task_handle.take() {
@@ -116,7 +116,7 @@ impl WorkflowScheduler {
         info!("Workflow scheduler stopped successfully");
     }
 
-    pub async fn cleanup_expired_workflows(&self) -> BearDogResult<u32> {
+    pub async fn cleanup_expired_workflows(&self) -> Result<u32, BearDogError> {
         info!("Starting manual cleanup of expired workflows");
 
         let cleaned_count = Self::run_cleanup_cycle(&self.workflows, &self.policy_config).await?;
@@ -127,7 +127,7 @@ impl WorkflowScheduler {
         Ok(cleaned_count)
     }
 
-    pub async fn schedule_reminders(&self, workflow: &Workflow) -> BearDogResult<()> {
+    pub async fn schedule_reminders(&self, workflow: &Workflow) -> Result<(), BearDogError> {
         debug!("Scheduling reminders for workflow: {}", workflow.id);
 
         if !matches!(workflow.status, WorkflowStatus::PendingApprovals) {
@@ -194,7 +194,7 @@ impl WorkflowScheduler {
         workflow: &Workflow,
         reminder_number: usize,
         interval: chrono::Duration,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         debug!(
             "REMINDER #{} for workflow {} ({}): Approval pending for {:?} - Type: {}, Initiator: {}",
             reminder_number,
@@ -210,7 +210,7 @@ impl WorkflowScheduler {
         &self,
         workflow: &Workflow,
         time_remaining: chrono::Duration,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         warn!(
             "TIMEOUT WARNING for workflow {} ({}): {:?} remaining until timeout - Immediate attention required",
             workflow.id,
@@ -219,7 +219,7 @@ impl WorkflowScheduler {
         );
     }
 
-    async fn log_timeout_exceeded(&self, workflow: &Workflow) -> BearDogResult<()> {
+    async fn log_timeout_exceeded(&self, workflow: &Workflow) -> Result<(), BearDogError> {
         error!(
             "TIMEOUT EXCEEDED for workflow {} ({}): Workflow approval period has expired",
             workflow.id, workflow.workflow_type
@@ -227,7 +227,7 @@ impl WorkflowScheduler {
 
     }
 
-    pub async fn check_expiring_workflows(&self) -> BearDogResult<Vec<String>> {
+    pub async fn check_expiring_workflows(&self) -> Result<Vec<String>, BearDogError>> {
         debug!("Checking for workflows approaching expiration");
         let workflows_guard = self.workflows.read().await;
         let mut expiring_workflows = Vec::new();

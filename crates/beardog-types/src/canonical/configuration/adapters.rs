@@ -30,16 +30,17 @@ pub struct BiomeOSConnectionConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SongBirdConfig {
     pub service_discovery_endpoint: String,
-    pub handoff: SongBirdHandoffConfig,
+    pub handoff: HandoffConfig,
     pub timeout: Duration,
     pub health_check_interval: Duration,
 }
 
+/// Consolidated SongBird handoff configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct SongBirdHandoffConfig {
-    pub enabled: bool,
-    pub handoff_timeout: Duration,
-    pub retry_policy: RetryPolicy,
+pub struct HandoffConfig {
+    pub endpoint: String,
+    pub timeout: Duration,
+    pub retry_attempts: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -50,12 +51,22 @@ pub struct RetryPolicy {
 }
 
 /// Consolidated Kubernetes adapter configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KubernetesConfig {
-    pub cluster_endpoint: String,
-    pub namespace: String,
-    pub service_account: String,
-    pub tls_config: TlsConfig,
+    pub kubeconfig_path: String,
+    pub default_namespace: String,
+    pub timeout_seconds: u64,
+}
+
+impl Default for KubernetesConfig {
+    fn default() -> Self {
+        Self {
+            kubeconfig_path: std::env::var("KUBECONFIG")
+                .unwrap_or_else(|_| "~/.kube/config".to_string()),
+            default_namespace: "default".to_string(),
+            timeout_seconds: 30,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -99,14 +110,8 @@ pub enum SecurityLevel {
     Maximum,
 }
 
-/// Consolidated universal adapter configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct UniversalAdapterConfig {
-    pub adapter_type: String,
-    pub target_system: String,
-    pub connection_config: ConnectionConfig,
-    pub feature_flags: HashMap<String, bool>,
-}
+// Re-export the canonical UniversalAdapterConfig from providers module
+pub use crate::canonical::providers::UniversalAdapterConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ConnectionConfig {
@@ -116,6 +121,41 @@ pub struct ConnectionConfig {
     pub use_compression: bool,
 }
 
+/// Bridge configuration for security provider integration
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct BridgeConfig {
+    pub enabled: bool,
+    pub bridge_endpoint: String,
+    pub timeout: Duration,
+    pub retry_attempts: u32,
+    pub max_sessions: usize,
+    pub session_timeout_seconds: u64,
+    pub enable_metrics: bool,
+    pub vendor_integrations_enabled: bool,
+}
+
+/// Evolution configuration for adaptive systems
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EvolutionConfig {
+    pub mutation_rate: f64,
+    pub crossover_rate: f64,
+    pub population_size: usize,
+    pub generation_limit: u32,
+    pub fitness_threshold: f64,
+}
+
+impl Default for EvolutionConfig {
+    fn default() -> Self {
+        Self {
+            mutation_rate: 0.01,
+            crossover_rate: 0.8,
+            population_size: 100,
+            generation_limit: 1000,
+            fitness_threshold: 0.95,
+        }
+    }
+}
+
 /// Consolidated ToadStool client configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ToadStoolClientConfig {
@@ -123,4 +163,4 @@ pub struct ToadStoolClientConfig {
     pub auth_token: String,
     pub request_timeout: Duration,
     pub max_concurrent_requests: usize,
-} 
+}

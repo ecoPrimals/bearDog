@@ -268,8 +268,6 @@ fn is_likely_id(s: &str) -> bool {
     (s.len() >= 6 && s.chars().all(|c| c.is_ascii_alphanumeric())) || // Hash-like
     s.chars().all(|c| c.is_ascii_digit()) // Numeric ID
 
-#[allow(dead_code)]}
-
 fn is_static_string(s: &str) -> bool {
     CommonString::from_str(s).is_some()
 

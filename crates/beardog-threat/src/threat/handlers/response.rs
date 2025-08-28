@@ -1,25 +1,21 @@
-
-
 use super::core::ThreatDetectionEngine;
 use crate::threat::types::*;
-use beardog_errors::BearDogResult;
 use beardog_errors::BearDogError;
 
-use chrono::{DateTime, Utc};
+use chrono::Utc;
+use std::collections::HashMap;
 use tracing::{error, info, warn};
 use uuid::Uuid;
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
 
-use crate::threat::types::incidents::response::{IncidentResponse, ResponseType, IncidentStatus, IncidentType};
 use crate::threat::types::core::ThreatEvent;
+use crate::threat::types::incidents::response::{
+    IncidentResponse, IncidentStatus, IncidentType, ResponseType,
+};
 impl ThreatDetectionEngine {
-
     pub async fn execute_automated_response(
         &mut self,
         threat_event: &ThreatEvent,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         if !self.config.automated_response {
             info!("Automated response disabled, skipping response actions");
             return Ok(());
@@ -51,19 +47,17 @@ impl ThreatDetectionEngine {
                 self.update_threat_intelligence(threat_event).await?;
             }
             ThreatSeverity::Info => {
-
                 info!("Informational threat event logged: {}", threat_event.id);
             }
         }
 
         for mitigation in &threat_event.mitigation_steps {
             if mitigation.success {
-
                 continue;
             }
             self.execute_mitigation_step(mitigation).await?;
         }
-        
+
         info!(
             "Automated response completed for threat: {}",
             threat_event.id
@@ -71,7 +65,7 @@ impl ThreatDetectionEngine {
         Ok(())
     }
 
-    pub async fn block_source(&mut self, ip_address: &str) -> BearDogResult<()> {
+    pub async fn block_source(&mut self, ip_address: &str) -> Result<(), BearDogError> {
         if ip_address.is_empty() {
             return Err(BearDogError::validation("IP address cannot be empty"));
         }
@@ -86,11 +80,11 @@ impl ThreatDetectionEngine {
             "Source IP {} has been blocked due to malicious activity",
             ip_address
         );
-        
+
         Ok(())
     }
 
-    pub async fn quarantine_system(&mut self, hostname: &str) -> BearDogResult<()> {
+    pub async fn quarantine_system(&mut self, hostname: &str) -> Result<(), BearDogError> {
         if hostname.is_empty() {
             return Err(BearDogError::validation("Hostname cannot be empty"));
         }
@@ -104,12 +98,14 @@ impl ThreatDetectionEngine {
             "System {} has been quarantined due to suspected compromise",
             hostname
         );
-        
+
         Ok(())
     }
 
-    pub async fn alert_security_team(&self, threat_event: &ThreatEvent) -> BearDogResult<()> {
-
+    pub async fn alert_security_team(
+        &self,
+        threat_event: &ThreatEvent,
+    ) -> Result<(), BearDogError> {
         let alert_message = format!(
             "SECURITY ALERT: {} threat detected - {} (ID: {})",
             threat_event.severity, threat_event.description, threat_event.id
@@ -125,14 +121,14 @@ impl ThreatDetectionEngine {
             "Alert dispatched to security team for threat: {}",
             threat_event.id
         );
-        
+
         Ok(())
     }
 
     pub async fn initiate_incident_response(
         &self,
         threat_event: &ThreatEvent,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let incident_id = Uuid::new_v4().to_string();
         let incident_response = IncidentResponse {
             response_id: Uuid::new_v4().to_string(),
@@ -152,22 +148,27 @@ impl ThreatDetectionEngine {
             incident_type: IncidentType::Security,
             estimated_cost: None,
             actual_cost: None,
+            containment_actions: Vec::new(),
+            remediation_actions: Vec::new(),
+            lessons_learned: Vec::new(),
+            severity: threat_event.severity.clone(),
+            assigned_to: None,
         };
 
         {
             let mut incidents = self.active_incidents.write().await;
             incidents.insert(incident_id.clone(), incident_response);
         }
-        
+
         error!(
             "INCIDENT RESPONSE INITIATED: {} for threat {}",
             incident_id, threat_event.id
         );
-        
+
         Ok(())
     }
 
-    pub async fn collect_forensics(&self, threat_event: &ThreatEvent) -> BearDogResult<()> {
+    pub async fn collect_forensics(&self, threat_event: &ThreatEvent) -> Result<(), BearDogError> {
         info!("Collecting forensics for threat: {}", threat_event.id);
 
         let forensic_actions = vec![
@@ -180,11 +181,11 @@ impl ThreatDetectionEngine {
         for action in forensic_actions {
             info!("Forensic action: {}", action);
         }
-        
+
         Ok(())
     }
 
-    pub async fn monitor_activity(&self, threat_event: &ThreatEvent) -> BearDogResult<()> {
+    pub async fn monitor_activity(&self, threat_event: &ThreatEvent) -> Result<(), BearDogError> {
         info!(
             "Enhanced monitoring activated for threat: {}",
             threat_event.id
@@ -196,15 +197,15 @@ impl ThreatDetectionEngine {
             "Behavioral analysis enabled",
             "Threat hunting activated",
         ];
-        
+
         for action in monitoring_actions {
             info!("Monitoring action: {}", action);
         }
-        
+
         Ok(())
     }
 
-    pub async fn log_threat_event(&self, threat_event: &ThreatEvent) -> BearDogResult<()> {
+    pub async fn log_threat_event(&self, threat_event: &ThreatEvent) -> Result<(), BearDogError> {
         info!(
             "Logging threat event: {} - {}",
             threat_event.id, threat_event.description
@@ -218,14 +219,14 @@ impl ThreatDetectionEngine {
                 history.drain(0..1000);
             }
         }
-        
+
         Ok(())
     }
 
     pub async fn update_threat_intelligence(
         &self,
         threat_event: &ThreatEvent,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!(
             "Updating threat intelligence with data from threat: {}",
             threat_event.id
@@ -246,15 +247,18 @@ impl ThreatDetectionEngine {
                 threat_event.detection_method
             ),
         ];
-        
+
         for update in intelligence_updates {
             info!("Intelligence update: {}", update);
         }
-        
+
         Ok(())
     }
 
-    pub async fn execute_mitigation_step(&self, mitigation: &MitigationStep) -> BearDogResult<()> {
+    pub async fn execute_mitigation_step(
+        &self,
+        mitigation: &MitigationStep,
+    ) -> Result<(), BearDogError> {
         info!("Executing mitigation step: {}", mitigation.description);
 
         match mitigation.description.as_str() {
@@ -281,33 +285,38 @@ impl ThreatDetectionEngine {
         }
     }
 
-    async fn isolate_system(&self, target: &str) -> BearDogResult<()> {
+    #[allow(dead_code)]
+    async fn isolate_system(&self, target: &str) -> Result<(), BearDogError> {
         // Implementation for system isolation
-        println!("Isolating system: {}", target);
+        println!("Isolating system: {target}");
         Ok(())
     }
 
-    async fn block_ip_address(&self, ip: &str) -> BearDogResult<()> {
+    #[allow(dead_code)]
+    async fn block_ip_address(&self, ip: &str) -> Result<(), BearDogError> {
         // Implementation for IP blocking
-        println!("Blocking IP address: {}", ip);
+        println!("Blocking IP address: {ip}");
         Ok(())
     }
 
-    async fn quarantine_file(&self, file_path: &str) -> BearDogResult<()> {
+    #[allow(dead_code)]
+    async fn quarantine_file(&self, file_path: &str) -> Result<(), BearDogError> {
         // Implementation for file quarantine
-        println!("Quarantining file: {}", file_path);
+        println!("Quarantining file: {file_path}");
         Ok(())
     }
 
-    async fn disable_user_account(&self, username: &str) -> BearDogResult<()> {
+    #[allow(dead_code)]
+    async fn disable_user_account(&self, username: &str) -> Result<(), BearDogError> {
         // Implementation for user account disabling
-        println!("Disabling user account: {}", username);
+        println!("Disabling user account: {username}");
         Ok(())
     }
 
-    async fn send_alert(&self, message: &str) -> BearDogResult<()> {
+    #[allow(dead_code)]
+    async fn send_alert(&self, message: &str) -> Result<(), BearDogError> {
         // Implementation for alert sending
-        println!("Sending alert: {}", message);
+        println!("Sending alert: {message}");
         Ok(())
     }
 }

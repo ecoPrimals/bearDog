@@ -5,7 +5,7 @@ use crate::universal_hsm::traits::{
     Platform, ProviderHealth, ProviderInfo, ProviderType, UniversalHsmProvider,
 };
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::traits::SecurityLevel;
 use beardog_types::canonical::{KeyMetadata, KeyType};
 use chrono::Utc;
@@ -14,7 +14,7 @@ pub struct TpmProvider {
     provider_info: ProviderInfo,
 }
 impl TpmProvider {
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let provider_info = ProviderInfo {
             provider_id: "tpm2_hsm".to_string(),
             name: "TPM 2.0 HSM".to_string(),
@@ -31,7 +31,7 @@ impl TpmProvider {
         };
         Ok(Self { provider_info })
     }
-    pub async fn is_available() -> BearDogResult<bool> {
+    pub async fn is_available() -> Result<bool, BearDogError> {
 
         Ok(false) // Placeholder - would check actual `TPM` 2.0 availability
     }
@@ -43,7 +43,7 @@ impl UniversalHsmProvider for TpmProvider {
         &self,
         key_type: KeyType,
         metadata: KeyMetadata,
-    ) -> BearDogResult<beardog_types::HsmKey> {
+    ) -> Result<beardog_types::HsmKey, BearDogError> {
 
         info!("🔑 Generating TPM key using BearDog crypto fallback");
         
@@ -67,7 +67,7 @@ impl UniversalHsmProvider for TpmProvider {
             metadata: metadata.additional_properties,
             created_at: chrono::Utc::now(),
         })
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         info!("✍️ Signing data with TPM key using BearDog crypto fallback: {}", key_id);
         match beardog_security::crypto_utils::BearDogCrypto::generate_ed25519_keypair() {
@@ -80,12 +80,12 @@ impl UniversalHsmProvider for TpmProvider {
         key_id: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
         info!("🔍 Verifying TPM signature using BearDog crypto fallback: {}", key_id);
 
         Ok(!signature.is_empty() && signature.len() >= 64 && !data.is_empty())
-    async fn get_human_entropy_capabilities(&self) -> BearDogResult<HumanEntropyCapabilities> {
+    async fn get_human_entropy_capabilities(&self) -> Result<HumanEntropyCapabilities, BearDogError> {
         Ok(HumanEntropyCapabilities {
             supports_ephemeral_seeds: false,
             collection_methods: Vec::new(),
@@ -98,19 +98,19 @@ impl UniversalHsmProvider for TpmProvider {
     async fn collect_human_entropy(
         _method: &HumanEntropyMethod,
         _bits: u32,
-    ) -> BearDogResult<HumanEntropyData> {
+    ) -> Result<HumanEntropyData, BearDogError> {
         Err(BearDogError::NotSupported {
             feature: "`TPM` does not support human entropy collection".to_string(),
     async fn create_ephemeral_seed(
         _entropy: &HumanEntropyData,
         _seed_size: u32,
-    ) -> BearDogResult<EphemeralSeed> {
+    ) -> Result<EphemeralSeed, BearDogError> {
             feature: "`TPM` does not support ephemeral seed creation".to_string(),}
 
     fn get_provider_info(&self) -> ProviderInfo {
         self.provider_info.clone()}
 
-    async fn health_check(&self) -> BearDogResult<ProviderHealth> {
+    async fn health_check(&self) -> Result<ProviderHealth, BearDogError> {
 
         let is_available = Self::is_available().await.unwrap_or(false);
         Ok(ProviderHealth {
@@ -123,15 +123,15 @@ impl UniversalHsmProvider for TpmProvider {
             last_check: Utc::now(),
             response_time_ms: if is_available { Some(10.0) } else { None },
             capabilities_verified: is_available,
-    async fn get_hardware_attestation(&self) -> BearDogResult<Option<AttestationData>> {
+    async fn get_hardware_attestation(&self) -> Result<Option<AttestationData>, BearDogError>> {
 
         Ok(None) // Would return TPM attestation when implemented}
 
-    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
 
         Ok(Vec::new()) // Would return actual key list when implemented
-    async fn delete_key(&self, _key_id: &str) -> BearDogResult<()> {
+    async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
         Err(BearDogError::Unimplemented("TPM key deletion not yet implemented".to_string()))}
 
-    async fn get_key_metadata(&self, _key_id: &str) -> BearDogResult<KeyMetadata> {
+    async fn get_key_metadata(&self, _key_id: &str) -> Result<KeyMetadata, BearDogError> {
         Err(BearDogError::Unimplemented("TPM key metadata retrieval not yet implemented".to_string()))

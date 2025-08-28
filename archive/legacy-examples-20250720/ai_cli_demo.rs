@@ -7,7 +7,7 @@ use tracing::{info, error};
 
 use beardog_config::BearDogConfig;
 use beardog_core::BearDogCore;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AiResponse<T> {
@@ -87,7 +87,7 @@ pub struct PerformanceMetrics {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
     
@@ -470,7 +470,7 @@ async fn run_performance_benchmark(core: &BearDogCore) -> AiResponse<serde_json:
     }
 }
 
-async fn simulate_security_operation(op: &SecurityOpRequest) -> BearDogResult<serde_json::Value> {
+async fn simulate_security_operation(op: &SecurityOpRequest) -> Result<serde_json::Value, BearDogError> {
 
     tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
     

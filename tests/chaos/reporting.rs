@@ -2,9 +2,9 @@
 
 use super::models::*;
 use super::ChaosTestFramework;
-use beardog::BearDogResult;
+use beardog_errors::BearDogError;
 
-pub async fn generate_chaos_report(framework: &ChaosTestFramework, scenario_results: Vec<ScenarioResult>) -> BearDogResult<ChaosTestReport> {
+pub async fn generate_chaos_report(framework: &ChaosTestFramework, scenario_results: Vec<ScenarioResult>) -> Result<ChaosTestReport, BearDogError> {
     let metrics = framework.metrics_collector.get_metrics().await;
     
     let successful_scenarios = scenario_results.iter().filter(|r| r.success).count();

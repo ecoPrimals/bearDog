@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use uuid::Uuid;
 use crate::universal::vendor_adapter::{
     CapabilityHandler, UniversalVendorRequest, UniversalVendorResponse,
@@ -18,18 +18,8 @@ pub struct UniversalRequestRouter {
     router_id: Uuid,
 }
 
-#[derive(Debug, Clone)]
-pub struct RouterConfig {
-
-    pub default_strategy: String,
-
-    pub enable_load_balancing: bool,
-
-    pub enable_circuit_breakers: bool,
-
-    pub circuit_breaker_failure_threshold: u32,
-
-    pub circuit_breaker_timeout_seconds: u64,}
+// UNIFIED: Use canonical RouterConfig
+pub use beardog_types::canonical::configuration::RouterConfig;
 
 impl Default for RouterConfig {}
 
@@ -44,7 +34,7 @@ impl Default for RouterConfig {}
     }
 impl UniversalRequestRouter {
 
-    pub async fn new(config: RouterConfig) -> BearDogResult<Self> {
+    pub async fn new(config: RouterConfig) -> Result<Self, BearDogError> {
         let router_id = Uuid::new_v4();
         tracing::info!("🎯 Creating Universal Request Router: {}", router_id);
 
@@ -55,7 +45,7 @@ impl UniversalRequestRouter {
             router_id,
         })
 
-    fn create_routing_strategy(config: &RouterConfig) -> BearDogResult<Box<dyn RoutingStrategy>> {
+    fn create_routing_strategy(config: &RouterConfig) -> Result<Box<dyn RoutingStrategy, BearDogError>> {
         let base_strategy: Box<dyn RoutingStrategy> = match config.default_strategy.as_str() {
             "performance" => Box::new(PerformanceFirstRouting::new("performance".to_string())),
             "multi_criteria" => Box::new(MultiCriteriaRouting::default()),
@@ -101,7 +91,7 @@ impl UniversalRequestRouter {
         &self,
         request: &UniversalVendorRequest,
         available_handlers: &[(Box<dyn CapabilityHandler>, f64)], // (handler, confidence)
-    ) -> BearDogResult<Option<usize>> {
+    ) -> Result<Option<usize>, BearDogError>> {
         if available_handlers.is_empty() {
             tracing::debug!(
                 "🎯 No handlers available for request {}",
@@ -129,7 +119,7 @@ impl UniversalRequestRouter {
     pub async fn update_with_result(
         handler_id: Uuid,
         response: Result<&UniversalVendorResponse, &str>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let (success, response_time_ms, error) = match response {
             Ok(resp) => (true, resp.performance.processing_time_ms, None),
             Err(err) => (false, 0, Some(err)),
@@ -141,7 +131,7 @@ impl UniversalRequestRouter {
             handler_id
         Ok(())
 
-    pub async fn get_statistics(&self) -> BearDogResult<RouterStatistics> {
+    pub async fn get_statistics(&self) -> Result<RouterStatistics, BearDogError> {
         let strategy_stats = self.primary_strategy.get_statistics().await?;
         Ok(RouterStatistics {
             router_id: self.router_id,

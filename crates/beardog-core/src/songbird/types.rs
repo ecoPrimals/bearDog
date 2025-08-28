@@ -38,6 +38,7 @@ pub struct RegistrationInfo {
     pub health_check_config: Option<HealthCheckConfig>,
 
     pub tags: Vec<String>,
+}
 
 pub use beardog_types::canonical::monitoring::HealthCheckConfig;
 
@@ -54,6 +55,7 @@ pub struct DiscoveredService {
     pub version: Option<String>,
 
     pub discovered_at: chrono::DateTime<chrono::Utc>,
+}
 
 pub struct ServiceMeshCapability {
 
@@ -62,6 +64,7 @@ pub struct ServiceMeshCapability {
     pub description: Option<String>,
 
     pub parameters: HashMap<String, serde_json::Value>,
+}
 
 pub struct ServiceRegistrationRequest {
 
@@ -69,6 +72,7 @@ pub struct ServiceRegistrationRequest {
     pub health_check: Option<HealthCheckConfig>,
 
     pub ttl_seconds: Option<u64>,
+}
 
 pub struct ServiceLookupRequest {
 
@@ -81,12 +85,14 @@ pub struct ServiceLookupRequest {
     pub health_filter: Option<ServiceHealth>,
 
     pub limit: Option<u32>,
+}
 
 pub struct ServiceUpdateRequest {
 
     pub tags: Option<Vec<String>>,
 
     pub metadata: Option<HashMap<String, String>>,
+}
 
 pub struct ServiceMeshResult<T> {
 
@@ -99,6 +105,7 @@ pub struct ServiceMeshResult<T> {
     pub timestamp: chrono::DateTime<chrono::Utc>,
 
     pub operation_id: Uuid,
+}
 
 pub struct ServiceMeshStats {
 
@@ -112,10 +119,10 @@ pub struct ServiceMeshStats {
 
     pub requests_per_second: f64,
 
-    pub avg_response_time_ms: f64,}
+    pub avg_response_time_ms: f64,
+}
 
-impl Default for ServiceMeshInfo {}
-
+impl Default for ServiceMeshInfo {
     fn default() -> Self {
         Self {
             name: "Unknown".to_string(),
@@ -130,7 +137,8 @@ impl Default for ServiceMeshInfo {}
                 error_message: Some("Unknown status".to_string()),
             },
             last_health_check: None,
-            metadata: ahash::HashMap::default(),
+            metadata: std::collections::HashMap::default(),
             priority: 0,
         }
     }
+}

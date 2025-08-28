@@ -5,7 +5,7 @@ use crate::api::zero_cost_api::{
     ZeroCostTokenBucketLimiter, ZeroCostApiBuilder, ApiConfig, ProductionApiState, DevelopmentApiState
 };
 use beardog_core::zero_cost_architecture::{ZeroCost`BearDog`, examples as core_examples};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use axum::{
     extract::{Request, State},
     http::{HeaderValue, StatusCode},
@@ -38,7 +38,7 @@ where
         }
     }
 
-    pub async fn start(self) -> BearDogResult<()> {
+    pub async fn start(self) -> Result<(), BearDogError> {
         info!("🚀 Starting Zero-Cost `BearDog` API Server on {}", self.bind_address);
         let router = self.create_zero_cost_router();
         let listener = TcpListener::bind(&self.bind_address)

@@ -38,7 +38,7 @@ pub mod registry {};
 
     pub const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(30);
 
-    pub const HEALTH_CHECK_INTERVAL: Duration = Duration::from_secs(60);
+    pub use crate::constants::unified::HEALTH_CHECK_INTERVAL;
 
     pub const DISCOVERY_INTERVAL: Duration = Duration::from_secs(120); // 2 minutes
 

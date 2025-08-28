@@ -16,7 +16,7 @@ pub use trace_collector::*;
 pub use autonomous_healer::*;
 pub use dashboard::*;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -40,7 +40,7 @@ pub struct AdvancedObservabilityEngine {
 
 impl AdvancedObservabilityEngine {
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             metric_collector: Arc::new(RealTimeMetricCollector::new()?),
             analytics_processor: Arc::new(AnalyticsProcessor::new()?),
@@ -52,7 +52,7 @@ impl AdvancedObservabilityEngine {
         })
     }
 
-    pub async fn initialize(&self) -> BearDogResult<()> {
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
 
         let tasks = vec![
             self.metric_collector.initialize(),
@@ -71,7 +71,7 @@ impl AdvancedObservabilityEngine {
         Ok(())
     }
 
-    pub async fn start(&self) -> BearDogResult<()> {
+    pub async fn start(&self) -> Result<(), BearDogError> {
 
         self.metric_collector.start().await?;
         self.analytics_processor.start().await?;
@@ -84,7 +84,7 @@ impl AdvancedObservabilityEngine {
         Ok(())
     }
 
-    pub async fn health_status(&self) -> BearDogResult<ObservabilityHealthStatus> {
+    pub async fn health_status(&self) -> Result<ObservabilityHealthStatus, BearDogError> {
         Ok(ObservabilityHealthStatus {
             metric_collector_healthy: self.metric_collector.is_healthy().await?,
             analytics_healthy: self.analytics_processor.is_healthy().await?,
@@ -96,7 +96,7 @@ impl AdvancedObservabilityEngine {
         })
     }
 
-    pub async fn shutdown(&self) -> BearDogResult<()> {
+    pub async fn shutdown(&self) -> Result<(), BearDogError> {
 
         self.dashboard_engine.shutdown().await?;
         self.autonomous_healer.shutdown().await?;

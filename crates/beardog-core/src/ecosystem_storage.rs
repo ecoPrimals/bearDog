@@ -1,7 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
-use beardog_errors::idiomatic::SystemResult;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -120,21 +119,21 @@ pub trait EcosystemStorage: Send + Sync {
         key: &str,
         data: Vec<u8>,
         metadata: HashMap<&str, &str>,
-    ) -> BearDogResult<StorageOperationResult>;
+    ) -> Result<StorageOperationResult, BearDogError>;
 
-    async fn retrieve_data(&self, key: &str) -> BearDogResult<Option<Vec<u8>>>;
+    async fn retrieve_data(&self, key: &str) -> Result<Option<Vec<u8>, BearDogError>>;
 
-    async fn delete_data(&self, key: &str) -> BearDogResult<StorageOperationResult>;
+    async fn delete_data(&self, key: &str) -> Result<StorageOperationResult, BearDogError>;
 
-    async fn list_keys(&self) -> BearDogResult<Vec<String>>;
+    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>;
 
-    async fn get_statistics(&self) -> BearDogResult<StorageStatistics>;
+    async fn get_statistics(&self) -> Result<StorageStatistics, BearDogError>;
 
-    async fn create_snapshot(&self, name: &str) -> BearDogResult<StorageOperationResult>;
+    async fn create_snapshot(&self, name: &str) -> Result<StorageOperationResult, BearDogError>;
 
-    async fn restore_snapshot(&self, name: &str) -> BearDogResult<StorageOperationResult>;
+    async fn restore_snapshot(&self, name: &str) -> Result<StorageOperationResult, BearDogError>;
 
-    async fn cleanup(&self) -> BearDogResult<StorageOperationResult>;
+    async fn cleanup(&self) -> Result<StorageOperationResult, BearDogError>;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -160,7 +159,7 @@ pub struct FileSystemStorage {
 
 impl FileSystemStorage {
 
-    pub fn new(config: EcosystemStorageConfig) -> BearDogResult<Self> {
+    pub fn new(config: EcosystemStorageConfig) -> Result<Self, BearDogError> {
 
         std::fs::create_dir_all(&config.storage_directory)
             .map_err(|e| BearDogError::system(format_args!("Failed to create storage directory: {}", e).to_string()))?;
@@ -186,7 +185,7 @@ impl EcosystemStorage for FileSystemStorage {
         key: &str,
         data: Vec<u8>,
         metadata: HashMap<&str, &str>,
-    ) -> BearDogResult<StorageOperationResult> {
+    ) -> Result<StorageOperationResult, BearDogError> {
         let start_time = std::time::Instant::now();
         let operation_id = Uuid::new_v4();
 
@@ -218,7 +217,7 @@ impl EcosystemStorage for FileSystemStorage {
         })
     }
 
-    async fn retrieve_data(&self, key: &str) -> BearDogResult<Option<Vec<u8>>> {
+    async fn retrieve_data(&self, key: &str) -> Result<Option<Vec<u8>, BearDogError>> {
         let data_path = self.get_file_path(key);
         
         if !data_path.exists() {
@@ -232,7 +231,7 @@ impl EcosystemStorage for FileSystemStorage {
         Ok(Some(data))
     }
 
-    async fn delete_data(&self, key: &str) -> BearDogResult<StorageOperationResult> {
+    async fn delete_data(&self, key: &str) -> Result<StorageOperationResult, BearDogError> {
         let start_time = std::time::Instant::now();
         let operation_id = Uuid::new_v4();
 
@@ -267,12 +266,12 @@ impl EcosystemStorage for FileSystemStorage {
         })
     }
 
-    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+    async fn list_keys(&self) -> Result<Vec<String>, BearDogError> {
         let store = self.metadata_store.read().await;
         Ok(store.keys().cloned().collect())
     }
 
-    async fn get_statistics(&self) -> BearDogResult<StorageStatistics> {
+    async fn get_statistics(&self) -> Result<StorageStatistics, BearDogError> {
         let used_space = self.calculate_used_space().await?;
         let object_count = self.metadata_store.read().await.len() as u64;
 
@@ -286,7 +285,7 @@ impl EcosystemStorage for FileSystemStorage {
         })
     }
 
-    async fn create_snapshot(&self, name: &str) -> BearDogResult<StorageOperationResult> {
+    async fn create_snapshot(&self, name: &str) -> Result<StorageOperationResult, BearDogError> {
         let start_time = std::time::Instant::now();
         let operation_id = Uuid::new_v4();
 
@@ -303,7 +302,7 @@ impl EcosystemStorage for FileSystemStorage {
         })
     }
 
-    async fn restore_snapshot(&self, name: &str) -> BearDogResult<StorageOperationResult> {
+    async fn restore_snapshot(&self, name: &str) -> Result<StorageOperationResult, BearDogError> {
         let start_time = std::time::Instant::now();
         let operation_id = Uuid::new_v4();
 
@@ -320,7 +319,7 @@ impl EcosystemStorage for FileSystemStorage {
         })
     }
 
-    async fn cleanup(&self) -> BearDogResult<StorageOperationResult> {
+    async fn cleanup(&self) -> Result<StorageOperationResult, BearDogError> {
         let start_time = std::time::Instant::now();
         let operation_id = Uuid::new_v4();
 
@@ -340,7 +339,7 @@ impl EcosystemStorage for FileSystemStorage {
 
 impl FileSystemStorage {
 
-    async fn calculate_used_space(&self) -> BearDogResult<u64> {
+    async fn calculate_used_space(&self) -> Result<u64, BearDogError> {
         let mut total_size = 0u64;
         
         let mut dir = tokio::fs::read_dir(&self.config.storage_directory)

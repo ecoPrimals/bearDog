@@ -1,7 +1,7 @@
 
 
 use crate::common::{TestResult, TestContext, TestSummary};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde_json::{json, Value as JsonValue};
 use std::{
     collections::{HashMap, VecDeque},

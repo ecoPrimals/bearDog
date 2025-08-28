@@ -3,12 +3,11 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::improved_results::OperationContext;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum HealthStatus {
-
+// UNIFIED: Use canonical HealthStatus from beardog-types
+pub use beardog_types::canonical::HealthStatus;
     Healthy,
 
     Degraded,
@@ -250,7 +249,6 @@ pub struct AuditManager {
 
     events: std::sync::Arc<tokio::sync::RwLock<Vec<SecurityAuditEvent>>>,
 
-    #[allow(dead_code)] // Configuration for future audit features
     config: super::config_types::AuditConfig,}
 
 impl Default for AuditManager {}
@@ -268,7 +266,7 @@ impl AuditManager {}
     pub async fn log_event(
         &mut self,
         event: SecurityAuditEvent,
-    ) -> beardog_errors::BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         tracing::debug!("Logging audit event: {}", event.event_id);
         let mut events = self.events.write().await;
         events.push(event);
@@ -281,7 +279,7 @@ impl AuditManager {}
         user_id: &str,
         from_time: Option<chrono::DateTime<chrono::Utc>>,
         to_time: Option<chrono::DateTime<chrono::Utc>>,
-    ) -> beardog_errors::BearDogResult<Vec<SecurityAuditEvent>> {
+    ) -> Result<Vec<SecurityAuditEvent>, BearDogError>> {
         tracing::debug!(
             "Retrieving audit events for user {} from {:?} to {:?}",
             user_id,
@@ -318,7 +316,7 @@ impl AuditManager {}
             from_time
     pub async fn cleanup_old_events(
         cutoff: chrono::DateTime<chrono::Utc>,
-    ) -> beardog_errors::BearDogResult<u32> {
+    ) -> Result<u32, BearDogError> {
         tracing::info!("Cleaning up audit events before {:?}", cutoff);
         let initial_count = events.len();
 
@@ -341,7 +339,7 @@ impl AuditManager {}
             removed_count,
             events.len()
         Ok(removed_count as u32)
-    pub async fn compact_logs(&self) -> beardog_errors::BearDogResult<u32> {
+    pub async fn compact_logs(&self) -> Result<u32, BearDogError> {
         tracing::info!("Starting audit log compaction");
         if initial_count == 0 {
             return Ok(0);

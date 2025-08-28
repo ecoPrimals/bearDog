@@ -9,7 +9,7 @@ use beardog_workflows::workflows::notification::NotificationEngine;
 use beardog_workflows::workflows::types::{
     NotificationConfig, NotificationMessage, NotificationResult, NotificationStatus,
 };
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 struct MockWebhookServer {
     port: u16,
@@ -37,7 +37,7 @@ impl MockWebhookServer {
 }
 
 #[tokio::test]
-async fn test_webhook_notification_success() -> BearDogResult<()> {
+async fn test_webhook_notification_success() -> Result<(), BearDogError> {
     let config = create_webhook_config();
     let engine = NotificationEngine::new(config);
     
@@ -68,7 +68,7 @@ async fn test_webhook_notification_success() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_webhook_notification_with_signature() -> BearDogResult<()> {
+async fn test_webhook_notification_with_signature() -> Result<(), BearDogError> {
     let config = create_webhook_config_with_secret();
     let engine = NotificationEngine::new(config);
     
@@ -97,7 +97,7 @@ async fn test_webhook_notification_with_signature() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_webhook_retry_mechanism() -> BearDogResult<()> {
+async fn test_webhook_retry_mechanism() -> Result<(), BearDogError> {
     let config = create_webhook_config_with_invalid_url();
     let engine = NotificationEngine::new(config);
     
@@ -124,7 +124,7 @@ async fn test_webhook_retry_mechanism() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_email_notification_configuration() -> BearDogResult<()> {
+async fn test_email_notification_configuration() -> Result<(), BearDogError> {
     let config = create_email_config();
     let engine = NotificationEngine::new(config);
     
@@ -154,7 +154,7 @@ async fn test_email_notification_configuration() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_sms_notification_twilio() -> BearDogResult<()> {
+async fn test_sms_notification_twilio() -> Result<(), BearDogError> {
     let config = create_sms_config_twilio();
     let engine = NotificationEngine::new(config);
     
@@ -184,7 +184,7 @@ async fn test_sms_notification_twilio() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_sms_notification_aws_sns() -> BearDogResult<()> {
+async fn test_sms_notification_aws_sns() -> Result<(), BearDogError> {
     let config = create_sms_config_aws_sns();
     let engine = NotificationEngine::new(config);
     
@@ -214,7 +214,7 @@ async fn test_sms_notification_aws_sns() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_slack_notification() -> BearDogResult<()> {
+async fn test_slack_notification() -> Result<(), BearDogError> {
     let config = create_slack_config();
     let engine = NotificationEngine::new(config);
     
@@ -245,7 +245,7 @@ async fn test_slack_notification() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_teams_notification() -> BearDogResult<()> {
+async fn test_teams_notification() -> Result<(), BearDogError> {
     let config = create_teams_config();
     let engine = NotificationEngine::new(config);
     
@@ -276,7 +276,7 @@ async fn test_teams_notification() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_multi_channel_notification() -> BearDogResult<()> {
+async fn test_multi_channel_notification() -> Result<(), BearDogError> {
     let config = create_multi_channel_config();
     let engine = NotificationEngine::new(config);
     
@@ -312,7 +312,7 @@ async fn test_multi_channel_notification() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_notification_filtering() -> BearDogResult<()> {
+async fn test_notification_filtering() -> Result<(), BearDogError> {
     let config = create_filtered_config();
     let engine = NotificationEngine::new(config);
 
@@ -362,7 +362,7 @@ async fn test_notification_filtering() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_notification_rate_limiting() -> BearDogResult<()> {
+async fn test_notification_rate_limiting() -> Result<(), BearDogError> {
     let config = create_rate_limited_config();
     let engine = NotificationEngine::new(config);
     
@@ -396,7 +396,7 @@ async fn test_notification_rate_limiting() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_notification_template_rendering() -> BearDogResult<()> {
+async fn test_notification_template_rendering() -> Result<(), BearDogError> {
     let config = create_template_config();
     let engine = NotificationEngine::new(config);
     
@@ -427,7 +427,7 @@ async fn test_notification_template_rendering() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_notification_error_handling() -> BearDogResult<()> {
+async fn test_notification_error_handling() -> Result<(), BearDogError> {
 
     let config = create_malformed_config();
     let engine = NotificationEngine::new(config);
@@ -458,7 +458,7 @@ async fn test_notification_error_handling() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_notification_metrics_collection() -> BearDogResult<()> {
+async fn test_notification_metrics_collection() -> Result<(), BearDogError> {
     let config = create_metrics_config();
     let engine = NotificationEngine::new(config);
     
@@ -491,7 +491,7 @@ async fn test_notification_metrics_collection() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_concurrent_notifications() -> BearDogResult<()> {
+async fn test_concurrent_notifications() -> Result<(), BearDogError> {
     let config = create_concurrent_config();
     let engine = std::sync::Arc::new(NotificationEngine::new(config));
 

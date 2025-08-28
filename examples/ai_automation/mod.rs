@@ -3,7 +3,7 @@
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 pub mod standalone_ai;
 pub mod network_effects;
@@ -136,7 +136,7 @@ pub struct AIInsight {
     pub metadata: std::collections::HashMap<String, serde_json::Value>,
 }
 
-pub async fn run_ai_automation() -> BearDogResult<()> {
+pub async fn run_ai_automation() -> Result<(), BearDogError> {
     let cli = Cli::parse();
 
     let ai_core = standalone_ai::initialize_ai_core(&cli.config).await?;
@@ -209,7 +209,7 @@ async fn run_hybrid_ai_operations(
     standalone_file: &PathBuf,
     network_file: &PathBuf,
     output_file: &PathBuf,
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
 
     let standalone_result = security_automation::run_standalone_security(
         ai_core,

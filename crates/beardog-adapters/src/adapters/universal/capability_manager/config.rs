@@ -1,6 +1,6 @@
 
 
-pub use beardog_types::config::manager::CapabilityManagerConfig;
+pub use beardog_types::canonical::configuration::consolidated::ConfigManagerConfig as CapabilityManagerConfig;
 
-pub use beardog_types::config::manager::ManagerConfig;
+pub use beardog_types::canonical::configuration::consolidated::ConfigManagerConfig as ManagerConfig;
 

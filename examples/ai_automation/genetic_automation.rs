@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::fs;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use crate::ai_automation::standalone_ai::{BearDogAICore, AIInsight};
 use crate::ai_automation::network_effects::SquirrelNetwork;
 
@@ -95,7 +95,7 @@ pub async fn run_ai_genetics(
     requests_file: &PathBuf,
     ai_optimize: bool,
     output_file: &PathBuf,
-) -> BearDogResult<Vec<GeneticResult>> {
+) -> Result<Vec<GeneticResult, BearDogError>> {
 
     let requests_data = fs::read_to_string(requests_file).await?;
     let requests: Vec<GeneticSpawnRequest> = serde_json::from_str(&requests_data)?;
@@ -136,7 +136,7 @@ async fn execute_standalone_genetics(
     ai_core: &BearDogAICore,
     request: &GeneticSpawnRequest,
     ai_optimize: bool,
-) -> BearDogResult<GeneticResult> {
+) -> Result<GeneticResult, BearDogError> {
     println!("🔬 Running standalone genetic evolution: {:?}", request.spawn_purpose);
 
     let optimized_params = if ai_optimize {
@@ -170,7 +170,7 @@ async fn execute_network_enhanced_genetics(
     network: &SquirrelNetwork,
     request: &GeneticSpawnRequest,
     ai_optimize: bool,
-) -> BearDogResult<GeneticResult> {
+) -> Result<GeneticResult, BearDogError> {
     println!("🌐 Running network-enhanced genetic evolution: {:?}", request.spawn_purpose);
 
     let distributed_evolution = distribute_genetic_evolution(
@@ -209,7 +209,7 @@ async fn execute_network_enhanced_genetics(
 async fn optimize_genetic_parameters_with_ai(
     ai_core: &BearDogAICore,
     base_params: &GeneticParameters,
-) -> BearDogResult<GeneticParameters> {
+) -> Result<GeneticParameters, BearDogError> {
 
     let fitness_predictor = &ai_core.genetic_enhancer.fitness_evaluator;
 
@@ -226,7 +226,7 @@ async fn optimize_genetic_parameters_with_ai(
 async fn run_genetic_evolution(
     purpose: &SpawnPurpose,
     params: &GeneticParameters,
-) -> BearDogResult<EvolutionaryResult> {
+) -> Result<EvolutionaryResult, BearDogError> {
 
     let base_fitness = match purpose {
         SpawnPurpose::SecurityOptimization => 0.85,
@@ -276,7 +276,7 @@ async fn generate_genetic_ai_insights(
     ai_core: &BearDogAICore,
     evolution_result: &EvolutionaryResult,
     _params: &GeneticParameters,
-) -> BearDogResult<Vec<AIInsight>> {
+) -> Result<Vec<AIInsight, BearDogError>> {
     let insights = vec![
         AIInsight {
             category: "Genetic Evolution".to_string(),
@@ -302,7 +302,7 @@ async fn distribute_genetic_evolution(
     _network: &SquirrelNetwork,
     purpose: &SpawnPurpose,
     params: &GeneticParameters,
-) -> BearDogResult<Vec<EvolutionaryResult>> {
+) -> Result<Vec<EvolutionaryResult, BearDogError>> {
 
     let mut results = Vec::new();
 
@@ -316,7 +316,7 @@ async fn distribute_genetic_evolution(
 
 async fn combine_distributed_genetic_results(
     results: Vec<EvolutionaryResult>
-) -> BearDogResult<EvolutionaryResult> {
+) -> Result<EvolutionaryResult, BearDogError> {
 
     let best_result = results.into_iter()
         .max_by(|a, b| a.fitness_score.partial_cmp(&b.fitness_score).map_err(|e| {
@@ -334,7 +334,7 @@ async fn combine_distributed_genetic_results(
 async fn generate_network_genetic_insights(
     _ai_core: &BearDogAICore,
     result: &EvolutionaryResult,
-) -> BearDogResult<Vec<AIInsight>> {
+) -> Result<Vec<AIInsight, BearDogError>> {
     Ok(vec![
         AIInsight {
             category: "Network-Enhanced Genetics".to_string(),

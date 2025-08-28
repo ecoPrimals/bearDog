@@ -2,7 +2,7 @@
 
 use beardog_config::Config;
 use beardog_core::BearDogCore;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_tunnel::hsm::android_strongbox::AndroidStrongBoxHsm;
 use beardog_tunnel::hsm::types::*;
 use beardog_traits::canonical::HsmProvider;
@@ -188,7 +188,7 @@ pub struct SecurityCapabilities {
 
 impl MobileBiomeNode {
 
-    pub async fn new(config: MobileBiomeConfig) -> BearDogResult<Self> {
+    pub async fn new(config: MobileBiomeConfig) -> Result<Self, BearDogError> {
         println!("🌱 Initializing BiomeOS Mobile Node");
 
         let beardog_config = Config::default();
@@ -212,7 +212,7 @@ impl MobileBiomeNode {
         Ok(node)
     }
 
-    async fn initialize_hsm_provider(config: &MobileBiomeConfig) -> BearDogResult<Arc<dyn HsmProvider>> {
+    async fn initialize_hsm_provider(config: &MobileBiomeConfig) -> Result<Arc<dyn HsmProvider, BearDogError>> {
         match &config.hsm_integration {
             HsmIntegrationType::StrongBox { implementation, attestation_support } => {
                 println!("🔐 Initializing StrongBox HSM: {}", implementation);
@@ -245,7 +245,7 @@ impl MobileBiomeNode {
         }
     }
 
-    async fn detect_capabilities(config: &MobileBiomeConfig) -> BearDogResult<MobileCapabilities> {
+    async fn detect_capabilities(config: &MobileBiomeConfig) -> Result<MobileCapabilities, BearDogError> {
         println!("📱 Detecting device capabilities");
 
         let capabilities = match &config.device_type {
@@ -314,7 +314,7 @@ impl MobileBiomeNode {
         Ok(capabilities)
     }
 
-    pub async fn register_with_ecosystem(&self) -> BearDogResult<()> {
+    pub async fn register_with_ecosystem(&self) -> Result<(), BearDogError> {
         println!("🌐 Registering mobile node with BiomeOS ecosystem");
 
         let registration_key = self.generate_registration_key().await?;
@@ -339,7 +339,7 @@ impl MobileBiomeNode {
         Ok(())
     }
 
-    async fn generate_registration_key(&self) -> BearDogResult<HsmKey> {
+    async fn generate_registration_key(&self) -> Result<HsmKey, BearDogError> {
         println!("🔑 Generating hardware-backed registration key");
         
         let key_request = GenerateKeyRequest {
@@ -373,14 +373,14 @@ impl MobileBiomeNode {
         Ok(key)
     }
 
-    pub async fn start_security_services(&self) -> BearDogResult<()> {
+    pub async fn start_security_services(&self) -> Result<(), BearDogError> {
         println!("🛡️ Starting mobile security services");
 
         println!("🔐 Security services started");
         Ok(())
     }
 
-    pub async fn test_biometric_auth(&self) -> BearDogResult<()> {
+    pub async fn test_biometric_auth(&self) -> Result<(), BearDogError> {
         println!("👆 Testing biometric authentication");
 
         let test_key = self.generate_biometric_key().await?;
@@ -398,7 +398,7 @@ impl MobileBiomeNode {
         Ok(())
     }
 
-    async fn generate_biometric_key(&self) -> BearDogResult<HsmKey> {
+    async fn generate_biometric_key(&self) -> Result<HsmKey, BearDogError> {
         let key_request = GenerateKeyRequest {
             key_id: format_args!("biometric_test_{}", Uuid::new_v4().to_string()),
             key_type: KeyType::EccP256,
@@ -423,7 +423,7 @@ impl MobileBiomeNode {
         self.hsm_provider.generate_key(key_request).await
     }
 
-    pub async fn demonstrate_cross_primal_communication(&self) -> BearDogResult<()> {
+    pub async fn demonstrate_cross_primal_communication(&self) -> Result<(), BearDogError> {
         println!("🌐 Demonstrating cross-primal communication");
 
         let comm_key = self.generate_communication_key().await?;
@@ -469,7 +469,7 @@ impl MobileBiomeNode {
         Ok(())
     }
 
-    async fn generate_communication_key(&self) -> BearDogResult<HsmKey> {
+    async fn generate_communication_key(&self) -> Result<HsmKey, BearDogError> {
         let key_request = GenerateKeyRequest {
             key_id: format_args!("comm_key_{}", Uuid::new_v4().to_string()),
             key_type: KeyType::EccP256,
@@ -494,7 +494,7 @@ impl MobileBiomeNode {
         self.hsm_provider.generate_key(key_request).await
     }
 
-    pub async fn get_status(&self) -> BearDogResult<serde_json::Value> {
+    pub async fn get_status(&self) -> Result<serde_json::Value, BearDogError> {
         let hsm_info = self.hsm_provider.get_info().await?;
         
         Ok(serde_json::json!({
@@ -517,7 +517,7 @@ impl MobileBiomeNode {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
     println!("🚀 BiomeOS Mobile Integration Demo");
     println!("Device: Pixel 8 + GrapheneOS + BearDog");
     println!("========================================\n");

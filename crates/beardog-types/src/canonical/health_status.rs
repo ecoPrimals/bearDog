@@ -1,10 +1,7 @@
-
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum HealthStatus {
-
     Healthy,
 
     Degraded,
@@ -47,15 +44,25 @@ impl std::fmt::Display for HealthStatus {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ComponentStatus {
+    Starting,
+    Running,
+    Stopping,
     Active,
     Inactive,
     Failed,
     Maintenance,
+    Error(String),
 }
 
 impl Default for ComponentStatus {
     fn default() -> Self {
         Self::Inactive
+    }
+}
+
+impl ComponentStatus {
+    pub fn healthy(&self) -> bool {
+        matches!(self, ComponentStatus::Running | ComponentStatus::Active)
     }
 }
 
@@ -103,4 +110,3 @@ impl Default for KeyStatus {
         Self::PendingActivation
     }
 }
-

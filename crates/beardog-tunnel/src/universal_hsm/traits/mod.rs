@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::KeyType;
 use beardog_types::canonical::hsm::keys::KeyMetadata;
 
@@ -186,14 +186,14 @@ impl<T> OperationResult<T> {
         _provider_id: &str,
         _operation_type: &str,
         _started_at: DateTime<Utc>,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         Err(BearDogError::Hsm(error))
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]}
 
-    fn test_provider_type_display() -> beardog_errors::BearDogResult<()> {
+    fn test_provider_type_display() -> Result<(), BearDogError> {
         assert_eq!(
             ProviderType::MobileHardware.to_string(),
             "Mobile Hardware Security"
@@ -202,7 +202,7 @@ mod tests {
             "Desktop Hardware Security"
         assert_eq!(ProviderType::Software.to_string(), "Software HSM");
         Ok(())
-    fn test_provider_info_creation() -> beardog_errors::BearDogResult<()> {
+    fn test_provider_info_creation() -> Result<(), BearDogError> {
         let info = ProviderInfo {
             provider_id: "test_provider".to_string(),
             name: "Test Provider".to_string(),
@@ -219,7 +219,7 @@ mod tests {
         };
         assert_eq!(info.name, "Test Provider");
         assert_eq!(info.provider_type, ProviderType::Software);
-    fn test_operation_result_success() -> beardog_errors::BearDogResult<()> {
+    fn test_operation_result_success() -> Result<(), BearDogError> {
         let started_at = Utc::now();
         let result = OperationResult::success(
             "test_data".to_string(),

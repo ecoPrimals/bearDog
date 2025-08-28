@@ -1,7 +1,7 @@
 
 
 use super::super::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::path::Path;
 use tracing::{debug, info, warn};
 
@@ -11,10 +11,10 @@ use crate::tunnel::hsm::types::HsmCapabilities;
 pub struct Pkcs11Discoverer;
 impl Pkcs11Discoverer {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn discover(&self, config: &DiscoveryConfig) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("🔍 Discovering PKCS#11 HSMs");
         let mut hsms = Vec::new();
 

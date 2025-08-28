@@ -19,8 +19,10 @@ pub async fn get_pci_compliance(
     )))
 }
 
-pub async fn audit_cardholder_data_handling(
-            "encryption_status": "ENCRYPTED",
-            "access_controls": "COMPLIANT",
-            "storage_compliance": "COMPLIANT"
-        60,
+pub async fn audit_cardholder_data_handling() -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "encryption_status": "ENCRYPTED",
+        "access_controls": "COMPLIANT",
+        "storage_compliance": "COMPLIANT"
+    }))))
+}

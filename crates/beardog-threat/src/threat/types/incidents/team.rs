@@ -1,11 +1,8 @@
-
-
-use serde::{Deserialize, Serialize};
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IncidentTeamMember {
-
     pub member_id: String,
 
     pub name: String,
@@ -39,9 +36,9 @@ pub enum IncidentRole {
     MalwareAnalyst,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum MemberAvailability {
-
+    #[default]
     Available,
 
     Busy,
@@ -49,12 +46,6 @@ pub enum MemberAvailability {
     Unavailable,
 
     OnCall,
-}
-
-impl Default for MemberAvailability {
-    fn default() -> Self {
-        MemberAvailability::Available
-    }
 }
 
 impl Default for IncidentTeamMember {
@@ -73,7 +64,6 @@ impl Default for IncidentTeamMember {
 }
 
 impl IncidentTeamMember {
-
     pub fn new(member_id: &str, name: &str, role: IncidentRole, contact_info: &str) -> Self {
         Self {
             member_id: member_id.to_string(),
@@ -87,7 +77,13 @@ impl IncidentTeamMember {
         }
     }
 
-    pub fn with_availability(member_id: &str, name: &str, role: IncidentRole, contact_info: &str, available: bool) -> Self {
+    pub fn with_availability(
+        member_id: &str,
+        name: &str,
+        role: IncidentRole,
+        contact_info: &str,
+        available: bool,
+    ) -> Self {
         Self {
             member_id: member_id.to_string(),
             name: name.to_string(),
@@ -95,7 +91,11 @@ impl IncidentTeamMember {
             contact_info: contact_info.to_string(),
             available,
             assigned_incidents: Vec::new(),
-            availability: if available { MemberAvailability::Available } else { MemberAvailability::Busy },
+            availability: if available {
+                MemberAvailability::Available
+            } else {
+                MemberAvailability::Busy
+            },
             last_active: Utc::now(),
         }
     }
@@ -107,8 +107,16 @@ impl IncidentTeamMember {
         }
     }
 
+    pub fn assign_incident(&mut self, incident_id: String) {
+        self.assign_to_incident(&incident_id);
+    }
+
     pub fn unassign_incident(&mut self, incident_id: &str) -> bool {
-        if let Some(pos) = self.assigned_incidents.iter().position(|x| x == incident_id) {
+        if let Some(pos) = self
+            .assigned_incidents
+            .iter()
+            .position(|x| x == incident_id)
+        {
             self.assigned_incidents.remove(pos);
             self.last_active = Utc::now();
             true
@@ -121,8 +129,7 @@ impl IncidentTeamMember {
         self.assigned_incidents.len() > 3
     }
 
-    pub fn update_role(&mut self, new_role: &str) {
-
+    pub fn update_role(&mut self, _new_role: &str) {
         self.last_active = Utc::now();
     }
 

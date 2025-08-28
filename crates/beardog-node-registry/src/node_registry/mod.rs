@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 pub mod bootstrap;
 
@@ -29,16 +29,16 @@ pub use types::{
     NodeType, NodeTypeRegistry, node_types,
 
 pub use core::BearDogNodeRegistry as InMemoryNodeRegistry;
-use crate::BearDogResult;
+use beardog_errors::BearDogError;
 
-pub async fn create_default_registry() -> BearDogResult<BearDogNodeRegistry> {
+pub async fn create_default_registry() -> Result<BearDogNodeRegistry, BearDogError> {
     BearDogNodeRegistry::new_default().await
 }
 
-pub async fn create_registry(config: RegistryConfig) -> BearDogResult<BearDogNodeRegistry> {
+pub async fn create_registry(config: RegistryConfig) -> Result<BearDogNodeRegistry, BearDogError> {
     BearDogNodeRegistry::new(config).await
 
-pub async fn create_phonebook_service() -> BearDogResult<PhonebookService> {
+pub async fn create_phonebook_service() -> Result<PhonebookService, BearDogError> {
     let config = PhonebookConfig {
         enabled: true,
         ..Default::default()
@@ -47,11 +47,11 @@ pub async fn create_phonebook_service() -> BearDogResult<PhonebookService> {
 
 pub async fn create_phonebook_service_with_config(
     config: PhonebookConfig,
-) -> BearDogResult<PhonebookService> {
+) -> Result<PhonebookService, BearDogError> {
 
 #[cfg(test)]}
 
-pub async fn create_test_registry() -> BearDogResult<BearDogNodeRegistry> {
+pub async fn create_test_registry() -> Result<BearDogNodeRegistry, BearDogError> {
     let config = RegistryConfig {
         max_nodes: 100,
         federation: FederationConfig {
@@ -61,11 +61,11 @@ pub async fn create_test_registry() -> BearDogResult<BearDogNodeRegistry> {
         phonebook: PhonebookConfig {
             enable_phonebook_service: false,
 
-pub async fn create_federation_test_registry() -> BearDogResult<BearDogNodeRegistry> {
+pub async fn create_federation_test_registry() -> Result<BearDogNodeRegistry, BearDogError> {
             enable_federation: true,
             max_federated_registries: 5,
 
-pub async fn create_phonebook_test_registry() -> BearDogResult<BearDogNodeRegistry> {
+pub async fn create_phonebook_test_registry() -> Result<BearDogNodeRegistry, BearDogError> {
         max_nodes: 1000,
         node_type: node_types::PHONEBOOK.to_string(),
             max_federated_registries: 10,

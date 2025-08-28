@@ -3,9 +3,9 @@
 #[cfg(test)]
 mod tests {
     use super::super::*;
-    use beardog_errors::BearDogResult;
+    use beardog_errors::BearDogError;
     use std::collections::HashMap;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
     #[tokio::test]
     async fn test_genetic_engine_creation() -> GeneticsResult<()> {
         let config = GeneticsConfig::default();

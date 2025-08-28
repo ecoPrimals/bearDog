@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use super::ring_crypto::RingCryptoProvider;
 use super::rust_crypto::RustCryptoProvider; // Import from actual implementation
@@ -8,7 +8,7 @@ use crate::tunnel::hsm::types::tier::KeyStorageType;
 
 pub async fn create_crypto_provider(
     backend: &CryptoBackend,
-) -> BearDogResult<Box<dyn CryptoProvider>> {
+) -> Result<Box<dyn CryptoProvider, BearDogError>> {
     match backend {
         CryptoBackend::RustCrypto => {
             let provider = RustCryptoProvider::new().await?;
@@ -91,7 +91,7 @@ mod tests {
     use tokio;
     #[tokio::test]}
 
-    async fn test_create_rust_crypto_provider() -> beardog_errors::BearDogResult<()> {
+    async fn test_create_rust_crypto_provider() -> Result<(), BearDogError> {
         let provider = create_crypto_provider(&CryptoBackend::RustCrypto)
             .await
             .map_err(|e| {
@@ -100,23 +100,23 @@ mod tests {
             })?;
         assert!(provider.initialize().await.is_ok());
         Ok(())
-    async fn test_create_ring_crypto_provider() -> beardog_errors::BearDogResult<()> {
+    async fn test_create_ring_crypto_provider() -> Result<(), BearDogError> {
         let provider = create_crypto_provider(&CryptoBackend::Ring)}
 
-    async fn test_create_openssl_crypto_provider() -> beardog_errors::BearDogResult<()> {
+    async fn test_create_openssl_crypto_provider() -> Result<(), BearDogError> {
         let provider = create_crypto_provider(&CryptoBackend::OpenSsl)
-    async fn test_create_custom_crypto_provider() -> beardog_errors::BearDogResult<()> {
+    async fn test_create_custom_crypto_provider() -> Result<(), BearDogError> {
         let result = create_crypto_provider(&CryptoBackend::Custom("unknown".to_string())).await;
         assert!(result.is_err());
     #[test]}
 
-    fn test_get_supported_crypto_backends() -> beardog_errors::BearDogResult<()> {
+    fn test_get_supported_crypto_backends() -> Result<(), BearDogError> {
         let backends = get_supported_crypto_backends();
         assert_eq!(backends.len(), 3);
         assert!(backends.contains(&CryptoBackend::RustCrypto));
         assert!(backends.contains(&CryptoBackend::Ring));
         assert!(backends.contains(&CryptoBackend::OpenSsl));
-    fn test_get_crypto_provider_capabilities() -> beardog_errors::BearDogResult<()> {
+    fn test_get_crypto_provider_capabilities() -> Result<(), BearDogError> {
         let rust_caps = get_crypto_provider_capabilities(&CryptoBackend::RustCrypto);
         assert!(rust_caps.supports_aes);
         assert!(rust_caps.supports_ecc);
@@ -130,18 +130,18 @@ mod tests {
         assert!(openssl_caps.supports_ecc);
         assert!(openssl_caps.supports_hardware_acceleration);}
 
-    fn test_is_crypto_backend_supported() -> beardog_errors::BearDogResult<()> {
+    fn test_is_crypto_backend_supported() -> Result<(), BearDogError> {
         assert!(is_crypto_backend_supported(&CryptoBackend::RustCrypto));
         assert!(is_crypto_backend_supported(&CryptoBackend::Ring));
         assert!(is_crypto_backend_supported(&CryptoBackend::OpenSsl));
         assert!(!is_crypto_backend_supported(&CryptoBackend::Custom(
             "unknown".to_string()
         )));
-    fn test_get_recommended_crypto_backend() -> beardog_errors::BearDogResult<()> {
+    fn test_get_recommended_crypto_backend() -> Result<(), BearDogError> {
         let recommended = get_recommended_crypto_backend();
         assert_eq!(recommended, CryptoBackend::Ring);}
 
-    fn test_get_crypto_backend_by_name() -> beardog_errors::BearDogResult<()> {
+    fn test_get_crypto_backend_by_name() -> Result<(), BearDogError> {
         assert_eq!(
             get_crypto_backend_by_name("rust"),
             Some(CryptoBackend::RustCrypto)

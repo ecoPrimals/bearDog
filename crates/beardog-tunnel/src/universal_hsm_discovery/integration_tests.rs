@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 #[cfg(test)]
@@ -8,7 +9,7 @@ mod integration_tests {
     use tokio;
 
     #[tokio::test]
-    async fn test_complete_hsm_discovery_workflow() -> beardog_errors::BearDogResult<()> {
+    async fn test_complete_hsm_discovery_workflow() -> Result<(), BearDogError> {
         println!("🚀 Starting Universal HSM Discovery System Integration Test");
 
         let mut discovery = UniversalHsmDiscovery::new()
@@ -191,7 +192,7 @@ mod integration_tests {
         Ok(())
     }
 
-    async fn test_human_entropy_classification_pipeline() -> beardog_errors::BearDogResult<()> {
+    async fn test_human_entropy_classification_pipeline() -> Result<(), BearDogError> {
         println!("🧠 Testing Human Entropy Classification Pipeline");
         let classifier = human_entropy_classifier::HumanEntropyClassifier::new()
             .map_err(|e| BearDogError::internal(format_args!("Failed to create human entropy classifier: {:?}", e).to_string()))?;
@@ -239,7 +240,7 @@ mod integration_tests {
                     HsmTier::HumanEntropyPremium,
                     "Premium should recommend top tier"
 
-    async fn test_multi_hsm_operation_scenarios() -> beardog_errors::BearDogResult<()> {
+    async fn test_multi_hsm_operation_scenarios() -> Result<(), BearDogError> {
         println!("🚀 Testing Multi-HSM Operation Scenarios");
         let mut discovery =
             UniversalHsmDiscovery::new().map_err(|e| BearDogError::internal(format_args!("Failed to create discovery system: {:?}", e).to_string()))?;

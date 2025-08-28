@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::{error, info, warn};
 
@@ -46,7 +46,7 @@ struct StandaloneAdapter {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
 
@@ -65,7 +65,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn test_basic_adapter_functionality() -> BearDogResult<()> {
+async fn test_basic_adapter_functionality() -> Result<(), BearDogError> {
     info!("🔧 Test 1: Basic Adapter Functionality");
     info!("--------------------------------------");
 
@@ -104,7 +104,7 @@ async fn test_basic_adapter_functionality() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn test_provider_selection_logic() -> BearDogResult<()> {
+async fn test_provider_selection_logic() -> Result<(), BearDogError> {
     info!("\n🎯 Test 2: Provider Selection Logic");
     info!("-----------------------------------");
 
@@ -139,7 +139,7 @@ async fn test_provider_selection_logic() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn test_error_handling_and_fallbacks() -> BearDogResult<()> {
+async fn test_error_handling_and_fallbacks() -> Result<(), BearDogError> {
     info!("\n⚠️  Test 3: Error Handling and Fallbacks");
     info!("----------------------------------------");
 
@@ -194,7 +194,7 @@ async fn test_error_handling_and_fallbacks() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn test_performance_and_reliability() -> BearDogResult<()> {
+async fn test_performance_and_reliability() -> Result<(), BearDogError> {
     info!("\n📈 Test 4: Performance and Reliability");
     info!("--------------------------------------");
 
@@ -256,12 +256,12 @@ impl StandaloneAdapter {
         }
     }
 
-    async fn register_provider(&mut self, provider: AdapterProvider) -> BearDogResult<()> {
+    async fn register_provider(&mut self, provider: AdapterProvider) -> Result<(), BearDogError> {
         self.providers.push(provider);
         Ok(())
     }
 
-    async fn process_request(&mut self, request: &TestRequest) -> BearDogResult<TestResponse> {
+    async fn process_request(&mut self, request: &TestRequest) -> Result<TestResponse, BearDogError> {
         self.request_count += 1;
 
         let capable_providers = self
@@ -299,7 +299,7 @@ impl StandaloneAdapter {
     async fn find_capable_providers(
         &self,
         capability: &AdapterCapability,
-    ) -> BearDogResult<Vec<AdapterProvider>> {
+    ) -> Result<Vec<AdapterProvider, BearDogError>> {
         let capable = self
             .providers
             .iter()
@@ -369,7 +369,7 @@ fn create_test_providers() -> Vec<AdapterProvider> {
     ]
 }
 
-async fn create_configured_adapter() -> BearDogResult<StandaloneAdapter> {
+async fn create_configured_adapter() -> Result<StandaloneAdapter, BearDogError> {
     let mut adapter = StandaloneAdapter::new();
     let providers = create_test_providers();
 

@@ -1,28 +1,35 @@
+use beardog_errors::BearDogError;
 
 
 #[cfg(test)]
 mod auth_tests {
     use tokio;
     #[tokio::test]
-    async fn test_password_hashing() {
+    async fn test_password_hashing() -> Result<(), Box<dyn std::error::Error>> {
         let password = "test_password_123";
-        let hash = hash_password(password).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?;
-        assert!(verify_password(password, &hash).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?);
-        assert!(!verify_password("wrong_password", &hash).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?);
+        let hash = hash_password(password).await?;
+        assert!(verify_password(password, &hash).await?);
+        assert!(!verify_password("wrong_password", &hash).await?);
+        Ok(())
     }
-    async fn test_token_generation() {
-        let token = generate_secure_token(32).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?;
+    
+    #[tokio::test]
+    async fn test_token_generation() -> Result<(), Box<dyn std::error::Error>> {
+        let token = generate_secure_token(32).await?;
         assert_eq!(token.len(), 32);
-        let token2 = generate_secure_token(32).await.map_err(|e| BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string()))?;
+        let token2 = generate_secure_token(32).await?;
         assert_ne!(token, token2); // Should be different
+        Ok(())
+    }
 
     #[derive(Debug)]
     struct MockSessionData {
         user_id: String,
         session_id: String,
         valid: bool,
-    impl MockSessionData {}
-
+    }
+    
+    impl MockSessionData {
         fn is_valid(&self) -> bool {
             self.valid
         }
@@ -99,6 +106,7 @@ mod auth_tests {
         let required_role = "user";
         assert!(has_required_role(&user_roles, required_role));
         assert!(!has_required_role(&user_roles, "admin"));
+    }
 
     async fn hash_password(password: &str) -> Result<String, Box<dyn std::error::Error>> {
         use argon2::password_hash::SaltString;
@@ -110,6 +118,8 @@ mod auth_tests {
             .hash_password(password.as_bytes(), &salt)
             .map_err(|e| format!("Password hashing failed: {e}"))?;
         Ok(password_hash.to_string())
+    }
+
     async fn verify_password(
         password: &str,
         hash: &str,
@@ -121,6 +131,8 @@ mod auth_tests {
         Ok(argon2
             .verify_password(password.as_bytes(), &parsed_hash)
             .is_ok())
+    }
+
     async fn generate_secure_token(length: usize) -> Result<String, Box<dyn std::error::Error>> {
         use rand::Rng;
         const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -132,6 +144,8 @@ mod auth_tests {
             })
             .collect();
         Ok(token)
+    }
+
     async fn create_session_data(
         user_id: &str,
         session_id: &str,
@@ -141,31 +155,47 @@ mod auth_tests {
             session_id: session_id.to_string(),
             valid: true,
         })
+    }
+
     async fn generate_mfa_token(user_id: &str) -> Result<String, Box<dyn std::error::Error>> {
         let _ = user_id; // Use parameter to avoid warnings
+        let mut rng = rand::thread_rng();
         let token: String = (0..6).map(|_| rng.gen_range(0..10).to_string()).collect();
+        Ok(token)
+    }
 
     struct MockUser {
         username: String,
         password_hash: String,
+    }
     struct MockAuthResult {
         success: bool,
-        session_token: Option<String>,}
+        session_token: Option<String>,
+    }
 
     async fn create_test_user(
         username: &str,
+        password: &str,
     ) -> Result<MockUser, Box<dyn std::error::Error>> {
         let password_hash = hash_password(password).await?;
         Ok(MockUser {
             username: username.to_string(),
             password_hash,
+        })
+    }
+
     async fn authenticate_user(
+        username: &str,
+        password: &str,
     ) -> Result<MockAuthResult, Box<dyn std::error::Error>> {
         let _ = (username, password); // Use parameters to avoid warnings
         Ok(MockAuthResult {
             success: true,
-            session_token: Some("mock_session_token_123".to_string()),}
+            session_token: Some("mock_session_token_123".to_string()),
+        })
+    }
 
     fn has_required_role(user_roles: &[&str], required_role: &str) -> bool {
-        user_roles.contains(&required_role.to_string())
+        user_roles.contains(&required_role)
+    }
 }

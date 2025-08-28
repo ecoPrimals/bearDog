@@ -1,11 +1,8 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ThreatAction {
-
     BlockSource,
 
     QuarantineSystem,
@@ -33,7 +30,6 @@ pub enum ThreatAction {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum ThreatStatus {
-
     #[default]
     New,
 
@@ -66,7 +62,6 @@ pub enum ThreatStatus {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MitigationStep {
-
     pub description: String,
 
     pub executed_at: DateTime<Utc>,
@@ -79,7 +74,6 @@ pub struct MitigationStep {
 }
 
 pub enum ResponseAction {
-
     LogAlert(String),
 
     BlockIp(String),
@@ -104,7 +98,6 @@ impl Default for MitigationStep {
 }
 
 impl ThreatAction {
-
     pub fn severity_level(&self) -> u8 {
         match self {
             ThreatAction::AlertSecurityTeam => 1,
@@ -162,7 +155,6 @@ impl ThreatAction {
     }
 }
 impl ThreatStatus {
-
     pub fn is_terminal(&self) -> bool {
         matches!(
             self,
@@ -206,33 +198,15 @@ impl ThreatStatus {
                 ThreatStatus::Contained,
                 ThreatStatus::Mitigated,
             ],
-            ThreatStatus::Active => vec![
-                ThreatStatus::Contained,
-                ThreatStatus::Escalated,
-            ],
-            ThreatStatus::Acknowledged => vec![
-                ThreatStatus::Investigating,
-                ThreatStatus::Active,
-            ],
-            ThreatStatus::Contained => vec![
-                ThreatStatus::Mitigated,
-                ThreatStatus::Recovery,
-            ],
-            ThreatStatus::Escalated => vec![
-                ThreatStatus::Active,
-                ThreatStatus::Contained,
-            ],
-            ThreatStatus::Mitigated => vec![
-                ThreatStatus::Recovery,
-                ThreatStatus::Resolved,
-            ],
-            ThreatStatus::Recovery => vec![
-                ThreatStatus::Resolved,
-                ThreatStatus::PostIncidentAnalysis,
-            ],
-            ThreatStatus::Resolved => vec![
-                ThreatStatus::PostIncidentAnalysis,
-            ],
+            ThreatStatus::Active => vec![ThreatStatus::Contained, ThreatStatus::Escalated],
+            ThreatStatus::Acknowledged => vec![ThreatStatus::Investigating, ThreatStatus::Active],
+            ThreatStatus::Contained => vec![ThreatStatus::Mitigated, ThreatStatus::Recovery],
+            ThreatStatus::Escalated => vec![ThreatStatus::Active, ThreatStatus::Contained],
+            ThreatStatus::Mitigated => vec![ThreatStatus::Recovery, ThreatStatus::Resolved],
+            ThreatStatus::Recovery => {
+                vec![ThreatStatus::Resolved, ThreatStatus::PostIncidentAnalysis]
+            }
+            ThreatStatus::Resolved => vec![ThreatStatus::PostIncidentAnalysis],
             ThreatStatus::FalsePositive => vec![],
             ThreatStatus::Suppressed => vec![],
             ThreatStatus::PostIncidentAnalysis => vec![],
@@ -259,7 +233,6 @@ impl ThreatStatus {
     }
 }
 impl MitigationStep {
-
     pub fn new(description: &str, executor: &str) -> Self {
         Self {
             description: description.to_string(),
@@ -290,7 +263,6 @@ impl MitigationStep {
     }
 }
 impl ResponseAction {
-
     pub fn severity_level(&self) -> u8 {
         match self {
             ResponseAction::LogAlert(_) => 1,

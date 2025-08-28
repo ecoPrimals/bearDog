@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 pub struct DependencyResolver {
 
@@ -33,7 +33,7 @@ pub struct ResolutionResult {
 
 impl DependencyResolver {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             dependency_graph: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             circular_dependencies: Arc::new(RwLock::new(HashSet::new())),
@@ -44,7 +44,7 @@ impl DependencyResolver {
     pub async fn resolve_dependencies(
         &self,
         required_capabilities: &[&str],
-    ) -> BearDogResult<ResolutionResult> {
+    ) -> Result<ResolutionResult, BearDogError> {
         info!(
             "🔗 Resolving dependencies for {} capabilities",
             required_capabilities.len()
@@ -102,7 +102,7 @@ impl DependencyResolver {
         _unresolved_dependencies: &'a mut Vec<String>,
         visited: &'a mut HashSet<String>,
         in_progress: &'a mut HashSet<String>,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<()>> + Send + 'a>> {
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BearDogError>> + Send + 'a>> {
         Box::pin(async move {
 
             if in_progress.contains(capability_id) {
@@ -140,7 +140,7 @@ impl DependencyResolver {
             resolution_order.push(capability_id.to_string());
             Ok(())
 
-    async fn get_capability_dependencies(&self, capability_id: &str) -> BearDogResult<Vec<String>> {
+    async fn get_capability_dependencies(&self, capability_id: &str) -> Result<Vec<String>, BearDogError>> {
         let dependency_graph = self.dependency_graph.read().await;
         Ok(dependency_graph
             .get(capability_id)
@@ -149,7 +149,7 @@ impl DependencyResolver {
 
     async fn detect_circular_dependencies(
         dependency_chain: &[&str],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         let circular_deps = self.circular_dependencies.read().await;
 
         let has_circular = dependency_chain
@@ -170,7 +170,7 @@ impl DependencyResolver {
     pub async fn add_dependency(
         capability_id: &str,
         dependency_id: &str,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut dependency_graph = self.dependency_graph.write().await;
         let dependencies = dependency_graph
             .entry(capability_id.to_string())
@@ -190,19 +190,19 @@ impl DependencyResolver {
             dependencies.retain(|dep| dep != dependency_id);
                 "➖ Removed dependency: {} -> {}",
 
-    pub async fn get_all_dependencies(&self, capability_id: &str) -> BearDogResult<Vec<String>> {
+    pub async fn get_all_dependencies(&self, capability_id: &str) -> Result<Vec<String>, BearDogError>> {
 
-    pub async fn get_dependents(&self, capability_id: &str) -> BearDogResult<Vec<String>> {
+    pub async fn get_dependents(&self, capability_id: &str) -> Result<Vec<String>, BearDogError>> {
         let mut dependents = Vec::new();
         for (cap_id, deps) in dependency_graph.iter() {
             if deps.contains(&capability_id.to_string()) {
                 dependents.push(cap_id.clone());
         Ok(dependents)
 
-    pub async fn clear_cache(&self) -> BearDogResult<()> {
+    pub async fn clear_cache(&self) -> Result<(), BearDogError> {
         debug!("🧹 Cleared dependency resolution cache");
 
-    pub async fn get_statistics(&self) -> BearDogResult<DependencyStatistics> {
+    pub async fn get_statistics(&self) -> Result<DependencyStatistics, BearDogError> {
         let cache = self.resolution_cache.read().await;
         let total_capabilities = dependency_graph.len();
         let total_dependencies = dependency_graph.values().map(|deps| deps.len()).sum();

@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::config::EncryptionConfig;
@@ -9,7 +10,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 #[tokio::test]
-async fn test_encryption_engine_initialization() -> BearDogResult<()> {
+async fn test_encryption_engine_initialization() -> Result<(), BearDogError> {
 
     let config = EncryptionConfig::default();
     let engine = EncryptionEngine::new(config).await?;
@@ -22,7 +23,7 @@ async fn test_encryption_engine_initialization() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_basic_encryption_decryption() -> BearDogResult<()> {
+async fn test_basic_encryption_decryption() -> Result<(), BearDogError> {
     let config = EncryptionConfig::default();
     let engine = EncryptionEngine::new(config).await?;
 
@@ -45,7 +46,7 @@ async fn test_basic_encryption_decryption() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_encryption_with_different_algorithms() -> BearDogResult<()> {
+async fn test_encryption_with_different_algorithms() -> Result<(), BearDogError> {
 
     let algorithms = vec![
         Some(EncryptionAlgorithm::Aes256Gcm),
@@ -68,7 +69,7 @@ async fn test_encryption_with_different_algorithms() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_key_derivation() -> BearDogResult<()> {
+async fn test_key_derivation() -> Result<(), BearDogError> {
 
     let password = "strong_password_for_beardog";
     let salt = "unique_salt_for_testing";
@@ -93,7 +94,7 @@ async fn test_key_derivation() -> BearDogResult<()> {
 }
 
 #[test]
-fn test_crypto_utils_hash_functions() -> BearDogResult<()> {
+fn test_crypto_utils_hash_functions() -> Result<(), BearDogError> {
 
     let data = b"BearDog security testing";
     let hash = crypto_utils::sha256_hash(data);
@@ -109,7 +110,7 @@ fn test_crypto_utils_hash_functions() -> BearDogResult<()> {
 }
 
 #[test]
-fn test_crypto_utils_hmac() -> BearDogResult<()> {
+fn test_crypto_utils_hmac() -> Result<(), BearDogError> {
 
     let key = b"secret_hmac_key";
     let data = b"data to authenticate";
@@ -127,7 +128,7 @@ fn test_crypto_utils_hmac() -> BearDogResult<()> {
 }
 
 #[test]
-fn test_password_generation() -> BearDogResult<()> {
+fn test_password_generation() -> Result<(), BearDogError> {
 
     let password = crypto_utils::generate_password(16);
     assert_eq!(password.len(), 16);
@@ -144,7 +145,7 @@ fn test_password_generation() -> BearDogResult<()> {
 }
 
 #[test]
-fn test_hex_encoding() -> BearDogResult<()> {
+fn test_hex_encoding() -> Result<(), BearDogError> {
 
     let data = b"test data for hex encoding";
 
@@ -160,7 +161,7 @@ fn test_hex_encoding() -> BearDogResult<()> {
 }
 
 #[test]
-fn test_secure_random_bytes() -> BearDogResult<()> {
+fn test_secure_random_bytes() -> Result<(), BearDogError> {
 
     let random1 = crypto_utils::secure_random_bytes(32);
     let random2 = crypto_utils::secure_random_bytes(32);
@@ -178,7 +179,7 @@ fn test_secure_random_bytes() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_encryption_with_large_data() -> BearDogResult<()> {
+async fn test_encryption_with_large_data() -> Result<(), BearDogError> {
 
     let config = EncryptionConfig::default();
     let engine = EncryptionEngine::new(config).await?;
@@ -198,7 +199,7 @@ async fn test_encryption_with_large_data() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_concurrent_encryption_operations() -> BearDogResult<()> {
+async fn test_concurrent_encryption_operations() -> Result<(), BearDogError> {
 
     let config = EncryptionConfig::default();
     let engine = Arc::new(EncryptionEngine::new(config).await?);
@@ -229,7 +230,7 @@ async fn test_concurrent_encryption_operations() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_encryption_error_handling() -> BearDogResult<()> {
+async fn test_encryption_error_handling() -> Result<(), BearDogError> {
 
     let config = EncryptionConfig::default();
     let engine = EncryptionEngine::new(config).await?;
@@ -250,7 +251,7 @@ async fn test_encryption_error_handling() -> BearDogResult<()> {
 }
 
 #[test]
-fn test_password_hashing() -> BearDogResult<()> {
+fn test_password_hashing() -> Result<(), BearDogError> {
 
     let password = "secure_password_123";
     let hash = BearDogCrypto::hash_password_argon2(password)?;
@@ -265,7 +266,7 @@ fn test_password_hashing() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_key_rotation() -> BearDogResult<()> {
+async fn test_key_rotation() -> Result<(), BearDogError> {
 
     let config = EncryptionConfig::default();
     let engine = EncryptionEngine::new(config).await?;
@@ -281,15 +282,15 @@ async fn test_key_rotation() -> BearDogResult<()> {
     Ok(())
 }
 
-fn derive_key_argon2(password: &[u8], salt: &[u8], length: usize) -> BearDogResult<Vec<u8>> {
+fn derive_key_argon2(password: &[u8], salt: &[u8], length: usize) -> Result<Vec<u8, BearDogError>> {
 
     BearDogCrypto::derive_key_pbkdf2(password, salt, 10000, length)
 }
 
-fn hash_password_argon2(password: &str) -> BearDogResult<String> {
+fn hash_password_argon2(password: &str) -> Result<String, BearDogError> {
     BearDogCrypto::hash_password_argon2(password)
 }
 
-fn verify_password_argon2(password: &str, hash: &str) -> BearDogResult<bool> {
+fn verify_password_argon2(password: &str, hash: &str) -> Result<bool, BearDogError> {
     BearDogCrypto::verify_password_argon2(password, hash)
 }

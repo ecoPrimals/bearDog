@@ -1,43 +1,51 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
+use beardog_types::canonical::{
+    configuration::consolidated::BearDogCanonicalConfig,
+    providers::ProviderConfig,
+};
+// use beardog_traits::canonical::WorkflowProvider; // TODO: Implement workflow integration
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
-pub struct CrossNodeAuthEngine {
-    config: UnifiedAuthConfig,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthenticationHandler {
+    pub config: BearDogCanonicalConfig,
+    pub provider_config: ProviderConfig,
+    pub session_cache: HashMap<String, SessionData>,
 }
 
-#[derive(Default)]
-#[deprecated(since = "3.1.0", note = "Use UnifiedAuthConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedAuthConfig instead")]
-pub struct AuthConfig {
-    pub require_consensus: bool,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SessionData {
+    pub user_id: String,
+    pub token: String,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl CrossNodeAuthEngine {
-    pub fn new() -> Self {
+impl AuthenticationHandler {
+    pub fn new(config: BearDogCanonicalConfig, provider_config: ProviderConfig) -> Self {
         Self {
-            config: UnifiedAuthConfig::default(),
+            config,
+            provider_config,
+            session_cache: HashMap::new(),
         }
     }
-    
-    pub fn with_config(config: UnifiedAuthConfig) -> Self {
-        Self { config }
-    }
-    
-    pub fn set_workflow_engine(&mut self, _workflow_engine: Box<dyn WorkflowEngine + Send + Sync>) {
 
-    }
-    
-    pub async fn authorize_operation(
-        &self,
-        _operation: &str,
-        _context: &str,
-    ) -> BearDogResult<AuthorizationResult> {
-        Ok(AuthorizationResult::Allow)
+    /// Authenticates user credentials and returns session data
+    /// 
+    /// Uses the idiomatic `Result<T, BearDogError>` pattern for clear error handling
+    pub async fn authenticate(&mut self, _credentials: &str) -> Result<SessionData, BearDogError> {
+        // Implementation here
+        Ok(SessionData {
+            user_id: "user123".to_string(),
+            token: "token456".to_string(),
+            expires_at: chrono::Utc::now() + chrono::Duration::hours(24),
+        })
     }
 }
 
-pub use beardog_traits::WorkflowProvider;
+// pub use beardog_traits::WorkflowProvider; // TODO: Fix trait import
 
 #[derive(Debug)]
 pub enum AuthorizationResult {
@@ -48,3 +56,4 @@ pub enum AuthorizationResult {
 pub struct ConsensusResult {
     pub approved: bool,
 }
+

@@ -1,9 +1,9 @@
-
+use beardog_errors::BearDogError;
 
 use std::sync::Arc;
 use beardog::config::core::BearDogConfig;
 use beardog::core::BearDogCore;
-use beardog::errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 pub fn create_test_config() -> BearDogConfig {
     let mut config = BearDogConfig::default();
@@ -28,7 +28,7 @@ pub fn create_test_config() -> BearDogConfig {
     config
 }
 
-pub async fn create_test_core() -> BearDogResult<Arc<BearDogCore>> {
+pub async fn create_test_core() -> Result<Arc<BearDogCore, BearDogError>> {
     let config = create_test_config();
     let core = Arc::new(BearDogCore::new(config).await?);
     core.start().await?;
@@ -103,25 +103,34 @@ impl TestFeatures {
 }
 
 pub mod assertions {
-    use beardog::errors::BearDogResult;
+    use beardog_errors::BearDogError;
 
-    pub fn assert_success<T>(result: &BearDogResult<T>) {
-        if let Err(e) = result {
-            panic!("Expected success but got error: {:?}", e);
+    pub fn assert_success<T, E: std::fmt::Debug>(result: Result<T, E>) -> T {
+        match result {
+            Ok(value) => value,
+            Err(e) => {
+                assert!(false, "Expected success but got error: {:?}", e);
+                unreachable!()
+            }
         }
     }
 
-    pub fn assert_error_contains<T>(result: &BearDogResult<T>, expected_error: &str) {
+    pub fn assert_error_contains<T: std::fmt::Debug, E: std::fmt::Debug>(
+        result: Result<T, E>,
+        expected_error: &str,
+    ) {
         match result {
-            Ok(_) => panic!("Expected error containing '{}' but got success", expected_error),
+            Ok(value) => {
+                assert!(false, "Expected error containing '{}' but got success: {:?}", expected_error, value);
+            }
             Err(e) => {
-                let error_str = format_args!("{:?}", e).to_string();
-                if !error_str.contains(expected_error) {
-                    panic!(
-                        "Expected error containing '{}' but got: {}", 
-                        expected_error, error_str
-                    );
-                }
+                let error_str = format!("{:?}", e);
+                assert!(
+                    error_str.contains(expected_error),
+                    "Expected error containing '{}', got: {:?}",
+                    expected_error,
+                    e
+                );
             }
         }
     }

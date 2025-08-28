@@ -1,5 +1,3 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -60,6 +58,7 @@ pub struct DetectionRule {
     pub references: Vec<String>,
     pub last_triggered: Option<DateTime<Utc>>,
     pub metadata: HashMap<String, String>,
+    pub actions: Vec<String>, // Actions to take when rule triggers
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -108,6 +107,7 @@ impl Default for DetectionRule {
             references: Vec::new(),
             last_triggered: None,
             metadata: HashMap::new(),
+            actions: Vec::new(),
         }
     }
 }
@@ -136,7 +136,6 @@ impl Default for ThreatDetectionRule {
 }
 
 impl DetectionRule {
-
     pub fn new(
         name: &str,
         description: &str,
@@ -167,6 +166,44 @@ impl DetectionRule {
             references: Vec::new(),
             last_triggered: None,
             metadata: HashMap::new(),
+            actions: Vec::new(),
+        }
+    }
+
+    /// Simple constructor for basic threat rules
+    pub fn simple(
+        id: &str,
+        name: &str,
+        description: &str,
+        threat_type: ThreatType,
+        severity: ThreatSeverity,
+        condition: RuleCondition,
+        actions: Vec<String>,
+    ) -> Self {
+        Self {
+            id: id.to_string(),
+            name: name.to_string(),
+            description: description.to_string(),
+            condition,
+            threat_type,
+            severity,
+            enabled: true,
+            detection_count: 0,
+            false_positive_count: 0,
+            rule_type: "behavioral".to_string(),
+            confidence: 0.8,
+            detection_logic: description.to_string(),
+            mitre_technique_id: None,
+            mitre_tactic: None,
+            author: "BearDog System".to_string(),
+            version: "1.0.0".to_string(),
+            created_at: Utc::now(),
+            modified_at: Utc::now(),
+            tags: Vec::new(),
+            references: Vec::new(),
+            last_triggered: None,
+            metadata: HashMap::new(),
+            actions,
         }
     }
 

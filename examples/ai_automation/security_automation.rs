@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::fs;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use crate::ai_automation::standalone_ai::{BearDogAICore, SecurityPattern, AIInsight};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -77,7 +77,7 @@ pub async fn run_standalone_security(
     operations_file: &PathBuf,
     output_file: &PathBuf,
     ai_enhanced: bool,
-) -> BearDogResult<Vec<SecurityResult>> {
+) -> Result<Vec<SecurityResult, BearDogError>> {
 
     let operations_data = fs::read_to_string(operations_file).await?;
     let operations: Vec<SecurityOperation> = serde_json::from_str(&operations_data)?;
@@ -110,7 +110,7 @@ async fn execute_security_operation(
     ai_core: &BearDogAICore,
     operation: &SecurityOperation,
     ai_enhanced: bool,
-) -> BearDogResult<SecurityResult> {
+) -> Result<SecurityResult, BearDogError> {
     match operation.operation_type {
         SecurityOperationType::ThreatDetection => {
             execute_threat_detection(ai_core, operation, ai_enhanced).await
@@ -137,7 +137,7 @@ async fn execute_threat_detection(
     ai_core: &BearDogAICore,
     operation: &SecurityOperation,
     ai_enhanced: bool,
-) -> BearDogResult<SecurityResult> {
+) -> Result<SecurityResult, BearDogError> {
     println!("🕵️ Running threat detection for: {}", operation.target.endpoint);
 
     let security_data = collect_security_data(&operation.target).await?;
@@ -197,7 +197,7 @@ async fn execute_vulnerability_scanning(
     ai_core: &BearDogAICore,
     operation: &SecurityOperation,
     ai_enhanced: bool,
-) -> BearDogResult<SecurityResult> {
+) -> Result<SecurityResult, BearDogError> {
     println!("🔍 Scanning for vulnerabilities: {}", operation.target.endpoint);
 
     let vulnerabilities = vec![
@@ -232,7 +232,7 @@ async fn execute_access_control_validation(
     _ai_core: &BearDogAICore,
     operation: &SecurityOperation,
     _ai_enhanced: bool,
-) -> BearDogResult<SecurityResult> {
+) -> Result<SecurityResult, BearDogError> {
     println!("🔑 Validating access controls: {}", operation.target.endpoint);
 
     Ok(SecurityResult {
@@ -250,7 +250,7 @@ async fn execute_compliance_audit(
     _ai_core: &BearDogAICore,
     operation: &SecurityOperation,
     _ai_enhanced: bool,
-) -> BearDogResult<SecurityResult> {
+) -> Result<SecurityResult, BearDogError> {
     println!("📋 Running compliance audit: {}", operation.target.endpoint);
 
     Ok(SecurityResult {
@@ -268,7 +268,7 @@ async fn execute_incident_response(
     ai_core: &BearDogAICore,
     operation: &SecurityOperation,
     ai_enhanced: bool,
-) -> BearDogResult<SecurityResult> {
+) -> Result<SecurityResult, BearDogError> {
     println!("🚨 Executing incident response: {}", operation.target.endpoint);
     
     let ai_insights = if ai_enhanced {
@@ -296,7 +296,7 @@ async fn execute_forensic_analysis(
     ai_core: &BearDogAICore,
     operation: &SecurityOperation,
     ai_enhanced: bool,
-) -> BearDogResult<SecurityResult> {
+) -> Result<SecurityResult, BearDogError> {
     println!("🔬 Performing forensic analysis: {}", operation.target.endpoint);
     
     let ai_insights = if ai_enhanced {
@@ -319,7 +319,7 @@ async fn execute_forensic_analysis(
     })
 }
 
-async fn collect_security_data(target: &SecurityTarget) -> BearDogResult<Vec<u8>> {
+async fn collect_security_data(target: &SecurityTarget) -> Result<Vec<u8, BearDogError>> {
 
     match target.target_type {
         TargetType::NetworkEndpoint => Ok(b"network_scan_data".to_vec()),

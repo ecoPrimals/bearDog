@@ -1,6 +1,6 @@
+use beardog_errors::BearDogError;
 
-
-use crate::{BearDogError, BearDogResult};
+use crate::{{BearDogError}};
 use crate::node_registry::types::{NodeInfo, TrustLevel};
 use super::types::{DiscoveredNode, PhonebookDiscoveryResponse, BootstrapConfig};
 use std::collections::HashMap;
@@ -24,7 +24,7 @@ impl NodeDiscovery {
         Self { config, client }
     }
 
-    pub async fn discover_from_environment(&self) -> BearDogResult<Vec<NodeInfo>> {
+    pub async fn discover_from_environment(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
         debug!("🔍 Discovering bootstrap nodes from environment variables");
         
         let mut nodes = Vec::new();
@@ -47,7 +47,7 @@ impl NodeDiscovery {
         info!("📋 Discovered {} nodes from environment", nodes.len());
         Ok(nodes)
 
-    pub async fn discover_from_phonebooks(&self) -> BearDogResult<Vec<NodeInfo>> {
+    pub async fn discover_from_phonebooks(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
         debug!("📞 Discovering nodes from phonebook services");
         let mut all_nodes = Vec::new();
         for phonebook_url in &self.config.phonebook_urls {
@@ -62,7 +62,7 @@ impl NodeDiscovery {
         info!("📋 Total discovered {} unique nodes from phonebooks", all_nodes.len());
         Ok(all_nodes)
 
-    async fn discover_from_phonebook(&self, phonebook_url: &str) -> BearDogResult<Vec<NodeInfo>> {
+    async fn discover_from_phonebook(&self, phonebook_url: &str) -> Result<Vec<NodeInfo>, BearDogError>> {
         let discovery_url = format_args!("{}/api/v1/nodes/discover", phonebook_url).to_string();
 
         let mut request = self.client.get(&discovery_url);
@@ -103,7 +103,7 @@ impl NodeDiscovery {
             };
             nodes.push(node_info);
 
-    async fn parse_node_address(&self, addr: &str) -> BearDogResult<NodeInfo> {
+    async fn parse_node_address(&self, addr: &str) -> Result<NodeInfo, BearDogError> {
 
         let (node_id, address) = if addr.contains('@') {
             let parts: Vec<&str> = addr.splitn(2, '@').collect();
@@ -145,7 +145,7 @@ impl NodeDiscovery {
             filtered.truncate(50);
         filtered
 
-    pub fn validate_node(&self, node: &NodeInfo) -> BearDogResult<()> {
+    pub fn validate_node(&self, node: &NodeInfo) -> Result<(), BearDogError> {
 
         if node.node_id.is_empty() {
             return Err(BearDogError::validation("Node ID cannot be empty"));

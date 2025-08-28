@@ -2,7 +2,7 @@
 
 use super::traits::{AlternativeHandler, RoutingStrategy};
 use crate::universal::vendor_adapter::{CapabilityHandler, UniversalVendorRequest};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde_json::json;
 use std::collections::HashMap;
@@ -89,7 +89,7 @@ impl RoutingStrategy for PerformanceFirstRouting {
         &self,
         _request: &UniversalVendorRequest,
         available_handlers: &[(Box<dyn CapabilityHandler>, f64)],
-    ) -> BearDogResult<Option<usize>> {
+    ) -> Result<Option<usize>, BearDogError>> {
         if available_handlers.is_empty() {
             return Ok(None);
         let mut best_index = 0;
@@ -128,7 +128,7 @@ impl RoutingStrategy for PerformanceFirstRouting {
         success: bool,
         response_time_ms: u64,
         error: Option<&str>,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let metric = PerformanceMetric {
             timestamp: Utc::now(),
             response_time_ms,
@@ -151,7 +151,7 @@ impl RoutingStrategy for PerformanceFirstRouting {
         Ok(())
     }
 
-    async fn get_statistics(&self) -> BearDogResult<serde_json::Value> {
+    async fn get_statistics(&self) -> Result<serde_json::Value, BearDogError> {
         let data = self
             .historical_data
             .read()

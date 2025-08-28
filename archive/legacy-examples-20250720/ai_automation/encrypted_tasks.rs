@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::fs;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use crate::ai_automation::{
     standalone_ai::{BearDogAICore, AIInsight},
     network_effects::{SquirrelNetwork, DistributedTask, TaskResult, FleetMode},
@@ -88,7 +88,7 @@ pub async fn run_fleet_operations(
     task_file: &PathBuf,
     mode: FleetMode,
     output_file: &PathBuf,
-) -> BearDogResult<FleetOperationResult> {
+) -> Result<FleetOperationResult, BearDogError> {
 
     let task_data = fs::read_to_string(task_file).await?;
     let operation_request: FleetOperationRequest = serde_json::from_str(&task_data)?;
@@ -133,7 +133,7 @@ pub async fn run_fleet_operations(
 async fn create_distributed_tasks(
     ai_core: &BearDogAICore,
     request: &FleetOperationRequest,
-) -> BearDogResult<Vec<DistributedTask>> {
+) -> Result<Vec<DistributedTask, BearDogError>> {
     let mut tasks = Vec::new();
     
     match request.operation_type {
@@ -220,7 +220,7 @@ async fn encrypt_tasks_for_distribution(
     tasks: &[DistributedTask],
     encryption_level: &EncryptionLevel,
     network: &SquirrelNetwork,
-) -> BearDogResult<Vec<DistributedTask>> {
+) -> Result<Vec<DistributedTask, BearDogError>> {
     let mut encrypted_tasks = Vec::new();
     
     println!("🔐 Encrypting {} tasks with {:?} encryption", tasks.len(), encryption_level);
@@ -238,7 +238,7 @@ async fn distribute_and_execute_tasks(
     network: &SquirrelNetwork,
     tasks: &[DistributedTask],
     coordination_mode: &CoordinationMode,
-) -> BearDogResult<Vec<TaskResult>> {
+) -> Result<Vec<TaskResult, BearDogError>> {
     println!("📡 Distributing {} tasks across {} nodes (Mode: {:?})", 
         tasks.len(), 
         network.fleet_coordinator.connected_nodes.len(),
@@ -291,7 +291,7 @@ async fn distribute_and_execute_tasks(
 async fn execute_hierarchical_distribution(
     network: &SquirrelNetwork,
     tasks: &[DistributedTask],
-) -> BearDogResult<Vec<TaskResult>> {
+) -> Result<Vec<TaskResult, BearDogError>> {
 
     let mut results = Vec::new();
 
@@ -320,7 +320,7 @@ async fn execute_hierarchical_distribution(
 async fn execute_mesh_coordination(
     network: &SquirrelNetwork,
     tasks: &[DistributedTask],
-) -> BearDogResult<Vec<TaskResult>> {
+) -> Result<Vec<TaskResult, BearDogError>> {
 
     let mut results = Vec::new();
     
@@ -345,7 +345,7 @@ async fn aggregate_fleet_results(
     ai_core: &BearDogAICore,
     task_results: &[TaskResult],
     request: &FleetOperationRequest,
-) -> BearDogResult<FleetOperationResult> {
+) -> Result<FleetOperationResult, BearDogError> {
 
     let ai_insights = vec![
         AIInsight {
@@ -394,7 +394,7 @@ async fn aggregate_fleet_results(
     })
 }
 
-pub async fn create_sample_fleet_operation() -> BearDogResult<FleetOperationRequest> {
+pub async fn create_sample_fleet_operation() -> Result<FleetOperationRequest, BearDogError> {
     Ok(FleetOperationRequest {
         operation_id: uuid::Uuid::new_v4().to_string(),
         operation_type: FleetOperationType::DistributedSecurityScan,
@@ -411,7 +411,7 @@ pub async fn create_sample_fleet_operation() -> BearDogResult<FleetOperationRequ
 
 pub async fn validate_fleet_operation_result(
     result: &FleetOperationResult,
-) -> BearDogResult<bool> {
+) -> Result<bool, BearDogError> {
 
     let valid = result.success &&
         result.task_results.len() > 0 &&

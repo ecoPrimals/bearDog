@@ -5,32 +5,14 @@ use crate::workflows::canonical::{
     Workflow, WorkflowExecutionStatus, WorkflowMetrics, WorkflowProcessingResult,
 };
 
-use beardog_errors::{BearDogError, BearDogResult};
-use beardog_types::canonical::workflow::WorkflowType;
+use beardog_errors::BearDogError;
+use beardog_types::{
+    canonical::configuration::workflows::WorkflowMetadata,
+    config::UnifiedProcessorConfig,
+};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use tracing::info;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedProcessorConfig instead")]
-pub struct SystemProcessorConfig {
-
-    pub auto_maintenance: bool,
-
-    pub maintenance_window_hours: u64,
-
-    pub enable_rollback: bool,
-}
-impl Default for SystemProcessorConfig {}
-
-    fn default() -> Self {
-        Self {
-            auto_maintenance: false,
-            maintenance_window_hours: 4,
-            enable_rollback: true,
-        }
-    }
 
 #[derive(Debug)]
 pub struct SystemProcessor {
@@ -42,7 +24,11 @@ impl SystemProcessor {
         Self { config }
 
     pub fn new_default() -> Self {
-        Self::new(SystemProcessorConfig::default())
+        let mut config = UnifiedProcessorConfig::default();
+        config.processor_type = beardog_types::canonical::configuration::consolidated::ProcessorType::System;
+        Self::new(config)
+    }
+}
 impl Default for SystemProcessor {
             config: UnifiedProcessorConfig::default(),}
 
@@ -51,7 +37,7 @@ impl WorkflowProcessor for SystemProcessor {
     async fn process_workflow(
         &self,
         workflow: &Workflow,
-    ) -> BearDogResult<WorkflowProcessingResult> {
+    ) -> Result<WorkflowProcessingResult, BearDogError> {
         let _start_time = Instant::now();
         info!("Processing system workflow: {}", workflow.id);
         match workflow.workflow_type {

@@ -1,10 +1,7 @@
-
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisMetrics {
-
     pub total_events_analyzed: u64,
 
     pub avg_analysis_time_ms: f64,
@@ -37,7 +34,6 @@ impl Default for AnalysisMetrics {
 }
 
 impl AnalysisMetrics {
-
     pub fn new() -> Self {
         Self::default()
     }

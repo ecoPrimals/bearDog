@@ -1,7 +1,7 @@
 
 
 use super::universal_hsm_provider::{EcosystemHsmProvider, EcosystemServiceDiscovery, ProviderHealthStatus};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::{HsmCapabilities, HsmHardwareStatus};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -109,7 +109,7 @@ impl SongbirdServiceDiscovery {
         }
     }
 
-    pub async fn register_beardog_service(&mut self) -> BearDogResult<()> {
+    pub async fn register_beardog_service(&mut self) -> Result<(), BearDogError> {
         let registration_payload = serde_json::json!({
             "service_id": self.config.beardog_service_info.service_id,
             "service_name": self.config.beardog_service_info.service_name,
@@ -166,7 +166,7 @@ impl SongbirdServiceDiscovery {
         ))
     }
 
-    async fn query_services_by_capability(&self, capability: &str) -> BearDogResult<Vec<ServiceRegistration>> {
+    async fn query_services_by_capability(&self, capability: &str) -> Result<Vec<ServiceRegistration>, BearDogError> {
         let query_url = format!(
             "{}/api/v1/services/query?capability={}",
             self.config.songbird_endpoint,
@@ -261,7 +261,7 @@ impl SongbirdServiceDiscovery {
 
 impl EcosystemServiceDiscovery for SongbirdServiceDiscovery {
 
-    async fn discover_hsm_providers(&self) -> BearDogResult<Vec<EcosystemHsmProvider>> {
+    async fn discover_hsm_providers(&self) -> Result<Vec<EcosystemHsmProvider>, BearDogError> {
         debug!("🔍 Discovering HSM providers through Songbird service mesh");
 
         let hsm_capabilities = vec![
@@ -300,7 +300,7 @@ impl EcosystemServiceDiscovery for SongbirdServiceDiscovery {
         Ok(discovered_providers)
     }
 
-    async fn register_hsm_provider(&self, provider_info: &EcosystemHsmProvider) -> BearDogResult<()> {
+    async fn register_hsm_provider(&self, provider_info: &EcosystemHsmProvider) -> Result<(), BearDogError> {
         let registration_payload = serde_json::json!({
             "service_id": provider_info.id,
             "service_name": provider_info.name,
@@ -351,7 +351,7 @@ impl EcosystemServiceDiscovery for SongbirdServiceDiscovery {
         }
     }
 
-    async fn health_check(&self) -> BearDogResult<bool> {
+    async fn health_check(&self) -> Result<bool, BearDogError> {
         let health_url = format_args!("{}/api/v1/health", self.config.songbird_endpoint).to_string();
         let timeout_duration = Duration::from_millis(self.config.health_check_timeout_ms);
 

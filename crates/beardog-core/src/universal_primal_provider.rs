@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use super::challenges::*;
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RecoverySession {

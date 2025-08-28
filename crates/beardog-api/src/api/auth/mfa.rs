@@ -2,81 +2,100 @@
 
 use super::models::*;
 use crate::api::*;
-use axum::{extract::State, http::StatusCode, Json};
-use std::time::Instant;
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    Json,
+};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use tracing::info;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MfaSetupRequest {
+    pub method: String,
+    pub phone_number: Option<String>,
+    pub email: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MfaSetupResponse {
+    pub setup_id: String,
+    pub qr_code: Option<String>,
+    pub secret: Option<String>,
+    pub backup_codes: Vec<String>,
+    pub instructions: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MfaVerifyRequest {
+    pub code: String,
+    pub setup_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MfaVerifyResponse {
+    pub verified: bool,
+    pub message: String,
+}
+
 pub async fn setup_mfa(
-    State(_state): State<AppState>,
-    Json(request): Json<SetupMfaRequest>,
-) -> Result<Json<ApiResponse<SetupMfaResponse>>, StatusCode> {
-    let start_time = Instant::now();
-    let request_id = uuid::Uuid::new_v4().to_string();
-    info!("🛡️ Setting up MFA for user: {}", request.user_id);
-    let response = SetupMfaResponse {
-        mfa_secret: "JBSWY3DPEHPK3PXP".to_string(), // Base32 encoded secret
-        qr_code_url: "https://api.beardog.com/mfa/qr/12345".to_string(),
-        backup_codes: vec![
-            "abc123".to_string(),
-            "def456".to_string(),
-            "ghi789".to_string(),
-            "jkl012".to_string(),
-            "mno345".to_string(),
-        ],
-        setup_instructions: "Scan the QR code with your authenticator app".to_string(),
-        supported_methods: vec!["totp".to_string(), "sms".to_string(), "email".to_string()],
-        verification_required: true,
+    State(_): State<AppState>,
+    Json(request): Json<MfaSetupRequest>,
+) -> Result<Json<ApiResponse<MfaSetupResponse>>, StatusCode> {
+    info!("🔐 Setting up MFA for method: {}", request.method);
+    
+    let response = MfaSetupResponse {
+        setup_id: uuid::Uuid::new_v4().to_string(),
+        qr_code: Some("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==".to_string()),
+        secret: Some("JBSWY3DPEHPK3PXP".to_string()),
+        backup_codes: vec!["abc123".to_string(), "def456".to_string()],
+        instructions: "Scan the QR code with your authenticator app".to_string(),
     };
-    let processing_time = start_time.elapsed().as_millis() as u64;
-    Ok(Json(success_response(
-        response,
-        request_id,
-        processing_time,
-        false,
-    )))
+    
+    Ok(Json(ApiResponse::success(response)))
 }
 
 pub async fn verify_mfa(
-    Json(request): Json<VerifyMfaRequest>,
-) -> Result<Json<ApiResponse<VerifyMfaResponse>>, StatusCode> {
-    info!("🔍 Verifying MFA code for user: {}", request.user_id);
-
-    let verification_success = request.mfa_code == "123456" || request.mfa_code == "abc123";
-    let response = VerifyMfaResponse {
-        verified: verification_success,
-        mfa_method: request.mfa_method.clone(),
-        verification_timestamp: chrono::Utc::now().to_rfc3339(),
-        remaining_backup_codes: if verification_success && request.mfa_code == "abc123" {
-            Some(4) // Used one backup code
-        } else {
-            Some(5)
-        },
-        trust_device_token: if request.trust_device.unwrap_or(false) && verification_success {
-            Some("trust_token_67890".to_string())
-            None
-        message: if verification_success {
+    State(_): State<AppState>,
+    Json(request): Json<MfaVerifyRequest>,
+) -> Result<Json<ApiResponse<MfaVerifyResponse>>, StatusCode> {
+    info!("🔐 Verifying MFA code");
+    
+    let verified = request.code == "123456"; // Mock verification
+    
+    let response = MfaVerifyResponse {
+        verified,
+        message: if verified {
             "MFA verification successful".to_string()
+        } else {
             "Invalid MFA code".to_string()
+        },
+    };
+    
+    Ok(Json(ApiResponse::success(response)))
+}
 
-pub async fn get_mfa_status(
-) -> Result<Json<ApiResponse<MfaStatusResponse>>, StatusCode> {
-    let response = MfaStatusResponse {
-        user_id: "user_12345".to_string(),
-        mfa_enabled: true,
-        enabled_methods: vec!["totp".to_string()],
-        primary_method: "totp".to_string(),
-        backup_codes_remaining: 5,
-        trusted_devices: 2,
-        last_mfa_verification: chrono::Utc::now().to_rfc3339(),
-        enforcement_policy: "optional".to_string(),
-        true,
+pub async fn disable_mfa(
+    State(_): State<AppState>,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "message": "MFA disabled successfully"
+    }))))
+}
 
 pub async fn get_backup_codes(
     State(_): State<AppState>,
 ) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
-        serde_json::json!({"backup_codes": ["abc123", "def456"]}),
-        20,
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "backup_codes": ["abc123", "def456"]
+    }))))
+}
 
 pub async fn generate_backup_codes(
-        serde_json::json!({"new_backup_codes": ["xyz789", "uvw012"]}),
-        30,
+    State(_): State<AppState>,
+) -> Result<Json<ApiResponse<serde_json::Value>>, StatusCode> {
+    Ok(Json(ApiResponse::success(serde_json::json!({
+        "new_backup_codes": ["xyz789", "uvw012"]
+    }))))
+}

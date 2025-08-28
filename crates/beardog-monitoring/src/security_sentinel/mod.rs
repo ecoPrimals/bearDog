@@ -1,17 +1,14 @@
-
-
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{error, info, warn};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertThresholds {
-
     pub max_auth_failures: u32,
 
     pub max_suspicious_score: f64,
@@ -34,7 +31,6 @@ impl Default for AlertThresholds {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecuritySentinelStats {
-
     pub total_events: u64,
 
     pub threats_detected: u64,
@@ -60,7 +56,6 @@ impl Default for SecuritySentinelStats {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityStatusReport {
-
     pub status: String,
 
     pub threat_level: String,
@@ -74,7 +69,6 @@ pub struct SecurityStatusReport {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatLandscapeReport {
-
     pub threat_vectors: Vec<String>,
 
     pub risk_score: f64,
@@ -86,7 +80,6 @@ pub struct ThreatLandscapeReport {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilitiesHealthReport {
-
     pub capability_status: HashMap<String, String>,
 
     pub health_score: f64,
@@ -98,7 +91,6 @@ pub struct CapabilitiesHealthReport {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityPerformanceMetrics {
-
     pub avg_processing_time_ms: f64,
 
     pub events_per_second: f64,
@@ -112,7 +104,6 @@ pub struct SecurityPerformanceMetrics {
 
 #[derive(Debug, Clone)]
 pub struct ThreatIntelligence {
-
     pub threat_signatures: Arc<RwLock<HashMap<String, String>>>,
 
     pub last_update: Arc<RwLock<DateTime<Utc>>>,
@@ -135,7 +126,6 @@ impl Default for ThreatIntelligence {
 
 #[derive(Debug, Clone)]
 pub struct CapabilityMonitor {
-
     pub capabilities: Arc<RwLock<HashMap<String, bool>>>,
 
     pub last_check: Arc<RwLock<DateTime<Utc>>>,
@@ -158,7 +148,6 @@ impl Default for CapabilityMonitor {
 
 #[derive(Debug, Clone)]
 pub struct PerformanceSentinel {
-
     pub metrics: Arc<RwLock<SecurityPerformanceMetrics>>,
 
     pub monitoring_active: Arc<AtomicBool>,
@@ -187,7 +176,6 @@ impl Default for PerformanceSentinel {
 
 #[derive(Debug, Clone)]
 pub struct SovereigntyMonitor {
-
     pub status: Arc<RwLock<HashMap<String, String>>>,
 
     pub compliance_state: Arc<RwLock<bool>>,
@@ -210,7 +198,6 @@ impl Default for SovereigntyMonitor {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecuritySentinelConfig {
-
     pub enabled: bool,
 
     pub alert_thresholds: AlertThresholds,
@@ -233,7 +220,6 @@ impl Default for SecuritySentinelConfig {
 
 #[derive(Debug)]
 pub struct SecuritySentinel {
-
     pub config: SecuritySentinelConfig,
 
     pub stats: SecuritySentinelStats,
@@ -252,8 +238,7 @@ pub struct SecuritySentinel {
 }
 
 impl SecuritySentinel {
-
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             config: SecuritySentinelConfig::default(),
             stats: SecuritySentinelStats::default(),
@@ -266,7 +251,7 @@ impl SecuritySentinel {
         })
     }
 
-    pub async fn start_monitoring(&self) -> BearDogResult<()> {
+    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
         info!("Starting BearDog Security Sentinel");
         self.monitoring_active.store(true, Ordering::Relaxed);
 
@@ -278,25 +263,29 @@ impl SecuritySentinel {
         Ok(())
     }
 
-    pub async fn stop_monitoring(&self) -> BearDogResult<()> {
+    pub async fn stop_monitoring(&self) -> Result<(), BearDogError> {
         info!("Stopping BearDog Security Sentinel");
         self.monitoring_active.store(false, Ordering::Relaxed);
         Ok(())
     }
 
-    pub async fn process_event(&self, event_type: &str, event_data: HashMap<&str, &str>) -> BearDogResult<()> {
+    pub async fn process_event(
+        &self,
+        event_type: &str,
+        event_data: HashMap<&str, &str>,
+    ) -> Result<(), BearDogError> {
         let event_count = self.event_counter.fetch_add(1, Ordering::Relaxed);
-        
+
         info!("Processing security event #{}: {}", event_count, event_type);
 
         self.update_stats(event_type, &event_data).await?;
 
         self.check_threats(event_type, &event_data).await?;
-        
+
         Ok(())
     }
 
-    pub async fn get_status_report(&self) -> BearDogResult<SecurityStatusReport> {
+    pub async fn get_status_report(&self) -> Result<SecurityStatusReport, BearDogError> {
         Ok(SecurityStatusReport {
             status: "ACTIVE".to_string(),
             threat_level: "LOW".to_string(),
@@ -310,7 +299,7 @@ impl SecuritySentinel {
         })
     }
 
-    pub async fn get_threat_landscape(&self) -> BearDogResult<ThreatLandscapeReport> {
+    pub async fn get_threat_landscape(&self) -> Result<ThreatLandscapeReport, BearDogError> {
         Ok(ThreatLandscapeReport {
             threat_vectors: vec![
                 "Network intrusion".to_string(),
@@ -326,7 +315,7 @@ impl SecuritySentinel {
         })
     }
 
-    pub async fn get_capabilities_health(&self) -> BearDogResult<CapabilitiesHealthReport> {
+    pub async fn get_capabilities_health(&self) -> Result<CapabilitiesHealthReport, BearDogError> {
         let mut capability_status = HashMap::with_capacity(16);
         capability_status.insert("encryption".to_string(), "HEALTHY".to_string());
         capability_status.insert("authentication".to_string(), "HEALTHY".to_string());
@@ -340,35 +329,40 @@ impl SecuritySentinel {
         })
     }
 
-    pub async fn get_performance_metrics(&self) -> BearDogResult<SecurityPerformanceMetrics> {
+    pub async fn get_performance_metrics(
+        &self,
+    ) -> Result<SecurityPerformanceMetrics, BearDogError> {
         let metrics = self.performance_sentinel.metrics.read().await;
         Ok(metrics.clone())
     }
 
+    #[allow(dead_code)]
     async fn monitoring_loop(&self) {
         while self.monitoring_active.load(Ordering::Relaxed) {
             if let Err(e) = self.perform_monitoring_cycle().await {
                 error!("Security monitoring cycle failed: {}", e);
             }
-            
+
             tokio::time::sleep(tokio::time::Duration::from_secs(
-                self.config.monitoring_interval_seconds
-            )).await;
+                self.config.monitoring_interval_seconds,
+            ))
+            .await;
         }
     }
 
-    async fn perform_monitoring_cycle(&self) -> BearDogResult<()> {
-
+    #[allow(dead_code)]
+    async fn perform_monitoring_cycle(&self) -> Result<(), BearDogError> {
         self.update_threat_intelligence().await?;
 
         self.check_capabilities().await?;
 
         self.update_performance_metrics().await?;
-        
+
         Ok(())
     }
 
-    async fn update_threat_intelligence(&self) -> BearDogResult<()> {
+    #[allow(dead_code)]
+    async fn update_threat_intelligence(&self) -> Result<(), BearDogError> {
         if self.config.enable_threat_intelligence {
             let mut last_update = self.threat_intelligence.last_update.write().await;
             *last_update = Utc::now();
@@ -376,13 +370,15 @@ impl SecuritySentinel {
         Ok(())
     }
 
-    async fn check_capabilities(&self) -> BearDogResult<()> {
+    #[allow(dead_code)]
+    async fn check_capabilities(&self) -> Result<(), BearDogError> {
         let mut last_check = self.capability_monitor.last_check.write().await;
         *last_check = Utc::now();
         Ok(())
     }
 
-    async fn update_performance_metrics(&self) -> BearDogResult<()> {
+    #[allow(dead_code)]
+    async fn update_performance_metrics(&self) -> Result<(), BearDogError> {
         let mut metrics = self.performance_sentinel.metrics.write().await;
         metrics.timestamp = Utc::now();
         metrics.events_per_second = 10.0; // Mock value
@@ -392,25 +388,25 @@ impl SecuritySentinel {
         Ok(())
     }
 
-    async fn update_stats(&self, event_type: &str, _event_data: &HashMap<&str, &str>) -> BearDogResult<()> {
+    async fn update_stats(
+        &self,
+        event_type: &str,
+        _event_data: &HashMap<&str, &str>,
+    ) -> Result<(), BearDogError> {
         match event_type {
-            "threat_detected" => {
-
-            }
-            "auth_failure" => {
-
-            }
-            "compliance_violation" => {
-
-            }
-            _ => {
-
-            }
+            "threat_detected" => {}
+            "auth_failure" => {}
+            "compliance_violation" => {}
+            _ => {}
         }
         Ok(())
     }
 
-    async fn check_threats(&self, event_type: &str, _event_data: &HashMap<&str, &str>) -> BearDogResult<()> {
+    async fn check_threats(
+        &self,
+        event_type: &str,
+        _event_data: &HashMap<&str, &str>,
+    ) -> Result<(), BearDogError> {
         if event_type == "suspicious_activity" {
             warn!("Suspicious activity detected");
         }
@@ -432,9 +428,13 @@ impl SecuritySentinel {
 #[derive(Clone)]
 struct SecuritySentinelBackground {
     config: SecuritySentinelConfig,
+    #[allow(dead_code)]
     threat_intelligence: Arc<ThreatIntelligence>,
+    #[allow(dead_code)]
     capability_monitor: Arc<CapabilityMonitor>,
+    #[allow(dead_code)]
     performance_sentinel: Arc<PerformanceSentinel>,
+    #[allow(dead_code)]
     sovereignty_monitor: Arc<SovereigntyMonitor>,
     monitoring_active: Arc<AtomicBool>,
 }
@@ -442,10 +442,10 @@ struct SecuritySentinelBackground {
 impl SecuritySentinelBackground {
     async fn monitoring_loop(&self) {
         while self.monitoring_active.load(Ordering::Relaxed) {
-
             tokio::time::sleep(tokio::time::Duration::from_secs(
-                self.config.monitoring_interval_seconds
-            )).await;
+                self.config.monitoring_interval_seconds,
+            ))
+            .await;
         }
     }
 }
@@ -467,9 +467,11 @@ impl Clone for SecuritySentinel {
 
 impl Default for SecuritySentinel {
     fn default() -> Self {
-
         Self::new().unwrap_or_else(|e| {
-            tracing::error!("Failed to create SecuritySentinel with default configuration: {:?}", e);
+            tracing::error!(
+                "Failed to create SecuritySentinel with default configuration: {:?}",
+                e
+            );
             tracing::warn!("Creating minimal SecuritySentinel instance as fallback");
             Self {
                 config: SecuritySentinelConfig::default(),

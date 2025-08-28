@@ -7,7 +7,7 @@ use tracing::{debug, error, info};
 use super::discovery::{EcosystemDiscovery, EcosystemService};
 use super::registry::CapabilityRegistry;
 use super::traits::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 pub struct UniversalEcosystemManager<T> {
 
@@ -47,7 +47,7 @@ pub struct EcosystemManagerStatus {
 
 impl<T: Send + Sync> UniversalEcosystemManager<T> {
 
-    pub async fn new(core: Arc<T>) -> BearDogResult<Self> {
+    pub async fn new(core: Arc<T>) -> Result<Self, BearDogError> {
         info!("🌐 Initializing Universal Ecosystem Manager");
         let capability_registry = Arc::new(CapabilityRegistry::new().await?);
         let ecosystem_discovery = Arc::new(EcosystemDiscovery::new(core.clone()).await?);
@@ -77,7 +77,7 @@ impl<T: Send + Sync> UniversalEcosystemManager<T> {
         &self,
         mut provider: P,
         config: ProviderConfig,
-    ) -> BearDogResult<EcosystemRegistration> {
+    ) -> Result<EcosystemRegistration, BearDogError> {
         let ecosystem_id = provider.ecosystem_id().to_string();
         let instance_id = provider.instance_id().to_string();
         info!(
@@ -109,7 +109,7 @@ impl<T: Send + Sync> UniversalEcosystemManager<T> {
     pub async fn unregister_provider(
         ecosystem_id: &str,
         instance_id: &str,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
             "🔌 Unregistering PrimalProvider: {} ({})",
         let provider_key = format!("{ecosystem_id}:{instance_id}");
 
@@ -125,7 +125,7 @@ impl<T: Send + Sync> UniversalEcosystemManager<T> {
             "✅ Successfully unregistered PrimalProvider: {} ({})",
         Ok(())
 
-    pub async fn route_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse> {
+    pub async fn route_request(&self, request: ServiceRequest) -> Result<ServiceResponse, BearDogError> {
         debug!(
             "🔄 Routing request: {} ({})",
             request.request_type, request.id
@@ -147,7 +147,7 @@ impl<T: Send + Sync> UniversalEcosystemManager<T> {
             active_requests.remove(&request.id);
         response
 
-    async fn find_capable_provider(&self, request: &ServiceRequest) -> BearDogResult<String> {
+    async fn find_capable_provider(&self, request: &ServiceRequest) -> Result<String, BearDogError> {
         let providers = self.providers.read().await;
 
         for (provider_key, provider) in providers.iter() {
@@ -206,7 +206,7 @@ impl<T: Send + Sync> UniversalEcosystemManager<T> {
             .filter(|cap| cap.category == category)
             .collect()
 
-    pub async fn health_check_all(&self) -> BearDogResult<EcosystemHealthReport> {
+    pub async fn health_check_all(&self) -> Result<EcosystemHealthReport, BearDogError> {
         let mut health_reports = Vec::new();
             let health_status = provider.health_check().await;
             health_reports.push(ProviderHealthReport {
@@ -242,7 +242,7 @@ impl<T: Send + Sync> UniversalEcosystemManager<T> {
         let status = self.manager_status.read().await;
         status.clone()
 
-    async fn update_manager_status(&self) -> BearDogResult<()> {
+    async fn update_manager_status(&self) -> Result<(), BearDogError> {
         let active_requests = self.active_requests.read().await;
         let total_capabilities = self.get_all_capabilities().await.len() as u32;
         let mut healthy_providers = 0;
@@ -263,7 +263,7 @@ impl<T: Send + Sync> UniversalEcosystemManager<T> {
         status.active_requests = active_requests.len() as u32;
         status.last_health_check = chrono::Utc::now();
 
-    pub async fn shutdown(&self) -> BearDogResult<()> {
+    pub async fn shutdown(&self) -> Result<(), BearDogError> {
         info!("🛑 Shutting down Universal Ecosystem Manager");
         let mut providers = self.providers.write().await;
         for (provider_key, provider) in providers.iter_mut() {
@@ -321,7 +321,7 @@ pub enum EcosystemHealthStatus {
 
 impl<T> UniversalEcosystemManager<T> {
 
-    pub async fn initialize_ecosystem_discovery(&self) -> BearDogResult<()> {
+    pub async fn initialize_ecosystem_discovery(&self) -> Result<(), BearDogError> {
         info!("🔄 Initializing ecosystem discovery with core integration");
 
         let _core_ref = Arc::clone(&self.core);
@@ -337,7 +337,7 @@ impl<T> UniversalEcosystemManager<T> {
         Arc::clone(&self.core)
 
     pub async fn discover_ecosystem_services(
-    ) -> BearDogResult<Vec<EcosystemService>> {
+    ) -> Result<Vec<EcosystemService>, BearDogError>> {
         info!("🔍 Discovering services for ecosystem: {}", ecosystem_id);
 
         let services = self
@@ -360,7 +360,7 @@ impl<T> UniversalEcosystemManager<T> {
     pub async fn check_capability_compatibility(
         capability_a: &str,
         capability_b: &str,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
 
         let compatible = self
             .capability_registry

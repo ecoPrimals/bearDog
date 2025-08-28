@@ -4,7 +4,7 @@ use super::{
     HsmHealthMonitor, HsmProvider, HsmHealthStatus, HsmInfo, HsmTier, SoftwareHsmType,
     KeyStorageType, MemoryProtectionLevel, TamperResistanceLevel, PerformanceMetrics,
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use crate::tunnel::hsm::config::HealthConfig;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -18,7 +18,7 @@ pub struct DefaultHsmHealthMonitor {
     monitoring_active: Arc<RwLock<bool>>,
 }
 impl DefaultHsmHealthMonitor {
-    pub async fn new(config: HealthConfig) -> BearDogResult<Self> {
+    pub async fn new(config: HealthConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             provider_health: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             health_config: config,
@@ -28,13 +28,13 @@ impl DefaultHsmHealthMonitor {
     pub async fn get_provider_health(
         &self,
         provider_id: &str,
-    ) -> BearDogResult<Option<HsmHealthStatus>> {
+    ) -> Result<Option<HsmHealthStatus>, BearDogError>> {
         let health_map = self.provider_health.read().await;
         Ok(health_map.get(provider_id).cloned())
 
 impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
 
-    async fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> BearDogResult<()> {
+    async fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> Result<(), BearDogError> {
         info!(
             "🏥 Starting health monitoring for {} providers",
             providers.len()
@@ -98,12 +98,12 @@ impl HsmHealthMonitor for DefaultHsmHealthMonitor {}
             });
         }
         Ok(())
-    async fn get_health_status(&self) -> BearDogResult<HashMap<String, HsmHealthStatus>> {
+    async fn get_health_status(&self) -> Result<HashMap<String, HsmHealthStatus, BearDogError>> {
         Ok(health_map.clone())}
 
     async fn filter_healthy_providers(
         providers: Vec<impl HsmProvider + Send + Sync + 'static>,
-    ) -> BearDogResult<Vec<impl HsmProvider + Send + Sync + 'static>> {
+    ) -> Result<Vec<impl HsmProvider + Send + Sync + 'static>, BearDogError>> {
         let mut healthy_providers = Vec::new();
             let provider_info = provider.get_info().await?;
             let provider_id = format_args!("{}_{}", provider_info.vendor, provider_info.model).to_string();

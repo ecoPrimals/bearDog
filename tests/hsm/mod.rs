@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::genetics::entropy_hierarchy::EntropyHierarchy;
@@ -19,7 +20,7 @@ use beardog::tunnel::hsm::{
     HsmCapabilityDetector, HsmFailoverManager, HsmHealthMonitor, HsmManager, HsmProvider,
     SecurityLevel, SecurityRequirements,
 };
-use beardog::{BearDogError, BearDogResult};
+use beardog::{{BearDogError, BearDogError}};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -57,7 +58,7 @@ pub struct HsmTestMetrics {
 
 impl HsmTestHarness {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         println!("🔐 Initializing HSM Test Harness");
 
         let hsm_manager = Arc::new(HsmManager::new());
@@ -119,7 +120,7 @@ impl HsmTestHarness {
         })
     }
 
-    pub async fn run_comprehensive_tests(&mut self) -> BearDogResult<()> {
+    pub async fn run_comprehensive_tests(&mut self) -> Result<(), BearDogError> {
         println!("🚀 Running Comprehensive HSM Test Suite");
         println!("════════════════════════════════════════");
 
@@ -202,7 +203,7 @@ impl HsmTestHarness {
 }
 
 #[tokio::test]
-async fn test_hsm_comprehensive_suite() -> BearDogResult<()> {
+async fn test_hsm_comprehensive_suite() -> Result<(), BearDogError> {
     println!("🔐 Starting HSM Comprehensive Test Suite");
     println!("Target: GrapheneOS on Pixel 8a with Android StrongBox");
     println!("Testing: HSM providers, manager, genetics, security, performance");

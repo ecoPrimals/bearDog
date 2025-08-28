@@ -5,7 +5,7 @@ pub mod discovery_engine;
 pub mod human_entropy_classifier;
 pub mod tier_manager;
 pub mod universal_adapter;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tracing::{info, warn};
 
@@ -262,7 +262,7 @@ impl Default for DiscoveryConfig {}
     }
 impl UniversalHsmDiscovery {
 
-    pub async fn new(config: DiscoveryConfig) -> BearDogResult<Self> {
+    pub async fn new(config: DiscoveryConfig) -> Result<Self, BearDogError> {
         info!("🔍 Initializing Universal HSM Discovery Engine");
         let capability_detector = capability_detector::CapabilityDetector::new().await?;
         let entropy_classifier = human_entropy_classifier::HumanEntropyClassifier::new().await?;
@@ -275,7 +275,7 @@ impl UniversalHsmDiscovery {
             config,
         })
 
-    pub async fn discover_all_hsms(&mut self) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover_all_hsms(&mut self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         info!("🔍 Starting universal HSM discovery process");
         let mut all_discovered = Vec::new();
 
@@ -336,7 +336,7 @@ impl UniversalHsmDiscovery {
     pub fn get_hsms_by_tier(&self, tier: &HsmTier) -> Vec<&DiscoveredHsm> {
             .filter(|hsm| &hsm.assigned_tier == tier)
 
-    pub async fn get_best_hsm_for_operation(&self, operation_type: &str) -> BearDogResult<Option<&DiscoveredHsm>> {
+    pub async fn get_best_hsm_for_operation(&self, operation_type: &str) -> Result<Option<&DiscoveredHsm>, BearDogError>> {
         self.tier_manager.select_best_hsm_for_operation(
             &self.discovered_hsms.values().collect::<Vec<_>>(),
             operation_type

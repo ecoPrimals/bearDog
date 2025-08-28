@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 #[cfg(test)]
@@ -9,7 +10,7 @@ mod tests {
     use tokio;
 
     #[tokio::test]
-    async fn test_universal_hsm_discovery_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_universal_hsm_discovery_creation() -> Result<(), BearDogError> {
         let discovery = UniversalHsmDiscovery::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create discovery system", e);
     beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failed to create discovery system", e).to_string())
@@ -22,7 +23,7 @@ mod tests {
         Ok(())
     }
 
-    async fn test_hsm_discovery_process() -> beardog_errors::BearDogResult<()> {
+    async fn test_hsm_discovery_process() -> Result<(), BearDogError> {
         let mut discovery =
             UniversalHsmDiscovery::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create discovery system", e);
@@ -48,7 +49,7 @@ mod tests {
             println!("  Tier {:?}: {} HSMs", tier, count);
         }
 
-    async fn test_human_entropy_classification() -> beardog_errors::BearDogResult<()> {
+    async fn test_human_entropy_classification() -> Result<(), BearDogError> {
         let _discovered_hsms = discovery
 
         let human_entropy_hsms = discovery.get_human_entropy_hsms();
@@ -69,7 +70,7 @@ mod tests {
                 "Human entropy HSM: {} (Tier: {:?})",
                 hsm.hsm_id, hsm.assigned_tier
 
-    async fn test_human_entropy_tier_elevation() -> beardog_errors::BearDogResult<()> {
+    async fn test_human_entropy_tier_elevation() -> Result<(), BearDogError> {
         let tier_manager = TierManager::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create tier manager", e);
     beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failed to create tier manager", e).to_string())
@@ -92,7 +93,7 @@ mod tests {
         println!("Basic HSM tier: {:?}", basic_tier);
         println!("Human entropy HSM tier: {:?}", entropy_tier);
 
-    async fn test_capability_detection() -> beardog_errors::BearDogResult<()> {
+    async fn test_capability_detection() -> Result<(), BearDogError> {
         let capability_detector = capability_detector::CapabilityDetector::new()
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create capability detector", e);
@@ -145,7 +146,7 @@ mod tests {
                 "Interface {:?}: Human entropy support = {}",
                 interface, capabilities.human_entropy.supports_human_entropy
 
-    async fn test_human_entropy_classifier() -> beardog_errors::BearDogResult<()> {
+    async fn test_human_entropy_classifier() -> Result<(), BearDogError> {
         let classifier = human_entropy_classifier::HumanEntropyClassifier::new()
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create classifier", e);
@@ -183,7 +184,7 @@ mod tests {
             "Low quality assessment: score={:.2}, tier={:?}",
             low_assessment.overall_score, low_assessment.recommended_tier
 
-    async fn test_operation_hsm_selection() -> beardog_errors::BearDogResult<()> {
+    async fn test_operation_hsm_selection() -> Result<(), BearDogError> {
 
         let root_key_hsm = discovery
             .get_best_hsm_for_operation("root_key_generation")
@@ -205,7 +206,7 @@ mod tests {
                 "Should use at least basic hardware for bulk operations"
                 "Selected HSM for bulk encryption: {} (Tier: {:?})",
 
-    async fn test_universal_adapter() -> beardog_errors::BearDogResult<()> {
+    async fn test_universal_adapter() -> Result<(), BearDogError> {
         let adapter =
             universal_adapter::UniversalAdapter::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create universal adapter", e);
@@ -234,7 +235,7 @@ mod tests {
             "Mock HSM health: healthy={}, response_time={}ms",
             health_status.is_healthy, health_status.response_time_ms
 
-    async fn test_human_entropy_seed_generation() -> beardog_errors::BearDogResult<()> {
+    async fn test_human_entropy_seed_generation() -> Result<(), BearDogError> {
 
         let entropy_requirements = universal_adapter::HumanEntropyRequirements {
             collection_methods: vec![
@@ -286,7 +287,7 @@ mod tests {
             "Generated entropy seed: quality={:.2}, methods={:?}",
             seed.entropy_quality, seed.collection_methods_used
 
-    async fn test_hsm_tier_distribution() -> beardog_errors::BearDogResult<()> {
+    async fn test_hsm_tier_distribution() -> Result<(), BearDogError> {
 
         for tier in [
             HsmTier::Software,
@@ -305,7 +306,7 @@ mod tests {
                 hsm.capabilities.human_entropy.supports_ephemeral_seeds,
                 "Premium tier HSMs should support ephemeral seeds"
 
-    async fn test_discovery_configuration() -> beardog_errors::BearDogResult<()> {
+    async fn test_discovery_configuration() -> Result<(), BearDogError> {
 
         let custom_config = DiscoveryConfig {
             auto_discovery_enabled: true,
@@ -324,7 +325,7 @@ mod tests {
 })?;
             "Should discover HSMs with custom config"
 
-    async fn test_concurrent_discovery() -> beardog_errors::BearDogResult<()> {
+    async fn test_concurrent_discovery() -> Result<(), BearDogError> {
         let mut handles = Vec::new();
 
         for i in 0..3 {

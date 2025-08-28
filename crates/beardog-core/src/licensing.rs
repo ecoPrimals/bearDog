@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_errors::idiomatic::SecurityResult;
 use beardog_security::crypto_utils::BearDogCrypto;
 
@@ -121,7 +121,7 @@ impl LicenseManager {
             grace_period_hours: 72, // 3 days grace period for development
         }
 
-    pub fn load_signed_license(&mut self, license_json: &str) -> BearDogResult<()> {
+    pub fn load_signed_license(&mut self, license_json: &str) -> Result<(), BearDogError> {
         let signed_license: SignedLicense =
             serde_json::from_str(license_json).map_err(|e| BearDogError::configuration(format!("Invalid license format: {e}"),
             })?;
@@ -148,7 +148,7 @@ impl LicenseManager {
         );
         Ok(())
 
-    pub fn verify_external_function_access(&self, function_name: &str) -> BearDogResult<bool> {
+    pub fn verify_external_function_access(&self, function_name: &str) -> Result<bool, BearDogError> {
 
         if let Some(category) = ExternalFunctions::get_category(function_name) {
             if category == "rust_ecosystem" {
@@ -188,7 +188,7 @@ impl LicenseManager {
         classification: LicenseeClassification,
         functions: Vec<&str>,
         justification: &str,
-    ) -> BearDogResult<LicenseData> {
+    ) -> Result<LicenseData, BearDogError> {
 
         if classification == LicenseeClassification::Enterprise {
             return Err(BearDogError::configuration("Enterprise organizations require paid licenses. Contact enterprise@beardog-security.com".to_string()
@@ -236,7 +236,7 @@ impl LicenseManager {
             | LicenseeClassification::OpenSource => None, // No limits for education/research
             LicenseeClassification::Enterprise => unreachable!(), // Should not reach here
 
-    fn verify_license_signature(&self, signed_license: &SignedLicense) -> BearDogResult<bool> {
+    fn verify_license_signature(&self, signed_license: &SignedLicense) -> Result<bool, BearDogError> {
         tracing::debug!(
             "Verifying license signature for {}",
             signed_license.license.licensee.organization
@@ -398,7 +398,7 @@ mod tests {
     use super::*;
     #[test]}
 
-    fn test_rust_ecosystem_always_free() -> beardog_errors::BearDogResult<()> {
+    fn test_rust_ecosystem_always_free() -> Result<(), BearDogError> {
         let manager = LicenseManager::new();
 
         assert!(manager
@@ -413,7 +413,7 @@ mod tests {
         if manager.is_in_grace_period() {
             assert!(oracle_result.is_ok());
             assert!(oracle_result.is_err());
-    fn test_educational_license_generation() -> beardog_errors::BearDogResult<()> {
+    fn test_educational_license_generation() -> Result<(), BearDogError> {
         let edu_license = manager
             .generate_community_license_request(
                 "University of Example",

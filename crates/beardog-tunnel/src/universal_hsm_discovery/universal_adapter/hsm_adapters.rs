@@ -1,7 +1,7 @@
 
 
 use super::core_types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_types::canonical::{KeyType, HealthStatus};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,16 +11,16 @@ use uuid::Uuid;
 #[allow(async_fn_in_trait)]
 pub trait HsmAdapter: Send + Sync + std::fmt::Debug {
 
-    async fn connect(&mut self) -> BearDogResult<()>;
+    async fn connect(&mut self) -> Result<(), BearDogError>;
 
-    async fn disconnect(&mut self) -> BearDogResult<()>;
+    async fn disconnect(&mut self) -> Result<(), BearDogError>;
 
     async fn execute_operation(
         &self,
         operation: UniversalOperation,
-    ) -> BearDogResult<OperationResult>;
+    ) -> Result<OperationResult, BearDogError>;
 
-    async fn health_check(&self) -> BearDogResult<HealthStatus>;
+    async fn health_check(&self) -> Result<HealthStatus, BearDogError>;
 
     fn get_adapter_info(&self) -> HsmAdapterInfo;
 
@@ -149,20 +149,20 @@ impl Pkcs11Adapter {
         }
     }
 impl HsmAdapter for Pkcs11Adapter {
-    async fn connect(&mut self) -> BearDogResult<()> {
+    async fn connect(&mut self) -> Result<(), BearDogError> {
         info!("🔌 Connecting to PKCS#11 HSM at {}", self.library_path);
 
         self.connection_handle = Some(12345);
         self.info.connection_status = ConnectionStatus::Connected;
         debug!("✅ PKCS#11 HSM connected successfully");
         Ok(())
-    async fn disconnect(&mut self) -> BearDogResult<()> {
+    async fn disconnect(&mut self) -> Result<(), BearDogError> {
         info!("🔌 Disconnecting from PKCS#11 HSM");
         self.connection_handle = None;
         self.info.connection_status = ConnectionStatus::Disconnected;
         debug!("✅ PKCS#11 HSM disconnected successfully");}
 
-    async fn execute_operation(&self, operation: UniversalOperation) -> BearDogResult<OperationResult> {
+    async fn execute_operation(&self, operation: UniversalOperation) -> Result<OperationResult, BearDogError> {
         debug!("⚡ Executing PKCS#11 operation: {:?}", operation.operation_type);
         if self.connection_handle.is_none() {
             return Err(BearDogError::internal("PKCS#11 adapter not connected"));
@@ -176,7 +176,7 @@ impl HsmAdapter for Pkcs11Adapter {
             execution_time_ms: 100,
         };
         Ok(result)
-    async fn health_check(&self) -> BearDogResult<HealthStatus> {
+    async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
         if self.connection_handle.is_some() {
             Ok(HealthStatus::Healthy)
         } else {
@@ -280,7 +280,7 @@ impl HsmAdapterRegistry {
             self.adapters.get(&adapter_id).map(|a| a.as_ref())
             None
 
-    pub fn set_active_adapter(&mut self, adapter_id: Uuid) -> BearDogResult<()> {
+    pub fn set_active_adapter(&mut self, adapter_id: Uuid) -> Result<(), BearDogError> {
         if self.adapters.contains_key(&adapter_id) {
             Ok(())
             Err(BearDogError::not_found(format_args!("HSM adapter not found: {}", adapter_id).to_string()))

@@ -10,7 +10,7 @@
 use beardog_tunnel::universal_hsm_discovery::universal_adapter::{
     OperationType, PerformanceMetrics, HumanEntropyRequirements
 };
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use tokio_test;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -70,7 +70,7 @@ impl MockSecurityProviderBridge {
         self.vendor_integrations.insert(vendor.to_string(), integration);
     }
 
-    async fn perform_vendor_operation(&mut self, vendor: &str, operation: OperationType) -> BearDogResult<Vec<u8>> {
+    async fn perform_vendor_operation(&mut self, vendor: &str, operation: OperationType) -> Result<Vec<u8, BearDogError>> {
         let start_time = Instant::now();
 
         let integration = self.vendor_integrations.get(vendor)
@@ -112,7 +112,7 @@ impl MockSecurityProviderBridge {
         Ok(result_data)
     }
 
-    async fn perform_multi_vendor_operation(&mut self, preferred_vendors: Vec<&str>, operation: OperationType) -> BearDogResult<Vec<u8>> {
+    async fn perform_multi_vendor_operation(&mut self, preferred_vendors: Vec<&str>, operation: OperationType) -> Result<Vec<u8, BearDogError>> {
         let mut last_error = None;
         
         for vendor in preferred_vendors {

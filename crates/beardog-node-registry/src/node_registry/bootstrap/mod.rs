@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 pub mod discovery;
 pub mod federation;  
@@ -37,7 +37,7 @@ pub struct BootstrapServices {
 
 impl BootstrapServices {
 
-    pub async fn comprehensive_bootstrap(&self) -> crate::BearDogResult<Vec<crate::node_registry::types::NodeInfo>> {
+    pub async fn comprehensive_bootstrap(&self) -> crate::Result<Vec<crate::node_registry::types::NodeInfo>, BearDogError>> {
         use tracing::{info, warn};
         
         let mut all_nodes = Vec::new();

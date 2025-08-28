@@ -1,7 +1,7 @@
 
 
 use super::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use chrono::Utc;
 use sha3::{Digest, Sha3_256};
 use std::collections::HashMap;
@@ -15,7 +15,7 @@ impl EntropySeed {
         owner_identity: HumanIdentity,
         seed_bytes: Vec<u8>,
         entropy_manager: &crate::genetics::entropy_hierarchy::EntropyHierarchyManager,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         let seed_id = Uuid::new_v4();
 
         let ownership_proof = entropy_manager
@@ -122,7 +122,7 @@ impl EntropySeed {
             SeedLifetimePolicy::SelfSovereign { .. } => true, // Self-sovereign seeds don't expire
         }
 
-    pub fn transfer_ownership(&mut self, new_owner: HumanIdentity) -> BearDogResult<()> {
+    pub fn transfer_ownership(&mut self, new_owner: HumanIdentity) -> Result<(), BearDogError> {
 
                 ownership_transfer_allowed,
             } => {
@@ -163,7 +163,7 @@ impl EntropySeed {
         });
         Ok(())
 
-    pub fn expire_ownership(&mut self) -> BearDogResult<()> {
+    pub fn expire_ownership(&mut self) -> Result<(), BearDogError> {
         let previous_owner = match &self.ownership {
             SeedOwnership::HumanOwned { owner_identity, .. } => Some(owner_identity.clone()),
             SeedOwnership::SharedOwnership { primary_owner, .. } => Some(primary_owner.clone()),
@@ -180,7 +180,7 @@ impl EntropySeed {
             context: "Ownership expired due to policy".to_string(),
             result_hash: vec![0u8; 32],
 
-    pub fn use_for_operation(&mut self, operation: &str) -> BearDogResult<Vec<u8>> {
+    pub fn use_for_operation(&mut self, operation: &str) -> Result<Vec<u8>, BearDogError>> {
 
         if !self.is_valid() {
             return Err(BearDogError::internal("Seed has expired and cannot be used".to_string(),

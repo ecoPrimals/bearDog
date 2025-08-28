@@ -9,7 +9,7 @@ use super::super::primal_registry::PrimalId;
 use super::super::traits::{HealthImpact, HealthStatus};
 use super::client::SongBirdDiscoveryClient;
 use super::types::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 pub struct UniversalHealthMonitor {
 
@@ -89,7 +89,7 @@ impl UniversalHealthMonitor {
     pub async fn new(
         client: Arc<SongBirdDiscoveryClient>,
         config: HealthMonitorConfig,
-    ) -> BearDogResult<Self> {
+    ) -> Result<Self, BearDogError> {
         info!("🏥 Initializing Universal Health Monitor");
         let health_status = Arc::new(RwLock::new(ServiceHealth {
             status: super::types::HealthStatus::Healthy,
@@ -114,7 +114,7 @@ impl UniversalHealthMonitor {
             primal_id: PrimalId::from_id("universal-component"), // Placeholder
         })
 
-    pub async fn start_monitoring(&self) -> BearDogResult<()> {
+    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
         info!("🔄 Starting universal health monitoring");
         let client = Arc::clone(&self.client);
         let primal_id = self.primal_id.clone();
@@ -165,7 +165,7 @@ impl UniversalHealthMonitor {
     async fn perform_comprehensive_health_check(
         &self,
         _primal_id: &PrimalId,
-    ) -> BearDogResult<HealthCheckResult> {
+    ) -> Result<HealthCheckResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
         let memory_usage = self.check_memory_usage().await?;
@@ -207,28 +207,28 @@ impl UniversalHealthMonitor {
                 error_rate,
                 last_updated: chrono::Utc::now(),
 
-    async fn check_memory_usage(&self) -> BearDogResult<f64> {
+    async fn check_memory_usage(&self) -> Result<f64, BearDogError> {
 
         debug!("📊 Checking memory usage");
         Ok(45.0) // Placeholder: 45% memory usage
 
-    async fn check_cpu_usage() -> BearDogResult<f64> {
+    async fn check_cpu_usage() -> Result<f64, BearDogError> {
 
         debug!("📊 Checking CPU usage");
         Ok(25.0) // Placeholder: 25% CPU usage
 
-    async fn check_disk_space(&self) -> BearDogResult<f64> {
+    async fn check_disk_space(&self) -> Result<f64, BearDogError> {
 
         debug!("📊 Checking disk space");
         Ok(60.0) // Placeholder: 60% disk usage
 
-    async fn check_active_connections(&self) -> BearDogResult<u32> {
+    async fn check_active_connections(&self) -> Result<u32, BearDogError> {
 
         debug!("📊 Checking active connections");
         Ok(42) // Placeholder: 42 active connections
 
     async fn check_all_components(
-    ) -> BearDogResult<std::collections::HashMap<String, HealthStatus>> {
+    ) -> Result<std::collections::HashMap<String, HealthStatus, BearDogError>> {
         let mut component_health = std::collections::HashMap::with_capacity(16);
 
         component_health.insert("beardog_core".to_string(), HealthStatus::Healthy);
@@ -245,7 +245,7 @@ impl UniversalHealthMonitor {
         debug!("🔍 All components checked");
         Ok(component_health)
 
-    async fn calculate_error_rate(&self) -> BearDogResult<f64> {
+    async fn calculate_error_rate(&self) -> Result<f64, BearDogError> {
 
         debug!("📊 Calculating error rate");
         Ok(0.5) // Placeholder: 0.5% error rate
@@ -288,7 +288,7 @@ impl UniversalHealthMonitor {
                 alerts.push(format!("Component {component} is {status:?}"));
         alerts
 
-    pub async fn perform_health_check(&self) -> BearDogResult<HealthCheckResult> {
+    pub async fn perform_health_check(&self) -> Result<HealthCheckResult, BearDogError> {
         debug!("🔍 Performing universal health check");
 
         let health_status = self.check_component_health().await?;
@@ -308,7 +308,7 @@ impl UniversalHealthMonitor {
         self.report_health_to_songbird().await?;
         Ok(result)
 
-    async fn check_component_health(&self) -> BearDogResult<HealthStatus> {
+    async fn check_component_health(&self) -> Result<HealthStatus, BearDogError> {
 
         let checks = vec![
             self.check_memory_usage().await,
@@ -330,13 +330,13 @@ impl UniversalHealthMonitor {
                 reason: "Multiple system failures detected".to_string(),
                 recovery_time: Some(chrono::Utc::now() + chrono::Duration::minutes(5)),
 
-    async fn check_network_connectivity(&self) -> BearDogResult<f64> {
+    async fn check_network_connectivity(&self) -> Result<f64, BearDogError> {
 
         match self.client.test_connection().await {
             Ok(()) => Ok(100.0), // 100% connectivity
             Err(_) => Ok(0.0),   // 0% connectivity
 
-    async fn update_health_status(&self, _result: &HealthCheckResult) -> BearDogResult<()> {
+    async fn update_health_status(&self, _result: &HealthCheckResult) -> Result<(), BearDogError> {
         let mut health = self.health_status.write().await;
 
         health.status = match _result.status {
@@ -367,7 +367,7 @@ impl UniversalHealthMonitor {
             let drain_count = history.len() - max_len;
             history.drain(0..drain_count);
 
-    async fn report_health_to_songbird(&self) -> BearDogResult<()> {
+    async fn report_health_to_songbird(&self) -> Result<(), BearDogError> {
         debug!("📡 Reporting health to SongBird");
 
         let service_id = "universal-component";
@@ -377,7 +377,7 @@ impl UniversalHealthMonitor {
         requests_processed: u64,
         errors_encountered: u64,
         response_time_ms: u64,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         if !self.config.enable_performance_metrics {
             return Ok(());
         let mut metrics = self.performance_metrics.write().await;

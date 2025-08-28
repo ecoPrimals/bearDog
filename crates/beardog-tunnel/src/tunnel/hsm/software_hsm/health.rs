@@ -4,7 +4,7 @@ use super::types::*;
 use crate::tunnel::hsm::types::canonical::PerformanceMetrics as CanonicalPerformanceMetrics;
 use crate::tunnel::hsm::types::KeyType; // Explicit KeyType import
 use crate::tunnel::hsm::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
@@ -12,11 +12,11 @@ use tracing::{debug, info, warn};
 use crate::tunnel::hsm::types::{HsmHealthStatus, PerformanceMetrics};
 
 type HealthTestFuture<'a> = std::pin::Pin<
-    Box<dyn std::future::Future<Output = BearDogResult<Option<Vec<u8>>>> + Send + 'a>,
+    Box<dyn std::future::Future<Output = Result<Option<Vec<u8>, BearDogError>>>> + Send + 'a>,
 >;
 impl SoftwareHealthMonitor {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("Creating software health monitor");
         let health_status = Arc::new(RwLock::new(HsmHealthStatus {
             healthy: true,
@@ -38,11 +38,11 @@ impl SoftwareHealthMonitor {
         })
     }
 
-    pub async fn get_health_status(&self) -> BearDogResult<HsmHealthStatus> {
+    pub async fn get_health_status(&self) -> Result<HsmHealthStatus, BearDogError> {
         let status = self.health_status.read().await;
         Ok(status.clone())
 
-    pub async fn update_health_status(&self, status: HsmHealthStatus) -> BearDogResult<()> {
+    pub async fn update_health_status(&self, status: HsmHealthStatus) -> Result<(), BearDogError> {
         let mut health_status = self.health_status.write().await;
         *health_status = status;
         debug!("Health status updated: healthy={}", health_status.healthy);
@@ -50,7 +50,7 @@ impl SoftwareHealthMonitor {
 
     pub async fn get_performance_metrics(
         &self,
-    ) -> BearDogResult<crate::tunnel::hsm::types::status::PerformanceMetrics> {
+    ) -> Result<crate::tunnel::hsm::types::status::PerformanceMetrics, BearDogError> {
         let canonical_metrics = self.metrics.read().await;
 
         Ok(crate::tunnel::hsm::types::status::PerformanceMetrics {
@@ -70,7 +70,7 @@ impl SoftwareHealthMonitor {
 
     pub async fn update_performance_metrics(
         metrics: PerformanceMetrics,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut perf_metrics = self.metrics.write().await;
         *perf_metrics = metrics;
         debug!(
@@ -78,7 +78,7 @@ impl SoftwareHealthMonitor {
             perf_metrics.operations_per_second
         );
 
-    pub async fn perform_health_check(&self) -> BearDogResult<HsmHealthStatus> {
+    pub async fn perform_health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
         info!("Performing health check");
         let mut healthy = true;
         let mut error_message = None;
@@ -112,7 +112,7 @@ impl SoftwareHealthMonitor {
         info!("Health check completed: healthy={}", health_status.healthy);
         Ok(health_status)
 
-    async fn check_keystore_health(&self) -> BearDogResult<()> {
+    async fn check_keystore_health(&self) -> Result<(), BearDogError> {
         debug!("Checking key store health");
 
         let key_store = self.get_key_store().await?;
@@ -133,7 +133,7 @@ impl SoftwareHealthMonitor {
         key_store.delete_key(test_key_id).await?;
         info!("Key store health check passed");
 
-    async fn check_crypto_provider_health(&self) -> BearDogResult<()> {
+    async fn check_crypto_provider_health(&self) -> Result<(), BearDogError> {
         debug!("Checking crypto provider health");
 
         let test_data = b"health_check_test_data";
@@ -152,7 +152,7 @@ impl SoftwareHealthMonitor {
                 message: "Crypto provider failed key derivation check".to_string(),
         info!("Crypto provider health check passed");
 
-    async fn check_memory_protector_health(&self) -> BearDogResult<()> {
+    async fn check_memory_protector_health(&self) -> Result<(), BearDogError> {
         debug!("Checking memory protector health");
 
         let memory_protector = self.get_memory_protector().await?;
@@ -168,7 +168,7 @@ impl SoftwareHealthMonitor {
         memory_protector.clear_memory(&protected_memory).await?;
         info!("Memory protector health check passed");
 
-    async fn check_audit_logger_health(&self) -> BearDogResult<()> {
+    async fn check_audit_logger_health(&self) -> Result<(), BearDogError> {
         debug!("Checking audit logger health");
 
         let test_entry = AuditLogEntry::new(
@@ -205,7 +205,7 @@ impl SoftwareHealthMonitor {
 
         info!("Audit logger health check passed");
 
-    async fn check_system_resources(&self) -> BearDogResult<()> {
+    async fn check_system_resources(&self) -> Result<(), BearDogError> {
         debug!("Checking system resource health");
 
         let memory_info = self.get_memory_info().await?;
@@ -239,12 +239,12 @@ impl SoftwareHealthMonitor {
             disk_info.get_used_bytes()
         info!("System resources health check passed");
 
-    async fn get_key_store(&self) -> BearDogResult<&dyn KeyStore> {
+    async fn get_key_store(&self) -> Result<&dyn KeyStore, BearDogError> {
 
         Err(BearDogError::Hsm {
             message: "Key store not implemented".to_string(),}
 
-    async fn encrypt_data(&self, key: &[u8], data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt_data(&self, key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
         use rand::RngCore;
@@ -264,7 +264,7 @@ impl SoftwareHealthMonitor {
         let mut result = nonce_bytes.to_vec();
         result.extend_from_slice(&ciphertext);
         Ok(result)
-    async fn decrypt_data(&self, key: &[u8], encrypted_data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn decrypt_data(&self, key: &[u8], encrypted_data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         if encrypted_data.len() < 12 {
             return Err(BearDogError::Crypto {
@@ -279,7 +279,7 @@ impl SoftwareHealthMonitor {
     async fn derive_key(
         master_key: &[u8],
         derivation_data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
 
         use hkdf::Hkdf;
         use sha2::Sha256;
@@ -288,24 +288,24 @@ impl SoftwareHealthMonitor {
         hkdf.expand(derivation_data, &mut derived_key)
                 message: format!("Key derivation failed: {e}"),
         Ok(derived_key)
-    async fn get_memory_protector(&self) -> BearDogResult<&dyn MemoryProtector> {
+    async fn get_memory_protector(&self) -> Result<&dyn MemoryProtector, BearDogError> {
 
             message: "Memory protector not implemented".to_string(),}
 
-    async fn get_audit_logger(&self) -> BearDogResult<&dyn AuditLogger> {
+    async fn get_audit_logger(&self) -> Result<&dyn AuditLogger, BearDogError> {
 
             message: "Audit logger not implemented".to_string(),
-    async fn get_memory_info(&self) -> BearDogResult<MemoryInfo> {
+    async fn get_memory_info(&self) -> Result<MemoryInfo, BearDogError> {
 
         Ok(MemoryInfo {
             total_bytes: 8 * 1024 * 1024 * 1024,     // 8GB
             available_bytes: 4 * 1024 * 1024 * 1024, // 4GB
             used_bytes: 4 * 1024 * 1024 * 1024,      // 4GB}
 
-    async fn get_cpu_usage(&self) -> BearDogResult<f64> {
+    async fn get_cpu_usage(&self) -> Result<f64, BearDogError> {
 
         Ok(25.0) // 25% usage
-    async fn get_disk_info(&self) -> BearDogResult<DiskInfo> {
+    async fn get_disk_info(&self) -> Result<DiskInfo, BearDogError> {
 
         Ok(DiskInfo {
             total_bytes: 1024 * 1024 * 1024 * 1024,    // 1TB
@@ -318,7 +318,7 @@ trait KeyStore: Send + Sync {
         key_id: &str,
         key_material: &[u8],
         key_type: &KeyType,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = BearDogResult<()>> + Send + '_>>;
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BearDogError>> + Send + '_>>;
     fn get_key(&self, key_id: &str) -> HealthTestFuture<'_>;
     fn delete_key(
 trait MemoryProtector: Send + Sync {}
@@ -326,7 +326,7 @@ trait MemoryProtector: Send + Sync {}
     fn protect_memory(
         data: &[u8],
     ) -> std::pin::Pin<
-        Box<dyn std::future::Future<Output = BearDogResult<ProtectedMemory>> + Send + '_>,
+        Box<dyn std::future::Future<Output = Result<ProtectedMemory, BearDogError>> + Send + '_>,
     >;
     fn clear_memory(
         protected: &ProtectedMemory,
@@ -336,7 +336,7 @@ trait AuditLogger: Send + Sync {}
         entry: &AuditLogEntry,
     fn get_audit_log(
         filter: &AuditLogFilter,
-        Box<dyn std::future::Future<Output = BearDogResult<Vec<AuditLogEntry>>> + Send + '_>,
+        Box<dyn std::future::Future<Output = Result<Vec<AuditLogEntry>, BearDogError>>> + Send + '_>,
 #[derive(Debug, Clone)]
 struct ProtectedMemory {
     id: String,
@@ -438,12 +438,12 @@ impl AuditLogFilter {
             "Recorded operation: {} ({}ms, success: {})",
             operation, new_latency_ms, success
 
-    pub async fn update_availability(&self, availability: f64) -> BearDogResult<()> {
+    pub async fn update_availability(&self, availability: f64) -> Result<(), BearDogError> {
 
         metrics.success_rate = availability;
         debug!("Updated availability: {:.2}%", availability);
 
-    pub async fn get_health_summary(&self) -> BearDogResult<SimpleHealthSummary> {
+    pub async fn get_health_summary(&self) -> Result<SimpleHealthSummary, BearDogError> {
         let health_status = self.health_status.read().await;
         let _metrics = self.metrics.read().await;
         Ok(SimpleHealthSummary {
@@ -454,7 +454,7 @@ impl AuditLogFilter {
                 .unwrap_or_else(|| "Healthy".to_string()),
             last_check: health_status.last_check,
 
-    pub async fn reset_metrics(&self) -> BearDogResult<()> {
+    pub async fn reset_metrics(&self) -> Result<(), BearDogError> {
         metrics.operations_per_second = 0.0;
         metrics.average_latency_ms = 0.0;
         metrics.error_count = 0;

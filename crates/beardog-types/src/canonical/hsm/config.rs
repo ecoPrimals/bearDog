@@ -1,5 +1,3 @@
-
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -7,7 +5,6 @@ use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HsmConfig {
-
     pub provider_type: HsmProviderType,
 
     pub connection: ConnectionConfig,
@@ -21,7 +18,6 @@ pub struct HsmConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum HsmProviderType {
-
     Software,
 
     Hardware,
@@ -42,7 +38,8 @@ pub enum HsmProviderType {
 
     Tpm,
 
-    Custom(String),}
+    Custom(String),
+}
 
 impl fmt::Display for HsmProviderType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -64,7 +61,6 @@ impl fmt::Display for HsmProviderType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionConfig {
-
     pub timeout_ms: u32,
 
     pub max_retries: u32,
@@ -87,7 +83,6 @@ impl Default for ConnectionConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityConfig {
-
     pub auth_required: bool,
 
     pub encryption_enabled: bool,
@@ -107,7 +102,6 @@ impl Default for SecurityConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceConfig {
-
     pub operation_timeout: Duration,
 
     pub batch_size: u32,
@@ -118,7 +112,6 @@ pub struct PerformanceConfig {
 }
 
 pub enum AuthMethod {
-
     None,
 
     Password(String),
@@ -131,7 +124,6 @@ pub enum AuthMethod {
 }
 
 pub struct SoftwareHsmConfig {
-
     pub base: HsmConfig,
 
     pub storage_path: String,
@@ -142,7 +134,6 @@ pub struct SoftwareHsmConfig {
 }
 
 pub struct HsmTierConfig {
-
     pub tier: HsmSecurityTier,
 
     pub tamper_resistance: TamperResistanceLevel,
@@ -152,7 +143,6 @@ pub struct HsmTierConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum HsmSecurityTier {
-
     CommonCriteria,
 
     Fips140Level2,
@@ -163,7 +153,6 @@ pub enum HsmSecurityTier {
 }
 
 pub enum TamperResistanceLevel {
-
     Basic,
 
     Evident,
@@ -174,10 +163,10 @@ pub enum TamperResistanceLevel {
 }
 
 pub enum AttestationLevel {
-
     Enhanced,
 
-    Remote,}
+    Remote,
+}
 
 impl Default for HsmConfig {
     fn default() -> Self {
@@ -215,7 +204,6 @@ impl Default for SoftwareHsmConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AttestationConfig {
-
     pub require_hardware_attestation: bool,
 
     pub accepted_attestation_levels: Vec<String>,

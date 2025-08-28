@@ -87,9 +87,13 @@ pub async fn analyze_security_event(
                         .iter()
                         .map(|step| format!("{step:?}"))
                         .collect(),
+                });
 
                 recommendations.extend(
                     threat_event
+                        .mitigation_steps
+                        .iter()
+                        .map(|step| format!("{step:?}"))
                         .collect::<Vec<String>>(),
                 );
             }
@@ -111,6 +115,7 @@ pub async fn analyze_security_event(
             tracing::warn!(
                 "Threat engine analysis failed, falling back to basic detection: {}",
                 e
+            );
 
             threats_detected = secure_threat_detection(&request.source_ip, &request.event_type);
             incident_created = if should_create_incident(
@@ -199,12 +204,18 @@ pub async fn get_analysis_result(
         recommendations: vec!["Monitor user activity".to_string()],
         processing_time_ms: 15,
         incident_created: None,
-        true,
+    };
+
+    Ok(Json(response))
+}
 
 pub async fn ml_threat_prediction(
+    Json(request): Json<SecurityEventRequest>,
 ) -> Result<Json<ApiResponse<Vec<MlPredictionResponse>>>, StatusCode> {
+    info!(
         "🧠 Running ML threat prediction for event: {}",
         request.event_type
+    );
 
     let predictions = vec![
         MlPredictionResponse {

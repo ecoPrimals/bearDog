@@ -1,3 +1,4 @@
+use beardog_errors::BearDogError;
 
 
 use beardog::{
@@ -10,7 +11,7 @@ use std::sync::Arc;
 use tracing::info;
 
 #[tokio::test]
-async fn test_api_server_initialization() -> BearDogResult<()> {
+async fn test_api_server_initialization() -> Result<(), BearDogError> {
     info!("Testing API server initialization");
     
     let config = BearDogConfig::default();
@@ -23,14 +24,14 @@ async fn test_api_server_initialization() -> BearDogResult<()> {
 }
 
 #[tokio::test]
-async fn test_api_endpoint_routing() -> BearDogResult<()> {
+async fn test_api_endpoint_routing() -> Result<(), BearDogError> {
     info!("Testing API endpoint routing");
 
     Ok(())
 }
 
 #[tokio::test]
-async fn test_api_authentication() -> BearDogResult<()> {
+async fn test_api_authentication() -> Result<(), BearDogError> {
     info!("Testing API authentication");
 
     Ok(())

@@ -20,7 +20,7 @@ use beardog_tunnel::universal_hsm_discovery::{
     DiscoveredHsm, HsmInterfaceType, HsmTier, HsmHealthStatus, PerformanceCapabilities
 };
 use beardog_tunnel::tunnel::hsm::types::KeyType;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use tokio_test;
 use std::collections::HashMap;
 

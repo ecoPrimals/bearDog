@@ -1,7 +1,7 @@
 
 
 use super::types::{AuditLogEntry, AuditLogFilter, OperationResult};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_security::handlers::audit_management::AuditStatistics;
 use serde_json;
 use std::collections::VecDeque;
@@ -28,7 +28,7 @@ pub struct PersistentAuditStorage {
 }
 impl PersistentAuditStorage {
 
-    pub async fn new(file_path: std::path::PathBuf, max_cache_size: usize) -> BearDogResult<Self> {
+    pub async fn new(file_path: std::path::PathBuf, max_cache_size: usize) -> Result<Self, BearDogError> {
 
         if let Some(parent) = file_path.parent() {
             tokio::fs::create_dir_all(parent)
@@ -58,7 +58,7 @@ impl PersistentAuditStorage {
         Ok(storage)
     }
 
-    async fn load_cache(&self) -> BearDogResult<()> {
+    async fn load_cache(&self) -> Result<(), BearDogError> {
         debug!("📥 Loading recent audit entries into cache");
 
         let mut file = match File::open(&self.file_path).await {
@@ -81,7 +81,7 @@ impl PersistentAuditStorage {
         info!("✅ Loaded {} audit entries into cache", cache.len());
         Ok(())
 
-    pub async fn append_entry(&self, entry: &AuditLogEntry) -> BearDogResult<()> {
+    pub async fn append_entry(&self, entry: &AuditLogEntry) -> Result<(), BearDogError> {
         debug!("📝 Appending audit entry: {:?}", entry.operation);
 
         let json_line = serde_json::to_string(entry).map_err(|e| BearDogError::Serialization {
@@ -114,7 +114,7 @@ impl PersistentAuditStorage {
         let mut timestamp = self.stats_cache_timestamp.write().await;
         *timestamp = chrono::Utc::now();
 
-    pub async fn get_entries(&self, filter: &AuditLogFilter) -> BearDogResult<Vec<AuditLogEntry>> {
+    pub async fn get_entries(&self, filter: &AuditLogFilter) -> Result<Vec<AuditLogEntry>, BearDogError>> {
         debug!("🔍 Retrieving audit entries with filter: {:?}", filter);
 
         if filter.from_time.is_none() && filter.limit.unwrap_or(1000) <= self.max_cache_size {
@@ -134,7 +134,7 @@ impl PersistentAuditStorage {
     async fn read_file_entries(
         &self,
         filter: &AuditLogFilter,
-    ) -> BearDogResult<Vec<AuditLogEntry>> {
+    ) -> Result<Vec<AuditLogEntry>, BearDogError>> {
         debug!("📖 Reading audit entries from file");
                 debug!("Audit file does not exist, returning empty results");
                 return Ok(Vec::new());
@@ -174,7 +174,7 @@ impl PersistentAuditStorage {
                 _ => return false,
         true
 
-    pub async fn get_storage_stats(&self) -> BearDogResult<StorageStats> {
+    pub async fn get_storage_stats(&self) -> Result<StorageStats, BearDogError> {
         let cache_size = self.cache.read().await.len();
         let file_size = match tokio::fs::metadata(&self.file_path).await {
             Ok(metadata) => metadata.len(),

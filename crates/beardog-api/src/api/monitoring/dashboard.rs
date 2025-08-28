@@ -30,17 +30,20 @@ pub async fn get_dashboard_overview(
             "memory_usage_percentage": 67.2,
             "cpu_usage_percentage": 23.5,
             "disk_usage_percentage": 45.8
+        },
         "security_summary": {
             "threat_level": "low",
             "security_events_today": 3,
             "blocked_attacks": 0,
             "authentication_failures": 2,
             "active_sessions": 15
+        },
         "genetics_summary": {
             "active_nodes": 5,
             "spawning_events": 12,
             "network_health": "excellent",
             "peer_connections": 8
+        },
         "compliance_summary": {
             "audit_events_today": 156,
             "compliance_score": 98.5,
@@ -50,7 +53,8 @@ pub async fn get_dashboard_overview(
     });
     Ok(Json(overview_data))
 }
-pub async fn get_security_dashboard_data(
+
+pub async fn get_security_dashboard_data() -> Result<Json<serde_json::Value>, StatusCode> {
     info!("🔒 Fetching security dashboard data");
     let security_data = json!({
         "threat_detection": {

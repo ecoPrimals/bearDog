@@ -1,21 +1,21 @@
 
 
-use beardog_errors::BearDogResult;
-use beardog_types::config::BearDogConfig;
+use beardog_errors::BearDogError;
+use beardog_types::canonical::BearDogConfig;
 use std::fs;
 use std::path::Path;
 
 pub struct ConfigLoader;
 impl ConfigLoader {
 
-    pub fn load_from_file<P: AsRef<Path>>(path: P) -> BearDogResult<BearDogConfig> {
+    pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<BearDogConfig, BearDogError> {
         let path = path.as_ref();
         let content = fs::read_to_string(path)?;
         let config: BearDogConfig = toml::from_str(&content)?;
         Ok(config)
     }
 
-    pub fn load_with_fallback(primary: &str, fallbacks: &[&str]) -> BearDogResult<BearDogConfig> {
+    pub fn load_with_fallback(primary: &str, fallbacks: &[&str]) -> Result<BearDogConfig, BearDogError> {
         if let Ok(config) = Self::load_from_file(primary) {
             return Ok(config);
         }
@@ -25,12 +25,12 @@ impl ConfigLoader {
             }
         Err(anyhow::anyhow!("No valid configuration file found"))
 
-    pub fn save_to_file<P: AsRef<Path>>(config: &BearDogConfig, path: P) -> BearDogResult<()> {
+    pub fn save_to_file<P: AsRef<Path>>(config: &BearDogConfig, path: P) -> Result<(), BearDogError> {
         let content = toml::to_string_pretty(config)?;
         fs::write(path, content)?;
 }
 
-pub fn load_config_file(path: &str) -> BearDogResult<BearDogConfig> {
+pub fn load_config_file(path: &str) -> Result<BearDogConfig, BearDogError> {
     let config = ConfigLoader::load_from_file(path)?;
 
     config
@@ -48,7 +48,7 @@ pub fn get_config_paths() -> Vec<String> {
         "/etc/beardog/beardog.toml".to_string(),
     ]
 
-pub fn auto_load_config() -> BearDogResult<BearDogConfig> {
+pub fn auto_load_config() -> Result<BearDogConfig, BearDogError> {
     let paths = get_config_paths();
     for path in &paths {
         if Path::new(path).exists() {
@@ -57,7 +57,6 @@ pub fn auto_load_config() -> BearDogResult<BearDogConfig> {
         "No configuration file found in standard locations"
     ))
 
-#[allow(clippy::module_inception)]
 pub mod config_utils {
     use super::*;
 
@@ -74,7 +73,7 @@ pub mod config_utils {
 
 #[cfg(unix)]}
 
-pub fn check_config_permissions(path: &str) -> BearDogResult<bool> {
+pub fn check_config_permissions(path: &str) -> Result<bool, BearDogError> {
     use std::os::unix::fs::PermissionsExt;
     let path = Path::new(path);
     if !path.exists() {
@@ -99,7 +98,7 @@ pub fn check_config_permissions(path: &str) -> BearDogResult<bool> {
         fs::read_to_string(path).map_err(|e| anyhow::anyhow!("Cannot read config file: {}", e))?;
     Ok(true)
 
-pub fn create_default_config(path: &str) -> BearDogResult<()> {
+pub fn create_default_config(path: &str) -> Result<(), BearDogError> {
     let default_config = BearDogConfig::default();
     let content = toml::to_string_pretty(&default_config)
         .map_err(|e| anyhow::anyhow!("Failed to serialize default config: {}", e))?;
@@ -113,7 +112,7 @@ pub fn create_default_config(path: &str) -> BearDogResult<()> {
         fs::set_permissions(path, perms)
             .map_err(|e| anyhow::anyhow!("Failed to set file permissions: {}", e))?;
 
-pub fn backup_config_file(path: &str) -> BearDogResult<String> {
+pub fn backup_config_file(path: &str) -> Result<String, BearDogError> {
         return Err(anyhow::anyhow!("Config file not found: {}", path.display()));
     let backup_path = format_args!("{}.backup", path.to_string_lossy().to_string());
     fs::copy(path, &backup_path)

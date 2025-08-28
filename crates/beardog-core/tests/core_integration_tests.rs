@@ -1,11 +1,10 @@
-
-
 #![allow(unused_variables, dead_code)]
+use beardog_errors::BearDogError;
 
 /*
 #[tokio::test]
 #[ignore = "Outdated test - needs API updates"]
-async fn test_beardog_core_initialization() -> BearDogResult<()> {
+async fn test_beardog_core_initialization() -> Result<(), BearDogError> {
 
     let config = BearDogConfig::default();
     let core = BearDogCore::new(config).await?;
@@ -16,7 +15,7 @@ async fn test_beardog_core_initialization() -> BearDogResult<()> {
     assert!(state.components.contains_key("core"));
     Ok(())
 }
-async fn test_beardog_core_security_operations() -> BearDogResult<()> {
+async fn test_beardog_core_security_operations() -> Result<(), BearDogError> {
 
     let key_result = core.generate_key("test", "test_metadata").await;
 
@@ -37,7 +36,7 @@ async fn test_beardog_core_security_operations() -> BearDogResult<()> {
         Ok(valid) => {
             println!("✅ Signature verification returned: {}", valid);
             println!("ℹ️ Signature verification failed gracefully: {}", e);
-async fn test_ecosystem_provider_creation() -> BearDogResult<()> {
+async fn test_ecosystem_provider_creation() -> Result<(), BearDogError> {
 
     let core = Arc::new(BearDogCore::new(config).await?);
     let provider = BearDogEcosystemProvider::new(core, "test-beardog-1".to_string());
@@ -45,7 +44,7 @@ async fn test_ecosystem_provider_creation() -> BearDogResult<()> {
     let modules = provider.available_modules();
     assert!(!modules.is_empty());
     println!("📦 Available modules: {}", modules.len());
-async fn test_capability_discovery() -> BearDogResult<()> {
+async fn test_capability_discovery() -> Result<(), BearDogError> {
 
     let capabilities = vec![
         CapabilityType::ComputeOptimization,
@@ -59,7 +58,7 @@ async fn test_capability_discovery() -> BearDogResult<()> {
         let serialized = rmp_serde::to_vec(&capability)?;
         let deserialized: CapabilityType = serde_json::from_str(&serialized)?;
         assert_eq!(capability, deserialized);
-async fn test_core_error_handling() -> BearDogResult<()> {
+async fn test_core_error_handling() -> Result<(), BearDogError> {
 
     let invalid_verify_result = core.verify_signature("", "", "invalid_hex").await;
     assert!(invalid_verify_result.is_err());
@@ -70,7 +69,7 @@ async fn test_core_error_handling() -> BearDogResult<()> {
         Err(other) => {
             println!("✅ Error properly categorized: {:?}", other);
         Ok(_) => panic!("Should have failed with invalid input"),
-async fn test_service_mesh_client() -> BearDogResult<()> {
+async fn test_service_mesh_client() -> Result<(), BearDogError> {
 
     let client = UniversalServiceMeshClient::new()?;
 

@@ -1,4 +1,4 @@
-
+use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -9,7 +9,7 @@ use super::types::{
     PhonebookConfig, ServiceAdvertisement, NodeInfo, ServiceHealthStatus,
     TrustLevel,
 };
-use crate::{BearDogError, BearDogResult};
+use crate::{{BearDogError}};
 
 pub struct PhonebookService {
 
@@ -100,7 +100,7 @@ pub enum PeerConnectionStatus {
 
 impl PhonebookService {
 
-    pub async fn new(config: PhonebookConfig) -> BearDogResult<Self> {
+    pub async fn new(config: PhonebookConfig) -> Result<Self, BearDogError> {
         if !config.enabled {
             return Err(BearDogError::config("Phonebook service is disabled"));
         }
@@ -135,7 +135,7 @@ impl PhonebookService {
         &self,
         node_info: NodeInfo,
         region: &str,
-    ) -> BearDogResult<String> {
+    ) -> Result<String, BearDogError> {
             "📝 Registering node '{}' from region '{}'",
             node_info.id, region
 
@@ -168,7 +168,7 @@ impl PhonebookService {
             node_info.id, registration_id
         Ok(registration_id)
 
-    pub async fn heartbeat(&self, node_id: &str) -> BearDogResult<()> {
+    pub async fn heartbeat(&self, node_id: &str) -> Result<(), BearDogError> {
         let updated = {
             if let Some(entry) = nodes.get_mut(node_id) {
                 entry.last_heartbeat = SystemTime::now();
@@ -184,7 +184,7 @@ impl PhonebookService {
 
     pub async fn discover_nodes(
         criteria: &NodeDiscoveryCriteria,
-    ) -> BearDogResult<Vec<NodeInfo>> {
+    ) -> Result<Vec<NodeInfo>, BearDogError>> {
         debug!("🔍 Discovering nodes with criteria: {:?}", criteria);
 
             status.total_discovery_requests += 1;
@@ -207,7 +207,7 @@ impl PhonebookService {
 
     pub async fn advertise_service(
         advertisement: ServiceAdvertisement,
-    ) -> BearDogResult<()> {
+    ) -> Result<(), BearDogError> {
         info!("📢 Advertising service: {}", advertisement.service_name);
 
             let mut ads = self.service_advertisements.write().await;
@@ -217,7 +217,7 @@ impl PhonebookService {
 
     pub async fn discover_services(
         criteria: &ServiceDiscoveryCriteria,
-    ) -> BearDogResult<Vec<ServiceAdvertisement>> {
+    ) -> Result<Vec<ServiceAdvertisement>, BearDogError>> {
         debug!("🔍 Discovering services with criteria: {:?}", criteria);
         let ads = self.service_advertisements.read().await;
         let mut matching_services = Vec::new();
@@ -230,21 +230,21 @@ impl PhonebookService {
     pub async fn get_statistics(&self) -> PhonebookStatus {
         self.status.read().await.clone()
 
-    pub async fn connect_to_phonebook(&self, peer_info: PhonebookPeer) -> BearDogResult<()> {
+    pub async fn connect_to_phonebook(&self, peer_info: PhonebookPeer) -> Result<(), BearDogError> {
         info!("📞 Connecting to phonebook peer: {}", peer_info.peer_id);
 
             let mut peers = self.phonebook_network.write().await;
             peers.insert(peer_info.peer_id.clone(), peer_info);
             status.connected_peers += 1;
 
-    pub async fn unregister_node(&self, node_id: &str) -> BearDogResult<()> {
+    pub async fn unregister_node(&self, node_id: &str) -> Result<(), BearDogError> {
         info!("🗑️ Unregistering node: {}", node_id);
         let removed = {
             nodes.remove(node_id).is_some()
         if removed {
             status.registered_nodes = status.registered_nodes.saturating_sub(1);
 
-    pub async fn cleanup_expired_entries(&self) -> BearDogResult<()> {
+    pub async fn cleanup_expired_entries(&self) -> Result<(), BearDogError> {
         debug!("🧹 Cleaning up expired phonebook entries");
         let now = SystemTime::now();
         let mut expired_nodes = Vec::new();
@@ -286,7 +286,7 @@ impl PhonebookService {
                 expired_services.len()
             );
 
-    async fn start_background_tasks(&self) -> BearDogResult<()> {
+    async fn start_background_tasks(&self) -> Result<(), BearDogError> {
 
     fn entry_matches_criteria(
         entry: &PhonebookEntry,

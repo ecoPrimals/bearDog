@@ -1,9 +1,9 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::time::Duration;
 
 // Import unified types
-use beardog_types::config::{UnifiedProcessorConfig, ProcessorType};
-use beardog_traits::canonical::{UniversalProvider, PlatformProvider};
+use beardog_traits::canonical::{PlatformProvider, UniversalProvider};
+use beardog_types::config::{ProcessorType, UnifiedProcessorConfig};
 
 /// Mock implementations for benchmarking
 struct UnifiedProviderImpl {
@@ -48,7 +48,7 @@ impl LegacyProviderImpl {
 /// Benchmark unified vs fragmented provider implementations
 fn benchmark_provider_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("provider_performance");
-    
+
     // Setup unified provider
     let mut unified_provider = UnifiedProviderImpl {
         config: UnifiedProcessorConfig {
@@ -68,16 +68,12 @@ fn benchmark_provider_performance(c: &mut Criterion) {
 
     // Benchmark unified provider
     group.bench_function("unified_provider", |b| {
-        b.iter(|| {
-            unified_provider.process(black_box(&test_data)).unwrap()
-        })
+        b.iter(|| unified_provider.process(black_box(&test_data)).unwrap())
     });
 
     // Benchmark legacy provider
     group.bench_function("legacy_provider", |b| {
-        b.iter(|| {
-            legacy_provider.process(black_box(&test_data)).unwrap()
-        })
+        b.iter(|| legacy_provider.process(black_box(&test_data)).unwrap())
     });
 
     group.finish();
@@ -101,18 +97,8 @@ fn benchmark_config_performance(c: &mut Criterion) {
     // Legacy configuration creation (multiple structs)
     group.bench_function("legacy_config_creation", |b| {
         b.iter(|| {
-            let _security_config = black_box((
-                "security".to_string(),
-                300u64,
-                100usize,
-                true,
-            ));
-            let _core_config = black_box((
-                true,
-                60u64,
-                50usize,
-                3u32,
-            ));
+            let _security_config = black_box(("security".to_string(), 300u64, 100usize, true));
+            let _core_config = black_box((true, 60u64, 50usize, 3u32));
         })
     });
 
@@ -124,9 +110,7 @@ fn benchmark_config_performance(c: &mut Criterion) {
     };
 
     group.bench_function("unified_config_serialization", |b| {
-        b.iter(|| {
-            serde_json::to_string(black_box(&unified_config)).unwrap()
-        })
+        b.iter(|| serde_json::to_string(black_box(&unified_config)).unwrap())
     });
 
     group.finish();
@@ -149,7 +133,7 @@ fn benchmark_error_performance(c: &mut Criterion) {
         b.iter(|| {
             black_box(std::io::Error::new(
                 std::io::ErrorKind::PermissionDenied,
-                "Test security error"
+                "Test security error",
             ))
         })
     });
@@ -173,19 +157,16 @@ fn benchmark_trait_dispatch(c: &mut Criterion) {
 
     // Static dispatch (unified traits)
     group.bench_function("static_dispatch", |b| {
-        b.iter(|| {
-            unified_provider.process(black_box(&test_data)).unwrap()
-        })
+        b.iter(|| unified_provider.process(black_box(&test_data)).unwrap())
     });
 
     // Dynamic dispatch simulation
-    let provider: Box<dyn UniversalProvider<Config = UnifiedProcessorConfig, Error = std::io::Error>> = 
-        Box::new(unified_provider);
+    let provider: Box<
+        dyn UniversalProvider<Config = UnifiedProcessorConfig, Error = std::io::Error>,
+    > = Box::new(unified_provider);
 
     group.bench_function("dynamic_dispatch", |b| {
-        b.iter(|| {
-            provider.process(black_box(&test_data)).unwrap()
-        })
+        b.iter(|| provider.process(black_box(&test_data)).unwrap())
     });
 
     group.finish();
@@ -213,16 +194,18 @@ fn benchmark_memory_usage(c: &mut Criterion) {
     group.bench_function("legacy_config_memory", |b| {
         b.iter(|| {
             let configs: Vec<(String, u64, usize, bool, bool, u64, usize, u32)> = (0..1000)
-                .map(|_| (
-                    "system".to_string(),
-                    300u64,
-                    100usize,
-                    true,
-                    true,
-                    60u64,
-                    50usize,
-                    3u32,
-                ))
+                .map(|_| {
+                    (
+                        "system".to_string(),
+                        300u64,
+                        100usize,
+                        true,
+                        true,
+                        60u64,
+                        50usize,
+                        3u32,
+                    )
+                })
                 .collect();
             black_box(configs)
         })
@@ -242,7 +225,11 @@ fn benchmark_compilation_impact(c: &mut Criterion) {
             for i in 0..100 {
                 let provider = UnifiedProviderImpl {
                     config: UnifiedProcessorConfig {
-                        processor_type: if i % 2 == 0 { ProcessorType::Security } else { ProcessorType::System },
+                        processor_type: if i % 2 == 0 {
+                            ProcessorType::Security
+                        } else {
+                            ProcessorType::System
+                        },
                         core: Default::default(),
                         security: Default::default(),
                     },
@@ -265,4 +252,4 @@ criterion_group!(
     benchmark_compilation_impact
 );
 
-criterion_main!(unified_benchmarks); 
+criterion_main!(unified_benchmarks);

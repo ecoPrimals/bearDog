@@ -1,12 +1,19 @@
-
-
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+pub use beardog_types::canonical::configuration::consolidated::{AuthConfig, SecurityConfig};
 pub use beardog_types::canonical::security::*;
-pub use beardog_types::security::SecurityProviderConfig;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct SecurityProviderConfig {
+    pub max_failed_attempts: u32,
+    pub lockout_duration_minutes: u32,
+    pub session_timeout_minutes: u32,
+    pub enable_audit_logging: bool,
+    pub require_mfa: bool,
+}
 
 impl Default for SecurityProviderConfig {
     fn default() -> Self {
@@ -20,7 +27,7 @@ impl Default for SecurityProviderConfig {
     }
 }
 
-pub use beardog_types::canonical::configuration::security::RateLimitConfig;
+pub use beardog_types::canonical::configuration::consolidated::RateLimitConfig;
 
 #[derive(Debug, Clone)]
 pub struct BearDogSecurityProvider {
@@ -98,7 +105,7 @@ pub struct SecurityProviderMetrics {
 #[derive(Debug, Clone)]
 pub struct SessionStore {
     pub sessions: Arc<RwLock<HashMap<String, SessionData>>>,
-    pub config: UnifiedAuthConfig,
+    pub config: AuthConfig,
 }
 
 #[derive(Debug, Clone)]
@@ -111,24 +118,7 @@ pub struct SessionData {
     pub is_authenticated: bool,
 }
 
-#[derive(Debug, Clone)]
-#[deprecated(since = "3.1.0", note = "Use UnifiedAuthConfig instead")]
-#[deprecated(since = "3.1.0", note = "Use UnifiedAuthConfig instead")]
-pub struct SessionConfig {
-    pub timeout_minutes: u32,
-    pub max_sessions_per_user: u32,
-    pub require_secure_transport: bool,
-}
-
-impl Default for SessionConfig {
-    fn default() -> Self {
-        Self {
-            timeout_minutes: 60,
-            max_sessions_per_user: 5,
-            require_secure_transport: true,
-        }
-    }
-}
+// SessionConfig removed - use AuthConfig instead
 
 #[derive(Debug, Clone)]
 pub struct AuditManager {
@@ -183,7 +173,7 @@ impl BearDogSecurityProvider {
             locked_accounts: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             failed_attempts: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             metrics: SecurityProviderMetrics::default(),
-            session_store: SessionStore::new(SessionConfig::default()),
+            session_store: SessionStore::new(AuthConfig::default()),
             audit_manager: AuditManager::new(AuditConfig::default()),
         }
     }
@@ -203,9 +193,10 @@ impl BearDogSecurityProvider {
         *attempts += 1;
 
         if *attempts >= self.config.max_failed_attempts {
-            let lockout_duration = chrono::Duration::minutes(self.config.lockout_duration_minutes as i64);
+            let lockout_duration =
+                chrono::Duration::minutes(self.config.lockout_duration_minutes as i64);
             let locked_until = Utc::now() + lockout_duration;
-            
+
             let mut locked_accounts = self.locked_accounts.write().await;
             locked_accounts.insert(user_id.to_string(), locked_until);
 
@@ -214,7 +205,6 @@ impl BearDogSecurityProvider {
     }
 
     pub async fn record_successful_auth(&mut self, user_id: &str) {
-
         let mut failed_attempts = self.failed_attempts.write().await;
         failed_attempts.remove(user_id);
 
@@ -232,18 +222,23 @@ impl RateLimiter {
 
     pub fn is_rate_limited(&mut self, identifier: &str) -> bool {
         let now = Utc::now();
-        let state = self.state.entry(identifier.to_string()).or_insert(RateLimiterState {
-            requests: 0,
-            last_reset: now,
-        });
+        let state = self
+            .state
+            .entry(identifier.to_string())
+            .or_insert(RateLimiterState {
+                requests: 0,
+                last_reset: now,
+            });
 
-        if now.signed_duration_since(state.last_reset).num_seconds() >= self.config.window_seconds as i64 {
+        if now.signed_duration_since(state.last_reset)
+            >= chrono::Duration::from_std(self.config.window).unwrap_or_default()
+        {
             state.requests = 0;
             state.last_reset = now;
         }
 
         state.requests += 1;
-        state.requests > self.config.max_requests
+        state.requests > self.config.requests_per_minute
     }
 }
 
@@ -258,21 +253,26 @@ impl Default for SecurityRules {
 }
 
 impl SessionStore {
-    pub fn new(config: UnifiedAuthConfig) -> Self {
+    pub fn new(config: AuthConfig) -> Self {
         Self {
             sessions: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             config,
         }
     }
 
-    pub async fn create_session(&self, user_id: &str, ip_address: &str, user_agent: &str) -> String {
+    pub async fn create_session(
+        &self,
+        user_id: &str,
+        ip_address: &str,
+        user_agent: &str,
+    ) -> String {
         let session_id = uuid::Uuid::new_v4().to_string();
         let session_data = SessionData {
-            user_id,
+            user_id: user_id.to_string(),
             created_at: Utc::now(),
             last_accessed: Utc::now(),
-            ip_address,
-            user_agent,
+            ip_address: ip_address.to_string(),
+            user_agent: user_agent.to_string(),
             is_authenticated: true,
         };
 
@@ -295,17 +295,26 @@ impl AuditManager {
         }
     }
 
-    pub async fn log_event(&self, event_type: &str, user_id: Option<&str>, details: HashMap<&str, &str>, level: AuditLevel) {
+    pub async fn log_event(
+        &self,
+        event_type: &str,
+        user_id: Option<&str>,
+        details: HashMap<&str, &str>,
+        level: AuditLevel,
+    ) {
         if !self.config.enabled || level < self.config.log_level {
             return;
         }
 
         let event = AuditEvent {
             id: uuid::Uuid::new_v4().to_string(),
-            event_type,
-            user_id,
+            event_type: event_type.to_string(),
+            user_id: user_id.map(|s| s.to_string()),
             timestamp: Utc::now(),
-            details,
+            details: details
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
             level,
         };
 
@@ -320,7 +329,6 @@ impl AuditManager {
 
 impl PartialOrd for AuditLevel {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        use std::cmp::Ordering;
         let self_val = match self {
             AuditLevel::Debug => 0,
             AuditLevel::Low => 1,

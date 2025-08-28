@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use tokio;
 use tracing::{info, warn};
@@ -49,7 +49,7 @@ impl BiomeOSAdapter {
         }
     }
 
-    pub async fn authenticate(&mut self) -> BearDogResult<()> {
+    pub async fn authenticate(&mut self) -> Result<(), BearDogError> {
         info!("🔐 Authenticating with BiomeOS at {}", self.config.endpoint);
 
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
@@ -59,7 +59,7 @@ impl BiomeOSAdapter {
         Ok(())
     }
 
-    pub async fn store_data(&self, key: &str, data: &[u8]) -> BearDogResult<String> {
+    pub async fn store_data(&self, key: &str, data: &[u8]) -> Result<String, BearDogError> {
         if !self.authenticated {
             return Err("Not authenticated with BiomeOS".into());
         }
@@ -71,7 +71,7 @@ impl BiomeOSAdapter {
         Ok(format_args!("biome_storage_{}", key).to_string())
     }
 
-    pub async fn encrypt_data(&self, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn encrypt_data(&self, data: &[u8]) -> Result<Vec<u8, BearDogError>> {
         if !self.authenticated {
             return Err("Not authenticated with BiomeOS".into());
         }
@@ -98,7 +98,7 @@ impl UniversalAdapter {
         }
     }
 
-    pub async fn register_biome_provider(&mut self, config: BiomeOSAuthConfig) -> BearDogResult<()> {
+    pub async fn register_biome_provider(&mut self, config: BiomeOSAuthConfig) -> Result<(), BearDogError> {
         let mut adapter = BiomeOSAdapter::new(config);
         adapter.authenticate().await?;
 
@@ -110,7 +110,7 @@ impl UniversalAdapter {
         Ok(())
     }
 
-    pub async fn register_fallback_providers(&mut self) -> BearDogResult<()> {
+    pub async fn register_fallback_providers(&mut self) -> Result<(), BearDogError> {
 
         self.providers.insert(CapabilityType::KeyManagement, "Software".to_string());
         self.providers.insert(CapabilityType::Authentication, "Local".to_string());
@@ -119,7 +119,7 @@ impl UniversalAdapter {
         Ok(())
     }
 
-    pub async fn execute_request(&self, request: PrimalRequest) -> BearDogResult<PrimalResponse> {
+    pub async fn execute_request(&self, request: PrimalRequest) -> Result<PrimalResponse, BearDogError> {
         let provider = self.providers.get(&request.capability)
             .ok_or_else(|| format_args!("No provider for capability: {:?}", request.capability).to_string())?;
 
@@ -131,7 +131,7 @@ impl UniversalAdapter {
         }
     }
 
-    async fn execute_biome_request(&self, request: PrimalRequest) -> BearDogResult<PrimalResponse> {
+    async fn execute_biome_request(&self, request: PrimalRequest) -> Result<PrimalResponse, BearDogError> {
         let adapter = self.biome_adapter.as_ref()
             .ok_or("BiomeOS adapter not initialized")?;
 
@@ -164,7 +164,7 @@ impl UniversalAdapter {
         }
     }
 
-    async fn execute_software_request(&self, request: PrimalRequest) -> BearDogResult<PrimalResponse> {
+    async fn execute_software_request(&self, request: PrimalRequest) -> Result<PrimalResponse, BearDogError> {
         info!("🔧 Executing with software provider: {:?}", request.capability);
 
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
@@ -177,7 +177,7 @@ impl UniversalAdapter {
         })
     }
 
-    async fn execute_local_request(&self, request: PrimalRequest) -> BearDogResult<PrimalResponse> {
+    async fn execute_local_request(&self, request: PrimalRequest) -> Result<PrimalResponse, BearDogError> {
         info!("🏠 Executing with local provider: {:?}", request.capability);
 
         Ok(PrimalResponse {
@@ -198,7 +198,7 @@ impl UniversalAdapter {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     println!("🔧 Initializing BearDog BiomeOS Migration Demo...");
 
@@ -217,7 +217,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_legacy_biome_integration() -> BearDogResult<()> {
+async fn demonstrate_legacy_biome_integration() -> Result<(), BearDogError> {
     info!("\n📜 Phase 1: Legacy BiomeOS Integration");
     info!("-------------------------------------");
 
@@ -249,7 +249,7 @@ async fn demonstrate_legacy_biome_integration() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_universal_adapter_migration() -> BearDogResult<()> {
+async fn demonstrate_universal_adapter_migration() -> Result<(), BearDogError> {
     info!("\n🔄 Phase 2: Universal Adapter Migration");
     info!("---------------------------------------");
 
@@ -284,7 +284,7 @@ async fn demonstrate_universal_adapter_migration() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_capability_first_operations() -> BearDogResult<()> {
+async fn demonstrate_capability_first_operations() -> Result<(), BearDogError> {
     info!("\n🎯 Phase 3: Capability-First Operations");
     info!("--------------------------------------");
 
@@ -332,7 +332,7 @@ async fn demonstrate_capability_first_operations() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_hot_swappable_providers() -> BearDogResult<()> {
+async fn demonstrate_hot_swappable_providers() -> Result<(), BearDogError> {
     info!("\n🔥 Phase 4: Hot-Swappable Providers");
     info!("-----------------------------------");
 

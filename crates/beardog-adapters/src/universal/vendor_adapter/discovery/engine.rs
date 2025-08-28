@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::CapabilityType;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -135,7 +135,7 @@ impl Default for ResourceRequirements {
 
 impl VendorDiscoveryEngine {
 
-    pub async fn new(config: DiscoveryEngineConfig) -> BearDogResult<Self> {
+    pub async fn new(config: DiscoveryEngineConfig) -> Result<Self, BearDogError> {
         let engine_id = Uuid::new_v4();
         tracing::info!("🔍 Creating Vendor Discovery Engine: {}", engine_id);
         let mut engine = Self {
@@ -161,7 +161,7 @@ impl VendorDiscoveryEngine {
         tracing::info!("📋 Adding discovery strategy: {}", strategy.strategy_name());
         self.strategies.push(strategy);
 
-    pub async fn discover_all_capabilities(&self) -> BearDogResult<Vec<DiscoveredCapability>> {
+    pub async fn discover_all_capabilities(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
         let mut all_capabilities = Vec::new();
         for strategy in &self.strategies {
             match strategy.discover_capabilities().await {
@@ -183,7 +183,7 @@ impl VendorDiscoveryEngine {
     pub async fn discover_capability(
         &self,
         capability: &CapabilityType,
-    ) -> BearDogResult<Vec<DiscoveredCapability>> {
+    ) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
         let mut matching_capabilities = Vec::new();
             if strategy.can_discover(capability).await {
                 match strategy.discover_capabilities().await {

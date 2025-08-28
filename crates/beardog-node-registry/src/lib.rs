@@ -1,6 +1,4 @@
-
-
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -26,14 +24,13 @@ pub mod registry {
         Inactive,
         Maintenance,
     }
-    
-    impl NodeRegistry {
 
+    impl NodeRegistry {
         pub fn new() -> Self {
             Self::default()
         }
 
-        pub fn register_node(&mut self, node_info: NodeInfo) -> BearDogResult<()> {
+        pub fn register_node(&mut self, node_info: NodeInfo) -> Result<(), BearDogError> {
             self.nodes.insert(node_info.node_id.clone(), node_info);
             Ok(())
         }

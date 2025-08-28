@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use beardog_security::zero_copy::{BufferPool, ZeroCopyCrypto};
 use beardog_tunnel::universal_hsm::{
     HumanEntropyCapabilities, ProviderInfo, UniversalHsmFactory, UniversalHsmManager,
@@ -29,7 +29,7 @@ pub trait WorkflowEngineInterface: Send + Sync {
 
 impl UnifiedBearDogShowcase {
 
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         info!("🚀 Initializing Unified BearDog Architecture Showcase");
 
         let hsm_manager = Arc::new(UniversalHsmManager::new().await?);
@@ -49,7 +49,7 @@ impl UnifiedBearDogShowcase {
         })
     }
 
-    pub async fn demonstrate_unified_hsm(&self) -> BearDogResult<()> {
+    pub async fn demonstrate_unified_hsm(&self) -> Result<(), BearDogError> {
         info!("🔐 Demonstrating Unified HSM System");
 
         let providers = self.hsm_manager.discover_providers().await?;
@@ -79,7 +79,7 @@ impl UnifiedBearDogShowcase {
         Ok(())
     }
 
-    pub async fn demonstrate_zero_copy_performance(&self) -> BearDogResult<()> {
+    pub async fn demonstrate_zero_copy_performance(&self) -> Result<(), BearDogError> {
         info!("⚡ Demonstrating Zero-Copy Performance Optimizations");
 
         let test_data_sizes = vec![32, 1024, 64 * 1024, 1024 * 1024]; // 32B, 1KB, 64KB, 1MB
@@ -112,7 +112,7 @@ impl UnifiedBearDogShowcase {
         Ok(())
     }
 
-    pub async fn demonstrate_canonical_types(&self) -> BearDogResult<()> {
+    pub async fn demonstrate_canonical_types(&self) -> Result<(), BearDogError> {
         info!("🏗️ Demonstrating Canonical Type System");
 
         let key_types = vec![KeyType::Ed25519, KeyType::Secp256k1, KeyType::Aes256];
@@ -135,7 +135,7 @@ impl UnifiedBearDogShowcase {
         Ok(())
     }
 
-    pub async fn demonstrate_system_health(&self) -> BearDogResult<()> {
+    pub async fn demonstrate_system_health(&self) -> Result<(), BearDogError> {
         info!("🏥 Demonstrating System Health Monitoring");
 
         let hsm_health = self.hsm_manager.health_check().await?;
@@ -168,7 +168,7 @@ impl UnifiedBearDogShowcase {
 }
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt().with_env_filter("info").init();
 
@@ -208,12 +208,12 @@ async fn main() -> BearDogResult<()> {
 }
 
 impl ZeroCopyCrypto {
-    pub async fn new_with_pool(_pool: Arc<BufferPool>) -> BearDogResult<Self> {
+    pub async fn new_with_pool(_pool: Arc<BufferPool>) -> Result<Self, BearDogError> {
 
         Ok(())
     }
 
-    pub async fn encrypt_zero_copy(&self, _data: &[u8]) -> BearDogResult<Vec<u8>> {
+    pub async fn encrypt_zero_copy(&self, _data: &[u8]) -> Result<Vec<u8, BearDogError>> {
 
         Ok(vec![0u8; 32]) // Mock encrypted data
     }
@@ -243,18 +243,18 @@ impl BufferPool {
 }
 
 impl UniversalHsmManager {
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
 
         Ok(())
     }
 
-    pub async fn discover_providers(&self) -> BearDogResult<Vec<Box<dyn HsmProvider>>> {
+    pub async fn discover_providers(&self) -> Result<Vec<Box<dyn HsmProvider, BearDogError>>> {
 
         tracing::warn!("Mock SongBird discovery - replace with real implementation");
         Ok(vec![])
     }
 
-    pub async fn health_check(&self) -> BearDogResult<HealthStatus> {
+    pub async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
         Ok(HealthStatus {
             status: "Healthy".to_string(),
         })
@@ -274,7 +274,5 @@ pub struct BufferPoolStats {
     pub lock_free_operations: u64,
 }
 
-#[derive(Debug)]
-pub struct HealthStatus {
-    pub status: String,
-}
+// Use canonical HealthStatus from beardog-types instead of local definition
+// pub use beardog_types::HealthStatus;

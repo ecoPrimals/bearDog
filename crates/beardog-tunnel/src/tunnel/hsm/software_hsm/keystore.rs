@@ -2,7 +2,7 @@
 
 use super::types::*;
 use crate::tunnel::hsm::types::*;
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
@@ -10,10 +10,10 @@ use tracing::{debug, info};
 use crate::tunnel::hsm::software_hsm::{EncryptionKeyTrait, KeyStoreConfig, StorageBackendTrait};
 impl SoftwareKeyStore {
 
-    pub async fn new(config: &KeyStoreConfig) -> BearDogResult<Self> {
+    pub async fn new(config: &KeyStoreConfig) -> Result<Self, BearDogError> {
         info!("Creating software key store with config: {:?}", config);
 
-        let storage_backend: Arc<dyn StorageBackendTrait> = match config.storage_type {
+        let storage_backend: impl StorageBackendTrait = match config.storage_type {
             KeyStorageType::EncryptedFile => Arc::new(FileStorageBackend::new(config).await?),
             KeyStorageType::Database => Arc::new(DatabaseStorageBackend::new(config).await?),
             KeyStorageType::InMemory => Arc::new(MemoryStorageBackend::new().await?),
@@ -23,7 +23,7 @@ impl SoftwareKeyStore {
             }
         };
 
-        let encryption_key: Arc<dyn EncryptionKeyTrait> = Arc::new(DefaultEncryptionKey);
+        let encryption_key: impl EncryptionKeyTrait = Arc::new(DefaultEncryptionKey);
         let _cache_size = std::num::NonZeroUsize::new(config.cache_size).ok_or_else(|| {
             BearDogError::configuration("HSM cache size must be non-zero".to_string(),
             )
@@ -35,14 +35,14 @@ impl SoftwareKeyStore {
         })
     }
 
-    pub async fn initialize(&self) -> BearDogResult<()> {
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
         info!("Initializing software key store");
         self.storage_backend.initialize().await?;
         self.encryption_key.initialize().await?;
         debug!("Software key store initialized successfully");
         Ok(())
 
-    pub async fn store_key(&self, key: &SoftwareKey) -> BearDogResult<()> {
+    pub async fn store_key(&self, key: &SoftwareKey) -> Result<(), BearDogError> {
         debug!("Storing key: {}", key.id);
 
         let serialized = bincode::serialize(key).map_err(|e| BearDogError::Serialization {
@@ -56,7 +56,7 @@ impl SoftwareKeyStore {
         cache.insert(key.id.clone(), key.clone());
         info!("Key stored successfully: {}", key.id);
 
-    pub async fn get_key(&self, key_id: &str) -> BearDogResult<SoftwareKey> {
+    pub async fn get_key(&self, key_id: &str) -> Result<SoftwareKey, BearDogError> {
         debug!("Getting key: {}", key_id);
 
         {
@@ -77,7 +77,7 @@ impl SoftwareKeyStore {
         debug!("Key loaded from storage: {}", key_id);
         Ok(key)
 
-    pub async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
+    pub async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         debug!("Deleting key: {}", key_id);
 
         self.storage_backend.delete(key_id).await?;
@@ -85,15 +85,15 @@ impl SoftwareKeyStore {
         cache.remove(key_id);
         info!("Key deleted successfully: {}", key_id);
 
-    pub async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+    pub async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
         debug!("Listing all keys");
         self.storage_backend.list_keys().await
 
-    pub async fn backup(&self) -> BearDogResult<Vec<u8>> {
+    pub async fn backup(&self) -> Result<Vec<u8>, BearDogError>> {
         info!("Creating key store backup");
         self.storage_backend.backup().await
 
-    pub async fn restore(&self, backup_data: &[u8]) -> BearDogResult<()> {
+    pub async fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError> {
         info!("Restoring key store from backup");
 
             let mut cache = self.key_cache.write().await;
@@ -101,7 +101,7 @@ impl SoftwareKeyStore {
         self.storage_backend.restore(backup_data).await?;
         info!("Key store restored successfully");
 
-    pub async fn get_statistics(&self) -> BearDogResult<KeyStoreStatistics> {
+    pub async fn get_statistics(&self) -> Result<KeyStoreStatistics, BearDogError> {
         let keys = self.list_keys().await?;
         let cache_size = {
             let cache = self.key_cache.read().await;
@@ -111,7 +111,7 @@ impl SoftwareKeyStore {
             cached_keys: cache_size,
             keys,
 
-    pub async fn clear_cache(&self) -> BearDogResult<()> {
+    pub async fn clear_cache(&self) -> Result<(), BearDogError> {
         debug!("Clearing key cache");
         cache.clear();
 

@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -16,14 +16,14 @@ pub struct ProductionConfigValidator;
 
 impl ProductionConfigValidator {
 
-    pub fn validate_config(config: &ProductionConfig) -> BearDogResult<()> {
+    pub fn validate_config(config: &ProductionConfig) -> Result<(), BearDogError> {
         Self::validate_cluster_config(&config.cluster)?;
         Self::validate_backup_config(&config.backup)?;
         Self::validate_maintenance_config(&config.maintenance)?;
         Ok(())
     }
 
-    pub fn validate_cluster_config(config: &ClusterConfig) -> BearDogResult<()> {
+    pub fn validate_cluster_config(config: &ClusterConfig) -> Result<(), BearDogError> {
         if config.nodes.is_empty() {
             return Err(BearDogError::configuration("Cluster must have at least one node".to_string()));
         }
@@ -35,7 +35,7 @@ impl ProductionConfigValidator {
         Ok(())
     }
 
-    pub fn validate_node_config(config: &NodeConfig) -> BearDogResult<()> {
+    pub fn validate_node_config(config: &NodeConfig) -> Result<(), BearDogError> {
         if config.id.is_empty() {
             return Err(BearDogError::configuration("Node ID cannot be empty".to_string()));
         }
@@ -51,7 +51,7 @@ impl ProductionConfigValidator {
         Ok(())
     }
 
-    pub fn validate_backup_config(config: &BackupConfig) -> BearDogResult<()> {
+    pub fn validate_backup_config(config: &BackupConfig) -> Result<(), BearDogError> {
         if config.enabled && config.retention_days == 0 {
             return Err(BearDogError::configuration("Backup retention days must be greater than 0 when backups are enabled".to_string()));
         }
@@ -59,7 +59,7 @@ impl ProductionConfigValidator {
         Ok(())
     }
 
-    pub fn validate_maintenance_config(config: &MaintenanceConfig) -> BearDogResult<()> {
+    pub fn validate_maintenance_config(config: &MaintenanceConfig) -> Result<(), BearDogError> {
         for window in &config.maintenance_windows {
             if window.duration_minutes == 0 {
                 return Err(BearDogError::configuration("Maintenance window duration must be greater than 0".to_string()));
@@ -102,7 +102,7 @@ impl ProductionConfigBuilder {
         self
     }
 
-    pub fn build(self) -> BearDogResult<ProductionConfig> {
+    pub fn build(self) -> Result<ProductionConfig, BearDogError> {
         ProductionConfigValidator::validate_config(&self.config)?;
         Ok(self.config)
     }

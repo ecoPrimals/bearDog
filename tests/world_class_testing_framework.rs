@@ -5,7 +5,7 @@ use beardog_auth::*;
 use beardog_compliance::*;
 use beardog_types::config::*;
 use beardog_core::*;
-use beardog_errors::*;
+use beardog_errors::{BearDogError, *};
 use beardog_security::*;
 use beardog_types::*;
 use std::collections::HashMap;
@@ -166,7 +166,7 @@ pub enum InvariantCriticality {
 }
 
 impl WorldClassTestingFramework {
-    pub async fn new() -> BearDogResult<Self> {
+    pub async fn new() -> Result<Self, BearDogError> {
         let formal_verifiers = vec![
             Box::new(CryptographicVerifier::new()) as Box<dyn FormalVerifier + Send + Sync>,
             Box::new(AuthenticationVerifier::new()) as Box<dyn FormalVerifier + Send + Sync>,
@@ -210,7 +210,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    pub async fn execute_world_class_validation(&self) -> BearDogResult<WorldClassTestResults> {
+    pub async fn execute_world_class_validation(&self) -> Result<WorldClassTestResults, BearDogError> {
         println!("🌟 INITIATING WORLD-CLASS TESTING VALIDATION 🌟");
         println!("🎯 Target: Mathematical Certainty of Safety and Correctness");
         println!("🔬 Methodology: Formal Verification + Property-Based + Mutation + Invariant Testing");
@@ -269,7 +269,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn execute_formal_verification(&self) -> BearDogResult<FormalVerificationResults> {
+    async fn execute_formal_verification(&self) -> Result<FormalVerificationResults, BearDogError> {
         println!("🔬 Executing Formal Verification...");
         
         let mut proofs_generated = 0;
@@ -315,7 +315,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn execute_property_based_testing(&self) -> BearDogResult<PropertyBasedTestResults> {
+    async fn execute_property_based_testing(&self) -> Result<PropertyBasedTestResults, BearDogError> {
         println!("🎲 Executing Property-Based Testing...");
         
         let mut properties_verified = 0;
@@ -383,7 +383,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn execute_mutation_testing(&self) -> BearDogResult<MutationTestResults> {
+    async fn execute_mutation_testing(&self) -> Result<MutationTestResults, BearDogError> {
         println!("🧬 Executing Mutation Testing...");
         
         let mut mutations_tested = 0;
@@ -446,7 +446,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn execute_invariant_validation(&self) -> BearDogResult<InvariantValidationResults> {
+    async fn execute_invariant_validation(&self) -> Result<InvariantValidationResults, BearDogError> {
         println!("🛡️ Executing Invariant Validation...");
         
         let mut invariants_verified = 0;
@@ -525,7 +525,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn execute_exhaustive_testing(&self) -> BearDogResult<ExhaustiveTestResults> {
+    async fn execute_exhaustive_testing(&self) -> Result<ExhaustiveTestResults, BearDogError> {
         println!("🔍 Executing Exhaustive Edge Case Testing...");
         
         let mut edge_cases_tested = 0;
@@ -580,7 +580,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn execute_quantum_validation(&self) -> BearDogResult<QuantumResistanceResults> {
+    async fn execute_quantum_validation(&self) -> Result<QuantumResistanceResults, BearDogError> {
         println!("🔮 Executing Quantum Resistance Validation...");
         
         let mut quantum_attacks_simulated = 0;
@@ -629,7 +629,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn calculate_mathematical_certainty(&self, _results: &[&dyn std::fmt::Debug]) -> BearDogResult<f64> {
+    async fn calculate_mathematical_certainty(&self, _results: &[&dyn std::fmt::Debug]) -> Result<f64, BearDogError> {
         let metrics = self.test_metrics.read().await;
 
         let formal_verification_weight = 0.25;
@@ -650,7 +650,7 @@ impl WorldClassTestingFramework {
         Ok(weighted_certainty.min(0.9999))
     }
 
-    async fn generate_test_system_states(&self) -> BearDogResult<Vec<SystemState>> {
+    async fn generate_test_system_states(&self) -> Result<Vec<SystemState, BearDogError>> {
 
         Ok(vec![
             SystemState {
@@ -723,7 +723,7 @@ pub enum WorldClassStatus {
 }
 
 #[tokio::test]
-async fn test_achieve_world_class_testing_supremacy() -> BearDogResult<()> {
+async fn test_achieve_world_class_testing_supremacy() -> Result<(), BearDogError> {
     let framework = WorldClassTestingFramework::new().await?;
     let results = framework.execute_world_class_validation().await?;
     

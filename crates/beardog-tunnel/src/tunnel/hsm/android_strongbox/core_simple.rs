@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 
 fn key_not_found_error(key_id: &str) -> BearDogError {
     BearDogError::NotFound(format!("`HSM` key not found: {key_id)"},
@@ -64,18 +64,18 @@ impl BaseProvider for MobileHardwareProvider {}
     fn provider_id(&self) -> &str {
         &self.config.instance_id}
 
-    async fn get_capabilities(&self) -> BearDogResult<Vec<String>> {
+    async fn get_capabilities(&self) -> Result<Vec<String>, BearDogError>> {
         Ok(vec![
             "key_generation".to_string(),
             "hardware_backed".to_string(),
             "attestation".to_string(),
         ])
-    async fn initialize(&mut self, _config: ProviderConfig) -> BearDogResult<()> {
+    async fn initialize(&mut self, _config: ProviderConfig) -> Result<(), BearDogError> {
         info!("🔧 Initializing Android StrongBox provider");
 
         Ok(())}
 
-    async fn health_check(&self) -> BearDogResult<ProviderHealthStatus> {
+    async fn health_check(&self) -> Result<ProviderHealthStatus, BearDogError> {
         if Self::is_strongbox_available() {
             Ok(ProviderHealthStatus {
                 is_healthy: true,
@@ -90,7 +90,7 @@ impl BaseProvider for MobileHardwareProvider {}
                 details: Some("StrongBox not available".to_string()),
                 response_time_ms: Some(5.0),
                 error_message: Some("Hardware not available".to_string()),
-    async fn shutdown(&mut self) -> BearDogResult<()> {
+    async fn shutdown(&mut self) -> Result<(), BearDogError> {
         info!("🛑 Shutting down Android StrongBox provider");
 impl HsmProvider for MobileHardwareProvider {}
 
@@ -98,7 +98,7 @@ impl HsmProvider for MobileHardwareProvider {}
         &self,
         key_type: KeyType,
         metadata: KeyMetadata,
-    ) -> BearDogResult<HsmKey> {
+    ) -> Result<HsmKey, BearDogError> {
         info!(
             "🔑 Generating key with Android StrongBox: {:?}",
             key_type
@@ -167,13 +167,13 @@ impl HsmProvider for MobileHardwareProvider {}
                 parameters: std::collections::HashMap::with_capacity(16),
             key_material: beardog_types::canonical::hsm::KeyMaterial::Derived {
             derivation_path: Some(hex::encode(derivation_data)),
-    async fn delete_key(&self, key_id: &str) -> BearDogResult<()> {
+    async fn delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         info!("🗑️ Deleting StrongBox key: {}", key_id);
         if cache.remove(key_id).is_some() {
             info!("✅ Key deleted: {}", key_id);
             Ok(())
             Err(key_not_found_error(key_id))
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Signing data with StrongBox key: {}", key_id);
 
         if let Some(key) = cache.get_mut(key_id) {
@@ -188,7 +188,7 @@ impl HsmProvider for MobileHardwareProvider {}
         key_id: &str,
         data: &[u8],
         signature: &[u8],
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         info!("🔍 Verifying signature with StrongBox key: {}", key_id);
         let cache = self.key_cache.read().await;
         if cache.contains_key(key_id) {
@@ -196,7 +196,7 @@ impl HsmProvider for MobileHardwareProvider {}
             let expected_signature =
                 format_args!("strongbox_signature_{}_{}", key_id, data.len().to_string()).into_bytes();
             Ok(signature == expected_signature)
-    async fn encrypt_with_key(&self, key_id: &str, data: &[u8]) -> BearDogResult<Vec<u8>> {
+    async fn encrypt_with_key(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         info!("🔐 Encrypting data with StrongBox key: {}", key_id);
 
             let mut encrypted = data.to_vec();
@@ -207,7 +207,7 @@ impl HsmProvider for MobileHardwareProvider {}
             Ok(encrypted)
     async fn decrypt_with_key(
         encrypted_data: &[u8],
-    ) -> BearDogResult<Vec<u8>> {
+    ) -> Result<Vec<u8>, BearDogError>> {
         info!("🔓 Decrypting data with StrongBox key: {}", key_id);
 
             let mut decrypted = encrypted_data.to_vec();
@@ -215,7 +215,7 @@ impl HsmProvider for MobileHardwareProvider {}
                 *byte ^= 0xAA; // Reverse the XOR
             debug!("Decrypted {} bytes", decrypted.len());
             Ok(decrypted)
-    async fn get_key_info(&self, key_id: &str) -> BearDogResult<HsmKeyInfo> {
+    async fn get_key_info(&self, key_id: &str) -> Result<HsmKeyInfo, BearDogError> {
         info!("ℹ️ Getting key info for: {}", key_id);
         if let Some(key) = cache.get(key_id) {
             Ok(HsmKeyInfo {
@@ -226,7 +226,7 @@ impl HsmProvider for MobileHardwareProvider {}
                 usage_count: key.usage_count,
 
                 metadata: key.metadata.clone(),
-    async fn get_hsm_info(&self) -> BearDogResult<HsmInfo> {
+    async fn get_hsm_info(&self) -> Result<HsmInfo, BearDogError> {
         Ok(HsmInfo {
             instance_id: "mobile_hardware_0".to_string(),
             hsm_type: "Android StrongBox".to_string(),
@@ -252,10 +252,10 @@ impl HsmProvider for MobileHardwareProvider {}
             tamper_resistant: true,
             hardware_status: beardog_types::canonical::hsm::HsmHealthStatus::Healthy,
         })
-    async fn list_keys(&self) -> BearDogResult<Vec<String>> {
+    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
         Ok(cache.keys().cloned().collect())}
 
-    async fn get_hardware_status(&self) -> BearDogResult<HsmHardwareStatus> {
+    async fn get_hardware_status(&self) -> Result<HsmHardwareStatus, BearDogError> {
         Ok(HsmHardwareStatus {
             available: Self::is_strongbox_available(),
             temperature: None,
@@ -272,13 +272,13 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_mobile_hardware_provider_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_mobile_hardware_provider_creation() -> Result<(), BearDogError> {
         let provider = MobileHardwareProvider::new();
         assert_eq!(provider.config.instance_id, "mobile_hardware_default");}
 
-    async fn test_key_generation() -> beardog_errors::BearDogResult<()> {
+    async fn test_key_generation() -> Result<(), BearDogError> {
 
         assert_eq!(provider.provider_id(), "mobile_hardware_default");
-    async fn test_provider_info() -> beardog_errors::BearDogResult<()> {
+    async fn test_provider_info() -> Result<(), BearDogError> {
         let id = provider.provider_id();
         assert_eq!(id, "mobile_hardware_default");

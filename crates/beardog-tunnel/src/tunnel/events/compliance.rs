@@ -16,6 +16,7 @@ pub enum ComplianceType {
     ExportControl,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum GeographicRegion {
 
     EU,
@@ -27,7 +28,9 @@ pub enum GeographicRegion {
     Russia,
 
     Other(String),
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RoutingRestriction {
 
     NoCloudStorage,
@@ -39,3 +42,4 @@ pub enum RoutingRestriction {
     AuditTrailRequired,
 
     DataResidency(GeographicRegion),
+}

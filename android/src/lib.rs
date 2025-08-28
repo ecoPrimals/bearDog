@@ -4,7 +4,7 @@
 use android_logger::{Config, FilterBuilder};
 
 use beardog_traits::canonical::HsmProvider;
-use beardog_errors::{BearDogResult, BearDogError};
+use beardog_errors::{{BearDogError}};
 use std::sync::Arc;
 use std::collections::HashMap;
 use tracing::{error, info};
@@ -39,7 +39,7 @@ fn init_android_logging() {
     );
 }
 
-pub fn initialize_beardog_pixel8() -> BearDogResult<String> {
+pub fn initialize_beardog_pixel8() -> Result<String, BearDogError> {
 
     let pixel8_config = AndroidHsmConfig {
         implementation: beardog_types::hsm::tiers::HardwareSecurityImplementation::StrongBox,
@@ -59,7 +59,7 @@ pub fn initialize_beardog_pixel8() -> BearDogResult<String> {
     ))
 }
 
-pub fn setup_pixel8_beardog() -> BearDogResult<AndroidHsmSystem> {
+pub fn setup_pixel8_beardog() -> Result<AndroidHsmSystem, BearDogError> {
 
     let hsm_system = AndroidHsmSystem {
         hardware_config: AndroidHsmConfig {
@@ -85,7 +85,7 @@ pub fn setup_pixel8_beardog() -> BearDogResult<AndroidHsmSystem> {
     Ok(hsm_system)
 }
 
-pub fn test_beardog_operations() -> BearDogResult<String> {
+pub fn test_beardog_operations() -> Result<String, BearDogError> {
 
     let test_results = vec![
         ("Hardware Detection", "Framework Ready"),
@@ -102,7 +102,7 @@ pub fn test_beardog_operations() -> BearDogResult<String> {
     Ok(results)
 }
 
-pub fn benchmark_hsm_performance() -> BearDogResult<String> {
+pub fn benchmark_hsm_performance() -> Result<String, BearDogError> {
 
     let benchmark_framework = "Performance benchmarking framework initialized. \
         Ready to measure: Key Generation (target: <100ms), Signing (<50ms), \

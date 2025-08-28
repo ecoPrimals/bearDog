@@ -6,14 +6,14 @@ use beardog_core::{
     ServiceHealth,
 };
 use beardog_types::config::BearDogConfig;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{info, warn, error};
 use uuid::Uuid;
 
 #[tokio::main]
-async fn main() -> BearDogResult<()> {
+async fn main() -> Result<(), BearDogError> {
 
     tracing_subscriber::fmt::init();
 
@@ -42,7 +42,7 @@ async fn main() -> BearDogResult<()> {
     Ok(())
 }
 
-async fn demonstrate_mesh_discovery(mesh_client: &UniversalServiceMeshClient) -> BearDogResult<()> {
+async fn demonstrate_mesh_discovery(mesh_client: &UniversalServiceMeshClient) -> Result<(), BearDogError> {
     info!("🔍 === Step 1: Universal Service Mesh Discovery ===");
 
     let discovered_meshes = mesh_client.discover_service_meshes().await?;
@@ -64,7 +64,7 @@ async fn demonstrate_mesh_discovery(mesh_client: &UniversalServiceMeshClient) ->
     Ok(())
 }
 
-async fn demonstrate_mesh_selection(mesh_client: &UniversalServiceMeshClient) -> BearDogResult<()> {
+async fn demonstrate_mesh_selection(mesh_client: &UniversalServiceMeshClient) -> Result<(), BearDogError> {
     info!("🎯 === Step 2: Intelligent Mesh Selection ===");
 
     match mesh_client.connect_to_best_mesh().await {
@@ -86,7 +86,7 @@ async fn demonstrate_mesh_selection(mesh_client: &UniversalServiceMeshClient) ->
 async fn demonstrate_mesh_registration(
     mesh_client: &UniversalServiceMeshClient,
     core: &Arc<BearDogCore>
-) -> BearDogResult<()> {
+) -> Result<(), BearDogError> {
     info!("📝 === Step 3: Universal Mesh Registration ===");
 
     let metadata = PrimalMetadata::default();
@@ -107,7 +107,7 @@ async fn demonstrate_mesh_registration(
     Ok(())
 }
 
-async fn demonstrate_service_discovery(mesh_client: &UniversalServiceMeshClient) -> BearDogResult<()> {
+async fn demonstrate_service_discovery(mesh_client: &UniversalServiceMeshClient) -> Result<(), BearDogError> {
     info!("🕵️ === Step 4: Universal Service Discovery ===");
 
     let capabilities_to_find = vec![
@@ -139,7 +139,7 @@ async fn demonstrate_service_discovery(mesh_client: &UniversalServiceMeshClient)
     Ok(())
 }
 
-async fn demonstrate_mesh_routing(mesh_client: &UniversalServiceMeshClient) -> BearDogResult<()> {
+async fn demonstrate_mesh_routing(mesh_client: &UniversalServiceMeshClient) -> Result<(), BearDogError> {
     info!("🌐 === Step 5: Universal Mesh Routing ===");
 
     let requests = vec![
@@ -165,7 +165,7 @@ async fn demonstrate_mesh_routing(mesh_client: &UniversalServiceMeshClient) -> B
     Ok(())
 }
 
-async fn demonstrate_mesh_failover(mesh_client: &UniversalServiceMeshClient) -> BearDogResult<()> {
+async fn demonstrate_mesh_failover(mesh_client: &UniversalServiceMeshClient) -> Result<(), BearDogError> {
     info!("🔄 === Step 6: Mesh Failover Demonstration ===");
 
     if let Some(current_mesh) = mesh_client.get_active_mesh().await {
@@ -190,7 +190,7 @@ async fn demonstrate_mesh_failover(mesh_client: &UniversalServiceMeshClient) -> 
     Ok(())
 }
 
-async fn demonstrate_multi_mesh_support() -> BearDogResult<()> {
+async fn demonstrate_multi_mesh_support() -> Result<(), BearDogError> {
     info!("🌟 === Step 7: Multi-Mesh Type Support ===");
 
     let mesh_examples = vec![

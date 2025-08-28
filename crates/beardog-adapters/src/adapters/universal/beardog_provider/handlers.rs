@@ -2,7 +2,7 @@
 
 use base64::prelude::BASE64_STANDARD;
 use base64::{engine::general_purpose, Engine as _};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use serde_json::json;
 use std::collections::HashMap;
 use super::super::traits::{PrimalProvider, ServiceRequest, ServiceResponse};
@@ -18,7 +18,7 @@ impl<T: Send + Sync + \'static> BearDogProviderHandler<T> {
         Self { provider }
     }
 
-    pub async fn handle_encrypt(&self, request: &ServiceRequest) -> BearDogResult<ServiceResponse> {
+    pub async fn handle_encrypt(&self, request: &ServiceRequest) -> Result<ServiceResponse, BearDogError> {
 
         let data = request
             .payload
@@ -44,7 +44,7 @@ impl<T: Send + Sync + \'static> BearDogProviderHandler<T> {
             error: None,
         })
 
-    pub async fn handle_decrypt(&self, request: &ServiceRequest) -> BearDogResult<ServiceResponse> {
+    pub async fn handle_decrypt(&self, request: &ServiceRequest) -> Result<ServiceResponse, BearDogError> {
 
         let encrypted_data = request
             .get("encrypted_data")
@@ -56,7 +56,7 @@ impl<T: Send + Sync + \'static> BearDogProviderHandler<T> {
                 "decrypted_data": String::from_utf8_lossy(&decrypted_data).to_string(),
                 "algorithm": "AES-256-GCM"
 
-    pub async fn handle_sign(&self, request: &ServiceRequest) -> BearDogResult<ServiceResponse> {
+    pub async fn handle_sign(&self, request: &ServiceRequest) -> Result<ServiceResponse, BearDogError> {
 
         error!("SECURITY VIOLATION: Digital signing service requested but not properly implemented");
         return Err(BearDogError::configuration("Digital signing service not available - cannot provide authentic signatures".to_string(),
@@ -64,7 +64,7 @@ impl<T: Send + Sync + \'static> BearDogProviderHandler<T> {
                 "signature": general_purpose::STANDARD.encode(signature),
                 "algorithm": "RSA-PSS-SHA256"
 
-    pub async fn handle_verify(&self, request: &ServiceRequest) -> BearDogResult<ServiceResponse> {
+    pub async fn handle_verify(&self, request: &ServiceRequest) -> Result<ServiceResponse, BearDogError> {
 
         let signature = request
             .get("signature")
@@ -80,7 +80,7 @@ impl<T: Send + Sync + \'static> BearDogProviderHandler<T> {
     pub async fn handle_generate_key(
         &self,
         request: &ServiceRequest,
-    ) -> BearDogResult<ServiceResponse> {
+    ) -> Result<ServiceResponse, BearDogError> {
 
         let key_type = request
             .get("key_type")

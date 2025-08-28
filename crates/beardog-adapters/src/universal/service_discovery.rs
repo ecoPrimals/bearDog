@@ -1,9 +1,9 @@
-
+use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use super::*;
-use crate::{EcosystemError, EcosystemResult};
+use crate::{{EcosystemError}};
 
 #[derive(Debug)]
 pub enum DiscoveryBackendType {
@@ -44,7 +44,7 @@ impl ServiceDiscoveryClient {
     pub async fn discover_by_capability(
         &mut self,
         capability: &str,
-    ) -> EcosystemResult<Vec<UniversalServiceRegistration>> {
+    ) -> Result<Vec<UniversalServiceRegistration, BearDogError>> {
 
         if let Some(cached) = self.cache.by_capability.get(capability) {
             if cached.expires_at > Instant::now() {
@@ -80,7 +80,7 @@ impl ServiceDiscoveryClient {
 
     pub async fn get_service(
         service_id: uuid::Uuid,
-    ) -> EcosystemResult<Option<UniversalServiceRegistration>> {
+    ) -> Result<Option<UniversalServiceRegistration, BearDogError>> {
         if let Some(cached) = self.cache.by_service_id.get(&service_id) {
                 return Ok(Some(cached.data.clone()));
             if let Ok(Some(service)) = backend.get_service(service_id).await {
@@ -96,7 +96,7 @@ impl ServiceDiscoveryClient {
     pub async fn register_service(
         &self,
         registration: &UniversalServiceRegistration,
-    ) -> EcosystemResult<()> {
+    ) -> Result<(), BearDogError> {
         let mut success_count = 0;
             match backend.register_service(registration).await {
                 Ok(_) => success_count += 1,
@@ -138,15 +138,15 @@ pub struct CacheStats {
 pub trait DiscoveryBackend: Send + Sync + std::fmt::Debug {
 
     async fn discover_by_capability(
-    ) -> EcosystemResult<Vec<UniversalServiceRegistration>>;
+    ) -> Result<Vec<UniversalServiceRegistration, BearDogError>>;
 
     async fn get_service(
-    ) -> EcosystemResult<Option<UniversalServiceRegistration>>;
+    ) -> Result<Option<UniversalServiceRegistration, BearDogError>>;
 
     async fn register_service(
-    ) -> EcosystemResult<()>;
+    ) -> Result<(), BearDogError>;
 
-    async fn health_check(&self) -> EcosystemResult<HealthStatus>;
+    async fn health_check(&self) -> Result<HealthStatus, BearDogError>;
 
 pub struct InMemoryDiscoveryBackend {
 
@@ -168,7 +168,7 @@ impl DiscoveryBackend for InMemoryDiscoveryBackend {
         let mut registry = self.registry.write().await;
         registry.register_service(registration.clone()).await}
 
-    async fn health_check(&self) -> EcosystemResult<HealthStatus> {
+    async fn health_check(&self) -> Result<HealthStatus, BearDogError> {
         Ok(HealthStatus {
             status: HealthLevel::Healthy,
             checks: vec![HealthCheck {

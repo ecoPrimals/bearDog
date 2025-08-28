@@ -1,10 +1,7 @@
-
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SystemMetrics {
-
     pub cpu: CpuMetrics,
 
     pub memory: MemoryMetrics,
@@ -18,7 +15,6 @@ pub struct SystemMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CpuMetrics {
-
     pub usage_percent: f64,
 
     pub cores: u32,
@@ -28,7 +24,6 @@ pub struct CpuMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MemoryMetrics {
-
     pub total_bytes: u64,
 
     pub used_bytes: u64,
@@ -40,7 +35,6 @@ pub struct MemoryMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DiskMetrics {
-
     pub total_bytes: u64,
 
     pub used_bytes: u64,
@@ -56,7 +50,6 @@ pub struct DiskMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NetworkMetrics {
-
     pub bytes_received: u64,
 
     pub bytes_sent: u64,
@@ -70,7 +63,6 @@ pub struct NetworkMetrics {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LoadAverage {
-
     pub one_minute: f64,
 
     pub five_minute: f64,

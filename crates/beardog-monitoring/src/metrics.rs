@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{improved_results::*, BearDogError, BearDogResult};
+use beardog_errors::{{improved_results::*, BearDogError}};
 use std::collections::HashMap;
 use std::time::Instant;
 use tracing::{debug, info};
@@ -9,7 +9,7 @@ use crate::types::{MetricCollectionConfig, MetricSource, MetricCollectionResult,
 pub async fn collect_metrics_improved(
     sources: Vec<MetricSource>,
     collection_config: &MetricCollectionConfig,
-) -> BearDogResult<ProcessingOutcome<MetricCollectionResult>> {
+) -> Result<ProcessingOutcome<MetricCollectionResult, BearDogError>> {
     let _start_time = Instant::now();
     info!(
         "📊 Collecting metrics from {} sources with improved patterns",
@@ -80,7 +80,7 @@ pub async fn collect_metrics_improved(
 pub async fn collect_source_metrics(
     source: &MetricSource,
     _config: &MetricCollectionConfig,
-) -> BearDogResult<HashMap<String, MetricValue>> {
+) -> Result<HashMap<String, MetricValue, BearDogError>> {
     debug!("📊 Collecting metrics from source: {}", source.name);
 
     tokio::time::sleep(std::time::Duration::from_millis(20)).await;

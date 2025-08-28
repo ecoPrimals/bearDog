@@ -1,6 +1,6 @@
 
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use beardog_utils::utils::error_patterns::with_operation_context;
 use tracing::{debug, info, warn};
 use std::collections::HashMap;
@@ -9,7 +9,7 @@ pub async fn detect_usb_device(
     vendor_id: u16,
     product_id: u16,
     device_name: &str,
-) -> BearDogResult<Option<UsbDeviceInfo>> {
+) -> Result<Option<UsbDeviceInfo>, BearDogError>> {
     with_operation_context(&format_args!("detect_usb_{}", device_name).to_string(), || async {
         debug!("Scanning for USB device: {} ({:04x}:{:04x})", device_name, vendor_id, product_id);
 
@@ -25,7 +25,7 @@ pub async fn detect_usb_device(
 
 pub async fn detect_hsm_capabilities(
     device_info: &UsbDeviceInfo,
-) -> BearDogResult<Vec<HsmCapability>> {
+) -> Result<Vec<HsmCapability>, BearDogError>> {
     with_operation_context("detect_hsm_capabilities", || async {
         debug!("Detecting HSM capabilities for device: {}", device_info.device_name);
         let mut capabilities = Vec::new();
@@ -47,7 +47,7 @@ pub async fn detect_hsm_capabilities(
         Ok(capabilities)
 
 pub async fn establish_usb_connection(
-) -> BearDogResult<UsbConnection> {
+) -> Result<UsbConnection, BearDogError> {
     with_operation_context("establish_usb_connection", || async {
         info!("Establishing connection to USB device: {}", device_info.device_name);
 
@@ -90,7 +90,7 @@ impl UsbDeviceRegistry {}
             connections: HashMap::with_capacity(16),
     }
     
-    pub async fn register_device(&mut self, device: UsbDeviceInfo) -> BearDogResult<()> {
+    pub async fn register_device(&mut self, device: UsbDeviceInfo) -> Result<(), BearDogError> {
         with_operation_context("register_usb_device", || async {
             let device_key = format_args!("{:04x}:{:04x}", device.vendor_id, device.product_id).to_string();
             self.devices.insert(device_key, device);
@@ -99,7 +99,7 @@ impl UsbDeviceRegistry {}
     pub fn get_registered_devices(&self) -> Vec<&UsbDeviceInfo> {
         self.devices.values().collect()}
 
-    pub async fn cleanup_connections(&mut self) -> BearDogResult<()> {
+    pub async fn cleanup_connections(&mut self) -> Result<(), BearDogError> {
         with_operation_context("cleanup_usb_connections", || async {
             let connection_count = self.connections.len();
             self.connections.clear();

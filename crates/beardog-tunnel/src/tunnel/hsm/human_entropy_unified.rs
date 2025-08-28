@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use tracing::{debug, info};
@@ -16,7 +16,7 @@ pub struct UnifiedHumanEntropyClassifier {
 }
 impl UnifiedHumanEntropyClassifier {
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             quality_assessor: EntropyQualityAssessor::new()?,
             method_evaluator: HumanEntropyMethodEvaluator::new()?,
@@ -24,13 +24,13 @@ impl UnifiedHumanEntropyClassifier {
         })
     }
 
-    pub fn with_criteria(criteria: TierElevationCriteria) -> BearDogResult<Self> {
+    pub fn with_criteria(criteria: TierElevationCriteria) -> Result<Self, BearDogError> {
             tier_criteria: criteria,
 
     pub async fn classify_for_tier_elevation(
         &self,
         capabilities: &UnifiedHumanEntropyCapabilities,
-    ) -> BearDogResult<HumanEntropyClassification> {
+    ) -> Result<HumanEntropyClassification, BearDogError> {
         info!("🧠 Classifying `HSM` for human entropy tier elevation");
 
         let assessment = self.perform_comprehensive_assessment(capabilities).await?;
@@ -58,7 +58,7 @@ impl UnifiedHumanEntropyClassifier {
         Ok(classification)
 
     async fn perform_comprehensive_assessment(
-    ) -> BearDogResult<HumanEntropyAssessment> {
+    ) -> Result<HumanEntropyAssessment, BearDogError> {
         debug!("🔍 Performing comprehensive human entropy assessment");
 
         let method_scores = self
@@ -94,7 +94,7 @@ impl UnifiedHumanEntropyClassifier {
 
     async fn evaluate_tier_elevation(
         assessment: &HumanEntropyAssessment,
-    ) -> BearDogResult<bool> {
+    ) -> Result<bool, BearDogError> {
         debug!("📊 Evaluating tier elevation eligibility");
 
         if !assessment.supports_ephemeral_seeds {
@@ -124,7 +124,7 @@ impl UnifiedHumanEntropyClassifier {
         Ok(true)
 
     async fn calculate_recommended_tier(
-    ) -> BearDogResult<HsmTier> {
+    ) -> Result<HsmTier, BearDogError> {
         let score = assessment.overall_score;
         let tier = if score >= 0.95
             && assessment.biometric_score >= 0.8
@@ -139,7 +139,7 @@ impl UnifiedHumanEntropyClassifier {
         Ok(tier)
 
     async fn calculate_confidence(
-    ) -> BearDogResult<f64> {
+    ) -> Result<f64, BearDogError> {
         let mut confidence = 0.0;
 
         confidence += assessment.overall_score * 0.4;
@@ -266,14 +266,14 @@ impl HumanEntropyMethodEvaluator {
 
     pub async fn evaluate_methods(
         methods: &[HumanEntropyMethod],
-    ) -> BearDogResult<HashMap<HumanEntropyMethod, f64>> {
+    ) -> Result<HashMap<HumanEntropyMethod, f64, BearDogError>> {
         let mut scores = HashMap::with_capacity(16);
         for method in methods {
             let score = self.evaluate_single_method(method).await?;
             scores.insert(method.clone(), score);
         Ok(scores)}
 
-    async fn evaluate_single_method(&self, method: &HumanEntropyMethod) -> BearDogResult<f64> {
+    async fn evaluate_single_method(&self, method: &HumanEntropyMethod) -> Result<f64, BearDogError> {
         let base_score = match method {
             HumanEntropyMethod::TouchPatterns => 0.8,
             HumanEntropyMethod::Biometric => 0.9,
@@ -315,14 +315,14 @@ impl Default for UnifiedHumanEntropyClassifier {}
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_unified_classifier_creation() -> beardog_errors::BearDogResult<()> {
+    async fn test_unified_classifier_creation() -> Result<(), BearDogError> {
         let classifier = UnifiedHumanEntropyClassifier::new().map_err(|e| {
             tracing::error!("Operation failed: {e:?}");
             beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
         })?;
         assert_eq!(classifier.tier_criteria.min_entropy_methods, 2);
         Ok(())
-    async fn test_tier_elevation_classification() -> beardog_errors::BearDogResult<()> {
+    async fn test_tier_elevation_classification() -> Result<(), BearDogError> {
         let capabilities = UnifiedHumanEntropyCapabilities {
             hardware_backed: true,
             key_attestation: true,
@@ -366,7 +366,7 @@ mod tests {
             HsmTier::Premium | HsmTier::EnhancedHardware | HsmTier::BasicHardware
         ));
     #[test]
-    fn test_tier_elevation_criteria_default() -> beardog_errors::BearDogResult<()> {
+    fn test_tier_elevation_criteria_default() -> Result<(), BearDogError> {
         let criteria = TierElevationCriteria::default();
         assert_eq!(criteria.min_entropy_methods, 2);
         assert_eq!(criteria.min_overall_score, 0.7);

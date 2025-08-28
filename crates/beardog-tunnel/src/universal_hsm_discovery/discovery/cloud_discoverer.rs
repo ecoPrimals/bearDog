@@ -5,8 +5,8 @@ use crate::tunnel::hsm::types::{
     capability::HsmCapabilities, status::HsmHealthStatus, tier::HsmTier, AuthenticationMethod,
     HsmConnectionInfo, HsmInterfaceType,
 };
-use beardog_errors::BearDogResult;
-use beardog_types::config::network::security::SslConfig;
+use beardog_errors::BearDogError;
+use beardog_types::canonical::configuration::security::TlsConfig as SslConfig;
 use std::path::Path;
 use std::time::Duration;
 use tracing::{debug, info};
@@ -23,10 +23,10 @@ pub type ConnectionType = String;
 pub struct CloudDiscoverer;
 impl CloudDiscoverer {}
 
-    pub fn new() -> BearDogResult<Self> {
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn discover(&self, config: &DiscoveryConfig) -> BearDogResult<Vec<DiscoveredHsm>> {
+    pub async fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("☁️ Discovering Cloud HSMs");
         let mut hsms = Vec::new();
 
@@ -44,7 +44,7 @@ impl CloudDiscoverer {}
     async fn discover_aws_kms(
         &self,
         config: &DiscoveryConfig,
-    ) -> BearDogResult<Vec<DiscoveredHsm>> {
+    ) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("🔍 Checking for AWS KMS availability");
 
         if !self.has_aws_credentials() {

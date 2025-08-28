@@ -1,6 +1,6 @@
 
 
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::{
     sync::{
@@ -267,12 +267,12 @@ impl AdvancedPerformanceMonitor {
         if hit {
             timers.cache_hits += 1;
 
-    pub async fn get_metrics(&self) -> BearDogResult<AdvancedPerformanceMetrics> {
+    pub async fn get_metrics(&self) -> Result<AdvancedPerformanceMetrics, BearDogError> {
         self.update_metrics().await?;
         let metrics = self.metrics.read().await.clone();
         Ok(metrics)
 
-    async fn update_metrics(&self) -> BearDogResult<()> {
+    async fn update_metrics(&self) -> Result<(), BearDogError> {
         let mut metrics = self.metrics.write().await;
 
         self.update_simd_metrics(&mut metrics.simd_metrics).await;
@@ -380,7 +380,7 @@ impl AdvancedPerformanceMonitor {
 
         1.25
 
-    pub async fn generate_performance_report(&self) -> BearDogResult<String> {
+    pub async fn generate_performance_report(&self) -> Result<String, BearDogError> {
         let metrics = self.get_metrics().await?;
         let report = format!(
             r#"

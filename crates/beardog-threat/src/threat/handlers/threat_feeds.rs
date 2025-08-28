@@ -1,22 +1,18 @@
-
-
 use super::core::ThreatDetectionEngine;
 use crate::threat::types::*;
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
 use chrono::Utc;
 use std::collections::HashMap;
 use uuid::Uuid;
 
 impl ThreatDetectionEngine {
-
     pub async fn check_threat_feeds(
         &self,
         event_data: &HashMap<&str, &str>,
-    ) -> BearDogResult<Vec<ThreatEvent>> {
+    ) -> Result<Vec<ThreatEvent>, BearDogError> {
         let mut feed_threats = Vec::new();
         for feed in self.threat_feeds.values() {
-
             for indicator in &feed.indicators {
                 if self.matches_indicator(event_data, indicator) {
                     let threat = self.create_feed_threat_event(feed, indicator, event_data)?;
@@ -27,29 +23,35 @@ impl ThreatDetectionEngine {
         Ok(feed_threats)
     }
 
-    fn matches_indicator(&self, event_data: &HashMap<&str, &str>, indicator: &ThreatIndicator) -> bool {
+    fn matches_indicator(
+        &self,
+        event_data: &HashMap<&str, &str>,
+        indicator: &ThreatIndicator,
+    ) -> bool {
         match indicator.indicator_type {
             IndicatorType::IpAddress => {
                 (event_data.get("source_ip") == Some(&indicator.value.as_str()))
                     || (event_data.get("dest_ip") == Some(&indicator.value.as_str()))
-            },
+            }
             IndicatorType::DomainName => {
                 (event_data.get("domain") == Some(&indicator.value.as_str()))
                     || event_data
                         .get("hostname")
-                        .is_some_and(|hostname| hostname.contains(&indicator.value.as_str()))
-            },
+                        .is_some_and(|hostname| hostname.contains(indicator.value.as_str()))
+            }
             IndicatorType::Url => event_data
                 .get("url")
-                .is_some_and(|url| url.contains(&indicator.value.as_str())),
+                .is_some_and(|url| url.contains(indicator.value.as_str())),
             IndicatorType::FileHash => {
                 (event_data.get("file_hash") == Some(&indicator.value.as_str()))
                     || (event_data.get("email") == Some(&indicator.value.as_str()))
-            },
-            IndicatorType::EmailAddress => event_data.get("email") == Some(&indicator.value.as_str()),
+            }
+            IndicatorType::EmailAddress => {
+                event_data.get("email") == Some(&indicator.value.as_str())
+            }
             IndicatorType::UserAgent => event_data
                 .get("user_agent")
-                .is_some_and(|ua| ua.contains(&indicator.value.as_str())),
+                .is_some_and(|ua| ua.contains(indicator.value.as_str())),
             _ => false,
         }
     }
@@ -59,7 +61,7 @@ impl ThreatDetectionEngine {
         feed: &ThreatIntelligenceFeed,
         indicator: &ThreatIndicator,
         event_data: &HashMap<&str, &str>,
-    ) -> BearDogResult<ThreatEvent> {
+    ) -> Result<ThreatEvent, BearDogError> {
         let threat_id = Uuid::new_v4().to_string();
         let timestamp = Utc::now();
 
@@ -72,7 +74,7 @@ impl ThreatDetectionEngine {
             geolocation: None, // Will be processed separately if needed
             classification: SourceClassification::KnownMalicious,
             reputation_score: 0.1, // Low reputation for known malicious
-            threat_actor: None, // Convert from indicator if available
+            threat_actor: None,    // Convert from indicator if available
             confidence_score: 0.8, // High confidence from threat intel
             first_seen: Some(timestamp),
             last_seen: Some(timestamp),
@@ -95,7 +97,7 @@ impl ThreatDetectionEngine {
             user_account: event_data.get("user_account").map(|s| s.to_string()),
             asset_criticality: AssetCriticality::Medium, // Default criticality
             protection_level: ProtectionLevel::Standard, // Default protection level
-            criticality: AssetCriticality::Medium, // Duplicate field for compatibility
+            criticality: AssetCriticality::Medium,       // Duplicate field for compatibility
             ip_address: event_data.get("target_ip").map(|s| s.to_string()),
             hostname: event_data.get("target_hostname").map(|s| s.to_string()),
             service: event_data.get("service").map(|s| s.to_string()),

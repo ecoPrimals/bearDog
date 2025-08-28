@@ -208,7 +208,7 @@ impl BearDogContextAnalyzer {
 
         function_patterns.insert(
             "beardog_result_function".to_string(),
-            Regex::new(r"fn\s+\w+\s*\([^)]*\)\s*->\s*(?:async\s+)?BearDogResult<")?
+            Regex::new(r"fn\s+\w+\s*\([^)]*\)\s*->\s*(?:async\s+)?Result<")?
         );
         function_patterns.insert(
             "test_function".to_string(),
@@ -234,7 +234,7 @@ impl BearDogContextAnalyzer {
 
         type_patterns.insert(
             "option_type".to_string(),
-            Regex::new(r"Option<[^>]+>")?
+            Regex::new(r"Option<[^, BearDogError>]+>")?
         );
         type_patterns.insert(
             "result_type".to_string(),
@@ -242,7 +242,7 @@ impl BearDogContextAnalyzer {
         );
         type_patterns.insert(
             "beardog_result".to_string(),
-            Regex::new(r"BearDogResult<[^>]+>")?
+            Regex::new(r"Result<[^, BearDogError>]+>")?
         );
 
         error_patterns.insert(
@@ -557,7 +557,7 @@ impl RefinedBearDogMigrator {
                 ContextRequirement::InBearDogResultFunction => {
                     context.function_return_type
                         .as_ref()
-                        .map(|t| t.contains("BearDogResult"))
+                        .map(|t| t.contains("Result<T, BearDogError>"))
                         .unwrap_or(false)
                 }
                 ContextRequirement::InTestFunction => context.is_test_code,
@@ -688,9 +688,9 @@ mod tests {
     beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
 })?;
         let content = r#"
-use beardog_errors::BearDogResult;
+use beardog_errors::BearDogError;
 
-fn test_function() -> BearDogResult<String> {
+fn test_function() -> Result<String, BearDogError> {
     let value = some_operation().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
     beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
@@ -712,7 +712,7 @@ fn test_function() -> BearDogResult<String> {
         assert!(context.function_return_type.as_ref().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
     beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?.contains("BearDogResult"));
+})?.contains("Result<T, BearDogError>"));
     }
 
     #[tokio::test]

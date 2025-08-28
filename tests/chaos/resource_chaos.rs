@@ -1,7 +1,7 @@
 
 
 use super::{ChaosConfig, TestMetrics, TestResult};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::time::{Duration, Instant};
 use tokio::sync::Semaphore;
 use tracing::{info, warn};
@@ -20,7 +20,7 @@ impl ResourceChaosController {
         }
     }
 
-    pub async fn test_resource_exhaustion(&self) -> BearDogResult<TestResult> {
+    pub async fn test_resource_exhaustion(&self) -> Result<TestResult, BearDogError> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
         let mut operations_succeeded = 0u64;
@@ -76,7 +76,7 @@ impl ResourceChaosController {
         })
     }
 
-    async fn simulate_resource_intensive_operation(&self) -> BearDogResult<()> {
+    async fn simulate_resource_intensive_operation(&self) -> Result<(), BearDogError> {
 
         tokio::task::yield_now().await;
 

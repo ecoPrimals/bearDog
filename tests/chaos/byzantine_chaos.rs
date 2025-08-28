@@ -1,7 +1,7 @@
 
 
 use super::{ChaosConfig, TestMetrics, TestResult};
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogError;
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
@@ -15,7 +15,7 @@ impl ByzantineChaosController {
         Self { config }
     }
 
-    pub async fn test_byzantine_failures(&self) -> BearDogResult<TestResult> {
+    pub async fn test_byzantine_failures(&self) -> Result<TestResult, BearDogError> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
         let mut operations_succeeded = 0u64;
@@ -59,7 +59,7 @@ impl ByzantineChaosController {
         })
     }
 
-    async fn simulate_byzantine_behavior(&self) -> BearDogResult<()> {
+    async fn simulate_byzantine_behavior(&self) -> Result<(), BearDogError> {
 
         let failure_mode = fastrand::u32(0..4);
 
