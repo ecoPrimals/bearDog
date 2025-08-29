@@ -50,7 +50,9 @@ mod auth_tests {
     #[tokio::test]
     async fn test_mfa_token_generation() {
         let user_id = "test_user_123";
-        let token = generate_mfa_token(user_id).await.expect("MFA token generation should succeed");
+        let token = generate_mfa_token(user_id)
+            .await
+            .expect("MFA token generation should succeed");
         assert_eq!(token.len(), 6); // Standard TOTP length
         assert!(token.chars().all(|c| c.is_ascii_digit()));
     }
@@ -68,11 +70,15 @@ mod auth_tests {
         let username = "testuser";
         let password = "secure_password_123";
 
-        let user = create_test_user(username, password).await.expect("User creation should succeed");
+        let user = create_test_user(username, password)
+            .await
+            .expect("User creation should succeed");
         assert_eq!(user.username, username);
         assert!(!user.password_hash.is_empty());
 
-        let auth_result = authenticate_user(username, password).await.expect("Authentication should succeed");
+        let auth_result = authenticate_user(username, password)
+            .await
+            .expect("Authentication should succeed");
         assert!(auth_result.success);
         assert!(auth_result.session_token.is_some());
     }
@@ -138,10 +144,12 @@ mod auth_tests {
     async fn generate_mfa_token(user_id: &str) -> Result<String, Box<dyn std::error::Error>> {
         let _ = user_id; // Use parameter to avoid warnings
         let mut rng = rand::thread_rng();
-        let token: String = (0..6).map(|_| {
-            use rand::Rng;
-            rng.gen_range(0..10).to_string()
-        }).collect();
+        let token: String = (0..6)
+            .map(|_| {
+                use rand::Rng;
+                rng.gen_range(0..10).to_string()
+            })
+            .collect();
         Ok(token)
     }
 

@@ -55,6 +55,7 @@ impl ThreatAnalysisSession {
     }
 
     pub fn session_duration_seconds(&self) -> Option<i64> {
-        self.end_time.map(|end_time| (end_time - self.start_time).num_seconds())
+        self.end_time
+            .map(|end_time| (end_time - self.start_time).num_seconds())
     }
 }

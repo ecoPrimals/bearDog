@@ -497,10 +497,7 @@ impl WorkflowCommand for StartWorkflowCommand {
     type Result = ExampleWorkflow;
     type Error = BearDogError;
 
-    async fn execute(
-        &self,
-        mut workflow: Self::Workflow,
-    ) -> Result<Self::Result, Self::Error> {
+    async fn execute(&self, mut workflow: Self::Workflow) -> Result<Self::Result, Self::Error> {
         info!(
             "Executing StartWorkflowCommand for workflow: {}",
             workflow.id().as_str()
