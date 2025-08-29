@@ -28,9 +28,9 @@ use beardog_types::canonical::HealthStatus;
 pub use types::*;
 
 pub trait BearDogService: Send + Sync {
-    async fn start(&mut self) -> Result<(), BearDogError>;
-    async fn stop(&mut self) -> Result<(), BearDogError>;
-    async fn health_check(&self) -> Result<HealthStatus, BearDogError>;
+    fn start(&mut self) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
+    fn stop(&mut self) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
+    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus, BearDogError>> + Send;
 }
 
 #[derive(Debug, Clone)]

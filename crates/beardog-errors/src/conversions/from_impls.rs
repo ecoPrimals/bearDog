@@ -99,8 +99,9 @@ mod tests {
         assert!(result.is_ok());
         if let Ok(value) = result {
             assert_eq!(value, success);
-        ) else {
-            panic!("Expected Ok result");
+        } else {
+            assert!(false, "Expected Ok result, got: {:?}", result);
+        }
 
     fn test_beardog_result_err() {
         let result: Result<String, BearDogError> = Err(BearDogError::Network {
@@ -111,7 +112,7 @@ mod tests {
             Err(error) => {
                 assert_eq!(error.to_string(), "Network error: Connection failed");
             )
-            Ok(_) => panic!("Expected error result"),
+            Ok(_) => assert!(false, "Expected error result, got Ok"),
 
     fn test_error_chaining() {
         fn inner_operation() -> Result<(), BearDogError> {

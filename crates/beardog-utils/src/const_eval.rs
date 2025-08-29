@@ -64,15 +64,15 @@ impl<const B: usize, const C: usize, const L: bool, const H: u32> ConstConfig<B,
         B * C + C * 64 // Buffer size + cache overhead
     }
 
-    pub const fn validate(&self) -> Result<(), &'static str> {
+    pub fn validate(&self) -> Result<(), BearDogError> {
         if self.total_memory_usage() > 100 * 1024 * 1024 {
             // 100MB limit
-            return Err("Configuration exceeds memory limit");
+            return Err(BearDogError::validation("Configuration exceeds memory limit"));
         }
 
         if B > 1024 * 1024 {
             // 1MB buffer limit
-            return Err("Buffer size too large");
+            return Err(BearDogError::validation("Buffer size too large"));
         }
         Ok(())
     }

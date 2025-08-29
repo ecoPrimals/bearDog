@@ -123,11 +123,11 @@ impl InMemoryWorkflowRepository {
     }
 
     pub fn len(&self) -> usize {
-        self.workflows.lock().unwrap().len()
+        self.workflows.lock().map(|w| w.len()).unwrap_or(0)
     }
 
     pub fn is_empty(&self) -> bool {
-        self.workflows.lock().unwrap().is_empty()
+        self.workflows.lock().map(|w| w.is_empty()).unwrap_or(true)
     }
 }
 

@@ -176,7 +176,7 @@ impl crate::ecosystem_integration::EcosystemIntegration for CapabilityManager {
 
     pub async fn resolve_dependencies(
         capability_ids: &[&str],
-    ) -> Result<Vec<String>, String> {
+    ) -> Result<Vec<String>, BearDogError> {
 
         let _ = &self.dependency_resolver;
         Ok(capability_ids.to_vec())
