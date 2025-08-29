@@ -4,6 +4,7 @@ use std::time::Duration;
 
 /// Canonical deployment configuration - consolidates all deployment-related configs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct DeploymentConfig {
     pub global: GlobalDeploymentConfig,
     pub optimization: DeploymentOptimizationConfig,
@@ -12,17 +13,6 @@ pub struct DeploymentConfig {
     pub security: DeploymentSecurityConfig,
 }
 
-impl Default for DeploymentConfig {
-    fn default() -> Self {
-        Self {
-            global: GlobalDeploymentConfig::default(),
-            optimization: DeploymentOptimizationConfig::default(),
-            regional: RegionalDeploymentConfig::default(),
-            monitoring: DeploymentMonitoringConfig::default(),
-            security: DeploymentSecurityConfig::default(),
-        }
-    }
-}
 
 /// Global deployment configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

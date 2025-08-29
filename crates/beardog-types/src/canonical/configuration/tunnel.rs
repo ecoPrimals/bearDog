@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 /// Canonical tunnel configuration - consolidates all tunnel-related configs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct TunnelConfig {
     pub performance: TunnelPerformanceConfig,
     pub key_management: TunnelKeyManagementConfig,
@@ -13,18 +14,6 @@ pub struct TunnelConfig {
     pub security: TunnelSecurityConfig,
 }
 
-impl Default for TunnelConfig {
-    fn default() -> Self {
-        Self {
-            performance: TunnelPerformanceConfig::default(),
-            key_management: TunnelKeyManagementConfig::default(),
-            gaming: TunnelGamingConfig::default(),
-            hsm_manager: TunnelHsmManagerConfig::default(),
-            monitoring: TunnelMonitoringConfig::default(),
-            security: TunnelSecurityConfig::default(),
-        }
-    }
-}
 
 /// Performance configuration for tunnel operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -148,6 +137,7 @@ impl Default for TunnelGamingConfig {
 
 /// HSM manager configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct TunnelHsmManagerConfig {
     pub hsm_configs: Vec<TunnelHsmConfig>,
     pub health_config: TunnelHealthConfig,
@@ -155,16 +145,6 @@ pub struct TunnelHsmManagerConfig {
     pub performance_config: TunnelHsmPerformanceConfig,
 }
 
-impl Default for TunnelHsmManagerConfig {
-    fn default() -> Self {
-        Self {
-            hsm_configs: vec![],
-            health_config: TunnelHealthConfig::default(),
-            failover_config: TunnelFailoverConfig::default(),
-            performance_config: TunnelHsmPerformanceConfig::default(),
-        }
-    }
-}
 
 /// Health check configuration for tunnel HSM
 #[derive(Debug, Clone, Serialize, Deserialize)]

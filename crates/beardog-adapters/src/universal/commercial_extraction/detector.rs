@@ -82,6 +82,12 @@ pub struct GeneticKeyEvolutionEngine {
 // UNIFIED: Use canonical EvolutionConfig
 pub use beardog_types::canonical::configuration::adapters::EvolutionConfig;
 
+impl Default for CommercialExtractionDetector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CommercialExtractionDetector {
     pub fn new() -> Self {
         Self {
@@ -98,6 +104,12 @@ impl CommercialExtractionDetector {
                 },
             },
         }
+    }
+}
+
+impl Default for GeneticKeyEvolutionEngine {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -23,8 +23,6 @@ reqwest = { version = "0.11", features = ["json"] }
 tracing = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }
-futures = "0.3"
-async-trait = "0.1"
 semver = "1.0"
 sha2 = "0.10"
 # kube = { version = "0.87", features = ["client", "runtime"] }  # Commented out for now

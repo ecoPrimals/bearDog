@@ -8,7 +8,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
 
-pub type SystemError = BearDogError;
+// BearDogError is used directly - no type alias needed
 
 #[derive(Debug)]
 pub struct CoreState {
@@ -47,7 +47,7 @@ impl BearDogCore {
         }
     }
 
-    pub async fn initialize(&self) -> Result<(), SystemError> {
+    pub async fn initialize(&self) -> Result<(), BearDogError> {
         info!("🚀 Initializing BearDog Core");
 
         {

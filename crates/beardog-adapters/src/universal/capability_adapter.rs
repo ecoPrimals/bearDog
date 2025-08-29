@@ -185,8 +185,7 @@ impl BearDogCapabilityAdapter {
             "generate" | "store" | "retrieve" | "delete" => {}
             _ => {
                 return Err(BearDogError::invalid_input(format!(
-                    "Unsupported key management operation: {}",
-                    operation_type
+                    "Unsupported key management operation: {operation_type}"
                 )))
             }
         }
@@ -345,9 +344,8 @@ impl UniversalProvider for BearDogCapabilityAdapter {
                 let response = self.handle_signature_request(&mock_request).await?;
                 Ok(response.payload)
             }
-            _ => Err(BearDogError::system(&format!(
-                "Unsupported operation: {}",
-                operation
+            _ => Err(BearDogError::system(format!(
+                "Unsupported operation: {operation}"
             ))),
         }
     }

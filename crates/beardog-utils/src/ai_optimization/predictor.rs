@@ -85,8 +85,7 @@ impl ResourcePredictor {
             "network" => &self.network_history,
             _ => {
                 return Err(BearDogError::invalid_input(format!(
-                    "Unknown resource type: {}",
-                    resource_type
+                    "Unknown resource type: {resource_type}"
                 )))
             }
         };

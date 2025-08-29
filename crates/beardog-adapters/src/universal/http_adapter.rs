@@ -145,7 +145,7 @@ impl ServiceMeshConnector for HttpAdapter {
                 .json(&registration)
                 .send()
                 .await
-                .map_err(|e| BearDogError::network(format!("Failed to register service: {}", e)))?;
+                .map_err(|e| BearDogError::network(format!("Failed to register service: {e}")))?;
 
             if response.status().is_success() {
                 Ok(())
@@ -190,7 +190,7 @@ impl ServiceMeshConnector for HttpAdapter {
                 .send()
                 .await
                 .map_err(|e| {
-                    BearDogError::network(format!("Failed to deregister service: {}", e))
+                    BearDogError::network(format!("Failed to deregister service: {e}"))
                 })?;
 
             if response.status().is_success() {

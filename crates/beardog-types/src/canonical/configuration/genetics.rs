@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// Canonical genetics configuration - consolidates all genetics-related configs
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct GeneticsConfig {
     pub genesis: GenesisConfig,
     pub network: GeneticsNetworkConfig,
@@ -10,17 +11,6 @@ pub struct GeneticsConfig {
     pub entropy: GeneticsEntropyConfig,
 }
 
-impl Default for GeneticsConfig {
-    fn default() -> Self {
-        Self {
-            genesis: GenesisConfig::default(),
-            network: GeneticsNetworkConfig::default(),
-            system: GeneticsSystemConfig::default(),
-            spawning: GeneticsSpawningConfig::default(),
-            entropy: GeneticsEntropyConfig::default(),
-        }
-    }
-}
 
 /// Genesis configuration for initial genetics creation
 #[derive(Debug, Clone, Serialize, Deserialize)]
