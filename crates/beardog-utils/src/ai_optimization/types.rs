@@ -75,6 +75,12 @@ pub struct AIOptimizationStats {
     pub model_confidence: f64,
 }
 
+impl Default for PerformanceModel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PerformanceModel {
     pub fn new() -> Self {
         Self {

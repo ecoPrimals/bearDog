@@ -49,19 +49,19 @@ impl GeneticsNode {
 pub struct P2PGeneticsNetwork {
     nodes: HashMap<String, GeneticsNode>,
     local_node: GeneticsNode,
-    network_config: NetworkConfig,
+    network_config: P2PNetworkConfig,
 }
 
-/// Network configuration for P2P genetics
+/// P2P genetics network configuration (specialized for genetics networking)
 #[derive(Debug, Clone)]
-pub struct NetworkConfig {
+pub struct P2PNetworkConfig {
     pub max_nodes: usize,
     pub heartbeat_interval_seconds: u64,
     pub node_timeout_minutes: u64,
     pub enable_discovery: bool,
 }
 
-impl Default for NetworkConfig {
+impl Default for P2PNetworkConfig {
     fn default() -> Self {
         Self {
             max_nodes: 100,
@@ -74,12 +74,12 @@ impl Default for NetworkConfig {
 
 impl Default for P2PGeneticsNetwork {
     fn default() -> Self {
-        Self::new(NetworkConfig::default())
+        Self::new(P2PNetworkConfig::default())
     }
 }
 
 impl P2PGeneticsNetwork {
-    pub fn new(config: NetworkConfig) -> Self {
+    pub fn new(config: P2PNetworkConfig) -> Self {
         let local_node = GeneticsNode::new(vec![
             NodeCapability::ComputeProvider,
             NodeCapability::SecurityAnalysis,

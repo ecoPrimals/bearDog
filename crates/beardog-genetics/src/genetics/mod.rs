@@ -1,9 +1,6 @@
 use beardog_auth::auth::BearDogGenetics;
 use beardog_errors::BearDogError;
 
-// Type alias for genetics operations
-pub type GeneticsResult<T> = Result<T, BearDogError>;
-
 pub mod api;
 // pub mod entropy_hierarchy; // Temporarily disabled - requires complete rewrite
 // pub mod handlers; // Temporarily disabled - requires syntax fixes
@@ -20,15 +17,15 @@ pub use zero_copy::{GeneticsPool, LineageStats, LineageTracker};
 // Re-export clean modules
 pub use human_entropy::{EntropyFeatures, EntropySource, HumanEntropyCollector, PrivacyLevel};
 pub use peer_to_peer_genetics::{
-    DistributedSpawnRequest, GeneticsNode, NetworkConfig, NetworkStatus, P2PGeneticsNetwork,
+    DistributedSpawnRequest, GeneticsNode, P2PNetworkConfig, NetworkStatus, P2PGeneticsNetwork,
     SpawnPriority,
 };
 
 pub use beardog_types::canonical::genetics::GeneticsConfig;
 
 pub trait GeneticsStore: Send + Sync {
-    fn store_genetics(&self, genetics: &BearDogGenetics) -> GeneticsResult<()>;
-    fn get_genetics(&self, id: &str) -> GeneticsResult<BearDogGenetics>;
+    fn store_genetics(&self, genetics: &BearDogGenetics) -> Result<(), BearDogError>;
+    fn get_genetics(&self, id: &str) -> Result<BearDogGenetics, BearDogError>;
 }
 
 pub struct DefaultBearDogGeneticsEngine<S: GeneticsStore> {
@@ -49,7 +46,7 @@ impl<S: GeneticsStore> DefaultBearDogGeneticsEngine<S> {
         &self.config
     }
 
-    pub async fn create_genesis_genetics(&self, _node_id: &str) -> GeneticsResult<BearDogGenetics> {
+    pub async fn create_genesis_genetics(&self, _node_id: &str) -> Result<BearDogGenetics, BearDogError> {
         use uuid::Uuid;
 
         let genetics = BearDogGenetics {
@@ -64,7 +61,7 @@ impl<S: GeneticsStore> DefaultBearDogGeneticsEngine<S> {
         Ok(genetics)
     }
 
-    pub async fn get_node_genetics(&self, node_id: &str) -> GeneticsResult<BearDogGenetics> {
+    pub async fn get_node_genetics(&self, node_id: &str) -> Result<BearDogGenetics, BearDogError> {
         match self.genetics_store.get_genetics(node_id) {
             Ok(genetics) => Ok(genetics),
             Err(_) => self.create_genesis_genetics(node_id).await,

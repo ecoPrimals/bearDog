@@ -21,7 +21,7 @@ pub struct Pixel8aHsmTester {
 impl Pixel8aHsmTester {
     pub fn new(device_serial: &str) -> Self {
         Self {
-            device_serial,
+            device_serial: device_serial.to_string(),
             test_iterations: 1000,
         }
     }
@@ -36,10 +36,10 @@ impl Pixel8aHsmTester {
         let start_time = Instant::now();
 
         println!("💻 Phase 1: Software HSM Performance (Host)");
-        let software_ops_per_sec = self.test_software_hsm_performance().await?;
+        let software_hsm_ops_per_sec = self.test_software_hsm_performance().await?;
 
         println!("🔐 Phase 2: Simulated Titan M Performance");  
-        let titan_m_ops_per_sec = self.test_simulated_titan_m_performance().await?;
+        let simulated_titan_m_ops_per_sec = self.test_simulated_titan_m_performance().await?;
 
         println!("💾 Phase 3: Memory Usage Assessment");
         let memory_usage = self.assess_memory_usage().await?;
@@ -48,9 +48,9 @@ impl Pixel8aHsmTester {
 
         let results = HsmTestResults {
             host_system: "Pop!_OS 22.04 LTS (Linux 6.12.10)".to_string(),
-            connected_device: format_args!("Pixel 8a GrapheneOS ({})", self.device_serial).to_string(),
+            connected_device: format!("Pixel 8a GrapheneOS ({})", self.device_serial),
             software_hsm_ops_per_sec,
-            simulated_titan_m_ops_per_sec: titan_m_ops_per_sec,
+            simulated_titan_m_ops_per_sec,
             memory_usage_mb: memory_usage,
             test_duration_ms: test_duration.as_millis() as u64,
         };
@@ -66,12 +66,12 @@ impl Pixel8aHsmTester {
         let operations = 1000;
 
         for i in 0..operations {
-
-            tokio::time::sleep(Duration::from_micros(50)).await;
-
-            tokio::time::sleep(Duration::from_micros(100)).await;
-
-            tokio::time::sleep(Duration::from_micros(20)).await;
+            // Simulate key generation
+            std::thread::sleep(Duration::from_micros(50));
+            // Simulate signing operation  
+            std::thread::sleep(Duration::from_micros(100));
+            // Simulate verification
+            std::thread::sleep(Duration::from_micros(20));
 
             if i % 200 == 0 {
                 print!(".");
@@ -95,12 +95,12 @@ impl Pixel8aHsmTester {
         let operations = 200; // Titan M is slower but more secure
 
         for i in 0..operations {
-
-            tokio::time::sleep(Duration::from_millis(10)).await;
-
-            tokio::time::sleep(Duration::from_millis(2)).await;
-
-            tokio::time::sleep(Duration::from_micros(500)).await;
+            // Simulate hardware key operation (slower)
+            std::thread::sleep(Duration::from_millis(10));
+            // Simulate hardware signing
+            std::thread::sleep(Duration::from_millis(2));
+            // Simulate hardware verification
+            std::thread::sleep(Duration::from_micros(500));
 
             if i % 40 == 0 {
                 print!(".");
@@ -127,7 +127,7 @@ impl Pixel8aHsmTester {
             data_structures.push(key_data);
             
             if i % 20 == 0 {
-                tokio::time::sleep(Duration::from_millis(1)).await;
+                std::thread::sleep(Duration::from_millis(1));
                 print!(".");
             }
         }
@@ -183,11 +183,12 @@ impl Pixel8aHsmTester {
         }
 
         println!();
-        println!("🚀 NEXT STEPS:");
-        println!("   1. Deploy to Pixel 8a: adb push target/aarch64-linux-android/release/beardog /data/local/tmp/");
-        println!("   2. Run on device: adb shell /data/local/tmp/beardog --test-hsm");
-        println!("   3. Compare real vs simulated Titan M performance");
-        println!("   4. Run distributed tests with multiple towers");
+        println!("🚀 NEXT STEPS FOR PIXEL 8A:");
+        println!("   1. Enable USB debugging on your Pixel 8a");
+        println!("   2. Connect device: adb devices");
+        println!("   3. Build for Android: cargo build --target aarch64-linux-android");
+        println!("   4. Deploy: adb push target/aarch64-linux-android/release/beardog /data/local/tmp/");
+        println!("   5. Test on device: adb shell /data/local/tmp/beardog --test-hsm");
         println!();
 
         println!("🎉 System is ready for live Pixel 8a HSM testing!");
@@ -196,15 +197,16 @@ impl Pixel8aHsmTester {
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔍 Initializing Pixel 8a HSM readiness test...");
     println!();
 
-    let device_serial = "44251JEKB04957".to_string();
+    let device_serial = "44251JEKB04957";
     let tester = Pixel8aHsmTester::new(device_serial);
 
-    let _results = tester.run_readiness_test().await?;
+    // Use a simple runtime for the async test
+    let rt = tokio::runtime::Runtime::new()?;
+    let _results = rt.block_on(tester.run_readiness_test())?;
 
     println!();
     println!("✅ Readiness test completed - ready for live device testing!");

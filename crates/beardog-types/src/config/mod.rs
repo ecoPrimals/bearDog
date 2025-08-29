@@ -3,21 +3,20 @@
 //! Re-exports canonical configuration for convenient access.
 //! All configuration types are defined in `beardog_types::canonical::configuration::consolidated`.
 
-// Re-export main canonical configuration types
-pub use crate::canonical::configuration::consolidated::{
-    AppConfig, BearDogCanonicalConfig, ComplianceConfig, ComplianceStandard, ConfigBuilder,
-    ConfigManagerConfig, ConfigMigrator, ConfigValidator, DatabaseConfig, DiscoveryConfig,
-    Environment, HsmConfig, HsmProvider, IntegrationConfig, LoadTestingConfig, LogLevel,
-    MonitoringConfig, NetworkConfig, NodeRegistryConfig, PerformanceConfig, PlatformConfig,
-    PlatformType, ProductionConfig, SecretsConfig, SecurityConfig, SecurityLevel, TunnelConfig,
-    WorkflowConfig, WorkflowEngineType,
+// Re-export main canonical configuration types from focused modules
+pub use crate::canonical::configuration::{
+    BearDogCanonicalConfig, AppConfig, Environment, LogLevel,
+    NetworkConfig, LoadBalancingConfig, LoadBalancingStrategy, PortRange, NetworkProtocol,
+    ConfigBuilder, ConfigValidator, ConfigMigrator,
 };
 
-// Type aliases for unified configs (use the canonical ones)
-pub type UnifiedNetworkConfig = NetworkConfig;
-pub type UnifiedPerformanceConfig = PerformanceConfig;
-pub type UnifiedMonitoringConfig = MonitoringConfig;
-pub type UnifiedSecurityConfig = SecurityConfig;
+// Re-export from legacy consolidated module for compatibility
+pub use crate::canonical::configuration::consolidated::{
+    ComplianceConfig, ComplianceStandard, ConfigManagerConfig, DatabaseConfig, DiscoveryConfig,
+    HsmConfig, HsmProvider, IntegrationConfig, LoadTestingConfig, MonitoringConfig,
+    NodeRegistryConfig, PerformanceConfig, PlatformConfig, PlatformType, ProductionConfig,
+    SecretsConfig, SecurityConfig, SecurityLevel, TunnelConfig, WorkflowConfig, WorkflowEngineType,
+};
 
 // Re-export specific types to avoid ambiguous re-exports
 pub use crate::canonical::configuration::{

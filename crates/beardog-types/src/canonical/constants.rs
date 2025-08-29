@@ -3,40 +3,52 @@
 //! This module re-exports all constants from the unified constants module.
 //! All constants are now consolidated in `crates/beardog-types/src/constants/unified.rs`
 
-// Re-export all unified constants
-pub use crate::constants::unified::*;
+// Re-export key unified constants (specific imports for better maintainability)
+pub use crate::constants::unified::{
+    UnifiedConstantRegistry, default_timeout_ms,
+};
 
 // Provide convenient module-level access
 pub mod api {
-    pub use crate::constants::unified::api::*;
+    pub use crate::constants::unified::api::{
+        VERSION, VERSION_HEADER, PROJECT_VERSION, PROJECT_NAME, MISSION,
+        MAX_REQUEST_SIZE,
+    };
 }
 
 pub mod network {
-    pub use crate::constants::unified::network::*;
+    pub use crate::constants::unified::network::{ports, endpoints, limits, addresses, timeouts};
 }
 
 pub mod security {
-    pub use crate::constants::unified::security::*;
+    // Re-export security constants from unified module
+    pub use crate::constants::unified::security;
 }
 
 pub mod performance {
-    pub use crate::constants::unified::performance::*;
+    // Re-export performance constants from unified module
+    pub use crate::constants::unified::performance;
 }
 
 pub mod hsm {
-    pub use crate::constants::unified::hsm::*;
+    // Re-export HSM constants from unified module
+    pub use crate::constants::unified::hsm;
 }
 
 pub mod cache {
-    pub use crate::constants::unified::cache::*;
+    // Re-export cache constants from unified module
+    pub use crate::constants::unified::cache;
 }
 
 pub mod nodes {
-    pub use crate::constants::unified::nodes::*;
+    // Re-export node constants from unified module
+    pub use crate::constants::unified::nodes;
 }
 
 pub mod compliance {
-    pub use crate::constants::unified::compliance::*;
+    pub use crate::constants::unified::compliance::{
+        gdpr, hipaa, pci_dss, violations,
+    };
 }
 
 pub mod system {
@@ -60,11 +72,5 @@ pub mod system {
     }
 }
 
-// Legacy aliases for backward compatibility
-pub use crate::constants::unified::{
-    default_api_bind_address, default_api_host, default_api_port, default_health_check_interval_ms,
-    default_key_rotation_timeout_ms, default_timeout_ms,
-};
-
-// Registry alias for compatibility
+// Registry alias for compatibility  
 pub use crate::constants::unified::UnifiedConstantRegistry as CanonicalConstantRegistry;

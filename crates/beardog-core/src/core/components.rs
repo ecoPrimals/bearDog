@@ -4,8 +4,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-pub type SystemError = BearDogError;
-
 #[derive(Debug)]
 pub struct ComponentManager {
     components: Arc<RwLock<HashMap<String, ComponentStatus>>>,
@@ -22,7 +20,7 @@ impl ComponentManager {
         &self,
         name: String,
         status: ComponentStatus,
-    ) -> Result<(), SystemError> {
+    ) -> Result<(), BearDogError> {
         let mut components = self.components.write().await;
         components.insert(name, status);
         Ok(())
@@ -32,7 +30,7 @@ impl ComponentManager {
         &self,
         name: &str,
         status: ComponentStatus,
-    ) -> Result<(), SystemError> {
+    ) -> Result<(), BearDogError> {
         let mut components = self.components.write().await;
         if let Some(component_status) = components.get_mut(name) {
             *component_status = status;
@@ -45,7 +43,7 @@ impl ComponentManager {
         }
     }
 
-    pub async fn get_component_status(&self, name: &str) -> Result<ComponentStatus, SystemError> {
+    pub async fn get_component_status(&self, name: &str) -> Result<ComponentStatus, BearDogError> {
         let components = self.components.read().await;
         components
             .get(name)
@@ -55,12 +53,12 @@ impl ComponentManager {
 
     pub async fn get_all_components(
         &self,
-    ) -> Result<HashMap<String, ComponentStatus>, SystemError> {
+    ) -> Result<HashMap<String, ComponentStatus>, BearDogError> {
         let components = self.components.read().await;
         Ok(components.clone())
     }
 
-    pub async fn all_components_healthy(&self) -> Result<bool, SystemError> {
+    pub async fn all_components_healthy(&self) -> Result<bool, BearDogError> {
         let components = self.components.read().await;
         let all_healthy = components
             .values()
@@ -68,7 +66,7 @@ impl ComponentManager {
         Ok(all_healthy)
     }
 
-    pub async fn get_system_health(&self) -> Result<HealthStatus, SystemError> {
+    pub async fn get_system_health(&self) -> Result<HealthStatus, BearDogError> {
         let all_healthy = self.all_components_healthy().await?;
         Ok(if all_healthy {
             HealthStatus::Healthy

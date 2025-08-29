@@ -46,7 +46,7 @@ impl InMemoryGeneticsStore {
 }
 
 impl super::GeneticsStore for InMemoryGeneticsStore {
-    fn store_genetics(&self, genetics: &BearDogGenetics) -> super::GeneticsResult<()> {
+    fn store_genetics(&self, genetics: &BearDogGenetics) -> Result<(), BearDogError> {
         // In a real implementation, this would be mutable or use interior mutability
         // For now, we'll just validate and return success
         if genetics.id.is_empty() {
@@ -55,7 +55,7 @@ impl super::GeneticsStore for InMemoryGeneticsStore {
         Ok(())
     }
 
-    fn get_genetics(&self, id: &str) -> super::GeneticsResult<BearDogGenetics> {
+    fn get_genetics(&self, id: &str) -> Result<BearDogGenetics, BearDogError> {
         self.genetics
             .get(id)
             .cloned()

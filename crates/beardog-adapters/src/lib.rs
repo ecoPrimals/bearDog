@@ -69,19 +69,19 @@ impl From<AdapterError> for BearDogError {
     fn from(error: AdapterError) -> Self {
         match error {
             AdapterError::AdapterNotFound { adapter_id } => Self::Configuration {
-                message: format!("Adapter not found: {}", adapter_id),
+                message: format!("Adapter not found: {adapter_id}"),
                 category: beardog_errors::ConfigurationErrorCategory::General,
             },
             AdapterError::ExternalSystemError { system, error } => Self::System {
-                message: format!("External system error from {}: {}", system, error),
+                message: format!("External system error from {system}: {error}"),
                 category: beardog_errors::SystemErrorCategory::Service,
             },
             AdapterError::AdapterError { adapter, error } => Self::System {
-                message: format!("Adapter error in {}: {}", adapter, error),
+                message: format!("Adapter error in {adapter}: {error}"),
                 category: beardog_errors::SystemErrorCategory::Resource,
             },
             AdapterError::ProtocolError { protocol, message } => Self::Network {
-                message: format!("Protocol error in {}: {}", protocol, message),
+                message: format!("Protocol error in {protocol}: {message}"),
                 category: beardog_errors::NetworkErrorCategory::Connection,
             },
         }

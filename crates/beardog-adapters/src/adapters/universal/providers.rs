@@ -16,6 +16,12 @@ pub struct KubernetesProvider {
 pub use beardog_types::canonical::configuration::KubernetesConfig;
 
 // Default implementation moved to canonical type definition
+impl Default for KubernetesProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl KubernetesProvider {
     pub fn new() -> Self {
         Self {
@@ -142,7 +148,7 @@ impl beardog_traits::canonical::UniversalProvider for KubernetesProvider {
             "apply" => self.kubectl_apply(&payload).await,
             "delete" => self.kubectl_delete(&payload).await,
             "logs" => self.kubectl_logs(&payload).await,
-            _ => Err(BearDogError::system(&format!(
+            _ => Err(BearDogError::system(format!(
                 "Unknown Kubernetes operation: {operation}"
             ))),
         }
@@ -195,7 +201,7 @@ impl KubernetesProvider {
             .execute_kubectl(&["get", resource, "-n", namespace, "-o", "json"])
             .await?;
         serde_json::from_str(&json_string).map_err(|e| {
-            BearDogError::system(format!("Failed to parse kubectl JSON output: {}", e))
+            BearDogError::system(format!("Failed to parse kubectl JSON output: {e}"))
         })
     }
 
@@ -542,7 +548,7 @@ impl beardog_traits::canonical::UniversalProvider for PrometheusProvider {
             "query" => self.query_metrics(&payload).await,
             "query_range" => self.query_range(&payload).await,
             "export" => self.export_metrics(&payload).await,
-            _ => Err(BearDogError::system(&format!(
+            _ => Err(BearDogError::system(format!(
                 "Unknown Prometheus operation: {operation}"
             ))),
         }

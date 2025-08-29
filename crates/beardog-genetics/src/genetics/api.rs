@@ -2,8 +2,9 @@
 //!
 //! This module provides the main API interface for genetics operations.
 
-use super::{DefaultBearDogGeneticsEngine, GeneticsResult, GeneticsStore};
+use super::{DefaultBearDogGeneticsEngine, GeneticsStore};
 use beardog_auth::auth::BearDogGenetics;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::genetics::GeneticsConfig;
 
 /// Main genetics API interface
@@ -18,11 +19,11 @@ impl<S: GeneticsStore> GeneticsAPI<S> {
         }
     }
 
-    pub async fn create_node_genetics(&self, node_id: &str) -> GeneticsResult<BearDogGenetics> {
+    pub async fn create_node_genetics(&self, node_id: &str) -> Result<BearDogGenetics, BearDogError> {
         self.engine.create_genesis_genetics(node_id).await
     }
 
-    pub async fn get_node_genetics(&self, node_id: &str) -> GeneticsResult<BearDogGenetics> {
+    pub async fn get_node_genetics(&self, node_id: &str) -> Result<BearDogGenetics, BearDogError> {
         self.engine.get_node_genetics(node_id).await
     }
 }
@@ -34,11 +35,11 @@ pub struct InMemoryGeneticsStore {
 }
 
 impl GeneticsStore for InMemoryGeneticsStore {
-    fn store_genetics(&self, _genetics: &BearDogGenetics) -> GeneticsResult<()> {
+    fn store_genetics(&self, _genetics: &BearDogGenetics) -> Result<(), BearDogError> {
         Ok(())
     }
 
-    fn get_genetics(&self, _id: &str) -> GeneticsResult<BearDogGenetics> {
+    fn get_genetics(&self, _id: &str) -> Result<BearDogGenetics, BearDogError> {
         Ok(BearDogGenetics::default())
     }
 }

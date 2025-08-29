@@ -1,12 +1,15 @@
-// CONSOLIDATED CONFIGURATION - SINGLE SOURCE OF TRUTH
-pub mod consolidated;
+// CANONICAL CONFIGURATION - SINGLE SOURCE OF TRUTH
+// Core configuration modules - focused and maintainable
+pub mod core;
+pub mod app;
+pub mod network;
+pub mod builder;
+pub mod validation;
 
-// Core configuration modules (kept for specific functionality)
+// Specialized configuration modules
 pub mod compliance;
 pub mod encryption;
 pub mod production;
-
-// Consolidated monitoring and adapter modules
 pub mod adapters;
 pub mod monitoring_consolidated;
 pub mod routing;
@@ -14,12 +17,15 @@ pub mod tunnel;
 pub mod genetics;
 pub mod deployment;
 
+// Legacy consolidated module (deprecated - use focused modules above)
+pub mod consolidated;
+
 // PRIMARY EXPORTS - Use these for new code
-pub use consolidated::{
-    AppConfig, BearDogCanonicalConfig, ConfigBuilder, ConfigMigrator, ConfigValidator,
-    DatabaseConfig, Environment, HsmConfig, HsmProvider, LogLevel, MonitoringConfig, NetworkConfig,
-    PerformanceConfig, ProductionConfig, SecurityConfig, WorkflowConfig, WorkflowEngineType,
-};
+pub use core::BearDogCanonicalConfig;
+pub use app::{AppConfig, Environment, LogLevel};
+pub use network::{NetworkConfig, LoadBalancingConfig, LoadBalancingStrategy, PortRange, NetworkProtocol};
+pub use builder::ConfigBuilder;
+pub use validation::{ConfigValidator, ConfigMigrator};
 
 pub use compliance::{
     ComplianceConfig, ComplianceStandard, DataSovereigntyConfig, PrivacyAuditConfig,
@@ -63,7 +69,7 @@ pub use genetics::{
 pub use deployment::{
     DeploymentConfig, GlobalDeploymentConfig, DeploymentOptimizationConfig,
     RegionalDeploymentConfig, RegionConfig, CloudProvider, GeographicalLocation,
-    LoadBalancingConfig, RoutingAlgorithm, CDNConfig, CDNProvider, AutoScalingConfig,
+    LoadBalancingConfig as DeploymentLoadBalancingConfig, RoutingAlgorithm, CDNConfig, CDNProvider, AutoScalingConfig,
     DeploymentMonitoringConfig, DeploymentSecurityConfig, NodeType,
     NodeConfig as DeploymentNodeConfig, // Renamed to avoid conflict
 };

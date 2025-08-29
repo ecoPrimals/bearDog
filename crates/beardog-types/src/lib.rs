@@ -69,11 +69,11 @@ mod tests {
     }
     #[test]
     fn test_configuration_helpers() {
-        let api_host = canonical::constants::default_api_host();
+        let api_host = crate::constants::unified::default_api_host();
         assert!(!api_host.is_empty());
-        let api_port = canonical::constants::default_api_port();
+        let api_port = crate::constants::unified::default_api_port();
         assert!(api_port > 0);
-        let bind_address = canonical::constants::default_api_bind_address();
+        let bind_address = crate::constants::unified::default_api_bind_address();
         assert!(bind_address.contains(':'));
         assert!(bind_address.len() > 3); // At least "x:y"
     }
@@ -82,7 +82,7 @@ mod tests {
         let timeout = canonical::constants::default_timeout_ms();
         assert!(timeout <= 300_000); // Max 5 minutes is reasonable
         assert!(timeout > 0); // Must be positive
-        let health_check = canonical::constants::default_health_check_interval_ms();
+        let health_check = crate::constants::unified::default_health_check_interval_ms();
         assert!(health_check <= 600_000); // Max 10 minutes is reasonable
     }
     #[test]

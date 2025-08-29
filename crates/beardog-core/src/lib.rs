@@ -1,11 +1,11 @@
 pub mod core; // Re-enabled - testing compilation
 pub mod ecosystem_simple;
 pub mod types; // Re-enabled - testing compilation
+pub mod context_aware_licensing; // Re-enabled - appears to be clean
 
 // Temporarily disabled modules - would need significant fixes for compilation
 // These modules contain working code but have import/syntax issues that would
 // require extensive refactoring. They are preserved for future development.
-// pub mod context_aware_licensing; // Temporarily disabled for clean build
 // pub mod ecosystem; // Temporarily disabled for clean build
 // pub mod ecosystem_integration; // Temporarily disabled for clean build
 // pub mod ecosystem_storage; // Temporarily disabled - needs type fixes

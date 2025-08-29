@@ -32,11 +32,17 @@ pub use configuration::consolidated::{
 
 pub use crate::constants::unified::network::limits::CONNECTION_POOL_SIZE;
 pub use crypto::{CryptoParams, EncryptionAlgorithm, KeyType, KeyUsage};
-pub use genetics::*;
-pub use health_status::*;
+pub use genetics::{
+    GeneticsConfig,
+};
+pub use health_status::{
+    HealthStatus, ComponentStatus,
+};
 pub use hsm::{HsmCapabilities, HsmKey, KeyMetadata};
 
-pub use metrics::*;
+pub use metrics::{
+    SystemMetrics, NetworkMetrics, MemoryMetrics,
+};
 pub use monitoring::{
     AlertConfig, AlertSeverity, HealthCheckConfig, HealthCheckResult, IntegrationMonitoringConfig,
     LoggingConfig, MetricsConfig, MonitoringConfig as CanonicalMonitoringConfig, MonitoringMetrics,
@@ -45,7 +51,9 @@ pub use monitoring::{
     ThreatDetectionConfig, TracingConfig,
 };
 
-pub use services::*;
+pub use services::{
+    ServiceEndpoint,
+};
 
 pub use network::{
     CircuitBreakerConfig, ConnectionPoolConfig,

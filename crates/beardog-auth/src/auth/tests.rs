@@ -33,7 +33,10 @@ mod auth_tests {
         fn is_valid(&self) -> bool {
             self.valid
         }
-    async fn test_session_validation() {
+    }
+
+    #[tokio::test]
+    async fn test_session_validation() -> Result<(), BearDogError> {
         let session_id = "test_session_123";
         let user_id = "user123";
 
@@ -43,16 +46,23 @@ mod auth_tests {
 })?;
         assert_eq!(session_data.user_id, user_id);
         assert_eq!(session_data.session_id, session_id);
-        assert!(session_data.is_valid());}
+        assert!(session_data.is_valid());
+    }
 
-    async fn test_mfa_token_generation() {
+    #[tokio::test]
+    async fn test_mfa_token_generation() -> Result<(), BearDogError> {
+        let user_id = "test_user_123";
         let token = generate_mfa_token(user_id).await.map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
+            tracing::error!("Operation failed: {:?}", e);
+            beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+        })?;
         assert_eq!(token.len(), 6); // Standard TOTP length
         assert!(token.chars().all(|c| c.is_ascii_digit()));
-    async fn test_decentralized_auth_token_operations() {
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_decentralized_auth_token_operations() -> Result<(), BearDogError> {
         use beardog_security::decentralized_auth::DecentralizedAuthManager;
         use std::collections::HashMap;
 
