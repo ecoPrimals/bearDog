@@ -1,10 +1,7 @@
-
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BearDogGenetics {
-
     pub id: String,
 
     pub crypto_chromosomes: Vec<CryptoChromosome>,
@@ -48,7 +45,6 @@ impl Default for BearDogGenetics {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CryptoChromosome {
-
     pub algorithm_family: AlgorithmFamily,
 
     pub strength_bits: u32,
@@ -62,7 +58,6 @@ pub struct CryptoChromosome {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AlgorithmFamily {
-
     Encryption(EncryptionFamily),
 
     Signing(SigningFamily),
@@ -85,7 +80,6 @@ pub enum EncryptionFamily {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SigningFamily {
-
     Ed25519,
 
     Ecdsa,
@@ -117,7 +111,6 @@ pub enum ZkFamily {
 }
 
 pub struct CapabilityGene {
-
     pub capability: NodeCapability,
 
     pub expression_level: f64,
@@ -131,7 +124,6 @@ pub struct CapabilityGene {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum NodeCapability {
-
     StorageProvider,
 
     ComputeProvider,
@@ -193,7 +185,6 @@ pub enum NodeCapability {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityTraits {
-
     pub trust_threshold: f64,
 
     pub paranoia_level: u8,
@@ -229,7 +220,6 @@ pub enum SpawnRestriction {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityMutation {
-
     pub trigger: MutationTrigger,
 
     pub mutation_type: String,
@@ -250,7 +240,6 @@ pub enum MutationTrigger {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum SecurityClearance {
-
     Basic,
 
     Medium,
@@ -262,7 +251,6 @@ pub enum SecurityClearance {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 pub enum NodeSpecialization {
-
     GeneralPurpose,
 
     HighPerformanceCrypto,

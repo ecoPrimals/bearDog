@@ -4,20 +4,17 @@
 //! All constants are now consolidated in `crates/beardog-types/src/constants/unified.rs`
 
 // Re-export key unified constants (specific imports for better maintainability)
-pub use crate::constants::unified::{
-    UnifiedConstantRegistry, default_timeout_ms,
-};
+pub use crate::constants::unified::{default_timeout_ms, UnifiedConstantRegistry};
 
 // Provide convenient module-level access
 pub mod api {
     pub use crate::constants::unified::api::{
-        VERSION, VERSION_HEADER, PROJECT_VERSION, PROJECT_NAME, MISSION,
-        MAX_REQUEST_SIZE,
+        MAX_REQUEST_SIZE, MISSION, PROJECT_NAME, PROJECT_VERSION, VERSION, VERSION_HEADER,
     };
 }
 
 pub mod network {
-    pub use crate::constants::unified::network::{ports, endpoints, limits, addresses, timeouts};
+    pub use crate::constants::unified::network::{addresses, endpoints, limits, ports, timeouts};
 }
 
 pub mod security {
@@ -46,9 +43,7 @@ pub mod nodes {
 }
 
 pub mod compliance {
-    pub use crate::constants::unified::compliance::{
-        gdpr, hipaa, pci_dss, violations,
-    };
+    pub use crate::constants::unified::compliance::{gdpr, hipaa, pci_dss, violations};
 }
 
 pub mod system {
@@ -72,5 +67,5 @@ pub mod system {
     }
 }
 
-// Registry alias for compatibility  
+// Registry alias for compatibility
 pub use crate::constants::unified::UnifiedConstantRegistry as CanonicalConstantRegistry;

@@ -1,7 +1,7 @@
+pub mod context_aware_licensing;
 pub mod core; // Re-enabled - testing compilation
 pub mod ecosystem_simple;
-pub mod types; // Re-enabled - testing compilation
-pub mod context_aware_licensing; // Re-enabled - appears to be clean
+pub mod types; // Re-enabled - testing compilation // Re-enabled - appears to be clean
 
 // Temporarily disabled modules - would need significant fixes for compilation
 // These modules contain working code but have import/syntax issues that would
@@ -30,7 +30,9 @@ pub use types::*;
 pub trait BearDogService: Send + Sync {
     fn start(&mut self) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
     fn stop(&mut self) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
-    fn health_check(&self) -> impl std::future::Future<Output = Result<HealthStatus, BearDogError>> + Send;
+    fn health_check(
+        &self,
+    ) -> impl std::future::Future<Output = Result<HealthStatus, BearDogError>> + Send;
 }
 
 #[derive(Debug, Clone)]

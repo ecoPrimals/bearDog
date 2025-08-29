@@ -5,9 +5,9 @@
 
 // Re-export main canonical configuration types from focused modules
 pub use crate::canonical::configuration::{
-    BearDogCanonicalConfig, AppConfig, Environment, LogLevel,
-    NetworkConfig, LoadBalancingConfig, LoadBalancingStrategy, PortRange, NetworkProtocol,
-    ConfigBuilder, ConfigValidator, ConfigMigrator,
+    AppConfig, BearDogCanonicalConfig, ConfigBuilder, ConfigMigrator, ConfigValidator, Environment,
+    LoadBalancingConfig, LoadBalancingStrategy, LogLevel, NetworkConfig, NetworkProtocol,
+    PortRange,
 };
 
 // Re-export from legacy consolidated module for compatibility

@@ -1,14 +1,11 @@
-
-
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use super::authorization::ResourcePermission;
 use super::genetics::NodeCapability;
 use super::spawning::SpawnPurpose;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossNodeWorkflowRequest {
-
     pub id: String,
 
     pub workflow_type: BearDogWorkflowType,
@@ -30,9 +27,7 @@ pub struct CrossNodeWorkflowRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BearDogWorkflowType {
-
     DataBackup {
-
         source_node: String,
 
         backup_nodes: Vec<String>,
@@ -61,7 +56,6 @@ pub enum BearDogWorkflowType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AutomatedCheck {
-
     ResourceAvailability,
 
     SecurityClearance,
@@ -75,7 +69,6 @@ pub enum AutomatedCheck {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EscalationCondition {
-
     HighRiskOperation,
 
     ComplianceViolation,
@@ -88,7 +81,6 @@ pub enum EscalationCondition {
 }
 
 pub enum WorkflowStatus {
-
     Pending,
 
     InProgress,

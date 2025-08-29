@@ -1,6 +1,2 @@
-
-
 #[cfg(test)]
-mod verification_tests {
-
-}
+mod verification_tests {}

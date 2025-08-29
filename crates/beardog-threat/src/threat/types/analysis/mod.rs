@@ -105,7 +105,7 @@ impl ThreatAnalysisResult {
             threat_level: "low".to_string(),
             threat_detected: false,
             confidence: 0.0,
-            details: format!("Analysis {} for event {}", analysis_id, event_id),
+            details: format!("Analysis {analysis_id} for event {event_id}"),
             indicators: Vec::new(),
             timestamp: chrono::Utc::now(),
         }

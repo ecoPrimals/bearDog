@@ -57,7 +57,7 @@ pub enum ServiceCategory {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum SecurityDomain {
     Cryptography,
-    IAM,
+    Iam,
     ThreatDetection,
     DataProtection,
     General,

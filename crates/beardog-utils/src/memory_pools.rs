@@ -396,7 +396,7 @@ mod tests {
         let pool: MemoryPool<String, 10> = MemoryPool::new().map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal(
-                format_args!("Operation failed: {:?}", e).to_string(),
+                format_args!("Operation failed: {e:?}").to_string(),
             )
         })?;
         let stats = pool.stats();
@@ -410,14 +410,14 @@ mod tests {
         let pool: MemoryPool<Vec<u8>, 5> = MemoryPool::new().map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal(
-                format_args!("Operation failed: {:?}", e).to_string(),
+                format_args!("Operation failed: {e:?}").to_string(),
             )
         })?;
 
         let mut obj = pool.acquire().map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal(
-                format_args!("Operation failed: {:?}", e).to_string(),
+                format_args!("Operation failed: {e:?}").to_string(),
             )
         })?;
         obj.push(42);
@@ -440,20 +440,20 @@ mod tests {
         let pool: MemoryPool<String, 2> = MemoryPool::new().map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal(
-                format_args!("Operation failed: {:?}", e).to_string(),
+                format_args!("Operation failed: {e:?}").to_string(),
             )
         })?;
 
         let _obj1 = pool.acquire().map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal(
-                format_args!("Operation failed: {:?}", e).to_string(),
+                format_args!("Operation failed: {e:?}").to_string(),
             )
         })?;
         let _obj2 = pool.acquire().map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal(
-                format_args!("Operation failed: {:?}", e).to_string(),
+                format_args!("Operation failed: {e:?}").to_string(),
             )
         })?;
 
@@ -468,7 +468,7 @@ mod tests {
         let buffer = pools.get_crypto_buffer().map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal(
-                format_args!("Operation failed: {:?}", e).to_string(),
+                format_args!("Operation failed: {e:?}").to_string(),
             )
         })?;
         assert_eq!(buffer.len(), 0); // Default empty vector

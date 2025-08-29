@@ -441,7 +441,7 @@ mod tests {
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
                     beardog_errors::BearDogError::internal(
-                        format_args!("Operation failed: {:?}", e).to_string(),
+                        format_args!("Operation failed: {e:?}").to_string(),
                     )
                 })?,
             None
@@ -456,7 +456,7 @@ mod tests {
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
                     beardog_errors::BearDogError::internal(
-                        format_args!("Operation failed: {:?}", e).to_string(),
+                        format_args!("Operation failed: {e:?}").to_string(),
                     )
                 })?,
             Some("value1".to_string())
@@ -493,7 +493,7 @@ mod tests {
             counter.increment().map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
                 beardog_errors::BearDogError::internal(
-                    format_args!("Operation failed: {:?}", e).to_string(),
+                    format_args!("Operation failed: {e:?}").to_string(),
                 )
             })?,
             1
@@ -502,7 +502,7 @@ mod tests {
             counter.increment().map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
                 beardog_errors::BearDogError::internal(
-                    format_args!("Operation failed: {:?}", e).to_string(),
+                    format_args!("Operation failed: {e:?}").to_string(),
                 )
             })?,
             2
@@ -511,7 +511,7 @@ mod tests {
             counter.decrement().map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
                 beardog_errors::BearDogError::internal(
-                    format_args!("Operation failed: {:?}", e).to_string(),
+                    format_args!("Operation failed: {e:?}").to_string(),
                 )
             })?,
             1
@@ -529,8 +529,8 @@ mod tests {
             let map_clone = Arc::clone(&map);
             let handle = thread::spawn(move || -> Result<(), Box<dyn std::error::Error + Send>> {
                 for j in 0..100 {
-                    let key = format_args!("thread{}_key{}", i, j).to_string();
-                    let value = format_args!("value{}", j).to_string();
+                    let key = format_args!("thread{i}_key{j}").to_string();
+                    let value = format_args!("value{j}").to_string();
                     map_clone.insert(key.clone(), value.clone()).map_err(|e| {
                         tracing::error!("Operation failed: {:?}", e);
                         Box::new(e) as Box<dyn std::error::Error + Send>

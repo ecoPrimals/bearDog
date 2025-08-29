@@ -30,7 +30,7 @@ mod threat_tests {
         )
         .with_source_ip("192.168.1.1".to_string())
         .with_user_id("admin".to_string());
-        assert_eq!(event.event_type, "failed_login");
+        assert_eq!(event.event_id, "event_001");
         assert_eq!(event.source_ip, Some("192.168.1.1".to_string()));
         assert_eq!(event.source_ip, Some("192.168.1.1".to_string()));
         assert_eq!(event.user_id, Some("admin".to_string()));
@@ -199,12 +199,12 @@ mod threat_tests {
         .with_source_ip("192.168.1.1".to_string())
         .with_user_id("api_user".to_string());
 
-        assert_eq!(suspicious_event.event_type, "failed_login");
+        assert_eq!(suspicious_event.event_id, "event_004");
         assert_eq!(suspicious_event.user_id, Some("api_user".to_string()));
         assert_eq!(suspicious_event.source_ip, Some("admin".to_string()));
 
         let engine = ();
 
-        drop(engine); // Successfully created and can be dropped
+        let _ = engine; // Successfully created and can be dropped
     }
 }

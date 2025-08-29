@@ -1,4 +1,8 @@
-use crate::{BearDogError, SecurityErrorCategory, SystemErrorCategory, BusinessErrorCategory, NetworkErrorCategory, ConfigurationErrorCategory, ApiErrorCategory, HsmErrorCategory, WorkflowErrorCategory};
+use crate::{
+    ApiErrorCategory, BearDogError, BusinessErrorCategory, ConfigurationErrorCategory,
+    HsmErrorCategory, NetworkErrorCategory, SecurityErrorCategory, SystemErrorCategory,
+    WorkflowErrorCategory,
+};
 
 impl BearDogError {
     /// Creates a security-related error with the given message

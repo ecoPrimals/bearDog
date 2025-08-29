@@ -200,9 +200,8 @@ impl KubernetesProvider {
         let json_string = self
             .execute_kubectl(&["get", resource, "-n", namespace, "-o", "json"])
             .await?;
-        serde_json::from_str(&json_string).map_err(|e| {
-            BearDogError::system(format!("Failed to parse kubectl JSON output: {e}"))
-        })
+        serde_json::from_str(&json_string)
+            .map_err(|e| BearDogError::system(format!("Failed to parse kubectl JSON output: {e}")))
     }
 
     async fn kubectl_describe(

@@ -16,17 +16,18 @@ use std::num::NonZeroU32;
 pub struct BearDogCrypto;
 
 impl BearDogCrypto {
-    pub fn generate_ed25519_keypair() -> Result<(Vec<u8>, Vec<u8>), BearDogError> {
+    #[must_use]
+    pub fn generate_ed25519_keypair() -> (Vec<u8>, Vec<u8>) {
         let mut csprng = OsRng;
         let mut secret_bytes = [0u8; 32];
         csprng.fill_bytes(&mut secret_bytes);
         let signing_key = SigningKey::from_bytes(&secret_bytes);
         let verifying_key = signing_key.verifying_key();
 
-        Ok((
+        (
             signing_key.to_bytes().to_vec(),
             verifying_key.to_bytes().to_vec(),
-        ))
+        )
     }
 
     pub fn sign_ed25519(private_key: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError> {
@@ -79,13 +80,15 @@ impl BearDogCrypto {
         }
     }
 
-    pub fn generate_secure_random(size: usize) -> Result<Vec<u8>, BearDogError> {
+    #[must_use]
+    pub fn generate_secure_random(size: usize) -> Vec<u8> {
         let mut bytes = vec![0u8; size];
         thread_rng().fill_bytes(&mut bytes);
-        Ok(bytes)
+        bytes
     }
 
-    pub fn generate_secure_nonce(size: usize) -> Result<Vec<u8>, BearDogError> {
+    #[must_use]
+    pub fn generate_secure_nonce(size: usize) -> Vec<u8> {
         Self::generate_secure_random(size)
     }
 
@@ -130,7 +133,7 @@ impl BearDogCrypto {
             }
             nonce.to_vec()
         } else {
-            Self::generate_secure_nonce(12)?
+            Self::generate_secure_nonce(12)
         };
 
         let nonce = Nonce::from_slice(&nonce_bytes);
@@ -203,7 +206,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_ed25519_signature_verification() -> Result<(), BearDogError> {
-        let (private_key, public_key) = BearDogCrypto::generate_ed25519_keypair()?;
+        let (private_key, public_key) = BearDogCrypto::generate_ed25519_keypair();
         let message = b"test message for signing";
 
         let signature = BearDogCrypto::sign_ed25519(&private_key, message)?;
@@ -221,8 +224,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_secure_nonce_generation() -> Result<(), BearDogError> {
-        let nonce1 = BearDogCrypto::generate_secure_nonce(32)?;
-        let nonce2 = BearDogCrypto::generate_secure_nonce(32)?;
+        let nonce1 = BearDogCrypto::generate_secure_nonce(32);
+        let nonce2 = BearDogCrypto::generate_secure_nonce(32);
 
         assert_eq!(nonce1.len(), 32);
         assert_eq!(nonce2.len(), 32);
@@ -234,7 +237,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_aes_gcm_encryption() -> Result<(), BearDogError> {
-        let key = BearDogCrypto::generate_secure_random(32)?;
+        let key = BearDogCrypto::generate_secure_random(32);
         let plaintext = b"test data for encryption";
 
         let (ciphertext, nonce) = BearDogCrypto::encrypt_aes_gcm(&key, plaintext, None)?;

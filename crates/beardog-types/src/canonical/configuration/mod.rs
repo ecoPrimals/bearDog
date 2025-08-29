@@ -1,31 +1,33 @@
 // CANONICAL CONFIGURATION - SINGLE SOURCE OF TRUTH
 // Core configuration modules - focused and maintainable
-pub mod core;
 pub mod app;
-pub mod network;
 pub mod builder;
+pub mod core;
+pub mod network;
 pub mod validation;
 
 // Specialized configuration modules
-pub mod compliance;
-pub mod encryption;
-pub mod production;
 pub mod adapters;
+pub mod compliance;
+pub mod deployment;
+pub mod encryption;
+pub mod genetics;
 pub mod monitoring_consolidated;
+pub mod production;
 pub mod routing;
 pub mod tunnel;
-pub mod genetics;
-pub mod deployment;
 
 // Legacy consolidated module (deprecated - use focused modules above)
 pub mod consolidated;
 
 // PRIMARY EXPORTS - Use these for new code
-pub use core::BearDogCanonicalConfig;
 pub use app::{AppConfig, Environment, LogLevel};
-pub use network::{NetworkConfig, LoadBalancingConfig, LoadBalancingStrategy, PortRange, NetworkProtocol};
 pub use builder::ConfigBuilder;
-pub use validation::{ConfigValidator, ConfigMigrator};
+pub use core::BearDogCanonicalConfig;
+pub use network::{
+    LoadBalancingConfig, LoadBalancingStrategy, NetworkConfig, NetworkProtocol, PortRange,
+};
+pub use validation::{ConfigMigrator, ConfigValidator};
 
 pub use compliance::{
     ComplianceConfig, ComplianceStandard, DataSovereigntyConfig, PrivacyAuditConfig,
@@ -55,23 +57,35 @@ pub use monitoring_consolidated::{
 pub use routing::{CapabilityConfig, ModelConfig, OAuth2Config, RouterConfig};
 
 pub use tunnel::{
-    TunnelConfig, TunnelPerformanceConfig, TunnelKeyManagementConfig, TunnelGamingConfig,
-    TunnelHsmManagerConfig, TunnelHealthConfig, TunnelFailoverConfig, TunnelHsmPerformanceConfig,
-    TunnelHsmConfig, TunnelHsmTier, TunnelConnectionConfig, TunnelAuthConfig, TunnelAuthMethod,
-    TunnelMonitoringConfig, TunnelAlertThresholds, TunnelSecurityConfig,
+    TunnelAlertThresholds, TunnelAuthConfig, TunnelAuthMethod, TunnelConfig,
+    TunnelConnectionConfig, TunnelFailoverConfig, TunnelGamingConfig, TunnelHealthConfig,
+    TunnelHsmConfig, TunnelHsmManagerConfig, TunnelHsmPerformanceConfig, TunnelHsmTier,
+    TunnelKeyManagementConfig, TunnelMonitoringConfig, TunnelPerformanceConfig,
+    TunnelSecurityConfig,
 };
 
 pub use genetics::{
-    GeneticsConfig, GenesisConfig, GeneticsNetworkConfig, GeneticsSystemConfig,
-    GeneticsSpawningConfig, GeneticsEntropyConfig, EntropyCollectionMethod, EntropyPrivacyLevel,
+    EntropyCollectionMethod, EntropyPrivacyLevel, GenesisConfig, GeneticsConfig,
+    GeneticsEntropyConfig, GeneticsNetworkConfig, GeneticsSpawningConfig, GeneticsSystemConfig,
 };
 
 pub use deployment::{
-    DeploymentConfig, GlobalDeploymentConfig, DeploymentOptimizationConfig,
-    RegionalDeploymentConfig, RegionConfig, CloudProvider, GeographicalLocation,
-    LoadBalancingConfig as DeploymentLoadBalancingConfig, RoutingAlgorithm, CDNConfig, CDNProvider, AutoScalingConfig,
-    DeploymentMonitoringConfig, DeploymentSecurityConfig, NodeType,
+    AutoScalingConfig,
+    CDNConfig,
+    CDNProvider,
+    CloudProvider,
+    DeploymentConfig,
+    DeploymentMonitoringConfig,
+    DeploymentOptimizationConfig,
+    DeploymentSecurityConfig,
+    GeographicalLocation,
+    GlobalDeploymentConfig,
+    LoadBalancingConfig as DeploymentLoadBalancingConfig,
     NodeConfig as DeploymentNodeConfig, // Renamed to avoid conflict
+    NodeType,
+    RegionConfig,
+    RegionalDeploymentConfig,
+    RoutingAlgorithm,
 };
 
 // Re-export the canonical CircuitBreakerConfig

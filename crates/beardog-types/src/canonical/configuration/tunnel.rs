@@ -1,10 +1,9 @@
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 use std::collections::HashMap;
+use std::time::Duration;
 
 /// Canonical tunnel configuration - consolidates all tunnel-related configs
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TunnelConfig {
     pub performance: TunnelPerformanceConfig,
     pub key_management: TunnelKeyManagementConfig,
@@ -13,7 +12,6 @@ pub struct TunnelConfig {
     pub monitoring: TunnelMonitoringConfig,
     pub security: TunnelSecurityConfig,
 }
-
 
 /// Performance configuration for tunnel operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -55,7 +53,7 @@ impl Default for TunnelPerformanceConfig {
             enable_compression: true,
             compression_level: 6,
             enable_caching: true,
-            cache_size_mb: 1024, // 1 GB
+            cache_size_mb: 1024,                  // 1 GB
             cache_ttl: Duration::from_secs(3600), // 1 hour
         }
     }
@@ -79,7 +77,7 @@ impl Default for TunnelKeyManagementConfig {
         Self {
             use_hardware_keys: true,
             key_derivation_rounds: 100_000,
-            session_key_length: 32, // 256 bits
+            session_key_length: 32,                           // 256 bits
             key_rotation_interval: Duration::from_secs(3600), // 1 hour
             backup_key_count: 3,
             key_storage_path: "/var/lib/beardog/tunnel/keys".to_string(),
@@ -136,15 +134,13 @@ impl Default for TunnelGamingConfig {
 }
 
 /// HSM manager configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TunnelHsmManagerConfig {
     pub hsm_configs: Vec<TunnelHsmConfig>,
     pub health_config: TunnelHealthConfig,
     pub failover_config: TunnelFailoverConfig,
     pub performance_config: TunnelHsmPerformanceConfig,
 }
-
 
 /// Health check configuration for tunnel HSM
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -268,10 +264,20 @@ pub struct TunnelAuthConfig {
 /// Authentication methods for tunnel operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TunnelAuthMethod {
-    Certificate { cert_path: String, key_path: String },
-    Token { token: String },
-    ApiKey { key: String },
-    Mutual { client_cert: String, ca_cert: String },
+    Certificate {
+        cert_path: String,
+        key_path: String,
+    },
+    Token {
+        token: String,
+    },
+    ApiKey {
+        key: String,
+    },
+    Mutual {
+        client_cert: String,
+        ca_cert: String,
+    },
 }
 
 impl Default for TunnelAuthConfig {
@@ -365,4 +371,4 @@ impl Default for TunnelSecurityConfig {
             intrusion_detection: true,
         }
     }
-} 
+}

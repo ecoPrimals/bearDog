@@ -135,7 +135,7 @@ mod tests {
 
         let genetics = BearDogGenetics {
             id: "test-genetics".to_string(),
-            capabilities: vec![NodeCapability::GeneticSpawning],
+            capabilities: vec![NodeCapability::ComputeProvider],
             security_clearance: SecurityClearance::Basic,
             fitness_score: 0.8,
             ..Default::default()

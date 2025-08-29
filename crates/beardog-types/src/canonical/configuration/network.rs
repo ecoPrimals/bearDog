@@ -77,4 +77,4 @@ impl NetworkConfig {
     pub fn full_address(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }
-} 
+}

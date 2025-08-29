@@ -57,6 +57,9 @@ impl AppConfig {
 
     /// Get rollout percentage for a feature
     pub fn get_rollout_percentage(&self, feature: &str) -> f64 {
-        self.rollout_percentages.get(feature).copied().unwrap_or(0.0)
+        self.rollout_percentages
+            .get(feature)
+            .copied()
+            .unwrap_or(0.0)
     }
-} 
+}

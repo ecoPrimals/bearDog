@@ -2,14 +2,9 @@
 //!
 //! Provides builder pattern for constructing BearDog configurations.
 
+use super::consolidated::{DatabaseConfig, HsmConfig, MonitoringConfig, SecurityConfig};
 use super::core::BearDogCanonicalConfig;
-use super::{
-    app::AppConfig,
-    network::NetworkConfig,
-};
-use super::consolidated::{
-    SecurityConfig, HsmConfig, DatabaseConfig, MonitoringConfig,
-};
+use super::{app::AppConfig, network::NetworkConfig};
 
 /// Configuration builder for fluent configuration construction
 #[derive(Debug, Clone)]
@@ -78,4 +73,4 @@ impl Default for ConfigBuilder {
     fn default() -> Self {
         Self::new()
     }
-} 
+}

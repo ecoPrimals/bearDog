@@ -67,7 +67,9 @@ impl<const B: usize, const C: usize, const L: bool, const H: u32> ConstConfig<B,
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.total_memory_usage() > 100 * 1024 * 1024 {
             // 100MB limit
-            return Err(BearDogError::validation("Configuration exceeds memory limit"));
+            return Err(BearDogError::validation(
+                "Configuration exceeds memory limit",
+            ));
         }
 
         if B > 1024 * 1024 {
@@ -436,7 +438,7 @@ mod tests {
 
         assert_eq!(config.buffer_size(), 8192);
         assert_eq!(config.cache_size(), 512);
-        assert_eq!(config.logging_enabled(), true);
+        assert!(config.logging_enabled());
         assert_eq!(config.hash_rounds(), 12);
     }
 
@@ -446,8 +448,8 @@ mod tests {
         assert_eq!(ConstMath::pow(2, 10), 1024);
         assert_eq!(ConstMath::gcd(48, 18), 6);
         assert_eq!(ConstMath::lcm(4, 6), 12);
-        assert_eq!(ConstMath::is_prime(17), true);
-        assert_eq!(ConstMath::is_prime(18), false);
+        assert!(ConstMath::is_prime(17));
+        assert!(!ConstMath::is_prime(18));
         assert_eq!(ConstMath::fibonacci(10), 55);
     }
 
@@ -462,8 +464,8 @@ mod tests {
         assert!((sin_0 - 0.0).abs() < 0.1);
         assert!((sin_90 - 1.0).abs() < 0.1);
 
-        assert_eq!(ConstTables::is_small_prime(17), true);
-        assert_eq!(ConstTables::is_small_prime(18), false);
+        assert!(ConstTables::is_small_prime(17));
+        assert!(!ConstTables::is_small_prime(18));
     }
 
     #[test]
@@ -502,10 +504,10 @@ mod tests {
     #[test]
     fn test_const_str() {
         assert_eq!(ConstStr::len("hello"), 5);
-        assert_eq!(ConstStr::is_empty(""), true);
-        assert_eq!(ConstStr::is_empty("hello"), false);
-        assert_eq!(ConstStr::eq("hello", "hello"), true);
-        assert_eq!(ConstStr::eq("hello", "world"), false);
+        assert!(ConstStr::is_empty(""));
+        assert!(!ConstStr::is_empty("hello"));
+        assert!(ConstStr::eq("hello", "hello"));
+        assert!(!ConstStr::eq("hello", "world"));
 
         let hash1 = ConstStr::hash("test");
         let hash2 = ConstStr::hash("test");

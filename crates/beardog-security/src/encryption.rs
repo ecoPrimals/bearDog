@@ -64,14 +64,14 @@ impl Default for EncryptionConfig {
 }
 
 impl EncryptionEngine {
-    pub async fn new(config: EncryptionConfig) -> Result<Self, BearDogError> {
+    pub fn new(config: EncryptionConfig) -> Result<Self, BearDogError> {
         Ok(Self {
             algorithm: config.algorithm.clone(),
             config,
         })
     }
 
-    pub async fn encrypt(
+    pub fn encrypt(
         &self,
         data: &[u8],
         algorithm: EncryptionAlgorithm,
@@ -90,7 +90,7 @@ impl EncryptionEngine {
         }
     }
 
-    pub async fn decrypt(&self, encrypted_data: &EncryptedData) -> Result<Vec<u8>, BearDogError> {
+    pub fn decrypt(&self, encrypted_data: &EncryptedData) -> Result<Vec<u8>, BearDogError> {
         // Simplified decryption - just return the data
         Ok(encrypted_data.data.clone())
     }

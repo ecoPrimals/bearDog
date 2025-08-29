@@ -17,7 +17,7 @@ pub use zero_copy::{GeneticsPool, LineageStats, LineageTracker};
 // Re-export clean modules
 pub use human_entropy::{EntropyFeatures, EntropySource, HumanEntropyCollector, PrivacyLevel};
 pub use peer_to_peer_genetics::{
-    DistributedSpawnRequest, GeneticsNode, P2PNetworkConfig, NetworkStatus, P2PGeneticsNetwork,
+    DistributedSpawnRequest, GeneticsNode, NetworkStatus, P2PGeneticsNetwork, P2PNetworkConfig,
     SpawnPriority,
 };
 
@@ -46,7 +46,10 @@ impl<S: GeneticsStore> DefaultBearDogGeneticsEngine<S> {
         &self.config
     }
 
-    pub async fn create_genesis_genetics(&self, _node_id: &str) -> Result<BearDogGenetics, BearDogError> {
+    pub async fn create_genesis_genetics(
+        &self,
+        _node_id: &str,
+    ) -> Result<BearDogGenetics, BearDogError> {
         use uuid::Uuid;
 
         let genetics = BearDogGenetics {
@@ -72,11 +75,11 @@ impl<S: GeneticsStore> DefaultBearDogGeneticsEngine<S> {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use beardog_errors::BearDogError;
-    use std::sync::Arc;
+    // BearDogError is already imported in the main module
+    // Arc removed - using direct store instance
     #[test]
     fn test_genetics_api_creation() {
-        let store = Arc::new(api::InMemoryGeneticsStore::new());
+        let store = api::InMemoryGeneticsStore::default();
         let config = GeneticsConfig::default();
         let _api = DefaultBearDogGeneticsEngine::new(store, config);
     }

@@ -374,7 +374,9 @@ pub mod validation {
             return Err(BearDogError::validation("Threat score cannot exceed 100"));
         }
         if event.description.is_empty() {
-            return Err(BearDogError::validation("Event description cannot be empty"));
+            return Err(BearDogError::validation(
+                "Event description cannot be empty",
+            ));
         }
 
         Ok(())
@@ -400,7 +402,9 @@ pub mod validation {
         }
         // Confidence level validation is handled by the enum type itself
         if indicator.first_seen > indicator.last_seen {
-            return Err(BearDogError::validation("First seen cannot be after last seen"));
+            return Err(BearDogError::validation(
+                "First seen cannot be after last seen",
+            ));
         }
 
         Ok(())
