@@ -1,7 +1,7 @@
 use beardog_errors::BearDogError;
 use beardog_types::providers::{
-    AuthenticationCredentials, AuthenticationResult, AuthorizationResult, 
-    ProviderHealth, ProviderStatus
+    AuthenticationCredentials, AuthenticationResult, AuthorizationResult, ProviderHealth,
+    ProviderStatus,
 };
 
 pub struct BearDogSecurityProvider {

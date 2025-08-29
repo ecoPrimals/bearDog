@@ -24,13 +24,13 @@ mod threat_tests {
     #[tokio::test]
     async fn test_security_event_creation() {
         let event = SecurityEvent::new(
-            "event_001".to_string(),
-            chrono::Utc::now(),
             "failed_login".to_string(),
+            chrono::Utc::now(),
+            "high".to_string(),
         )
         .with_source_ip("192.168.1.1".to_string())
         .with_user_id("admin".to_string());
-        assert_eq!(event.event_id, "event_001");
+        assert_eq!(event.event_type, "failed_login");
         assert_eq!(event.source_ip, Some("192.168.1.1".to_string()));
         assert_eq!(event.source_ip, Some("192.168.1.1".to_string()));
         assert_eq!(event.user_id, Some("admin".to_string()));
@@ -192,16 +192,16 @@ mod threat_tests {
     #[tokio::test]
     async fn test_basic_threat_detection_flow() {
         let suspicious_event = SecurityEvent::new(
-            "event_004".to_string(),
-            chrono::Utc::now(),
             "failed_login".to_string(),
+            chrono::Utc::now(),
+            "high".to_string(),
         )
         .with_source_ip("192.168.1.1".to_string())
         .with_user_id("api_user".to_string());
 
-        assert_eq!(suspicious_event.event_id, "event_004");
+        assert_eq!(suspicious_event.event_type, "failed_login");
         assert_eq!(suspicious_event.user_id, Some("api_user".to_string()));
-        assert_eq!(suspicious_event.source_ip, Some("admin".to_string()));
+        assert_eq!(suspicious_event.source_ip, Some("192.168.1.1".to_string()));
 
         let engine = ();
 

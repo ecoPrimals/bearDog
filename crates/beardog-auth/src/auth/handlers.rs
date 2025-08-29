@@ -34,9 +34,9 @@ impl AuthenticationHandler {
     ///
     /// Uses the idiomatic `Result<T, BearDogError>` pattern for clear error handling
     /// Authenticate user credentials
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Returns `BearDogError` if authentication fails or credentials are invalid
     pub async fn authenticate(&mut self, _credentials: &str) -> Result<SessionData, BearDogError> {
         // Implementation here
