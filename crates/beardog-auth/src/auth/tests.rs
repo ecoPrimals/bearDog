@@ -69,20 +69,21 @@ mod auth_tests {
                 HashMap::with_capacity(16),
             )
             .map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
+                tracing::error!("Operation failed: {:?}", e);
+                beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
+            })?;
 
         let is_valid = auth_manager.verify_auth_token(&token).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
 })?;
         assert!(is_valid);
 
         assert_eq!(token.claims.subject, "test_user");
         assert_eq!(token.claims.audience, "test_service");
         assert_eq!(token.claims.permissions, vec!["read", "write"]);
-        assert!(!token.signature.is_empty());}
+        assert!(!token.signature.is_empty());
+    }
 
     async fn test_user_authentication_flow() {
         let username = "testuser";
@@ -97,10 +98,13 @@ mod auth_tests {
 
         let auth_result = authenticate_user(username, password).await.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Operation failed: {:?}", e))
 })?;
         assert!(auth_result.success);
         assert!(auth_result.session_token.is_some());
+    }
+
+    #[tokio::test]
     async fn test_role_based_access() {
         let user_roles = vec!["user".to_string(), "read_only".to_string()];
         let required_role = "user";

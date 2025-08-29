@@ -1,17 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct SystemMetrics {
-    pub cpu: CpuMetrics,
-
-    pub memory: MemoryMetrics,
-
-    pub disk: DiskMetrics,
-
-    pub network: NetworkMetrics,
-
-    pub load_average: LoadAverage,
-}
+// SystemMetrics consolidated to main metrics module
+pub use crate::metrics::SystemMetrics;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CpuMetrics {
@@ -48,18 +38,8 @@ pub struct DiskMetrics {
     pub write_ops_per_sec: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct NetworkMetrics {
-    pub bytes_received: u64,
-
-    pub bytes_sent: u64,
-
-    pub packets_received: u64,
-
-    pub packets_sent: u64,
-
-    pub errors: u64,
-}
+// NetworkMetrics consolidated to main metrics module
+pub use crate::metrics::NetworkMetrics;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LoadAverage {

@@ -10,6 +10,9 @@ pub mod production;
 pub mod adapters;
 pub mod monitoring_consolidated;
 pub mod routing;
+pub mod tunnel;
+pub mod genetics;
+pub mod deployment;
 
 // PRIMARY EXPORTS - Use these for new code
 pub use consolidated::{
@@ -44,6 +47,26 @@ pub use monitoring_consolidated::{
 };
 
 pub use routing::{CapabilityConfig, ModelConfig, OAuth2Config, RouterConfig};
+
+pub use tunnel::{
+    TunnelConfig, TunnelPerformanceConfig, TunnelKeyManagementConfig, TunnelGamingConfig,
+    TunnelHsmManagerConfig, TunnelHealthConfig, TunnelFailoverConfig, TunnelHsmPerformanceConfig,
+    TunnelHsmConfig, TunnelHsmTier, TunnelConnectionConfig, TunnelAuthConfig, TunnelAuthMethod,
+    TunnelMonitoringConfig, TunnelAlertThresholds, TunnelSecurityConfig,
+};
+
+pub use genetics::{
+    GeneticsConfig, GenesisConfig, GeneticsNetworkConfig, GeneticsSystemConfig,
+    GeneticsSpawningConfig, GeneticsEntropyConfig, EntropyCollectionMethod, EntropyPrivacyLevel,
+};
+
+pub use deployment::{
+    DeploymentConfig, GlobalDeploymentConfig, DeploymentOptimizationConfig,
+    RegionalDeploymentConfig, RegionConfig, CloudProvider, GeographicalLocation,
+    LoadBalancingConfig, RoutingAlgorithm, CDNConfig, CDNProvider, AutoScalingConfig,
+    DeploymentMonitoringConfig, DeploymentSecurityConfig, NodeType,
+    NodeConfig as DeploymentNodeConfig, // Renamed to avoid conflict
+};
 
 // Re-export the canonical CircuitBreakerConfig
 pub use crate::canonical::providers::CircuitBreakerConfig;

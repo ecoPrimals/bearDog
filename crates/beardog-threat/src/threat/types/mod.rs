@@ -364,53 +364,54 @@ mod tests {
 
 pub mod validation {
     use super::*;
+    use beardog_errors::BearDogError;
 
-    pub fn validate_threat_event(event: &ThreatEvent) -> Result<(), String> {
+    pub fn validate_threat_event(event: &ThreatEvent) -> Result<(), BearDogError> {
         if event.id.is_empty() {
-            return Err("Event ID cannot be empty".to_string());
+            return Err(BearDogError::validation("Event ID cannot be empty"));
         }
         if event.score > 100 {
-            return Err("Threat score cannot exceed 100".to_string());
+            return Err(BearDogError::validation("Threat score cannot exceed 100"));
         }
         if event.description.is_empty() {
-            return Err("Event description cannot be empty".to_string());
+            return Err(BearDogError::validation("Event description cannot be empty"));
         }
 
         Ok(())
     }
 
-    pub fn validate_detection_rule(rule: &DetectionRule) -> Result<(), String> {
+    pub fn validate_detection_rule(rule: &DetectionRule) -> Result<(), BearDogError> {
         if rule.id.is_empty() {
-            return Err("Rule ID cannot be empty".to_string());
+            return Err(BearDogError::validation("Rule ID cannot be empty"));
         }
         if rule.name.is_empty() {
-            return Err("Rule name cannot be empty".to_string());
+            return Err(BearDogError::validation("Rule name cannot be empty"));
         }
         if rule.condition.complexity_score() > 10 {
-            return Err("Rule condition too complex".to_string());
+            return Err(BearDogError::validation("Rule condition too complex"));
         }
 
         Ok(())
     }
 
-    pub fn validate_threat_indicator(indicator: &ThreatIndicator) -> Result<(), String> {
+    pub fn validate_threat_indicator(indicator: &ThreatIndicator) -> Result<(), BearDogError> {
         if indicator.value.is_empty() {
-            return Err("Indicator value cannot be empty".to_string());
+            return Err(BearDogError::validation("Indicator value cannot be empty"));
         }
         // Confidence level validation is handled by the enum type itself
         if indicator.first_seen > indicator.last_seen {
-            return Err("First seen cannot be after last seen".to_string());
+            return Err(BearDogError::validation("First seen cannot be after last seen"));
         }
 
         Ok(())
     }
 
-    pub fn validate_security_event(event: &SecurityEvent) -> Result<(), String> {
+    pub fn validate_security_event(event: &SecurityEvent) -> Result<(), BearDogError> {
         if event.event_type.is_empty() {
-            return Err("Event type cannot be empty".to_string());
+            return Err(BearDogError::validation("Event type cannot be empty"));
         }
         if event.severity.is_empty() {
-            return Err("Event severity cannot be empty".to_string());
+            return Err(BearDogError::validation("Event severity cannot be empty"));
         }
 
         Ok(())

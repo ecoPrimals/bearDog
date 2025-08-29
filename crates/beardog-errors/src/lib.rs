@@ -179,7 +179,7 @@ mod tests {
         if let BearDogError::Security { category, .. } = security_error {
             assert!(matches!(category, SecurityErrorCategory::Authentication));
         } else {
-            panic!("Expected Security error");
+            assert!(false, "Expected Security error, got: {:?}", security_error);
         }
     }
 
@@ -197,7 +197,7 @@ mod tests {
             assert!(message.contains("Failed to read file"));
             assert!(matches!(category, SystemErrorCategory::General));
         } else {
-            panic!("Expected System error");
+            assert!(false, "Expected System error, got: {:?}", beardog_result);
         }
     }
 

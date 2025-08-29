@@ -255,7 +255,10 @@ mod tests {
                 HumanEntropyMethod::TouchPatterns { .. } => (),
                 HumanEntropyMethod::Biometric { .. } => (),
                 HumanEntropyMethod::VoicePatterns => (),
-                _ => panic!("Unexpected entropy method"),
+                _ => {
+                    eprintln!("Warning: Unexpected entropy method encountered");
+                    return Err(BearDogError::validation("Unsupported entropy method"));
+                },
             }
         }
     }
