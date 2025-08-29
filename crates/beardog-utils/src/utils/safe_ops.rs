@@ -190,7 +190,7 @@ mod tests {
             result.map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
                 beardog_errors::BearDogError::internal(
-                    format_args!("Operation failed: {:?}", e).to_string(),
+                    format_args!("Operation failed: {e:?}").to_string(),
                 )
             })?,
             8

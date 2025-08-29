@@ -1,44 +1,59 @@
-
-
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossNodeAuthConfig {
-
-    pub proof_verification_enabled: bool,
-
+    pub verification_mode: VerificationMode,
     pub max_proof_validity_minutes: u32,
-
-    pub genetic_spawning_enabled: bool,
-
-    pub require_consensus: bool,
-
-    pub consensus_threshold: f64,
-
+    pub spawning_mode: SpawningMode,
+    pub consensus_config: ConsensusConfig,
     pub max_spawns_per_node: u32,
+    pub approval_mode: ApprovalMode,
+}
 
-    pub automated_approval_enabled: bool,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum VerificationMode {
+    Enabled,
+    Disabled,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SpawningMode {
+    Enabled,
+    Disabled,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ApprovalMode {
+    Automated,
+    Manual,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConsensusConfig {
+    pub required: bool,
+    pub threshold: f64,
 }
 
 impl Default for CrossNodeAuthConfig {
     fn default() -> Self {
         Self {
-            proof_verification_enabled: true,
+            verification_mode: VerificationMode::Enabled,
             max_proof_validity_minutes: 60,
-            genetic_spawning_enabled: true,
-            require_consensus: false,
-            consensus_threshold: 0.67,
+            spawning_mode: SpawningMode::Enabled,
+            consensus_config: ConsensusConfig {
+                required: false,
+                threshold: 0.67,
+            },
             max_spawns_per_node: 10,
-            automated_approval_enabled: true,
+            approval_mode: ApprovalMode::Automated,
         }
     }
-    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrossNodeAuthorization {
-
     pub id: String,
 
     pub requester_node_id: String,
@@ -57,14 +72,16 @@ pub struct CrossNodeAuthorization {
 
     pub signature: String,
 
-    pub is_active: bool,}
+    pub is_active: bool,
+}
 
 impl CrossNodeAuthorization {
-
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         self.is_active && Utc::now() < self.expires_at
     }
 
+    #[must_use]
     pub fn has_permission(&self, permission: &ResourcePermission) -> bool {
         self.permissions.iter().any(|p| p.implies(permission))
     }
@@ -72,7 +89,6 @@ impl CrossNodeAuthorization {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ResourcePermission {
-
     Read,
 
     Write,
@@ -101,10 +117,11 @@ pub enum ResourcePermission {
 
     Consensus,
 
-    Compliance,}
+    Compliance,
+}
 
 impl ResourcePermission {
-
+    #[must_use]
     pub fn implies(&self, other: &Self) -> bool {
         match (self, other) {
             (ResourcePermission::Admin, _) => true,
@@ -115,7 +132,8 @@ impl ResourcePermission {
         }
     }
 
-    pub fn security_level(&self) -> u8 {
+    #[must_use]
+    pub const fn security_level(&self) -> u8 {
         match self {
             ResourcePermission::Read => 1,
             ResourcePermission::Audit => 2,
@@ -138,9 +156,7 @@ impl ResourcePermission {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AccessCondition {
-
     TimeWindow {
-
         start: DateTime<Utc>,
 
         end: DateTime<Utc>,
@@ -172,7 +188,6 @@ pub enum AuthMethod {
 
 #[derive(Debug, Clone)]
 pub struct CrossNodeOperation {
-
     pub operation_type: OperationType,
 
     pub target_resource: String,
@@ -200,7 +215,6 @@ pub struct AuthorizationProof {
 
 #[derive(Debug, Clone)]
 pub struct ConsensusResult {
-
     pub approved: bool,
 
     pub votes: HashMap<String, bool>,

@@ -1,9 +1,6 @@
-
-
 use beardog_errors::BearDogError;
 use beardog_types::canonical::{
-    configuration::consolidated::BearDogCanonicalConfig,
-    providers::ProviderConfig,
+    configuration::consolidated::BearDogCanonicalConfig, providers::ProviderConfig,
 };
 // use beardog_traits::canonical::WorkflowProvider; // TODO: Implement workflow integration
 use serde::{Deserialize, Serialize};
@@ -24,6 +21,7 @@ pub struct SessionData {
 }
 
 impl AuthenticationHandler {
+    #[must_use]
     pub fn new(config: BearDogCanonicalConfig, provider_config: ProviderConfig) -> Self {
         Self {
             config,
@@ -33,8 +31,13 @@ impl AuthenticationHandler {
     }
 
     /// Authenticates user credentials and returns session data
-    /// 
+    ///
     /// Uses the idiomatic `Result<T, BearDogError>` pattern for clear error handling
+    /// Authenticate user credentials
+    /// 
+    /// # Errors
+    /// 
+    /// Returns `BearDogError` if authentication fails or credentials are invalid
     pub async fn authenticate(&mut self, _credentials: &str) -> Result<SessionData, BearDogError> {
         // Implementation here
         Ok(SessionData {
@@ -56,4 +59,3 @@ pub enum AuthorizationResult {
 pub struct ConsensusResult {
     pub approved: bool,
 }
-

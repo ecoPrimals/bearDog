@@ -114,4 +114,4 @@ impl ConfigMigrator {
     pub fn migrate_app_config() -> super::app::AppConfig {
         super::app::AppConfig::default()
     }
-} 
+}

@@ -19,7 +19,10 @@ impl<S: GeneticsStore> GeneticsAPI<S> {
         }
     }
 
-    pub async fn create_node_genetics(&self, node_id: &str) -> Result<BearDogGenetics, BearDogError> {
+    pub async fn create_node_genetics(
+        &self,
+        node_id: &str,
+    ) -> Result<BearDogGenetics, BearDogError> {
         self.engine.create_genesis_genetics(node_id).await
     }
 
@@ -49,7 +52,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_genetics_api() -> GeneticsResult<()> {
+    async fn test_genetics_api() -> Result<(), BearDogError> {
         let store = InMemoryGeneticsStore::default();
         let config = GeneticsConfig::default();
         let api = GeneticsAPI::new(store, config);

@@ -1,6 +1,6 @@
-//! # BearDog Security Module
+//! # `BearDog` Security Module
 //!
-//! This module provides security functionality for the BearDog ecosystem.
+//! This module provides security functionality for the `BearDog` ecosystem.
 //!
 //! **NOTE**: This module has been temporarily simplified due to extensive
 //! syntax errors in the test code. The core functionality has been preserved
@@ -29,7 +29,7 @@ mod tests {
     async fn test_basic_functionality() -> Result<(), BearDogError> {
         // Basic smoke test to ensure the module compiles
         let config = encryption::EncryptionConfig::default();
-        let _engine = encryption::EncryptionEngine::new(config).await?;
+        let _engine = encryption::EncryptionEngine::new(config)?;
         Ok(())
     }
 }

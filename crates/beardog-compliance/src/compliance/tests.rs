@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod compliance_tests {
 
     use crate::compliance::types::*;
     use chrono::Utc;
@@ -17,16 +17,14 @@ mod tests {
     fn test_compliance_standards() {
         use beardog_types::canonical::configuration::consolidated::ComplianceStandard as ConsolidatedStandard;
 
-        let standards = vec![
-            ConsolidatedStandard::Gdpr,
+        let standards = [ConsolidatedStandard::Gdpr,
             ConsolidatedStandard::Sox,
             ConsolidatedStandard::PciDss,
             ConsolidatedStandard::Hipaa,
             ConsolidatedStandard::IsoIec27001,
             ConsolidatedStandard::Nist,
             ConsolidatedStandard::FedRamp,
-            ConsolidatedStandard::Custom("CustomStandard".to_string()),
-        ];
+            ConsolidatedStandard::Custom("CustomStandard".to_string())];
 
         assert_eq!(standards.len(), 8);
         // Note: We can't use assert_eq! directly because the consolidated enum doesn't implement PartialEq

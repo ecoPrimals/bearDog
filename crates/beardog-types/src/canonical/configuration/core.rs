@@ -7,17 +7,14 @@ use serde::{Deserialize, Serialize};
 
 // Import all the specific config types from consolidated module for now
 use super::consolidated::{
-    HsmConfig, DatabaseConfig, MonitoringConfig, WorkflowConfig, ProductionConfig,
-    PerformanceConfig, ConfigManagerConfig, DiscoveryConfig, ComplianceConfig,
-    TunnelConfig, IntegrationConfig, NodeRegistryConfig, PlatformConfig,
-    LoadTestingConfig, SecretsConfig, TestingConfig, SecurityConfig,
+    ComplianceConfig, ConfigManagerConfig, DatabaseConfig, DiscoveryConfig, HsmConfig,
+    IntegrationConfig, LoadTestingConfig, MonitoringConfig, NodeRegistryConfig, PerformanceConfig,
+    PlatformConfig, ProductionConfig, SecretsConfig, SecurityConfig, TestingConfig, TunnelConfig,
+    WorkflowConfig,
 };
 
 // Import from focused modules
-use super::{
-    app::AppConfig,
-    network::NetworkConfig,
-};
+use super::{app::AppConfig, network::NetworkConfig};
 
 /// **THE** canonical BearDog configuration struct
 /// Replaces: BearDogCanonicalConfig, UnifiedDeploymentConfig, BiomeConfig, etc.
@@ -96,4 +93,4 @@ impl BearDogCanonicalConfig {
     pub fn builder() -> super::builder::ConfigBuilder {
         super::builder::ConfigBuilder::new()
     }
-} 
+}

@@ -31,7 +31,7 @@ pub use universal::{
 pub enum AdapterError {
     AdapterNotFound { adapter_id: String },
     ExternalSystemError { system: String, error: String },
-    AdapterError { adapter: String, error: String },
+    Adapter { adapter: String, error: String },
     ProtocolError { protocol: String, message: String },
 }
 
@@ -51,7 +51,7 @@ impl AdapterError {
     }
 
     pub fn integration_failed<S: Into<String>>(reason: S) -> Self {
-        Self::AdapterError {
+        Self::Adapter {
             adapter: "integration".to_string(),
             error: reason.into(),
         }
@@ -76,7 +76,7 @@ impl From<AdapterError> for BearDogError {
                 message: format!("External system error from {system}: {error}"),
                 category: beardog_errors::SystemErrorCategory::Service,
             },
-            AdapterError::AdapterError { adapter, error } => Self::System {
+            AdapterError::Adapter { adapter, error } => Self::System {
                 message: format!("Adapter error in {adapter}: {error}"),
                 category: beardog_errors::SystemErrorCategory::Resource,
             },

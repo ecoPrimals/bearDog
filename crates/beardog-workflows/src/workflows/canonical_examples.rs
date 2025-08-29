@@ -497,26 +497,24 @@ impl WorkflowCommand for StartWorkflowCommand {
     type Result = ExampleWorkflow;
     type Error = BearDogError;
 
-    fn execute(
+    async fn execute(
         &self,
         mut workflow: Self::Workflow,
-    ) -> impl std::future::Future<Output = Result<Self::Result, Self::Error>> + Send {
-        async move {
-            info!(
-                "Executing StartWorkflowCommand for workflow: {}",
-                workflow.id().as_str()
-            );
+    ) -> Result<Self::Result, Self::Error> {
+        info!(
+            "Executing StartWorkflowCommand for workflow: {}",
+            workflow.id().as_str()
+        );
 
-            if !matches!(workflow.status, ExampleWorkflowStatus::Created) {
-                return Err(BearDogError::validation(format!(
-                    "Cannot start workflow in status: {:?}",
-                    workflow.status
-                )));
-            }
-
-            workflow = workflow.set_status(ExampleWorkflowStatus::Started);
-            Ok(workflow)
+        if !matches!(workflow.status, ExampleWorkflowStatus::Created) {
+            return Err(BearDogError::validation(format!(
+                "Cannot start workflow in status: {:?}",
+                workflow.status
+            )));
         }
+
+        workflow = workflow.set_status(ExampleWorkflowStatus::Started);
+        Ok(workflow)
     }
 
     fn can_execute(&self, workflow: &Self::Workflow) -> bool {

@@ -15,9 +15,9 @@ mod tests {
     // use crate::threat::types::incidents::response::IncidentType; // Unused import removed
     #[test]
     fn test_incident_response_creation() {
-        let incident = IncidentResponse::new("INC-2024-001", ThreatSeverity::High, "Test incident");
+        let incident = IncidentResponse::new("INC-2024-001", ThreatSeverity::Medium, "Test incident");
         assert_eq!(incident.incident_id, "INC-2024-001");
-        assert_eq!(incident.severity, ThreatSeverity::High);
+        assert_eq!(incident.severity, ThreatSeverity::Medium);
         assert_eq!(incident.status, IncidentStatus::Open);
     }
     #[test]

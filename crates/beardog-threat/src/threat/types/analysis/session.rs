@@ -55,10 +55,6 @@ impl ThreatAnalysisSession {
     }
 
     pub fn session_duration_seconds(&self) -> Option<i64> {
-        if let Some(end_time) = self.end_time {
-            Some((end_time - self.start_time).num_seconds())
-        } else {
-            None
-        }
+        self.end_time.map(|end_time| (end_time - self.start_time).num_seconds())
     }
 }

@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 /// Canonical deployment configuration - consolidates all deployment-related configs
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DeploymentConfig {
     pub global: GlobalDeploymentConfig,
     pub optimization: DeploymentOptimizationConfig,
@@ -12,7 +11,6 @@ pub struct DeploymentConfig {
     pub monitoring: DeploymentMonitoringConfig,
     pub security: DeploymentSecurityConfig,
 }
-
 
 /// Global deployment configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -99,7 +97,7 @@ pub struct RegionConfig {
 /// Cloud provider options
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CloudProvider {
-    AWS,
+    Aws,
     GoogleCloud,
     Azure,
     DigitalOcean,
@@ -172,7 +170,7 @@ impl Default for CDNConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CDNProvider {
     Cloudflare,
-    AWS,
+    Aws,
     GoogleCloud,
     Azure,
     Custom(String),
@@ -392,4 +390,4 @@ impl Default for AccessControlConfig {
             session_timeout: Duration::from_secs(3600),
         }
     }
-} 
+}
