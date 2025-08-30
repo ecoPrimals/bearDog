@@ -241,7 +241,7 @@ impl LicenseManager {
             "Verifying license signature for {}",
             signed_license.license.licensee.organization
 
-        let license_json = rmp_serde::to_vec(&signed_license.license).map_err(|e| {
+        let license_json = serde_json::to_vec(&signed_license.license).map_err(|e| {
             BearDogError::configuration(format!("License serialization error: {e}"),
         })?;
 

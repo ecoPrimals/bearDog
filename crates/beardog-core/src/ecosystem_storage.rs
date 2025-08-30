@@ -195,7 +195,7 @@ impl EcosystemStorage for FileSystemStorage {
             .map_err(|e| BearDogError::system(format_args!("Failed to write data file: {}", e).to_string()))?;
 
         let metadata_path = self.get_metadata_path(key);
-        let metadata_json = rmp_serde::to_vec(&metadata)
+        let metadata_json = serde_json::to_vec(&metadata)
             .map_err(|e| BearDogError::system(format_args!("Failed to serialize metadata: {}", e).to_string()))?;
         tokio::fs::write(&metadata_path, metadata_json)
             .await
