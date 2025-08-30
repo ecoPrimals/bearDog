@@ -36,7 +36,7 @@ toml = "0.8"
 ahash = "0.8"
 async-trait = "0.1"  # Still needed for some trait implementations
 rand = "0.8"
-rmp-serde = "1.1"
+# rmp-serde = "1.1"  # REMOVED: Contains unmaintained paste dependency - replaced with serde_json
 urlencoding = "2.1"
 
 [dev-dependencies]

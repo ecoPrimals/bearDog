@@ -32,8 +32,9 @@ thiserror = "1.0"
 # File operations
 walkdir = "2.0"
 
-# Process execution
-tokio-process = "0.2"
+# Process execution - using modern tokio::process instead of deprecated tokio-process
+# tokio-process = "0.2" # REMOVED: Contains vulnerable dependencies (slab 0.4.10, crossbeam-utils)
+# Modern tokio already includes process support via tokio::process
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

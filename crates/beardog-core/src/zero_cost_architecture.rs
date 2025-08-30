@@ -165,7 +165,7 @@ for MemoryCache<String, String, SIZE, TTL_SECONDS>
         T: for<'de> serde::Deserialize<'de> + Send,
     {
         if let Some(value) = ZeroCostCache::get(self, &key.to_string()).await {
-            let deserialized: T = rmp_serde::to_vec(&value)
+            let serialized_bytes = serde_json::to_vec(&value)
                 .and_then(|s| serde_json::from_str(&s))
                 .map_err(|e| beardog_errors::BearDogError::internal(
                     format_args!("Failed to deserialize cached value: {}", e).to_string()
