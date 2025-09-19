@@ -189,24 +189,50 @@ impl ValidationUtils {
     /// - Entity ID contains invalid characters
     /// - Entity ID exceeds maximum length
     pub fn validate_id(entity_id: &str) -> Result<(), BearDogError> {
+        // Ultra-pedantic security: Check for null bytes and control characters
+        if entity_id.contains('\0') {
+            return Err(BearDogError::Security {
+                message: "Entity ID contains null bytes - potential security risk".to_string(),
+                category: beardog_errors::SecurityErrorCategory::InputValidation,
+            });
+        }
+        
         if entity_id.is_empty() {
             return Err(BearDogError::Business {
                 message: "Entity ID cannot be empty".to_string(),
                 category: beardog_errors::BusinessErrorCategory::Validation,
             });
         }
+        
+        // Ultra-pedantic: Minimum length requirement
+        if entity_id.len() < 3 {
+            return Err(BearDogError::Business {
+                message: "Entity ID too short (minimum 3 characters)".to_string(),
+                category: beardog_errors::BusinessErrorCategory::Validation,
+            });
+        }
+        
         if entity_id.len() > 255 {
             return Err(BearDogError::Business {
                 message: "Entity ID too long (max 255 characters)".to_string(),
                 category: beardog_errors::BusinessErrorCategory::Validation,
             });
         }
+        
+        // Ultra-pedantic: Check for control characters
+        if entity_id.chars().any(|c| c.is_control()) {
+            return Err(BearDogError::Security {
+                message: "Entity ID contains control characters - potential security risk".to_string(),
+                category: beardog_errors::SecurityErrorCategory::InputValidation,
+            });
+        }
+        
         if !entity_id
             .chars()
             .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
         {
             return Err(BearDogError::Business {
-                message: "Entity ID contains invalid characters".to_string(),
+                message: "Entity ID contains invalid characters (only alphanumeric, hyphens, and underscores allowed)".to_string(),
                 category: beardog_errors::BusinessErrorCategory::Validation,
             });
         }
