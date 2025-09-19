@@ -27,7 +27,28 @@ pub struct AIOptimizationEngine {
 }
 
 impl AIOptimizationEngine {
-    /// Creates a new instance
+    /// Creates a new AI optimization engine instance
+    ///
+    /// # Arguments
+    /// 
+    /// * `optimization_interval` - The interval between optimization cycles
+    ///
+    /// # Errors
+    ///
+    /// Returns `BearDogError` if:
+    /// - Resource predictor initialization fails due to insufficient memory
+    /// - Neural network creation fails due to invalid parameters
+    /// - System resources are unavailable for AI components
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use std::time::Duration;
+    /// use beardog_utils::ai_optimization::AIOptimizationEngine;
+    /// 
+    /// let engine = AIOptimizationEngine::new(Duration::from_secs(60))?;
+    /// # Ok::<(), beardog_errors::BearDogError>(())
+    /// ```
     pub fn new(optimization_interval: Duration) -> Result<Self, BearDogError> {
         let performance_model = Arc::new(RwLock::new(PerformanceModel::new()));
         let resource_predictor = Arc::new(Mutex::new(ResourcePredictor::new(100)?));

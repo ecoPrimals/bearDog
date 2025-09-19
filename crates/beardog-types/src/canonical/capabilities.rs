@@ -155,7 +155,8 @@ impl CapabilityType {
     #[must_use]
     /// Checks if vendor capability
     /// Checks if vendor capability
-    pub fn is_vendor_capability(&self) -> bool {
+    #[inline]
+    pub const fn is_vendor_capability(&self) -> bool {
         matches!(
             self,
             Self::KeyManagement
@@ -173,7 +174,8 @@ impl CapabilityType {
     #[must_use]
     /// Checks if primal capability
     /// Checks if primal capability
-    pub fn is_primal_capability(&self) -> bool {
+    #[inline]
+    pub const fn is_primal_capability(&self) -> bool {
         matches!(
             self,
             Self::ServiceMesh
@@ -189,7 +191,8 @@ impl CapabilityType {
     /// DEPRECATED: Removed hardcoded primal mappings to achieve true capability-based discovery
     #[deprecated(note = "Use capability-based discovery instead of hardcoded primal names")]
     #[must_use]
-    pub fn associated_primal(&self) -> Option<&'static str> {
+    #[inline]
+    pub const fn associated_primal(&self) -> Option<&'static str> {
         // EVOLUTION: No longer return hardcoded primal names
         // Each primal should discover capabilities dynamically through universal adapter
         // No capability available
