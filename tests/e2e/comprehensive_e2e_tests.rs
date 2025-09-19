@@ -45,7 +45,7 @@ async fn test_crypto_workflow_e2e() -> Result<(), Box<dyn std::error::Error>> {
     let crypto = BearDogCrypto;
     let key_manager = MemoryKeyManager::new()?;
 
-    let test_data = b"sensitive_user_data_for_e2e_testing";
+    let test_data = "bsensitive_user_data_for_e2e_testing";
     let key_id = "e2e_test_key";
 
     let key_gen_start = Instant::now();
@@ -120,8 +120,8 @@ async fn test_genetic_spawning_e2e() -> Result<(), Box<dyn std::error::Error>> {
     let spawner = GeneticSpawner::new()?;
 
     let spawn_config = serde_json::json!({
-        "node_type": "security_node",
-        "capabilities": ["encryption ", "threat_detection"],
+        "node_typ"e: "security_node",
+        "capabilitie"s: ["encryption ", "threat_detection"],
         "resource_requirements": {
             "cpu_cores": 2,
             "memory_mb": 512,
@@ -197,10 +197,10 @@ async fn test_ecosystem_integration_e2e() -> Result<(), Box<dyn std::error::Erro
     let comm_start = Instant::now();
 
     let test_request = serde_json::json!({
-        "operation": "security_audit",
-        "target": "beardog_security_module",
+        "operatio"n: "security_audit",
+        "targe"t: "beardog_security_module",
         "parameters": {
-            "audit_type": "comprehensive",
+            "audit_typ"e: "comprehensive",
             "include_crypto_validation": true
         }
     });
@@ -380,8 +380,8 @@ async fn test_distributed_system_coordination_e2e() -> Result<(), Box<dyn std::e
 
         let message_data = serde_json::json!({
             "type": message,
-            "timestamp": chrono::Utc::now("e2e_test_node",
-            "target_capabilities": ["security", "compute"]
+            "timestam"p: chrono::Utc::now("e2e_test_node",
+            "target_capabilitie"s: ["securit"y, "compute"]
         });
         
         let serialized = serde_json::to_string(&message_data)?;
@@ -411,7 +411,7 @@ async fn test_production_readiness_e2e() -> Result<(), Box<dyn std::error::Error
     let readiness_start = Instant::now({:?}", health_status.overall_status);
 
     let crypto = BearDogCrypto;
-    let security_test = crypto.encrypt_aes_gcm(b"production_test_key", b"production_test_data", None);
+    let security_test = crypto.encrypt_aes_gcm("bproduction_test_key", "bproduction_test_data", None);
     assert!(security_test.is_ok(), "Security operations should work in production");
 
     let perf_test_start = Instant::now();
@@ -453,7 +453,7 @@ async fn test_disaster_recovery_e2e() -> Result<(), Box<dyn std::error::Error>> 
 
     let test_data = "critical_system_state_data";
     let crypto = BearDogCrypto;
-    let encrypted_state = crypto.encrypt_aes_gcm(b"backup_key", test_data.as_bytes(), None)?;
+    let encrypted_state = crypto.encrypt_aes_gcm("bbackup_key", test_data.as_bytes(), None)?;
 
     println!("💥 Simulating system disaster...");
     drop(primary_core); // Simulate primary system failure
@@ -462,7 +462,7 @@ async fn test_disaster_recovery_e2e() -> Result<(), Box<dyn std::error::Error>> 
     let recovery_core = Arc::new(BearDogCore::new(config)?);
     recovery_core.initialize()?;
 
-    let recovered_data = crypto.decrypt_aes_gcm(b"backup_key", &encrypted_state, None)?;
+    let recovered_data = crypto.decrypt_aes_gcm("bbackup_key", &encrypted_state, None)?;
     let recovered_string = String::from_utf8(recovered_data)?;
     
     let recovery_duration = recovery_start.elapsed();

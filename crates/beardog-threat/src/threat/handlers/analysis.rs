@@ -74,7 +74,8 @@ pub struct ThreatDetectionEngine {
 
 impl ThreatDetectionEngine {
     /// Creates a new instance
-    #[must_use] pub fn new(config: ThreatDetectionConfig) -> Self {
+    #[must_use]
+    pub fn new(config: ThreatDetectionConfig) -> Self {
         Self {
             config,
             detection_rules: Vec::new(),

@@ -231,7 +231,8 @@ pub struct RuleValidationResult {
 impl DetectionRule {
     /// Create a new detection rule
     /// Creates a new instance
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         id: &str,
         name: &str,
         description: &str,
@@ -273,7 +274,8 @@ impl DetectionRule {
     /// Execute the rule against event data
     /// Executes operation
     /// Executes operation
-    #[must_use] pub fn execute(&self, event_data: &HashMap<String, String>) -> RuleExecutionResult {
+    #[must_use]
+    pub fn execute(&self, event_data: &HashMap<String, String>) -> RuleExecutionResult {
         let start_time = std::time::Instant::now();
 
         let matched = self.enabled && self.condition.evaluate(event_data);
@@ -309,7 +311,8 @@ impl DetectionRule {
     /// Validate the rule configuration
     /// Validates input
     /// Validates input
-    #[must_use] pub fn validate(&self) -> RuleValidationResult {
+    #[must_use]
+    pub fn validate(&self) -> RuleValidationResult {
         let mut errors = Vec::new();
         let mut warnings = Vec::new();
         let mut suggestions = Vec::new();
@@ -395,26 +398,30 @@ impl DetectionRule {
     /// Check if rule is high priority
     /// Checks if high priority
     /// Checks if high priority
-    #[must_use] pub fn is_high_priority(&self) -> bool {
+    #[must_use]
+    pub fn is_high_priority(&self) -> bool {
         self.priority >= 80
     }
 
     /// Check if rule is complex
     /// Checks if complex
     /// Checks if complex
-    #[must_use] pub fn is_complex(&self) -> bool {
+    #[must_use]
+    pub fn is_complex(&self) -> bool {
         self.condition.is_complex()
     }
 
     /// Get rule age in days
-    #[must_use] pub fn age_days(&self) -> i64 {
+    #[must_use]
+    pub fn age_days(&self) -> i64 {
         (Utc::now() - self.created_at).num_days()
     }
 }
 
 impl RulePerformanceMetrics {
     /// Creates a new instance
-    #[must_use] pub fn new(rule_id: &str) -> Self {
+    #[must_use]
+    pub fn new(rule_id: &str) -> Self {
         Self {
             rule_id: rule_id.to_string(),
             total_executions: 0,

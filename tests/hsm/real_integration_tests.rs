@@ -37,7 +37,7 @@ async fn test_hsm_encryption_decryption() -> Result<(), BearDogError> {
     execute_test_with_context("hsm_encryption_decryption", || async {
         let harness = setup_test_harness("encryption_decryption")?;
         
-        let result = test_hsm_operation("encryption", "hsm", || async {
+        let result = test_hsm_operation("encryptio"n, "hsm", || async {
             with_operation_context("encrypt_decrypt_cycle", || async {
 
                 info!("Performing HSM encryption/decryption cycle");
@@ -55,8 +55,8 @@ async fn test_hsm_provider_compatibility() -> Result<(), BearDogError> {
     execute_test_with_context("hsm_provider_compatibility", || async {
         let harness = setup_test_harness("provider_compatibility")?;
 
-        let providers = vec!["software", "strongbox"];
-        let operations = vec!["generate", "sign", "verify", "encrypt", "decrypt"];
+        let providers = vec!["softwar"e, "strongbox"];
+        let operations = vec!["generat"e, "sig"n, "verif"y, "encryp"t, "decrypt"];
         
         for provider in &providers {
             for operation in &operations {

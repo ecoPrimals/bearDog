@@ -87,9 +87,9 @@ async fn test_human_dignity_evolution() -> Result<(), BearDogError> {
 async fn test_capability_discovery_evolution() -> Result<(), BearDogError> {
     // Test evolved capability discovery patterns
     let capabilities = vec![
-        ("security", "BearDog's primary capability"),
-        ("sovereignty", "Human dignity preservation"),
-        ("cryptography", "Advanced cryptographic operations"),
+        ("securit"y, "BearDog's primary capability"),
+        ("sovereignt"y, "Human dignity preservation"),
+        ("cryptograph"y, "Advanced cryptographic operations"),
     ];
 
     assert!(capabilities.len() >= 3);
@@ -193,7 +193,7 @@ async fn test_ecosystem_communication_protocols() -> Result<(), BearDogError> {
     }
 
     // Validate no surveillance protocols
-    let forbidden_protocols = vec!["surveillance", "monitoring", "tracking"];
+    let forbidden_protocols = vec!["surveillanc"e, "monitorin"g, "tracking"];
     for protocol in &communication_protocols {
         for forbidden in &forbidden_protocols {
             assert!(

@@ -102,7 +102,7 @@ async fn production_validation_error_handling() {
 async fn production_validation_configuration() {
     info!("⚙️ PRODUCTION VALIDATION: Configuration");
 
-    std::env::set_var("BEARDOG_TEST_CONFIG", "production_test");
+    std::env::set_var("BEARDOG_TEST_CONFI"G, "production_test");
     let config_value = std::env::var("BEARDOG_TEST_CONFIG")
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
     assert_eq!(config_value, "production_test");
@@ -271,7 +271,7 @@ async fn production_validation_integration() -> Result<(), BearDogError> {
         );
     }
 
-    std::env::set_var("BEARDOG_TEST_ENDPOINT", "https://test.example.com");
+    std::env::set_var("BEARDOG_TEST_ENDPOIN"T, "https://test.example.com");
     let test_endpoint = std::env::var("BEARDOG_TEST_ENDPOINT")
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
     assert_eq!(test_endpoint, "https://test.example.com");

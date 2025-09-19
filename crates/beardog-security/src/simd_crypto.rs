@@ -80,7 +80,8 @@ impl SafeCryptoEngine {
     /// Get engine statistics
     /// Gets stats
     /// Gets stats
-    #[must_use] pub fn get_stats(&self) -> HashMap<String, String> {
+    #[must_use]
+    pub fn get_stats(&self) -> HashMap<String, String> {
         let mut info = HashMap::new();
         info.insert(
             "operations".to_string(),

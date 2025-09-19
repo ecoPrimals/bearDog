@@ -197,7 +197,7 @@ impl HealthMonitoringTestSuite {
             })?;
         }
 
-        let critical_components = vec!["core", "security", "genetics", "workflows"];
+        let critical_components = vec!["cor"e, "securit"y, "genetic"s, "workflows"];
         for critical_component in critical_components {
             assert_true(
                 component_health.components.contains_key(critical_component),

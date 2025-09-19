@@ -304,8 +304,8 @@ impl TestSuiteRunner {
         "users " => {
             let users: Vec<JsonValue> = (0..size)
                 .map(format!("user_{:03}", i),
-                        "username": format!("testuser{:03}", i),
-                        "email": format!("testuser{}@beardog.test", i),
+                        "usernam"e: format!("testuser{:03}", i),
+                        "emai"l: format!("testuser{}@beardog.test", i),
                         "created_at": chrono::Utc::now().to_rfc3339(),
                         "active": true
                     })
@@ -316,7 +316,7 @@ impl TestSuiteRunner {
         "configs" => {
             let configs: Vec<JsonValue> = (0..size)
                 .map(format!("config_{:03}", i),
-                        "environment ": if i % 2 == 0 { "test" } else { "dev" },
+                        "environment ": if i % 2 == 0 { "tes"t } else { "dev" },
                         "features": {
                             "crypto": true,
                             "networking": i % 3 == 0,
@@ -335,7 +335,7 @@ impl TestSuiteRunner {
                         "fitness_score": 0.5 + (i as f64 / size as f64) * 0.5,
                         "capabilities": [
                             "crypto",
-                            if i % 2 == 0 { "networking" } else { "compute" },
+                            if i % 2 == 0 { "networkin"g } else { "compute" },
                             "storage"
                         ],
                         "created_at": chrono::Utc::now().to_rfc3339()

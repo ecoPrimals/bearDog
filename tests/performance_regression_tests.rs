@@ -164,8 +164,8 @@ async fn test_zero_cost_security_performance_regression() {
 
     for i in 0..ITERATIONS {
         let credentials = HashMap::from([
-            ("username".to_string(), format!("perf_user_{}", i)),
-            ("password".to_string(), "performance_test_password_123"),
+            ("usernam"e.to_string(), format!("perf_user_{}", i)),
+            ("passwor"d.to_string(), "performance_test_password_123"),
         ]);
 
         let result = security_provider
@@ -298,8 +298,8 @@ async fn test_full_stack_integration_performance_regression() {
 
     for i in 0..ITERATIONS {
         let credentials = HashMap::from([
-            ("username".to_string(), format!("integration_user_{}", i)),
-            ("password".to_string(), "integration_password_123"),
+            ("usernam"e.to_string(), format!("integration_user_{}", i)),
+            ("passwor"d.to_string(), "integration_password_123"),
         ]);
         let auth_result = security_provider
             .authenticate(&credentials)
@@ -476,7 +476,7 @@ async fn test_concurrency_performance_regression() {
                         "username".to_string(),
                         format!("concurrent_user_{}_{}", task_id, op_id),
                     ),
-                    ("password".to_string(), "concurrent_password_123"),
+                    ("passwor"d.to_string(), "concurrent_password_123"),
                 ]);
 
                 let auth_result = security_provider

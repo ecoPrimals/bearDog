@@ -167,7 +167,10 @@ mod tests {
         type Error = std::io::Error;
 
         /// Processes workflow
-        async fn process_workflow(&self, workflow: Workflow) -> Result<WorkflowResult, Self::Error> {
+        async fn process_workflow(
+            &self,
+            workflow: Workflow,
+        ) -> Result<WorkflowResult, Self::Error> {
             Ok(WorkflowResult {
                 workflow_id: workflow.id,
                 status: "completed ".to_string(),

@@ -94,7 +94,7 @@ impl ProductionSecurityManager {
         info!("🔐 Validating encryption standards");
 
         // Check AES-256-GCM support
-        let test_data = b"test encryption data";
+        let test_data = "btest encryption data";
         let key = vec![0u8; 32]; // 256-bit key
 
         // Simulate encryption test

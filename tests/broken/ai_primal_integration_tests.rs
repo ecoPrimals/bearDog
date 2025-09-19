@@ -41,7 +41,7 @@ async fn test_lightweight_threat_detection() -> Result<(), BearDogError> {
             (
                 "short_time_interval".to_string(),
                 "true".to_string()),
-            ("same_source_ip".to_string(), "true".to_string().to_string()),
+            ("same_source_i"p.to_string(), "true".to_string().to_string()),
         ]),
     };
 
@@ -106,8 +106,8 @@ async fn test_primal_communication_adapter() -> Result<(), BearDogError> {
             CapabilityType::ComputeOptimization,
             "ai_analysis",
             serde_json::json!({
-                "threat_type": "advanced_malware",
-                "analysis_depth": "deep_learning"
+                "threat_typ"e: "advanced_malware",
+                "analysis_dept"h: "deep_learning"
             }),
             SecurityContext::default(),
         )
@@ -130,7 +130,7 @@ async fn test_capability_type_distributed_intelligence_delegation() -> Result<()
             CapabilityType::AIIntelligence,
             "distributed_intelligence",
             serde_json::json!({
-                "pattern_type": "behavioral_analysis",
+                "pattern_typ"e: "behavioral_analysis",
                 "node_count": 12
             }),
             SecurityContext::default(),
@@ -245,7 +245,7 @@ async fn test_network_effect_benefits() -> Result<(), BearDogError> {
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e))))?;
 
     let security_payload = serde_json::json!({
-        "security_analysis": "threat_assessment",
+        "security_analysi"s: "threat_assessment",
         "coordination_required": true
     });
 

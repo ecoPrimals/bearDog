@@ -31,7 +31,8 @@ pub struct ThreatResponseConfig {
 impl AutomatedThreatResponseHandler {
     /// Create new handler
     /// Creates a new instance
-    #[must_use] pub fn new(config: ThreatResponseConfig) -> Self {
+    #[must_use]
+    pub fn new(config: ThreatResponseConfig) -> Self {
         Self {
             config,
             event_history: Arc::new(RwLock::new(Vec::new())),

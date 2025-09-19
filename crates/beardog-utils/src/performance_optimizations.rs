@@ -32,7 +32,8 @@ impl Default for CloneOptimizer {
 impl CloneOptimizer {
     /// New operation.
     /// Creates a new instance
-    #[must_use] pub fn new() -> Self {
+    #[must_use]
+    pub fn new() -> Self {
         Self {
             string_cache: HashMap::with_capacity(16),
             buffer_pools: HashMap::with_capacity(16),
@@ -91,7 +92,8 @@ impl CloneOptimizer {
     /// Get Stats operation.
     /// Gets stats
     /// Gets stats
-    #[must_use] pub fn get_stats(&self) -> &OptimizationStats {
+    #[must_use]
+    pub fn get_stats(&self) -> &OptimizationStats {
         &self.stats
     }
 
@@ -122,7 +124,8 @@ pub struct ZeroCopyProcessor {
 impl ZeroCopyProcessor {
     /// New operation.
     /// Creates a new instance
-    #[must_use] pub fn new(initial_capacity: usize) -> Self {
+    #[must_use]
+    pub fn new(initial_capacity: usize) -> Self {
         Self {
             shared_buffer: BytesMut::with_capacity(initial_capacity),
             shared_refs: HashMap::with_capacity(16),
@@ -194,7 +197,8 @@ impl ZeroCopyProcessor {
     /// Get stored reference by name
     /// Gets `shared_reference`
     /// Gets `shared_reference`
-    #[must_use] pub fn get_shared_reference(&self, name: &str) -> Option<Arc<Bytes>> {
+    #[must_use]
+    pub fn get_shared_reference(&self, name: &str) -> Option<Arc<Bytes>> {
         self.shared_refs.get(name).cloned()
     }
 
@@ -207,7 +211,8 @@ impl ZeroCopyProcessor {
     /// Get statistics
     /// Gets stats
     /// Gets stats
-    #[must_use] pub fn get_stats(&self) -> (usize, usize, usize) {
+    #[must_use]
+    pub fn get_stats(&self) -> (usize, usize, usize) {
         (
             self.processed_count,
             self.shared_references,
@@ -218,7 +223,8 @@ impl ZeroCopyProcessor {
     /// Create zero-copy slice from existing shared reference
     /// Creates `zero_copy_slice`
     /// Creates `zero_copy_slice`
-    #[must_use] pub fn create_zero_copy_slice(
+    #[must_use]
+    pub fn create_zero_copy_slice(
         &self,
         name: &str,
         start: usize,
@@ -293,7 +299,8 @@ impl ZeroCopyProcessor {
         }
     }
 
-    #[must_use] pub const fn create_data_view<'a>(&self, input_buffer: &'a [u8]) -> DataView<'a> {
+    #[must_use]
+    pub const fn create_data_view<'a>(&self, input_buffer: &'a [u8]) -> DataView<'a> {
         DataView {
             buffer: input_buffer,
             offset: 0,
@@ -331,7 +338,8 @@ pub struct DataView<'a> {
 
 impl DataView<'_> {
     /// Get slice of data at offset
-    #[must_use] pub fn slice(&self, start: usize, len: usize) -> Option<&[u8]> {
+    #[must_use]
+    pub fn slice(&self, start: usize, len: usize) -> Option<&[u8]> {
         if start + len <= self.length {
             Some(&self.buffer[self.offset + start..self.offset + start + len])
         } else {
@@ -340,14 +348,16 @@ impl DataView<'_> {
     }
 
     /// Get the effective length of the view
-    #[must_use] pub fn len(&self) -> usize {
+    #[must_use]
+    pub fn len(&self) -> usize {
         self.length
     }
 
     /// Check if the view is empty
     /// Checks if empty
     /// Checks if empty
-    #[must_use] pub fn is_empty(&self) -> bool {
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
         self.length == 0
     }
 }
@@ -373,7 +383,8 @@ impl Default for SimdAccelerator {
 impl SimdAccelerator {
     /// New operation.
     /// Creates a new instance
-    #[must_use] pub fn new() -> Self {
+    #[must_use]
+    pub fn new() -> Self {
         Self {
             features: CpuFeatures {
                 sse4_1: false, // Will be detected at runtime
@@ -383,7 +394,8 @@ impl SimdAccelerator {
     }
 
     /// Accelerated Hash operation.
-    #[must_use] pub fn accelerated_hash(&self, buffer_data: &[u8]) -> u64 {
+    #[must_use]
+    pub fn accelerated_hash(&self, buffer_data: &[u8]) -> u64 {
         // Safe SIMD-style acceleration without unsafe code
         buffer_data
             .chunks(8)
@@ -400,7 +412,8 @@ impl SimdAccelerator {
     /// Get Features operation.
     /// Gets features
     /// Gets features
-    #[must_use] pub fn get_features(&self) -> &CpuFeatures {
+    #[must_use]
+    pub fn get_features(&self) -> &CpuFeatures {
         &self.features
     }
 }

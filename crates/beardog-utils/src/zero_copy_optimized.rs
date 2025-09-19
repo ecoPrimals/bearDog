@@ -181,7 +181,8 @@ impl ZeroCopyManager {
     /// Get optimization statistics
     /// Gets stats
     /// Gets stats
-    #[must_use] pub fn get_stats(&self) -> Arc<ZeroCopyStats> {
+    #[must_use]
+    pub fn get_stats(&self) -> Arc<ZeroCopyStats> {
         self.stats.clone()
     }
 
@@ -252,7 +253,8 @@ pub enum OptimizedString {
 impl OptimizedString {
     /// Get the string as a &str
     /// Returns as str
-    #[must_use] pub fn as_str(&self) -> &str {
+    #[must_use]
+    pub fn as_str(&self) -> &str {
         match self {
             OptimizedString::Shared(s) => s,
             OptimizedString::Owned(s) => s,
@@ -260,7 +262,8 @@ impl OptimizedString {
     }
 
     /// Convert to String (may clone if necessary)
-    #[must_use] pub fn into_string(self) -> String {
+    #[must_use]
+    pub fn into_string(self) -> String {
         match self {
             OptimizedString::Shared(s) => s.to_string(),
             OptimizedString::Owned(s) => s,
@@ -270,7 +273,8 @@ impl OptimizedString {
     /// Check if this is using zero-copy optimization
     /// Checks if optimized
     /// Checks if optimized
-    #[must_use] pub fn is_optimized(&self) -> bool {
+    #[must_use]
+    pub fn is_optimized(&self) -> bool {
         matches!(self, OptimizedString::Shared(_))
     }
 }
@@ -294,7 +298,8 @@ pub enum OptimizedBytes {
 impl OptimizedBytes {
     /// Get the bytes as a slice
     /// Returns as slice
-    #[must_use] pub fn as_slice(&self) -> &[u8] {
+    #[must_use]
+    pub fn as_slice(&self) -> &[u8] {
         match self {
             OptimizedBytes::Shared(bytes) => bytes,
             OptimizedBytes::Owned(bytes) => bytes,
@@ -303,7 +308,8 @@ impl OptimizedBytes {
 
     /// Convert to Vec<u8> (may clone if necessary)
     /// Converts to vec
-    #[must_use] pub fn to_vec(&self) -> Vec<u8> {
+    #[must_use]
+    pub fn to_vec(&self) -> Vec<u8> {
         match self {
             OptimizedBytes::Shared(bytes) => bytes.to_vec(),
             OptimizedBytes::Owned(bytes) => bytes.clone(),
@@ -313,13 +319,15 @@ impl OptimizedBytes {
     /// Check if this is using zero-copy optimization
     /// Checks if optimized
     /// Checks if optimized
-    #[must_use] pub fn is_optimized(&self) -> bool {
+    #[must_use]
+    pub fn is_optimized(&self) -> bool {
         matches!(self, OptimizedBytes::Shared(_))
     }
 }
 
 pub trait ZeroCopyOptimized {
     /// Apply zero-copy optimizations
+    #[must_use]
     fn optimize(&self, manager: &ZeroCopyManager) -> Self;
 
     /// Check if already optimized
@@ -365,12 +373,14 @@ pub fn shared_string<S: AsRef<str>>(s: S) -> Arc<str> {
 }
 
 /// Convenience function to optimize a string
-#[must_use] pub fn optimize_string(s: &str) -> OptimizedString {
+#[must_use]
+pub fn optimize_string(s: &str) -> OptimizedString {
     global_zero_copy_manager().optimize_string(s)
 }
 
 /// Convenience function to optimize bytes
-#[must_use] pub fn optimize_bytes(data: &[u8]) -> OptimizedBytes {
+#[must_use]
+pub fn optimize_bytes(data: &[u8]) -> OptimizedBytes {
     global_zero_copy_manager().optimize_bytes(data)
 }
 
@@ -400,6 +410,7 @@ impl<T> ZeroCopyBuilder<T> {
     }
 
     /// Apply optimizations
+    #[must_use]
     pub fn optimize(mut self) -> Self
     where
         T: ZeroCopyOptimized,

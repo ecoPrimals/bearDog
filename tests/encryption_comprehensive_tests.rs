@@ -13,7 +13,7 @@ async fn test_encryption_engine_initialization() -> Result<(), BearDogError> {
     let config = EncryptionConfig::default();
     let engine = EncryptionEngine::new(config)?;
 
-    let test_data = b"test initialization";
+    let test_data = "btest initialization";
     let encrypted = engine.encrypt(test_data, None)?;
     assert!(!encrypted.ciphertext.is_empty());
 
@@ -25,7 +25,7 @@ async fn test_basic_encryption_decryption() -> Result<(), BearDogError> {
     let config = EncryptionConfig::default();
     let engine = EncryptionEngine::new(config)?;
 
-    let test_data = b"BearDog protects the digital forest";
+    let test_data = "bBearDog protects the digital forest";
 
     let encrypted = engine.encrypt(test_data, None)?;
     assert!(
@@ -91,14 +91,14 @@ fn test_key_derivation() -> Result<(), BearDogError> {
 
 #[test]
 fn test_crypto_utils_hash_functions() -> Result<(), BearDogError> {
-    let data = b"BearDog security testing";
+    let data = "bBearDog security testing";
     let hash = crypto_utils::sha256_hash(data);
     assert_eq!(hash.len(), 64); // SHA-256 hex encoded = 64 chars
 
     let hash2 = crypto_utils::sha256_hash(data);
     assert_eq!(hash, hash2);
 
-    let different_hash = crypto_utils::sha256_hash(b"different data");
+    let different_hash = crypto_utils::sha256_hash("bdifferent data");
     assert_ne!(hash, different_hash);
 
     Ok(())
@@ -106,8 +106,8 @@ fn test_crypto_utils_hash_functions() -> Result<(), BearDogError> {
 
 #[test]
 fn test_crypto_utils_hmac() -> Result<(), BearDogError> {
-    let key = b"secret_hmac_key";
-    let data = b"data to authenticate";
+    let key = "bsecret_hmac_key";
+    let data = "bdata to authenticate";
 
     let hmac = crypto_utils::hmac_sha256(key, data);
     assert_eq!(hmac.len(), 64); // HMAC-SHA256 hex encoded = 64 chars
@@ -115,7 +115,7 @@ fn test_crypto_utils_hmac() -> Result<(), BearDogError> {
     let hmac2 = crypto_utils::hmac_sha256(key, data);
     assert_eq!(hmac, hmac2);
 
-    let different_hmac = crypto_utils::hmac_sha256(b"different_key", data);
+    let different_hmac = crypto_utils::hmac_sha256("bdifferent_key", data);
     assert_ne!(hmac, different_hmac);
 
     Ok(())
@@ -139,7 +139,7 @@ fn test_password_generation() -> Result<(), BearDogError> {
 
 #[test]
 fn test_hex_encoding() -> Result<(), BearDogError> {
-    let data = b"test data for hex encoding";
+    let data = "btest data for hex encoding";
 
     let hex_encoded = crypto_utils::bytes_to_hex(data);
     assert_eq!(hex_encoded.len(), data.len() * 2); // Each byte becomes 2 hex chars
@@ -189,7 +189,7 @@ async fn test_concurrent_encryption_operations() -> Result<(), BearDogError> {
     let config = EncryptionConfig::default();
     let engine = Arc::new(EncryptionEngine::new(config)?);
 
-    let test_data = b"concurrent test data";
+    let test_data = "bconcurrent test data";
 
     let mut handles = Vec::new();
     for i in 0..10 {

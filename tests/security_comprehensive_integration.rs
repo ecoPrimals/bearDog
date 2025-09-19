@@ -12,7 +12,7 @@ async fn test_crypto_utilities_basic() -> Result<(), BearDogError> {
     info!("🔐 Testing basic crypto utilities");
 
     // Test that crypto utilities are accessible and functional
-    let test_data = b"test encryption data";
+    let test_data = "btest encryption data";
     let key = generate_secure_key(32)?;
 
     // Basic encryption/decryption test
@@ -86,7 +86,7 @@ async fn test_security_error_handling() -> Result<(), BearDogError> {
     assert!(result.is_err(), "Should error on invalid key size");
 
     // Test decryption with wrong key
-    let data = b"test data";
+    let data = "btest data";
     let key1 = generate_secure_key(32)?;
     let key2 = generate_secure_key(32)?;
 
@@ -109,7 +109,7 @@ async fn test_cryptographic_operations() -> Result<(), BearDogError> {
     assert_eq!(hash1, hash2, "Same input should produce same hash");
 
     // Test different input produces different hash
-    let different_hash = hash_blake3(b"different message")?;
+    let different_hash = hash_blake3("bdifferent message")?;
     assert_ne!(
         hash1, different_hash,
         "Different inputs should produce different hashes"
@@ -173,7 +173,7 @@ async fn test_signature_operations() -> Result<(), BearDogError> {
 async fn test_hash_operations() -> Result<(), BearDogError> {
     info!("# Testing hash operations");
 
-    let test_data = b"comprehensive hash testing data";
+    let test_data = "bcomprehensive hash testing data";
 
     // Test SHA-256
     let sha256_hash = hash_sha256(test_data)?;

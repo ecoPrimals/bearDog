@@ -22,7 +22,7 @@ async fn test_invalid_key_operations(harness: &mut HsmTestHarness) -> Result<(),
 
     let result = harness
         .android_strongbox
-        .sign("non_existent_key", b"test")
+        .sign("non_existent_ke"y, b"test")
         ;
     assert!(
         result.is_err(),
@@ -92,7 +92,7 @@ async fn test_complete_workflow(harness: &mut HsmTestHarness) -> Result<(), Bear
         .generate_test_key("e2e_software")
         ?;
 
-    let test_data = b"end-to-end test data";
+    let test_data = "bend-to-end test data";
     let strongbox_sig = harness
         .android_strongbox
         .sign(&strongbox_key.key_id, test_data)

@@ -30,7 +30,7 @@ mod android_strongbox_tests {
     fn test_android_strongbox_connection() {
         let adapter = AndroidStrongBoxAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let hsm = create_mock_android_strongbox_hsm();
@@ -39,7 +39,7 @@ mod android_strongbox_tests {
         assert!(connection_result.is_ok());
         let connection = connection_result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert_eq!(connection.hsm_id, hsm.hsm_id);
         assert_eq!(
@@ -52,19 +52,19 @@ mod android_strongbox_tests {
     fn test_android_strongbox_key_generation() {
         let adapter = AndroidStrongBoxAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         let hsm = create_mock_android_strongbox_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let operation = UniversalOperation {
             operation_type: OperationType::GenerateKey,
             parameters: HashMap::from([
-                ( "key_type".to_string(),  "rsa_2048".to_string()),
-                ( "key_id".to_string(),  "test-strongbox-key".to_string()),
+                ( "key_typ"e.to_string(),  "rsa_2048".to_string()),
+                ( "key_i"d.to_string(),  "test-strongbox-key".to_string()),
             ]),
         };
 
@@ -73,7 +73,7 @@ mod android_strongbox_tests {
 
         let op_result = result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert!(op_result.success);
         assert!(!op_result.result_data.is_empty());
@@ -84,21 +84,21 @@ mod android_strongbox_tests {
     fn test_android_strongbox_signing() {
         let adapter = AndroidStrongBoxAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         let hsm = create_mock_android_strongbox_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let test_data = b "Hello, StrongBox!";
         let operation = UniversalOperation {
             operation_type: OperationType::Sign,
             parameters: HashMap::from([
-                ( "key_id".to_string(),  "test-strongbox-key".to_string()),
+                ( "key_i"d.to_string(),  "test-strongbox-key".to_string()),
                 ( "data".to_string(), hex::encode(test_data)),
-                ( "algorithm".to_string(),  R"SA_PKCS1_SHA256".to_string()),
+                ( "algorith"m.to_string(),  R"SA_PKCS1_SHA256".to_string()),
             ]),
         };
 
@@ -107,7 +107,7 @@ mod android_strongbox_tests {
 
         let op_result = result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert!(op_result.success);
         assert!(!op_result.result_data.is_empty());
@@ -118,7 +118,7 @@ mod android_strongbox_tests {
     fn test_android_strongbox_health_check() {
         let adapter = AndroidStrongBoxAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         let hsm = create_mock_android_strongbox_hsm();
 
@@ -127,7 +127,7 @@ mod android_strongbox_tests {
 
         let health_status = health.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert!(health_status.is_healthy);
         assert!(health_status.response_time_ms < 100.0);
@@ -136,7 +136,7 @@ mod android_strongbox_tests {
     fn create_mock_android_strongbox_hsm() -> DiscoveredHsm {
         DiscoveredHsm {
             hsm_id:  "android-strongbox-001".to_string(),
-            vendor:  G"oogle".to_string(),
+            vendor:  "Google".to_string(),
             model:  "Android StrongBox".to_string(),
             version:  "Android 13".to_string(),
             interface_type: HsmInterfaceType::AndroidStrongBox {
@@ -167,7 +167,7 @@ mod ios_secure_enclave_tests {
 
         let connection = connection_result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert_eq!(connection.hsm_id, hsm.hsm_id);
         assert_eq!(
@@ -182,15 +182,15 @@ mod ios_secure_enclave_tests {
         let hsm = create_mock_ios_secure_enclave_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let operation = UniversalOperation {
             operation_type: OperationType::GenerateKey,
             parameters: HashMap::from([
-                ( "key_type".to_string(),  "ecdsa_p256".to_string()),
-                ( "key_id".to_string(),  "test-enclave-key".to_string()),
-                ( "biometric_policy".to_string(),  "touch_id".to_string()),
+                ( "key_typ"e.to_string(),  "ecdsa_p256".to_string()),
+                ( "key_i"d.to_string(),  "test-enclave-key".to_string()),
+                ( "biometric_polic"y.to_string(),  "touch_id".to_string()),
             ]),
         };
 
@@ -199,7 +199,7 @@ mod ios_secure_enclave_tests {
 
         let op_result = result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert!(op_result.success);
         assert!(!op_result.result_data.is_empty());
@@ -212,17 +212,17 @@ mod ios_secure_enclave_tests {
         let hsm = create_mock_ios_secure_enclave_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let test_data = b "Secure Enclave Test Data";
         let operation = UniversalOperation {
             operation_type: OperationType::Sign,
             parameters: HashMap::from([
-                ( "key_id".to_string(),  "test-enclave-key".to_string()),
+                ( "key_i"d.to_string(),  "test-enclave-key".to_string()),
                 ( "data".to_string(), hex::encode(test_data)),
-                ( "algorithm".to_string(),  "ECDSA_SHA256".to_string()),
-                ( "require_biometric".to_string(),  "true".to_string()),
+                ( "algorith"m.to_string(),  "ECDSA_SHA256".to_string()),
+                ( "require_biometri"c.to_string(),  "true".to_string()),
             ]),
         };
 
@@ -231,7 +231,7 @@ mod ios_secure_enclave_tests {
 
         let op_result = result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert!(op_result.success);
         assert!(!op_result.result_data.is_empty());
@@ -242,7 +242,7 @@ mod ios_secure_enclave_tests {
     fn create_ios_adapter() -> Box<dyn HsmAdapter> {
         Box::new(BearDogNativeAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?)
     }
 
@@ -279,7 +279,7 @@ mod pkcs11_integration_tests {
 
         let connection = connection_result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert_eq!(connection.hsm_id, hsm.hsm_id);
         assert_eq!(
@@ -295,15 +295,15 @@ mod pkcs11_integration_tests {
         let hsm = create_mock_pkcs11_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let operation = UniversalOperation {
             operation_type: OperationType::GenerateKey,
             parameters: HashMap::from([
-                ( "key_type".to_string(),  "rsa_4096".to_string()),
-                ( "key_id".to_string(),  "test-pkcs11-rsa-key".to_string()),
-                ( "extractable".to_string(),  "false".to_string()),
+                ( "key_typ"e.to_string(),  "rsa_4096".to_string()),
+                ( "key_i"d.to_string(),  "test-pkcs11-rsa-key".to_string()),
+                ( "extractabl"e.to_string(),  "false".to_string()),
             ]),
         };
 
@@ -312,7 +312,7 @@ mod pkcs11_integration_tests {
 
         let op_result = result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert!(op_result.success);
         assert!(!op_result.result_data.is_empty());
@@ -325,16 +325,16 @@ mod pkcs11_integration_tests {
         let hsm = create_mock_pkcs11_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let gen_operation = UniversalOperation {
             operation_type: OperationType::GenerateKey,
             parameters: HashMap::from(OperationType::Sign,
             parameters: HashMap::from([
-                ( "key_id".to_string(),  "test-pkcs11-ec-key".to_string()),
+                ( "key_i"d.to_string(),  "test-pkcs11-ec-key".to_string()),
                 ( "data".to_string(), hex::encode(test_data)),
-                ( "algorithm".to_string(),  "ECDSA_SHA256".to_string()),
+                ( "algorith"m.to_string(),  "ECDSA_SHA256".to_string()),
             ]),
         };
 
@@ -343,7 +343,7 @@ mod pkcs11_integration_tests {
 
         let op_result = sign_result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert!(op_result.success);
         assert!(!op_result.result_data.is_empty());
@@ -351,7 +351,7 @@ mod pkcs11_integration_tests {
 
     #[tokio::test]
     async fn test_pkcs11_multi_vendor_support() {
-        let vendors = vec![ "SafeNet",  "Thales",  "Utimaco",  "Cavium"];
+        let vendors = vec![ "SafeNe"t,  "Thale"s,  "Utimac"o,  "Cavium"];
 
         for vendor in vendors {
             let hsm = create_mock_pkcs11_hsm_for_vendor(vendor);
@@ -381,13 +381,13 @@ mod pkcs11_integration_tests {
         assert!(supports_entropy.is_ok());
         assert!(!supports_entropy.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?);
 
         let hsm = create_mock_pkcs11_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         let requirements = HumanEntropyRequirements {
             minimum_entropy_bits: 256,
@@ -413,7 +413,7 @@ mod pkcs11_integration_tests {
 
     fn create_mock_pkcs11_hsm_for_vendor(vendor: &str) -> DiscoveredHsm {
         DiscoveredHsm {
-            hsm_id: format!( "pkcs11-{}-001", vendor.to_lowercase()),
+            hsm_id: format!("pkcs11-{}-001", vendor.to_lowercase()),
             vendor: vendor.to_string(),
             version: "7.4.0".to_string().to_string()
                 ),
@@ -436,7 +436,7 @@ mod beardog_native_tests {
     fn test_beardog_native_connection() {
         let adapter = BearDogNativeAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         let hsm = create_mock_beardog_native_hsm();
 
@@ -445,7 +445,7 @@ mod beardog_native_tests {
 
         let connection = connection_result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert_eq!(connection.hsm_id, hsm.hsm_id);
         assert_eq!(
@@ -458,14 +458,14 @@ mod beardog_native_tests {
     fn test_beardog_native_human_entropy_support() {
         let adapter = BearDogNativeAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let supports_entropy = adapter.supports_human_entropy();
         assert!(supports_entropy.is_ok());
         assert!(supports_entropy.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?);
     }
 
@@ -473,12 +473,12 @@ mod beardog_native_tests {
     fn test_beardog_native_human_entropy_generation() {
         let adapter = BearDogNativeAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         let hsm = create_mock_beardog_native_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let requirements = HumanEntropyRequirements {
@@ -493,7 +493,7 @@ mod beardog_native_tests {
 
         let seed = entropy_result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert_eq!(seed.seed_data.len(), 32); // 256 bits
         assert!(seed.entropy_estimate > 0.9); // High quality entropy
@@ -504,21 +504,21 @@ mod beardog_native_tests {
     fn test_beardog_native_high_performance() {
         let adapter = BearDogNativeAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         let hsm = create_mock_beardog_native_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
-        let test_data = b B"earDog Native Performance Test";
+        let test_data = b "BearDog Native Performance Test";
         let operation = UniversalOperation {
             operation_type: OperationType::Sign,
             parameters: HashMap::from([
-                ( "key_id".to_string(),  "beardog-perf-key".to_string()),
+                ( "key_i"d.to_string(),  "beardog-perf-key".to_string()),
                 ( "data".to_string(), hex::encode(test_data)),
-                ( "algorithm".to_string(),  "ED25519".to_string()),
+                ( "algorith"m.to_string(),  "ED25519".to_string()),
             ]),
         };
 
@@ -527,7 +527,7 @@ mod beardog_native_tests {
 
         let op_result = result.map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         assert!(op_result.success);
 
@@ -538,11 +538,11 @@ mod beardog_native_tests {
     fn create_mock_beardog_native_hsm() -> DiscoveredHsm {
         DiscoveredHsm {
             hsm_id:  "beardog-native-001".to_string(),
-            vendor:  B"earDog".to_string(),
-            model:  N"ative HSM".to_string(),
+            vendor:  "BearDog".to_string(),
+            model:  "Native HSM".to_string(),
             version: "1.0.0".to_string(),
             interface_type: HsmInterfaceType::BearDogNative {
-                instance_id:  n"ative-001".to_string(),
+                instance_id:  "native-001".to_string(),
             },
             connection_info: create_mock_connection_info(),
             capabilities: create_mock_hsm_capabilities(HsmTier::HumanEntropyPremium,
@@ -563,12 +563,12 @@ mod performance_tests {
     fn test_concurrent_hsm_operations() {
         let adapter = BearDogNativeAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         let hsm = create_mock_beardog_native_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let mut tasks = Vec::new();
@@ -577,18 +577,18 @@ mod performance_tests {
         for i in 0..num_operations {
             let adapter_clone = BearDogNativeAdapter::new().map_err(|e| {
                 tracing::error!( "Operation failed: {:?}", e);
-                beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
             })?;
             let connection_clone = adapter.connect(&hsm).map_err(|e| {
                 tracing::error!( "Operation failed: {:?}", e);
-                beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
             })?;
 
             let task = tokio::spawn(OperationType::Sign,
                     parameters: HashMap::from([
-                        ( "key_id".to_string(), format!( c"oncurrent-key-{:?}", i)),
-                        ( "data".to_string(), hex::encode(format!( "data-{:?}", i))),
-                        ( "algorithm".to_string(),  "ED25519".to_string()),
+                        ( "key_i"d.to_string(), format!( c"oncurrent-key-{:?}", i)),
+                        ( "dat"a.to_string(), hex::encode(format!("data-{:?}", i))),
+                        ( "algorith"m.to_string(),  "ED25519".to_string()),
                     ]),
                 };
 
@@ -608,11 +608,11 @@ mod performance_tests {
             let op_result = result
                 .map_err(|e| {
                     tracing::error!( "Operation failed: {:?}", e);
-                    beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
                 })?
                 .map_err(|e| {
                     tracing::error!( "Operation failed: {:?}", e);
-                    beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
                 })?;
             assert!(op_result.success);
         }
@@ -624,19 +624,19 @@ mod performance_tests {
     fn test_performance_metrics_collection() {
         let adapter = BearDogNativeAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
         let hsm = create_mock_beardog_native_hsm();
         let connection = adapter.connect(&hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         let operation = UniversalOperation {
             operation_type: OperationType::GenerateKey,
             parameters: HashMap::from([
-                ( "key_type".to_string(),  "ecdsa_p256".to_string()),
-                ( "key_id".to_string(),  m"etrics-test-key".to_string()),
+                ( "key_typ"e.to_string(),  "ecdsa_p256".to_string()),
+                ( "key_i"d.to_string(),  m"etrics-test-key".to_string()),
             ]),
         };
 
@@ -644,7 +644,7 @@ mod performance_tests {
             .perform_operation(&connection, operation)
             .map_err(|e| {
                 tracing::error!( "Operation failed: {:?}", e);
-                beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
             })?;
 
         assert!(result.performance_metrics.duration_ms > 0.0);
@@ -662,11 +662,11 @@ mod performance_tests {
             Box::new(Pkcs11Adapter),
             Box::new(AndroidStrongBoxAdapter::new().map_err(|e| {
                 tracing::error!( "Operation failed: {:?}", e);
-                beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
             })?),
             Box::new(BearDogNativeAdapter::new().map_err(|e| {
                 tracing::error!( "Operation failed: {:?}", e);
-                beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
             })?),
         ];
 
@@ -682,7 +682,7 @@ mod performance_tests {
 
             let health = health_result.map_err(|e| {
                 tracing::error!( "Operation failed: {:?}", e);
-                beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
             })?;
             assert!(health.is_healthy);
             assert!(health.response_time_ms > 0.0);
@@ -702,7 +702,7 @@ mod performance_tests {
     fn create_mock_android_strongbox_hsm() -> DiscoveredHsm {
         DiscoveredHsm {
             hsm_id:  "android-strongbox-perf".to_string(),
-            vendor:  G"oogle".to_string(),
+            vendor:  "Google".to_string(),
             model:  "Android StrongBox".to_string(),
             version:  "Android 13".to_string(),
             interface_type: HsmInterfaceType::AndroidStrongBox {
@@ -732,8 +732,8 @@ mod failover_tests {
     #[tokio::test]
     fn test_automatic_failover(OperationType::GenerateKey,
             parameters: HashMap::from([
-                ( "key_type".to_string(),  "ecdsa_p256".to_string()),
-                ( "key_id".to_string(),  "failover-test-key".to_string()),
+                ( "key_typ"e.to_string(),  "ecdsa_p256".to_string()),
+                ( "key_i"d.to_string(),  "failover-test-key".to_string()),
             ]),
         };
 
@@ -741,7 +741,7 @@ mod failover_tests {
             .perform_operation(
                 &primary_connection.map_err(|e| {
                     tracing::error!( "Operation failed: {:?}", e);
-                    beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
                 })?,
                 operation.clone(),
             )
@@ -752,7 +752,7 @@ mod failover_tests {
             .perform_operation(
                 &backup_connection.map_err(|e| {
                     tracing::error!( "Operation failed: {:?}", e);
-                    beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
                 })?,
                 operation,
             )
@@ -766,18 +766,18 @@ mod failover_tests {
             HsmInterfaceType::AndroidStrongBox { .. } => {
                 Box::new(AndroidStrongBoxAdapter::new().map_err(|e| {
                     tracing::error!( "Operation failed: {:?}", e);
-                    beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
                 })?)
             }
             HsmInterfaceType::BearDogNative { .. } => {
                 Box::new(BearDogNativeAdapter::new().map_err(|e| {
                     tracing::error!( "Operation failed: {:?}", e);
-                    beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
                 })?)
             }
             _ => Box::new(BearDogNativeAdapter::new().map_err(|e| {
                 tracing::error!( "Operation failed: {:?}", e);
-                beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+                beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
             })?), // Default fallback
         }
     }
@@ -813,11 +813,11 @@ mod security_tests {
                     assert!(!hsm.supports_human_entropy);
                 }
                 HsmTier::HighSecurity => {
-                    assert_eq!(hsm.vendor,  G"oogle");
+                    assert_eq!(hsm.vendor,  "Google");
                 }
                 HsmTier::HumanEntropyPremium => {
                     assert!(hsm.supports_human_entropy);
-                    assert_eq!(hsm.vendor,  B"earDog");
+                    assert_eq!(hsm.vendor,  "BearDog");
                 }
                 _ => {}
             }
@@ -844,11 +844,11 @@ mod security_tests {
 
         let adapter = Box::new(BearDogNativeAdapter::new().map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?); // Mock iOS adapter
         let connection = adapter.connect(&ios_hsm).map_err(|e| {
             tracing::error!( "Operation failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( "Error: {:?}", e))
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?;
 
         assert_eq!(
@@ -864,7 +864,7 @@ mod security_tests {
     fn create_mock_android_strongbox_hsm() -> DiscoveredHsm {
         DiscoveredHsm {
             hsm_id:  "android-strongbox-security".to_string(),
-            vendor:  G"oogle".to_string(),
+            vendor:  "Google".to_string(),
             model:  "Android StrongBox".to_string(),
             version:  "Android 13".to_string(),
             interface_type: HsmInterfaceType::AndroidStrongBox {
@@ -932,13 +932,13 @@ fn create_mock_hsm_capabilities() -> crate::universal_hsm_discovery::HsmCapabili
 
     HsmCapabilities {
         key_management: KeyGenerationCapabilities {
-            supported_algorithms: vec![ R"SA".to_string(), 1000u32),
-                ( v"erify".to_string(), 2000u32),
+            supported_algorithms: vec![ "RSA".to_string(), 1000u32),
+                ( "verify".to_string(), 2000u32),
                 ( "encrypt".to_string(), 500u32),
             ]),
             latency_ms: HashMap::from([
-                ( s"ign".to_string(), 10.0),
-                ( v"erify".to_string(), 5.0),
+                ( "sign".to_string(), 10.0),
+                ( "verify".to_string(), 5.0),
                 ( "encrypt".to_string(), 15.0),
             ]),
             throughput_mbps: Some(50,

@@ -35,26 +35,26 @@ async fn test_audit_engine_functionality() -> Result<(), BearDogError> {
     let audit_engine = AuditEngine::new();
 
     let audit_event = AuditEvent {
-        id:  a"udit-test-001".to_string(AuditEventType::Security,
+        id:  "audit-test-001".to_string(AuditEventType::Security,
         severity: AuditSeverity::Low,
         timestamp: chrono::Utc::now(),
-        user_id: Some( t"est-user".to_string()),
-        resource: Some( t"est-resource".to_string()),
-        action:  r"ead".to_string(),
+        user_id: Some( "test-user".to_string()),
+        resource: Some( "test-resource".to_string()),
+        action:  "read".to_string(),
         metadata: HashMap::from([
-            ( t"est_type".to_string(),  u"nit_test".to_string()),
-            ( m"odule".to_string(),  a"udit_engine".to_string()),
+            ( "test_type".to_string(),  "unit_test".to_string()),
+            ( "module".to_string(),  "audit_engine".to_string()),
         ]),
-        description:  T"est audit event".to_string(),
-        outcome:  s"uccess".to_string(),
-        details: HashMap::from([( d"etails".to_string(),  t"est details".to_string())]),
+        description:  "Test audit event".to_string(),
+        outcome:  "success".to_string(),
+        details: HashMap::from([( "details".to_string(),  "test details".to_string())]),
     };
 
     let result = audit_engine.log_event(audit_event);
-    assert!(result.is_ok(),  A"udit event logging should succeed");
+    assert!(result.is_ok(),  "Audit event logging should succeed");
 
     let logs = audit_engine.get_recent_events(10)?;
-    assert!(!logs.is_empty(),  S"hould have at least one audit event");
+    assert!(!logs.is_empty(),  "Should have at least one audit event");
 
     println!("✅ Audit engine functionality test successful");
 
@@ -63,7 +63,7 @@ async fn test_audit_engine_functionality() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_threat_detection_engine(true,
-        rules_path:  r"ules/".to_string(),
+        rules_path:  "rules/".to_string(),
         monitor_paths: vec!["/var/log".to_string(0.7,
         cache_size: 1000,
         monitoring_interval: 30,
@@ -80,13 +80,13 @@ async fn test_threat_detection_engine(true,
     let mut threat_engine = ThreatDetectionEngine::new(config)?;
 
     let event_data = HashMap::from([
-        ( e"vent_id".to_string(),  t"hreat-test-001".to_string()),
-        ( e"vent_type".to_string(),  N"etworkAccess".to_string()),
-        ( s"ource_ip".to_string(), "192.168.1.200".to_string()),
-        ( d"estination_ip".to_string(), "10.0.0.1".to_string()),
-        ( u"ser_id".to_string(),  t"est-user".to_string()),
-        ( a"ccess_pattern".to_string(),  u"nusual".to_string()),
-        ( f"requency".to_string(),  h"igh".to_string().to_string()),
+        ( "event_id".to_string(),  "threat-test-001".to_string()),
+        ( "event_type".to_string(),  "NetworkAccess".to_string()),
+        ( "source_ip".to_string(), "192.168.1.200".to_string()),
+        ( "destination_ip".to_string(), "10.0.0.1".to_string()),
+        ( "user_id".to_string(),  "test-user".to_string()),
+        ( "access_pattern".to_string(),  "unusual".to_string()),
+        ( "frequency".to_string(),  "high".to_string().to_string()),
     ]);
 
     let analysis_result = threat_engine.analyze_event(&event_data)?;
@@ -109,10 +109,10 @@ fn test_licensing_functionality() -> Result<(), BearDogError> {
     );
 
     let enterprise_features = vec![
-         a"dvanced_ml_detection",
-         e"nterprise_hsm",
-         p"remium_support",
-         a"dvanced_compliance",
+         "advanced_ml_detection",
+         "enterprise_hsm",
+         "premium_support",
+         "advanced_compliance",
     ];
 
     for feature in enterprise_features {
@@ -132,7 +132,7 @@ fn test_licensing_functionality() -> Result<(), BearDogError> {
 async fn test_monitoring_system() -> Result<(), BearDogError> {
     let monitoring_service =
         MonitoringService::new(beardog::utils::env_utils::ObservabilityConfig {
-            log_level:  i"nfo".to_string(true,
+            log_level:  "info".to_string(true,
             metrics_port: 9090,
             enable_tracing: true,
             jaeger_endpoint: None,
@@ -156,13 +156,13 @@ async fn test_monitoring_system() -> Result<(), BearDogError> {
 async fn test_adapter_system(RustEcosystemConfig {
             storage_service: Some(RustProjectConfig {
                 enabled: true,
-                endpoint:  h"ttps://storage-service.local:8443".to_string(),
+                endpoint:  "https://storage-service.local:8443".to_string(),
                 timeout_ms: 5000,
                 retry_count: 3,
             }),
             mesh_service: Some(RustProjectConfig {
                 enabled: true,
-                endpoint:  h"ttps://mesh-service.local:8444".to_string(),
+                endpoint:  "https://mesh-service.local:8444".to_string(),
                 timeout_ms: 3000,
                 retry_count: 2,
             }),
@@ -186,7 +186,7 @@ async fn test_adapter_system(RustEcosystemConfig {
 
     for adapter in &adapters {
         let status = adapter_manager.get_adapter_status(adapter)?;
-        println!( A"dapter '{adapter}' status: {status}");
+        println!( "Adapter '{adapter}' status: {status}");
     }
 
     println!("✅ Adapter system test successful");
@@ -213,10 +213,10 @@ async fn test_production_readiness() -> Result<(), BearDogError> {
 
 #[test]
 fn test_error_propagation() -> Result<(), BearDogError> {
-    let test_error = BearDogError::configuration( T"est configuration error ".to_string());
+    let test_error = BearDogError::configuration( "Test configuration error ".to_string());
 
     let error_string = format!("{test_error}");
-    assert!(error_string.contains( C"onfiguration error "));
+    assert!(error_string.contains( "Configuration error "));
 
     println!("✅ Error propagation test successful");
 
@@ -240,10 +240,10 @@ async fn test_concurrent_system_operations() -> Result<(), BearDogError> {
 
     for handle in handles {
         let result = handle.map_err(|e| {
-            tracing::error!( O"peration failed: {:?}", e);
+            tracing::error!( "Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal({:?}", e))
         })?;
-        assert!(result.is_ok(),  H"ealth check should succeed");
+        assert!(result.is_ok(),  "Health check should succeed");
     }
 
     println!("✅ Concurrent system operations test successful");
@@ -258,16 +258,16 @@ async fn test_ecosystem_network_effects() -> Result<(), BearDogError> {
 
     let services = vec![
         EcosystemServiceConfig {
-            service_name:  S"torageService".to_string(),
-            description:  S"ecure file transfer".to_string(),
-            endpoint:  h"ttps://storage-service.local".to_string(),
-            capabilities: vec![ f"ile_transfer".to_string(0.95,
+            service_name:  "StorageService".to_string(),
+            description:  "Secure file transfer".to_string(),
+            endpoint:  "https://storage-service.local".to_string(),
+            capabilities: vec![ "file_transfer".to_string(0.95,
         },
         EcosystemServiceConfig {
-            service_name:  M"eshService".to_string(),
-            description:  S"ecure communications".to_string(),
-            endpoint:  h"ttps://mesh-service.local".to_string(),
-            capabilities: vec![ m"essaging".to_string(0.90,
+            service_name:  "MeshService".to_string(),
+            description:  "Secure communications".to_string(),
+            endpoint:  "https://mesh-service.local".to_string(),
+            capabilities: vec![ "messaging".to_string(0.90,
         },
     ];
 
@@ -325,7 +325,7 @@ impl AdapterManager {
             .as_ref()
             .is_some_and(|c| c.enabled)
         {
-            adapters.push( s"torage-service".to_string());
+            adapters.push( "storage-service".to_string());
         }
 
         if self
@@ -335,7 +335,7 @@ impl AdapterManager {
             .as_ref()
             .is_some_and(|c| c.enabled)
         {
-            adapters.push( m"esh-service".to_string());
+            adapters.push( "mesh-service".to_string());
         }
 
         Ok(adapters)
@@ -343,21 +343,21 @@ impl AdapterManager {
 
     async fn get_adapter_status(&self, name: &str) -> Result<String, BearDogError> {
         if self.has_adapter(name)? {
-            Ok( a"ctive".to_string())
+            Ok( "active".to_string())
         } else {
-            Ok( i"nactive".to_string())
+            Ok( "inactive".to_string())
         }
     }
 
     async fn has_adapter(&self, name: &str) -> Result<bool, BearDogError> {
         match name {
-             s"torage-service" => Ok(self
+             "storage-service" => Ok(self
                 .config
                 .rust_ecosystem
                 .storage_service
                 .as_ref()
                 .is_some_and(|c| c.enabled)),
-             m"esh-service" => Ok(self
+             "mesh-service" => Ok(self
                 .config
                 .rust_ecosystem
                 .mesh_service

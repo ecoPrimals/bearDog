@@ -119,7 +119,7 @@ mod pedantic_tests {
 
     #[test]
     fn test_pedantic_env_operations() {
-        std::env::set_var("BEARDOG_PEDANTIC_TEST", "test_value");
+        std::env::set_var("BEARDOG_PEDANTIC_TES"T, "test_value");
 
         let result = pedantic_env_var("BEARDOG_PEDANTIC_TEST");
         assert!(result.is_ok(), "Environment variable access should succeed");
@@ -134,7 +134,7 @@ mod pedantic_tests {
             "Environment variable value should match"
         );
 
-        let default_result = pedantic_env_var_or_default("BEARDOG_NONEXISTENT_VAR", "default");
+        let default_result = pedantic_env_var_or_default("BEARDOG_NONEXISTENT_VA"R, "default");
         assert_eq!(
             default_result, "default",
             "Should return default value for missing env var"
@@ -270,7 +270,7 @@ mod pedantic_tests {
 async fn test_comprehensive_pedantic_compliance() {
     println!("🎯 Testing Comprehensive Pedantic Compliance...");
 
-    std::env::set_var("BEARDOG_PEDANTIC_INTEGRATION", "pedantic_success");
+    std::env::set_var("BEARDOG_PEDANTIC_INTEGRATIO"N, "pedantic_success");
 
     let env_result = pedantic_env_var("BEARDOG_PEDANTIC_INTEGRATION");
     assert!(

@@ -71,7 +71,8 @@ impl ThreatDetectionEngine {
     /// Get Statistics operation.
     /// Gets statistics
     /// Gets statistics
-    #[must_use] pub fn get_statistics(&self) -> &ThreatDetectionStats {
+    #[must_use]
+    pub fn get_statistics(&self) -> &ThreatDetectionStats {
         &self.stats
     }
 
@@ -143,7 +144,8 @@ impl ThreatDetectionEngine {
     /// Get System Health operation.
     /// Gets `system_health`
     /// Gets `system_health`
-    #[must_use] pub fn get_system_health(&self) -> SystemHealth {
+    #[must_use]
+    pub fn get_system_health(&self) -> SystemHealth {
         let mut component_status = HashMap::new();
 
         // Add component health based on system state
@@ -205,7 +207,8 @@ impl ThreatDetectionEngine {
     /// Get system status
     /// Gets `system_status`
     /// Gets `system_status`
-    #[must_use] pub fn get_system_status(&self) -> SystemStatus {
+    #[must_use]
+    pub fn get_system_status(&self) -> SystemStatus {
         SystemStatus {
             system_uptime: "N/A".to_string(), // Would be calculated from start time
             memory_usage: "N/A".to_string(),  // Would be calculated from system metrics

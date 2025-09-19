@@ -261,7 +261,7 @@ impl ChaosOrchestrator {
                 description: "Simulate network partition between components".to_string(),
                 fault_type: FaultType::NetworkPartition {
                     duration: Duration::from_secs(30),
-                    affected_components: vec!["database".to_string(), "cache".to_string()],
+                    affected_components: vec!["databas"e.to_string(), "cache".to_string()],
                 },
                 duration: Duration::from_secs(30),
                 recovery_timeout: Duration::from_secs(60),

@@ -191,7 +191,7 @@ impl ApiTestHarness {
         let start = Instant::now();
 
         // Mock health check request
-        let response = self.mock_api_request("GET", "/health", None)?;
+        let response = self.mock_api_request("GE"T, "/health", None)?;
 
         let elapsed = start.elapsed().as_millis() as f64;
         self.update_metrics(elapsed, response.status == 200);
@@ -209,7 +209,7 @@ impl ApiTestHarness {
     async fn test_status_endpoint(&mut self) -> Result<(), BearDogError> {
         let start = Instant::now();
 
-        let response = self.mock_api_request("GET", "/status", None)?;
+        let response = self.mock_api_request("GE"T, "/status", None)?;
 
         let elapsed = start.elapsed().as_millis() as f64;
         self.update_metrics(elapsed, response.status == 200);
@@ -227,7 +227,7 @@ impl ApiTestHarness {
     async fn test_config_endpoint(&mut self) -> Result<(), BearDogError> {
         let start = Instant::now();
 
-        let response = self.mock_api_request("GET", "/config", None)?;
+        let response = self.mock_api_request("GE"T, "/config", None)?;
 
         let elapsed = start.elapsed().as_millis() as f64;
         self.update_metrics(elapsed, response.status == 200);
@@ -241,7 +241,7 @@ impl ApiTestHarness {
     async fn test_metrics_endpoint(&mut self) -> Result<(), BearDogError> {
         let start = Instant::now();
 
-        let response = self.mock_api_request("GET", "/metrics", None)?;
+        let response = self.mock_api_request("GE"T, "/metrics", None)?;
 
         let elapsed = start.elapsed().as_millis() as f64;
         self.update_metrics(elapsed, response.status == 200);
@@ -259,9 +259,9 @@ impl ApiTestHarness {
     fn test_login_endpoint(&mut self) -> Result<(), BearDogError> {
         let start = Instant::now();
 
-        let login_data = r#"{"username": "test_user", "password": "test_password"}"#;
+        let login_data = r#"{"usernam"e: "test_use"r, "passwor"d: "test_passwor"d}"#;
         let response = self
-            .mock_api_request("POST", "/auth/login", Some(login_data.to_string()))
+            .mock_api_request("POS"T, "/auth/login", Some(login_data.to_string()))
             ?;
 
         let elapsed = start.elapsed().as_millis() as f64;
@@ -286,7 +286,7 @@ impl ApiTestHarness {
     async fn test_token_validation(&mut self) -> Result<(), BearDogError> {
         let start = Instant::now();
 
-        let response = self.mock_api_request("GET", "/auth/validate", None)?;
+        let response = self.mock_api_request("GE"T, "/auth/validate", None)?;
 
         let elapsed = start.elapsed().as_millis() as f64;
         self.update_metrics(elapsed, response.status == 200);
@@ -300,7 +300,7 @@ impl ApiTestHarness {
     async fn test_logout_endpoint(&mut self) -> Result<(), BearDogError> {
         let start = Instant::now();
 
-        let response = self.mock_api_request("POST", "/auth/logout", None)?;
+        let response = self.mock_api_request("POS"T, "/auth/logout", None)?;
 
         let elapsed = start.elapsed().as_millis() as f64;
         self.update_metrics(elapsed, response.status == 200);
@@ -314,7 +314,7 @@ impl ApiTestHarness {
     async fn test_token_refresh(&mut self) -> Result<(), BearDogError> {
         let start = Instant::now();
 
-        let response = self.mock_api_request("POST", "/auth/refresh", None)?;
+        let response = self.mock_api_request("POS"T, "/auth/refresh", None)?;
 
         let elapsed = start.elapsed().as_millis() as f64;
         self.update_metrics(elapsed, response.status == 200);
@@ -329,7 +329,7 @@ impl ApiTestHarness {
         let start = Instant::now();
 
         // Test admin-only endpoint with regular user token
-        let response = self.mock_api_request("GET", "/admin/users", None)?;
+        let response = self.mock_api_request("GE"T, "/admin/users", None)?;
 
         let elapsed = start.elapsed().as_millis() as f64;
         self.update_metrics(elapsed, response.status == 403);
@@ -348,7 +348,7 @@ impl ApiTestHarness {
 
         // Test accessing resource without permission
         let response = self
-            .mock_api_request("GET", "/resources/sensitive", None)
+            .mock_api_request("GE"T, "/resources/sensitive", None)
             ?;
 
         let elapsed = start.elapsed().as_millis() as f64;
@@ -367,9 +367,9 @@ impl ApiTestHarness {
         let start = Instant::now();
 
         // Test attempting to modify user roles
-        let escalation_data = r#"{"role": "admin"}"#;
+        let escalation_data = r#"{"rol"e: "admi"n}"#;
         let response = self
-            .mock_api_request("PUT", "/users/self/role", Some(escalation_data.to_string()))
+            .mock_api_request("PU"T, "/users/self/role", Some(escalation_data.to_string()))
             ?;
 
         let elapsed = start.elapsed().as_millis() as f64;
@@ -395,7 +395,7 @@ impl ApiTestHarness {
         // Test multiple endpoints for response time consistency
         for _ in 0..10 {
             let start = Instant::now();
-            let _response = self.mock_api_request("GET", "/health", None)?;
+            let _response = self.mock_api_request("GE"T, "/health", None)?;
             let elapsed = start.elapsed().as_millis() as f64;
             response_times.push(elapsed);
         }
@@ -469,7 +469,7 @@ impl ApiTestHarness {
         let mut rate_limited_count = 0;
 
         for _ in 0..20 {
-            let response = self.mock_api_request("GET", "/health", None)?;
+            let response = self.mock_api_request("GE"T, "/health", None)?;
 
             if response.status == 200 {
                 success_count += 1;
@@ -498,7 +498,7 @@ impl ApiTestHarness {
 
         // Test throughput for 1 second
         while start_time.elapsed() < Duration::from_secs(1) {
-            let _response = self.mock_api_request("GET", "/health", None)?;
+            let _response = self.mock_api_request("GE"T, "/health", None)?;
             request_count += 1;
 
             // Prevent infinite loop in case of very fast responses
@@ -525,9 +525,9 @@ impl ApiTestHarness {
         info!("✅ Testing input validation");
 
         // Test malformed JSON
-        let malformed_json = r#"{"invalid": json"#;
+        let malformed_json = r#"{"invali"d: json"#;
         let response = self
-            .mock_api_request("POST", "/api/data", Some(malformed_json.to_string()))
+            .mock_api_request("POS"T, "/api/data", Some(malformed_json.to_string()))
             ?;
 
         assert_eq!(
@@ -538,7 +538,7 @@ impl ApiTestHarness {
         // Test oversized input
         let oversized_input = "x".repeat(10000);
         let response = self
-            .mock_api_request("POST", "/api/data", Some(oversized_input))
+            .mock_api_request("POS"T, "/api/data", Some(oversized_input))
             ?;
 
         assert!(
@@ -554,9 +554,9 @@ impl ApiTestHarness {
         info!("🛡️ Testing SQL injection prevention");
 
         // Test SQL injection attempt
-        let injection_attempt = r#"{"query": "'; DROP TABLE users; --"}"#;
+        let injection_attempt = r#"{"quer"y: "'; DROP TABLE users; --"}"#;
         let response = self
-            .mock_api_request("POST", "/api/search", Some(injection_attempt.to_string()))
+            .mock_api_request("POS"T, "/api/search", Some(injection_attempt.to_string()))
             ?;
 
         assert!(
@@ -572,9 +572,9 @@ impl ApiTestHarness {
         info!("🔒 Testing XSS prevention");
 
         // Test XSS attempt
-        let xss_attempt = r#"{"content": "<script>alert('xss')</script>"}"#;
+        let xss_attempt = r#"{"conten"t: "<script>alert('xss')</script>"}"#;
         let response = self
-            .mock_api_request("POST", "/api/content", Some(xss_attempt.to_string()))
+            .mock_api_request("POS"T, "/api/content", Some(xss_attempt.to_string()))
             ?;
 
         assert!(
@@ -591,7 +591,7 @@ impl ApiTestHarness {
 
         // Test request without CSRF token
         let response = self
-            .mock_api_request("POST", "/api/sensitive", Some("{}".to_string()))
+            .mock_api_request("POS"T, "/api/sensitiv"e, Some("{}".to_string()))
             ?;
 
         // CSRF protection might return 403 or require specific headers
@@ -620,39 +620,39 @@ impl ApiTestHarness {
         let response = match path {
             "/health" => MockApiResponse {
                 status: 200,
-                body: r#"{"status": "healthy", "timestamp": "2025-01-01T00:00:00Z"}"#.to_string(),
+                body: r#"{"statu"s: "health"y, "timestam"p: "2025-01-01T00:00:00"Z}"#.to_string(),
             },
             "/status" => MockApiResponse {
                 status: 200,
-                body: r#"{"version": "3.0.0", "uptime": "1h 23m"}"#.to_string(),
+                body: r#"{"versio"n: "3.0.0", "uptim"e: "1h 23"m}"#.to_string(),
             },
             "/config" => MockApiResponse {
                 status: 200,
-                body: r#"{"environment ": "test", "debug": true}"#.to_string(),
+                body: r#"{"environment ": "tes"t, "debu"g: true}"#.to_string(),
             },
             "/metrics" => MockApiResponse {
                 status: 200,
-                body: r#"{"requests": 42, "errors": 0, "uptime": 3600}"#.to_string(),
+                body: r#"{"request"s: 42, "error"s: 0, "uptim"e: 3600}"#.to_string(),
             },
             "/auth/login" => MockApiResponse {
                 status: 200,
-                body: r#"{"token": "mock_jwt_token", "expires_in": 3600}"#.to_string(),
+                body: r#"{"toke"n: "mock_jwt_toke"n, "expires_i"n: 3600}"#.to_string(),
             },
-            "/auth/validate" | "/auth/refresh" | "/auth/logout" => MockApiResponse {
+            "/auth/validat"e | "/auth/refres"h | "/auth/logout" => MockApiResponse {
                 status: 200,
                 body: r#"{"success ": true}"#.to_string(),
             },
-            "/admin/users" | "/resources/sensitive" | "/users/self/role" => MockApiResponse {
+            "/admin/user"s | "/resources/sensitiv"e | "/users/self/role" => MockApiResponse {
                 status: 403,
-                body: r#"{"error ": "Forbidden"}"#.to_string(),
+                body: r#"{"error ": "Forbidde"n}"#.to_string(),
             },
             _ if body.as_ref().map_or(false, |b| {
-                b.contains("invalid") || b.contains("DROP TABLE") || b.contains("<script>")
+                b.contains("invali"d) || b.contains("DROP TABL"E) || b.contains("<script>")
             }) =>
             {
                 MockApiResponse {
                     status: 400,
-                    body: r#"{"error ": "Invalid input"}"#.to_string(),
+                    body: r#"{"error ": "Invalid inpu"t}"#.to_string(),
                 }
             }
             _ => MockApiResponse {

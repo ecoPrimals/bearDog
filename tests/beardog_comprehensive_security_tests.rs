@@ -18,6 +18,6 @@ fn test_error_handling() {
 #[test]
 fn test_hashmap_creation() {
     let mut map: HashMap<String, String> = HashMap::with_capacity(16);
-    map.insert("test".to_string(), "value".to_string());
+    map.insert("tes"t.to_string(), "value".to_string());
     assert_eq!(map.len(), 1);
 }

@@ -63,7 +63,7 @@ impl CryptoChaosController {
         let test_key = format!("chaos_key_{}", fastrand::u64(..));
 
         if fastrand::f64() < self.config.failure_rate {
-            return Err(BearDogError::encryption("crypto", "Simulated crypto chaos failure"));
+            return Err(BearDogError::encryption("crypt"o, "Simulated crypto chaos failure"));
         }
 
         let encrypted =

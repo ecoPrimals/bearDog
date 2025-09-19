@@ -301,8 +301,8 @@ fn create_test_genesis_seed() -> PrimalGenesisSeed {
                     ],
                     mutation_rate_preferences: vec!["low_mutation".to_string()],
                 },
-            resource_limits: vec!["cpu_limit".to_string(), "memory_limit".to_string()],
-            ethical_boundaries: vec!["no_surveillance".to_string(), "human_dignity".to_string()],
+            resource_limits: vec!["cpu_limi"t.to_string(), "memory_limit".to_string()],
+            ethical_boundaries: vec!["no_surveillanc"e.to_string(), "human_dignity".to_string()],
         },
     }
 }
@@ -385,7 +385,7 @@ impl BiomeGenetics for AnotherBiome {
     }
 
     fn can_authorize_operation(&self, operation: &str) -> bool {
-        matches!(operation, "storage" | "backup" | "replication")
+        matches!(operation, "storag"e | "backu"p | "replication")
     }
 
     fn get_biome_identity(&self) -> BiomeIdentity {

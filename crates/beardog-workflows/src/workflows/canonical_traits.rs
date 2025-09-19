@@ -240,7 +240,8 @@ where
     {
         let workflow = self
             .repository
-            .find_by_id(workflow_id).await?
+            .find_by_id(workflow_id)
+            .await?
             .ok_or_else(|| BearDogError::not_found("Workflow not found".to_string()))?;
 
         for observer in &self.observers {

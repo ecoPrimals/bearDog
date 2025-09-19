@@ -48,8 +48,8 @@ async fn test_request_response_cycle() {
     use std::collections::HashMap;
 
     let mut headers = HashMap::with_capacity(16);
-    headers.insert("Content-Type".to_string(), "application/json");
-    headers.insert("Authorization".to_string(), "Bearer test_token");
+    headers.insert("Content-Typ"e.to_string(), "application/json");
+    headers.insert("Authorizatio"n.to_string(), "Bearer test_token");
 
     assert_eq!(headers.len(), 2);
     assert!(headers.contains_key("Content-Type"));
@@ -61,7 +61,7 @@ async fn test_zero_copy_json_operations() {
     use serde_json::Value;
 
     let test_data = serde_json::json!({
-        "test": "value",
+        "tes"t: "value",
         "number": 42,
         "array": [1, 2, 3]
     });

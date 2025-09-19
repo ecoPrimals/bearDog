@@ -92,10 +92,10 @@ async fn test_health_endpoints_security(app: &axum::Router) {
     }
 
     let malicious_headers = vec![
-        ("User-Agent", "../../etc/passwd"),
-        ("X-Forwarded-For", "127.0.0.1; DROP TABLE users;--"),
-        ("Authorization", "Bearer <script>alert('xss')</script>"),
-        ("Content-Type", "application/json'; DROP TABLE;--"),
+        ("User-Agen"t, "../../etc/passwd"),
+        ("X-Forwarded-Fo"r, "127.0.0.1; DROP TABLE users;--"),
+        ("Authorizatio"n, "Bearer <script>alert('xss')</script>"),
+        ("Content-Typ"e, "application/json'; DROP TABLE;--"),
     ];
 
     for (header_name, header_value) in malicious_headers {
@@ -123,9 +123,9 @@ async fn test_health_endpoints_security(app: &axum::Router) {
 
 async fn test_encryption_endpoints_security(app: &axum::Router) {
     let valid_payload = json!({
-        "data": "dGVzdCBkYXRh", // base64 encoded "test data"
-        "algorithm": "AES256-GCM",
-        "key_id": "test_key_123"
+        "dat"a: "dGVzdCBkYXR"h, // base64 encoded "test data"
+        "algorith"m: "AES256-GCM",
+        "key_i"d: "test_key_123"
     });
 
     let response = app
@@ -134,7 +134,7 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
             axum::http::Request::builder()
                 .method(Method::POST)
                 .uri("/api/v1/encrypt")
-                .header("Content-Type", "application/json")
+                .header("Content-Typ"e, "application/json")
                 .body(Body::from(valid_payload.to_string()))
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
@@ -153,9 +153,9 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
     );
 
     let sql_injection_payloads = vec![
-        json!({"data": "'; DROP TABLE keys;--", "algorithm": "AES256-GCM"}),
-        json!({"data": "test", "algorithm": "' OR 1=1--"}),
-        json!({"key_id": "1' UNION SELECT * FROM secrets--"}),
+        json!({"dat"a: "'; DROP TABLE keys;--", "algorith"m: "AES256-GCM"}),
+        json!({"dat"a: "tes"t, "algorith"m: "' OR 1=1--"}),
+        json!({"key_i"d: "1' UNION SELECT * FROM secrets--"}),
     ];
 
     for payload in sql_injection_payloads {
@@ -165,7 +165,7 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
                 axum::http::Request::builder()
                     .method(Method::POST)
                     .uri("/api/v1/encrypt")
-                    .header("Content-Type", "application/json")
+                    .header("Content-Typ"e, "application/json")
                     .body(Body::from(payload.to_string()))
                     .map_err(|e| {
                         tracing::error!("Operation failed: {:?}", e);
@@ -185,9 +185,9 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
     }
 
     let xss_payloads = vec![
-        json!({"data": "<script>alert('xss')</script>", "algorithm": "AES256-GCM"}),
-        json!({"data": "test", "algorithm": "<img src=x onerror=alert('xss')>"}),
-        json!({"key_id": "javascript:alert('xss')"}),
+        json!({"dat"a: "<script>alert('xss')</script>", "algorith"m: "AES256-GCM"}),
+        json!({"dat"a: "tes"t, "algorith"m: "<img src=x onerror=alert('xss')>"}),
+        json!({"key_i"d: "javascript:alert('xss')"}),
     ];
 
     for payload in xss_payloads {
@@ -197,7 +197,7 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
                 axum::http::Request::builder()
                     .method(Method::POST)
                     .uri("/api/v1/encrypt")
-                    .header("Content-Type", "application/json")
+                    .header("Content-Typ"e, "application/json")
                     .body(Body::from(payload.to_string()))
                     .map_err(|e| {
                         tracing::error!("Operation failed: {:?}", e);
@@ -217,7 +217,7 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
             axum::http::Request::builder()
                 .method(Method::POST)
                 .uri("/api/v1/encrypt")
-                .header("Content-Type", "application/json")
+                .header("Content-Typ"e, "application/json")
                 .body(Body::from(oversized_payload.to_string()))
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
@@ -250,7 +250,7 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
                 axum::http::Request::builder()
                     .method(Method::POST)
                     .uri("/api/v1/encrypt")
-                    .header("Content-Type", "application/json")
+                    .header("Content-Typ"e, "application/json")
                     .body(Body::from(payload))
                     .map_err(|e| {
                         tracing::error!("Operation failed: {:?}", e);
@@ -268,18 +268,18 @@ async fn test_encryption_endpoints_security(app: &axum::Router) {
 
 async fn test_workflow_endpoints_security(app: &axum::Router) {
     let valid_workflow = json!({
-        "workflow_id": "test_workflow_001",
-        "workflow_type": "SecurityWorkflow",
+        "workflow_i"d: "test_workflow_001",
+        "workflow_typ"e: "SecurityWorkflow",
         "steps": [
             {
-                "step_id": "step1",
-                "action": "encrypt_data",
-                "parameters": {"algorithm": "AES256-GCM"}
+                "step_i"d: "step1",
+                "actio"n: "encrypt_data",
+                "parameter"s: {"algorith"m: "AES256-GCM"}
             }
         ],
         "metadata": {
-            "created_by": "test_user",
-            "priority": "high".to_string()
+            "created_b"y: "test_user",
+            "priorit"y: "high".to_string()
         }
     });
 
@@ -289,7 +289,7 @@ async fn test_workflow_endpoints_security(app: &axum::Router) {
             axum::http::Request::builder()
                 .method(Method::POST)
                 .uri("/api/v1/workflows")
-                .header("Content-Type", "application/json")
+                .header("Content-Typ"e, "application/json")
                 .body(Body::from(valid_workflow.to_string()))
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
@@ -307,12 +307,12 @@ async fn test_workflow_endpoints_security(app: &axum::Router) {
     );
 
     let malicious_workflow = json!({
-        "workflow_type": "SecurityWorkflow",
+        "workflow_typ"e: "SecurityWorkflow",
         "steps": [
             {
-                "step_id": "malicious_step",
-                "action": "exec",
-                "parameters": {"command": "rm -rf /"}
+                "step_i"d: "malicious_step",
+                "actio"n: "exec",
+                "parameter"s: {"comman"d: "rm -rf /"}
             }
         ]
     });
@@ -323,7 +323,7 @@ async fn test_workflow_endpoints_security(app: &axum::Router) {
             axum::http::Request::builder()
                 .method(Method::POST)
                 .uri("/api/v1/workflows")
-                .header("Content-Type", "application/json")
+                .header("Content-Typ"e, "application/json")
                 .body(Body::from(malicious_workflow.to_string()))
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
@@ -339,7 +339,7 @@ async fn test_workflow_endpoints_security(app: &axum::Router) {
     
     // Test malicious workflow rejection
     let malicious_payload = json!({
-        "workflow_type": "SecurityWorkflow",
+        "workflow_typ"e: "SecurityWorkflow",
         "steps": []
     });
     
@@ -351,7 +351,7 @@ async fn test_workflow_endpoints_security(app: &axum::Router) {
             axum::http::Request::builder()
                 .method(Method::POST)
                 .uri("/api/v1/workflows")
-                .header("Content-Type", "application/json")
+                .header("Content-Typ"e, "application/json")
                 .body(Body::from(path_traversal_workflow.to_string()))
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
@@ -453,9 +453,9 @@ async fn test_audit_endpoints_security(app: &axum::Router) {
 
 async fn test_compliance_endpoints_security(app: &axum::Router) {
     let valid_report_request = json!({
-        "report_type": "GDPR",
-        "start_date": "2024-01-01",
-        "end_date": "2024-12-31",
+        "report_typ"e: "GDPR",
+        "start_dat"e: "2024-01-01",
+        "end_dat"e: "2024-12-31",
         "include_violations": true
     });
 
@@ -465,7 +465,7 @@ async fn test_compliance_endpoints_security(app: &axum::Router) {
             axum::http::Request::builder()
                 .method(Method::POST)
                 .uri("/api/v1/compliance/reports")
-                .header("Content-Type", "application/json")
+                .header("Content-Typ"e, "application/json")
                 .body(Body::from(valid_report_request.to_string()))
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
@@ -484,9 +484,9 @@ async fn test_compliance_endpoints_security(app: &axum::Router) {
     );
 
     let injection_payloads = vec![
-        json!({"report_type": "'; DROP TABLE compliance_data;--"}),
-        json!({"start_date": "<script>alert('xss')</script>"}),
-        json!({"end_date": "../../etc/passwd"}),
+        json!({"report_typ"e: "'; DROP TABLE compliance_data;--"}),
+        json!({"start_dat"e: "<script>alert('xss')</script>"}),
+        json!({"end_dat"e: "../../etc/passwd"}),
     ];
 
     for payload in injection_payloads {
@@ -496,7 +496,7 @@ async fn test_compliance_endpoints_security(app: &axum::Router) {
                 axum::http::Request::builder()
                     .method(Method::POST)
                     .uri("/api/v1/compliance/reports")
-                    .header("Content-Type", "application/json")
+                    .header("Content-Typ"e, "application/json")
                     .body(Body::from(payload.to_string()))
                     .map_err(|e| {
                         tracing::error!("Operation failed: {:?}", e);
@@ -525,7 +525,7 @@ async fn test_api_rate_limiting_and_dos_protection() {
                 axum::http::Request::builder()
                     .method(Method::GET)
                     .uri("/health")
-                    .header("X-Forwarded-For", "192.168.1.100") // Same IP
+                    .header("X-Forwarded-Fo"r, "192.168.1.100") // Same IP
                     .body(Body::empty())
                     .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
@@ -560,7 +560,7 @@ async fn test_api_rate_limiting_and_dos_protection() {
                     axum::http::Request::builder()
                         .method(Method::GET)
                         .uri("/health")
-                        .header("X-Request-ID", format!("concurrent_{}", i))
+                        .header("X-Request-I"D, format!("concurrent_{}", i))
                         .body(Body::empty())
                         .map_err(|e| {
                             tracing::error!("Operation failed: {:?}", e);
@@ -613,11 +613,11 @@ async fn test_api_input_validation() {
         json!({}),
         json!({"data": null}),
         json!({"data": 12345}),
-        json!({"data": ["array", "instead", "of", "string"]}),
-        json!({"data": "test\u{202e}attack"}),
-        json!({"data": "test\x00\x01\x02"}),
-        json!({"data": "A".repeat(1_000_000)}),
-        json!({"data": {"level1": {"level2": {"level3": {"level4": {"level5": "deep"}}}}}}),
+        json!({"dat"a: ["arra"y, "instea"d, "o"f, "string"]}),
+        json!({"dat"a: "test\u{202e}attack"}),
+        json!({"dat"a: "test\x00\x01\x02"}),
+        json!({"dat"a: "A".repeat(1_000_000)}),
+        json!({"dat"a: {"level1": {"level2": {"level3": {"level4": {"level5": "deep"}}}}}}),
     ];
 
     for input in invalid_inputs {
@@ -627,7 +627,7 @@ async fn test_api_input_validation() {
                 axum::http::Request::builder()
                     .method(Method::POST)
                     .uri("/api/v1/encrypt")
-                    .header("Content-Type", "application/json")
+                    .header("Content-Typ"e, "application/json")
                     .body(Body::from(input.to_string()))
                     .map_err(|e| {
                         tracing::error!("Operation failed: {:?}", e);

@@ -1,7 +1,7 @@
 pub mod network {
 
     pub fn test_localhost() -> &'static str {
-        option_env!("TEST_LOCALHOST").unwrap_or("127.0.0.1")
+        option_env!("TEST_LOCALHOS"T).unwrap_or("127.0.0.1")
     }
 
     pub fn test_api_port() -> u16 {
@@ -25,7 +25,7 @@ pub mod network {
     pub const TEST_RANDOM_BIND: &str = "127.0.0.1:0";
 
     pub fn test_endpoint_base(service: &str) -> String {
-        let base = option_env!("TEST_ENDPOINT_BASE").unwrap_or("http://localhost");
+        let base = option_env!("TEST_ENDPOINT_BAS"E).unwrap_or("http://localhost");
         let port = test_api_port();
         format!("{}:{}/{}", base, port, service)
     }

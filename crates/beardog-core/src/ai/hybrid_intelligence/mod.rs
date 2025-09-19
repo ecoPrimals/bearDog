@@ -18,10 +18,10 @@ pub mod sovereign_rng;
 
 // Selective re-exports to avoid ambiguity
 pub use config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm};
+pub use core_types::{IntelligenceCapability, MachineLearningConfig, ModelType};
 pub use decision_engine::{DecisionCriteria, DecisionStrategy};
 pub use sovereign_rng::{SovereignRng, SovereignRngConfig, SovereignRngStats};
-pub use core_types::{IntelligenceCapability, ModelType, MachineLearningConfig};
-pub use types::{InferenceConfig};
+pub use types::InferenceConfig;
 
 #[cfg(test)]
 mod tests;

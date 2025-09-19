@@ -60,7 +60,8 @@ impl RuleCondition {
     /// Check if this condition is complex (has nested conditions)
     /// Checks if complex
     /// Checks if complex
-    #[must_use] pub fn is_complex(&self) -> bool {
+    #[must_use]
+    pub fn is_complex(&self) -> bool {
         matches!(
             self,
             RuleCondition::LogicalAnd { .. }
@@ -71,10 +72,14 @@ impl RuleCondition {
     }
 
     /// Calculate complexity score of the condition
-    #[must_use] pub fn complexity_score(&self) -> u32 {
+    #[must_use]
+    pub fn complexity_score(&self) -> u32 {
         match self {
             RuleCondition::LogicalAnd { conditions } | RuleCondition::LogicalOr { conditions } => {
-                1 + conditions.iter().map(RuleCondition::complexity_score).sum::<u32>()
+                1 + conditions
+                    .iter()
+                    .map(RuleCondition::complexity_score)
+                    .sum::<u32>()
             }
             RuleCondition::LogicalNot { condition } => 1 + condition.complexity_score(),
             RuleCondition::Custom { .. } => 3,
@@ -84,7 +89,8 @@ impl RuleCondition {
     }
 
     /// Get all field names referenced by this condition
-    #[must_use] pub fn referenced_fields(&self) -> Vec<String> {
+    #[must_use]
+    pub fn referenced_fields(&self) -> Vec<String> {
         match self {
             RuleCondition::FieldEquals { field, .. }
             | RuleCondition::FieldContains { field, .. }
@@ -109,7 +115,8 @@ impl RuleCondition {
     }
 
     /// Evaluate the condition against event data
-    #[must_use] pub fn evaluate(&self, event_data: &HashMap<String, String>) -> bool {
+    #[must_use]
+    pub fn evaluate(&self, event_data: &HashMap<String, String>) -> bool {
         match self {
             RuleCondition::FieldEquals { field, value } => event_data.get(field) == Some(value),
 
@@ -160,7 +167,8 @@ impl RuleCondition {
     }
 
     /// Create a simple field equals condition
-    #[must_use] pub fn field_equals(field: &str, value: &str) -> Self {
+    #[must_use]
+    pub fn field_equals(field: &str, value: &str) -> Self {
         RuleCondition::FieldEquals {
             field: field.to_string(),
             value: value.to_string(),
@@ -168,7 +176,8 @@ impl RuleCondition {
     }
 
     /// Create a field contains condition
-    #[must_use] pub fn field_contains(field: &str, value: &str) -> Self {
+    #[must_use]
+    pub fn field_contains(field: &str, value: &str) -> Self {
         RuleCondition::FieldContains {
             field: field.to_string(),
             value: value.to_string(),
@@ -176,24 +185,28 @@ impl RuleCondition {
     }
 
     /// Create a field exists condition
-    #[must_use] pub fn field_exists(field: &str) -> Self {
+    #[must_use]
+    pub fn field_exists(field: &str) -> Self {
         RuleCondition::FieldExists {
             field: field.to_string(),
         }
     }
 
     /// Create a logical AND condition
-    #[must_use] pub fn and(conditions: Vec<RuleCondition>) -> Self {
+    #[must_use]
+    pub fn and(conditions: Vec<RuleCondition>) -> Self {
         RuleCondition::LogicalAnd { conditions }
     }
 
     /// Create a logical OR condition
-    #[must_use] pub fn or(conditions: Vec<RuleCondition>) -> Self {
+    #[must_use]
+    pub fn or(conditions: Vec<RuleCondition>) -> Self {
         RuleCondition::LogicalOr { conditions }
     }
 
     /// Create a logical NOT condition
-    #[must_use] pub fn logical_not(condition: RuleCondition) -> Self {
+    #[must_use]
+    pub fn logical_not(condition: RuleCondition) -> Self {
         RuleCondition::LogicalNot {
             condition: Box::new(condition),
         }
@@ -208,32 +221,37 @@ pub struct ConditionBuilder {
 impl ConditionBuilder {
     /// Create a new condition builder
     /// Creates a new instance
-    #[must_use] pub fn new() -> Self {
+    #[must_use]
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// Add a field equals condition
-    #[must_use] pub fn field_equals(mut self, field: &str, value: &str) -> Self {
+    #[must_use]
+    pub fn field_equals(mut self, field: &str, value: &str) -> Self {
         self.conditions
             .push(RuleCondition::field_equals(field, value));
         self
     }
 
     /// Add a field contains condition
-    #[must_use] pub fn field_contains(mut self, field: &str, value: &str) -> Self {
+    #[must_use]
+    pub fn field_contains(mut self, field: &str, value: &str) -> Self {
         self.conditions
             .push(RuleCondition::field_contains(field, value));
         self
     }
 
     /// Add a field exists condition
-    #[must_use] pub fn field_exists(mut self, field: &str) -> Self {
+    #[must_use]
+    pub fn field_exists(mut self, field: &str) -> Self {
         self.conditions.push(RuleCondition::field_exists(field));
         self
     }
 
     /// Add a custom condition
-    #[must_use] pub fn add_condition(mut self, condition: RuleCondition) -> Self {
+    #[must_use]
+    pub fn add_condition(mut self, condition: RuleCondition) -> Self {
         self.conditions.push(condition);
         self
     }
@@ -241,7 +259,8 @@ impl ConditionBuilder {
     /// Build as AND condition
     /// Builds and
     /// Builds and
-    #[must_use] pub fn build_and(self) -> RuleCondition {
+    #[must_use]
+    pub fn build_and(self) -> RuleCondition {
         if self.conditions.len() == 1 {
             self.conditions.into_iter().next().unwrap()
         } else {
@@ -252,7 +271,8 @@ impl ConditionBuilder {
     /// Build as OR condition
     /// Builds or
     /// Builds or
-    #[must_use] pub fn build_or(self) -> RuleCondition {
+    #[must_use]
+    pub fn build_or(self) -> RuleCondition {
         if self.conditions.len() == 1 {
             self.conditions.into_iter().next().unwrap()
         } else {

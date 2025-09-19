@@ -33,7 +33,8 @@ impl SafeZeroCopyBuffer {
 
     /// From Vec operation.
     /// Creates instance from vec
-    #[must_use] pub fn from_vec(buffer: Vec<u8>) -> Self {
+    #[must_use]
+    pub fn from_vec(buffer: Vec<u8>) -> Self {
         let length = buffer.len();
         Self {
             data: Arc::new(buffer),
@@ -58,26 +59,31 @@ impl SafeZeroCopyBuffer {
         })
     }
 
-    #[must_use] pub const fn len(&self) -> usize {
+    #[must_use]
+    pub const fn len(&self) -> usize {
         self.length
     }
 
-    #[must_use] pub const fn is_empty(&self) -> bool {
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
         self.length == 0
     }
 
     /// Capacity operation.
-    #[must_use] pub fn capacity(&self) -> usize {
+    #[must_use]
+    pub fn capacity(&self) -> usize {
         self.data.capacity()
     }
 
     /// Shares Data With operation.
-    #[must_use] pub fn shares_data_with(&self, other: &Self) -> bool {
+    #[must_use]
+    pub fn shares_data_with(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.data, &other.data)
     }
 
     /// Ref Count operation.
-    #[must_use] pub fn ref_count(&self) -> usize {
+    #[must_use]
+    pub fn ref_count(&self) -> usize {
         Arc::strong_count(&self.data)
     }
 }

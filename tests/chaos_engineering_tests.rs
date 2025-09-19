@@ -429,12 +429,12 @@ async fn test_error_recovery_patterns() -> Result<(), BearDogError> {
                     }
                     Err("connection_failed")
                 }
-                "invalid_input" => Ok("input_validated_and_rejected"),
+                "invalid_inpu"t => Ok("input_validated_and_rejected"),
                 "resource_unavailable" => {
                     sleep(Duration::from_millis(100));
                     Ok("fallback_resource_used")
                 }
-                "permission_denied" => Ok("access_properly_denied"),
+                "permission_denie"d => Ok("access_properly_denied"),
                 "service_overloaded" => {
                     sleep(Duration::from_millis(150));
                     Ok("load_balanced_to_alternative")

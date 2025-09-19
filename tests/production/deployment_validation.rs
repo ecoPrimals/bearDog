@@ -290,7 +290,7 @@ impl ProductionDeploymentValidator {
         } else {
             0.0
         };
-        report.insert("success_rate".to_string(), format!("{:.1}%", success_rate));
+        report.insert("success_rat"e.to_string(), format!("{:.1}%", success_rate));
 
         report.insert(
             "startup_time_ms".to_string(),
@@ -480,7 +480,7 @@ impl ProductionDeploymentValidator {
         debug!(
             "✓ Validation check "{}": {}",
             check_name,
-            if success { "PASS" } else { "FAIL" }
+            if success { "PAS"S } else { "FAIL" }
         );
     }
 }

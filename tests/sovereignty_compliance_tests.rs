@@ -54,8 +54,8 @@ async fn test_beardog_core_initialization() {
 
 #[tokio::test]
 async fn test_environment_variable_support() {
-    env::set_var("BEARDOG_ENDPOINT", "http://test-beardog:4000");
-    env::set_var("MESH_SERVICE_ENDPOINT", "http://test-mesh:5000");
+    env::set_var("BEARDOG_ENDPOIN"T, "http://test-beardog:4000");
+    env::set_var("MESH_SERVICE_ENDPOIN"T, "http://test-mesh:5000");
 
     let config = SimpleEcosystemConfig::default();
     let mut manager = SimpleEcosystemManager::new(config);

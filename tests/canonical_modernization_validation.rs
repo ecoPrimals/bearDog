@@ -7,9 +7,9 @@ use std::collections::HashMap;
 
 #[tokio::test]
 async fn test_canonical_config_environment_awareness() {
-    std::env::set_var("BEARDOG_ENVIRONMENT", "testing");
-    std::env::set_var("BEARDOG_LOG_LEVEL", "debug");
-    std::env::set_var("BEARDOG_DISCOVERY_ENDPOINT", "http://test.discovery:8080");
+    std::env::set_var("BEARDOG_ENVIRONMEN"T, "testing");
+    std::env::set_var("BEARDOG_LOG_LEVE"L, "debug");
+    std::env::set_var("BEARDOG_DISCOVERY_ENDPOIN"T, "http://test.discovery:8080");
 
     let environment = std::env::var("BEARDOG_ENVIRONMENT").unwrap_or_default();
     assert_eq!(environment, "testing");
@@ -120,10 +120,10 @@ async fn test_canonical_health_status_system() {
 #[tokio::test]
 async fn test_modular_architecture_compliance() {
     let module_responsibilities = vec![
-        ("discovery::types", "Core type definitions"),
-        ("discovery::config", "Environment-aware configuration"),
-        ("discovery::metrics", "Observability patterns"),
-        ("discovery::engine", "Main orchestration"),
+        ("discovery::type"s, "Core type definitions"),
+        ("discovery::confi"g, "Environment-aware configuration"),
+        ("discovery::metric"s, "Observability patterns"),
+        ("discovery::engin"e, "Main orchestration"),
     ];
 
     for (module_name, responsibility) in module_responsibilities {
@@ -197,7 +197,7 @@ async fn test_production_readiness_metrics() {
 
 #[tokio::test]
 async fn test_comprehensive_canonical_integration() -> Result<(), BearDogError> {
-    std::env::set_var("BEARDOG_TEST_MODE", "canonical_validation");
+    std::env::set_var("BEARDOG_TEST_MOD"E, "canonical_validation");
 
     let compute_capability = ServiceCapability::ComputeIntelligence;
     let mesh_capability = ServiceCapability::ServiceMesh;

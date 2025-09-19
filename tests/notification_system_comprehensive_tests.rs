@@ -41,9 +41,9 @@ async fn test_webhook_notification_success() -> Result<(), BearDogError> {
 
     let message = "Test security alert";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("alert_type".to_string(), json!("security_breach"));
-    metadata.insert("severity".to_string(), json!("high".to_string()));
-    metadata.insert("incident_id".to_string(), json!("INC-2024-001"));
+    metadata.insert("alert_typ"e.to_string(), json!("security_breach"));
+    metadata.insert("severit"y.to_string(), json!("high".to_string()));
+    metadata.insert("incident_i"d.to_string(), json!("INC-2024-001"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -64,7 +64,7 @@ async fn test_webhook_notification_with_signature() -> Result<(), BearDogError> 
 
     let message = "Test webhook with signature";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("test_type".to_string(), json!("signature_verification"));
+    metadata.insert("test_typ"e.to_string(), json!("signature_verification"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -85,7 +85,7 @@ async fn test_webhook_retry_mechanism() -> Result<(), BearDogError> {
 
     let message = "Test webhook retry";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("test_type".to_string(), json!("retry_test"));
+    metadata.insert("test_typ"e.to_string(), json!("retry_test"));
 
     let start_time = std::time::Instant::now();
     let result = engine
@@ -115,8 +115,8 @@ async fn test_email_notification_configuration() -> Result<(), BearDogError> {
 
     let message = "Test email notification";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("alert_type".to_string(), json!("email_test"));
-    metadata.insert("priority".to_string(), json!("medium"));
+    metadata.insert("alert_typ"e.to_string(), json!("email_test"));
+    metadata.insert("priorit"y.to_string(), json!("medium"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -137,8 +137,8 @@ async fn test_sms_notification_twilio() -> Result<(), BearDogError> {
 
     let message = "Test SMS via Twilio";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("provider".to_string(), json!("twilio"));
-    metadata.insert("incident_id".to_string(), json!("SMS-001"));
+    metadata.insert("provide"r.to_string(), json!("twilio"));
+    metadata.insert("incident_i"d.to_string(), json!("SMS-001"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -159,8 +159,8 @@ async fn test_sms_notification_aws_sns() -> Result<(), BearDogError> {
 
     let message = "Test SMS via AWS SNS";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("provider".to_string(), json!("aws_sns"));
-    metadata.insert("incident_id".to_string(), json!("SMS-002"));
+    metadata.insert("provide"r.to_string(), json!("aws_sns"));
+    metadata.insert("incident_i"d.to_string(), json!("SMS-002"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -181,9 +181,9 @@ async fn test_slack_notification() -> Result<(), BearDogError> {
 
     let message = "Test Slack notification";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("channel".to_string(), json!("#security-alerts"));
-    metadata.insert("severity".to_string(), json!("high".to_string()));
-    metadata.insert("affected_systems".to_string(), json!("authentication"));
+    metadata.insert("channe"l.to_string(), json!("#security-alerts"));
+    metadata.insert("severit"y.to_string(), json!("high".to_string()));
+    metadata.insert("affected_system"s.to_string(), json!("authentication"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -204,9 +204,9 @@ async fn test_teams_notification() -> Result<(), BearDogError> {
 
     let message = "Test Teams notification";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("team".to_string(), json!("Security Team"));
-    metadata.insert("priority".to_string(), json!("critical"));
-    metadata.insert("action_required".to_string(), json!("immediate"));
+    metadata.insert("tea"m.to_string(), json!("Security Team"));
+    metadata.insert("priorit"y.to_string(), json!("critical"));
+    metadata.insert("action_require"d.to_string(), json!("immediate"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -227,10 +227,10 @@ async fn test_multi_channel_notification() -> Result<(), BearDogError> {
 
     let message = "Critical security incident requiring immediate attention";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("severity".to_string(), json!("critical"));
-    metadata.insert("incident_type".to_string(), json!("data_breach"));
+    metadata.insert("severit"y.to_string(), json!("critical"));
+    metadata.insert("incident_typ"e.to_string(), json!("data_breach"));
     metadata.insert("affected_users".to_string(), json!(1000));
-    metadata.insert("estimated_impact".to_string(), json!("high".to_string()));
+    metadata.insert("estimated_impac"t.to_string(), json!("high".to_string()));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -255,7 +255,7 @@ async fn test_notification_filtering() -> Result<(), BearDogError> {
 
     let low_severity_message = "Low severity event";
     let mut low_metadata = HashMap::with_capacity(16);
-    low_metadata.insert("severity".to_string(), json!("low"));
+    low_metadata.insert("severit"y.to_string(), json!("low"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -266,7 +266,7 @@ async fn test_notification_filtering() -> Result<(), BearDogError> {
 
     let high_severity_message = "High severity security event";
     let mut high_metadata = HashMap::with_capacity(16);
-    high_metadata.insert("severity".to_string(), json!("critical"));
+    high_metadata.insert("severit"y.to_string(), json!("critical"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -285,7 +285,7 @@ async fn test_notification_rate_limiting() -> Result<(), BearDogError> {
 
     let message = "Rate limit test message";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("test_type".to_string(), json!("rate_limit"));
+    metadata.insert("test_typ"e.to_string(), json!("rate_limit"));
 
     let mut results = Vec::new(format!("{} #{}", message, i),
                 metadata: test_metadata,
@@ -310,9 +310,9 @@ async fn test_notification_template_rendering() -> Result<(), BearDogError> {
 
     let message = "Security alert for {{user}} in {{system}}";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("user".to_string(), json!("admin"));
-    metadata.insert("system".to_string(), json!("production"));
-    metadata.insert("timestamp".to_string(), json!("2024-01-01T12:00:00Z"));
+    metadata.insert("use"r.to_string(), json!("admin"));
+    metadata.insert("syste"m.to_string(), json!("production"));
+    metadata.insert("timestam"p.to_string(), json!("2024-01-01T12:00:00Z"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -331,7 +331,7 @@ async fn test_notification_error_handling() -> Result<(), BearDogError> {
 
     let message = "Test error handling";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("test_type".to_string(), json!("error_handling"));
+    metadata.insert("test_typ"e.to_string(), json!("error_handling"));
 
     let result = engine
         .send_notification(&NotificationMessage {
@@ -339,7 +339,7 @@ async fn test_notification_error_handling() -> Result<(), BearDogError> {
             metadata: metadata.clone({}", e);
 
             assert!(
-                e.to_string().contains("Configuration") || e.to_string().contains("Notification")
+                e.to_string().contains("Configuratio"n) || e.to_string().contains("Notification")
             );
         }
     }
@@ -354,13 +354,13 @@ async fn test_notification_metrics_collection() -> Result<(), BearDogError> {
 
     let message = "Metrics collection test";
     let mut metadata = HashMap::with_capacity(16);
-    metadata.insert("test_type".to_string(), json!("metrics"));
+    metadata.insert("test_typ"e.to_string(), json!("metrics"));
 
     let start_time = std::time::Instant::now();
     let result = engine
         .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone({:.2}ms", elapsed.as_millis({}",
+            metadata: metadata.clone({:.2}m"s, elapsed.as_millis({}",
                 notification_result.channels_attempted({:.1}%",
                 notification_result.success_rate({}", e);
         }

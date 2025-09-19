@@ -26,7 +26,8 @@ pub struct SafeBufferPool {
 impl SafeBufferPool {
     /// Creates a new safe buffer pool
     /// Creates a new instance
-    #[must_use] pub fn new(max_pool_size: usize) -> Self {
+    #[must_use]
+    pub fn new(max_pool_size: usize) -> Self {
         Self {
             pools: HashMap::with_capacity(16),
             stats: PoolStats::default(),
@@ -78,7 +79,8 @@ impl SafeBufferPool {
     /// Gets statistics about pool usage
     /// Gets stats
     /// Gets stats
-    #[must_use] pub fn get_stats(&self) -> &PoolStats {
+    #[must_use]
+    pub fn get_stats(&self) -> &PoolStats {
         &self.stats
     }
 

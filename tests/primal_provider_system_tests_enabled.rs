@@ -108,8 +108,8 @@ async fn test_beardog_primal_provider_requests() -> BearDogResult<()> {
     let encryption_request = ServiceRequest {
         request_id: Uuid::new_v4(),
         request_type: request_types::SECURITY_ENCRYPT.to_string(json!({
-            "data": "sensitive information",
-            "algorithm": "AES-256-GCM"
+            "dat"a: "sensitive information",
+            "algorith"m: "AES-256-GCM"
         }),
         timestamp: chrono::Utc::now(RequestPriority::High,
         metadata: HashMap::with_capacity(16),
@@ -134,9 +134,9 @@ async fn test_beardog_primal_provider_requests() -> BearDogResult<()> {
     let auth_request = ServiceRequest {
         request_id: Uuid::new_v4(),
         request_type: request_types::SECURITY_AUTHENTICATE.to_string(json!({
-            "username": "test-user",
-            "password": "secure-password",
-            "mfa_token": "123456"
+            "usernam"e: "test-user",
+            "passwor"d: "secure-password",
+            "mfa_toke"n: "123456"
         }),
         timestamp: chrono::Utc::now(RequestPriority::Critical,
         metadata: HashMap::with_capacity(16),
@@ -176,14 +176,14 @@ async fn test_universal_ecosystem_manager() -> BearDogResult<()> {
     let provider_config = ProviderConfig {
         provider_config: {
             let mut config = HashMap::with_capacity(16);
-            config.insert("security_level".to_string(), json!("high".to_string()));
-            config.insert("encryption_default".to_string(), json!("AES-256-GCM"));
+            config.insert("security_leve"l.to_string(), json!("high".to_string()));
+            config.insert("encryption_defaul"t.to_string(), json!("AES-256-GCM"));
             config
         },
         ecosystem_config: {
             let mut config = HashMap::with_capacity(16);
-            config.insert("ecosystem_version".to_string(), json!("1.0.0"));
-            config.insert("cluster_name".to_string(), json!("test-cluster"));
+            config.insert("ecosystem_versio"n.to_string(), json!("1.0.0"));
+            config.insert("cluster_nam"e.to_string(), json!("test-cluster"));
             config
         },
         network_config: NetworkConfig::default(),
@@ -253,15 +253,15 @@ async fn test_cross_ecosystem_request_routing() -> BearDogResult<()> {
     let cross_ecosystem_request = ServiceRequest {
         request_id: Uuid::new_v4(),
         request_type: request_types::SECURITY_ENCRYPT.to_string(json!({
-            "data": "cross-ecosystem sensitive data",
-            "algorithm": "AES-256-GCM",
-            "source_ecosystem": "mesh-service"
+            "dat"a: "cross-ecosystem sensitive data",
+            "algorith"m: "AES-256-GCM",
+            "source_ecosyste"m: "mesh-service"
         }),
         timestamp: chrono::Utc::now(RequestPriority::High,
         metadata: {
             let mut metadata = HashMap::with_capacity(16);
-            metadata.insert("cross_ecosystem".to_string(), "true".to_string());
-            metadata.insert("requesting_service".to_string(), "songbird-discovery");
+            metadata.insert("cross_ecosyste"m.to_string(), "true".to_string());
+            metadata.insert("requesting_servic"e.to_string(), "songbird-discovery");
             metadata
         },
         context: RequestContext {
@@ -272,7 +272,7 @@ async fn test_cross_ecosystem_request_routing() -> BearDogResult<()> {
             target_ecosystem: Some(ecosystem_ids::BEARDOG.to_string()),
             metadata: {
                 let mut metadata = HashMap::with_capacity(16);
-                metadata.insert("route_type".to_string(), "cross_ecosystem");
+                metadata.insert("route_typ"e.to_string(), "cross_ecosystem");
                 metadata
             },
         },
@@ -347,12 +347,12 @@ async fn test_primal_provider_lifecycle() -> BearDogResult<()> {
         provider_config: {
             let mut config = HashMap::with_capacity(16);
             config.insert("test_mode".to_string(), json!(true));
-            config.insert("security_level".to_string(), json!("maximum"));
+            config.insert("security_leve"l.to_string(), json!("maximum"));
             config
         },
         ecosystem_config: {
             let mut config = HashMap::with_capacity(16);
-            config.insert("ecosystem_version".to_string(), json!("1.0.0"));
+            config.insert("ecosystem_versio"n.to_string(), json!("1.0.0"));
             config
         },
         network_config: NetworkConfig {
@@ -442,7 +442,7 @@ async fn test_capability_attributes() -> BearDogResult<()> {
                     assert!(!attr_value.value.is_empty());
                 }
                 AttributeDataType::Boolean => {
-                    assert!(attr_value.value == "true".to_string() || attr_value.value == "false");
+                    assert!(attr_value.value == "tru"e.to_string() || attr_value.value == "false");
                 }
                 AttributeDataType::Integer => {
                     assert!(attr_value.value.parse::<i64>().is_ok());
@@ -537,7 +537,7 @@ mod test_helpers {
         async fn handle_request(&self, request: ServiceRequest) -> BearDogResult<ServiceResponse> {
             Ok(ServiceResponse {
                 request_id: request.request_id.clone(true,
-                payload: json!({"result": "mock computation completed"}),
+                payload: json!({"resul"t: "mock computation completed"}),
                 timestamp: chrono::Utc::now(),
                 metadata: HashMap::with_capacity(None,
             })
@@ -573,7 +573,7 @@ mod test_helpers {
                 description: "Mock compute provider for testing".to_string(),
                 author: "Test Suite".to_string(None,
                 license: "MIT".to_string(),
-                tags: vec!["compute".to_string(), "mock".to_string()],
+                tags: vec!["comput"e.to_string(), "mock".to_string()],
                 custom: HashMap::with_capacity(16),
             }
         }
@@ -645,7 +645,7 @@ async fn test_multi_provider_ecosystem() -> BearDogResult<()> {
     let security_request = ServiceRequest {
         request_id: Uuid::new_v4(),
         request_type: request_types::SECURITY_ENCRYPT.to_string(),
-        payload: json!({"data": "test data"}),
+        payload: json!({"dat"a: "test data"}),
         timestamp: chrono::Utc::now(RequestPriority::Normal,
         metadata: HashMap::with_capacity(16),
         context: RequestContext {
@@ -663,7 +663,7 @@ async fn test_multi_provider_ecosystem() -> BearDogResult<()> {
     let compute_request = ServiceRequest {
         request_id: Uuid::new_v4(),
         request_type: request_types::COMPUTE_EXECUTE.to_string(),
-        payload: json!({"code": "print('hello world')"}),
+        payload: json!({"cod"e: "print('hello world')"}),
         timestamp: chrono::Utc::now(RequestPriority::Normal,
         metadata: HashMap::with_capacity(16),
         context: RequestContext {
@@ -699,8 +699,8 @@ async fn test_primal_provider_performance() -> BearDogResult<()> {
             let request = ServiceRequest {
                 request_id: Uuid::new_v4(),
                 request_type: request_types::SECURITY_ENCRYPT.to_string(json!({
-                    "data": format!("concurrent test data {}", i),
-                    "algorithm": "AES-256-GCM"
+                    "dat"a: format!("concurrent test data {}", i),
+                    "algorith"m: "AES-256-GCM"
                 }),
                 timestamp: chrono::Utc::now(RequestPriority::Normal,
                 metadata: HashMap::with_capacity(RequestContext {

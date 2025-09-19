@@ -47,7 +47,7 @@ async fn test_android_strongbox_provider(harness: &mut HsmTestHarness) -> Result
     assert_eq!(key.key_id, "test_strongbox_key");
     assert_eq!(key.key_type, KeyType::Symmetric);
 
-    let test_data = b"test signature data for strongbox";
+    let test_data = "btest signature data for strongbox";
     let signature = harness
         .android_strongbox
         .sign(&key.key_id, test_data)
@@ -106,7 +106,7 @@ async fn test_software_hsm_provider(harness: &mut HsmTestHarness) -> Result<(), 
             key_type,
             KeyType::Aes256 | KeyType::Aes128 | KeyType::Aes192 | KeyType::ChaCha20
         ) {
-            let plaintext = b"test encryption data";
+            let plaintext = "btest encryption data";
             let ciphertext = harness
                 .software_hsm
                 .encrypt(&key.metadata.key_id, plaintext)
@@ -128,7 +128,7 @@ async fn test_software_hsm_provider(harness: &mut HsmTestHarness) -> Result<(), 
                 | KeyType::EccP521
                 | KeyType::Ed25519
         ) {
-            let test_data = b"test signature data";
+            let test_data = "btest signature data";
             let signature = harness
                 .software_hsm
                 .sign(&key.metadata.key_id, test_data)
@@ -183,7 +183,7 @@ async fn test_provider_compatibility(harness: &mut HsmTestHarness) -> Result<(),
             key_id: "attested_key".to_string(KeyType::EccP256,
             usage_policy: KeyUsagePolicy::default(),
             metadata: KeyMetadata::default(false,
-            attestation_challenge: Some(b"test_challenge".to_vec()),
+            attestation_challenge: Some("btest_challenge".to_vec()),
         };
 
         let key = harness.android_strongbox.generate_key(key_request)?;

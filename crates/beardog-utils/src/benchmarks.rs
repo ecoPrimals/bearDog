@@ -128,7 +128,8 @@ impl Default for BenchmarkConfig {
 
 impl BenchmarkSuite {
     /// Creates a new instance
-    #[must_use] pub fn new(config: BenchmarkConfig) -> Self {
+    #[must_use]
+    pub fn new(config: BenchmarkConfig) -> Self {
         Self {
             benchmarks: HashMap::with_capacity(16),
             config,
@@ -271,17 +272,20 @@ impl BenchmarkSuite {
 
     /// Gets result
     /// Gets result
-    #[must_use] pub fn get_result(&self, name: &str) -> Option<&BenchmarkResult> {
+    #[must_use]
+    pub fn get_result(&self, name: &str) -> Option<&BenchmarkResult> {
         self.benchmarks.get(name)
     }
 
     /// Gets `all_results`
     /// Gets `all_results`
-    #[must_use] pub fn get_all_results(&self) -> &HashMap<String, BenchmarkResult> {
+    #[must_use]
+    pub fn get_all_results(&self) -> &HashMap<String, BenchmarkResult> {
         &self.benchmarks
     }
 
-    #[must_use] pub fn generate_report(&self) -> PerformanceReport {
+    #[must_use]
+    pub fn generate_report(&self) -> PerformanceReport {
         let mut excellent_count = 0;
         let mut good_count = 0;
         let mut average_count = 0;

@@ -2,7 +2,11 @@
 //
 // **MODERNIZED**: Clean, production-ready threat intelligence feed processing.
 
-use crate::threat::types::{ThreatDetectionEngine, ThreatEvent, ThreatIntelligenceFeed, ThreatIndicator, IndicatorType, ThreatSource, SourceClassification, ThreatTarget, AssetCriticality, ProtectionLevel, ThreatSeverity, ThreatType, ThreatStatus, DetectionMethod, ThreatAction};
+use crate::threat::types::{
+    AssetCriticality, DetectionMethod, IndicatorType, ProtectionLevel, SourceClassification,
+    ThreatAction, ThreatDetectionEngine, ThreatEvent, ThreatIndicator, ThreatIntelligenceFeed,
+    ThreatSeverity, ThreatSource, ThreatStatus, ThreatTarget, ThreatType,
+};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -200,7 +204,8 @@ impl ThreatDetectionEngine {
     /// Get threat feed statistics
     /// Gets `feed_statistics`
     /// Gets `feed_statistics`
-    #[must_use] pub fn get_feed_statistics(&self) -> ThreatFeedStats {
+    #[must_use]
+    pub fn get_feed_statistics(&self) -> ThreatFeedStats {
         let total_feeds = self.threat_feeds.len();
         let total_indicators: usize = self
             .threat_feeds

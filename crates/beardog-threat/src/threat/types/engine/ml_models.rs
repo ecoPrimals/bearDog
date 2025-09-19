@@ -223,7 +223,8 @@ pub struct ModelTrainingConfig {
 impl MlModel {
     /// Create a new ML model
     /// Creates a new instance
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         name: &str,
         description: &str,
         model_type: MlModelType,
@@ -256,12 +257,14 @@ impl MlModel {
     /// Check if model is high accuracy
     /// Checks if high accuracy
     /// Checks if high accuracy
-    #[must_use] pub fn is_high_accuracy(&self) -> bool {
+    #[must_use]
+    pub fn is_high_accuracy(&self) -> bool {
         self.accuracy > 0.85
     }
 
     /// Check if model needs retraining
-    #[must_use] pub fn needs_retraining(&self) -> bool {
+    #[must_use]
+    pub fn needs_retraining(&self) -> bool {
         let days_since_training = (Utc::now() - self.last_trained).num_days();
         days_since_training > 30 || self.accuracy < 0.7
     }
@@ -269,7 +272,8 @@ impl MlModel {
     /// Get model age in days
     /// Gets `age_days`
     /// Gets `age_days`
-    #[must_use] pub fn get_age_days(&self) -> i64 {
+    #[must_use]
+    pub fn get_age_days(&self) -> i64 {
         (Utc::now() - self.created_at).num_days()
     }
 
@@ -308,7 +312,8 @@ impl MlModel {
     }
 
     /// Get model summary
-    #[must_use] pub fn summary(&self) -> ModelSummary {
+    #[must_use]
+    pub fn summary(&self) -> ModelSummary {
         ModelSummary {
             id: self.id.clone(),
             name: self.name.clone(),
@@ -369,7 +374,8 @@ impl Default for ModelPerformanceMetrics {
 
 impl ConfusionMatrix {
     /// Calculate accuracy from confusion matrix
-    #[must_use] pub fn accuracy(&self) -> f64 {
+    #[must_use]
+    pub fn accuracy(&self) -> f64 {
         let total =
             self.true_positives + self.true_negatives + self.false_positives + self.false_negatives;
         if total == 0 {
@@ -380,7 +386,8 @@ impl ConfusionMatrix {
     }
 
     /// Calculate precision from confusion matrix
-    #[must_use] pub fn precision(&self) -> f64 {
+    #[must_use]
+    pub fn precision(&self) -> f64 {
         let predicted_positive = self.true_positives + self.false_positives;
         if predicted_positive == 0 {
             0.0
@@ -390,7 +397,8 @@ impl ConfusionMatrix {
     }
 
     /// Calculate recall from confusion matrix
-    #[must_use] pub fn recall(&self) -> f64 {
+    #[must_use]
+    pub fn recall(&self) -> f64 {
         let actual_positive = self.true_positives + self.false_negatives;
         if actual_positive == 0 {
             0.0
@@ -400,7 +408,8 @@ impl ConfusionMatrix {
     }
 
     /// Calculate F1 score from confusion matrix
-    #[must_use] pub fn f1_score(&self) -> f64 {
+    #[must_use]
+    pub fn f1_score(&self) -> f64 {
         let precision = self.precision();
         let recall = self.recall();
         if precision + recall == 0.0 {
@@ -414,7 +423,8 @@ impl ConfusionMatrix {
 impl ModelPrediction {
     /// Create a new model prediction
     /// Creates a new instance
-    #[must_use] pub fn new(model_id: &str, prediction: PredictionValue, confidence: f64) -> Self {
+    #[must_use]
+    pub fn new(model_id: &str, prediction: PredictionValue, confidence: f64) -> Self {
         Self {
             model_id: model_id.to_string(),
             prediction,
@@ -430,7 +440,8 @@ impl ModelPrediction {
     /// Check if prediction is high confidence
     /// Checks if high confidence
     /// Checks if high confidence
-    #[must_use] pub fn is_high_confidence(&self) -> bool {
+    #[must_use]
+    pub fn is_high_confidence(&self) -> bool {
         self.confidence > 0.8
     }
 

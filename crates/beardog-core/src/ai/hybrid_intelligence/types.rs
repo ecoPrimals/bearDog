@@ -5,7 +5,9 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 // Import core types from the new module
-use crate::ai::hybrid_intelligence::core_types::{IntelligenceCapability, ModelType, MachineLearningConfig};
+use crate::ai::hybrid_intelligence::core_types::{
+    IntelligenceCapability, MachineLearningConfig, ModelType,
+};
 use crate::ai::hybrid_intelligence::decision_engine::{
     ConsensusStrategy, DecisionCriteria, DecisionStrategy,
 };

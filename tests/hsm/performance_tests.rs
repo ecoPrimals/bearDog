@@ -39,7 +39,7 @@ async fn test_signing_performance(harness: &mut HsmTestHarness) -> Result<(), Be
 
     let iterations = 100;
     let mut total_time = 0.0;
-    let test_data = b"performance test data for signing benchmarks";
+    let test_data = "bperformance test data for signing benchmarks";
 
     for _i in 0..iterations {
         let start_time = std::time::Instant::now({:.2}ms", avg_time);
@@ -55,7 +55,7 @@ async fn test_encryption_performance(harness: &mut HsmTestHarness) -> Result<(),
 
     let iterations = 100;
     let mut total_time = 0.0;
-    let test_data = b"performance test data for encryption benchmarks with sufficient length";
+    let test_data = "bperformance test data for encryption benchmarks with sufficient length";
 
     for _i in 0..iterations {
         let start_time = std::time::Instant::now({:.2}ms", avg_time);

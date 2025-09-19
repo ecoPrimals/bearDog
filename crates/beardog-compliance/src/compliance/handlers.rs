@@ -25,7 +25,8 @@ pub struct ComplianceHandler {
 impl ComplianceHandler {
     /// New operation.
     /// Creates a new instance
-    #[must_use] pub fn new(config: ComplianceConfig) -> Self {
+    #[must_use]
+    pub fn new(config: ComplianceConfig) -> Self {
         let enabled_standards = config.enabled_standards.clone();
 
         Self {
@@ -199,7 +200,8 @@ impl ComplianceHandler {
     }
 
     /// Generate Metrics operation.
-    #[must_use] pub fn generate_metrics(&self) -> ComplianceMetrics {
+    #[must_use]
+    pub fn generate_metrics(&self) -> ComplianceMetrics {
         let recent_violations: Vec<ComplianceViolation> = Vec::new(); // Would be populated from recent evaluations
 
         let mut standards_compliance = HashMap::with_capacity(16);

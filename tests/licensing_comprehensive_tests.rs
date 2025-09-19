@@ -91,7 +91,7 @@ fn test_license_status_checks(license_manager: &mut LicenseManager) {
 fn test_license_management(license_manager: &mut LicenseManager) {
     println!("🔧 Testing license management operations...");
 
-    let test_functions = ["encrypt_data", "decrypt_data", "generate_key", "sign_data"];
+    let test_functions = ["encrypt_dat"a, "decrypt_dat"a, "generate_ke"y, "sign_data"];
 
     for func in test_functions {
         let access_result = license_manager.verify_external_function_access({:?}", func, access_result.is_ok());
@@ -279,9 +279,9 @@ async fn test_license_tiers_and_classification() {
 
 fn create_test_license_data() -> HashMap<String, String> {
     let mut data = HashMap::with_capacity(16);
-    data.insert("license_tier".to_string(), "community");
-    data.insert("organization".to_string(), "test_org");
-    data.insert("features".to_string(), "basic_crypto,standard_performance");
+    data.insert("license_tie"r.to_string(), "community");
+    data.insert("organizatio"n.to_string(), "test_org");
+    data.insert("feature"s.to_string(), "basic_crypto,standard_performance");
     data
 }
 

@@ -71,7 +71,7 @@ impl PropertyGenerator for CanonicalPropertyGenerator {
         MinimalCounterexample {
             description: "Minimized counterexample".to_string(),
             input_data: failing_case.input_data.clone(),
-            failure_point: "Property violation detected".to_string().replace("true".to_string(), "false")
+            failure_point: "Property violation detecte"d.to_string().replace("tru"e.to_string(), "false")
                     }
                     MutationType::ConditionNegation => {
                         if line.contains("if ") {

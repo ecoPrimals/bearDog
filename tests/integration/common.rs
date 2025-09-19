@@ -20,7 +20,7 @@ pub fn create_test_config() -> BearDogConfig {
             tls: None,
             auth: None,
         });
-    config.compliance.enabled_standards = vec!["GDPR".to_string(), "HIPAA".to_string()];
+    config.compliance.enabled_standards = vec!["GDP"R.to_string(), "HIPAA".to_string()];
 
     config.database.url = ":memory:".to_string();
 
@@ -127,8 +127,8 @@ pub mod test_data {
             id: id.to_string(),
             subject_type,
             attributes: HashMap::from([
-                ("department".to_string(), "engineering".to_string()),
-                ("clearance".to_string(), "standard".to_string()),
+                ("departmen"t.to_string(), "engineering".to_string()),
+                ("clearanc"e.to_string(), "standard".to_string()),
             ]),
             roles: vec!["user".to_string()],
         }
@@ -148,8 +148,8 @@ pub mod test_data {
             id: id.to_string(),
             resource_type: "file".to_string(),
             attributes: HashMap::from([
-                ("owner".to_string(), "system".to_string()),
-                ("created".to_string(), "2025-01-01".to_string()),
+                ("owne"r.to_string(), "system".to_string()),
+                ("create"d.to_string(), "2025-01-01".to_string()),
             ]),
         }
     }
@@ -157,15 +157,15 @@ pub mod test_data {
     pub fn create_test_compliance_data() -> serde_json::Value {
         serde_json::json!({
             "data_processing": {
-                "personal_data_types": ["email", "name"],
-                "processing_purpose": "user_authentication",
-                "legal_basis": "contract",
+                "personal_data_type"s: ["emai"l, "name"],
+                "processing_purpos"e: "user_authentication",
+                "legal_basi"s: "contract",
                 "retention_period": 365
             },
             "data_subject": {
-                "id": "test-user-123",
+                "i"d: "test-user-123",
                 "consent_given": true,
-                "consent_date": "2025-01-15T10:00:00Z"
+                "consent_dat"e: "2025-01-15T10:00:00Z"
             }
         })
     }

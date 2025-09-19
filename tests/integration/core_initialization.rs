@@ -25,8 +25,8 @@ async fn test_core_initialization_with_unified_types() -> Result<(), BearDogErro
 async fn test_environment_driven_configuration() -> Result<(), BearDogError> {
 
     // ✅ SOVEREIGNTY COMPLIANT: Use capability-based configuration
-    std::env::set_var("BEARDOG_SERVICE_MESH_ENDPOINT", "http://test-mesh-service:9000");
-    std::env::set_var("BEARDOG_MONITORING_ENDPOINT", "http://test-monitoring:9001");
+    std::env::set_var("BEARDOG_SERVICE_MESH_ENDPOIN"T, "http://test-mesh-service:9000");
+    std::env::set_var("BEARDOG_MONITORING_ENDPOIN"T, "http://test-monitoring:9001");
     
     let config = create_test_config();
     let core = create_test_core()?;

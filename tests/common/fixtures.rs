@@ -167,7 +167,7 @@ impl TestFixtures {
                 user_id: "admin_001".to_string(),
                 username: "admin".to_string(),
                 email: "admin@beardog.test".to_string(),
-                roles: vec!["admin".to_string(), "user".to_string()],
+                roles: vec!["admi"n.to_string(), "user".to_string()],
                 permissions: vec!["*".to_string()
                 .as_object()
                 .unwrap_or_else(|e| {
@@ -240,15 +240,15 @@ impl TestFixtures {
             .insert("integration".to_string(), integration_config);
 
         let mut performance_config = BearDogConfig::default("/api/v1/test",
-                "method": "POST",
+                "metho"d: "POST",
                 "headers": {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer test_token"
+                    "Content-Typ"e: "application/json",
+                    "Authorizatio"n: "Bearer test_token"
                 },
                 "body": {
-                    "action": "test_action",
+                    "actio"n: "test_action",
                     "data": {
-                        "test_field": "test_value"
+                        "test_fiel"d: "test_value"
                     }
                 }
             }),
@@ -269,18 +269,18 @@ impl TestFixtures {
         );
 
         self.datasets.insert("network_timeout",
-                    "error_type": "NetworkError",
-                    "trigger": "network_delay_5000ms"
+                    "error_typ"e: "NetworkError",
+                    "trigge"r: "network_delay_5000ms"
                 },
                 {
-                    "name": "invalid_signature",
-                    "error_type": "CryptoError",
-                    "trigger": "malformed_signature"
+                    "nam"e: "invalid_signature",
+                    "error_typ"e: "CryptoError",
+                    "trigge"r: "malformed_signature"
                 },
                 {
-                    "name": "resource_exhaustion",
-                    "error_type": "ResourceError",
-                    "trigger": "memory_limit_exceeded"
+                    "nam"e: "resource_exhaustion",
+                    "error_typ"e: "ResourceError",
+                    "trigge"r: "memory_limit_exceeded"
                 }
             ]),
         );
@@ -304,7 +304,7 @@ impl TestFixtures {
                 metadata: json!({
                     "test_user": true,
                     "temporary": true,
-                    "created_by": "test_fixtures"
+                    "created_b"y: "test_fixtures"
                 })
                 .as_object()
                 .unwrap_or_else(|e| {
@@ -377,7 +377,7 @@ impl TestFixtures {
                     .into());
                 }),
                 key_id: "test_key_001".to_string(),
-                signature: b"test_signature_bytes".to_vec(hex::decode(
+                signature: "btest_signature_bytes".to_vec(hex::decode(
                     "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
                 )
                 .unwrap_or_else(|e| {
@@ -390,9 +390,9 @@ impl TestFixtures {
                 }),
                 algorithm: "Ed25519".to_string(),
             nonce_samples: vec![
-                b"test_nonce_01".to_vec(),
-                b"test_nonce_02".to_vec(),
-                b"test_nonce_03".to_vec(),
+                "btest_nonce_01".to_vec(),
+                "btest_nonce_02".to_vec(),
+                "btest_nonce_03".to_vec(),
             ],
         }
     }
@@ -431,7 +431,7 @@ impl NetworkFixtures {
             peer_configs: vec![PeerConfigSample {
                 peer_id: "peer_001".to_string(),
                 address: "192.168.1.50".to_string(),
-                capabilities: vec!["crypto".to_string(), "genetics".to_string()],
+                capabilities: vec!["crypt"o.to_string(), "genetics".to_string()],
                 trust_level: "high".to_string().to_string(),
             }],
         }

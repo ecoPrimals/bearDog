@@ -21,11 +21,11 @@ mod core_coverage_tests {
         let health = service.health_check();
         assert!(
             health.is_ok(),
-             H"ealth check should succeed during operation"
+             "Health check should succeed during operation"
         );
         assert_eq!(
             health
-                .map_err(|e| BearDogError::system(format!( H"ealth check error: {:?}", e)))?
+                .map_err(|e| BearDogError::system(format!("Health check error: {:?}", e)))?
                 .status,
             ComponentStatus::Healthy
         );
@@ -39,14 +39,14 @@ mod core_coverage_tests {
     #[async_test]
     async fn test_error_handling_comprehensive() {
         let error_scenarios = vec![
-            BearDogError::validation( T"est validation error "),
-            BearDogError::system( T"est system error "),
-            BearDogError::network( T"est network error "),
+            BearDogError::validation( "Test validation error "),
+            BearDogError::system( "Test system error "),
+            BearDogError::network( "Test network error "),
         ];
 
         for error in error_scenarios {
             let handled = handle_error_scenario(error);
-            assert!(handled.is_ok(),  E"rror handling should succeed");
+            assert!(handled.is_ok(),  "Error handling should succeed");
         }
     }
 
@@ -101,7 +101,7 @@ mod security_coverage_tests {
             let key_result = provider.generate_key(&key_spec);
             assert!(
                 key_result.is_ok(),
-                 K"ey generation should succeed for {:?}",
+                 "Key generation should succeed for {:?}",
                 algorithm
             );
         }
@@ -122,7 +122,7 @@ mod security_coverage_tests {
         let key = provider
             .generate_key(&key_spec)
             .map_err(|e| BearDogError::system({:?}", e))?;
-        let test_data = b c"omprehensive test data for signature verification";
+        let test_data = b "comprehensive test data for signature verification";
 
         let signature = provider
             .sign(&key, test_data)
@@ -131,7 +131,7 @@ mod security_coverage_tests {
             .verify(&key, test_data, &signature)
             .map_err(|e| BearDogError::system({:?}", e))?;
 
-        assert!(verification,  S"ignature verification should succeed");
+        assert!(verification,  "Signature verification should succeed");
     }
 
     #[async_test]
@@ -145,8 +145,8 @@ mod security_coverage_tests {
             key_derivation: KeyDerivationMethod::Pbkdf2,
         };
 
-        let test_data = b c"omprehensive test data for encryption";
-        let passphrase =  t"est-passphrase-for-comprehensive-testing";
+        let test_data = b "comprehensive test data for encryption";
+        let passphrase =  "test-passphrase-for-comprehensive-testing";
 
         let encrypted = provider
             .encrypt(test_data, passphrase, &encryption_spec)
@@ -158,7 +158,7 @@ mod security_coverage_tests {
         assert_eq!(
             test_data,
             decrypted.as_slice(),
-             D"ecrypted data should match original"
+             "Decrypted data should match original"
         );
     }
 
@@ -178,11 +178,11 @@ mod monitoring_coverage_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         monitor
-            .record_operation_start( t"est_operation")
+            .record_operation_start( "test_operation")
             .map_err(|e| BearDogError::system({:?}", e))?;
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
         monitor
-            .record_operation_end( t"est_operation")
+            .record_operation_end( "test_operation")
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let metrics = monitor
@@ -190,7 +190,7 @@ mod monitoring_coverage_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             !metrics.operations.is_empty(),
-             S"hould have recorded operation metrics"
+             "Should have recorded operation metrics"
         );
     }
 
@@ -203,12 +203,12 @@ mod monitoring_coverage_tests {
         let test_threat = ThreatIndicator {
             threat_type: ThreatType::Anomaly,
             severity: ThreatSeverity::Medium,
-            description:  T"est threat for comprehensive coverage".to_string(),
+            description:  "Test threat for comprehensive coverage".to_string(),
             metadata: std::collections::HashMap::with_capacity(16),
         };
 
         let detection_result = sentinel.detect_threat(&test_threat);
-        assert!(detection_result.is_ok(),  T"hreat detection should succeed");
+        assert!(detection_result.is_ok(),  "Threat detection should succeed");
     }
 
     #[async_test]
@@ -219,12 +219,12 @@ mod monitoring_coverage_tests {
 
         let test_alert = Alert {
             id: uuid::Uuid::new_v4(AlertSeverity::Warning,
-            message:  C"omprehensive test alert".to_string(),
+            message:  "Comprehensive test alert".to_string(),
             timestamp: std::time::SystemTime::now(false,
         };
 
         let alert_result = alert_manager.process_alert(&test_alert);
-        assert!(alert_result.is_ok(),  A"lert processing should succeed");
+        assert!(alert_result.is_ok(),  "Alert processing should succeed");
     }
 
     fn create_monitoring_config() -> MonitoringConfig {
@@ -245,7 +245,7 @@ mod genetics_coverage_tests {
         let spawn_purposes = vec![
             SpawnPurpose::SecurityOptimization,
             SpawnPurpose::PerformanceOptimization,
-            SpawnPurpose::EcosystemIntegration( t"est-service".to_string()),
+            SpawnPurpose::EcosystemIntegration( "test-service".to_string()),
         ];
 
         for purpose in spawn_purposes {
@@ -257,7 +257,7 @@ mod genetics_coverage_tests {
             let spawn_result = engine.spawn_genetics(spawn_request);
             assert!(
                 spawn_result.is_ok(),
-                 G"enetic spawning should succeed for {:?}",
+                 "Genetic spawning should succeed for {:?}",
                 purpose
             );
         }
@@ -284,12 +284,12 @@ mod genetics_coverage_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             fitness.overall_score > 0.0,
-             F"itness evaluation should produce positive score"
+             "Fitness evaluation should produce positive score"
         );
 
         let evolution_request = GeneticEvolutionRequest {
             current_generation: generation_0,
-            target_improvements: vec![ s"ecurity".to_string(EvolutionPressure::Moderate,
+            target_improvements: vec![ "security".to_string(EvolutionPressure::Moderate,
         };
 
         let generation_1 = engine
@@ -297,7 +297,7 @@ mod genetics_coverage_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             !generation_1.genetic_traits.is_empty(),
-             E"volution should produce genetic traits"
+             "Evolution should produce genetic traits"
         );
     }
 
@@ -308,7 +308,7 @@ mod genetics_coverage_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let parent1 = create_test_genetics(0.7,
-            preservation_traits: vec![ s"ecurity".to_string()],
+            preservation_traits: vec![ "security".to_string()],
         };
 
         let offspring = engine
@@ -316,7 +316,7 @@ mod genetics_coverage_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             !offspring.genetic_traits.is_empty(),
-             C"rossover should produce offspring with traits"
+             "Crossover should produce offspring with traits"
         );
     }
 
@@ -329,11 +329,11 @@ mod genetics_coverage_tests {
             id: id.to_string(),
             genetic_traits: vec![
                 GeneticTrait {
-                    trait_type:  s"ecurity".to_string(0.8,
+                    trait_type:  "security".to_string(0.8,
                     dominance: TraitDominance::Dominant,
                 },
                 GeneticTrait {
-                    trait_type:  p"erformance".to_string(0.6,
+                    trait_type:  "performance".to_string(0.6,
                     dominance: TraitDominance::Recessive,
                 },
             ],
@@ -365,7 +365,7 @@ mod integration_coverage_tests {
         );
 
         monitor
-            .record_operation_start( e"2e_test")
+            .record_operation_start( "e2e_test")
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let key_spec = KeyGenerationSpec {
@@ -387,21 +387,21 @@ mod integration_coverage_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         monitor
-            .record_operation_end( e"2e_test")
+            .record_operation_end( "e2e_test")
             .map_err(|e| BearDogError::system({:?}", e))?;
 
-        assert!(!key.public_key.is_empty(),  S"hould have generated key ");
+        assert!(!key.public_key.is_empty(),  "Should have generated key ");
         assert!(
             !genetics.genetic_traits.is_empty(),
-             S"hould have genetic traits"
+             "Should have genetic traits"
         );
 
         let metrics = monitor
             .get_metrics()
             .map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
-            metrics.operations.contains_key( e"2e_test"),
-             S"hould have recorded e2e operation"
+            metrics.operations.contains_key( "e2e_test"),
+             "Should have recorded e2e operation"
         );
     }
 
@@ -433,7 +433,7 @@ mod edge_case_coverage_tests {
             let result = simulate_resource_exhaustion(scenario, &config);
             assert!(
                 result.is_ok(),
-                 S"hould handle resource exhaustion gracefully"
+                 "Should handle resource exhaustion gracefully"
             );
         }
     }

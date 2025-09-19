@@ -21,7 +21,8 @@ use tracing::{debug, trace};
 
 /// Simple capability validation
 /// Checks if valid service capability
-#[must_use] pub fn is_valid_service_capability(capability: &str) -> bool {
+#[must_use]
+pub fn is_valid_service_capability(capability: &str) -> bool {
     matches!(
         capability,
         "communication_mesh"
@@ -38,7 +39,8 @@ use tracing::{debug, trace};
 
 /// Get all standard capabilities
 /// Gets `all_standard_capabilities`
-#[must_use] pub fn get_all_standard_capabilities() -> Vec<&'static str> {
+#[must_use]
+pub fn get_all_standard_capabilities() -> Vec<&'static str> {
     vec![
         "communication_mesh",
         "storage_services",
@@ -71,7 +73,8 @@ pub struct ZeroCopyManager {
 
 impl ZeroCopyManager {
     /// Creates a new instance
-    #[must_use] pub fn new() -> Self {
+    #[must_use]
+    pub fn new() -> Self {
         Self {
             string_cache: RwLock::new(HashMap::new()),
             config_cache: RwLock::new(HashMap::new()),

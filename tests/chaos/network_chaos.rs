@@ -69,7 +69,7 @@ impl NetworkChaosController {
         }
 
         self.crypto
-            .encrypt_aes_gcm(b"test_key", b"test_data", None)?;
+            .encrypt_aes_gcm("btest_key", "btest_data", None)?;
         Ok(())
     }
 }

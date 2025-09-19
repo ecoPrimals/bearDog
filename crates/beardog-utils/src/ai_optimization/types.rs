@@ -126,7 +126,8 @@ impl Default for PerformanceModel {
 
 impl PerformanceModel {
     /// Creates a new instance
-    #[must_use] pub fn new() -> Self {
+    #[must_use]
+    pub fn new() -> Self {
         Self {
             cpu_utilization_weights: vec![0.3, 0.2, 0.1, 0.4],
             memory_usage_weights: vec![0.4, 0.3, 0.2, 0.1],

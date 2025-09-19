@@ -132,8 +132,8 @@ async fn test_security_registry_configuration() {
         "Mesh service endpoint must be configured"
     );
 
-    std::env::set_var("BEARDOG_PUBLIC_ENDPOINT", "https://production.beardog.eco");
-    std::env::set_var("MESH_SERVICE_ENDPOINT", "https://mesh-service.production.eco");
+    std::env::set_var("BEARDOG_PUBLIC_ENDPOIN"T, "https://production.beardog.eco");
+    std::env::set_var("MESH_SERVICE_ENDPOIN"T, "https://mesh-service.production.eco");
 
     let env_config = SecurityRegistryConfig::default();
     assert_eq!(env_config.public_endpoint, "https://production.beardog.eco");
