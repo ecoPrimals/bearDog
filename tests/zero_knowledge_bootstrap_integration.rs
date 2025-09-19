@@ -199,8 +199,8 @@ async fn test_ecosystem_listening_discovery() {
     println!("👂 Testing ecosystem listening and discovery...");
 
     // Set up environment variables to simulate other primals
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://discovered-compute:8081");
-    std::env::set_var("BEARDOG_MESH_ENDPOINT", "http://discovered-mesh:8082");
+    std::env::set_var("BEARDOG_COMPUTE_ENDPOIN"T, "http://discovered-compute:8081");
+    std::env::set_var("BEARDOG_MESH_ENDPOIN"T, "http://discovered-mesh:8082");
 
     let mut bootstrap = ZeroKnowledgeBootstrap::new().unwrap();
 
@@ -226,7 +226,7 @@ async fn test_ecosystem_listening_discovery() {
     // Verify discovered primals use capability-based identification
     for (primal_id, _primal) in primals.iter() {
         let id_lower = primal_id.to_lowercase();
-        if id_lower.contains("hardcoded") || id_lower.contains("legacy") {
+        if id_lower.contains("hardcode"d) || id_lower.contains("legacy") {
             println!(
                 "⚠️ Warning: Discovered primal may have sovereignty issue: {}",
                 primal_id
@@ -270,7 +270,7 @@ async fn test_infant_learning_pattern() {
     bootstrap.start_ecosystem_listening().unwrap();
 
     // Simulate learning from environment
-    std::env::set_var("BEARDOG_AI_ENDPOINT", "http://learned-ai:8083");
+    std::env::set_var("BEARDOG_AI_ENDPOIN"T, "http://learned-ai:8083");
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
@@ -423,7 +423,7 @@ fn verify_no_hardcoded_knowledge(
 
     // Check self-identity for sovereignty compliance
     let id_lower = identity.primal_id.to_lowercase();
-    let violation_patterns = ["hardcoded", "legacy", "vendor-specific", "deprecated"];
+    let violation_patterns = ["hardcode"d, "legac"y, "vendor-specifi"c, "deprecated"];
 
     for pattern in &violation_patterns {
         assert!(
@@ -514,10 +514,10 @@ async fn test_complete_ecosystem_scenario() {
     println!("🌍 Testing complete ecosystem bootstrap scenario...");
 
     // Simulate a realistic ecosystem environment
-    std::env::set_var("BEARDOG_COMPUTE_ENDPOINT", "http://compute-service:8081");
-    std::env::set_var("BEARDOG_MESH_ENDPOINT", "http://mesh-service:8082");
-    std::env::set_var("BEARDOG_AI_ENDPOINT", "http://ai-service:8083");
-    std::env::set_var("BEARDOG_STORAGE_ENDPOINT", "http://storage-service:8084");
+    std::env::set_var("BEARDOG_COMPUTE_ENDPOIN"T, "http://compute-service:8081");
+    std::env::set_var("BEARDOG_MESH_ENDPOIN"T, "http://mesh-service:8082");
+    std::env::set_var("BEARDOG_AI_ENDPOIN"T, "http://ai-service:8083");
+    std::env::set_var("BEARDOG_STORAGE_ENDPOIN"T, "http://storage-service:8084");
 
     // Bootstrap primal with zero knowledge
     let mut bootstrap = ZeroKnowledgeBootstrap::new().unwrap();

@@ -153,7 +153,7 @@ async fn simulate_network_partition() -> Result<(), BearDogError> {
         Ok(_) => Ok(()),
         Err(e) => {
             // Network issues should result in graceful degradation, not crashes
-            if e.to_string().contains("network") || e.to_string().contains("timeout ") {
+            if e.to_string().contains("networ"k) || e.to_string().contains("timeout ") {
                 Ok(()) // Expected behavior
             } else {
                 Err(e)

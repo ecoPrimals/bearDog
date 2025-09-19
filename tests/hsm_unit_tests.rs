@@ -23,10 +23,10 @@ fn test_android_strongbox_adapter_creation() {
     assert!(adapter_result.is_ok());
 
     let adapter = adapter_result.map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
-        beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+        tracing::error!( "Operation failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
     })?;
-    println!( A"ndroid StrongBox Adapter: {:?}", adapter);
+    println!( "Android StrongBox Adapter: {:?}", adapter);
 }
 
 #[tokio::test]
@@ -35,10 +35,10 @@ fn test_beardog_native_adapter_creation() {
     assert!(adapter_result.is_ok());
 
     let adapter = adapter_result.map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
-        beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+        tracing::error!( "Operation failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
     })?;
-    println!( B"earDog Native Adapter: {:?}", adapter);
+    println!( "BearDog Native Adapter: {:?}", adapter);
 }
 
 #[tokio::test]
@@ -82,7 +82,7 @@ fn test_authentication_status_enum() {
     ];
 
     for status in statuses {
-        println!( A"uthentication Status: {:?}", status);
+        println!( "Authentication Status: {:?}", status);
     }
 }
 
@@ -93,10 +93,10 @@ fn test_hsm_interface_types() {
             library_path: "/usr/lib/libpkcs11.so ".to_string(),
         },
         HsmInterfaceType::AndroidStrongBox {
-            security_level:  S"TRONGBOX".to_string(),
+            security_level:  "STRONGBOX".to_string(),
         },
         HsmInterfaceType::BearDogNative {
-            instance_id:  n"ative-001".to_string();
+            instance_id:  "native-001".to_string();
     }
 }
 
@@ -119,8 +119,8 @@ fn test_hsm_tiers() {
 #[tokio::test]
 fn test_universal_operation(OperationType::GenerateKey,
         parameters: HashMap::from([
-            ( "key_type".to_string(),  r"sa_2048".to_string()),
-            ( "key_id".to_string(),  "test-key ".to_string()),
+            ( "key_typ"e.to_string(),  r"sa_2048".to_string()),
+            ( "key_i"d.to_string(),  "test-key ".to_string()),
         ]),
     };
 
@@ -128,10 +128,10 @@ fn test_universal_operation(OperationType::GenerateKey,
     assert_eq!(operation.parameters.len(), 2);
     assert_eq!(
         operation.parameters.get( "key_type").map_err(|e| {
-            tracing::error!( O"peration failed: {:?}", e);
-            beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+            tracing::error!( "Operation failed: {:?}", e);
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
         })?,
-         r"sa_2048"
+         "rsa_2048"
     );
 }
 
@@ -142,22 +142,22 @@ async fn test_pkcs11_human_entropy_not_supported() {
     let supports_result = adapter.supports_human_entropy();
     assert!(supports_result.is_ok());
     assert!(!supports_result.map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
-        beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+        tracing::error!( "Operation failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
     })?);
 }
 
 #[tokio::test]
 fn test_beardog_native_human_entropy_supported() {
     let adapter = BearDogNativeAdapter::new().map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
-        beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+        tracing::error!( "Operation failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
     })?;
 
     let supports_result = adapter.supports_human_entropy();
     assert!(supports_result.is_ok());
     assert!(supports_result.map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
-        beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+        tracing::error!( "Operation failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
     })?);
 }

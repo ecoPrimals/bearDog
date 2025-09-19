@@ -17,7 +17,7 @@ async fn test_ecosystem_provider_creation() {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).map_err(|e| {
         tracing::error!("Operation failed: {:?}", e);
-        beardog_errors::BearDogError::internal(format!( C"ore creation failed: {:?}", e))
+        beardog_errors::BearDogError::internal(format!("Core creation failed: {:?}", e))
     })?);
 
     let provider = BearDogEcosystemFactory::create_provider(core);
@@ -26,23 +26,23 @@ async fn test_ecosystem_provider_creation() {
     assert!(provider
         .capabilities
         .core
-        .contains(& a"uthentication".to_string()));
+        .contains(& "authentication".to_string()));
     assert!(provider
         .capabilities
         .core
-        .contains(& e"ncryption".to_string()));
+        .contains(& "encryption".to_string()));
     assert!(provider
         .capabilities
         .extended
-        .contains(& m"l_threat_detection".to_string()));
+        .contains(& "ml_threat_detection".to_string()));
 }
 
 #[tokio::test]
 async fn test_capability_type_service_registration() {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
-        beardog_errors::BearDogError::internal(format!( C"ore creation failed: {:?}", e))
+        tracing::error!( "Operation failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!("Core creation failed: {:?}", e))
     })?));
     let provider = BearDogEcosystemFactory::create_provider(core);
 
@@ -50,7 +50,7 @@ async fn test_capability_type_service_registration() {
     assert!(registration_result.is_ok());
 
     let registration_id = registration_result.map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?;
     assert!(!registration_id.is_empty());
@@ -62,23 +62,23 @@ async fn test_capability_type_service_registration() {
 async fn test_authentication_request_handling() {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let request = EcosystemRequest {
         request_id: Uuid::new_v4(),
-        source_service:  c"ompute-service-01".to_string(),
-        target_service:  b"eardog-security-01".to_string(),
-        operation:  a"uthenticate".to_string(serde_json::json!({
-             u"sername":  t"est_user",
-             p"assword":  t"est_password"
+        source_service:  "compute-service-01".to_string(),
+        target_service:  "beardog-security-01".to_string(),
+        operation:  "authenticate".to_string(serde_json::json!({
+             "username":  "test_user",
+             "password":  "test_password"
         }),
         security_context: SecurityContext {
-            auth_token: Some( t"est_token".to_string()),
-            identity:  c"ompute-service".to_string(),
-            permissions: vec![ s"ecurity.auth".to_string(SecurityLevel::Internal,
+            auth_token: Some( "test_token".to_string()),
+            identity:  "compute-service".to_string(),
+            permissions: vec![ "security.auth".to_string(SecurityLevel::Internal,
         },
         metadata: HashMap::with_capacity(16),
         timestamp: chrono::Utc::now(),
@@ -87,7 +87,7 @@ async fn test_authentication_request_handling() {
     let response = provider
         .handle_ecosystem_request(request.clone())
         .map_err(|e| {
-            tracing::error!( O"peration failed: {:?}", e);
+            tracing::error!( "Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal({:?}", e))
         })?;
 
@@ -96,35 +96,35 @@ async fn test_authentication_request_handling() {
     assert!(response.payload.is_object());
 
     let payload = response.payload.as_object().map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?;
-    assert!(payload.contains_key( a"uthenticated"));
-    assert!(payload.contains_key( u"ser_id"));
-    assert!(payload.contains_key( p"ermissions"));
+    assert!(payload.contains_key( "authenticated"));
+    assert!(payload.contains_key( "user_id"));
+    assert!(payload.contains_key( "permissions"));
 }
 
 #[tokio::test]
 async fn test_encryption_request_handling() {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let request = EcosystemRequest {
         request_id: Uuid::new_v4(),
-        source_service:  s"torage-service-01".to_string(),
-        target_service:  b"eardog-security-01".to_string(),
-        operation:  e"ncrypt".to_string(serde_json::json!({
-             d"ata":  s"ensitive_data_to_encrypt",
-             a"lgorithm":  a"es-256-gcm"
+        source_service:  "storage-service-01".to_string(),
+        target_service:  "beardog-security-01".to_string(),
+        operation:  "encrypt".to_string(serde_json::json!({
+             "data":  "sensitive_data_to_encrypt",
+             "algorithm":  "aes-256-gcm"
         }),
         security_context: SecurityContext {
-            auth_token: Some( t"est_token".to_string()),
-            identity:  s"torage-service".to_string(),
-            permissions: vec![ s"ecurity.encrypt".to_string(SecurityLevel::Confidential,
+            auth_token: Some( "test_token".to_string()),
+            identity:  "storage-service".to_string(),
+            permissions: vec![ "security.encrypt".to_string(SecurityLevel::Confidential,
         },
         metadata: HashMap::with_capacity(16),
         timestamp: chrono::Utc::now(),
@@ -133,7 +133,7 @@ async fn test_encryption_request_handling() {
     let response = provider
         .handle_ecosystem_request(request.clone())
         .map_err(|e| {
-            tracing::error!( O"peration failed: {:?}", e);
+            tracing::error!( "Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal({:?}", e))
         })?;
 
@@ -141,35 +141,35 @@ async fn test_encryption_request_handling() {
     assert!(matches!(response.status, ResponseStatus::Success));
 
     let payload = response.payload.as_object().map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?;
-    assert!(payload.contains_key( e"ncrypted"));
-    assert!(payload.contains_key( a"lgorithm"));
-    assert!(payload.contains_key( d"ata"));
+    assert!(payload.contains_key( "encrypted"));
+    assert!(payload.contains_key( "algorithm"));
+    assert!(payload.contains_key( "data"));
 }
 
 #[tokio::test]
 async fn test_compliance_request_handling() {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let request = EcosystemRequest {
         request_id: Uuid::new_v4(),
-        source_service:  b"iomeos-orchestrator-01".to_string(),
-        target_service:  b"eardog-security-01".to_string(),
-        operation:  c"ompliance_check".to_string(serde_json::json!({
-             f"ramework":  g"dpr",
-             d"ata_type":  p"ersonal_data"
+        source_service:  "biomeos-orchestrator-01".to_string(),
+        target_service:  "beardog-security-01".to_string(),
+        operation:  "compliance_check".to_string(serde_json::json!({
+             "framework":  "gdpr",
+             "data_type":  "personal_data"
         }),
         security_context: SecurityContext {
-            auth_token: Some( t"est_token".to_string()),
-            identity:  b"iomeos-service".to_string(),
-            permissions: vec![ s"ecurity.compliance".to_string(SecurityLevel::Restricted,
+            auth_token: Some( "test_token".to_string()),
+            identity:  "biomeos-service".to_string(),
+            permissions: vec![ "security.compliance".to_string(SecurityLevel::Restricted,
         },
         metadata: HashMap::with_capacity(16),
         timestamp: chrono::Utc::now(),
@@ -178,7 +178,7 @@ async fn test_compliance_request_handling() {
     let response = provider
         .handle_ecosystem_request(request.clone())
         .map_err(|e| {
-            tracing::error!( O"peration failed: {:?}", e);
+            tracing::error!( "Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal({:?}", e))
         })?;
 
@@ -186,33 +186,33 @@ async fn test_compliance_request_handling() {
     assert!(matches!(response.status, ResponseStatus::Success));
 
     let payload = response.payload.as_object().map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?;
-    assert!(payload.contains_key( c"ompliant"));
-    assert!(payload.contains_key( f"rameworks"));
-    assert!(payload.contains_key( c"hecks_passed"));
-    assert!(payload.contains_key( c"hecks_failed"));
+    assert!(payload.contains_key( "compliant"));
+    assert!(payload.contains_key( "frameworks"));
+    assert!(payload.contains_key( "checks_passed"));
+    assert!(payload.contains_key( "checks_failed"));
 }
 
 #[tokio::test]
 async fn test_unsupported_operation_handling() {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let request = EcosystemRequest {
         request_id: Uuid::new_v4(),
-        source_service:  u"nknown-service".to_string(),
-        target_service:  b"eardog-security-01".to_string(),
-        operation:  u"nsupported_operation".to_string(),
+        source_service:  "unknown-service".to_string(),
+        target_service:  "beardog-security-01".to_string(),
+        operation:  "unsupported_operation".to_string(),
         payload: serde_json::json!({}),
         security_context: SecurityContext {
             auth_token: None,
-            identity:  u"nknown-service".to_string(vec![],
+            identity:  "unknown-service".to_string(vec![],
             security_level: SecurityLevel::Public,
         },
         metadata: HashMap::with_capacity(16),
@@ -222,7 +222,7 @@ async fn test_unsupported_operation_handling() {
     let response = provider
         .handle_ecosystem_request(request.clone())
         .map_err(|e| {
-            tracing::error!( O"peration failed: {:?}", e);
+            tracing::error!( "Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal({:?}", e))
         })?;
 
@@ -230,8 +230,8 @@ async fn test_unsupported_operation_handling() {
     assert!(matches!(response.status, ResponseStatus::Error { .. }));
 
     if let ResponseStatus::Error { code, message } = response.status {
-        assert_eq!(code,  U"NSUPPORTED_OPERATION");
-        assert!(message.contains( u"nsupported_operation"));
+        assert_eq!(code,  "UNSUPPORTED_OPERATION");
+        assert!(message.contains( "unsupported_operation"));
     }
 }
 
@@ -239,13 +239,13 @@ async fn test_unsupported_operation_handling() {
 async fn test_health_status_reporting() {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let health_status = provider.get_health_status().map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?;
     assert!(!health_status.version.is_empty());
@@ -260,15 +260,15 @@ async fn test_health_status_reporting() {
 async fn test_capability_updates() {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?);
     let provider = BearDogEcosystemFactory::create_provider(core);
 
     let capabilities = beardog::ecosystem_integration::ServiceCapabilities {
-        core: vec![ a"uthentication".to_string(),  e"ncryption".to_string()],
-        extended: vec![ m"l_threat_detection".to_string()],
-        integrations: vec![ m"esh-service".to_string(),  c"ompute-service".to_string()],
+        core: vec![ "authentication".to_string(),  "encryption".to_string()],
+        extended: vec![ "ml_threat_detection".to_string()],
+        integrations: vec![ "mesh-service".to_string(),  "compute-service".to_string()],
     };
 
     let result = provider.update_capabilities(capabilities);
@@ -279,7 +279,7 @@ async fn test_capability_updates() {
 async fn test_ecosystem_deregistration() {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?);
     let provider = BearDogEcosystemFactory::create_provider(core);
@@ -293,19 +293,19 @@ async fn test_ecosystem_deregistration() {
 
 #[tokio::test]
 async fn test_primal_type_conversion() {
-    assert_eq!(PrimalType::BearDog.as_str(),  b"eardog");
-    assert_eq!(PrimalType::ComputeService.as_str(),  c"ompute-service");
-    assert_eq!(PrimalType::Songbird.as_str(),  m"esh-service");
-    assert_eq!(PrimalType::StorageService.as_str(),  s"torage-service");
-    assert_eq!(PrimalType::AutomationService.as_str(),  a"utomation-service");
-    assert_eq!(PrimalType::PlatformService.as_str(),  p"latform-service");
+    assert_eq!(PrimalType::BearDog.as_str(),  "beardog");
+    assert_eq!(PrimalType::ComputeService.as_str(),  "compute-service");
+    assert_eq!(PrimalType::Songbird.as_str(),  "mesh-service");
+    assert_eq!(PrimalType::StorageService.as_str(),  "storage-service");
+    assert_eq!(PrimalType::AutomationService.as_str(),  "automation-service");
+    assert_eq!(PrimalType::PlatformService.as_str(),  "platform-service");
 }
 
 #[tokio::test]
 async fn test_security_context_validation() {
     let config = BearDogConfig::default();
     let core = Arc::new(BearDogCore::new(config).map_err(|e| {
-        tracing::error!( O"peration failed: {:?}", e);
+        tracing::error!( "Operation failed: {:?}", e);
         beardog_errors::BearDogError::internal({:?}", e))
     })?);
     let provider = BearDogEcosystemFactory::create_provider(core);
@@ -320,14 +320,14 @@ async fn test_security_context_validation() {
     for security_level in security_levels {
         let request = EcosystemRequest {
             request_id: Uuid::new_v4(),
-            source_service:  t"est-service".to_string(),
-            target_service:  b"eardog-security-01".to_string(),
-            operation:  a"uthenticate".to_string(),
+            source_service:  "test-service".to_string(),
+            target_service:  "beardog-security-01".to_string(),
+            operation:  "authenticate".to_string(),
             payload: serde_json::json!({}),
             security_context: SecurityContext {
-                auth_token: Some( t"est_token".to_string()),
-                identity:  t"est-service".to_string(),
-                permissions: vec![ s"ecurity.auth".to_string()],
+                auth_token: Some( "test_token".to_string()),
+                identity:  "test-service".to_string(),
+                permissions: vec![ "security.auth".to_string()],
                 security_level: security_level.clone(),
             },
             metadata: HashMap::with_capacity(16),
@@ -337,7 +337,7 @@ async fn test_security_context_validation() {
         let response = provider
             .handle_ecosystem_request(request)
             .map_err(|e| {
-                tracing::error!( O"peration failed: {:?}", e);
+                tracing::error!( "Operation failed: {:?}", e);
                 beardog_errors::BearDogError::internal({:?}", e))
             })?;
         assert!(matches!(response.status, ResponseStatus::Success));

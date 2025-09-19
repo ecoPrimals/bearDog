@@ -28,11 +28,11 @@ async fn test_hsm_genetic_spawning(harness: &mut HsmTestHarness) -> Result<(), B
     let start_time = std::time::Instant::now();
 
     let entropy = harness.genetics_api.generate_entropy_with_hsm()?;
-    assert!(entropy.len() >= 32,  S"hould generate sufficient entropy");
-    assert!(entropy.hsm_source,  E"ntropy should be HSM-sourced");
+    assert!(entropy.len() >= 32,  "Should generate sufficient entropy");
+    assert!(entropy.hsm_source,  "Entropy should be HSM-sourced");
 
     let latency = start_time.elapsed().as_millis() as f64;
-    harness.record_operation(latency,  g"enetic", true);
+    harness.record_operation(latency,  "genetic", true);
 
     println!("    ✅ Entropy hierarchy integration tests passed");
     Ok(())
@@ -44,11 +44,11 @@ async fn test_genetic_key_derivation(harness: &mut HsmTestHarness) -> Result<(),
     let start_time = std::time::Instant::now();
 
     let derived_key = harness.genetics_api.derive_key_from_genetics()?;
-    assert!(derived_key.is_secure(),  D"erived key should be secure");
-    assert!(derived_key.hsm_protected,  K"ey should be HSM-protected");
+    assert!(derived_key.is_secure(),  "Derived key should be secure");
+    assert!(derived_key.hsm_protected,  "Key should be HSM-protected");
 
     let latency = start_time.elapsed().as_millis() as f64;
-    harness.record_operation(latency,  g"enetic", true);
+    harness.record_operation(latency,  "genetic", true);
 
     println!("    ✅ Genetic key derivation tests passed");
     Ok(())

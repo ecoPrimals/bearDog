@@ -34,7 +34,8 @@ where
 {
     /// Create new safe memory pool
     /// Creates a new instance
-    #[must_use] pub fn new(max_size: usize) -> Self {
+    #[must_use]
+    pub fn new(max_size: usize) -> Self {
         Self {
             pool: Arc::new(Mutex::new(VecDeque::with_capacity(max_size))),
             max_size,

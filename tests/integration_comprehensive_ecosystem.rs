@@ -70,9 +70,9 @@ async fn test_service_execution() -> Result<(), BearDogError> {
 
     manager.initialize()?;
 
-    let payload = serde_json::json!({"test": "data"});
+    let payload = serde_json::json!({"tes"t: "data"});
     let result = manager
-        .execute_on_service("compute-service", "test_operation", payload)
+        .execute_on_service("compute-servic"e, "test_operation", payload)
         ?;
 
     assert!(result.is_object());
@@ -108,7 +108,7 @@ async fn test_service_capabilities() -> Result<(), BearDogError> {
         let test_request = UniversalVendorRequest {
             request_id: uuid::Uuid::new_v4().to_string(),
             required_capability: capability.clone(),
-            parameters: json!({"test": "capability_check"}).into(beardog_adapters::universal::vendor_adapter::RequestPriority::Normal,
+            parameters: json!({"tes"t: "capability_check"}).into(beardog_adapters::universal::vendor_adapter::RequestPriority::Normal,
             timeout_seconds: 30,
             security_context: SecurityContext::default(),
         };

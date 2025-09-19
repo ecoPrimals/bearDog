@@ -46,7 +46,7 @@ async fn test_resource_sharing_workflow() {
     let request = Request::builder()
         .method("POST")
         .uri("/api/v1/sovereignty/sharing/request")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(serde_json::to_string(&sharing_request).map_err(|e| {
             tracing::error!(
                 "Operation failed ({}): {:?}",
@@ -87,7 +87,7 @@ async fn test_resource_sharing_workflow() {
 
     let offer_id = "test-offer-123";
     let accept_request = serde_json::json!({
-        "acceptance_message": "Thanks for sharing compute resources!",
+        "acceptance_messag"e: "Thanks for sharing compute resources!",
         "consent_confirmed": true
     });
 
@@ -97,7 +97,7 @@ async fn test_resource_sharing_workflow() {
             "/api/v1/sovereignty/sharing/offers/{}/accept",
             offer_id
         ))
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(accept_request.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -138,8 +138,8 @@ async fn test_friend_recovery_workflow() {
     })?;
 
     let recovery_request = serde_json::json!({
-        "recovery_type": "DeviceLoss",
-        "emergency_message": "Lost device while traveling, need urgent help!",
+        "recovery_typ"e: "DeviceLoss",
+        "emergency_messag"e: "Lost device while traveling, need urgent help!",
         "required_friends": 3,
         "trusted_friend_ids": [
             "friend-alice-test",
@@ -152,7 +152,7 @@ async fn test_friend_recovery_workflow() {
     let request = Request::builder()
         .method("POST")
         .uri("/api/v1/sovereignty/recovery/request")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(recovery_request.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -170,18 +170,18 @@ async fn test_friend_recovery_workflow() {
         "shard_count": 5,
         "threshold ": 3,
         "friend_assignments": [
-            {"friend_id": "friend-alice-test", "shard_index": 1},
-            {"friend_id": "friend-bob-test", "shard_index": 2},
-            {"friend_id": "friend-carol-test", "shard_index": 3},
-            {"friend_id": "friend-dave-test", "shard_index": 4},
-            {"friend_id": "friend-eve-test", "shard_index": 5}
+            {"friend_i"d: "friend-alice-tes"t, "shard_index": 1},
+            {"friend_i"d: "friend-bob-tes"t, "shard_index": 2},
+            {"friend_i"d: "friend-carol-tes"t, "shard_index": 3},
+            {"friend_i"d: "friend-dave-tes"t, "shard_index": 4},
+            {"friend_i"d: "friend-eve-tes"t, "shard_index": 5}
         ]
     });
 
     let request = Request::builder()
         .method("POST")
         .uri("/api/v1/sovereignty/recovery/shards/distribute")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(shard_distribution.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -196,9 +196,9 @@ async fn test_friend_recovery_workflow() {
     println!("   ✅ Recovery shards distributed to friends");
 
     let assistance = serde_json::json!({
-        "friend_id": "friend-alice-test",
-        "recovery_shard": "encrypted_shard_data",
-        "consent_message": "Happy to help with recovery!"
+        "friend_i"d: "friend-alice-test",
+        "recovery_shar"d: "encrypted_shard_data",
+        "consent_messag"e: "Happy to help with recovery!"
     });
 
     let request_id = "recovery-test-456";
@@ -208,7 +208,7 @@ async fn test_friend_recovery_workflow() {
             "/api/v1/sovereignty/recovery/requests/{}/assist",
             request_id
         ))
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(assistance.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -233,18 +233,18 @@ async fn test_identity_management_workflow() {
     })?;
 
     let key_request = serde_json::json!({
-        "key_purpose": "Authentication",
-        "algorithm": "Ed25519",
+        "key_purpos"e: "Authentication",
+        "algorith"m: "Ed25519",
         "metadata": {
-            "description": "Primary identity key for peer interactions",
-            "usage": "authentication"
+            "descriptio"n: "Primary identity key for peer interactions",
+            "usag"e: "authentication"
         }
     });
 
     let request = Request::builder()
         .method("POST")
         .uri("/api/v1/sovereignty/identity/keys")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(key_request.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -275,17 +275,17 @@ async fn test_identity_management_workflow() {
     println!("   ✅ Identity keys listed successfully");
 
     let claim_verification = serde_json::json!({
-        "claim_type": "ProfessionalSkill",
-        "claim_value": "Machine Learning Engineer",
-        "proof_type": "SelfAttestation",
-        "signature": "ed25519_signature_data",
-        "public_key": "ed25519_public_key_data"
+        "claim_typ"e: "ProfessionalSkill",
+        "claim_valu"e: "Machine Learning Engineer",
+        "proof_typ"e: "SelfAttestation",
+        "signatur"e: "ed25519_signature_data",
+        "public_ke"y: "ed25519_public_key_data"
     });
 
     let request = Request::builder()
         .method("POST")
         .uri("/api/v1/sovereignty/identity/verify")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(claim_verification.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -300,17 +300,17 @@ async fn test_identity_management_workflow() {
     println!("   ✅ Identity claim verified successfully");
 
     let attestation = serde_json::json!({
-        "attesting_for": "friend-alice-test",
-        "claim_type": "ProfessionalSkill",
-        "attestation_strength": "Strong",
-        "message": "Alice is an excellent ML engineer, worked with her for 2 years",
-        "signature": "attestation_signature_data"
+        "attesting_fo"r: "friend-alice-test",
+        "claim_typ"e: "ProfessionalSkill",
+        "attestation_strengt"h: "Strong",
+        "messag"e: "Alice is an excellent ML engineer, worked with her for 2 years",
+        "signatur"e: "attestation_signature_data"
     });
 
     let request = Request::builder()
         .method("POST")
         .uri("/api/v1/sovereignty/identity/attest")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(attestation.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -367,15 +367,15 @@ async fn test_privacy_protection_workflow() {
     println!("   ✅ Privacy audit trail retrieved");
 
     let anonymization_request = serde_json::json!({
-        "data_types": ["UserProfile", "InteractionLogs"],
-        "anonymization_level": "Strong",
+        "data_type"s: ["UserProfil"e, "InteractionLogs"],
+        "anonymization_leve"l: "Strong",
         "preserve_functionality": true
     });
 
     let request = Request::builder()
         .method("POST")
         .uri("/api/v1/sovereignty/privacy/anonymize")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(anonymization_request.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -390,15 +390,15 @@ async fn test_privacy_protection_workflow() {
     println!("   ✅ Personal data anonymized successfully");
 
     let purge_request = serde_json::json!({
-        "data_categories": ["TemporaryLogs", "CachedData"],
+        "data_categorie"s: ["TemporaryLog"s, "CachedData"],
         "confirm_irreversible": true,
-        "reason": "Privacy maintenance"
+        "reaso"n: "Privacy maintenance"
     });
 
     let request = Request::builder()
         .method("POST")
         .uri("/api/v1/sovereignty/privacy/purge")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(purge_request.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -456,9 +456,9 @@ async fn test_consent_management_workflow() {
     println!("   ✅ Consent details retrieved");
 
     let revocation = serde_json::json!({
-        "revocation_reason": "No longer need shared resources",
+        "revocation_reaso"n: "No longer need shared resources",
         "notify_parties": true,
-        "message": "Thanks for the help, no longer needed!"
+        "messag"e: "Thanks for the help, no longer needed!"
     });
 
     let request = Request::builder()
@@ -467,7 +467,7 @@ async fn test_consent_management_workflow() {
             "/api/v1/sovereignty/consent/{}/revoke",
             consent_id
         ))
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(revocation.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -530,7 +530,7 @@ async fn test_end_to_end_sovereignty_workflow() {
         personal_message: "Happy to share storage for your climate research!".to_string()
         .method("POST")
         .uri("/api/v1/sovereignty/sharing/request")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(serde_json::to_string().map_err(|e| {
             tracing::error!(
                 "Operation failed ({}): {:?}",
@@ -570,9 +570,9 @@ async fn test_end_to_end_sovereignty_workflow() {
 
     let offer_id = "alice-storage-offer-123";
     let acceptance = serde_json::json!({
-        "acceptance_message": "Thanks Alice! This will really help my climate modeling work.",
+        "acceptance_messag"e: "Thanks Alice! This will really help my climate modeling work.",
         "consent_confirmed": true,
-        "usage_commitment": "Will only use for climate research data"
+        "usage_commitmen"t: "Will only use for climate research data"
     });
 
     let request = Request::builder()
@@ -581,7 +581,7 @@ async fn test_end_to_end_sovereignty_workflow() {
             "/api/v1/sovereignty/sharing/offers/{}/accept",
             offer_id
         ))
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(acceptance.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
@@ -629,9 +629,9 @@ async fn test_end_to_end_sovereignty_workflow() {
 
     let consent_id = "storage-consent-alice-bob";
     let revocation = serde_json::json!({
-        "revocation_reason": "Research project completed successfully",
+        "revocation_reaso"n: "Research project completed successfully",
         "notify_parties": true,
-        "gratitude_message": "Thank you Alice! Your storage sharing made this research possible."
+        "gratitude_messag"e: "Thank you Alice! Your storage sharing made this research possible."
     });
 
     let request = Request::builder()
@@ -640,7 +640,7 @@ async fn test_end_to_end_sovereignty_workflow() {
             "/api/v1/sovereignty/consent/{}/revoke",
             consent_id
         ))
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(revocation.to_string()))
         .map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);

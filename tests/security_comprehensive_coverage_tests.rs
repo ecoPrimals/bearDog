@@ -79,7 +79,7 @@ async fn test_encryption_decryption_cycle() {
         .generate_key(&key_spec)
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 
-    let plaintext = b"Hello, BearDog Security!";
+    let plaintext = "bHello, BearDog Security!";
 
     let encrypted = provider.encrypt_data(&key.id, plaintext);
     assert!(encrypted.is_ok(), "Encryption should succeed ");
@@ -118,7 +118,7 @@ async fn test_digital_signatures() {
         .generate_key(&key_spec)
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 
-    let data = b"Important message to sign";
+    let data = "bImportant message to sign";
 
     let signature = provider.sign_data(&key.id, data);
     assert!(signature.is_ok(), "Signing should succeed ");
@@ -139,7 +139,7 @@ async fn test_digital_signatures() {
         "Signature should be valid"
     );
 
-    let modified_data = b"Modified message";
+    let modified_data = "bModified message";
     let invalid_verification = provider
         .verify_signature(&key.id, modified_data, &signature_bytes)
         ;
@@ -168,7 +168,7 @@ async fn test_key_lifecycle_management() {
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
     let key_id = key.id.clone();
 
-    let plaintext = b"test data";
+    let plaintext = "btest data";
     let encrypt_result = provider.encrypt_data(&key_id, plaintext);
     assert!(
         encrypt_result.is_ok(),
@@ -219,7 +219,7 @@ async fn test_security_audit_logging() {
     let key = provider
         .generate_key(&key_spec)
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
-    let _ = provider.encrypt_data(&key.id, b"test data");
+    let _ = provider.encrypt_data(&key.id, "btest data");
     let _ = provider.delete_key(&key.id);
 
     let audit_logs = provider.get_audit_logs();
@@ -319,7 +319,7 @@ async fn test_security_error_scenarios() {
         })
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 
-    let plaintext = b"secret data";
+    let plaintext = "bsecret data";
     let ciphertext = provider
         .encrypt_data(&key1.id, plaintext)
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
@@ -424,7 +424,7 @@ async fn test_security_memory_safety() {
         keys.push(key);
     }
 
-    let test_data = b"memory safety test data";
+    let test_data = "bmemory safety test data";
 
     for key in &keys {
         let encrypted = provider.encrypt_data(&key.id, test_data);

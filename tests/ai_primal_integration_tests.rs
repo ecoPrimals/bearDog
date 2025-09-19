@@ -35,9 +35,9 @@ async fn test_lightweight_threat_detection() -> Result<(), BearDogError> {
             "Failed login attempt 3".to_string(),
         ],
         context: HashMap::from([
-            ("multiple_failed_logins".to_string(), "true".to_string()),
-            ("short_time_interval".to_string(), "true".to_string()),
-            ("same_source_ip".to_string(), "true".to_string().to_string()),
+            ("multiple_failed_login"s.to_string(), "true".to_string()),
+            ("short_time_interva"l.to_string(), "true".to_string()),
+            ("same_source_i"p.to_string(), "true".to_string().to_string()),
         ]),
     };
 
@@ -70,9 +70,9 @@ async fn test_external_ai_delegation() -> Result<(), BearDogError> {
             "Advanced evasion techniques".to_string(),
         ],
         context: HashMap::from([
-            ("advanced_evasion".to_string(), "true".to_string()),
-            ("encrypted_payload".to_string(), "true".to_string()),
-            ("persistence_mechanism".to_string(), "true".to_string()),
+            ("advanced_evasio"n.to_string(), "true".to_string()),
+            ("encrypted_payloa"d.to_string(), "true".to_string()),
+            ("persistence_mechanis"m.to_string(), "true".to_string()),
         ]),
     };
 
@@ -95,8 +95,8 @@ async fn test_primal_communication_adapter() -> Result<(), BearDogError> {
             CapabilityType::ComputeOptimization,
             "ai_analysis",
             serde_json::json!({
-                "threat_type": "advanced_malware",
-                "analysis_depth": "deep_learning"
+                "threat_typ"e: "advanced_malware",
+                "analysis_dept"h: "deep_learning"
             }),
             SecurityContext::default(),
         )
@@ -119,7 +119,7 @@ async fn test_capability_type_distributed_intelligence_delegation() -> Result<()
             CapabilityType::AIIntelligence,
             "distributed_intelligence",
             serde_json::json!({
-                "pattern_type": "behavioral_analysis",
+                "pattern_typ"e: "behavioral_analysis",
                 "node_count": 12
             }),
             SecurityContext::default(),
@@ -172,7 +172,7 @@ async fn test_security_authority_preservation() -> Result<(), BearDogError> {
         source_ip: Some("internal.network".to_string()),
         user_id: Some("service_account".to_string()),
         raw_logs: vec!["Attempted privilege escalation".to_string()],
-        context: HashMap::from([("privilege_escalation".to_string(), "true".to_string())]),
+        context: HashMap::from([("privilege_escalatio"n.to_string(), "true".to_string())]),
     };
 
     let internal_result = manager
@@ -202,9 +202,9 @@ async fn test_threat_pattern_matching() -> Result<(), BearDogError> {
         user_id: Some("user123".to_string()),
         raw_logs: vec!["Large data transfer detected".to_string()],
         context: HashMap::from([
-            ("large_data_transfer".to_string(), "true".to_string()),
-            ("external_destination".to_string(), "true".to_string()),
-            ("unusual_access_time".to_string(), "true".to_string()),
+            ("large_data_transfe"r.to_string(), "true".to_string()),
+            ("external_destinatio"n.to_string(), "true".to_string()),
+            ("unusual_access_tim"e.to_string(), "true".to_string()),
         ]),
     };
 
@@ -226,7 +226,7 @@ async fn test_network_effect_benefits() -> Result<(), BearDogError> {
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 
     let security_payload = serde_json::json!({
-        "security_analysis": "threat_assessment",
+        "security_analysi"s: "threat_assessment",
         "coordination_required": true
     });
 

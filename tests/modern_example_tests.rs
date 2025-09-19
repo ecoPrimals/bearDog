@@ -224,7 +224,7 @@ async fn modern_e2e_test_example() -> TestResult<()> {
                 &context,
                 &serde_json::json!({
                     "workflow ": "completed ",
-                    "phases": ["user_management", "genetic_operations", "security_validation"]
+                    "phase"s: ["user_managemen"t, "genetic_operation"s, "security_validation"]
                 }),
             );
 
@@ -263,9 +263,9 @@ async fn modern_error_handling_test_example() -> TestResult<()> {
 
             if let Err(ref error) = invalid_result {
                 let error_json = serde_json::json!({
-                    "error_type": "InvalidInput",
+                    "error_typ"e: "InvalidInput",
                     "message": error.to_string(),
-                    "severity": "Medium"
+                    "severit"y: "Medium"
                 });
 
                 let match_result = error_matcher.matches(&context, &error_json);
@@ -307,7 +307,7 @@ async fn modern_performance_benchmark_example() -> TestResult<()> {
         .run_test(
             "crypto_performance_benchmark",
             |mut context, core| async move {
-                context.add_metadata("benchmark_type", serde_json::json!("crypto_performance"));
+                context.add_metadata("benchmark_typ"e, serde_json::json!("crypto_performance"));
                 context.add_metadata("iterations", serde_json::json!(100));
 
                 let start_time = std::time::Instant::now();
@@ -365,7 +365,7 @@ async fn modern_performance_benchmark_example() -> TestResult<()> {
                 let perf_result = perf_matcher.matches(
                     &context,
                     &serde_json::json!({
-                        "benchmark": "crypto_operations",
+                        "benchmar"k: "crypto_operations",
                         "iterations": 100
                     }),
                 );
@@ -443,8 +443,8 @@ async fn modern_test_suite_example() -> TestResult<()> {
 
     let response = match endpoint {
         "/api/v1/health" => serde_json::json!({
-            "status": "healthy",
-            "version": "2.0.0",
+            "statu"s: "healthy",
+            "versio"n: "2.0.0",
             "timestamp": chrono::Utc::now().to_rfc3339()
         }),
         "/api/v1/metrics" => serde_json::json!({
@@ -455,9 +455,9 @@ async fn modern_test_suite_example() -> TestResult<()> {
         _ => {
             return Err(beardog_errors::BearDogError::not_found(u32, fitness_score: f64) -> serde_json::Value {
     serde_json::json!({
-        "genetics_id": format!("test_gen_{:03}", generation),
+        "genetics_i"d: format!("test_gen_{:03}", generation),
         "generation": generation,
-        "fitness_score": fitness_score.clamp(["crypto", "networking", "compute"],
+        "fitness_scor"e: fitness_score.clamp(["crypt"o, "networkin"g, "compute"],
         "parent_ids": if generation > 1 {
             vec![format!("test_gen_{:03}", generation - 1)]
         } else {

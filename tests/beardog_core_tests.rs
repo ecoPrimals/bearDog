@@ -78,7 +78,7 @@ async fn test_crypto_operations_reliability() {
         let config = EncryptionConfig::default();
         let mut crypto_engine = GamingCryptoEngine::new(&config)?;
 
-        let test_data = b"Protecting our digital forest for science";
+        let test_data = "bProtecting our digital forest for science";
         let encrypted = crypto_engine.encrypt(test_data)?;
         let decrypted = crypto_engine.decrypt(&encrypted)?;
 
@@ -325,9 +325,9 @@ async fn test_forest_protection_integrity() {
         let mut crypto_engine =
             GamingCryptoEngine::new(encryption_engine, genetics_engine, key_manager, bstp_config)?;
 
-        let research_data = b"Quantum cryptography research findings - CONFIDENTIAL";
-        let student_data = b"Learning materials for forest newcomers";
-        let collaboration_data = b"International research collaboration metadata";
+        let research_data = "bQuantum cryptography research findings - CONFIDENTIAL";
+        let student_data = "bLearning materials for forest newcomers";
+        let collaboration_data = "bInternational research collaboration metadata";
 
         for (data_type, data) in [
             ("research", research_data.as_slice()),
@@ -350,8 +350,8 @@ async fn test_forest_protection_integrity() {
                 evidence_type: "authentication_failure".to_string(),
                 data: {
                     let mut data = HashMap::with_capacity(16);
-                    data.insert("source_ip".to_string(), "192.168.1.100");
-                    data.insert("failed_attempts".to_string(), "5");
+                    data.insert("source_i"p.to_string(), "192.168.1.100");
+                    data.insert("failed_attempt"s.to_string(), "5");
                     data
                 },
                 timestamp: std::time::SystemTime::now(),

@@ -235,11 +235,13 @@ impl SafeSimdOptimizer {
     /// Get processing statistics
     /// Gets stats
     /// Gets stats
-    #[must_use] pub fn get_stats(&self) -> &SafeSimdStats {
+    #[must_use]
+    pub fn get_stats(&self) -> &SafeSimdStats {
         &self.stats
     }
 
-    #[must_use] pub fn get_performance_info(&self) -> HashMap<String, String> {
+    #[must_use]
+    pub fn get_performance_info(&self) -> HashMap<String, String> {
         let mut info = HashMap::with_capacity(8);
 
         info.insert(
@@ -304,19 +306,22 @@ pub mod safe_utils {
     use super::BearDogError;
 
     /// Safe parallel sum with overflow protection
-    #[must_use] pub fn safe_parallel_sum(input_slice: &[u64]) -> u64 {
+    #[must_use]
+    pub fn safe_parallel_sum(input_slice: &[u64]) -> u64 {
         input_slice
             .iter()
             .fold(0u64, |acc, &value| acc.saturating_add(value))
     }
 
     /// Safe parallel maximum
-    #[must_use] pub fn safe_parallel_max(input_slice: &[u64]) -> Option<u64> {
+    #[must_use]
+    pub fn safe_parallel_max(input_slice: &[u64]) -> Option<u64> {
         input_slice.iter().max().copied()
     }
 
     /// Safe parallel minimum
-    #[must_use] pub fn safe_parallel_min(input_slice: &[u64]) -> Option<u64> {
+    #[must_use]
+    pub fn safe_parallel_min(input_slice: &[u64]) -> Option<u64> {
         input_slice.iter().min().copied()
     }
 
@@ -339,7 +344,8 @@ pub mod safe_utils {
     }
 
     /// Safe pattern matching in byte arrays
-    #[must_use] pub fn safe_pattern_match(input_buffer: &[u8], pattern: &[u8]) -> Vec<usize> {
+    #[must_use]
+    pub fn safe_pattern_match(input_buffer: &[u8], pattern: &[u8]) -> Vec<usize> {
         if pattern.is_empty() {
             return Vec::new();
         }
@@ -590,12 +596,14 @@ impl AdvancedSIMDOptimizer {
 
     /// Gets metrics
     /// Gets metrics
-    #[must_use] pub fn get_metrics(&self) -> &SIMDMetrics {
+    #[must_use]
+    pub fn get_metrics(&self) -> &SIMDMetrics {
         &self.metrics
     }
 
     /// 📊 Get cache efficiency
-    #[must_use] pub fn cache_hit_rate(&self) -> f64 {
+    #[must_use]
+    pub fn cache_hit_rate(&self) -> f64 {
         let total_accesses = self.metrics.cache_hits + self.metrics.cache_misses;
         if total_accesses == 0 {
             0.0
@@ -629,7 +637,8 @@ impl AdvancedSIMDOptimizer {
         );
     }
 
-    #[must_use] pub fn performance_report(&self) -> HashMap<String, String> {
+    #[must_use]
+    pub fn performance_report(&self) -> HashMap<String, String> {
         let mut report = HashMap::new();
 
         report.insert(

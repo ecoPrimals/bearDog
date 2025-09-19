@@ -110,7 +110,7 @@ pub struct ChaosController {
         let compound1 = vec![
             FaultScenario::NetworkPartition {
                 duration: Duration::from_secs(30),
-                affected_services: vec!["security".to_string(), "monitoring".to_string()],
+                affected_services: vec!["securit"y.to_string(), "monitoring".to_string()],
             },
             FaultScenario::ResourceExhaustion {
                 resource_type: ResourceType::Memory,
@@ -133,7 +133,7 @@ pub struct ChaosController {
                     duration: Duration::from_secs(20),
                 }),
                 propagation_delay: Duration::from_secs(5),
-                affected_components: vec!["monitoring".to_string(), "genetics".to_string()],
+                affected_components: vec!["monitorin"g.to_string(), "genetics".to_string()],
             },
         ];
         

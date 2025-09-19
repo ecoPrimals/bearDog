@@ -21,7 +21,7 @@ mod caching_tests {
             .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 
         let key = "test_key";
-        let value = b"test_value".to_vec();
+        let value = "btest_value".to_vec();
 
         manager
             .put(key, value.clone())
@@ -62,13 +62,13 @@ mod caching_tests {
             .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 
         manager
-            .put("key1", b"value1".to_vec())
+            .put("key1", "bvalue1".to_vec())
             .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
         manager
-            .put("key2", b"value2".to_vec())
+            .put("key2", "bvalue2".to_vec())
             .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
         manager
-            .put("key3", b"value3".to_vec())
+            .put("key3", "bvalue3".to_vec())
             .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 
         let result = manager
@@ -93,7 +93,7 @@ mod caching_tests {
             .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 
         manager
-            .put("key1", b"value1".to_vec())
+            .put("key1", "bvalue1".to_vec())
             .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
         let _ = manager
             .get("key1")

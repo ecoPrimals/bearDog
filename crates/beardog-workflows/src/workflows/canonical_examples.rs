@@ -94,7 +94,8 @@ impl Workflow for ExampleWorkflow {
 impl ExampleWorkflow {
     /// New operation.
     /// Creates a new instance
-    #[must_use] pub fn new(id: &str, name: &str) -> Self {
+    #[must_use]
+    pub fn new(id: &str, name: &str) -> Self {
         let now = chrono::Utc::now();
         Self {
             id: ExampleWorkflowId(id.to_string()),
@@ -108,7 +109,8 @@ impl ExampleWorkflow {
 
     /// With Data operation.
     /// Creates instance with data
-    #[must_use] pub fn with_data(mut self, workflow_data: serde_json::Value) -> Self {
+    #[must_use]
+    pub fn with_data(mut self, workflow_data: serde_json::Value) -> Self {
         self.data = Some(workflow_data);
         self
     }
@@ -116,7 +118,8 @@ impl ExampleWorkflow {
     /// Set Status operation.
     /// Sets status
     /// Sets status
-    #[must_use] pub fn set_status(mut self, status: ExampleWorkflowStatus) -> Self {
+    #[must_use]
+    pub fn set_status(mut self, status: ExampleWorkflowStatus) -> Self {
         self.status = status;
         self.updated_at = chrono::Utc::now();
         self
@@ -132,21 +135,24 @@ pub struct InMemoryWorkflowRepository {
 impl InMemoryWorkflowRepository {
     /// New operation.
     /// Creates a new instance
-    #[must_use] pub fn new() -> Self {
+    #[must_use]
+    pub fn new() -> Self {
         Self {
             workflows: Arc::new(Mutex::new(HashMap::with_capacity(16))),
         }
     }
 
     /// Len operation.
-    #[must_use] pub fn len(&self) -> usize {
+    #[must_use]
+    pub fn len(&self) -> usize {
         self.workflows.lock().map(|w| w.len()).unwrap_or(0)
     }
 
     /// Is Empty operation.
     /// Checks if empty
     /// Checks if empty
-    #[must_use] pub fn is_empty(&self) -> bool {
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
         self.workflows.lock().map(|w| w.is_empty()).unwrap_or(true)
     }
 }
@@ -172,7 +178,10 @@ impl WorkflowRepository for InMemoryWorkflowRepository {
         Ok(())
     }
 
-    async fn find_by_id(&self, id: &ExampleWorkflowId) -> Result<Option<Self::Workflow>, Self::Error> {
+    async fn find_by_id(
+        &self,
+        id: &ExampleWorkflowId,
+    ) -> Result<Option<Self::Workflow>, Self::Error> {
         let workflows = self
             .workflows
             .lock()
@@ -200,7 +209,8 @@ impl WorkflowRepository for InMemoryWorkflowRepository {
 
     /// Removes
     async fn delete(&self, id: &ExampleWorkflowId) -> Result<(), Self::Error> {
-        let mut workflows = self.workflows
+        let mut workflows = self
+            .workflows
             .lock()
             .map_err(|e| BearDogError::internal(format!("Failed to acquire lock: {e}")))?;
 
@@ -264,7 +274,8 @@ pub struct ExampleWorkflowProcessor {
 impl ExampleWorkflowProcessor {
     /// New operation.
     /// Creates a new instance
-    #[must_use] pub fn new(name: &'static str) -> Self {
+    #[must_use]
+    pub fn new(name: &'static str) -> Self {
         Self { name }
     }
 }
@@ -423,12 +434,14 @@ pub struct StartWorkflowCommand {
 impl StartWorkflowCommand {
     /// New operation.
     /// Creates a new instance
-    #[must_use] pub fn new(context: ProcessingContext) -> Self {
+    #[must_use]
+    pub fn new(context: ProcessingContext) -> Self {
         Self { context }
     }
 
     /// Context operation.
-    #[must_use] pub fn context(&self) -> &ProcessingContext {
+    #[must_use]
+    pub fn context(&self) -> &ProcessingContext {
         &self.context
     }
 }

@@ -59,7 +59,7 @@ impl beardog::auth::NodeRegistry for MockNodeRegistry {
             .get(node_id)
             .map(|n| n.trust_level as f64)
             .ok_or_else(|| BearDogError::NotFound {
-                resource_type:  N"ode".to_string(),
+                resource_type:  "Node".to_string(),
                 id: node_id.to_string(),
             })
     }
@@ -70,7 +70,7 @@ impl beardog::auth::NodeRegistry for MockNodeRegistry {
             Ok(())
         } else {
             Err(BearDogError::NotFound {
-                resource_type:  N"ode".to_string(),
+                resource_type:  "Node".to_string(),
                 id: node_id.to_string(),
             })
         }
@@ -93,7 +93,7 @@ impl beardog::auth::NodeRegistry for MockNodeRegistry {
             authorization_id: authorization.id.clone(),
             operation: operation.clone(),
             timestamp: Utc::now(),
-            proof_signature:  m"ock_signature".to_string(),
+            proof_signature:  "mock_signature".to_string(),
         })
     }
 
@@ -108,10 +108,16 @@ impl beardog::auth::NodeRegistry for MockNodeRegistry {
         let genetics = self.genetics_api.create_genesis_node(node_id)?;
 
         let mut auth_engine_mut = Arc::try_unwrap(auth_engine)
-            .map_err(|_| BearDogError::internal( F"ailed to unwrap auth engine".to_string())?;
+            .map_err(|_| BearDogError::internal("Failed to unwrap auth engine".to_string()))?;
         auth_engine_mut.register_genetics(genetics)?;
 
-        let auth_engine = Arc::new(&str,
+        let auth_engine = Arc::new(auth_engine_mut);
+        Ok(node_id.to_string())
+    }
+
+    pub fn spawn_child_node(
+        &mut self,
+        parent_node_id: &str,
         spawn_purpose: SpawnPurpose,
     ) -> Result<String, BearDogError> {
         info!(
@@ -143,9 +149,9 @@ impl beardog::auth::NodeRegistry for MockNodeRegistry {
 
         let workflow_request = WorkflowRequest {
             workflow_type: wf_type,
-            initiator:  t"est_user".to_string(),
+            initiator:  "test_user".to_string(),
             parameters: HashMap::with_capacity(16),
-            reason:  I"ntegration test workflow".to_string(),
+            reason:  "Integration test workflow".to_string(),
             metadata: HashMap::with_capacity(16),
         };
 
@@ -171,13 +177,13 @@ async fn test_genetic_spawning_integration() -> Result<(), BearDogError> {
 
     let mut harness = GeneticIntegrationHarness::new()?;
 
-    let parent_node = harness.create_test_node( p"arent_node_1")?;
-    assert_eq!(parent_node,  p"arent_node_1");
+    let parent_node = harness.create_test_node( "parent_node_1")?;
+    assert_eq!(parent_node,  "parent_node_1");
 
     let child_node = harness
         .test_genetic_spawning(&parent_node, SpawnPurpose::SecurityResponse)
         ?;
-    assert!(child_node.starts_with( p"arent_node_1_child_"));
+    assert!(child_node.starts_with( "parent_node_1_child_"));
 
     let metrics = harness.get_metrics();
     assert_eq!(metrics.total_spawns_attempted, 1);
@@ -194,15 +200,15 @@ async fn test_multi_party_workflow_integration() -> Result<(), BearDogError> {
     let mut harness = GeneticIntegrationHarness::new()?;
 
     let genetic_workflow = BearDogWorkflowType::GeneticSpawning {
-        parent_genetics: vec![ p"arent1".to_string()],
+        parent_genetics: vec![ "parent1".to_string()],
     };
 
     let workflow_id = harness.test_multi_party_workflow(genetic_workflow)?;
     assert!(!workflow_id.is_empty());
 
     let compliance_workflow = BearDogWorkflowType::ComplianceAudit {
-        audit_scope: vec![ a"ll_systems".to_string()],
-        standards: vec![ S"OC2".to_string()],
+        audit_scope: vec![ "all_systems".to_string()],
+        standards: vec![ "SOC2".to_string()],
     };
 
     let workflow_id2 = harness
@@ -223,9 +229,9 @@ async fn test_cross_node_genetic_operations() -> Result<(), BearDogError> {
 
     let mut harness = GeneticIntegrationHarness::new()?;
 
-    let node1 = harness.create_test_node( n"ode_1")?;
-    let node2 = harness.create_test_node( n"ode_2")?;
-    let node3 = harness.create_test_node( n"ode_3")?;
+    let node1 = harness.create_test_node( "node_1")?;
+    let node2 = harness.create_test_node( "node_2")?;
+    let node3 = harness.create_test_node( "node_3")?;
 
     let child1 = harness
         .test_genetic_spawning(&node1, SpawnPurpose::LoadBalancing)
@@ -237,9 +243,9 @@ async fn test_cross_node_genetic_operations() -> Result<(), BearDogError> {
         .test_genetic_spawning(&node3, SpawnPurpose::PerformanceOptimization)
         ?;
 
-    assert!(child1.starts_with( n"ode_1_child_"));
-    assert!(child2.starts_with( n"ode_2_child_"));
-    assert!(child3.starts_with( n"ode_3_child_"));
+    assert!(child1.starts_with( "node_1_child_"));
+    assert!(child2.starts_with( "node_2_child_"));
+    assert!(child3.starts_with( "node_3_child_"));
 
     let metrics = harness.get_metrics();
     assert_eq!(metrics.total_spawns_attempted, 3);
@@ -255,7 +261,7 @@ async fn test_genetic_lineage_tracking() -> Result<(), BearDogError> {
 
     let mut harness = GeneticIntegrationHarness::new()?;
 
-    let genesis_node = harness.create_test_node( g"enesis")?;
+    let genesis_node = harness.create_test_node( "genesis")?;
 
     let gen1_child1 = harness
         .test_genetic_spawning(&genesis_node, SpawnPurpose::SecurityResponse)
@@ -277,8 +283,8 @@ async fn test_genetic_lineage_tracking() -> Result<(), BearDogError> {
         )
         ?;
 
-    assert!(gen1_child1.starts_with( g"enesis_child_"));
-    assert!(gen1_child2.starts_with( g"enesis_child_"));
+    assert!(gen1_child1.starts_with( "genesis_child_"));
+    assert!(gen1_child2.starts_with( "genesis_child_"));
     assert!(gen2_child1.starts_with(&format!("{}_child_", gen1_child1)));
     assert!(gen2_child2.starts_with(&format!("{}_child_", gen1_child2)));
 
@@ -296,7 +302,7 @@ async fn test_genetic_capability_inheritance() -> Result<(), BearDogError> {
 
     let mut harness = GeneticIntegrationHarness::new()?;
 
-    let parent_node = harness.create_test_node( s"ecurity_specialist")?;
+    let parent_node = harness.create_test_node( "security_specialist")?;
 
     let threat_detector = harness
         .test_genetic_spawning(&parent_node, SpawnPurpose::SecurityResponse)
@@ -308,9 +314,9 @@ async fn test_genetic_capability_inheritance() -> Result<(), BearDogError> {
         .test_genetic_spawning(&parent_node, SpawnPurpose::PerformanceOptimization)
         ?;
 
-    assert!(threat_detector.contains( s"ecurity_specialist"));
-    assert!(compliance_auditor.contains( s"ecurity_specialist"));
-    assert!(performance_optimizer.contains( s"ecurity_specialist"));
+    assert!(threat_detector.contains( "security_specialist"));
+    assert!(compliance_auditor.contains( "security_specialist"));
+    assert!(performance_optimizer.contains( "security_specialist"));
 
     let metrics = harness.get_metrics();
     assert_eq!(metrics.total_spawns_attempted, 3);
@@ -327,8 +333,8 @@ async fn test_workflow_approval_integration() -> Result<(), BearDogError> {
 
     let workflows = vec![
         BearDogWorkflowType::GeneticSpawning {
-            parent_genetics: vec![ p"arent1".to_string()],
-            response_team: vec![ s"ecurity_team".to_string()],
+            parent_genetics: vec![ "parent1".to_string()],
+            response_team: vec![ "security_team".to_string()],
         },
     ];
 
@@ -356,7 +362,7 @@ async fn test_genetic_integration_error_handling() -> Result<(), BearDogError> {
 
     let mut harness = GeneticIntegrationHarness::new()?;
 
-    let parent_node = harness.create_test_node( e"rror_test_parent")?;
+    let parent_node = harness.create_test_node( "error_test_parent")?;
 
     let mut successful_spawns = 0;
     let mut failed_spawns = 0;
@@ -395,9 +401,9 @@ async fn test_genetic_integration_comprehensive() -> Result<(), BearDogError> {
     let mut harness = GeneticIntegrationHarness::new()?;
 
     let nodes = vec![
-        harness.create_test_node( c"omprehensive_test_1")?,
-        harness.create_test_node( c"omprehensive_test_2")?,
-        harness.create_test_node( c"omprehensive_test_3")?,
+        harness.create_test_node( "comprehensive_test_1")?,
+        harness.create_test_node( "comprehensive_test_2")?,
+        harness.create_test_node( "comprehensive_test_3")?,
     ];
 
     let mut children = Vec::new();

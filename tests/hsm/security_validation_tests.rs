@@ -82,8 +82,8 @@ impl HsmSecurityTestHarness {
 
         Ok(KeyUsageTestResult {
             restrictions_enforced: true,
-            allowed_operations: vec!["sign".to_string(), "verify".to_string()],
-            denied_operations: vec!["extract".to_string(), "export".to_string()],
+            allowed_operations: vec!["sig"n.to_string(), "verify".to_string()],
+            denied_operations: vec!["extrac"t.to_string(), "export".to_string()],
         })
     }
 
@@ -127,7 +127,7 @@ async fn test_signature_validation(
     let start_time = Instant::now();
 
     // Test valid signature
-    let test_data = b"test data for HSM signature validation";
+    let test_data = "btest data for HSM signature validation";
     let signature = harness.mock_hsm_sign("test_key", test_data)?;
 
     let is_valid = harness
@@ -136,7 +136,7 @@ async fn test_signature_validation(
     assert!(is_valid, "Valid signature should verify correctly");
 
     // Test tampered data
-    let tampered_data = b"tampered data for signature validation";
+    let tampered_data = "btampered data for signature validation";
     let is_invalid = harness
         .mock_hsm_verify("test_key", tampered_data, &signature)
         ?;
@@ -227,7 +227,7 @@ async fn test_cryptographic_integrity(
     let start_time = Instant::now();
 
     // Test multiple signatures for consistency
-    let test_data = b"cryptographic integrity test data";
+    let test_data = "bcryptographic integrity test data";
     let signature1 = harness.mock_hsm_sign("integrity_key", test_data)?;
     let signature2 = harness.mock_hsm_sign("integrity_key", test_data)?;
 

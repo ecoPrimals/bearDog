@@ -13,7 +13,8 @@ pub struct OptimizationHistory {
 
 impl OptimizationHistory {
     /// Creates a new instance
-    #[must_use] pub fn new(max_size: usize) -> Self {
+    #[must_use]
+    pub fn new(max_size: usize) -> Self {
         Self {
             optimization_actions: VecDeque::with_capacity(max_size),
             success_rates: HashMap::new(),
@@ -36,13 +37,15 @@ impl OptimizationHistory {
 
     /// Gets `total_actions`
     /// Gets `total_actions`
-    #[must_use] pub fn get_total_actions(&self) -> usize {
+    #[must_use]
+    pub fn get_total_actions(&self) -> usize {
         self.optimization_actions.len()
     }
 
     /// Gets `successful_actions`
     /// Gets `successful_actions`
-    #[must_use] pub fn get_successful_actions(&self) -> usize {
+    #[must_use]
+    pub fn get_successful_actions(&self) -> usize {
         self.optimization_actions
             .iter()
             .filter(|action| action.success == Some(true))
@@ -51,7 +54,8 @@ impl OptimizationHistory {
 
     /// Gets `average_improvement`
     /// Gets `average_improvement`
-    #[must_use] pub fn get_average_improvement(&self) -> f64 {
+    #[must_use]
+    pub fn get_average_improvement(&self) -> f64 {
         let improvements: Vec<f64> = self
             .optimization_actions
             .iter()
@@ -67,7 +71,8 @@ impl OptimizationHistory {
 
     /// Gets `success_rate`
     /// Gets `success_rate`
-    #[must_use] pub fn get_success_rate(&self, optimization_type: &str) -> Option<f64> {
+    #[must_use]
+    pub fn get_success_rate(&self, optimization_type: &str) -> Option<f64> {
         self.success_rates.get(optimization_type).copied()
     }
 
@@ -100,7 +105,8 @@ impl OptimizationHistory {
 
     /// Gets `recent_actions`
     /// Gets `recent_actions`
-    #[must_use] pub fn get_recent_actions(&self, count: usize) -> Vec<&OptimizationAction> {
+    #[must_use]
+    pub fn get_recent_actions(&self, count: usize) -> Vec<&OptimizationAction> {
         self.optimization_actions.iter().rev().take(count).collect()
     }
 }

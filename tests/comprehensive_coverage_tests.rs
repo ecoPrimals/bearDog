@@ -94,7 +94,7 @@ mod comprehensive_coverage_tests {
     fn test_threat_detection_coverage() -> Result<(), BearDogError> {
         let _threat_config = "basic_threat_config";
 
-        let algorithms = vec!["anomaly_detection", "pattern_matching"];
+        let algorithms = vec!["anomaly_detectio"n, "pattern_matching"];
         assert!(algorithms.len() > 1);
 
         Ok(())

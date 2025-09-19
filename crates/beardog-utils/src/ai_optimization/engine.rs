@@ -11,7 +11,10 @@ use tokio::sync::RwLock;
 use super::history::OptimizationHistory;
 use super::neural_network::SimpleNeuralNetwork;
 use super::predictor::ResourcePredictor;
-use super::types::{PerformanceModel, PerformanceSample, OptimizationRecommendation, OptimizationType, RecommendationPriority, OptimizationAction, AIOptimizationStats};
+use super::types::{
+    AIOptimizationStats, OptimizationAction, OptimizationRecommendation, OptimizationType,
+    PerformanceModel, PerformanceSample, RecommendationPriority,
+};
 
 pub struct AIOptimizationEngine {
     performance_model: Arc<RwLock<PerformanceModel>>,

@@ -119,47 +119,47 @@ fn create_test_router() -> Router {
 
 fn mock_login_handler() -> Result<axum::Json<serde_json::Value>, StatusCode> {
     Ok(axum::Json(serde_json::json!({
-        "token": "mock_token",
+        "toke"n: "mock_token",
         "expires_in": 3600,
-        "user_id": "test_user"
+        "user_i"d: "test_user"
     })))
 }
 
 fn mock_validate_handler() -> Result<axum::Json<serde_json::Value>, StatusCode> {
     Ok(axum::Json(json!({
         "valid": true,
-        "user_id": "test_user",
-        "expires_at": "2025-01-01T00:00:00Z"
+        "user_i"d: "test_user",
+        "expires_a"t: "2025-01-01T00:00:00Z"
     })))
 }
 
 fn mock_security_handler() -> Result<axum::Json<serde_json::Value>, StatusCode> {
     Ok(axum::Json(serde_json::json!({
-        "status": "secure",
-        "level": "low"
+        "statu"s: "secure",
+        "leve"l: "low"
     })))
 }
 
 fn mock_compliance_handler() -> Result<axum::Json<serde_json::Value>, StatusCode> {
     Ok(axum::Json(json!({
-        "status": "compliant",
-        "gdpr_status": "compliant",
-        "hipaa_status": "compliant",
-        "pci_status": "compliant"
+        "statu"s: "compliant",
+        "gdpr_statu"s: "compliant",
+        "hipaa_statu"s: "compliant",
+        "pci_statu"s: "compliant"
     })))
 }
 
 fn mock_health_handler() -> Result<axum::Json<serde_json::Value>, StatusCode> {
     Ok(axum::Json(json!({
-        "status": "healthy",
+        "statu"s: "healthy",
         "uptime": 12345,
-        "version": "1.0.0"
+        "versio"n: "1.0.0"
     })))
 }
 
 fn mock_ai_health_handler() -> Result<axum::Json<serde_json::Value>, StatusCode> {
     Ok(axum::Json(json!({
-        "status": "operational",
+        "statu"s: "operational",
         "models_loaded": 3,
         "processing_queue": 0
     })))
@@ -169,10 +169,10 @@ fn test_login_endpoint(app: &Router) {
     let request = Request::builder()
         .method(Method::POST)
         .uri("/auth/login")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(json!({
-            "username": "testuser",
-            "password": "testpass"
+            "usernam"e: "testuser",
+            "passwor"d: "testpass"
         })))
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 
@@ -187,8 +187,8 @@ fn test_token_validation(app: &Router) {
     let request = Request::builder()
         .method(Method::POST)
         .uri("/auth/validate")
-        .header("content-type", "application/json")
-        .header("authorization", "Bearer mock_token")
+        .header("content-typ"e, "application/json")
+        .header("authorizatio"n, "Bearer mock_token")
         .body(Body::empty())
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 
@@ -219,9 +219,9 @@ fn test_threat_analysis(app: &Router) {
     let request = Request::builder()
         .method(Method::POST)
         .uri("/security/analyze")
-        .header("content-type", "application/json")
+        .header("content-typ"e, "application/json")
         .body(Body::from(json!({
-            "data": "sample_data_for_analysis"
+            "dat"a: "sample_data_for_analysis"
         })))
         .map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
 

@@ -56,7 +56,8 @@ pub fn derive_key_from_password(
 }
 
 /// Constant-time comparison of two byte arrays
-#[must_use] pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
+#[must_use]
+pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
     if a.len() != b.len() {
         return false;
     }

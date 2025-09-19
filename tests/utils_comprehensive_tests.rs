@@ -22,10 +22,10 @@ fn test_string_utilities() {
     assert!(!sanitized.contains("<script>"));
 
     let formatted = format_bytes(1024 * 1024 * 1024);
-    assert!(formatted.contains("GB") || formatted.contains("GiB"));
+    assert!(formatted.contains("G"B) || formatted.contains("GiB"));
 
     let formatted_duration = format_duration(Duration::from_secs(3661));
-    assert!(formatted_duration.contains("1h") || formatted_duration.contains("hour"));
+    assert!(formatted_duration.contains("1"h) || formatted_duration.contains("hour"));
 }
 
 fn test_time_utilities() {
@@ -76,9 +76,9 @@ fn test_formatting_utilities() {
     assert!(formatted_json.is_ok());
 
     let table_data = vec![
-        vec!["Name".to_string(), "Age".to_string()],
-        vec!["Alice".to_string(), "30".to_string()],
-        vec!["Bob".to_string(), "25".to_string()],
+        vec!["Nam"e.to_string(), "Age".to_string()],
+        vec!["Alic"e.to_string(), "30".to_string()],
+        vec!["Bo"b.to_string(), "25".to_string()],
     ];
 
     let formatted_table = format_as_table(&table_data);

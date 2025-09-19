@@ -1,5 +1,8 @@
 use super::core::ThreatDetectionEngine;
-use crate::threat::types::{ThreatEvent, ThreatSource, SourceClassification, ThreatTarget, AssetCriticality, ProtectionLevel, ThreatSeverity, ThreatType, ThreatStatus, DetectionMethod, MlModel};
+use crate::threat::types::{
+    AssetCriticality, DetectionMethod, MlModel, ProtectionLevel, SourceClassification, ThreatEvent,
+    ThreatSeverity, ThreatSource, ThreatStatus, ThreatTarget, ThreatType,
+};
 use beardog_errors::BearDogError;
 
 use std::collections::hash_map::DefaultHasher;

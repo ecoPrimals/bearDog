@@ -14,7 +14,8 @@ pub struct SharedConfigManager {
 impl SharedConfigManager {
     /// Create new shared config manager
     /// Creates a new instance
-    #[must_use] pub fn new() -> Self {
+    #[must_use]
+    pub fn new() -> Self {
         Self {
             configs: RwLock::new(HashMap::new()),
         }

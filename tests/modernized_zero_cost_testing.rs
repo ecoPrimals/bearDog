@@ -574,7 +574,7 @@ impl QuantumResistanceValidator for ProductionQuantumValidator {
     type Attack = String;
 
     fn simulate_quantum_attacks(&self, _algorithm: &Self::Algorithm) -> Vec<Self::Attack> {
-        vec!["grover".to_string(), "shor".to_string()]
+        vec!["grove"r.to_string(), "shor".to_string()]
     }
 
     fn calculate_resistance_score(&self, _attacks: &[Self::Attack]) -> f64 {
@@ -582,7 +582,7 @@ impl QuantumResistanceValidator for ProductionQuantumValidator {
     }
 
     fn recommend_quantum_safe_alternatives(&self) -> Vec<Self::Algorithm> {
-        vec!["kyber".to_string(), "dilithium".to_string()]
+        vec!["kybe"r.to_string(), "dilithium".to_string()]
     }
 }
 

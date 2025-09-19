@@ -51,8 +51,8 @@ mod error_handling_tests {
 
     #[test]
     fn test_error_chaining() {
-        let root_cause = std::io::Error::new(std::io::ErrorKind::NotFound,  f"ile not found");
-        let chained_error = BearDogError::network_error( N"etwork operation failed".to_string())
+        let root_cause = std::io::Error::new(std::io::ErrorKind::NotFound,  "file not found");
+        let chained_error = BearDogError::network_error( "Network operation failed".to_string())
             .with_source(Box::new(root_cause));
 
         assert!(chained_error.source().is_some());
@@ -96,18 +96,18 @@ mod configuration_tests {
         let config = BearDogConfig::default();
 
         let json_str = serde_json::to_string_pretty(&config)
-            .map_err(|e| BearDogError::system(format!( J"SON serialization failed: {:?}", e))?;
+            .map_err(|e| BearDogError::system(format!("JSON serialization failed: {:?}", e))?;
         let from_json: BearDogConfig = serde_json::from_str(&json_str)
-            .map_err(|e| BearDogError::system(format!( J"SON deserialization failed: {:?}", e))?;
+            .map_err(|e| BearDogError::system(format!("JSON deserialization failed: {:?}", e))?;
         assert_eq!(config.version, from_json.version);
 
         // Test JSON deserialization validation
-        assert!(serde_json::from_str::<BearDogConfig>(&json_str).is_ok(),  C"onfig should deserialize from JSON ");
+        assert!(serde_json::from_str::<BearDogConfig>(&json_str).is_ok(),  "Config should deserialize from JSON ");
 
         let toml_str = toml::to_string_pretty(&config)
-            .map_err(|e| BearDogError::system(format!( T"OML serialization failed: {:?}", e))?;
+            .map_err(|e| BearDogError::system(format!("TOML serialization failed: {:?}", e)))?;
         let from_toml: BearDogConfig = toml::from_str(&toml_str)
-            .map_err(|e| BearDogError::system(format!( T"OML deserialization failed: {:?}", e))?;
+            .map_err(|e| BearDogError::system(format!("TOML deserialization failed: {:?}", e)))?;
         assert_eq!(config.version, from_toml.version);
 
         Ok(())
@@ -121,23 +121,23 @@ mod performance_tests {
     fn test_zero_copy_string_operations() {
         use beardog_utils::zero_copy::optimized_strings::*;
 
-        let constant_str = shared_string( a"pi");
-        let constant_str2 = shared_string( a"pi");
+        let constant_str = shared_string( "api");
+        let constant_str2 = shared_string( "api");
         assert!(Arc::ptr_eq(&constant_str, &constant_str2));
 
         let mut builder = ZeroCopyStringBuilder::new();
         builder
-            .push_static( p"refix_")
-            .push( d"ynamic")
+            .push_static( "prefix_")
+            .push( "dynamic")
             .push_static("_suffix");
 
         let result = builder.build();
-        assert_eq!(result,  p"refix_dynamic_suffix");
+        assert_eq!(result,  "prefix_dynamic_suffix");
 
-        let cow_static = cow_string( l"ocalhost");
+        let cow_static = cow_string( "localhost");
         assert!(matches!(cow_static, std::borrow::Cow::Borrowed(_)));
 
-        let cow_dynamic = cow_string( d"ynamic_string_12345");
+        let cow_dynamic = cow_string( "dynamic_string_12345");
         assert!(matches!(cow_dynamic, std::borrow::Cow::Owned(_)));
     }
 
@@ -149,23 +149,23 @@ mod performance_tests {
 
         let strategies = vec![
             (
-                 S"tring",
-                 s"hared_across_threads",
+                 "String",
+                 "shared_across_threads",
                 CloneOptimizationStrategy::SharedOwnership,
             ),
             (
-                 V"ec<u8>",
-                 o"ccasional_modification",
+                 "Vec<u8>",
+                 "occasional_modification",
                 CloneOptimizationStrategy::CopyOnWrite,
             ),
             (
-                 C"onfig",
-                 r"ead_only_access",
+                 "Config",
+                 "read_only_access",
                 CloneOptimizationStrategy::BorrowInstead,
             ),
             (
-                 A"piResponse",
-                 s"tring_operations",
+                 "ApiResponse",
+                 "string_operations",
                 CloneOptimizationStrategy::ZeroCopy,
             ),
         ];
@@ -187,7 +187,7 @@ mod performance_tests {
         assert!(pool_result.is_ok());
 
         let mut pool =
-            pool_result.map_err(|e| BearDogError::system(format!( P"ool creation error: {:?}", e))?;
+            pool_result.map_err(|e| BearDogError::system(format!("Pool creation error: {:?}", e))?;
 
         let mut allocated_items = Vec::new();
 
@@ -196,8 +196,8 @@ mod performance_tests {
             assert!(item_result.is_ok());
 
             let mut item = item_result
-                .map_err(|e| BearDogError::system(format!( P"ool allocation error: {:?}", e))?;
-            item.push_str(&format!( t"est_item_{:?}", i));
+                .map_err(|e| BearDogError::system(format!("Pool allocation error: {:?}", e))?;
+            item.push_str(&format!("test_item_{:?}", i));
             allocated_items.push(item);
         }
 
@@ -219,7 +219,7 @@ mod security_comprehensive_tests {
     async fn test_comprehensive_cryptographic_operations() {
         let config = security::SecurityConfig::default();
         let provider = beardog_security::SecurityProvider::new(config)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let algorithms = vec![
             security::Algorithm::Ed25519,
@@ -239,15 +239,15 @@ mod security_comprehensive_tests {
             let key_result = provider.generate_key(&key_spec);
             assert!(
                 key_result.is_ok(),
-                 K"ey generation should succeed for {:?}",
+                 "Key generation should succeed for {:?}",
                 algorithm
             );
 
             let key =
-                key_result.map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+                key_result.map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
             assert_eq!(key.algorithm, algorithm);
 
-            let test_data = format!( t"est data for {:?}", algorithm)
+            let test_data = format!("test data for {:?}", algorithm)
                 .to_string()
                 .into_bytes();
 
@@ -255,13 +255,13 @@ mod security_comprehensive_tests {
                 let signature_result = provider.sign_data(&key.id, &test_data);
                 assert!(
                     signature_result.is_ok(),
-                     S"igning should succeed for {:?}",
+                     "Signing should succeed for {:?}",
                     algorithm
                 );
 
                 let signature = signature_result
-                    .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
-                assert!(!signature.is_empty(),  S"ignature should not be empty");
+                    .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
+                assert!(!signature.is_empty(),  "Signature should not be empty");
 
                 if key.usage.contains(&security::KeyUsage::Verification) {
                     let verify_result = provider
@@ -269,14 +269,14 @@ mod security_comprehensive_tests {
                         ;
                     assert!(
                         verify_result.is_ok(),
-                         V"erification should succeed for {:?}",
+                         "Verification should succeed for {:?}",
                         algorithm
                     );
                     assert!(
                         verify_result.map_err(|e| BearDogError::system({:?}",
                             e
                         )))?,
-                         S"ignature should verify for {:?}",
+                         "Signature should verify for {:?}",
                         algorithm
                     );
                 }
@@ -288,20 +288,20 @@ mod security_comprehensive_tests {
     async fn test_security_provider_edge_cases() {
         let config = security::SecurityConfig::default();
         let provider = beardog_security::SecurityProvider::new(config)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
-        let invalid_key_id =  n"on_existent_key_12345";
-        let test_data = b t"est data ";
+        let invalid_key_id =  "non_existent_key_12345";
+        let test_data = b "test data ";
 
         let sign_result = provider.sign_data(invalid_key_id, test_data);
-        assert!(sign_result.is_err(),  S"igning with invalid key should fail ");
+        assert!(sign_result.is_err(),  "Signing with invalid key should fail ");
 
         let verify_result = provider
             .verify_signature(invalid_key_id, test_data, &[])
             ;
         assert!(
             verify_result.is_err(),
-             V"erification with invalid key should fail "
+             "Verification with invalid key should fail "
         );
 
         let key_spec = security::KeySpec {
@@ -310,14 +310,14 @@ mod security_comprehensive_tests {
         };
         let key = provider
             .generate_key(&key_spec)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let empty_data_sign = provider.sign_data(&key.id, &[]);
-        assert!(empty_data_sign.is_ok(),  S"igning empty data should succeed ");
+        assert!(empty_data_sign.is_ok(),  "Signing empty data should succeed ");
 
         let large_data = vec![0u8; 1024 * 1024]; // 1MB
         let large_data_sign = provider.sign_data(&key.id, &large_data);
-        assert!(large_data_sign.is_ok(),  S"igning large data should succeed ");
+        assert!(large_data_sign.is_ok(),  "Signing large data should succeed ");
     }
 }
 
@@ -328,11 +328,11 @@ mod monitoring_comprehensive_tests {
     async fn test_security_sentinel_comprehensive() {
         let config = monitoring::SecuritySentinelConfig::default();
         let sentinel = beardog_monitoring::SecuritySentinel::new(config)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let threat_data = monitoring::ThreatData {
             source_ip: "192.168.1.100".to_string(),
-            request_pattern:  s"uspicious_pattern".to_string(),
+            request_pattern:  "suspicious_pattern".to_string(),
             timestamp: chrono::Utc::now(),
         };
 
@@ -340,14 +340,14 @@ mod monitoring_comprehensive_tests {
         assert!(detection_result.is_ok());
 
         let threat_assessment = detection_result
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert!(threat_assessment.risk_score >= 0.0);
         assert!(threat_assessment.risk_score <= 100.0);
 
         let security_event = monitoring::SecurityEvent {
             event_type: monitoring::SecurityEventType::AuthenticationAttempt,
             severity: monitoring::Severity::Medium,
-            description:  T"est authentication attempt ".to_string(),
+            description:  "Test authentication attempt ".to_string(),
             metadata: std::collections::HashMap::with_capacity(16),
         };
 
@@ -359,14 +359,14 @@ mod monitoring_comprehensive_tests {
     async fn test_performance_monitoring_comprehensive() {
         let config = monitoring::PerformanceConfig::default();
         let monitor = beardog_monitoring::PerformanceMonitor::new(config)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         for i in 0..5 {
             let metrics_result = monitor.collect_metrics();
             assert!(metrics_result.is_ok());
 
             let metrics = metrics_result
-                .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+                .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
             assert!(!metrics.is_empty());
 
             for metric in metrics {
@@ -382,7 +382,7 @@ mod monitoring_comprehensive_tests {
         assert!(report_result.is_ok());
 
         let report =
-            report_result.map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            report_result.map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert!(!report.summary.is_empty());
         assert!(!report.recommendations.is_empty());
         assert!(report.overall_score >= 0.0);
@@ -397,11 +397,11 @@ mod genetics_comprehensive_tests {
     async fn test_genetics_lifecycle_comprehensive() {
         let config = genetics::GeneticsConfig::default();
         let engine = beardog_genetics::GeneticsEngine::new(config)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let initial_spawn = genetics::SpawnRequest {
             parent_ids: vec![],
-            target_capabilities: vec![ s"ecurity".to_string(genetics::FitnessCriteria {
+            target_capabilities: vec![ "security".to_string(genetics::FitnessCriteria {
                 security_weight: 0.6,
                 performance_weight: 0.4,
                 minimum_fitness: 0.7,
@@ -410,24 +410,24 @@ mod genetics_comprehensive_tests {
 
         let generation_0 = engine
             .spawn_genetics(initial_spawn)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert_eq!(generation_0.generation, 0);
         assert!(!generation_0.chromosomes.is_empty());
 
         let fitness_result = engine
             .evaluate_fitness(&generation_0)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert!(fitness_result >= 0.0 && fitness_result <= 1.0);
 
         let evolution_request = genetics::EvolutionRequest {
             parent_genetics: vec![generation_0.clone(0.1,
             crossover_rate: 0.8,
-            target_improvements: vec![ e"fficiency".to_string()],
+            target_improvements: vec![ "efficiency".to_string()],
         };
 
         let generation_1 = engine
             .evolve_genetics(evolution_request)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert_eq!(generation_1.generation, 1);
         assert_eq!(generation_1.lineage.parent_ids, vec![generation_0.id]);
 
@@ -435,17 +435,17 @@ mod genetics_comprehensive_tests {
             let evolution_request = genetics::EvolutionRequest {
                 parent_genetics: vec![generation_1.clone(0.05,
                 crossover_rate: 0.9,
-                target_improvements: vec![ o"ptimization".to_string()],
+                target_improvements: vec![ "optimization".to_string()],
             };
 
             let next_gen = engine
                 .evolve_genetics(evolution_request)
-                .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+                .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
             assert_eq!(next_gen.generation, gen);
 
             let fitness = engine
                 .evaluate_fitness(&next_gen)
-                .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+                .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
             assert!(fitness >= 0.0);
         }
     }
@@ -454,22 +454,22 @@ mod genetics_comprehensive_tests {
     async fn test_genetics_crossover_and_mutation() {
         let config = genetics::GeneticsConfig::default();
         let engine = beardog_genetics::GeneticsEngine::new(config)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let parent1 = genetics::BearDogGenetics {
-            id:  p"arent1".to_string(1,
+            id:  "parent1".to_string(1,
             chromosomes: vec![
-                genetics::CryptoChromosome::new( e"d25519".to_string()),
-                genetics::PerformanceChromosome::new( z"ero_copy".to_string()),
+                genetics::CryptoChromosome::new( "ed25519".to_string()),
+                genetics::PerformanceChromosome::new( "zero_copy".to_string()),
             ],
             lineage: genetics::GeneticsLineage::default(),
         };
 
         let parent2 = genetics::BearDogGenetics {
-            id:  p"arent2".to_string(1,
+            id:  "parent2".to_string(1,
             chromosomes: vec![
-                genetics::CryptoChromosome::new( x"25519".to_string()),
-                genetics::NetworkChromosome::new( m"esh_communication".to_string()),
+                genetics::CryptoChromosome::new( "x25519".to_string()),
+                genetics::NetworkChromosome::new( "mesh_communication".to_string()),
             ],
             lineage: genetics::GeneticsLineage::default(),
         };
@@ -481,7 +481,7 @@ mod genetics_comprehensive_tests {
 
         let offspring = engine
             .perform_crossover(crossover_request)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert_eq!(offspring.generation, 2);
         assert!(!offspring.chromosomes.is_empty());
 
@@ -496,7 +496,7 @@ mod genetics_comprehensive_tests {
 
         let mutated = engine
             .perform_mutation(mutation_request)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert!(!mutated.chromosomes.is_empty());
     }
 }
@@ -522,7 +522,7 @@ mod compliance_comprehensive_tests {
         for standard in standards {
             let test_event = compliance::ComplianceEvent {
                 id: uuid::Uuid::new_v4(compliance::ComplianceEventType::DataAccess,
-                standard: standard.clone(format!( T"est event for {:?}", standard),
+                standard: standard.clone(format!("Test event for {:?}", standard),
                 timestamp: chrono::Utc::now(),
                 metadata: std::collections::HashMap::with_capacity(16),
             };
@@ -530,12 +530,12 @@ mod compliance_comprehensive_tests {
             let evaluation_result = handler.evaluate_event(&test_event);
             assert!(
                 evaluation_result.is_ok(),
-                 C"ompliance evaluation should succeed for {:?}",
+                 "Compliance evaluation should succeed for {:?}",
                 standard
             );
 
             let result = evaluation_result
-                .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+                .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
             assert_eq!(result.standard, standard);
             assert!(result.score >= 0.0 && result.score <= 100.0);
         }
@@ -550,14 +550,14 @@ mod compliance_comprehensive_tests {
             let event = compliance::ComplianceEvent {
                 id: uuid::Uuid::new_v4(compliance::ComplianceEventType::DataModification,
                 standard: compliance::ComplianceStandard::Gdpr,
-                description: format!( A"udit test event {:?}", i),
+                description: format!("Audit test event {:?}", i),
                 timestamp: chrono::Utc::now(),
                 metadata: std::collections::HashMap::with_capacity(16),
             };
 
             handler
                 .evaluate_event(&event)
-                .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+                .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         }
 
         assert_eq!(handler.audit_trail.len(), 10);
@@ -577,42 +577,42 @@ mod workflow_comprehensive_tests {
     async fn test_workflow_engine_comprehensive() {
         let config = workflows::WorkflowConfig::default();
         let engine = beardog_workflows::WorkflowEngine::new(config)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let complex_workflow = workflows::Workflow {
-            id:  c"omplex_test_workflow".to_string(),
-            workflow_type:  s"ecurity_compliance_workflow".to_string(),
+            id:  "complex_test_workflow".to_string(),
+            workflow_type:  "security_compliance_workflow".to_string(),
             steps: vec![
                 workflows::WorkflowStep {
-                    id:  u"ser_authentication".to_string(),
-                    step_type:  a"uthentication".to_string(),
+                    id:  "user_authentication".to_string(),
+                    step_type:  "authentication".to_string(),
                     parameters: {
                         let mut params = std::collections::HashMap::with_capacity(16);
                         params.insert(
-                             u"sername".to_string(),
-                            serde_json::Value::String( t"est_user"),
+                             "username".to_string(),
+                            serde_json::Value::String( "test_user"),
                         );
                         params
                     },
                 },
                 workflows::WorkflowStep {
-                    id:  k"ey_generation".to_string(),
-                    step_type:  c"ryptographic_operation".to_string(),
+                    id:  "key_generation".to_string(),
+                    step_type:  "cryptographic_operation".to_string(),
                     parameters: {
                         let mut params = std::collections::HashMap::with_capacity(16);
                         params.insert(
-                             a"lgorithm".to_string(),
-                            serde_json::Value::String( E"d25519"),
+                             "algorithm".to_string(),
+                            serde_json::Value::String( "Ed25519"),
                         );
                         params
                     },
                 },
                 workflows::WorkflowStep {
-                    id:  c"ompliance_check".to_string(),
-                    step_type:  c"ompliance_validation".to_string(),
+                    id:  "compliance_check".to_string(),
+                    step_type:  "compliance_validation".to_string(),
                     parameters: {
                         let mut params = std::collections::HashMap::with_capacity(16);
-                        params.insert( s"tandard".to_string(), serde_json::Value::String( G"DPR"));
+                        params.insert( "standard".to_string(), serde_json::Value::String( "GDPR"));
                         params
                     },
                 },
@@ -622,11 +622,11 @@ mod workflow_comprehensive_tests {
         let execution_result = engine.execute_workflow(complex_workflow);
         assert!(
             execution_result.is_ok(),
-             C"omplex workflow execution should succeed "
+             "Complex workflow execution should succeed "
         );
 
         let result = execution_result
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert_eq!(result.status, workflows::WorkflowStatus::Completed);
         assert_eq!(result.completed_steps.len(), 3);
     }
@@ -635,14 +635,14 @@ mod workflow_comprehensive_tests {
     async fn test_parallel_workflow_execution() {
         let config = workflows::WorkflowConfig::default();
         let engine = beardog_workflows::WorkflowEngine::new(config)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let workflows: Vec<workflows::Workflow> = (0..5)
             .map(|i| workflows::Workflow {
-                id: format!( p"arallel_workflow_{:?}", i),
-                workflow_type:  p"arallel_test".to_string(vec![workflows::WorkflowStep {
-                    id: format!( s"tep_{:?}", i),
-                    step_type:  t"est_operation".to_string(),
+                id: format!("parallel_workflow_{:?}", i),
+                workflow_type:  "parallel_test".to_string(vec![workflows::WorkflowStep {
+                    id: format!("step_{:?}", i),
+                    step_type:  "test_operation".to_string(),
                     parameters: std::collections::HashMap::with_capacity(16),
                 }],
             })
@@ -656,10 +656,10 @@ mod workflow_comprehensive_tests {
         let results = futures::future::join_all(execution_futures);
 
         for (i, result) in results.into_iter().enumerate() {
-            assert!(result.is_ok(),  P"arallel workflow {} should succeed ", i);
+            assert!(result.is_ok(),  "Parallel workflow {} should succeed ", i);
 
             let workflow_result =
-                result.map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+                result.map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
             assert_eq!(workflow_result.status, workflows::WorkflowStatus::Completed);
         }
     }
@@ -674,13 +674,13 @@ mod edge_case_tests {
         config.performance.max_concurrent_operations = 1; // Very limited
 
         let core = beardog_core::BearDogCore::new(config)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let mut tasks = Vec::new();
         for i in 0..10 {
             let core_clone = core.clone();
-            let task = tokio::spawn(format!( s"tress_service_{:?}", i),
-                    capabilities: vec![ s"tress_test".to_string(format!( h"ttp://localhost:808{:?}", i),
+            let task = tokio::spawn(format!("stress_service_{:?}", i),
+                    capabilities: vec![ "stress_test".to_string(format!("http://localhost:808{:?}", i),
                 };
                 core_clone.register_service(service)
             });
@@ -694,12 +694,12 @@ mod edge_case_tests {
             .filter(|r| {
                 r.is_ok()
                     && r.as_ref()
-                        .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e))))?
+                        .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e))))?
                         .is_ok()
             })
             .count();
 
-        assert!(success_count > 0,  A"t least some operations should succeed ");
+        assert!(success_count > 0,  "At least some operations should succeed ");
     }
 
     #[test]
@@ -739,13 +739,13 @@ mod edge_case_tests {
 
         let large_data = vec![0u8; 20];
         let copy_result = buffer.copy_from_slice(&large_data);
-        assert!(copy_result.is_err(),  C"opying oversized data should fail ");
+        assert!(copy_result.is_err(),  "Copying oversized data should fail ");
 
         let exact_data = vec![1u8; 10];
         let exact_copy_result = buffer.copy_from_slice(&exact_data);
         assert!(
             exact_copy_result.is_ok(),
-             C"opying exact size should succeed "
+             "Copying exact size should succeed "
         );
     }
 }
@@ -757,26 +757,26 @@ mod integration_comprehensive_tests {
     async fn test_full_ecosystem_integration() {
         let config = configuration::BearDogConfig::default();
         let core = beardog_core::BearDogCore::new(config.clone())
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let auth_service = beardog_auth::AuthService::new(config.auth.clone())
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         let security_provider = beardog_security::SecurityProvider::new(config.security.clone())
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         let monitor = beardog_monitoring::PerformanceMonitor::new(config.monitoring.clone())
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         let genetics_engine = beardog_genetics::GeneticsEngine::new(config.genetics.clone())
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let user_request = auth::UserRegistrationRequest {
-            username:  i"ntegration_user".to_string(),
-            email:  i"ntegration@beardog.dev".to_string(),
-            password:  s"ecure_integration_password_123".to_string(),
+            username:  "integration_user".to_string(),
+            email:  "integration@beardog.dev".to_string(),
+            password:  "secure_integration_password_123".to_string(),
         };
 
         let user = auth_service
             .register_user(user_request)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let key_spec = security::KeySpec {
             algorithm: security::Algorithm::Ed25519,
@@ -788,12 +788,12 @@ mod integration_comprehensive_tests {
 
         let user_key = security_provider
             .generate_user_key(&user.id, &key_spec)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert_eq!(user_key.owner_id, Some(user.id.clone()));
 
         let genetics_request = genetics::SpawnRequest {
             parent_ids: vec![],
-            target_capabilities: vec![ u"ser_optimization".to_string(genetics::FitnessCriteria {
+            target_capabilities: vec![ "user_optimization".to_string(genetics::FitnessCriteria {
                 security_weight: 0.7,
                 performance_weight: 0.3,
                 minimum_fitness: 0.8,
@@ -802,31 +802,31 @@ mod integration_comprehensive_tests {
 
         let user_genetics = genetics_engine
             .spawn_genetics(genetics_request)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let integration_metrics = monitor
             .collect_integration_metrics()
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert!(!integration_metrics.is_empty());
 
-        let test_data = b i"ntegration test data ";
+        let test_data = b "integration test data ";
         let signature = security_provider
             .sign_data(&user_key.id, test_data)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         let verification = security_provider
             .verify_signature(&user_key.id, test_data, &signature)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert!(
             verification,
-             E"nd-to-end signature verification should succeed "
+             "End-to-end signature verification should succeed "
         );
 
         let ecosystem_health = core
             .comprehensive_health_check()
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
         assert!(
             ecosystem_health.is_healthy,
-             E"ntire ecosystem should be healthy"
+             "Entire ecosystem should be healthy"
         );
     }
 }
@@ -838,16 +838,16 @@ mod stress_tests {
     async fn test_concurrent_operations_stress() {
         let config = configuration::BearDogConfig::default();
         let core = beardog_core::BearDogCore::new(config)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let concurrent_tasks = 50;
         let mut tasks = Vec::with_capacity(concurrent_tasks);
 
         for i in 0..concurrent_tasks {
             let core_clone = core.clone();
-            let task = tokio::spawn(format!( s"tress_service_{:?}", i),
-                    capabilities: vec![format!( c"apability_{:?}", i % 5)],
-                    endpoint: format!( h"ttp://localhost:{:?}", 8080 + i),
+            let task = tokio::spawn(format!("stress_service_{:?}", i),
+                    capabilities: vec![format!("capability_{:?}", i % 5)],
+                    endpoint: format!("http://localhost:{:?}", 8080 + i),
                 };
 
                 core_clone.register_service(service)
@@ -862,14 +862,14 @@ mod stress_tests {
             .filter(|r| {
                 r.is_ok()
                     && r.as_ref()
-                        .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e))))?
+                        .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e))))?
                         .is_ok()
             })
             .count();
 
         assert!(
             success_count >= concurrent_tasks / 2,
-             S"hould handle reasonable concurrent load"
+             "Should handle reasonable concurrent load"
         );
     }
 
@@ -877,7 +877,7 @@ mod stress_tests {
     async fn test_memory_pressure_handling() {
         let config = configuration::BearDogConfig::default();
         let security_provider = beardog_security::SecurityProvider::new(config.security)
-            .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
 
         let mut keys = Vec::new();
 
@@ -895,17 +895,17 @@ mod stress_tests {
             if i % 10 == 0 {
                 let health = security_provider
                     .health_check()
-                    .map_err(|e| BearDogError::system(format!( O"peration error: {:?}", e)))?;
+                    .map_err(|e| BearDogError::system(format!("Operation error: {:?}", e)))?;
                 assert!(
                     health.is_healthy || health.memory_usage_mb < 1000,
-                     M"emory usage should remain reasonable"
+                     "Memory usage should remain reasonable"
                 );
             }
         }
 
         assert!(
             !keys.is_empty(),
-             S"hould generate at least some keys under memory pressure"
+             "Should generate at least some keys under memory pressure"
         );
     }
 }

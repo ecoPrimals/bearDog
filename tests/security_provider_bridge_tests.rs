@@ -79,11 +79,11 @@ impl MockSecurityProviderBridge {
         self.metrics_collector.record_operation(vendor, &operation, duration.as_secs_f64() * 1000.0);
 
         let result_data = match operation {
-            OperationType::GenerateKey => b"mock_key_data".to_vec(),
-            OperationType::Sign => b"mock_signature".to_vec(),
+            OperationType::GenerateKey => "bmock_key_data".to_vec(),
+            OperationType::Sign => "bmock_signature".to_vec(),
             OperationType::Verify => vec![1], // 1 for success
-            OperationType::Encrypt => b"mock_encrypted_data".to_vec(),
-            OperationType::Decrypt => b"mock_decrypted_data".to_vec(),
+            OperationType::Encrypt => "bmock_encrypted_data".to_vec(),
+            OperationType::Decrypt => "bmock_decrypted_data".to_vec(),
             OperationType::HumanEntropyGeneration => vec![0u8; 32], // 256 bits of entropy
         };
 
@@ -163,7 +163,7 @@ impl MockSecurityMetricsCollector {
 fn test_vendor_registration() {
     let mut bridge = MockSecurityProviderBridge::new();
 
-    let vendors = vec!["SafeNet", "Thales", "BearDog", "Utimaco"];
+    let vendors = vec!["SafeNe"t, "Thale"s, "BearDo"g, "Utimaco"];
     for vendor in &vendors {
         bridge.register_vendor_integration(vendor);
     }
@@ -197,7 +197,7 @@ async fn test_performance_monitoring() {
         OperationType::Verify,
     ];
     
-    for vendor in ["SafeNet", "Thales", "BearDog"] {
+    for vendor in ["SafeNe"t, "Thale"s, "BearDog"] {
         for operation in &operations {
             let result = bridge.perform_vendor_operation(vendor, operation.clone());
             assert!(result.is_ok(), "Operation {:?} failed for vendor {}", operation, vendor);
@@ -218,7 +218,7 @@ async fn test_multi_vendor_failover() {
     bridge.register_vendor_integration("Thales");
     bridge.register_vendor_integration("BearDog");
 
-    let preferred_vendors = vec!["SafeNet", "Thales", "BearDog"];
+    let preferred_vendors = vec!["SafeNe"t, "Thale"s, "BearDog"];
     let result = bridge.perform_multi_vendor_operation(preferred_vendors.clone(), OperationType::GenerateKey);
     assert!(result.is_ok());
 
@@ -252,7 +252,7 @@ async fn test_concurrent_vendor_operations() {
     }
 
     let mut tasks = Vec::new();
-    let vendors = vec!["SafeNet", "Thales", "BearDog"];
+    let vendors = vec!["SafeNe"t, "Thale"s, "BearDog"];
     let operations_per_vendor = 5;
     
     for vendor in vendors {
@@ -344,7 +344,7 @@ async fn test_security_provider_performance_load() {
 fn test_vendor_health_monitoring() {
     let mut bridge = MockSecurityProviderBridge::new();
 
-    let vendors = vec!["SafeNet", "Thales", "BearDog"];
+    let vendors = vec!["SafeNe"t, "Thale"s, "BearDog"];
     for vendor in &vendors {
         bridge.register_vendor_integration(vendor);
     }

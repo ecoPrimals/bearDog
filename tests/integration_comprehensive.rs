@@ -29,7 +29,7 @@ async fn test_security_compliance_integration() -> Result<(), BearDogError> {
     let compliance_config = beardog_compliance::ComplianceConfig::default();
     let compliance_engine = ComplianceEngine::new(compliance_config)?;
 
-    let test_key = b"test_integration_key".to_vec();
+    let test_key = "btest_integration_key".to_vec();
     let metadata = beardog_security::memory_key_manager::KeyMetadata {
         key_type: "AES-256".to_string(),
         purpose: "integration_test".to_string(),

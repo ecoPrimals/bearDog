@@ -122,7 +122,8 @@ impl SafeSimdProcessor {
     }
 
     /// Safe memory comparison using optimized algorithms
-    #[must_use] pub fn safe_compare_arrays(&self, a: &[u8], b: &[u8]) -> bool {
+    #[must_use]
+    pub fn safe_compare_arrays(&self, a: &[u8], b: &[u8]) -> bool {
         if a.len() != b.len() {
             return false;
         }

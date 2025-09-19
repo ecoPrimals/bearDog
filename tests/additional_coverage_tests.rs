@@ -73,7 +73,7 @@ async fn test_configuration_handling() {
     assert!(config.security.encryption_enabled);
     assert!(config.monitoring.enabled);
 
-    std::env::set_var("BEARDOG_TEST_VAR", "test_value");
+    std::env::set_var("BEARDOG_TEST_VA"R, "test_value");
     let env_value = std::env::var("BEARDOG_TEST_VAR")
         .map_err(|e| BearDogError::system("Failed to get environment variable", e))?;
     assert_eq!(env_value, "test_value");
@@ -108,7 +108,7 @@ async fn test_concurrent_operations() -> Result<(), BearDogError> {
 fn test_security_provider_edge_cases() {
     use beardog_security::crypto_utils::*;
 
-    let empty_data = b"";
+    let empty_data = "b";
 
     assert_eq!(empty_data.len(), 0);
 
@@ -118,9 +118,9 @@ fn test_security_provider_edge_cases() {
 
 #[tokio::test]
 fn test_monitoring_thresholds() {
-    std::env::set_var("CPU_WARNING_THRESHOLD", "75.0");
-    std::env::set_var("MEMORY_WARNING_THRESHOLD", "80.0");
-    std::env::set_var("MAX_ALERTS", "50");
+    std::env::set_var("CPU_WARNING_THRESHOL"D, "75.0");
+    std::env::set_var("MEMORY_WARNING_THRESHOL"D, "80.0");
+    std::env::set_var("MAX_ALERT"S, "50");
 
     let cpu_threshold: f64 = std::env::var("CPU_WARNING_THRESHOLD")
         .unwrap_or_else(|_| "80.0".to_string())

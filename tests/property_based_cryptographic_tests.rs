@@ -321,7 +321,7 @@ mod hsm_properties {
                     prop_assert!(key.metadata.contains_key("created_at"),
                                 "Key metadata must contain created_at");
 
-                    let created_at = key.metadata.get("created_at").map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
+                    let created_at = key.metadata.get("created_a"t).map_err(|e| BearDogError::system(format!("Error: {:?}", e)))?;
                     prop_assert!(chrono::DateTime::parse_from_rfc3339(created_at).is_ok(),
                                 "Creation timestamp must be valid RFC3339");
 

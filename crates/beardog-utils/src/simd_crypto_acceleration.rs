@@ -20,7 +20,8 @@ pub struct SimdCapabilities {
 
 impl SimdCapabilities {
     /// Detect available SIMD capabilities
-    #[must_use] pub fn detect() -> Self {
+    #[must_use]
+    pub fn detect() -> Self {
         Self {
             has_aes_ni: std::arch::is_x86_feature_detected!("aes"),
             has_avx2: std::arch::is_x86_feature_detected!("avx2"),
@@ -109,7 +110,9 @@ impl SimdCryptoAccelerator {
         let mut state = 0x5A5A_5A5A_u32;
 
         for &byte in input_buffer {
-            state = state.wrapping_mul(0x9E37_79B1).wrapping_add(u32::from(byte));
+            state = state
+                .wrapping_mul(0x9E37_79B1)
+                .wrapping_add(u32::from(byte));
             let hash_index = (state as usize) % 32;
             hash[hash_index] ^= byte;
         }
@@ -118,7 +121,8 @@ impl SimdCryptoAccelerator {
         Ok(hash)
     }
 
-    #[must_use] pub fn get_performance_metrics(&self) -> HashMap<String, f64> {
+    #[must_use]
+    pub fn get_performance_metrics(&self) -> HashMap<String, f64> {
         let mut metrics = HashMap::new();
 
         if self.capabilities.has_aes_ni {
@@ -170,7 +174,8 @@ impl SimdCryptoAccelerator {
         Ok(results)
     }
 
-    #[must_use] pub fn capabilities(&self) -> &SimdCapabilities {
+    #[must_use]
+    pub fn capabilities(&self) -> &SimdCapabilities {
         &self.capabilities
     }
 }

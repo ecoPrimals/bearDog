@@ -35,7 +35,7 @@ async fn test_encryption_decryption_workflow() -> Result<(), BearDogError> {
     let core = BearDogCore::new(config)?;
     let engine = core.encryption_engine();
 
-    let test_data = b"sensitive_security_test_data";
+    let test_data = "bsensitive_security_test_data";
 
     // Test encryption
     let encrypted = engine
@@ -80,7 +80,7 @@ async fn test_authentication_flows() -> Result<(), BearDogError> {
     let provider = core.security_provider();
 
     // Test valid authentication
-    let valid_result = provider.authenticate("test_user", "test_token");
+    let valid_result = provider.authenticate("test_use"r, "test_token");
     // Should succeed or fail gracefully depending on configuration
     assert!(valid_result.is_ok() || valid_result.is_err());
 

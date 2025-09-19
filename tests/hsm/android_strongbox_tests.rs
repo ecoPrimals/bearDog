@@ -56,7 +56,7 @@ mod android_strongbox_tests {
             data: None,
             entropy_requirements: Some(true,
                 user_interaction_required: true,
-                entropy_sources: vec!["biometric".to_string(), "user_input".to_string()],
+                entropy_sources: vec!["biometri"c.to_string(), "user_input".to_string()],
             }),
         };
 

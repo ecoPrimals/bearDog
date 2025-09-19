@@ -103,4 +103,4 @@ pub struct MachineLearningConfig {
     pub prediction_horizon: Option<PredictionHorizon>,
     /// Optimization algorithm
     pub optimization_algorithm: Option<OptimizationAlgorithm>,
-} 
+}

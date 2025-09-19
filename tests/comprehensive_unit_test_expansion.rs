@@ -22,7 +22,7 @@ mod core_tests {
         // Verify core is healthy
         assert!(
             true, // Core health check would go here
-             C"ore should be healthy after initialization"
+             "Core should be healthy after initialization"
         );
         
         Ok(())
@@ -36,7 +36,7 @@ mod core_tests {
         
         assert!(
             validation_result.is_ok(),
-             D"efault config should be valid"
+             "Default config should be valid"
         );
         
         // Test invalid configuration
@@ -46,7 +46,7 @@ mod core_tests {
         
         assert!(
             validation_result.is_err(),
-             I"nvalid config should fail validation"
+             "Invalid config should fail validation"
         );
         
         Ok(())
@@ -57,16 +57,16 @@ mod core_tests {
         // Test service discovery functionality
         let config = CanonicalAppConfig::default();
         let core = beardog_core::BearDogCore::new(config)
-            .map_err(|e| BearDogError::system(format!( C"ore initialization failed: {:?}", e))?;
+            .map_err(|e| BearDogError::system(format!("Core initialization failed: {:?}", e))?;
         
         // Discover available services
         let services = core.discover_services()?;
         
         // Verify services were discovered
-        assert!(!services.is_empty(),  S"ervices list should not be empty");
+        assert!(!services.is_empty(),  "Services list should not be empty");
         assert!(
-            services.contains(& t"est-service".to_string()),
-             T"est service should be registered"
+            services.contains(& "test-service".to_string()),
+             "Test service should be registered"
         );
         
         Ok(())
@@ -78,9 +78,9 @@ mod core_tests {
         
         // Test JSON serialization
         let json = serde_json::to_string(&config)
-            .map_err(|e| BearDogError::system(format!( S"erialization failed: {:?}", e))?;
+            .map_err(|e| BearDogError::system(format!("Serialization failed: {:?}", e))?;
         
-        assert!(json.is_ok(),  C"onfig should serialize to JSON");
+        assert!(json.is_ok(),  "Config should serialize to JSON");
         
         Ok(())
     }
@@ -94,43 +94,43 @@ mod types_tests {
         let config = configuration::BearDogConfig::default();
 
         let json = serde_json::to_string(&config);
-        assert!(json.is_ok(),  C"onfig should serialize to JSON");
+        assert!(json.is_ok(),  "Config should serialize to JSON");
 
         let json_str =
             json.map_err(|e| BearDogError::system({:?}", e))?;
         let deserialized: Result<configuration::BearDogConfig, _> = serde_json::from_str(&json_str);
-        assert!(deserialized.is_ok(),  C"onfig should deserialize from JSON");
+        assert!(deserialized.is_ok(),  "Config should deserialize from JSON");
 
         let deserialized_config =
             deserialized.map_err(|e| BearDogError::system({:?}", e))?;
         assert_eq!(
             config.version, deserialized_config.version,
-             V"ersions should match after round-trip"
+             "Versions should match after round-trip"
         );
     }
 
     #[test]
     fn test_error_types_comprehensive() {
         let errors = vec![
-            BearDogError::invalid_input( t"est message ".to_string()),
-            BearDogError::encryption_error( e"ncryption failed".to_string()),
-            BearDogError::authentication_failed( a"uth failed".to_string()),
-            BearDogError::authorization_failed( a"uthz failed".to_string()),
-            BearDogError::network_error( n"etwork failed".to_string()),
-            BearDogError::internal( i"nternal error ".to_string()),
+            BearDogError::invalid_input( "test message ".to_string()),
+            BearDogError::encryption_error( "encryption failed".to_string()),
+            BearDogError::authentication_failed( "auth failed".to_string()),
+            BearDogError::authorization_failed( "authz failed".to_string()),
+            BearDogError::network_error( "network failed".to_string()),
+            BearDogError::internal( "internal error ".to_string()),
         ];
 
         for error in errors {
             let error_string = format!("{:?}", error);
             assert!(
                 !error_string.is_empty(),
-                 E"rror should have non-empty display"
+                 "Error should have non-empty display"
             );
 
             let debug_string = format!("{:?}", error);
             assert!(
                 !debug_string.is_empty(),
-                 E"rror should have non-empty debug"
+                 "Error should have non-empty debug"
             );
 
             let source = std::error::Error::source(&error);
@@ -168,14 +168,14 @@ mod security_tests {
 
         assert!(
             provider.is_ok(),
-             S"ecurity provider initialization should succeed"
+             "Security provider initialization should succeed"
         );
 
         let provider =
             provider.map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             provider.is_ready(),
-             S"ecurity provider should be ready after initialization"
+             "Security provider should be ready after initialization"
         );
     }
 
@@ -191,15 +191,15 @@ mod security_tests {
         };
 
         let key_result = provider.generate_key(&key_spec);
-        assert!(key_result.is_ok(),  K"ey generation should succeed");
+        assert!(key_result.is_ok(),  "Key generation should succeed");
 
         let key =
             key_result.map_err(|e| BearDogError::system({:?}", e))?;
-        assert!(!key.id.is_empty(),  G"enerated key should have non-empty ID");
+        assert!(!key.id.is_empty(),  "Generated key should have non-empty ID");
         assert_eq!(
             key.algorithm,
             security::Algorithm::Ed25519,
-             K"ey algorithm should match request"
+             "Key algorithm should match request"
         );
     }
 
@@ -221,23 +221,23 @@ mod security_tests {
             .generate_key(&key_spec)
             .map_err(|e| BearDogError::system({:?}", e))?;
 
-        let test_data = b t"est message for signing";
+        let test_data = b "test message for signing";
         let signature_result = provider.sign_data(&key.id, test_data);
-        assert!(signature_result.is_ok(),  S"igning should succeed");
+        assert!(signature_result.is_ok(),  "Signing should succeed");
 
         let signature = signature_result
             .map_err(|e| BearDogError::system({:?}", e))?;
-        assert!(!signature.is_empty(),  S"ignature should not be empty");
-        assert_eq!(signature.len(), 64,  E"d25519 signature should be 64 bytes");
+        assert!(!signature.is_empty(),  "Signature should not be empty");
+        assert_eq!(signature.len(), 64,  "Ed25519 signature should be 64 bytes");
 
         let verification_result = provider
             .verify_signature(&key.id, test_data, &signature)
             ;
-        assert!(verification_result.is_ok(),  V"erification should succeed");
+        assert!(verification_result.is_ok(),  "Verification should succeed");
         assert!(
             verification_result
                 .map_err(|e| BearDogError::system({:?}", e)))?,
-             S"ignature should verify successfully"
+             "Signature should verify successfully"
         );
     }
 }
@@ -252,41 +252,41 @@ mod auth_tests {
 
         assert!(
             auth_service.is_ok(),
-             A"uth service initialization should succeed"
+             "Auth service initialization should succeed"
         );
 
         let auth_service =
             auth_service.map_err(|e| BearDogError::system({:?}", e))?;
 
         let user_request = auth::UserRegistrationRequest {
-            username:  t"est_user".to_string(),
-            email:  t"est@example.com".to_string(),
-            password:  s"ecure_password_123".to_string(),
+            username:  "test_user".to_string(),
+            email:  "test@example.com".to_string(),
+            password:  "secure_password_123".to_string(),
         };
 
         let registration_result = auth_service.register_user(user_request);
         assert!(
             registration_result.is_ok(),
-             U"ser registration should succeed"
+             "User registration should succeed"
         );
 
         let login_request = auth::LoginRequest {
-            username:  t"est_user".to_string(),
-            password:  s"ecure_password_123".to_string(),
+            username:  "test_user".to_string(),
+            password:  "secure_password_123".to_string(),
         };
 
         let login_result = auth_service.authenticate(login_request);
-        assert!(login_result.is_ok(),  A"uthentication should succeed");
+        assert!(login_result.is_ok(),  "Authentication should succeed");
 
         let auth_token =
             login_result.map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             !auth_token.token.is_empty(),
-             A"uth token should not be empty"
+             "Auth token should not be empty"
         );
         assert!(
             auth_token.expires_at > chrono::Utc::now(),
-             T"oken should not be expired"
+             "Token should not be expired"
         );
     }
 
@@ -297,9 +297,9 @@ mod auth_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let user_request = auth::UserRegistrationRequest {
-            username:  t"est_user_authz".to_string(),
-            email:  a"uthz@example.com".to_string(),
-            password:  s"ecure_password_123".to_string(),
+            username:  "test_user_authz".to_string(),
+            email:  "authz@example.com".to_string(),
+            password:  "secure_password_123".to_string(),
         };
 
         let user = auth_service
@@ -307,7 +307,7 @@ mod auth_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let permission = auth::Permission {
-            resource:  t"est_resource".to_string(),
+            resource:  "test_resource".to_string(),
             action: auth::Action::Read,
         };
 
@@ -316,18 +316,18 @@ mod auth_tests {
             ;
         assert!(
             assign_result.is_ok(),
-             P"ermission assignment should succeed"
+             "Permission assignment should succeed"
         );
 
         let authz_result = auth_service.check_permission(&user.id, &permission);
-        assert!(authz_result.is_ok(),  A"uthorization check should succeed");
+        assert!(authz_result.is_ok(),  "Authorization check should succeed");
         assert!(
             authz_result.map_err(|e| BearDogError::system({:?}", e)))?,
-             U"ser should have assigned permission"
+             "User should have assigned permission"
         );
 
         let unauthorized_permission = auth::Permission {
-            resource:  u"nauthorized_resource".to_string(),
+            resource:  "unauthorized_resource".to_string(),
             action: auth::Action::Write,
         };
 
@@ -336,12 +336,12 @@ mod auth_tests {
             ;
         assert!(
             unauthorized_result.is_ok(),
-             A"uthorization check should succeed"
+             "Authorization check should succeed"
         );
         assert!(
             !unauthorized_result
                 .map_err(|e| BearDogError::system({:?}", e)))?,
-             U"ser should not have unauthorized permission"
+             "User should not have unauthorized permission"
         );
     }
 }
@@ -353,30 +353,30 @@ mod utils_tests {
     fn test_zero_copy_string_optimization() {
         use beardog_utils::zero_copy::optimized_strings::*;
 
-        let static_str = shared_string( a"pi");
-        let static_str2 = shared_string( a"pi");
+        let static_str = shared_string( "api");
+        let static_str2 = shared_string( "api");
         assert!(
             Arc::ptr_eq(&static_str, &static_str2),
-             S"tatic strings should share the same Arc"
+             "Static strings should share the same Arc"
         );
 
-        let dynamic_str1 = shared_string( d"ynamic_test_string_123");
-        let dynamic_str2 = shared_string( d"ynamic_test_string_123");
+        let dynamic_str1 = shared_string( "dynamic_test_string_123");
+        let dynamic_str2 = shared_string( "dynamic_test_string_123");
         assert!(
             Arc::ptr_eq(&dynamic_str1, &dynamic_str2),
-             D"ynamic strings should be cached"
+             "Dynamic strings should be cached"
         );
 
         let mut builder = ZeroCopyStringBuilder::new();
         builder
-            .push_static( p"refix_")
-            .push( m"iddle")
+            .push_static( "prefix_")
+            .push( "middle")
             .push_static("_suffix");
 
         let result = builder.build();
         assert_eq!(
-            result,  p"refix_middle_suffix",
-             S"tring builder should concatenate correctly"
+            result,  "prefix_middle_suffix",
+             "String builder should concatenate correctly"
         );
     }
 
@@ -386,7 +386,7 @@ mod utils_tests {
         use beardog_utils::memory_pools_safe::SafeMemoryPool;
 
         let pool_result = MemoryPool::<Vec<u8>, 100>::new();
-        assert!(pool_result.is_ok(),  M"emory pool creation should succeed");
+        assert!(pool_result.is_ok(),  "Memory pool creation should succeed");
 
         let mut pool =
             pool_result.map_err(|e| BearDogError::system({:?}", e))?;
@@ -394,17 +394,17 @@ mod utils_tests {
         let allocation_result = pool.allocate();
         assert!(
             allocation_result.is_ok(),
-             M"emory allocation should succeed"
+             "Memory allocation should succeed"
         );
 
         let item = allocation_result
             .map_err(|e| BearDogError::system({:?}", e))?;
-        assert!(item.is_empty(),  N"ew allocation should be empty");
+        assert!(item.is_empty(),  "New allocation should be empty");
 
         let deallocation_result = pool.deallocate(item);
         assert!(
             deallocation_result.is_ok(),
-             M"emory deallocation should succeed"
+             "Memory deallocation should succeed"
         );
     }
 
@@ -416,20 +416,20 @@ mod utils_tests {
         assert_eq!(
             secure_buffer.len(),
             32,
-             S"ecure buffer should have correct size"
+             "Secure buffer should have correct size"
         );
 
         let mut mutable_buffer = SafeSecureBuffer::new(64);
-        let test_data = b t"est data for secure buffer";
+        let test_data = b "test data for secure buffer";
 
         let copy_result = mutable_buffer.copy_from_slice(test_data);
         assert!(
             copy_result.is_ok(),
-             C"opying to secure buffer should succeed"
+             "Copying to secure buffer should succeed"
         );
 
         let copied_data = &mutable_buffer.as_slice()[..test_data.len()];
-        assert_eq!(copied_data, test_data,  C"opied data should match original");
+        assert_eq!(copied_data, test_data,  "Copied data should match original");
     }
 }
 
@@ -443,14 +443,14 @@ mod monitoring_tests {
 
         assert!(
             sentinel.is_ok(),
-             S"ecurity sentinel initialization should succeed"
+             "Security sentinel initialization should succeed"
         );
 
         let sentinel =
             sentinel.map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             sentinel.is_active(),
-             S"ecurity sentinel should be active after initialization"
+             "Security sentinel should be active after initialization"
         );
     }
 
@@ -461,20 +461,20 @@ mod monitoring_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let metrics_result = monitor.collect_metrics();
-        assert!(metrics_result.is_ok(),  M"etrics collection should succeed");
+        assert!(metrics_result.is_ok(),  "Metrics collection should succeed");
 
         let metrics =
             metrics_result.map_err(|e| BearDogError::system({:?}", e))?;
-        assert!(!metrics.is_empty(),  M"etrics should not be empty");
+        assert!(!metrics.is_empty(),  "Metrics should not be empty");
 
         let report_result = monitor.generate_report();
-        assert!(report_result.is_ok(),  R"eport generation should succeed");
+        assert!(report_result.is_ok(),  "Report generation should succeed");
 
         let report =
             report_result.map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             !report.summary.is_empty(),
-             R"eport summary should not be empty"
+             "Report summary should not be empty"
         );
     }
 
@@ -487,18 +487,18 @@ mod monitoring_tests {
         let assessment_result = monitor.assess_sovereignty();
         assert!(
             assessment_result.is_ok(),
-             S"overeignty assessment should succeed"
+             "Sovereignty assessment should succeed"
         );
 
         let assessment = assessment_result
             .map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             assessment.sovereignty_score >= 0.0,
-             S"overeignty score should be non-negative"
+             "Sovereignty score should be non-negative"
         );
         assert!(
             assessment.sovereignty_score <= 100.0,
-             S"overeignty score should not exceed 100"
+             "Sovereignty score should not exceed 100"
         );
 
         assert!(
@@ -506,11 +506,11 @@ mod monitoring_tests {
                 .human_dignity_metrics
                 .privacy_protection_score
                 .is_nan(),
-             P"rivacy protection score should be a valid number"
+             "Privacy protection score should be a valid number"
         );
         assert!(
             assessment.human_dignity_metrics.consent_compliance_score >= 0.0,
-             C"onsent compliance should be non-negative"
+             "Consent compliance should be non-negative"
         );
     }
 }
@@ -525,14 +525,14 @@ mod genetics_tests {
 
         assert!(
             engine.is_ok(),
-             G"enetics engine initialization should succeed"
+             "Genetics engine initialization should succeed"
         );
 
         let engine =
             engine.map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             engine.is_ready(),
-             G"enetics engine should be ready after initialization"
+             "Genetics engine should be ready after initialization"
         );
     }
 
@@ -543,23 +543,23 @@ mod genetics_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let spawn_request = genetics::SpawnRequest {
-            parent_ids: vec![ p"arent1".to_string(),  p"arent2".to_string()],
-            target_capabilities: vec![ t"est_capability".to_string()],
+            parent_ids: vec![ "parent1".to_string(),  "parent2".to_string()],
+            target_capabilities: vec![ "test_capability".to_string()],
             fitness_criteria: genetics::FitnessCriteria::default(),
         };
 
         let spawn_result = engine.spawn_genetics(spawn_request);
-        assert!(spawn_result.is_ok(),  G"enetic spawning should succeed");
+        assert!(spawn_result.is_ok(),  "Genetic spawning should succeed");
 
         let genetics =
             spawn_result.map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             !genetics.id.is_empty(),
-             S"pawned genetics should have non-empty ID"
+             "Spawned genetics should have non-empty ID"
         );
         assert!(
             !genetics.chromosomes.is_empty(),
-             S"pawned genetics should have chromosomes"
+             "Spawned genetics should have chromosomes"
         );
     }
 
@@ -570,18 +570,18 @@ mod genetics_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let test_genetics = genetics::BearDogGenetics {
-            id:  t"est_genetics".to_string(),
-            chromosomes: vec![genetics::CryptoChromosome::new( t"est_capability")],
+            id:  "test_genetics".to_string(),
+            chromosomes: vec![genetics::CryptoChromosome::new( "test_capability")],
             lineage: genetics::GeneticsLineage::default(),
         };
 
         let fitness_result = engine.evaluate_fitness(&test_genetics);
-        assert!(fitness_result.is_ok(),  F"itness evaluation should succeed");
+        assert!(fitness_result.is_ok(),  "Fitness evaluation should succeed");
 
         let fitness_score =
             fitness_result.map_err(|e| BearDogError::system({:?}", e))?;
-        assert!(fitness_score >= 0.0,  F"itness score should be non-negative");
-        assert!(fitness_score <= 1.0,  F"itness score should not exceed 1.0");
+        assert!(fitness_score >= 0.0,  "Fitness score should be non-negative");
+        assert!(fitness_score <= 1.0,  "Fitness score should not exceed 1.0");
     }
 }
 
@@ -595,14 +595,14 @@ mod workflow_tests {
 
         assert!(
             engine.is_ok(),
-             W"orkflow engine initialization should succeed"
+             "Workflow engine initialization should succeed"
         );
 
         let engine =
             engine.map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             engine.is_ready(),
-             W"orkflow engine should be ready after initialization"
+             "Workflow engine should be ready after initialization"
         );
     }
 
@@ -613,11 +613,11 @@ mod workflow_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let workflow = workflows::Workflow {
-            id:  t"est_workflow".to_string(),
-            workflow_type:  s"ecurity_workflow".to_string(),
+            id:  "test_workflow".to_string(),
+            workflow_type:  "security_workflow".to_string(),
             steps: vec![workflows::WorkflowStep {
-                id:  s"tep1".to_string(),
-                step_type:  k"ey_generation".to_string(),
+                id:  "step1".to_string(),
+                step_type:  "key_generation".to_string(),
                 parameters: std::collections::HashMap::with_capacity(16),
             }],
         };
@@ -625,7 +625,7 @@ mod workflow_tests {
         let execution_result = engine.execute_workflow(workflow);
         assert!(
             execution_result.is_ok(),
-             W"orkflow execution should succeed"
+             "Workflow execution should succeed"
         );
 
         let result = execution_result
@@ -633,11 +633,11 @@ mod workflow_tests {
         assert_eq!(
             result.status,
             workflows::WorkflowStatus::Completed,
-             W"orkflow should complete successfully"
+             "Workflow should complete successfully"
         );
         assert!(
             !result.outputs.is_empty(),
-             W"orkflow should produce outputs"
+             "Workflow should produce outputs"
         );
     }
 }
@@ -660,9 +660,9 @@ mod integration_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let user_request = auth::UserRegistrationRequest {
-            username:  i"ntegration_test_user".to_string(),
-            email:  i"ntegration@example.com".to_string(),
-            password:  i"ntegration_password_123".to_string(),
+            username:  "integration_test_user".to_string(),
+            email:  "integration@example.com".to_string(),
+            password:  "integration_password_123".to_string(),
         };
 
         let user = auth_service
@@ -670,8 +670,8 @@ mod integration_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let login_request = auth::LoginRequest {
-            username:  i"ntegration_test_user".to_string(),
-            password:  i"ntegration_password_123".to_string(),
+            username:  "integration_test_user".to_string(),
+            password:  "integration_password_123".to_string(),
         };
 
         let auth_token = auth_service
@@ -689,19 +689,19 @@ mod integration_tests {
 
         assert!(
             authenticated_key_result.is_ok(),
-             A"uthenticated key generation should succeed"
+             "Authenticated key generation should succeed"
         );
 
         let key = authenticated_key_result
             .map_err(|e| BearDogError::system({:?}", e))?;
-        assert!(!key.id.is_empty(),  G"enerated key should have ID");
+        assert!(!key.id.is_empty(),  "Generated key should have ID");
         assert!(
-            key.metadata.contains_key( o"wner"),
-             K"ey should have owner metadata "
+            key.metadata.contains_key( "owner"),
+             "Key should have owner metadata "
         );
         assert_eq!(
-            key.metadata[ o"wner"], user.id,
-             K"ey owner should match user"
+            key.metadata[ "owner"], user.id,
+             "Key owner should match user"
         );
     }
 
@@ -712,16 +712,16 @@ mod integration_tests {
             .map_err(|e| BearDogError::system({:?}", e))?;
 
         let services = vec![
-            ( a"uth_service",  a"uthentication"),
-            ( s"ecurity_service",  c"ryptography"),
-            ( m"onitoring_service",  o"bservability"),
+            ( "auth_service",  "authentication"),
+            ( "security_service",  "cryptography"),
+            ( "monitoring_service",  "observability"),
         ];
 
         for (name, capability) in services {
             let service_config = ServiceConfig {
                 name: name.to_string(),
                 capabilities: vec![capability],
-                endpoint: format!( h"ttp://localhost:808{:?}", name.len()),
+                endpoint: format!("http://localhost:808{:?}", name.len()),
             };
 
             core.register_service(service_config)
@@ -729,20 +729,20 @@ mod integration_tests {
         }
 
         let discovered_services = core
-            .discover_services( a"uthentication")
+            .discover_services( "authentication")
             .map_err(|e| BearDogError::system({:?}", e))?;
         assert!(
             !discovered_services.is_empty(),
-             S"hould discover authentication services"
+             "Should discover authentication services"
         );
 
         let auth_service = discovered_services
             .iter()
-            .find(|s| s.capabilities.contains(& a"uthentication".to_string()));
-        assert!(auth_service.is_some(),  S"hould find authentication service");
+            .find(|s| s.capabilities.contains(& "authentication".to_string()));
+        assert!(auth_service.is_some(),  "Should find authentication service");
 
         let communication_result = core
-            .send_service_request( a"uth_service",  h"ealth_check", &serde_json::Value::Null)
+            .send_service_request( "auth_service",  "health_check", &serde_json::Value::Null)
             ;
 
         match communication_result {

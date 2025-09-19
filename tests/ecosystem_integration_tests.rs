@@ -58,16 +58,16 @@ async fn test_compute_service_integration() -> Result<(), BearDogError> {
         "operation_type".to_string(),
         "compute_execution".to_string(),
     );
-    params.insert("source_node".to_string(), "beardog-node-alpha".to_string());
+    params.insert("source_nod"e.to_string(), "beardog-node-alpha".to_string());
     params.insert("target_node".to_string(), compute_capability.provider_id);
     params.insert(
         "operation_data".to_string(),
         serde_json::json!({
             "compute_task": {
-                "task_id": "hybrid_security_computation",
-                "algorithm": "genetic_security_optimization",
-                "input_data": "encrypted_node_genetics",
-                "expected_output": "optimized_security_configuration"
+                "task_i"d: "hybrid_security_computation",
+                "algorith"m: "genetic_security_optimization",
+                "input_dat"a: "encrypted_node_genetics",
+                "expected_outpu"t: "optimized_security_configuration"
             }
         })
         .to_string(),
@@ -76,8 +76,8 @@ async fn test_compute_service_integration() -> Result<(), BearDogError> {
     let genetics_engine = GeneticsEngine::new_placeholder();
 
     let authorization_proof = genetics_engine.create_authorization_proof(
-        &params.get("source_node").unwrap_or(&"unknown".to_string()),
-        &params.get("target_node").unwrap_or(&"unknown".to_string()),
+        &params.get("source_nod"e).unwrap_or(&"unknown".to_string()),
+        &params.get("target_nod"e).unwrap_or(&"unknown".to_string()),
         &params,
     )?;
 
@@ -250,22 +250,22 @@ async fn test_comprehensive_compute_integration() -> Result<(), BearDogError> {
         target_resource: "compute-genetic-service".to_string(),
         parameters: {
             let mut params = HashMap::with_capacity(16);
-            params.insert("operation_type".to_string(), "hybrid_genetic_spawning");
+            params.insert("operation_typ"e.to_string(), "hybrid_genetic_spawning");
             params.insert(
                 "source_genetics".to_string(),
                 "beardog_security_genetics_v1",
             );
-            params.insert("target_genetics".to_string(), "compute_genetics_v1");
+            params.insert("target_genetic"s.to_string(), "compute_genetics_v1");
             params.insert(
                 "hybrid_capabilities".to_string(),
                 serde_json::json!({
-                    "security_level": "maximum",
+                    "security_leve"l: "maximum",
                     "compute_optimization": true,
                     "universal_platform_support": true,
                     "quantum_ready": true
                 }),
             );
-            params.insert("network_effects_multiplier".to_string(), "2.5");
+            params.insert("network_effects_multiplie"r.to_string(), "2.5");
             params
         },
         requester_signature: "beardog_cryptographic_proof".to_string(),

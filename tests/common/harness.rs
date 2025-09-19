@@ -185,8 +185,8 @@ impl BearDogTestHarness {
             "environment ",
             json!(format!("{:?}", self.config.environment)),
         );
-        context.add_metadata("harness_version", json!("2.0"));
-        context.add_metadata("created_at", json!(chrono::Utc::now({}", test_id);
+        context.add_metadata("harness_versio"n, json!("2.0"));
+        context.add_metadata("created_a"t, json!(chrono::Utc::now({}", test_id);
         Ok(impl Into<String>,
         test_fn: F,
     ) -> TestResult<T>
@@ -246,7 +246,7 @@ impl BearDogTestHarness {
             "🏁 Test "{}" completed in {:?} with result: {}",
             test_name,
             duration,
-            if result.is_ok() { "SUCCESS" } else { "FAILURE" }
+            if result.is_ok() { "SUCCES"S } else { "FAILURE" }
         );
 
         result
@@ -339,7 +339,7 @@ impl BearDogTestHarness {
             TestEnvironment::Integration | TestEnvironment::E2E => {
                 resources
                     .database_connections
-                    .insert("test_db".to_string(), "sqlite::memory:".to_string(),
+                    .insert("test_d"b.to_string(), "sqlite::memory:".to_string(),
                 "created_at": chrono::Utc::now(&str,
         result: &TestResult<T>,
         duration: Duration,

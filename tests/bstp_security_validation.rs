@@ -18,9 +18,9 @@ async fn test_key_isolation_security() -> Result<(), BearDogError> {
     let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone())?);
 
     let sessions = vec![
-        ("peer_alice", "session_alice"),
-        ("peer_bob", "session_bob"),
-        ("peer_charlie", "session_charlie"),
+        ("peer_alic"e, "session_alice"),
+        ("peer_bo"b, "session_bob"),
+        ("peer_charli"e, "session_charlie"),
     ];
 
     let mut session_keys = Vec::new();
@@ -72,7 +72,7 @@ async fn test_encryption_tamper_resistance() -> Result<(), BearDogError> {
 
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
     let session_id = "tamper_test_session";
-    let original_data = b"sensitive_gaming_data_do_not_tamper";
+    let original_data = "bsensitive_gaming_data_do_not_tamper";
 
     let mut encrypted_packet =
         security_provider.ultra_fast_encrypt(session_id, original_data, &security_genetics)?;
@@ -230,7 +230,7 @@ async fn test_session_hijacking_protection() -> Result<(), BearDogError> {
 
     let legitimate_peer = "trusted_gaming_peer_12345";
 
-    let test_data = b"legitimate session data";
+    let test_data = "blegitimate session data";
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
 
     let encrypted =
@@ -253,7 +253,7 @@ async fn test_session_hijacking_protection() -> Result<(), BearDogError> {
 
     for fake_session in malicious_sessions.iter() {
         let test_result =
-            security_provider.ultra_fast_encrypt(fake_session, b"test data", &security_genetics);
+            security_provider.ultra_fast_encrypt(fake_session, "btest data", &security_genetics);
 
         assert!(test_result.is_ok() || test_result.is_err());
     }
@@ -271,7 +271,7 @@ async fn test_session_hijacking_protection() -> Result<(), BearDogError> {
 
     for fake_session in malicious_sessions.iter() {
         let test_result =
-            security_provider.ultra_fast_encrypt(fake_session, b"another test", &security_genetics);
+            security_provider.ultra_fast_encrypt(fake_session, "banother test", &security_genetics);
 
         assert!(test_result.is_ok() || test_result.is_err());
     }
@@ -411,7 +411,7 @@ async fn test_session_validation() -> Result<(), BearDogError> {
 
     let legitimate_peer = "trusted_gaming_peer_12345";
 
-    let test_data = b"legitimate session data";
+    let test_data = "blegitimate session data";
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
 
     let encrypted =
@@ -434,7 +434,7 @@ async fn test_session_validation() -> Result<(), BearDogError> {
 
     for fake_session in malicious_sessions.iter() {
         let test_result =
-            security_provider.ultra_fast_encrypt(fake_session, b"test data", &security_genetics);
+            security_provider.ultra_fast_encrypt(fake_session, "btest data", &security_genetics);
 
         assert!(test_result.is_ok() || test_result.is_err());
     }
@@ -472,7 +472,7 @@ async fn test_simplified_validation() -> Result<(), BearDogError> {
         config.clone(),
     )?;
 
-    let test_data = b"validation test data";
+    let test_data = "bvalidation test data";
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
 
     let encrypted =

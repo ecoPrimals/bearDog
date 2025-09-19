@@ -98,7 +98,8 @@ pub trait Validatable: Identifiable {
     ) -> impl std::future::Future<Output = Result<ValidationResult, BearDogError>> + Send;
 
     /// Batch validate multiple configurations
-    #[must_use] fn batch_validate(
+    #[must_use]
+    fn batch_validate(
         configs: Vec<Self::Config>,
     ) -> impl std::future::Future<Output = Result<ValidationResult, BearDogError>> + Send
     where
@@ -179,8 +180,14 @@ pub trait MetricsCollector: Identifiable {
 pub struct ValidationUtils;
 
 impl ValidationUtils {
-    /// Validates id
-    /// Validates id
+    /// Validates entity ID format and constraints
+    ///
+    /// # Errors
+    /// 
+    /// Returns `BearDogError::Business` if:
+    /// - Entity ID is empty
+    /// - Entity ID contains invalid characters
+    /// - Entity ID exceeds maximum length
     pub fn validate_id(entity_id: &str) -> Result<(), BearDogError> {
         if entity_id.is_empty() {
             return Err(BearDogError::Business {

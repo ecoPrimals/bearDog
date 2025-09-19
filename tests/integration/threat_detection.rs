@@ -19,8 +19,8 @@ async fn test_threat_detection_engine() -> Result<(), BearDogError> {
         resource: "sensitive-file.txt".to_string(),
         action: "read".to_string(),
         timestamp: chrono::Utc::now(serde_json::json!({
-            "file_path": "/secure/sensitive-file.txt",
-            "access_pattern": "unusual_time"
+            "file_pat"h: "/secure/sensitive-file.txt",
+            "access_patter"n: "unusual_time"
         }),
     };
 
@@ -45,9 +45,9 @@ async fn test_threat_detection_file_integrity() -> Result<(), BearDogError> {
         resource: "system-config.conf".to_string(),
         action: "write".to_string(),
         timestamp: chrono::Utc::now(serde_json::json!({
-            "file_hash_before": "abc123",
-            "file_hash_after": "def456",
-            "modification_type": "unauthorized"
+            "file_hash_befor"e: "abc123",
+            "file_hash_afte"r: "def456",
+            "modification_typ"e: "unauthorized"
         }),
     };
 

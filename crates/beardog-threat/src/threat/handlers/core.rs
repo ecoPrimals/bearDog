@@ -4,7 +4,10 @@
 
 use crate::threat::ml_engine::SmartThreatMLEngine;
 use crate::threat::types::engine::threat_engine::ThreatDetectionStats;
-use crate::threat::types::{ThreatDetectionConfig, ThreatEvent, ThreatIntelligenceFeed, DetectionRule, MlModel, IncidentResponse};
+use crate::threat::types::{
+    DetectionRule, IncidentResponse, MlModel, ThreatDetectionConfig, ThreatEvent,
+    ThreatIntelligenceFeed,
+};
 use beardog_errors::BearDogError;
 
 use std::collections::{HashMap, HashSet};

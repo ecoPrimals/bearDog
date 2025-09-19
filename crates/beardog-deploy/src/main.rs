@@ -121,7 +121,8 @@ async fn main() -> Result<()> {
                 &device_manager,
                 release,
                 skip_build,
-            ).await?;
+            )
+            .await?;
         }
         Commands::Run { args } => {
             run_command(&device_manager, &args)?;
@@ -179,7 +180,8 @@ async fn deploy_command(
             android_deployment,
             release,
             "aarch64-linux-android",
-        ).await?;
+        )
+        .await?;
     }
 
     device_manager.deploy_app(release)?;
@@ -211,7 +213,8 @@ async fn full_command(
         android_deployment,
         release,
         "aarch64-linux-android",
-    ).await?;
+    )
+    .await?;
     deploy_command(builder, android_deployment, device_manager, release, true).await?;
 
     println!("✅ Full deployment completed successfully!");

@@ -50,7 +50,7 @@ impl CryptographicCertaintyTester {
         let keypair = self.mock_generate_ed25519_keypair()?;
 
         // Test signature determinism
-        let message = b"Mathematical certainty test message for Ed25519";
+        let message = "bMathematical certainty test message for Ed25519";
         let signature1 = self
             .mock_sign_ed25519(&keypair.private_key, message)
             ?;
@@ -71,7 +71,7 @@ impl CryptographicCertaintyTester {
         );
 
         // Test with wrong message
-        let wrong_message = b"Wrong message that should fail verification";
+        let wrong_message = "bWrong message that should fail verification";
         let is_invalid = self
             .mock_verify_ed25519(&keypair.public_key, wrong_message, &signature1)
             ?;
@@ -104,7 +104,7 @@ impl CryptographicCertaintyTester {
         let start_time = Instant::now();
 
         let key = self.mock_generate_aes256_key()?;
-        let plaintext = b"Mathematical certainty test data for AES-256-GCM encryption";
+        let plaintext = "bMathematical certainty test data for AES-256-GCM encryption";
 
         // Test encryption determinism with different nonces
         let ciphertext1 = self.mock_encrypt_aes256_gcm(&key, plaintext, None)?;
@@ -147,7 +147,7 @@ impl CryptographicCertaintyTester {
         info!("🔍 Testing BLAKE3 hash mathematical certainty");
         let start_time = Instant::now();
 
-        let input = b"Mathematical certainty test data for BLAKE3 hashing";
+        let input = "bMathematical certainty test data for BLAKE3 hashing";
 
         // Test hash determinism
         let hash1 = self.mock_hash_blake3(input)?;
@@ -197,8 +197,8 @@ impl CryptographicCertaintyTester {
         info!("🔑 Testing PBKDF2 key derivation mathematical certainty");
         let start_time = Instant::now();
 
-        let password = b"test_password_for_mathematical_certainty";
-        let salt = b"test_salt_for_pbkdf2_validation";
+        let password = "btest_password_for_mathematical_certainty";
+        let salt = "btest_salt_for_pbkdf2_validation";
         let iterations = 10000;
         let key_length = 32;
 
@@ -221,7 +221,7 @@ impl CryptographicCertaintyTester {
         );
 
         // Test salt sensitivity
-        let different_salt = b"different_salt_for_pbkdf2";
+        let different_salt = "bdifferent_salt_for_pbkdf2";
         let key3 = self
             .mock_derive_pbkdf2(password, different_salt, iterations, key_length)
             ?;
@@ -231,7 +231,7 @@ impl CryptographicCertaintyTester {
         );
 
         // Test password sensitivity
-        let different_password = b"different_password_for_test";
+        let different_password = "bdifferent_password_for_test";
         let key4 = self
             .mock_derive_pbkdf2(different_password, salt, iterations, key_length)
             ?;

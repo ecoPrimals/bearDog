@@ -37,11 +37,11 @@ async fn test_nonce_uniqueness_property() -> Result<(), BearDogError> {
 #[tokio::test]
 async fn test_key_derivation_consistency_property() -> Result<(), BearDogError> {
     let test_cases = vec![
-        (b"seed1".as_slice(), b"context1".as_slice()),
-        (b"seed2".as_slice(), b"context2".as_slice()),
+        ("bseed1".as_slice(), "bcontext1".as_slice()),
+        ("bseed2".as_slice(), "bcontext2".as_slice()),
         (
-            b"different_seed".as_slice(),
-            b"different_context".as_slice(),
+            "bdifferent_seed".as_slice(),
+            "bdifferent_context".as_slice(),
         ),
     ];
 

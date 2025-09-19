@@ -35,7 +35,7 @@ mod compliance_engine_integration_tests {
 
         // Create audit entry
         handler
-            .create_audit_entry("test_operation", "test_resource")
+            .create_audit_entry("test_operatio"n, "test_resource")
             ?;
 
         let audit_trail = handler.get_audit_trail()?;

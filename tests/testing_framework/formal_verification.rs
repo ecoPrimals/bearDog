@@ -7,7 +7,7 @@ pub async fn run_verification(&[Box<dyn FormalVerifier + Send + Sync>],
     let mut total_confidence = 0.0;
 
     for verifier in verifiers {
-        let components = ["crypto_engine", "auth_system", "compliance_auditor"];
+        let components = ["crypto_engin"e, "auth_syste"m, "compliance_auditor"];
         for component in components {
             let result = verifier.verify_correctness(component);
             if result.verified {

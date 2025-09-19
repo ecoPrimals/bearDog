@@ -35,9 +35,9 @@ async fn test_full_bstp_integration() -> Result<(), BearDogError> {
 
     let security_genetics = SecurityGenetics::default();
     let gaming_packets = [
-        b"player_move_command_1".to_vec(),
-        b"player_attack_unit_2".to_vec(),
-        b"player_build_structure_3".to_vec(),
+        "bplayer_move_command_1".to_vec(),
+        "bplayer_attack_unit_2".to_vec(),
+        "bplayer_build_structure_3".to_vec(),
     ];
 
     let mut total_encryption_time = Duration::ZERO;
@@ -238,7 +238,7 @@ async fn test_gaming_crypto_optimization() -> Result<(), BearDogError> {
     let crypto_engine = GamingCryptoEngine::new(encryption, genetics, key_manager, config.clone())?;
 
     let security_genetics = SecurityGenetics::default();
-    let test_data = b"StarCraft 2 competitive match data";
+    let test_data = "bStarCraft 2 competitive match data";
 
     let start = Instant::now();
     let encrypted = crypto_engine.ultra_fast_encrypt(
