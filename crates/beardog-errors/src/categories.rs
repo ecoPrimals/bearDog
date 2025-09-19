@@ -1,237 +1,371 @@
 use serde::{Deserialize, Serialize};
 
-/// Security-related error categories for authentication, authorization, and cryptographic operations
+/// Categories of security errors for detailed classification and handling
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum SecurityErrorCategory {
-    /// Authentication failures and credential issues
+    /// Authentication failure (login, credentials, identity verification)
     Authentication,
-    /// Authorization and permission denied errors
+
+    /// Authorization failure (permissions, access control, role validation)
     Authorization,
-    /// Cryptographic operation failures
+
+    /// Encryption/decryption operation failure
     Encryption,
-    /// Certificate validation and management errors
+
+    /// Digital certificate validation or management failure
     Certificate,
-    /// Access control and policy violations
+
+    /// Access control policy or permission enforcement failure
     AccessControl,
-    /// Security audit and compliance failures
+
+    /// Security audit logging or compliance failure
     Audit,
-    /// Token validation and management errors
+
+    /// Token generation, validation, or expiration failure
     Token,
-    /// Key management and rotation errors
+
+    /// Cryptographic key management operation failure
     KeyManagement,
-    /// Hardware Security Module errors
+
+    /// Hardware Security Module operation failure
     Hsm,
-    /// Security policy violations
+
+    /// Security policy validation or enforcement failure
     Policy,
-    /// Session management errors
+
+    /// Session management or validation failure
     Session,
-    /// Multi-factor authentication errors
+
+    /// Multi-factor authentication failure
     MultiFactorAuth,
-    /// Biometric authentication errors
+
+    /// Biometric authentication or validation failure
     Biometric,
-    /// Security configuration errors
+
+    /// Security configuration validation failure
     Configuration,
-    /// General security errors not covered by specific categories
+
     #[default]
+    /// General security error not covered by specific categories
     General,
 }
 
-/// System-level error categories for infrastructure and resource management
+/// Categories of system-level errors for detailed classification and handling
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum SystemErrorCategory {
-    /// File system operations and permissions
-    FileSystem,
-    /// System resource exhaustion and limits
-    Resource,
-    /// Memory allocation and management errors
-    Memory,
-    /// CPU and processing errors
-    Processing,
-    /// Storage and disk-related errors
-    Storage,
-    /// Operating system interface errors
-    OS,
-    /// Process and thread management errors
-    Process,
-    /// Environment variable and configuration errors
-    Environment,
-    /// Hardware interface and driver errors
-    Hardware,
-    /// Service and daemon management errors
-    Service,
-    /// System initialization and startup errors
-    Initialization,
-    /// System shutdown and cleanup errors
-    Shutdown,
-    /// Performance and monitoring errors
-    Performance,
-    /// General system errors not covered by specific categories
+    /// General system error
     #[default]
+    /// Represents general variant
     General,
+
+    /// Internal system error
+    Internal,
+
+    /// File system operation failure (read, write, permissions)
+    FileSystem,
+
+    /// System resource exhaustion or allocation failure
+    Resource,
+
+    /// Memory allocation, management, or corruption failure
+    Memory,
+
+    /// CPU processing or computation failure
+    Processing,
+
+    /// Data storage operation failure (database, disk)
+    Storage,
+
+    /// Operating system level failure
+    OS,
+
+    /// Process management or execution failure
+    Process,
+
+    /// Environment variable or configuration failure
+    Environment,
+
+    /// Hardware component failure or detection
+    Hardware,
+
+    /// System service operation failure
+    Service,
+
+    /// System initialization or startup failure
+    Initialization,
+
+    /// System shutdown or cleanup failure
+    Shutdown,
+
+    /// System performance degradation or optimization failure
+    Performance,
 }
 
-/// Business logic and application-level error categories
+/// Categories of business logic errors for detailed classification and handling
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum BusinessErrorCategory {
-    /// Data validation and format errors
+    /// Business rule validation failure
     Validation,
-    /// Business rule and constraint violations
+
+    /// Business rule processing or enforcement failure
     Rule,
-    /// Workflow and process execution errors
+
+    /// Workflow execution or state transition failure
     Workflow,
-    /// Data processing and transformation errors
+
+    /// Business process execution failure
     Processing,
-    /// Business logic calculation errors
+
+    /// Mathematical calculation or computation failure
     Calculation,
-    /// State management and consistency errors
+
+    /// Application state management failure
     State,
-    /// Transaction and atomicity errors
+
+    /// Transaction processing or rollback failure
     Transaction,
-    /// Business configuration errors
+
+    /// Business configuration validation failure
     Configuration,
-    /// Approval and authorization workflow errors
+
+    /// Approval process or authorization failure
     Approval,
-    /// Notification and communication errors
+
+    /// Notification delivery or processing failure
     Notification,
-    /// Reporting and analytics errors
+
+    /// Report generation or data export failure
     Reporting,
-    /// Integration and external service errors
+
+    /// External system integration failure
     Integration,
-    /// General business logic errors
+
     #[default]
+    /// General business error not covered by specific categories
     General,
 }
 
-/// Network communication and connectivity error categories
+/// Categories of network-related errors for detailed classification and handling
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum NetworkErrorCategory {
-    /// Network connection establishment errors
+    /// Network connection establishment or maintenance failure
     Connection,
-    /// Request timeout errors
+
+    /// Operation timeout or response delay failure
     Timeout,
-    /// DNS resolution errors
+
+    /// DNS resolution or lookup failure
     Dns,
-    /// SSL/TLS certificate and handshake errors
+
+    /// SSL/TLS certificate or handshake failure
     Ssl,
-    /// HTTP protocol errors
+
+    /// HTTP protocol or status code failure
     Http,
-    /// Proxy and gateway errors
+
+    /// Proxy server or intermediary failure
     Proxy,
-    /// Firewall and network security errors
+
+    /// Firewall or security filtering failure
     Firewall,
-    /// Bandwidth and throughput errors
+
+    /// Network bandwidth or capacity limitation
     Bandwidth,
-    /// Load balancing and routing errors
+
+    /// Load balancing or traffic distribution failure
     LoadBalancing,
-    /// Network protocol errors
+
+    /// Network protocol parsing or validation failure
     Protocol,
-    /// Service discovery errors
+
+    /// Service discovery or registry failure
     ServiceDiscovery,
-    /// Network configuration errors
+
+    /// Network configuration or routing failure
     Configuration,
-    /// General network errors
+
     #[default]
+    /// General network error not covered by specific categories
     General,
 }
 
-/// Configuration and setup error categories
+/// Categories of configuration-related errors for detailed classification and handling
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum ConfigurationErrorCategory {
-    /// Configuration file parsing errors
+    /// Configuration file parsing or syntax failure
     Parsing,
-    /// Missing required configuration
+
+    /// Required configuration parameter missing
     Missing,
-    /// Invalid configuration values
+
+    /// Invalid configuration value or parameter
     Invalid,
-    /// Configuration format errors
+
+    /// Configuration format or structure error
     Format,
-    /// Environment-specific configuration errors
+
+    /// Environment-specific configuration failure
     Environment,
-    /// Default configuration loading errors
+
+    /// Default configuration value application failure
     Default,
-    /// Configuration validation errors
+
+    /// Configuration validation or consistency failure
     Validation,
-    /// Configuration migration errors
+
+    /// Configuration migration or upgrade failure
     Migration,
-    /// Configuration backup and restore errors
+
+    /// Configuration backup or restore failure
     Backup,
-    /// Configuration security errors
+
+    /// Security-related configuration failure
     Security,
-    /// Configuration versioning errors
+
+    /// Configuration versioning or compatibility failure
     Versioning,
-    /// General configuration errors
+
     #[default]
+    /// General configuration error not covered by specific categories
     General,
 }
 
-/// Hardware Security Module (HSM) specific error categories
+/// Categories of Hardware Security Module errors for detailed classification and handling
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum HsmErrorCategory {
-    /// Key generation errors
+    /// Cryptographic key generation failure
     KeyGeneration,
-    /// Key storage and retrieval errors
+
+    /// Key storage or retrieval failure
     KeyStorage,
-    /// Hardware device errors
+
+    /// Hardware component or connectivity failure
     Hardware,
-    /// HSM authentication errors
+
+    /// HSM authentication or access failure
     Authentication,
-    /// Cryptographic operation errors
+
+    /// Cryptographic operation execution failure
     Crypto,
-    /// HSM configuration errors
+
+    /// HSM configuration or setup failure
     Configuration,
-    /// HSM capacity and limit errors
+
+    /// HSM capacity or resource limitation
     Capacity,
-    /// HSM firmware and software errors
+
+    /// HSM firmware or software failure
     Firmware,
-    /// HSM network connectivity errors
+
+    /// HSM network connectivity failure
     Network,
-    /// HSM backup and recovery errors
+
+    /// HSM backup or recovery failure
     Backup,
-    /// HSM compliance and audit errors
+
+    /// HSM compliance or certification failure
     Compliance,
-    /// General HSM errors
+
     #[default]
+    /// General HSM error not covered by specific categories
     General,
 }
 
-/// Workflow execution and management error categories
+/// Categories of workflow execution errors for detailed classification and handling
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum WorkflowErrorCategory {
-    /// Workflow execution errors
+    /// Workflow step execution failure
     Execution,
-    /// Workflow approval process errors
+
+    /// Workflow approval or authorization failure
     Approval,
-    /// Workflow state transition errors
+
+    /// Workflow state transition failure
     StateTransition,
-    /// Workflow timeout errors
+
+    /// Workflow timeout or deadline failure
     Timeout,
-    /// Workflow validation errors
+
+    /// Workflow input validation failure
     Validation,
-    /// General workflow errors
+
     #[default]
+    /// General workflow error not covered by specific categories
     General,
 }
 
-/// API and service interface error categories
+/// Categories of API-related errors for detailed classification and handling
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum ApiErrorCategory {
-    /// General API errors
     #[default]
+    /// General API error not covered by specific categories
     General,
-    /// API authentication errors
+
+    /// API authentication failure
     Authentication,
-    /// API authorization errors
+
+    /// API authorization or permission failure
     Authorization,
-    /// Request validation errors
+
+    /// API input validation failure
     Validation,
-    /// Resource not found errors
+
+    /// API resource not found failure
     NotFound,
-    /// Resource conflict errors
+
+    /// API resource conflict or duplicate failure
     Conflict,
-    /// Rate limiting errors
+
+    /// API rate limiting or throttling failure
     RateLimit,
-    /// Internal server errors
+
+    /// API internal server error
     Internal,
-    /// Service unavailable errors
+
+    /// API service unavailable or maintenance failure
     ServiceUnavailable,
+}
+
+/// Categories of testing framework errors for detailed classification and handling
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub enum TestingErrorCategory {
+    /// Property-based testing failure
+    Property,
+
+    /// Mutation testing failure
+    Mutation,
+
+    /// Invariant validation failure
+    Invariant,
+
+    /// Test monitoring and metrics failure
+    Monitoring,
+
+    /// Code coverage analysis failure
+    Coverage,
+
+    /// Boundary testing failure
+    Boundary,
+
+    /// Quantum security testing failure
+    Quantum,
+
+    /// Attack simulation failure
+    Attack,
+
+    /// System readiness testing failure
+    Readiness,
+
+    /// Resistance testing failure
+    Resistance,
+
+    /// Simulation framework failure
+    Simulation,
+
+    /// Test validation framework failure
+    Validation,
+
+    #[default]
+    /// General testing error not covered by specific categories
+    General,
 }

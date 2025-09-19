@@ -1,136 +1,126 @@
+// **ULTRA-PEDANTIC**: External Functions Interface for BearDog Ecosystem
+//
+// This module provides comprehensive Foreign Function Interface (FFI) capabilities
+// for BearDog, enabling seamless integration with external libraries, native code,
+// and system-level operations with enterprise-grade safety and performance.
+//
+// ## Architecture
+//
+// The external functions system is organized into focused modules:
+// - **types**: Core type definitions and data structures
+// - **registry**: Function registry and library management
+// - **safety**: Safety checking and validation policies
+//
+// ## Usage
+//
+// ```rust
+// use beardog_core::external_functions::{
+//     ExternalFunctionRegistry, RegistryConfig, FunctionSignature, ParameterType
+// };
+//
+// // Create registry with default config
+// let registry = ExternalFunctionRegistry::default();
+//
+// // Load a library
+// let lib_id = registry.load_library("/path/to/library.so")?;
+//
+// // Cache a function
+// let signature = FunctionSignature {
+//     parameters: vec![ParameterType::Int32, ParameterType::CString],
+//     return_type: ReturnType::Type(ParameterType::Int32),
+//     calling_convention: CallingConvention::C,
+//     attributes: vec![],
+// };
+//
+// let func_id = registry.cache_function(&lib_id, "my_function", signature)?;
+//
+// // Call the function
+// let result = registry.call_cached_function(&func_id, parameters)?;
+// ```
 
+// Module declarations
+pub mod registry;
+pub mod safety;
+pub mod types;
 
-use crate::licensing::LicenseManager;
-use beardog_errors::BearDogError;
-use serde_json::Value;
-use std::collections::HashMap;
+// Re-export main types and functions
+pub use registry::ExternalFunctionRegistry;
+pub use types::{
+    AccessRestriction, CallingConvention, CpuIntensity, FunctionAttribute, FunctionHandle,
+    FunctionMetadata, FunctionParameter, FunctionResult, FunctionValue, LibraryHandle,
+    LibraryMetadata, ParameterType, PerformanceInfo, RegistryConfig, SafetyLevel,
+    SecurityClearance, SecurityInfo,
+};
 
-pub mod aws_kms;
-pub mod grafana;
-pub mod kubernetes;
-pub mod prometheus;
+pub use safety::{ParameterValue, SafetyChecker};
 
-pub use aws_kms::AwsKmsIntegration;
-pub use grafana::GrafanaDashboards;
-pub use kubernetes::KubernetesIntegration;
-pub use prometheus::PrometheusExport;
-
-#[allow(async_fn_in_trait)]
-pub trait ExternalFunctionHandler: Send + Sync + Clone {
-
-    fn function_name(&self) -> &str;
-
-    async fn execute(
-        &self,
-        license_manager: &LicenseManager,
-        operation: &str,
-        payload: Value,
-    ) -> Result<Value, BearDogError>;
+pub fn default_config() -> RegistryConfig {
+    RegistryConfig::default()
 }
 
-pub struct ExternalFunctionRegistry<H: ExternalFunctionHandler> {
-    handlers: HashMap<String, H>,
+/// Creates a new external function registry with default configuration
+/// Creates registry
+pub fn create_registry() -> ExternalFunctionRegistry {
+    ExternalFunctionRegistry::default()
 }
 
-impl<H: ExternalFunctionHandler> ExternalFunctionRegistry<H> {
-
-    pub fn new() -> Self {
-        Self {
-            handlers: ahash::HashMap::default(),
-        }
-    }
-
-    pub fn register_handler(&mut self, name: &str, handler: H) {
-        self.handlers.insert(name, handler);
-    }
-
-    pub async fn execute_function(
-        &self,
-        function_name: &str,
-        license_manager: &LicenseManager,
-        operation: &str,
-        payload: Value,
-    ) -> Result<Value, BearDogError> {
-        let handler = self.handlers
-            .get(function_name)
-            .ok_or_else(|| BearDogError::not_found(format_args!("Function handler not found: {}", function_name).to_string()))?;
-        
-        handler.execute(license_manager, operation, payload).await
-    }
-
-    pub fn get_function_names(&self) -> Vec<&String> {
-        self.handlers.keys().collect()
-    }
-
-    pub fn list_functions(&self) -> Vec<String> {
-        self.handlers.keys().cloned().collect()
-    }
+/// Creates a new external function registry with custom configuration
+/// Creates registry_with_config
+pub fn create_registry_with_config(config: RegistryConfig) -> ExternalFunctionRegistry {
+    ExternalFunctionRegistry::new(config)
 }
 
-impl<H: ExternalFunctionHandler> Default for ExternalFunctionRegistry<H> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[derive(Clone)]
-pub enum UnifiedExternalHandler {
-    Kubernetes(KubernetesIntegration),
-    Prometheus(PrometheusExport),
-    Grafana(GrafanaDashboards),
-    AwsKms(AwsKmsIntegration),
-}
-
-impl ExternalFunctionHandler for UnifiedExternalHandler {
-    fn function_name(&self) -> &str {
-        match self {
-            UnifiedExternalHandler::Kubernetes(h) => h.function_name(),
-            UnifiedExternalHandler::Prometheus(h) => h.function_name(),
-            UnifiedExternalHandler::Grafana(h) => h.function_name(),
-            UnifiedExternalHandler::AwsKms(h) => h.function_name(),
-        }
+    #[tokio::test]
+    fn test_registry_creation() {
+        let config = RegistryConfig::default();
+        let registry = ExternalFunctionRegistry::new(config);
+        let libraries = registry.list_libraries().unwrap();
+        assert!(libraries.is_empty());
     }
 
-    async fn execute(
-        &self,
-        license_manager: &LicenseManager,
-        operation: &str,
-        payload: Value,
-    ) -> Result<Value, BearDogError> {
-        match self {
-            UnifiedExternalHandler::Kubernetes(h) => h.execute(license_manager, operation, payload).await,
-            UnifiedExternalHandler::Prometheus(h) => h.execute(license_manager, operation, payload).await,
-            UnifiedExternalHandler::Grafana(h) => h.execute(license_manager, operation, payload).await,
-            UnifiedExternalHandler::AwsKms(h) => h.execute(license_manager, operation, payload).await,
-        }
+    #[tokio::test]
+    fn test_registry_library_management() {
+        let config = RegistryConfig::default();
+        let registry = ExternalFunctionRegistry::new(config);
+        let libraries = registry.list_libraries().unwrap();
+        assert!(libraries.is_empty());
+    }
+
+    #[tokio::test]
+    fn test_safety_checker() {
+        use super::safety::{SafetyChecker, SafetyPolicy};
+        use super::types::SecurityClearance;
+        use beardog_traits::unified::PolicyEngine;
+
+        let mut checker = SafetyChecker::new(SecurityClearance::Internal);
+
+        // Add some test policies
+        let policy1 = SafetyPolicy {
+            policy_id: "parameter_validation".to_string(),
+            function_patterns: vec!["validate_*".to_string()],
+            required_clearance: SecurityClearance::Public,
+            parameter_validation: true,
+        };
+
+        let policy2 = SafetyPolicy {
+            policy_id: "memory_bounds".to_string(),
+            function_patterns: vec!["memory_*".to_string()],
+            required_clearance: SecurityClearance::Internal,
+            parameter_validation: true,
+        };
+
+        // Load policies
+        checker.load_policy(policy1).unwrap();
+        checker.load_policy(policy2).unwrap();
+
+        // Test list_policies
+        let policies = checker.list_policies().unwrap();
+        assert!(!policies.is_empty());
+        assert!(policies.contains(&"parameter_validation".to_string()));
+        assert!(policies.contains(&"memory_bounds".to_string()));
     }
 }
-
-pub type UnifiedExternalFunctionRegistry = ExternalFunctionRegistry<UnifiedExternalHandler>;
-
-impl UnifiedExternalFunctionRegistry {
-
-    pub fn with_default_handlers() -> Self {
-        let mut registry = Self::new();
-
-        registry.register_handler(
-            "kubernetes".to_string(),
-            UnifiedExternalHandler::Kubernetes(KubernetesIntegration),
-        );
-        registry.register_handler(
-            "prometheus".to_string(),
-            UnifiedExternalHandler::Prometheus(PrometheusExport),
-        );
-        registry.register_handler(
-            "grafana".to_string(),
-            UnifiedExternalHandler::Grafana(GrafanaDashboards),
-        );
-        registry.register_handler(
-            "aws_kms".to_string(),
-            UnifiedExternalHandler::AwsKms(AwsKmsIntegration),
-        );
-        
-        registry
-    }
-}
-

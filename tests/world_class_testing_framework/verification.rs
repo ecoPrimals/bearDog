@@ -4,16 +4,12 @@ use super::traits::*;
 use super::metrics::*;
 use beardog_errors::*;
 
-#[derive(Debug)]
-pub struct CanonicalFormalVerifier {
-    verification_engine: VerificationEngine,
+#[derive(Debug, Clone)]
     proof_cache: std::collections::HashMap<String, MathematicalProof>,
 }
 
 impl CanonicalFormalVerifier {
-    pub fn new() -> Self {
-        Self {
-            verification_engine: VerificationEngine::ModelChecker,
+    pub fn new(VerificationEngine::ModelChecker,
             proof_cache: std::collections::HashMap::with_capacity(16),
         }
     }
@@ -25,59 +21,36 @@ impl FormalVerifier for CanonicalFormalVerifier {
         match component {
             "beardog_core" => {
                 let proof = MathematicalProof {
-                    theorem: format_args!("Component {} is mathematically correct", component).to_string(),
+                    theorem: format!("Component {} is mathematically correct", component),
                     proof_steps: vec![
                         ProofStep {
                             step_number: 1,
                             description: "Initialize verification environment".to_string(),
                             justification: "Formal verification requirements".to_string(),
-                        },
-                        ProofStep {
-                            step_number: 2,
                             description: "Apply verification rules".to_string(),
                             justification: "Canonical verification process".to_string(),
-                        },
-                    ],
-                    verification_method: VerificationMethod::ModelChecking,
-                    confidence_level: 1.0,
-                };
-                FormalVerificationResult::Verified { proof }
-            }
-            _ => FormalVerificationResult::Failed {
-                reason: format_args!("Component {} not supported for verification", component).to_string(),
             },
         }
     }
 
     fn generate_proof(&self, property: &str) -> MathematicalProof {
         MathematicalProof {
-            theorem: format_args!("Property: {}", property).to_string(),
+            theorem: format!("Property: {}", property),
             proof_steps: vec![ProofStep {
                 step_number: 1,
                 description: "Property verification".to_string(),
-                justification: "Canonical proof generation".to_string(),
-            }],
-            verification_method: VerificationMethod::TheoremProving,
-            confidence_level: 0.95,
-        }
-    }
-
-    fn validate_invariants(&self, _system_state: &SystemState) -> InvariantValidationResult {
+                justification: "Canonical proof generation".to_string(), _system_state: &SystemState) -> InvariantValidationResult {
 
         InvariantValidationResult::Valid
     }
 }
 
-#[derive(Debug)]
-pub struct CanonicalPropertyGenerator {
-    test_case_limit: usize,
+#[derive(Debug, Clone)]
     shrinking_enabled: bool,
 }
 
 impl CanonicalPropertyGenerator {
-    pub fn new() -> Self {
-        Self {
-            test_case_limit: 1000,
+    pub fn new(1000,
             shrinking_enabled: true,
         }
     }
@@ -86,25 +59,10 @@ impl CanonicalPropertyGenerator {
 impl PropertyGenerator for CanonicalPropertyGenerator {
     fn generate_test_cases(&self, property: &SecurityProperty) -> Vec<TestCase> {
 
-        let mut test_cases = Vec::new();
-        
-        for i in 0..self.test_case_limit.min(100) {
-            test_cases.push(TestCase {
-                input_data: vec![i as u8; 32], // Generate varied input data
+        let mut test_cases = Vec::new(vec![i as u8; 32], // Generate varied input data
                 expected_output: None,
                 test_metadata: {
-                    let mut metadata = std::collections::HashMap::with_capacity(16);
-                    metadata.insert("property".to_string(), property.name.clone());
-                    metadata.insert("test_id".to_string(), i.to_string());
-                    metadata
-                },
-            });
-        }
-        
-        test_cases
-    }
-
-    fn validate_property(&self, _property: &SecurityProperty, _input: &TestInput) -> PropertyResult {
+                    let mut metadata = std::collections::HashMap::with_capacity(&SecurityProperty, _input: &TestInput) -> PropertyResult {
 
         PropertyResult::Satisfied
     }
@@ -113,42 +71,7 @@ impl PropertyGenerator for CanonicalPropertyGenerator {
         MinimalCounterexample {
             description: "Minimized counterexample".to_string(),
             input_data: failing_case.input_data.clone(),
-            failure_point: "Property violation detected".to_string(),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct CanonicalMutationTester {
-    mutation_operators: Vec<MutationType>,
-}
-
-impl CanonicalMutationTester {
-    pub fn new() -> Self {
-        Self {
-            mutation_operators: vec![
-                MutationType::OperatorReplacement,
-                MutationType::ConstantChange,
-                MutationType::ConditionNegation,
-                MutationType::StatementDeletion,
-                MutationType::BoundaryShift,
-            ],
-        }
-    }
-}
-
-impl MutationTester for CanonicalMutationTester {
-    fn generate_mutations(&self, code: &str) -> Vec<CodeMutation> {
-        let mut mutations = Vec::new();
-        
-        for (line_num, line) in code.lines().enumerate() {
-            for mutation_type in &self.mutation_operators {
-                let mutated_line = match mutation_type {
-                    MutationType::OperatorReplacement => {
-                        line.replace("==", "!=").replace("&&", "||")
-                    }
-                    MutationType::ConstantChange => {
-                        line.replace("0", "1").replace("true", "false")
+            failure_point: "Property violation detected".to_string().replace("true".to_string(), "false")
                     }
                     MutationType::ConditionNegation => {
                         if line.contains("if ") {
@@ -166,9 +89,6 @@ impl MutationTester for CanonicalMutationTester {
                 if mutated_line != line {
                     mutations.push(CodeMutation {
                         original_code: line.to_string(),
-                        mutated_code: mutated_line,
-                        mutation_type: mutation_type.clone(),
-                        line_number: line_num,
                     });
                 }
             }
@@ -189,15 +109,7 @@ impl MutationTester for CanonicalMutationTester {
         
         let killed_count = results.iter()
             .filter(|r| matches!(r, MutationResult::Killed))
-            .count();
-        
-        killed_count as f64 / results.len() as f64
-    }
-}
-
-#[derive(Debug)]
-pub struct CanonicalInvariantValidator {
-    safety_invariants: Vec<SafetyInvariant>,
+            .count(Vec<SafetyInvariant>,
 }
 
 impl CanonicalInvariantValidator {
@@ -206,21 +118,7 @@ impl CanonicalInvariantValidator {
             safety_invariants: vec![
                 SafetyInvariant {
                     name: "memory_safety".to_string(),
-                    condition: "No memory leaks or use-after-free".to_string(),
-                    criticality: InvariantCriticality::Critical,
-                },
-                SafetyInvariant {
-                    name: "cryptographic_integrity".to_string(),
-                    condition: "All cryptographic operations maintain integrity".to_string(),
-                    criticality: InvariantCriticality::Critical,
-                },
-            ],
-        }
-    }
-}
-
-impl InvariantValidator for CanonicalInvariantValidator {
-    fn validate_invariants(&self, _state: &SystemState) -> InvariantValidationResult {
+                    condition: "No memory leaks or use-after-free".to_string() -> InvariantValidationResult {
 
         InvariantValidationResult::Valid
     }
@@ -234,9 +132,7 @@ impl InvariantValidator for CanonicalInvariantValidator {
     }
 }
 
-#[derive(Debug)]
-pub struct CanonicalExhaustiveTester {
-    boundary_conditions: Vec<BoundaryCondition>,
+#[derive(Debug, Clone)]
 }
 
 impl CanonicalExhaustiveTester {
@@ -259,8 +155,6 @@ impl ExhaustiveTester for CanonicalExhaustiveTester {
         vec![
             ExhaustiveTestCase {
                 scenario: "Boundary testing".to_string(),
-                inputs: vec![TestInput { data: vec![0] }],
-                boundary_conditions: self.boundary_conditions.clone(),
             },
         ]
     }
@@ -274,9 +168,7 @@ impl ExhaustiveTester for CanonicalExhaustiveTester {
     }
 }
 
-#[derive(Debug)]
-pub struct CanonicalQuantumValidator {
-    quantum_algorithms: Vec<String>,
+#[derive(Debug, Clone)]
 }
 
 impl CanonicalQuantumValidator {
@@ -303,13 +195,9 @@ impl QuantumResistanceValidator for CanonicalQuantumValidator {
         }
     }
 
-    fn simulate_quantum_attacks(&self) -> Vec<QuantumAttackResult> {
-        vec![
-            QuantumAttackResult {
-                attack_type: QuantumAttackType::Shor,
+    fn simulate_quantum_attacks(QuantumAttackType::Shor,
                 success_probability: 1.0,
-                time_complexity: "O(n^3)".to_string(),
-                mitigation_required: true,
+                time_complexity: "O(true,
             },
         ]
     }

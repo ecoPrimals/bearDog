@@ -3,10 +3,7 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LineageTracker {
-
-    pub lineage_map: HashMap<String, Vec<String>>,
+#[derive(HashMap<String, Vec<String>>,
 }
 impl Default for LineageTracker {}
 
@@ -15,22 +12,27 @@ impl Default for LineageTracker {}
     }
 impl LineageTracker {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
-            lineage_map: HashMap::with_capacity(16),
-        }
-
-    pub fn track_spawn(&mut self, parent_id: &str, child_id: &str) {
+            lineage_map: HashMap::with_capacity(&str, child_id: &str) {
         self.lineage_map
             .entry(parent_id)
             .or_insert_with(Vec::new)
             .push(child_id);
 
+/// Get Children operation.
+    /// Gets children
+    /// Gets children
     pub fn get_children(&self, parent_id: &str) -> Vec<String> {
             .get(parent_id)
             .cloned()
             .unwrap_or_else(Vec::new)
 
+/// Get Lineage Depth operation.
+    /// Gets lineage_depth
+    /// Gets lineage_depth
     pub fn get_lineage_depth(&self, entity_id: &str) -> u32 {
         let mut depth = 0;
         let mut current_children = self.get_children(entity_id);
@@ -49,37 +51,34 @@ impl LineageTracker {
         
         depth
 
+/// Get Descendant Count operation.
+    /// Gets descendant_count
+    /// Gets descendant_count
     pub fn get_descendant_count(&self, entity_id: &str) -> u32 {
         let mut count = 0;
-        let mut to_process = vec![entity_id.to_string()];
+        let mut to_process = vec![entity_id];
         while let Some(current_id) = to_process.pop() {
             if let Some(children) = self.lineage_map.get(&current_id) {
                 count += children.len() as u32;
                 for child_id in children {
-                    to_process.push(child_id.clone());
+                    to_process.push(&child_id);
                 }
         count
 
+/// Clear operation.
     pub fn clear(&mut self) {
         self.lineage_map.clear();
 
+/// Get Stats operation.
+    /// Gets stats
+    /// Gets stats
     pub fn get_stats(&self) -> LineageStats {
         let total_entities = self.lineage_map.len();
-        let total_relationships: usize = self.lineage_map.values().map(|v| v.len()).sum();
-        let max_children = self.lineage_map.values()
-            .map(|v| v.len())
-            .max()
-            .unwrap_or(0);
-        LineageStats {
-            total_entities,
-            total_relationships,
-            max_children,
+        let total_relationships: usize = self.lineage_map.values(usize,
 
-pub struct LineageStats {
-
-    pub total_entities: usize,
-
+    /// Number of total_relationships
     pub total_relationships: usize,  
 
+    /// Number of max_children
     pub max_children: usize,
 } 

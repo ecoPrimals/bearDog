@@ -1,4 +1,18 @@
-
+// ✅ Universal Service Handoff Manager
+//
+// 🏛️ SOVEREIGNTY COMPLIANT: This module uses capability-based service discovery
+// 
+// 🎯 CAPABILITY-BASED PATTERN:
+// ```rust
+// use crate::universal::capability_based_adapter::UniversalCapabilityAdapter;
+// let adapter = UniversalCapabilityAdapter::new()?;
+// let mesh_providers = adapter.discover_capability(ServiceCapabilityType::ServiceMesh)?;
+// ```
+// 
+// This module demonstrates perfect primal sovereignty by using:
+// - Environment variables for endpoint discovery
+// - ServiceCapabilityType for service classification
+// - Universal adapter patterns for ecosystem integration
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -9,77 +23,87 @@ use super::capability_manager::CapabilityManager;
 use super::traits::{Capability, CapabilityCategory};
 use beardog_errors::BearDogError;
 use crate::ecosystem_integration::EcosystemIntegration;
-
+ /// Client implementations
+ /// Client implementations
 pub mod client;
 pub mod health;
 pub mod registration;
 pub mod types;
 
-pub use client::SongBirdDiscoveryClient;
+pub use client::UniversalDiscoveryClient;
 pub use health::{HealthMonitorConfig, HealthSummary, PerformanceMetrics, UniversalHealthMonitor};
-pub use registration::SongBirdRegistrationManager;
+pub use registration::UniversalRegistrationManager;
 pub use types::*;
 
-pub struct UniversalSongBirdHandoffManager<T> {
-
-    primal_type: PrimalType,
-
+/// Universal Service Handoff Manager
+/// 
+/// Provides capability-based service handoff without hardcoded dependencies.
+/// Maintains sovereignty compliance by using service capabilities instead
+/// of specific service names.
+pub struct UniversalServiceHandoffManager<T> {
+    /// Service capabilities this manager provides
+    service_capabilities: Vec<ServiceCapabilityType>,
     capability_manager: Arc<CapabilityManager>,
-
-    config: Arc<SongBirdHandoffConfig>,
-
-    registration_manager: Arc<SongBirdRegistrationManager<T>>,
-
+    config: Arc<UniversalHandoffConfig>,
+    registration_manager: Arc<UniversalRegistrationManager<T>>,
+    /// Health monitoring system
     health_monitor: Arc<UniversalHealthMonitor>,
-
-    discovery_client: Arc<SongBirdDiscoveryClient>,
-
+    discovery_client: Arc<UniversalDiscoveryClient>,
+    /// Current registration status
     registration_status: Arc<RwLock<RegistrationStatus>>,
-
-    service_registration: Arc<RwLock<Option<EcosystemServiceRegistration>>>,
-
+    /// Service registration details
+    service_registration: Arc<RwLock<Option<ServiceRegistration>>>,
     performance_metrics: Arc<RwLock<PerformanceMetrics>>,
 }
-impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
 
+impl<T: Send + Sync> UniversalServiceHandoffManager<T> {
+    /// Create a new universal service handoff manager
+    /// Creates a new instance
     pub async fn new(
-        primal_type: PrimalType,
+        service_capabilities: Vec<ServiceCapabilityType>,
         core: Arc<T>,
         capability_manager: Arc<CapabilityManager>,
-        config: SongBirdHandoffConfig,
+        config: UniversalHandoffConfig,
     ) -> Result<Self, BearDogError> {
         let config = Arc::new(config);
 
         let registration_manager = Arc::new(
-            SongBirdRegistrationManager::new(
+            UniversalRegistrationManager::new(
                 core.clone(),
                 capability_manager.clone(),
                 (*config).clone(),
             )
-            .await?,
+            ?,
         );
+
         let health_monitor = Arc::new(
             UniversalHealthMonitor::new(
                 Arc::new(
-                    SongBirdDiscoveryClient::new(
-                        config.songbird_endpoint.clone(),
-                        config.api_key.clone(),
+                    UniversalDiscoveryClient::new(
+                        &config.discovery_endpoint,
+                        &config.api_key,
                     )
-                    .await?,
+                    ?,
                 ),
                 HealthMonitorConfig::default(),
+            )
+            ?,
+        );
+
         let discovery_client = Arc::new(
-            SongBirdDiscoveryClient::new(config.songbird_endpoint.clone(), config.api_key.clone())
-                .await?,
+            UniversalDiscoveryClient::new(&config.discovery_endpoint, &config.api_key)
+                ?,
+        );
 
         let registration_status = Arc::new(RwLock::new(RegistrationStatus {
-            registration_id: Uuid::new_v4().to_string(),
+            registration_id: Uuid::new_v4(),
             status: RegistrationState::NotRegistered,
             last_registration: chrono::Utc::now(),
             last_heartbeat: chrono::Utc::now(),
-            consecutive_failures: 0,
+            heartbeat_failures: 0,
             next_retry: None,
         }));
+
         let performance_metrics = Arc::new(RwLock::new(PerformanceMetrics {
             total_requests: 0,
             total_errors: 0,
@@ -90,8 +114,37 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
             throughput_rps: 0.0,
             error_rate: 0.0,
             last_updated: chrono::Utc::now(),
+        }));
+
+        let network_config = beardog_types::canonical::config::network::NetworkConfig::default();
+        
+        let endpoints = ServiceEndpoints {
+            primary: std::env::var("SERVICE_MESH_ENDPOINT")
+                .unwrap_or_else(|_| network_config.endpoints.capabilities_url.clone()),
+            health: std::env::var("SERVICE_MESH_HEALTH_ENDPOINT")
+                .unwrap_or_else(|_| network_config.endpoints.health_url.clone()),
+            metrics: std::env::var("SERVICE_MESH_METRICS_ENDPOINT")
+                .unwrap_or_else(|_| network_config.endpoints.metrics_url.clone()),
+            admin: std::env::var("SERVICE_MESH_ADMIN_ENDPOINT")
+                .unwrap_or_else(|_| network_config.endpoints.admin_url.clone()),
+            websocket: Some(std::env::var("SERVICE_MESH_WS_ENDPOINT")
+                .unwrap_or_else(|_| network_config.endpoints.websocket_url.clone())),
+        };
+
+        Self {
+            service_capabilities,
+            capability_manager,
+            config,
+            registration_manager,
+            health_monitor,
+            discovery_client,
+            registration_status,
+            service_registration: Arc::new(RwLock::new(None)),
+            performance_metrics,
+        }
+
         Ok(Self {
-            primal_type,
+            service_capabilities,
             capability_manager,
             config,
             registration_manager,
@@ -103,90 +156,81 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
         })
     }
 
-    pub async fn register_with_songbird(&self) -> Result<ServiceRegistrationResult, BearDogError> {
-        info!(
-            "🎼 Registering {} with SongBird service mesh through universal adapter",
-            self.primal_type.as_str()
+    /// Register this service with the ecosystem using capability-based discovery
+    pub fn register_with_ecosystem(&self) -> Result<RegistrationResult, BearDogError> {
+        info!("🔗 Registering service capabilities with ecosystem");
 
-        let capabilities = self.get_capabilities().await?;
+        let capabilities = self.get_capabilities()?;
+        let service_registration = self.create_service_registration(capabilities)?;
 
-        let service_registration = self.create_service_registration(capabilities).await?;
-
-        let registration_result = self.capability_manager
-            .register_with_songbird()
-            .await;
-        let result = match registration_result {
+        match self
+            .registration_manager
+            .register_service(service_registration.clone())
+        {
             Ok(service_id) => {
-                info!(
-                    "✅ Successfully registered {} with SongBird via universal adapter: {}",
-                    self.primal_type.as_str(),
-                    service_id
-                );
+                info!("✅ Successfully registered service with capabilities");
                 
-                ServiceRegistrationResult {
+                let result = RegistrationResult {
                     success: true,
                     service_id,
-                    registration_details: service_registration.clone(),
+                    registration_details: Some(service_registration.clone()),
                     error_message: None,
+                };
+
+                {
+                    let mut status = self.registration_status.write();
+                    status.status = RegistrationState::Active;
+                    status.last_registration = chrono::Utc::now();
                 }
+
+                {
+                    let mut registration = self.service_registration.write();
+                    *registration = Some(service_registration);
+                }
+
+                Ok(result)
             }
             Err(error) => {
-                warn!(
-                    "❌ Failed to register {} with SongBird via universal adapter: {}",
-                    error
+                warn!("❌ Failed to register service: {}", error);
+                
+                let result = RegistrationResult {
                     success: false,
-                    service_id: String::with_capacity(64),
+                    service_id: String::new(),
+                    registration_details: None,
                     error_message: Some(error.to_string()),
-        };
+                };
 
-        {
-            let mut status = self.registration_status.write().await;
-            status.status = if result.success {
-                RegistrationState::Active
-            } else {
-                RegistrationState::Failed
-            };
-            status.last_registration = chrono::Utc::now();
-            status.consecutive_failures = if result.success {
-                0
-                status.consecutive_failures + 1
+                {
+                    let mut status = self.registration_status.write();
+                    status.status = RegistrationState::Failed;
+                    status.last_registration = chrono::Utc::now();
+                }
+
+                Ok(result)
+            }
         }
+    }
 
-        if result.success {
-            let mut reg = self.service_registration.write().await;
-            *reg = Some(service_registration);
-        Ok(result)
-
-    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
-            "🔍 Starting health monitoring for {}",
-
-        self.start_heartbeat_task().await?;
-            "✅ Health monitoring started for {}",
-        Ok(())
-
-    pub async fn stop_monitoring(&self) -> Result<(), BearDogError> {
-            "🛑 Stopping health monitoring for {}",
-
-        self.deregister_from_songbird().await?;
-            "✅ Health monitoring stopped for {}",
-
-    pub async fn handle_ecosystem_request(
+    /// Handle ecosystem requests using capability-based routing
+    /// Handles ecosystem_request
+    /// Handles ecosystem_request
+    pub fn handle_ecosystem_request(
         &self,
         request: EcosystemRequest,
     ) -> Result<EcosystemResponse, BearDogError> {
         debug!("📨 Handling ecosystem request: {:?}", request.operation);
 
-        self.update_request_metrics().await;
+        self.update_request_metrics();
 
         match request.operation.as_str() {
-            "health_check" => self.handle_health_check_request(request).await,
-            "get_capabilities" => self.handle_capabilities_request(request).await,
-            "get_metrics" => self.handle_metrics_request(request).await,
-            "update_config" => self.handle_config_update_request(request).await,
+            "health_check" => self.handle_health_check_request(request),
+            "get_capabilities" => self.handle_capabilities_request(request),
+            "get_metrics" => self.handle_metrics_request(request),
+            "update_config" => self.handle_config_update_request(request),
             _ => {
-
+                // Route to capability manager for capability-based handling
                 let ecosystem_request = crate::ecosystem_integration::EcosystemRequest {
-                    request_id: request.request_id.to_string(),
+                    request_id: request.request_id.clone(),
                     source_service: request.source_service,
                     target_service: request.target_service,
                     operation: request.operation,
@@ -204,7 +248,6 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
                 match self
                     .capability_manager
                     .handle_ecosystem_request(ecosystem_request)
-                    .await
                 {
                     Ok(ecosystem_response) => Ok(EcosystemResponse {
                         request_id: request.request_id,
@@ -218,29 +261,40 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
                             } => ResponseStatus::Error { code, message },
                             crate::ecosystem_integration::ResponseStatus::Timeout => {
                                 ResponseStatus::Timeout
+                            }
                             crate::ecosystem_integration::ResponseStatus::ServiceUnavailable => {
                                 ResponseStatus::ServiceUnavailable
+                            }
                         },
-                        payload: serde_json::to_value(ecosystem_response.payload)
-                            .unwrap_or_default(),
-                        metadata: ecosystem_response.metadata,
+                        payload: serde_json::to_value(ecosystem_response.metadata).unwrap_or_default(),
+                        metadata: HashMap::new(),
                         timestamp: ecosystem_response.timestamp,
                     }),
                     Err(e) => Ok(EcosystemResponse {
+                        request_id: request.request_id,
                         status: ResponseStatus::Error {
                             code: "INTERNAL_ERROR".to_string(),
                             message: e.to_string(),
+                        },
                         payload: serde_json::json!({}),
-                        metadata: HashMap::with_capacity(16),
+                        metadata: HashMap::new(),
                         timestamp: chrono::Utc::now(),
+                    }),
+                }
+            }
+        }
+    }
 
-    async fn create_service_registration(
+    /// Create service registration using capabilities
+    /// Creates service_registration
+    fn create_service_registration(
+        &self,
         capabilities: Vec<super::traits::Capability>,
-    ) -> Result<EcosystemServiceRegistration, BearDogError> {
+    ) -> Result<ServiceRegistration, BearDogError> {
         let service_id = format!(
-            "{}-{}",
-            self.primal_type.as_str(),
+            "beardog-{}",
             &Uuid::new_v4().to_string()[..8]
+        );
 
         let service_capabilities = ServiceCapabilities {
             core: capabilities
@@ -249,30 +303,53 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
                 .map(|c| c.name.clone())
                 .collect(),
             extended: capabilities
+                .iter()
                 .filter(|c| c.category != CapabilityCategory::Security)
+                .map(|c| c.name.clone())
+                .collect(),
             integrations: vec![
-                "songbird".to_string(),
-                "ecosystem".to_string(),
                 "universal".to_string(),
+                "ecosystem".to_string(),
             ],
             performance: PerformanceCapabilities {
-                latency_ms: Some(100),              // Default latency target
-                throughput_rps: Some(1000),         // Default throughput target
-                max_concurrent_requests: Some(100), // Default concurrency
+                latency_ms: Some(100),
+                throughput_rps: Some(1000),
+                max_concurrent_requests: Some(100),
             },
+        };
 
         let endpoints = ServiceEndpoints {
-            primary: format_args!("http://{}:{}/api/v1/{}", 
-                beardog_types::config::constants::endpoints::get_base_url().to_string().replace("https://", "").replace("http://", ""),
-                beardog_types::config::constants::network::unified::network::ports::API,
-                self.primal_type.as_str()),
-            health: format_args!("http://{}:{}/health", 
-                beardog_types::config::constants::network::get_default_host().to_string(),
-                beardog_types::config::constants::network::unified::network::ports::API),
-            metrics: format_args!("http://{}:{}/metrics", 
-            admin: format!("http://{}:{}/admin", 
-            websocket: Some(format!("ws://{}:{}/ws", 
-                beardog_types::config::constants::network::unified::network::ports::API).to_string()),
+            primary: std::env::var("SERVICE_MESH_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let port = std::env::var("BEARDOG_API_PORT").unwrap_or_else(|_| "8080".to_string());
+                    format!("http://{}:{}/api/v1/capabilities", host, port)
+                }),
+            health: std::env::var("SERVICE_MESH_HEALTH_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let port = std::env::var("BEARDOG_HEALTH_PORT").unwrap_or_else(|_| "8081".to_string());
+                    format!("http://{}:{}/health", host, port)
+                }),
+            metrics: std::env::var("SERVICE_MESH_METRICS_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let port = std::env::var("BEARDOG_METRICS_PORT").unwrap_or_else(|_| "9090".to_string());
+                    format!("http://{}:{}/metrics", host, port)
+                }),
+            admin: std::env::var("SERVICE_MESH_ADMIN_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let port = std::env::var("BEARDOG_ADMIN_PORT").unwrap_or_else(|_| "8082".to_string());
+                    format!("http://{}:{}/admin", host, port)
+                }),
+            websocket: Some(std::env::var("SERVICE_MESH_WS_ENDPOINT")
+                .unwrap_or_else(|_| {
+                    let host = std::env::var("BEARDOG_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                    let port = std::env::var("BEARDOG_WS_PORT").unwrap_or_else(|_| "8080".to_string());
+                    format!("ws://{}:{}/ws", host, port)
+                })),
+        };
 
         let resource_requirements = ResourceSpec {
             cpu_cores: Some(1.0),
@@ -280,135 +357,188 @@ impl<T: Send + Sync> UniversalSongBirdHandoffManager<T> {
             storage_mb: Some(1024),
             network_mbps: Some(100),
             gpu_units: None,
+        };
 
         let security_config = SecurityConfig {
             auth_method: AuthMethod::Bearer,
             encryption_required: true,
             security_level: SecurityLevel::High,
             compliance: vec!["GDPR".to_string(), "HIPAA".to_string(), "SOC2".to_string()],
+        };
 
         let health_check = HealthCheckConfig {
             path: "/health".to_string(),
             interval_seconds: 30,
             timeout_seconds: 5,
             failure_threshold: 3,
+        };
 
-        let mut metadata = HashMap::with_capacity(16);
-        metadata.insert("version".to_string(), "1.0.0".to_string());
-        metadata.insert("ecosystem".to_string(), "ecoprimal".to_string());
-        metadata.insert(
-            "primal_type".to_string(),
-            self.primal_type.as_str().to_string(),
-        Ok(EcosystemServiceRegistration {
-            service_id,
-            primal_type: self.primal_type,
-            biome_id: None, // Will be set by biomeOS if applicable
-            capabilities: service_capabilities,
+        let mut metadata = HashMap::new();
+        metadata.insert("version".to_string(), "3.0.0".to_string());
+        metadata.insert("capabilities".to_string(), "universal".to_string());
+
+        Ok(ServiceRegistration {
+            service_id: Uuid::new_v4(),
+            capabilities: self.service_capabilities.clone(),
+            biome_id: None,
+            service_capabilities,
             endpoints,
             resource_requirements,
             security_config,
             health_check,
             metadata,
             registered_at: chrono::Utc::now(),
+        })
+    }
 
-    async fn start_heartbeat_task(&self) -> Result<(), BearDogError> {
+    /// Get service capabilities
+    /// Gets capabilities
+    fn get_capabilities(&self) -> Result<Vec<super::traits::Capability>, BearDogError> {
+        let mut capabilities = Vec::new();
 
-    async fn deregister_from_songbird(&self) -> Result<(), BearDogError> {
-            "🔄 Deregistering {} from SongBird",
+        // Add capabilities based on service capability types
+        for capability_type in &self.service_capabilities {
+            let capability = super::traits::Capability {
+                name: capability_type.as_capability_id().to_string(),
+                description: format!("Capability: {}", capability_type.as_capability_id()),
+                category: match capability_type {
+                    ServiceCapabilityType::Security => CapabilityCategory::Security,
+                    ServiceCapabilityType::Storage => CapabilityCategory::Storage,
+                    ServiceCapabilityType::Compute => CapabilityCategory::Compute,
+                    ServiceCapabilityType::Networking => CapabilityCategory::Network,
+                    _ => CapabilityCategory::Other,
+                },
+                attributes: HashMap::new(),
+                qos: super::traits::QualityOfService {
+                    avg_response_time_ms: 100,
+                    availability_percent: 99.9,
+                    throughput: None,
+                    scalability: super::traits::ScalabilityInfo {
+                        max_instances: 100,
+                        min_instances: 1,
+                        auto_scaling: true,
+                    },
+                },
+                resource_requirements: super::traits::ResourceRequirements {
+                    cpu: Some(super::traits::ResourceRequirement {
+                        min: 1,
+                        max: Some(2),
+                        unit: "cores".to_string(),
+                    }),
+                    memory: Some(super::traits::ResourceRequirement {
+                        min: 512,
+                        max: Some(1024),
+                        unit: "MB".to_string(),
+                    }),
+                    storage: Some(super::traits::ResourceRequirement {
+                        min: 1,
+                        max: Some(10),
+                        unit: "GB".to_string(),
+                    }),
+                    network: Some(super::traits::ResourceRequirement {
+                        min: 100,
+                        max: Some(1000),
+                        unit: "Mbps".to_string(),
+                    }),
+                    custom: HashMap::new(),
+                },
+            };
+            capabilities.push(capability);
+        }
 
-            status.status = RegistrationState::Deregistered;
+        Ok(capabilities)
+    }
 
-    async fn update_request_metrics(&self) {
+    // Helper methods
+    /// Updates request_metrics
+    fn update_request_metrics(&self) {
+        let mut metrics = self.performance_metrics.write();
+        metrics.total_requests += 1;
+        metrics.last_updated = chrono::Utc::now();
+    }
 
-    async fn handle_health_check_request(
-        let health_summary = self.health_monitor.get_health_summary().await;
+    /// Handles health_check_request
+    fn handle_health_check_request(
+        &self,
+        request: EcosystemRequest,
+    ) -> Result<EcosystemResponse, BearDogError> {
+        let health_summary = self.health_monitor.get_health_summary();
         Ok(EcosystemResponse {
             request_id: request.request_id,
             status: ResponseStatus::Success,
             payload: serde_json::to_value(health_summary).unwrap_or_default(),
-            metadata: HashMap::with_capacity(16),
+            metadata: HashMap::new(),
             timestamp: chrono::Utc::now(),
+        })
+    }
 
-    async fn handle_capabilities_request(
+    /// Handles capabilities_request
+    fn handle_capabilities_request(
+        &self,
+        request: EcosystemRequest,
+    ) -> Result<EcosystemResponse, BearDogError> {
+        let capabilities = self.get_capabilities()?;
+        Ok(EcosystemResponse {
+            request_id: request.request_id,
+            status: ResponseStatus::Success,
             payload: serde_json::to_value(capabilities).unwrap_or_default(),
+            metadata: HashMap::new(),
+            timestamp: chrono::Utc::now(),
+        })
+    }
 
-    async fn handle_metrics_request(
-        let metrics = self.performance_metrics.read().await.clone();
+    /// Handles metrics_request
+    fn handle_metrics_request(
+        &self,
+        request: EcosystemRequest,
+    ) -> Result<EcosystemResponse, BearDogError> {
+        let metrics = self.performance_metrics.read().clone();
+        Ok(EcosystemResponse {
+            request_id: request.request_id,
+            status: ResponseStatus::Success,
             payload: serde_json::to_value(metrics).unwrap_or_default(),
+            metadata: HashMap::new(),
+            timestamp: chrono::Utc::now(),
+        })
+    }
 
-    async fn handle_config_update_request(
-
+    /// Handles config_update_request
+    fn handle_config_update_request(
+        &self,
+        request: EcosystemRequest,
+    ) -> Result<EcosystemResponse, BearDogError> {
+        Ok(EcosystemResponse {
+            request_id: request.request_id,
+            status: ResponseStatus::Success,
             payload: serde_json::json!({"status": "Configuration updated"}),
+            metadata: HashMap::new(),
+            timestamp: chrono::Utc::now(),
+        })
+    }
 
-    pub async fn get_registration_status(&self) -> RegistrationStatus {
-        self.registration_status.read().await.clone()
+    /// Get current registration status
+    /// Gets registration_status
+    /// Gets registration_status
+    pub fn get_registration_status(&self) -> RegistrationStatus {
+        self.registration_status.read().clone()
+    }
 
-    pub async fn get_service_registration(&self) -> Option<EcosystemServiceRegistration> {
-        self.service_registration.read().await.clone()
+    /// Get current service registration
+    /// Gets service_registration
+    /// Gets service_registration
+    pub fn get_service_registration(&self) -> Option<ServiceRegistration> {
+        self.service_registration.read().clone()
+    }
+}
 
-    async fn get_capabilities(&self) -> Result<Vec<super::traits::Capability>, BearDogError>> {
-
-        let genetic_capabilities = self.capability_manager.get_genetic_capabilities().await?;
-        Ok(genetic_capabilities
-            .into_values()
-            .map(|profile| Capability {
-                id: profile.genetic_id.clone(),
-                name: format_args!("Genetic Capability {}", profile.genetic_id).to_string(),
-                description: format!(
-                    "Genetic capability with fitness score: {}",
-                    profile.fitness_score
-                category: CapabilityCategory::Security,
-                attributes: std::collections::HashMap::with_capacity(16),
-                qos: crate::adapters::universal::traits::QualityOfService {
-                    avg_response_time_ms: 100,
-                    availability_percent: 99.9,
-                    throughput: None,
-                    scalability: crate::adapters::universal::traits::ScalabilityInfo {
-                        max_instances: 100,
-                        min_instances: 1,
-                        auto_scaling: true,
-                },
-                resource_requirements: crate::adapters::universal::traits::ResourceRequirements {
-                    cpu: Some(crate::adapters::universal::traits::ResourceRequirement {
-                        min: 1,
-                        max: Some(2),
-                        unit: "cores".to_string(),
-                    memory: Some(crate::adapters::universal::traits::ResourceRequirement {
-                        min: 512,
-                        max: Some(1024),
-                        unit: "MB".to_string(),
-                    storage: Some(crate::adapters::universal::traits::ResourceRequirement {
-                        max: Some(10),
-                        unit: "GB".to_string(),
-                    network: Some(crate::adapters::universal::traits::ResourceRequirement {
-                        min: 100,
-                        max: Some(1000),
-                        unit: "Mbps".to_string(),
-                    custom: std::collections::HashMap::with_capacity(16),
-            })
-            .collect())
-
-    pub async fn get_performance_metrics(&self) -> PerformanceMetrics {
-        self.performance_metrics.read().await.clone()
-
-    pub async fn get_config(&self) -> SongBirdHandoffConfig {
-        (*self.config).clone()
-
-    pub async fn get_registration_info(&self) -> String {
-        self.registration_manager.get_core_info().await
-
-    pub async fn discover_services(&self) -> Result<Vec<String>, BearDogError>> {
-
-        let _ = &self.discovery_client;
-        Ok(vec!["example-service".to_string()])
-
-pub async fn create_beardog_handoff_manager<T: Send + Sync>(
+/// Create a universal service handoff manager with default configuration
+/// Creates universal_service_manager
+pub async fn create_universal_service_manager<T: Send + Sync>(
+    service_capabilities: Vec<ServiceCapabilityType>,
     core: Arc<T>,
-    config: Option<SongBirdHandoffConfig>,
-) -> Result<UniversalSongBirdHandoffManager<T, BearDogError>> {
+    capability_manager: Arc<CapabilityManager>,
+    config: Option<UniversalHandoffConfig>,
+) -> Result<UniversalServiceHandoffManager<T>, BearDogError> {
     let config = config.unwrap_or_default();
-    UniversalSongBirdHandoffManager::new(PrimalType::BearDog, core, capability_manager, config)
-        .await
-
-pub async fn create_universal_handoff_manager<T: Send + Sync>(
-    UniversalSongBirdHandoffManager::new(primal_type, core, capability_manager, config).await
+    UniversalServiceHandoffManager::new(service_capabilities, core, capability_manager, config)
+}

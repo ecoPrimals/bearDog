@@ -9,8 +9,10 @@ use uuid::Uuid;
 use zeroize::Zeroize;
 impl EntropySeed {
 
-    pub async fn new_human_entropy(
-        entropy_class: EntropyClass,
+/// New Human Entropy operation.
+    /// Creates a new instance
+    /// Creates a new instance
+    pub fn new_human_entropy(EntropyClass,
         lifetime_policy: SeedLifetimePolicy,
         owner_identity: HumanIdentity,
         seed_bytes: Vec<u8>,
@@ -20,7 +22,7 @@ impl EntropySeed {
 
         let ownership_proof = entropy_manager
             .generate_ownership_proof(&owner_identity, &seed_bytes)
-            .await?;
+            ?;
 
         let irreproducibility_proof = entropy_manager
             .generate_irreproducibility_proof(&seed_bytes, &entropy_class)
@@ -29,39 +31,24 @@ impl EntropySeed {
             EntropyClass::HumanLivedExperience { .. } => SeedUsagePolicy {
                 allowed_operations: vec![
                     "key_derivation".to_string(),
-                    "signing".to_string(),
-                    "encryption".to_string(),
-                ],
-                max_uses: None, // No limit for human entropy
-                requires_approval: false,
-            },
-            _ => SeedUsagePolicy {
-                allowed_operations: vec!["key_derivation".to_string()],
-                max_uses: Some(100),
-                requires_approval: true,
-        };
-        Ok(EntropySeed {
-            id: seed_id,
-            seed_bytes: SecretBytes::new(seed_bytes),
             entropy_class,
-            generation_time: Utc::now(),
-            lifetime_policy,
-            ownership: SeedOwnership::HumanOwned {
+            generation_time: Utc::now(SeedOwnership::HumanOwned {
                 owner_identity,
                 ownership_proof,
                 transfer_count: 0,
             irreproducibility_proof,
             usage_policy,
-            usage_history: Vec::new(),
-            social_context: None,
+            usage_history: Vec::new(None,
         })
     }
 
-    pub async fn new_event_seed(
-        event_context: SocialContext,
+/// New Event Seed operation.
+    /// Creates a new instance
+    /// Creates a new instance
+    pub fn new_event_seed(SocialContext,
         sharing_policy: SharingPolicy,
 
-        let location_clone = event_context.location.clone();
+        let location_clone = &event_context.location;
         let timestamp = event_context.event_timestamp;
         let biometric_data = format!(
             "{}:{}:{}",
@@ -87,16 +74,15 @@ impl EntropySeed {
         let event_context_clone = event_context.clone();
         let lifetime_policy = SeedLifetimePolicy::EventBased {
             event_id: format!("event_{seed_id}"),
-            event_type: event_context.event_type.clone(),
-            sharing_policy: sharing_policy.clone(),
-            event_expiration: sharing_policy.sharing_expiration,
+            event_type: &event_context.event_type: event_type.to_string(),
+            sharing_policy: sharing_policy.clone(sharing_policy.sharing_expiration,
             ownership: SeedOwnership::SharedOwnership {
                 primary_owner: owner_identity,
-                shared_with: event_context.participants.clone(),
+                shared_with: &event_context.participants,
                 sharing_terms: SharingTerms {
                     max_participants: sharing_policy.max_shares,
                     expiration: sharing_policy.sharing_expiration,
-                    permissions: sharing_policy.allowed_operations.clone(),
+                    permissions: &sharing_policy.allowed_operations,
                 },
             usage_policy: SeedUsagePolicy {
                 allowed_operations: sharing_policy.allowed_operations,
@@ -104,6 +90,9 @@ impl EntropySeed {
                 requires_approval: sharing_policy.require_permission,
             social_context: Some(event_context_clone), // Use cloned context
 
+/// Is Valid operation.
+    /// Checks if valid
+    /// Checks if valid
     pub fn is_valid(&self) -> bool {
 
         match &self.lifetime_policy {
@@ -122,13 +111,16 @@ impl EntropySeed {
             SeedLifetimePolicy::SelfSovereign { .. } => true, // Self-sovereign seeds don't expire
         }
 
+/// Transfer Ownership operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn transfer_ownership(&mut self, new_owner: HumanIdentity) -> Result<(), BearDogError> {
 
                 ownership_transfer_allowed,
             } => {
                 if !ownership_transfer_allowed {
-                    return Err(BearDogError::internal("Ownership transfer not allowed for this seed".to_string(),
-                    ));
+                    return Err(BearDogError::internal("Ownership transfer not allowed for this seed"));
                 }
             }
             SeedLifetimePolicy::SelfSovereign {
@@ -136,10 +128,9 @@ impl EntropySeed {
                 if !transfer_permissions.transferable {
                         message: "This self-sovereign seed is not transferable".to_string(),
             _ => {
-                return Err(BearDogError::internal("Ownership transfer not supported for this seed type".to_string(),
-                ));
+                return Err(BearDogError::internal("Ownership transfer not supported for this seed type"));
 
-        let transfer_context = format_args!("Transferred to {}", new_owner.identity_id).to_string();
+        let transfer_context = format!("Transferred to {}", new_owner.identity_id);
 
         match &mut self.ownership {
             SeedOwnership::HumanOwned { transfer_count, .. } => {
@@ -148,8 +139,7 @@ impl EntropySeed {
                     owner_identity: new_owner, // Move happens here
                     ownership_proof: OwnershipProof {
                         signature: vec![0u8; 64], // Would be generated properly
-                        timestamp: Utc::now(),
-                        verification_key: vec![0u8; 32],
+                        timestamp: Utc::now(vec![0u8; 32],
                     },
                     transfer_count: *transfer_count,
                 };
@@ -157,16 +147,18 @@ impl EntropySeed {
 
         self.usage_history.push(SeedUsageEvent {
             timestamp: Utc::now(),
-            operation: "ownership_transfer".to_string(),
-            context: transfer_context,  // Use the saved context
-            result_hash: vec![0u8; 32], // Would be hash of transfer
+            operation: "ownership_transfer".to_string(), // Would be hash of transfer
         });
         Ok(())
 
+/// Expire Ownership operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn expire_ownership(&mut self) -> Result<(), BearDogError> {
         let previous_owner = match &self.ownership {
-            SeedOwnership::HumanOwned { owner_identity, .. } => Some(owner_identity.clone()),
-            SeedOwnership::SharedOwnership { primary_owner, .. } => Some(primary_owner.clone()),
+            SeedOwnership::HumanOwned { owner_identity, .. } => Some(owner_identity),
+            SeedOwnership::SharedOwnership { primary_owner, .. } => Some(primary_owner),
             _ => None,
         self.ownership = SeedOwnership::MachineOwned {
             previous_owner,
@@ -177,14 +169,10 @@ impl EntropySeed {
             ),
 
             operation: "ownership_expiration".to_string(),
-            context: "Ownership expired due to policy".to_string(),
-            result_hash: vec![0u8; 32],
-
-    pub fn use_for_operation(&mut self, operation: &str) -> Result<Vec<u8>, BearDogError>> {
+            context: "Ownership expired due to policy".to_string(), operation: &str) -> Result<Vec<u8>, BearDogError>> {
 
         if !self.is_valid() {
-            return Err(BearDogError::internal("Seed has expired and cannot be used".to_string(),
-            ));
+            return Err(BearDogError::internal("Seed has expired and cannot be used"));
 
         if !self
             .usage_policy
@@ -219,6 +207,7 @@ impl EntropySeed {
             result_hash,
         Ok(result)
 
+/// Destroy operation.
     pub fn destroy(&mut self) {
         self.seed_bytes.zeroize();
         self.irreproducibility_proof.zeroize();
@@ -226,18 +215,25 @@ impl EntropySeed {
             operation: "destroy".to_string(),
             context: "Seed securely destroyed".to_string(),
 
+/// Get Entropy Tier operation.
+    /// Gets entropy_tier
+    /// Gets entropy_tier
     pub fn get_entropy_tier(&self) -> u8 {
         match &self.entropy_class {
             EntropyClass::HumanLivedExperience { .. } => 3,
             EntropyClass::HumanSupervisedMachine { .. } => 2,
             EntropyClass::StoreBoughtMachine { .. } => 1,
 
+/// Can Be Shared operation.
     pub fn can_be_shared(&self) -> bool {
             SeedLifetimePolicy::EventBased { sharing_policy, .. } => {
                 sharing_policy.max_shares.is_some()
             } => transfer_permissions.transferable,
             _ => false,
 
+/// Get Current Owner operation.
+    /// Gets current_owner
+    /// Gets current_owner
     pub fn get_current_owner(&self) -> Option<&HumanIdentity> {
         match &self.ownership {
             SeedOwnership::HumanOwned { owner_identity, .. } => Some(owner_identity),
@@ -245,15 +241,22 @@ impl EntropySeed {
             SeedOwnership::CommunityOwned { .. } => None, // Community ownership
             SeedOwnership::MachineOwned { .. } => None,   // Machine ownership
 
+/// Get Usage Stats operation.
+    /// Gets usage_stats
+    /// Gets usage_stats
     pub fn get_usage_stats(&self) -> HashMap<String, u32> {
         let mut stats = HashMap::with_capacity(16);
         for event in &self.usage_history {
-            *stats.entry(event.operation.clone()).or_insert(0) += 1;
+            *stats.entry(event.operation).or_insert(0) += 1;
         stats
 
+/// Requires Approval operation.
     pub fn requires_approval(&self) -> bool {
         self.usage_policy.requires_approval
 
+/// Get Remaining Uses operation.
+    /// Gets remaining_uses
+    /// Gets remaining_uses
     pub fn get_remaining_uses(&self, operation: &str) -> Option<u32> {
         self.usage_policy.max_uses.map(|max_uses| {
             let used = self

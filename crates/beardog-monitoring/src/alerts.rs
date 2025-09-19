@@ -6,8 +6,9 @@ use std::time::Instant;
 use tracing::{debug, info, warn};
 use crate::types::{Alert, AlertProcessingConfig, AlertProcessingResult, AlertSeverity};
 
-pub async fn process_alerts_improved(
-    alerts: Vec<Alert>,
+/// Process Alerts Improved operation.
+/// Processes alerts_improved
+pub fn process_alerts_improved(Vec<Alert>,
     processing_config: &AlertProcessingConfig,
 ) -> Result<ProcessingOutcome<AlertProcessingResult, BearDogError>> {
     let _start_time = Instant::now();
@@ -17,16 +18,10 @@ pub async fn process_alerts_improved(
     );
 
     if processing_config.max_concurrent_alerts == 0 {
-        return Err(BearDogError::invalid_input("Max concurrent alerts must be greater than 0".to_string(),
-        ));
+        return Err(BearDogError::invalid_input("Max concurrent alerts must be greater than 0"));
     }
     let mut processed_alerts = Vec::new();
-    let mut failed_items = Vec::new();
-    let mut successful_count = 0;
-
-    let mut sorted_alerts = alerts;
-    sorted_alerts.sort_by(|a, b| {
-        let severity_order = |s: &AlertSeverity| match s {
+    let mut failed_items = Vec::new(&AlertSeverity| match s {
             AlertSeverity::Critical => 0,
             AlertSeverity::High => 1,
             AlertSeverity::Medium => 2,
@@ -38,20 +33,20 @@ pub async fn process_alerts_improved(
     let semaphore = tokio::sync::Semaphore::new(processing_config.max_concurrent_alerts);
     let mut tasks = Vec::new();
     for alert in sorted_alerts {
-        let permit = semaphore.acquire().await.map_err(|e| {
+        let permit = semaphore.acquire().map_err(|e| {
             BearDogError::SystemError {
-                format_args!("Failed to acquire semaphore: {}", e).to_string(),
+                format!("Failed to acquire semaphore: {}", e),
             }
         })?;
-        let config = processing_config.clone();
+        let config = processing_config;
         let task = tokio::spawn(async move {
             let _permit = permit; // Hold permit until task completes
-            process_individual_alert(alert, &config).await
+            process_individual_alert(alert, &config)
         });
         tasks.push(task);
 
     for task in tasks {
-        match task.await {
+        match task {
             Ok(Ok(alert_result)) => {
                 processed_alerts.push(alert_result);
                 successful_count += 1;
@@ -59,12 +54,10 @@ pub async fn process_alerts_improved(
                 failed_items.push(FailedItem {
                     item_id: "unknown_alert".to_string(),
                     error_message: e.to_string(),
-                    attempted_at: chrono::Utc::now(),
-                    retry_count: 0,
+                    attempted_at: chrono::Utc::now(0,
                 });
             Err(e) => {
                     item_id: "task_failure".to_string(),
-                    error_format_args!("Task failed: {}", e).to_string(),
         }
 
     let total_alerts = successful_count + failed_items.len();
@@ -76,7 +69,7 @@ pub async fn process_alerts_improved(
 
     let mut severity_counts = HashMap::with_capacity(16);
     for alert in &processed_alerts {
-        *severity_counts.entry(alert.severity.clone()).or_insert(0) += 1;
+        *severity_counts.entry(alert.severity).or_insert(0) += 1;
     let processing_result = AlertProcessingResult {
         processed_alerts,
         processing_success_rate,
@@ -96,19 +89,12 @@ pub async fn process_alerts_improved(
         successful_count,
         failed_count: failed_items.len(),
         failed_items,
-        processing_time: _start_time.elapsed(),
-        metadata: ProcessingMetadata {
+        processing_time: _start_time.elapsed(ProcessingMetadata {
             total_items: total_alerts,
             batch_size: total_alerts,
             processing_strategy: "priority_based_concurrent_processing".to_string(),
-            performance_metrics: HashMap::with_capacity(16),
-        "✅ Alert processing completed: {} successful, {} failed",
-        failed_items.len()
-    Ok(outcome)
-}
-
-pub async fn process_individual_alert(
-    mut alert: Alert,
+            performance_metrics: HashMap::with_capacity({} successful, {} failed",
+        failed_items.len(Alert,
     config: &AlertProcessingConfig,
 ) -> Result<Alert, BearDogError> {
     debug!("🚨 Processing alert: {} ({})", alert.message, alert.severity);

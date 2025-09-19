@@ -156,9 +156,17 @@ timeout_ms = 5000
 method = "JWT"
 secret = "shared-internal-secret"
 
+# ⚠️ DEPRECATED: Hardcoded primal references violate sovereignty architecture
+# ✅ MIGRATION: Use capability-based discovery instead:
+#   [capability_adapters.service_mesh]
+#   enabled = true
+#   discovery_method = "universal_adapter"
+#   capability_type = "ServiceMesh"
+#   timeout_ms = 3000
+
 [adapters.external_systems.rust_ecosystem.songbird]
-# SongBird - Your Rust communication platform
-enabled = true
+# DEPRECATED: SongBird - Your Rust communication platform (use capability discovery)
+enabled = false  # Disabled - migrate to capability-based discovery
 endpoint = "https://songbird.internal:8444"
 timeout_ms = 3000
 

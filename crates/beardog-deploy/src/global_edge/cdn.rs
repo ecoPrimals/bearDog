@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::types::*;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
@@ -17,36 +22,21 @@ pub struct CDNManager {
 
 impl CDNManager {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(config: CDNConfig) -> Self {
         Self {
             config,
             cdn_providers: Vec::new(),
             cache_policies: HashMap::with_capacity(16),
             invalidation_queue: Arc::new(RwLock::new(Vec::new())),
-            analytics: Arc::new(RwLock::new(CDNAnalytics::default())),
-        }
-    }
-
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
-        info!("Initializing CDN management system");
-
-        info!("CDN providers initialized");
-
-        info!("Cache policies configured");
-        
-        info!("CDN management system initialized successfully");
-        Ok(())
-    }
-
-    pub async fn global_cache_invalidation(
-        &self,
-        paths: Vec<&str>,
+            analytics: Arc::new(RwLock::new(CDNAnalytics::default(Vec<&str>,
         priority: InvalidationPriority,
     ) -> Result<String, BearDogError> {
         info!("Starting global cache invalidation for {} paths", paths.len());
         
-        let invalidation_id = format_args!("inv_{}_{}", 
-            chrono::Utc::now().to_string().timestamp(), 
+        let invalidation_id = format!("inv_{}_{}", 
+            chrono::Utc::now().timestamp(), 
             rand::random::<u32>()
         );
         
@@ -55,12 +45,11 @@ impl CDNManager {
             paths: paths.clone(),
             priority: priority.clone(),
             status: "queued".to_string(),
-            created_at: chrono::Utc::now().timestamp() as u64,
-            completed_at: None,
+            created_at: chrono::Utc::now(None,
         };
 
         {
-            let mut queue = self.invalidation_queue.write().await;
+            let mut queue = self.invalidation_queue.write();
             queue.push(invalidation_request);
         }
 
@@ -73,26 +62,13 @@ impl CDNManager {
             tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
             {
-                let mut queue = queue_clone.write().await;
+                let mut queue = queue_clone.write();
                 if let Some(request) = queue.iter_mut().find(|r| r.request_id == request_id) {
-                    request.status = "completed".to_string();
-                    request.completed_at = Some(chrono::Utc::now().timestamp() as u64);
-                }
-            }
-
-            {
-                let mut analytics = analytics_clone.write().await;
-                analytics.total_invalidations += 1;
-                analytics.successful_invalidations += 1;
-            }
-            
-            info!("Cache invalidation completed: {}", request_id);
+                    request.status = "completed ".to_string();
+                    request.completed_at = Some(chrono::Utc::now({}", request_id);
         });
         
-        Ok(invalidation_id)
-    }
-
-    pub async fn set_cache_policy(&self, pattern: &str, policy: CachePolicy) -> Result<(), BearDogError> {
+        Ok(&str, policy: CachePolicy) -> Result<(), BearDogError> {
         info!("Setting cache policy for pattern: {}", pattern);
 
         debug!("Cache policy configured: TTL={:?}, Max-Age={:?}", 
@@ -101,62 +77,70 @@ impl CDNManager {
         Ok(())
     }
 
-    pub async fn get_analytics(&self) -> CDNAnalytics {
-        self.analytics.read().await.clone()
+/// Get Analytics operation.
+    /// Gets analytics
+    /// Gets analytics
+    pub fn get_analytics(&self) -> CDNAnalytics {
+        self.analytics.read().clone()
     }
 
-    pub async fn get_invalidation_queue_status(&self) -> Result<Vec<InvalidationRequest>, BearDogError>> {
-        let queue = self.invalidation_queue.read().await;
-        Ok(queue.clone())
+/// Get Invalidation Queue Status operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets invalidation_queue_status
+    /// Gets invalidation_queue_status
+    pub fn get_invalidation_queue_status(&self) -> Result<Vec<InvalidationRequest>, BearDogError>> {
+        let queue = self.invalidation_queue.read();
+        Ok(queue)
     }
 
-    pub async fn purge_content(&self, urls: Vec<&str>) -> Result<String, BearDogError> {
+/// Purge Content operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn purge_content(&self, urls: Vec<&str>) -> Result<String, BearDogError> {
         info!("Purging {} URLs from CDN", urls.len());
         
-        let purge_id = format_args!("purge_{}_{}", 
-            chrono::Utc::now().to_string().timestamp(), 
+        let purge_id = format!("purge_{}_{}", 
+            chrono::Utc::now().timestamp(), 
             rand::random::<u32>()
         );
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-
-        {
-            let mut analytics = self.analytics.write().await;
-            analytics.total_purges += urls.len() as u64;
-        }
-        
-        info!("Content purge completed: {}", purge_id);
+        tokio::time::sleep(tokio::time::Duration::from_millis({}", purge_id);
         Ok(purge_id)
     }
 
-    pub async fn get_cache_hit_ratio(&self, region_id: &str) -> Result<f64, BearDogError> {
+/// Get Cache Hit Ratio operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets cache_hit_ratio
+    /// Gets cache_hit_ratio
+    pub fn get_cache_hit_ratio(&self, region_id: &str) -> Result<f64, BearDogError> {
         debug!("Getting cache hit ratio for region: {}", region_id);
 
         let hit_ratio = 0.85 + (rand::random::<f64>() * 0.1); // 85-95%
         
-        Ok(hit_ratio)
-    }
-
-    pub async fn preload_content(&self, urls: Vec<&str>, regions: Vec<&str>) -> Result<String, BearDogError> {
+        Ok(Vec<&str>, regions: Vec<&str>) -> Result<String, BearDogError> {
         info!("Preloading {} URLs to {} regions", urls.len(), regions.len());
         
-        let preload_id = format_args!("preload_{}_{}", 
-            chrono::Utc::now().to_string().timestamp(), 
+        let preload_id = format!("preload_{}_{}", 
+            chrono::Utc::now().timestamp(), 
             rand::random::<u32>()
         );
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
-
-        {
-            let mut analytics = self.analytics.write().await;
-            analytics.total_preloads += urls.len() as u64;
-        }
-        
-        info!("Content preload completed: {}", preload_id);
+        tokio::time::sleep(tokio::time::Duration::from_millis({}", preload_id);
         Ok(preload_id)
     }
 
-    pub async fn get_bandwidth_usage(&self, region_id: Option<&str>) -> Result<BandwidthUsage, BearDogError> {
+/// Get Bandwidth Usage operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets bandwidth_usage
+    /// Gets bandwidth_usage
+    pub fn get_bandwidth_usage(&self, region_id: Option<&str>) -> Result<BandwidthUsage, BearDogError> {
         debug!("Getting bandwidth usage for region: {:?}", region_id);
 
         let usage = BandwidthUsage {
@@ -164,34 +148,12 @@ impl CDNManager {
             total_bytes: (rand::random::<u64>() % 1_000_000_000) + 100_000_000, // 100MB-1GB
             cached_bytes: (rand::random::<u64>() % 800_000_000) + 80_000_000,   // 80MB-800MB
             origin_bytes: (rand::random::<u64>() % 200_000_000) + 20_000_000,   // 20MB-200MB
-            timestamp: chrono::Utc::now().timestamp() as u64,
-        };
-        
-        Ok(usage)
-    }
-
-    pub async fn shutdown(&self) -> Result<(), BearDogError> {
-        info!("Shutting down CDN management system");
-
-        let queue = self.invalidation_queue.read().await;
-        let pending_requests = queue.iter()
-            .filter(|r| r.status == "queued")
-            .count();
-        
-        if pending_requests > 0 {
-            warn!("Shutting down with {} pending invalidation requests", pending_requests);
-        }
-        
-        info!("CDN management system shutdown complete");
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct BandwidthUsage {
-    pub region_id: String,
+            timestamp: chrono::Utc::now(String,
+    /// Number of total_bytes
     pub total_bytes: u64,
+    /// Number of cached_bytes
     pub cached_bytes: u64,
+    /// Number of origin_bytes
     pub origin_bytes: u64,
     pub timestamp: u64,
 } 

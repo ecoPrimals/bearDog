@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::CapabilityType;
 use chrono::{DateTime, Utc};
@@ -9,23 +14,25 @@ use uuid::Uuid;
 
 pub use beardog_errors::BearDogError;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VendorErrorContext {
-
-    pub request_id: Uuid,
-
+#[derive(Debug, Clone)]
+    /// The capability value
     pub capability: CapabilityType,
 
+    /// Name of the handler
     pub handler_name: Option<String>,
+
 
     pub timestamp: DateTime<Utc>,
 
+    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
 impl VendorErrorContext {
 
     #[must_use] 
-    pub fn new(request_id: Uuid, capability: CapabilityType) -> Self {
+/// New operation.
+    /// Creates a new instance
+    pub fn new(Uuid, capability: CapabilityType) -> Self {
         Self {
             request_id,
             capability,
@@ -35,11 +42,10 @@ impl VendorErrorContext {
         }
     }
 
+/// With Handler operation.
+    /// Creates instance with handler
     pub fn with_handler(mut self, handler_name: impl Into<&str>) -> Self {
-        self.handler_name = Some(handler_name.into());
-        self
-
-    pub fn with_metadata(mut self, key: impl Into<&str>, value: impl Into<&str>) -> Self {
+        self.handler_name = Some(impl Into<&str>, value: impl Into<&str>) -> Self {
         self.metadata.insert(key.into(), value.into());
 
 pub use beardog_errors::BearDogError;

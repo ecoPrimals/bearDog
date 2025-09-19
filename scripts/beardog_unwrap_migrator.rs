@@ -1,6 +1,5 @@
 use beardog_errors::BearDogError;
 
-
 #!/usr/bin/env rust-script
 
 use std::collections::HashMap;
@@ -20,10 +19,7 @@ pub struct BearDogUnwrapMigrator {
     dry_run: bool,
 }
 
-#[derive(Debug, Clone)]
-pub struct MigrationPattern {
-
-    pub pattern: String,
+#[derive(String,
 
     pub replacement: String,
 
@@ -47,8 +43,7 @@ impl BearDogUnwrapMigrator {
                     message: format!(\"Signing operation failed: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Cryptographic".to_string(),
-                context: "Cryptographic signing operations".to_string(),
-                priority: 10,
+                context: "Cryptographic signing operations".to_string(10,
             }
         );
 
@@ -60,8 +55,7 @@ impl BearDogUnwrapMigrator {
                     message: format!(\"Encryption failed: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Cryptographic".to_string(),
-                context: "Encryption operations".to_string(),
-                priority: 10,
+                context: "Encryption operations".to_string(10,
             }
         );
 
@@ -73,21 +67,18 @@ impl BearDogUnwrapMigrator {
                     message: format!(\"Verification failed: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Cryptographic".to_string(),
-                context: "Signature verification".to_string(),
-                priority: 10,
+                context: "Signature verification".to_string(10,
             }
         );
 
         error_patterns.insert(
             "hsm_unwrap".to_string(),
             MigrationPattern {
-                pattern: r"\.await\.unwrap\(\)".to_string(),
-                replacement: r".await.map_err(|e| BearDogError::Hardware { 
+                pattern: r"\.await\.unwrap\(\)".to_string(r".await.map_err(|e| BearDogError::Hardware { 
                     message: format!(\"HSM operation failed: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Hardware".to_string(),
-                context: "HSM hardware operations".to_string(),
-                priority: 9,
+                context: "HSM hardware operations".to_string(9,
             }
         );
 
@@ -100,8 +91,7 @@ impl BearDogUnwrapMigrator {
                     poisoned.into_inner()
                 })".to_string(),
                 error_category: "Lock recovery".to_string(),
-                context: "Mutex/RwLock poisoning recovery".to_string(),
-                priority: 8,
+                context: "Mutex/RwLock poisoning recovery".to_string(8,
             }
         );
 
@@ -114,8 +104,7 @@ impl BearDogUnwrapMigrator {
                     poisoned.into_inner()
                 })".to_string(),
                 error_category: "Lock recovery".to_string(),
-                context: "Write lock poisoning recovery".to_string(),
-                priority: 8,
+                context: "Write lock poisoning recovery".to_string(8,
             }
         );
 
@@ -128,8 +117,7 @@ impl BearDogUnwrapMigrator {
                     poisoned.into_inner()
                 })".to_string(),
                 error_category: "Lock recovery".to_string(),
-                context: "Read lock poisoning recovery".to_string(),
-                priority: 8,
+                context: "Read lock poisoning recovery".to_string(8,
             }
         );
 
@@ -141,8 +129,7 @@ impl BearDogUnwrapMigrator {
                     message: format!(\"JSON serialization failed: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Serialization".to_string(),
-                context: "JSON serialization".to_string(),
-                priority: 7,
+                context: "JSON serialization".to_string(7,
             }
         );
 
@@ -154,8 +141,7 @@ impl BearDogUnwrapMigrator {
                     message: format!(\"JSON deserialization failed: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Serialization".to_string(),
-                context: "JSON deserialization".to_string(),
-                priority: 7,
+                context: "JSON deserialization".to_string(7,
             }
         );
 
@@ -167,8 +153,7 @@ impl BearDogUnwrapMigrator {
                     message: format!(\"JSON pretty serialization failed: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Serialization".to_string(),
-                context: "JSON pretty serialization".to_string(),
-                priority: 7,
+                context: "JSON pretty serialization".to_string(7,
             }
         );
 
@@ -177,11 +162,10 @@ impl BearDogUnwrapMigrator {
             MigrationPattern {
                 pattern: r#"std::env::var\("([^"]+)"\)\.unwrap\(\)"#.to_string(),
                 replacement: r#"std::env::var("$1").map_err(|_| BearDogError::Configuration { 
-                    message: format_args!("Missing required environment variable: {}", "$1").to_string() 
+                    message: format!("Missing required environment variable: {}", "$1") 
                 })?"#.to_string(),
                 error_category: "BearDogError::Configuration".to_string(),
-                context: "Environment variable access".to_string(),
-                priority: 6,
+                context: "Environment variable access".to_string(6,
             }
         );
 
@@ -190,11 +174,10 @@ impl BearDogUnwrapMigrator {
             MigrationPattern {
                 pattern: r#"std::env::var\("([^"]+)"\)\.expect\("([^"]+)"\)"#.to_string(),
                 replacement: r#"std::env::var("$1").map_err(|_| BearDogError::Configuration { 
-                    message: format_args!("Missing environment variable {}: {}", "$1", "$2").to_string() 
+                    message: format!("Missing environment variable {}: {}", "$1", "$2") 
                 })?"#.to_string(),
                 error_category: "BearDogError::Configuration".to_string(),
-                context: "Environment variable access with message".to_string(),
-                priority: 6,
+                context: "Environment variable access with message".to_string(6,
             }
         );
 
@@ -206,8 +189,7 @@ impl BearDogUnwrapMigrator {
                     message: format!(\"HTTP request failed: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Network".to_string(),
-                context: "HTTP request execution".to_string(),
-                priority: 5,
+                context: "HTTP request execution".to_string(5,
             }
         );
 
@@ -219,8 +201,7 @@ impl BearDogUnwrapMigrator {
                     message: format!(\"Failed to read file: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Io".to_string(),
-                context: "File reading operations".to_string(),
-                priority: 4,
+                context: "File reading operations".to_string(4,
             }
         );
 
@@ -232,8 +213,7 @@ impl BearDogUnwrapMigrator {
                     message: format!(\"Failed to write file: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Io".to_string(),
-                context: "File writing operations".to_string(),
-                priority: 4,
+                context: "File writing operations".to_string(4,
             }
         );
 
@@ -245,8 +225,7 @@ impl BearDogUnwrapMigrator {
                     message: format!(\"Parsing failed: {}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::InvalidInput".to_string(),
-                context: "String parsing operations".to_string(),
-                priority: 3,
+                context: "String parsing operations".to_string(3,
             }
         );
 
@@ -258,34 +237,29 @@ impl BearDogUnwrapMigrator {
                     message: \"String split operation failed - delimiter not found\".to_string() 
                 })?".to_string(),
                 error_category: "BearDogError::InvalidInput".to_string(),
-                context: "String splitting operations".to_string(),
-                priority: 3,
+                context: "String splitting operations".to_string(3,
             }
         );
 
         error_patterns.insert(
             "general_unwrap".to_string(),
             MigrationPattern {
-                pattern: r"\.unwrap\(\)".to_string(),
-                replacement: r".map_err(|e| BearDogError::Internal { 
+                pattern: r"\.unwrap\(\)".to_string(r".map_err(|e| BearDogError::Internal { 
                     message: format!(\"Operation failed: {:?}\", e) 
                 })?".to_string(),
                 error_category: "BearDogError::Internal".to_string(),
-                context: "General unwrap patterns".to_string(),
-                priority: 1,
+                context: "General unwrap patterns".to_string(1,
             }
         );
 
         error_patterns.insert(
             "general_expect".to_string(),
             MigrationPattern {
-                pattern: r#"\.expect\("([^"]+)"\)"#.to_string(),
-                replacement: r#".map_err(|e| BearDogError::Internal { 
-                    message: format_args!("{}: {:?}", "$1", e).to_string() 
+                pattern: r#"\.expect\("([^"]+)"\)"#.to_string(r#".map_err(|e| BearDogError::Internal { 
+                    message: format!("{}: {:?}", "$1", e) 
                 })?"#.to_string(),
                 error_category: "BearDogError::Internal".to_string(),
-                context: "General expect patterns".to_string(),
-                priority: 2,
+                context: "General expect patterns".to_string(2,
             }
         );
 
@@ -299,41 +273,16 @@ impl BearDogUnwrapMigrator {
 
     pub fn migrate_codebase(&self, root_path: &Path) -> Result<MigrationReport, Box<dyn std::error::Error>> {
         println!("🚀 Starting BearDog Unwrap Migration");
-        println!("📁 Target path: {}", root_path.display());
-        println!("🔧 Dry run mode: {}", self.dry_run);
+        println!("📁 Target path: {}", root_path.display({}", self.dry_run);
         
-        let rust_files = self.discover_rust_files(root_path)?;
-        let total_files = rust_files.len();
-        
-        println!("📊 Found {} Rust files to process", total_files);
-        
-        let mut report = MigrationReport {
-            files_processed: 0,
+        let rust_files = self.discover_rust_files(0,
             total_changes: 0,
             file_changes: HashMap::with_capacity(16),
             patterns_used: Vec::new(),
         };
 
-        let mut sorted_patterns: Vec<_> = self.error_patterns.iter().collect();
-        sorted_patterns.sort_by(|a, b| b.1.priority.cmp(&a.1.priority));
-        
-        for (i, file_path) in rust_files.iter().enumerate() {
-            if i % 10 == 0 {
-                println!("📋 Processing file {}/{}: {}", i + 1, total_files, 
-                    file_path.file_name().unwrap_or_default().to_string_lossy());
-            }
-            
-            match self.migrate_file(file_path, &sorted_patterns) {
-                Ok(changes) => {
-                    report.files_processed += 1;
-                    if changes > 0 {
-                        report.total_changes += changes;
-                        report.file_changes.insert(file_path.clone(), changes);
-                        println!("  ✅ {} changes applied", changes);
-                    }
-                }
-                Err(e) => {
-                    println!("  ❌ Error processing file: {}", e);
+        let mut sorted_patterns: Vec<_> = self.error_patterns.iter({}", i + 1, total_files, 
+                    file_path.file_name({}", e);
                 }
             }
         }
@@ -341,10 +290,7 @@ impl BearDogUnwrapMigrator {
         self.files_processed.store(report.files_processed, Ordering::SeqCst);
         self.migrations_applied.store(report.total_changes as u64, Ordering::SeqCst);
         
-        Ok(report)
-    }
-
-    fn migrate_file(&self, file_path: &Path, patterns: &[(&&str, &MigrationPattern)]) -> Result<usize, Box<dyn std::error::Error>> {
+        Ok(&Path, patterns: &[(&&str, &MigrationPattern)]) -> Result<usize, Box<dyn std::error::Error>> {
         let content = fs::read_to_string(file_path)?;
         let mut modified_content = content.clone();
         let mut changes_made = 0;
@@ -372,9 +318,7 @@ impl BearDogUnwrapMigrator {
     }
 
     fn discover_rust_files(&self, root_path: &Path) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
-        let mut rust_files = Vec::new();
-        
-        fn visit_dir(dir: &Path, rust_files: &mut Vec<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
+        let mut rust_files = Vec::new(&Path, rust_files: &mut Vec<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
             for entry in fs::read_dir(dir)? {
                 let entry = entry?;
                 let path = entry.path();
@@ -407,22 +351,13 @@ impl BearDogUnwrapMigrator {
         MigrationStatistics {
             files_processed: self.files_processed.load(Ordering::SeqCst),
             patterns_applied: self.migrations_applied.load(Ordering::SeqCst),
-            available_patterns: self.error_patterns.len() as u64,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct MigrationReport {
-    pub files_processed: u64,
+            available_patterns: self.error_patterns.len(u64,
     pub total_changes: usize,
     pub file_changes: HashMap<PathBuf, usize>,
     pub patterns_used: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
-pub struct MigrationStatistics {
-    pub files_processed: u64,
+#[derive(u64,
     pub patterns_applied: u64,
     pub available_patterns: u64,
 }
@@ -435,9 +370,9 @@ impl MigrationReport {
         summary.push_str("==================================\n\n");
         
         summary.push_str(&format!("📊 Statistics:\n"));
-        summary.push_str(&format_args!("  • Files Processed: {}\n", self.files_processed).to_string());
-        summary.push_str(&format_args!("  • Total Changes: {}\n", self.total_changes).to_string());
-        summary.push_str(&format_args!("  • Files Modified: {}\n", self.file_changes.len().to_string()));
+        summary.push_str({}\n", self.files_processed));
+        summary.push_str({}\n", self.total_changes));
+        summary.push_str({}\n", self.file_changes.len()));
         
         if !self.file_changes.is_empty() {
             summary.push_str("\n📝 Modified Files (Top 10):\n");
@@ -445,8 +380,8 @@ impl MigrationReport {
             sorted_files.sort_by(|a, b| b.1.cmp(a.1));
             
             for (file, changes) in sorted_files.iter().take(10) {
-                summary.push_str(&format_args!("  • {} ({} changes)\n", 
-                    file.file_name().to_string().unwrap_or_default().to_string_lossy(), changes));
+                summary.push_str(&format!("  • {} ({} changes)\n", 
+                    file.file_name().unwrap_or_default().to_string_lossy(), changes));
             }
         }
         
@@ -475,18 +410,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 BearDog Specialized Unwrap Migrator");
     println!("=====================================");
     
-    let migrator = BearDogUnwrapMigrator::new(dry_run || !apply);
-    
-    if stats_only {
-        let stats = migrator.get_statistics();
-        println!("📊 Available Patterns: {}", stats.available_patterns);
+    let migrator = BearDogUnwrapMigrator::new({}", stats.available_patterns);
         println!("📊 Ready to migrate production unwrap/expect calls");
-        return Ok(());
-    }
-    
-    if dry_run {
-        println!("🔍 DRY RUN MODE - No changes will be made");
-        println!("This will scan for unwrap/expect patterns in: {}", path);
+        return Ok({}", path);
         println!("Run with --apply to execute the migration");
         return Ok(());
     }

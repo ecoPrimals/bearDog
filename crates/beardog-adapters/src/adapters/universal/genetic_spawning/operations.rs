@@ -5,109 +5,95 @@ use serde::{Deserialize, Serialize};
 use super::genetics::HybridCapability;
 use crate::adapters::universal::traits::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SpawningOperation {
-
-    pub spawn_id: Uuid,
-
+#[derive(Debug, Clone)]
+    /// Collection of parent nodes
     pub parent_nodes: Vec<EcosystemNodeInfo>,
 
+    /// Collection of target capabilities
     pub target_capabilities: Vec<HybridCapability>,
 
+    /// The security requirements value
     pub security_requirements: SecurityRequirements,
 
+    /// The resource constraints value
     pub resource_constraints: ResourceConstraints,
 
+    /// Current status of the component
     pub status: SpawningStatus,
 
+    /// The started at value
     pub started_at: chrono::DateTime<chrono::Utc>,
 
+    /// The progress percentage value
     pub progress_percentage: f64,
 
+    /// The current stage value
     pub current_stage: SpawningStage,
 
+    /// Optional error
     pub error: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum SpawningStatus {
-
-    Pending,
-
-    InProgress,
-
-    Completed,
-
-    Failed,
-
-    Cancelled,
-
-pub enum SpawningStage {
-
-    Validation,
-
-    GeneticRecombination,
-
-    CapabilityMerging,
-
-    SecurityConfiguration,
-
-    ResourceAllocation,
-
-    NodeInitialization,
-
-    HealthVerification,
-
-    RegistrationComplete,
-impl SpawningOperation {
-
-    pub fn new(
-        parent_nodes: Vec<EcosystemNodeInfo>,
+#[derive(Debug, Clone)]
         target_capabilities: Vec<HybridCapability>,
         security_requirements: SecurityRequirements,
         resource_constraints: ResourceConstraints,
     ) -> Self {
         Self {
-            spawn_id: Uuid::new_v4(),
-            parent_nodes,
-            target_capabilities,
-            security_requirements,
-            resource_constraints,
-            status: SpawningStatus::Pending,
-            started_at: chrono::Utc::now(),
-            progress_percentage: 0.0,
+            spawn_id: Uuid::new_v4(SpawningStatus::Pending,
+            started_at: chrono::Utc::now(0.0,
             current_stage: SpawningStage::Validation,
             error: None,
         }
     }
 
+/// Update Status operation.
+    /// Updates status
+    /// Updates status
     pub fn update_status(&mut self, status: SpawningStatus) {
         self.status = status;
 
-    pub fn update_progress(&mut self, stage: SpawningStage, progress: f64) {
+/// Update Progress operation.
+    /// Updates progress
+    /// Updates progress
+    pub fn update_progress(SpawningStage, progress: f64) {
         self.current_stage = stage;
         self.progress_percentage = progress.clamp(0.0, 100.0);
 
+/// Set Error operation.
+    /// Sets error
+    /// Sets error
     pub fn set_error(&mut self, error: &str) {
         self.status = SpawningStatus::Failed;
         self.error = Some(error);
 
+/// Is Active operation.
+    /// Checks if active
+    /// Checks if active
     pub fn is_active(&self) -> bool {
         matches!(self.status, SpawningStatus::InProgress)
 
+/// Is Completed operation.
+    /// Checks if completed
+    /// Checks if completed
     pub fn is_completed(&self) -> bool {
         matches!(
             self.status,
             SpawningStatus::Completed | SpawningStatus::Failed | SpawningStatus::Cancelled
         )
 
+/// Is Successful operation.
+    /// Checks if successful
+    /// Checks if successful
     pub fn is_successful(&self) -> bool {
         matches!(self.status, SpawningStatus::Completed)
 
+/// Duration Ms operation.
     pub fn duration_ms(&self) -> i64 {
         let now = chrono::Utc::now();
         (now - self.started_at).num_milliseconds()
 
+/// Estimated Time Remaining Ms operation.
     pub fn estimated_time_remaining_ms(&self) -> Option<i64> {
         if self.progress_percentage <= 0.0 || self.progress_percentage >= 100.0 {
             return None;
@@ -115,27 +101,35 @@ impl SpawningOperation {
         let estimated_total_ms = (elapsed_ms as f64 / self.progress_percentage * 100.0) as i64;
         Some(estimated_total_ms - elapsed_ms)
 
+/// Parent Ecosystem Count operation.
     pub fn parent_ecosystem_count(&self) -> usize {
         self.parent_nodes.len()
 
+/// Get Ecosystem Ids operation.
+    /// Gets ecosystem_ids
+    /// Gets ecosystem_ids
     pub fn get_ecosystem_ids(&self) -> Vec<String> {
         self.parent_nodes
             .iter()
-            .map(|node| node.ecosystem_id.clone())
+            .map(&|node| node.ecosystem_id)
             .collect::<std::collections::HashSet<_>>()
             .into_iter()
             .collect()
 
+/// Involves Ecosystem operation.
     pub fn involves_ecosystem(&self, ecosystem_id: &str) -> bool {
             .any(|node| node.ecosystem_id == ecosystem_id)
 
+/// Target Capability Count operation.
     pub fn target_capability_count(&self) -> usize {
         self.target_capabilities.len()
 
+/// Targets Capability operation.
     pub fn targets_capability(&self, capability: &HybridCapability) -> bool {
         self.target_capabilities.contains(capability)
 impl SpawningStatus {
 
+/// Description operation.
     pub fn description(&self) -> &'static str {
         match self {
             SpawningStatus::Pending => "Queued and waiting to start",
@@ -144,9 +138,15 @@ impl SpawningStatus {
             SpawningStatus::Failed => "Failed with error",
             SpawningStatus::Cancelled => "Cancelled by user",
 
+/// Is Running operation.
+    /// Checks if running
+    /// Checks if running
     pub fn is_running(&self) -> bool {
         matches!(self, SpawningStatus::InProgress)
 
+/// Is Terminal operation.
+    /// Checks if terminal
+    /// Checks if terminal
     pub fn is_terminal(&self) -> bool {
             self,
 impl SpawningStage {
@@ -160,6 +160,7 @@ impl SpawningStage {
             SpawningStage::HealthVerification => "Verifying node health",
             SpawningStage::RegistrationComplete => "Completing registration",
 
+/// Expected Progress operation.
     pub fn expected_progress(&self) -> f64 {
             SpawningStage::Validation => 10.0,
             SpawningStage::GeneticRecombination => 25.0,
@@ -170,6 +171,7 @@ impl SpawningStage {
             SpawningStage::HealthVerification => 95.0,
             SpawningStage::RegistrationComplete => 100.0,
 
+/// Next Stage operation.
     pub fn next_stage(&self) -> Option<SpawningStage> {
             SpawningStage::Validation => Some(SpawningStage::GeneticRecombination),
             SpawningStage::GeneticRecombination => Some(SpawningStage::CapabilityMerging),
@@ -180,6 +182,7 @@ impl SpawningStage {
             SpawningStage::HealthVerification => Some(SpawningStage::RegistrationComplete),
             SpawningStage::RegistrationComplete => None,
 
+/// All Stages operation.
     pub fn all_stages() -> Vec<SpawningStage> {
         vec![
             SpawningStage::Validation,
@@ -225,6 +228,7 @@ mod tests {
         assert_eq!(operation.current_stage, SpawningStage::Validation);
         assert!(operation.error.is_none());}
 
+
     fn test_spawning_operation_status_updates() {
         let mut operation = SpawningOperation::new(
             vec![],
@@ -244,6 +248,7 @@ mod tests {
 
         operation.update_progress(SpawningStage::RegistrationComplete, 150.0);
         assert_eq!(operation.progress_percentage, 100.0);}
+
 
     fn test_spawning_stage_progression() {
         let stage = SpawningStage::Validation;

@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use beardog_traits::canonical::HsmProvider;
 use beardog_types::canonical::hsm::{HsmKey, HsmTier, KeyMetadata, KeyType};
@@ -19,10 +24,6 @@ pub struct HsmOperationRouter<P: HsmProvider + Clone + 'static> {
 }
 
 #[derive(Debug, Clone)]
-pub struct OperationRoutingRules {
-
-    critical_operations: Vec<OperationType>,
-
     preferred_mobile_operations: Vec<OperationType>,
 
     flexible_operations: Vec<OperationType>,
@@ -34,30 +35,7 @@ pub struct OperationRoutingRules {
     operation_timeout_ms: u64,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum OperationType {
-
-    KeyGeneration,
-
-    DigitalSigning,
-
-    Encryption,
-
-    KeyDerivation,
-
-    RandomGeneration,
-
-    KeyStorage,
-
-    Authentication,
-
-    HealthCheck,
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct RoutingMetrics {
-
-    success_rates: HashMap<String, f64>,
+#[derive(HashMap<String, f64>,
 
     average_latency_ms: HashMap<String, f64>,
 
@@ -67,100 +45,55 @@ pub struct RoutingMetrics {
 }
 
 #[derive(Debug, Clone)]
-pub struct RoutingContext {
-
-    pub operation_type: OperationType,
-
+    /// Number of priority
     pub priority: u8,
 
+    /// Whether requires_hardware is enabled
     pub requires_hardware: bool,
 
+    /// Optional max latency ms
     pub max_latency_ms: Option<u64>,
 }
 
 impl<P: HsmProvider + Clone + 'static> HsmOperationRouter<P> {
 
-    pub fn new(
-        primary_provider: P,
+/// New operation.
+    /// Creates a new instance
+    pub fn new(P,
         fallback_provider: Option<P>,
     ) -> Self {
         Self {
             primary_provider,
             fallback_provider,
             routing_rules: OperationRoutingRules::default(),
-            performance_metrics: RoutingMetrics::default(),
-        }
-    }
-
-    pub async fn route_operation<T, F, Fut>(
-        &mut self,
-        context: RoutingContext,
+            performance_metrics: RoutingMetrics::default(RoutingContext,
         operation: F,
     ) -> Result<T, BearDogError>
     where
-        F: Fn(P) -> Fut + Send + Clone,
-        Fut: std::future::Future<Output = Result<T, BearDogError>> + Send,
+        F: Fn(std::future::Future<Output = Result<T, BearDogError>> + Send,
         T: Send,
     {
         debug!("Routing operation: {:?}", context.operation_type);
 
-        let should_use_primary = self.should_use_primary_provider(&context);
-
-        if should_use_primary {
-            match self.execute_with_provider(&self.primary_provider.clone(), &operation).await {
-                Ok(result) => {
-                    self.update_success_metrics("primary").await;
-                    return Ok(result);
-                }
-                Err(e) => {
-                    warn!("Primary provider failed: {}", e);
-                    self.update_error_metrics("primary").await;
-
-                    if let Some(fallback) = &self.fallback_provider {
-                        return self.execute_with_provider(fallback, &operation).await;
-                    }
-                    return Err(e);
-                }
-            }
-        }
-
-        if let Some(fallback) = &self.fallback_provider {
-            match self.execute_with_provider(fallback, &operation).await {
-                Ok(result) => {
-                    self.update_success_metrics("fallback").await;
-                    return Ok(result);
-                }
-                Err(e) => {
-                    warn!("Fallback provider failed: {}", e);
-                    self.update_error_metrics("fallback").await;
-
-                    return self.execute_with_provider(&self.primary_provider.clone(), &operation).await;
-                }
-            }
-        }
-
-        self.execute_with_provider(&self.primary_provider.clone(), &operation).await
-    }
-
-    async fn execute_with_provider<T, F, Fut>(
-        &mut self,
-        provider: &P,
+        let should_use_primary = self.should_use_primary_provider({}", e);
+                    self.update_error_metrics({}", e);
+                    self.update_error_metrics(&P,
         operation: &F,
     ) -> Result<T, BearDogError>
     where
-        F: Fn(P) -> Fut + Send + Clone,
-        Fut: std::future::Future<Output = Result<T, BearDogError>> + Send,
+        F: Fn(std::future::Future<Output = Result<T, BearDogError>> + Send,
         T: Send,
     {
         let start_time = std::time::Instant::now();
         
-        let result = operation(provider.clone()).await;
+        let result = operation(&provider);
         
         let elapsed = start_time.elapsed();
         debug!("Operation completed in {:?}", elapsed);
         
         result
     }
+
 
     fn should_use_primary_provider(&self, context: &RoutingContext) -> bool {
 
@@ -189,7 +122,8 @@ impl<P: HsmProvider + Clone + 'static> HsmOperationRouter<P> {
         primary_success_rate > fallback_success_rate
     }
 
-    async fn update_success_metrics(&mut self, provider_name: &str) {
+    /// Updates success_metrics
+    fn update_success_metrics(&mut self, provider_name: &str) {
         let current_rate = self.performance_metrics
             .success_rates
             .get(provider_name)
@@ -205,7 +139,8 @@ impl<P: HsmProvider + Clone + 'static> HsmOperationRouter<P> {
         self.performance_metrics.operations_processed.insert(provider_name.to_string(), operations + 1);
     }
 
-    async fn update_error_metrics(&mut self, provider_name: &str) {
+    /// Updates error_metrics
+    fn update_error_metrics(&mut self, provider_name: &str) {
         let current_rate = self.performance_metrics
             .success_rates
             .get(provider_name)
@@ -221,19 +156,23 @@ impl<P: HsmProvider + Clone + 'static> HsmOperationRouter<P> {
         self.performance_metrics.error_counts.insert(provider_name.to_string(), errors + 1);
     }
 
+/// Get Metrics operation.
+    /// Gets metrics
+    /// Gets metrics
     pub fn get_metrics(&self) -> &RoutingMetrics {
         &self.performance_metrics
     }
 
+/// Update Routing Rules operation.
+    /// Updates routing_rules
+    /// Updates routing_rules
     pub fn update_routing_rules(&mut self, rules: OperationRoutingRules) {
         self.routing_rules = rules;
     }
 }
 
 impl Default for OperationRoutingRules {
-    fn default() -> Self {
-        Self {
-            critical_operations: vec![
+    fn default(vec![
                 OperationType::KeyGeneration,
                 OperationType::DigitalSigning,
             ],
@@ -256,18 +195,30 @@ impl Default for OperationRoutingRules {
 
 impl RoutingMetrics {
 
+/// Get Success Rate operation.
+    /// Gets success_rate
+    /// Gets success_rate
     pub fn get_success_rate(&self, provider: &str) -> f64 {
         self.success_rates.get(provider).copied().unwrap_or(0.0)
     }
 
+/// Get Average Latency operation.
+    /// Gets average_latency
+    /// Gets average_latency
     pub fn get_average_latency(&self, provider: &str) -> f64 {
         self.average_latency_ms.get(provider).copied().unwrap_or(0.0)
     }
 
+/// Get Operations Count operation.
+    /// Gets operations_count
+    /// Gets operations_count
     pub fn get_operations_count(&self, provider: &str) -> u64 {
         self.operations_processed.get(provider).copied().unwrap_or(0)
     }
 
+/// Get Error Count operation.
+    /// Gets error_count
+    /// Gets error_count
     pub fn get_error_count(&self, provider: &str) -> u64 {
         self.error_counts.get(provider).copied().unwrap_or(0)
     }

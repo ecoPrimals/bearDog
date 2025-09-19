@@ -1,6 +1,5 @@
 use beardog_errors::BearDogError;
 
-
 #[cfg(test)]
 mod tests {
 
@@ -10,7 +9,7 @@ mod tests {
     use std::collections::HashMap;
 
     #[tokio::test]
-    async fn test_unified_genetic_traits() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_unified_genetic_traits() -> Result<(), Box<dyn std::error::Error>> {
 
         let mut engine = GeneticSpawningEngine::new();
 
@@ -39,24 +38,25 @@ mod tests {
         Ok(())
     }
 
-    async fn test_genetic_evolution_traits() -> Result<(), Box<dyn std::error::Error>> {
+
+    fn test_genetic_evolution_traits() -> Result<(), Box<dyn std::error::Error>> {
         let engine = GeneticSpawningEngine::new();
 
         let parent1 = create_test_genetics("parent1", 0.7);
         let parent2 = create_test_genetics("parent2", 0.8);
 
-        let fitness1 = engine.calculate_fitness(&parent1).await?;
-        let fitness2 = engine.calculate_fitness(&parent2).await?;
+        let fitness1 = engine.calculate_fitness(&parent1)?;
+        let fitness2 = engine.calculate_fitness(&parent2)?;
         assert!((0.0..=1.0).contains(&fitness1));
         assert!((0.0..=1.0).contains(&fitness2));
 
-        let compatibility = engine.check_compatibility(&parent1, &parent2).await?;
+        let compatibility = engine.check_compatibility(&parent1, &parent2)?;
         assert!((0.0..=1.0).contains(&compatibility));
 
-        let mutated = engine.mutate(&parent1, 0.5).await?;
+        let mutated = engine.mutate(&parent1, 0.5)?;
         assert_ne!(mutated.id, parent1.id); // Should have different characteristics
 
-        let offspring = engine.crossover(&parent1, &parent2).await?;
+        let offspring = engine.crossover(&parent1, &parent2)?;
         assert_eq!(offspring.len(), 2);
 
         let child1 = &offspring[0];
@@ -73,7 +73,8 @@ mod tests {
             assert!(selected[0].fitness_score >= selected[1].fitness_score);
         }
 
-    async fn test_zero_copy_patterns() -> Result<(), Box<dyn std::error::Error>> {
+
+    fn test_zero_copy_patterns() -> Result<(), Box<dyn std::error::Error>> {
 
         let view = engine.as_view();
         assert!(engine.is_owned());
@@ -85,13 +86,14 @@ mod tests {
             std::borrow::Cow::Owned(_) => {
                 println!("Zero-copy: Using owned data (fallback)");
 
-    async fn test_performance_monitoring() -> Result<(), Box<dyn std::error::Error>> {
+
+    fn test_performance_monitoring() -> Result<(), Box<dyn std::error::Error>> {
 
         let mut metrics: HashMap<String, f64> = HashMap::with_capacity(16);
 
         let start = std::time::Instant::now();
         let genetics = create_test_genetics("perf_test", 0.6);
-        let _fitness = engine.calculate_fitness(&genetics).await?;
+        let _fitness = engine.calculate_fitness(&genetics)?;
         let duration = start.elapsed().as_millis() as f64;
         metrics.insert("fitness_calculation_ms".to_string(), duration);
 
@@ -99,7 +101,8 @@ mod tests {
         assert!(metrics["fitness_calculation_ms"] >= 0.0);
         println!("Performance metrics: {metrics:?}");
 
-    async fn test_unified_error_handling() -> Result<(), Box<dyn std::error::Error>> {
+
+    fn test_unified_error_handling() -> Result<(), Box<dyn std::error::Error>> {
         use beardog_traits::error::{BearDogError as TraitsError, ErrorContext, RecoverableError};
 
         let validation_error = TraitsError::Validation {
@@ -118,14 +121,15 @@ mod tests {
         assert!(network_error.is_recoverable());
         assert_eq!(network_error.retry_delay_ms(), Some(500));
 
-    async fn test_genetic_lineage() -> Result<(), Box<dyn std::error::Error>> {
+
+    fn test_genetic_lineage() -> Result<(), Box<dyn std::error::Error>> {
 
         let ancestor = create_test_genetics("ancestor", 0.5);
         let parent1 = create_test_genetics("parent1", 0.6);
         let parent2 = create_test_genetics("parent2", 0.7);
 
-        let generation1 = engine.mutate(&ancestor, 0.1).await?;
-        let generation2 = engine.crossover(&parent1, &parent2).await?;
+        let generation1 = engine.mutate(&ancestor, 0.1)?;
+        let generation2 = engine.crossover(&parent1, &parent2)?;
 
         let mut population = vec![ancestor, parent1, parent2, generation1];
         population.extend(generation2);
@@ -142,34 +146,9 @@ mod tests {
         println!("Population diversity metrics:");
         println!("  Average fitness: {avg_fitness:.3}");
         println!("  Fitness variance: {fitness_variance:.3}");
-        println!("  Population size: {}", survivors.len());
-
-        assert!(fitness_variance >= 0.0);
-
-    fn create_test_genetics(id: &str, base_fitness: f64) -> BearDogGenetics {
+        println!("  Population size: {}", survivors.len(&str, base_fitness: f64) -> BearDogGenetics {
         BearDogGenetics {
-            id: id.to_string(),
-            crypto_chromosomes: vec![],
-            security_traits: SecurityTraits {
-                trust_threshold: base_fitness,
-                paranoia_level: (base_fitness * 10.0) as u8,
-                consensus_requirement: base_fitness > 0.5,
-                isolation_preference: base_fitness * 0.8,
-                audit_frequency: (base_fitness * 24.0) as u32,
-            },
-            capabilities: vec![
-                NodeCapability::StorageProvider,
-                NodeCapability::ComputeProvider,
-            ],
-            spawn_restrictions: vec![],
-            fitness_score: base_fitness,
-            generation: 0,
-            parent_genetics: None,
-            mutations: vec![],
-            specializations: vec![beardog_auth::auth::NodeSpecialization::GeneralPurpose],
-            security_clearance: beardog_auth::auth::SecurityClearance::Basic,
-
-    async fn test_performance_benchmarks() -> Result<(), Box<dyn std::error::Error>> {
+            id: id.to_string() -> Result<(), Box<dyn std::error::Error>> {
 
         let population_size = 100;
         let mut population = Vec::with_capacity(population_size);
@@ -184,7 +163,7 @@ mod tests {
         let fitness_start = std::time::Instant::now();
         let mut fitness_scores = Vec::with_capacity(population_size);
         for genetics in &population {
-            let fitness = engine.calculate_fitness(genetics).await?;
+            let fitness = engine.calculate_fitness(genetics)?;
             fitness_scores.push(fitness);
         let fitness_time = fitness_start.elapsed();
 

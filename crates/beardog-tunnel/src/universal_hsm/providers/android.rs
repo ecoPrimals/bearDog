@@ -1,385 +1,162 @@
+// Android HSM Provider with StrongBox Support
+// CRITICAL: NO SIMULATED ENTROPY ALLOWED FOR HUMAN KEYS
 
-
-use crate::universal_hsm::traits::{
-    AttestationData, EphemeralSeed, HumanEntropyCapabilities, HumanEntropyData, HumanEntropyMethod,
-    Platform, ProviderHealth, ProviderInfo, ProviderType, UniversalHsmProvider,
-};
-
+use super::traits::{HumanEntropyData, HumanEntropyMethod, HumanEntropyProvider};
+use crate::universal_hsm::entropy::live_feed_validator::LiveFeedValidator;
 use beardog_errors::BearDogError;
-use beardog_types::canonical::{KeyMetadata, KeyType};
-use chrono::Utc;
-use tracing::info;
+use std::collections::HashMap;
 
-pub struct MobileHardwareProvider {
-
-    provider_info: ProviderInfo,
-
-    is_available: bool,
+pub struct AndroidHsmProvider {
+    live_feed_validator: LiveFeedValidator,
 }
-impl MobileHardwareProvider {
 
-    pub async fn new() -> Result<Self, BearDogError> {
-        info!("🔧 Initializing Android StrongBox `HSM` Provider");
-        let is_available = Self::check_strongbox_availability().await?;
-        if !is_available {
-            return Err(BearDogError::NotSupported {
-                feature: "Android StrongBox is not available on this device".to_string(),
-            });
-        }
-        let provider_info = ProviderInfo {
-            provider_id: "mobile_hardware".to_string(),
-            name: "Android StrongBox `HSM`".to_string(),
-            version: "1.0.0".to_string(),
-            provider_type: ProviderType::MobileHardware,
-            security_level: crate::SecurityLevel::Hardware,
-            supports_attestation: true,
-            supports_biometric: true,
-            supports_human_entropy: true,
-            supported_key_types: vec![KeyType::Ed25519, KeyType::EccP256],
-            description: "Android StrongBox hardware security module".to_string(),
-            vendor: "Google/Android".to_string(),
-            platforms: vec![Platform::Android],
-        };
-        info!("✅ Android StrongBox Provider initialized successfully");
-        Ok(Self {
-            provider_info,
-            is_available,
-        })
-    }
-
-    pub async fn is_available() -> Result<bool, BearDogError> {
-        #[cfg(target_os = "android")]
-        {
-
-            use std::fs;
-
-            let api_level = std::env::var("ANDROID_API_LEVEL")
-                .unwrap_or_else(|_| "28".to_string())
-                .parse::<u32>()
-                .unwrap_or(28);
-            if api_level < 28 {
-                return Ok(false);
-            }
-
-            let strongbox_paths = [
-                "/vendor/lib/hw/keystore.strongbox.so",
-                "/vendor/lib64/hw/keystore.strongbox.so",
-                "/system/lib/hw/keystore.strongbox.so",
-                "/system/lib64/hw/keystore.strongbox.so",
-            ];
-            let has_strongbox = strongbox_paths
-                .iter()
-                .any(|path| fs::metadata(path).is_ok());
-
-            let attestation_paths = [
-                "/vendor/etc/permissions/android.hardware.keystore.app_attest_key.xml",
-                "/system/etc/permissions/android.hardware.keystore.app_attest_key.xml",
-            let has_attestation = attestation_paths
-            Ok(has_strongbox && has_attestation)
-        #[cfg(not(target_os = "android"))]
-        Ok(false)
-
-    async fn check_strongbox_availability() -> Result<bool, BearDogError> {
-        Self::is_available().await
-
-    async fn generate_strongbox_key(
-        &self,
-        _key_type: KeyType,
-        _metadata: KeyMetadata,
-    ) -> Result<beardog_types::HsmKey, BearDogError> {
-            info!("🔑 Generating StrongBox key: {:?}", _key_type);
-
-            let key_id = format!(
-                "strongbox_{}_{}",
-                _key_type.to_string().to_lowercase(),
-                uuid::Uuid::new_v4().to_string()[..8].to_string()
-            );
-
-            let public_key = match _key_type {
-                KeyType::Ed25519 => vec![0u8; 32], // `Ed25519` public key size
-                KeyType::EccP256 => vec![0u8; 64], // P-256 uncompressed public key size
-                _ => {
-                    return Err(BearDogError::NotSupported {
-                        feature: format_args!("StrongBox does not support key type: {:?}", _key_type).to_string(),
-                    })
-                }
-            };
-            let hsm_key = beardog_types::HsmKey {
-                key_id,
-                key_type: _key_type,
-                public_key,
-                metadata: _metadata,
-                created_at: Utc::now(),
-            info!("✅ StrongBox key generated: {}", hsm_key.key_id);
-            Ok(hsm_key)
-            Err(BearDogError::NotSupported {
-                feature: "Android StrongBox is only available on Android devices".to_string(),
-            })
-
-    async fn sign_with_strongbox(&self, _key_id: &str, _data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-            debug!("✍️ Signing with StrongBox key: {}", _key_id);
-
-            use sha2::{Digest, Sha256};
-            let mut hasher = Sha256::new();
-            hasher.update(_key_id.as_bytes());
-            hasher.update(_data);
-            hasher.update(b"strongbox_signature");
-            let signature = hasher.finalize().to_vec();
-            debug!("✅ StrongBox signature generated for key: {}", _key_id);
-            Ok(signature)
-
-    async fn verify_strongbox_signature(
-        _key_id: &str,
-        _data: &[u8],
-        _signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-            debug!("🔍 Verifying StrongBox signature for key: {}", _key_id);
-
-            let expected_signature = hasher.finalize().to_vec();
-            let is_valid = _signature == expected_signature;
-            debug!(
-                "✅ StrongBox signature verification: {}",
-                if is_valid { "VALID" } else { "INVALID" }
-            Ok(is_valid)
-
-    async fn collect_android_entropy(
-        _method: &HumanEntropyMethod,
-        _bits: u32,
-    ) -> Result<HumanEntropyData, BearDogError> {
-            info!(
-                "🎲 Collecting Android entropy: {:?} ({} bits)",
-                _method, _bits
-            let start_time = std::time::Instant::now();
-            let bytes_needed = (_bits + 7) / 8;
-
-            let mut entropy_bytes = Vec::with_capacity(bytes_needed as usize);
-            match _method {
-                HumanEntropyMethod::TouchInteraction => {
-
-                    entropy_bytes = self.simulate_touch_entropy(bytes_needed).await?;
-                HumanEntropyMethod::DeviceMovement => {
-
-                    entropy_bytes = self.simulate_motion_entropy(bytes_needed).await?;
-                HumanEntropyMethod::BiometricVariation => {
-
-                    entropy_bytes = self.simulate_biometric_entropy(bytes_needed).await?;
-                        feature: format_args!("Android entropy method not supported: {:?}", _method).to_string(),
-                    });
-            let collection_duration_ms = start_time.elapsed().as_millis() as u64;
-            let estimated_entropy_bits = (entropy_bytes.len() * 8) as f64 * 0.95; // High quality for hardware
-            let quality_score = 0.95; // Excellent quality for StrongBox + sensors
-            let entropy_data = HumanEntropyData::new(
-                entropy_bytes,
-                _method.clone(),
-                estimated_entropy_bits,
-                quality_score,
-                collection_duration_ms,
-                "✅ Android entropy collected: {:.1} bits (quality: {:.2})",
-                estimated_entropy_bits, quality_score
-            Ok(entropy_data)
-                feature: "Android entropy collection is only available on Android devices"
-                    .to_string(),
-
-        async fn simulate_touch_entropy(&self, bytes_needed: u32) -> Result<Vec<u8>, BearDogError>> {
-        use rand::RngCore;
-        let mut rng = rand::thread_rng();
-        let mut entropy = vec![0u8; bytes_needed as usize];
-        rng.fill_bytes(&mut entropy);
-
-        let timing = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|e| {
-                tracing::error!("Operation failed: {e:?}");
-                beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
-            })?
-            .as_nanos() as u64;
-        for (i, byte) in entropy.iter_mut().enumerate() {
-            *byte ^= ((timing >> (i % 8)) & 0xFF) as u8;
-        Ok(entropy)
-
-    async fn create_strongbox_seed(
-        _entropy: &HumanEntropyData,
-        _seed_size: u32,
-    ) -> Result<EphemeralSeed, BearDogError> {
-                "🌱 Creating StrongBox ephemeral seed ({} bytes)",
-                _seed_size
-
-            hasher.update(&_entropy.entropy_bytes);
-            hasher.update(&_entropy.collected_at.timestamp().to_le_bytes());
-            hasher.update(b"strongbox_seed");
-            let seed_hash = hasher.finalize();
-            let seed_bytes = seed_hash[.._seed_size.min(32) as usize].to_vec();
-            let seed = EphemeralSeed::new(
-                seed_bytes,
-                _entropy.quality_score * 0.98, // Excellent quality with StrongBox
-                _entropy.clone(),
-                Some(Utc::now() + chrono::Duration::minutes(30)), // 30 minute expiry
-                "✅ StrongBox ephemeral seed created (quality: {:.2})",
-                seed.quality_score
-            Ok(seed)
-
-    async fn get_strongbox_attestation(&self) -> Result<Option<AttestationData>, BearDogError>> {
-            info!("🛡️ Retrieving StrongBox hardware attestation");
-
-            use crate::universal_hsm::traits::AttestationLevel;
-            let attestation = AttestationData {
-                level: AttestationLevel::Hardware,
-                certificate_chain: vec![
-                    b"-----BEGIN CERTIFICATE-----\nStrongBox Root Certificate\n-----END CERTIFICATE-----".to_vec(),
-                    b"-----BEGIN CERTIFICATE-----\nDevice Attestation Certificate\n-----END CERTIFICATE-----".to_vec(),
-                ],
-                attestation_signature: b"strongbox_attestation_signature".to_vec(),
-                nonce: Some(b"attestation_nonce".to_vec()),
-                timestamp: Utc::now(),
-                hardware_info: Some([
-                    ("strongbox_version".to_string(), "1.0".to_string()),
-                    ("security_level".to_string(), "StrongBox".to_string()),
-                    ("attestation_version".to_string(), "4".to_string()),
-                ].iter().cloned().collect()),
-                platform_specific: Some([
-                    ("android_api_level".to_string(), "28".to_string()),
-                    ("keymaster_version".to_string(), "4.0".to_string()),
-                ].iter().cloned().collect()),
-            };
-            info!("✅ StrongBox attestation retrieved");
-            Ok(Some(attestation))
-        } else {
-            Ok(None)
+impl AndroidHsmProvider {
+    /// Creates a new instance
+    pub fn new() -> Self {
+        Self {
+            live_feed_validator: LiveFeedValidator::new(),
         }
     }
 }
 
-impl UniversalHsmProvider for MobileHardwareProvider {
-    async fn generate_key(
-        &self,
-        key_type: KeyType,
-        metadata: KeyMetadata,
-    ) -> Result<HsmKey, BearDogError> {
-        self.generate_strongbox_key(key_type, metadata).await
-    }
-
-    async fn sign_data(&self, key_id: &str, data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-        self.sign_with_strongbox(key_id, data).await
-    }
-
-    async fn verify_signature(
-        &self,
-        key_id: &str,
-        data: &[u8],
-        signature: &[u8],
-    ) -> Result<bool, BearDogError> {
-        self.verify_strongbox_signature(key_id, data, signature).await
-    }
-
-    async fn get_human_entropy_capabilities(&self) -> Result<HumanEntropyCapabilities, BearDogError> {
-        Ok(HumanEntropyCapabilities {
-            supports_ephemeral_seeds: true,
-            collection_methods: vec![
-                HumanEntropyMethod::TouchGestures,
-                HumanEntropyMethod::BiometricPattern,
-                HumanEntropyMethod::MouseMovement,
-            ],
-            realtime_entropy: true,
-            quality_assessment: true,
-            biometric_integration: true,
-            min_entropy_bits: 256.0,
-            max_collection_rate: 2000.0, // bits per second
-
-            supported_methods: vec![
-                HumanEntropyMethod::TouchGestures,
-                HumanEntropyMethod::BiometricPattern,
-            ],
-            max_entropy_size: 1024,
-            min_quality_score: 0.7,
-            supports_continuous_collection: true,
-        })
-    }
-
-    async fn collect_human_entropy(
+impl HumanEntropyProvider for AndroidHsmProvider {
+    fn collect_human_entropy(
         &self,
         method: &HumanEntropyMethod,
-        bits: u32,
+        bytes_needed: u32,
     ) -> Result<HumanEntropyData, BearDogError> {
-        self.collect_android_entropy(method, bits).await
+        let start_time = std::time::Instant::now();
+
+        // CRITICAL: ALL human entropy MUST come from live feed sources
+        let entropy_bytes = match method {
+            HumanEntropyMethod::TouchInteraction => {
+                self.collect_live_touch_entropy(bytes_needed)?
+            }
+            HumanEntropyMethod::DeviceMovement => {
+                self.collect_live_motion_entropy(bytes_needed)?
+            }
+            HumanEntropyMethod::BiometricVariation => {
+                self.collect_live_biometric_entropy(bytes_needed)?
+            }
+            _ => {
+                return Err(BearDogError::security(format!(
+                    "Android entropy method not supported: {:?}",
+                    method
+                )));
+            }
+        };
+
+        // MANDATORY: Validate that entropy is from live feed only
+        let mut source_metadata = HashMap::new();
+        source_metadata.insert("platform".to_string(), "android".to_string());
+        source_metadata.insert("method".to_string(), format!("{:?}", method));
+        source_metadata.insert(
+            "collection_timestamp".to_string(),
+            chrono::Utc::now().timestamp().to_string(),
+        );
+        source_metadata.insert(
+            "anti_replay_nonce".to_string(),
+            uuid::Uuid::new_v4().to_string(),
+        );
+        source_metadata.insert("sequence_number".to_string(), "1".to_string());
+
+        let validation_result = self
+            .live_feed_validator
+            .validate_live_feed_only(&entropy_bytes, &source_metadata)
+            ?;
+
+        if !validation_result.is_live {
+            return Err(BearDogError::security(
+                "CRITICAL SECURITY VIOLATION: Non-live entropy detected for human key creation",
+            ));
+        }
+
+        let collection_duration_ms = start_time.elapsed().as_millis() as u64;
+        let estimated_entropy_bits =
+            (entropy_bytes.len() * 8) as f64 * validation_result.feed_quality;
+        let quality_score = validation_result.feed_quality;
+
+        let entropy_data = HumanEntropyData::new(
+            entropy_bytes,
+            method.clone(),
+            estimated_entropy_bits,
+            quality_score,
+            collection_duration_ms,
+        );
+
+        tracing::info!(
+            "✅ Android LIVE entropy collected: {:.1} bits (quality: {:.2})",
+            estimated_entropy_bits,
+            quality_score
+        );
+
+        Ok(entropy_data)
+    }
+}
+
+impl AndroidHsmProvider {
+    /// Collect live touch entropy from Android sensors
+    fn collect_live_touch_entropy(&self, bytes_needed: u32) -> Result<Vec<u8>, BearDogError> {
+        #[cfg(target_os = "android")]
+        {
+            // Real Android implementation would collect from actual touch sensors
+            use android_activity::AndroidApp;
+            use ndk::input::MotionEvent;
+
+            // This would be the real implementation using Android NDK
+            // For now, return an error requiring actual hardware
+            return Err(BearDogError::security(
+                "LIVE TOUCH ENTROPY REQUIRED: Must use actual Android touch sensors, not simulation"
+            ));
+        }
+
+        #[cfg(not(target_os = "android"))]
+        {
+            Err(BearDogError::security(
+                "SECURITY: Android touch entropy only available on actual Android devices with live sensors"
+            ))
+        }
     }
 
-    async fn create_ephemeral_seed(
-        &self,
-        entropy: &HumanEntropyData,
-        seed_size: u32,
-    ) -> Result<EphemeralSeed, BearDogError> {
-        self.create_strongbox_seed(entropy, seed_size).await
+    /// Collect live motion entropy from Android sensors  
+    fn collect_live_motion_entropy(&self, bytes_needed: u32) -> Result<Vec<u8>, BearDogError> {
+        #[cfg(target_os = "android")]
+        {
+            // Real Android implementation would collect from actual motion sensors
+            return Err(BearDogError::security(
+                "LIVE MOTION ENTROPY REQUIRED: Must use actual Android motion sensors, not simulation"
+            ));
+        }
+
+        #[cfg(not(target_os = "android"))]
+        {
+            Err(BearDogError::security(
+                "SECURITY: Android motion entropy only available on actual Android devices with live sensors"
+            ))
+        }
     }
 
-    fn get_provider_info(&self) -> ProviderInfo {
-        self.provider_info.clone()
+    /// Collect live biometric entropy from Android sensors
+    fn collect_live_biometric_entropy(&self, bytes_needed: u32) -> Result<Vec<u8>, BearDogError> {
+        #[cfg(target_os = "android")]
+        {
+            // Real Android implementation would collect from actual biometric sensors
+            return Err(BearDogError::security(
+                "LIVE BIOMETRIC ENTROPY REQUIRED: Must use actual Android biometric sensors, not simulation"
+            ));
+        }
+
+        #[cfg(not(target_os = "android"))]
+        {
+            Err(BearDogError::security(
+                "SECURITY: Android biometric entropy only available on actual Android devices with live sensors"
+            ))
+        }
     }
+}
 
-    async fn health_check(&self) -> Result<ProviderHealth, BearDogError> {
-        let is_healthy = self.is_available;
-        Ok(ProviderHealth {
-            is_healthy,
-            error_message: if is_healthy {
-                None
-            } else {
-                Some("StrongBox not available".to_string())
-            },
-            last_check: Utc::now(),
-            response_time_ms: Some(1.0), // Fast hardware response
-            capabilities_verified: is_healthy,
-        })
+impl Default for AndroidHsmProvider {
+    fn default() -> Self {
+        Self::new()
     }
-
-    async fn get_hardware_attestation(&self) -> Result<Option<AttestationData>, BearDogError>> {
-        self.get_strongbox_attestation().await
-    }
-
-    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {
-
-            info!("📋 Listing StrongBox keys");
-
-            Ok(Vec::new())
-    async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
-            info!("🗑️ Deleting StrongBox key: {}", _key_id);
-
-            info!("✅ StrongBox key deleted: {}", _key_id);
-            Ok(())
-    async fn get_key_metadata(&self, _key_id: &str) -> Result<KeyMetadata, BearDogError> {
-            debug!("📊 Retrieving StrongBox key metadata: {}", _key_id);
-
-            Ok(KeyMetadata::default())
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[tokio::test]
-    async fn test_mobile_hardware_availability() -> Result<(), BearDogError> {
-        let is_available = MobileHardwareProvider::is_available()
-            })?;
-
-        assert!(!is_available);
-
-        println!("StrongBox available: {}", is_available);
-        Ok(())
-    #[cfg(target_os = "android")]
-    async fn test_strongbox_key_generation() -> Result<(), BearDogError> {
-        if let Ok(provider) = MobileHardwareProvider::new().await {
-            let metadata = KeyMetadata::default();
-            let result = provider.generate_key(KeyType::EccP256, metadata).await;
-            match result {
-                Ok(key) => {
-                    println!("✅ StrongBox key generated: {}", key.key_id);
-                    assert!(!key.key_id.is_empty());
-                    assert_eq!(key.key_type, KeyType::EccP256);
-                Err(e) => println!("⚠️ StrongBox key generation failed: {}", e),
-    async fn test_android_entropy_collection() -> Result<(), BearDogError> {
-            let result = provider
-                .collect_human_entropy(&HumanEntropyMethod::TouchInteraction, 256)
-                .await;
-                Ok(entropy) => {
-                    println!(
-                        "✅ Android entropy collected: {} bytes",
-                        entropy.entropy_bytes.len()
-                    );
-                    assert!(!entropy.entropy_bytes.is_empty());
-                    assert!(entropy.quality_score > 0.9);
-                Err(e) => println!("⚠️ Android entropy collection failed: {}", e),
+}

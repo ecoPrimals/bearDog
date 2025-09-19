@@ -1,141 +1,52 @@
 use crate::security_sentinel::{SecuritySentinel, SecuritySentinelConfig};
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
-use tracing::{error, info};
 
-pub async fn security_sentinel_demo() -> Result<(), BearDogError> {
-    info!("🛡️ Starting BearDog Security Sentinel Demo");
-
-    let sentinel = SecuritySentinel::new()?;
-
-    sentinel.start_monitoring().await?;
-
-    let mut event_data = HashMap::new();
-    event_data.insert("source", "demo");
-    event_data.insert("severity", "low");
-
-    sentinel
-        .process_event("authentication", event_data.clone())
-        .await?;
-    sentinel
-        .process_event("authorization", event_data.clone())
-        .await?;
-    sentinel
-        .process_event("data_access", event_data.clone())
-        .await?;
-
-    let status_report = sentinel.get_status_report().await?;
-    info!("Security Status: {}", status_report.status);
-    info!("Threat Level: {}", status_report.threat_level);
-
-    let threat_report = sentinel.get_threat_landscape().await?;
-    info!("Risk Score: {:.1}", threat_report.risk_score);
-    info!("Threat Vectors: {:?}", threat_report.threat_vectors);
-
-    let capabilities_report = sentinel.get_capabilities_health().await?;
-    info!(
-        "Capabilities Health Score: {:.1}%",
-        capabilities_report.health_score
-    );
-
-    let performance_metrics = sentinel.get_performance_metrics().await?;
-    info!(
-        "Detection Accuracy: {:.1}%",
-        performance_metrics.detection_accuracy
-    );
-    info!(
-        "Average Processing Time: {:.1}ms",
-        performance_metrics.avg_processing_time_ms
-    );
-
-    sentinel.stop_monitoring().await?;
-
-    info!("✅ Security Sentinel Demo completed successfully");
-    Ok(())
-}
-
-pub async fn integrate_security_sentinel_startup() -> Result<SecuritySentinel, BearDogError> {
-    info!("🚀 Integrating Security Sentinel into startup sequence");
-
-    let _config = SecuritySentinelConfig {
-        monitoring_interval_seconds: 30, // More frequent monitoring
-        enable_threat_intelligence: true,
-        ..Default::default()
+/// Example function demonstrating `SecuritySentinel` usage
+///
+/// # Errors
+/// Returns an error if the security sentinel operations fail
+pub async fn demonstrate_security_sentinel() -> Result<(), BearDogError> {
+    // Create configuration
+    let config = SecuritySentinelConfig {
+        enabled: true,
+        max_events: 1000,
+        retention_hours: 24,
+        log_events: true,
+        alert_threshold: 5,
+        real_time_monitoring: true,
+        monitoring_interval_seconds: 60,
     };
 
-    let sentinel = SecuritySentinel::new()?;
+    // Initialize security sentinel
+    let sentinel = SecuritySentinel::new(config);
 
-    sentinel.start_monitoring().await?;
+    // Start monitoring
+    sentinel.start_monitoring()?;
 
-    let initial_report = sentinel.get_status_report().await?;
+    // Process some security events
+    let mut event_data = HashMap::new();
+    event_data.insert("source_ip", "192.168.1.100");
+    event_data.insert("user_id", "user123");
 
-    match initial_report.status.as_str() {
-        "HEALTHY" => info!("✅ Startup Security Status: EXCELLENT"),
-        "WARNING" => info!("⚠️ Startup Security Status: GOOD"),
-        "CRITICAL" => error!("🚨 Startup Security Status: CRITICAL"),
-        _ => info!("ℹ️ Startup Security Status: {}", initial_report.status),
+    sentinel.process_security_event("auth_failure", event_data.clone())?;
+    sentinel.process_security_event("access_violation", event_data.clone())?;
+    sentinel.process_security_event("compliance_violation", event_data)?;
+
+    // Get status report
+    let report = sentinel.get_status_report()?;
+    println!("Security Status: {}", report.status);
+    println!("Total Events: {}", report.stats.total_events);
+    println!("Auth Failures: {}", report.stats.auth_failures);
+
+    // Check if monitoring is active
+    if sentinel.is_monitoring_active() {
+        println!("Security monitoring is active");
     }
 
-    info!("🛡️ Security Sentinel successfully integrated into startup");
-    Ok(sentinel)
-}
+    // Stop monitoring
+    sentinel.stop_monitoring()?;
 
-pub async fn handle_security_alerts_example(
-    sentinel: &SecuritySentinel,
-) -> Result<(), BearDogError> {
-    info!("🚨 Demonstrating security alert handling");
-
-    let mut high_risk_event = HashMap::new();
-    high_risk_event.insert("source", "external");
-    high_risk_event.insert("severity", "high");
-    high_risk_event.insert("type", "suspicious_activity");
-
-    sentinel
-        .process_event("suspicious_activity", high_risk_event)
-        .await?;
-
-    let status_report = sentinel.get_status_report().await?;
-    if status_report.threat_level != "LOW" {
-        info!(
-            "⚠️ Elevated threat level detected: {}",
-            status_report.threat_level
-        );
-
-        let threat_report = sentinel.get_threat_landscape().await?;
-        for recommendation in &threat_report.recommendations {
-            info!("📋 Recommendation: {}", recommendation);
-        }
-    }
-
-    info!("✅ Security alert handling demonstration completed");
-    Ok(())
-}
-
-pub async fn monitor_security_performance_example(
-    sentinel: &SecuritySentinel,
-) -> Result<(), BearDogError> {
-    info!("📊 Demonstrating security performance monitoring");
-
-    let metrics = sentinel.get_performance_metrics().await?;
-
-    info!("Current Security Performance Metrics:");
-    info!("  Events per second: {:.1}", metrics.events_per_second);
-    info!(
-        "  Average processing time: {:.1}ms",
-        metrics.avg_processing_time_ms
-    );
-    info!("  Detection accuracy: {:.1}%", metrics.detection_accuracy);
-    info!("  False positive rate: {:.1}%", metrics.false_positive_rate);
-
-    if metrics.avg_processing_time_ms > 100.0 {
-        info!("⚠️ Processing time above threshold, consider optimization");
-    }
-
-    if metrics.detection_accuracy < 90.0 {
-        info!("⚠️ Detection accuracy below threshold, review detection rules");
-    }
-
-    info!("✅ Security performance monitoring demonstration completed");
     Ok(())
 }
 
@@ -144,68 +55,31 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_security_sentinel_demo() {
-        let result = security_sentinel_demo().await;
-        assert!(
-            result.is_ok(),
-            "Security Sentinel demo should complete successfully"
-        );
-    }
+    fn test_security_sentinel_basic() -> Result<(), BearDogError> {
+        let sentinel = SecuritySentinel::default();
 
-    #[tokio::test]
-    async fn test_security_sentinel_startup_integration() {
-        let result = integrate_security_sentinel_startup().await;
-        assert!(
-            result.is_ok(),
-            "Security Sentinel startup integration should succeed"
-        );
-    }
+        sentinel.start_monitoring()?;
 
-    #[tokio::test]
-    async fn test_security_alerts_handling() -> Result<(), BearDogError> {
-        let sentinel = SecuritySentinel::new().map_err(|e| {
-            tracing::error!(
-                "Operation failed ({}): {:?}",
-                "Should create SecuritySentinel",
-                e
-            );
-            beardog_errors::BearDogError::internal(
-                format_args!(
-                    "Operation failed ({}): {:?}",
-                    "Should create SecuritySentinel", e
-                )
-                .to_string(),
-            )
-        })?;
-        let result = handle_security_alerts_example(&sentinel).await;
-        assert!(
-            result.is_ok(),
-            "Security alerts handling should complete successfully"
-        );
+        let status = sentinel.get_status_report()?;
+        assert_eq!(status.status, "ACTIVE");
+
+        sentinel.stop_monitoring()?;
+
         Ok(())
     }
 
     #[tokio::test]
-    async fn test_performance_monitoring() -> Result<(), BearDogError> {
-        let sentinel = SecuritySentinel::new().map_err(|e| {
-            tracing::error!(
-                "Operation failed ({}): {:?}",
-                "Should create SecuritySentinel",
-                e
-            );
-            beardog_errors::BearDogError::internal(
-                format_args!(
-                    "Operation failed ({}): {:?}",
-                    "Should create SecuritySentinel", e
-                )
-                .to_string(),
-            )
-        })?;
-        let result = monitor_security_performance_example(&sentinel).await;
-        assert!(
-            result.is_ok(),
-            "Performance monitoring should complete successfully"
-        );
+    fn test_security_event_processing() -> Result<(), BearDogError> {
+        let sentinel = SecuritySentinel::default();
+
+        let mut event_data = HashMap::new();
+        event_data.insert("test", "data");
+
+        sentinel.process_security_event("auth_failure", event_data)?;
+
+        let stats = sentinel.get_statistics();
+        assert!(stats.auth_failures > 0);
+
         Ok(())
     }
 }

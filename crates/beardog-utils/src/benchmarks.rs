@@ -1,3 +1,7 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -15,31 +19,41 @@ pub struct BenchmarkSuite {
 
 #[derive(Debug, Clone)]
 pub struct BenchmarkConfig {
+    /// Number of warmup_iterations
     pub warmup_iterations: u32,
 
+    /// Number of measurement_iterations
     pub measurement_iterations: u32,
 
     pub max_time: Duration,
 
+    /// Whether enable_memory_profiling is enabled
     pub enable_memory_profiling: bool,
 
+    /// Whether enable_latency_analysis is enabled
     pub enable_latency_analysis: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchmarkResult {
+    /// Name of the item
     pub name: String,
 
     pub total_time: Duration,
 
+    /// Number of iterations
     pub iterations: u64,
 
+    /// The ops per second value
     pub ops_per_second: f64,
 
+    /// The avg latency value
     pub avg_latency: Duration,
 
+    /// The latency percentiles value
     pub latency_percentiles: LatencyPercentiles,
 
+    /// The memory stats value
     pub memory_stats: MemoryStats,
 
     pub performance_grade: PerformanceGrade,
@@ -47,37 +61,54 @@ pub struct BenchmarkResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LatencyPercentiles {
+    /// The p50 value
     pub p50: Duration,
+    /// The p90 value
     pub p90: Duration,
+    /// The p95 value
     pub p95: Duration,
+    /// The p99 value
     pub p99: Duration,
+    /// The p99 9 value
     pub p99_9: Duration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryStats {
+    /// Number of peak_memory
     pub peak_memory: u64,
 
+    /// Number of total_allocations
     pub total_allocations: u64,
 
+    /// The allocation rate value
     pub allocation_rate: f64,
 
+    /// Number of avg_allocation_size
     pub avg_allocation_size: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum PerformanceGrade {
+    /// Represents excellent variant
     Excellent, // > 1M ops/sec
-    Good,      // > 100K ops/sec
-    Average,   // > 10K ops/sec
-    Poor,      // > 1K ops/sec
-    Critical,  // < 1K ops/sec
+    /// Represents good variant
+    Good, // > 100K ops/sec
+    /// Represents average variant
+    Average, // > 10K ops/sec
+    /// Represents poor variant
+    Poor, // > 1K ops/sec
+    /// Represents critical variant
+    Critical, // < 1K ops/sec
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SuiteStats {
+    /// Number of total_benchmarks
     pub total_benchmarks: u32,
+    /// Number of passed_benchmarks
     pub passed_benchmarks: u32,
+    /// Number of failed_benchmarks
     pub failed_benchmarks: u32,
     pub total_execution_time: Duration,
     pub average_performance_grade: f64,
@@ -96,6 +127,7 @@ impl Default for BenchmarkConfig {
 }
 
 impl BenchmarkSuite {
+    /// Creates a new instance
     pub fn new(config: BenchmarkConfig) -> Self {
         Self {
             benchmarks: HashMap::with_capacity(16),
@@ -237,10 +269,14 @@ impl BenchmarkSuite {
         Ok(result.avg_latency)
     }
 
+    /// Gets result
+    /// Gets result
     pub fn get_result(&self, name: &str) -> Option<&BenchmarkResult> {
         self.benchmarks.get(name)
     }
 
+    /// Gets all_results
+    /// Gets all_results
     pub fn get_all_results(&self) -> &HashMap<String, BenchmarkResult> {
         &self.benchmarks
     }
@@ -352,19 +388,29 @@ impl BenchmarkSuite {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceReport {
+    /// The suite stats value
     pub suite_stats: SuiteStats,
+    /// The grade distribution value
     pub grade_distribution: GradeDistribution,
+    /// The avg ops per second value
     pub avg_ops_per_second: f64,
+    /// The total ops per second value
     pub total_ops_per_second: f64,
+    /// Mapping of benchmarks
     pub benchmarks: HashMap<String, BenchmarkResult>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GradeDistribution {
+    /// Number of excellent
     pub excellent: u32,
+    /// Number of good
     pub good: u32,
+    /// Number of average
     pub average: u32,
+    /// Number of poor
     pub poor: u32,
+    /// Number of critical
     pub critical: u32,
 }
 

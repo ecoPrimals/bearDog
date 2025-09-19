@@ -1,7 +1,14 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 pub mod trust;
 pub mod node;
+/// Configuration management
+/// Configuration management
 pub mod config;
 pub mod federation;
 
@@ -13,30 +20,35 @@ pub use federation::*;
 pub use node::node_types;
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Default)]
-pub struct RegistryStatistics {
-
-    pub total_nodes: usize,
-
+#[derive(Debug, Clone)]
+    /// Number of active_nodes
     pub active_nodes: usize,
 
+    /// Number of trust_relationships
     pub trust_relationships: usize,
 
+    /// Mapping of nodes by trust level
     pub nodes_by_trust_level: HashMap<TrustLevel, usize>,
 
+    /// Number of average_node_age_seconds
     pub average_node_age_seconds: u64,
+
 
     pub registry_uptime_seconds: u64,
 }
 impl RegistryStatistics {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self::default()
     }
 
+/// Total Trust Relationships operation.
     pub fn total_trust_relationships(&self) -> usize {
         self.trust_relationships
 
+/// Active Node Percentage operation.
     pub fn active_node_percentage(&self) -> f64 {
         if self.total_nodes == 0 {
             0.0
@@ -44,21 +56,26 @@ impl RegistryStatistics {
             (self.active_nodes as f64 / self.total_nodes as f64) * 100.0
         }
 
+/// Get Nodes By Trust Level operation.
+    /// Gets nodes_by_trust_level
+    /// Gets nodes_by_trust_level
     pub fn get_nodes_by_trust_level(&self, trust_level: TrustLevel) -> usize {
-        self.nodes_by_trust_level.get(&trust_level).copied().unwrap_or(0)
-
-    pub fn update_nodes_by_trust_level(&mut self, trust_level: TrustLevel, count: usize) {
+        self.nodes_by_trust_level.get(TrustLevel, count: usize) {
         self.nodes_by_trust_level.insert(trust_level, count);
 
+/// Average Node Age Minutes operation.
     pub fn average_node_age_minutes(&self) -> u64 {
         self.average_node_age_seconds / 60
 
+/// Registry Uptime Minutes operation.
     pub fn registry_uptime_minutes(&self) -> u64 {
         self.registry_uptime_seconds / 60
 
+/// Registry Uptime Hours operation.
     pub fn registry_uptime_hours(&self) -> u64 {
         self.registry_uptime_seconds / 3600
 
+/// Reset operation.
     pub fn reset(&mut self) {
         self.total_nodes = 0;
         self.active_nodes = 0;
@@ -88,6 +105,7 @@ mod tests {
         assert_eq!(stats.active_nodes, 0);
         assert_eq!(stats.trust_relationships, 0);
         assert!(stats.nodes_by_trust_level.is_empty());}
+
 
     fn test_all_types_available() {
 

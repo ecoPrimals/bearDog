@@ -4,33 +4,32 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
-pub struct P2PConfig {
-
-    pub enabled: bool,
-
+    /// The listen address value
     pub listen_address: String,
 
+    /// Number of listen_port
     pub listen_port: u16,
 
+    /// Collection of bootstrap peers
     pub bootstrap_peers: Vec<String>,
 
+    /// Number of max_peers
     pub max_peers: usize,
+
 
     pub connection_timeout_seconds: u64,
 
+    /// Number of peer_discovery_interval_seconds
     pub peer_discovery_interval_seconds: u64,
 
+    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 }
 impl Default for P2PConfig {}
 
-    fn default() -> Self {
-        Self {
-            enabled: true,
+    fn default(true,
             listen_address: "0.0.0.0".to_string(),
-            listen_port: 8081,
-            bootstrap_peers: Vec::new(),
-            max_peers: 50,
+            bootstrap_peers: Vec::new(50,
             connection_timeout_seconds: 30,
             peer_discovery_interval_seconds: 60,
             metadata: HashMap::with_capacity(16),
@@ -38,43 +37,70 @@ impl Default for P2PConfig {}
     }
 impl P2PConfig {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self::default()
 
+/// With Enabled operation.
+    /// Creates instance with enabled
     pub fn with_enabled(mut self, enabled: bool) -> Self {
         self.enabled = enabled;
         self
 
+/// With Listen Address operation.
+    /// Creates instance with listen address
     pub fn with_listen_address(mut self, address: &str) -> Self {
         self.listen_address = address;
 
+/// With Listen Port operation.
+    /// Creates instance with listen port
     pub fn with_listen_port(mut self, port: u16) -> Self {
         self.listen_port = port;
 
+/// With Bootstrap Peer operation.
+    /// Creates instance with bootstrap peer
     pub fn with_bootstrap_peer(mut self, peer: &str) -> Self {
         self.bootstrap_peers.push(peer);
 
+/// With Max Peers operation.
+    /// Creates instance with max peers
     pub fn with_max_peers(mut self, max_peers: usize) -> Self {
         self.max_peers = max_peers;
 
+/// With Connection Timeout operation.
+    /// Creates instance with connection timeout
     pub fn with_connection_timeout(mut self, timeout_seconds: u64) -> Self {
         self.connection_timeout_seconds = timeout_seconds;
 
+/// With Peer Discovery Interval operation.
+    /// Creates instance with peer discovery interval
     pub fn with_peer_discovery_interval(mut self, interval_seconds: u64) -> Self {
         self.peer_discovery_interval_seconds = interval_seconds;
 
-    pub fn with_metadata(mut self, key: &str, value: &str) -> Self {
-        self.metadata.insert(key, value);
+/// With Metadata operation.
+    /// Creates instance with metadata
+    pub fn with_metadata(&str, value: &str) -> Self {
+        self.metadata.insert(key.to_string(), value.into());
 
+/// Connection Timeout operation.
     pub fn connection_timeout(&self) -> Duration {
         Duration::from_secs(self.connection_timeout_seconds)
 
+/// Peer Discovery Interval operation.
     pub fn peer_discovery_interval(&self) -> Duration {
         Duration::from_secs(self.peer_discovery_interval_seconds)
 
+/// Full Listen Address operation.
     pub fn full_listen_address(&self) -> String {
-        format_args!("{}:{}", self.listen_address, self.listen_port).to_string()
+        format!("{}:{}", self.listen_address, self.listen_port)
 
+/// Validate operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Validates input
+    /// Validates input
     pub fn validate(&self) -> Result<(), String> {
         if self.listen_address.is_empty() {
             return Err("Listen address cannot be empty".to_string());
@@ -91,6 +117,7 @@ impl P2PConfig {
 mod tests {
     use super::*;
     #[test]}
+
 
     fn test_p2p_config_default() {
         let config = P2PConfig::default();
@@ -112,6 +139,7 @@ mod tests {
         assert!(config.bootstrap_peers.contains(&"peer1:8080".to_string()));
         assert_eq!(config.full_listen_address(), "0.0.0.0:9090");}
 
+
     fn test_p2p_config_durations() {
         let config = P2PConfig::default()
             .with_connection_timeout(45)
@@ -132,6 +160,7 @@ mod tests {
         config.connection_timeout_seconds = 30;
         config.peer_discovery_interval_seconds = 0;}
 
+
     fn test_p2p_config_network() {
             .with_listen_address("127.0.0.1".to_string())
             .with_listen_port(9999);
@@ -146,11 +175,12 @@ mod tests {
         assert!(config.bootstrap_peers.contains(&"peer3:8080".to_string()));
         assert_eq!(config.bootstrap_peers.len(), 3);}
 
+
     fn test_p2p_config_metadata() {
             .with_metadata("protocol".to_string(), "tcp".to_string())
-            .with_metadata("encryption".to_string(), "tls".to_string());
-        assert_eq!(config.metadata.get("protocol"), Some(&"tcp".to_string()));
-        assert_eq!(config.metadata.get("encryption"), Some(&"tls".to_string()));
+            .with_metadata("encryption ".to_string(), "tls".to_string());
+        assert_eq!(config.metadata.get("protocol"), Some("tcp".to_string()));
+        assert_eq!(config.metadata.get("encryption "), Some("tls".to_string()));
     fn test_p2p_config_disabled() {
             .with_enabled(false);
         assert!(!config.enabled);

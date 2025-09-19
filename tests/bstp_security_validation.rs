@@ -1,5 +1,3 @@
-
-
 use beardog::config::EncryptionConfig;
 use beardog::encryption::EncryptionEngine;
 use beardog::genetics::{DefaultBearDogGeneticsEngine, GeneticsConfig, InMemoryGeneticsStore};
@@ -14,11 +12,10 @@ use std::time::{Duration, SystemTime};
 
 #[tokio::test]
 async fn test_key_isolation_security() -> Result<(), BearDogError> {
-
     println!("🔐 Testing session key isolation security...");
 
     let config = BStpConfig::maximum_security();
-    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
+    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone())?);
 
     let sessions = vec![
         ("peer_alice", "session_alice"),
@@ -29,9 +26,7 @@ async fn test_key_isolation_security() -> Result<(), BearDogError> {
     let mut session_keys = Vec::new();
 
     for (peer, session_id) in &sessions {
-        let key = key_manager
-            .generate_session_key(session_id, CryptoAlgorithm::Aes256Gcm)
-            .await?;
+        let key = key_manager.generate_session_key(session_id, CryptoAlgorithm::Aes256Gcm)?;
         session_keys.push((peer.to_string(), session_id.to_string(), key));
     }
 
@@ -45,7 +40,7 @@ async fn test_key_isolation_security() -> Result<(), BearDogError> {
         }
     }
 
-    let wrong_key_result = key_manager.get_session_key("non_existent_session").await;
+    let wrong_key_result = key_manager.get_session_key("non_existent_session");
     assert!(
         wrong_key_result.is_none(),
         "Should return None for non-existent session"
@@ -57,33 +52,30 @@ async fn test_key_isolation_security() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_encryption_tamper_resistance() -> Result<(), BearDogError> {
-
     println!("🛡️ Testing encryption tamper resistance...");
 
     let config = BStpConfig::maximum_security();
-    let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
+    let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default())?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
     let genetics = Arc::new(DefaultBearDogGeneticsEngine::new(
         genetics_store,
         GeneticsConfig::default(),
     ));
-    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
+    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone())?);
 
     let security_provider = GamingCryptoEngine::new(
         encryption.clone(),
         genetics.clone(),
         key_manager.clone(),
         config.clone(),
-    )
-    .await?;
+    )?;
 
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
     let session_id = "tamper_test_session";
     let original_data = b"sensitive_gaming_data_do_not_tamper";
 
-    let mut encrypted_packet = security_provider
-        .ultra_fast_encrypt(session_id, original_data, &security_genetics)
-        .await?;
+    let mut encrypted_packet =
+        security_provider.ultra_fast_encrypt(session_id, original_data, &security_genetics)?;
 
     let original_encrypted = encrypted_packet.data.clone();
 
@@ -119,9 +111,8 @@ async fn test_encryption_tamper_resistance() -> Result<(), BearDogError> {
     for (test_name, tampered_data) in tampering_tests {
         encrypted_packet.data = tampered_data;
 
-        let decrypt_result = security_provider
-            .ultra_fast_decrypt(session_id, &encrypted_packet, &security_genetics)
-            .await;
+        let decrypt_result =
+            security_provider.ultra_fast_decrypt(session_id, &encrypted_packet, &security_genetics);
 
         assert!(
             decrypt_result.is_err(),
@@ -132,9 +123,8 @@ async fn test_encryption_tamper_resistance() -> Result<(), BearDogError> {
     }
 
     encrypted_packet.data = original_encrypted;
-    let decrypted = security_provider
-        .ultra_fast_decrypt(session_id, &encrypted_packet, &security_genetics)
-        .await?;
+    let decrypted =
+        security_provider.ultra_fast_decrypt(session_id, &encrypted_packet, &security_genetics)?;
 
     assert_eq!(original_data, &decrypted[..]);
 
@@ -144,25 +134,23 @@ async fn test_encryption_tamper_resistance() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_timing_attack_resistance() -> Result<(), BearDogError> {
-
     println!("⏱️ Testing timing attack resistance...");
 
     let config = BStpConfig::maximum_security();
-    let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
+    let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default())?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
     let genetics = Arc::new(DefaultBearDogGeneticsEngine::new(
         genetics_store,
         GeneticsConfig::default(),
     ));
-    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
+    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone())?);
 
     let security_provider = GamingCryptoEngine::new(
         encryption.clone(),
         genetics.clone(),
         key_manager.clone(),
         config.clone(),
-    )
-    .await?;
+    )?;
 
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
 
@@ -190,15 +178,16 @@ async fn test_timing_attack_resistance() -> Result<(), BearDogError> {
             let session_id = format!("timing_test_{pattern_idx}_{i}");
 
             let start = std::time::Instant::now();
-            let encrypted = security_provider
-                .ultra_fast_encrypt(&session_id, pattern, &security_genetics)
-                .await?;
+            let encrypted =
+                security_provider.ultra_fast_encrypt(&session_id, pattern, &security_genetics)?;
             encryption_times.push(start.elapsed());
 
             let start = std::time::Instant::now();
-            let decrypted = security_provider
-                .ultra_fast_decrypt(&session_id, &encrypted, &security_genetics)
-                .await?;
+            let decrypted = security_provider.ultra_fast_decrypt(
+                &session_id,
+                &encrypted,
+                &security_genetics,
+            )?;
             decryption_times.push(start.elapsed());
 
             assert_eq!(pattern, &decrypted);
@@ -221,38 +210,34 @@ async fn test_timing_attack_resistance() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_session_hijacking_protection() -> Result<(), BearDogError> {
-
     println!("🔒 Testing session hijacking protection...");
 
     let config = BStpConfig::maximum_security();
-    let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
+    let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default())?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
     let genetics = Arc::new(DefaultBearDogGeneticsEngine::new(
         genetics_store,
         GeneticsConfig::default(),
     ));
-    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
+    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone())?);
 
     let security_provider = GamingCryptoEngine::new(
         encryption.clone(),
         genetics.clone(),
         key_manager.clone(),
         config.clone(),
-    )
-    .await?;
+    )?;
 
     let legitimate_peer = "trusted_gaming_peer_12345";
 
     let test_data = b"legitimate session data";
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
 
-    let encrypted = security_provider
-        .ultra_fast_encrypt(legitimate_peer, test_data, &security_genetics)
-        .await?;
+    let encrypted =
+        security_provider.ultra_fast_encrypt(legitimate_peer, test_data, &security_genetics)?;
 
-    let decrypted = security_provider
-        .ultra_fast_decrypt(legitimate_peer, &encrypted, &security_genetics)
-        .await?;
+    let decrypted =
+        security_provider.ultra_fast_decrypt(legitimate_peer, &encrypted, &security_genetics)?;
 
     assert_eq!(test_data, &decrypted[..]);
 
@@ -267,29 +252,26 @@ async fn test_session_hijacking_protection() -> Result<(), BearDogError> {
     ];
 
     for fake_session in malicious_sessions.iter() {
-
-        let test_result = security_provider
-            .ultra_fast_encrypt(fake_session, b"test data", &security_genetics)
-            .await;
+        let test_result =
+            security_provider.ultra_fast_encrypt(fake_session, b"test data", &security_genetics);
 
         assert!(test_result.is_ok() || test_result.is_err());
     }
 
-    let final_encrypted = security_provider
-        .ultra_fast_encrypt(legitimate_peer, test_data, &security_genetics)
-        .await?;
+    let final_encrypted =
+        security_provider.ultra_fast_encrypt(legitimate_peer, test_data, &security_genetics)?;
 
-    let final_decrypted = security_provider
-        .ultra_fast_decrypt(legitimate_peer, &final_encrypted, &security_genetics)
-        .await?;
+    let final_decrypted = security_provider.ultra_fast_decrypt(
+        legitimate_peer,
+        &final_encrypted,
+        &security_genetics,
+    )?;
 
     assert_eq!(test_data, &final_decrypted[..]);
 
     for fake_session in malicious_sessions.iter() {
-
-        let test_result = security_provider
-            .ultra_fast_encrypt(fake_session, b"another test", &security_genetics)
-            .await;
+        let test_result =
+            security_provider.ultra_fast_encrypt(fake_session, b"another test", &security_genetics);
 
         assert!(test_result.is_ok() || test_result.is_err());
     }
@@ -299,8 +281,7 @@ async fn test_session_hijacking_protection() -> Result<(), BearDogError> {
 }
 
 #[tokio::test]
-async fn test_genetic_healing_security() -> Result<(), BearDogError> {
-
+fn test_genetic_healing_security() -> Result<(), BearDogError> {
     println!("🧬 Testing genetic healing security...");
 
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
@@ -308,7 +289,7 @@ async fn test_genetic_healing_security() -> Result<(), BearDogError> {
         genetics_store,
         GeneticsConfig::default(),
     ));
-    let mut healing = GeneticSecurityHealing::new(genetics.clone()).await?;
+    let mut healing = GeneticSecurityHealing::new();
 
     let malicious_issues = vec![
         SecurityIssue {
@@ -332,7 +313,7 @@ async fn test_genetic_healing_security() -> Result<(), BearDogError> {
     ];
 
     for (i, issue) in malicious_issues.into_iter().enumerate() {
-        let result = healing.heal_security_issue(issue).await?;
+        let result = healing.heal_security_issue(issue)?;
 
         assert_eq!(result, beardog::tunnel::HealingResult::Success);
         println!("✅ Safely handled malicious issue {i}");
@@ -351,7 +332,7 @@ async fn test_genetic_healing_security() -> Result<(), BearDogError> {
     ];
 
     for (i, event) in extreme_events.into_iter().enumerate() {
-        let result = healing.heal_from_network_event(event).await;
+        let result = healing.heal_from_network_event(event);
         assert!(
             result.is_ok(),
             "Extreme event {i} should be handled gracefully"
@@ -364,25 +345,19 @@ async fn test_genetic_healing_security() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_key_rotation_security() -> Result<(), BearDogError> {
-
     println!("🔄 Testing key rotation security...");
 
     let config = BStpConfig::maximum_security();
-    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
+    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone())?);
 
     let session_id = "rotation_test_session";
 
-    let key1 = key_manager
-        .generate_session_key(session_id, CryptoAlgorithm::Aes256Gcm)
-        .await?;
+    let key1 = key_manager.generate_session_key(session_id, CryptoAlgorithm::Aes256Gcm)?;
 
-    let key2 = key_manager.rotate_session_key(session_id, None).await?;
-    let key3 = key_manager
-        .rotate_session_key(session_id, Some(CryptoAlgorithm::ChaCha20Poly1305))
-        .await?;
-    let key4 = key_manager
-        .rotate_session_key(session_id, Some(CryptoAlgorithm::GeneticHybrid))
-        .await?;
+    let key2 = key_manager.rotate_session_key(session_id, None)?;
+    let key3 =
+        key_manager.rotate_session_key(session_id, Some(CryptoAlgorithm::ChaCha20Poly1305))?;
+    let key4 = key_manager.rotate_session_key(session_id, Some(CryptoAlgorithm::GeneticHybrid))?;
 
     assert_ne!(key1.key, key2.key);
     assert_ne!(key2.key, key3.key);
@@ -396,13 +371,17 @@ async fn test_key_rotation_security() -> Result<(), BearDogError> {
     assert_eq!(key3.algorithm, CryptoAlgorithm::ChaCha20Poly1305);
     assert_eq!(key4.algorithm, CryptoAlgorithm::GeneticHybrid);
 
-    let current_key = key_manager
-        .get_session_key(session_id)
-        .await
-        .map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Session key should exist after rotation", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Session key should exist after rotation", e).to_string())
-})?;
+    let current_key = key_manager.get_session_key(session_id).map_err(|e| {
+        tracing::error!(
+            "Operation failed ({}): {:?}",
+            "Session key should exist after rotation",
+            e
+        );
+        beardog_errors::BearDogError::internal(format!(
+            "Error: {:?}",
+            "Session key should exist after rotation", e
+        ))
+    })?;
     assert_eq!(current_key.key, key4.key);
     assert_eq!(current_key.key_id, key4.key_id);
 
@@ -412,38 +391,34 @@ async fn test_key_rotation_security() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_session_validation() -> Result<(), BearDogError> {
-
     println!("🔒 Testing session validation security...");
 
     let config = BStpConfig::maximum_security();
-    let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
+    let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default())?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
     let genetics = Arc::new(DefaultBearDogGeneticsEngine::new(
         genetics_store,
         GeneticsConfig::default(),
     ));
-    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
+    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone())?);
 
     let security_provider = GamingCryptoEngine::new(
         encryption.clone(),
         genetics.clone(),
         key_manager.clone(),
         config.clone(),
-    )
-    .await?;
+    )?;
 
     let legitimate_peer = "trusted_gaming_peer_12345";
 
     let test_data = b"legitimate session data";
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
 
-    let encrypted = security_provider
-        .ultra_fast_encrypt(legitimate_peer, test_data, &security_genetics)
-        .await?;
+    let encrypted =
+        security_provider.ultra_fast_encrypt(legitimate_peer, test_data, &security_genetics)?;
 
-    let decrypted = security_provider
-        .ultra_fast_decrypt(legitimate_peer, &encrypted, &security_genetics)
-        .await?;
+    let decrypted =
+        security_provider.ultra_fast_decrypt(legitimate_peer, &encrypted, &security_genetics)?;
 
     assert_eq!(test_data, &decrypted[..]);
 
@@ -458,21 +433,20 @@ async fn test_session_validation() -> Result<(), BearDogError> {
     ];
 
     for fake_session in malicious_sessions.iter() {
-
-        let test_result = security_provider
-            .ultra_fast_encrypt(fake_session, b"test data", &security_genetics)
-            .await;
+        let test_result =
+            security_provider.ultra_fast_encrypt(fake_session, b"test data", &security_genetics);
 
         assert!(test_result.is_ok() || test_result.is_err());
     }
 
-    let final_encrypted = security_provider
-        .ultra_fast_encrypt(legitimate_peer, test_data, &security_genetics)
-        .await?;
+    let final_encrypted =
+        security_provider.ultra_fast_encrypt(legitimate_peer, test_data, &security_genetics)?;
 
-    let final_decrypted = security_provider
-        .ultra_fast_decrypt(legitimate_peer, &final_encrypted, &security_genetics)
-        .await?;
+    let final_decrypted = security_provider.ultra_fast_decrypt(
+        legitimate_peer,
+        &final_encrypted,
+        &security_genetics,
+    )?;
 
     assert_eq!(test_data, &final_decrypted[..]);
 
@@ -483,32 +457,29 @@ async fn test_session_validation() -> Result<(), BearDogError> {
 #[tokio::test]
 async fn test_simplified_validation() -> Result<(), BearDogError> {
     let config = BStpConfig::maximum_security();
-    let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default()).await?);
+    let encryption = Arc::new(EncryptionEngine::new(EncryptionConfig::default())?);
     let genetics_store = Arc::new(InMemoryGeneticsStore::new());
     let genetics = Arc::new(DefaultBearDogGeneticsEngine::new(
         genetics_store,
         GeneticsConfig::default(),
     ));
-    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone()).await?);
+    let key_manager = Arc::new(BStpKeyManager::new(config.key_management.clone())?);
 
     let security_provider = GamingCryptoEngine::new(
         encryption.clone(),
         genetics.clone(),
         key_manager.clone(),
         config.clone(),
-    )
-    .await?;
+    )?;
 
     let test_data = b"validation test data";
     let security_genetics = beardog::tunnel::SecurityGenetics::default();
 
-    let encrypted = security_provider
-        .ultra_fast_encrypt("test_session", test_data, &security_genetics)
-        .await?;
+    let encrypted =
+        security_provider.ultra_fast_encrypt("test_session", test_data, &security_genetics)?;
 
-    let decrypted = security_provider
-        .ultra_fast_decrypt("test_session", &encrypted, &security_genetics)
-        .await?;
+    let decrypted =
+        security_provider.ultra_fast_decrypt("test_session", &encrypted, &security_genetics)?;
 
     assert_eq!(test_data, &decrypted[..]);
 

@@ -1,19 +1,14 @@
 
 
+// MODERNIZATION NOTE: This file contains vendor-specific references that should be migrated
+// to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
+// Target: Replace with capability-based discovery for vendor/primal agnosticism
 use super::types::OutputFormat;
 use clap::{Subcommand, ValueEnum};
 use std::path::PathBuf;
 
-#[derive(Debug, Subcommand)]
-pub enum HsmOperation {
-
-    Initialize {
-
-        #[arg(long, value_enum, default_value = "software")]
-        provider: HsmProvider,
-
-        #[arg(long)]
-        config: Option<PathBuf>,
+#[derive(Debug, Clone)]
+        #[arg(Option<PathBuf>,
 
         force: bool,
 
@@ -22,11 +17,9 @@ pub enum HsmOperation {
 
     GenerateKey {
 
-        #[arg(long, value_enum, default_value = "rsa2048")]
-        key_type: String,
+        #[arg(String,
 
-        #[arg(long, value_enum, default_value = "general")]
-        usage: String,
+        #[arg(String,
 
         label: String,
 
@@ -36,11 +29,9 @@ pub enum HsmOperation {
 
     ListKeys {
 
-        #[arg(long, value_enum, default_value = "json")]
-        format: OutputFormat,
+        #[arg(OutputFormat,
 
-        #[arg(long, value_enum)]
-        key_type: Option<String>,
+        #[arg(Option<String>,
 
         usage: Option<String>,
 
@@ -50,8 +41,7 @@ pub enum HsmOperation {
 
     CryptoOperation {
 
-        #[arg(long, value_enum, default_value = "encrypt")]
-        operation: CryptoOperationType,
+        #[arg(CryptoOperationType,
         key_label: String,
 
         input: String,
@@ -72,8 +62,7 @@ pub enum HsmOperation {
 
         output: PathBuf,
 
-        #[arg(long, default_value = "json")]
-        format: String,
+        #[arg(String,
 
     VerifyAttestation {
 
@@ -85,14 +74,9 @@ pub enum HsmOperation {
 
     ExportPublicKey {
 
-        #[arg(long, default_value = "PEM")]
+        #[arg(PathBuf,
 
-    ImportCertificate {
-
-        certificate: PathBuf,
-
-        #[arg(long, default_value = "X509")]
-        cert_type: String,
+        #[arg(String,
 
     Diagnostics {
 
@@ -104,28 +88,50 @@ pub enum HsmOperation {
 #[derive(Debug, Clone, ValueEnum)]
 pub enum HsmProvider {
 
+
+    /// Represents software variant
     Software,
 
+
+    /// Represents pkcs11 variant
     Pkcs11,
 
+
+    /// Represents aws cloud hsm variant
     AwsCloudHsm,
 
-    AzureDedicatedHsm,
+    universal_cloudDedicatedHsm,
 
+
+    /// Represents hardware variant
     Hardware,
-
+/// Types of crypto operation
 pub enum CryptoOperationType {
 
+
+    /// Represents encrypt variant
     Encrypt,
 
+
+    /// Represents decrypt variant
     Decrypt,
 
+
+    /// Represents sign variant
     Sign,
 
+
+    /// Represents verify variant
     Verify,
 
+
+    /// Represents derive variant
     Derive,
 
+
+    /// Represents unwrap variant
     Unwrap,
 
+
+    /// Represents wrap variant
     Wrap,

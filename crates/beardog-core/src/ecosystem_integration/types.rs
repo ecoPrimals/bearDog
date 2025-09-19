@@ -1,158 +1,206 @@
-// Fixed types.rs - Ecosystem integration types
-use beardog_errors::BearDogError;
+// **MODERNIZED**: Ecosystem integration types for BearDog
+//
+// This module provides comprehensive types for ecosystem integration,
+// including service discovery, compute orchestration, and HSM management.
+
+// Removed unused import: beardog_errors::BearDogError
 use beardog_types::canonical::HealthStatus;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
+use uuid::Uuid;
 
+/// Represents an event in the ecosystem integration system
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EcosystemEvent {
+    pub id: Uuid,
+    /// Type of the event
+    /// The event type value
+    pub event_type: String,
+    /// Source service that generated the event
+    /// The source value
+    pub source: String,
+    /// Optional target
+    pub target: Option<String>,
+    /// Event payload data
+    /// Mapping of data
+    pub data: HashMap<String, serde_json::Value>,
+    /// Timestamp when the event was created
+    pub timestamp: DateTime<Utc>,
+    /// Priority level of the event
+    /// The priority value
+    pub priority: EventPriority,
+    /// Current status of the event
+    /// Current status of the component
+    pub status: EventStatus,
+}
+
+/// Represents a node in the ecosystem
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemNode {
-    pub node_id: String,
-    pub node_type: String,
+    pub id: Uuid,
+    /// Human-readable name of the node
+    /// Name of the item
+    pub name: String,
+    /// Type of the node (service, compute, hsm, etc.)
+    /// The node type value
+    pub node_type: NodeType,
+    /// The endpoint value
     pub endpoint: String,
-    pub capabilities: Vec<String>,
+    /// Current health status
+    /// Current status of the health
     pub health_status: HealthStatus,
+    /// Node capabilities
+    /// Collection of capabilities
+    pub capabilities: Vec<String>,
+    /// Node metadata
+    /// Mapping of metadata
+    pub metadata: HashMap<String, String>,
+    /// Last seen timestamp
+    /// The last seen value
     pub last_seen: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceMeshConfig {
-    pub mesh_id: String,
-    pub nodes: Vec<EcosystemNode>,
-    pub routing_rules: HashMap<String, String>,
-    pub load_balancing_strategy: String,
-    pub circuit_breaker_enabled: bool,
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum EventPriority {
+    /// Low priority event
+    Low,
+    /// Medium priority event
+    Medium,
+    /// High priority event
+    High,
+    /// Critical priority event
+    Critical,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct IntegrationMetrics {
-    pub total_nodes: usize,
-    pub healthy_nodes: usize,
-    pub total_requests: u64,
-    pub successful_requests: u64,
-    pub average_latency_ms: f64,
-    pub last_updated: DateTime<Utc>,
+/// Status of ecosystem events
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum EventStatus {
+    /// Event is pending processing
+    Pending,
+    /// Event is currently being processed
+    Processing,
+    /// Event has been completed successfully
+    Completed,
+    /// Event processing failed
+    Failed,
+    /// Event was cancelled
+    Cancelled,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EcosystemEvent {
-    pub event_id: String,
-    pub event_type: String,
-    pub source_node: String,
-    pub target_node: Option<String>,
-    pub payload: serde_json::Value,
-    pub timestamp: DateTime<Utc>,
-    pub severity: String,
+/// Types of nodes in the ecosystem
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of node
+pub enum NodeType {
+    /// Service node
+    Service,
+    /// Compute node
+    Compute,
+    /// HSM node
+    Hsm,
+    /// Storage node
+    Storage,
+    /// Gateway node
+    Gateway,
+    /// Custom node type
+    Custom(String),
 }
 
-impl EcosystemNode {
-    pub fn new(node_id: String, node_type: String, endpoint: String) -> Self {
+impl Default for EcosystemEvent {
+    fn default() -> Self {
         Self {
-            node_id,
-            node_type,
-            endpoint,
-            capabilities: Vec::new(),
+            id: Uuid::new_v4(),
+            event_type: "unknown".to_string(),
+            source: "system".to_string(),
+            target: None,
+            data: HashMap::new(),
+            timestamp: Utc::now(),
+            priority: EventPriority::Medium,
+            status: EventStatus::Pending,
+        }
+    }
+}
+
+impl Default for EcosystemNode {
+    fn default() -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            name: "unnamed-node".to_string(),
+            node_type: NodeType::Service,
+            endpoint: std::env::var("BEARDOG_ENDPOINT").unwrap_or_else(|_| {
+                std::env::var("ECOSYSTEM_BASE_URL")
+                    .unwrap_or_else(|_| "https://beardog.ecoprimals.com".to_string())
+            }),
             health_status: HealthStatus::Healthy,
+            capabilities: vec!["security".to_string(), "hsm".to_string()],
+            metadata: HashMap::new(),
             last_seen: Utc::now(),
         }
     }
+}
 
-    pub fn is_healthy(&self) -> bool {
-        matches!(self.health_status, HealthStatus::Healthy)
+impl EcosystemEvent {
+    /// Creates a new ecosystem event
+    /// Creates a new instance
+    pub fn new(event_type: String, source: String) -> Self {
+        Self {
+            event_type,
+            source,
+            ..Default::default()
+        }
     }
 
+    /// Creates instance with target
+    pub fn with_target(mut self, target: String) -> Self {
+        self.target = Some(target);
+        self
+    }
+
+    /// Creates instance with priority
+    pub fn with_priority(mut self, priority: EventPriority) -> Self {
+        self.priority = priority;
+        self
+    }
+
+    /// Adds data to the event
+    /// Creates instance with data
+    pub fn with_data(mut self, key: String, value: serde_json::Value) -> Self {
+        self.data.insert(key, value);
+        self
+    }
+}
+
+impl EcosystemNode {
+    /// Creates a new ecosystem node
+    /// Creates a new instance
+    pub fn new(name: String, node_type: NodeType, endpoint: String) -> Self {
+        Self {
+            name,
+            node_type,
+            endpoint,
+            ..Default::default()
+        }
+    }
+
+    /// Adds a capability to the node
+    /// Creates instance with capability
+    pub fn with_capability(mut self, capability: String) -> Self {
+        self.capabilities.push(capability);
+        self
+    }
+
+    /// Adds metadata to the node
+    /// Creates instance with metadata
+    pub fn with_metadata(mut self, key: String, value: String) -> Self {
+        self.metadata.insert(key, value);
+        self
+    }
+
+    /// Updates the health status of the node
+    /// Updates health
+    /// Updates health
     pub fn update_health(&mut self, status: HealthStatus) {
         self.health_status = status;
         self.last_seen = Utc::now();
-    }
-}
-
-impl ServiceMeshConfig {
-    pub fn new(mesh_id: String) -> Self {
-        Self {
-            mesh_id,
-            nodes: Vec::new(),
-            routing_rules: HashMap::new(),
-            load_balancing_strategy: "round_robin".to_string(),
-            circuit_breaker_enabled: true,
-        }
-    }
-
-    pub fn add_node(&mut self, node: EcosystemNode) {
-        self.nodes.push(node);
-    }
-
-    pub fn get_healthy_nodes(&self) -> Vec<&EcosystemNode> {
-        self.nodes.iter().filter(|node| node.is_healthy()).collect()
-    }
-}
-
-impl IntegrationMetrics {
-    pub fn new() -> Self {
-        Self {
-            total_nodes: 0,
-            healthy_nodes: 0,
-            total_requests: 0,
-            successful_requests: 0,
-            average_latency_ms: 0.0,
-            last_updated: Utc::now(),
-        }
-    }
-
-    pub fn success_rate(&self) -> f64 {
-        if self.total_requests == 0 {
-            0.0
-        } else {
-            (self.successful_requests as f64 / self.total_requests as f64) * 100.0
-        }
-    }
-
-    pub fn health_ratio(&self) -> f64 {
-        if self.total_nodes == 0 {
-            0.0
-        } else {
-            (self.healthy_nodes as f64 / self.total_nodes as f64) * 100.0
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_ecosystem_node_creation() {
-        let node = EcosystemNode::new(
-            "test-node-001".to_string(),
-            "beardog".to_string(),
-            "http://localhost:8080".to_string(),
-        );
-
-        assert_eq!(node.node_id, "test-node-001");
-        assert_eq!(node.node_type, "beardog");
-        assert!(node.is_healthy());
-    }
-
-    #[test]
-    fn test_service_mesh_config() {
-        let mut mesh = ServiceMeshConfig::new("test-mesh".to_string());
-        let node = EcosystemNode::new(
-            "node-1".to_string(),
-            "test".to_string(),
-            "http://test:8080".to_string(),
-        );
-
-        mesh.add_node(node);
-        assert_eq!(mesh.nodes.len(), 1);
-        assert_eq!(mesh.get_healthy_nodes().len(), 1);
-    }
-
-    #[test]
-    fn test_integration_metrics() {
-        let mut metrics = IntegrationMetrics::new();
-        metrics.total_requests = 100;
-        metrics.successful_requests = 95;
-        
-        assert_eq!(metrics.success_rate(), 95.0);
     }
 }

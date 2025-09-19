@@ -1,0 +1,188 @@
+// Configuration types for hybrid intelligence system
+
+// use super::learning::PredictionHorizon; // TODO: Remove if truly unused
+use super::types::IntelligenceCapability;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone)]
+pub enum ConsensusStrategy {
+    /// Majority rule consensus requiring >50% agreement
+    Majority,
+    /// Weighted consensus based on expertise and trust scores
+    Weighted,
+    /// Unanimous consensus requiring 100% agreement
+    Unanimous,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum IntelligenceMode {
+    /// Pure human decision making without AI assistance
+    Human,
+    /// AI-assisted human decision making with recommendations
+    HybridAssisted,
+    /// Fully autonomous AI decision making with human oversight
+    AutonomousAI,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum LearningAlgorithm {
+    ReinforcementLearning,
+    /// Supervised learning with human-labeled training datasets
+    SupervisedLearning,
+    /// Unsupervised pattern discovery and clustering algorithms
+    UnsupervisedLearning,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct MLConfig {
+    /// The learning rate value
+    pub learning_rate: f64,
+    /// Number of batch_size
+    pub batch_size: usize,
+    /// Maximum number of training epochs
+    /// Number of max_epochs
+    pub max_epochs: u32,
+    /// Enable early stopping to prevent overfitting
+    /// Whether early_stopping is enabled
+    pub early_stopping: bool,
+}
+
+/// Neural network architecture configuration
+#[derive(Debug, Clone)]
+pub struct NeuralConfig {
+    pub hidden_layers: Vec<usize>,
+    /// Activation function type (relu, sigmoid, tanh)
+    /// The activation value
+    pub activation: String,
+    /// The dropout rate value
+    pub dropout_rate: f64,
+    /// Whether batch_norm is enabled
+    pub batch_norm: bool,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct DecisionConfig {
+    pub confidence_threshold: f64,
+    /// Enable human feedback integration
+    /// Whether enable_human_feedback is enabled
+    pub enable_human_feedback: bool,
+    /// Maximum decision processing time in milliseconds
+    pub max_processing_time_ms: u64,
+}
+
+/// Learning system configuration
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct LearningConfig {
+    /// Enable online learning
+    /// Whether online_learning is enabled
+    pub online_learning: bool,
+    /// Experience replay buffer size
+    /// Number of replay_buffer_size
+    pub replay_buffer_size: usize,
+    /// Learning update frequency
+    /// Number of update_frequency
+    pub update_frequency: u32,
+    /// Exploration vs exploitation balance
+    /// The exploration rate value
+    pub exploration_rate: f64,
+}
+
+/// Prediction engine configuration
+#[derive(Debug, Clone)]
+pub struct PredictionConfig {
+    /// Prediction horizon in time steps
+    /// Number of horizon
+    pub horizon: u32,
+    /// Uncertainty quantification method
+    /// The uncertainty method value
+    pub uncertainty_method: String,
+    /// Monte Carlo sample count
+    /// Number of mc_samples
+    pub mc_samples: u32,
+    /// Prediction confidence threshold
+    pub confidence_threshold: f64,
+}
+
+/// Optimization configuration
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct OptimizationConfig {
+    /// Optimization algorithm to use
+    /// The algorithm value
+    pub algorithm: OptimizationAlgorithm,
+    /// Maximum optimization iterations
+    /// Number of max_iterations
+    pub max_iterations: u32,
+    /// Convergence tolerance
+    /// The tolerance value
+    pub tolerance: f64,
+    /// Enable parallel optimization
+    /// Whether parallel is enabled
+    pub parallel: bool,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum OptimizationAlgorithm {
+    /// Stochastic gradient descent
+    SGD,
+    /// Adam optimizer with adaptive learning rates
+    Adam,
+    RMSprop,
+}
+
+#[derive(Debug, Clone)]
+pub struct HybridIntelligenceConfig {
+    /// Current intelligence processing mode
+    /// The mode value
+    pub mode: IntelligenceMode,
+    /// The learning algorithm value
+    pub learning_algorithm: LearningAlgorithm,
+    /// Human feedback integration settings
+    /// The human feedback weight value
+    pub human_feedback_weight: f64,
+    pub ai_confidence_threshold: f64,
+    pub system_id: String,
+    /// Whether feature_capabilities is enabled
+    pub enabled_capabilities: Vec<IntelligenceCapability>,
+    /// Machine learning configuration settings
+    pub ml_config: super::types::MachineLearningConfig,
+    /// Neural network configuration
+    pub neural_config: super::types::NeuralNetworkConfig,
+    /// Decision engine configuration
+    pub decision_config: super::types::DecisionEngineConfig,
+    /// Learning system configuration
+    pub learning_config: super::types::LearningConfig,
+    /// Prediction engine configuration
+    pub prediction_config: super::types::PredictionConfig,
+    /// Optimization configuration
+    pub optimization_config: super::types::OptimizationConfig,
+}
+
+impl Default for HybridIntelligenceConfig {
+    fn default() -> Self {
+        Self {
+            mode: IntelligenceMode::HybridAssisted,
+            learning_algorithm: LearningAlgorithm::ReinforcementLearning,
+            human_feedback_weight: 0.3,
+            ai_confidence_threshold: 0.8,
+            system_id: "default-hybrid-intelligence".to_string(),
+            enabled_capabilities: vec![],
+            ml_config: super::types::MachineLearningConfig::default(),
+            neural_config: create_default_neural_config_for_default(),
+            decision_config: create_default_decision_config_for_default(),
+            learning_config: super::types::LearningConfig::default(),
+            prediction_config: super::types::PredictionConfig::default(),
+            optimization_config: super::types::OptimizationConfig::default(),
+        }
+    }
+}
+
+// Helper functions for Default implementation
+fn create_default_neural_config_for_default() -> super::types::NeuralNetworkConfig {
+    // Create a simplified neural network configuration using defaults
+    super::types::NeuralNetworkConfig::default()
+}
+
+fn create_default_decision_config_for_default() -> super::types::DecisionEngineConfig {
+    // Create a simplified decision engine configuration using defaults
+    super::types::DecisionEngineConfig::default()
+}

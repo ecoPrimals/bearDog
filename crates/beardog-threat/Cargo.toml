@@ -1,19 +1,49 @@
 [package]
 name = "beardog-threat"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
 description = "BearDog threat module"
-authors.workspace = true
+repository = "https://github.com/eastgate-software/beardog"
+rust-version = "1.75"
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
+keywords = [ "threat", "detection", "analysis", "security", "beardog",]
+categories = [ "security", "development-tools", "analysis",]
+readme = "README.md"
 
-[dependencies]
-anyhow = { workspace = true }
-# async-trait = { workspace = true }  # REMOVED: Modernized to native async fn
-beardog-errors = { path = "../beardog-errors" }
-beardog-types = { path = "../beardog-types" }
-chrono = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-tokio = { workspace = true }
-tracing = { workspace = true }
-uuid = { workspace = true }
+[package.version]
+workspace = true
+
+[package.edition]
+workspace = true
+
+[package.license]
+workspace = true
+
+[package.authors]
+workspace = true
+
+[dependencies.anyhow]
+workspace = true
+
+[dependencies.beardog-errors]
+path = "../beardog-errors"
+
+[dependencies.beardog-types]
+path = "../beardog-types"
+
+[dependencies.chrono]
+workspace = true
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
+
+[dependencies.tokio]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.uuid]
+workspace = true

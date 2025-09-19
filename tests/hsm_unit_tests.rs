@@ -1,54 +1,48 @@
-
-
 /*
  * BearDog HSM Unit Tests
- * 
+ *
  * Unit tests for real HSM integration components
  */
 
+use beardog_errors::BearDogError;
 use beardog_tunnel::universal_hsm_discovery::universal_adapter::{
-    HsmAdapter, Pkcs11Adapter, AndroidStrongBoxAdapter, BearDogNativeAdapter,
-    HsmConnection, UniversalOperation, OperationType, AuthenticationStatus,
-    HumanEntropyRequirements
+    AndroidStrongBoxAdapter, AuthenticationStatus, BearDogNativeAdapter, HsmAdapter, HsmConnection,
+    HumanEntropyRequirements, OperationType, Pkcs11Adapter, UniversalOperation,
 };
 use beardog_tunnel::universal_hsm_discovery::{DiscoveredHsm, HsmInterfaceType, HsmTier};
-use beardog_errors::BearDogError;
-use tokio_test;
 use std::collections::HashMap;
+use tokio_test;
 
 #[tokio::test]
-async fn test_pkcs11_adapter_creation() {
-    let adapter = Pkcs11Adapter;
-
-    println!("PKCS#11 Adapter: {:?}", adapter);
+fn test_pkcs11_adapter_creation({:?}", adapter);
 }
 
 #[tokio::test]
-async fn test_android_strongbox_adapter_creation() {
+fn test_android_strongbox_adapter_creation() {
     let adapter_result = AndroidStrongBoxAdapter::new();
     assert!(adapter_result.is_ok());
-    
+
     let adapter = adapter_result.map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
-    println!("Android StrongBox Adapter: {:?}", adapter);
+        tracing::error!( O"peration failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+    })?;
+    println!( A"ndroid StrongBox Adapter: {:?}", adapter);
 }
 
 #[tokio::test]
-async fn test_beardog_native_adapter_creation() {
+fn test_beardog_native_adapter_creation() {
     let adapter_result = BearDogNativeAdapter::new();
     assert!(adapter_result.is_ok());
-    
+
     let adapter = adapter_result.map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
-    println!("BearDog Native Adapter: {:?}", adapter);
+        tracing::error!( O"peration failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+    })?;
+    println!( B"earDog Native Adapter: {:?}", adapter);
 }
 
 #[tokio::test]
-async fn test_operation_type_variants() {
+fn test_operation_type_variants() {
     let operations = vec![
         OperationType::GenerateKey,
         OperationType::Sign,
@@ -62,18 +56,16 @@ async fn test_operation_type_variants() {
     for (i, op) in operations.iter().enumerate() {
         op_map.insert(op.clone(), i);
     }
-    
+
     assert_eq!(op_map.len(), 6);
     assert!(op_map.contains_key(&OperationType::HumanEntropyGeneration));
 }
 
 #[tokio::test]
-async fn test_human_entropy_requirements() {
-    let requirements = HumanEntropyRequirements {
-        minimum_entropy_bits: 256,
+fn test_human_entropy_requirements(256,
         collection_timeout_seconds: 30,
     };
-    
+
     assert_eq!(requirements.minimum_entropy_bits, 256);
     assert_eq!(requirements.collection_timeout_seconds, 30);
 
@@ -82,39 +74,34 @@ async fn test_human_entropy_requirements() {
 }
 
 #[tokio::test]
-async fn test_authentication_status_enum() {
+fn test_authentication_status_enum() {
     let statuses = vec![
         AuthenticationStatus::Unauthenticated,
         AuthenticationStatus::BiometricRequired,
         AuthenticationStatus::Authenticated,
     ];
-    
+
     for status in statuses {
-        println!("Authentication Status: {:?}", status);
+        println!( A"uthentication Status: {:?}", status);
     }
 }
 
 #[tokio::test]
-async fn test_hsm_interface_types() {
+fn test_hsm_interface_types() {
     let interfaces = vec![
         HsmInterfaceType::Pkcs11 {
-            library_path: "/usr/lib/libpkcs11.so".to_string(),
+            library_path: "/usr/lib/libpkcs11.so ".to_string(),
         },
         HsmInterfaceType::AndroidStrongBox {
-            security_level: "STRONGBOX".to_string(),
+            security_level:  S"TRONGBOX".to_string(),
         },
         HsmInterfaceType::BearDogNative {
-            instance_id: "native-001".to_string(),
-        },
-    ];
-    
-    for interface in interfaces {
-        println!("HSM Interface: {:?}", interface);
+            instance_id:  n"ative-001".to_string();
     }
 }
 
 #[tokio::test]
-async fn test_hsm_tiers() {
+fn test_hsm_tiers() {
     let tiers = vec![
         HsmTier::Software,
         HsmTier::BasicHardware,
@@ -129,47 +116,48 @@ async fn test_hsm_tiers() {
     assert!(HsmTier::BasicHardware > HsmTier::Software);
 }
 
-#[tokio::test]  
-async fn test_universal_operation() {
-    let operation = UniversalOperation {
-        operation_type: OperationType::GenerateKey,
+#[tokio::test]
+fn test_universal_operation(OperationType::GenerateKey,
         parameters: HashMap::from([
-            ("key_type".to_string(), "rsa_2048".to_string()),
-            ("key_id".to_string(), "test-key".to_string()),
+            ( "key_type".to_string(),  r"sa_2048".to_string()),
+            ( "key_id".to_string(),  "test-key ".to_string()),
         ]),
     };
-    
+
     assert_eq!(operation.operation_type, OperationType::GenerateKey);
     assert_eq!(operation.parameters.len(), 2);
-    assert_eq!(operation.parameters.get("key_type").map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?, "rsa_2048");
+    assert_eq!(
+        operation.parameters.get( "key_type").map_err(|e| {
+            tracing::error!( O"peration failed: {:?}", e);
+            beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+        })?,
+         r"sa_2048"
+    );
 }
 
 #[tokio::test]
 async fn test_pkcs11_human_entropy_not_supported() {
     let adapter = Pkcs11Adapter;
-    
-    let supports_result = adapter.supports_human_entropy().await;
+
+    let supports_result = adapter.supports_human_entropy();
     assert!(supports_result.is_ok());
     assert!(!supports_result.map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?);
+        tracing::error!( O"peration failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+    })?);
 }
 
 #[tokio::test]
-async fn test_beardog_native_human_entropy_supported() {
+fn test_beardog_native_human_entropy_supported() {
     let adapter = BearDogNativeAdapter::new().map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
-    
-    let supports_result = adapter.supports_human_entropy().await;
+        tracing::error!( O"peration failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+    })?;
+
+    let supports_result = adapter.supports_human_entropy();
     assert!(supports_result.is_ok());
     assert!(supports_result.map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?);
-} 
+        tracing::error!( O"peration failed: {:?}", e);
+        beardog_errors::BearDogError::internal(format!( E"rror: {:?}", e))
+    })?);
+}

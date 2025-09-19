@@ -1,6 +1,5 @@
 use beardog_errors::BearDogError;
 
-
 use clap::{Arg, Command};
 use std::path::Path;
 use tracing::info;
@@ -63,10 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .default_value("0.8")
         )
         .arg(
-            Arg::new("safety-level")
-                .long("safety-level")
-                .value_name("LEVEL")
-                .help("Maximum safety level for automatic migration: safe, safe-with-review, requires-analysis")
+            Arg::new(safe, safe-with-review, requires-analysis")
                 .default_value("safe-with-review")
         )
         .arg(
@@ -106,17 +102,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .action(clap::ArgAction::SetTrue)
         )
         .arg(
-            Arg::new("examples-strategy")
-                .long("examples-strategy")
-                .value_name("STRATEGY")
-                .help("Strategy for examples: 'safe', 'expect', 'skip' (default: expect)")
+            Arg::new('safe', 'expect', 'skip' (default: expect)")
                 .default_value("expect")
         )
         .arg(
-            Arg::new("benchmarks-strategy")
-                .long("benchmarks-strategy")
-                .value_name("STRATEGY")
-                .help("Strategy for benchmarks: 'safe', 'expect', 'skip' (default: expect)")
+            Arg::new('safe', 'expect', 'skip' (default: expect)")
                 .default_value("expect")
         )
         .arg(
@@ -151,13 +141,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => SafetyLevel::Safe,
     };
 
-    let migrate_tests = matches.get_flag("migrate-tests");
-    let migrate_examples = matches.get_flag("migrate-examples");
-    let migrate_benchmarks = matches.get_flag("migrate-benchmarks");
-    let require_beardog_result = matches.get_flag("require-beardog-result");
-
-    info!("🚀 Starting BearDog Enhanced Unwrap Migration");
-    info!("📁 Scanning path: {}", root_path);
+    let migrate_tests = matches.get_flag({}", root_path);
     info!("🔍 Mode: {}", if stats_only { "Statistics Only" } 
                               else if dry_run { "Dry Run" } 
                               else if apply_changes { "Apply Changes" } 
@@ -177,23 +161,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             require_beardog_result,
         };
         
-        let mut migrator = RefinedBearDogMigrator::new()?.with_config(config);
-        
-        if stats_only {
-            run_refined_analysis(&mut migrator, root_path).await?;
-        } else {
-            run_refined_migration(&mut migrator, root_path, !apply_changes).await?;
-        }
-        
-    } else {
-
-        if context_aware {
-            info!("🧠 Using enhanced context-aware migration");
-            if let Some(strategy) = examples_strategy {
-                info!("📚 Examples strategy: {}", strategy);
+        let mut migrator = RefinedBearDogMigrator::new({}", strategy);
             }
-            if let Some(strategy) = benchmarks_strategy {
-                info!("⚡ Benchmarks strategy: {}", strategy);
+            if let Some({}", strategy);
             }
         }
 
@@ -225,9 +195,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             if context_aware {
                 println!("\n🧠 Context Analysis:");
-                println!("   📚 Example files detected: {}", count_files_by_pattern(root_path, "examples")?);
-                println!("   ⚡ Benchmark files detected: {}", count_files_by_pattern(root_path, "bench")?);
-                println!("   🧪 Test files detected: {}", count_files_by_pattern(root_path, "test")?);
+                println!("   📚 Example files detected: {}", count_files_by_pattern({}", count_files_by_pattern({}", count_files_by_pattern(root_path, "test")?);
             }
             
         } else if dry_run || apply_changes {
@@ -269,11 +237,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    Ok(())
-}
-
-async fn run_refined_analysis(
-    migrator: &mut RefinedBearDogMigrator,
+    Ok(&mut RefinedBearDogMigrator,
     root_path: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use std::fs;
@@ -282,20 +246,7 @@ async fn run_refined_analysis(
     let mut total_candidates = 0;
     let mut files_processed = 0;
 
-    for entry in walkdir::WalkDir::new(root_path) {
-        let entry = entry?;
-        let path = entry.path();
-        
-        if path.extension().map_or(false, |ext| ext == "rs") {
-            match migrator.analyze_file(path).await {
-                Ok(candidates) => {
-                    total_candidates += candidates.len();
-                    files_processed += 1;
-                    
-                    if !candidates.is_empty() {
-                        println!("\n📄 {}", path.display());
-                        for candidate in &candidates {
-                            println!("   🔧 Line {}: {} -> {}",
+    for entry in walkdir::WalkDir::new({} -> {}",
                                 candidate.line_number,
                                 candidate.original_code,
                                 candidate.suggested_replacement);
@@ -305,8 +256,7 @@ async fn run_refined_analysis(
                         }
                     }
                 }
-                Err(e) => {
-                    eprintln!("⚠️ Error analyzing {}: {}", path.display(), e);
+                Err({}", path.display(), e);
                 }
             }
         }
@@ -320,11 +270,7 @@ async fn run_refined_analysis(
     println!("   ⚠️ Review required: {}", stats.review_migrations);
     println!("   ❌ Skipped: {}", stats.skipped_migrations);
     
-    Ok(())
-}
-
-async fn run_refined_migration(
-    migrator: &mut RefinedBearDogMigrator,
+    Ok(&mut RefinedBearDogMigrator,
     root_path: &str,
     dry_run: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -334,23 +280,7 @@ async fn run_refined_migration(
     let mut total_applied = 0;
     let mut files_modified = 0;
 
-    for entry in walkdir::WalkDir::new(root_path) {
-        let entry = entry?;
-        let path = entry.path();
-        
-        if path.extension().map_or(false, |ext| ext == "rs") {
-            match migrator.analyze_file(path).await {
-                Ok(candidates) => {
-                    if !candidates.is_empty() {
-                        let applied = migrator.apply_migrations(path, &candidates, dry_run).await?;
-                        if applied > 0 {
-                            total_applied += applied;
-                            files_modified += 1;
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("⚠️ Error processing {}: {}", path.display(), e);
+    for entry in walkdir::WalkDir::new({}", path.display(), e);
                 }
             }
         }
@@ -367,10 +297,7 @@ async fn run_refined_migration(
         println!("   🧪 Run tests to verify everything works correctly");
     }
     
-    Ok(())
-}
-
-fn count_files_by_pattern(root_path: &str, pattern: &str) -> Result<usize, Box<dyn std::error::Error>> {
+    Ok(&str, pattern: &str) -> Result<usize, Box<dyn std::error::Error>> {
     use std::fs;
     use std::path::Path;
     

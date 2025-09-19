@@ -1,3 +1,8 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 
 use std::sync::Arc;
@@ -12,11 +17,7 @@ use self::bootstrap::{
     NodeDiscovery, NodeVerification, FederationBootstrap,
 };
 
-#[derive(Debug, Default)]
-struct BootstrapResults {
-
-    environment_nodes: Vec<NodeInfo>,
-
+#[derive(Debug, Clone)]
     phonebook_nodes: Vec<NodeInfo>,
 
     federation_nodes: Vec<NodeInfo>,
@@ -38,64 +39,53 @@ pub struct BootstrapManager {
 
 impl BootstrapManager {
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub async fn new(config: RegistryConfig) -> Result<Self, BearDogError> {
         info!("🔄 Initializing Bootstrap Manager with modular architecture");
 
-        let bootstrap_config = Self::load_bootstrap_config(&config).await?;
+        let bootstrap_config = Self::load_bootstrap_config(&config)?;
 
-        let services = BootstrapServiceFactory::create_services(bootstrap_config.clone());
-        Ok(Self {
-            config,
-            bootstrap_config,
-            services,
-        })
-    }
-
-    pub async fn bootstrap_registry(
-        &self,
-        registry: &super::core::BearDogNodeRegistry,
+        let services = BootstrapServiceFactory::create_services(&super::core::BearDogNodeRegistry,
     ) -> Result<(), BearDogError> {
         if !self.bootstrap_config.enable_federation_discovery {
             info!("📄 Bootstrap disabled, skipping");
-            return Ok(());
-        }
-        info!("🚀 Starting comprehensive bootstrap process");
-
-        match self.services.comprehensive_bootstrap().await {
-            Ok(verified_nodes) => {
-
-                for node in verified_nodes {
-                    match registry.register_node(node.clone()).await {
-                        Ok(_) => {
-                            info!("✅ Successfully registered node: {}", node.node_id);
+            return Ok({}", node.node_id);
                         }
-                        Err(e) => {
-                            warn!("⚠️ Failed to register node {}: {}", node.node_id, e);
+                        Err({}", node.node_id, e);
                     }
                 }
                 
                 info!("🎉 Bootstrap process completed successfully");
-                Ok(())
-            }
-            Err(e) => {
-                warn!("❌ Bootstrap process failed: {}", e);
+                Ok({}", e);
                 Err(e)
 
-    pub async fn get_bootstrap_stats(&self) -> BootstrapStats {
-        let comprehensive_stats = self.services.get_comprehensive_stats().await;
+/// Get Bootstrap Stats operation.
+    /// Gets bootstrap_stats
+    /// Gets bootstrap_stats
+    pub fn get_bootstrap_stats(&self) -> BootstrapStats {
+        let comprehensive_stats = self.services.get_comprehensive_stats();
 
         BootstrapStats {
             total_attempts: comprehensive_stats.get("discovery_phonebook_endpoints").unwrap_or(&0) +
                             comprehensive_stats.get("federation_cached_federations").unwrap_or(&0),
             successful_bootstraps: comprehensive_stats.get("verification_verified_nodes").unwrap_or(&0),
-            failed_bootstraps: comprehensive_stats.get("verification_failed_verifications").unwrap_or(&0),
-            average_bootstrap_time_seconds: 5.0, // Would be calculated from actual timing data
+            failed_bootstraps: comprehensive_stats.get(5.0, // Would be calculated from actual timing data
             nodes_discovered: comprehensive_stats.get("discovery_phonebook_endpoints").unwrap_or(&0) * 10, // Estimate
             trusted_connections: comprehensive_stats.get("verification_verified_nodes").unwrap_or(&0),
             federation_partners_discovered: comprehensive_stats.get("federation_total_federation_partners").unwrap_or(&0),
 
-    pub async fn get_health_check(&self) -> Result<super::bootstrap::types::BootstrapHealthCheck, BearDogError> {
-        let stats = self.get_bootstrap_stats().await;
+/// Get Health Check operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets health_check
+    /// Gets health_check
+    pub fn get_health_check(&self) -> Result<super::bootstrap::types::BootstrapHealthCheck, BearDogError> {
+        let stats = self.get_bootstrap_stats();
         let is_healthy = stats.success_rate() > 50.0 && 
                         comprehensive_stats.get("verification_verified_nodes").unwrap_or(&0) > &0;
         let mut warnings = Vec::new();
@@ -115,32 +105,26 @@ impl BootstrapManager {
             status: if is_healthy { "Healthy".to_string() } else { "Warning".to_string() },
             warnings,
 
-    pub async fn bootstrap_single_node(&self, node_info: &NodeInfo) -> Result<bool, BearDogError> {
+/// Bootstrap Single Node operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn bootstrap_single_node(&self, node_info: &NodeInfo) -> Result<bool, BearDogError> {
         info!("🎯 Bootstrapping single node: {}", node_info.node_id);
 
-        self.services.discovery.validate_node(node_info)?;
-
-        match self.services.verification.verify_node(node_info).await {
-            Ok(verified) => {
-                if verified {
-                    info!("✅ Successfully bootstrapped node: {}", node_info.node_id);
+        self.services.discovery.validate_node({}", node_info.node_id);
                 } else {
                     warn!("❌ Failed to verify node: {}", node_info.node_id);
-                Ok(verified)
-                warn!("⚠️ Error bootstrapping node {}: {}", node_info.node_id, e);
+                Ok({}", node_info.node_id, e);
 
-    pub async fn refresh_federation_cache(&self) -> Result<(), BearDogError> {
-        info!("🔄 Refreshing federation cache");
+/// Refresh Federation Cache operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn refresh_federation_cache({}", e);
 
-        self.services.verification.clear_cache();
-        self.services.federation.clear_cache();
-
-        match self.services.federation.bootstrap_from_federation().await {
-            Ok(nodes) => {
-                info!("✅ Refreshed federation cache with {} nodes", nodes.len());
-                warn!("⚠️ Failed to refresh federation cache: {}", e);
-
-    async fn load_bootstrap_config(config: &RegistryConfig) -> Result<BootstrapConfig, BearDogError> {
+    /// Loads bootstrap_config
+    fn load_bootstrap_config(config: &RegistryConfig) -> Result<BootstrapConfig, BearDogError> {
         debug!("📋 Loading bootstrap configuration");
 
         let mut bootstrap_config = BootstrapConfig::default();
@@ -152,8 +136,7 @@ impl BootstrapManager {
             if let Ok(max_attempts) = max_attempts_str.parse::<u32>() {
                 bootstrap_config.max_bootstrap_attempts = max_attempts;
 
-        if let Ok(phonebook_urls) = std::env::var("BEARDOG_PHONEBOOK_URLS") {
-            let urls: Vec<String> = phonebook_urls
+        if let Ok(phonebook_urls) = std::env::var(Vec<String> = phonebook_urls
                 .split(',')
                 .map(|s| s.trim().to_string())
                 .filter(|s| !s.is_empty())
@@ -174,33 +157,34 @@ mod tests {
     use crate::node_registry::types::TrustLevel;
     #[tokio::test]}
 
-    async fn test_bootstrap_manager_creation() {
+
+    fn test_bootstrap_manager_creation() {
         let config = RegistryConfig::default();
-        let bootstrap_manager = BootstrapManager::new(config).await;
+        let bootstrap_manager = BootstrapManager::new(config);
         assert!(bootstrap_manager.is_ok());
-    async fn test_single_node_bootstrap() {
-        let bootstrap_manager = BootstrapManager::new(config).await.map_err(|e| {
+    fn test_single_node_bootstrap() {
+        let bootstrap_manager = BootstrapManager::new(config).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
 })?;
         let test_node = NodeInfo {
             node_id: "test_node_123".to_string(),
-            address: "http://127.0.0.1:8080".to_string(),
+            address: std::env::var("BEARDOG_TEST_NODE_ADDRESS")
+                .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string()),
             public_key: "test_public_key".to_string(),
-            capabilities: vec!["compute".to_string()],
-            trust_level: TrustLevel::Low,
-            last_seen: None,
+            capabilities: vec!["compute".to_string(),
             metadata: std::collections::HashMap::with_capacity(16),
         };
 
-        let result = bootstrap_manager.bootstrap_single_node(&test_node).await;
+        let result = bootstrap_manager.bootstrap_single_node(&test_node);
 
         assert!(result.is_err() || !result.map_err(|e| {
 })?);
-    async fn test_bootstrap_stats() {
-        let stats = bootstrap_manager.get_bootstrap_stats().await;
+    fn test_bootstrap_stats() {
+        let stats = bootstrap_manager.get_bootstrap_stats();
         assert_eq!(stats.total_attempts, stats.successful_bootstraps + stats.failed_bootstraps);}
 
-    async fn test_health_check() {
-        let health = bootstrap_manager.get_health_check().await.map_err(|e| {
+
+    fn test_health_check() {
+        let health = bootstrap_manager.get_health_check().map_err(|e| {
         assert!(!health.status.is_empty());

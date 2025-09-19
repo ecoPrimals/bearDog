@@ -1,131 +1,176 @@
-use std::collections::{HashMap, HashSet};
-use tokio::sync::RwLock;
+// Threat Detection Engine Types - Modernized
+//
+// **MODERNIZED**: Clean, production-ready engine types using canonical definitions
 
-use super::ml_models::MlModel;
-use super::rules::DetectionRule;
-use crate::threat::types::config::ThreatDetectionConfig;
-use crate::threat::types::core::ThreatEvent;
-use crate::threat::types::incidents::IncidentResponse;
-use crate::threat::types::intelligence::ThreatIntelligenceFeed;
-use crate::threat::types::statistics::ThreatDetectionStats;
+use crate::threat::types::{
+    DetectionRule, ThreatDetectionConfig, ThreatEvent, ThreatIntelligenceFeed,
+};
+use beardog_errors::BearDogError;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+// SystemTime is available via std::time:: in usage
 
+/// Main threat detection engine
 #[derive(Debug)]
 pub struct ThreatDetectionEngine {
     pub config: ThreatDetectionConfig,
-
-    pub active_threats: HashMap<String, ThreatEvent>,
-
-    pub blocked_sources: HashSet<String>,
-
-    pub quarantined_systems: HashSet<String>,
-
+    /// Mapping of threat feeds
+    /// Mapping of threat feeds
     pub threat_feeds: HashMap<String, ThreatIntelligenceFeed>,
-
+    /// Collection of detection rules
+    /// Collection of detection rules
     pub detection_rules: Vec<DetectionRule>,
-
+    /// Collection of ml models
+    /// Collection of ml models
+    pub ml_models: Vec<MlModel>,
+    /// Collection of blocked sources
+    /// Collection of blocked sources
+    pub blocked_sources: Vec<String>,
+    /// Collection of quarantined systems
+    /// Collection of quarantined systems
+    pub quarantined_systems: Vec<String>,
+    /// Collection of active threats
+    /// Collection of active threats
+    pub active_threats: Vec<ThreatEvent>,
+    /// The stats value
+    /// The stats value
     pub stats: ThreatDetectionStats,
-
-    pub ml_models: HashMap<String, MlModel>,
-
-    pub active_incidents: RwLock<HashMap<String, IncidentResponse>>, // incident_id -> incident mapping
 }
-impl ThreatDetectionEngine {
-    pub fn new(config: ThreatDetectionConfig) -> Self {
+
+// ThreatDetectionConfig is now imported from the parent module
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MlModel {
+    pub id: String,
+    /// Name of the item
+    /// Name of the item
+    pub name: String,
+    /// The description value
+    /// The description value
+    pub description: String,
+    /// The version value
+    /// The version value
+    pub version: String,
+    /// The accuracy value
+    /// The accuracy value
+    pub accuracy: f64,
+    /// The precision value
+    /// The precision value
+    pub precision: f64,
+    /// The recall value
+    /// The recall value
+    pub recall: f64,
+    /// The f1 score value
+    /// The f1 score value
+    pub f1_score: f64,
+    /// The created at value
+    /// The created at value
+    pub created_at: DateTime<Utc>,
+    /// The last updated value
+    /// The last updated value
+    pub last_updated: DateTime<Utc>,
+    /// The model type value
+    /// The model type value
+    pub model_type: String,
+    /// Number of training_data_size
+    /// Number of training_data_size
+    pub training_data_size: u64,
+    /// Whether is_active is enabled
+    /// Whether is_active is enabled
+    pub is_active: bool,
+}
+
+/// Threat detection statistics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ThreatDetectionStats {
+    /// Number of total_threats_detected
+    /// Number of total_threats_detected
+    pub total_threats_detected: u64,
+    /// Mapping of threats by severity
+    /// Mapping of threats by severity
+    pub threats_by_severity: HashMap<String, u64>,
+    /// The false positive rate value
+    /// The false positive rate value
+    pub false_positive_rate: f64,
+    /// The detection accuracy value
+    /// The detection accuracy value
+    pub detection_accuracy: f64,
+    pub average_detection_time_ms: f64,
+    /// The last updated value
+    /// The last updated value
+    pub last_updated: DateTime<Utc>,
+}
+
+// Default implementation is provided in the parent module
+
+impl Default for ThreatDetectionStats {
+    fn default() -> Self {
         Self {
-            config,
-            active_threats: HashMap::with_capacity(16),
-            blocked_sources: HashSet::new(),
-            quarantined_systems: HashSet::new(),
-            threat_feeds: HashMap::with_capacity(16),
-            detection_rules: Vec::new(),
-            stats: ThreatDetectionStats::default(),
-            ml_models: HashMap::with_capacity(16),
-            active_incidents: RwLock::new(HashMap::new()),
+            total_threats_detected: 0,
+            threats_by_severity: HashMap::new(),
+            false_positive_rate: 0.0,
+            detection_accuracy: 0.0,
+            average_detection_time_ms: 0.0,
+            last_updated: Utc::now(),
         }
     }
+}
 
-    pub fn add_rule(&mut self, rule: DetectionRule) {
-        self.detection_rules.push(rule);
+impl ThreatDetectionEngine {
+    /// Create a new threat detection engine
+    /// Creates a new instance
+    pub fn new(config: ThreatDetectionConfig) -> Result<Self, BearDogError> {
+        Ok(Self {
+            config,
+            threat_feeds: HashMap::new(),
+            detection_rules: Vec::new(),
+            ml_models: Vec::new(),
+            blocked_sources: Vec::new(),
+            quarantined_systems: Vec::new(),
+            active_threats: Vec::new(),
+            stats: ThreatDetectionStats::default(),
+        })
     }
 
-    pub fn add_detection_rule(&mut self, rule: DetectionRule) {
-        self.add_rule(rule);
-    }
-
-    pub fn remove_rule(&mut self, rule_id: &str) -> bool {
-        let initial_len = self.detection_rules.len();
-        self.detection_rules.retain(|rule| rule.id != rule_id);
-        self.detection_rules.len() < initial_len
-    }
-
-    pub fn get_rule(&self, rule_id: &str) -> Option<&DetectionRule> {
-        self.detection_rules.iter().find(|rule| rule.id == rule_id)
-    }
-
-    pub fn get_rules(&self) -> &Vec<DetectionRule> {
-        &self.detection_rules
-    }
-
-    pub fn get_enabled_rules(&self) -> Vec<&DetectionRule> {
-        self.detection_rules
-            .iter()
-            .filter(|rule| rule.enabled)
-            .collect()
-    }
-
-    pub fn add_ml_model(&mut self, model: MlModel) {
-        self.ml_models.insert(model.id.clone(), model);
-    }
-
-    pub fn remove_ml_model(&mut self, model_id: &str) -> Option<MlModel> {
-        self.ml_models.remove(model_id)
-    }
-
-    pub fn get_ml_model(&self, model_id: &str) -> Option<&MlModel> {
-        self.ml_models.get(model_id)
-    }
-
+    /// Add a threat feed
     pub fn add_threat_feed(&mut self, feed: ThreatIntelligenceFeed) {
         self.threat_feeds.insert(feed.id.clone(), feed);
     }
 
-    pub fn block_source(&mut self, source: &str) {
-        self.blocked_sources.insert(source.to_string());
+    /// Update a threat feed  
+    /// Updates threat_feed
+    /// Updates threat_feed
+    pub fn update_threat_feed(&mut self, feed: ThreatIntelligenceFeed) {
+        self.threat_feeds.insert(feed.id.clone(), feed);
     }
 
-    pub fn quarantine_system(&mut self, system: &str) {
-        self.quarantined_systems.insert(system.to_string());
+    /// Add a detection rule
+    pub fn add_detection_rule(&mut self, rule: DetectionRule) {
+        self.detection_rules.push(rule);
     }
 
-    pub fn is_source_blocked(&self, source: &str) -> bool {
-        self.blocked_sources.contains(source)
+    /// Remove a detection rule
+    /// Removes rule
+    /// Removes rule
+    pub fn remove_rule(&mut self, rule_id: &str) -> bool {
+        if let Some(pos) = self.detection_rules.iter().position(|r| r.id == rule_id) {
+            self.detection_rules.remove(pos);
+            true
+        } else {
+            false
+        }
     }
 
-    pub fn is_system_quarantined(&self, system: &str) -> bool {
-        self.quarantined_systems.contains(system)
+    /// Add an ML model
+    pub fn add_ml_model(&mut self, model: MlModel) {
+        self.ml_models.push(model);
     }
 
+    /// Get detection statistics
+    /// Gets stats
+    /// Gets stats
     pub fn get_stats(&self) -> &ThreatDetectionStats {
         &self.stats
-    }
-
-    pub fn update_stats(&mut self, stats: ThreatDetectionStats) {
-        self.stats = stats;
-    }
-}
-
-impl Default for ThreatDetectionEngine {
-    fn default() -> Self {
-        Self {
-            config: ThreatDetectionConfig::default(),
-            active_threats: HashMap::new(),
-            blocked_sources: HashSet::new(),
-            quarantined_systems: HashSet::new(),
-            threat_feeds: HashMap::new(),
-            detection_rules: Vec::new(),
-            stats: ThreatDetectionStats::default(),
-            ml_models: HashMap::new(),
-            active_incidents: RwLock::new(HashMap::new()),
-        }
     }
 }

@@ -13,11 +13,10 @@ pub fn create_test_config() -> BearDogConfig {
 
     config.threat_detection.enabled = true;
 
-    config.adapters.external_systems.rust_ecosystem.nestgate =
+    config.adapters.external_systems.rust_ecosystem.storage_service =
         Some(beardog::config::RustProjectConfig {
             enabled: true,
-            endpoint: "https://nestgate.test:8443".to_string(),
-            timeout_ms: 5000,
+            endpoint: "https://storage-service.test:8443".to_string(),
             tls: None,
             auth: None,
         });
@@ -28,10 +27,10 @@ pub fn create_test_config() -> BearDogConfig {
     config
 }
 
-pub async fn create_test_core() -> Result<Arc<BearDogCore, BearDogError>> {
+pub async fn create_test_core() -> Result<Arc<BearDogCore>, BearDogError> {
     let config = create_test_config();
-    let core = Arc::new(BearDogCore::new(config).await?);
-    core.start().await?;
+    let core = Arc::new(BearDogCore::new(config)?);
+    core.start()?;
     Ok(core)
 }
 
@@ -42,50 +41,33 @@ pub fn create_minimal_test_config() -> BearDogConfig {
     config
 }
 
-pub fn create_test_config_with_features(features: TestFeatures) -> BearDogConfig {
-    let mut config = create_test_config();
-    
-    if features.threat_detection {
-        config.threat_detection.enabled = true;
-        config.threat_detection.real_time_detection = true;
-    }
-    
-    if features.compliance {
-        config.compliance.enabled_standards = vec![
-            "GDPR".to_string(), 
-            "HIPAA".to_string(), 
-            "SOX".to_string()
-        ];
-        config.compliance.strict_mode = features.strict_compliance;
-    }
-    
-    if features.workflows {
-        config.workflows.enabled = true;
-        config.workflows.multi_party_approval = true;
-    }
-    
-    config
-}
-
-#[derive(Default)]
 pub struct TestFeatures {
     pub threat_detection: bool,
     pub compliance: bool,
     pub strict_compliance: bool,
     pub workflows: bool,
-    pub nestgate_adapter: bool,
+    pub storage_service_adapter: bool,
     pub api_server: bool,
 }
 
-impl TestFeatures {
+pub fn create_test_config_with_features(features: TestFeatures) -> BearDogConfig {
+    let mut config = create_test_config();
+    
+    config.threat_detection.enabled = features.threat_detection;
+    config.compliance.enabled = features.compliance;
+    config.workflows.enabled = features.workflows;
+    
+    config
+}
 
+impl TestFeatures {
     pub fn all_enabled() -> Self {
         Self {
             threat_detection: true,
             compliance: true,
             strict_compliance: true,
             workflows: true,
-            nestgate_adapter: true,
+            storage_service_adapter: true,
             api_server: true,
         }
     }
@@ -96,7 +78,7 @@ impl TestFeatures {
             compliance: false,
             strict_compliance: false,
             workflows: false,
-            nestgate_adapter: false,
+            storage_service_adapter: false,
             api_server: false,
         }
     }
@@ -109,8 +91,7 @@ pub mod assertions {
         match result {
             Ok(value) => value,
             Err(e) => {
-                assert!(false, "Expected success but got error: {:?}", e);
-                unreachable!()
+                panic!("Expected success but got error: {:?}", e);
             }
         }
     }
@@ -121,13 +102,14 @@ pub mod assertions {
     ) {
         match result {
             Ok(value) => {
-                assert!(false, "Expected error containing '{}' but got success: {:?}", expected_error, value);
+                panic!("Expected error containing '{}' but got success: {:?}", expected_error, value);
             }
             Err(e) => {
                 let error_str = format!("{:?}", e);
                 assert!(
                     error_str.contains(expected_error),
-                    "Expected error containing '{}', got: {:?}",
+                    "Error '{}' does not contain expected text '{}'. Full error: {:?}",
+                    error_str,
                     expected_error,
                     e
                 );
@@ -149,7 +131,6 @@ pub mod test_data {
                 ("clearance".to_string(), "standard".to_string()),
             ]),
             roles: vec!["user".to_string()],
-            clearance_level: 3,
         }
     }
 
@@ -166,7 +147,6 @@ pub mod test_data {
         Resource {
             id: id.to_string(),
             resource_type: "file".to_string(),
-            classification: beardog::security::ResourceClassification::Internal,
             attributes: HashMap::from([
                 ("owner".to_string(), "system".to_string()),
                 ("created".to_string(), "2025-01-01".to_string()),
@@ -201,29 +181,20 @@ pub mod timing {
         check_interval: Duration
     ) -> bool 
     where
-        F: Fn() -> Fut,
-        Fut: std::future::Future<Output = bool>,
+        F: Fn(std::future::Future<Output = bool>,
     {
         let start = Instant::now();
         
         while start.elapsed() < timeout_duration {
-            if condition().await {
+            if condition() {
                 return true;
             }
-            tokio::time::sleep(check_interval).await;
-        }
-        
-        false
-    }
-
-    pub async fn with_timeout<F, Fut, T>(
-        future: F,
+            tokio::time::sleep(F,
         timeout_duration: Duration
     ) -> Result<T, tokio::time::error::Elapsed>
     where
-        F: Fn() -> Fut,
-        Fut: std::future::Future<Output = T>,
+        F: Fn(std::future::Future<Output = T>,
     {
-        timeout(timeout_duration, future()).await
+        timeout(timeout_duration, future())
     }
 } 

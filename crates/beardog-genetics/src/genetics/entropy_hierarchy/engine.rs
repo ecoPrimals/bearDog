@@ -1,272 +1,279 @@
+// Entropy Hierarchy Engine
+//
+// This module provides the main entropy hierarchy management engine,
+// coordinating entropy collection, validation, and seed management.
 
-
-use super::monitoring::{EntropyHealthStatus, EntropyMonitor, PerformanceMetrics};
+use super::monitoring::{EntropyMonitor, PerformanceMetrics};
 use super::sources::EntropyMixingEngine;
 use super::types::*;
 use super::validation::EntropyValidator;
-use crate::genetics::human_entropy::MultiModalHumanEntropyCollector;
 
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
-use std::sync::Arc;
 use uuid::Uuid;
 
+/// Main entropy hierarchy manager
+#[derive(Debug, Clone)]
 pub struct EntropyHierarchyManager {
-
     pub config: EntropyHierarchyConfig,
-
+    /// Mapping of active seeds
     pub active_seeds: HashMap<Uuid, EntropySeed>,
-
+    /// The mixing engine value
     pub mixing_engine: EntropyMixingEngine,
-
-    pub human_entropy_collector: Arc<MultiModalHumanEntropyCollector>,
-
     pub validator: EntropyValidator,
-
+    /// The monitor value
     pub monitor: EntropyMonitor,
 }
+
 impl EntropyHierarchyManager {
+    /// Create new entropy hierarchy manager
+    /// Creates a new instance
+    pub fn new(config: EntropyHierarchyConfig) -> Self {
+        let mixing_engine = EntropyMixingEngine::new(&config);
+        let validator = EntropyValidator::new(config.clone());
+        let monitor = EntropyMonitor::new(&config);
 
-    pub fn new(
-        config: EntropyHierarchyConfig,
-
-        human_entropy_collector: Arc<MultiModalHumanEntropyCollector>,
-    ) -> Self {
-        let mixing_engine = EntropyMixingEngine::new(config.clone());
-        let validator = EntropyValidator::new(EntropyHierarchyConfig::default());
-        let monitor = EntropyMonitor::new(config.clone());
         Self {
             config,
-            active_seeds: HashMap::with_capacity(16),
+            active_seeds: HashMap::with_capacity(1000),
             mixing_engine,
-
-            human_entropy_collector,
             validator,
             monitor,
         }
     }
 
-    pub async fn create_human_seed(
+    /// Create human entropy seed
+    /// Creates human_seed
+    /// Creates human_seed
+    pub fn create_human_seed(
         &mut self,
         entropy_class: EntropyClass,
-        lifetime_policy: SeedLifetimePolicy,
-        owner_identity: HumanIdentity,
-        seed_bytes: Vec<u8>,
+        entropy_data: Vec<u8>,
     ) -> Result<Uuid, BearDogError> {
-
-        self.validator.validate_entropy_quality(&entropy_class)?;
-
-        let seed = EntropySeed::new_human_entropy(
-            entropy_class,
-            lifetime_policy,
-            owner_identity,
-            seed_bytes,
-            self,
-        )
-        .await?;
-        let seed_id = seed.id;
-        self.active_seeds.insert(seed_id, seed);
-        Ok(seed_id)
-
-    pub async fn create_event_seed(
-        event_context: SocialContext,
-        sharing_policy: SharingPolicy,
-        if !self.config.enable_event_seeds {
-            return Err(BearDogError::internal("Event seeds are disabled in configuration".to_string(),
+        // Validate entropy quality
+        if !self.validator.validate_entropy_quality(&entropy_class)? {
+            return Err(BearDogError::invalid_input(
+                "Entropy quality below threshold",
             ));
+        }
 
-        let seed = EntropySeed::new_event_seed(
-            event_context,
-            sharing_policy,
+        // Create seed
+        let seed = self
+            .mixing_engine
+            .create_entropy_seed(entropy_data, entropy_class)?;
+        let seed_id = seed.seed_id;
 
-    pub fn get_seed(&self, seed_id: &Uuid) -> Option<&EntropySeed> {
-        self.active_seeds.get(seed_id)
+        self.active_seeds.insert(seed_id, seed);
 
-    pub fn get_seed_mut(&mut self, seed_id: &Uuid) -> Option<&mut EntropySeed> {
-        self.active_seeds.get_mut(seed_id)
+        Ok(seed_id)
+    }
 
-    pub fn use_seed(&mut self, seed_id: &Uuid, operation: &str) -> Result<Vec<u8>, BearDogError>> {
-        let seed =
-            self.active_seeds
-                .get_mut(seed_id)
-                .ok_or_else(|| BearDogError::invalid_input(format!("Seed with ID {seed_id} not found")))?;
-        seed.use_for_operation(operation)
-
-    pub async fn generate_signature(&self, data: &[u8], key_id: &str) -> Result<Vec<u8>, BearDogError>> {
-
-        use sha3::{Digest, Sha3_256};
-        let mut hasher = Sha3_256::new();
-        hasher.update(data);
-        hasher.update(key_id.as_bytes());
-        Ok(hasher.finalize().to_vec())
-
-    pub async fn generate_ownership_proof(
-        &self,
-        owner_identity: &HumanIdentity,
-        entropy_data: &[u8],
-    ) -> Result<OwnershipProof, BearDogError> {
-        self.validator
-            .generate_ownership_proof(owner_identity, entropy_data)
-            .await
-
-    pub async fn generate_irreproducibility_proof(
-        entropy_class: &EntropyClass,
-    ) -> Result<IrreproducibilityProof, BearDogError> {
-            .generate_irreproducibility_proof(entropy_data, entropy_class)
-
-    pub fn mix_entropy_sources(&self, sources: Vec<EntropyClass>) -> Result<EntropyClass, BearDogError> {
-        self.mixing_engine.mix_entropy_sources(sources)
-
-    pub fn validate_entropy_quality(&self, entropy_class: &EntropyClass) -> Result<f64, BearDogError> {
-        self.validator.validate_entropy_quality(entropy_class)
-
-    pub fn transfer_seed_ownership(
-        seed_id: &Uuid,
-        new_owner: HumanIdentity,
-    ) -> Result<(), BearDogError> {
-        if !self.config.enable_ownership_transfer {
-                message: "Ownership transfer is disabled in configuration".to_string(),
-        seed.transfer_ownership(new_owner)
-
-    pub fn expire_seed_ownership(&mut self, seed_id: &Uuid) -> Result<(), BearDogError> {
-        seed.expire_ownership()
-
-    pub fn destroy_seed(&mut self, seed_id: &Uuid) -> Result<(), BearDogError> {
-        if let Some(mut seed) = self.active_seeds.remove(seed_id) {
-            seed.destroy();
-            Ok(())
-        } else {
-            Err(BearDogError::invalid_input(format!("Seed with ID {seed_id} not found")))
-
-    pub fn cleanup_expired_seeds(&mut self) {
-        self.monitor.cleanup_expired_seeds(&mut self.active_seeds);
-
-    pub fn get_statistics(&self) -> EntropyHierarchyStats {
-        self.monitor.get_statistics(&self.active_seeds)
-
-    pub fn get_detailed_analytics(&self) -> super::monitoring::EntropyAnalytics {
-        self.monitor.get_detailed_analytics(&self.active_seeds)
-
-    pub fn get_health_status(&self) -> EntropyHealthStatus {
-        self.monitor.get_health_status(&self.active_seeds)
-
-    pub fn get_performance_metrics(&self) -> PerformanceMetrics {
-        self.monitor.get_performance_metrics(&self.active_seeds)
-
-    pub fn list_active_seeds(&self) -> Vec<Uuid> {
-        self.active_seeds.keys().cloned().collect()
-
-    pub fn list_seeds_by_entropy_class(
-        entropy_class_filter: fn(&EntropyClass) -> bool,
-    ) -> Vec<Uuid> {
-        self.active_seeds
-            .iter()
-            .filter(|(_, seed)| entropy_class_filter(&seed.entropy_class))
-            .map(|(id, _)| *id)
-            .collect()
-
-    pub fn list_seeds_by_ownership(
-        ownership_filter: fn(&SeedOwnership) -> bool,
-            .filter(|(_, seed)| ownership_filter(&seed.ownership))
-
-    pub fn get_seeds_owned_by(&self, owner_id: &str) -> Vec<Uuid> {
-            .filter(|(_, seed)| {
-                if let Some(owner) = seed.get_current_owner() {
-                    owner.identity_id == owner_id
-                } else {
-                    false
-                }
-            })
-
-    pub fn get_event_seeds(&self, event_type_filter: Option<&str>) -> Vec<Uuid> {
-                if let Some(social_context) = &seed.social_context {
-                    if let Some(filter) = event_type_filter {
-                        social_context.event_type.to_string().contains(filter)
-                    } else {
-                        true
-                    }
-
-    pub async fn verify_seed_ownership_proof(
-        proof: &OwnershipProof,
-    ) -> Result<bool, BearDogError> {
+    pub fn use_seed(&mut self, seed_id: Uuid, operation: &str) -> Result<Vec<u8>, BearDogError> {
         let seed = self
             .active_seeds
-            .get(seed_id)
-            .ok_or_else(|| BearDogError::invalid_input(format!("Seed with ID {seed_id} not found")))?;
-            .verify_ownership_proof(proof, owner_identity, seed.seed_bytes.as_bytes())
+            .get_mut(&seed_id)
+            .ok_or_else(|| BearDogError::invalid_input("Seed not found"))?;
 
-    pub async fn verify_seed_irreproducibility_proof(
-        proof: &IrreproducibilityProof,
-            .verify_irreproducibility_proof(proof, seed.seed_bytes.as_bytes(), &seed.entropy_class)
-
-    pub fn get_mixing_recommendations(&self, sources: &[EntropyClass]) -> Vec<String> {
-        self.mixing_engine.get_mixing_recommendations(sources)
-
-    pub fn validate_entropy_combination(&self, sources: &[EntropyClass]) -> Result<(), BearDogError> {
-        self.mixing_engine.validate_entropy_combination(sources)
-
-    pub fn assess_entropy_quality(
-    ) -> Result<EntropyQualityAssessment, BearDogError> {
-        let quality_score = self.validator.validate_entropy_quality(entropy_class)?;
-        let _security_level = self.validator.check_security_requirements(entropy_class)?;
-        let weighted_score = self
-            .mixing_engine
-            .calculate_weighted_entropy_score(entropy_class);
-        Ok(EntropyQualityAssessment {
-            quality_score,
-
-            weighted_score,
-            entropy_tier: match entropy_class {
-                EntropyClass::HumanLivedExperience { .. } => 3,
-                EntropyClass::HumanSupervisedMachine { .. } => 2,
-                EntropyClass::StoreBoughtMachine { .. } => 1,
-            },
-            recommendations: self.get_quality_recommendations(entropy_class),
-        })
-
-    fn get_quality_recommendations(&self, entropy_class: &EntropyClass) -> Vec<String> {
-        let mut recommendations = Vec::new();
-        match entropy_class {
-            EntropyClass::HumanLivedExperience { source_type, .. } => match source_type {
-                HumanEntropySource::MultiModalHuman { .. } => {
-                    recommendations.push(
-                        "Excellent choice: Multi-modal human entropy provides maximum security"
-                            .to_string(),
-                    );
-                _ => {
-                    recommendations.push("Consider combining with other human entropy sources for multi-modal entropy".to_string());
-            EntropyClass::HumanSupervisedMachine { .. } => {
-                recommendations.push(
-                    "Consider upgrading to pure human entropy for maximum security".to_string(),
-                );
-                recommendations
-                    .push("Ensure human validator has appropriate verification level".to_string());
+        // Check usage limits
+        if let Some(max_usage) = seed.metadata.max_usage {
+            if seed.metadata.usage_count >= max_usage {
+                return Err(BearDogError::invalid_input("Seed usage limit exceeded"));
             }
-            EntropyClass::StoreBoughtMachine {
-                reproducibility_index,
-                ..
-            } => {
-                if *reproducibility_index > 0.7 {
-                        "High reproducibility detected - consider human supervision".to_string(),
-                    "Machine entropy should be used only when human entropy is not available"
-                        .to_string(),
-        recommendations
+        }
 
-    pub fn update_config(&mut self, new_config: EntropyHierarchyConfig) {
-        self.config = new_config.clone();
-        self.mixing_engine = EntropyMixingEngine::new(new_config.clone());
-        self.validator = EntropyValidator::new(new_config.clone());
-        self.monitor = EntropyMonitor::new(new_config);
+        // Update usage count
+        seed.metadata.usage_count += 1;
 
-    pub fn get_config(&self) -> &EntropyHierarchyConfig {
-        &self.config
+        // Generate operation-specific entropy
+        let mut result = seed.entropy_data.clone();
+        result.extend_from_slice(operation.as_bytes());
+
+        Ok(result)
+    }
+
+    /// Validate entropy age and quality
+    /// Validates seed
+    /// Validates seed
+    pub fn validate_seed(&self, seed_id: Uuid) -> Result<bool, BearDogError> {
+        let seed = self
+            .active_seeds
+            .get(&seed_id)
+            .ok_or_else(|| BearDogError::invalid_input("Seed not found"))?;
+
+        // Check age
+        if !self.validator.validate_entropy_age(&seed.entropy_class)? {
+            return Ok(false);
+        }
+
+        // Check quality
+        self.validator.validate_entropy_quality(&seed.entropy_class)
+    }
+
+    /// Gets seed_info
+    /// Gets seed_info
+    pub fn get_seed_info(&self, seed_id: Uuid) -> Option<&EntropySeed> {
+        self.active_seeds.get(&seed_id)
+    }
+
+    /// List all active seeds
+    pub fn list_active_seeds(&self) -> Vec<Uuid> {
+        self.active_seeds.keys().copied().collect()
+    }
+
+    /// Remove expired seeds
+    /// Cleans up expired_seeds
+    /// Cleans up expired_seeds
+    pub fn cleanup_expired_seeds(&mut self) -> Result<usize, BearDogError> {
+        let mut removed_count = 0;
+        let mut to_remove = Vec::new();
+
+        for (seed_id, seed) in &self.active_seeds {
+            if let Some(expires_at) = seed.metadata.expires_at {
+                if chrono::Utc::now() > expires_at {
+                    to_remove.push(*seed_id);
+                }
+            }
+        }
+
+        for seed_id in to_remove {
+            self.active_seeds.remove(&seed_id);
+            removed_count += 1;
+        }
+
+        Ok(removed_count)
+    }
+
+    pub fn get_performance_metrics(&self) -> PerformanceMetrics {
+        PerformanceMetrics {
+            active_seeds_count: self.active_seeds.len(),
+            total_entropy_generated: self
+                .active_seeds
+                .values()
+                .map(|s| s.entropy_data.len())
+                .sum::<usize>() as u64,
+            average_quality_score: self.calculate_average_quality(),
+            seed_creation_time_ms: 0.0,  // Would be tracked in production
+            entropy_mixing_time_ms: 0.0, // Would be tracked in production
+            validation_time_ms: 0.0,     // Would be tracked in production
+            total_operations: self
+                .active_seeds
+                .values()
+                .map(|s| s.metadata.usage_count)
+                .sum(),
+            successful_operations: self
+                .active_seeds
+                .values()
+                .map(|s| s.metadata.usage_count)
+                .sum(), // Simplified - assume all successful for now
+            failed_operations: 0, // Would be tracked in production
+        }
+    }
+
+    /// Calculate average quality score across all seeds
+    fn calculate_average_quality(&self) -> f64 {
+        if self.active_seeds.is_empty() {
+            return 0.0;
+        }
+
+        let total_quality: f64 = self
+            .active_seeds
+            .values()
+            .map(|seed| match &seed.entropy_class {
+                EntropyClass::HumanLivedExperience { quality_score, .. } => *quality_score,
+                EntropyClass::HumanSupervisedMachine { quality_score, .. } => *quality_score,
+                EntropyClass::StoreBoughtMachine { quality_score, .. } => *quality_score,
+            })
+            .sum();
+
+        total_quality / self.active_seeds.len() as f64
+    }
+
+    /// Initialize the manager
+    /// Initializes componentialize
+    /// Initializes componentialize
+    pub fn initialize(&self) -> Result<(), BearDogError> {
+        // Perform any necessary initialization
+        Ok(())
+    }
+
+    /// Shutdown the manager
+    pub fn shutdown(&mut self) -> Result<(), BearDogError> {
+        // Clear sensitive data
+        self.active_seeds.clear();
+        Ok(())
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct EntropyQualityAssessment {
-    pub quality_score: f64,
-    pub weighted_score: f64,
-    pub entropy_tier: u8,
-    pub recommendations: Vec<String>,
+impl Default for EntropyHierarchyManager {
+    fn default() -> Self {
+        Self::new(EntropyHierarchyConfig::default())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Utc;
+
+    #[tokio::test]
+    fn test_entropy_hierarchy_manager_creation() {
+        let config = EntropyHierarchyConfig::default();
+        let _manager = EntropyHierarchyManager::new(config);
+    }
+
+    #[tokio::test]
+    fn test_create_human_seed() {
+        let config = EntropyHierarchyConfig::default();
+        let mut manager = EntropyHierarchyManager::new(config);
+
+        let entropy_class = EntropyClass::HumanLivedExperience {
+            quality_score: 0.9,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        let seed_id = manager
+            .create_human_seed(entropy_class, vec![1, 2, 3, 4])
+            .unwrap();
+        assert!(manager.get_seed_info(seed_id).is_some());
+    }
+
+    #[tokio::test]
+    fn test_seed_usage() {
+        let config = EntropyHierarchyConfig::default();
+        let mut manager = EntropyHierarchyManager::new(config);
+
+        let entropy_class = EntropyClass::HumanLivedExperience {
+            quality_score: 0.9,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
+
+        let seed_id = manager
+            .create_human_seed(entropy_class, vec![1, 2, 3, 4])
+            .unwrap();
+        let result = manager.use_seed(seed_id, "test_operation").unwrap();
+
+        assert!(!result.is_empty());
+        assert_eq!(
+            manager.get_seed_info(seed_id).unwrap().metadata.usage_count,
+            1
+        );
+    }
 }

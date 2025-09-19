@@ -1,71 +1,89 @@
-//! Canonical constants for the BearDog ecosystem
-//!
-//! This module re-exports all constants from the unified constants module.
-//! All constants are now consolidated in `crates/beardog-types/src/constants/unified.rs`
+// Canonical constants - Single source of truth
+// **MODERNIZED**: All constants consolidated using domain-organized system
 
-// Re-export key unified constants (specific imports for better maintainability)
-pub use crate::constants::unified::{default_timeout_ms, UnifiedConstantRegistry};
+// MODERNIZED: Use domain-organized constants instead of deprecated unified system
+pub use crate::constants::domains::system::timeouts::default_timeout_ms;
+pub use crate::constants::domains::system::ConstantRegistry as UnifiedConstantRegistry;
 
-// Provide convenient module-level access
+// **MODERNIZED MODULE ACCESS** - Domain-organized constants
+/// Api module
 pub mod api {
-    pub use crate::constants::unified::api::{
-        MAX_REQUEST_SIZE, MISSION, PROJECT_NAME, PROJECT_VERSION, VERSION, VERSION_HEADER,
-    };
+    pub use crate::constants::domains::network::api::*;
 }
 
+/// Network module
 pub mod network {
-    pub use crate::constants::unified::network::{addresses, endpoints, limits, ports, timeouts};
+    pub use crate::constants::domains::network::*;
 }
 
+/// Security module
 pub mod security {
-    // Re-export security constants from unified module
-    pub use crate::constants::unified::security;
+    pub use crate::constants::domains::security::*;
 }
 
 pub mod performance {
-    // Re-export performance constants from unified module
-    pub use crate::constants::unified::performance;
+    pub use crate::constants::domains::system::performance::*;
 }
 
+/// Hsm module
 pub mod hsm {
-    // Re-export HSM constants from unified module
-    pub use crate::constants::unified::hsm;
+    pub use crate::constants::domains::security::hsm::*;
 }
 
+/// Cache module
 pub mod cache {
-    // Re-export cache constants from unified module
-    pub use crate::constants::unified::cache;
+    pub use crate::constants::domains::system::cache::*;
 }
 
+/// Nodes module
 pub mod nodes {
-    // Re-export node constants from unified module
-    pub use crate::constants::unified::nodes;
+    pub use crate::constants::domains::network::nodes::*;
 }
 
+/// Compliance module
 pub mod compliance {
-    pub use crate::constants::unified::compliance::{gdpr, hipaa, pci_dss, violations};
+    pub use crate::constants::domains::security::compliance::*;
 }
 
+/// System module
 pub mod system {
-    pub use crate::constants::unified::system::*;
-
-    // Re-export system sub-modules for convenience
-    pub mod environment {
-        pub use crate::constants::unified::system::environment::*;
-    }
-
-    pub mod features {
-        pub use crate::constants::unified::system::features::*;
-    }
-
-    pub mod health {
-        pub use crate::constants::unified::system::health::*;
-    }
-
-    pub mod monitoring {
-        pub use crate::constants::unified::system::monitoring::*;
-    }
+    pub use crate::constants::domains::system::*;
 }
 
-// Registry alias for compatibility
-pub use crate::constants::unified::UnifiedConstantRegistry as CanonicalConstantRegistry;
+/// Workflow module
+pub mod workflow {
+    pub use crate::constants::domains::system::workflow::*;
+}
+
+/// Genetics module
+pub mod genetics {
+    pub use crate::constants::domains::system::genetics::*;
+}
+
+/// Testing module
+pub mod testing {
+    pub use crate::constants::domains::system::testing::*;
+}
+
+/// Versions module
+pub mod versions {
+    pub use crate::constants::domains::system::versions::*;
+}
+
+/// Http module
+pub mod http {
+    pub use crate::constants::domains::network::http::*;
+}
+
+/// Services module
+pub mod services {
+    pub use crate::constants::domains::network::services::*;
+}
+
+/// States module
+pub mod states {
+    pub use crate::constants::domains::system::states::*;
+}
+
+// **CANONICAL CONSTANT REGISTRY** - Modernized alias
+pub use crate::constants::domains::system::ConstantRegistry as CanonicalConstantRegistry;

@@ -12,16 +12,12 @@ use tokio::runtime::Runtime;
 
 use beardog_types::hsm::android::{AndroidHsmConfig, MobileHardwareHsm};
 
-#[derive(Debug)]
-struct HsmInfo {
-    instance_id: String,
+#[derive(String,
     vendor: String,
     model: String,
 }
 
-#[derive(Debug, Clone)]
-pub struct AndroidHsmSystem {
-    pub hardware_config: AndroidHsmConfig,
+#[derive(AndroidHsmConfig,
     pub initialization_status: String,
     pub supported_operations: Vec<String>,
 }
@@ -35,37 +31,15 @@ fn init_android_logging() {
         Config::default()
             .with_max_level(log::LevelFilter::Info)
             .with_tag("BearDogPixel8")
-            .with_filter(FilterBuilder::new().parse("debug,beardog=info").build()),
-    );
-}
-
-pub fn initialize_beardog_pixel8() -> Result<String, BearDogError> {
-
-    let pixel8_config = AndroidHsmConfig {
-        implementation: beardog_types::hsm::tiers::HardwareSecurityImplementation::StrongBox,
-        alias_prefix: "beardog_pixel8".to_string(),
-        enable_attestation: true,
+            .with_filter(FilterBuilder::new(beardog_types::hsm::tiers::HardwareSecurityImplementation::StrongBox,
+        alias_prefix: "beardog_pixel8".to_string(true,
         require_user_presence: false,
         key_validity_duration: Some(86400), // 24 hours
-        additional_config: HashMap::with_capacity(16),
-    };
-    
-    info!("🔧 Configuring BearDog for Pixel 8 with Titan M2 security chip");
-    info!("📱 Hardware security features: StrongBox Keymaster, Hardware Attestation");
+        additional_config: HashMap::with_capacity(StrongBox Keymaster, Hardware Attestation");
 
-    Ok(format!(
-        "BearDog Android HSM framework initialized for Pixel 8 with Titan M2 security chip. \
-         Hardware integration ready for implementation."
-    ))
-}
-
-pub fn setup_pixel8_beardog() -> Result<AndroidHsmSystem, BearDogError> {
-
-    let hsm_system = AndroidHsmSystem {
-        hardware_config: AndroidHsmConfig {
+    Ok(AndroidHsmConfig {
             implementation: beardog_types::hsm::tiers::HardwareSecurityImplementation::StrongBox,
-            alias_prefix: "beardog_pixel8".to_string(),
-            enable_attestation: true,
+            alias_prefix: "beardog_pixel8".to_string(true,
             require_user_presence: false,
             key_validity_duration: Some(86400),
             additional_config: HashMap::with_capacity(16),
@@ -96,7 +70,7 @@ pub fn test_beardog_operations() -> Result<String, BearDogError> {
     
     let mut results = String::from("🧪 BearDog Core Operations Test Framework:\n");
     for (test_name, status) in test_results {
-        results.push_str(&format_args!("  ✓ {}: {}\n", test_name, status).to_string());
+        results.push_str({}\n", test_name, status));
     }
     
     Ok(results)
@@ -122,20 +96,12 @@ pub extern "C" fn android_main(_app: &mut NativeActivity) {
     info!("🚀 BearDog Pixel 8 Android App Starting");
     info!("========================================");
 
-    let rt = match Runtime::new() {
-        Ok(runtime) => runtime,
-        Err(e) => {
-            error!("❌ Failed to create async runtime: {}", e);
+    let rt = match Runtime::new({}", e);
             return;
         }
     };
 
-    match rt.block_on(run_beardog_android_app()) {
-        Ok(()) => {
-            info!("✅ BearDog Android app completed successfully");
-        }
-        Err(e) => {
-            error!("❌ BearDog Android app failed: {}", e);
+    match rt.block_on({}", e);
         }
     }
 }
@@ -173,41 +139,16 @@ async fn run_beardog_android_app() -> Result<(), Box<dyn std::error::Error>> {
     info!("🏃 BearDog Android app running successfully");
     info!("💤 Entering sleep mode (real app would handle events here)");
 
-    tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-
-    info!("🎉 BearDog Android demo completed successfully!");
-    Ok(())
-}
-
-#[allow(dead_code)] // Will be used when Android HSM testing is fully implemented
-async fn test_core_operations(
-    hsm: &Arc<dyn HsmProvider>,
+    tokio::time::sleep(tokio::time::Duration::from_secs(&Arc<dyn HsmProvider>,
     anchor_key: &beardog_tunnel::tunnel::hsm::types::HsmKey,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("🔐 Testing basic cryptographic operations...");
 
     let test_data = b"BearDog test on Pixel 8 GrapheneOS with Titan M";
 
-    let signature = hsm.sign(&anchor_key.id, test_data).await?;
-    info!("   ✅ Data signed: {} bytes", signature.len());
+    let signature = hsm.sign({} bytes", signature.len({:?}", health);
 
-    let is_valid = hsm.verify(&anchor_key.id, test_data, &signature).await?;
-    if is_valid {
-        info!("   ✅ Signature verification passed");
-    } else {
-        error!("   ❌ Signature verification failed");
-        return Err("Signature verification failed".into());
-    }
-
-    let health = hsm.health_check().await?;
-    info!("   ✅ HSM Health: {:?}", health);
-
-    Ok(())
-}
-
-#[allow(dead_code)] // Will be used when Android HSM testing is fully implemented
-async fn performance_test(
-    hsm: &Arc<dyn HsmProvider>,
+    Ok(&Arc<dyn HsmProvider>,
     anchor_key: &beardog_tunnel::tunnel::hsm::types::HsmKey,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("⚡ Performance testing: 20 sign/verify operations...");

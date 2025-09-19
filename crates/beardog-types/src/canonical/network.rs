@@ -1,188 +1,221 @@
+// Network configuration types for BearDog
+// Provides network-related configuration structures and utilities
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum NetworkProtocol {
-    Http,
-    Https,
-    Tcp,
-    Udp,
-    Grpc,
-    WebSocket,
-    Quic,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkConfig {
+    /// The bind address value
+    pub bind_address: String,
+    /// Port number
+    /// Number of port
+    pub port: u16,
+    /// Enable TLS/SSL
+    /// Whether tls is enabled
+    pub tls_enabled: bool,
+    /// TLS certificate path
+    /// Optional tls cert path
+    pub tls_cert_path: Option<String>,
+    /// TLS private key path
+    /// Optional tls key path
+    pub tls_key_path: Option<String>,
+    /// Connection pool configuration
+    /// The connection pool value
+    pub connection_pool: ConnectionPoolConfig,
+    /// Timeout configurations
+    pub timeouts: TimeoutConfig,
 }
 
-impl Default for NetworkProtocol {
+impl Default for NetworkConfig {
     fn default() -> Self {
-        Self::Https
+        Self {
+            bind_address: "0.0.0.0".to_string(),
+            port: 8080,
+            tls_enabled: true,
+            tls_cert_path: None,
+            tls_key_path: None,
+            connection_pool: ConnectionPoolConfig::default(),
+            timeouts: TimeoutConfig::default(),
+        }
     }
 }
 
+/// Connection pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionPoolConfig {
-    pub min_connections: u32,
-    pub max_connections: u32,
-    pub connection_timeout: Duration,
+    /// Maximum pool size
+    /// Number of `pool_size`
+    pub pool_size: u32,
+    /// Idle timeout duration
     pub idle_timeout: Duration,
+    /// Maximum connection lifetime
     pub max_lifetime: Duration,
+    /// Test connections on borrow
+    /// Whether `test_on_borrow` is enabled
     pub test_on_borrow: bool,
+    /// Test connections on return
+    /// Whether `test_on_return` is enabled
     pub test_on_return: bool,
+    /// Test idle connections
+    pub test_while_idle: bool,
 }
 
 impl Default for ConnectionPoolConfig {
     fn default() -> Self {
         Self {
-            min_connections: 5,
-            max_connections: 100,
-            connection_timeout: Duration::from_secs(30),
-            idle_timeout: Duration::from_secs(600),
+            pool_size: 10,
+            idle_timeout: Duration::from_secs(300),
             max_lifetime: Duration::from_secs(3600),
             test_on_borrow: true,
             test_on_return: false,
+            test_while_idle: true,
         }
     }
 }
 
+/// Timeout configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TimeoutConfig {
+    /// Connection timeout
+    pub connection_timeout: Duration,
+    /// Request timeout
+    pub request_timeout: Duration,
+    /// Keep-alive timeout
+    pub keep_alive_timeout: Duration,
+}
+
+impl Default for TimeoutConfig {
+    fn default() -> Self {
+        Self {
+            connection_timeout: Duration::from_secs(30),
+            request_timeout: Duration::from_secs(60),
+            keep_alive_timeout: Duration::from_secs(300),
+        }
+    }
+}
+
+/// Load balancer configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoadBalancerConfig {
+    /// Load balancing strategy
+    /// The strategy value
+    pub strategy: LoadBalancingStrategy,
+    /// Backend servers
+    /// Collection of backends
+    pub backends: Vec<BackendServer>,
+    /// Health check configuration
+    /// The health check value
+    pub health_check: HealthCheckConfig,
+}
+
+/// Load balancing strategies
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LoadBalancingStrategy {
+    /// Round-robin
+    RoundRobin,
+    /// Least connections
+    LeastConnections,
+    /// Weighted round-robin
+    WeightedRoundRobin,
+    /// IP hash
+    IpHash,
+}
+
+/// Backend server configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BackendServer {
+    /// Server address
+    /// The address value
+    pub address: String,
+    /// Server port
+    /// Number of port
+    pub port: u16,
+    /// Number of weight
+    pub weight: u32,
+    /// Server enabled
+    /// Whether feature is enabled
+    pub enabled: bool,
+    /// Server metadata
+    /// Mapping of metadata
+    pub metadata: HashMap<String, String>,
+}
+
+/// Health check configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HealthCheckConfig {
+    /// Health check enabled
+    /// Whether feature is enabled
     pub enabled: bool,
-    pub endpoint: String,
+    /// Check interval
+    /// The interval value
     pub interval: Duration,
+    /// Check timeout
     pub timeout: Duration,
-    pub healthy_threshold: u32,
-    pub unhealthy_threshold: u32,
-    pub expected_status_codes: Vec<u16>,
-    pub headers: HashMap<String, String>,
+    /// Health check path
+    /// The path value
+    pub path: String,
+    /// Expected status code
+    /// Current status of the expected
+    pub expected_status: u16,
 }
 
 impl Default for HealthCheckConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            endpoint: "/health".to_string(),
             interval: Duration::from_secs(30),
             timeout: Duration::from_secs(5),
-            healthy_threshold: 2,
-            unhealthy_threshold: 3,
-            expected_status_codes: vec![200],
-            headers: HashMap::with_capacity(16),
+            path: "/health".to_string(),
+            expected_status: 200,
         }
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum LoadBalancingStrategy {
-    RoundRobin,
-    LeastConnections,
-    WeightedRoundRobin,
-    IpHash,
-    Random,
-    LeastResponseTime,
-}
-
-impl Default for LoadBalancingStrategy {
-    fn default() -> Self {
-        Self::RoundRobin
+impl NetworkConfig {
+    /// Create a new network configuration
+    #[must_use]
+    /// Creates a new instance
+    pub fn new() -> Self {
+        Self::default()
     }
-}
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CircuitBreakerConfig {
-    pub failure_threshold: u32,
-    pub success_threshold: u32,
-    pub timeout: Duration,
-    pub half_open_max_calls: u32,
-}
+    /// Get the full bind address including port
+    #[must_use]
+    pub fn bind_address(&self) -> String {
+        format!("{}:{}", self.bind_address, self.port)
+    }
 
-impl Default for CircuitBreakerConfig {
-    fn default() -> Self {
-        Self {
-            failure_threshold: 5,
-            success_threshold: 3,
-            timeout: Duration::from_secs(60),
-            half_open_max_calls: 10,
+    /// Check if TLS is properly configured
+    #[must_use]
+    /// Checks if tls configured
+    /// Checks if tls configured
+    pub fn is_tls_configured(&self) -> bool {
+        self.tls_enabled && self.tls_cert_path.is_some() && self.tls_key_path.is_some()
+    }
+
+    /// Validate the network configuration
+    /// Validates input
+    /// Validates input
+    pub fn validate(&self) -> Result<(), String> {
+        if self.port == 0 {
+            return Err("Port must be greater than 0".to_string());
         }
-    }
-}
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FailoverConfig {
-    pub max_retries: u32,
-    pub retry_delay: Duration,
-    pub backoff_multiplier: f64,
-    pub max_delay: Duration,
-}
-
-impl Default for FailoverConfig {
-    fn default() -> Self {
-        Self {
-            max_retries: 3,
-            retry_delay: Duration::from_millis(100),
-            backoff_multiplier: 2.0,
-            max_delay: Duration::from_secs(30),
+        if self.tls_enabled {
+            if self.tls_cert_path.is_none() {
+                return Err("TLS certificate path is required when TLS is enabled".to_string());
+            }
+            if self.tls_key_path.is_none() {
+                return Err("TLS key path is required when TLS is enabled".to_string());
+            }
         }
-    }
-}
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LoadBalancingConfig {
-    pub strategy: LoadBalancingStrategy,
-    pub health_check: HealthCheckConfig,
-    pub circuit_breaker: crate::canonical::providers::CircuitBreakerConfig,
-    pub failover: FailoverConfig,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum ServiceDiscoveryType {
-    Static,
-    Consul,
-    Etcd,
-    Kubernetes,
-    Zookeeper,
-}
-
-impl Default for ServiceDiscoveryType {
-    fn default() -> Self {
-        Self::Static
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServiceDiscoveryConfig {
-    pub enabled: bool,
-    pub discovery_type: ServiceDiscoveryType,
-    pub endpoints: Vec<String>,
-    pub refresh_interval: Duration,
-}
-
-impl Default for ServiceDiscoveryConfig {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            discovery_type: ServiceDiscoveryType::Static,
-            endpoints: Vec::new(),
-            refresh_interval: Duration::from_secs(30),
+        if self.connection_pool.pool_size == 0 {
+            return Err("Connection pool size must be greater than 0".to_string());
         }
-    }
-}
 
-impl Default for LoadBalancingConfig {
-    fn default() -> Self {
-        Self {
-            strategy: LoadBalancingStrategy::RoundRobin,
-            health_check: HealthCheckConfig::default(),
-            circuit_breaker: crate::canonical::providers::CircuitBreakerConfig::default(),
-            failover: FailoverConfig::default(),
-        }
+        Ok(())
     }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct NetworkConfig {
-    pub connection_pool: ConnectionPoolConfig,
-    pub load_balancing: LoadBalancingConfig,
-    pub service_discovery: ServiceDiscoveryConfig,
-    pub failover: FailoverConfig,
-    pub circuit_breaker: crate::canonical::providers::CircuitBreakerConfig,
 }

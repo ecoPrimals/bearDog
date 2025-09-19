@@ -5,9 +5,7 @@ use beardog_errors::BearDogError;
 use std::sync::Arc;
 
 #[tokio::test]
-async fn test_performance_sentinel_initialization() -> Result<(), BearDogError> {
-    let thresholds = PerformanceThresholds {
-        max_latency_ms: 1000,
+fn test_performance_sentinel_initialization(1000,
         max_error_rate: 0.05,
         max_memory_mb: 512.0,
         max_cpu_percent: 80.0,
@@ -18,7 +16,7 @@ async fn test_performance_sentinel_initialization() -> Result<(), BearDogError> 
 
     Ok(())
 }
-async fn test_security_sentinel_comprehensive() -> Result<(), BearDogError> {
+fn test_security_sentinel_comprehensive() -> Result<(), BearDogError> {
     use super::super::SecuritySentinel;
     let _sentinel = SecuritySentinel::new();
 

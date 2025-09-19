@@ -133,7 +133,7 @@ criterion_main!(benches);
 
 fn print_assembly_inspection_instructions() {
     println!("🔍 **ASSEMBLY INSPECTION INSTRUCTIONS**");
-    println!("To verify zero-cost abstractions, inspect the generated assembly:");
+    println!("To verify zero-cost abstractions: actions.iter().map(|s| s.to_string()).collect(), inspect the generated assembly:");
     println!("💡 To verify: cargo asm --release --bench safe_vs_unsafe_benchmarks");
     println!("📊 Expected: Identical assembly for safe vs unsafe versions");
     println!("🎯 Goal: Prove safety without performance cost");

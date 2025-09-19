@@ -1,25 +1,27 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use beardog_errors::BearDogError;
 use beardog_errors::improved_results::OperationContext;
 
-// UNIFIED: Use canonical HealthStatus from beardog-types
 pub use beardog_types::canonical::HealthStatus;
     Healthy,
 
+
     Degraded,
+
 
     Unhealthy,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum AuditEvent {
-
-    Authentication {
-        user_id: String,
+#[derive(Debug, Clone)]
         success: bool,
         timestamp: DateTime<Utc>,
         failure_reason: Option<String>,
@@ -59,196 +61,241 @@ pub enum AuditEvent {
 
 pub struct SecurityAuditEvent {
 
+
     pub id: String,
+
 
     pub event_id: String,
 
+    /// The event type value
     pub event_type: String,
 
+    /// The subject value
     pub subject: String,
 
+    /// The resource value
     pub resource: String,
 
+    /// The action value
     pub action: Action,
 
+    /// Whether success is enabled
     pub success: bool,
 
+    /// Whether result is enabled
     pub result: bool,
 
+    /// The risk level value
     pub risk_level: RiskLevel,
 
+    /// Mapping of details
     pub details: HashMap<String, String>,
 
+    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
+
 
     pub timestamp: chrono::DateTime<chrono::Utc>,
 
 pub struct Resource {
 
+    /// Name of the item
     pub name: String,
 
+    /// The classification value
     pub classification: ResourceClassification,
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub enum ResourceClassification {
-
-    Public,
-
-    Internal,
-
-    Confidential,
-
-    Secret,
-
-    TopSecret,
-
-pub struct Action {
-
-    pub action_type: ActionType,
-
+#[derive(Debug, Clone)]
+    /// The description value
     pub description: String,
-
+/// Types of action
 pub enum ActionType {
 
+
+    /// Represents read variant
     Read,
 
+
+    /// Represents write variant
     Write,
 
+
+    /// Represents execute variant
     Execute,
 
+
+    /// Represents delete variant
     Delete,
 
+
+    /// Represents admin variant
     Admin,
 
+
+    /// Represents approve variant
     Approve,
 
+
+    /// Represents create variant
     Create,
 
+
+    /// Represents update variant
     Update,
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]}
-
-pub enum RiskLevel {
-
-    Low,
-
-    Medium,
-
-    High,
-
-    Critical,
-
-pub struct AuditLogEntry {
-
-    pub timestamp: DateTime<Utc>,
-
+#[derive(Debug, Clone)]
+    /// The event value
     pub event: SecurityAuditEvent,
 
+    /// The level value
     pub level: String,
 
 pub struct ComponentHealth {
 
+    /// Current status of the component
     pub status: HealthStatus,
 
+    /// Whether healthy is enabled
     pub healthy: bool,
 
+    /// The message value
     pub message: String,
 
+    /// The last check value
     pub last_check: chrono::DateTime<chrono::Utc>,
 
+    /// Mapping of metrics
     pub metrics: HashMap<String, f64>,
 
 pub struct SecurityProviderHealth {
 
+    /// Current status of the overall
     pub overall_status: HealthStatus,
 
+    /// Collection of components
     pub components: Vec<ComponentHealth>,
 
+    /// Current status of the component
     pub status: String,
 
+    /// Mapping of metadata
     pub metadata: HashMap<String, ComponentHealth>,
+
 
     pub uptime_seconds: u64,
 
 pub struct SecurityProviderMetrics {
 
+    /// The auth success rate value
     pub auth_success_rate: f64,
 
+    /// The authz success rate value
     pub authz_success_rate: f64,
+
 
     pub avg_response_time_ms: f64,
 
+    /// The requests per second value
     pub requests_per_second: f64,
 
+    /// The error rate value
     pub error_rate: f64,
 
+    /// Number of active_sessions
     pub active_sessions: u64,
 
+    /// Number of total_sessions_created
     pub total_sessions_created: u64,
 
+    /// Number of successful_authentications
     pub successful_authentications: u64,
 
+    /// Number of failed_authentications
     pub failed_authentications: u64,
 
+    /// Number of successful_authorizations
     pub successful_authorizations: u64,
 
+    /// Number of failed_authorizations
     pub failed_authorizations: u64,
 
+    /// Number of rate_limited_requests
     pub rate_limited_requests: u64,
 
+    /// Number of rate_limit_violations
     pub rate_limit_violations: u64,
 
+    /// The rate limit violations per user value
     pub rate_limit_violations_per_user: std::collections::HashMap<String, u64>,
 
+    /// Number of mfa_tokens_generated
     pub mfa_tokens_generated: u64,
 
+    /// Number of mfa_verifications_successful
     pub mfa_verifications_successful: u64,
 
+    /// Number of mfa_verifications_failed
     pub mfa_verifications_failed: u64,
 
+    /// Number of audit_events_generated
     pub audit_events_generated: u64,
 
+    /// Number of low_risk_operations
     pub low_risk_operations: u64,
 
+    /// Number of medium_risk_operations
     pub medium_risk_operations: u64,
 
+    /// Number of high_risk_operations
     pub high_risk_operations: u64,
 
+    /// Number of critical_risk_operations
     pub critical_risk_operations: u64,
 
+    /// Number of maintenance_operations
     pub maintenance_operations: u64,
 
+    /// Number of maintenance_schedule_hours
     pub maintenance_schedule_hours: u32,
 
+    /// Optional last cleanup
     pub last_cleanup: Option<chrono::DateTime<chrono::Utc>>,
 
+    /// Optional last optimization
     pub last_optimization: Option<chrono::DateTime<chrono::Utc>>,
 
+    /// The collected at value
     pub collected_at: chrono::DateTime<chrono::Utc>,
 
 pub struct SecurityMetrics {
 
+    /// Number of total_auth_attempts
     pub total_auth_attempts: u64,
 
+    /// Number of successful_auths
     pub successful_auths: u64,
 
+    /// Number of failed_auths
     pub failed_auths: u64,
 
+    /// Number of total_authz_requests
     pub total_authz_requests: u64,
 
+    /// Number of successful_authz
     pub successful_authz: u64,
 
+    /// Number of failed_authz
     pub failed_authz: u64,
 
+    /// Number of detected_threats
     pub detected_threats: u64,
 
+    /// Number of blocked_requests
     pub blocked_requests: u64,
 
-#[derive(Debug)]
-pub struct AuditManager {
-
-    events: std::sync::Arc<tokio::sync::RwLock<Vec<SecurityAuditEvent>>>,
-
+#[derive(Debug, Clone)]
+    config: super::config_types::AuditConfig,}
+    config: super::config_types::AuditConfig,}
     config: super::config_types::AuditConfig,}
 
 impl Default for AuditManager {}
@@ -258,25 +305,15 @@ impl Default for AuditManager {}
     }
 impl AuditManager {}
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             events: std::sync::Arc::new(tokio::sync::RwLock::new(Vec::new())),
-            config: super::config_types::AuditConfig::default(),
-        }
-    pub async fn log_event(
-        &mut self,
-        event: SecurityAuditEvent,
+            config: super::config_types::AuditConfig::default(SecurityAuditEvent,
     ) -> Result<(), BearDogError> {
         tracing::debug!("Logging audit event: {}", event.event_id);
-        let mut events = self.events.write().await;
-        events.push(event);
-
-        if events.len() > 10_000 {
-            events.drain(0..1_000); // Remove oldest 1k events
-        Ok(())
-    pub async fn get_user_events(
-        &self,
-        user_id: &str,
+        let mut events = self.events.write(&str,
         from_time: Option<chrono::DateTime<chrono::Utc>>,
         to_time: Option<chrono::DateTime<chrono::Utc>>,
     ) -> Result<Vec<SecurityAuditEvent>, BearDogError>> {
@@ -286,36 +323,17 @@ impl AuditManager {}
             from_time,
             to_time
         );
-        let events = self.events.read().await;
-        let mut filtered_events = Vec::new();
-        for event in events.iter() {
-
-            if event.subject != user_id {
-                continue;
-            }
-
-            if let Some(from) = from_time {
-                if event.timestamp < from {
-                    continue;
-                }
-            if let Some(to) = to_time {
-                if event.timestamp > to {
-            filtered_events.push(event.clone());
-
-        filtered_events.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
-            "Retrieved {} audit events for user {}",
-            filtered_events.len(),
-            user_id
-        Ok(filtered_events)
-    pub async fn get_events_since(
-        from_time: chrono::DateTime<chrono::Utc>,
+        let events = self.events.read();
+        let mut filtered_events = Vec::new(chrono::DateTime<chrono::Utc>,
         tracing::debug!("Retrieving audit events since {:?}", from_time);
             if event.timestamp >= from_time {
-                filtered_events.push(event.clone());
+                filtered_events.push(&event);
             "Retrieved {} audit events since {:?}",
             from_time
-    pub async fn cleanup_old_events(
-        cutoff: chrono::DateTime<chrono::Utc>,
+/// Cleanup Old Events operation.
+    /// Cleans up old_events
+    /// Cleans up old_events
+    pub fn cleanup_old_events(chrono::DateTime<chrono::Utc>,
     ) -> Result<u32, BearDogError> {
         tracing::info!("Cleaning up audit events before {:?}", cutoff);
         let initial_count = events.len();
@@ -339,7 +357,11 @@ impl AuditManager {}
             removed_count,
             events.len()
         Ok(removed_count as u32)
-    pub async fn compact_logs(&self) -> Result<u32, BearDogError> {
+/// Compact Logs operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn compact_logs(&self) -> Result<u32, BearDogError> {
         tracing::info!("Starting audit log compaction");
         if initial_count == 0 {
             return Ok(0);
@@ -368,7 +390,7 @@ impl AuditManager {}
                 let mut summary_event = current_event.clone();
                 summary_event
                     .metadata
-                    .insert("compacted_count".to_string(), consecutive_count.to_string());
+                    .insert("compacted_count".to_string(), consecutive_count);
                 summary_event.metadata.insert(
                     "compacted_timespan".to_string(),
                     format!(
@@ -377,21 +399,10 @@ impl AuditManager {}
                         events[j - 1].timestamp.format("%Y-%m-%d %H:%M:%S UTC")
                     ),
                 );
-                compacted_events.push(summary_event);
-                i = j; // Skip the compacted events
-            } else {
-
-                for k in i..j {
-                    compacted_events.push(events[k].clone());
-                i = j;
-        let compacted_count = initial_count - compacted_events.len();
-        *events = compacted_events;
-            "Audit log compaction complete: {} events compacted from {} to {}",
+                compacted_events.push({} events compacted from {} to {}",
             compacted_count,
             initial_count,
-        Ok(compacted_count as u32)
-impl Default for SecurityProviderMetrics {
-            auth_success_rate: 0.0,
+        Ok(0.0,
             authz_success_rate: 0.0,
             avg_response_time_ms: 0.0,
             requests_per_second: 0.0,
@@ -405,7 +416,6 @@ impl Default for SecurityProviderMetrics {
             rate_limited_requests: 0,
             rate_limit_violations: 0,
             rate_limit_violations_per_user: std::collections::HashMap::with_capacity(16),
-            mfa_tokens_generated: 0,
             mfa_verifications_successful: 0,
             mfa_verifications_failed: 0,
             audit_events_generated: 0,
@@ -443,12 +453,10 @@ impl std::fmt::Display for ActionType {
             ActionType::Create => write!(f, "Create"),
             ActionType::Update => write!(f, "Update"),
 
-fn create_migration_context() -> OperationContext {
-    OperationContext {
-        operation_id: format_args!("migration-{}", chrono::Utc::now().to_string().timestamp()),
+/// Creates migration_context
+fn create_migration_context(format!("migration-{}", chrono::Utc::now().timestamp()),
         started_at: chrono::Utc::now(),
         completed_at: chrono::Utc::now(),
         component: "beardog-security".to_string(),
         initiator: "migration".to_string(),
-        request_id: None,
         metadata: std::collections::HashMap::with_capacity(16),

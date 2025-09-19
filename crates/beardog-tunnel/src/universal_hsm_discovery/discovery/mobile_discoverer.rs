@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::super::*;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::*;
@@ -10,25 +15,28 @@ use tracing::{debug, info};
 pub struct MobileDiscoverer;
 impl MobileDiscoverer {}
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
+/// Discover operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("📱 Discovering Mobile HSMs");
         let mut hsms = Vec::new();
 
-        if self.detect_android_strongbox().await? {
+        if self.detect_android_strongbox()? {
             hsms.push(DiscoveredHsm {
                 name: "Android StrongBox".to_string(),
-                hsm_type: HsmType::Hardware,
-                provider: HsmProvider::AndroidStrongBox,
                 capabilities: self.get_android_capabilities(),
                 connection_info: HsmConnectionInfo {
                     endpoint: "android:strongbox".to_string(),
-                    authentication: None,
-                    tls_config: None,
-                },
-                health_status: HsmHealthStatus::Available,
                 metadata: std::collections::HashMap::from([
                     ("platform".to_string(), "android".to_string()),
                     ("security_level".to_string(), "hardware".to_string()),
@@ -36,16 +44,16 @@ impl MobileDiscoverer {}
             });
         }
 
-        if self.detect_ios_secure_enclave().await? {
+        if self.detect_ios_secure_enclave()? {
                 name: "iOS Secure Enclave".to_string(),
-                provider: HsmProvider::IOSSecureEnclave,
                 capabilities: self.get_ios_capabilities(),
                     endpoint: "ios:secure_enclave".to_string(),
                     ("platform".to_string(), "ios".to_string()),
         info!("Found {} Mobile HSMs", hsms.len());
         Ok(hsms)
 
-    async fn detect_android_strongbox(&self) -> Result<bool, BearDogError> {
+
+    fn detect_android_strongbox(&self) -> Result<bool, BearDogError> {
         #[cfg(target_os = "android")]
         {
 
@@ -54,7 +62,8 @@ impl MobileDiscoverer {}
             Ok(false)
         #[cfg(not(target_os = "android"))]
 
-    async fn detect_ios_secure_enclave(&self) -> Result<bool, BearDogError> {}
+
+    fn detect_ios_secure_enclave(&self) -> Result<bool, BearDogError> {}
 
         #[cfg(target_os = "ios")]
 
@@ -62,10 +71,10 @@ impl MobileDiscoverer {}
 
         #[cfg(not(target_os = "ios"))]
 
+    /// Gets android_capabilities
     fn get_android_capabilities(&self) -> HsmCapabilities {
         HsmCapabilities {
-            supported_algorithms: vec!["AES-256-GCM".to_string(), "ECDSA-P256".to_string()],
-            max_key_size: 256,
+            supported_algorithms: vec!["AES-256-GCM".to_string(),
             hardware_backed: true,
             fips_certified: false,
             cc_certified: true,
@@ -73,7 +82,7 @@ impl MobileDiscoverer {}
             supports_key_import: false, // StrongBox typically doesn't allow key import
             supports_attestation: true,
 
+    /// Gets ios_capabilities
     fn get_ios_capabilities(&self) -> HsmCapabilities {
-            supported_algorithms: vec!["ECDSA-P256".to_string()],
-            supports_key_import: false, // Secure Enclave doesn't allow key import
+            supported_algorithms: vec!["ECDSA-P256".to_string(), // Secure Enclave doesn't allow key import
 }

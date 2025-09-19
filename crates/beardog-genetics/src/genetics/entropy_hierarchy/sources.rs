@@ -1,206 +1,230 @@
-
+// Entropy Sources Management
+//
+// This module provides entropy source management and mixing capabilities
+// for the entropy hierarchy system.
 
 use super::types::*;
 use beardog_errors::BearDogError;
-use rand::seq::SliceRandom;
-use rand::thread_rng;
+// Note: rand utilities available for future entropy mixing enhancements
 use sha3::{Digest, Sha3_256};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct EntropyMixingEngine {
     config: EntropyHierarchyConfig,
 }
-impl EntropyMixingEngine {
 
-    pub fn new(config: EntropyHierarchyConfig) -> Self {
-        Self { config }
+impl EntropyMixingEngine {
+    /// Create new entropy mixing engine
+    /// Creates a new instance
+    pub fn new(config: &EntropyHierarchyConfig) -> Self {
+        Self {
+            config: config.clone(),
+        }
     }
 
-    pub fn mix_entropy_sources(&self, sources: Vec<EntropyClass>) -> Result<EntropyClass, BearDogError> {
-        if sources.is_empty() {
-            return Err(BearDogError::invalid_input("Cannot mix empty list of entropy sources".to_string(),
-            ));
-        }
-        if sources.len() == 1 {
-
-            let selected_source = sources
-                .choose(&mut thread_rng())
-                .ok_or_else(|| BearDogError::EntropySourceNotAvailable {
-                    source_name: "No entropy sources available for selection".to_string(),
-                })?
-                .clone();
-            return Ok(selected_source);
-
-        let highest_tier = sources
-            .iter()
-            .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .ok_or_else(|| beardog_errors::BearDogError::internal("No entropy sources available for classification".to_string(),
-            ))?;
-
-        match highest_tier {
-            EntropyClass::HumanLivedExperience { .. } => {
-
-                Ok(highest_tier.clone())
-            }
-            EntropyClass::HumanSupervisedMachine { .. } => {
-
-                self.mix_human_supervised_sources(&sources)
-            EntropyClass::StoreBoughtMachine { .. } => {
-
-                self.mix_machine_sources(&sources)
-
-    fn mix_human_supervised_sources(
+    /// Mix entropy sources using specified algorithm
+    pub fn mix_entropy_sources(
         &self,
-        sources: &[EntropyClass],
-    ) -> Result<EntropyClass, BearDogError> {
+        sources: &[Vec<u8>],
+        algorithm: &FusionAlgorithm,
+    ) -> Result<Vec<u8>, BearDogError> {
+        if sources.is_empty() {
+            return Err(BearDogError::invalid_input("No entropy sources provided"));
+        }
 
-        let supervised_sources: Vec<_> = sources
-            .filter(|s| matches!(s, EntropyClass::HumanSupervisedMachine { .. }))
-            .collect();
-        if let Some(first_supervised) = supervised_sources.first() {
-            if let EntropyClass::HumanSupervisedMachine {
-                machine_source,
-                human_validator,
-                ..
-            } = first_supervised
-            {
-                Ok(EntropyClass::HumanSupervisedMachine {
-                    machine_source: machine_source.clone(),
-                    human_validator: human_validator.clone(),
-                    validation_timestamp: chrono::Utc::now(),
-                })
-            } else {
-                Err(BearDogError::internal("Unexpected entropy class type".to_string(),
-        ) else {
-            Err(BearDogError::internal("No human-supervised sources found".to_string(),
-            ))
+        match &algorithm.mixing_strategy {
+            MixingStrategy::XorMix => self.xor_mix(sources),
+            MixingStrategy::HashMix { hash_algorithm } => self.hash_mix(sources, hash_algorithm),
+            MixingStrategy::CryptoMix { cipher } => self.crypto_mix(sources, cipher),
+        }
+    }
 
-    fn mix_machine_sources(&self, sources: &[EntropyClass]) -> Result<EntropyClass, BearDogError> {
-
-        let mut total_reproducibility = 0.0f64;
-        let mut machine_count = 0;
-        for source in sources {
-            if let EntropyClass::StoreBoughtMachine {
-                reproducibility_index,
-            } = source
-                total_reproducibility += reproducibility_index;
-                machine_count += 1;
-        let avg_reproducibility = if machine_count > 0 {
-            total_reproducibility / machine_count as f64
-            0.8 // Default reproducibility
+    /// Create entropy seed from mixed sources
+    /// Creates entropy_seed
+    /// Creates entropy_seed
+    pub fn create_entropy_seed(
+        &self,
+        entropy_data: Vec<u8>,
+        entropy_class: EntropyClass,
+    ) -> Result<EntropySeed, BearDogError> {
+        let seed_metadata = SeedMetadata {
+            created_at: chrono::Utc::now(),
+            expires_at: None,
+            usage_count: 0,
+            max_usage: Some(1000), // Default usage limit
         };
 
-        if let Some(EntropyClass::StoreBoughtMachine { source_type, .. }) = sources
-            .find(|s| matches!(s, EntropyClass::StoreBoughtMachine { .. }))
-        {
-            Ok(EntropyClass::StoreBoughtMachine {
-                source_type: source_type.clone(),
-                generation_timestamp: chrono::Utc::now(),
-                reproducibility_index: avg_reproducibility,
+        Ok(EntropySeed {
+            seed_id: uuid::Uuid::new_v4(),
+            entropy_class,
+            entropy_data,
+            metadata: seed_metadata,
+        })
+    }
 
-                source_type: MachineEntropySource::Csprng {
-                    algorithm: "ChaCha20".to_string(),
-                    seed_source: "Mixed".to_string(),
-                    state_size: 256,
-                },
+    /// XOR mixing strategy
+    fn xor_mix(&self, sources: &[Vec<u8>]) -> Result<Vec<u8>, BearDogError> {
+        if sources.is_empty() {
+            return Err(BearDogError::invalid_input("No sources to mix"));
+        }
 
-    pub fn validate_entropy_quality(&self, entropy_class: &EntropyClass) -> Result<f64, BearDogError> {
-        let quality_score = match entropy_class {
-            EntropyClass::HumanLivedExperience { source_type, .. } => {
-                self.calculate_human_entropy_quality(source_type)
+        let max_len = sources.iter().map(|s| s.len()).max().unwrap_or(0);
+        let mut result = vec![0u8; max_len];
 
-                0.8
-            EntropyClass::StoreBoughtMachine {
-            } => {
+        for source in sources {
+            for (i, &byte) in source.iter().enumerate() {
+                if i < result.len() {
+                    result[i] ^= byte;
+                }
+            }
+        }
 
-                1.0 - reproducibility_index
-        if quality_score < self.config.min_entropy_quality {
-            return Err(BearDogError::invalid_input(format!(
-                    "Entropy quality {} below minimum threshold {}",
-                    quality_score, self.config.min_entropy_quality
-                )));
-        Ok(quality_score)
+        Ok(result)
+    }
 
-    fn calculate_human_entropy_quality(&self, source: &HumanEntropySource) -> f64 {
-        match source {
-            HumanEntropySource::MultiModalHuman {
-                confidence_score, ..
-            } => *confidence_score,
-            HumanEntropySource::Biometric { quality_score, .. } => *quality_score,
-            HumanEntropySource::Microphone {
-                spectral_features, ..
-
-                let diversity = spectral_features.len() as f64 / 100.0; // Normalize
-                diversity.clamp(0.5, 1.0) // Clamp between 0.5 and 1.0
-            HumanEntropySource::Camera {
-                lighting_variations,
-
-                let variation = lighting_variations.iter().sum::<f32>() as f64
-                    / lighting_variations.len() as f64;
-                variation.clamp(0.6, 1.0)
-            HumanEntropySource::Haptic {
-                motion_patterns, ..
-
-                let complexity = motion_patterns.len() as f64 / 50.0; // Normalize
-                complexity.clamp(0.7, 1.0)
-
-    pub fn generate_entropy_commitment(&self, entropy_data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+    /// Hash-based mixing strategy
+    fn hash_mix(
+        &self,
+        sources: &[Vec<u8>],
+        _hash_algorithm: &str,
+    ) -> Result<Vec<u8>, BearDogError> {
         let mut hasher = Sha3_256::new();
-        hasher.update(entropy_data);
-        hasher.update(b"entropy_commitment");
-        hasher.update(chrono::Utc::now().timestamp().to_le_bytes());
+
+        // Add entropy from all sources
+        for source in sources {
+            hasher.update(source);
+        }
+
+        // Add mixing salt
+        hasher.update(b"entropy_hash_mix");
+
         Ok(hasher.finalize().to_vec())
+    }
 
-    pub fn mix_entropy_bytes(&self, entropy_sources: &[(Vec<u8>, f64)]) -> Result<Vec<u8>, BearDogError>> {
-        if entropy_sources.is_empty() {
-            return Err(BearDogError::invalid_input("Cannot mix empty entropy sources".to_string(),
+    /// Cryptographic mixing strategy
+    fn crypto_mix(&self, sources: &[Vec<u8>], _cipher: &str) -> Result<Vec<u8>, BearDogError> {
+        // For now, use hash mixing as a secure fallback
+        // In production, this would use proper cryptographic mixing
+        self.hash_mix(sources, "sha3-256")
+    }
 
-        for (entropy_bytes, weight) in entropy_sources {
-            hasher.update(entropy_bytes);
-            hasher.update(weight.to_le_bytes());
+    /// Validate entropy source quality
+    /// Validates source_quality
+    /// Validates source_quality
+    pub fn validate_source_quality(
+        &self,
+        source: &HumanEntropySource,
+    ) -> Result<f64, BearDogError> {
+        match &source.source_type {
+            HumanEntropyType::Biometric { quality_score, .. } => Ok(*quality_score),
+            HumanEntropyType::Behavioral {
+                complexity_score, ..
+            } => Ok(*complexity_score * 0.8),
+            HumanEntropyType::Creative {
+                uniqueness_score, ..
+            } => Ok(*uniqueness_score * 0.9),
+        }
+    }
 
-        hasher.update(b"entropy_mixing");
+    /// Creates fusion_algorithm
+    /// Creates fusion_algorithm
+    pub fn create_fusion_algorithm(&self, strategy: MixingStrategy) -> FusionAlgorithm {
+        let mut parameters = HashMap::new();
+        parameters.insert(
+            "quality_threshold".to_string(),
+            self.config.min_human_quality,
+        );
+        parameters.insert("mix_rounds".to_string(), 3.0);
 
-    pub fn calculate_weighted_entropy_score(&self, entropy_class: &EntropyClass) -> f64 {
-        match entropy_class {
-            EntropyClass::HumanLivedExperience { .. } => self.config.human_entropy_weight * 1.0,
-                (self.config.human_entropy_weight + self.config.machine_entropy_weight) / 2.0 * 0.8
-            EntropyClass::StoreBoughtMachine { .. } => self.config.machine_entropy_weight * 0.5,
+        FusionAlgorithm {
+            algorithm_type: "entropy_fusion_v1".to_string(),
+            parameters,
+            mixing_strategy: strategy,
+        }
+    }
+}
 
-    pub fn should_prefer_human_entropy(&self) -> bool {
-        self.config.hierarchy_enforcement == "strict"
-            && self.config.human_entropy_weight > self.config.machine_entropy_weight
+/// Entropy source manager
+#[derive(Debug, Clone)]
+pub struct EntropySourceManager {
+    #[allow(dead_code)] // Used for entropy mixing but not yet fully implemented
+    mixing_engine: EntropyMixingEngine,
+    source_registry: HashMap<String, HumanEntropySource>,
+}
 
-    pub fn get_mixing_recommendations(&self, sources: &[EntropyClass]) -> Vec<String> {
-        let mut recommendations = Vec::new();
-        let human_count = sources
-            .filter(|s| matches!(s, EntropyClass::HumanLivedExperience { .. }))
-            .count();
-        let supervised_count = sources
-        let machine_count = sources
-            .filter(|s| matches!(s, EntropyClass::StoreBoughtMachine { .. }))
-        if human_count == 0 {
-            recommendations
-                .push("Consider adding human entropy sources for higher security".to_string());
-        if supervised_count == 0 && machine_count > 0 {
-                .push("Consider human supervision for machine entropy sources".to_string());
-        if sources.len() < 2 {
-                .push("Consider mixing multiple entropy sources for better security".to_string());
-        if sources.len() > 5 {
-            recommendations.push(
-                "Too many entropy sources may not improve security significantly".to_string(),
-            );
-        recommendations
+impl EntropySourceManager {
+    /// Create new entropy source manager
+    /// Creates a new instance
+    pub fn new(config: &EntropyHierarchyConfig) -> Self {
+        Self {
+            mixing_engine: EntropyMixingEngine::new(config),
+            source_registry: HashMap::new(),
+        }
+    }
 
-    pub fn validate_entropy_combination(&self, sources: &[EntropyClass]) -> Result<(), BearDogError> {
+    /// Register entropy source
+    pub fn register_source(&mut self, id: String, source: HumanEntropySource) {
+        self.source_registry.insert(id, source);
+    }
 
-            return Err(BearDogError::invalid_input("At least one entropy source required".to_string(),
+    /// Get registered source
+    /// Gets source
+    /// Gets source
+    pub fn get_source(&self, id: &str) -> Option<&HumanEntropySource> {
+        self.source_registry.get(id)
+    }
 
-        let has_human = sources
-            .any(|s| matches!(s, EntropyClass::HumanLivedExperience { .. }));
-        let has_machine = sources
-            .any(|s| matches!(s, EntropyClass::StoreBoughtMachine { .. }));
-        if self.config.hierarchy_enforcement == "strict" && has_human && has_machine {
+    /// List all registered sources
+    pub fn list_sources(&self) -> Vec<&String> {
+        self.source_registry.keys().collect()
+    }
 
-            self.validate_entropy_quality(source)?;
-        Ok(())
+    /// Remove entropy source
+    /// Removes source
+    /// Removes source
+    pub fn remove_source(&mut self, id: &str) -> Option<HumanEntropySource> {
+        self.source_registry.remove(id)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_entropy_mixing_engine_creation() {
+        let config = EntropyHierarchyConfig::default();
+        let _engine = EntropyMixingEngine::new(&config);
+    }
+
+    #[test]
+    fn test_xor_mixing() {
+        let config = EntropyHierarchyConfig::default();
+        let engine = EntropyMixingEngine::new(&config);
+
+        let sources = vec![vec![1, 2, 3, 4], vec![5, 6, 7, 8]];
+
+        let result = engine.xor_mix(&sources).unwrap();
+        assert_eq!(result, vec![4, 4, 4, 12]); // 1^5, 2^6, 3^7, 4^8
+    }
+
+    #[test]
+    fn test_entropy_source_manager() {
+        let config = EntropyHierarchyConfig::default();
+        let mut manager = EntropySourceManager::new(&config);
+
+        let source = HumanEntropySource {
+            source_type: HumanEntropyType::Biometric {
+                biometric_type: "fingerprint".to_string(),
+                quality_score: 0.9,
+            },
+            entropy_data: vec![1, 2, 3, 4],
+            collected_at: chrono::Utc::now(),
+        };
+
+        manager.register_source("test_source".to_string(), source);
+        assert!(manager.get_source("test_source").is_some());
+        assert_eq!(manager.list_sources().len(), 1);
+    }
+}

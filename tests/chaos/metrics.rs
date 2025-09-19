@@ -1,5 +1,3 @@
-
-
 use super::models::*;
 use beardog_errors::BearDogError;
 use std::{
@@ -27,7 +25,7 @@ impl ChaosMetricsCollector {
         }
     }
 
-    pub async fn start_collection(&self) -> Result<(), BearDogError> {
+    pub fn start_collection(&self) -> Result<(), BearDogError> {
         self.is_collecting.store(true, Ordering::SeqCst);
         info!("📊 Started chaos metrics collection");
         Ok(())
@@ -40,28 +38,20 @@ impl ChaosMetricsCollector {
     }
 
     pub async fn get_metrics(&self) -> ChaosMetrics {
-        let metrics = self.metrics.read().await;
+        let metrics = self.metrics.read();
         metrics.clone()
     }
 }
 
-pub async fn collect_baseline_metrics() -> Result<SystemImpact, BearDogError> {
-
+pub fn collect_baseline_metrics() -> Result<SystemImpact, BearDogError> {
     Ok(SystemImpact::default())
 }
 
-pub async fn collect_current_metrics() -> Result<SystemImpact, BearDogError> {
-
-    Ok(SystemImpact::default())
-}
-
-pub async fn measure_fault_impact() -> Result<SystemImpact, BearDogError> {
-
-    Ok(SystemImpact {
-        response_time_increase: 2.5,
+pub fn collect_current_metrics() -> Result<SystemImpact, BearDogError> {
+    Ok(SystemImpact::default(2.5,
         error_rate_increase: 0.05,
         throughput_decrease: 0.3,
         memory_usage_increase: 0.2,
         availability_decrease: 0.1,
     })
-} 
+}

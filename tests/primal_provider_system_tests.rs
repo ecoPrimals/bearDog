@@ -1,8 +1,7 @@
 use beardog_errors::BearDogError;
 
-
 use beardog::adapters::universal::*;
-use beardog::{{BearDogConfig, BearDogCore, BearDogError}};
+use beardog::{BearDogConfig, BearDogCore, BearDogError};
 use serde_json::json;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -11,12 +10,11 @@ use uuid::Uuid;
 
 #[tokio::test]
 async fn test_beardog_primal_provider_basic() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
     let instance_id = "test-beardog-001".to_string();
-    let provider = BearDogPrimalProvider::new(core.clone(), instance_id.clone());
+    let provider = BearDogPrimalProvider::new(Arc::clone(&core), instance_id);
 
     assert_eq!(provider.ecosystem_id(), ecosystem_ids::BEARDOG);
     assert_eq!(provider.instance_id(), instance_id);
@@ -26,11 +24,11 @@ async fn test_beardog_primal_provider_basic() -> Result<(), BearDogError> {
     let capabilities = provider.capabilities();
     assert!(!capabilities.is_empty());
 
-    let capability_ids: Vec<String> = capabilities.iter().map(|c| c.id.clone()).collect();
-    assert!(capability_ids.contains(&capability_ids::SECURITY_ENCRYPT.to_string()));
-    assert!(capability_ids.contains(&capability_ids::SECURITY_AUTHENTICATE.to_string()));
-    assert!(capability_ids.contains(&capability_ids::SECURITY_AUTHORIZE.to_string()));
-    assert!(capability_ids.contains(&capability_ids::SECURITY_AUDIT.to_string()));
+    let capability_ids: Vec<&str> = capabilities.iter().map(|c| c.id.as_str()).collect();
+    assert!(capability_ids.contains(&capability_ids::SECURITY_ENCRYPT));
+    assert!(capability_ids.contains(&capability_ids::SECURITY_AUTHENTICATE));
+    assert!(capability_ids.contains(&capability_ids::SECURITY_AUTHORIZE));
+    assert!(capability_ids.contains(&capability_ids::SECURITY_AUDIT));
 
     for capability in &capabilities {
         assert_eq!(capability.category, CapabilityCategory::Security);
@@ -57,14 +55,13 @@ async fn test_beardog_primal_provider_basic() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_beardog_primal_provider_health() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
     let instance_id = "test-beardog-002".to_string();
     let provider = BearDogPrimalProvider::new(core.clone(), instance_id);
 
-    let health_status = provider.health_check().await;
+    let health_status = provider.health_check();
 
     match health_status {
         HealthStatus::Healthy => {
@@ -104,36 +101,32 @@ async fn test_beardog_primal_provider_health() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_beardog_primal_provider_requests() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
     let instance_id = "test-beardog-003".to_string();
     let provider = BearDogPrimalProvider::new(core.clone(), instance_id);
 
     let encryption_request = ServiceRequest {
         request_id: Uuid::new_v4(),
-        request_type: request_types::SECURITY_ENCRYPT.to_string(),
-        payload: json!({
+        request_type: request_types::SECURITY_ENCRYPT.to_string(json!({
             "data": "sensitive information",
             "algorithm": "AES-256-GCM"
         }),
-        timestamp: chrono::Utc::now(),
-        priority: RequestPriority::High,
+        timestamp: chrono::Utc::now(RequestPriority::High,
         metadata: HashMap::with_capacity(16),
         context: RequestContext {
             user_id: Some("test-user".to_string()),
             session_id: Some("test-session".to_string()),
             transaction_id: Some("test-tx".to_string()),
-            source_ecosystem: ecosystem_ids::BEARDOG.to_string(),
-            target_ecosystem: None,
+            source_ecosystem: ecosystem_ids::BEARDOG.to_string(None,
             metadata: HashMap::with_capacity(16),
         },
     };
 
     assert!(provider.can_handle_request(&encryption_request));
 
-    let response = provider.handle_request(encryption_request.clone()).await?;
+    let response = provider.handle_request(encryption_request.clone())?;
 
     assert_eq!(response.request_id, encryption_request.request_id);
     assert!(response.success);
@@ -142,20 +135,18 @@ async fn test_beardog_primal_provider_requests() -> Result<(), BearDogError> {
 
     let auth_request = ServiceRequest {
         request_id: Uuid::new_v4(),
-        request_type: request_types::SECURITY_AUTHENTICATE.to_string(),
-        payload: json!({
+        request_type: request_types::SECURITY_AUTHENTICATE.to_string(json!({
             "username": "test-user",
             "password": "secure-password",
             "mfa_token": "123456"
         }),
-        timestamp: chrono::Utc::now(),
-        priority: RequestPriority::Critical,
+        timestamp: chrono::Utc::now(RequestPriority::Critical,
         metadata: HashMap::with_capacity(16),
         context: RequestContext {
             user_id: Some("test-user".to_string()),
             session_id: Some("test-session".to_string()),
             transaction_id: Some("test-tx".to_string()),
-            source_ecosystem: ecosystem_ids::SONGBIRD.to_string(),
+            source_ecosystem: CapabilityType::ServiceMeshCoordination.to_string(),
             target_ecosystem: Some(ecosystem_ids::BEARDOG.to_string()),
             metadata: HashMap::with_capacity(16),
         },
@@ -163,7 +154,7 @@ async fn test_beardog_primal_provider_requests() -> Result<(), BearDogError> {
 
     assert!(provider.can_handle_request(&auth_request));
 
-    let auth_response = provider.handle_request(auth_request.clone()).await?;
+    let auth_response = provider.handle_request(auth_request.clone())?;
 
     assert_eq!(auth_response.request_id, auth_request.request_id);
     assert!(auth_response.success);
@@ -176,19 +167,18 @@ async fn test_beardog_primal_provider_requests() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_universal_ecosystem_manager() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
-    let manager = UniversalEcosystemManager::new(core.clone()).await?;
+    let manager = UniversalEcosystemManager::new(Arc::clone(&core))?;
 
     let instance_id = "test-beardog-004".to_string();
-    let provider = BearDogPrimalProvider::new(core.clone(), instance_id.clone());
+    let provider = BearDogPrimalProvider::new(Arc::clone(&core), instance_id);
 
     let provider_config = ProviderConfig {
         provider_config: {
             let mut config = HashMap::with_capacity(16);
-            config.insert("security_level".to_string(), json!("high"));
+            config.insert("security_level".to_string(), json!("high".to_string()));
             config.insert("encryption_default".to_string(), json!("AES-256-GCM"));
             config
         },
@@ -202,14 +192,14 @@ async fn test_universal_ecosystem_manager() -> Result<(), BearDogError> {
         monitoring_config: MonitoringConfig::default(),
     };
 
-    let registration = manager.register_provider(provider, provider_config).await?;
+    let registration = manager.register_provider(provider, provider_config)?;
 
     assert_eq!(registration.ecosystem_id, ecosystem_ids::BEARDOG);
     assert_eq!(registration.instance_id, instance_id);
     assert_eq!(registration.status, RegistrationStatus::Active);
     assert!(!registration.capabilities.is_empty());
 
-    let providers = manager.get_providers().await;
+    let providers = manager.get_providers();
     assert!(!providers.is_empty());
 
     let beardog_provider = providers
@@ -218,26 +208,26 @@ async fn test_universal_ecosystem_manager() -> Result<(), BearDogError> {
     assert!(beardog_provider.is_some());
 
     let beardog_provider = beardog_provider.map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
+        tracing::error!("Operation failed: {:?}", e);
+        beardog_errors::BearDogError::internal({:?}", e))
+    })?;
     assert_eq!(beardog_provider.instance_id, instance_id);
     assert!(!beardog_provider.capabilities.is_empty());
 
-    let all_capabilities = manager.get_all_capabilities().await;
+    let all_capabilities = manager.get_all_capabilities();
     assert!(!all_capabilities.is_empty());
 
     let security_capabilities = manager
         .get_capabilities_by_category(CapabilityCategory::Security)
-        .await;
+        ;
     assert!(!security_capabilities.is_empty());
 
-    let health_report = manager.health_check_all().await?;
+    let health_report = manager.health_check_all()?;
     assert!(health_report.total_providers > 0);
     assert!(health_report.healthy_providers > 0);
     assert!(!health_report.provider_reports.is_empty());
 
-    let status = manager.get_status().await;
+    let status = manager.get_status();
     assert!(status.total_providers > 0);
     assert!(status.total_capabilities > 0);
 
@@ -247,14 +237,13 @@ async fn test_universal_ecosystem_manager() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_cross_ecosystem_request_routing() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
-    let manager = UniversalEcosystemManager::new(core.clone()).await?;
+    let manager = UniversalEcosystemManager::new(Arc::clone(&core))?;
 
     let instance_id = "test-beardog-005".to_string();
-    let provider = BearDogPrimalProvider::new(core.clone(), instance_id.clone());
+    let provider = BearDogPrimalProvider::new(Arc::clone(&core), instance_id);
 
     let provider_config = ProviderConfig {
         provider_config: HashMap::with_capacity(16),
@@ -263,36 +252,31 @@ async fn test_cross_ecosystem_request_routing() -> Result<(), BearDogError> {
         monitoring_config: MonitoringConfig::default(),
     };
 
-    manager.register_provider(provider, provider_config).await?;
+    manager.register_provider(provider, provider_config)?;
 
     let cross_ecosystem_request = ServiceRequest {
         request_id: Uuid::new_v4(),
-        request_type: request_types::SECURITY_ENCRYPT.to_string(),
-        payload: json!({
+        request_type: request_types::SECURITY_ENCRYPT.to_string(json!({
             "data": "cross-ecosystem sensitive data",
             "algorithm": "AES-256-GCM",
-            "source_ecosystem": "songbird"
+            "source_ecosystem": "mesh-service"
         }),
-        timestamp: chrono::Utc::now(),
-        priority: RequestPriority::High,
+        timestamp: chrono::Utc::now(RequestPriority::High,
         metadata: {
             let mut metadata = HashMap::with_capacity(16);
             metadata.insert("cross_ecosystem".to_string(), "true".to_string());
-            metadata.insert(
-                "requesting_service".to_string(),
-                "songbird-discovery".to_string(),
-            );
+            metadata.insert("requesting_service".to_string(), "mesh-service-discovery");
             metadata
         },
         context: RequestContext {
-            user_id: Some("songbird-user".to_string()),
-            session_id: Some("songbird-session".to_string()),
+            user_id: Some("mesh-service-user".to_string()),
+            session_id: Some("mesh-service-session".to_string()),
             transaction_id: Some("cross-tx-001".to_string()),
-            source_ecosystem: ecosystem_ids::SONGBIRD.to_string(),
+            source_ecosystem: CapabilityType::ServiceMeshCoordination.to_string(),
             target_ecosystem: Some(ecosystem_ids::BEARDOG.to_string()),
             metadata: {
                 let mut metadata = HashMap::with_capacity(16);
-                metadata.insert("route_type".to_string(), "cross_ecosystem".to_string());
+                metadata.insert("route_type".to_string(), "cross_ecosystem");
                 metadata
             },
         },
@@ -300,7 +284,7 @@ async fn test_cross_ecosystem_request_routing() -> Result<(), BearDogError> {
 
     let response = manager
         .route_request(cross_ecosystem_request.clone())
-        .await?;
+        ?;
 
     assert_eq!(response.request_id, cross_ecosystem_request.request_id);
     assert!(response.success);
@@ -318,14 +302,13 @@ async fn test_cross_ecosystem_request_routing() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_primal_provider_registration_discovery() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
     let instance_id = "test-beardog-006".to_string();
     let provider = BearDogPrimalProvider::new(core.clone(), instance_id.clone());
 
-    let registration = provider.register_with_ecosystem().await?;
+    let registration = provider.register_with_ecosystem()?;
 
     assert_eq!(registration.ecosystem_id, ecosystem_ids::BEARDOG);
     assert_eq!(registration.instance_id, instance_id);
@@ -358,9 +341,8 @@ async fn test_primal_provider_registration_discovery() -> Result<(), BearDogErro
 
 #[tokio::test]
 async fn test_primal_provider_lifecycle() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
     let instance_id = "test-beardog-007".to_string();
     let mut provider = BearDogPrimalProvider::new(core.clone(), instance_id.clone());
@@ -378,8 +360,7 @@ async fn test_primal_provider_lifecycle() -> Result<(), BearDogError> {
             config
         },
         network_config: NetworkConfig {
-            listen_address: "127.0.0.1".to_string(),
-            port: 8443,
+            listen_address: "127.0.0.1".to_string(8443,
             tls_enabled: true,
             timeout_seconds: 30,
             connection_pool: ConnectionPoolConfig {
@@ -390,14 +371,13 @@ async fn test_primal_provider_lifecycle() -> Result<(), BearDogError> {
         },
         monitoring_config: MonitoringConfig {
             metrics_enabled: true,
-            log_level: "info".to_string(),
-            health_check_interval_seconds: 30,
+            log_level: "info".to_string(30,
         },
     };
 
-    provider.initialize(provider_config).await?;
+    provider.initialize(provider_config)?;
 
-    let health_status = provider.health_check().await;
+    let health_status = provider.health_check();
     match health_status {
         HealthStatus::Healthy | HealthStatus::Starting => {
             println!("✅ Provider is healthy after initialization");
@@ -411,24 +391,21 @@ async fn test_primal_provider_lifecycle() -> Result<(), BearDogError> {
         request_id: Uuid::new_v4(),
         request_type: request_types::HEALTH_CHECK.to_string(),
         payload: json!({}),
-        timestamp: chrono::Utc::now(),
-        priority: RequestPriority::Normal,
+        timestamp: chrono::Utc::now(RequestPriority::Normal,
         metadata: HashMap::with_capacity(16),
         context: RequestContext {
-            user_id: Some("test-user".to_string()),
-            session_id: None,
+            user_id: Some(None,
             transaction_id: None,
-            source_ecosystem: ecosystem_ids::BEARDOG.to_string(),
-            target_ecosystem: None,
+            source_ecosystem: ecosystem_ids::BEARDOG.to_string(None,
             metadata: HashMap::with_capacity(16),
         },
     };
 
-    let response = provider.handle_request(test_request.clone()).await?;
+    let response = provider.handle_request(test_request.clone())?;
     assert_eq!(response.request_id, test_request.request_id);
     assert!(response.success);
 
-    provider.shutdown().await?;
+    provider.shutdown()?;
 
     println!("✅ PrimalProvider lifecycle test passed");
     Ok(())
@@ -436,9 +413,8 @@ async fn test_primal_provider_lifecycle() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_capability_attributes() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
     let instance_id = "test-beardog-008".to_string();
     let provider = BearDogPrimalProvider::new(core.clone(), instance_id);
@@ -461,43 +437,35 @@ async fn test_capability_attributes() -> Result<(), BearDogError> {
             assert!(
                 !attr_value.value.is_empty(),
                 "Empty attribute value for {} in capability {}",
-                attr_name,
+                attr_name: name.to_string(),
                 capability.id
             );
 
             match attr_value.data_type {
                 AttributeDataType::String => {
-
                     assert!(!attr_value.value.is_empty());
                 }
                 AttributeDataType::Boolean => {
-
-                    assert!(attr_value.value == "true" || attr_value.value == "false");
+                    assert!(attr_value.value == "true".to_string() || attr_value.value == "false");
                 }
                 AttributeDataType::Integer => {
-
                     assert!(attr_value.value.parse::<i64>().is_ok());
                 }
                 AttributeDataType::Float => {
-
                     assert!(attr_value.value.parse::<f64>().is_ok());
                 }
                 AttributeDataType::Array => {
-
                     assert!(
                         serde_json::from_str::<Vec<serde_json::Value>>(&attr_value.value).is_ok()
                     );
                 }
                 AttributeDataType::Object => {
-
                     assert!(serde_json::from_str::<serde_json::Value>(&attr_value.value).is_ok());
                 }
                 AttributeDataType::Duration => {
-
                     assert!(attr_value.value.parse::<u64>().is_ok());
                 }
                 AttributeDataType::Bytes => {
-
                     assert!(attr_value.value.parse::<u64>().is_ok());
                 }
             }
@@ -515,20 +483,20 @@ async fn test_capability_attributes() -> Result<(), BearDogError> {
 mod test_helpers {
     use super::*;
 
-    pub struct MockToadStoolProvider {
+    pub struct MockComputeServiceProvider {
         instance_id: String,
     }
 
-    impl MockToadStoolProvider {
+    impl MockComputeServiceProvider {
         pub fn new(instance_id: &str) -> Self {
             Self { instance_id }
         }
     }
 
     #[allow(async_fn_in_trait)]
-    impl PrimalProvider for MockToadStoolProvider {
+    impl PrimalProvider for MockComputeServiceProvider {
         fn ecosystem_id(&self) -> &str {
-            ecosystem_ids::TOADSTOOL
+            "compute-service"
         }
 
         fn instance_id(&self) -> &str {
@@ -536,7 +504,7 @@ mod test_helpers {
         }
 
         fn service_name(&self) -> &str {
-            "Mock ToadStool Compute Provider"
+            "Mock ComputeService Compute Provider"
         }
 
         fn service_version(&self) -> &str {
@@ -547,8 +515,7 @@ mod test_helpers {
             vec![Capability {
                 id: capability_ids::COMPUTE_EXECUTE.to_string(),
                 name: "Code Execution".to_string(),
-                description: "Execute code on various compute platforms".to_string(),
-                category: CapabilityCategory::Compute,
+                description: "Execute code on various compute platforms".to_string(CapabilityCategory::Compute,
                 attributes: HashMap::with_capacity(16),
                 qos: QualityOfService::default(),
                 resource_requirements: ResourceRequirements::default(),
@@ -559,8 +526,7 @@ mod test_helpers {
             vec![Dependency {
                 id: "beardog-security".to_string(),
                 required_capability: capability_ids::SECURITY_AUTHENTICATE.to_string(),
-                min_version: Some("1.0.0".to_string()),
-                optional: false,
+                min_version: Some(false,
                 attributes: HashMap::with_capacity(16),
             }]
         }
@@ -573,14 +539,13 @@ mod test_helpers {
             HealthStatus::Healthy
         }
 
-        async fn handle_request(&self, request: ServiceRequest) -> Result<ServiceResponse, BearDogError> {
+        async fn handle_request(ServiceRequest,
+        ) -> Result<ServiceResponse, BearDogError> {
             Ok(ServiceResponse {
-                request_id: request.request_id,
-                success: true,
+                request_id: request.request_id.clone(true,
                 payload: json!({"result": "mock computation completed"}),
                 timestamp: chrono::Utc::now(),
-                metadata: HashMap::with_capacity(16),
-                error: None,
+                metadata: HashMap::with_capacity(None,
             })
         }
 
@@ -591,8 +556,7 @@ mod test_helpers {
                 instance_id: self.instance_id().to_string(),
                 endpoints: self.endpoints(),
                 capabilities: self.capabilities(),
-                registration_time: chrono::Utc::now(),
-                status: RegistrationStatus::Active,
+                registration_time: chrono::Utc::now(RegistrationStatus::Active,
             })
         }
 
@@ -610,11 +574,10 @@ mod test_helpers {
 
         fn metadata(&self) -> ProviderMetadata {
             ProviderMetadata {
-                name: "Mock ToadStool Provider".to_string(),
+                name: "Mock ComputeService Provider".to_string(),
                 version: "1.0.0".to_string(),
                 description: "Mock compute provider for testing".to_string(),
-                author: "Test Suite".to_string(),
-                website: None,
+                author: "Test Suite".to_string(None,
                 license: "MIT".to_string(),
                 tags: vec!["compute".to_string(), "mock".to_string()],
                 custom: HashMap::with_capacity(16),
@@ -625,11 +588,10 @@ mod test_helpers {
 
 #[tokio::test]
 async fn test_multi_provider_ecosystem() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
-    let manager = UniversalEcosystemManager::new(core.clone()).await?;
+    let manager = UniversalEcosystemManager::new(core.clone())?;
 
     let beardog_provider = BearDogPrimalProvider::new(core.clone(), "beardog-001".to_string());
     manager
@@ -642,12 +604,13 @@ async fn test_multi_provider_ecosystem() -> Result<(), BearDogError> {
                 monitoring_config: MonitoringConfig::default(),
             },
         )
-        .await?;
+        ?;
 
-    let toadstool_provider = test_helpers::MockToadStoolProvider::new("toadstool-001".to_string());
+    let compute_provider =
+        test_helpers::MockComputeServiceProvider::new("compute-service-001");
     manager
         .register_provider(
-            toadstool_provider,
+            compute_provider,
             ProviderConfig {
                 provider_config: HashMap::with_capacity(16),
                 ecosystem_config: HashMap::with_capacity(16),
@@ -655,32 +618,32 @@ async fn test_multi_provider_ecosystem() -> Result<(), BearDogError> {
                 monitoring_config: MonitoringConfig::default(),
             },
         )
-        .await?;
+        ?;
 
-    let status = manager.get_status().await;
+    let status = manager.get_status();
     assert_eq!(status.total_providers, 2);
     assert!(status.healthy_providers >= 1);
     assert!(status.total_capabilities > 0);
 
-    let providers = manager.get_providers().await;
+    let providers = manager.get_providers();
     assert_eq!(providers.len(), 2);
 
     let beardog_provider = providers
         .iter()
         .find(|p| p.ecosystem_id == ecosystem_ids::BEARDOG);
-    let toadstool_provider = providers
+    let compute_provider = providers
         .iter()
         .find(|p| p.ecosystem_id == ecosystem_ids::TOADSTOOL);
 
     assert!(beardog_provider.is_some());
-    assert!(toadstool_provider.is_some());
+    assert!(compute_provider.is_some());
 
     let security_capabilities = manager
         .get_capabilities_by_category(CapabilityCategory::Security)
-        .await;
+        ;
     let compute_capabilities = manager
         .get_capabilities_by_category(CapabilityCategory::Compute)
-        .await;
+        ;
 
     assert!(!security_capabilities.is_empty());
     assert!(!compute_capabilities.is_empty());
@@ -689,12 +652,10 @@ async fn test_multi_provider_ecosystem() -> Result<(), BearDogError> {
         request_id: Uuid::new_v4(),
         request_type: request_types::SECURITY_ENCRYPT.to_string(),
         payload: json!({"data": "test data"}),
-        timestamp: chrono::Utc::now(),
-        priority: RequestPriority::Normal,
+        timestamp: chrono::Utc::now(RequestPriority::Normal,
         metadata: HashMap::with_capacity(16),
         context: RequestContext {
-            user_id: Some("test-user".to_string()),
-            session_id: None,
+            user_id: Some(None,
             transaction_id: None,
             source_ecosystem: ecosystem_ids::TOADSTOOL.to_string(),
             target_ecosystem: Some(ecosystem_ids::BEARDOG.to_string()),
@@ -702,27 +663,25 @@ async fn test_multi_provider_ecosystem() -> Result<(), BearDogError> {
         },
     };
 
-    let security_response = manager.route_request(security_request).await?;
+    let security_response = manager.route_request(security_request)?;
     assert!(security_response.success);
 
     let compute_request = ServiceRequest {
         request_id: Uuid::new_v4(),
         request_type: request_types::COMPUTE_EXECUTE.to_string(),
         payload: json!({"code": "print('hello world')"}),
-        timestamp: chrono::Utc::now(),
-        priority: RequestPriority::Normal,
+        timestamp: chrono::Utc::now(RequestPriority::Normal,
         metadata: HashMap::with_capacity(16),
         context: RequestContext {
-            user_id: Some("test-user".to_string()),
-            session_id: None,
+            user_id: Some(None,
             transaction_id: None,
             source_ecosystem: ecosystem_ids::BEARDOG.to_string(),
-            target_ecosystem: Some(ecosystem_ids::TOADSTOOL.to_string()),
+            target_ecosystem: Some(ecosystem_ids::COMPUTE_SERVICE.to_string()),
             metadata: HashMap::with_capacity(16),
         },
     };
 
-    let compute_response = manager.route_request(compute_request).await?;
+    let compute_response = manager.route_request(compute_request)?;
     assert!(compute_response.success);
 
     println!("✅ Multi-provider ecosystem integration test passed");
@@ -731,9 +690,8 @@ async fn test_multi_provider_ecosystem() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_primal_provider_performance() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
     let instance_id = "test-beardog-perf".to_string();
     let provider = Arc::new(BearDogPrimalProvider::new(core.clone(), instance_id));
@@ -746,26 +704,21 @@ async fn test_primal_provider_performance() -> Result<(), BearDogError> {
         let handle = tokio::spawn(async move {
             let request = ServiceRequest {
                 request_id: Uuid::new_v4(),
-                request_type: request_types::SECURITY_ENCRYPT.to_string(),
-                payload: json!({
-                    "data": format_args!("concurrent test data {}", i).to_string(),
+                request_type: request_types::SECURITY_ENCRYPT.to_string(json!({
+                    "data": format!("concurrent test data {}", i),
                     "algorithm": "AES-256-GCM"
                 }),
-                timestamp: chrono::Utc::now(),
-                priority: RequestPriority::Normal,
-                metadata: HashMap::with_capacity(16),
-                context: RequestContext {
-                    user_id: Some(format_args!("user-{}", i).to_string()),
-                    session_id: Some(format_args!("session-{}", i).to_string()),
-                    transaction_id: Some(format_args!("tx-{}", i).to_string()),
-                    source_ecosystem: ecosystem_ids::BEARDOG.to_string(),
-                    target_ecosystem: None,
+                timestamp: chrono::Utc::now(RequestPriority::Normal,
+                metadata: HashMap::with_capacity(RequestContext {
+                    user_id: Some(format!("user-{}", i)),
+                    session_id: Some(Some(format!("tx-{}", i)),
+                    source_ecosystem: ecosystem_ids::BEARDOG.to_string(None,
                     metadata: HashMap::with_capacity(16),
                 },
             };
 
             let start = std::time::Instant::now();
-            let response = provider_clone.handle_request(request).await?;
+            let response = provider_clone.handle_request(request)?;
             let duration = start.elapsed();
 
             Ok::<(ServiceResponse, std::time::Duration), BearDogError>((response, duration))
@@ -774,19 +727,9 @@ async fn test_primal_provider_performance() -> Result<(), BearDogError> {
         handles.push(handle);
     }
 
-    let results = futures::future::join_all(handles).await;
+    let results = futures::future::join_all(handles);
 
-    let mut total_duration = std::time::Duration::from_millis(0);
-    for result in results {
-        let (response, duration) = result??;
-        assert!(response.success);
-        assert!(response.error.is_none());
-        total_duration += duration;
-    }
-
-    let avg_duration = total_duration / num_requests as u32;
-    println!(
-        "✅ Concurrent requests completed. Average duration: {:?}",
+    let mut total_duration = std::time::Duration::from_millis({:?}",
         avg_duration
     );
 

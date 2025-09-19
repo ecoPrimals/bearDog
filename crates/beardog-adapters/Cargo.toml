@@ -2,31 +2,63 @@
 name = "beardog-adapters"
 version = "0.1.0"
 edition = "2021"
-license.workspace = true
 description = "BearDog adapters module"
-authors.workspace = true
+repository = "https://github.com/eastgate-software/beardog"
+rust-version = "1.75"
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
+keywords = [ "adapters", "integration", "beardog", "ecosystem", "universal",]
+categories = [ "development-tools", "integration", "adapters",]
+readme = "README.md"
 
 [features]
 default = []
-# Enable advanced NestGate ZFS integration (requires fully implemented API)
 advanced-nestgate = []
 
 [dependencies]
-beardog-errors = { path = "../beardog-errors" }
-beardog-traits = { path = "../beardog-traits" }
-beardog-types = { path = "../beardog-types" }
-serde = { version = "1.0", features = ["derive"] }
+async-trait = "0.1"
 serde_json = "1.0"
 serde_yaml = "0.9"
-tokio = { version = "1.0", features = ["full"] }
-reqwest = { version = "0.11", features = ["json"] }
 tracing = "0.1"
-chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1.0", features = ["v4", "serde"] }
 semver = "1.0"
 sha2 = "0.10"
-# kube = { version = "0.87", features = ["client", "runtime"] }  # Commented out for now
+rand = "0.8"
+ed25519-dalek = "2.1"
 
-# Dev dependencies for testing
 [dev-dependencies]
 tokio-test = "0.4"
+
+[package.license]
+workspace = true
+
+[package.authors]
+workspace = true
+
+[dependencies.beardog-errors]
+path = "../beardog-errors"
+
+[dependencies.beardog-traits]
+path = "../beardog-traits"
+
+[dependencies.beardog-types]
+path = "../beardog-types"
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]
+
+[dependencies.tokio]
+version = "1.0"
+features = [ "full",]
+
+[dependencies.reqwest]
+version = "0.11"
+features = [ "json",]
+
+[dependencies.chrono]
+version = "0.4"
+features = [ "serde",]
+
+[dependencies.uuid]
+version = "1.0"
+features = [ "v4", "serde",]

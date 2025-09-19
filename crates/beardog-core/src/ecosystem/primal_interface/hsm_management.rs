@@ -1,36 +1,69 @@
 // Simplified hsm_management.rs to resolve compilation issues
-use beardog_errors::BearDogError;
 use crate::BearDogCore;
+use beardog_errors::BearDogError;
 use beardog_types::canonical::HealthStatus;
-use super::super::primal_types::*;
-use tracing::{debug, info, warn};
 use std::collections::HashMap;
+use tracing::{debug, info};
 
 impl BearDogCore {
-    pub(crate) async fn initialize_hsm_providers(&self) -> Result<(), BearDogError> {
+    /// Initialize HSM providers - used by ecosystem integration
+    pub(crate) fn initialize_hsm_providers(&self) -> Result<(), BearDogError> {
         info!("🔧 Initializing universal HSM providers");
         info!("🛠️ Initializing Software HSM provider");
         info!("🔍 Detecting available hardware HSM modules");
+
+        // Actual initialization would happen here in production
+        #[cfg(feature = "hsm-integration")]
+        {
+            // Real HSM initialization code would go here
+        }
+
         Ok(())
     }
 
-    pub(crate) async fn shutdown_hsm_providers(&self) -> Result<(), BearDogError> {
+    /// Shutdown HSM providers - used by ecosystem cleanup
+    pub(crate) fn shutdown_hsm_providers(&self) -> Result<(), BearDogError> {
         debug!("🔍 Closing hardware HSM connections");
+
+        #[cfg(feature = "hsm-integration")]
+        {
+            // Real HSM shutdown code would go here
+        }
+
         info!("✅ HSM providers shutdown complete");
         Ok(())
     }
 
-    pub(crate) async fn check_hsm_health(&self) -> HealthStatus {
+    /// Check HSM health - used by health monitoring
+    pub(crate) fn check_hsm_health(&self) -> HealthStatus {
         debug!("🏥 Checking HSM provider health");
+
+        #[cfg(feature = "hsm-integration")]
+        {
+            // Real HSM health check would go here
+            // For now, return healthy in development
+        }
+
         HealthStatus::Healthy
     }
 
+    /// Get HSM metrics - used by monitoring system
     pub(crate) fn get_hsm_metrics(&self) -> HashMap<String, serde_json::Value> {
         let mut metrics = HashMap::new();
+
+        #[cfg(feature = "hsm-integration")]
+        {
+            // Real HSM metrics collection would go here
+        }
+
+        // Development metrics
         metrics.insert("total_keys_generated".to_string(), serde_json::json!(42));
         metrics.insert("active_sessions".to_string(), serde_json::json!(3));
         metrics.insert("hardware_attestations".to_string(), serde_json::json!(15));
-        metrics.insert("last_key_generation".to_string(), serde_json::json!(chrono::Utc::now()));
+        metrics.insert(
+            "last_key_generation".to_string(),
+            serde_json::json!(chrono::Utc::now()),
+        );
         metrics.insert("provider_uptime".to_string(), serde_json::json!("99.9%"));
         metrics
     }

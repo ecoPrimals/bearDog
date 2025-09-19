@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 pub mod adapter_core;
 pub mod capabilities;
 pub mod core_types;

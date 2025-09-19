@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use crate::tunnel::hsm::android_strongbox::safe_android_provider::{
     SafeMobileHardwareProvider, SoftwareFallback, StrongBoxAvailable, TeeAvailable,
 };
@@ -17,10 +22,15 @@ pub struct SafeAndroidKeystoreOps {
 }
 impl SafeAndroidKeystoreOps {
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub async fn new() -> Result<Self, BearDogError> {
         info!("🛡️ Initializing SafeAndroidKeystoreOps - ZERO UNSAFE CODE");
 
-        let provider = Self::detect_best_provider().await?;
+        let provider = Self::detect_best_provider()?;
         let buffer_pools = Arc::new(GlobalBufferPools::new());
         Ok(Self {
             provider,
@@ -28,28 +38,24 @@ impl SafeAndroidKeystoreOps {
         })
     }
 
-    async fn detect_best_provider() -> Result<Box<dyn PlatformProvider, BearDogError>> {
+
+    fn detect_best_provider() -> Result<Box<dyn PlatformProvider, BearDogError>> {
         info!("🔍 Safe hardware detection starting");
 
         if let Some(strongbox) =
-            SafeMobileHardwareProvider::<StrongBoxAvailable>::detect_strongbox().await?
+            SafeMobileHardwareProvider::<StrongBoxAvailable>::detect_strongbox()?
         {
             info!("✅ StrongBox detected - using highest security level");
             return Ok(strongbox);
         }
 
-        if let Some(tee) = SafeMobileHardwareProvider::<TeeAvailable>::detect_tee().await? {
+        if let Some(tee) = SafeMobileHardwareProvider::<TeeAvailable>::detect_tee()? {
             info!("✅ TEE detected - using hardware security");
             return Ok(tee);
 
         info!("ℹ️ Using software fallback - no hardware security available");
         let software =
-            SafeMobileHardwareProvider::<SoftwareFallback>::new(SoftwareFallback).await?;
-        Ok(software)
-
-    pub async fn safe_generate_key_with_strongbox(
-        &self,
-        key_id: &str,
+            SafeMobileHardwareProvider::<SoftwareFallback>::new(&str,
         key_type: &KeyType,
         strongbox_required: bool,
     ) -> Result<HsmKey, BearDogError> {
@@ -62,99 +68,94 @@ impl SafeAndroidKeystoreOps {
 
         let key_request = KeyGenerationRequest {
             key_id: key_id.to_string(),
-            key_type: key_type.clone(),
-            hardware_backed: strongbox_required,
+            key_type: key_type.clone(strongbox_required,
             biometric_required: true,
         };
-        let generated_key = self.provider.generate_key(&key_request).await?;
+        let generated_key = self.provider.generate_key(&key_request)?;
         info!("✅ Safe Android: Key generated successfully");
-        Ok(generated_key)
-
-    pub async fn safe_sign_with_strongbox(
-        data: &[u8],
+        Ok(&[u8],
         algorithm: Algorithm,
     ) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Safe Android: Signing with StrongBox key: {}", key_id);
 
-        let data_buffer = SafePinnedBuffer::from_slice(data)?;
-        let signing_request = SigningRequest {
-            data: data_buffer,
+        let data_buffer = SafePinnedBuffer::from_slice(data_buffer,
             algorithm,
-        let signature = self.provider.sign(&signing_request).await?;
+        let signature = self.provider.sign(&signing_request)?;
         info!("✅ Safe Android: Data signed successfully");
-        Ok(signature.into_vec())
-
-    pub async fn safe_verify_with_strongbox(
-        signature: &[u8],
+        Ok(&[u8],
     ) -> Result<bool, BearDogError> {
         info!("🔍 Safe Android: Verifying with StrongBox key: {}", key_id);
 
-        let signature_buffer = SafePinnedBuffer::from_slice(signature)?;
-        let verification_request = VerificationRequest {
-            signature: signature_buffer,
-        let is_valid = self.provider.verify(&verification_request).await?;
-        info!("✅ Safe Android: Verification completed: {}", is_valid);
+        let signature_buffer = SafePinnedBuffer::from_slice(signature_buffer,
+        let is_valid = self.provider.verify(Verification completed: {}", is_valid);
         Ok(is_valid)
 
-    pub async fn safe_delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
+/// Safe Delete Key operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn safe_delete_key(&self, key_id: &str) -> Result<(), BearDogError> {
         info!("🗑️ Safe Android: Deleting key: {}", key_id);
-        self.provider.delete_key(key_id).await?;
+        self.provider.delete_key(key_id)?;
         info!("✅ Safe Android: Key deleted successfully");
         Ok(())
 
-    pub async fn safe_key_exists(&self, key_id: &str) -> Result<bool, BearDogError> {
+/// Safe Key Exists operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn safe_key_exists(&self, key_id: &str) -> Result<bool, BearDogError> {
         debug!("🔍 Safe Android: Checking key existence: {}", key_id);
-        let exists = self.provider.key_exists(key_id).await?;
-        debug!("✅ Safe Android: Key exists check: {}", exists);
+        let exists = self.provider.key_exists(Key exists check: {}", exists);
         Ok(exists)
 
-    pub async fn safe_get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError> {
+/// Safe Get Key Info operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn safe_get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError> {
         debug!("ℹ️ Safe Android: Getting key info: {}", key_id);
-        let key_info = self.provider.get_key_info(key_id).await?;
+        let key_info = self.provider.get_key_info(key_id)?;
         debug!("✅ Safe Android: Key info retrieved");
         Ok(key_info)
 
-// SafeHardwareProvider removed - use PlatformProvider from beardog-traits instead
-    async fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError>;
+    /// Gets key_info
+    fn get_key_info(&self, key_id: &str) -> Result<KeyInfo, BearDogError>;
 #[derive(Debug, Clone)]
-pub struct KeyGenerationRequest {
-    pub key_id: String,
+    /// The key type value
     pub key_type: KeyType,
+    /// Whether hardware_backed is enabled
     pub hardware_backed: bool,
+    /// Whether biometric_required is enabled
     pub biometric_required: bool,
-#[derive(Debug)]
-pub struct SigningRequest {
-    pub data: SafePinnedBuffer,
+#[derive(Debug, Clone)]
+    /// The algorithm value
     pub algorithm: Algorithm,
 }
 
 pub struct VerificationRequest {
+    /// The signature value
     pub signature: SafePinnedBuffer,
 pub struct KeyInfo {
+    /// The created at value
     pub created_at: DateTime<Utc>,
+    /// Whether biometric_protected is enabled
     pub biometric_protected: bool,
 
+/// Create Safe Android Keystore operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+/// Creates safe_android_keystore
 pub async fn create_safe_android_keystore() -> Result<SafeAndroidKeystoreOps, BearDogError> {
-    SafeAndroidKeystoreOps::new().await
-
-pub async fn safe_generate_key_wrapper(
-    key_id: &str,
+    SafeAndroidKeystoreOps::new(&str,
     key_type: &KeyType,
     strongbox_required: bool,
 ) -> Result<HsmKey, BearDogError> {
-    let keystore = create_safe_android_keystore().await?;
-    keystore
-        .safe_generate_key_with_strongbox(key_id, key_type, strongbox_required)
-        .await
-
-pub async fn safe_sign_data_wrapper(
-    data: &[u8],
+    let keystore = create_safe_android_keystore(&[u8],
     algorithm: Algorithm,
 ) -> Result<Vec<u8>, BearDogError>> {
-        .safe_sign_with_strongbox(key_id, data, algorithm)
-
-pub async fn safe_verify_signature_wrapper(
-    signature: &[u8],
+        .safe_sign_with_strongbox(&[u8],
 ) -> Result<bool, BearDogError> {
         .safe_verify_with_strongbox(key_id, data, signature, Algorithm::EcdsaSha256)}
 
@@ -162,12 +163,13 @@ pub async fn safe_verify_signature_wrapper(
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_safe_keystore_creation() -> Result<(), BearDogError> {
-        let keystore = SafeAndroidKeystoreOps::new().await;
+    fn test_safe_keystore_creation() -> Result<(), BearDogError> {
+        let keystore = SafeAndroidKeystoreOps::new();
         assert!(keystore.is_ok());}
 
-    async fn test_safe_key_operations() -> Result<(), BearDogError> {
-        let keystore = SafeAndroidKeystoreOps::new().await.map_err(|e| {
+
+    fn test_safe_key_operations() -> Result<(), BearDogError> {
+        let keystore = SafeAndroidKeystoreOps::new().map_err(|e| {
             tracing::error!("Operation failed: {e:?}");
             beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
         })?;
@@ -175,7 +177,7 @@ mod tests {
         let key_type = KeyType::EccP256;
         let key = keystore
             .safe_generate_key_with_strongbox("test_key", &key_type, false)
-            .await;
+            ;
         assert!(key.is_ok());
 
         let data = b"test data";
@@ -187,9 +189,9 @@ mod tests {
         let valid = keystore
             .safe_verify_signature_wrapper("test_key", data, &sig_bytes)
         assert!(valid.is_ok());
-    async fn test_wrapper_functions() -> Result<(), BearDogError> {
+    fn test_wrapper_functions() -> Result<(), BearDogError> {
 
-        let key = safe_generate_key_wrapper("wrapper_test", &key_type, false).await;
+        let key = safe_generate_key_wrapper("wrapper_test", &key_type, false);
         let data = b"wrapper test data";
-        let signature = safe_sign_data_wrapper("wrapper_test", data, Algorithm::EcdsaSha256).await;
-        let valid = safe_verify_signature_wrapper("wrapper_test", data, &sig_bytes).await;
+        let signature = safe_sign_data_wrapper("wrapper_test", data, Algorithm::EcdsaSha256);
+        let valid = safe_verify_signature_wrapper("wrapper_test", data, &sig_bytes);

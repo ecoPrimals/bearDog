@@ -4,43 +4,29 @@ use super::types::OutputFormat;
 use clap::{Subcommand, ValueEnum};
 use std::path::PathBuf;
 
-#[derive(Debug, Subcommand)]
-pub enum GeneticsOperation {
-
-    Spawn {
-
-        #[arg(long, default_value = "1")]
-        count: u32,
-
-        #[arg(long)]
-        template: Option<String>,
+#[derive(Debug, Clone)]
+        #[arg(Option<String>,
 
         config: Option<PathBuf>,
 
-        #[arg(long, value_enum, default_value = "balanced")]
-        strategy: SpawnStrategy,
+        #[arg(SpawnStrategy,
 
         resources: Option<String>,
 
-        #[arg(long, value_enum, default_value = "json")]
-        format: OutputFormat,
+        #[arg(OutputFormat,
     },
 
     Evolve {
 
         instances: Vec<String>,
 
-        #[arg(long, value_enum, default_value = "automated")]
-        algorithm: EvolutionAlgorithm,
+        #[arg(EvolutionAlgorithm,
 
-        #[arg(long, default_value = "10")]
-        generations: u32,
+        #[arg(u32,
 
-        #[arg(long, default_value = "0.1")]
-        mutation_rate: f32,
+        #[arg(f32,
 
-        #[arg(long, default_value = "0.5")]
-        selection_pressure: f32,
+        #[arg(f32,
 
         fitness_function: Option<String>,
 
@@ -62,15 +48,13 @@ pub enum GeneticsOperation {
 
         force: bool,
 
-        #[arg(long, default_value = "30")]
-        timeout: u64,
+        #[arg(u64,
 
     Export {
 
         output: PathBuf,
 
-        #[arg(long, default_value = "json")]
-        format: String,
+        #[arg(String,
 
         include_genetics: bool,
 
@@ -82,8 +66,7 @@ pub enum GeneticsOperation {
 
     Analyze {
 
-        #[arg(long, default_value = "performance")]
-        analysis_type: String,
+        #[arg(String,
 
         time_range: Option<String>,
 }
@@ -91,24 +74,43 @@ pub enum GeneticsOperation {
 #[derive(Debug, Clone, ValueEnum, serde::Serialize, serde::Deserialize)]
 pub enum SpawnStrategy {
 
+
+    /// State indicating balanced
     Balanced,
+
 
     HighPerformance,
 
+
+    /// Represents conservative variant
     Conservative,
 
+
+    /// Represents custom variant
     Custom,
 
+#[derive(Debug, Clone, ValueEnum)]}
+#[derive(Debug, Clone, ValueEnum)]}
 #[derive(Debug, Clone, ValueEnum)]}
 
 pub enum EvolutionAlgorithm {
 
+
+    /// State indicating automated
     Automated,
 
+
+    /// Represents genetic variant
     Genetic,
 
+
+    /// Represents differential variant
     Differential,
 
+
+    /// Represents particle swarm variant
     ParticleSwarm,
 
+
+    /// Currently simulatedannealing
     SimulatedAnnealing,

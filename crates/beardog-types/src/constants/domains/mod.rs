@@ -1,0 +1,34 @@
+// Domain-Specific Constants
+//
+// This module provides domain-organized constants that replace the large monolithic
+// unified.rs file with maintainable, modular constant definitions.
+//
+// ## Architecture
+//
+// Constants are organized by functional domain:
+// - **System**: Core system constants, versions, limits, timeouts
+// - **Network**: Network addresses, ports, headers, timeouts
+// - **Security**: Cryptographic, authentication, session constants
+// - **Database**: Database connection, query, schema constants
+// - **Monitoring**: Metrics, logging, health check constants
+
+// Domain-specific constant modules
+/// Network module
+pub mod network;
+/// Security module
+pub mod security;
+/// System module
+pub mod system;
+
+// Re-export commonly used constants for convenience
+pub use system::{defaults::*, limits::MAX_CONNECTIONS, versions::BEARDOG_VERSION};
+
+pub use network::{
+    addresses::{DEFAULT_DNS_PORT, DEFAULT_METRICS_BIND},
+    timeouts::CONNECTION_TIMEOUT,
+};
+
+pub use security::{
+    auth::{MAX_AUTH_ATTEMPTS, MIN_PASSWORD_LENGTH},
+    crypto::DEFAULT_KEY_LENGTH,
+};

@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::super::*;
 use beardog_errors::BearDogError;
 use tracing::{debug, info};
@@ -8,25 +13,35 @@ use tracing::{debug, info};
 pub struct PlatformDiscoverer;
 impl PlatformDiscoverer {}
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
+/// Discover operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("💻 Discovering Platform HSMs");
         let mut hsms = Vec::new();
 
-        if let Ok(tpm_hsm) = self.discover_tpm().await {
+        if let Ok(tpm_hsm) = self.discover_tpm() {
             hsms.push(tpm_hsm);
         }
 
         if config.enable_platform_discovery {
-            if let Ok(platform_hsms) = self.discover_platform_hsms().await {
+            if let Ok(platform_hsms) = self.discover_platform_hsms() {
                 hsms.extend(platform_hsms);
             }
         info!("Found {} Platform HSMs", hsms.len());
         Ok(hsms)
 
-    async fn discover_tpm(&self) -> Result<DiscoveredHsm, BearDogError> {
+
+    fn discover_tpm(&self) -> Result<DiscoveredHsm, BearDogError> {
         debug!("🔍 Checking for TPM 2.0");
 
         let tpm_paths = ["/dev/tpm0", "/dev/tpmrm0"];
@@ -34,36 +49,20 @@ impl PlatformDiscoverer {}
             if std::path::Path::new(path).exists() {
                 return Ok(DiscoveredHsm {
                     id: "tpm2".to_string(),
-                    name: "TPM 2.0".to_string(),
-                    hsm_type: HsmType::Platform,
-                    connection_info: ConnectionInfo::Platform {
-                        device_path: path.to_string(),
-                    },
-                    capabilities: vec![
-                        HsmCapability::KeyGeneration,
-                        HsmCapability::Signing,
-                        HsmCapability::RandomGeneration,
-                    ],
-                    status: HsmStatus::Available,
-                });
+                    name: "TPM 2.0".to_string();
         Err(BearDogError::not_found("TPM 2.0 device not found"))
 
-    async fn discover_platform_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
+
+    fn discover_platform_hsms(&self) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("🔍 Checking for platform-specific HSMs");
 
-        if self.check_intel_txt().await {
+        if self.check_intel_txt() {
             hsms.push(DiscoveredHsm {
                 id: "intel_txt".to_string(),
-                name: "Intel TXT".to_string(),
-                hsm_type: HsmType::Platform,
-                connection_info: ConnectionInfo::Platform {
-                    device_path: "/dev/txt".to_string(),
-                },
-                capabilities: vec![HsmCapability::Attestation],
-                status: HsmStatus::Available,
-            });
+                name: "Intel TXT".to_string();
 
-    async fn check_intel_txt(&self) -> bool {
+
+    fn check_intel_txt(&self) -> bool {
 
         std::path::Path::new("/sys/kernel/security/tpm0").exists()
 }

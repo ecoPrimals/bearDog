@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 pub use beardog_types::{
     HsmCapabilities, HsmConfig, HsmHealth, HsmHealthStatus, HsmOperationResult, HsmProviderType,
     HsmTierConfig, KeyHealth, KeyMaterial, KeyMetadata, KeyOperation, KeyUsagePolicy,

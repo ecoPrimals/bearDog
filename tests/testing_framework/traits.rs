@@ -1,9 +1,6 @@
-
-
 use std::collections::HashMap;
 
 pub trait FormalVerifier {
-
     fn verify_correctness(&self, component: &str) -> FormalVerificationResult;
 
     fn generate_proof(&self, property: &str) -> MathematicalProof;
@@ -12,16 +9,14 @@ pub trait FormalVerifier {
 }
 
 pub trait PropertyGenerator {
-
     fn generate_test_cases(&self, property: &SecurityProperty) -> Vec<TestCase>;
 
-    fn validate_property(&self, property: &SecurityProperty, input: &TestInput) -> PropertyResult;
+    fn validate_property(&SecurityProperty, input: &TestInput) -> PropertyResult;
 
     fn exhaustive_edge_cases(&self, domain: &TestDomain) -> Vec<EdgeCase>;
 }
 
 pub trait MutationTester {
-
     fn generate_mutants(&self, code: &str) -> Vec<CodeMutant>;
 
     fn execute_mutant_tests(&self, mutant: &CodeMutant) -> MutationTestResult;
@@ -30,10 +25,9 @@ pub trait MutationTester {
 }
 
 pub trait InvariantValidator {
-
     fn define_invariants(&self, system: &SystemDefinition) -> Vec<SystemInvariant>;
 
-    fn validate_invariant(&self, invariant: &SystemInvariant, state: &SystemState) -> bool;
+    fn validate_invariant(&SystemInvariant, state: &SystemState) -> bool;
 
     fn monitor_invariants(&self, states: &[SystemState]) -> InvariantMonitoringResult;
 
@@ -41,7 +35,6 @@ pub trait InvariantValidator {
 }
 
 pub trait ExhaustiveTester {
-
     fn generate_exhaustive_inputs(&self, function: &FunctionSignature) -> Vec<TestInput>;
 
     fn test_all_paths(&self, function: &FunctionSignature) -> PathCoverageResult;
@@ -54,7 +47,6 @@ pub trait ExhaustiveTester {
 }
 
 pub trait QuantumResistanceValidator {
-
     fn validate_post_quantum_security(&self, algorithm: &CryptoAlgorithm) -> QuantumSecurityResult;
 
     fn test_quantum_attack_resistance(&self, keys: &[CryptoKey]) -> QuantumAttackResult;
@@ -66,89 +58,67 @@ pub trait QuantumResistanceValidator {
     fn simulate_quantum_attacks(&self, target: &str) -> QuantumAttackSimulation;
 }
 
-#[derive(Debug, Clone)]
-pub struct FormalVerificationResult {
-    pub verified: bool,
+#[derive(bool,
     pub confidence_score: f64,
     pub proof_steps: Vec<ProofStep>,
     pub verification_time_ms: u64,
     pub errors: Vec<VerificationError>,
 }
 
-#[derive(Debug, Clone)]
-pub struct MathematicalProof {
-    pub theorem: String,
+#[derive(String,
     pub axioms: Vec<String>,
     pub proof_steps: Vec<ProofStep>,
     pub conclusion: String,
     pub validity: bool,
 }
 
-#[derive(Debug, Clone)]
-pub struct SystemState {
-    pub variables: HashMap<String, serde_json::Value>,
+#[derive(HashMap<String, serde_json::Value>,
     pub timestamp: std::time::SystemTime,
     pub context: String,
 }
 
-#[derive(Debug, Clone)]
-pub struct SecurityProperty {
-    pub name: String,
+#[derive(String,
     pub description: String,
     pub requirements: Vec<String>,
     pub test_vectors: Vec<TestVector>,
 }
 
-#[derive(Debug, Clone)]
-pub struct TestCase {
-    pub id: String,
+#[derive(String,
     pub input: TestInput,
     pub expected_output: TestOutput,
     pub property: String,
     pub metadata: HashMap<String, String>,
 }
 
-#[derive(Debug, Clone)]
-pub struct TestInput {
-    pub data: serde_json::Value,
+#[derive(serde_json::Value,
     pub context: HashMap<String, String>,
     pub constraints: Vec<InputConstraint>,
 }
 
-#[derive(Debug, Clone)]
-pub struct TestOutput {
-    pub result: serde_json::Value,
+#[derive(serde_json::Value,
     pub status: TestStatus,
     pub execution_time_ms: u64,
 }
 
-#[derive(Debug, Clone)]
-pub struct CodeMutant {
-    pub original_code: String,
+#[derive(String,
     pub mutated_code: String,
     pub mutation_type: MutationType,
     pub location: CodeLocation,
 }
 
-#[derive(Debug, Clone)]
-pub struct SystemInvariant {
-    pub name: String,
+#[derive(String,
     pub condition: String,
     pub severity: InvariantSeverity,
     pub description: String,
 }
 
-#[derive(Debug, Clone)]
-pub struct FunctionSignature {
-    pub name: String,
+#[derive(String,
     pub parameters: Vec<Parameter>,
     pub return_type: String,
     pub constraints: Vec<FunctionConstraint>,
 }
 
-#[derive(Debug, Clone)]
-pub struct CryptoAlgorithm {
-    pub name: String,
+#[derive(String,
     pub key_size: u32,
     pub algorithm_type: AlgorithmType,
     pub security_level: u32,
@@ -188,54 +158,27 @@ pub enum AlgorithmType {
     DigitalSignature,
 }
 
-pub type PropertyResult = Result<bool, PropertyError>;
-pub type MutationTestResult = Result<MutationScore, MutationError>;
-pub type InvariantValidationResult = Result<bool, InvariantError>;
-pub type InvariantMonitoringResult = Result<MonitoringReport, MonitoringError>;
-pub type PathCoverageResult = Result<CoverageReport, CoverageError>;
-pub type BoundaryTestResult = Result<BoundaryReport, BoundaryError>;
-pub type QuantumSecurityResult = Result<SecurityAssessment, QuantumError>;
-pub type QuantumAttackResult = Result<AttackResistance, AttackError>;
-pub type QuantumReadinessScore = Result<ReadinessReport, ReadinessError>;
-pub type QuantumResistanceResult = Result<ResistanceReport, ResistanceError>;
-pub type QuantumAttackSimulation = Result<SimulationReport, SimulationError>;
-pub type ErrorValidationResults = Result<Vec<ErrorValidation>, ValidationError>;
+// MIGRATED TO UNIFIED ERROR SYSTEM
+// All custom error types have been consolidated into BearDogError with TestingErrorCategory
+// Use the unified_errors module for creating testing errors with proper categorization
 
-#[derive(Debug, Clone)]
-pub struct PropertyError(pub String);
+use beardog_errors::BearDogError;
 
-#[derive(Debug, Clone)]
-pub struct MutationError(pub String);
+pub type PropertyResult = Result<bool, BearDogError>;
+pub type MutationTestResult = Result<MutationScore, BearDogError>;
+pub type InvariantValidationResult = Result<bool, BearDogError>;
+pub type InvariantMonitoringResult = Result<MonitoringReport, BearDogError>;
+pub type PathCoverageResult = Result<CoverageReport, BearDogError>;
+pub type BoundaryTestResult = Result<BoundaryReport, BearDogError>;
+pub type QuantumSecurityResult = Result<SecurityAssessment, BearDogError>;
+pub type QuantumAttackResult = Result<AttackResistance, BearDogError>;
+pub type QuantumReadinessScore = Result<ReadinessReport, BearDogError>;
+pub type QuantumResistanceResult = Result<ResistanceReport, BearDogError>;
+pub type QuantumAttackSimulation = Result<SimulationReport, BearDogError>;
+pub type ErrorValidationResults = Result<Vec<ErrorValidation>, BearDogError>;
 
-#[derive(Debug, Clone)]
-pub struct InvariantError(pub String);
-
-#[derive(Debug, Clone)]
-pub struct MonitoringError(pub String);
-
-#[derive(Debug, Clone)]
-pub struct CoverageError(pub String);
-
-#[derive(Debug, Clone)]
-pub struct BoundaryError(pub String);
-
-#[derive(Debug, Clone)]
-pub struct QuantumError(pub String);
-
-#[derive(Debug, Clone)]
-pub struct AttackError(pub String);
-
-#[derive(Debug, Clone)]
-pub struct ReadinessError(pub String);
-
-#[derive(Debug, Clone)]
-pub struct ResistanceError(pub String);
-
-#[derive(Debug, Clone)]
-pub struct SimulationError(pub String);
-
-#[derive(Debug, Clone)]
-pub struct ValidationError(pub String);
+// REMOVED: Custom error types - use BearDogError with TestingErrorCategory instead
+// For creating testing errors, use the TestingErrorHelpers from unified_errors module
 
 pub type ProofStep = String;
 pub type VerificationError = String;
@@ -262,4 +205,4 @@ pub type AttackResistance = String;
 pub type ReadinessReport = String;
 pub type ResistanceReport = String;
 pub type SimulationReport = String;
-pub type ErrorValidation = String; 
+pub type ErrorValidation = String;

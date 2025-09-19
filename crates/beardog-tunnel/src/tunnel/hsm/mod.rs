@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 pub mod zero_cost_provider;
 
 pub use zero_cost_provider::{
@@ -26,26 +31,26 @@ pub use types::*;
 
 pub use beardog_traits::canonical::HsmProvider;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GenerateKeyRequest {
-    pub key_size: Option<u32>,
+#[derive(Debug, Clone)]
+    /// The usage policy value
     pub usage_policy: KeyUsagePolicy,
+    /// The key type value
     pub key_type: KeyType,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct KeyUsagePolicy {
-    pub can_encrypt: bool,
+#[derive(Debug, Clone)]
+    /// Whether can_decrypt is enabled
     pub can_decrypt: bool,
+    /// Whether can_sign is enabled
     pub can_sign: bool,
+    /// Whether can_verify is enabled
     pub can_verify: bool,
+    /// Whether exportable is enabled
     pub exportable: bool,
 }
 
 impl Default for KeyUsagePolicy {
-    fn default() -> Self {
-        Self {
-            can_encrypt: true,
+    fn default(true,
             can_decrypt: true,
             can_sign: true,
             can_verify: true,
@@ -55,104 +60,99 @@ impl Default for KeyUsagePolicy {
 }
 
 pub trait HsmCapabilityDetector: Send + Sync {
-    async fn detect_capabilities(&self) -> Result<Vec<HsmCapability>, BearDogError>;
-    async fn is_hsm_available(&self, hsm_type: &HsmTier) -> Result<bool, BearDogError>;
-    async fn recommend_hsm_tier(
-        requirements: &SecurityRequirements,
+    fn detect_capabilities(&self) -> Result<Vec<HsmCapability>, BearDogError>> + Send;
+    /// Checks if hsm available
+    fn is_hsm_available(&self, hsm_type: &HsmTier) -> Result<bool, BearDogError>;
+    fn recommend_hsm_tier(&SecurityRequirements,
     ) -> Result<HsmTier, BearDogError>;
 }
 
 pub trait HsmHealthMonitor: Send + Sync {
-    async fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> Result<(), BearDogError>;
-    async fn get_health_status(&self) -> Result<HashMap<String, HsmHealthStatus>, BearDogError>;
-    async fn filter_healthy_providers(
-        providers: Vec<impl HsmProvider + Send + Sync + 'static>,
-    ) -> Result<Vec<impl HsmProvider + Send + Sync + 'static>, BearDogError>;
+    /// Starts monitoring
+    fn start_monitoring(&self, providers: Vec<impl HsmProvider + Send + Sync + 'static>) -> Result<(), BearDogError>;
+    /// Gets health_status
+    fn get_health_status(Vec<impl HsmProvider + Send + Sync + 'static>,
+    ) -> Result<Vec<impl HsmProvider + Send + Sync + 'static>, BearDogError>> + Send;
 }
 
 pub trait HsmFailoverManager: Send + Sync {
-    async fn handle_provider_failure(
+    /// Handles provider_failure
+    fn handle_provider_failure(
         provider: &(impl HsmProvider + Send + Sync + 'static),
         error: &BearDogError,
     ) -> Result<(), BearDogError>;
     
-    async fn get_failover_provider(
+    /// Gets failover_provider
+    
+    fn get_failover_provider(
         failed_provider: &(impl HsmProvider + Send + Sync + 'static),
     ) -> Result<impl HsmProvider + Send + Sync + 'static, BearDogError>;
     
-    async fn perform_with_failover<T, F>(
+    
+    fn perform_with_failover<T, F>(
         operation: F,
     ) -> Result<T, BearDogError>
     where
-        F: Fn(impl HsmProvider + Send + Sync + 'static) -> Result<T, BearDogError> + Send + Sync + 'static,
-        T: Send + 'static;
+        F: Fn(Send + 'static;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 
 pub struct SecurityRequirements {
+    /// The security level value
     pub security_level: SecurityLevel,
+    /// Whether user_interaction_required is enabled
     pub user_interaction_required: bool,
+    /// Whether attestation_required is enabled
     pub attestation_required: bool,
+    /// Whether hardware_backed_required is enabled
     pub hardware_backed_required: bool,
+    /// Collection of compliance requirements
     pub compliance_requirements: Vec<ComplianceStandard>,
     pub performance_requirements: PerformanceRequirements,
 }
 
 pub struct PerformanceRequirements {
+    /// Optional max latency ms
     pub max_latency_ms: Option<u64>,
+    /// Optional min throughput ops per sec
     pub min_throughput_ops_per_sec: Option<u64>,
+    /// Whether cost_optimization is enabled
     pub cost_optimization: bool,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub enum SecurityLevel {
-
-    Basic,
-
-    Medium,
-
-    Tee,
-
-    High,
-
-    StrongBox,
-    Critical,
-    Maximum,
-}
-
-pub enum ComplianceStandard {
-    Gdpr,
-    Hipaa,
-    Sox,
-    PciDss,
-    FedRamp,
-    Fips140Level2,
-    Fips140Level3,
-    CommonCriteria,
-}
-
-pub struct OperationContext {
-    pub user_id: Option<String>,
+#[derive(Debug, Clone)]
     pub session_id: Option<String>,
+    /// The operation type value
     pub operation_type: OperationType,
     pub timestamp: DateTime<Utc>,
 }
-
+/// Types of operation
 pub enum OperationType {
+    /// Represents key generation variant
     KeyGeneration,
+    /// Represents key import variant
     KeyImport,
+    /// Represents encryption variant
     Encryption,
+    /// Represents decryption variant
     Decryption,
+    /// Currently signing
     Signing,
+    /// Represents verification variant
     Verification,
+    /// Represents key derivation variant
     KeyDerivation,
+    /// Represents key backup variant
     KeyBackup,
+    /// Represents key restoration variant
     KeyRestoration,
 }
 
 impl SecurityRequirements {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(security_level: SecurityLevel) -> Self {
         Self {
             security_level,
@@ -163,15 +163,7 @@ impl SecurityRequirements {
                 SecurityLevel::High | SecurityLevel::Maximum
             ),
             compliance_requirements: vec![],
-            performance_requirements: PerformanceRequirements::default(),
-        }
-    }
-}
-
-impl Default for SecurityRequirements {
-    fn default() -> Self {
-        Self {
-            security_level: SecurityLevel::Medium,
+            performance_requirements: PerformanceRequirements::default(SecurityLevel::Medium,
             user_interaction_required: false,
             attestation_required: false,
             hardware_backed_required: false,
@@ -185,16 +177,13 @@ impl Default for PerformanceRequirements {
     fn default() -> Self {
         Self {
             max_latency_ms: Some(1000),           // 1 second default
-            min_throughput_ops_per_sec: Some(10), // 10 ops/sec default
-            cost_optimization: false,
+            min_throughput_ops_per_sec: Some(false,
         }
     }
 }
 
 impl Default for OperationContext {
-    fn default() -> Self {
-        Self {
-            user_id: None,
+    fn default(None,
             session_id: None,
             operation_type: OperationType::KeyGeneration,
             timestamp: Utc::now(),

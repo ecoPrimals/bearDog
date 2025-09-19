@@ -1,6 +1,6 @@
-//! Genetic Spawning Module
-//!
-//! This module provides genetic spawning functionality with canonical patterns.
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
 pub mod engine;
 pub mod types;

@@ -2,18 +2,35 @@
 name = "beardog-traits"
 version = "0.1.0"
 edition = "2021"
-authors = ["BearDog Team <team@beardog.dev>"]
+authors = [ "BearDog Team <team@beardog.dev>",]
 description = "Unified trait system for BearDog ecosystem - provides common abstractions for security, genetics, monitoring, and performance"
 license = "AGPL-3.0-only"
 repository = "https://github.com/beardog/beardog"
-keywords = ["beardog", "traits", "security", "genetics", "abstraction"]
-categories = ["cryptography", "security", "data-structures"]
+keywords = [ "beardog", "traits", "security", "genetics", "abstraction",]
+categories = [ "cryptography", "security", "data-structures",]
+rust-version = "1.75"
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
 
 [dependencies]
-beardog-errors = { path = "../beardog-errors" }
-beardog-types = { path = "../beardog-types" }
-serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
-# Documentation and testing
-[dev-dependencies] 
+async-trait = "0.1"
+thiserror = { workspace = true }
+uuid = { version = "1.0", features = ["v4"] }
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["rt", "macros"] }
+
+[dependencies.beardog-errors]
+path = "../beardog-errors"
+
+[dependencies.beardog-types]
+path = "../beardog-types"
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]
+
+[dependencies.chrono]
+version = "0.4"
+features = [ "serde",]

@@ -1,11 +1,11 @@
-//! ToadStool Client Integration
-//! 
-//! This module provides the main interface to ToadStool compute orchestration services.
+// Removed unuse crate::ecosystem_integration::universal_compute_client::{UniversalComputeClient, UniversalComputeRequest, UniversalComputeResponse};
 
-pub use crate::ecosystem_integration::toadstool_client::*;
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
-// Re-export key types for convenience
+
 pub use crate::ecosystem_integration::ecosystem_genetic_spawner::{
-    EcosystemPrimalClient, GeneticTrait, TraitCategory, EcosystemCapability,
-    ComputeResourceAllocation, EcosystemGeneticBlueprint,
-}; 
+    ComputeResourceAllocation, EcosystemCapability, EcosystemGeneticBlueprint,
+    EcosystemPrimalClient, GeneticTrait, TraitCategory,
+};

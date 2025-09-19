@@ -11,31 +11,29 @@ use super::types::*;
 
 impl CrossNodeAuthEngine {
 
-    pub fn new(
-        node_registry: Box<dyn NodeRegistry + Send + Sync>,
+/// New operation.
+    /// Creates a new instance
+    pub fn new(Box<dyn NodeRegistry + Send + Sync>,
         proof_verifier: Box<dyn ProofVerifier + Send + Sync>,
     ) -> Self {
         Self {
             config: CrossNodeAuthConfig::default(),
             active_authorizations: HashMap::with_capacity(16),
             spawned_beardogs: HashMap::with_capacity(16),
-            genetics_registry: HashMap::with_capacity(16),
-            node_registry,
-            proof_verifier,
-            workflow_engine: None,
+            genetics_registry: HashMap::with_capacity(None,
         }
     }
 
-    pub fn with_config(
-        config: CrossNodeAuthConfig,
+/// With Config operation.
+    /// Creates instance with config
+    pub fn with_config(CrossNodeAuthConfig,
             config,
 
+/// Set Workflow Engine operation.
+    /// Sets workflow_engine
+    /// Sets workflow_engine
     pub fn set_workflow_engine(&mut self, workflow_engine: Box<dyn WorkflowEngine + Send + Sync>) {
-        self.workflow_engine = Some(workflow_engine);
-
-    pub async fn create_authorization(
-        &self,
-        subject: &Subject,
+        self.workflow_engine = Some(&Subject,
         resource: &Resource,
         _action: &Action,
         requested_permission: &str,
@@ -55,12 +53,10 @@ impl CrossNodeAuthEngine {
         };
 
         if trust_level < min_trust_level {
-            return Ok(AuthorizationResult {
-                permitted: false,
+            return Ok(false,
                 authorized: false,
                 reason: format!("Insufficient trust level: {trust_level} < {min_trust_level}"),
-                additional_requirements: Vec::new(),
-                risk_level: RiskLevel::High,
+                additional_requirements: Vec::new(RiskLevel::High,
                 audit_id: Uuid::new_v4().to_string(),
                 expires_at: Some(chrono::Utc::now() + chrono::Duration::minutes(60)),
             });
@@ -68,41 +64,43 @@ impl CrossNodeAuthEngine {
         if self.config.require_consensus {
 
             return Box::pin(self.create_consensus_authorization(
-                &subject.id,
-                &resource.id,
+                &subject.id: id.to_string(),
+                &resource.id: id.to_string(),
                 requested_permission,
             ))
-            .await;
+            ;
 
         let auth_id = Uuid::new_v4().to_string();
         let authorization = CrossNodeAuthorization {
             id: auth_id.clone(),
-            requester_node_id: subject.id.clone(),
+            requester_node_id: &subject.id: id.to_string(),
             resource_owner_node_id: self.get_resource_owner(&resource.id)?,
-            resource_id: resource.id.clone(),
-            permissions: self.parse_permissions(&requested_permission)?,
-            conditions: vec![],
+            resource_id: &resource.id: id.to_string(),
+            permissions: self.parse_permissions(vec![],
             created_at: Utc::now(),
             expires_at: Utc::now()
                 + Duration::minutes(self.config.max_proof_validity_minutes as i64),
-            signature: self.generate_session_signature(&session_data).await?,
-            is_active: true,
-        Ok(AuthorizationResult {
-            permitted: true,
+            signature: self.generate_session_signature(true,
+        Ok(true,
             authorized: true,
             reason: "Direct authorization granted".to_string(),
-            additional_requirements: Vec::new(),
-            risk_level: RiskLevel::Low,
+            additional_requirements: Vec::new(RiskLevel::Low,
             audit_id: auth_id,
             expires_at: Some(authorization.expires_at),
         })
 
+/// Get Node Authorizations operation.
+    /// Gets node_authorizations
+    /// Gets node_authorizations
     pub fn get_node_authorizations(&self, node_id: &str) -> Vec<&CrossNodeAuthorization> {
         self.active_authorizations
             .values()
             .filter(|auth| auth.requester_node_id == node_id)
             .collect()
 
+/// Get Authorization Metrics operation.
+    /// Gets authorization_metrics
+    /// Gets authorization_metrics
     pub fn get_authorization_metrics(&self) -> HashMap<String, u64> {
         let mut metrics = HashMap::with_capacity(16);
         metrics.insert(
@@ -126,7 +124,13 @@ impl CrossNodeAuthEngine {
         metrics.insert("expired_authorizations".to_string(), expired_count);
         metrics
 
-    pub async fn cleanup_expired_data(&mut self) -> Result<(), BearDogError> {
+/// Cleanup Expired Data operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Cleans up expired_data
+    /// Cleans up expired_data
+    pub fn cleanup_expired_data(&mut self) -> Result<(), BearDogError> {
 
             .retain(|_, auth| auth.expires_at > now);
 
@@ -134,7 +138,8 @@ impl CrossNodeAuthEngine {
             .retain(|_, spawn| spawn.expected_lifetime.map_or(true, |exp| exp > now));
         Ok(())
 
-    async fn generate_session_signature(&self, session_data: &str) -> Result<String, BearDogError> {
+
+    fn generate_session_signature(&self, session_data: &str) -> Result<String, BearDogError> {
         use beardog_security::crypto_utils::BearDogCrypto;
 
         let (private_key, _public_key) = BearDogCrypto::generate_ed25519_keypair()?;
@@ -143,6 +148,7 @@ impl CrossNodeAuthEngine {
 
         Ok(hex::encode(signature))
 
+    /// Gets resource_owner
     fn get_resource_owner(&self, resource_id: &str) -> Result<String, BearDogError> {
 
         if resource_id.starts_with("system_") {
@@ -152,6 +158,7 @@ impl CrossNodeAuthEngine {
         } else {
             Ok("default_node".to_string())
 
+    /// Parses permissions
     fn parse_permissions(&self, permission_str: &str) -> Result<Vec<ResourcePermission>, BearDogError>> {
         match permission_str.to_lowercase().as_str() {
             "read" => Ok(vec![ResourcePermission::Read]),

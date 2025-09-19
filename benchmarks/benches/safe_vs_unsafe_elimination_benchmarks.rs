@@ -3,7 +3,6 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Through
 use std::time::Duration;
 use tokio::runtime::Runtime;
 
-#[derive(Clone)]
 struct MockKeyData {
     data: Vec<u8>,
 }
@@ -19,9 +18,7 @@ impl MockKeyData {
 fn benchmark_key_generation(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
         tracing::error!("Operation failed ({}): {:?}", "Failed to create runtime", e);
-        beardog_errors::BearDogError::internal(
-            format_args!("Operation failed ({}): {:?}", "Failed to create runtime", e).to_string(),
-        )
+        beardog_errors::BearDogError::internal({:?}", "Failed to create runtime", e))
     })?;
     let mut group = c.benchmark_group("key_generation");
 
@@ -71,9 +68,7 @@ fn benchmark_memory_management(c: &mut Criterion) {
 fn benchmark_ffi_patterns(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
         tracing::error!("Operation failed ({}): {:?}", "Failed to create runtime", e);
-        beardog_errors::BearDogError::internal(
-            format_args!("Operation failed ({}): {:?}", "Failed to create runtime", e).to_string(),
-        )
+        beardog_errors::BearDogError::internal({:?}", "Failed to create runtime", e))
     })?;
     let mut group = c.benchmark_group("ffi_patterns");
 
@@ -99,9 +94,7 @@ fn benchmark_ffi_patterns(c: &mut Criterion) {
 fn benchmark_error_handling(c: &mut Criterion) {
     let rt = Runtime::new().map_err(|e| {
         tracing::error!("Operation failed ({}): {:?}", "Failed to create runtime", e);
-        beardog_errors::BearDogError::internal(
-            format_args!("Operation failed ({}): {:?}", "Failed to create runtime", e).to_string(),
-        )
+        beardog_errors::BearDogError::internal({:?}", "Failed to create runtime", e))
     })?;
     let mut group = c.benchmark_group("error_handling");
 

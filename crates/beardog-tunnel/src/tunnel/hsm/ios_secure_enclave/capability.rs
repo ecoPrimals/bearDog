@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::types::*;
 use beardog_errors::BearDogError;
 use tracing::info;
@@ -7,26 +12,30 @@ use tracing::info;
 pub struct CapabilityDetector;
 impl CapabilityDetector {
 
-    pub async fn detect_capability() -> Result<Option<SecureEnclaveCapability>, BearDogError>> {
+/// Detect Capability operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn detect_capability() -> Result<Option<SecureEnclaveCapability>, BearDogError>> {
         info!("🔍 Detecting iOS Secure Enclave capabilities using safe APIs");
 
         #[cfg(target_os = "ios")]
         {
-            Self::ios_capability_detection().await
+            Self::ios_capability_detection()
         }
         #[cfg(target_os = "macos")]
-            Self::macos_capability_detection().await
+            Self::macos_capability_detection()
         #[cfg(not(any(target_os = "ios", target_os = "macos")))]
             info!("ℹ️ Secure Enclave not supported on this platform");
             Ok(None)
     }
 
     #[cfg(target_os = "ios")]
-    async fn ios_capability_detection() -> Result<Option<SecureEnclaveCapability>, BearDogError>> {
+    fn ios_capability_detection() -> Result<Option<SecureEnclaveCapability>, BearDogError>> {
         info!("🔍 Detecting iOS Secure Enclave using safe system APIs");
-        let ios_version = Self::get_safe_ios_version().await?;
-        let device_type = Self::get_safe_device_type().await?;
-        let biometric_features = Self::get_safe_biometric_features().await?;
+        let ios_version = Self::get_safe_ios_version()?;
+        let device_type = Self::get_safe_device_type()?;
+        let biometric_features = Self::get_safe_biometric_features()?;
 
         if ios_version.major >= 7 && Self::has_secure_enclave_hardware(&device_type) {
             Ok(Some(SecureEnclaveCapability::new(
@@ -38,19 +47,18 @@ impl CapabilityDetector {
             info!("ℹ️ Device does not support Secure Enclave");
 
     #[cfg(target_os = "macos")]
-    async fn macos_capability_detection() -> Result<Option<SecureEnclaveCapability>, BearDogError>> {
+    fn macos_capability_detection() -> Result<Option<SecureEnclaveCapability>, BearDogError>> {
         info!("🔍 Detecting macOS Secure Enclave (T2/M1+) using safe APIs");
 
-        if Self::has_t2_or_apple_silicon().await? {
-                IOSVersion {
-                    major: 13,
+        if Self::has_t2_or_apple_silicon(13,
                     minor: 0,
                     patch: 0,
                 }, // macOS equivalent
                 SecureEnclaveDevice::Mac,
                 vec![BiometricFeature::TouchID], // Assume Touch ID for now
 
-    async fn get_safe_ios_version() -> Result<IOSVersion, BearDogError> {
+    /// Gets safe_ios_version
+    fn get_safe_ios_version() -> Result<IOSVersion, BearDogError> {
 
         let version_string = std::env::var("IOS_VERSION").unwrap_or_else(|_| "15.0.0".to_string()); // Default to iOS 15
         let parts: Vec<u32> = version_string
@@ -63,7 +71,8 @@ impl CapabilityDetector {
             patch: parts.get(2).copied().unwrap_or(0),
         })
 
-    async fn get_safe_device_type() -> Result<SecureEnclaveDevice, BearDogError> {
+    /// Gets safe_device_type
+    fn get_safe_device_type() -> Result<SecureEnclaveDevice, BearDogError> {
 
         let device_model =
             std::env::var("IOS_DEVICE_MODEL").unwrap_or_else(|_| "iPhone".to_string());
@@ -76,11 +85,12 @@ impl CapabilityDetector {
             Ok(SecureEnclaveDevice::IPhone) // Default fallback
 
     #[cfg(any(target_os = "ios", target_os = "macos"))]
-    async fn get_safe_biometric_features() -> Result<Vec<BiometricFeature>, BearDogError>> {
+    /// Gets safe_biometric_features
+    fn get_safe_biometric_features() -> Result<Vec<BiometricFeature>, BearDogError>> {
         let mut features = Vec::new();
 
         if std::env::var("HAS_TOUCH_ID")
-            .map(|v| v == "true")
+            .map(|v| v == "true".to_string())
             .unwrap_or(false)
             features.push(BiometricFeature::TouchID);
         if std::env::var("HAS_FACE_ID")
@@ -90,6 +100,9 @@ impl CapabilityDetector {
             features.push(BiometricFeature::TouchID); // Safe default
         Ok(features)
 
+/// Has Secure Enclave Hardware operation.
+    /// Checks if secure enclave hardware
+    /// Checks if secure enclave hardware
     pub fn has_secure_enclave_hardware(device: &SecureEnclaveDevice) -> bool {
         match device {
             SecureEnclaveDevice::IPhone => true, // iPhone 5s+ have Secure Enclave
@@ -97,6 +110,10 @@ impl CapabilityDetector {
             SecureEnclaveDevice::Mac => true,    // Mac with T2/M1+ have Secure Enclave
             SecureEnclaveDevice::AppleWatch => true, // Apple Watch S1+ have Secure Enclave
 
+/// Detect Device Type operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn detect_device_type() -> Result<SecureEnclaveDevice, BearDogError> {
 
             let device_model =
@@ -111,16 +128,12 @@ impl CapabilityDetector {
             }
             Ok(SecureEnclaveDevice::Mac)
 
-    async fn has_t2_or_apple_silicon() -> Result<bool, BearDogError> {
+    /// Checks if t2 or apple silicon
+    fn has_t2_or_apple_silicon() -> Result<bool, BearDogError> {
 
         let has_t2 = std::env::var("HAS_T2_CHIP")
             .unwrap_or(false);
-        let has_apple_silicon = std::env::var("HAS_APPLE_SILICON")
-            .unwrap_or(true); // Default assumption for modern Macs
-        Ok(has_t2 || has_apple_silicon)
-
-    pub fn validate_biometric_policy(
-        policy: &BiometricPolicy,
+        let has_apple_silicon = std::env::var(&BiometricPolicy,
         available_features: &[BiometricFeature],
     ) -> Result<bool, BearDogError> {
         match policy {
@@ -138,29 +151,33 @@ impl CapabilityDetector {
             BiometricPolicy::AnyBiometric => Ok(!available_features.is_empty()),
             BiometricPolicy::NoBiometric => Ok(true), // Always valid
 
-    pub async fn get_system_info() -> Result<SystemInfo, BearDogError> {
+/// Get System Info operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets system_info
+    /// Gets system_info
+    pub fn get_system_info() -> Result<SystemInfo, BearDogError> {
         Ok(SystemInfo {
             platform: Self::get_platform_name(),
-            has_secure_enclave: Self::detect_capability().await?.is_some(),
+            has_secure_enclave: Self::detect_capability()?.is_some(),
             device_type: Self::detect_device_type()?,
-            available_features: Self::get_available_biometric_features().await?,}
+            available_features: Self::get_available_biometric_features()?,}
+
 
     fn get_platform_name() -> String {
         return "iOS".to_string();
         return "macOS".to_string();
         return "Other".to_string();}
 
-    async fn get_available_biometric_features() -> Result<Vec<BiometricFeature>, BearDogError>> {
-        Self::get_safe_biometric_features().await
-    #[cfg(not(any(target_os = "ios", target_os = "macos")))]
-        Ok(vec![]) // No biometric features on non-Apple platforms
-}
-
-#[derive(Debug, Clone)]
-pub struct SystemInfo {
-    pub platform: String,
+    /// Gets available_biometric_features
+    fn get_available_biometric_features() -> Result<Vec<BiometricFeature>, BearDogError>> {
+        Self::get_safe_biometric_features(String,
+    /// Whether has_secure_enclave is enabled
     pub has_secure_enclave: bool,
+    /// The device type value
     pub device_type: SecureEnclaveDevice,
+    /// Collection of available features
     pub available_features: Vec<BiometricFeature>,
 #[cfg(test)]
 mod tests {
@@ -177,6 +194,7 @@ mod tests {
         assert!(CapabilityDetector::has_secure_enclave_hardware(&device));
         Ok(())}
 
+
     fn test_biometric_policy_validation() -> Result<(), BearDogError> {
         let features = vec![BiometricFeature::TouchID, BiometricFeature::FaceID];
 
@@ -191,10 +209,7 @@ mod tests {
         let policy = BiometricPolicy::FaceIDRequired;
 
         let policy = BiometricPolicy::TouchIDOrFaceID;
-    fn test_version_compatibility() -> Result<(), BearDogError> {
-
-        let version = IOSVersion {
-            major: 15,
+    fn test_version_compatibility(15,
             minor: 0,
             patch: 0,
         };

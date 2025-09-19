@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use crate::tunnel::hsm::software_hsm::{KeyMetadata, KeyStoreConfig};
 use crate::tunnel::hsm::types::{
     HsmHealthStatus, KeyStorageType, KeyType, MemoryProtectionLevel, PerformanceMetrics,
@@ -14,13 +19,7 @@ use tokio::sync::RwLock;
 
 pub use super::audit::types::{AuditLogEntry, AuditLogFilter, OperationResult};
 
-#[derive(Debug)]
-pub enum StorageBackend {
-
-    InMemory,
-
-    File { path: String },
-
+#[derive(Debug, Clone)]
     Database { connection_string: String },
 }
 impl Clone for StorageBackend {}
@@ -36,25 +35,30 @@ impl Clone for StorageBackend {}
     }
 
 pub trait StorageBackendTrait: Send + Sync {
-    async fn initialize(&self) -> Result<(), BearDogError>;
-    async fn store(&self, key_id: &str, key_data: &[u8]) -> Result<(), BearDogError>;
-    async fn retrieve(&self, key_id: &str) -> Result<Vec<u8>, BearDogError>>;
-    async fn delete(&self, key_id: &str) -> Result<(), BearDogError>;
-    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>>;
-    async fn backup(&self) -> Result<Vec<u8>, BearDogError>>;
-    async fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError>;
+    /// Initializes componentialize
+    fn initialize(&str, key_data: &[u8]) -> Result<(), BearDogError>;
+    fn retrieve(&self, key_id: &str) -> Result<Vec<u8>, BearDogError>>;
+    /// Removes 
+    fn delete(&self, key_id: &str) -> Result<(), BearDogError>;
+    fn list_keys(&self) -> Result<Vec<String>, BearDogError>>;
+    fn backup(&self) -> Result<Vec<u8>, BearDogError>>;
+    fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError>;
 
 pub trait EncryptionKeyTrait: Send + Sync {}
 
-    async fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>>;
-    async fn decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, BearDogError>>;
+
+    fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, BearDogError>>;
+    fn decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8>, BearDogError>>;
 
 pub struct MemoryProtector {
 
+    /// Whether secure_allocation is enabled
     pub secure_allocation: bool,
 
+    /// Whether clear_on_dealloc is enabled
     pub clear_on_dealloc: bool,
 
+    /// Whether lock_memory is enabled
     pub lock_memory: bool,}
 
 impl Clone for MemoryProtector {
@@ -65,169 +69,202 @@ impl Clone for MemoryProtector {
 
 pub struct EncryptionKey {
 
+    /// The derivation method value
     pub derivation_method: String,
 
+    /// Number of key_size
     pub key_size: u32,
 
+    /// Whether hardware_entropy is enabled
     pub hardware_entropy: bool,}
 
 impl Clone for EncryptionKey {
-            derivation_method: self.derivation_method.clone(),
+            derivation_method: &self.derivation_method,
             key_size: self.key_size,
             hardware_entropy: self.hardware_entropy,
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SoftwareHsmConfig {
-
-    pub storage: StorageBackend,
-
+#[derive(Debug, Clone)]
+    /// The memory protection value
     pub memory_protection: MemoryProtectionLevel,
 
+    /// The key storage value
     pub key_storage: KeyStorageType,
 
+    /// Whether audit_logging is enabled
     pub audit_logging: bool,
 
+    /// Optional max keys
     pub max_keys: Option<usize>,
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SoftwareKey {
 
+
     pub id: String,
 
+    /// The key type value
     pub key_type: KeyType,
 
+    /// The key material value
     pub key_material: ProtectedMemory,
 
+    /// The created at value
     pub created_at: chrono::DateTime<Utc>,
 
+    /// The metadata value
     pub metadata: KeyMetadata,
 
 pub struct ProtectedMemory {
 
+    /// Collection of data
     pub data: Vec<u8>,
 
+    /// Whether protected is enabled
     pub protected: bool,
 
 pub use beardog_traits::canonical::CryptoProvider;
 
 pub trait MemoryProtector: Send + Sync {
 
-    async fn initialize(&self) -> Result<(), BearDogError>;
+    /// Initializes componentialize
+    fn initialize(&self) -> Result<(), BearDogError>;
 
-    async fn protect_key_material(&self, key_material: &[u8]) -> Result<ProtectedMemory, BearDogError>;
 
-    async fn unprotect_key_material(&self, protected: &ProtectedMemory) -> Result<Vec<u8>, BearDogError>>;
+    fn protect_key_material(&self, key_material: &[u8]) -> Result<ProtectedMemory, BearDogError>;
 
-    async fn zeroize_key_material(&self, key_material: &[u8]) -> Result<(), BearDogError>;
+
+    fn unprotect_key_material(&self, protected: &ProtectedMemory) -> Result<Vec<u8>, BearDogError>>;
+
+
+    fn zeroize_key_material(&self, key_material: &[u8]) -> Result<(), BearDogError>;
 
 pub trait StorageBackend: Send + Sync {
 
-    async fn store(&self, key_id: &str, encrypted_key: &[u8]) -> Result<(), BearDogError>;
 
-    async fn load(&self, key_id: &str) -> Result<Vec<u8>, BearDogError>>;
+    fn store(&str, encrypted_key: &[u8]) -> Result<(), BearDogError>;
+
+    /// Loads data
+    fn load(&self, key_id: &str) -> Result<Vec<u8>, BearDogError>>;
 
 pub trait EncryptionKey: Send + Sync {
 
-    async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>>;
 
-    async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>>;
+    fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>>;
+
+
+    fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>>;
 
 pub trait AuditLogger: Send + Sync {
 
-    async fn log_operation(&self, operation: &AuditLogEntry) -> Result<(), BearDogError>;
 
-    async fn get_audit_log(&self, filter: &AuditLogFilter) -> Result<Vec<AuditLogEntry>, BearDogError>>;
+    fn log_operation(&self, operation: &AuditLogEntry) -> Result<(), BearDogError>;
+
+    /// Gets audit_log
+    fn get_audit_log(&self, filter: &AuditLogFilter) -> Result<Vec<AuditLogEntry>, BearDogError>>;
 
 pub struct SoftwareKeyStore {
 
+    /// Number of storage_backend
     pub storage_backend: impl StorageBackendTrait,
 
+    /// Number of encryption_key
     pub encryption_key: impl EncryptionKeyTrait,
 
+    /// The key cache value
     pub key_cache: Arc<RwLock<std::collections::HashMap<String, SoftwareKey>>>, // placeholder for lru::LruCache<String, SoftwareKey>
 
 pub struct SoftwareHealthMonitor {
 
+    /// Current status of the health
     pub health_status: Arc<RwLock<HsmHealthStatus>>,
 
+    /// The metrics value
     pub metrics: Arc<RwLock<super::super::types::canonical::PerformanceMetrics>>,
 
 pub struct DefaultMemoryProtector {
+
 
     pub config: crate::tunnel::hsm::software_hsm::MemoryConfig,
 
 pub struct DefaultAuditLogger {
 
+    /// The storage value
     pub storage: Arc<super::audit::PersistentAuditStorage>,
 
 pub struct FileStorageBackend;}
 
 impl FileStorageBackend {
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub async fn new(_config: &KeyStoreConfig) -> Result<Self, BearDogError> {
-        Ok(FileStorageBackend)}
+        Ok(&str, _encrypted_key: &[u8]) -> Result<(), BearDogError> {
+        Err(BearDogError::unsupported_operation("FileStorageBackend not implemented"))
+    fn retrieve(&self, _key_id: &str) -> Result<Vec<u8>, BearDogError>> {}
 
-impl StorageBackendTrait for FileStorageBackend {
-    async fn initialize(&self) -> Result<(), BearDogError> {
-        Ok(())}
+    /// Removes 
+    fn delete(&self, _key_id: &str) -> Result<(), BearDogError> {
+    fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {}
 
-    async fn store(&self, _key_id: &str, _encrypted_key: &[u8]) -> Result<(), BearDogError> {
-        Err(BearDogError::unsupported_operation("FileStorageBackend not implemented".to_string(),
-        ))
-    async fn retrieve(&self, _key_id: &str) -> Result<Vec<u8>, BearDogError>> {}
 
-    async fn delete(&self, _key_id: &str) -> Result<(), BearDogError> {
-    async fn list_keys(&self) -> Result<Vec<String>, BearDogError>> {}
-
-    async fn backup(&self) -> Result<Vec<u8>, BearDogError>> {
-    async fn restore(&self, _backup_data: &[u8]) -> Result<(), BearDogError> {
+    fn backup(&self) -> Result<Vec<u8>, BearDogError>> {
+    fn restore(&self, _backup_data: &[u8]) -> Result<(), BearDogError> {
 
 pub struct DatabaseStorageBackend;
 impl DatabaseStorageBackend {
         Ok(DatabaseStorageBackend)}
 
 impl StorageBackendTrait for DatabaseStorageBackend {
-        Err(BearDogError::unsupported_operation("DatabaseStorageBackend not implemented".to_string(),
-
-pub struct MemoryStorageBackend {
-
-    pub storage: Arc<RwLock<HashMap<String, Vec<u8>>>>,}
+        Err(BearDogError::unsupported_operation(Arc<RwLock<HashMap<String, Vec<u8>>>>,}
 
 impl MemoryStorageBackend {
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub async fn new() -> Result<Self, BearDogError> {
         Ok(MemoryStorageBackend {
-            storage: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-        })
-impl StorageBackendTrait for MemoryStorageBackend {
-    async fn store(&self, key_id: &str, encrypted_key: &[u8]) -> Result<(), BearDogError> {
-        let mut storage = self.storage.write().await;
+            storage: Arc::new(RwLock::new(HashMap::with_capacity(&str, encrypted_key: &[u8]) -> Result<(), BearDogError> {
+        let mut storage = self.storage.write();
         storage.insert(key_id.to_string(), encrypted_key.to_vec());}
 
-    async fn retrieve(&self, key_id: &str) -> Result<Vec<u8>, BearDogError>> {
-        let storage = self.storage.read().await;
+
+    fn retrieve(&self, key_id: &str) -> Result<Vec<u8>, BearDogError>> {
+        let storage = self.storage.read();
         storage
             .get(key_id)
             .cloned()
             .ok_or_else(|| BearDogError::not_found(format!("Key not found: {key_id}"))},
             })
-    async fn delete(&self, key_id: &str) -> Result<(), BearDogError> {
+    /// Removes 
+    fn delete(&self, key_id: &str) -> Result<(), BearDogError> {
         storage.remove(key_id);
         Ok(storage.keys().cloned().collect())
         bincode::serialize(&*storage).map_err(|e| BearDogError::Serialization {
             message: e.to_string(),}
 
-    async fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError> {
+
+    fn restore(&self, backup_data: &[u8]) -> Result<(), BearDogError> {
         let restored: HashMap<String, Vec<u8>> =
-            bincode::deserialize(backup_data).map_err(|e| BearDogError::internal(e.to_string(),
-            ))?;
+            bincode::deserialize(backup_data).map_err(|e| BearDogError::internal(e))?;
         *storage = restored;
 
 pub struct DefaultEncryptionKey;
 impl DefaultEncryptionKey {
-    pub async fn create(_config: &SoftwareHsmConfig) -> Result<Box<dyn EncryptionKeyTrait, BearDogError>> {
+/// Create operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates item
+    /// Creates item
+    pub fn create(_config: &SoftwareHsmConfig) -> Result<Box<dyn EncryptionKeyTrait, BearDogError>> {
         Ok(DefaultEncryptionKey)}
 
 impl EncryptionKeyTrait for DefaultEncryptionKey {
-    async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+    fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         use aes_gcm::{aead::Aead, Aes256Gcm, Key, KeyInit, Nonce};
         use rand::RngCore;
@@ -249,7 +286,7 @@ impl EncryptionKeyTrait for DefaultEncryptionKey {
         let mut result = nonce_bytes.to_vec();
         result.extend_from_slice(&ciphertext);
         Ok(result)
-    async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+    fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
 
         if ciphertext.len() < 12 {
             return Err(BearDogError::Crypto {
@@ -266,88 +303,92 @@ impl EncryptionKeyTrait for DefaultEncryptionKey {
 pub struct RustCryptoProvider;
 impl RustCryptoProvider {
 
-        Ok(RustCryptoProvider)
+        Ok(SoftwareHsmConfig,
 
-pub struct OpenSslCryptoProvider;
-
-pub struct RustSoftwareHsm {
-
-    pub config: SoftwareHsmConfig,
-
+    /// The key store value
     pub key_store: Arc<RwLock<SoftwareKeyStore>>,
+
 
     pub crypto_provider: impl CryptoProvider + Send + Sync + 'static,
 
+    /// The memory protector value
     pub memory_protector: Arc<MemoryProtector>,
 
+    /// Number of audit_logger
     pub audit_logger: impl AuditLogger,
 
+    /// The health monitor value
     pub health_monitor: Arc<SoftwareHealthMonitor>,}
 
 impl ProtectedMemory {
 
-    pub fn new(data: Vec<u8>, protected: bool) -> Self {
+/// New operation.
+    /// Creates a new instance
+    pub fn new(Vec<u8>, protected: bool) -> Self {
         Self { data, protected }
 
-    pub fn data(&self) -> &[u8] {
-        &self.data
-
-    pub fn is_protected(&self) -> bool {
-        self.protected
-impl SoftwareKey {
-
-    pub fn new(
-        id: &str,
+/// Data operation.
+    pub fn data(&str,
         key_type: KeyType,
         key_material: ProtectedMemory,
         metadata: KeyMetadata,
     ) -> Self {
-            id,
+            id: id.to_string(),
             key_type,
             key_material,
             created_at: Utc::now(),
             metadata,
 
+/// Id operation.
     pub fn id(&self) -> &str {
         &self.id
 
+/// Key Type operation.
     pub fn key_type(&self) -> &KeyType {
         &self.key_type
 
+/// Key Material operation.
     pub fn key_material(&self) -> &ProtectedMemory {
         &self.key_material
 
+/// Metadata operation.
     pub fn metadata(&self) -> &KeyMetadata {
         &self.metadata
 
+/// Created At operation.
+    /// Creates itemd_at
+    /// Creates itemd_at
     pub fn created_at(&self) -> chrono::DateTime<Utc> {
         self.created_at
 
 impl AuditLogFilter {
 
-    pub fn new() -> Self {
-            operation: None,
+/// New operation.
+    /// Creates a new instance
+    pub fn new(None,
             key_id: None,
             actor: None,
             result: None,
             from_time: None,
             to_time: None,
-            limit: Some(100),
-
-    pub fn with_time_range(
-        mut self,
-        start: chrono::DateTime<Utc>,
+            limit: Some(chrono::DateTime<Utc>,
         end: chrono::DateTime<Utc>,
         self.from_time = Some(start);
         self.to_time = Some(end);
         self
 
+/// With Operation operation.
+    /// Creates instance with operation
     pub fn with_operation(mut self, operation: &str) -> Self {
         self.operation = Some(operation);
 
+/// With Key Id operation.
+    /// Creates instance with key id
     pub fn with_key_id(mut self, key_id: &str) -> Self {
         self.key_id = Some(key_id);
 
+/// With Actor operation.
+    /// Creates instance with actor
     pub fn with_actor(mut self, actor: &str) -> Self {
         self.actor = Some(actor);
 impl Default for AuditLogFilter {}

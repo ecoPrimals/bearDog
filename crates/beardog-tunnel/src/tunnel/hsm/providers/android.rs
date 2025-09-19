@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use beardog_types::canonical::{
     crypto::KeyType,
@@ -29,23 +34,28 @@ pub struct AndroidUniversalProvider {
 }
 impl AndroidUniversalProvider {
 
-    pub async fn new() -> Result<Self, BearDogError> {
-        let mut provider = Self {
-            capabilities: None,
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    pub async fn new(None,
             strongbox_available: false,
             tee_available: false,
             device_metadata: HashMap::with_capacity(16),
         };
 
-        let capabilities = provider.discover_capabilities().await?;
+        let capabilities = provider.discover_capabilities()?;
         provider.capabilities = Some(capabilities);
         Ok(provider)
     }
 
+
     fn is_android_platform() -> bool {
         cfg!(target_os = "android")
 
-    async fn detect_strongbox(&mut self) -> bool {
+
+    fn detect_strongbox(&mut self) -> bool {
         if !Self::is_android_platform() {
             debug!("Not on Android platform, StrongBox not available");
             return false;
@@ -56,21 +66,23 @@ impl AndroidUniversalProvider {
         let has_strongbox = self.simulate_strongbox_detection();
         if has_strongbox {
             info!("✅ StrongBox detected and available");
-            self.device_metadata.insert("strongbox_version".to_string(), "1.0".to_string());
+            self.device_metadata.insert("strongbox_version".to_string(), "1.0");
         } else {
             info!("❌ StrongBox not available on this device");
         self.strongbox_available = has_strongbox;
         has_strongbox
 
-    async fn detect_tee(&mut self) -> bool {
+
+    fn detect_tee(&mut self) -> bool {
 
         info!("Detecting TEE availability");
         let has_tee = true; // Simulate - most devices have TEE
         if has_tee {
             info!("✅ TEE detected and available");
-            self.device_metadata.insert("tee_version".to_string(), "trusty".to_string());
+            self.device_metadata.insert("tee_version".to_string(), "trusty");
         self.tee_available = has_tee;
         has_tee
+
 
     fn simulate_strongbox_detection(&mut self) -> bool {
 
@@ -85,6 +97,7 @@ impl AndroidUniversalProvider {
 
         true
 
+    /// Gets security_level
     fn get_security_level(&self) -> SecurityLevel {
         if self.strongbox_available {
             SecurityLevel::Hardware
@@ -92,12 +105,8 @@ impl AndroidUniversalProvider {
             SecurityLevel::Tee
             SecurityLevel::Software
 
-    fn generate_performance_profile(&self) -> PerformanceProfile {
-        let (key_gen_speed, signing_speed, encryption_throughput, latency) = 
-            if self.strongbox_available {
 
-                (50.0, 200.0, 50.0, LatencyProfile {
-                    average_ms: 15.0,
+    fn generate_performance_profile(15.0,
                     p95_ms: 30.0,
                     max_ms: 100.0,
                 })
@@ -121,13 +130,13 @@ impl AndroidUniversalProvider {
             latency,
 
 impl UniversalHsmProvider for AndroidUniversalProvider {
-    async fn discover_capabilities(&self) -> Result<HsmCapabilities, BearDogError> {
+    fn discover_capabilities(&self) -> Result<HsmCapabilities, BearDogError> {
         if let Some(ref capabilities) = self.capabilities {
-            return Ok(capabilities.clone());
+            return Ok(capabilities);
 
         let mut provider = self.clone();
-        provider.detect_strongbox().await;
-        provider.detect_tee().await;
+        provider.detect_strongbox();
+        provider.detect_tee();
         let security_level = provider.get_security_level();
 
         let mut crypto_operations = vec![
@@ -179,8 +188,7 @@ impl UniversalHsmProvider for AndroidUniversalProvider {
                 } else {
                     "Android Software".to_string()
                 },
-                version: "1.0".to_string(),
-                metadata: provider.device_metadata.clone(),
+                version: "1.0".to_string(&provider.device_metadata,
             security_level,
             crypto_operations,
             supported_key_types,
@@ -189,14 +197,8 @@ impl UniversalHsmProvider for AndroidUniversalProvider {
             performance_profile: provider.generate_performance_profile(),
             certifications,
         Ok(capabilities)
-    async fn supports_operation(&self, operation: &CryptoOperation) -> bool {
-        if let Ok(capabilities) = self.discover_capabilities().await {
-            capabilities.crypto_operations.contains(operation)
-            false}
-
-    async fn generate_key(
-        &self,
-        key_type: KeyType,
+    fn supports_operation(&self, operation: &CryptoOperation) -> bool {
+        if let Ok(KeyType,
         metadata: KeyMetadata,
         _auth: Option<AuthenticationContext>,
     ) -> Result<HsmKey, BearDogError> {
@@ -209,45 +211,35 @@ impl UniversalHsmProvider for AndroidUniversalProvider {
         let hsm_key = HsmKey {
             id: key_id.clone(),
             key_type,
-            material: beardog_types::canonical::hsm::KeyMaterial::Reference(key_id),
-            metadata,
-            health: beardog_types::canonical::hsm::KeyHealth::Healthy,
-            created_at: chrono::Utc::now(),
-            expires_at: None,
-            key_name: Some("android_generated_key".to_string()),
-            last_used: None,
+            material: beardog_types::canonical::hsm::KeyMaterial::Reference(beardog_types::canonical::hsm::KeyHealth::Healthy,
+            created_at: chrono::Utc::now(None,
+            key_name: Some(None,
             usage_count: 0,
             is_hardware_backed: self.strongbox_available || self.tee_available,
         info!("✅ Android key generated successfully: {}", key_id);
-        Ok(hsm_key)
-    async fn sign_data(
-        key_id: &str,
+        Ok(&str,
         data: &[u8],
     ) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Signing data with Android key: {}", key_id);
 
         let mut signature = Vec::new();
         signature.extend_from_slice(b"android_signature_");
-        signature.extend_from_slice(&data[..std::cmp::min(32, data.len())]);
-        info!("✅ Data signed successfully with Android key");
-        Ok(signature)
-    async fn verify_signature(
-        signature: &[u8],
+        signature.extend_from_slice(&data[..std::cmp::min(&[u8],
     ) -> Result<bool, BearDogError> {
         info!("🔍 Verifying signature with Android key: {}", key_id);
 
         let expected_prefix = b"android_signature_";
-        let valid = signature.starts_with(expected_prefix);
-        info!("✅ Signature verification result: {}", valid);
+        let valid = signature.starts_with({}", valid);
         Ok(valid)
+    /// Gets provider_info
     fn get_provider_info(&self) -> VendorInfo {
         VendorInfo {
             name: "Google".to_string(),
             product: "Android Universal HSM".to_string(),
-            version: "1.0.0".to_string(),
-            metadata: self.device_metadata.clone(),}
+            version: "1.0.0".to_string(&self.device_metadata,}
 
-    async fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
+
+    fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
             return Ok(HsmHealthStatus::Unavailable);
         if self.strongbox_available || self.tee_available {
             Ok(HsmHealthStatus::Healthy)
@@ -255,25 +247,25 @@ impl UniversalHsmProvider for AndroidUniversalProvider {
                 message: "Only software security available".to_string(),
             })
 impl MobileHsmProvider for AndroidUniversalProvider {
-    async fn authenticate_biometric(&self) -> Result<AuthenticationToken, BearDogError> {
+    fn authenticate_biometric(&self) -> Result<AuthenticationToken, BearDogError> {
         if !self.strongbox_available && !self.tee_available {
-            return Err(BearDogError::unsupported_operation("Biometric authentication requires hardware security".to_string(),
-            ));
+            return Err(BearDogError::unsupported_operation("Biometric authentication requires hardware security"));
         info!("🔐 Performing Android biometric authentication");
 
         let token = AuthenticationToken {
             token: b"android_biometric_token".to_vec(),
-            expires_at: chrono::Utc::now() + chrono::Duration::minutes(15),
-            method_used: AuthenticationMethod::Biometric,
+            expires_at: chrono::Utc::now() + chrono::Duration::minutes(AuthenticationMethod::Biometric,
         info!("✅ Android biometric authentication successful");
         Ok(token)}
 
-    async fn require_user_presence(&self, message: &str) -> Result<(), BearDogError> {
+
+    fn require_user_presence(&self, message: &str) -> Result<(), BearDogError> {
         info!("👆 Requiring user presence: {}", message);
 
         info!("✅ User presence confirmed");
         Ok(())
-    async fn get_device_attestation(&self) -> Result<AttestationData, BearDogError> {
+    /// Gets device_attestation
+    fn get_device_attestation(&self) -> Result<AttestationData, BearDogError> {
         if !self.strongbox_available {
             return Err(BearDogError::unsupported_operation("Device attestation requires StrongBox".to_string(),
         info!("📜 Generating Android device attestation");
@@ -282,16 +274,9 @@ impl MobileHsmProvider for AndroidUniversalProvider {
             certificate_chain: vec![b"android_cert_chain".to_vec()],
             attestation_record: b"android_attestation_record".to_vec(),
             signature: b"android_attestation_signature".to_vec(),
-            timestamp: chrono::Utc::now(),
-        info!("✅ Android device attestation generated");
-        Ok(attestation)}
-
-impl AttestationProvider for AndroidUniversalProvider {
-    async fn generate_attestation(
-        challenge: &[u8],
+            timestamp: chrono::Utc::now(&[u8],
     ) -> Result<AttestationData, BearDogError> {
-            return Err(BearDogError::unsupported_operation("Key attestation requires StrongBox".to_string(),
-        info!("🔏 Generating Android key attestation for: {}", key_id);
+            return Err(BearDogError::unsupported_operation({}", key_id);
 
         let mut attestation_record = Vec::new();
         attestation_record.extend_from_slice(b"android_key_attestation_");
@@ -299,10 +284,7 @@ impl AttestationProvider for AndroidUniversalProvider {
         attestation_record.extend_from_slice(challenge);
             certificate_chain: vec![b"android_key_cert_chain".to_vec()],
             attestation_record,
-            signature: b"android_key_attestation_signature".to_vec(),
-        info!("✅ Android key attestation generated");
-    async fn verify_attestation(
-        attestation: &AttestationData,
+            signature: b"android_key_attestation_signature".to_vec(&AttestationData,
     ) -> Result<AttestationResult, BearDogError> {
         info!("🔍 Verifying Android attestation");
 
@@ -313,18 +295,11 @@ impl AttestationProvider for AndroidUniversalProvider {
                 SecurityLevel::Hardware
                 SecurityLevel::Software
             details: if valid {
-                "Android StrongBox attestation verified".to_string()
-                "Invalid Android attestation".to_string()
-        info!("✅ Android attestation verification complete: {}", result.valid);
-        Ok(result)
-impl Clone for AndroidUniversalProvider {}
-
-    fn clone(&self) -> Self {
-        Self {
-            capabilities: self.capabilities.clone(),
+                "Android StrongBox attestation verified".to_string();
+        Ok(&self.capabilities,
             strongbox_available: self.strongbox_available,
             tee_available: self.tee_available,
-            device_metadata: self.device_metadata.clone(),
+            device_metadata: &self.device_metadata,
 impl Default for AndroidUniversalProvider {}
 
     fn default() -> Self {

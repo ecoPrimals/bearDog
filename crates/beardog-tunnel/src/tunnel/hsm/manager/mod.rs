@@ -1,6 +1,13 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 pub mod capability;
+/// Configuration management
+/// Configuration management
 pub mod config;
 pub mod failover;
 pub mod health;
@@ -28,17 +35,21 @@ pub use operation_router::{
 
 pub use performance::{HsmPerformanceTracker, OperationMetrics};
 
-#[derive(Clone)]
 pub struct HsmProviderSelection {
+
 
     pub provider: impl HsmProvider + Send + Sync + 'static,
 
+
     pub provider_id: String,
 
+    /// The tier value
     pub tier: HsmTier,
+
 
     pub confidence: f64,
 
+    /// The estimated latency ms value
     pub estimated_latency_ms: f64,
 }
 

@@ -1,15 +1,13 @@
-
-
+use serde_json::json;
 use std::collections::HashMap;
 use std::time::Duration;
 use tokio::time::sleep;
-use serde_json::json;
 
+use beardog_errors::BearDogError;
 use beardog_workflows::workflows::notification::NotificationEngine;
 use beardog_workflows::workflows::types::{
     NotificationConfig, NotificationMessage, NotificationResult, NotificationStatus,
 };
-use beardog_errors::BearDogError;
 
 struct MockWebhookServer {
     port: u16,
@@ -24,15 +22,15 @@ impl MockWebhookServer {
         }
     }
 
-    fn with_failure() -> Self {
+    fn with_failure(port: u16, should_fail: bool) -> Self {
         Self {
-            port: 8080,
-            should_fail: true,
+            port,
+            should_fail,
         }
     }
 
     async fn start(&self) -> String {
-        format_args!("http://localhost:{}/webhook", self.port).to_string()
+        format!("http://localhost:{}/webhook", self.port)
     }
 }
 
@@ -40,27 +38,19 @@ impl MockWebhookServer {
 async fn test_webhook_notification_success() -> Result<(), BearDogError> {
     let config = create_webhook_config();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Test security alert";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("alert_type".to_string(), json!("security_breach"));
-    metadata.insert("severity".to_string(), json!("high"));
+    metadata.insert("severity".to_string(), json!("high".to_string()));
     metadata.insert("incident_id".to_string(), json!("INC-2024-001"));
 
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ Webhook notification sent successfully");
-            assert!(notification_result.webhook_sent);
-        }
-        Err(e) => {
-            println!("⚠️  Webhook notification failed (expected in test environment): {}", e);
+            metadata: metadata.clone({}",
+                e
+            );
         }
     }
 
@@ -71,25 +61,17 @@ async fn test_webhook_notification_success() -> Result<(), BearDogError> {
 async fn test_webhook_notification_with_signature() -> Result<(), BearDogError> {
     let config = create_webhook_config_with_secret();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Test webhook with signature";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("test_type".to_string(), json!("signature_verification"));
 
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ Webhook with signature sent successfully");
-            assert!(notification_result.webhook_sent);
-        }
-        Err(e) => {
-            println!("⚠️  Webhook with signature failed (expected in test environment): {}", e);
+            metadata: metadata.clone({}",
+                e
+            );
         }
     }
 
@@ -100,25 +82,28 @@ async fn test_webhook_notification_with_signature() -> Result<(), BearDogError> 
 async fn test_webhook_retry_mechanism() -> Result<(), BearDogError> {
     let config = create_webhook_config_with_invalid_url();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Test webhook retry";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("test_type".to_string(), json!("retry_test"));
 
     let start_time = std::time::Instant::now();
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
             metadata: metadata.clone(),
-        }
-    ).await;
+        })
+        ;
 
     let elapsed = start_time.elapsed();
 
     assert!(result.is_err());
 
     assert!(elapsed >= Duration::from_secs(2));
-    println!("✅ Webhook retry mechanism working, took {:.2}s", elapsed.as_secs_f64());
+    println!(
+        "✅ Webhook retry mechanism working, took {:.2}s",
+        elapsed.as_secs_f64()
+    );
 
     Ok(())
 }
@@ -127,26 +112,18 @@ async fn test_webhook_retry_mechanism() -> Result<(), BearDogError> {
 async fn test_email_notification_configuration() -> Result<(), BearDogError> {
     let config = create_email_config();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Test email notification";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("alert_type".to_string(), json!("email_test"));
     metadata.insert("priority".to_string(), json!("medium"));
 
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ Email notification sent successfully");
-            assert!(notification_result.email_sent);
-        }
-        Err(e) => {
-            println!("⚠️  Email notification failed (expected without SMTP server): {}", e);
+            metadata: metadata.clone({}",
+                e
+            );
         }
     }
 
@@ -157,26 +134,18 @@ async fn test_email_notification_configuration() -> Result<(), BearDogError> {
 async fn test_sms_notification_twilio() -> Result<(), BearDogError> {
     let config = create_sms_config_twilio();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Test SMS via Twilio";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("provider".to_string(), json!("twilio"));
     metadata.insert("incident_id".to_string(), json!("SMS-001"));
 
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ SMS notification sent successfully");
-            assert!(notification_result.sms_sent);
-        }
-        Err(e) => {
-            println!("⚠️  SMS notification failed (expected without Twilio credentials): {}", e);
+            metadata: metadata.clone({}",
+                e
+            );
         }
     }
 
@@ -187,26 +156,18 @@ async fn test_sms_notification_twilio() -> Result<(), BearDogError> {
 async fn test_sms_notification_aws_sns() -> Result<(), BearDogError> {
     let config = create_sms_config_aws_sns();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Test SMS via AWS SNS";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("provider".to_string(), json!("aws_sns"));
     metadata.insert("incident_id".to_string(), json!("SMS-002"));
 
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ SMS notification sent successfully");
-            assert!(notification_result.sms_sent);
-        }
-        Err(e) => {
-            println!("⚠️  SMS notification failed (expected without AWS credentials): {}", e);
+            metadata: metadata.clone({}",
+                e
+            );
         }
     }
 
@@ -217,27 +178,19 @@ async fn test_sms_notification_aws_sns() -> Result<(), BearDogError> {
 async fn test_slack_notification() -> Result<(), BearDogError> {
     let config = create_slack_config();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Test Slack notification";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("channel".to_string(), json!("#security-alerts"));
-    metadata.insert("severity".to_string(), json!("high"));
+    metadata.insert("severity".to_string(), json!("high".to_string()));
     metadata.insert("affected_systems".to_string(), json!("authentication"));
 
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ Slack notification sent successfully");
-            assert!(notification_result.slack_sent);
-        }
-        Err(e) => {
-            println!("⚠️  Slack notification failed (expected without webhook URL): {}", e);
+            metadata: metadata.clone({}",
+                e
+            );
         }
     }
 
@@ -248,27 +201,19 @@ async fn test_slack_notification() -> Result<(), BearDogError> {
 async fn test_teams_notification() -> Result<(), BearDogError> {
     let config = create_teams_config();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Test Teams notification";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("team".to_string(), json!("Security Team"));
     metadata.insert("priority".to_string(), json!("critical"));
     metadata.insert("action_required".to_string(), json!("immediate"));
 
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ Teams notification sent successfully");
-            assert!(notification_result.teams_sent);
-        }
-        Err(e) => {
-            println!("⚠️  Teams notification failed (expected without webhook URL): {}", e);
+            metadata: metadata.clone({}",
+                e
+            );
         }
     }
 
@@ -279,32 +224,24 @@ async fn test_teams_notification() -> Result<(), BearDogError> {
 async fn test_multi_channel_notification() -> Result<(), BearDogError> {
     let config = create_multi_channel_config();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Critical security incident requiring immediate attention";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("severity".to_string(), json!("critical"));
     metadata.insert("incident_type".to_string(), json!("data_breach"));
     metadata.insert("affected_users".to_string(), json!(1000));
-    metadata.insert("estimated_impact".to_string(), json!("high"));
+    metadata.insert("estimated_impact".to_string(), json!("high".to_string()));
 
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ Multi-channel notification completed");
-            println!("   Email: {}", notification_result.email_sent);
+            metadata: metadata.clone({}", notification_result.email_sent);
             println!("   SMS: {}", notification_result.sms_sent);
             println!("   Webhook: {}", notification_result.webhook_sent);
             println!("   Slack: {}", notification_result.slack_sent);
             println!("   Teams: {}", notification_result.teams_sent);
         }
-        Err(e) => {
-            println!("⚠️  Multi-channel notification had failures: {}", e);
+        Err({}", e);
         }
     }
 
@@ -319,42 +256,22 @@ async fn test_notification_filtering() -> Result<(), BearDogError> {
     let low_severity_message = "Low severity event";
     let mut low_metadata = HashMap::with_capacity(16);
     low_metadata.insert("severity".to_string(), json!("low"));
-    
-    let result = engine.send_notification(
-        &NotificationMessage {
+
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: low_severity_message.to_string(),
-            metadata: low_metadata.clone(),
-        }
-    ).await;
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ Low severity notification filtered appropriately");
-
-            assert!(!notification_result.sms_sent); // SMS typically for critical only
-        }
-        Err(e) => {
-            println!("⚠️  Low severity notification failed: {}", e);
+            metadata: low_metadata.clone({}", e);
         }
     }
 
     let high_severity_message = "High severity security event";
     let mut high_metadata = HashMap::with_capacity(16);
     high_metadata.insert("severity".to_string(), json!("critical"));
-    
-    let result = engine.send_notification(
-        &NotificationMessage {
-            content: high_severity_message.to_string(),
-            metadata: high_metadata.clone(),
-        }
-    ).await;
 
-    match result {
-        Ok(notification_result) => {
-            println!("✅ High severity notification sent to all channels");
-        }
-        Err(e) => {
-            println!("⚠️  High severity notification failed: {}", e);
+    let result = engine
+        .send_notification(&NotificationMessage {
+            content: high_severity_message.to_string(),
+            metadata: high_metadata.clone({}", e);
         }
     }
 
@@ -365,30 +282,21 @@ async fn test_notification_filtering() -> Result<(), BearDogError> {
 async fn test_notification_rate_limiting() -> Result<(), BearDogError> {
     let config = create_rate_limited_config();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Rate limit test message";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("test_type".to_string(), json!("rate_limit"));
 
-    let mut results = Vec::new();
-    for i in 0..10 {
-        let mut test_metadata = metadata.clone();
-        test_metadata.insert("sequence".to_string(), json!(i));
-        
-        let result = engine.send_notification(
-            &NotificationMessage {
-                content: format_args!("{} #{}", message, i).to_string(),
+    let mut results = Vec::new(format!("{} #{}", message, i),
                 metadata: test_metadata,
-            }
-        ).await;
-        
+            })
+            ;
+
         results.push(result);
 
-        sleep(Duration::from_millis(10)).await;
-    }
-
-    let success_count = results.iter().filter(|r| r.is_ok()).count();
-    println!("✅ Rate limiting test completed: {}/10 notifications successful", success_count);
+        sleep(Duration::from_millis({}/10 notifications successful",
+        success_count
+    );
 
     assert!(success_count <= 10);
 
@@ -399,27 +307,17 @@ async fn test_notification_rate_limiting() -> Result<(), BearDogError> {
 async fn test_notification_template_rendering() -> Result<(), BearDogError> {
     let config = create_template_config();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Security alert for {{user}} in {{system}}";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("user".to_string(), json!("admin"));
     metadata.insert("system".to_string(), json!("production"));
     metadata.insert("timestamp".to_string(), json!("2024-01-01T12:00:00Z"));
 
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ Template rendering successful");
-
-        }
-        Err(e) => {
-            println!("⚠️  Template rendering failed: {}", e);
+            metadata: metadata.clone({}", e);
         }
     }
 
@@ -428,29 +326,21 @@ async fn test_notification_template_rendering() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_notification_error_handling() -> Result<(), BearDogError> {
-
     let config = create_malformed_config();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Test error handling";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("test_type".to_string(), json!("error_handling"));
 
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
+            metadata: metadata.clone({}", e);
 
-    match result {
-        Ok(_) => {
-            println!("✅ Error handling test passed (unexpected success)");
-        }
-        Err(e) => {
-            println!("✅ Error handling test passed: {}", e);
-
-            assert!(e.to_string().contains("Configuration") || e.to_string().contains("Notification"));
+            assert!(
+                e.to_string().contains("Configuration") || e.to_string().contains("Notification")
+            );
         }
     }
 
@@ -461,29 +351,18 @@ async fn test_notification_error_handling() -> Result<(), BearDogError> {
 async fn test_notification_metrics_collection() -> Result<(), BearDogError> {
     let config = create_metrics_config();
     let engine = NotificationEngine::new(config);
-    
+
     let message = "Metrics collection test";
     let mut metadata = HashMap::with_capacity(16);
     metadata.insert("test_type".to_string(), json!("metrics"));
 
     let start_time = std::time::Instant::now();
-    let result = engine.send_notification(
-        &NotificationMessage {
+    let result = engine
+        .send_notification(&NotificationMessage {
             content: message.to_string(),
-            metadata: metadata.clone(),
-        }
-    ).await;
-    let elapsed = start_time.elapsed();
-
-    match result {
-        Ok(notification_result) => {
-            println!("✅ Metrics collection test completed");
-            println!("   Processing time: {:.2}ms", elapsed.as_millis());
-            println!("   Channels attempted: {}", notification_result.channels_attempted());
-            println!("   Success rate: {:.1}%", notification_result.success_rate() * 100.0);
-        }
-        Err(e) => {
-            println!("⚠️  Metrics collection test failed: {}", e);
+            metadata: metadata.clone({:.2}ms", elapsed.as_millis({}",
+                notification_result.channels_attempted({:.1}%",
+                notification_result.success_rate({}", e);
         }
     }
 
@@ -499,243 +378,125 @@ async fn test_concurrent_notifications() -> Result<(), BearDogError> {
     for i in 0..10 {
         let engine_clone = std::sync::Arc::clone(&engine);
         let handle = tokio::spawn(async move {
-            let message = format_args!("Concurrent notification #{}", i).to_string();
-            let mut metadata = HashMap::with_capacity(16);
-            metadata.insert("sequence".to_string(), json!(i));
-            metadata.insert("test_type".to_string(), json!("concurrent"));
-            
-            engine_clone.send_notification(
-                &NotificationMessage {
-                    content: message,
+            let message = format!("Concurrent notification #{}", i);
+            let mut metadata = HashMap::with_capacity(message,
                     metadata,
-                }
-            ).await
+                })
         });
         handles.push(handle);
     }
 
     let mut results = Vec::new();
     for handle in handles {
-        let result = handle.await.map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
-        results.push(result);
-    }
+        let result = handle.map_err(|e| {
+            tracing::error!("Operation failed: {:?}", e);
+            beardog_errors::BearDogError::internal({:?}", e))
+        })?;
+        results.push({}/10 successful",
+        success_count
+    );
 
-    let success_count = results.iter().filter(|r| r.is_ok()).count();
-    println!("✅ Concurrent notifications test: {}/10 successful", success_count);
-
-    Ok(())
-}
-
-fn create_webhook_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: true,
+    Ok(true,
+        webhook_url: Some("http://localhost:8080/webhook".to_string(None,
+        email_enabled: false,
+        sms_enabled: false,
+        slack_enabled: false,
+        teams_enabled: false,
+        ..Default::default(true,
         webhook_url: Some("http://localhost:8080/webhook".to_string()),
-        webhook_secret: None,
+        webhook_secret: Some(false,
+        sms_enabled: false,
+        slack_enabled: false,
+        teams_enabled: false,
+        ..Default::default(true,
+        webhook_url: Some("http://invalid-host:9999/webhook".to_string(None,
         email_enabled: false,
         sms_enabled: false,
         slack_enabled: false,
         teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_webhook_config_with_secret() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: true,
-        webhook_url: Some("http://localhost:8080/webhook".to_string()),
-        webhook_secret: Some("test-secret-key".to_string()),
-        email_enabled: false,
-        sms_enabled: false,
-        slack_enabled: false,
-        teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_webhook_config_with_invalid_url() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: true,
-        webhook_url: Some("http://invalid-host:9999/webhook".to_string()),
-        webhook_secret: None,
-        email_enabled: false,
-        sms_enabled: false,
-        slack_enabled: false,
-        teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_email_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: false,
+        ..Default::default(false,
         email_enabled: true,
         smtp_server: Some("smtp.example.com".to_string()),
         smtp_port: Some(587),
         smtp_username: Some("test@example.com".to_string()),
-        smtp_password: Some("test-password".to_string()),
-        sms_enabled: false,
+        smtp_password: Some(false,
         slack_enabled: false,
         teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_sms_config_twilio() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: false,
+        ..Default::default(false,
         email_enabled: false,
         sms_enabled: true,
         sms_provider: Some("twilio".to_string()),
         sms_api_key: Some("test-twilio-key".to_string()),
         sms_phone_number: Some("+1234567890".to_string()),
-        sms_from_number: Some("+0987654321".to_string()),
-        slack_enabled: false,
+        sms_from_number: Some(false,
         teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_sms_config_aws_sns() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: false,
+        ..Default::default(false,
         email_enabled: false,
         sms_enabled: true,
         sms_provider: Some("aws_sns".to_string()),
         sms_api_key: Some("test-aws-key".to_string()),
-        sms_phone_number: Some("+1234567890".to_string()),
-        slack_enabled: false,
+        sms_phone_number: Some(false,
         teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_slack_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: false,
+        ..Default::default(false,
         email_enabled: false,
         sms_enabled: false,
         slack_enabled: true,
-        slack_webhook_url: Some("https://hooks.slack.com/services/test/test/test".to_string()),
-        teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_teams_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: false,
+        slack_webhook_url: Some("https://hooks.slack.com/services/test/test/test".to_string(false,
+        ..Default::default(false,
         email_enabled: false,
         sms_enabled: false,
         slack_enabled: false,
         teams_enabled: true,
         teams_webhook_url: Some("https://outlook.office.com/webhook/test".to_string()),
-        ..Default::default()
-    }
-}
-
-fn create_multi_channel_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: true,
-        webhook_url: Some("http://localhost:8080/webhook".to_string()),
-        email_enabled: true,
+        ..Default::default(true,
+        webhook_url: Some("http://localhost:8080/webhook".to_string(true,
         smtp_server: Some("smtp.example.com".to_string()),
         smtp_port: Some(587),
         smtp_username: Some("test@example.com".to_string()),
-        smtp_password: Some("test-password".to_string()),
-        sms_enabled: true,
+        smtp_password: Some(true,
         sms_provider: Some("twilio".to_string()),
         sms_api_key: Some("test-twilio-key".to_string()),
-        sms_phone_number: Some("+1234567890".to_string()),
-        slack_enabled: true,
-        slack_webhook_url: Some("https://hooks.slack.com/services/test/test/test".to_string()),
-        teams_enabled: true,
+        sms_phone_number: Some(true,
+        slack_webhook_url: Some("https://hooks.slack.com/services/test/test/test".to_string(true,
         teams_webhook_url: Some("https://outlook.office.com/webhook/test".to_string()),
-        ..Default::default()
-    }
-}
-
-fn create_filtered_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: true,
-        webhook_url: Some("http://localhost:8080/webhook".to_string()),
-        email_enabled: true,
+        ..Default::default(true,
+        webhook_url: Some("http://localhost:8080/webhook".to_string(true,
         smtp_server: Some("smtp.example.com".to_string()),
         smtp_port: Some(587),
         smtp_username: Some("test@example.com".to_string()),
-        smtp_password: Some("test-password".to_string()),
-        sms_enabled: true,
+        smtp_password: Some(true,
         sms_provider: Some("twilio".to_string()),
         sms_api_key: Some("test-twilio-key".to_string()),
-        sms_phone_number: Some("+1234567890".to_string()),
-        slack_enabled: false,
+        sms_phone_number: Some(false,
         teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_rate_limited_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: true,
-        webhook_url: Some("http://localhost:8080/webhook".to_string()),
-        email_enabled: false,
+        ..Default::default(true,
+        webhook_url: Some("http://localhost:8080/webhook".to_string(false,
         sms_enabled: false,
         slack_enabled: false,
         teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_template_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: true,
-        webhook_url: Some("http://localhost:8080/webhook".to_string()),
-        email_enabled: false,
+        ..Default::default(true,
+        webhook_url: Some("http://localhost:8080/webhook".to_string(false,
         sms_enabled: false,
         slack_enabled: false,
         teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_malformed_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: true,
-        webhook_url: Some("not-a-valid-url".to_string()),
-        email_enabled: true,
+        ..Default::default(true,
+        webhook_url: Some(true,
         smtp_server: None, // Missing required field
-        smtp_port: Some(587),
-        smtp_username: None, // Missing required field
+        smtp_port: Some(None, // Missing required field
         smtp_password: None, // Missing required field
         sms_enabled: false,
         slack_enabled: false,
         teams_enabled: false,
-        ..Default::default()
-    }
-}
-
-fn create_metrics_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: true,
-        webhook_url: Some("http://localhost:8080/webhook".to_string()),
-        email_enabled: false,
+        ..Default::default(true,
+        webhook_url: Some("http://localhost:8080/webhook".to_string(false,
+        sms_enabled: false,
+        slack_enabled: false,
+        teams_enabled: false,
+        ..Default::default(true,
+        webhook_url: Some("http://localhost:8080/webhook".to_string(false,
         sms_enabled: false,
         slack_enabled: false,
         teams_enabled: false,
         ..Default::default()
     }
 }
-
-fn create_concurrent_config() -> NotificationConfig {
-    NotificationConfig {
-        webhook_enabled: true,
-        webhook_url: Some("http://localhost:8080/webhook".to_string()),
-        email_enabled: false,
-        sms_enabled: false,
-        slack_enabled: false,
-        teams_enabled: false,
-        ..Default::default()
-    }
-} 

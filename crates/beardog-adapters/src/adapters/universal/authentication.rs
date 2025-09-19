@@ -1,115 +1,64 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 
 pub trait Authentication: Send + Sync {
-    fn method(&self) -> &str;
+    fn method(&HashMap<&str, &str>) -> Result<(), BearDogError>;
 
-    fn validate(&self, params: &HashMap<&str, &str>) -> Result<(), BearDogError>;
-
+    /// Gets headers
     fn get_headers(&self) -> HashMap<String, String>;
 }
 
 pub struct NoAuthentication;
 impl Default for NoAuthentication {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl NoAuthentication {
-    pub fn new() -> Self {
-        Self
-    }
-}
-
-impl Authentication for NoAuthentication {
-    fn method(&self) -> &str {
-        "none"
-    }
-
-    fn validate(&self, _params: &HashMap<&str, &str>) -> Result<(), BearDogError> {
+        Self::new(&HashMap<&str, &str>) -> Result<(), BearDogError> {
         Ok(())
     }
 
+    /// Gets headers
     fn get_headers(&self) -> HashMap<String, String> {
-        HashMap::with_capacity(16)
-    }
-}
-
-pub struct ApiKeyAuthentication {
-    api_key: String,
+        HashMap::with_capacity(String,
     header_name: String,
 }
 
 impl ApiKeyAuthentication {
-    pub fn new(api_key: &str, header_name: Option<&str>) -> Self {
+    /// New operation.
+    /// Creates a new instance
+    pub fn new(&str, header_name: Option<&str>) -> Self {
         Self {
             api_key: api_key.to_string(),
-            header_name: header_name.unwrap_or("Authorization").to_string(),
-        }
-    }
-}
-
-impl Authentication for ApiKeyAuthentication {
-    fn method(&self) -> &str {
-        "api_key"
-    }
-
-    fn validate(&self, _params: &HashMap<&str, &str>) -> Result<(), BearDogError> {
+            header_name: header_name.unwrap_or(&HashMap<&str, &str>) -> Result<(), BearDogError> {
         if self.api_key.is_empty() {
-            return Err(BearDogError::configuration(
-                "API key cannot be empty".to_string(),
-            ));
+            return Err(BearDogError::configuration("API key cannot be empty"));
         }
         Ok(())
     }
 
+    /// Gets headers
     fn get_headers(&self) -> HashMap<String, String> {
-        let mut headers = HashMap::with_capacity(16);
-        headers.insert(self.header_name.clone(), format!("Bearer {}", self.api_key));
-        headers
-    }
-}
-
-pub struct BearerTokenAuthentication {
-    token: String,
+        let mut headers = HashMap::with_capacity(String,
 }
 
 impl BearerTokenAuthentication {
+    /// New operation.
+    /// Creates a new instance
     pub fn new(token: &str) -> Self {
         Self {
-            token: token.to_string(),
-        }
-    }
-}
-
-impl Authentication for BearerTokenAuthentication {
-    fn method(&self) -> &str {
-        "bearer_token"
-    }
-
-    fn validate(&self, _params: &HashMap<&str, &str>) -> Result<(), BearDogError> {
+            token: token.to_string(&HashMap<&str, &str>) -> Result<(), BearDogError> {
         if self.token.is_empty() {
-            return Err(BearDogError::configuration(
-                "Bearer token cannot be empty".to_string(),
-            ));
+            return Err(BearDogError::configuration("Bearer token cannot be empty"));
         }
         Ok(())
     }
 
+    /// Gets headers
     fn get_headers(&self) -> HashMap<String, String> {
-        let mut headers = HashMap::with_capacity(16);
-        headers.insert(
-            "Authorization".to_string(),
-            format!("Bearer {}", self.token),
-        );
-        headers
-    }
-}
-
-#[derive(Debug)]
-pub struct KubeconfigAuthentication {
-    pub config_path: String,
+        let mut headers = HashMap::with_capacity(String,
 }
 
 impl Default for KubeconfigAuthentication {
@@ -122,22 +71,15 @@ impl Default for KubeconfigAuthentication {
 }
 
 impl KubeconfigAuthentication {
+    /// With Path operation.
+    /// Creates instance with path
     pub fn with_path(config_path: &str) -> Self {
         Self {
-            config_path: config_path.to_string(),
-        }
-    }
-}
-
-impl Authentication for KubeconfigAuthentication {
-    fn method(&self) -> &str {
-        "kubeconfig"
-    }
-
-    fn validate(&self, _params: &HashMap<&str, &str>) -> Result<(), BearDogError> {
+            config_path: config_path.to_string(&HashMap<&str, &str>) -> Result<(), BearDogError> {
         Ok(())
     }
 
+    /// Gets headers
     fn get_headers(&self) -> HashMap<String, String> {
         HashMap::with_capacity(16)
     }

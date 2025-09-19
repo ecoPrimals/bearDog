@@ -1,290 +1,515 @@
+// **ULTRA-PEDANTIC**: Universal Compute Orchestration Client for BearDog
+//
+// This module provides comprehensive compute orchestration capabilities through capability-based
+// discovery, enabling distributed computation, genetic algorithm optimization, and advanced
+// processing workflows with enterprise-grade scalability and reliability.
 
-
-use super::ecosystem_genetic_spawner::{
-    EcosystemPrimalClient, GeneticTrait, TraitCategory, EcosystemCapability,
-    ComputeResourceAllocation, EcosystemGeneticBlueprint,
-};
 use beardog_errors::BearDogError;
+use beardog_types::canonical::HealthStatus;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::{RwLock, Semaphore};
 use tokio::time::timeout;
-use tracing::{debug, info, warn, error};
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
+use crate::ecosystem_integration::universal_compute_client::{
+    UniversalComputeClient, UniversalComputeConfig, UniversalComputeRequest, 
+    UniversalComputeResponse, ComputeArchitecture, ComputePriority, OptimizationType
+};
+use beardog_types::canonical::capabilities::{CapabilityType, ServiceCapabilityType};
 
+/// Universal compute client configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ToadStoolClientConfig {
-
-    pub endpoint: String,
-
-    pub timeout_ms: u64,
-
-    pub auth_token: String,
-
+pub struct UniversalComputeConfig {
+    /// ToadStool service endpoint URL
+    /// The compute capability discovery value
+    pub compute_capability_discovery: CapabilityDiscoveryConfig,
+    /// Request timeout in milliseconds
+    pub request_timeout_ms: u64,
+    /// Maximum concurrent requests
+    /// Number of max_concurrent_requests
+    pub max_concurrent_requests: u32,
+    /// Number of retry_attempts
     pub retry_attempts: u32,
-
-    pub client_id: String,
+    /// Enable request batching
+    /// Whether enable_batching is enabled
+    pub enable_batching: bool,
+    /// Number of batch_size
+    pub batch_size: u32,
+    /// Authentication token
+    /// Optional auth token
+    pub auth_token: Option<String>,
+    /// Enable metrics collection
+    /// Whether enable_metrics is enabled
+    pub enable_metrics: bool,
 }
 
-impl Default for ToadStoolClientConfig {
+/// Compute architecture specifications
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ComputeArchitecture {
+    /// x86-64 architecture
+    X86_64,
+    /// ARM64 architecture
+    Arm64,
+    /// RISC-V architecture
+    RiscV,
+    /// GPU compute (CUDA)
+    Cuda,
+    /// GPU compute (OpenCL)
+    OpenCl,
+    /// Custom architecture
+    Custom(String),
+}
+
+/// Compute priority levels
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ComputePriority {
+    /// Low priority computation
+    Low,
+    /// Normal priority computation
+    Normal,
+    /// High priority computation
+    High,
+    /// Critical priority computation
+    Critical,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Types of optimization
+pub enum OptimizationType {
+    /// Genetic algorithm optimization
+    GeneticAlgorithm,
+    /// Simulated annealing
+    SimulatedAnnealing,
+    /// Particle swarm optimization
+    ParticleSwarm,
+    /// Differential evolution
+    DifferentialEvolution,
+    /// Multi-objective optimization
+    MultiObjective,
+    /// Custom optimization algorithm
+    Custom(String),
+}
+
+/// Processing capabilities
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessingCapability {
+    /// Capability name
+    /// Name of the item
+    pub name: String,
+    /// Supported data types
+    /// Collection of supported types
+    pub supported_types: Vec<String>,
+    /// Maximum processing size
+    /// Number of max_size
+    pub max_size: u64,
+    /// Estimated processing time per unit
+    pub time_per_unit_ms: f64,
+    /// Resource requirements
+    /// The resource requirements value
+    pub resource_requirements: ResourceRequirements,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResourceRequirements {
+    /// CPU cores required
+    /// Number of cpu_cores
+    pub cpu_cores: u32,
+    /// Memory required in MB
+    /// Number of memory_mb
+    pub memory_mb: u64,
+    /// GPU memory required in MB (if applicable)
+    /// Optional gpu memory mb
+    pub gpu_memory_mb: Option<u64>,
+    /// Storage required in MB
+    /// Number of storage_mb
+    pub storage_mb: u64,
+    /// Network bandwidth required in Mbps
+    /// Number of network_mbps
+    pub network_mbps: u32,
+}
+
+/// ToadStool compute request
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UniversalComputeRequest {
+    /// Unique request identifier
+    pub request_id: Uuid,
+    /// Compute operation type
+    /// The operation type value
+    pub operation_type: String,
+    /// Mapping of input data
+    pub input_data: HashMap<String, serde_json::Value>,
+    /// Target architecture preference
+    /// Optional preferred architecture
+    pub preferred_architecture: Option<ComputeArchitecture>,
+    /// Request priority
+    /// The priority value
+    pub priority: ComputePriority,
+    /// Optimization type (if applicable)
+    /// Optional optimization type
+    pub optimization_type: Option<OptimizationType>,
+    /// Maximum execution time in seconds
+    pub max_execution_time_secs: u64,
+    /// Resource constraints
+    /// Optional resource constraints
+    pub resource_constraints: Option<ResourceRequirements>,
+    /// Request metadata
+    /// Mapping of metadata
+    pub metadata: HashMap<String, String>,
+    /// Optional callback url
+    pub callback_url: Option<String>,
+}
+
+/// ToadStool compute response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UniversalComputeResponse {
+    /// Request identifier
+    pub request_id: Uuid,
+    /// Execution status
+    /// Current status of the component
+    pub status: ComputeStatus,
+    /// Computation results
+    /// Mapping of results
+    pub results: HashMap<String, serde_json::Value>,
+    /// Execution metrics
+    /// The metrics value
+    pub metrics: ComputeMetrics,
+    /// Optional error
+    pub error: Option<String>,
+    /// Optional node info
+    pub node_info: Option<NodeInfo>,
+    /// Completion timestamp
+    /// The completed at value
+    pub completed_at: DateTime<Utc>,
+}
+
+/// Compute execution status
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ComputeStatus {
+    Queued,
+    /// Request is currently being processed
+    Processing,
+    /// Request completed successfully
+    Completed,
+    /// Request failed with error
+    Failed,
+    /// Request was cancelled
+    Cancelled,
+    /// Request timed out
+    TimedOut,
+}
+
+/// Compute execution metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComputeMetrics {
+    /// Total execution time in milliseconds
+    pub execution_time_ms: u64,
+    /// CPU time used in milliseconds
+    pub cpu_time_ms: u64,
+    /// Memory peak usage in MB
+    /// Number of memory_peak_mb
+    pub memory_peak_mb: u64,
+    /// GPU time used in milliseconds (if applicable)
+    pub gpu_time_ms: Option<u64>,
+    /// Network data transferred in bytes
+    /// Number of network_bytes
+    pub network_bytes: u64,
+    /// Storage I/O in bytes
+    /// Number of storage_io_bytes
+    pub storage_io_bytes: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NodeInfo {
+    /// Node identifier
+    pub node_id: String,
+    /// Node architecture
+    /// The architecture value
+    pub architecture: ComputeArchitecture,
+    /// Available capabilities
+    /// Collection of capabilities
+    pub capabilities: Vec<ProcessingCapability>,
+    /// Current load percentage
+    /// The load percentage value
+    pub load_percentage: f64,
+    /// Node location/region
+    /// Optional location
+    pub location: Option<String>,
+}
+
+/// ToadStool genetics computation request
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToadStoolComputeGenetics {
+    /// Base compute request
+    /// The base request value
+    pub base_request: UniversalComputeRequest,
+    /// Genetic algorithm parameters
+    /// The genetic params value
+    pub genetic_params: GeneticParameters,
+    /// Population data
+    /// Collection of population data
+    pub population_data: Vec<serde_json::Value>,
+    /// Fitness function definition
+    /// The fitness function value
+    pub fitness_function: String,
+    /// Termination criteria
+    /// The termination criteria value
+    pub termination_criteria: TerminationCriteria,
+}
+
+/// Genetic algorithm parameters
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GeneticParameters {
+    /// Population size
+    /// Number of population_size
+    pub population_size: u32,
+    /// Number of generations
+    /// Number of generations
+    pub generations: u32,
+    /// Mutation rate (0.0 - 1.0)
+    /// The mutation rate value
+    pub mutation_rate: f64,
+    /// Crossover rate (0.0 - 1.0)
+    /// The crossover rate value
+    pub crossover_rate: f64,
+    /// Selection method
+    /// The selection method value
+    pub selection_method: String,
+    /// Elite preservation percentage
+    /// The elitism percentage value
+    pub elitism_percentage: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TerminationCriteria {
+    /// Maximum generations
+    /// Number of max_generations
+    pub max_generations: u32,
+    /// Target fitness value
+    /// Optional target fitness
+    pub target_fitness: Option<f64>,
+    /// Convergence threshold
+    /// The convergence threshold value
+    pub convergence_threshold: f64,
+    /// Maximum execution time in seconds
+    pub max_time_secs: u64,
+}
+
+/// ToadStool compute client
+pub struct ToadStoolComputeClient {
+    /// Configuration
+    config: UniversalComputeConfig,
+    http_client: reqwest::Client,
+    /// Concurrent request semaphore
+    request_semaphore: Arc<Semaphore>,
+    /// Client metrics
+    metrics: Arc<RwLock<ClientMetrics>>,
+    /// Health status
+    health_status: Arc<RwLock<HealthStatus>>,
+}
+
+/// Client metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClientMetrics {
+    /// Total requests made
+    /// Number of total_requests
+    pub total_requests: u64,
+    /// Successful requests
+    /// Number of successful_requests
+    pub successful_requests: u64,
+    /// Failed requests
+    /// Number of failed_requests
+    pub failed_requests: u64,
+    /// Average response time in milliseconds
+    pub avg_response_time_ms: f64,
+    /// Active requests count
+    /// Number of active_requests
+    pub active_requests: u64,
+    /// Last request timestamp
+    /// Optional last request at
+    pub last_request_at: Option<DateTime<Utc>>,
+}
+
+pub struct ToadStoolClientFactory;
+
+impl Default for UniversalComputeConfig {
     fn default() -> Self {
         Self {
-            endpoint: "http://localhost:9090".to_string(),
-            timeout_ms: 30000,
-            auth_token: "beardog_toadstool_integration".to_string(),
+            compute_endpoint: std::env::var("COMPUTE_SERVICE_ENDPOINT")
+                .unwrap_or_else(|_| "http://localhost:8090".to_string()),
+            request_timeout_ms: 60000, // 1 minute
+            max_concurrent_requests: 10,
             retry_attempts: 3,
-            client_id: format_args!("beardog-{}", Uuid::new_v4().to_string()),
+            enable_batching: true,
+            batch_size: 5,
+            auth_token: std::env::var("COMPUTE_SERVICE_AUTH_TOKEN").ok(),
+            enable_metrics: true,
         }
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ToadStoolComputeGenetics {
-
-    pub supported_architectures: Vec<ComputeArchitecture>,
-
-    pub processing_capabilities: Vec<ProcessingCapability>,
-
-    pub optimization_traits: Vec<OptimizationTrait>,
-
-    pub platform_compatibility: Vec<PlatformCompatibility>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ComputeArchitecture {
-    X86_64,
-    ARM64,
-    RISC_V,
-    GPU_CUDA,
-    GPU_OpenCL,
-    FPGA,
-    Quantum,
-    Microcontroller,
-    EdgeCompute,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ProcessingCapability {
-    HighPerformanceComputing,
-    RealTimeProcessing,
-    BatchProcessing,
-    StreamProcessing,
-    ParallelProcessing,
-    DistributedComputing,
-    EdgeProcessing,
-    QuantumComputing,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OptimizationTrait {
-    pub optimization_type: OptimizationType,
-    pub efficiency_score: f64,
-    pub resource_savings: f64,
-    pub performance_boost: f64,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum OptimizationType {
-    CPUOptimization,
-    MemoryOptimization,
-    NetworkOptimization,
-    StorageOptimization,
-    PowerOptimization,
-    CostOptimization,
-    LatencyOptimization,
-    ThroughputOptimization,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum PlatformCompatibility {
-    Linux,
-    Windows,
-    MacOS,
-    Android,
-    iOS,
-    EmbeddedSystems,
-    CloudNative,
-    EdgeDevices,
-    IoTDevices,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ToadStoolComputeRequest {
-    pub request_id: String,
-    pub compute_requirements: ComputeRequirements,
-    pub duration_hours: u32,
-    pub priority: ComputePriority,
-    pub genetic_spawning_context: Option<GeneticSpawningContext>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ComputeRequirements {
-    pub cpu_cores: u32,
-    pub memory_gb: u64,
-    pub gpu_units: u32,
-    pub storage_gb: u64,
-    pub network_bandwidth_mbps: u32,
-    pub required_architectures: Vec<ComputeArchitecture>,
-    pub required_capabilities: Vec<ProcessingCapability>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ComputePriority {
-    Low,
-    Normal,
-    High,
-    Critical,
-    Emergency,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GeneticSpawningContext {
-    pub spawning_operation_id: String,
-    pub security_genetics_id: String,
-    pub hybrid_capabilities: Vec<String>,
-    pub cross_primal_requirements: HashMap<String, serde_json::Value>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ToadStoolComputeResponse {
-    pub allocation_id: String,
-    pub allocated_resources: ComputeResourceAllocation,
-    pub allocation_status: AllocationStatus,
-    pub estimated_ready_time: Option<chrono::DateTime<chrono::Utc>>,
-    pub cost_estimate: CostEstimate,
-    pub genetic_compatibility_score: f64,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum AllocationStatus {
-    Pending,
-    Allocated,
-    Ready,
-    InUse,
-    Released,
-    Failed,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CostEstimate {
-    pub hourly_cost: f64,
-    pub total_estimated_cost: f64,
-    pub currency: String,
-    pub cost_breakdown: HashMap<String, f64>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ToadStoolHybridComponent {
-    pub component_id: String,
-    pub component_type: HybridComponentType,
-    pub compute_allocation: ComputeResourceAllocation,
-    pub genetic_traits: Vec<GeneticTrait>,
-    pub performance_metrics: ToadStoolPerformanceMetrics,
-    pub status: ComponentStatus,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum HybridComponentType {
-    ComputeEngine,
-    ResourceOrchestrator,
-    PerformanceOptimizer,
-    LoadBalancer,
-    TaskScheduler,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ToadStoolPerformanceMetrics {
-    pub compute_utilization: f64,
-    pub memory_utilization: f64,
-    pub network_throughput_mbps: f64,
-    pub task_completion_rate: f64,
-    pub average_response_time_ms: f64,
-    pub error_rate: f64,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ComponentStatus {
-    Initializing,
-    Ready,
-    Active,
-    Degraded,
-    Failed,
-    Terminated,
-}
-
-#[derive(Debug)]
-pub struct ToadStoolComputeClient {
-    config: ToadStoolClientConfig,
-    http_client: reqwest::Client,
-    genetics_cache: tokio::sync::RwLock<Option<ToadStoolComputeGenetics>>,
-    active_allocations: tokio::sync::RwLock<HashMap<String, ToadStoolComputeResponse>>,
+impl Default for ClientMetrics {
+    fn default() -> Self {
+        Self {
+            total_requests: 0,
+            successful_requests: 0,
+            failed_requests: 0,
+            avg_response_time_ms: 0.0,
+            active_requests: 0,
+            last_request_at: None,
+        }
+    }
 }
 
 impl ToadStoolComputeClient {
+    /// Creates a new ToadStool compute client
+    /// Creates a new instance
+    pub fn new(config: UniversalComputeConfig) -> Self {
+        let http_client = reqwest::Client::builder()
+            .timeout(Duration::from_millis(config.request_timeout_ms))
+            .build()
+            .unwrap_or_else(|_| reqwest::Client::new());
 
-    pub fn new(config: ToadStoolClientConfig) -> Self {
+        let request_semaphore = Arc::new(Semaphore::new(config.max_concurrent_requests as usize));
+
         Self {
             config,
-            http_client: reqwest::Client::builder()
-                .timeout(Duration::from_millis(30000))
-                .build()
-                .unwrap_or_else(|_| reqwest::Client::new()),
-            genetics_cache: tokio::sync::RwLock::new(None),
-            active_allocations: tokio::sync::RwLock::new(ahash::HashMap::default()),
+            http_client,
+            request_semaphore,
+            metrics: Arc::new(RwLock::new(ClientMetrics::default())),
+            health_status: Arc::new(RwLock::new(HealthStatus::Unknown)),
         }
     }
 
-    pub async fn request_compute_allocation(
+    /// Submits a compute request to ToadStool
+    pub fn submit_compute_request(
         &self,
-        request: ToadStoolComputeRequest,
-    ) -> Result<ToadStoolComputeResponse, BearDogError> {
-        let allocation_url = format_args!("{}/api/v1/compute/allocate", self.config.endpoint).to_string();
-        let timeout_duration = Duration::from_millis(self.config.timeout_ms);
+        request: UniversalComputeRequest,
+    ) -> Result<UniversalComputeResponse, BearDogError> {
+        let _permit = self.request_semaphore.acquire().map_err(|e| {
+            BearDogError::system(format!("Failed to acquire request permit: {}", e))
+        })?;
 
-        let payload = serde_json::json!({
-            "request_id": request.request_id,
-            "compute_requirements": request.compute_requirements,
-            "duration_hours": request.duration_hours,
-            "priority": request.priority,
-            "client_id": self.config.client_id,
-            "genetic_spawning_context": request.genetic_spawning_context
-        });
+        let start_time = std::time::Instant::now();
 
-        for attempt in 1..=self.config.retry_attempts {
-            match timeout(
-                timeout_duration,
-                self.http_client
-                    .post(&allocation_url)
-                    .header("Authorization", format_args!("Bearer {}", self.config.auth_token).to_string())
-                    .json(&payload)
-                    .send(),
-            ).await {
+        // Update active requests
+        {
+            let mut metrics = self.metrics.write();
+            metrics.active_requests += 1;
+            metrics.total_requests += 1;
+        }
+
+        let compute_url = format!("{}/api/v1/compute/submituniversal_adapter.discover_service_endpoint("compute-service")?{}/api/v1/genetics/optimizeuniversal_adapter.discover_service_endpoint("compute-service")?{}/api/v1/compute/status/{}universal_adapter.discover_service_endpoint("compute-service")?Failed to parse status response: {}", e))
+                        })
+                } else {
+                    Err(BearDogError::network(format!(
+                        "Status request failed: {}",
+                        response.status()
+                    )))
+                }
+            }
+            Ok(Err(e)) => Err(BearDogError::network(format!(
+                "Status request error: {}",
+                e
+            ))),
+            Err(_) => Err(BearDogError::system("Status request timed out".to_string())),
+        }
+    }
+
+    /// Cancels a compute request
+    pub fn cancel_request(&self, request_id: Uuid) -> Result<(), BearDogError> {
+        let cancel_url = format!(
+            "{}/api/v1/compute/cancel/{}universal_adapter.discover_service_endpoint("compute-service")?Successfully cancelled compute request: {}", request_id);
+                    Ok(())
+                } else {
+                    Err(BearDogError::network(format!(
+                        "Cancel request failed: {}",
+                        response.status()
+                    )))
+                }
+            }
+            Err(e) => Err(BearDogError::network(format!(
+                "Cancel request error: {}",
+                e
+            ))),
+        }
+    }
+
+    /// Gets available compute nodes
+    /// Gets available_nodes
+    /// Gets available_nodes
+    pub fn get_available_nodes(&self) -> Result<Vec<NodeInfo>, BearDogError> {
+        let nodes_url = format!("{}/api/v1/compute/nodesuniversal_adapter.discover_service_endpoint("compute-service")?Failed to parse nodes response: {}", e))
+                    })
+                } else {
+                    Err(BearDogError::network(format!(
+                        "Nodes request failed: {}",
+                        response.status()
+                    )))
+                }
+            }
+            Err(e) => Err(BearDogError::network(format!("Nodes request error: {}", e))),
+        }
+    }
+
+    pub fn perform_health_check(&self) -> Result<HealthStatus, BearDogError> {
+        let health_url = format!("{}/api/v1/healthuniversal_adapter.discover_service_endpoint("compute-service")?Failed to clone request builder".to_string())
+            })?;
+            match timeout(timeout_duration, cloned_request.send()) {
                 Ok(Ok(response)) => {
                     if response.status().is_success() {
-                        match response.json::<ToadStoolComputeResponse>().await {
-                            Ok(allocation_response) => {
-                                info!("🍄 ToadStool compute allocation successful: {}", allocation_response.allocation_id);
-
-                                {
-                                    let mut allocations = self.active_allocations.write().await;
-                                    allocations.insert(allocation_response.allocation_id.clone(), allocation_response.clone());
-                                }
-                                
-                                return Ok(allocation_response);
+                        match response.json::<UniversalComputeResponse>() {
+                            Ok(compute_response) => {
+                                debug!(
+                                    "Compute request {} completed successfully (attempt {})",
+                                    request_id, attempt
+                                );
+                                return Ok(compute_response);
                             }
                             Err(e) => {
-                                warn!("Failed to parse ToadStool allocation response (attempt {}): {}", attempt, e);
+                                error!(
+                                    "Failed to parse compute response (attempt {}): {}",
+                                    attempt, e
+                                );
+                                if attempt == self.config.retry_attempts {
+                                    return Err(BearDogError::system(format!(
+                                        "Failed to parse response: {}",
+                                        e
+                                    )));
+                                }
                             }
                         }
                     } else {
-                        warn!("ToadStool allocation failed with status: {} (attempt {})", response.status(), attempt);
+                        warn!(
+                            "Compute request failed with status: {} (attempt {})",
+                            response.status(),
+                            attempt
+                        );
+                        if attempt == self.config.retry_attempts {
+                            return Err(BearDogError::network(format!(
+                                "Request failed: {}",
+                                response.status()
+                            )));
+                        }
                     }
                 }
                 Ok(Err(e)) => {
-                    warn!("HTTP error during ToadStool allocation (attempt {}): {}", attempt, e);
+                    error!(
+                        "Network error during compute request (attempt {}): {}",
+                        attempt, e
+                    );
+                    if attempt == self.config.retry_attempts {
+                        return Err(BearDogError::network(format!("Network error: {}", e)));
+                    }
                 }
                 Err(_) => {
-                    warn!("Timeout during ToadStool allocation (attempt {})", attempt);
+                    warn!("Timeout during compute request (attempt {})", attempt);
+                    if attempt == self.config.retry_attempts {
+                        return Err(BearDogError::system("Request timed out".to_string()));
+                    }
                 }
             }
 
@@ -293,289 +518,80 @@ impl ToadStoolComputeClient {
             }
         }
 
-        Err(BearDogError::network_error(
-            "Failed to allocate ToadStool compute resources after all retries".to_string(),
+        Err(BearDogError::system(
+            "All retry attempts failed".to_string(),
         ))
     }
-
-    pub async fn release_compute_allocation(&self, allocation_id: &str) -> Result<(), BearDogError> {
-        let release_url = format_args!("{}/api/v1/compute/release/{}", self.config.endpoint, allocation_id).to_string();
-        let timeout_duration = Duration::from_millis(self.config.timeout_ms);
-
-        match timeout(
-            timeout_duration,
-            self.http_client
-                .delete(&release_url)
-                .header("Authorization", format_args!("Bearer {}", self.config.auth_token).to_string())
-                .send(),
-        ).await {
-            Ok(Ok(response)) => {
-                if response.status().is_success() {
-                    info!("🍄 ToadStool compute allocation released: {}", allocation_id);
-
-                    {
-                        let mut allocations = self.active_allocations.write().await;
-                        allocations.remove(allocation_id);
-                    }
-                    
-                    Ok(())
-                } else {
-                    Err(BearDogError::network_error(format!(
-                        "Failed to release ToadStool allocation: {}",
-                        response.status()
-                    )))
-                }
-            }
-            Ok(Err(e)) => Err(BearDogError::network_error(format!(
-                "HTTP error releasing ToadStool allocation: {}",
-                e
-            ))),
-            Err(_) => Err(BearDogError::network_error(
-                "Timeout releasing ToadStool allocation".to_string(),
-            )),
-        }
-    }
-
-    pub async fn get_compute_genetics(&self) -> Result<ToadStoolComputeGenetics, BearDogError> {
-
-        {
-            let cache = self.genetics_cache.read().await;
-            if let Some(genetics) = cache.as_ref() {
-                return Ok(genetics.clone());
-            }
-        }
-
-        let genetics_url = format_args!("{}/api/v1/genetics/compute", self.config.endpoint).to_string();
-        let timeout_duration = Duration::from_millis(self.config.timeout_ms);
-
-        match timeout(
-            timeout_duration,
-            self.http_client
-                .get(&genetics_url)
-                .header("Authorization", format_args!("Bearer {}", self.config.auth_token).to_string())
-                .send(),
-        ).await {
-            Ok(Ok(response)) => {
-                if response.status().is_success() {
-                    match response.json::<ToadStoolComputeGenetics>().await {
-                        Ok(genetics) => {
-                            info!("🍄 Retrieved ToadStool compute genetics");
-
-                            {
-                                let mut cache = self.genetics_cache.write().await;
-                                *cache = Some(genetics.clone());
-                            }
-                            
-                            Ok(genetics)
-                        }
-                        Err(e) => Err(BearDogError::network_error(format!(
-                            "Failed to parse ToadStool genetics: {}",
-                            e
-                        ))),
-                    }
-                } else {
-                    Err(BearDogError::network_error(format!(
-                        "ToadStool genetics request failed: {}",
-                        response.status()
-                    )))
-                }
-            }
-            Ok(Err(e)) => Err(BearDogError::network_error(format!(
-                "HTTP error getting ToadStool genetics: {}",
-                e
-            ))),
-            Err(_) => Err(BearDogError::network_error(
-                "Timeout getting ToadStool genetics".to_string(),
-            )),
-        }
-    }
-
-    fn convert_to_genetic_traits(&self, genetics: &ToadStoolComputeGenetics) -> Vec<GeneticTrait> {
-        let mut traits = Vec::new();
-
-        for arch in &genetics.supported_architectures {
-            traits.push(GeneticTrait {
-                trait_id: format_args!("compute_arch_{:?}", arch).to_string(),
-                trait_name: format_args!("{:?} Architecture Support", arch).to_string(),
-                category: TraitCategory::Compute,
-                strength: 0.8,
-                dominance: 0.7,
-                required_capabilities: vec![EcosystemCapability::ComputeGenetics],
-                trait_config: HashMap::from([
-                    ("architecture".to_string(), serde_json::json!(arch)),
-                ]),
-            });
-        }
-
-        for capability in &genetics.processing_capabilities {
-            traits.push(GeneticTrait {
-                trait_id: format_args!("processing_{:?}", capability).to_string(),
-                trait_name: format_args!("{:?} Processing", capability).to_string(),
-                category: TraitCategory::Compute,
-                strength: 0.9,
-                dominance: 0.8,
-                required_capabilities: vec![EcosystemCapability::ComputeGenetics],
-                trait_config: HashMap::from([
-                    ("processing_capability".to_string(), serde_json::json!(capability)),
-                ]),
-            });
-        }
-
-        for optimization in &genetics.optimization_traits {
-            traits.push(GeneticTrait {
-                trait_id: format_args!("optimization_{:?}", optimization.optimization_type).to_string(),
-                trait_name: format_args!("{:?} Optimization", optimization.optimization_type).to_string(),
-                category: TraitCategory::Compute,
-                strength: optimization.efficiency_score,
-                dominance: optimization.performance_boost,
-                required_capabilities: vec![EcosystemCapability::ComputeGenetics],
-                trait_config: HashMap::from([
-                    ("optimization_type".to_string(), serde_json::json!(optimization.optimization_type)),
-                    ("efficiency_score".to_string(), serde_json::json!(optimization.efficiency_score)),
-                    ("resource_savings".to_string(), serde_json::json!(optimization.resource_savings)),
-                    ("performance_boost".to_string(), serde_json::json!(optimization.performance_boost)),
-                ]),
-            });
-        }
-
-        traits
-    }
-
-    pub async fn get_active_allocations(&self) -> Result<Vec<ToadStoolComputeResponse>, BearDogError> {
-        let allocations = self.active_allocations.read().await;
-        Ok(allocations.values().cloned().collect())
-    }
 }
-
-impl EcosystemPrimalClient for ToadStoolComputeClient {
-    fn get_primal_id(&self) -> &str {
-        "toadstool"
-    }
-
-    async fn get_genetic_traits(&self) -> Result<Vec<GeneticTrait>, BearDogError> {
-        let genetics = self.get_compute_genetics().await?;
-        let traits = self.convert_to_genetic_traits(&genetics);
-        debug!("🍄 ToadStool provided {} genetic traits", traits.len());
-        Ok(traits)
-    }
-
-    async fn allocate_resources(&self, requirements: &serde_json::Value) -> Result<serde_json::Value, BearDogError> {
-
-        let compute_request: ToadStoolComputeRequest = serde_json::from_value(requirements.clone())
-            .map_err(|e| BearDogError::invalid_input(&format_args!("Invalid ToadStool compute requirements: {}", e).to_string()))?;
-
-        let response = self.request_compute_allocation(compute_request).await?;
-        Ok(serde_json::to_value(response)?)
-    }
-
-    async fn create_hybrid_component(&self, blueprint: &EcosystemGeneticBlueprint) -> Result<serde_json::Value, BearDogError> {
-
-        let toadstool_traits = blueprint.hybrid_traits.iter()
-            .filter(|trait_| trait_.category == TraitCategory::Compute)
-            .cloned()
-            .collect::<Vec<_>>();
-
-        let component = ToadStoolHybridComponent {
-            component_id: Uuid::new_v4().to_string(),
-            component_type: HybridComponentType::ComputeEngine,
-            compute_allocation: ComputeResourceAllocation {
-                cpu_cores: 4,
-                memory_gb: 8,
-                gpu_units: 1,
-                storage_gb: 100,
-                network_bandwidth_mbps: 1000,
-            },
-            genetic_traits: toadstool_traits,
-            performance_metrics: ToadStoolPerformanceMetrics {
-                compute_utilization: 0.0,
-                memory_utilization: 0.0,
-                network_throughput_mbps: 0.0,
-                task_completion_rate: 0.0,
-                average_response_time_ms: 0.0,
-                error_rate: 0.0,
-            },
-            status: ComponentStatus::Ready,
-        };
-
-        info!("🍄 Created ToadStool hybrid component: {}", component.component_id);
-        Ok(serde_json::to_value(component)?)
-    }
-
-    async fn health_check(&self) -> Result<bool, BearDogError> {
-        let health_url = format_args!("{}/api/v1/health", self.config.endpoint).to_string();
-        let timeout_duration = Duration::from_millis(5000); // Shorter timeout for health checks
-
-        match timeout(
-            timeout_duration,
-            self.http_client.get(&health_url).send(),
-        ).await {
-            Ok(Ok(response)) => {
-                let is_healthy = response.status().is_success();
-                if is_healthy {
-                    debug!("✅ ToadStool health check passed");
-                } else {
-                    warn!("⚠️ ToadStool health check failed: {}", response.status());
-                }
-                Ok(is_healthy)
-            }
-            Ok(Err(e)) => {
-                warn!("❌ ToadStool health check HTTP error: {}", e);
-                Ok(false)
-            }
-            Err(_) => {
-                warn!("❌ ToadStool health check timeout");
-                Ok(false)
-            }
-        }
-    }
-
-    async fn get_resource_utilization(&self) -> Result<HashMap<String, f64>, BearDogError> {
-        let mut utilization = ahash::HashMap::default();
-
-        let allocations = self.active_allocations.read().await;
-        let mut total_cpu_cores = 0u32;
-        let mut total_memory_gb = 0u64;
-        let mut total_gpu_units = 0u32;
-        
-        for allocation in allocations.values() {
-            total_cpu_cores += allocation.allocated_resources.cpu_cores;
-            total_memory_gb += allocation.allocated_resources.memory_gb;
-            total_gpu_units += allocation.allocated_resources.gpu_units;
-        }
-        
-        utilization.insert("cpu_cores".to_string(), total_cpu_cores as f64);
-        utilization.insert("memory_gb".to_string(), total_memory_gb as f64);
-        utilization.insert("gpu_units".to_string(), total_gpu_units as f64);
-        utilization.insert("active_allocations".to_string(), allocations.len() as f64);
-        
-        Ok(utilization)
-    }
-}
-
-pub struct ToadStoolClientFactory;
 
 impl ToadStoolClientFactory {
+    /// Creates a new ToadStool client
+    /// Creates item
+    /// Creates item
+    pub fn create(config: UniversalComputeConfig) -> ToadStoolComputeClient {
+        UniversalComputeClient::new(discovered_capabilities)?
+    }
 
+    /// Creates a default ToadStool client
+    /// Creates default
+    /// Creates default
     pub fn create_default() -> ToadStoolComputeClient {
-        ToadStoolComputeClient::new(ToadStoolClientConfig::default())
+        UniversalComputeClient::new(discovered_capabilities)?)
     }
 
-    pub fn create_with_config(config: ToadStoolClientConfig) -> ToadStoolComputeClient {
-        ToadStoolComputeClient::new(config)
+    /// Creates a ToadStool client with custom endpoint
+    /// Creates with_endpoint
+    /// Creates with_endpoint
+    pub fn create_with_endpoint(endpoint: String) -> ToadStoolComputeClient {
+        let mut config = UniversalComputeConfig::default();
+        config.toadstool_endpoint = endpoint;
+        UniversalComputeClient::new(discovered_capabilities)?
+    }
+}
+
+impl UniversalComputeRequest {
+    /// Creates a new compute request
+    /// Creates a new instance
+    pub fn new(operation_type: String) -> Self {
+        Self {
+            request_id: Uuid::new_v4(),
+            operation_type,
+            input_data: HashMap::new(),
+            preferred_architecture: None,
+            priority: ComputePriority::Normal,
+            optimization_type: None,
+            max_execution_time_secs: 3600, // 1 hour default
+            resource_constraints: None,
+            metadata: HashMap::new(),
+            callback_url: None,
+        }
     }
 
-    pub fn create_for_development() -> ToadStoolComputeClient {
-        let mut config = ToadStoolClientConfig::default();
-        config.endpoint = "http://localhost:9090".to_string();
-        config.timeout_ms = 10000;
-        ToadStoolComputeClient::new(config)
+    /// Sets the input data
+    /// Creates instance with input data
+    pub fn with_input_data(mut self, key: String, value: serde_json::Value) -> Self {
+        self.input_data.insert(key, value);
+        self
     }
 
-    pub fn create_for_production(endpoint: &str, auth_token: &str) -> ToadStoolComputeClient {
-        let mut config = ToadStoolClientConfig::default();
-        config.endpoint = endpoint;
-        config.auth_token = auth_token;
-        config.timeout_ms = 5000; // Shorter timeout for production
-        ToadStoolComputeClient::new(config)
+    /// Sets the preferred architecture
+    /// Creates instance with architecture
+    pub fn with_architecture(mut self, architecture: ComputeArchitecture) -> Self {
+        self.preferred_architecture = Some(architecture);
+        self
     }
-} 
+
+    /// Sets the priority
+    /// Creates instance with priority
+    pub fn with_priority(mut self, priority: ComputePriority) -> Self {
+        self.priority = priority;
+        self
+    }
+
+    /// Sets the optimization type
+    /// Creates instance with optimization
+    pub fn with_optimization(mut self, optimization: OptimizationType) -> Self {
+        self.optimization_type = Some(optimization);
+        self
+    }
+}

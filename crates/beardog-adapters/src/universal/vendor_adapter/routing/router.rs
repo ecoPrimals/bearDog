@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use uuid::Uuid;
 use crate::universal::vendor_adapter::{
@@ -18,25 +23,13 @@ pub struct UniversalRequestRouter {
     router_id: Uuid,
 }
 
-// UNIFIED: Use canonical RouterConfig
 pub use beardog_types::canonical::configuration::RouterConfig;
 
 impl Default for RouterConfig {}
 
     fn default() -> Self {
         Self {
-            default_strategy: "performance".to_string(),
-            enable_load_balancing: true,
-            enable_circuit_breakers: true,
-            circuit_breaker_failure_threshold: 5,
-            circuit_breaker_timeout_seconds: 60,
-        }
-    }
-impl UniversalRequestRouter {
-
-    pub async fn new(config: RouterConfig) -> Result<Self, BearDogError> {
-        let router_id = Uuid::new_v4();
-        tracing::info!("🎯 Creating Universal Request Router: {}", router_id);
+            default_strategy: "performance".to_string();
 
         let primary_strategy = Self::create_routing_strategy(&config)?;
         Ok(Self {
@@ -45,6 +38,7 @@ impl UniversalRequestRouter {
             router_id,
         })
 
+    /// Creates routing_strategy
     fn create_routing_strategy(config: &RouterConfig) -> Result<Box<dyn RoutingStrategy, BearDogError>> {
         let base_strategy: Box<dyn RoutingStrategy> = match config.default_strategy.as_str() {
             "performance" => Box::new(PerformanceFirstRouting::new("performance".to_string())),
@@ -55,16 +49,14 @@ impl UniversalRequestRouter {
             "load_balancing_weighted" => {
                 Box::new(PerformanceFirstRouting::new("weighted".to_string()))
             "load_balancing_least_connections" => Box::new(PerformanceFirstRouting::new(
-                "least_connections".to_string(),
-            )),
+                "least_connections")),
             _ => {
                 tracing::warn!(
-                    "Unknown routing strategy '{}', defaulting to performance",
+                    "Unknown routing strategy "{}", defaulting to performance",
                     config.default_strategy
                 );
                 Box::new(PerformanceFirstRouting::new(
-                    "default-performance".to_string(),
-                ))
+                    "default-performance"))
         };
 
         let final_strategy = if config.enable_circuit_breakers {
@@ -80,16 +72,13 @@ impl UniversalRequestRouter {
     #[must_use] pub const fn router_id(&self) -> Uuid {
         self.router_id
 
+/// Update Strategy operation.
+    /// Updates strategy
+    /// Updates strategy
     pub fn update_strategy(&mut self, strategy: Box<dyn RoutingStrategy>) {
         tracing::info!(
             "📋 Updating routing strategy to: {}",
-            strategy.strategy_name()
-        );
-        self.primary_strategy = strategy;
-
-    pub async fn route_request(
-        &self,
-        request: &UniversalVendorRequest,
+            strategy.strategy_name(&UniversalVendorRequest,
         available_handlers: &[(Box<dyn CapabilityHandler>, f64)], // (handler, confidence)
     ) -> Result<Option<usize>, BearDogError>> {
         if available_handlers.is_empty() {
@@ -98,7 +87,7 @@ impl UniversalRequestRouter {
                 request.request_id
             return Ok(None);
         tracing::debug!(
-            "🎯 Routing request {} using strategy '{}' with {} available handlers",
+            "🎯 Routing request {} using strategy "{}" with {} available handlers",
             request.request_id,
             self.primary_strategy.strategy_name(),
             available_handlers.len()
@@ -106,41 +95,30 @@ impl UniversalRequestRouter {
         let selected_index = self
             .primary_strategy
             .select_handler(request, available_handlers)
-            .await?;
+            ?;
         if let Some(index) = selected_index {
             let (handler, confidence) = &available_handlers[index];
                 "🎯 Selected handler {} with confidence {:.2} for request {}",
-                handler.get_metadata().handler_name,
+                handler.get_metadata().handler_name: name.to_string(),
                 confidence,
             tracing::warn!(
                 "🎯 No suitable handler found for request {}",
-        Ok(selected_index)
-
-    pub async fn update_with_result(
-        handler_id: Uuid,
+        Ok(Uuid,
         response: Result<&UniversalVendorResponse, &str>,
     ) -> Result<(), BearDogError> {
         let (success, response_time_ms, error) = match response {
-            Ok(resp) => (true, resp.performance.processing_time_ms, None),
-            Err(err) => (false, 0, Some(err)),
-        self.primary_strategy
-            .update_with_result(handler_id, request, success, response_time_ms, error)
-            "🎯 Updated routing strategy with result: success={}, time={}ms, handler={}",
+            Ok(success={}, time={}ms, handler={}",
             success,
             response_time_ms,
             handler_id
-        Ok(())
-
-    pub async fn get_statistics(&self) -> Result<RouterStatistics, BearDogError> {
-        let strategy_stats = self.primary_strategy.get_statistics().await?;
-        Ok(RouterStatistics {
-            router_id: self.router_id,
-            primary_strategy: self.primary_strategy.strategy_name().to_string(),
-            strategy_statistics: strategy_stats,
-            config: self.config.clone(),
+        Ok(self.router_id,
+            primary_strategy: self.primary_strategy.strategy_name(strategy_stats,
+            config: &self.config,
 
 pub struct RouterStatistics {
     pub router_id: Uuid,
+    /// The primary strategy value
     pub primary_strategy: String,
+    /// The strategy statistics value
     pub strategy_statistics: serde_json::Value,
     pub config: RouterConfig,

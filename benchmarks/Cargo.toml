@@ -1,27 +1,30 @@
 [package]
-name = "beardog-benchmarks"
+name = "benchmarks"
 version = "0.1.0"
 edition = "2021"
+description = "Performance benchmarks and testing framework"
+readme = "README.md"
+license = "AGPL-3.0-only"
+homepage = "https://github.com/your-org/beardog"
+repository = "https://github.com/your-org/beardog"
+authors = ['BearDog Security Team']
+keywords = ['security', 'hsm', 'threat-detection', 'compliance', 'workflow']
+categories = ['cryptography', 'authentication', 'web-programming', 'network-programming']
+rust-version = "1.70"
 
 [[bench]]
-name = "performance_optimization_benchmarks"
-harness = false
-
-[[bench]]
-name = "security_performance_benchmarks"
+name = "hyperoptimized_benchmarks"
 harness = false
 
 [dependencies]
+beardog-core = { path = "../crates/beardog-core" }
+beardog-security = { workspace = true }
+beardog-types = { workspace = true }
+beardog-utils = { path = "../crates/beardog-utils" }
 criterion = { version = "0.5", features = ["html_reports"] }
-beardog-security = { path = "../crates/beardog-security" }
-# beardog-config removed - use beardog-types::config::complete_unified
-beardog-errors = { path = "../crates/beardog-errors" }
-beardog-types = { path = "../crates/beardog-types" }
+pprof = { version = "0.13", features = ["criterion", "flamegraph"] }
 tokio = { version = "1.0", features = ["full"] }
 toml = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
-
-[lib]
-name = "beardog_benchmarks"
-path = "src/lib.rs" 
+tracing = "0.1" 

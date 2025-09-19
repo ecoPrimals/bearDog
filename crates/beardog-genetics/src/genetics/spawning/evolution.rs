@@ -7,9 +7,14 @@ use beardog_errors::BearDogError;
 use sha3::{Digest, Sha3_256};
 use tracing::info;
 use beardog_errors::BearDogError;
+use crate::ecosystem_integration::universal_compute_client::{
+    UniversalComputeClient, UniversalComputeConfig, UniversalComputeRequest, 
+    UniversalComputeResponse, ComputeArchitecture, ComputePriority, OptimizationType
+};
+use beardog_types::canonical::capabilities::{CapabilityType, ServiceCapabilityType};
 
-pub async fn apply_directed_evolution(
-    _engine: &GeneticSpawningEngine,
+/// Apply Directed Evolution operation.
+pub async fn apply_directed_evolution(&GeneticSpawningEngine,
     mut genetics: BearDogGenetics,
     purpose: &beardog_auth::auth::SpawnPurpose,
 ) -> GeneticsResult<BearDogGenetics> {
@@ -51,21 +56,30 @@ pub async fn apply_directed_evolution(
         beardog_auth::auth::SpawnPurpose::EcosystemIntegration(ecosystem) => {
 
             match ecosystem.as_str() {
-                "ToadStool" => genetics
+                // Use capability types instead of hardcoded primal names
+                ecosystem_name if ecosystem_name.to_lowercase().contains("compute") => genetics
                     .capabilities
-                    .push(beardog_auth::auth::NodeCapability::ToadStoolCompute),
-                "SongBird" => genetics
-                    .push(beardog_auth::auth::NodeCapability::SongBirdDiscovery),
-                "NestGate" => genetics
-                    .push(beardog_auth::auth::NodeCapability::NestGateStorage),
-                "Squirrel" => genetics
-                    .push(beardog_auth::auth::NodeCapability::SquirrelPlugins),
-        _ => {
+                    .push(beardog_auth::auth::NodeCapability::ComputeCapable),
+                ecosystem_name if ecosystem_name.to_lowercase().contains("mesh") || ecosystem_name.to_lowercase().contains("network") => genetics
+                    .capabilities
+                    .push(beardog_auth::auth::NodeCapability::ServiceMeshCapable),
+                ecosystem_name if ecosystem_name.to_lowercase().contains("storage") || ecosystem_name.to_lowercase().contains("data") => genetics
+                    .capabilities
+                    .push(beardog_auth::auth::NodeCapability::StorageCapable),
+                ecosystem_name if ecosystem_name.to_lowercase().contains("ai") || ecosystem_name.to_lowercase().contains("intelligence") => genetics
+                    .capabilities
+                    .push(beardog_auth::auth::NodeCapability::AICapable),
+                _ => {
+                    // Universal capability for unknown ecosystem types
+                    genetics
+                        .capabilities
+                        .push(beardog_auth::auth::NodeCapability::UniversalAdapter);
+                }
+            }
+        }
+    }
 
-            genetics.fitness_score = (genetics.fitness_score * 1.05).min(1.0);
-    };
-
-    let evolution_data = format_args!("{:?}-{}-{}", purpose, genetics.id, genetics.generation).to_string();
+    let evolution_data = format!("{:?}-{}-{}", purpose, genetics.id, genetics.generation);
     let _evolution_hash = Sha3_256::digest(evolution_data.as_bytes());
 
     let _evolution_signature = "signature_placeholder"; // engine.hsm_manager.sign_data(
@@ -75,14 +89,10 @@ pub async fn apply_directed_evolution(
         .push(beardog_auth::auth::CapabilityMutation {
             trigger: beardog_auth::auth::MutationTrigger::UserRequirement,
             mutation_type: format!("DirectedEvolution-{purpose:?}"),
-            affected_capabilities: genetics.capabilities.clone(),
+            affected_capabilities: &genetics.capabilities,
             fitness_impact: 0.05,
         });
-    Ok(genetics)
-}
-
-pub async fn apply_mutations(
-    mutation_rate: f64,
+    Ok(f64,
     info!(
         "Applying mutations with HSM-backed randomness at rate: {}",
         mutation_rate
@@ -90,7 +100,7 @@ pub async fn apply_mutations(
     if mutation_rate <= 0.0 {
         return Ok(genetics);
     }
-    let random_bytes = [0u8; 64]; // engine.hsm_manager.generate_random_bytes(64, &security_reqs).await?;
+    let random_bytes = [0u8; 64]; // engine.hsm_manager.generate_random_bytes(64, &security_reqs)?;
 
     let mut rng_state = u64::from_le_bytes([
         random_bytes[0],
@@ -102,14 +112,7 @@ pub async fn apply_mutations(
         random_bytes[6],
         random_bytes[7],
     ]);
-    let mut mutations_applied = Vec::new();
-
-    let adaptive_mutation_rate = if genetics.fitness_score < 0.5 {
-        mutation_rate * 1.5 // Increase mutation rate for low fitness
-    } else if genetics.generation > 10 {
-        mutation_rate * 0.8 // Reduce mutation rate for mature generations
-    } else {
-    info!("Using adaptive mutation rate: {} (base: {}, fitness: {}, generation: {})", 
+    let mut mutations_applied = Vec::new({} (base: {}, fitness: {}, generation: {})", 
           adaptive_mutation_rate, mutation_rate, genetics.fitness_score, genetics.generation);
 
     rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
@@ -173,7 +176,7 @@ pub async fn apply_mutations(
                 let new_cap =
                     new_capabilities[random_bytes[57] as usize % new_capabilities.len()].clone();
                 if !genetics.capabilities.contains(&new_cap) {
-                    genetics.capabilities.push(new_cap.clone());
+                    genetics.capabilities.push(&new_cap);
                     mutations_applied.push(format!("AddCapability-{new_cap:?}"));
 
                 if !genetics.capabilities.is_empty() {
@@ -190,7 +193,6 @@ pub async fn apply_mutations(
             .mutations
             .push(beardog_auth::auth::CapabilityMutation {
                 trigger: beardog_auth::auth::MutationTrigger::EnvironmentalStress,
-                mutation_type: format_args!("RandomMutation-{}", mutations_applied.join(",").to_string()),
-                affected_capabilities: genetics.capabilities.clone(),
+                mutation_type: format!("RandomMutation-{}", mutations_applied.join(&genetics.capabilities,
                 fitness_impact: -0.01, // Small negative impact for random mutations
             });

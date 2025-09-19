@@ -1,9 +1,11 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
-
-pub mod types;
-pub mod traits;
 pub mod spawner;
+pub mod traits;
+pub mod types;
 
+pub use spawner::EcosystemGeneticSpawner;
+pub use traits::{EcosystemGeneticTrait, EcosystemPrimalClient, EcosystemResourceAvailability};
 pub use types::*;
-pub use traits::{EcosystemPrimalClient, EcosystemGeneticTrait, EcosystemResourceAvailability};
-pub use spawner::EcosystemGeneticSpawner; 

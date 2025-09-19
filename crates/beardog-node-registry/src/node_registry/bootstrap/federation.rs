@@ -8,17 +8,15 @@ use tracing::{debug, info, warn};
 use tokio::time::{timeout, Duration};
 use serde_json::Value;
 
-#[derive(Debug)]
-pub struct FederationBootstrap {
-
-    config: BootstrapConfig,
-
+#[derive(Debug, Clone)]
     client: reqwest::Client,
 
     federation_cache: std::sync::RwLock<HashMap<String, (Vec<FederationDiscoveryResult>, std::time::Instant)>>,
 }
 impl FederationBootstrap {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(config: BootstrapConfig) -> Self {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(45)) // Longer timeout for federation
@@ -31,23 +29,17 @@ impl FederationBootstrap {
         }
     }
 
-    pub async fn bootstrap_from_federation(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
+/// Bootstrap From Federation operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn bootstrap_from_federation(&self) -> Result<Vec<NodeInfo>, BearDogError>> {
         if !self.config.enable_federation_discovery {
             debug!("🚫 Federation discovery disabled");
             return Ok(Vec::new());
         debug!("🌐 Starting federation bootstrap process");
         
-        let mut all_nodes = Vec::new();
-
-        for federation_endpoint in &self.config.phonebook_urls {
-            if federation_endpoint.contains("federation") {
-                match self.bootstrap_from_federation_endpoint(federation_endpoint).await {
-                    Ok(mut nodes) => {
-                        info!("🌐 Discovered {} nodes from federation {}", nodes.len(), federation_endpoint);
-                        all_nodes.append(&mut nodes);
-                    }
-                    Err(e) => {
-                        warn!("Failed to bootstrap from federation {}: {}", federation_endpoint, e);
+        let mut all_nodes = Vec::new({}", federation_endpoint, e);
                 }
             }
 
@@ -55,26 +47,19 @@ impl FederationBootstrap {
         info!("🌐 Total discovered {} nodes from federation", all_nodes.len());
         Ok(all_nodes)
 
-    async fn bootstrap_from_federation_endpoint(&self, endpoint: &str) -> Result<Vec<NodeInfo>, BearDogError>> {
 
-        let federation_network = self.discover_federation_network(endpoint).await?;
+    fn bootstrap_from_federation_endpoint(&self, endpoint: &str) -> Result<Vec<NodeInfo>, BearDogError>> {
+
+        let federation_network = self.discover_federation_network(endpoint)?;
         let mut nodes = Vec::new();
 
-        for registry_info in federation_network.get("registries").and_then(|r| r.as_array()).unwrap_or(&Vec::new()) {
-            if let Some(registry_endpoints) = registry_info.get("endpoints").and_then(|e| e.as_array()) {
-                for endpoint_value in registry_endpoints {
-                    if let Some(endpoint_url) = endpoint_value.as_str() {
-                        match self.bootstrap_from_registry_endpoint(endpoint_url).await {
-                            Ok(mut registry_nodes) => {
-                                nodes.append(&mut registry_nodes);
-                            }
-                            Err(e) => {
-                                warn!("Failed to bootstrap from registry {}: {}", endpoint_url, e);
+        for registry_info in federation_network.get("registries").and_then(|r| r.as_array()).unwrap_or(&Vec::new({}", endpoint_url, e);
                         }
         Ok(nodes)
 
-    async fn discover_federation_network(&self, endpoint: &str) -> Result<Value, BearDogError> {
-        let discovery_url = format_args!("{}/api/v1/federation/network", endpoint).to_string();
+
+    fn discover_federation_network(&self, endpoint: &str) -> Result<Value, BearDogError> {
+        let discovery_url = format!("{}/api/v1/federation/network", endpoint);
 
         if let Some((cached_results, timestamp)) = self.get_cached_federation(endpoint) {
             if timestamp.elapsed() < Duration::from_secs(600) { // 10-minute cache
@@ -83,39 +68,39 @@ impl FederationBootstrap {
         let response = timeout(
             Duration::from_secs(self.config.bootstrap_timeout_seconds),
             self.client.get(&discovery_url).send()
-        ).await
+        )
         .map_err(|_| BearDogError::timeout("Federation discovery timed out"))?
-        .map_err(|e| BearDogError::network(format_args!("Federation request failed: {}", e).to_string()))?;
+        .map_err(|e| BearDogError::network({}", e)))?;
         if !response.status().is_success() {
-            return Err(BearDogError::network(format!(
-                "Federation endpoint returned error: {}",
+            return Err(BearDogError::network({}",
                 response.status()
             )));
         let federation_info: Value = response
             .json()
-            .await
-            .map_err(|e| BearDogError::parsing(format_args!("Failed to parse federation response: {}", e).to_string()))?;
+            .map_err(|e| BearDogError::parsing({}", e)))?;
 
-        self.cache_federation_results(endpoint, &federation_info).await;
+        self.cache_federation_results(endpoint, &federation_info);
         Ok(federation_info)
 
-    async fn bootstrap_from_registry_endpoint(&self, endpoint: &str) -> Result<Vec<NodeInfo>, BearDogError>> {
-        let registry_url = format_args!("{}/api/v1/registry/nodes", endpoint).to_string();
+
+    fn bootstrap_from_registry_endpoint(&self, endpoint: &str) -> Result<Vec<NodeInfo>, BearDogError>> {
+        let registry_url = format!("{}/api/v1/registry/nodes", endpoint);
         debug!("🔗 Bootstrapping from registry endpoint: {}", endpoint);
             self.client.get(&registry_url).send()
         .map_err(|_| BearDogError::timeout("Registry bootstrap timed out"))?
-        .map_err(|e| BearDogError::network(format_args!("Registry request failed: {}", e).to_string()))?;
+        .map_err(|e| BearDogError::network({}", e)))?;
                 "Registry returned error: {}",
         let registry_response: Value = response
-            .map_err(|e| BearDogError::parsing(format_args!("Failed to parse registry response: {}", e).to_string()))?;
+            .map_err(|e| BearDogError::parsing({}", e)))?;
 
         if let Some(node_array) = registry_response.get("nodes").and_then(|n| n.as_array()) {
             for node_value in node_array {
-                if let Ok(node_info) = self.parse_registry_node(node_value).await {
+                if let Ok(node_info) = self.parse_registry_node(node_value) {
                     nodes.push(node_info);
         info!("📋 Discovered {} nodes from registry {}", nodes.len(), endpoint);
 
-    async fn parse_registry_node(&self, node_value: &Value) -> Result<NodeInfo, BearDogError> {
+    /// Parses registry_node
+    fn parse_registry_node(&self, node_value: &Value) -> Result<NodeInfo, BearDogError> {
         let node_id = node_value.get("node_id")
             .and_then(|v| v.as_str())
             .ok_or_else(|| BearDogError::parsing("Missing node_id in registry response"))?
@@ -129,7 +114,7 @@ impl FederationBootstrap {
             caps_array
                 .iter()
                 .filter_map(|v| v.as_str())
-                .map(|s| s.to_string())
+                .map(std::string::ToString::to_string)
                 .collect()
         } else {
             Vec::new()
@@ -140,12 +125,12 @@ impl FederationBootstrap {
                 "untrusted" => Some(TrustLevel::Untrusted),
                 "low" => Some(TrustLevel::Low),
                 "medium" => Some(TrustLevel::Medium),
-                "high" => Some(TrustLevel::High),
+                "high".to_string() => Some(TrustLevel::High),
                 _ => None,
             })
             .unwrap_or(TrustLevel::Low);
         let last_seen = node_value.get("last_seen")
-            .map(|s| s.to_string());
+            .map(std::string::ToString::to_string);
 
         let metadata = if let Some(meta_obj) = node_value.get("metadata").and_then(|m| m.as_object()) {
             meta_obj
@@ -161,24 +146,29 @@ impl FederationBootstrap {
             metadata,
         })
 
-    pub async fn discover_federation_partners(&self, registry_endpoint: &str) -> Result<Vec<FederationDiscoveryResult>, BearDogError>> {
-        let partners_url = format_args!("{}/api/v1/federation/partners", registry_endpoint).to_string();
+/// Discover Federation Partners operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn discover_federation_partners(&self, registry_endpoint: &str) -> Result<Vec<FederationDiscoveryResult>, BearDogError>> {
+        let partners_url = format!("{}/api/v1/federation/partners", registry_endpoint);
         debug!("🤝 Discovering federation partners from {}", registry_endpoint);
             self.client.get(&partners_url).send()
         .map_err(|_| BearDogError::timeout("Federation partners discovery timed out"))?
-        .map_err(|e| BearDogError::network(format_args!("Partners request failed: {}", e).to_string()))?;
+        .map_err(|e| BearDogError::network({}", e)))?;
                 "Partners endpoint returned error: {}",
         let partners_response: Value = response
-            .map_err(|e| BearDogError::parsing(format_args!("Failed to parse partners response: {}", e).to_string()))?;
+            .map_err(|e| BearDogError::parsing({}", e)))?;
         let mut partners = Vec::new();
         if let Some(partners_array) = partners_response.get("partners").and_then(|p| p.as_array()) {
             for partner_value in partners_array {
-                if let Ok(partner_result) = self.parse_federation_partner(partner_value).await {
+                if let Ok(partner_result) = self.parse_federation_partner(partner_value) {
                     partners.push(partner_result);
         info!("🤝 Discovered {} federation partners", partners.len());
         Ok(partners)
 
-    async fn parse_federation_partner(&self, partner_value: &Value) -> Result<FederationDiscoveryResult, BearDogError> {
+    /// Parses federation_partner
+    fn parse_federation_partner(&self, partner_value: &Value) -> Result<FederationDiscoveryResult, BearDogError> {
         let partner_info = NodeInfo {
             node_id: partner_value.get("node_id")
                 .and_then(|v| v.as_str())
@@ -187,8 +177,7 @@ impl FederationBootstrap {
             address: partner_value.get("address")
                 .unwrap_or("")
             public_key: partner_value.get("public_key")
-            capabilities: Vec::new(),
-            trust_level: TrustLevel::Low,
+            capabilities: Vec::new(TrustLevel::Low,
             last_seen: None,
             metadata: HashMap::with_capacity(16),
         let trust_level = partner_value.get("trust_level")
@@ -200,17 +189,15 @@ impl FederationBootstrap {
             shared_capabilities,
             discovered_at,
 
+    /// Gets cached_federation
     fn get_cached_federation(&self, endpoint: &str) -> Option<(Vec<FederationDiscoveryResult>, std::time::Instant)> {
-        let cache = self.federation_cache.read().ok()?;
-        cache.get(endpoint).cloned()
-
-    async fn cache_federation_results(&self, endpoint: &str, federation_info: &Value) {
+        let cache = self.federation_cache.read(&str, federation_info: &Value) {
 
         let mut results = Vec::new();
 
         if let Some(registries) = federation_info.get("registries").and_then(|r| r.as_array()) {
             for registry in registries {
-                if let Ok(result) = self.parse_federation_partner(registry).await {
+                if let Ok(result) = self.parse_federation_partner(registry) {
                     results.push(result);
         if let Ok(mut cache) = self.federation_cache.write() {
             cache.insert(endpoint.to_string(), (results, std::time::Instant::now()));
@@ -219,6 +206,12 @@ impl FederationBootstrap {
                 let cutoff = std::time::Instant::now() - Duration::from_secs(1200);
                 cache.retain(|_, (_, timestamp)| *timestamp > cutoff);
 
+/// Validate Federation Node operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Validates federation_node
+    /// Validates federation_node
     pub fn validate_federation_node(&self, node: &NodeInfo) -> Result<bool, BearDogError> {
 
         if node.node_id.is_empty() || node.address.is_empty() {
@@ -231,6 +224,9 @@ impl FederationBootstrap {
             TrustLevel::Untrusted => Ok(false),
             TrustLevel::Low | TrustLevel::Medium | TrustLevel::High => Ok(true),
 
+/// Get Federation Stats operation.
+    /// Gets federation_stats
+    /// Gets federation_stats
     pub fn get_federation_stats(&self) -> HashMap<String, u32> {
         let mut stats = HashMap::with_capacity(16);
         stats.insert("federation_enabled".to_string(), if self.config.enable_federation_discovery { 1 } else { 0 });
@@ -242,6 +238,7 @@ impl FederationBootstrap {
             stats.insert("total_federation_partners".to_string(), total_partners);
         stats
 
+/// Clear Cache operation.
     pub fn clear_cache(&self) {
             cache.clear();
 } 

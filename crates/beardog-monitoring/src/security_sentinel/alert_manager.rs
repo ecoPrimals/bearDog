@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -9,42 +14,30 @@ use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PerformanceAlert {
-
-    pub alert_id: String,
-
+#[derive(Debug, Clone)]
+    /// The severity value
     pub severity: AlertSeverity,
 
+    /// The alert type value
     pub alert_type: String,
 
+    /// The message value
     pub message: String,
 
+    /// Mapping of context
     pub context: HashMap<String, serde_json::Value>,
+
 
     pub timestamp: DateTime<Utc>,
 
+    /// The source value
     pub source: String,
 
+    /// Whether active is enabled
     pub active: bool,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub enum AlertSeverity {
-
-    Info,
-
-    Warning,
-
-    Error,
-
-    Critical,
-
-impl Default for AlertManagerConfig {}
-
-    fn default() -> Self {
-        Self {
-            max_active_alerts: 100,
+#[derive(Debug, Clone)]
             max_alert_history: 1000,
             alert_cooldown_seconds: 300, // 5 minutes
             enable_aggregation: true,
@@ -54,6 +47,8 @@ impl Default for AlertManagerConfig {}
 
 pub enum NotificationChannel {
 
+    Logging { level: String },
+    Logging { level: String },
     Logging { level: String },
 
     Webhook {
@@ -69,22 +64,25 @@ pub enum NotificationChannel {
 
 pub struct AlertStatistics {
 
+    /// Number of total_active_alerts
     pub total_active_alerts: usize,
 
+    /// Number of total_historical_alerts
     pub total_historical_alerts: usize,
 
+    /// Mapping of alerts by severity
     pub alerts_by_severity: HashMap<String, usize>,
 
+    /// Mapping of alerts by component
     pub alerts_by_component: HashMap<String, usize>,
+
 
     pub average_resolution_time_minutes: f64,
 
+    /// The alert rate per hour value
     pub alert_rate_per_hour: f64,
 
-#[derive(Debug, Clone)]
-pub struct AlertManager {
-
-    active_alerts: Arc<RwLock<HashMap<String, PerformanceAlert>>>,
+#[derive(Arc<RwLock<HashMap<String, PerformanceAlert>>>,
 
     alert_history: Arc<RwLock<Vec<PerformanceAlert>>>,
 
@@ -94,6 +92,8 @@ pub struct AlertManager {
 
 impl AlertManager {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
             active_alerts: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             alert_history: Arc::new(RwLock::new(Vec::new())),
@@ -106,48 +106,22 @@ impl AlertManager {
                     component: "performance_sentinel".to_string(),
             ])),
 
+/// With Config operation.
+    /// Creates instance with config
     pub fn with_config(_config: AlertManagerConfig) -> Self {
         let manager = Self::new();
 
         manager
 
-    pub async fn trigger_alert(&self, alert: PerformanceAlert) -> Result<(), BearDogError> {
-        let config = self.config.read().await;
-
-        if !self.meets_severity_threshold(&alert.severity, &config.min_severity) {
-            debug!(
-                "Alert '{}' below minimum severity threshold",
-                alert.alert_id
-            );
-            return Ok(());
-
-        if self.is_in_cooldown(&alert).await? {
-            debug!("Alert '{}' in cooldown period", alert.alert_id);
-        info!("🚨 Triggering performance alert: {}", alert.alert_id);
+/// Trigger Alert operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn trigger_alert(&self, alert: PerformanceAlert) -> Result<(), BearDogError> {
+        let config = self.config.read({}", alert.alert_id);
 
         {
-            let mut active_alerts = self.active_alerts.write().await;
-            active_alerts.insert(alert.alert_id.clone(), alert.clone());
-
-            if active_alerts.len() > config.max_active_alerts {
-                let oldest_key = active_alerts.keys().next().cloned();
-                if let Some(key) = oldest_key {
-                    active_alerts.remove(&key);
-                }
-            }
-
-            let mut history = self.alert_history.write().await;
-            history.push(alert.clone());
-
-            if history.len() > config.max_alert_history {
-                history.remove(0);
-
-        self.send_alert_notifications(&alert).await?;
-        Ok(())
-
-    pub async fn trigger_security_alert(
-        &self,
-        message: &str,
+            let mut active_alerts = self.active_alerts.write(&str,
         assessment: &super::SecurityAssessmentReport,
     ) -> Result<(), BearDogError> {
         tracing::warn!(
@@ -157,29 +131,37 @@ impl AlertManager {
             assessment.threat_level
         );
 
-    pub async fn get_active_alerts(&self) -> Result<Vec<PerformanceAlert>, BearDogError>> {
-        let active_alerts = self.active_alerts.read().await;
+/// Get Active Alerts operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets active_alerts
+    /// Gets active_alerts
+    pub fn get_active_alerts(&self) -> Result<Vec<PerformanceAlert>, BearDogError>> {
+        let active_alerts = self.active_alerts.read();
         Ok(active_alerts.values().cloned().collect())
 
-    pub async fn get_alert_statistics(&self) -> Result<AlertStatistics, BearDogError> {
-        let history = self.alert_history.read().await;
+/// Get Alert Statistics operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets alert_statistics
+    /// Gets alert_statistics
+    pub fn get_alert_statistics(&self) -> Result<AlertStatistics, BearDogError> {
+        let history = self.alert_history.read();
         let stats = AlertStatistics {
             total_active_alerts: active_alerts.len(),
             total_historical_alerts: history.len(),
-            alerts_by_severity: self.count_alerts_by_severity(&history).await,
-            alerts_by_component: self.count_alerts_by_component(&history).await,
-            average_resolution_time_minutes: self.calculate_average_resolution_time(&history).await,
-            alert_rate_per_hour: self.calculate_alert_rate(&history).await,
-        };
-        Ok(stats)
-
-    fn meets_severity_threshold(
-        alert_severity: &AlertSeverity,
-        min_severity: &AlertSeverity,
+            alerts_by_severity: self.count_alerts_by_severity(&history),
+            alerts_by_component: self.count_alerts_by_component(&history),
+            average_resolution_time_minutes: self.calculate_average_resolution_time(&history),
+            alert_rate_per_hour: self.calculate_alert_rate(AlertSeverity,
+        min_severity: AlertSeverity,
     ) -> bool {
         alert_severity >= min_severity
 
-    async fn is_in_cooldown(&self, alert: &PerformanceAlert) -> Result<bool, BearDogError> {
+    /// Checks if in cooldown
+    fn is_in_cooldown(&self, alert: &PerformanceAlert) -> Result<bool, BearDogError> {
         let cooldown_duration = chrono::Duration::seconds(config.alert_cooldown_seconds as i64);
         let cutoff_time = chrono::Utc::now() - cooldown_duration;
 
@@ -191,12 +173,13 @@ impl AlertManager {
                 return Ok(true);
         Ok(false)
 
-    async fn send_alert_notifications(&self, alert: &PerformanceAlert) -> Result<(), BearDogError> {
-        let channels = self.notification_channels.read().await;
+
+    fn send_alert_notifications(&self, alert: &PerformanceAlert) -> Result<(), BearDogError> {
+        let channels = self.notification_channels.read();
         for channel in channels.iter() {
             match channel {
                 NotificationChannel::Logging { level } => match level.as_str() {
-                    "error" => tracing::error!(
+                    "error " => tracing::error!(
                         "🚨 Performance Alert: {} - {}",
                         alert.alert_id,
                         self.format_alert_message(alert)
@@ -222,29 +205,33 @@ impl AlertManager {
                 } => {
                     debug!("📧 Sending email notification to: {:?}", recipients);
 
+    /// Formats alert_message
     fn format_alert_message(&self, alert: &PerformanceAlert) -> String {
         format!(
             "Source: {} | Type: {} | Severity: {:?} | Message: {}",
             alert.source, alert.alert_type, alert.severity, alert.message
         )
 
-    async fn count_alerts_by_severity(
-        history: &[PerformanceAlert],
+
+    fn count_alerts_by_severity(&[PerformanceAlert],
     ) -> HashMap<String, usize> {
         let mut counts = HashMap::with_capacity(16);
         for alert in history {
-            let severity_str = format_args!("{:?}", alert.severity).to_string();
+            let severity_str = format!("{:?}", alert.severity);
             *counts.entry(severity_str).or_insert(0) += 1;
         counts
 
-    async fn count_alerts_by_component(
-            *counts.entry(alert.source.clone()).or_insert(0) += 1;
 
-    async fn calculate_average_resolution_time(&self, _history: &[PerformanceAlert]) -> f64 {
+    fn count_alerts_by_component(&
+            *counts.entry(alert.source).or_insert(0) += 1;
+
+
+    fn calculate_average_resolution_time(&self, _history: &[PerformanceAlert]) -> f64 {
 
         15.5 // Average 15.5 minutes
 
-    async fn calculate_alert_rate(&self, history: &[PerformanceAlert]) -> f64 {
+
+    fn calculate_alert_rate(&self, history: &[PerformanceAlert]) -> f64 {
         if history.is_empty() {
             return 0.0;
         let one_hour_ago = chrono::Utc::now() - chrono::Duration::hours(1);

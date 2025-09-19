@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
@@ -18,6 +23,7 @@ pub struct SafeSecureBuffer {
 }
 impl SafeSecureBuffer {
 
+    /// Creates a new instance
     pub fn new(size: usize) -> Self {
         debug!("🔐 Creating secure buffer of {} bytes", size);
         Self {
@@ -27,6 +33,8 @@ impl SafeSecureBuffer {
         }
     }
 
+
+    /// Creates instance from data
     pub fn from_data(data: Vec<u8>) -> Self {
         debug!(
             "🔐 Creating secure buffer from {} bytes of data",
@@ -34,9 +42,11 @@ impl SafeSecureBuffer {
         );
             data,
 
+
+
     pub fn named(size: usize, name: impl Into<&str>) -> Self {
         let name = name.into();
-            "🔐 Creating named secure buffer '{}' of {} bytes",
+            "🔐 Creating named secure buffer "{}" of {} bytes",
             name, size
             name: Some(name),
 
@@ -49,8 +59,12 @@ impl SafeSecureBuffer {
     #[must_use] pub fn as_slice(&self) -> &[u8] {
         &self.data
 
+
+    /// Returns as mut slice
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
         &mut self.data
+
+
 
     pub fn copy_from_slice(&mut self, source: &[u8]) -> Result<(), SafeMemoryError> {
         if source.len() > self.data.len() {
@@ -61,11 +75,15 @@ impl SafeSecureBuffer {
         self.data[..source.len()].copy_from_slice(source);
         trace!("📋 Copied {} bytes into secure buffer", source.len());
 
+
+
     pub fn resize(&mut self, new_size: usize) {
         let old_size = self.data.len();
         self.data.resize(new_size, 0);
             "📏 Resized secure buffer from {} to {} bytes",
             old_size, new_size
+
+
 
     pub fn split_at(&self, mid: usize) -> Result<(Self, Self), SafeMemoryError> {
         if mid > self.data.len() {
@@ -79,6 +97,8 @@ impl SafeSecureBuffer {
             left.len(),
             right.len()
         Ok((left, right))
+
+
 
     pub fn concat(buffers: &[&Self]) -> Self {
         let total_size: usize = buffers.iter().map(|b| b.len()).sum();
@@ -95,15 +115,19 @@ impl SafeSecureBuffer {
     #[must_use] pub fn age(&self) -> std::time::Duration {
         self.created_at.elapsed()
 
+
+
     pub fn explicit_zero(&mut self) {
         self.data.zeroize();
         trace!("🧹 Explicitly zeroed secure buffer");
 impl Deref for SafeSecureBuffer {
     type Target = [u8];}
 
+
     fn deref(&self) -> &Self::Target {
 impl DerefMut for SafeSecureBuffer {}
 
+    /// Returns mutable reference to deref
     fn deref_mut(&mut self) -> &mut Self::Target {
 impl fmt::Debug for SafeSecureBuffer {}
 
@@ -120,7 +144,7 @@ impl Drop for SafeSecureBuffer {}
         let age = self.age();
         if let Some(ref name) = self.name {
             debug!(
-                "🗑️ Dropping named secure buffer '{}' ({} bytes, age: {:?})",
+                "🗑️ Dropping named secure buffer "{}" ({} bytes, age: {:?})",
                 name,
                 self.data.len(),
                 age
@@ -151,13 +175,15 @@ impl SafePinnedBuffer {
         };
         Self { data, metadata }
 
-            "📌 Creating named pinned buffer '{}' of {} bytes",
+            "📌 Creating named pinned buffer "{}" of {} bytes",
 
     #[must_use] pub fn as_ptr(&self) -> *const u8 {
         self.data.as_ptr()
         self.metadata.size
         self.metadata.size == 0
 
+
+    /// Creates instance with mut slice
     pub fn with_mut_slice<F, R>(&mut self, f: F) -> R
     where
         F: FnOnce(&mut [u8]) -> R,
@@ -176,7 +202,7 @@ impl fmt::Debug for SafePinnedBuffer {
 
 impl Drop for SafePinnedBuffer {
         if let Some(ref name) = self.metadata.name {
-                "🗑️ Dropping named pinned buffer '{}' ({} bytes, age: {:?})",
+                "🗑️ Dropping named pinned buffer "{}" ({} bytes, age: {:?})",
                 name, self.metadata.size, age
                 "🗑️ Dropping pinned buffer ({} bytes, age: {:?})",
                 self.metadata.size, age
@@ -194,11 +220,14 @@ struct PoolStats {
 
 impl SafeMemoryPool {
 
+    /// Creates a new instance
     pub fn new() -> Self {
         debug!("🏊 Creating safe memory pool");
             pools: std::collections::HashMap::with_capacity(16),
             stats: PoolStats::default(),
 
+    /// Gets buffer
+    /// Gets buffer
     pub fn get_buffer(&mut self, size: usize) -> SafeSecureBuffer {
         if let Some(pool) = self.pools.get_mut(&size) {
             if let Some(buffer) = pool.pop() {
@@ -211,6 +240,7 @@ impl SafeMemoryPool {
         self.stats.total_bytes_managed += size;
         debug!("🆕 Created new pooled buffer: {} bytes", size);
         SafeSecureBuffer::new(size)
+
 
     fn return_buffer(&mut self, mut buffer: SafeSecureBuffer) {
         let size = buffer.data.capacity();
@@ -225,6 +255,8 @@ impl SafeMemoryPool {
             self.stats.reuses,
             self.stats.total_bytes_managed,
         )
+
+
 
     pub fn clear(&mut self) {
         let total_buffers: usize = self.pools.values().map(|v| v.len()).sum();
@@ -246,6 +278,8 @@ impl SafeMemoryUtils {
             return false;
         a.ct_eq(b).into()
 
+
+
     pub fn safe_copy(dest: &mut [u8], src: &[u8]) -> Result<(), SafeMemoryError> {
         if src.len() > dest.len() {
                 required: src.len(),
@@ -264,6 +298,8 @@ impl SafeMemoryUtils {
 
         padded_a.zeroize();
         padded_b.zeroize();
+
+
 
 pub fn safe_memory_examples() -> Result<(), BearDogError> {
 

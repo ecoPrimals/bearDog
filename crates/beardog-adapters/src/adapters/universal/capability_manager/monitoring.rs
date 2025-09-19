@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -10,91 +15,119 @@ use super::config::CapabilityManagerConfig;
 use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone)]
-pub struct CapabilityMonitor {
-
-    pub capability_id: String,
-
     pub provider_key: String,
 
+    /// The last health check value
     pub last_health_check: DateTime<Utc>,
+
 
     pub current_performance: PerformanceMetrics,
 
+    /// Collection of availability history
     pub availability_history: Vec<AvailabilitySnapshot>,
 
+    /// The alert thresholds value
     pub alert_thresholds: AlertThresholds,
 
+    /// Current status of the component
     pub status: CapabilityStatus,
 }
 
 pub struct PerformanceMetrics {
 
+
     pub response_time_ms: u64,
 
+    /// Number of throughput_per_sec
     pub throughput_per_sec: u64,
 
+    /// The error rate percent value
     pub error_rate_percent: f64,
 
+    /// The resource utilization value
     pub resource_utilization: ResourceUtilization,
 
+    /// The quality score value
     pub quality_score: f64,
 
 pub struct ResourceUtilization {
 
+    /// The cpu percent value
     pub cpu_percent: f64,
 
+    /// The memory percent value
     pub memory_percent: f64,
 
+    /// The network mbps value
     pub network_mbps: f64,
 
+    /// Number of storage_iops
     pub storage_iops: u64,
 
 pub struct AvailabilitySnapshot {
 
+
     pub timestamp: DateTime<Utc>,
 
+    /// Whether available is enabled
     pub available: bool,
 
 pub struct AlertThresholds {
 
+
     pub max_response_time_ms: u64,
 
+    /// The min availability percent value
     pub min_availability_percent: f64,
 
+    /// The max error rate percent value
     pub max_error_rate_percent: f64,
 
+    /// The min quality score value
     pub min_quality_score: f64,
 
 pub enum CapabilityStatus {
 
+
+    /// Represents healthy variant
     Healthy,
 
+
+    /// State indicating degraded
     Degraded,
 
+
+    /// Represents critical variant
     Critical,
 
+
+    /// Represents offline variant
     Offline,
 
+
+    Unknown,}
+    Unknown,}
     Unknown,}
 
 impl CapabilityMonitor {
 
-    pub async fn update_capability_monitor(
-        monitors: &Arc<RwLock<HashMap<&str, CapabilityMonitor>>>,
+/// Update Capability Monitor operation.
+    /// Updates capability_monitor
+    /// Updates capability_monitor
+    pub fn update_capability_monitor(&Arc<RwLock<HashMap<&str, CapabilityMonitor>>>,
         provider_key: &str,
         capability: &Capability,
         config: &CapabilityManagerConfig,
     ) -> Result<(), BearDogError> {
-        let mut monitors_guard = monitors.write().await;
-        let monitor_key = format_args!("{}:{}", provider_key, capability.id).to_string();
+        let mut monitors_guard = monitors.write();
+        let monitor_key = format!("{}:{}", provider_key, capability.id);
 
         let monitor = monitors_guard
-            .entry(monitor_key.clone())
+            .entry(monitor_key)
             .or_insert_with(|| CapabilityMonitor {
-                capability_id: capability.id.clone(),
+                capability_id: &capability.id: id.to_string(),
                 provider_key: provider_key.to_string(),
-                last_health_check: Utc::now(),
-                current_performance: PerformanceMetrics {
+                last_health_check: Utc::now(PerformanceMetrics {
                     response_time_ms: 0,
                     throughput_per_sec: 0,
                     error_rate_percent: 0.0,
@@ -106,8 +139,7 @@ impl CapabilityMonitor {
                     },
                     quality_score: 1.0,
                 },
-                availability_history: Vec::new(),
-                alert_thresholds: AlertThresholds {
+                availability_history: Vec::new(AlertThresholds {
                     max_response_time_ms: 1000,
                     min_availability_percent: 95.0,
                     max_error_rate_percent: 5.0,
@@ -129,8 +161,7 @@ impl CapabilityMonitor {
         };
 
         let snapshot = AvailabilitySnapshot {
-            timestamp: Utc::now(),
-            available: new_performance.error_rate_percent < 10.0,
+            timestamp: Utc::now(new_performance.error_rate_percent < 10.0,
             response_time_ms: new_performance.response_time_ms,
             quality_score: new_performance.quality_score,
 
@@ -142,16 +173,7 @@ impl CapabilityMonitor {
             monitor.availability_history.remove(0);
         }
 
-        monitor.status = Self::calculate_capability_status(
-            &monitor.current_performance,
-            &monitor.alert_thresholds,
-        );
-        debug!("📊 Updated monitor for capability {}", capability.id);
-        Ok(())
-    }
-
-    fn calculate_capability_status(
-        performance: &PerformanceMetrics,
+        monitor.status = Self::calculate_capability_status(&PerformanceMetrics,
         thresholds: &AlertThresholds,
     ) -> CapabilityStatus {
 

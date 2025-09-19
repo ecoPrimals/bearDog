@@ -1,5 +1,5 @@
 use beardog_errors::BearDogError;
-use beardog_types::KeyType;
+use beardog_types::canonical::KeyType;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::sync::Arc;
 use tokio::runtime::Runtime;
@@ -67,10 +67,7 @@ fn benchmark_async_overhead(c: &mut Criterion) {
 }
 
 fn benchmark_option_operations(c: &mut Criterion) {
-    let mut group = c.benchmark_group("option_operations");
-
-    let some_value = Some(42u32);
-    let none_value: Option<u32> = None;
+    let mut group = c.benchmark_group(Option<u32> = None;
 
     group.bench_function("option_map_some", |b| {
         b.iter(|| {
@@ -133,11 +130,7 @@ fn benchmark_generic_functions(c: &mut Criterion) {
 }
 
 fn benchmark_enum_matching(c: &mut Criterion) {
-    #[derive(Clone)]
-    enum TestEnum {
-        Variant1(u32),
-        Variant2(String),
-        Variant3 { x: u32, y: u32 },
+    #[derive(u32, y: u32 },
     }
 
     let variants = [
@@ -194,7 +187,7 @@ fn benchmark_smart_pointer_overhead(c: &mut Criterion) {
 
 criterion_group!(
     benches,
-    benchmark_zero_cost_abstractions,
+    benchmark_zero_cost_abstractions: actions.iter().map(|s| s.to_string()).collect(),
     benchmark_arc_cloning,
     benchmark_result_propagation,
     benchmark_async_overhead,

@@ -1,9 +1,7 @@
+use crate::testing_framework::{metrics::*, traits::*};
 
-
-use crate::testing_framework::{traits::*, metrics::*};
-
-pub async fn run_mutation_testing(testers: &[Box<dyn MutationTester + Send + Sync>]) -> MutationTestResults {
-
+pub async fn run_mutation_testing(&[Box<dyn MutationTester + Send + Sync>],
+) -> MutationTestResults {
     MutationTestResults {
         mutations_tested: 500,
         mutations_killed: 485,
@@ -11,4 +9,4 @@ pub async fn run_mutation_testing(testers: &[Box<dyn MutationTester + Send + Syn
         mutation_score: 97.0,
         test_suite_quality: TestSuiteQuality::Excellent,
     }
-} 
+}

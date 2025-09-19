@@ -1,15 +1,16 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 
-#[derive(Debug)]
-pub struct SimdGeneticsProcessor {
-
-    population_size: usize,
-
+#[derive(Debug, Clone)]
     chromosome_length: usize,
 
         cpu_features: CpuFeatures,
@@ -19,11 +20,12 @@ pub struct SimdGeneticsProcessor {
     fitness_buffer: Vec<f64>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CpuFeatures {
-    pub avx2: bool,
+#[derive(Debug, Clone)]
+    /// Whether avx512 is enabled
     pub avx512: bool,
+    /// Whether fma is enabled
     pub fma: bool,
+    /// Whether sse4_1 is enabled
     pub sse4_1: bool,}
 
 impl Default for CpuFeatures {}
@@ -38,10 +40,14 @@ impl Default for CpuFeatures {}
     }
 impl SimdGeneticsProcessor {
 
-    pub fn new(population_size: usize, chromosome_length: usize) -> Result<Self, BearDogError> {
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    pub fn new(usize, chromosome_length: usize) -> Result<Self, BearDogError> {
         if population_size == 0 || chromosome_length == 0 {
-            return Err(BearDogError::invalid_input("Population size and chromosome length must be positive".to_string(),
-            ));
+            return Err(BearDogError::invalid_input("Population size and chromosome length must be positive"));
         let cpu_features = CpuFeatures::default();
 
         const VECTOR_WIDTH: usize = 8;
@@ -51,14 +57,14 @@ impl SimdGeneticsProcessor {
             "Initializing high-performance genetics processor: {}x{} (aligned), AVX2={}, AVX512={}",
             aligned_pop_size, aligned_chromosome_length, cpu_features.avx2, cpu_features.avx512
         );
-        Ok(Self {
-            population_size: aligned_pop_size,
+        Ok(aligned_pop_size,
             chromosome_length: aligned_chromosome_length,
             cpu_features,
             population_buffer: vec![0.0; aligned_pop_size * aligned_chromosome_length],
             fitness_buffer: vec![0.0; aligned_pop_size],
         })
 
+/// Evaluate Population Fitness operation.
     pub fn evaluate_population_fitness(
         &mut self,
         fitness_fn: impl Fn(&[f64]) -> f64,
@@ -78,31 +84,14 @@ impl SimdGeneticsProcessor {
                 self.fitness_buffer[i] = base_fitness - penalty;
             }
         debug!("Evaluated fitness for {} individuals", self.population_size);
-        Ok(&self.fitness_buffer[..self.population_size])
+        Ok(self.fitness_buffer[..self.population_size])
 
     #[inline]
     fn calculate_constraint_penalty_vectorized(&self, chromosome: &[f64]) -> f64 {
         const PENALTY_FACTOR: f64 = 0.01;
 
         let mut total_penalty = 0.0;
-        for chunk in chromosome.chunks_exact(8) {
-
-            let penalty_sum = chunk[0].abs()
-                + chunk[1].abs()
-                + chunk[2].abs()
-                + chunk[3].abs()
-                + chunk[4].abs()
-                + chunk[5].abs()
-                + chunk[6].abs()
-                + chunk[7].abs();
-            total_penalty += penalty_sum * PENALTY_FACTOR;
-
-        for &value in chromosome.chunks_exact(8).remainder() {
-            total_penalty += value.abs() * PENALTY_FACTOR;
-        total_penalty
-
-    pub fn crossover_population(
-        parent1_indices: &[usize],
+        for chunk in chromosome.chunks_exact(&[usize],
         parent2_indices: &[usize],
         crossover_rate: f64,
     ) -> Result<(), BearDogError> {
@@ -120,12 +109,7 @@ impl SimdGeneticsProcessor {
             let (p1_batch, p2_batch) = batch;
             for (&p1_idx, &p2_idx) in p1_batch.iter().zip(p2_batch.iter()) {
                 if rng.gen::<f64>() < crossover_rate {
-                    self.perform_uniform_crossover_vectorized(p1_idx, p2_idx, &mut rng)?;
-                }
-        Ok(())
-
-    fn perform_uniform_crossover_vectorized(
-        parent1_idx: usize,
+                    self.perform_uniform_crossover_vectorized(usize,
         parent2_idx: usize,
         rng: &mut impl Rng,
         let p1_start = parent1_idx * self.chromosome_length;
@@ -135,23 +119,11 @@ impl SimdGeneticsProcessor {
             let chunk_end = (chunk_offset + 8).min(self.chromosome_length);
 
             let crossover_mask: [bool; 8] = [
-                rng.gen_bool(0.5),
-            ];
-
-            for (i, &should_cross) in crossover_mask.iter().enumerate() {
-                if chunk_offset + i >= chunk_end {
-                    break;
-                if should_cross {
-                    let p1_pos = p1_start + chunk_offset + i;
-                    let p2_pos = p2_start + chunk_offset + i;
-                    self.population_buffer.swap(p1_pos, p2_pos);
-
-    pub fn mutate_population(
-        mutation_rate: f64,
+                rng.gen_bool(f64,
         mutation_strength: f64,
         use rand_distr::Normal;
         let normal_dist =
-            Normal::new(0.0, mutation_strength).map_err(|e| BearDogError::internal(format!("Failed to create normal distribution: {e)"),
+            Normal::new(0.0, mutation_strength).map_err(|e| BearDogError::internal(format!("Failed to create normal distribution: {}e"),
             })?;
 
         let total_genes = self.population_size * self.chromosome_length;
@@ -170,52 +142,36 @@ impl SimdGeneticsProcessor {
             self.population_buffer[pos] = self.population_buffer[pos].clamp(-10.0, 10.0);
         debug!("Applied {} mutations to population", mutations_needed);
 
+/// Get Population Stats operation.
     #[must_use] pub fn get_population_stats(&self) -> PopulationStats {
 
         let mut min_fitness = f64::INFINITY;
         let mut max_fitness = f64::NEG_INFINITY;
         let mut sum_fitness = 0.0;
 
-        for chunk in self.fitness_buffer[..self.population_size].chunks_exact(8) {
+        for chunk in self.fitness_buffer[..self.population_size].chunks_exact(self.population_size,
 
-            for &fitness in chunk {
-                min_fitness = min_fitness.min(fitness);
-                max_fitness = max_fitness.max(fitness);
-                sum_fitness += fitness;
-
-        for &fitness in self.fitness_buffer[..self.population_size]
-            .chunks_exact(8)
-            .remainder()
-            min_fitness = min_fitness.min(fitness);
-            max_fitness = max_fitness.max(fitness);
-            sum_fitness += fitness;
-        let avg_fitness = sum_fitness / self.population_size as f64;
-        PopulationStats {
-            min_fitness,
-            max_fitness,
-            avg_fitness,
-            population_size: self.population_size,
-
-    #[must_use] pub fn population_buffer(&self) -> &[f64] {
-        &self.population_buffer
-
-    pub fn population_buffer_mut(&mut self) -> &mut [f64] {
-        &mut self.population_buffer
-
-pub struct PopulationStats {
-    pub min_fitness: f64,
+/// Population Buffer operation.
+    #[must_use] pub fn population_buffer(f64,
+    /// The max fitness value
     pub max_fitness: f64,
+    /// The avg fitness value
     pub avg_fitness: f64,
+    /// Number of population_size
     pub population_size: usize,
 
 pub struct SimdGeneticsConfig {
 
+    /// Whether enable_simd is enabled
     pub enable_simd: bool,
+
 
     pub force_instruction_set: Option<String>,
 
+    /// Number of memory_alignment
     pub memory_alignment: usize,
 
+    /// Number of chromosome_length
     pub chromosome_length: usize,}
 
 impl Default for SimdGeneticsConfig {
@@ -239,6 +195,7 @@ mod tests {
 
         assert_eq!(processor.population_size, 104); // 100 -> 104 (next multiple of 8)
         assert_eq!(processor.chromosome_length, 56); // 50 -> 56 (next multiple of 8)}
+
 
     fn test_fitness_evaluation() -> Result<(), BearDogError> {
         let mut processor = SimdGeneticsProcessor::new(8, 16)?;
@@ -278,6 +235,7 @@ mod tests {
             has_mixed_0 || has_mixed_2,
             "Crossover should have caused some mixing"}
 
+
     fn test_mutation_operation() -> GeneticsResult<()> {
 
         for value in population_buffer.iter_mut() {
@@ -288,6 +246,7 @@ mod tests {
         assert!(mutations_occurred, "Mutations should have occurred");
 
         assert!(buffer.iter().all(|&gene| (-10.0..=10.0).contains(&gene)));}
+
 
     fn test_population_stats() -> Result<(), BearDogError> {
 

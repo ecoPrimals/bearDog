@@ -8,28 +8,16 @@ use super::types::{OutputFormat, StreamType};
 use clap::Subcommand;
 use std::path::PathBuf;
 
-#[derive(Debug, Subcommand)]
-pub enum AiCommand {
-
-    Assistant {
-
-        #[arg(long)]
-        prompt: Option<String>,
-
+#[derive(Debug, Clone)]
         context: Option<PathBuf>,
 
-        #[arg(long, default_value = "default")]}
+        #[arg(String,
 
-        model: String,
+        #[arg(OutputFormat,
 
-        #[arg(long, value_enum, default_value = "json")]
-        format: OutputFormat,
+        #[arg(f32,
 
-        #[arg(long, default_value = "0.7")]
-        temperature: f32,
-
-        #[arg(long, default_value = "2000")]
-        max_tokens: u32,
+        #[arg(u32,
 
         system: Option<String>,
 
@@ -39,48 +27,50 @@ pub enum AiCommand {
     },
 
     Execute {
-        #[command(subcommand)]
-        command: AiSubcommand,
+        #[command(AiSubcommand,
 }
 
 pub enum AiSubcommand {
 
+    /// Represents status variant
     Status {
 
         detailed: bool,
 
         watch: bool,
 
-        #[arg(long, default_value = "5")]
-        interval: u64,
+        #[arg(u64,
 
+    /// Represents security variant
     Security {
         operation: SecurityOperation,
 
+    /// Represents genetics variant
     Genetics {
         operation: GeneticsOperation,
 
+    /// Represents hsm variant
     Hsm {
         operation: HsmOperation,
 
+    /// Represents batch variant
     Batch {
 
         file: PathBuf,
 
-        #[arg(long, default_value = "10")]
-        max_parallel: u32,
+        #[arg(u32,
 
         continue_on_error: bool,
 
         output: Option<PathBuf>,
 
+    /// Represents stream variant
     Stream {
 
-        #[arg(long, value_enum)]
-        stream_type: StreamType,
+        #[arg(StreamType,
 
-        #[arg(long, default_value = "0")]
-        duration: u64,
+        #[arg(u64,
 
+    /// Represents config variant
     Config {
         operation: ConfigOperation,

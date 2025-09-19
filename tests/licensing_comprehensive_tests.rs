@@ -1,6 +1,5 @@
 use beardog_errors::BearDogError;
 
-
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -11,24 +10,25 @@ use beardog::{BearDogConfig, BearDogCore};
 #[tokio::test]
 async fn test_licensing_system_comprehensive() {
     let config = BearDogConfig::default();
-    let core = Arc::new(
-        BearDogCore::new(config)
-            .await
-            .map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
-})?,
-    );
+    let core = Arc::new(BearDogCore::new(config).map_err(|e| {
+        tracing::error!(
+            "Operation failed ({}): {:?}",
+            "Core initialization failed",
+            e
+        );
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", "Core initialization failed", e
+        ))
+    })?);
 
     let mut license_manager = LicenseManager::new();
 
-    test_license_validation(&mut license_manager).await;
-    test_feature_access_control(&mut license_manager).await;
-    test_license_status_checks(&mut license_manager).await;
-    test_license_management(&mut license_manager).await;
+    test_license_validation(&mut license_manager);
+    test_feature_access_control(&mut license_manager);
+    test_license_status_checks(&mut license_manager);
+    test_license_management(&mut license_manager);
 }
 
-async fn test_license_validation(license_manager: &mut LicenseManager) {
+fn test_license_validation(license_manager: &mut LicenseManager) {
     println!("📜 Testing license validation...");
 
     let community_request = license_manager.generate_community_license_request(
@@ -52,7 +52,7 @@ async fn test_license_validation(license_manager: &mut LicenseManager) {
     println!("✅ License validation tests passed");
 }
 
-async fn test_feature_access_control(license_manager: &mut LicenseManager) {
+fn test_feature_access_control(license_manager: &mut LicenseManager) {
     println!("🔐 Testing feature access control...");
 
     let licenses = license_manager.list_licenses();
@@ -70,28 +70,17 @@ async fn test_feature_access_control(license_manager: &mut LicenseManager) {
             trial_ends: chrono::Utc::now() + chrono::Duration::days(30),
         },
     ] {
-
-        let tier_str = format_args!("{:?}", license_tier).to_string();
+        let tier_str = format!("{:?}", license_tier);
         assert!(!tier_str.is_empty(), "License tier should be valid");
     }
 
     println!("✅ Feature access control tests passed");
 }
 
-async fn test_license_status_checks(license_manager: &mut LicenseManager) {
+fn test_license_status_checks(license_manager: &mut LicenseManager) {
     println!("⏰ Testing license status checks...");
 
-    let licenses = license_manager.list_licenses();
-    for license in licenses {
-
-        assert!(
-            !license.function_name.is_empty(),
-            "License should have a function name"
-        );
-        assert!(license.is_valid, "License should be valid");
-
-        println!(
-            "License {} is valid: {}",
+    let licenses = license_manager.list_licenses({}",
             license.function_name, license.is_valid
         );
     }
@@ -99,14 +88,13 @@ async fn test_license_status_checks(license_manager: &mut LicenseManager) {
     println!("✅ License status tests passed");
 }
 
-async fn test_license_management(license_manager: &mut LicenseManager) {
+fn test_license_management(license_manager: &mut LicenseManager) {
     println!("🔧 Testing license management operations...");
 
     let test_functions = ["encrypt_data", "decrypt_data", "generate_key", "sign_data"];
 
     for func in test_functions {
-        let access_result = license_manager.verify_external_function_access(func);
-        println!("Function '{}' access: {:?}", func, access_result.is_ok());
+        let access_result = license_manager.verify_external_function_access({:?}", func, access_result.is_ok());
     }
 
     let licenses = license_manager.list_licenses();
@@ -120,14 +108,15 @@ async fn test_licensing_edge_cases() {
     println!("🧪 Testing licensing edge cases...");
 
     let config = BearDogConfig::default();
-    let _core = Arc::new(
-        BearDogCore::new(config)
-            .await
-            .map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
-})?,
-    );
+    let _core = Arc::new(BearDogCore::new(config).map_err(|e| {
+        tracing::error!(
+            "Operation failed ({}): {:?}",
+            "Core initialization failed",
+            e
+        );
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", "Core initialization failed", e
+        ))
+    })?);
 
     let license_manager = LicenseManager::new();
 
@@ -154,14 +143,15 @@ async fn test_concurrent_license_operations() {
     println!("🚀 Testing concurrent license operations...");
 
     let config = BearDogConfig::default();
-    let _core = Arc::new(
-        BearDogCore::new(config)
-            .await
-            .map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
-})?,
-    );
+    let _core = Arc::new(BearDogCore::new(config).map_err(|e| {
+        tracing::error!(
+            "Operation failed ({}): {:?}",
+            "Core initialization failed",
+            e
+        );
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", "Core initialization failed", e
+        ))
+    })?);
 
     let mut managers = Vec::new();
     for _i in 0..5 {
@@ -171,7 +161,6 @@ async fn test_concurrent_license_operations() {
     let mut handles = Vec::new();
     for manager in managers {
         let handle = tokio::spawn(async move {
-
             for _j in 0..10 {
                 let _licenses = manager.list_licenses();
                 let _access = manager.verify_external_function_access("test_function");
@@ -183,10 +172,15 @@ async fn test_concurrent_license_operations() {
     }
 
     for handle in handles {
-        handle.await.map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Concurrent operation should complete", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Concurrent operation should complete", e).to_string())
-})?;
+        handle.map_err(|e| {
+            tracing::error!(
+                "Operation failed ({}): {:?}",
+                "Concurrent operation should complete",
+                e
+            );
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", "Concurrent operation should complete", e
+            ))
+        })?;
     }
 
     println!("✅ Concurrent license operations completed successfully");
@@ -197,36 +191,24 @@ async fn test_license_integration_scenarios() {
     println!("🌐 Testing license integration scenarios...");
 
     let config = BearDogConfig::default();
-    let core = Arc::new(
-        BearDogCore::new(config)
-            .await
-            .map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
-})?,
-    );
+    let core = Arc::new(BearDogCore::new(config).map_err(|e| {
+        tracing::error!(
+            "Operation failed ({}): {:?}",
+            "Core initialization failed",
+            e
+        );
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", "Core initialization failed", e
+        ))
+    })?);
 
-    let license_manager = LicenseManager::new();
-
-    let licenses = license_manager.list_licenses();
-    println!("Found {} licenses on startup", licenses.len());
-
-    let features_to_test = [
-        "basic_crypto",
-        "advanced_crypto",
-        "genetic_algorithms",
-        "zero_knowledge_proofs",
-    ];
-
-    for feature in features_to_test {
-        let access_result = license_manager.verify_external_function_access(feature);
-        println!("Feature '{}' access: {:?}", feature, access_result.is_ok());
+    let license_manager = LicenseManager::new({:?}", feature, access_result.is_ok());
     }
 
-    let health = core.health_check().await.map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Health check should work", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Health check should work", e).to_string())
-})?;
+    let health = core.health_check().map_err(|e| {
+        tracing::error!("Operation failed ({}): {:?}", "Health check should work", e);
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", "Health check should work", e
+        ))
+    })?;
     assert!(
         matches!(health.status, beardog::core::HealthStatus::Healthy),
         "Licensing should not impact system health"
@@ -240,14 +222,15 @@ async fn test_license_tiers_and_classification() {
     println!("🎭 Testing license tiers and classification...");
 
     let config = BearDogConfig::default();
-    let _core = Arc::new(
-        BearDogCore::new(config)
-            .await
-            .map_err(|e| {
-    tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
-})?,
-    );
+    let _core = Arc::new(BearDogCore::new(config).map_err(|e| {
+        tracing::error!(
+            "Operation failed ({}): {:?}",
+            "Core initialization failed",
+            e
+        );
+        beardog_errors::BearDogError::internal(format!("Error: {:?}", "Core initialization failed", e
+        ))
+    })?);
 
     let mut license_manager = LicenseManager::new();
 
@@ -265,22 +248,14 @@ async fn test_license_tiers_and_classification() {
     ];
 
     for tier in tiers {
-        let tier_name = format_args!("{:?}", tier).to_string();
+        let tier_name = format!("{:?}", tier);
         println!("Testing tier: {}", tier_name);
 
         let license_request = license_manager.generate_community_license_request(
             "test_user",
             "test_project",
             beardog::licensing::LicenseeClassification::Individual,
-            vec!["basic_crypto".to_string()],
-            "testing_purposes",
-        );
-
-        assert!(
-            license_request.is_ok(),
-            "License request should succeed for tier: {}",
-            tier_name
-        );
+            vec!["basic_crypto".to_string();
     }
 
     let classifications = [
@@ -291,20 +266,10 @@ async fn test_license_tiers_and_classification() {
     ];
 
     for classification in classifications {
-        let classification_name = format_args!("{:?}", classification).to_string();
+        let classification_name = format!("{:?}", classification);
         println!("Testing classification: {}", classification_name);
 
-        let license_request = license_manager.generate_community_license_request(
-            "test_user",
-            "test_project",
-            classification,
-            vec!["basic_crypto".to_string()],
-            "testing_purposes",
-        );
-
-        assert!(
-            license_request.is_ok(),
-            "License request should succeed for classification: {}",
+        let license_request = license_manager.generate_community_license_request({}",
             classification_name
         );
     }
@@ -314,12 +279,9 @@ async fn test_license_tiers_and_classification() {
 
 fn create_test_license_data() -> HashMap<String, String> {
     let mut data = HashMap::with_capacity(16);
-    data.insert("license_tier".to_string(), "community".to_string());
-    data.insert("organization".to_string(), "test_org".to_string());
-    data.insert(
-        "features".to_string(),
-        "basic_crypto,standard_performance".to_string(),
-    );
+    data.insert("license_tier".to_string(), "community");
+    data.insert("organization".to_string(), "test_org");
+    data.insert("features".to_string(), "basic_crypto,standard_performance");
     data
 }
 

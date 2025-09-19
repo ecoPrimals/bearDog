@@ -1,206 +1,186 @@
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::fmt::Write;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::warn;
-
+// Removed unused imports: use chrono::{DateTime, Utc};
+use crate::monitoring::types::MetricValue;
 use beardog_errors::BearDogError;
+use beardog_types::canonical::HealthStatus;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum MetricValue {
-    Counter(u64),
-    Gauge(f64),
-    Histogram(Vec<f64>),
-    Summary { sum: f64, count: u64 },
-}
-
+/// `MetricsCollector` provides comprehensive metrics collection functionality
 #[derive(Debug)]
-pub struct InternalMetricsCollector {
-    pub security_events: Arc<AtomicU64>,
-    pub encryption_operations: Arc<AtomicU64>,
-    pub threat_detections: Arc<AtomicU64>,
-    pub compliance_checks: Arc<AtomicU64>,
-    pub api_requests: Arc<AtomicU64>,
-    pub error_count: Arc<AtomicU64>,
-    pub active_sessions: Arc<AtomicU64>,
-    pub last_updated: Arc<RwLock<DateTime<Utc>>>,
+pub struct MetricsCollector {
+    metrics: Arc<RwLock<HashMap<String, MetricValue>>>,
+    counter: AtomicUsize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InternalMetricsSummary {
-    pub security_events: u64,
-    pub encryption_operations: u64,
-    pub threat_detections: u64,
-    pub compliance_checks: u64,
-    pub api_requests: u64,
-    pub error_count: u64,
-    pub active_sessions: u64,
-    pub last_updated: DateTime<Utc>,
+impl Default for MetricsCollector {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
-// UNIFIED: Use canonical PrometheusConfig
-pub use beardog_types::canonical::monitoring::PrometheusConfig;
-
-#[derive(Debug)]
-pub struct MetricsService<T> {
-    pub native_metrics: Arc<RwLock<HashMap<String, MetricValue>>>,
-    pub internal_collector: InternalMetricsCollector,
-    pub prometheus_config: Option<PrometheusConfig>,
-    pub license_checker: Option<T>,
-}
-
-impl<T> MetricsService<T> {
+impl MetricsCollector {
+    /// Creates a new `MetricsCollector` instance
+    #[must_use]
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
-            native_metrics: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            internal_collector: InternalMetricsCollector::new(),
-            prometheus_config: None,
-            license_checker: None,
+            metrics: Arc::new(RwLock::new(HashMap::new())),
+            counter: AtomicUsize::new(0),
         }
     }
 
-    pub async fn record_metric(&self, name: &str, value: MetricValue) {
-        let mut metrics = self.native_metrics.write().await;
-        metrics.insert(name.to_string(), value);
-
-        let mut last_updated = self.internal_collector.last_updated.write().await;
-        *last_updated = Utc::now();
+    /// Records a counter metric value
+    ///
+    /// # Errors
+    /// Returns an error if the metrics storage cannot be accessed
+    pub fn record_counter(&self, name: &str, value: u64) -> Result<(), BearDogError> {
+        self.metrics
+            .write()
+            .insert(name.to_string(), MetricValue::Counter(value));
+        self.counter.fetch_add(1, Ordering::Relaxed);
+        Ok(())
     }
 
-    pub async fn get_native_metrics(&self) -> HashMap<String, MetricValue> {
-        self.native_metrics.read().await.clone()
+    /// Records a gauge metric value
+    ///
+    /// # Errors
+    /// Returns an error if the metrics storage cannot be accessed
+    pub fn record_gauge(&self, name: &str, value: f64) -> Result<(), BearDogError> {
+        self.metrics
+            .write()
+            .insert(name.to_string(), MetricValue::Gauge(value));
+        self.counter.fetch_add(1, Ordering::Relaxed);
+        Ok(())
     }
 
-    pub async fn get_internal_summary(&self) -> InternalMetricsSummary {
-        InternalMetricsSummary {
-            security_events: self
-                .internal_collector
-                .security_events
-                .load(Ordering::Relaxed),
-            encryption_operations: self
-                .internal_collector
-                .encryption_operations
-                .load(Ordering::Relaxed),
-            threat_detections: self
-                .internal_collector
-                .threat_detections
-                .load(Ordering::Relaxed),
-            compliance_checks: self
-                .internal_collector
-                .compliance_checks
-                .load(Ordering::Relaxed),
-            api_requests: self.internal_collector.api_requests.load(Ordering::Relaxed),
-            error_count: self.internal_collector.error_count.load(Ordering::Relaxed),
-            active_sessions: self
-                .internal_collector
-                .active_sessions
-                .load(Ordering::Relaxed),
-            last_updated: *self.internal_collector.last_updated.read().await,
-        }
+    ///
+    /// # Errors
+    /// Returns an error if the metrics storage cannot be accessed
+    pub fn record_histogram(&self, name: &str, values: Vec<f64>) -> Result<(), BearDogError> {
+        self.metrics
+            .write()
+            .insert(name.to_string(), MetricValue::Histogram(values));
+        self.counter.fetch_add(1, Ordering::Relaxed);
+        Ok(())
     }
 
-    pub async fn enable_prometheus_export(
-        &mut self,
-        config: PrometheusConfig,
+    /// Records a timer metric value
+    ///
+    /// # Errors
+    /// Returns an error if the metrics storage cannot be accessed
+    pub fn record_timer(
+        &self,
+        name: &str,
+        duration: std::time::Duration,
     ) -> Result<(), BearDogError> {
-        if let Err(e) = self.validate_monitoring_license().await {
-            warn!("License validation failed: {}, using basic monitoring", e);
-            return Err(BearDogError::security(
-                "Prometheus export requires valid license".to_string(),
-            ));
-        }
-
-        self.prometheus_config = Some(config);
+        self.metrics
+            .write()
+            .insert(name.to_string(), MetricValue::Timer(duration));
+        self.counter.fetch_add(1, Ordering::Relaxed);
         Ok(())
     }
 
-    pub async fn increment_counter(&self, name: &str, value: u64) {
-        self.record_metric(name, MetricValue::Counter(value)).await;
+    /// Gets all current metrics
+    ///
+    /// # Errors
+    /// Returns an error if the metrics storage cannot be accessed
+    /// Gets all_metrics
+    /// Gets all_metrics
+    pub fn get_all_metrics(&self) -> Result<HashMap<String, MetricValue>, BearDogError> {
+        Ok(self.metrics.read().clone())
     }
 
-    pub async fn set_gauge(&self, name: &str, value: f64) {
-        self.record_metric(name, MetricValue::Gauge(value)).await;
+    /// Gets the total number of recorded metrics
+    #[must_use]
+    /// Gets metric_count
+    /// Gets metric_count
+    pub fn get_metric_count(&self) -> usize {
+        self.counter.load(Ordering::Relaxed)
     }
 
-    pub async fn record_histogram(&self, name: &str, values: Vec<f64>) {
-        self.record_metric(name, MetricValue::Histogram(values))
-            .await;
-    }
-
-    async fn validate_monitoring_license(&self) -> Result<(), BearDogError> {
+    /// Clears all stored metrics
+    ///
+    /// # Errors
+    /// Returns an error if the metrics storage cannot be accessed
+    pub fn clear_metrics(&self) -> Result<(), BearDogError> {
+        self.metrics.write().clear();
+        self.counter.store(0, Ordering::Relaxed);
         Ok(())
     }
-
-    pub fn increment_security_events(&self) {
-        self.internal_collector
-            .security_events
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn increment_encryption_operations(&self) {
-        self.internal_collector
-            .encryption_operations
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn increment_threat_detections(&self) {
-        self.internal_collector
-            .threat_detections
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn increment_compliance_checks(&self) {
-        self.internal_collector
-            .compliance_checks
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn increment_api_requests(&self) {
-        self.internal_collector
-            .api_requests
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn increment_errors(&self) {
-        self.internal_collector
-            .error_count
-            .fetch_add(1, Ordering::Relaxed);
-    }
-
-    pub fn set_active_sessions(&self, count: u64) {
-        self.internal_collector
-            .active_sessions
-            .store(count, Ordering::Relaxed);
-    }
 }
 
-impl<T> Default for MetricsService<T> {
-    fn default() -> Self {
-        Self::new()
-    }
+// PrometheusConfig is imported from types module to avoid duplication
+pub use super::types::PrometheusConfig;
+
+/// `PrometheusExporter` provides Prometheus metrics export functionality
+#[derive(Debug)]
+pub struct PrometheusExporter {
+    config: PrometheusConfig,
+    collector: Arc<MetricsCollector>,
 }
 
-impl InternalMetricsCollector {
-    pub fn new() -> Self {
-        Self {
-            security_events: Arc::new(AtomicU64::new(0)),
-            encryption_operations: Arc::new(AtomicU64::new(0)),
-            threat_detections: Arc::new(AtomicU64::new(0)),
-            compliance_checks: Arc::new(AtomicU64::new(0)),
-            api_requests: Arc::new(AtomicU64::new(0)),
-            error_count: Arc::new(AtomicU64::new(0)),
-            active_sessions: Arc::new(AtomicU64::new(0)),
-            last_updated: Arc::new(RwLock::new(Utc::now())),
+impl PrometheusExporter {
+    /// Creates a new `PrometheusExporter`
+    #[must_use]
+    pub const fn new(config: PrometheusConfig, collector: Arc<MetricsCollector>) -> Self {
+        Self { config, collector }
+    }
+
+    ///
+    /// # Errors
+    pub fn export_metrics(&self) -> Result<String, BearDogError> {
+        let metrics = self.collector.get_all_metrics()?;
+        let mut output = String::new();
+
+        for (name, value) in &metrics {
+            match value {
+                MetricValue::Counter(val) => {
+                    writeln!(output, "beardog_counter_{name} {val}").map_err(|e| {
+                        BearDogError::system(format!("Failed to write counter metric: {e}"))
+                    })?;
+                }
+                MetricValue::Gauge(val) => {
+                    writeln!(output, "beardog_gauge_{name} {val}").map_err(|e| {
+                        BearDogError::system(format!("Failed to write gauge metric: {e}"))
+                    })?;
+                }
+                MetricValue::Histogram(vals) => {
+                    let avg = if vals.is_empty() {
+                        0.0
+                    } else {
+                        #[allow(clippy::cast_precision_loss)]
+                        let len_f64 = vals.len() as f64;
+                        vals.iter().sum::<f64>() / len_f64
+                    };
+                    writeln!(output, "beardog_histogram_{name}_avg {avg}").map_err(|e| {
+                        BearDogError::system(format!("Failed to write histogram metric: {e}"))
+                    })?;
+                }
+                MetricValue::Timer(duration) => {
+                    writeln!(output, "beardog_timer_{name}_ms {}", duration.as_millis()).map_err(
+                        |e| BearDogError::system(format!("Failed to write timer metric: {e}")),
+                    )?;
+                }
+            }
+        }
+
+        Ok(output)
+    }
+
+    /// Gets the health status of the Prometheus exporter
+    #[must_use]
+    pub const fn get_health_status(&self) -> HealthStatus {
+        if self.config.enabled {
+            HealthStatus::Healthy
+        } else {
+            HealthStatus::Unhealthy
         }
     }
 }
-
-impl Default for InternalMetricsCollector {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-// Default implementation moved to canonical PrometheusConfig in beardog-types

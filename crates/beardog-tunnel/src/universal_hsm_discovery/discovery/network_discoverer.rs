@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::super::*;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::hsm::*;
@@ -10,22 +15,32 @@ use tracing::{debug, info};
 pub struct NetworkDiscoverer;
 impl NetworkDiscoverer {}
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
+/// Discover operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("🌐 Discovering Network HSMs");
         let mut hsms = Vec::new();
 
-        hsms.extend(self.discover_pkcs11_hsms(config).await?);
+        hsms.extend(self.discover_pkcs11_hsms(config)?);
 
-        hsms.extend(self.discover_rest_hsms(config).await?);
+        hsms.extend(self.discover_rest_hsms(config)?);
 
-        hsms.extend(self.discover_grpc_hsms(config).await?);
+        hsms.extend(self.discover_grpc_hsms(config)?);
         info!("Found {} Network HSMs", hsms.len());
         Ok(hsms)
 
-    async fn discover_pkcs11_hsms(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
+
+    fn discover_pkcs11_hsms(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("Discovering PKCS#11 Network HSMs");
 
         let endpoints = vec![
@@ -34,18 +49,14 @@ impl NetworkDiscoverer {}
             ("Utimaco HSM", "tcp://192.168.1.102:8080"),
         ];
         for (name, endpoint) in endpoints {
-            if self.probe_pkcs11_endpoint(endpoint).await? {
-                hsms.push(DiscoveredHsm {
-                    name: format_args!("{} Network HSM", name).to_string(),
+            if self.probe_pkcs11_endpoint(format!("{} Network HSM", name),
                     hsm_type: HsmType::Hardware,
                     provider: HsmProvider::NetworkPKCS11,
                     capabilities: self.get_network_pkcs11_capabilities(),
                     connection_info: HsmConnectionInfo {
                         endpoint: endpoint.to_string(),
                         authentication: Some("PKCS#11 PIN + Client Certificate".to_string()),
-                        tls_config: Some("TLS 1.3".to_string()),
-                    },
-                    health_status: HsmHealthStatus::Available,
+                        tls_config: Some(HsmHealthStatus::Available,
                     metadata: std::collections::HashMap::from([
                         ("protocol".to_string(), "pkcs11".to_string()),
                         ("vendor".to_string(), name.to_lowercase().replace(" ", "_")),
@@ -54,14 +65,14 @@ impl NetworkDiscoverer {}
             }
         }
 
-    async fn discover_rest_hsms(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
+
+    fn discover_rest_hsms(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("Discovering REST API HSMs");
 
-            ("AWS CloudHSM", "https://cloudhsm.us-east-1.amazonaws.com"),
-            ("Azure Key Vault", "https://vault.azure.net"),
+            ("universal_cloud universal_hsm", "https://universal_hsm.us-east-1.amazonuniversal_cloud.com"),
+            ("universal_cloud Key Vault", "https://vault.universal_cloud.net"),
             ("HashiCorp Vault", "https://vault.example.com:8200"),
-            if self.probe_rest_endpoint(endpoint).await? {
-                    name: format_args!("{} REST HSM", name).to_string(),
+            if self.probe_rest_endpoint(format!("{} REST HSM", name),
                     hsm_type: HsmType::Cloud,
                     provider: HsmProvider::RestApi,
                     capabilities: self.get_rest_hsm_capabilities(),
@@ -69,41 +80,38 @@ impl NetworkDiscoverer {}
                         ("protocol".to_string(), "https".to_string()),
                         ("provider".to_string(), name.to_lowercase().replace(" ", "_")),
 
-    async fn discover_grpc_hsms(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
+
+    fn discover_grpc_hsms(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("Discovering gRPC HSMs");
 
             ("Google Cloud KMS", "grpc://cloudkms.googleapis.com:443"),
             ("Custom HSM Service", "grpc://hsm.internal.com:9090"),
-            if self.probe_grpc_endpoint(endpoint).await? {
-                    name: format_args!("{} gRPC HSM", name).to_string(),
+            if self.probe_grpc_endpoint(format!("{} gRPC HSM", name),
                     provider: HsmProvider::GRPC,
                     capabilities: self.get_grpc_hsm_capabilities(),
                         authentication: Some("mTLS + Service Account".to_string()),
                         tls_config: Some("TLS 1.3 + mTLS".to_string()),
                         ("protocol".to_string(), "grpc".to_string()),
 
-    async fn probe_pkcs11_endpoint(&self, endpoint: &str) -> Result<bool, BearDogError> {
+
+    fn probe_pkcs11_endpoint(&self, endpoint: &str) -> Result<bool, BearDogError> {
         debug!("Probing PKCS#11 endpoint: {}", endpoint);
 
         Ok(false)
 
-    async fn probe_rest_endpoint(&self, endpoint: &str) -> Result<bool, BearDogError> {
+
+    fn probe_rest_endpoint(&self, endpoint: &str) -> Result<bool, BearDogError> {
         debug!("Probing REST endpoint: {}", endpoint);
 
-    async fn probe_grpc_endpoint(&self, endpoint: &str) -> Result<bool, BearDogError> {
+
+    fn probe_grpc_endpoint(&self, endpoint: &str) -> Result<bool, BearDogError> {
         debug!("Probing gRPC endpoint: {}", endpoint);
 
+    /// Gets network_pkcs11_capabilities
     fn get_network_pkcs11_capabilities(&self) -> HsmCapabilities {
         HsmCapabilities {
             supported_algorithms: vec![
                 "AES-256-GCM".to_string(),
-                "AES-128-GCM".to_string(),
-                "RSA-2048".to_string(),
-                "RSA-4096".to_string(),
-                "ECDSA-P256".to_string(),
-                "ECDSA-P384".to_string(),
-            ],
-            max_key_size: 4096,
             hardware_backed: true,
             fips_certified: true,
             cc_certified: true,
@@ -111,11 +119,11 @@ impl NetworkDiscoverer {}
             supports_key_import: true,
             supports_attestation: true,
 
-    fn get_rest_hsm_capabilities(&self) -> HsmCapabilities {
-            cc_certified: false,
+    /// Gets rest_hsm_capabilities
+    fn get_rest_hsm_capabilities(false,
             supports_key_import: false,
             supports_attestation: false,
 
-    fn get_grpc_hsm_capabilities(&self) -> HsmCapabilities {
-            max_key_size: 2048,
+    /// Gets grpc_hsm_capabilities
+    fn get_grpc_hsm_capabilities(2048,
 }

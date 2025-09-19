@@ -19,17 +19,13 @@ impl HealthMonitoringTestSuite {
 
     pub fn new() -> Self {
         Self {
-            runner: TestSuiteRunner::new("Production Health Monitoring"),
-            prod_manager: None,
+            runner: TestSuiteRunner::new(None,
         }
     }
 
     pub async fn initialize(&mut self) -> TestResult<()> {
         let core = beardog::BearDogCore::new()
-            .await
-            .map_err(|e| BearDogError::enhanced(
-                "TEST_SETUP",
-                format_args!("Failed to initialize BearDog core: {}", e).to_string(),
+            .map_err(|e| BearDogError::enhanced({}", e),
                 beardog_errors::ErrorSeverity::Critical,
                 beardog_errors::ErrorCategory::Initialization,
                 "test_infrastructure",
@@ -39,10 +35,7 @@ impl HealthMonitoringTestSuite {
 
         self.prod_manager = Some(
             ProductionManager::new(core)
-                .await
-                .map_err(|e| BearDogError::enhanced(
-                    "TEST_SETUP",
-                    format_args!("Failed to create production manager: {}", e).to_string(),
+                .map_err(|e| BearDogError::enhanced({}", e),
                     beardog_errors::ErrorSeverity::Critical,
                     beardog_errors::ErrorCategory::Initialization,
                     "test_infrastructure",
@@ -58,15 +51,15 @@ impl HealthMonitoringTestSuite {
     pub async fn run_all_tests(&mut self) -> TestResult<()> {
         info!("🏥 Starting comprehensive health monitoring test suite");
 
-        self.initialize().await?;
+        self.initialize()?;
 
-        self.runner.run_test("system_health_monitoring", |ctx| self.test_system_health_monitoring(ctx)).await?;
-        self.runner.run_test("component_health_checks", |ctx| self.test_component_health_checks(ctx)).await?;
-        self.runner.run_test("health_endpoints", |ctx| self.test_health_endpoints(ctx)).await?;
-        self.runner.run_test("liveness_probes", |ctx| self.test_liveness_probes(ctx)).await?;
-        self.runner.run_test("readiness_probes", |ctx| self.test_readiness_probes(ctx)).await?;
-        self.runner.run_test("performance_metrics", |ctx| self.test_performance_metrics(ctx)).await?;
-        self.runner.run_test("alert_systems", |ctx| self.test_alert_systems(ctx)).await?;
+        self.runner.run_test("system_health_monitoring", |ctx| self.test_system_health_monitoring(ctx))?;
+        self.runner.run_test("component_health_checks", |ctx| self.test_component_health_checks(ctx))?;
+        self.runner.run_test("health_endpoints", |ctx| self.test_health_endpoints(ctx))?;
+        self.runner.run_test("liveness_probes", |ctx| self.test_liveness_probes(ctx))?;
+        self.runner.run_test("readiness_probes", |ctx| self.test_readiness_probes(ctx))?;
+        self.runner.run_test("performance_metrics", |ctx| self.test_performance_metrics(ctx))?;
+        self.runner.run_test("alert_systems", |ctx| self.test_alert_systems(ctx))?;
 
         let report = self.runner.generate_report();
         report.print_report();
@@ -74,7 +67,7 @@ impl HealthMonitoringTestSuite {
         if report.metrics.failed_tests > 0 {
             return Err(BearDogError::enhanced(
                 "TEST_SUITE_FAILED",
-                format_args!("Health monitoring test suite failed with {} failures", report.metrics.failed_tests).to_string(),
+                format!("Health monitoring test suite failed with {} failures", report.metrics.failed_tests),
                 beardog_errors::ErrorSeverity::High,
                 beardog_errors::ErrorCategory::Validation,
                 "test_infrastructure",
@@ -98,13 +91,10 @@ impl HealthMonitoringTestSuite {
 
         let system_health = prod_manager
             .get_system_health_status()
-            .await
             .map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Execution, 
                                    "Failed to get system health status");
-                BearDogError::enhanced(
-                    "HEALTH_CHECK_FAILED",
-                    format_args!("System health check failed: {}", e).to_string(),
+                BearDogError::enhanced({}", e),
                     beardog_errors::ErrorSeverity::High,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -120,7 +110,7 @@ impl HealthMonitoringTestSuite {
             &Ok(system_health.overall_status.clone()),
             Some(AssertionContext::new("system_health_status")
                 .with_expected("Healthy")
-                .with_actual(format_args!("{:?}", system_health.overall_status).to_string())),
+                .with_actual(format!("{:?}", system_health.overall_status))),
         ).map_err(|e| {
             context.record_error(e.clone(), crate::tests::common::TestPhase::Validation, 
                                "System health status assertion failed");
@@ -177,13 +167,10 @@ impl HealthMonitoringTestSuite {
 
         let component_health = prod_manager
             .get_component_health_status()
-            .await
             .map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Execution, 
                                    "Failed to get component health status");
-                BearDogError::enhanced(
-                    "COMPONENT_HEALTH_CHECK_FAILED",
-                    format_args!("Component health check failed: {}", e).to_string(),
+                BearDogError::enhanced({}", e),
                     beardog_errors::ErrorSeverity::High,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -198,14 +185,14 @@ impl HealthMonitoringTestSuite {
         for (component_name, component_status) in &component_health.components {
             assert_true(
                 *component_status == ComponentHealthStatus::Healthy,
-                format_args!("Component '{}' should be healthy", component_name).to_string(),
+                format!("Component '{}' should be healthy", component_name),
                 Some(AssertionContext::new("component_health_status")
                     .with_expected("Healthy")
-                    .with_actual(format_args!("{:?}", component_status).to_string())
+                    .with_actual(format!("{:?}", component_status))
                     .with_info("component_name", serde_json::json!(component_name))),
             ).map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Validation, 
-                                   &format_args!("Component '{}' health validation failed", component_name).to_string());
+                                   &format!("Component '{}' health validation failed", component_name));
                 e
             })?;
         }
@@ -214,13 +201,13 @@ impl HealthMonitoringTestSuite {
         for critical_component in critical_components {
             assert_true(
                 component_health.components.contains_key(critical_component),
-                format_args!("Critical component '{}' should be present", critical_component).to_string(),
+                format!("Critical component '{}' should be present", critical_component),
                 Some(AssertionContext::new("critical_component_presence")
                     .with_info("component_name", serde_json::json!(critical_component))
                     .with_info("available_components", serde_json::json!(component_health.components.keys().collect::<Vec<_>>()))),
             ).map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Validation, 
-                                   &format_args!("Critical component '{}' presence validation failed", critical_component).to_string());
+                                   &format!("Critical component '{}' presence validation failed", critical_component));
                 e
             })?;
         }
@@ -237,13 +224,10 @@ impl HealthMonitoringTestSuite {
 
         let endpoint_response = prod_manager
             .test_health_endpoint()
-            .await
             .map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Execution, 
                                    "Health endpoint test failed");
-                BearDogError::enhanced(
-                    "HEALTH_ENDPOINT_FAILED",
-                    format_args!("Health endpoint test failed: {}", e).to_string(),
+                BearDogError::enhanced({}", e),
                     beardog_errors::ErrorSeverity::High,
                     beardog_errors::ErrorCategory::Network,
                     "health_monitoring",
@@ -289,13 +273,10 @@ impl HealthMonitoringTestSuite {
 
         let liveness_probe = prod_manager
             .get_liveness_probe()
-            .await
             .map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Execution, 
                                    "Liveness probe test failed");
-                BearDogError::enhanced(
-                    "LIVENESS_PROBE_FAILED",
-                    format_args!("Liveness probe failed: {}", e).to_string(),
+                BearDogError::enhanced({}", e),
                     beardog_errors::ErrorSeverity::Critical,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -341,13 +322,10 @@ impl HealthMonitoringTestSuite {
 
         let readiness_probe = prod_manager
             .get_readiness_probe()
-            .await
             .map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Execution, 
                                    "Readiness probe test failed");
-                BearDogError::enhanced(
-                    "READINESS_PROBE_FAILED",
-                    format_args!("Readiness probe failed: {}", e).to_string(),
+                BearDogError::enhanced({}", e),
                     beardog_errors::ErrorSeverity::High,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -382,13 +360,10 @@ impl HealthMonitoringTestSuite {
 
         let performance_metrics = prod_manager
             .get_performance_metrics()
-            .await
             .map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Execution, 
                                    "Performance metrics collection failed");
-                BearDogError::enhanced(
-                    "PERFORMANCE_METRICS_FAILED",
-                    format_args!("Performance metrics collection failed: {}", e).to_string(),
+                BearDogError::enhanced({}", e),
                     beardog_errors::ErrorSeverity::Medium,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -434,13 +409,10 @@ impl HealthMonitoringTestSuite {
 
         let alert_status = prod_manager
             .test_alert_systems()
-            .await
             .map_err(|e| {
                 context.record_error(e.clone(), crate::tests::common::TestPhase::Execution, 
                                    "Alert systems test failed");
-                BearDogError::enhanced(
-                    "ALERT_SYSTEMS_FAILED",
-                    format_args!("Alert systems test failed: {}", e).to_string(),
+                BearDogError::enhanced({}", e),
                     beardog_errors::ErrorSeverity::High,
                     beardog_errors::ErrorCategory::SystemHealth,
                     "health_monitoring",
@@ -471,5 +443,5 @@ impl HealthMonitoringTestSuite {
 #[tokio::test]
 async fn test_modernized_health_monitoring() -> TestResult<()> {
     let mut test_suite = HealthMonitoringTestSuite::new();
-    test_suite.run_all_tests().await
+    test_suite.run_all_tests()
 } 

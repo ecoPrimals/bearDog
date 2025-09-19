@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::super::*;
 use beardog_errors::BearDogError;
 use std::path::Path;
@@ -11,40 +16,41 @@ use crate::tunnel::hsm::types::HsmCapabilities;
 pub struct Pkcs11Discoverer;
 impl Pkcs11Discoverer {}
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
+/// Discover operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn discover(&self, config: &DiscoveryConfig) -> Result<Vec<DiscoveredHsm>, BearDogError>> {
         debug!("🔍 Discovering PKCS#11 HSMs");
         let mut hsms = Vec::new();
 
         let library_paths = self.get_common_pkcs11_paths();
         for path in library_paths {
-            if Path::new(&path).exists() {
-                debug!("Found PKCS#11 library: {}", path);
+            if Path::new({}", path);
                 let hsm = DiscoveredHsm {
-                    hsm_id: format_args!("pkcs11-{}", path).to_string(), // path is already a String
-                    name: format_args!("PKCS#11 HSM ({})", self.detect_vendor_from_path(&path).to_string()),
-                    hsm_type: crate::universal_hsm_discovery::HsmType::Hardware,
+                    hsm_id: format!("pkcs11-{}", path), // path is already a String
+                    name: format!("PKCS#11 HSM ({})", self.detect_vendor_from_path(crate::universal_hsm_discovery::HsmType::Hardware,
                     endpoint: crate::universal_hsm_discovery::HsmEndpoint {
-                        address: path.clone(), // path is already a String
-                        port: None,
-                        protocol: "pkcs11".to_string(),
-                        secure: true,
-                    },
-                    capabilities: HsmCapabilities::default(), // Will be filled by capability detection
-                    assigned_tier: HsmTier::BasicHardware, // Will be updated after capability detection
-                    supports_human_entropy: false, // Will be determined by capability detection
+                        address: path.clone(None,
+                        protocol: "pkcs11".to_string(), // Will be determined by capability detection
                     health_status: HsmHealthStatus::healthy(),
                     discovered_at: chrono::Utc::now(),
-                    last_health_check: chrono::Utc::now(),
-                    integration_status: IntegrationStatus::Discovered,
+                    last_health_check: chrono::Utc::now(IntegrationStatus::Discovered,
                 };
                 hsms.push(hsm);
             }
         }
         info!("Found {} PKCS#11 HSMs", hsms.len());
         Ok(hsms)
+    /// Gets common_pkcs11_paths
     fn get_common_pkcs11_paths(&self) -> Vec<String> {
         vec![
 
@@ -61,6 +67,7 @@ impl Pkcs11Discoverer {}
             "/opt/homebrew/lib/softhsm/libsofthsm2.so".to_string(),
             "/Library/Application Support/Yubico/libykcs11.dylib".to_string(),
         ]}
+
 
     fn detect_vendor_from_path(&self, path: &str) -> String {
         let path_lower = path.to_lowercase();

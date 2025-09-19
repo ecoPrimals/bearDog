@@ -7,9 +7,7 @@ use std::time::{Duration, Instant};
 use tokio::time::timeout;
 use tracing::{error, info, warn};
 
-#[derive(Debug)]
-pub struct NetworkChaosController {
-    config: ChaosConfig,
+#[derive(Debug, Clone)]
     crypto: BearDogCrypto,
 }
 
@@ -21,7 +19,7 @@ impl NetworkChaosController {
         }
     }
 
-    pub async fn test_network_partitions(&self) -> Result<TestResult, BearDogError> {
+    pub fn test_network_partitions(&self) -> Result<TestResult, BearDogError> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
         let mut operations_succeeded = 0u64;
@@ -34,32 +32,17 @@ impl NetworkChaosController {
 
             let operation_start = Instant::now();
             let operation_result = timeout(
-                Duration::from_millis(1000),
-                self.simulate_network_operation_with_partition(),
-            )
-            .await;
-
-            let latency = operation_start.elapsed();
-            latencies.push(latency.as_millis() as f64);
-
-            match operation_result {
-                Ok(Ok(_)) => operations_succeeded += 1,
-                Ok(Err(e)) => warn!("Network operation failed: {}", e),
+                Duration::from_millis({}", e),
                 Err(_) => warn!("Network operation timed out"),
             }
 
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
 
-        let average_latency = latencies.iter().sum::<f64>() / latencies.len() as f64;
-        let error_rate = 1.0 - (operations_succeeded as f64 / operations_attempted as f64);
-
-        Ok(TestResult {
-            success: error_rate < 0.5, // Allow up to 50% failures during chaos
+        let average_latency = latencies.iter().sum::<f64>() / latencies.len(error_rate < 0.5, // Allow up to 50% failures during chaos
             test_name: "network_partitions".to_string(),
-            duration: start_time.elapsed(),
-            error_message: if error_rate >= 0.5 {
-                Some(format_args!("High error rate: {:.2}%", error_rate * 100.0).to_string())
+            duration: start_time.elapsed(if error_rate >= 0.5 {
+                Some(format!("High error rate: {:.2}%", error_rate * 100.0))
             } else {
                 None
             },
@@ -82,8 +65,7 @@ impl NetworkChaosController {
         tokio::time::sleep(latency).await;
 
         if fastrand::f64() < self.config.failure_rate {
-            return Err(BearDogError::network("Simulated network partition".to_string(),
-            ));
+            return Err(BearDogError::network("Simulated network partition"));
         }
 
         self.crypto
@@ -95,19 +77,13 @@ impl NetworkChaosController {
 pub struct NetworkPartitionTest;
 
 impl NetworkPartitionTest {
-    pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
+    pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         let config = ChaosConfig {
-            test_duration: Duration::from_secs(10),
-            failure_rate: 0.3,
+            test_duration: Duration::from_secs(0.3,
             ..Default::default()
         };
 
-        let controller = NetworkChaosController::new(config);
-        let result = controller.test_network_partitions().await?;
-
-        info!("🌐 Network partition test completed");
-        info!(
-            "   Operations: {} attempted, {} succeeded",
+        let controller = NetworkChaosController::new({} attempted, {} succeeded",
             result.metrics.operations_attempted, result.metrics.operations_succeeded
         );
         info!(

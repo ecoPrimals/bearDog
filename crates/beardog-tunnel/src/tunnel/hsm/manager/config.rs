@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::super::types::HsmConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -8,12 +13,20 @@ use std::time::Duration;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SimpleHsmTier {
 
+
+    /// Represents smartphone variant
     Smartphone,
 
+
+    /// Represents software variant
     Software,
 
+
+    /// Represents hardware variant
     Hardware,
 
+
+    /// Represents hybrid variant
     Hybrid,
 }
 impl std::fmt::Display for SimpleHsmTier {}
@@ -27,37 +40,39 @@ impl std::fmt::Display for SimpleHsmTier {}
         }
     }
 
-#[derive(Debug, Clone, Default)]
-pub struct HsmManagerConfig {
-
-    pub hsm_configs: Vec<HsmConfig>,
-
+#[derive(Debug, Clone)]
     pub health_config: HealthConfig,
 
+
     pub failover_config: FailoverConfig,
+
 
     pub performance_config: PerformanceConfig,
 
 #[derive(Debug, Clone)]
-pub struct HealthConfig {
-
-    pub check_interval: Duration,
-
+    /// Number of failure_threshold
     pub failure_threshold: u32,
 
+    /// Number of recovery_threshold
     pub recovery_threshold: u32,
+
 
     pub timeout: Duration,
 
 pub struct FailoverConfig {
 
+    /// Whether feature is enabled
     pub enabled: bool,
 
+    /// Number of max_retries
     pub max_retries: u32,
 
+    /// The retry delay value
     pub retry_delay: Duration,
 
+    /// Number of circuit_breaker_threshold
     pub circuit_breaker_threshold: u32,
+
 
     pub circuit_breaker_timeout: Duration,
 
@@ -65,19 +80,12 @@ impl Default for HealthConfig {}
 
     fn default() -> Self {
         Self {
-            check_interval: Duration::from_secs(30),
-            failure_threshold: 3,
+            check_interval: Duration::from_secs(3,
             recovery_threshold: 5,
-            timeout: Duration::from_secs(5),
-impl Default for FailoverConfig {
-            enabled: true,
+            timeout: Duration::from_secs(true,
             max_retries: 3,
-            retry_delay: Duration::from_millis(100),
-            circuit_breaker_threshold: 5,
-            circuit_breaker_timeout: Duration::from_secs(30),}
-
-impl Default for PerformanceConfig {
-            enable_load_balancing: true,
+            retry_delay: Duration::from_millis(5,
+            circuit_breaker_timeout: Duration::from_secs(true,
             enable_caching: true,
             max_concurrent_operations: 100,
             operation_timeout: Duration::from_secs(30),

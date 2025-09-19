@@ -1,6 +1,5 @@
 use beardog_errors::BearDogError;
 
-
 #[cfg(test)]
 mod integration_tests {
     use super::super::*;
@@ -9,11 +8,11 @@ mod integration_tests {
     use tokio;
 
     #[tokio::test]
-    async fn test_complete_hsm_discovery_workflow() -> Result<(), BearDogError> {
+    fn test_complete_hsm_discovery_workflow() -> Result<(), BearDogError> {
         println!("🚀 Starting Universal HSM Discovery System Integration Test");
 
         let mut discovery = UniversalHsmDiscovery::new()
-            .map_err(|e| BearDogError::internal(format_args!("Failed to initialize Universal HSM Discovery System: {:?}", e).to_string()))?;
+            .map_err(|e| BearDogError::internal(format!("Error: {:?}", e)))?;
         println!("✅ Universal HSM Discovery System initialized");
 
         let config = DiscoveryConfig {
@@ -21,8 +20,7 @@ mod integration_tests {
             discovery_interval: Duration::from_secs(60),
             health_check_interval: Duration::from_secs(30),
             capability_refresh_interval: Duration::from_secs(1800),
-            timeout: Duration::from_secs(10),
-            max_concurrent_discoveries: 8,
+            timeout: Duration::from_secs(8,
             tier_elevation_enabled: true,
             human_entropy_priority: true, // This is key!
         };
@@ -32,8 +30,7 @@ mod integration_tests {
         println!("🔍 Discovering all available HSMs...");
         let discovered_hsms = discovery
             .discover_all_hsms()
-            .await
-            .map_err(|e| BearDogError::internal(format_args!("HSM discovery failed: {:?}", e).to_string()))?;
+            .map_err(|e| BearDogError::internal(format!("Error: {:?}", e)))?;
         assert!(
             !discovered_hsms.is_empty(),
             "Should discover at least one HSM"
@@ -75,10 +72,7 @@ mod integration_tests {
                 .capabilities
                 .human_entropy
                 .entropy_collection_methods
-                .is_empty()
-            {
-                println!(
-                    "    Entropy Methods: {:?}",
+                .is_empty({:?}",
                     hsm.capabilities.human_entropy.entropy_collection_methods
                 );
             }
@@ -87,7 +81,7 @@ mod integration_tests {
 
         if let Some(root_key_hsm) = discovery
             .get_best_hsm_for_operation("root_key_generation")
-            .map_err(|e| BearDogError::internal(format_args!("Failed to select HSM: {:?}", e).to_string()))?
+            .map_err(|e| BearDogError::internal(format!("Error: {:?}", e)))?
         {
                 "  Root Key Generation → {} (Tier: {:?})",
                 root_key_hsm.hsm_id, root_key_hsm.assigned_tier
@@ -104,9 +98,7 @@ mod integration_tests {
                 "Should use at least basic hardware"
 
         println!("\n🔧 Testing Universal Adapter Integration:");
-        let adapter = discovery.get_universal_adapter();
-        let available_adapters = adapter.get_available_adapters();
-        println!("  Available Adapters: {}", available_adapters.len());
+        let adapter = discovery.get_universal_adapter({}", available_adapters.len());
         for adapter_name in &available_adapters {
             println!("    - {}", adapter_name);
 
@@ -128,33 +120,16 @@ mod integration_tests {
                         pattern_recognition: true,
                 ],
                 quality_threshold: 0.85,
-                seed_lifetime: Duration::from_secs(300), // 5 minutes
-                verification_required: true,
+                seed_lifetime: Duration::from_secs(true,
                 real_time_collection: true,
             };
 
             match adapter
-                .generate_human_entropy_seed(entropy_requirements, None)
-                .await
-                Ok(seed) => {
-                    println!("  ✅ Successfully generated human entropy ephemeral seed!");
-                    println!("    Quality: {:.2}", seed.entropy_quality);
+                .generate_human_entropy_seed({:.2}", seed.entropy_quality);
                     println!("    Methods Used: {:?}", seed.collection_methods_used);
                     println!("    Generated At: {}", seed.generated_at);
                     println!("    Expires At: {}", seed.expires_at);
-                    println!("    Verified: {}", seed.verification_signature.is_some());
-
-                    assert!(!seed.seed_data.is_empty(), "Should have seed data");
-                    assert!(seed.entropy_quality > 0.0, "Should have quality rating");
-                    assert!(
-                        seed.expires_at > seed.generated_at,
-                        "Should have valid expiration"
-                    );
-                        !seed.collection_methods_used.is_empty(),
-                        "Should have used collection methods"
-                }
-                Err(e) => {
-                    println!("  ⚠️  Human entropy seed generation failed (expected in test environment): {}", e);
+                    println!("    Verified: {}", seed.verification_signature.is_some({}");
 
         println!("\n📈 Testing HSM Ranking by Tier:");
 
@@ -168,10 +143,7 @@ mod integration_tests {
         for tier in all_tiers {
             let hsms_in_tier = discovery.get_hsms_by_tier(tier);
             if !hsms_in_tier.is_empty() {
-                println!("  {:?} Tier: {} HSMs", tier, hsms_in_tier.len());
-                for hsm in hsms_in_tier {
-                    println!(
-                        "    - {} ({}) - Human Entropy: {}",
+                println!("  {:?} Tier: {} HSMs", tier, hsms_in_tier.len({}",
                         hsm.hsm_id, hsm.vendor, hsm.supports_human_entropy
 
         let premium_hsms = discovery.get_hsms_by_tier(HsmTier::HumanEntropyPremium);
@@ -192,10 +164,11 @@ mod integration_tests {
         Ok(())
     }
 
-    async fn test_human_entropy_classification_pipeline() -> Result<(), BearDogError> {
+
+    fn test_human_entropy_classification_pipeline() -> Result<(), BearDogError> {
         println!("🧠 Testing Human Entropy Classification Pipeline");
         let classifier = human_entropy_classifier::HumanEntropyClassifier::new()
-            .map_err(|e| BearDogError::internal(format_args!("Failed to create human entropy classifier: {:?}", e).to_string()))?;
+            .map_err(|e| BearDogError::internal(format!("Error: {:?}", e)))?;
 
         let test_cases = vec![
             ("No Human Entropy", create_no_entropy_capabilities()),
@@ -210,7 +183,7 @@ mod integration_tests {
         for (name, capabilities) in test_cases {
             let assessment = classifier
                 .assess_human_entropy_capabilities(&capabilities)
-                .map_err(|e| BearDogError::internal(format_args!("Failed to assess human entropy capabilities: {:?}", e).to_string()))?;
+                .map_err(|e| BearDogError::internal(format!("Error: {:?}", e)))?;
             println!("\n  {} Assessment:", name);
             println!("    Overall Score: {:.2}", assessment.overall_score);
                 "    Supports Ephemeral Seeds: {}",
@@ -240,18 +213,19 @@ mod integration_tests {
                     HsmTier::HumanEntropyPremium,
                     "Premium should recommend top tier"
 
-    async fn test_multi_hsm_operation_scenarios() -> Result<(), BearDogError> {
+
+    fn test_multi_hsm_operation_scenarios() -> Result<(), BearDogError> {
         println!("🚀 Testing Multi-HSM Operation Scenarios");
         let mut discovery =
-            UniversalHsmDiscovery::new().map_err(|e| BearDogError::internal(format_args!("Failed to create discovery system: {:?}", e).to_string()))?;
+            UniversalHsmDiscovery::new().map_err(|e| BearDogError::internal(format!("Error: {:?}", e)))?;
         let _discovered_hsms = discovery
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Discovery failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Discovery failed", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Discovery failed", e))
 })?;
         let tier_manager = tier_manager::TierManager::new().map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failed to create tier manager", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failed to create tier manager", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Failed to create tier manager", e))
 })?;
 
         let operations = vec![
@@ -261,9 +235,7 @@ mod integration_tests {
             "authentication_token",
         println!("\n🎯 Operation-Specific HSM Selection:");
         for operation in operations {
-            match discovery.get_best_hsm_for_operation(operation).await {
-                Ok(Some(hsm)) => {
-                        "  {} → {} (Tier: {:?}, Human Entropy: {})",
+            match discovery.get_best_hsm_for_operation({:?}, Human Entropy: {})",
                         operation, hsm.hsm_id, hsm.assigned_tier, hsm.supports_human_entropy
 
                     match operation {
@@ -278,19 +250,11 @@ mod integration_tests {
                                 "Critical signing should use certified hardware"
                         _ => {}
                     }
-                Ok(None) => {
-                    println!("  {} → No suitable HSM found", operation);
-                    println!("  {} → Error: {}", operation, e);
+                Ok({}", operation, e);
 
+    /// Creates no_entropy_capabilities
     fn create_no_entropy_capabilities() -> HsmCapabilities {
-        let mut capabilities = HsmCapabilities::default();
-        capabilities.human_entropy.supports_human_entropy = false;
-        capabilities.human_entropy.supports_ephemeral_seeds = false;
-        capabilities}
-
-    fn create_basic_entropy_capabilities() -> HsmCapabilities {
-        capabilities.human_entropy = HumanEntropyCapabilities {
-            supports_human_entropy: true,
+        let mut capabilities = HsmCapabilities::default(true,
             supports_ephemeral_seeds: true,
             entropy_collection_methods: vec![EntropyCollectionMethod::Keystroke {
                 timing_analysis: false,
@@ -301,9 +265,7 @@ mod integration_tests {
             user_interaction_entropy: true,
             temporal_entropy_collection: false,
             entropy_verification: false,
-            ephemeral_seed_lifetime: Some(Duration::from_secs(300)),
-    fn create_advanced_entropy_capabilities() -> HsmCapabilities {
-            entropy_collection_methods: vec![
+            ephemeral_seed_lifetime: Some(Duration::from_secs(vec![
                 EntropyCollectionMethod::Keystroke {
                     timing_analysis: true,
                 },
@@ -316,9 +278,7 @@ mod integration_tests {
             real_time_entropy_generation: true,
             biometric_entropy_integration: true,
             entropy_verification: true,
-        capabilities.security.fips_140_level = Some(2);
-    fn create_premium_entropy_capabilities() -> HsmCapabilities {
-                    template_noise: true,
+        capabilities.security.fips_140_level = Some(true,
                 EntropyCollectionMethod::BehavioralBiometrics {
                     pattern_recognition: true,
                 EntropyCollectionMethod::VoicePatterns {

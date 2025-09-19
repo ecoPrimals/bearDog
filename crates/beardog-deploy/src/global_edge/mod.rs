@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -26,39 +31,61 @@ pub struct GlobalEdgeManager {
 
 impl GlobalEdgeManager {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(config: GlobalDeploymentConfig) -> Self {
         Self {
-            deployment_manager: Arc::new(deployment::DeploymentManager::new(config.clone())),
-            monitoring_system: Arc::new(monitoring::GlobalHealthMonitor::new(config.monitoring.clone())),
-            load_balancer: Arc::new(load_balancer::IntelligentLoadBalancer::new(config.load_balancing.clone())),
-            cdn_manager: Arc::new(cdn::CDNManager::new(config.cdn.clone())),
+            deployment_manager: Arc::new(&deployment::DeploymentManager::new(config)),
+            monitoring_system: Arc::new(&monitoring::GlobalHealthMonitor::new(config.monitoring)),
+            load_balancer: Arc::new(&load_balancer::IntelligentLoadBalancer::new(config.load_balancing)),
+            cdn_manager: Arc::new(&cdn::CDNManager::new(config.cdn)),
             config,
         }
     }
 
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
+/// Initialize operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Initializes componentialize
+    /// Initializes componentialize
+    pub fn initialize(&self) -> Result<(), BearDogError> {
 
-        self.deployment_manager.initialize().await?;
-        self.monitoring_system.start_monitoring().await?;
-        self.load_balancer.initialize().await?;
-        self.cdn_manager.initialize().await?;
+        self.deployment_manager.initialize()?;
+        self.monitoring_system.start_monitoring()?;
+        self.load_balancer.initialize()?;
+        self.cdn_manager.initialize()?;
         
         Ok(())
     }
 
-    pub async fn deploy_globally(&self) -> Result<(), BearDogError> {
-        self.deployment_manager.deploy_all_regions().await
+/// Deploy Globally operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn deploy_globally(&self) -> Result<(), BearDogError> {
+        self.deployment_manager.deploy_all_regions()
     }
 
-    pub async fn get_global_health(&self) -> Result<GlobalHealthStatus, BearDogError> {
-        self.monitoring_system.get_global_health().await
+/// Get Global Health operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets global_health
+    /// Gets global_health
+    pub fn get_global_health(&self) -> Result<GlobalHealthStatus, BearDogError> {
+        self.monitoring_system.get_global_health()
     }
 
-    pub async fn shutdown(&self) -> Result<(), BearDogError> {
-        self.cdn_manager.shutdown().await?;
-        self.load_balancer.shutdown().await?;
-        self.monitoring_system.shutdown().await?;
-        self.deployment_manager.shutdown().await?;
+/// Shutdown operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn shutdown(&self) -> Result<(), BearDogError> {
+        self.cdn_manager.shutdown()?;
+        self.load_balancer.shutdown()?;
+        self.monitoring_system.shutdown()?;
+        self.deployment_manager.shutdown()?;
         
         Ok(())
     }

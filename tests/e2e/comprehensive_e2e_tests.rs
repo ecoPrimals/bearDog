@@ -1,7 +1,6 @@
 use beardog_errors::BearDogError;
 
-
-use beardog_core::{
+use beardog_errors::{
     core::BearDogCore,
     ecosystem_simple::BearDogEcosystemProvider,
     songbird_client::UniversalServiceMeshClient,
@@ -24,18 +23,17 @@ async fn test_full_system_startup() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Testing full BearDog system startup...");
 
     let config = BearDogConfig::default();
-    let core = BearDogCore::new(config).await?;
+    let core = BearDogCore::new(config)?;
 
     let start_time = Instant::now();
-    core.initialize().await?;
+    core.initialize()?;
     let init_duration = start_time.elapsed();
     
     println!("✅ System initialized in {:?}", init_duration);
 
-    let health_status = core.get_health_status().await?;
-    println!("🏥 System health: {:?}", health_status.overall_status);
+    let health_status = core.get_health_status({:?}", health_status.overall_status);
 
-    assert!(init_duration < Duration::from_secs(30), "System startup took too long: {:?}", init_duration);
+    assert!(init_duration < Duration::from_secs({:?}", init_duration);
     
     Ok(())
 }
@@ -45,26 +43,20 @@ async fn test_crypto_workflow_e2e() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔐 Testing end-to-end cryptographic workflow...");
 
     let crypto = BearDogCrypto;
-    let key_manager = MemoryKeyManager::new().await?;
+    let key_manager = MemoryKeyManager::new()?;
 
     let test_data = b"sensitive_user_data_for_e2e_testing";
     let key_id = "e2e_test_key";
 
     let key_gen_start = Instant::now();
-    let _generated_key = key_manager.generate_key(key_id, "AES-256-GCM", None).await?;
+    let _generated_key = key_manager.generate_key(key_id, "AES-256-GCM", None)?;
     let key_gen_duration = key_gen_start.elapsed();
 
     let encrypt_start = Instant::now();
     let encrypted_data = crypto.encrypt_aes_gcm(key_id.as_bytes(), test_data, None)?;
     let encrypt_duration = encrypt_start.elapsed();
 
-    let decrypt_start = Instant::now();
-    let decrypted_data = crypto.decrypt_aes_gcm(key_id.as_bytes(), &encrypted_data, None)?;
-    let decrypt_duration = decrypt_start.elapsed();
-
-    assert_eq!(test_data, decrypted_data.as_slice());
-    
-    println!("✅ Crypto workflow: Key gen {:?}, Encrypt {:?}, Decrypt {:?}", 
+    let decrypt_start = Instant::now(Key gen {:?}, Encrypt {:?}, Decrypt {:?}", 
              key_gen_duration, encrypt_duration, decrypt_duration);
 
     assert!(key_gen_duration < Duration::from_secs(5), "Key generation too slow");
@@ -78,7 +70,7 @@ async fn test_crypto_workflow_e2e() -> Result<(), Box<dyn std::error::Error>> {
 async fn test_authentication_workflow_e2e() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔑 Testing end-to-end authentication workflow...");
 
-    let auth_handler = AuthHandler::new().await?;
+    let auth_handler = AuthHandler::new()?;
 
     let user_id = "e2e_test_user";
     let credentials = "secure_test_password_123!";
@@ -88,7 +80,7 @@ async fn test_authentication_workflow_e2e() -> Result<(), Box<dyn std::error::Er
         user_id.to_string(),
         credentials.to_string(),
         None // No MFA for basic test
-    ).await;
+    );
     
     match registration_result {
         Ok(user_info) => {
@@ -101,7 +93,7 @@ async fn test_authentication_workflow_e2e() -> Result<(), Box<dyn std::error::Er
                 user_id.to_string(),
                 credentials.to_string(),
                 None
-            ).await;
+            );
             
             match auth_result {
                 Ok(session) => {
@@ -110,15 +102,11 @@ async fn test_authentication_workflow_e2e() -> Result<(), Box<dyn std::error::Er
                     assert!(!session.session_id.is_empty());
 
                     assert!(register_duration < Duration::from_secs(10), "Registration too slow");
-                    assert!(auth_duration < Duration::from_secs(5), "Authentication too slow");
-                }
-                Err(e) => {
-                    println!("ℹ️ Authentication failed gracefully: {}", e);
+                    assert!(auth_duration < Duration::from_secs({}", e);
                 }
             }
         }
-        Err(e) => {
-            println!("ℹ️ User registration failed gracefully: {}", e);
+        Err({}", e);
         }
     }
     
@@ -129,11 +117,11 @@ async fn test_authentication_workflow_e2e() -> Result<(), Box<dyn std::error::Er
 async fn test_genetic_spawning_e2e() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧬 Testing end-to-end genetic spawning workflow...");
 
-    let spawner = GeneticSpawner::new().await?;
+    let spawner = GeneticSpawner::new()?;
 
     let spawn_config = serde_json::json!({
         "node_type": "security_node",
-        "capabilities": ["encryption", "threat_detection"],
+        "capabilities": ["encryption ", "threat_detection"],
         "resource_requirements": {
             "cpu_cores": 2,
             "memory_mb": 512,
@@ -142,28 +130,19 @@ async fn test_genetic_spawning_e2e() -> Result<(), Box<dyn std::error::Error>> {
     });
     
     let spawn_start = Instant::now();
-    let spawn_result = spawner.spawn_node(spawn_config).await;
+    let spawn_result = spawner.spawn_node(spawn_config);
     
     match spawn_result {
         Ok(node_info) => {
             let spawn_duration = spawn_start.elapsed();
             println!("✅ Node spawning successful in {:?}", spawn_duration);
-            assert!(!node_info.node_id.is_empty());
-
-            let health_result = spawner.check_node_health(&node_info.node_id).await;
-            match health_result {
-                Ok(health) => {
-                    println!("✅ Spawned node health: {:?}", health);
+            assert!(!node_info.node_id.is_empty({:?}", health);
                 }
-                Err(e) => {
-                    println!("ℹ️ Node health check failed gracefully: {}", e);
+                Err({}", e);
                 }
             }
 
-            assert!(spawn_duration < Duration::from_secs(30), "Node spawning too slow");
-        }
-        Err(e) => {
-            println!("ℹ️ Node spawning failed gracefully: {}", e);
+            assert!(spawn_duration < Duration::from_secs({}", e);
         }
     }
     
@@ -174,7 +153,7 @@ async fn test_genetic_spawning_e2e() -> Result<(), Box<dyn std::error::Error>> {
 async fn test_threat_detection_e2e() -> Result<(), Box<dyn std::error::Error>> {
     println!("🛡️ Testing end-to-end threat detection workflow...");
 
-    let detector = ThreatDetector::new().await?;
+    let detector = ThreatDetector::new()?;
 
     let suspicious_activities = vec![
         "repeated_failed_login_attempts",
@@ -184,22 +163,13 @@ async fn test_threat_detection_e2e() -> Result<(), Box<dyn std::error::Error>> {
     ];
     
     for activity in suspicious_activities {
-        let analysis_start = Instant::now();
-        let threat_result = detector.analyze_threat(activity.to_string()).await;
-        let analysis_duration = analysis_start.elapsed();
-        
-        match threat_result {
-            Ok(threat_assessment) => {
-                println!("✅ Threat analysis for '{}': {:?} in {:?}", 
+        let analysis_start = Instant::now({:?} in {:?}", 
                         activity, threat_assessment.threat_level, analysis_duration);
 
                 assert!(!threat_assessment.threat_id.is_empty());
                 assert!(threat_assessment.confidence_score >= 0.0 && threat_assessment.confidence_score <= 1.0);
 
-                assert!(analysis_duration < Duration::from_secs(5), "Threat analysis too slow");
-            }
-            Err(e) => {
-                println!("ℹ️ Threat analysis for '{}' failed gracefully: {}", activity, e);
+                assert!(analysis_duration < Duration::from_secs({}", activity, e);
             }
         }
     }
@@ -212,8 +182,8 @@ async fn test_ecosystem_integration_e2e() -> Result<(), Box<dyn std::error::Erro
     println!("🌍 Testing end-to-end ecosystem integration...");
 
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
-    core.initialize().await?;
+    let core = Arc::new(BearDogCore::new(config)?);
+    core.initialize()?;
     
     let provider = BearDogEcosystemProvider::new(Arc::clone(&core), "e2e-test-beardog".to_string());
 
@@ -238,16 +208,16 @@ async fn test_ecosystem_integration_e2e() -> Result<(), Box<dyn std::error::Erro
     let request_result = timeout(
         Duration::from_secs(10),
         provider.process_ecosystem_request(test_request)
-    ).await;
+    );
     
     let comm_duration = comm_start.elapsed();
     
     match request_result {
         Ok(Ok(response)) => {
-            println!("✅ Ecosystem request successful in {:?}: {:?}", comm_duration, response);
+            println!("✅ Ecosystem request successful in {:?}: {}", comm_duration);
         }
         Ok(Err(e)) => {
-            println!("ℹ️ Ecosystem request failed gracefully in {:?}: {}", comm_duration, e);
+            println!("ℹ️ Ecosystem request failed gracefully in {:?}: {}", comm_duration);
         }
         Err(_) => {
             println!("ℹ️ Ecosystem request timed out in {:?} (acceptable)", comm_duration);
@@ -265,8 +235,8 @@ async fn test_concurrent_system_load_e2e() -> Result<(), Box<dyn std::error::Err
     println!("⚡ Testing end-to-end system under concurrent load...");
 
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
-    core.initialize().await?;
+    let core = Arc::new(BearDogCore::new(config)?);
+    core.initialize()?;
     
     let crypto = BearDogCrypto;
 
@@ -284,20 +254,20 @@ async fn test_concurrent_system_load_e2e() -> Result<(), Box<dyn std::error::Err
 
                 let key_result = core_clone.generate_key(
                     "user_key", 
-                    &format_args!("user_{}_op_{}", user_id, op_id).to_string()
-                ).await;
+                    &format!("user_{}_op_{}", user_id, op_id)
+                );
                 
                 let encrypt_result = crypto.encrypt_aes_gcm(
-                    format_args!("user_{}_key", user_id).to_string().as_bytes(),
-                    format_args!("user_{}_data_{}", user_id, op_id).to_string().as_bytes(),
+                    format!("user_{}_key", user_id).as_bytes(),
+                    format!("user_{}_data_{}", user_id, op_id).as_bytes(),
                     None
                 );
                 
                 let verify_result = core_clone.verify_signature(
-                    &format_args!("user_{}_pubkey", user_id).to_string(),
-                    &format_args!("user_{}_message_{}", user_id, op_id).to_string(),
+                    &format!("user_{}_pubkey", user_id),
+                    &format!("user_{}_message_{}", user_id, op_id),
                     "deadbeef"
-                ).await;
+                );
                 
                 user_operations.push((key_result.is_ok(), encrypt_result.is_ok(), verify_result.is_ok()));
             }
@@ -306,7 +276,7 @@ async fn test_concurrent_system_load_e2e() -> Result<(), Box<dyn std::error::Err
         })
     }).collect();
 
-    let results = futures::future::join_all(tasks).await;
+    let results = futures::future::join_all(tasks);
     let load_test_duration = load_test_start.elapsed();
 
     let mut total_operations = 0;
@@ -351,45 +321,26 @@ async fn test_security_incident_response_e2e() -> Result<(), Box<dyn std::error:
     println!("🚨 Testing end-to-end security incident response...");
 
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
-    core.initialize().await?;
+    let core = Arc::new(BearDogCore::new(config)?);
+    core.initialize()?;
     
-    let detector = ThreatDetector::new().await?;
-
-    let incidents = vec![
-        ("brute_force_attack", "Multiple failed authentication attempts detected"),
-        ("data_exfiltration", "Unusual large data transfer patterns detected"),
-        ("crypto_attack", "Suspicious cryptographic key access patterns"),
-        ("privilege_escalation", "Unauthorized privilege escalation attempt"),
-    ];
-    
-    for (incident_type, incident_description) in incidents {
-        println!("🔍 Processing incident: {}", incident_type);
+    let detector = ThreatDetector::new({}", incident_type);
         
         let response_start = Instant::now();
 
-        let threat_analysis = detector.analyze_threat(incident_description.to_string()).await;
+        let threat_analysis = detector.analyze_threat(incident_description.to_string());
 
         match threat_analysis {
             Ok(assessment) => {
                 println!("   ✅ Threat assessment: {:?} (confidence: {:.2})", 
                         assessment.threat_level, assessment.confidence_score);
 
-                let response_action = match assessment.threat_level.as_str() {
-                    "critical" | "high" => "immediate_isolation",
-                    "medium" => "enhanced_monitoring", 
-                    "low" => "log_and_monitor",
-                    _ => "default_monitoring",
-                };
-                
-                println!("   🛡️ Response action: {}", response_action);
+                let response_action = match assessment.threat_level.as_str({}", response_action);
 
                 let response_duration = response_start.elapsed();
-                assert!(response_duration < Duration::from_secs(10), 
-                        "Incident response too slow: {:?}", response_duration);
+                assert!(response_duration < Duration::from_secs({:?}", response_duration);
             }
-            Err(e) => {
-                println!("   ℹ️ Threat analysis failed gracefully: {}", e);
+            Err({}", e);
             }
         }
     }
@@ -402,8 +353,8 @@ async fn test_distributed_system_coordination_e2e() -> Result<(), Box<dyn std::e
     println!("🌐 Testing end-to-end distributed system coordination...");
 
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
-    core.initialize().await?;
+    let core = Arc::new(BearDogCore::new(config)?);
+    core.initialize()?;
     
     let service_mesh_client = UniversalServiceMeshClient::new()?;
 
@@ -425,22 +376,11 @@ async fn test_distributed_system_coordination_e2e() -> Result<(), Box<dyn std::e
         let _deserialized: CapabilityType = serde_json::from_str(&capability_data)?;
     }
 
-    let comm_test_start = Instant::now();
-    
-    let test_messages = vec![
-        "security_status_request",
-        "capability_query",
-        "resource_availability_check",
-        "health_status_ping",
-    ];
-    
-    for message in test_messages {
-        println!("   📡 Testing message: {}", message);
+    let comm_test_start = Instant::now({}", message);
 
         let message_data = serde_json::json!({
             "type": message,
-            "timestamp": chrono::Utc::now().to_rfc3339(),
-            "source_node": "e2e_test_node",
+            "timestamp": chrono::Utc::now("e2e_test_node",
             "target_capabilities": ["security", "compute"]
         });
         
@@ -466,14 +406,9 @@ async fn test_production_readiness_e2e() -> Result<(), Box<dyn std::error::Error
     println!("🎯 Testing end-to-end production readiness...");
 
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
     
-    let readiness_start = Instant::now();
-
-    core.initialize().await?;
-
-    let health_status = core.get_health_status().await?;
-    println!("🏥 System health: {:?}", health_status.overall_status);
+    let readiness_start = Instant::now({:?}", health_status.overall_status);
 
     let crypto = BearDogCrypto;
     let security_test = crypto.encrypt_aes_gcm(b"production_test_key", b"production_test_data", None);
@@ -483,9 +418,9 @@ async fn test_production_readiness_e2e() -> Result<(), Box<dyn std::error::Error
     for i in 0..50 {
         let _test_op = core.verify_signature(
             "prod_key",
-            &format_args!("prod_message_{}", i).to_string(),
+            &format!("prod_message_{}", i),
             "deadbeef"
-        ).await;
+        );
     }
     let perf_test_duration = perf_test_start.elapsed();
     let ops_per_sec = 50.0 / perf_test_duration.as_secs_f64();
@@ -513,8 +448,8 @@ async fn test_disaster_recovery_e2e() -> Result<(), Box<dyn std::error::Error>> 
     println!("🔄 Testing end-to-end disaster recovery...");
 
     let config = BearDogConfig::default();
-    let primary_core = Arc::new(BearDogCore::new(config.clone()).await?);
-    primary_core.initialize().await?;
+    let primary_core = Arc::new(BearDogCore::new(config.clone())?);
+    primary_core.initialize()?;
 
     let test_data = "critical_system_state_data";
     let crypto = BearDogCrypto;
@@ -524,8 +459,8 @@ async fn test_disaster_recovery_e2e() -> Result<(), Box<dyn std::error::Error>> 
     drop(primary_core); // Simulate primary system failure
 
     let recovery_start = Instant::now();
-    let recovery_core = Arc::new(BearDogCore::new(config).await?);
-    recovery_core.initialize().await?;
+    let recovery_core = Arc::new(BearDogCore::new(config)?);
+    recovery_core.initialize()?;
 
     let recovered_data = crypto.decrypt_aes_gcm(b"backup_key", &encrypted_state, None)?;
     let recovered_string = String::from_utf8(recovered_data)?;
@@ -542,19 +477,31 @@ async fn test_disaster_recovery_e2e() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 fn get_memory_usage() -> f64 {
-
-    use std::alloc::{GlobalAlloc, Layout, System};
-
-    let test_allocation = Layout::from_size_align(1024, 8).map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
-    unsafe {
-        let ptr = System.alloc(test_allocation);
-        if !ptr.is_null() {
-            System.dealloc(ptr, test_allocation);
+    // Safe memory usage measurement using standard library functions
+    use std::alloc::{Layout, GlobalAlloc, System};
+    
+    // Create a test allocation layout
+    let test_allocation = Layout::new::<[u8; 1024]>();
+    
+    // Measure memory usage safely using Box allocation instead of raw pointers
+    let test_data: Box<[u8; 1024]> = Box::new([0u8; 1024]);
+    let _memory_test = std::hint::black_box(test_data); // Prevent optimization
+    
+    // Use process memory information if available, otherwise return placeholder
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(contents) = std::fs::read_to_string("/proc/self/status") {
+            for line in contents.lines() {
+                if line.starts_with("VmRSS:") {
+                    if let Some(kb_str) = line.split_whitespace().nth(1) {
+                        if let Ok(kb) = kb_str.parse::<f64>() {
+                            return kb / 1024.0; // Convert KB to MB
+                        }
+                    }
+                }
+            }
         }
     }
-
+    
     128.0 // Placeholder - would be actual measurement in production
 } 

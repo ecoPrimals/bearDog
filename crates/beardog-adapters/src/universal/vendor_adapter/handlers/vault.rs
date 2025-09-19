@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use beardog_types::canonical::capabilities::CapabilityType;
 use chrono::Utc;
@@ -19,11 +24,7 @@ use super::super::core::{
     },
     request_response::{CapabilityOperation, CryptoOperationType},
 
-#[derive(Debug)]
-pub struct VaultCapabilityHandler {
-
-    instance_id: Uuid,
-
+#[derive(Debug, Clone)]
     base_url: String,
 
     token: String,
@@ -33,44 +34,27 @@ pub struct VaultCapabilityHandler {
     config: VaultConfig,
 }
 
-// UNIFIED: Use canonical VaultConfig
 pub use beardog_types::canonical::configuration::VaultConfig;
 
 impl Default for VaultConfig {}
 
-    fn default() -> Self {
-        Self {
-            namespace: None,
+    fn default(None,
             kv_mount: "secret".to_string(),
             transit_mount: "transit".to_string(),
-            timeout_seconds: 30,
-            verify_tls: true,
-        }
-    }
-impl VaultCapabilityHandler {
-
-    pub fn new(base_url: &str, token: &str) -> Result<Self, BearDogError> {
-        let client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(30))
-            .build()
-            .map_err(|e| BearDogError::internal(format!("Failed to create HTTP client: {e)"),
             })?;
         Ok(Self {
             instance_id: Uuid::new_v4(),
-            base_url,
+            base_url: base_url.to_string(),
             token,
             client,
-            config: VaultConfig::default(),
-        })
-
-    pub fn with_config(
-        base_url: &str,
+            config: VaultConfig::default(&str,
         token: &str,
         config: VaultConfig,
     ) -> Result<Self, BearDogError> {
             .timeout(Duration::from_secs(config.timeout_seconds))
             config,
 
+    /// Builds headers
     fn build_headers(&self) -> Result<reqwest::header::HeaderMap, BearDogError> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -79,7 +63,7 @@ impl VaultCapabilityHandler {
         );
             "X-Vault-Token",
             reqwest::header::HeaderValue::from_str(&self.token).map_err(|e| {
-                BearDogError::internal(format!("Invalid vault token header: {e)"),
+                BearDogError::internal(format!("Invalid vault token header: {}e"),
                 }
             })?,
         if let Some(namespace) = &self.config.namespace {
@@ -87,22 +71,18 @@ impl VaultCapabilityHandler {
                 headers.insert(
                     "X-Vault-Namespace",
                     reqwest::header::HeaderValue::from_str(namespace).map_err(|e| {
-                        BearDogError::internal(format!("Invalid vault namespace header: {e)"),
+                        BearDogError::internal(format!("Invalid vault namespace header: {}e"),
                         }
                     })?,
                 );
             }
-        Ok(headers)
-
-    async fn handle_encrypt(
-        &self,
-        algorithm: Option<&str>,
+        Ok(Option<&str>,
         data: &[u8],
     ) -> Result<serde_json::Value, BearDogError> {
         let key_name = "beardog-default-key";
         let algorithm = algorithm.unwrap_or_else(|| "aes256-gcm96".to_string());
 
-        self.ensure_transit_key(key_name, &algorithm).await?;
+        self.ensure_transit_key(key_name, &algorithm)?;
 
         use base64::{engine::general_purpose::STANDARD, Engine as _};
         let plaintext = STANDARD.encode(data);
@@ -118,14 +98,12 @@ impl VaultCapabilityHandler {
             .headers(self.build_headers()?)
             .json(&request_body)
             .send()
-            .await
-            .map_err(|e| beardog_errors::BearDogError::network(format!("Vault encrypt request failed: {e)"),
+            .map_err(|e| beardog_errors::BearDogError::network(format!("Vault encrypt request failed: {}e)"),
         if !response.status().is_success() {
             let error_text = response
                 .text()
-                .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            return Err(beardog_errors::BearDogError::network(format!("Vault encrypt failed: {error_text)"),
+            return Err(beardog_errors::BearDogError::network(format!("Vault encrypt failed: {error_text"),
             });
         let response_json: serde_json::Value =
             response
@@ -135,16 +113,14 @@ impl VaultCapabilityHandler {
 
         let ciphertext = response_json["data"]["ciphertext"]
             .as_str()
-            .ok_or_else(|| beardog_errors::BearDogError::configuration("Vault response missing ciphertext".to_string(),
-            ))?;
-        Ok(json!({
-            "operation": "encrypt",
+            .ok_or_else(|| beardog_errors::BearDogError::configuration("encrypt",
             "algorithm": algorithm,
             "ciphertext": ciphertext,
             "key_name": key_name
         }))
 
-    async fn handle_decrypt(&self, ciphertext: &str) -> Result<serde_json::Value, BearDogError> {
+    /// Handles decrypt
+    fn handle_decrypt(&self, ciphertext: &str) -> Result<serde_json::Value, BearDogError> {
         let decrypt_url = format!(
             "{}/v1/{}/decrypt/{}",
             "ciphertext": ciphertext
@@ -153,15 +129,12 @@ impl VaultCapabilityHandler {
                 message: format!("Vault decrypt failed: {error_text}"),
 
         let plaintext_b64 = response_json["data"]["plaintext"].as_str().ok_or_else(|| {
-            beardog_errors::BearDogError::configuration("Vault response missing plaintext".to_string(),
-            )
+            beardog_errors::BearDogError::configuration("Vault response missing plaintext")
         })?;
         let plaintext = STANDARD.decode(plaintext_b64).map_err(|e| {
             beardog_errors::BearDogError::configuration(format!("Failed to decode plaintext: {e}"),
             "operation": "decrypt",
-            "plaintext": String::from_utf8_lossy(&plaintext),
-
-    async fn ensure_transit_key(&self, key_name: &str, algorithm: &str) -> Result<(), BearDogError> {
+            "plaintext": String::from_utf8_lossy(&str, algorithm: &str) -> Result<(), BearDogError> {
         let key_url = format!(
             "{}/v1/{}/keys/{}",
 
@@ -178,20 +151,17 @@ impl VaultCapabilityHandler {
 
 impl CapabilityHandler for VaultCapabilityHandler {}
 
+
     fn capability_type(&self) -> CapabilityType {
         CapabilityType::Encryption}
 
-    async fn can_handle(&self, request: &UniversalVendorRequest) -> Result<f64, BearDogError> {
+
+    fn can_handle(&self, request: &UniversalVendorRequest) -> Result<f64, BearDogError> {
         match &request.operation {
             CapabilityOperation::Crypto { operation_type, .. } => match operation_type {
                 CryptoOperationType::Encrypt | CryptoOperationType::Decrypt => Ok(0.9),
                 CryptoOperationType::Sign | CryptoOperationType::Verify => Ok(0.7),
-                CryptoOperationType::Hash => Ok(0.3),
-                _ => Ok(0.1),
-            },
-            _ => Ok(0.0),
-    async fn execute(
-        request: UniversalVendorRequest,
+                CryptoOperationType::Hash => Ok(UniversalVendorRequest,
     ) -> Result<UniversalVendorResponse, BearDogError> {
         let start_time = std::time::Instant::now();
         let result = match &request.operation {
@@ -203,18 +173,17 @@ impl CapabilityHandler for VaultCapabilityHandler {}
             } => {
                 match operation_type {
                     CryptoOperationType::Encrypt => {
-                        self.handle_encrypt(algorithm.clone(), data).await?
+                        self.handle_encrypt(algorithm.clone(), data)?
                     }
                     CryptoOperationType::Decrypt => {
 
                         let ciphertext = String::from_utf8_lossy(data);
-                        self.handle_decrypt(&ciphertext).await?
+                        self.handle_decrypt(&ciphertext)?
                     _ => {
-                        return Err(beardog_errors::BearDogError::configuration(format!("Unsupported crypto operation: {operation_type:?)"},
+                        return Err(beardog_errors::BearDogError::configuration({}operation_type:?"},
                         });
             _ => {
-                return Err(beardog_errors::BearDogError::configuration("Vault handler only supports crypto operations".to_string(),
-                ));
+                return Err(beardog_errors::BearDogError::configuration("Vault handler only supports crypto operations"));
         };
         let processing_time = start_time.elapsed();
         let mut response = UniversalVendorResponse::success(
@@ -226,75 +195,14 @@ impl CapabilityHandler for VaultCapabilityHandler {}
         response.metadata.handler_name = "HashiCorp Vault".to_string();
         response.metadata.handler_version = "1.0.0".to_string();
         Ok(response)
+    /// Gets metadata
     fn get_metadata(&self) -> CapabilityMetadata {
-        let now = Utc::now();
-        CapabilityMetadata {
-            instance_id: self.instance_id,
+        let now = Utc::now(self.instance_id,
             capability: self.capability_type(),
             handler_name: "HashiCorp Vault".to_string(),
             handler_version: "1.0.0".to_string(),
             description: "HashiCorp Vault encryption and key management capability handler"
                 .to_string(),
-            performance: PerformanceProfile {
-                average_response_time_ms: 50.0,
-                p95_response_time_ms: 100.0,
-                p99_response_time_ms: 200.0,
-                throughput_ops_per_second: 100.0,
-                success_rate: 0.999,
-                cpu_usage: 0.05,
-                memory_usage_mb: 20.0,
-                network_bandwidth_mbps: 1.0,
-                scalability_rating: 9,
-            quality: QualityProfile {
-                reliability_score: 0.999,
-                availability_percentage: 99.9,
-                consistency_level: ConsistencyLevel::Strong,
-                security_rating: 10,
-                durability_rating: 9,
-                fault_tolerance_rating: 8,
-                recovery_time_objective_seconds: 60,
-                recovery_point_objective_seconds: 0,
-            cost: CostProfile {
-                cost_per_operation_usd: 0.0001,
-                fixed_monthly_cost_usd: 0.0,
-                cost_per_mb_usd: 0.0,
-                cost_per_hour_usd: 0.0,
-                free_tier: None,
-                pricing_model: PricingModel::PayPerUse,
-            compliance: ComplianceProfile {
-                soc2_type2: true,
-                iso27001: true,
-                gdpr_compliant: true,
-                hipaa_compliant: true,
-                pci_dss_compliant: true,
-                fedramp_authorized: false,
-                additional_certifications: vec![
-                    "Common Criteria EAL4+".to_string(),
-                    "FIPS 140-2 Level 3".to_string(),
-                ],
-                compliance_documentation: {
-                    let mut docs = HashMap::with_capacity(16);
-                    docs.insert(
-                        "security_whitepaper".to_string(),
-                        "https://www.vaultproject.io/docs/internals/security".to_string(),
-                    );
-                    docs
-                },
-            location: None,
-            supported_operations: vec![
-                "encrypt".to_string(),
-                "decrypt".to_string(),
-                "generate_key".to_string(),
-                "rotate_key".to_string(),
-            ],
-            resource_requirements: ResourceRequirements {
-                min_cpu_cores: 1,
-                recommended_cpu_cores: 2,
-                min_memory_mb: 256,
-                recommended_memory_mb: 512,
-                min_disk_space_mb: 100,
-                network_bandwidth_mbps: 10,
-                special_hardware: Vec::new(),
                 os_requirements: vec![
                     "Linux".to_string(),
                     "macOS".to_string(),
@@ -302,26 +210,16 @@ impl CapabilityHandler for VaultCapabilityHandler {}
             tags: vec![
                 "hashicorp".to_string(),
                 "vault".to_string(),
-                "encryption".to_string(),
+                "encryption ".to_string(),
                 "enterprise".to_string(),
             custom_metadata: {
-                let mut metadata = HashMap::with_capacity(16);
-                metadata.insert("vault_version".to_string(), json!("1.15.0"));
-                metadata.insert("api_version".to_string(), json!("v1"));
-                metadata.insert("base_url".to_string(), json!(self.base_url));
-                metadata
-            created_at: now,
+                let mut metadata = HashMap::with_capacity(now,
             updated_at: now,
-    async fn health_check(&self) -> Result<CapabilityHealth, BearDogError> {
+    fn health_check(&self) -> Result<CapabilityHealth, BearDogError> {
 
-        let health_url = format_args!("{}/v1/sys/health", self.base_url).to_string();
+        let health_url = format!("{}/v1/sys/health", self.base_url);
             .get(&health_url)
-            .timeout(std::time::Duration::from_secs(5))
-            .await;
-        let check_duration = start_time.elapsed();
-        match response {
-            Ok(resp) if resp.status().is_success() => Ok(CapabilityHealth {
-                status: HealthStatus::Healthy,
+            .timeout(std::time::Duration::from_secs(HealthStatus::Healthy,
                 health_score: 1.0,
                 last_check: Utc::now(),
                 check_duration_ms: check_duration.as_millis() as u64,
@@ -334,26 +232,16 @@ impl CapabilityHandler for VaultCapabilityHandler {}
                         "vault_status".to_string(),
                         HealthDetail {
                             component: "vault_api".to_string(),
-                            status: HealthStatus::Healthy,
-                            message: "Vault API responding normally".to_string(),
-                            metrics,
-                        },
-                    details
-                error_message: None,
             }),
-            Ok(resp) => Ok(CapabilityHealth {
-                status: HealthStatus::Degraded,
+            Ok(HealthStatus::Degraded,
                 health_score: 0.5,
-                details: HashMap::with_capacity(16),
-                error_message: Some(format!(
+                details: HashMap::with_capacity(Some(format!(
                     "Vault health check returned status: {}",
-                    resp.status()
-                )),
-            Err(e) => Ok(CapabilityHealth {
-                status: HealthStatus::Unhealthy,
+                    resp.status(HealthStatus::Unhealthy,
                 health_score: 0.0,
                 error_message: Some(format!("Vault health check failed: {e}")),
-    async fn initialize(&mut self, config: CapabilityConfig) -> Result<(), BearDogError> {
+    /// Initializes componentialize
+    fn initialize(&mut self, config: CapabilityConfig) -> Result<(), BearDogError> {
 
         if let Some(namespace) = config.parameters.get("namespace") {
             if let Some(namespace_str) = namespace.as_str() {
@@ -365,7 +253,7 @@ impl CapabilityHandler for VaultCapabilityHandler {}
             if let Some(transit_mount_str) = transit_mount.as_str() {
                 self.config.transit_mount = transit_mount_str.to_string();
 
-        let health = self.health_check().await?;
+        let health = self.health_check()?;
         if matches!(health.status, HealthStatus::Unhealthy) {
                 message: format!(
                     "Vault initialization failed: {}",
@@ -374,8 +262,9 @@ impl CapabilityHandler for VaultCapabilityHandler {}
                         .unwrap_or_else(|| "Unknown error".to_string())
                 ),
         tracing::info!("✅ Vault capability handler initialized successfully");
-    async fn shutdown(&mut self) -> Result<(), BearDogError> {
+    fn shutdown(&mut self) -> Result<(), BearDogError> {
         tracing::info!("🔄 Vault capability handler shutting down");
+
 
     fn supported_operations(&self) -> Vec<String> {
         vec![
@@ -390,23 +279,24 @@ impl CapabilityHandler for VaultCapabilityHandler {}
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_vault_handler_creation() -> Result<(), BearDogError> {
+    fn test_vault_handler_creation() -> Result<(), BearDogError> {
+        let vault_url = std::env::var("VAULT_ADDR")
+            .unwrap_or_else(|_| "http://127.0.0.1:8200".to_string());
         let handler = VaultCapabilityHandler::new(
-            "http://localhost:8200".to_string(),
-            "test-token".to_string(),
-        )?;
-        assert_eq!(handler.base_url, "http://localhost:8200");
+            vault_url.clone(),
+            "test-token")?;
+        assert_eq!(handler.base_url, vault_url);
         assert_eq!(handler.token, "test-token");}
 
-    async fn test_vault_handler_capability_check() -> Result<(), BearDogError> {
+
+    fn test_vault_handler_capability_check() -> Result<(), BearDogError> {
             "https://vault.example.com".to_string(),
         let encrypt_request = UniversalVendorRequest::new(
             CapabilityType::Encryption,
                 operation_type: CryptoOperationType::Encrypt,
-                algorithm: Some("aes256-gcm96".to_string()),
-                key_spec: None,
+                algorithm: Some(None,
                 data: b"test data".to_vec(),
-        let confidence = handler.can_handle(&encrypt_request).await.map_err(|e| {
+        let confidence = handler.can_handle(&encrypt_request).map_err(|e| {
             tracing::error!("Operation failed: {:?}", e);
             beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))
         assert!(confidence > 0.8);

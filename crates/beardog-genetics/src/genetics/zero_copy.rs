@@ -1,25 +1,28 @@
-//! Zero-Copy Genetics Module
-//!
-//! This module provides zero-copy operations for genetics data using canonical patterns.
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 
 use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Zero-copy genetics pool for efficient memory management
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct GeneticsPool {
     pools: HashMap<String, Vec<u8>>,
     metadata: HashMap<String, PoolMetadata>,
 }
 
-/// Pool metadata for tracking usage
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolMetadata {
+    /// The created at value
     pub created_at: DateTime<Utc>,
+    /// The last accessed value
     pub last_accessed: DateTime<Utc>,
+    /// Number of access
     pub access_count: u64,
+    /// Number of size_bytes
     pub size_bytes: usize,
 }
 
@@ -36,16 +39,22 @@ impl Default for PoolMetadata {
 }
 
 impl GeneticsPool {
+    /// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
-            pools: HashMap::new(),
-            metadata: HashMap::new(),
+            pools: HashMap::with_capacity(16),
+            metadata: HashMap::with_capacity(16),
         }
     }
 
-    pub fn allocate(&mut self, pool_id: String, size: usize) -> Result<(), BearDogError> {
-        if self.pools.contains_key(&pool_id) {
-            return Err(BearDogError::system("Pool already exists"));
+    /// Allocate a new pool
+    pub fn allocate(&mut self, pool_id: &str, size: usize) -> Result<(), BearDogError> {
+        if self.pools.contains_key(pool_id) {
+            return Err(BearDogError::system(format!(
+                "Pool already exists: {}",
+                pool_id
+            )));
         }
 
         let buffer = vec![0u8; size];
@@ -54,12 +63,15 @@ impl GeneticsPool {
             ..Default::default()
         };
 
-        self.pools.insert(pool_id.clone(), buffer);
-        self.metadata.insert(pool_id, metadata);
+        self.pools.insert(pool_id.to_string(), buffer);
+        self.metadata.insert(pool_id.to_string(), metadata);
 
         Ok(())
     }
 
+    /// Get Pool operation.
+    /// Gets pool
+    /// Gets pool
     pub fn get_pool(&mut self, pool_id: &str) -> Option<&mut Vec<u8>> {
         if let Some(metadata) = self.metadata.get_mut(pool_id) {
             metadata.last_accessed = Utc::now();
@@ -68,34 +80,37 @@ impl GeneticsPool {
         self.pools.get_mut(pool_id)
     }
 
+    /// Deallocate operation.
     pub fn deallocate(&mut self, pool_id: &str) -> bool {
-        let removed_pool = self.pools.remove(pool_id).is_some();
-        let removed_metadata = self.metadata.remove(pool_id).is_some();
-        removed_pool && removed_metadata
+        let removed_pool = self.pools.remove(pool_id);
+        self.metadata.remove(pool_id);
+        removed_pool.is_some()
     }
 
+    /// Get pool count
     pub fn pool_count(&self) -> usize {
         self.pools.len()
     }
 
+    /// Get total allocated bytes
     pub fn total_allocated_bytes(&self) -> usize {
         self.metadata.values().map(|m| m.size_bytes).sum()
     }
 }
 
-/// Lineage tracking for genetics relationships
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct LineageTracker {
-    pub lineages: HashMap<String, LineageInfo>,
+    lineages: HashMap<String, LineageInfo>,
 }
 
-/// Information about a genetics lineage
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LineageInfo {
     pub genetics_id: String,
     pub parent_ids: Vec<String>,
     pub child_ids: Vec<String>,
+    /// Number of generation
     pub generation: u32,
+    /// The created at value
     pub created_at: DateTime<Utc>,
 }
 
@@ -106,19 +121,22 @@ impl Default for LineageTracker {
 }
 
 impl LineageTracker {
+    /// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
-            lineages: HashMap::new(),
+            lineages: HashMap::with_capacity(100),
         }
     }
 
-    pub fn track_genetics(&mut self, genetics_id: String, parent_ids: Vec<String>) {
+    /// Track genetics with parents
+    pub fn track_genetics(&mut self, genetics_id: &str, parent_ids: Vec<&str>) {
         let generation = if parent_ids.is_empty() {
             0
         } else {
             parent_ids
                 .iter()
-                .filter_map(|id| self.lineages.get(id))
+                .filter_map(|id| self.lineages.get(&**id))
                 .map(|info| info.generation)
                 .max()
                 .unwrap_or(0)
@@ -126,27 +144,35 @@ impl LineageTracker {
         };
 
         let lineage_info = LineageInfo {
-            genetics_id: genetics_id.clone(),
-            parent_ids: parent_ids.clone(),
+            genetics_id: genetics_id.to_string(),
+            parent_ids: parent_ids
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect(),
             child_ids: Vec::new(),
             generation,
             created_at: Utc::now(),
         };
 
-        // Update parent records to include this child
         for parent_id in &parent_ids {
-            if let Some(parent_info) = self.lineages.get_mut(parent_id) {
-                parent_info.child_ids.push(genetics_id.clone());
+            if let Some(parent_info) = self.lineages.get_mut(&**parent_id) {
+                parent_info.child_ids.push(genetics_id.to_string());
             }
         }
 
-        self.lineages.insert(genetics_id, lineage_info);
+        self.lineages.insert(genetics_id.to_string(), lineage_info);
     }
 
+    /// Get Lineage operation.
+    /// Gets lineage
+    /// Gets lineage
     pub fn get_lineage(&self, genetics_id: &str) -> Option<&LineageInfo> {
         self.lineages.get(genetics_id)
     }
 
+    /// Get Descendants operation.
+    /// Gets descendants
+    /// Gets descendants
     pub fn get_descendants(&self, genetics_id: &str) -> Vec<String> {
         let mut descendants = Vec::new();
         if let Some(info) = self.lineages.get(genetics_id) {
@@ -158,6 +184,9 @@ impl LineageTracker {
         descendants
     }
 
+    /// Get Ancestors operation.
+    /// Gets ancestors
+    /// Gets ancestors
     pub fn get_ancestors(&self, genetics_id: &str) -> Vec<String> {
         let mut ancestors = Vec::new();
         if let Some(info) = self.lineages.get(genetics_id) {
@@ -169,22 +198,29 @@ impl LineageTracker {
         ancestors
     }
 
+    /// Get lineage count
     pub fn lineage_count(&self) -> usize {
         self.lineages.len()
     }
 }
 
-/// Statistics for lineage analysis
+/// Statistics about lineage tracking
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LineageStats {
+    /// Number of total_lineages
     pub total_lineages: usize,
+    /// Number of max_generation
     pub max_generation: u32,
+    /// The average children per genetics value
     pub average_children_per_genetics: f64,
+    /// Number of orphan
     pub orphan_count: usize, // Genetics with no parents
+    /// Number of leaf
     pub leaf_count: usize,   // Genetics with no children
 }
 
 impl LineageStats {
+    /// Calculate operation.
     pub fn calculate(tracker: &LineageTracker) -> Self {
         let lineages = &tracker.lineages;
         let total_lineages = lineages.len();
@@ -231,20 +267,16 @@ mod tests {
     fn test_genetics_pool() {
         let mut pool = GeneticsPool::new();
 
-        // Test allocation
-        assert!(pool.allocate("test-pool".to_string(), 1024).is_ok());
+        assert!(pool.allocate("test-pool", 1024).is_ok());
         assert_eq!(pool.pool_count(), 1);
         assert_eq!(pool.total_allocated_bytes(), 1024);
 
-        // Test duplicate allocation fails
-        assert!(pool.allocate("test-pool".to_string(), 512).is_err());
+        assert!(pool.allocate("test-pool", 512).is_err());
 
-        // Test access
         let buffer = pool.get_pool("test-pool");
         assert!(buffer.is_some());
         assert_eq!(buffer.unwrap().len(), 1024);
 
-        // Test deallocation
         assert!(pool.deallocate("test-pool"));
         assert_eq!(pool.pool_count(), 0);
         assert_eq!(pool.total_allocated_bytes(), 0);
@@ -254,33 +286,24 @@ mod tests {
     fn test_lineage_tracker() {
         let mut tracker = LineageTracker::new();
 
-        // Track genesis genetics
-        tracker.track_genetics("genesis".to_string(), vec![]);
+        tracker.track_genetics("genesis", vec![]);
 
-        // Track first generation
-        tracker.track_genetics("child1".to_string(), vec!["genesis".to_string()]);
-        tracker.track_genetics("child2".to_string(), vec!["genesis".to_string()]);
+        tracker.track_genetics("child1", vec!["genesis"]);
+        tracker.track_genetics("child2", vec!["genesis"]);
 
-        // Track second generation
-        tracker.track_genetics(
-            "grandchild".to_string(),
-            vec!["child1".to_string(), "child2".to_string()],
-        );
+        tracker.track_genetics("grandchild", vec!["child1", "child2"]);
 
         assert_eq!(tracker.lineage_count(), 4);
 
-        // Test generation tracking
         assert_eq!(tracker.get_lineage("genesis").unwrap().generation, 0);
         assert_eq!(tracker.get_lineage("child1").unwrap().generation, 1);
         assert_eq!(tracker.get_lineage("grandchild").unwrap().generation, 2);
 
-        // Test descendant tracking
         let descendants = tracker.get_descendants("genesis");
         assert!(descendants.contains(&"child1".to_string()));
         assert!(descendants.contains(&"child2".to_string()));
         assert!(descendants.contains(&"grandchild".to_string()));
 
-        // Test ancestor tracking
         let ancestors = tracker.get_ancestors("grandchild");
         assert!(ancestors.contains(&"child1".to_string()));
         assert!(ancestors.contains(&"child2".to_string()));
@@ -291,9 +314,9 @@ mod tests {
     fn test_lineage_stats() {
         let mut tracker = LineageTracker::new();
 
-        tracker.track_genetics("genesis".to_string(), vec![]);
-        tracker.track_genetics("child1".to_string(), vec!["genesis".to_string()]);
-        tracker.track_genetics("child2".to_string(), vec!["genesis".to_string()]);
+        tracker.track_genetics("genesis", vec![]);
+        tracker.track_genetics("child1", vec!["genesis"]);
+        tracker.track_genetics("child2", vec!["genesis"]);
 
         let stats = LineageStats::calculate(&tracker);
 

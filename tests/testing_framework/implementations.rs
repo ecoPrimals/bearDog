@@ -1,7 +1,5 @@
-
-
-use crate::testing_framework::traits::*;
 use crate::testing_framework::formal_verification::generate_mathematical_proof;
+use crate::testing_framework::traits::*;
 
 pub struct CryptographicVerifier;
 
@@ -13,13 +11,8 @@ impl CryptographicVerifier {
 
 impl FormalVerifier for CryptographicVerifier {
     fn verify_correctness(&self, component: &str) -> FormalVerificationResult {
-
-        let proof = generate_mathematical_proof("Cryptographic operations are secure", component);
-        
-        FormalVerificationResult {
-            verified: true,
-            proof: Some(proof),
-            confidence_level: 99.9,
+        let proof = generate_mathematical_proof(true,
+            proof: Some(99.9,
         }
     }
 
@@ -42,12 +35,8 @@ impl AuthenticationVerifier {
 
 impl FormalVerifier for AuthenticationVerifier {
     fn verify_correctness(&self, component: &str) -> FormalVerificationResult {
-        let proof = generate_mathematical_proof("Authentication is secure", component);
-        
-        FormalVerificationResult {
-            verified: true,
-            proof: Some(proof),
-            confidence_level: 98.5,
+        let proof = generate_mathematical_proof(true,
+            proof: Some(98.5,
         }
     }
 
@@ -70,12 +59,8 @@ impl ComplianceVerifier {
 
 impl FormalVerifier for ComplianceVerifier {
     fn verify_correctness(&self, component: &str) -> FormalVerificationResult {
-        let proof = generate_mathematical_proof("Compliance is verifiable", component);
-        
-        FormalVerificationResult {
-            verified: true,
-            proof: Some(proof),
-            confidence_level: 97.0,
+        let proof = generate_mathematical_proof(true,
+            proof: Some(97.0,
         }
     }
 
@@ -98,11 +83,12 @@ impl SecurityPropertyGenerator {
 
 impl PropertyGenerator for SecurityPropertyGenerator {
     fn generate_test_cases(&self, _property: &SecurityProperty) -> Vec<TestCase> {
-
         vec![]
     }
 
-    fn validate_property(&self, _property: &SecurityProperty, _input: &TestInput) -> PropertyResult {
+    fn validate_property(&SecurityProperty,
+        _input: &TestInput,
+    ) -> PropertyResult {
         PropertyResult { passed: true }
     }
 }
@@ -120,7 +106,9 @@ impl PropertyGenerator for ConcurrencyPropertyGenerator {
         vec![]
     }
 
-    fn validate_property(&self, _property: &SecurityProperty, _input: &TestInput) -> PropertyResult {
+    fn validate_property(&SecurityProperty,
+        _input: &TestInput,
+    ) -> PropertyResult {
         PropertyResult { passed: true }
     }
 }
@@ -138,7 +126,9 @@ impl PropertyGenerator for PerformancePropertyGenerator {
         vec![]
     }
 
-    fn validate_property(&self, _property: &SecurityProperty, _input: &TestInput) -> PropertyResult {
+    fn validate_property(&SecurityProperty,
+        _input: &TestInput,
+    ) -> PropertyResult {
         PropertyResult { passed: true }
     }
 }
@@ -157,7 +147,9 @@ impl MutationTester for SecurityMutationTester {
     }
 
     fn test_mutation(&self, _mutation: &CodeMutation) -> MutationResult {
-        MutationResult { killed_by_tests: true }
+        MutationResult {
+            killed_by_tests: true,
+        }
     }
 }
 
@@ -175,20 +167,18 @@ impl MutationTester for LogicMutationTester {
     }
 
     fn test_mutation(&self, _mutation: &CodeMutation) -> MutationResult {
-        MutationResult { killed_by_tests: true }
+        MutationResult {
+            killed_by_tests: true,
+        }
     }
 }
 
 pub struct SafetyInvariantValidator;
 
 impl SafetyInvariantValidator {
-    pub fn new() -> Self {
-        Self
-    }
-}
-
-impl InvariantValidator for SafetyInvariantValidator {
-    fn validate_invariant(&self, _invariant: &SystemInvariant, _state: &SystemState) -> InvariantValidationResult {
+    pub fn new(&SystemInvariant,
+        _state: &SystemState,
+    ) -> InvariantValidationResult {
         InvariantValidationResult { valid: true }
     }
 
@@ -200,13 +190,9 @@ impl InvariantValidator for SafetyInvariantValidator {
 pub struct SecurityInvariantValidator;
 
 impl SecurityInvariantValidator {
-    pub fn new() -> Self {
-        Self
-    }
-}
-
-impl InvariantValidator for SecurityInvariantValidator {
-    fn validate_invariant(&self, _invariant: &SystemInvariant, _state: &SystemState) -> InvariantValidationResult {
+    pub fn new(&SystemInvariant,
+        _state: &SystemState,
+    ) -> InvariantValidationResult {
         InvariantValidationResult { valid: true }
     }
 
@@ -269,7 +255,9 @@ impl PostQuantumCryptographyValidator {
 
 impl QuantumResistanceValidator for PostQuantumCryptographyValidator {
     fn validate_crypto_primitive(&self, _primitive: &CryptoPrimitive) -> QuantumResistanceResult {
-        QuantumResistanceResult { quantum_resistant: true }
+        QuantumResistanceResult {
+            quantum_resistant: true,
+        }
     }
 
     fn simulate_quantum_attacks(&self, _target: &str) -> QuantumAttackSimulation {
@@ -294,7 +282,9 @@ impl QuantumAttackSimulator {
 
 impl QuantumResistanceValidator for QuantumAttackSimulator {
     fn validate_crypto_primitive(&self, _primitive: &CryptoPrimitive) -> QuantumResistanceResult {
-        QuantumResistanceResult { quantum_resistant: true }
+        QuantumResistanceResult {
+            quantum_resistant: true,
+        }
     }
 
     fn simulate_quantum_attacks(&self, _target: &str) -> QuantumAttackSimulation {
@@ -307,4 +297,4 @@ impl QuantumResistanceValidator for QuantumAttackSimulator {
     fn verify_post_quantum_readiness(&self) -> PostQuantumValidation {
         PostQuantumValidation
     }
-} 
+}

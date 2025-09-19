@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use beardog_traits::canonical::HsmProvider;
 use chrono::{DateTime, Utc};
@@ -8,120 +13,147 @@ use std::collections::HashMap;
 use tracing::debug;
 
 #[derive(Debug, Clone)]
-pub struct UnifiedHumanEntropyCapabilities {
-
-    pub hardware_backed: bool,
-
+    /// Whether key_attestation is enabled
     pub key_attestation: bool,
 
+    /// Whether user_authentication is enabled
     pub user_authentication: bool,
 
+    /// Whether rollback_resistance is enabled
     pub rollback_resistance: bool,
 
+    /// Collection of supported key sizes
     pub supported_key_sizes: Vec<u32>,
 
+    /// Whether supports_ephemeral_seeds is enabled
     pub supports_ephemeral_seeds: bool,
 
+    /// Collection of collection methods
     pub collection_methods: Vec<HumanEntropyMethod>,
+
 
     pub realtime_entropy: bool,
 
+    /// Whether quality_assessment is enabled
     pub quality_assessment: bool,
 
+    /// Whether biometric_integration is enabled
     pub biometric_integration: bool,
 
+    /// The min entropy bits value
     pub min_entropy_bits: f64,
 
+    /// The max collection rate value
     pub max_collection_rate: f64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum HumanEntropyMethod {
 
+
+    /// Represents mouse movement variant
     MouseMovement,
 
+
+    /// Currently keyboardtiming
     KeyboardTiming,
 
+
+    /// Represents touch patterns variant
     TouchPatterns,
 
+
+    /// Represents biometric variant
     Biometric,
 
+
+    /// Represents voice variant
     Voice,
 
+
+    /// Represents voice patterns variant
     VoicePatterns,
 
+
+    /// Represents camera variant
     Camera,
 
+
+    /// Represents behavioral patterns variant
     BehavioralPatterns,
 
+
+    /// Represents environmental sensors variant
     EnvironmentalSensors,
 
     HardwareEntropy { source_type: String },
+    HardwareEntropy { source_type: String },
+    HardwareEntropy { source_type: String },
 
-    Custom(String),
+    Custom(HsmProvider + Send + Sync {
 
-#[allow(async_fn_in_trait)]
-pub trait UnifiedHsmProvider: HsmProvider + Send + Sync {
 
-    async fn collect_human_entropy(
+    fn collect_human_entropy(
         &self,
         method: &HumanEntropyMethod,
         target_bits: u32,
     ) -> Result<HumanEntropyData, BearDogError>;
 
-    async fn get_human_entropy_capabilities(
-    ) -> Result<UnifiedHumanEntropyCapabilities, BearDogError>;
-
-    async fn create_ephemeral_seed(
-        entropy_data: &HumanEntropyData,
+    /// Gets human_entropy_capabilities
+    fn get_human_entropy_capabilities(&HumanEntropyData,
         seed_length: u32,
     ) -> Result<EphemeralSeed, BearDogError>;
 
-    async fn assess_entropy_quality(
-    ) -> Result<EntropyQualityReport, BearDogError>;
 
-    async fn get_tier_recommendation(&self) -> Result<HsmTier, BearDogError>;
+    fn assess_entropy_quality(Vec<u8>,
 
-pub struct HumanEntropyData {
-
-    pub data: Vec<u8>,
-
+    /// The method value
     pub method: HumanEntropyMethod,
 
+    /// The entropy bits value
     pub entropy_bits: f64,
 
+    /// The collected at value
     pub collected_at: DateTime<Utc>,
 
+    /// Number of collection_duration_ms
     pub collection_duration_ms: u64,
 
+    /// Mapping of quality indicators
     pub quality_indicators: HashMap<String, f64>,
 
-#[derive(Debug)]
-pub struct EphemeralSeed {
-
-        pub(crate) seed_data: Vec<u8>,
-
+#[derive(Debug, Clone)]
+    /// The created at value
     pub created_at: DateTime<Utc>,
 
+    /// The expires at value
     pub expires_at: DateTime<Utc>,
 
+    /// The quality score value
     pub quality_score: f64,
+
 
     pub seed_id: String,
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EntropyQualityReport {
 
+    /// The shannon entropy value
     pub shannon_entropy: f64,
 
+    /// The min entropy value
     pub min_entropy: f64,
 
+    /// The compression ratio value
     pub compression_ratio: f64,
 
+    /// Mapping of statistical tests
     pub statistical_tests: HashMap<String, f64>,
 
+    /// The assessed at value
     pub assessed_at: DateTime<Utc>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 
 #[derive(
@@ -130,7 +162,9 @@ pub struct EntropyQualityReport {
 
 pub struct UnifiedProviderRegistry {
 
+
     pub providers: HashMap<String, Box<dyn UnifiedHsmProvider>>,
+
 
     pub human_entropy_providers: Vec<String>,}
 
@@ -141,29 +175,32 @@ impl Default for UnifiedProviderRegistry {}
     }
 impl UnifiedProviderRegistry {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             providers: HashMap::with_capacity(16),
-            human_entropy_providers: Vec::new(),
-        }
-
-    pub async fn register_provider(
-        &mut self,
-        instance_id: &str,
+            human_entropy_providers: Vec::new(&str,
         provider: Box<dyn UnifiedHsmProvider>,
     ) -> Result<(), BearDogError> {
         self.providers.insert(instance_id, provider);
         Ok(())
 
+/// Get Provider operation.
+    /// Gets provider
+    /// Gets provider
     pub fn get_provider(&self, instance_id: &str) -> Option<&dyn UnifiedHsmProvider> {
         self.providers.get(instance_id).map(|p| p.as_ref())
 
-    pub async fn get_best_entropy_provider(
+/// Get Best Entropy Provider operation.
+    /// Gets best_entropy_provider
+    /// Gets best_entropy_provider
+    pub fn get_best_entropy_provider(
     ) -> Result<Option<&dyn UnifiedHsmProvider>, BearDogError>> {
         let mut best_provider = None;
         let mut best_score = 0.0;
         for provider in self.providers.values() {
-            let capabilities = provider.get_human_entropy_capabilities().await?;
+            let capabilities = provider.get_human_entropy_capabilities()?;
 
             let mut score = 0.0;
             if capabilities.realtime_entropy {
@@ -183,7 +220,8 @@ impl UnifiedProviderRegistry {
 pub struct HumanEntropyQualityAssessor;
 impl HumanEntropyQualityAssessor {
 
-    pub async fn assess_quality(
+/// Assess Quality operation.
+    pub fn assess_quality(
     ) -> Result<EntropyQualityReport, BearDogError> {
         debug!("🧠 Assessing human entropy quality");
 
@@ -227,6 +265,7 @@ impl HumanEntropyQualityAssessor {
                 entropy -= p * p.log2();
         entropy}
 
+
     fn estimate_min_entropy(data: &[u8]) -> f64 {
 
         let max_count = counts.iter().max().unwrap_or(&0);
@@ -234,6 +273,7 @@ impl HumanEntropyQualityAssessor {
             return 0.0;
         let p_max = *max_count as f64 / data.len() as f64;
         -p_max.log2()}
+
 
     fn compression_test(data: &[u8]) -> f64 {
 
@@ -260,6 +300,7 @@ impl HumanEntropyQualityAssessor {
 
         1.0 - (chi_square / 255.0).min(1.0)}
 
+
     fn runs_test(data: &[u8]) -> f64 {
 
         if data.len() < 2 {
@@ -274,22 +315,10 @@ impl HumanEntropyQualityAssessor {
         let z = (runs as f64 - expected_runs).abs() / variance.sqrt();
         1.0 - (z / 3.0).min(1.0) // Simplified p-value}
 
+
     fn autocorrelation_test(data: &[u8]) -> f64 {
 
-        if data.len() < 10 {
-        let lag = (data.len() / 10).max(1);
-        let mut correlation = 0.0;
-        let mut count = 0;
-        for i in lag..data.len() {
-            correlation += (data[i] as f64) * (data[i - lag] as f64);
-            count += 1;
-        if count == 0 {
-        correlation /= count as f64;
-        let normalized = (correlation / (127.5 * 127.5) - 1.0).abs();
-        1.0 - normalized.min(1.0)}
-
-    fn calculate_quality_score(
-        shannon_entropy: f64,
+        if data.len(f64,
         min_entropy: f64,
         compression_ratio: f64,
         statistical_tests: &HashMap<&str, f64>,
@@ -303,24 +332,18 @@ impl HumanEntropyQualityAssessor {
         score += (compression_ratio.min(2.0) / 2.0) * 25.0;
 
         let avg_test_score: f64 =
-            statistical_tests.values().sum::<f64>() / statistical_tests.len() as f64;
-        score += avg_test_score * 25.0;
-        score.min(100.0) / 100.0}
-
-    fn generate_recommendations(
-        quality_score: f64,
+            statistical_tests.values().sum::<f64>() / statistical_tests.len(f64,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
         if quality_score < 0.7 {
             recommendations.push("Consider collecting more entropy data".to_string());
-        if let Some(&freq_score) = statistical_tests.get("frequency_test") {
+        if let Some(freq_score) = statistical_tests.get("frequency_test") {
             if freq_score < 0.5 {
                 recommendations.push("Frequency distribution appears non-uniform".to_string());
-        if let Some(&runs_score) = statistical_tests.get("runs_test") {
+        if let Some(runs_score) = statistical_tests.get("runs_test") {
             if runs_score < 0.5 {
                 recommendations.push(
-                    "Data may have patterns - consider different collection method".to_string(),
-                );
+                    "Data may have patterns - consider different collection method");
         if recommendations.is_empty() {
             recommendations.push("Entropy quality is acceptable".to_string());
         recommendations
@@ -328,18 +351,15 @@ impl HumanEntropyQualityAssessor {
 mod tests {
     use super::*;
     #[tokio::test]
-    async fn test_entropy_quality_assessment() -> Result<(), BearDogError> {
+    fn test_entropy_quality_assessment() -> Result<(), BearDogError> {
 
         let entropy_data = HumanEntropyData {
-            data: (0..1000).map(|i| (i % 256) as u8).collect(),
-            method: HumanEntropyMethod::TouchPatterns,
+            data: (0..1000).map(HumanEntropyMethod::TouchPatterns,
             entropy_bits: 800.0,
-            collected_at: Utc::now(),
-            collection_duration_ms: 1000,
+            collected_at: Utc::now(1000,
             quality_indicators: HashMap::with_capacity(16),
         };
         let report = HumanEntropyQualityAssessor::assess_quality(&entropy_data)
-            .await
             .map_err(|e| {
                 tracing::error!("Operation failed: {e:?}");
                 beardog_errors::BearDogError::internal(format!("Operation failed: {e:?}"))

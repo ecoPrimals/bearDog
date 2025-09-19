@@ -1,39 +1,58 @@
-// Simplified api_endpoints.rs to resolve compilation issues
+use crate::core::BearDogCore;
+use crate::ecosystem_integration::{
+    ProductionConfig, ProductionUniversalAdapter, UniversalAdapterConfig,
+};
 use beardog_errors::BearDogError;
-use crate::BearDogCore;
-use beardog_types::canonical::HealthStatus;
-use super::super::primal_types::*;
-use tracing::{debug, info, warn};
-use std::collections::HashMap;
+use serde_json::json;
+use tracing::info;
 
 impl BearDogCore {
-    pub(crate) async fn start_ai_first_api_server(&self) -> Result<(), BearDogError> {
-        info!("🤖 Starting AI-first API server");
+    pub(crate) fn start_ai_first_api_server(&self) -> Result<(), BearDogError> {
+        info!("🤖 Starting AI-first API server via universal adapter");
+
+        let _payload = json!({
+            "type": "ai_first",
+            "capabilities": ["routing", "load_balancing", "versioning"]
+        });
+
+        // Create proper config for ProductionUniversalAdapter
+        let config = UniversalAdapterConfig::default();
+        let production_config = ProductionConfig::default();
+        let adapter = ProductionUniversalAdapter::new(config, production_config);
+
+        adapter.execute_on_system("api_gateway", "start_server", json!({}))?;
         Ok(())
     }
 
-    async fn initialize_ai_router(&self) -> Result<(), BearDogError> {
-        info!("🧠 Initializing AI-powered routing");
+    pub(crate) fn start_universal_api_gateway(&self) -> Result<(), BearDogError> {
+        info!("🌐 Starting universal API gateway via adapter");
+
+        let _payload = json!({
+            "features": ["universal_routing", "service_mesh", "versioning"]
+        });
+
+        // Create proper config for ProductionUniversalAdapter
+        let config = UniversalAdapterConfig::default();
+        let production_config = ProductionConfig::default();
+        let adapter = ProductionUniversalAdapter::new(config, production_config);
+
+        adapter.execute_on_system("service_mesh", "initialize_gateway", json!({}))?;
         Ok(())
     }
 
-    async fn setup_intelligent_load_balancing(&self) -> Result<(), BearDogError> {
-        info!("⚖️ Setting up intelligent load balancing");
-        Ok(())
-    }
+    pub(crate) fn initialize_service_mesh(&self) -> Result<(), BearDogError> {
+        info!("🕸️ Initializing service mesh via universal adapter");
 
-    pub(crate) async fn start_universal_api_gateway(&self) -> Result<(), BearDogError> {
-        info!("🌐 Starting universal API gateway");
-        Ok(())
-    }
+        let _payload = json!({
+            "capabilities": ["discovery", "routing", "load_balancing"]
+        });
 
-    async fn setup_api_versioning(&self) -> Result<(), BearDogError> {
-        info!("📊 Setting up API versioning");
-        Ok(())
-    }
+        // Create proper config for ProductionUniversalAdapter
+        let config = UniversalAdapterConfig::default();
+        let production_config = ProductionConfig::default();
+        let adapter = ProductionUniversalAdapter::new(config, production_config);
 
-    pub(crate) async fn initialize_service_mesh(&self) -> Result<(), BearDogError> {
-        info!("🕸️ Initializing service mesh");
+        adapter.execute_on_system("service_mesh", "initialize", json!({}))?;
         Ok(())
     }
 }

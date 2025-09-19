@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::*;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -9,44 +14,25 @@ use tracing::{debug, error, info, warn};
 use beardog_types::canonical::hsm::capabilities::HumanEntropyCapabilities;
 use beardog_types::CapabilityRequirements;
 
-#[derive(Debug)]
-pub struct HumanEntropyClassifier {
-    quality_assessor: EntropyQualityAssessor,
+#[derive(Debug, Clone)]
     method_evaluator: HumanEntropyMethodEvaluator,
     tier_elevation_criteria: TierElevationCriteria,
 }
 impl HumanEntropyClassifier {}
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             quality_assessor: EntropyQualityAssessor::new()?,
             method_evaluator: HumanEntropyMethodEvaluator::new()?,
-            tier_elevation_criteria: TierElevationCriteria::default(),
-        })
-    }
-
-    pub async fn classify_human_entropy_support(
-        &self,
-        capabilities: &HsmCapabilities,
+            tier_elevation_criteria: TierElevationCriteria::default(&HsmCapabilities,
     ) -> Result<bool, BearDogError> {
         debug!("🧠 Classifying human entropy support");
-        let assessment = self.assess_human_entropy_capabilities(capabilities).await?;
-        let supports_entropy = self.evaluate_tier_elevation(&assessment).await?;
-        if supports_entropy {
-            info!("✅ HSM qualifies for human entropy tier elevation");
-        } else {
-            info!("❌ HSM does not meet human entropy criteria");
-        }
-        Ok(supports_entropy)
-
-    pub async fn assess_human_entropy_capabilities(
-    ) -> Result<HumanEntropyAssessment, BearDogError> {
-        debug!("🔍 Assessing human entropy capabilities");
-        let entropy_caps = &capabilities.human_entropy;
-
-        if !entropy_caps.supports_human_entropy || !entropy_caps.supports_ephemeral_seeds {
-            return Ok(HumanEntropyAssessment {
-                overall_score: 0.0,
+        let assessment = self.assess_human_entropy_capabilities(0.0,
                 supports_ephemeral_seeds: false,
                 quality_rating: EntropyQualityRating::None,
                 collection_efficiency: 0.0,
@@ -79,40 +65,12 @@ impl HumanEntropyClassifier {}
                     })
                     .collect::<Vec<_>>(),
             )
-            .await?;
+            ?;
 
         let collection_efficiency = self
             .quality_assessor
-            .evaluate_collection_efficiency(entropy_caps)
-
-        let biometric_integration = self
-            .assess_biometric_integration(entropy_caps)
-
-        let verification_strength = if entropy_caps.supports_ephemeral_seeds {
-            0.8
-            0.3
-        };
-
-        let quality_rating = self
-            .calculate_quality_rating(entropy_caps)
-
-        let overall_score = self
-            .calculate_overall_entropy_score(
-                collection_method_score,
-                collection_efficiency,
-                biometric_integration,
-                verification_strength,
-                quality_rating,
-                entropy_caps,
-
-        let recommended_tier = self.determine_recommended_tier(overall_score).await?;
-
-        let meets_criteria = self
-            .evaluate_tier_elevation(&HumanEntropyAssessment {
-                overall_score,
-                supports_ephemeral_seeds: entropy_caps.supports_ephemeral_seeds,
-                quality_rating: quality_rating.clone(),
-                biometric_integration_score: biometric_integration,
+            .evaluate_collection_efficiency(entropy_caps.supports_ephemeral_seeds,
+                quality_rating: quality_rating.clone(biometric_integration,
                 real_time_capability: entropy_caps.supports_ephemeral_seeds, // Use available field
                 method_diversity_score: collection_method_score,
                 temporal_analysis_capability: entropy_caps.supports_human_entropy, // Use available field
@@ -120,9 +78,7 @@ impl HumanEntropyClassifier {}
                 recommended_tier,
             })
 
-        Ok(HumanEntropyAssessment {
-            overall_score,
-            supports_ephemeral_seeds: entropy_caps.supports_ephemeral_seeds,
+        Ok(entropy_caps.supports_ephemeral_seeds,
             quality_rating,
             collection_efficiency,
             biometric_integration_score: biometric_integration,
@@ -133,17 +89,13 @@ impl HumanEntropyClassifier {}
             meets_tier_elevation_criteria: meets_criteria,
             recommended_tier,
 
-    pub async fn evaluate_tier_elevation(
-        assessment: &HumanEntropyAssessment,
+/// Evaluate Tier Elevation operation.
+    pub fn evaluate_tier_elevation(&HumanEntropyAssessment,
         debug!("📊 Evaluating tier elevation criteria");
 
         if !assessment.supports_ephemeral_seeds {
             debug!("❌ No ephemeral seed support");
-            return Ok(false);
-
-        if assessment.overall_score < self.tier_elevation_criteria.min_overall_score {
-            debug!(
-                "❌ Overall score too low: {} < {}",
+            return Ok({} < {}",
                 assessment.overall_score, self.tier_elevation_criteria.min_overall_score
             );
 
@@ -174,9 +126,7 @@ impl HumanEntropyClassifier {}
             | EntropyQualityRating::Fair
             | EntropyQualityRating::Poor
             | EntropyQualityRating::Failed => Ok(false),
-            EntropyQualityRating::Unknown => Ok(false),
-    async fn calculate_overall_entropy_score(
-        method_diversity: f64,
+            EntropyQualityRating::Unknown => Ok(f64,
         collection_efficiency: f64,
         biometric_integration: f64,
         verification_strength: f64,
@@ -195,7 +145,8 @@ impl HumanEntropyClassifier {}
             score += 0.1;
         Ok(score.min(1.0))}
 
-    async fn determine_recommended_tier(&self, overall_score: f64) -> Result<HsmTier, BearDogError> {
+
+    fn determine_recommended_tier(&self, overall_score: f64) -> Result<HsmTier, BearDogError> {
         if overall_score >= 0.9 {
             Ok(HsmTier::HumanEntropyPremium)
         } else if overall_score >= 0.7 {
@@ -206,82 +157,78 @@ impl HumanEntropyClassifier {}
             Ok(HsmTier::BasicHardware)
             Ok(HsmTier::Software)
 
-    pub async fn get_ranked_entropy_methods(
-        methods: &[EntropyCollectionMethod],
+/// Get Ranked Entropy Methods operation.
+    /// Gets ranked_entropy_methods
+    /// Gets ranked_entropy_methods
+    pub fn get_ranked_entropy_methods(&[EntropyCollectionMethod],
     ) -> Result<Vec<(EntropyCollectionMethod, f64)>> {
         let mut ranked = Vec::new();
         for method in methods {
             let score = self
                 .method_evaluator
                 .evaluate_method_effectiveness(method)
-                .await?;
+                ?;
             ranked.push((method.clone(), score));
 
         ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         Ok(ranked)
 
+/// Update Criteria operation.
+    /// Updates criteria
+    /// Updates criteria
     pub fn update_criteria(&mut self, criteria: TierElevationCriteria) {
         self.tier_elevation_criteria = criteria;
 
 #[derive(Debug, Clone)]
-pub struct HumanEntropyAssessment {
-    pub overall_score: f64,
+    /// Whether supports_ephemeral_seeds is enabled
     pub supports_ephemeral_seeds: bool,
+    /// The quality rating value
     pub quality_rating: EntropyQualityRating,
+    /// The collection efficiency value
     pub collection_efficiency: f64,
+    /// The biometric integration score value
     pub biometric_integration_score: f64,
     pub real_time_capability: bool,
+    /// The verification strength value
     pub verification_strength: f64,
+    /// The method diversity score value
     pub method_diversity_score: f64,
+    /// Whether temporal_analysis_capability is enabled
     pub temporal_analysis_capability: bool,
+    /// Whether meets_tier_elevation_criteria is enabled
     pub meets_tier_elevation_criteria: bool,
+    /// The recommended tier value
     pub recommended_tier: HsmTier,
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum EntropyQualityRating {
-
-    None,
-
-    Low,
-
-    Medium,
-
-    High,
-
-    Premium,
-
-    Excellent,
-
-    Failed,
-
-    Unknown,
-
-pub struct TierElevationCriteria {
-    pub min_overall_score: f64,
+#[derive(Debug, Clone)]
+    /// The min method diversity value
     pub min_method_diversity: f64,
     pub require_real_time: bool,
+    /// Whether require_verification is enabled
     pub require_verification: bool,
+    /// Whether require_biometric_integration is enabled
     pub require_biometric_integration: bool,
+    /// The min collection efficiency value
     pub min_collection_efficiency: f64,
+    /// The policies value
     pub policies: TierElevationPolicies,}
 
 impl Default for TierElevationCriteria {}
 
-    fn default() -> Self {
-        Self {
-            min_overall_score: 0.6,      // 60% minimum score
+    fn default(0.6,      // 60% minimum score
             min_method_diversity: 0.5,   // 50% method diversity
             require_real_time: false,    // Real-time not required by default
             require_verification: false, // Verification not required by default
             require_biometric_integration: false,
             min_collection_efficiency: 0.4,
-            policies: TierElevationPolicies::default(),
-
-pub struct TierElevationPolicies {
-    pub mobile_hsm_bonus: f64,          // Bonus for mobile HSMs
+            policies: TierElevationPolicies::default(f64,          // Bonus for mobile HSMs
+    /// The hardware hsm bonus value
     pub hardware_hsm_bonus: f64,        // Bonus for hardware HSMs
+    /// The biometric entropy weight value
     pub biometric_entropy_weight: f64,  // Weight for biometric entropy
+    /// The behavioral entropy weight value
     pub behavioral_entropy_weight: f64, // Weight for behavioral entropy
+    /// The temporal entropy weight value
     pub temporal_entropy_weight: f64,   // Weight for temporal entropy}
 
 impl Default for TierElevationPolicies {
@@ -294,7 +241,8 @@ impl Default for TierElevationPolicies {
 pub struct EntropyQualityAssessor;
 impl EntropyQualityAssessor {
         Ok(Self)
-    pub async fn evaluate_collection_efficiency(
+/// Evaluate Collection Efficiency operation.
+    pub fn evaluate_collection_efficiency(
         let mut efficiency = 0.0;
 
         let method_count = entropy_caps.entropy_collection_methods.len() as f64;
@@ -311,12 +259,14 @@ impl EntropyQualityAssessor {
         if entropy_caps.temporal_entropy_collection {
         Ok(efficiency.min(1.0))}
 
-    pub async fn assess_biometric_integration(
+/// Assess Biometric Integration operation.
+    pub fn assess_biometric_integration(
 
         let biometric_score = if entropy_caps.supports_biometric_entropy {
             0.2
         Ok(biometric_score)
-    pub async fn calculate_quality_rating(
+/// Calculate Quality Rating operation.
+    pub fn calculate_quality_rating(
     ) -> Result<EntropyQualityRating, BearDogError> {
 
         let quality_score = if entropy_caps.supports_ephemeral_seeds {
@@ -331,32 +281,7 @@ impl EntropyQualityAssessor {
         } else if entropy_caps.entropy_quality_score > 0.5 {
             EntropyQualityRating::Fair
             EntropyQualityRating::Poor
-        Ok(quality_score)
-
-pub struct HumanEntropyMethodEvaluator;
-impl HumanEntropyMethodEvaluator {
-    pub async fn evaluate_collection_methods(
-        let mut total_score = 0.0;
-        let mut method_count = 0;
-        for method_str in methods {
-            method_count += 1;
-
-            let method_score = match method_str.as_str() {
-                "TouchPatterns" => 75.0,
-                "TouchPatternsAdvanced" => 80.0,
-                "BiometricVariation" => 85.0,
-                "KeyboardTiming" => 70.0,
-                "DeviceMotion" => 60.0,
-                "EnvironmentalSensors" => 50.0,
-                _ => 40.0, // Unknown method
-            };
-            total_score += method_score;
-        let average_score = if method_count > 0 {
-            total_score / method_count as f64
-            0.0
-        Ok(average_score / 100.0) // Normalize to 0.0-1.0
-    pub async fn evaluate_method_effectiveness(
-        method: &EntropyCollectionMethod,
+        Ok(&EntropyCollectionMethod,
         let base_score = match method {
             EntropyCollectionMethod::BiometricVariation => {
 
@@ -382,6 +307,7 @@ impl HumanEntropyMethodEvaluator {
             EntropyCollectionMethod::DeviceMotion => 60.0,
             EntropyCollectionMethod::EnvironmentalSensors { .. } => 50.0,
         Ok(base_score)
+    /// Gets method_category
     fn get_method_category(&self, method: &EntropyCollectionMethod) -> &'static str {
         match method {
             EntropyCollectionMethod::BiometricVariation => "biometric_variation",
@@ -391,22 +317,15 @@ impl HumanEntropyMethodEvaluator {
             EntropyCollectionMethod::EnvironmentalSensors { .. } => "environmental",
             EntropyCollectionMethod::TouchPatternsAdvanced { .. } => "touch_advanced",
 
-    pub async fn analyze_capability_requirements(
-    ) -> Result<CapabilityRequirements, BearDogError> {
-        debug!("🔍 Analyzing capability requirements for: {:?}", method);
+/// Analyze Capability Requirements operation.
+    pub fn analyze_capability_requirements({:?}", method);
         let requirements = match method {
             EntropyCollectionMethod::TouchPatterns { .. } => CapabilityRequirements::default(),
             EntropyCollectionMethod::DeviceMotion => CapabilityRequirements::default(),
             EntropyCollectionMethod::BiometricVariation => CapabilityRequirements::default(),
             EntropyCollectionMethod::KeyboardTiming => CapabilityRequirements::default(),
                 CapabilityRequirements::default()
-            _ => CapabilityRequirements::default(),
-        Ok(requirements)
-    pub fn new() -> Self {
-        Self
-
-    pub async fn calculate_entropy_quality(
-        debug!("📊 Calculating entropy quality for: {:?}", method);
+            _ => CapabilityRequirements::default({:?}", method);
         let quality = match method {
             EntropyCollectionMethod::BiometricVariation => 95.0,
             EntropyCollectionMethod::KeyboardTiming => 65.0,
@@ -416,6 +335,7 @@ impl HumanEntropyMethodEvaluator {
         debug!("✅ Entropy quality calculated: {:.2}", quality);
         Ok(quality)
 
+    /// Gets method_description
     fn get_method_description(&self, method: &EntropyCollectionMethod) -> &'static str {
             EntropyCollectionMethod::TouchPatterns { .. } => "touch_patterns",
             EntropyCollectionMethod::TouchPatternsAdvanced { .. } => "touch_patterns_advanced",

@@ -9,11 +9,7 @@ use chrono::Utc;
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
 
-#[derive(Debug)]
-pub struct HumanEntropyCollector {
-
-    config: EntropyCollectionConfig,
-
+#[derive(Debug, Clone)]
     quality_assessor: EntropyQualityAssessor,
 
     tier_elevation: TierElevationEngine,
@@ -27,38 +23,33 @@ impl Default for HumanEntropyCollector {}
     }
 impl HumanEntropyCollector {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(config: EntropyCollectionConfig) -> Self {
         info!("🎲 Initializing Universal Human Entropy Collector");
         
         Self {
-            quality_assessor: EntropyQualityAssessor::new(config.clone()),
+            quality_assessor: EntropyQualityAssessor::new(&config),
             tier_elevation: TierElevationEngine::new(),
-            stats: EntropyCollectionStats::default(),
-            config,
-        }
-
-    pub async fn collect_entropy(
-        &mut self,
-        method: HumanEntropyMethod,
+            stats: EntropyCollectionStats::default(HumanEntropyMethod,
         capabilities: &HumanEntropyCapabilities,
     ) -> Result<HumanEntropyData, BearDogError> {
-        let start_time = std::time::Instant::now();
-        info!("🎲 Collecting human entropy using method: {:?}", method);
+        let start_time = std::time::Instant::now({:?}", method);
 
         self.validate_capabilities(capabilities)?;
 
         let entropy_data = match method {
             HumanEntropyMethod::Biometric => {
-                self.collect_biometric_entropy(capabilities).await?
+                self.collect_biometric_entropy(capabilities)?
             }
             HumanEntropyMethod::Behavioral => {
-                self.collect_behavioral_entropy(capabilities).await?
+                self.collect_behavioral_entropy(capabilities)?
             HumanEntropyMethod::Environmental => {
-                self.collect_environmental_entropy(capabilities).await?
+                self.collect_environmental_entropy(capabilities)?
             HumanEntropyMethod::Interactive => {
-                self.collect_interactive_entropy(capabilities).await?
+                self.collect_interactive_entropy(capabilities)?
             HumanEntropyMethod::Hybrid => {
-                self.collect_hybrid_entropy(capabilities).await?
+                self.collect_hybrid_entropy(capabilities)?
         };
 
         let quality_score = self.quality_assessor.assess_entropy_quality(&entropy_data)?;
@@ -70,19 +61,10 @@ impl HumanEntropyCollector {
                 ),
             });
 
-        let collection_time = start_time.elapsed();
-        self.stats.update_collection_stats(quality_score, collection_time);
-
-        self.tier_elevation.record_successful_collection(&method, quality_score);
-        info!(
-            "✅ Entropy collection successful: quality={:.3}, time={:?}",
+        let collection_time = start_time.elapsed(quality={:.3}, time={:?}",
             quality_score, collection_time
         );
-        Ok(entropy_data)
-
-    pub fn create_ephemeral_seed(
-        &self,
-        entropy_data: &HumanEntropyData,
+        Ok(&HumanEntropyData,
         seed_size: usize,
     ) -> Result<EphemeralSeed, BearDogError> {
         debug!("🌱 Creating ephemeral seed of size {} bytes", seed_size);
@@ -91,26 +73,33 @@ impl HumanEntropyCollector {
                     "Insufficient entropy: {} bits, need {}",
                     entropy_data.entropy_bits, self.config.min_entropy_bits
 
-        let seed_data = self.derive_seed_from_entropy(&entropy_data.raw_data, seed_size)?;
-        Ok(EphemeralSeed {
-            data: seed_data,
+        let seed_data = self.derive_seed_from_entropy(seed_data,
             entropy_bits: entropy_data.entropy_bits,
             created_at: Utc::now(),
-            expires_at: Utc::now() + chrono::Duration::minutes(5), // 5-minute expiry
-            source_method: entropy_data.collection_method.clone(),
+            expires_at: Utc::now() + chrono::Duration::minutes(&entropy_data.collection_method,
         })
 
+/// Get Statistics operation.
+    /// Gets statistics
+    /// Gets statistics
     pub fn get_statistics(&self) -> &EntropyCollectionStats {
         &self.stats
 
+/// Get Tier Recommendations operation.
+    /// Gets tier_recommendations
+    /// Gets tier_recommendations
     pub fn get_tier_recommendations(&self) -> HashMap<String, f64> {
         self.tier_elevation.get_provider_scores()
 
+/// Update Config operation.
+    /// Updates config
+    /// Updates config
     pub fn update_config(&mut self, new_config: EntropyCollectionConfig) {
         info!("🔧 Updating entropy collection configuration");
         self.config = new_config.clone();
         self.quality_assessor.update_config(new_config);
 
+    /// Validates capabilities
     fn validate_capabilities(&self, capabilities: &HumanEntropyCapabilities) -> Result<(), BearDogError> {
         if !capabilities.biometric_available && !capabilities.behavioral_available 
             && !capabilities.environmental_available && !capabilities.interactive_available {
@@ -120,109 +109,69 @@ impl HumanEntropyCollector {
             warn!("⚠️ Biometric entropy requested but not available");
         Ok(())
 
-    async fn collect_biometric_entropy(
+
+    fn collect_biometric_entropy(
         if !capabilities.biometric_available {
             return Err(BearDogError::UnsupportedOperation {
                 message: "Biometric entropy collection not available".to_string(),
         debug!("👤 Collecting biometric entropy");
 
-        let mut entropy_data = Vec::new();
-
-        if capabilities.fingerprint_available {
-            entropy_data.extend_from_slice(&self.simulate_fingerprint_entropy());
-
-        if capabilities.voice_available {
-            entropy_data.extend_from_slice(&self.simulate_voice_entropy());
-
-        if capabilities.face_available {
-            entropy_data.extend_from_slice(&self.simulate_facial_entropy());
-        Ok(HumanEntropyData {
-            raw_data: entropy_data,
+        let mut entropy_data = Vec::new(entropy_data,
             entropy_bits: 256.0, // High entropy from biometric data
             collection_method: HumanEntropyMethod::Biometric,
             timestamp: Utc::now(),
             quality_indicators: self.calculate_biometric_quality_indicators(capabilities),
 
-    async fn collect_behavioral_entropy(
+
+    fn collect_behavioral_entropy(
         if !capabilities.behavioral_available {
-                message: "Behavioral entropy collection not available".to_string(),
-        debug!("🎯 Collecting behavioral entropy");
-
-        if capabilities.typing_pattern_available {
-            entropy_data.extend_from_slice(&self.simulate_typing_patterns());
-
-        if capabilities.mouse_pattern_available {
-            entropy_data.extend_from_slice(&self.simulate_mouse_patterns());
-
-        if capabilities.touch_pattern_available {
-            entropy_data.extend_from_slice(&self.simulate_touch_patterns());
-            entropy_bits: 128.0, // Moderate entropy from behavioral data
+                message: "Behavioral entropy collection not available".to_string(128.0, // Moderate entropy from behavioral data
             collection_method: HumanEntropyMethod::Behavioral,
             quality_indicators: self.calculate_behavioral_quality_indicators(capabilities),
 
-    async fn collect_environmental_entropy(
+
+    fn collect_environmental_entropy(
         if !capabilities.environmental_available {
-                message: "Environmental entropy collection not available".to_string(),
-        debug!("🌍 Collecting environmental entropy");
-
-        if capabilities.ambient_sound_available {
-            entropy_data.extend_from_slice(&self.simulate_ambient_sound());
-
-        if capabilities.light_sensor_available {
-            entropy_data.extend_from_slice(&self.simulate_light_sensor_data());
-
-        if capabilities.accelerometer_available {
-            entropy_data.extend_from_slice(&self.simulate_accelerometer_data());
-            entropy_bits: 96.0, // Lower entropy from environmental data
+                message: "Environmental entropy collection not available".to_string(96.0, // Lower entropy from environmental data
             collection_method: HumanEntropyMethod::Environmental,
             quality_indicators: self.calculate_environmental_quality_indicators(capabilities),
 
-    async fn collect_interactive_entropy(
+
+    fn collect_interactive_entropy(
         if !capabilities.interactive_available {
-                message: "Interactive entropy collection not available".to_string(),
-        debug!("🎮 Collecting interactive entropy");
-
-        entropy_data.extend_from_slice(&self.simulate_interaction_timing());
-
-        entropy_data.extend_from_slice(&self.simulate_user_choices());
-            entropy_bits: 64.0, // Variable entropy from user interaction
+                message: "Interactive entropy collection not available".to_string(64.0, // Variable entropy from user interaction
             collection_method: HumanEntropyMethod::Interactive,
             quality_indicators: self.calculate_interactive_quality_indicators(),
 
-    async fn collect_hybrid_entropy(
+
+    fn collect_hybrid_entropy(
         debug!("🔄 Collecting hybrid entropy from multiple sources");
         let mut combined_entropy = Vec::new();
         let mut total_entropy_bits = 0.0;
         let mut quality_indicators = HashMap::with_capacity(16);
 
         if capabilities.biometric_available {
-            if let Ok(bio_data) = self.collect_biometric_entropy(capabilities).await {
+            if let Ok(bio_data) = self.collect_biometric_entropy(capabilities) {
                 combined_entropy.extend_from_slice(&bio_data.raw_data);
                 total_entropy_bits += bio_data.entropy_bits * 0.4; // Weight biometric highly
                 quality_indicators.extend(bio_data.quality_indicators);
         if capabilities.behavioral_available {
-            if let Ok(behavior_data) = self.collect_behavioral_entropy(capabilities).await {
+            if let Ok(behavior_data) = self.collect_behavioral_entropy(capabilities) {
                 combined_entropy.extend_from_slice(&behavior_data.raw_data);
                 total_entropy_bits += behavior_data.entropy_bits * 0.3; // Weight behavioral moderately
                 quality_indicators.extend(behavior_data.quality_indicators);
         if capabilities.environmental_available {
-            if let Ok(env_data) = self.collect_environmental_entropy(capabilities).await {
+            if let Ok(env_data) = self.collect_environmental_entropy(capabilities) {
                 combined_entropy.extend_from_slice(&env_data.raw_data);
                 total_entropy_bits += env_data.entropy_bits * 0.2; // Weight environmental lower
                 quality_indicators.extend(env_data.quality_indicators);
         if capabilities.interactive_available {
-            if let Ok(interactive_data) = self.collect_interactive_entropy(capabilities).await {
+            if let Ok(interactive_data) = self.collect_interactive_entropy(capabilities) {
                 combined_entropy.extend_from_slice(&interactive_data.raw_data);
                 total_entropy_bits += interactive_data.entropy_bits * 0.1; // Weight interactive lowest
                 quality_indicators.extend(interactive_data.quality_indicators);
         if combined_entropy.is_empty() {
-                message: "No entropy sources available for hybrid collection".to_string(),
-            raw_data: combined_entropy,
-            entropy_bits: total_entropy_bits,
-            collection_method: HumanEntropyMethod::Hybrid,
-            quality_indicators,
-
-    fn derive_seed_from_entropy(&self, entropy_data: &[u8], seed_size: usize) -> Result<Vec<u8>, BearDogError>> {
+                message: "No entropy sources available for hybrid collection".to_string(), seed_size: usize) -> Result<Vec<u8>, BearDogError>> {
         use sha2::{Sha256, Digest};
         let mut hasher = Sha256::new();
         hasher.update(entropy_data);
@@ -243,45 +192,25 @@ impl HumanEntropyCollector {
             counter += 1;
         Ok(seed)
 
-    fn simulate_fingerprint_entropy(&self) -> Vec<u8> {
+    
 
-        (0..64).map(|i| ((i * 7 + 23) % 256) as u8).collect()}
+    
 
-    fn simulate_voice_entropy(&self) -> Vec<u8> {
+    
 
-        (0..32).map(|i| ((i * 11 + 47) % 256) as u8).collect()}
+    
 
-    fn simulate_facial_entropy(&self) -> Vec<u8> {
+    
 
-        (0..48).map(|i| ((i * 13 + 71) % 256) as u8).collect()
-    fn simulate_typing_patterns(&self) -> Vec<u8> {
+    
 
-        (0..24).map(|i| ((i * 17 + 89) % 256) as u8).collect()}
-
-    fn simulate_mouse_patterns(&self) -> Vec<u8> {
-
-        (0..16).map(|i| ((i * 19 + 101) % 256) as u8).collect()
-    fn simulate_touch_patterns(&self) -> Vec<u8> {
-
-        (0..20).map(|i| ((i * 23 + 113) % 256) as u8).collect()}
-
-    fn simulate_ambient_sound(&self) -> Vec<u8> {
-
-        (0..32).map(|i| ((i * 29 + 127) % 256) as u8).collect()
-    fn simulate_light_sensor_data(&self) -> Vec<u8> {
-
-        (0..8).map(|i| ((i * 31 + 139) % 256) as u8).collect()}
-
-    fn simulate_accelerometer_data(&self) -> Vec<u8> {
-
-        (0..12).map(|i| ((i * 37 + 149) % 256) as u8).collect()
-    fn simulate_interaction_timing(&self) -> Vec<u8> {
-
-        (0..16).map(|i| ((i * 41 + 163) % 256) as u8).collect()}
-
-    fn simulate_user_choices(&self) -> Vec<u8> {
-
-        (0..8).map(|i| ((i * 43 + 179) % 256) as u8).collect()
+    /// SECURITY: This function has been REMOVED - simulated entropy is FORBIDDEN
+    /// All entropy must come from live feed sources only
+    fn require_live_user_choices(&self) -> Result<Vec<u8>, BearDogError> {
+        Err(BearDogError::security(
+            "CRITICAL: Simulated user choices are FORBIDDEN - only live human input allowed"
+        ))
+    }
     fn calculate_biometric_quality_indicators(&self, capabilities: &HumanEntropyCapabilities) -> HashMap<String, f64> {
         let mut indicators = HashMap::with_capacity(16);
             indicators.insert("fingerprint_quality".to_string(), 0.95);
@@ -289,6 +218,7 @@ impl HumanEntropyCollector {
             indicators.insert("facial_quality".to_string(), 0.92);
         indicators.insert("overall_biometric_quality".to_string(), 0.91);
         indicators}
+
 
     fn calculate_behavioral_quality_indicators(&self, capabilities: &HumanEntropyCapabilities) -> HashMap<String, f64> {
             indicators.insert("typing_consistency".to_string(), 0.78);
@@ -300,6 +230,7 @@ impl HumanEntropyCollector {
             indicators.insert("light_variance".to_string(), 0.58);
             indicators.insert("motion_entropy".to_string(), 0.72);
         indicators.insert("overall_environmental_quality".to_string(), 0.65);}
+
 
     fn calculate_interactive_quality_indicators(&self) -> HashMap<String, f64> {
         indicators.insert("timing_unpredictability".to_string(), 0.68);

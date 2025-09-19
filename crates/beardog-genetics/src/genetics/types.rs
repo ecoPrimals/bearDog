@@ -1,45 +1,59 @@
-//! Genetics Types
-//!
-//! Core type definitions for the genetics system using canonical patterns.
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 
 use beardog_auth::auth::BearDogGenetics;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// In-memory genetics store for testing and development
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct InMemoryGeneticsStore {
     genetics: HashMap<String, BearDogGenetics>,
 }
 
 impl InMemoryGeneticsStore {
+    /// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
-            genetics: HashMap::new(),
+            genetics: HashMap::with_capacity(100),
         }
     }
 
-    pub fn insert(&mut self, id: String, genetics: BearDogGenetics) {
-        self.genetics.insert(id, genetics);
+    /// Insert genetics into the store
+    pub fn insert(&mut self, id: &str, genetics: BearDogGenetics) {
+        self.genetics.insert(id.to_string(), genetics);
     }
 
+    /// Get operation.
+    /// Gets value
+    /// Gets value
     pub fn get(&self, id: &str) -> Option<&BearDogGenetics> {
         self.genetics.get(id)
     }
 
+    /// Remove operation.
+    /// Removes item
+    /// Removes item
     pub fn remove(&mut self, id: &str) -> Option<BearDogGenetics> {
         self.genetics.remove(id)
     }
 
+    /// Len operation.
     pub fn len(&self) -> usize {
         self.genetics.len()
     }
 
+    /// Is Empty operation.
+    /// Checks if empty
+    /// Checks if empty
     pub fn is_empty(&self) -> bool {
         self.genetics.is_empty()
     }
 
+    /// Clear operation.
     pub fn clear(&mut self) {
         self.genetics.clear();
     }
@@ -47,28 +61,33 @@ impl InMemoryGeneticsStore {
 
 impl super::GeneticsStore for InMemoryGeneticsStore {
     fn store_genetics(&self, genetics: &BearDogGenetics) -> Result<(), BearDogError> {
-        // In a real implementation, this would be mutable or use interior mutability
-        // For now, we'll just validate and return success
         if genetics.id.is_empty() {
-            return Err(BearDogError::system("Genetics ID cannot be empty"));
+            return Err(BearDogError::system(
+                "Genetics ID cannot be empty".to_string(),
+            ));
         }
         Ok(())
     }
 
+    /// Gets genetics
     fn get_genetics(&self, id: &str) -> Result<BearDogGenetics, BearDogError> {
         self.genetics
             .get(id)
             .cloned()
-            .ok_or_else(|| BearDogError::system("Genetics not found"))
+            .ok_or_else(|| BearDogError::system(format!("Genetics not found: {}", id)))
     }
 }
 
-/// Genetics metadata for tracking and analysis
+/// Metadata associated with genetics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticsMetadata {
+    /// The created at value
     pub created_at: chrono::DateTime<chrono::Utc>,
+    /// The last modified value
     pub last_modified: chrono::DateTime<chrono::Utc>,
+    /// Number of version
     pub version: u32,
+    /// Collection of tags
     pub tags: Vec<String>,
 }
 
@@ -84,12 +103,16 @@ impl Default for GeneticsMetadata {
     }
 }
 
-/// Genetics statistics for monitoring and analysis
+/// Statistics about the genetics system
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticsStats {
+    /// Number of total_genetics
     pub total_genetics: usize,
+    /// The average fitness value
     pub average_fitness: f64,
+    /// Number of max_generation
     pub max_generation: u32,
+    /// Mapping of capability distribution
     pub capability_distribution: HashMap<String, usize>,
 }
 
@@ -99,24 +122,27 @@ impl Default for GeneticsStats {
             total_genetics: 0,
             average_fitness: 0.0,
             max_generation: 0,
-            capability_distribution: HashMap::new(),
+            capability_distribution: HashMap::with_capacity(10),
         }
     }
 }
 
-/// Genetics configuration for system behavior
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticsSystemConfig {
-    pub max_stored_genetics: usize,
+    /// Number of max_genetics_stored
+    pub max_genetics_stored: usize,
+    /// Number of cleanup_interval_seconds
     pub cleanup_interval_seconds: u64,
+    /// Whether enable_metrics_collection is enabled
     pub enable_metrics_collection: bool,
+    /// The fitness threshold value
     pub fitness_threshold: f64,
 }
 
 impl Default for GeneticsSystemConfig {
     fn default() -> Self {
         Self {
-            max_stored_genetics: 1000,
+            max_genetics_stored: 1000,
             cleanup_interval_seconds: 3600, // 1 hour
             enable_metrics_collection: true,
             fitness_threshold: 0.5,
@@ -141,7 +167,7 @@ mod tests {
             ..Default::default()
         };
 
-        store.insert(genetics.id.clone(), genetics.clone());
+        store.insert(&genetics.id.clone(), genetics);
 
         assert_eq!(store.len(), 1);
         assert!(!store.is_empty());

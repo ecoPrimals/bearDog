@@ -1,279 +1,209 @@
-
+// Entropy Hierarchy Validation
+//
+// This module provides validation capabilities for entropy hierarchy management,
+// including quality assessment and ownership verification.
 
 use super::types::*;
-
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use sha3::{Digest, Sha3_256};
+use std::collections::HashMap;
 
+#[derive(Debug, Clone)]
 pub struct EntropyValidator {
-
     config: EntropyHierarchyConfig,
+    #[allow(dead_code)] // Used for validation thresholds but not yet fully implemented
+    quality_thresholds: HashMap<String, f64>,
 }
+
 impl EntropyValidator {
+    /// Create new entropy validator
+    /// Creates a new instance
+    pub fn new(config: EntropyHierarchyConfig) -> Self {
+        let mut quality_thresholds = HashMap::new();
+        quality_thresholds.insert("human".to_string(), config.min_human_quality);
+        quality_thresholds.insert("machine".to_string(), config.min_machine_quality);
 
-    pub fn new(/* hsm_manager: Arc<HsmManager>, */ config: EntropyHierarchyConfig) -> Self {
         Self {
-
             config,
+            quality_thresholds,
         }
     }
 
-    pub async fn generate_ownership_proof(
+    /// Validate entropy class quality
+    /// Validates entropy_quality
+    /// Validates entropy_quality
+    pub fn validate_entropy_quality(
+        &self,
+        entropy_class: &EntropyClass,
+    ) -> Result<bool, BearDogError> {
+        match entropy_class {
+            EntropyClass::HumanLivedExperience { quality_score, .. } => {
+                Ok(*quality_score >= self.config.min_human_quality)
+            }
+            EntropyClass::HumanSupervisedMachine { quality_score, .. } => {
+                Ok(*quality_score >= self.config.min_machine_quality)
+            }
+            EntropyClass::StoreBoughtMachine { quality_score, .. } => {
+                Ok(*quality_score >= self.config.min_machine_quality)
+            }
+        }
+    }
+
+    pub fn generate_ownership_proof(
         &self,
         owner_identity: &HumanIdentity,
         entropy_data: &[u8],
     ) -> Result<OwnershipProof, BearDogError> {
-
         let proof_data = self.create_ownership_proof_data(owner_identity, entropy_data)?;
+        let signature = self.sign_ownership_proof(&proof_data, owner_identity)?;
 
-        let signature = {
-            let mut hasher = Sha3_256::new();
-            hasher.update(&proof_data);
-            hasher.update(b"ownership_signature");
-            hasher.finalize().to_vec()
-        };
         Ok(OwnershipProof {
+            proof_data,
             signature,
             timestamp: Utc::now(),
-            verification_key: owner_identity.public_key.clone(),
         })
+    }
 
-    pub async fn generate_irreproducibility_proof(
-        entropy_class: &EntropyClass,
-    ) -> Result<IrreproducibilityProof, BearDogError> {
+    /// Generate biometric hash
+    pub fn generate_biometric_hash(
+        &self,
+        biometric_data: &[u8],
+        ownership_proof: &[u8],
+    ) -> Result<BiometricHash, BearDogError> {
+        let mut hasher = Sha3_256::new();
+        hasher.update(biometric_data);
+        hasher.update(b"biometric_hash_salt");
+        let hash = hasher.finalize().to_vec();
 
-        let entropy_commitment = self.generate_entropy_commitment(entropy_data)?;
+        Ok(BiometricHash {
+            hash,
+            ownership_proof: ownership_proof.to_vec(),
+        })
+    }
 
-        let temporal_proof = self.generate_temporal_proof(entropy_class).await?;
+    /// Validate entropy age
+    /// Validates entropy_age
+    /// Validates entropy_age
+    pub fn validate_entropy_age(&self, entropy_class: &EntropyClass) -> Result<bool, BearDogError> {
+        let timestamp = match entropy_class {
+            EntropyClass::HumanLivedExperience {
+                capture_timestamp, ..
+            } => capture_timestamp,
+            EntropyClass::HumanSupervisedMachine {
+                validation_timestamp,
+                ..
+            } => validation_timestamp,
+            EntropyClass::StoreBoughtMachine {
+                generation_timestamp,
+                ..
+            } => generation_timestamp,
+        };
 
-        let uniqueness_proof = self
-            .generate_uniqueness_proof(entropy_data, entropy_class)
-            .await?;
-        Ok(IrreproducibilityProof {
-            entropy_commitment,
-            temporal_proof,
-            uniqueness_proof,
+        let age_hours = (Utc::now() - *timestamp).num_hours() as u64;
+        Ok(age_hours <= self.config.max_entropy_age_hours)
+    }
 
+    /// Create ownership proof data
+    /// Creates ownership_proof_data
     fn create_ownership_proof_data(
-    ) -> Result<Vec<u8>, BearDogError>> {
+        &self,
+        owner_identity: &HumanIdentity,
+        entropy_data: &[u8],
+    ) -> Result<Vec<u8>, BearDogError> {
         let mut hasher = Sha3_256::new();
 
         hasher.update(owner_identity.identity_id.as_bytes());
-        hasher.update(&owner_identity.public_key);
-
-        if let Some(bio_hash) = &owner_identity.biometric_hash {
-            hasher.update(bio_hash);
+        hasher.update(&owner_identity.identity_hash);
 
         let entropy_hash = Sha3_256::digest(entropy_data);
         hasher.update(entropy_hash);
 
         hasher.update(Utc::now().timestamp().to_le_bytes());
-
         hasher.update(b"entropy_ownership_proof");
-        Ok(hasher.finalize().to_vec())
 
-    fn generate_entropy_commitment(&self, entropy_data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+        Ok(hasher.finalize().to_vec())
+    }
+
+    /// Sign ownership proof
+    fn sign_ownership_proof(
+        &self,
+        proof_data: &[u8],
+        _owner_identity: &HumanIdentity,
+    ) -> Result<Vec<u8>, BearDogError> {
+        // Simplified signature for now - in production would use proper cryptographic signing
+        let mut hasher = Sha3_256::new();
+        hasher.update(proof_data);
+        hasher.update(b"ownership_signature");
+        Ok(hasher.finalize().to_vec())
+    }
+
+    /// Generate entropy commitment
+    #[allow(dead_code)] // Used for entropy validation but not yet fully implemented
+    fn generate_entropy_commitment(&self, entropy_data: &[u8]) -> Result<Vec<u8>, BearDogError> {
+        let mut hasher = Sha3_256::new();
         hasher.update(entropy_data);
         hasher.update(b"entropy_commitment");
+        Ok(hasher.finalize().to_vec())
+    }
 
-    async fn generate_temporal_proof(
-        let timestamp = match entropy_class {
-            EntropyClass::HumanLivedExperience {
-                capture_timestamp, ..
-            } => *capture_timestamp,
-            EntropyClass::HumanSupervisedMachine {
-                validation_timestamp,
-                ..
-            } => *validation_timestamp,
-            EntropyClass::StoreBoughtMachine {
-                generation_timestamp,
-            } => *generation_timestamp,
-
-        hasher.update(timestamp.timestamp().to_le_bytes());
-        hasher.update(b"temporal_proof");
-
-        let class_type = match entropy_class {
-            EntropyClass::HumanLivedExperience { .. } => "human_lived_experience",
-            EntropyClass::HumanSupervisedMachine { .. } => "human_supervised_machine",
-            EntropyClass::StoreBoughtMachine { .. } => "store_bought_machine",
-        hasher.update(class_type.as_bytes());
-        let temporal_data = hasher.finalize().to_vec();
-
-            hasher.update(&temporal_data);
-            hasher.update(b"temporal_signature");
-        Ok(signature)
-
-    async fn generate_uniqueness_proof(
-
-        hasher.update(Sha3_256::digest(entropy_data));
-
-        match entropy_class {
-                source_type,
-                biometric_signature,
-            } => {
-                hasher.update(b"human_lived_experience");
-
-                match source_type {
-                    HumanEntropySource::Microphone {
-                        spectral_features, ..
-                    } => {
-                        hasher.update(b"microphone");
-                        for feature in spectral_features {
-                            hasher.update(feature.to_le_bytes());
-                        }
-                    }
-                    HumanEntropySource::Camera {
-                        lighting_variations,
-                        ..
-                        hasher.update(b"camera");
-                        for variation in lighting_variations {
-                            hasher.update(variation.to_le_bytes());
-                    HumanEntropySource::Haptic {
-                        motion_patterns, ..
-                        hasher.update(b"haptic");
-                        for pattern in motion_patterns {
-                            hasher.update(pattern.to_le_bytes());
-                    HumanEntropySource::Biometric { entropy_hash, .. } => {
-                        hasher.update(b"biometric");
-                        hasher.update(entropy_hash);
-                    HumanEntropySource::MultiModalHuman { sources, .. } => {
-                        hasher.update(b"multimodal");
-                        hasher.update(sources.len().to_le_bytes());
-                }
-
-                hasher.update(&biometric_signature.0);
-            }
-                machine_source,
-                human_validator,
-                hasher.update(b"human_supervised_machine");
-                hasher.update(human_validator.identity_id.as_bytes());
-
-                match machine_source {
-                    MachineEntropySource::HardwareRNG { device_id, .. } => {
-                        hasher.update(device_id.as_bytes());
-                    MachineEntropySource::Csprng { algorithm, .. } => {
-                        hasher.update(algorithm.as_bytes());
-                    MachineEntropySource::DerivedFromHuman {
-                        transition_timestamp,
-                        hasher.update(transition_timestamp.timestamp().to_le_bytes());
-                reproducibility_index,
-                hasher.update(b"store_bought_machine");
-                hasher.update(reproducibility_index.to_le_bytes());
-                    MachineEntropySource::Csprng {
-                        algorithm,
-                        state_size,
-                        hasher.update(state_size.to_le_bytes());
-                    MachineEntropySource::DerivedFromHuman { .. } => {
-                        hasher.update(b"derived_from_human");
-
-        hasher.update(b"uniqueness_proof");
-        let uniqueness_data = hasher.finalize().to_vec();
-            hasher.update(&uniqueness_data);
-            hasher.update(b"uniqueness_signature");
-
-    pub fn validate_entropy_quality(&self, entropy_class: &EntropyClass) -> Result<f64, BearDogError> {
-        let quality_score = match entropy_class {
-            EntropyClass::HumanLivedExperience { source_type, .. } => {
-                self.calculate_human_entropy_quality(source_type)?
-            EntropyClass::HumanSupervisedMachine { .. } => {
-
-                0.8
-
-                1.0 - reproducibility_index
-        if quality_score < self.config.min_entropy_quality {
-            return Err(BearDogError::invalid_input(format!(
-                    "Entropy quality {} below minimum threshold {}",
-                    quality_score, self.config.min_entropy_quality
-                )));
-        Ok(quality_score)
-
-    fn calculate_human_entropy_quality(&self, source: &HumanEntropySource) -> Result<f64, BearDogError> {
-        let quality = match source {
-            HumanEntropySource::MultiModalHuman {
-                confidence_score,
-                sources,
-
-                let diversity_bonus = (sources.len() as f64 / 10.0).min(0.2);
-                confidence_score + diversity_bonus
-            HumanEntropySource::Biometric { quality_score, .. } => *quality_score,
-            HumanEntropySource::Microphone {
-                spectral_features,
-                duration_ms,
-
-                let feature_diversity = spectral_features.len() as f64 / 100.0;
-                let duration_factor = (*duration_ms as f64 / 10000.0).min(1.0); // 10 seconds max
-                (feature_diversity * 0.7 + duration_factor * 0.3).clamp(0.5, 1.0)
-            HumanEntropySource::Camera {
-                lighting_variations,
-
-                if lighting_variations.is_empty() {
-                    return Ok(0.6); // Base quality for camera without variations
-                let variation_score = lighting_variations.iter().sum::<f32>() as f64
-                    / lighting_variations.len() as f64;
-                let duration_factor = (*duration_ms as f64 / 5000.0).min(1.0); // 5 seconds max
-                (variation_score * 0.8 + duration_factor * 0.2).clamp(0.6, 1.0)
-            HumanEntropySource::Haptic {
-                motion_patterns,
-                touch_points,
-
-                let motion_complexity = motion_patterns.len() as f64 / 50.0;
-                let touch_diversity = touch_points.len() as f64 / 20.0;
-                (motion_complexity * 0.6 + touch_diversity * 0.4).clamp(0.7, 1.0)
-        Ok(quality.min(1.0))
-
-    pub async fn verify_ownership_proof(
-        _proof: &OwnershipProof,
-        _owner_identity: &HumanIdentity,
-        _entropy_data: &[u8],
-    ) -> Result<bool, BearDogError> {
-
-        Ok(true)
-
-    pub async fn verify_irreproducibility_proof(
-        proof: &IrreproducibilityProof,
+    /// Generate temporal proof
+    #[allow(dead_code)] // Used for entropy validation but not yet fully implemented
+    fn generate_temporal_proof(
+        &self,
         _entropy_class: &EntropyClass,
+    ) -> Result<Vec<u8>, BearDogError> {
+        let mut hasher = Sha3_256::new();
+        hasher.update(Utc::now().timestamp().to_le_bytes());
+        hasher.update(b"temporal_proof");
+        Ok(hasher.finalize().to_vec())
+    }
 
-        let expected_commitment = self.generate_entropy_commitment(entropy_data)?;
-        if proof.entropy_commitment != expected_commitment {
-            return Ok(false);
+    /// Generate uniqueness proof
+    #[allow(dead_code)] // Used for entropy validation but not yet fully implemented
+    fn generate_uniqueness_proof(
+        &self,
+        entropy_data: &[u8],
+        _entropy_class: &EntropyClass,
+    ) -> Result<Vec<u8>, BearDogError> {
+        let mut hasher = Sha3_256::new();
+        hasher.update(entropy_data);
+        hasher.update(b"uniqueness_proof");
+        Ok(hasher.finalize().to_vec())
+    }
+}
 
-        if proof.temporal_proof.is_empty() || proof.uniqueness_proof.is_empty() {
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    pub fn validate_usage_policy(
-        policy: &SeedUsagePolicy,
-    ) -> Result<(), BearDogError> {
+    #[test]
+    fn test_entropy_validator_creation() {
+        let config = EntropyHierarchyConfig::default();
+        let _validator = EntropyValidator::new(config);
+    }
 
-            EntropyClass::HumanLivedExperience { .. } => {
+    #[test]
+    fn test_entropy_quality_validation() {
+        let config = EntropyHierarchyConfig::default();
+        let validator = EntropyValidator::new(config);
 
-                Ok(())
+        let high_quality_entropy = EntropyClass::HumanLivedExperience {
+            quality_score: 0.9,
+            capture_timestamp: Utc::now(),
+            biometric_signature: BiometricHash {
+                hash: vec![1, 2, 3],
+                ownership_proof: vec![4, 5, 6],
+            },
+            ownership_proof: OwnershipProof {
+                proof_data: vec![7, 8, 9],
+                signature: vec![10, 11, 12],
+                timestamp: Utc::now(),
+            },
+        };
 
-                if policy
-                    .allowed_operations
-                    .contains(&"high_security_signing".to_string())
-                    && !policy.requires_approval
-                {
-                    return Err(BearDogError::invalid_input("High security operations with supervised entropy require approval"
-                                .to_string(),
-                    ));
-            EntropyClass::StoreBoughtMachine { .. } => {
-
-                if policy.max_uses.is_none() {
-                    return Err(BearDogError::invalid_input("Machine entropy must have usage limits".to_string(),
-                if !policy.requires_approval {
-                    return Err(BearDogError::invalid_input("Machine entropy operations require approval".to_string(),
-
-    pub fn check_security_requirements(&self, entropy_class: &EntropyClass) -> Result<u8, BearDogError> {
-        let security_level = match entropy_class {
-            EntropyClass::HumanLivedExperience { .. } => 100, // SecurityLevel::Maximum,
-            EntropyClass::HumanSupervisedMachine { .. } => 80, // SecurityLevel::High,
-                if *reproducibility_index < 0.3 {
-
-                    80
-                } else if *reproducibility_index < 0.7 {
-
-                    60
-                } else {
-
-                    40
-        Ok(security_level)
+        assert!(validator
+            .validate_entropy_quality(&high_quality_entropy)
+            .unwrap());
+    }
+}

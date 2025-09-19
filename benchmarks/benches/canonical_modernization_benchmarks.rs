@@ -5,9 +5,8 @@ use tokio::runtime::Runtime;
 use beardog_errors::BearDogError;
 use beardog_traits::canonical::{BaseProvider, HsmProvider, SecurityProvider};
 use beardog_types::canonical::hsm::{HsmKey, KeyMetadata, KeyType};
-use beardog_types::providers::{AuthenticationCredentials, ProviderHealthStatus};
+use beardog_types::canonical::providers_unified::migration::{AuthenticationCredentials, ProviderHealthStatus};
 
-#[derive(Clone)]
 struct MockSecurityProvider {
     id: String,
 }
@@ -27,13 +26,7 @@ impl BaseProvider for MockSecurityProvider {
         Ok(beardog_types::canonical::HealthStatus::Healthy)
     }
 
-    async fn capabilities(&self) -> Result<Vec<String, BearDogError>> {
-        Ok(vec!["authentication".to_string(), "encryption".to_string()])
-    }
-
-    async fn initialize(
-        &self,
-        _config: &beardog_types::canonical::providers::ProviderConfig,
+    async fn capabilities(&beardog_types::canonical::providers::ProviderConfig,
     ) -> Result<(), BearDogError> {
         Ok(())
     }
@@ -43,54 +36,26 @@ impl BaseProvider for MockSecurityProvider {
     }
 
     async fn metrics(&self) -> Result<beardog_traits::canonical::ProviderMetrics, BearDogError> {
-        Ok(std::collections::HashMap::with_capacity(16))
-    }
-
-    async fn validate_config(
-        &self,
-        _config: &beardog_types::canonical::providers::ProviderConfig,
+        Ok(std::collections::HashMap::with_capacity(&beardog_types::canonical::providers::ProviderConfig,
     ) -> Result<bool, BearDogError> {
         Ok(true)
     }
 
-    async fn status(&self) -> Result<beardog_types::canonical::providers::ProviderStatus, BearDogError> {
+    async fn status(
+        &self,
+    ) -> Result<beardog_types::canonical::providers::ProviderStatus, BearDogError> {
         Ok(beardog_types::canonical::providers::ProviderStatus::Active)
     }
 
-    async fn reload_config(
-        &self,
-        _config: &beardog_types::canonical::providers::ProviderConfig,
+    async fn reload_config(&beardog_types::canonical::providers::ProviderConfig,
     ) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    fn version(&self) -> &str {
-        "1.0.0"
-    }
-
-    fn id(&self) -> &str {
-        &self.id
-    }
-}
-
-#[allow(async_fn_in_trait)]
-impl SecurityProvider for MockSecurityProvider {
-    async fn authenticate(
-        &self,
-        _credentials: AuthenticationCredentials,
+        Ok(AuthenticationCredentials,
     ) -> Result<beardog_types::providers::AuthenticationResult, BearDogError> {
         tokio::time::sleep(Duration::from_micros(10)).await;
         Ok(beardog_types::providers::AuthenticationResult {
             user_id: "test_user".to_string(),
-            session_token: Some("token_123".to_string()),
-            expiry: None,
-            permissions: vec!["read".to_string()],
-        })
-    }
-
-    async fn authorize(
-        &self,
-        _subject: &str,
+            session_token: Some(None,
+            permissions: vec!["read".to_string(&str,
         _resource: &str,
         _action: &str,
     ) -> Result<beardog_types::providers::AuthorizationResult, BearDogError> {
@@ -100,26 +65,17 @@ impl SecurityProvider for MockSecurityProvider {
         })
     }
 
-    async fn create_session(
-        &self,
-        _user_id: &str,
+    async fn create_session(&str,
         _client_info: beardog_types::providers::ClientInfo,
     ) -> Result<beardog_types::providers::SecureSession, BearDogError> {
         Ok(beardog_types::providers::SecureSession {
             session_id: "session_123".to_string(),
             created_at: chrono::Utc::now(),
-            expires_at: chrono::Utc::now() + chrono::Duration::hours(1),
-        })
-    }
-
-    async fn validate_token(
-        &self,
-        _token: &str,
+            expires_at: chrono::Utc::now() + chrono::Duration::hours(&str,
     ) -> Result<beardog_types::providers::TokenValidation, BearDogError> {
         Ok(beardog_types::providers::TokenValidation {
             valid: true,
-            user_id: Some("test_user".to_string()),
-            expires_at: None,
+            user_id: Some(None,
             scopes: vec!["read".to_string()],
         })
     }
@@ -133,17 +89,7 @@ impl SecurityProvider for MockSecurityProvider {
     }
 
     async fn decrypt(&self, encrypted_data: &[u8]) -> Result<Vec<u8, BearDogError>> {
-        let mut result = encrypted_data.to_vec();
-        for byte in &mut result {
-            *byte = byte.wrapping_sub(1);
-        }
-        Ok(result)
-    }
-}
-
-#[derive(Clone)]
-struct MockHsmProvider {
-    id: String,
+        let mut result = encrypted_data.to_vec(String,
 }
 
 #[allow(async_fn_in_trait)]
@@ -161,13 +107,7 @@ impl BaseProvider for MockHsmProvider {
         Ok(beardog_types::canonical::HealthStatus::Healthy)
     }
 
-    async fn capabilities(&self) -> Result<Vec<String, BearDogError>> {
-        Ok(vec!["key_generation".to_string(), "signing".to_string()])
-    }
-
-    async fn initialize(
-        &self,
-        _config: &beardog_types::canonical::providers::ProviderConfig,
+    async fn capabilities(&beardog_types::canonical::providers::ProviderConfig,
     ) -> Result<(), BearDogError> {
         Ok(())
     }
@@ -177,51 +117,28 @@ impl BaseProvider for MockHsmProvider {
     }
 
     async fn metrics(&self) -> Result<beardog_traits::canonical::ProviderMetrics, BearDogError> {
-        Ok(std::collections::HashMap::with_capacity(16))
-    }
-
-    async fn validate_config(
-        &self,
-        _config: &beardog_types::canonical::providers::ProviderConfig,
+        Ok(std::collections::HashMap::with_capacity(&beardog_types::canonical::providers::ProviderConfig,
     ) -> Result<bool, BearDogError> {
         Ok(true)
     }
 
-    async fn status(&self) -> Result<beardog_types::canonical::providers::ProviderStatus, BearDogError> {
+    async fn status(
+        &self,
+    ) -> Result<beardog_types::canonical::providers::ProviderStatus, BearDogError> {
         Ok(beardog_types::canonical::providers::ProviderStatus::Active)
     }
 
-    async fn reload_config(
-        &self,
-        _config: &beardog_types::canonical::providers::ProviderConfig,
+    async fn reload_config(&beardog_types::canonical::providers::ProviderConfig,
     ) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    fn version(&self) -> &str {
-        "1.0.0"
-    }
-
-    fn id(&self) -> &str {
-        &self.id
-    }
-}
-
-#[allow(async_fn_in_trait)]
-impl HsmProvider for MockHsmProvider {
-    async fn generate_key(
-        &self,
-        _key_type: KeyType,
+        Ok(KeyType,
         _metadata: KeyMetadata,
     ) -> Result<HsmKey, BearDogError> {
         tokio::time::sleep(Duration::from_micros(50)).await;
         Ok(HsmKey {
-            id: "key_123".to_string(),
-            key_type: KeyType::Symmetric,
+            id: "key_123".to_string(KeyType::Symmetric,
             metadata: KeyMetadata {
                 created_by: "test".to_string(),
-                purpose: "test".to_string(),
-                usage_policy: beardog_types::canonical::hsm::KeyUsagePolicy {
+                purpose: "test".to_string(beardog_types::canonical::hsm::KeyUsagePolicy {
                     allowed_operations: vec![],
                     max_uses: None,
                     usage_limits: None,
@@ -238,22 +155,17 @@ impl HsmProvider for MockHsmProvider {
                 compliance_tags: vec![],
                 is_hardware_backed: false,
                 user_presence_required: false,
-                algorithm: "AES".to_string(),
-                attestation_available: false,
-                created_at: chrono::Utc::now(),
-                last_accessed: None,
+                algorithm: "AES".to_string(false,
+                created_at: chrono::Utc::now(None,
                 access_count: 0,
                 hsm_type: "software".to_string(),
                 hsm_tier: "basic".to_string(),
                 key_type: "symmetric".to_string(),
                 key_id: "key_123".to_string(),
-                health_status: "healthy".to_string(),
-                performance_metrics: None,
-                provider_attributes: std::collections::HashMap::with_capacity(16),
-                derivation_path: None,
+                health_status: "healthy".to_string(None,
+                provider_attributes: std::collections::HashMap::with_capacity(None,
                 custom: std::collections::HashMap::with_capacity(16),
-                custom_fields: std::collections::HashMap::with_capacity(16),
-                key_name: None,
+                custom_fields: std::collections::HashMap::with_capacity(None,
                 key_size: None,
                 expires_at: None,
                 creation_time: None,
@@ -265,32 +177,13 @@ impl HsmProvider for MockHsmProvider {
         })
     }
 
-    async fn sign_data(&self, _key_id: &str, data: &[u8]) -> Result<Vec<u8, BearDogError>> {
-        tokio::time::sleep(Duration::from_micros(30)).await;
-        Ok(format_args!("signature_{}", data.len().to_string()).into_bytes())
-    }
-
-    async fn verify_signature(
-        &self,
-        _key_id: &str,
+    async fn sign_data(&str, data: &[u8]) -> Result<Vec<u8, BearDogError>> {
+        tokio::time::sleep(Duration::from_micros(&str,
         _data: &[u8],
         _signature: &[u8],
     ) -> Result<bool, BearDogError> {
-        tokio::time::sleep(Duration::from_micros(25)).await;
-        Ok(true)
-    }
-
-    async fn encrypt_with_key(&self, _key_id: &str, data: &[u8]) -> Result<Vec<u8, BearDogError>> {
-        let mut result = data.to_vec();
-        for byte in &mut result {
-            *byte = byte.wrapping_add(42);
-        }
-        Ok(result)
-    }
-
-    async fn decrypt_with_key(
-        &self,
-        _key_id: &str,
+        tokio::time::sleep(Duration::from_micros(&str, data: &[u8]) -> Result<Vec<u8, BearDogError>> {
+        let mut result = data.to_vec(&str,
         encrypted_data: &[u8],
     ) -> Result<Vec<u8, BearDogError>> {
         let mut result = encrypted_data.to_vec();
@@ -301,24 +194,13 @@ impl HsmProvider for MockHsmProvider {
     }
 
     async fn delete_key(&self, _key_id: &str) -> Result<(), BearDogError> {
-        Ok(())
-    }
-
-    async fn list_keys(&self) -> Result<Vec<String, BearDogError>> {
-        Ok(vec!["key_1".to_string(), "key_2".to_string()])
-    }
-
-    async fn get_key_info(
-        &self,
-        _key_id: &str,
+        Ok(&str,
     ) -> Result<beardog_types::providers::HsmKeyInfo, BearDogError> {
         Ok(beardog_types::providers::HsmKeyInfo {
-            key_id: "key_123".to_string(),
-            key_type: KeyType::Symmetric,
+            key_id: "key_123".to_string(KeyType::Symmetric,
             metadata: KeyMetadata {
                 created_by: "test".to_string(),
-                purpose: "test".to_string(),
-                usage_policy: beardog_types::canonical::hsm::KeyUsagePolicy {
+                purpose: "test".to_string(beardog_types::canonical::hsm::KeyUsagePolicy {
                     allowed_operations: vec![],
                     max_uses: None,
                     usage_limits: None,
@@ -335,22 +217,17 @@ impl HsmProvider for MockHsmProvider {
                 compliance_tags: vec![],
                 is_hardware_backed: false,
                 user_presence_required: false,
-                algorithm: "AES".to_string(),
-                attestation_available: false,
-                created_at: chrono::Utc::now(),
-                last_accessed: None,
+                algorithm: "AES".to_string(false,
+                created_at: chrono::Utc::now(None,
                 access_count: 0,
                 hsm_type: "software".to_string(),
                 hsm_tier: "basic".to_string(),
                 key_type: "symmetric".to_string(),
                 key_id: "key_123".to_string(),
-                health_status: "healthy".to_string(),
-                performance_metrics: None,
-                provider_attributes: std::collections::HashMap::with_capacity(16),
-                derivation_path: None,
+                health_status: "healthy".to_string(None,
+                provider_attributes: std::collections::HashMap::with_capacity(None,
                 custom: std::collections::HashMap::with_capacity(16),
-                custom_fields: std::collections::HashMap::with_capacity(16),
-                key_name: None,
+                custom_fields: std::collections::HashMap::with_capacity(None,
                 key_size: None,
                 expires_at: None,
                 creation_time: None,
@@ -373,14 +250,7 @@ impl<P: BaseProvider + Clone> ModernProviderManager<P> {
         Self { provider }
     }
 
-    async fn execute_operation(&self) -> Result<(), BearDogError> {
-        self.provider.health_check().await?;
-        Ok(())
-    }
-}
-
-struct LegacyProviderManager {
-    provider: std::sync::Arc<dyn BaseProvider + Send + Sync>,
+    async fn execute_operation(std::sync::Arc<dyn BaseProvider + Send + Sync>,
 }
 
 impl LegacyProviderManager {
@@ -401,13 +271,10 @@ fn bench_async_patterns(c: &mut Criterion) {
             "Benchmark runtime creation failed",
             e
         );
-        beardog_errors::BearDogError::internal(
-            format_args!(
-                "Operation failed ({}): {:?}",
+        beardog_errors::BearDogError::internal({:?}",
                 "Benchmark runtime creation failed", e
             )
-            .to_string(),
-        )
+            )
     })?;
     let provider = MockSecurityProvider {
         id: "test_provider".to_string(),
@@ -420,8 +287,7 @@ fn bench_async_patterns(c: &mut Criterion) {
             let result = provider
                 .authenticate(black_box(AuthenticationCredentials {
                     username: Some("test".to_string()),
-                    password: Some("password".to_string()),
-                    token: None,
+                    password: Some(None,
                     certificate: None,
                     additional_data: std::collections::HashMap::with_capacity(16),
                 }))
@@ -440,13 +306,10 @@ fn bench_provider_patterns(c: &mut Criterion) {
             "Benchmark runtime creation failed",
             e
         );
-        beardog_errors::BearDogError::internal(
-            format_args!(
-                "Operation failed ({}): {:?}",
+        beardog_errors::BearDogError::internal({:?}",
                 "Benchmark runtime creation failed", e
             )
-            .to_string(),
-        )
+            )
     })?;
     let mock_provider = MockSecurityProvider {
         id: "test_provider".to_string(),
@@ -480,13 +343,10 @@ fn bench_hsm_operations(c: &mut Criterion) {
             "Benchmark runtime creation failed",
             e
         );
-        beardog_errors::BearDogError::internal(
-            format_args!(
-                "Operation failed ({}): {:?}",
+        beardog_errors::BearDogError::internal({:?}",
                 "Benchmark runtime creation failed", e
             )
-            .to_string(),
-        )
+            )
     })?;
     let hsm_provider = MockHsmProvider {
         id: "test_hsm".to_string(),
@@ -501,8 +361,7 @@ fn bench_hsm_operations(c: &mut Criterion) {
                     black_box(KeyType::Symmetric),
                     black_box(KeyMetadata {
                         created_by: "benchmark".to_string(),
-                        purpose: "test".to_string(),
-                        usage_policy: beardog_types::canonical::hsm::KeyUsagePolicy {
+                        purpose: "test".to_string(beardog_types::canonical::hsm::KeyUsagePolicy {
                             allowed_operations: vec![],
                             max_uses: None,
                             usage_limits: None,
@@ -519,22 +378,17 @@ fn bench_hsm_operations(c: &mut Criterion) {
                         compliance_tags: vec![],
                         is_hardware_backed: false,
                         user_presence_required: false,
-                        algorithm: "AES".to_string(),
-                        attestation_available: false,
-                        created_at: chrono::Utc::now(),
-                        last_accessed: None,
+                        algorithm: "AES".to_string(false,
+                        created_at: chrono::Utc::now(None,
                         access_count: 0,
                         hsm_type: "software".to_string(),
                         hsm_tier: "basic".to_string(),
                         key_type: "symmetric".to_string(),
                         key_id: "bench_key".to_string(),
-                        health_status: "healthy".to_string(),
-                        performance_metrics: None,
-                        provider_attributes: std::collections::HashMap::with_capacity(16),
-                        derivation_path: None,
+                        health_status: "healthy".to_string(None,
+                        provider_attributes: std::collections::HashMap::with_capacity(None,
                         custom: std::collections::HashMap::with_capacity(16),
-                        custom_fields: std::collections::HashMap::with_capacity(16),
-                        key_name: None,
+                        custom_fields: std::collections::HashMap::with_capacity(None,
                         key_size: None,
                         expires_at: None,
                         creation_time: None,
@@ -584,13 +438,10 @@ fn bench_provider_health(c: &mut Criterion) {
             "Benchmark runtime creation failed",
             e
         );
-        beardog_errors::BearDogError::internal(
-            format_args!(
-                "Operation failed ({}): {:?}",
+        beardog_errors::BearDogError::internal({:?}",
                 "Benchmark runtime creation failed", e
             )
-            .to_string(),
-        )
+            )
     })?;
     let provider = MockSecurityProvider {
         id: "health_test".to_string(),
@@ -629,13 +480,10 @@ fn bench_provider_workflow(c: &mut Criterion) {
             "Benchmark runtime creation failed",
             e
         );
-        beardog_errors::BearDogError::internal(
-            format_args!(
-                "Operation failed ({}): {:?}",
+        beardog_errors::BearDogError::internal({:?}",
                 "Benchmark runtime creation failed", e
             )
-            .to_string(),
-        )
+            )
     })?;
     let security_provider = MockSecurityProvider {
         id: "workflow_test".to_string(),
@@ -650,31 +498,24 @@ fn bench_provider_workflow(c: &mut Criterion) {
         b.to_async(&rt).iter(|| async {
             let _health = security_provider.health_check().await.map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
-                beardog_errors::BearDogError::internal(
-                    format_args!("Operation failed: {:?}", e).to_string(),
-                )
+                beardog_errors::BearDogError::internal({:?}", e))
             })?;
             let _auth = security_provider
                 .authenticate(AuthenticationCredentials {
                     username: Some("workflow_user".to_string()),
-                    password: Some("secure_password".to_string()),
-                    token: None,
+                    password: Some(None,
                     certificate: None,
                     additional_data: std::collections::HashMap::with_capacity(16),
                 })
                 .await
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
-                    beardog_errors::BearDogError::internal(
-                        format_args!("Operation failed: {:?}", e).to_string(),
-                    )
+                    beardog_errors::BearDogError::internal({:?}", e))
                 })?;
             let test_data = b"workflow test data";
             let _encrypted = security_provider.encrypt(test_data).await.map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
-                beardog_errors::BearDogError::internal(
-                    format_args!("Operation failed: {:?}", e).to_string(),
-                )
+                beardog_errors::BearDogError::internal({:?}", e))
             })?;
             black_box(())
         })
@@ -684,17 +525,14 @@ fn bench_provider_workflow(c: &mut Criterion) {
         b.to_async(&rt).iter(|| async {
             let _health = hsm_provider.health_check().await.map_err(|e| {
                 tracing::error!("Operation failed: {:?}", e);
-                beardog_errors::BearDogError::internal(
-                    format_args!("Operation failed: {:?}", e).to_string(),
-                )
+                beardog_errors::BearDogError::internal({:?}", e))
             })?;
             let _key = hsm_provider
                 .generate_key(
                     KeyType::Symmetric,
                     KeyMetadata {
                         created_by: "workflow".to_string(),
-                        purpose: "test".to_string(),
-                        usage_policy: beardog_types::canonical::hsm::KeyUsagePolicy {
+                        purpose: "test".to_string(beardog_types::canonical::hsm::KeyUsagePolicy {
                             allowed_operations: vec![],
                             max_uses: None,
                             usage_limits: None,
@@ -711,22 +549,17 @@ fn bench_provider_workflow(c: &mut Criterion) {
                         compliance_tags: vec![],
                         is_hardware_backed: false,
                         user_presence_required: false,
-                        algorithm: "AES".to_string(),
-                        attestation_available: false,
-                        created_at: chrono::Utc::now(),
-                        last_accessed: None,
+                        algorithm: "AES".to_string(false,
+                        created_at: chrono::Utc::now(None,
                         access_count: 0,
                         hsm_type: "software".to_string(),
                         hsm_tier: "basic".to_string(),
                         key_type: "symmetric".to_string(),
                         key_id: "workflow_key".to_string(),
-                        health_status: "healthy".to_string(),
-                        performance_metrics: None,
-                        provider_attributes: std::collections::HashMap::with_capacity(16),
-                        derivation_path: None,
+                        health_status: "healthy".to_string(None,
+                        provider_attributes: std::collections::HashMap::with_capacity(None,
                         custom: std::collections::HashMap::with_capacity(16),
-                        custom_fields: std::collections::HashMap::with_capacity(16),
-                        key_name: None,
+                        custom_fields: std::collections::HashMap::with_capacity(None,
                         key_size: None,
                         expires_at: None,
                         creation_time: None,
@@ -739,9 +572,7 @@ fn bench_provider_workflow(c: &mut Criterion) {
                 .await
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
-                    beardog_errors::BearDogError::internal(
-                        format_args!("Operation failed: {:?}", e).to_string(),
-                    )
+                    beardog_errors::BearDogError::internal({:?}", e))
                 })?;
             let test_data = b"workflow signing data";
             let _signature = hsm_provider
@@ -749,9 +580,7 @@ fn bench_provider_workflow(c: &mut Criterion) {
                 .await
                 .map_err(|e| {
                     tracing::error!("Operation failed: {:?}", e);
-                    beardog_errors::BearDogError::internal(
-                        format_args!("Operation failed: {:?}", e).to_string(),
-                    )
+                    beardog_errors::BearDogError::internal({:?}", e))
                 })?;
             black_box(())
         })

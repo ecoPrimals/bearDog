@@ -1,152 +1,281 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DetectionMethod {
+    /// Represents signature variant
     Signature,
 
+
+
+
+    /// Represents anomaly variant
     Anomaly,
 
+
+
+
+    /// Represents behavioral variant
     Behavioral,
 
+
+
+
+    /// Currently machinelearning
     MachineLearning,
 
+
+
+
+    /// State indicating rulebased
     RuleBased,
 
+
+
+
+    /// Represents heuristic variant
     Heuristic,
 
+
+
+
+    /// Represents reputation variant
     Reputation,
 
+
+
+
+    /// Represents threat intelligence variant
     ThreatIntelligence,
 
+
+
+
+    /// Represents ueba variant
     Ueba,
 
+
+
+
+    /// Represents network analysis variant
     NetworkAnalysis,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Types of evidence
+/// Types of evidence
 pub enum EvidenceType {
+    /// Represents network traffic variant
     NetworkTraffic,
 
+
+
+
+    /// Represents system logs variant
     SystemLogs,
 
+
+
+
+    /// Represents file analysis variant
     FileAnalysis,
 
+
+
+
+    /// Represents memory dump variant
     MemoryDump,
+
+
+
 
     ProcessInformation,
 
+
+
+
+    /// Represents registry changes variant
     RegistryChanges,
 
+
+
+
+    /// Represents network connections variant
     NetworkConnections,
 
+
+
+
+    /// Represents dns queries variant
     DnsQueries,
 
+
+
+
+    /// Represents http requests variant
     HttpRequests,
 
+
+
+
+    /// Represents email headers variant
     EmailHeaders,
 
+
+
+
+    /// Represents file hashes variant
     FileHashes,
 
+
+
+
+    /// Represents cryptographic signatures variant
     CryptographicSignatures,
 
+
+
+
+    /// Represents user activity variant
     UserActivity,
 
+
+
+
+    /// Represents database queries variant
     DatabaseQueries,
 
+
+
+
+    /// Represents api calls variant
     ApiCalls,
 
+
+
+
+    /// Represents rule match variant
     RuleMatch,
 
+
+
+
+    /// Represents threat intelligence variant
     ThreatIntelligence,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EvidenceData {
+    /// Represents text variant
     Text(String),
 
+    /// Represents binary variant
     Binary(Vec<u8>),
 
+    /// Represents json variant
     Json(serde_json::Value),
 
-    Hash(String),
+    /// Represents hash variant
+    Hash(EvidenceType,
 
-    NetworkPacket(NetworkPacketData),
-
-    LogEntry(LogEntryData),
-
-    FileMetadata(FileMetadataData),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ThreatEvidence {
-    pub evidence_type: EvidenceType,
-
+    /// The description value
+    /// The description value
     pub description: String,
 
+    /// The data value
+    /// The data value
     pub data: EvidenceData,
 
+    /// The collected at value
+    /// The collected at value
     pub collected_at: DateTime<Utc>,
 
+    /// Collection of chain of custody
+    /// Collection of chain of custody
     pub chain_of_custody: Vec<String>,
 
+    /// The reliability value
+    /// The reliability value
     pub reliability: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct NetworkPacketData {
-    pub source_ip: String,
-
+#[derive(Debug, Clone)]
+    /// The dest ip value
+    /// The dest ip value
     pub dest_ip: String,
 
+    /// Number of source_port
+    /// Number of source_port
     pub source_port: u16,
 
+    /// Number of dest_port
+    /// Number of dest_port
     pub dest_port: u16,
 
+    /// The protocol value
+    /// The protocol value
     pub protocol: String,
 
+    /// Number of payload_size
+    /// Number of payload_size
     pub payload_size: usize,
 
+    /// Collection of flags
+    /// Collection of flags
     pub flags: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LogEntryData {
-    pub log_level: String,
-
+#[derive(Debug, Clone)]
+    /// The message value
+    /// The message value
     pub message: String,
 
+    /// The source value
+    /// The source value
     pub source: String,
 
+    /// Mapping of additional fields
+    /// Mapping of additional fields
     pub additional_fields: HashMap<String, String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct FileMetadataData {
-    pub filename: String,
-
+#[derive(Debug, Clone)]
+    /// Number of file_size
+    /// Number of file_size
     pub file_size: u64,
 
+    /// The file type value
+    /// The file type value
     pub file_type: String,
 
+    /// Optional hash md5
+    /// Optional hash md5
     pub hash_md5: Option<String>,
 
+    /// Optional hash sha256
+    /// Optional hash sha256
     pub hash_sha256: Option<String>,
 
+    /// Optional created at
+    /// Optional created at
     pub created_at: Option<DateTime<Utc>>,
 
+    /// Optional modified at
+    /// Optional modified at
     pub modified_at: Option<DateTime<Utc>>,
 }
 
 impl Default for ThreatEvidence {
-    fn default() -> Self {
-        Self {
-            evidence_type: EvidenceType::SystemLogs,
+    fn default(EvidenceType::SystemLogs,
             description: String::with_capacity(64),
             data: EvidenceData::Text(String::with_capacity(64)),
-            collected_at: Utc::now(),
-            chain_of_custody: vec![],
+            collected_at: Utc::now(vec![],
             reliability: 1.0,
         }
     }
@@ -164,6 +293,7 @@ impl Default for LogEntryData {
 }
 
 impl DetectionMethod {
+    /// Typical Accuracy operation.
     pub fn typical_accuracy(&self) -> f64 {
         match self {
             DetectionMethod::Signature => 0.95,
@@ -179,6 +309,7 @@ impl DetectionMethod {
         }
     }
 
+    /// False Positive Rate operation.
     pub fn false_positive_rate(&self) -> f64 {
         match self {
             DetectionMethod::Signature => 0.05,
@@ -194,6 +325,7 @@ impl DetectionMethod {
         }
     }
 
+    /// Is Good For Unknown Threats operation.
     pub fn is_good_for_unknown_threats(&self) -> bool {
         matches!(
             self,
@@ -207,6 +339,7 @@ impl DetectionMethod {
 }
 
 impl EvidenceType {
+    /// Typical Reliability operation.
     pub fn typical_reliability(&self) -> f64 {
         match self {
             EvidenceType::NetworkTraffic => 0.85,
@@ -229,6 +362,7 @@ impl EvidenceType {
         }
     }
 
+    /// Is Forensically Sound operation.
     pub fn is_forensically_sound(&self) -> bool {
         matches!(
             self,
@@ -242,26 +376,27 @@ impl EvidenceType {
 }
 
 impl ThreatEvidence {
-    pub fn new(evidence_type: EvidenceType, description: &str, data: EvidenceData) -> Self {
+    /// New operation.
+    /// Creates a new instance
+    pub fn new(EvidenceType,
+        description: &str,
+        evidence_data: EvidenceData,
+    ) -> Self {
         let reliability = evidence_type.typical_reliability();
         Self {
             evidence_type,
-            description: description.to_string(),
-            data,
-            collected_at: Utc::now(),
-            chain_of_custody: vec![],
-            reliability,
-        }
-    }
-
-    pub fn add_custody_handler(&mut self, handler: &str) {
+            description: description.to_string(), handler: &str) {
         self.chain_of_custody.push(handler.to_string());
     }
 
+    /// Is Highly Reliable operation.
+    /// Checks if highly reliable
+    /// Checks if highly reliable
     pub fn is_highly_reliable(&self) -> bool {
         self.reliability > 0.8
     }
 
+    /// Age Minutes operation.
     pub fn age_minutes(&self) -> i64 {
         let now = Utc::now();
         (now - self.collected_at).num_minutes()
@@ -269,8 +404,10 @@ impl ThreatEvidence {
 }
 
 impl NetworkPacketData {
-    pub fn new(
-        source_ip: &str,
+    #[allow(clippy::too_many_arguments)]
+    /// New operation.
+    /// Creates a new instance
+    pub fn new(&str,
         dest_ip: &str,
         source_port: u16,
         dest_port: u16,
@@ -282,48 +419,29 @@ impl NetworkPacketData {
             source_port,
             dest_port,
             protocol: protocol.to_string(),
-            payload_size: 0,
             flags: vec![],
         }
     }
 
-    pub fn is_suspicious_port(&self) -> bool {
-        let suspicious_ports = [1337, 31337, 4444, 5555, 6666, 7777, 8888, 9999];
-        suspicious_ports.contains(&self.dest_port) || suspicious_ports.contains(&self.source_port)
-    }
-}
-
-impl LogEntryData {
-    pub fn new(log_level: &str, message: &str, source: &str) -> Self {
+    /// Is Suspicious Port operation.
+    /// Checks if suspicious port
+    /// Checks if suspicious port
+    pub fn is_suspicious_port(&str, message: &str, source: &str) -> Self {
         Self {
             log_level: log_level.to_string(),
             message: message.to_string(),
             source: source.to_string(),
-            additional_fields: HashMap::with_capacity(16),
-        }
-    }
-
-    pub fn is_error_level(&self) -> bool {
-        matches!(
-            self.log_level.to_uppercase().as_str(),
-            "ERROR" | "FATAL" | "CRITICAL" | "WARN" | "WARNING"
-        )
-    }
-}
-
-impl FileMetadataData {
-    pub fn new(filename: &str, file_size: u64, file_type: &str) -> Self {
+            additional_fields: HashMap::with_capacity(&str, file_size: u64, file_type: &str) -> Self {
         Self {
             filename: filename.to_string(),
             file_size,
             file_type: file_type.to_string(),
-            hash_md5: None,
-            hash_sha256: None,
-            created_at: None,
-            modified_at: None,
         }
     }
 
+    /// Is Suspicious operation.
+    /// Checks if suspicious
+    /// Checks if suspicious
     pub fn is_suspicious(&self) -> bool {
         let suspicious_extensions = [
             ".exe", ".bat", ".cmd", ".scr", ".pif", ".com", ".js", ".vbs", ".ps1",

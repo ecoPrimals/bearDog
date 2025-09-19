@@ -1,29 +1,70 @@
 [package]
 name = "beardog-genetics"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
 description = "BearDog genetics module"
-authors.workspace = true
+repository = "https://github.com/eastgate-software/beardog"
+rust-version = "1.75"
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
+keywords = [ "genetics", "evolution", "algorithms", "beardog", "computation",]
+categories = [ "algorithms", "science", "development-tools",]
 
 [dependencies]
-beardog-errors = { workspace = true }
-beardog-auth = { workspace = true }
-beardog-types = { workspace = true }
-tokio = { workspace = true }
-serde = { workspace = true }
-chrono = { workspace = true }
-tracing = { workspace = true }
-uuid = { workspace = true }
-thiserror = { workspace = true }
-# async-trait = { workspace = true }  # REMOVED: Modernized to native async fn
 rand = "0.8"
 serde_json = "1.0"
-# Removed unused dependencies: axum, base64, bytes, serde_json, thiserror
-sha2 = { workspace = true }
-sha3 = { workspace = true }
-zeroize = { workspace = true }
+hex = "0.4"
 
 [features]
+zero-cost-architecture = []
+universal-discovery = []
+primal-sovereignty = []
+ecosystem = []
 default = []
 genetics_tests_disabled_during_refactor = []
+
+[package.version]
+workspace = true
+
+[package.edition]
+workspace = true
+
+[package.license]
+workspace = true
+
+[package.authors]
+workspace = true
+
+[dependencies.beardog-errors]
+workspace = true
+
+[dependencies.beardog-auth]
+workspace = true
+
+[dependencies.beardog-types]
+workspace = true
+
+[dependencies.tokio]
+workspace = true
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.chrono]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.uuid]
+workspace = true
+
+[dependencies.thiserror]
+workspace = true
+
+[dependencies.sha2]
+workspace = true
+
+[dependencies.sha3]
+workspace = true
+
+[dependencies.zeroize]
+workspace = true
