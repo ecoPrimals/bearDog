@@ -1,6 +1,5 @@
 use beardog_errors::BearDogError;
 
-
 use beardog::{BearDogResult, tunnel::hsm::HsmProvider};
 use tracing::info;
 

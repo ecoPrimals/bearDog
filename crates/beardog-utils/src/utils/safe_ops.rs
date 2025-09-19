@@ -1,3 +1,7 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 use beardog_errors::BearDogError;
 use std::time::Duration;
 use tokio::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
@@ -36,17 +40,18 @@ pub struct SafeCollection;
 impl SafeCollection {
     pub fn safe_get<T>(vec: &[T], index: usize) -> Result<&T, BearDogError> {
         vec.get(index).ok_or_else(|| {
-            BearDogError::validation(format!(
+            BearDogError::validation(&format!(
                 "Index {index} out of bounds for collection of length {}",
                 vec.len()
             ))
         })
     }
 
+    /// Returns mutable reference to safe get
     pub fn safe_get_mut<T>(vec: &mut [T], index: usize) -> Result<&mut T, BearDogError> {
         let len = vec.len();
         vec.get_mut(index).ok_or_else(|| {
-            BearDogError::validation(format!(
+            BearDogError::validation(&format!(
                 "Index {index} out of bounds for collection of length {len}"
             ))
         })
@@ -83,7 +88,7 @@ impl SafeArithmetic {
 
     pub fn safe_to_usize(value: i64) -> Result<usize, BearDogError> {
         if value < 0 {
-            Err(BearDogError::validation(format!(
+            Err(BearDogError::validation(&format!(
                 "Cannot convert negative value {value} to usize"
             )))
         } else {
@@ -101,12 +106,12 @@ impl SafeString {
         T::Err: std::fmt::Display,
     {
         s.parse()
-            .map_err(|e| BearDogError::validation(format!("Failed to parse '{s}': {e}")))
+            .map_err(|e| BearDogError::validation(&format!("Failed to parse '{s}': {e}")))
     }
 
     pub fn safe_substring(s: &str, start: usize, len: usize) -> Result<&str, BearDogError> {
         if start >= s.len() {
-            return Err(BearDogError::validation(format!(
+            return Err(BearDogError::validation(&format!(
                 "Start index {start} out of bounds for string of length {}",
                 s.len()
             )));
@@ -114,7 +119,7 @@ impl SafeString {
 
         let end = start + len;
         if end > s.len() {
-            return Err(BearDogError::validation(format!(
+            return Err(BearDogError::validation(&format!(
                 "End index {end} out of bounds for string of length {}",
                 s.len()
             )));
@@ -138,7 +143,7 @@ impl SafeOps {
     where
         E: std::fmt::Display,
     {
-        result.map_err(|e| BearDogError::validation(format!("{error_msg}: {e}")))
+        result.map_err(|e| BearDogError::validation(&format!("{error_msg}: {e}")))
     }
 
     pub fn safe_execute<F, T>(f: F, error_msg: &str) -> Result<T, BearDogError>
@@ -155,15 +160,15 @@ mod tests {
     use tokio::sync::RwLock;
 
     #[tokio::test]
-    async fn test_safe_lock_operations() {
+    fn test_safe_lock_operations() {
         let data = RwLock::new(42);
         let timeout_duration = Duration::from_millis(100);
 
-        let read_guard = SafeLock::safe_read_lock(&data, timeout_duration).await;
+        let read_guard = SafeLock::safe_read_lock(&data, timeout_duration);
         assert!(read_guard.is_ok());
 
         drop(read_guard);
-        let write_guard = SafeLock::safe_write_lock(&data, timeout_duration).await;
+        let write_guard = SafeLock::safe_write_lock(&data, timeout_duration);
         assert!(write_guard.is_ok());
     }
 
@@ -220,6 +225,6 @@ mod tests {
         assert!(SafeOps::safe_unwrap_option(None::<i32>, "test").is_err());
 
         assert!(SafeOps::safe_unwrap_result(Ok::<i32, &str>(42), "test").is_ok());
-        assert!(SafeOps::safe_unwrap_result(Err::<i32, _>("error"), "test").is_err());
+        assert!(SafeOps::safe_unwrap_result(Err::<i32, _>("error "), "test").is_err());
     }
 }

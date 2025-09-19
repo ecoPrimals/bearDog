@@ -2,44 +2,68 @@
 name = "beardog-api"
 version = "0.1.0"
 edition = "2021"
-license.workspace = true
-description = "BearDog api module"
-authors.workspace = true
+license = "AGPL-3.0-only"
+repository = "https://github.com/ecoPrimals/beardog"
+description = "BearDog API server and handlers"
+rust-version = "1.75"
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
+keywords = [ "api", "rest", "beardog", "web", "services",]
+categories = [ "web-programming", "api-bindings", "development-tools",]
 
 [dependencies]
-anyhow = { workspace = true }
-async-stream = "0.3"
-# async-trait = { workspace = true }  # REMOVED: Modernized to native async fn
-axum = { workspace = true, features = ["ws"] }
-base64 = { workspace = true }
-chrono = { workspace = true }
-futures.workspace = true
-serde = { workspace = true }
-serde_json = { workspace = true }
-serde_urlencoded = "0.7"
-bytes = "1.5"
-tokio = { workspace = true }
-tokio-stream = "0.1"
-tower-http = { version = "0.4", features = ["trace", "cors", "compression-gzip", "timeout"] }
-tracing = { workspace = true }
-uuid = { workspace = true }
-redis = { workspace = true }
-ipnet = { workspace = true }
+serde_json = "1.0"
+tracing = "0.1"
 
-beardog-auth = { workspace = true }
-# beardog-config removed - use beardog-types::config::complete_unified
-beardog-core = { workspace = true }
-beardog-errors = { workspace = true }
-beardog-genetics = { workspace = true }
-beardog-monitoring = { workspace = true }
-beardog-security = { workspace = true }
-# beardog-tunnel = { workspace = true } # Temporarily disabled
-beardog-utils = { workspace = true }
-beardog-threat = { workspace = true }
-# beardog-workflows = { path = "../beardog-workflows" } # Disabled
-rand.workspace = true
-lazy_static = "1.4"
-num_cpus = "1.0"
-hex = "0.4"
-sha2 = "0.10"
-ed25519-dalek = { version = "2.0", features = ["rand_core"] }
+[package.authors]
+workspace = true
+
+[dependencies.beardog-core]
+path = "../beardog-core"
+
+[dependencies.beardog-errors]
+path = "../beardog-errors"
+
+[dependencies.beardog-types]
+path = "../beardog-types"
+
+[dependencies.beardog-auth]
+path = "../beardog-auth"
+
+[dependencies.beardog-threat]
+path = "../beardog-threat"
+
+[dependencies.beardog-security]
+path = "../beardog-security"
+
+[dependencies.axum]
+version = "0.7"
+features = [ "macros", "json", "query", "tokio", "tracing",]
+
+[dependencies.tower]
+version = "0.4"
+features = [ "full",]
+
+[dependencies.tower-http]
+version = "0.5"
+features = [ "cors", "compression-gzip", "trace",]
+
+[dependencies.tokio]
+version = "1.0"
+features = [ "full",]
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]
+
+[dependencies.chrono]
+version = "0.4"
+features = [ "serde",]
+
+[dependencies.uuid]
+version = "1.0"
+features = [ "v4", "serde",]
+
+[dependencies.reqwest]
+version = "0.11"
+features = [ "json",]

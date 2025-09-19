@@ -5,33 +5,45 @@ use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::KeyType;
 use tracing::{debug, info, warn};
 
-#[derive(Debug)]
-pub struct ProviderFactory {
-
-    software_config: SoftwareHsmConfig,
+#[derive(Debug, Clone)]
 }
 impl ProviderFactory {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             software_config: SoftwareHsmConfig::default(),
         }
     }
 
-    pub async fn create_software_provider(&self) -> Result<SoftwareHsmProvider, BearDogError> {
-        SoftwareHsmProvider::new_with_config(&self.software_config).await
+/// Create Software Provider operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates software_provider
+    /// Creates software_provider
+    pub fn create_software_provider(&self) -> Result<SoftwareHsmProvider, BearDogError> {
+        SoftwareHsmProvider::new_with_config(&self.software_config)
 
-    pub async fn create_best_provider(&self) -> Result<SoftwareHsmProvider, BearDogError> {
+/// Create Best Provider operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates best_provider
+    /// Creates best_provider
+    pub fn create_best_provider(&self) -> Result<SoftwareHsmProvider, BearDogError> {
         info!("🔍 Detecting best available HSM provider for platform");
 
-        let detected_providers = self.detect_platform_providers().await?;
+        let detected_providers = self.detect_platform_providers()?;
         if detected_providers.is_empty() {
             info!("📱 No hardware HSM detected, using software fallback");
-            return self.create_software_provider().await;
+            return self.create_software_provider();
 
         info!("🔧 Hardware HSM detected but using software provider for stability");
-        self.create_software_provider().await
+        self.create_software_provider()
 
+/// Supports Key Type operation.
     pub fn supports_key_type(&self, key_type: &KeyType) -> bool {
         match key_type {
             KeyType::Ed25519 | KeyType::Aes256 => true,
@@ -43,46 +55,26 @@ impl ProviderFactory {
                 false
             }
 
-    pub fn available_providers(&self) -> Vec<String> {
-        let mut providers = vec!["software".to_string()];
-
-        if self.is_mobile_hardware_available() {
-            providers.push("mobile_hardware".to_string());
-        if self.is_desktop_hardware_available() {
-            providers.push("desktop_hardware".to_string());
-        if self.is_tpm_available() {
-            providers.push("tpm".to_string());
-        if self.is_pkcs11_available() {
-            providers.push("pkcs11".to_string());
-        debug!("📋 Available HSM providers: {:?}", providers);
+/// Available Providers operation.
+    pub fn available_providers({:?}", providers);
         providers
 
-    pub async fn auto_discover(&self) -> Result<Vec<String>, BearDogError>> {
-        info!("🔍 Auto-discovering HSM providers on system");
-        let mut discovered = vec!["software".to_string()]; // Software is always available
-
-            discovered.push("mobile_hardware".to_string());
-            info!("🤖 Android StrongBox HSM detected");
-
-            discovered.push("desktop_hardware".to_string());
-            info!("🍎 iOS Secure Enclave detected");
-
-            discovered.push("tpm".to_string());
-            info!("🔒 TPM 2.0 detected");
-
-            discovered.push("pkcs11".to_string());
-            info!("🔑 PKCS#11 provider detected");
-        info!(
-            "✅ Discovery complete: found {} providers",
+/// Auto Discover operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn auto_discover(found {} providers",
             discovered.len()
         );
         Ok(discovered)
 
-    async fn detect_platform_providers(&self) -> Result<Vec<String>, BearDogError>> {
+
+    fn detect_platform_providers(&self) -> Result<Vec<String>, BearDogError>> {
         let mut providers = Vec::new();
 
         Ok(providers)
 
+    /// Checks if mobile hardware available
     fn is_mobile_hardware_available(&self) -> bool {
 
         #[cfg(target_os = "android")]
@@ -92,6 +84,7 @@ impl ProviderFactory {
             false
         #[cfg(not(target_os = "android"))]
 
+    /// Checks if desktop hardware available
     fn is_desktop_hardware_available(&self) -> bool {
 
         #[cfg(target_os = "ios")]
@@ -99,6 +92,7 @@ impl ProviderFactory {
             debug!("🍎 iOS platform detected, but Secure Enclave implementation pending");
         #[cfg(not(target_os = "ios"))]
 
+    /// Checks if tpm available
     fn is_tpm_available(&self) -> bool {
 
         #[cfg(any(target_os = "linux", target_os = "windows"))]
@@ -117,6 +111,7 @@ impl ProviderFactory {
                 debug!("🔒 Windows platform detected, TPM detection not implemented");
         #[cfg(not(any(target_os = "linux", target_os = "windows")))]
 
+    /// Checks if pkcs11 available
     fn is_pkcs11_available(&self) -> bool {
 
         #[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
@@ -129,8 +124,7 @@ impl ProviderFactory {
                 "/System/Library/Frameworks/PCSC.framework/",
             ];
             for path in &common_paths {
-                if std::path::Path::new(path).exists() {
-                    debug!("🔑 PKCS#11 library path found: {}", path);
+                if std::path::Path::new({}", path);
 
                     return false; // Return false until full implementation
         #[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]

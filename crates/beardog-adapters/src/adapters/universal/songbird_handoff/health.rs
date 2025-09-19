@@ -1,5 +1,13 @@
 
 
+// MODERNIZATION NOTE: This file contains primal-specific references that should be migrated
+// to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
+// Target: Replace with capability-based discovery for vendor/primal agnosticism
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
@@ -27,12 +35,6 @@ pub struct UniversalHealthMonitor {
 }
 
 #[derive(Debug, Clone)]
-
-impl Default for HealthMonitorConfig {}
-
-    fn default() -> Self {
-        Self {
-            check_interval_seconds: 30,
             check_timeout_seconds: 10,
             max_consecutive_failures: 3,
             history_retention_count: 100,
@@ -40,25 +42,29 @@ impl Default for HealthMonitorConfig {}
         }
     }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PerformanceMetrics {
-
-    pub total_requests: u64,
-
+#[derive(Debug, Clone)]
+    /// Number of total_errors
     pub total_errors: u64,
+
 
     pub avg_response_time_ms: f64,
 
+    /// The cpu utilization value
     pub cpu_utilization: f64,
 
+    /// The memory utilization value
     pub memory_utilization: f64,
 
+    /// Number of active_connections
     pub active_connections: u32,
 
+    /// The throughput rps value
     pub throughput_rps: f64,
 
+    /// The error rate value
     pub error_rate: f64,
 
+    /// The last updated value
     pub last_updated: chrono::DateTime<chrono::Utc>,}
 
 impl Default for PerformanceMetrics {
@@ -70,31 +76,30 @@ impl Default for PerformanceMetrics {
             active_connections: 0,
             throughput_rps: 0.0,
             error_rate: 0.0,
-            last_updated: chrono::Utc::now(),
+            last_updated: chrono::Utc::now(chrono::DateTime<chrono::Utc>,
 
-pub struct HealthCheckResult {
-
-    pub timestamp: chrono::DateTime<chrono::Utc>,
-
+    /// Current status of the component
     pub status: HealthStatus,
+
 
     pub response_time_ms: u64,
 
+    /// Optional error message
     pub error_message: Option<String>,
 
+    /// The metrics value
     pub metrics: PerformanceMetrics,}
 
 impl UniversalHealthMonitor {
 
-    pub async fn new(
-        client: Arc<SongBirdDiscoveryClient>,
+/// New operation.
+    /// Creates a new instance
+    pub fn new(Arc<SongBirdDiscoveryClient>,
         config: HealthMonitorConfig,
     ) -> Result<Self, BearDogError> {
         info!("🏥 Initializing Universal Health Monitor");
-        let health_status = Arc::new(RwLock::new(ServiceHealth {
-            status: super::types::HealthStatus::Healthy,
-            last_check: chrono::Utc::now(),
-            metrics: super::types::PerformanceMetrics {
+        let health_status = Arc::new(RwLock::new(super::types::HealthStatus::Healthy,
+            last_check: chrono::Utc::now(super::types::PerformanceMetrics {
                 cpu_percent: 0.0,
                 memory_percent: 0.0,
                 latency_ms: 0,
@@ -114,34 +119,37 @@ impl UniversalHealthMonitor {
             primal_id: PrimalId::from_id("universal-component"), // Placeholder
         })
 
-    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
+/// Start Monitoring operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Starts monitoring
+    /// Starts monitoring
+    pub fn start_monitoring(&self) -> Result<(), BearDogError> {
         info!("🔄 Starting universal health monitoring");
         let client = Arc::clone(&self.client);
-        let primal_id = self.primal_id.clone();
+        let primal_id = &self.primal_id;
         let health_history = Arc::clone(&self.health_history);
 
         let health_monitor = UniversalHealthMonitor {
             client: Arc::clone(&self.client),
-            health_status: Arc::clone(&self.health_status),
-            config: self.config.clone(),
+            health_status: Arc::clone(&self.config,
             performance_metrics: Arc::clone(&self.performance_metrics),
-            health_history: Arc::clone(&self.health_history),
-            primal_id: self.primal_id.clone(),
+            health_history: Arc::clone(&self.primal_id,
         };
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(60));
             loop {
-                interval.tick().await;
+                interval.tick();
 
                 match health_monitor
                     .perform_comprehensive_health_check(&primal_id)
-                    .await
                 {
                     Ok(health_result) => {
 
                         {
-                            let mut history = health_history.write().await;
-                            history.push(health_result.clone());
+                            let mut history = health_history.write();
+                            history.push(&health_result);
 
                             if history.len() > 100 {
                                 history.remove(0);
@@ -150,37 +158,25 @@ impl UniversalHealthMonitor {
 
                         let success = matches!(health_result.status, HealthStatus::Healthy);
                         let error_count = if success { 0 } else { 1 };
-                        client.update_health_status(success, error_count).await;
-                        debug!("✅ Health status updated to SongBird");
-                    }
-                    Err(e) => {
-                        warn!("Health check failed: {}", e);
+                        client.update_health_status({}", e);
 
-                        client.update_health_status(false, 1).await;
-                }
-            }
-        });
-        Ok(())
-
-    async fn perform_comprehensive_health_check(
-        &self,
-        _primal_id: &PrimalId,
+                        client.update_health_status(&PrimalId,
     ) -> Result<HealthCheckResult, BearDogError> {
         let start_time = std::time::Instant::now();
 
-        let memory_usage = self.check_memory_usage().await?;
+        let memory_usage = self.check_memory_usage()?;
 
-        let cpu_usage = UniversalHealthMonitor::check_cpu_usage().await?;
+        let cpu_usage = UniversalHealthMonitor::check_cpu_usage()?;
 
-        let disk_space = self.check_disk_space().await?;
+        let disk_space = self.check_disk_space()?;
 
-        let active_connections = self.check_active_connections().await?;
+        let active_connections = self.check_active_connections()?;
 
-        let component_health = self.check_all_components().await?;
+        let component_health = self.check_all_components()?;
 
         let response_time_ms = start_time.elapsed().as_millis() as f64;
 
-        let error_rate = self.calculate_error_rate().await?;
+        let error_rate = self.calculate_error_rate()?;
 
         let overall_health = UniversalHealthMonitor::determine_overall_health(
             memory_usage,
@@ -192,8 +188,7 @@ impl UniversalHealthMonitor {
 
         let _alerts = UniversalHealthMonitor::generate_health_alerts(
         Ok(HealthCheckResult {
-            timestamp: chrono::Utc::now(),
-            status: overall_health,
+            timestamp: chrono::Utc::now(overall_health,
             response_time_ms: response_time_ms as u64,
             error_message: None,
             metrics: PerformanceMetrics {
@@ -207,27 +202,32 @@ impl UniversalHealthMonitor {
                 error_rate,
                 last_updated: chrono::Utc::now(),
 
-    async fn check_memory_usage(&self) -> Result<f64, BearDogError> {
+
+    fn check_memory_usage(&self) -> Result<f64, BearDogError> {
 
         debug!("📊 Checking memory usage");
         Ok(45.0) // Placeholder: 45% memory usage
 
-    async fn check_cpu_usage() -> Result<f64, BearDogError> {
+
+    fn check_cpu_usage() -> Result<f64, BearDogError> {
 
         debug!("📊 Checking CPU usage");
         Ok(25.0) // Placeholder: 25% CPU usage
 
-    async fn check_disk_space(&self) -> Result<f64, BearDogError> {
+
+    fn check_disk_space(&self) -> Result<f64, BearDogError> {
 
         debug!("📊 Checking disk space");
         Ok(60.0) // Placeholder: 60% disk usage
 
-    async fn check_active_connections(&self) -> Result<u32, BearDogError> {
+
+    fn check_active_connections(&self) -> Result<u32, BearDogError> {
 
         debug!("📊 Checking active connections");
         Ok(42) // Placeholder: 42 active connections
 
-    async fn check_all_components(
+
+    fn check_all_components(
     ) -> Result<std::collections::HashMap<String, HealthStatus, BearDogError>> {
         let mut component_health = std::collections::HashMap::with_capacity(16);
 
@@ -237,18 +237,14 @@ impl UniversalHealthMonitor {
 
         component_health.insert("database".to_string(), HealthStatus::Healthy);
 
-        component_health.insert("encryption".to_string(), HealthStatus::Healthy);
+        component_health.insert("encryption ".to_string(), HealthStatus::Healthy);
 
         component_health.insert("audit".to_string(), HealthStatus::Healthy);
 
         component_health.insert("threat_detection".to_string(), HealthStatus::Healthy);
         debug!("🔍 All components checked");
-        Ok(component_health)
+        Ok(0.5% error rate
 
-    async fn calculate_error_rate(&self) -> Result<f64, BearDogError> {
-
-        debug!("📊 Calculating error rate");
-        Ok(0.5) // Placeholder: 0.5% error rate
 
     fn determine_overall_health(
         memory_usage: f64,
@@ -272,6 +268,7 @@ impl UniversalHealthMonitor {
             .any(|status| matches!(status, HealthStatus::Warning))
         HealthStatus::Healthy
 
+
     fn generate_health_alerts(
     ) -> Vec<String> {
         let mut alerts = Vec::new();
@@ -285,59 +282,23 @@ impl UniversalHealthMonitor {
             alerts.push(format!("High error rate: {error_rate:.1}%"));
         for (component, status) in component_health {
             if !matches!(status, HealthStatus::Healthy) {
-                alerts.push(format!("Component {component} is {status:?}"));
-        alerts
-
-    pub async fn perform_health_check(&self) -> Result<HealthCheckResult, BearDogError> {
-        debug!("🔍 Performing universal health check");
-
-        let health_status = self.check_component_health().await?;
-        let response_time_ms = start_time.elapsed().as_millis() as u64;
-
-        let metrics = self.performance_metrics.read().await.clone();
-
-        let result = HealthCheckResult {
-            status: health_status,
-            response_time_ms,
-            metrics,
-
-        self.update_health_status(&result).await?;
-
-        self.add_to_history(result.clone()).await;
-
-        self.report_health_to_songbird().await?;
-        Ok(result)
-
-    async fn check_component_health(&self) -> Result<HealthStatus, BearDogError> {
-
-        let checks = vec![
-            self.check_memory_usage().await,
-            UniversalHealthMonitor::check_cpu_usage().await,
-            self.check_disk_space().await,
-            self.check_network_connectivity().await,
-        ];
-
-        let failed_checks = checks.iter().filter(|r| r.is_err()).count();
-        if failed_checks == 0 {
-            Ok(HealthStatus::Healthy)
-        } else if failed_checks <= 1 {
-            Ok(HealthStatus::Degraded {
-                issues: vec!["Minor system issues detected".to_string()],
-                impact: HealthImpact::Low,
+                alerts.push(format!("Component {component} is {status:?}universal_adapter.discover_service_endpoint("mesh-service")?Minor system issues detected".to_string(),
             })
         } else {
             Ok(HealthStatus::Unhealthy {
                 reason: "Multiple system failures detected".to_string(),
                 recovery_time: Some(chrono::Utc::now() + chrono::Duration::minutes(5)),
 
-    async fn check_network_connectivity(&self) -> Result<f64, BearDogError> {
 
-        match self.client.test_connection().await {
+    fn check_network_connectivity(&self) -> Result<f64, BearDogError> {
+
+        match self.client.test_connection() {
             Ok(()) => Ok(100.0), // 100% connectivity
             Err(_) => Ok(0.0),   // 0% connectivity
 
-    async fn update_health_status(&self, _result: &HealthCheckResult) -> Result<(), BearDogError> {
-        let mut health = self.health_status.write().await;
+    /// Updates health_status
+    fn update_health_status(&self, _result: &HealthCheckResult) -> Result<(), BearDogError> {
+        let mut health = self.health_status.write();
 
         health.status = match _result.status {
             super::super::traits::HealthStatus::Healthy => super::types::HealthStatus::Healthy,
@@ -358,29 +319,15 @@ impl UniversalHealthMonitor {
             health.error_details = Some("Health check failed".to_string());
             health.error_details = None;
 
-    async fn add_to_history(&self, result: HealthCheckResult) {
-        let mut history = self.health_history.write().await;
-        history.push(result);
 
-        let max_len = self.config.history_retention_count;
-        if history.len() > max_len {
-            let drain_count = history.len() - max_len;
-            history.drain(0..drain_count);
-
-    async fn report_health_to_songbird(&self) -> Result<(), BearDogError> {
-        debug!("📡 Reporting health to SongBird");
-
-        let service_id = "universal-component";
-        self.client.update_service_health(service_id).await
-
-    pub async fn update_performance_metrics(
-        requests_processed: u64,
+    fn add_to_history(&self, result: HealthCheckResult) {
+        let mut history = self.health_history.write(u64,
         errors_encountered: u64,
         response_time_ms: u64,
     ) -> Result<(), BearDogError> {
         if !self.config.enable_performance_metrics {
             return Ok(());
-        let mut metrics = self.performance_metrics.write().await;
+        let mut metrics = self.performance_metrics.write();
         metrics.total_requests += requests_processed;
         metrics.total_errors += errors_encountered;
 
@@ -400,19 +347,28 @@ impl UniversalHealthMonitor {
             metrics.throughput_rps = requests_processed as f64 / elapsed_seconds;
         metrics.last_updated = chrono::Utc::now();
 
-    pub async fn get_health_status(&self) -> ServiceHealth {
-        self.health_status.read().await.clone()
+/// Get Health Status operation.
+    /// Gets health_status
+    /// Gets health_status
+    pub fn get_health_status(&self) -> ServiceHealth {
+        self.health_status.read().clone()
 
-    pub async fn get_performance_metrics(&self) -> PerformanceMetrics {
-        self.performance_metrics.read().await.clone()
+    pub fn get_performance_metrics(&self) -> PerformanceMetrics {
+        self.performance_metrics.read().clone()
 
-    pub async fn get_health_history(&self) -> Vec<HealthCheckResult> {
-        self.health_history.read().await.clone()
+/// Get Health History operation.
+    /// Gets health_history
+    /// Gets health_history
+    pub fn get_health_history(&self) -> Vec<HealthCheckResult> {
+        self.health_history.read().clone()
 
-    pub async fn get_health_summary(&self) -> HealthSummary {
-        let health = self.get_health_status().await;
-        let metrics = self.get_performance_metrics().await;
-        let history = self.get_health_history().await;
+/// Get Health Summary operation.
+    /// Gets health_summary
+    /// Gets health_summary
+    pub fn get_health_summary(&self) -> HealthSummary {
+        let health = self.get_health_status();
+        let metrics = self.get_performance_metrics();
+        let history = self.get_health_history();
 
         let total_checks = history.len();
         let healthy_checks = history
@@ -436,16 +392,23 @@ impl UniversalHealthMonitor {
             last_check: health.last_check,
 
 pub struct HealthSummary {
+    /// Current status of the current
     pub current_status: HealthStatus,
+
 
     pub uptime_percentage: f64,
 
+    /// Number of total_checks
     pub total_checks: usize,
 
+    /// Number of healthy_checks
     pub healthy_checks: usize,
 
+    /// Number of degraded_checks
     pub degraded_checks: usize,
 
+    /// Number of unhealthy_checks
     pub unhealthy_checks: usize,
 
+    /// The last check value
     pub last_check: chrono::DateTime<chrono::Utc>,

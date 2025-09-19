@@ -1,3 +1,8 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 
 use std::collections::HashMap;
@@ -27,80 +32,93 @@ pub struct PhonebookService {
 }
 
 #[derive(Debug, Clone)]
-pub struct PhonebookEntry {
-
-    pub node_info: NodeInfo,
-
+    /// The registered at value
     pub registered_at: SystemTime,
 
+    /// The last heartbeat value
     pub last_heartbeat: SystemTime,
 
+    /// Current status of the health
     pub health_status: ServiceHealthStatus,
 
+    /// The region value
     pub region: String,
 
+    /// Collection of protocols
     pub protocols: Vec<String>,
 
+    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 
+    /// The registration source value
     pub registration_source: RegistrationSource,
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum RegistrationSource {
-
-    Direct,
-
-    Federation,
-
-    DHT,
-
-    Manual,
-
-    NetworkScan,
-
-pub struct PhonebookStatus {
-
-    pub active: bool,
-
+#[derive(Debug, Clone)]
+    /// Number of registered_nodes
     pub registered_nodes: usize,
 
+    /// Number of active_advertisements
     pub active_advertisements: usize,
 
+    /// Number of total_discovery_requests
     pub total_discovery_requests: u64,
 
+    /// The last cleanup value
     pub last_cleanup: chrono::DateTime<chrono::Utc>,
 
+    /// Number of connected_peers
     pub connected_peers: usize,
 
 pub struct PhonebookPeer {
 
+
     pub peer_id: String,
 
+    /// Collection of endpoints
     pub endpoints: Vec<String>,
 
+    /// Collection of regions
     pub regions: Vec<String>,
 
+    /// Collection of capabilities
     pub capabilities: Vec<String>,
 
+    /// Current status of the connection
     pub connection_status: PeerConnectionStatus,
 
+    /// The last seen value
     pub last_seen: SystemTime,
 
+    /// The trust level value
     pub trust_level: TrustLevel,
 
 pub enum PeerConnectionStatus {
 
+
+    /// State indicating connected
     Connected,
 
+
+    /// Currently connecting
     Connecting,
 
+
+    /// State indicating disconnected
     Disconnected,
 
+
+    Failed,}
+    Failed,}
     Failed,}
 
 impl PhonebookService {
 
-    pub async fn new(config: PhonebookConfig) -> Result<Self, BearDogError> {
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    pub fn new(config: PhonebookConfig) -> Result<Self, BearDogError> {
         if !config.enabled {
             return Err(BearDogError::config("Phonebook service is disabled"));
         }
@@ -108,13 +126,11 @@ impl PhonebookService {
             "📞 Initializing Phonebook Service on {}:{}",
             config.bind_address, config.port
         );
-        let status = Arc::new(RwLock::new(PhonebookStatus {
-            active: true,
+        let status = Arc::new(RwLock::new(true,
             registered_nodes: 0,
             active_advertisements: 0,
             total_discovery_requests: 0,
-            last_cleanup: chrono::Utc::now(),
-            health_status: ServiceHealthStatus::Healthy,
+            last_cleanup: chrono::Utc::now(ServiceHealthStatus::Healthy,
             connected_peers: 0,
         }));
         let service = Self {
@@ -123,24 +139,14 @@ impl PhonebookService {
             service_advertisements: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             status,
             served_regions: vec!["global".to_string()],
-            phonebook_network: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-        };
-
-        service.start_background_tasks().await?;
-        info!("✅ Phonebook Service initialized successfully");
-        Ok(service)
-    }
-
-    pub async fn register_node(
-        &self,
-        node_info: NodeInfo,
+            phonebook_network: Arc::new(RwLock::new(HashMap::with_capacity(NodeInfo,
         region: &str,
     ) -> Result<String, BearDogError> {
-            "📝 Registering node '{}' from region '{}'",
+            "📝 Registering node "{}" from region "{}"",
             node_info.id, region
 
         {
-            let nodes = self.registered_nodes.read().await;
+            let nodes = self.registered_nodes.read();
             if nodes.len() >= self.config.max_tracked_nodes {
                 return Err(BearDogError::validation(
                     "registration",
@@ -154,21 +160,23 @@ impl PhonebookService {
             last_heartbeat: SystemTime::now(),
             region,
             protocols: vec!["https".to_string(), "beardog-secure".to_string()],
-            metadata: HashMap::with_capacity(16),
-            registration_source: RegistrationSource::Direct,
+            metadata: HashMap::with_capacity(RegistrationSource::Direct,
 
-            let mut nodes = self.registered_nodes.write().await;
+            let mut nodes = self.registered_nodes.write();
             nodes.insert(node_info.id.clone(), entry);
 
-            let mut status = self.status.write().await;
+            let mut status = self.status.write();
             status.registered_nodes += 1;
 
-        let registration_id = format_args!("reg_{}", uuid::Uuid::new_v4().to_string());
-            "✅ Node '{}' registered with ID: {}",
+        let registration_id = format!("reg_{}", uuid::Uuid::new_v4({}",
             node_info.id, registration_id
         Ok(registration_id)
 
-    pub async fn heartbeat(&self, node_id: &str) -> Result<(), BearDogError> {
+/// Heartbeat operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn heartbeat(&self, node_id: &str) -> Result<(), BearDogError> {
         let updated = {
             if let Some(entry) = nodes.get_mut(node_id) {
                 entry.last_heartbeat = SystemTime::now();
@@ -180,71 +188,62 @@ impl PhonebookService {
             debug!("💓 Heartbeat received from node: {}", node_id);
             Ok(())
         } else {
-            Err(BearDogError::not_found("node", node_id))
-
-    pub async fn discover_nodes(
-        criteria: &NodeDiscoveryCriteria,
+            Err(BearDogError::not_found(&NodeDiscoveryCriteria,
     ) -> Result<Vec<NodeInfo>, BearDogError>> {
         debug!("🔍 Discovering nodes with criteria: {:?}", criteria);
 
             status.total_discovery_requests += 1;
-        let nodes = self.registered_nodes.read().await;
-        let mut matching_nodes = Vec::new();
-        for entry in nodes.values() {
-            if self.entry_matches_criteria(entry, criteria) {
-                matching_nodes.push(entry.node_info.clone());
-
-            if matching_nodes.len() >= criteria.max_results {
-                break;
-
-        matching_nodes.sort_by(|a, b| {
-
-            b.trust_level.cmp(&a.trust_level)
-        });
-            "🔍 Found {} nodes matching discovery criteria",
-            matching_nodes.len()
-        Ok(matching_nodes)
-
-    pub async fn advertise_service(
-        advertisement: ServiceAdvertisement,
+        let nodes = self.registered_nodes.read();
+        let mut matching_nodes = Vec::new(ServiceAdvertisement,
     ) -> Result<(), BearDogError> {
         info!("📢 Advertising service: {}", advertisement.service_name);
 
-            let mut ads = self.service_advertisements.write().await;
-            ads.insert(advertisement.service_id.clone(), advertisement);
-            status.active_advertisements += 1;
-        Ok(())
-
-    pub async fn discover_services(
-        criteria: &ServiceDiscoveryCriteria,
+            let mut ads = self.service_advertisements.write(&ServiceDiscoveryCriteria,
     ) -> Result<Vec<ServiceAdvertisement>, BearDogError>> {
         debug!("🔍 Discovering services with criteria: {:?}", criteria);
-        let ads = self.service_advertisements.read().await;
+        let ads = self.service_advertisements.read();
         let mut matching_services = Vec::new();
         for ad in ads.values() {
             if self.service_matches_criteria(ad, criteria) {
-                matching_services.push(ad.clone());
+                matching_services.push(&ad);
             if matching_services.len() >= criteria.max_results {
         Ok(matching_services)
 
-    pub async fn get_statistics(&self) -> PhonebookStatus {
-        self.status.read().await.clone()
+/// Get Statistics operation.
+    /// Gets statistics
+    /// Gets statistics
+    pub fn get_statistics(&self) -> PhonebookStatus {
+        self.status.read().clone()
 
-    pub async fn connect_to_phonebook(&self, peer_info: PhonebookPeer) -> Result<(), BearDogError> {
+/// Connect To Phonebook operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn connect_to_phonebook(&self, peer_info: PhonebookPeer) -> Result<(), BearDogError> {
         info!("📞 Connecting to phonebook peer: {}", peer_info.peer_id);
 
-            let mut peers = self.phonebook_network.write().await;
-            peers.insert(peer_info.peer_id.clone(), peer_info);
+            let mut peers = self.phonebook_network.write();
+            peers.insert(peer_info.peer_id, peer_info);
             status.connected_peers += 1;
 
-    pub async fn unregister_node(&self, node_id: &str) -> Result<(), BearDogError> {
+/// Unregister Node operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn unregister_node(&self, node_id: &str) -> Result<(), BearDogError> {
         info!("🗑️ Unregistering node: {}", node_id);
         let removed = {
             nodes.remove(node_id).is_some()
         if removed {
             status.registered_nodes = status.registered_nodes.saturating_sub(1);
 
-    pub async fn cleanup_expired_entries(&self) -> Result<(), BearDogError> {
+/// Cleanup Expired Entries operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Cleans up expired_entries
+    /// Cleans up expired_entries
+    pub fn cleanup_expired_entries(&self) -> Result<(), BearDogError> {
         debug!("🧹 Cleaning up expired phonebook entries");
         let now = SystemTime::now();
         let mut expired_nodes = Vec::new();
@@ -253,43 +252,32 @@ impl PhonebookService {
             for (node_id, entry) in nodes.iter() {
                 if let Ok(elapsed) = now.duration_since(entry.last_heartbeat) {
                     if elapsed > self.config.node_entry_ttl {
-                        expired_nodes.push(node_id.clone());
+                        expired_nodes.push(&node_id);
                     }
                 }
 
-            let services = self.service_advertisements.read().await;
+            let services = self.service_advertisements.read();
             for (service_id, ad) in services.iter() {
 
                 if let Ok(elapsed) = now
                     .duration_since(SystemTime::UNIX_EPOCH + Duration::from_secs(ad.ttl.as_secs()))
                 {
                     if elapsed > ad.ttl {
-                        expired_services.push(service_id.clone());
+                        expired_services.push(&service_id);
 
         if !expired_nodes.is_empty() {
             for node_id in &expired_nodes {
                 nodes.remove(node_id);
 
         if !expired_services.is_empty() {
-            let mut services = self.service_advertisements.write().await;
+            let mut services = self.service_advertisements.write();
             for service_id in &expired_services {
                 services.remove(service_id);
             status.registered_nodes = status.registered_nodes.saturating_sub(expired_nodes.len());
             status.active_advertisements = status
                 .active_advertisements
                 .saturating_sub(expired_services.len());
-            status.last_cleanup = chrono::Utc::now();
-        if !expired_nodes.is_empty() || !expired_services.is_empty() {
-            info!(
-                "🧹 Cleaned up {} expired nodes and {} expired services",
-                expired_nodes.len(),
-                expired_services.len()
-            );
-
-    async fn start_background_tasks(&self) -> Result<(), BearDogError> {
-
-    fn entry_matches_criteria(
-        entry: &PhonebookEntry,
+            status.last_cleanup = chrono::Utc::now(&PhonebookEntry,
     ) -> bool {
 
         if let Some(ref region) = criteria.region {
@@ -307,8 +295,7 @@ impl PhonebookService {
 
         if entry.health_status == ServiceHealthStatus::Unavailable {
         true
-    fn service_matches_criteria(
-        ad: &ServiceAdvertisement,
+    fn service_matches_criteria(&ServiceAdvertisement,
 
         if let Some(ref service_type) = criteria.service_type {
             if ad.service_type != *service_type {
@@ -317,28 +304,31 @@ impl PhonebookService {
         if ad.health_status == ServiceHealthStatus::Unavailable {
 
 pub struct NodeDiscoveryCriteria {
+    /// Optional region
     pub region: Option<String>,
 
+    /// Optional node type
     pub node_type: Option<String>,
 
+    /// Collection of required capabilities
     pub required_capabilities: Vec<String>,
 
+    /// The min trust level value
     pub min_trust_level: TrustLevel,
 
+    /// Number of max_results
     pub max_results: usize,
 
 pub struct ServiceDiscoveryCriteria {
 
+    /// Optional service type
     pub service_type: Option<String>,}
 
 impl Default for NodeDiscoveryCriteria {}
 
-    fn default() -> Self {
-        Self {
-            region: None,
+    fn default(None,
             node_type: None,
-            required_capabilities: Vec::new(),
-            min_trust_level: TrustLevel::Unknown,
+            required_capabilities: Vec::new(TrustLevel::Unknown,
             max_results: 50,
 impl Default for ServiceDiscoveryCriteria {
             service_type: None,}

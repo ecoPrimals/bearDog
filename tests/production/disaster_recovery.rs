@@ -1,6 +1,5 @@
 use beardog_errors::BearDogError;
 
-
 use beardog::production::*;
 
 pub async fn test_disaster_recovery(prod_manager: &mut ProductionManager) {
@@ -8,10 +7,9 @@ pub async fn test_disaster_recovery(prod_manager: &mut ProductionManager) {
 
     let failover_test = prod_manager
         .test_failover_procedures()
-        .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Failover procedures should work", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Failover procedures should work", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", "Failover procedures should work", e))
 })?;
 
     assert!(
@@ -25,10 +23,9 @@ pub async fn test_disaster_recovery(prod_manager: &mut ProductionManager) {
 
     let recovery_test = prod_manager
         .test_recovery_procedures()
-        .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Recovery procedures should work", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Recovery procedures should work", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", "Recovery procedures should work", e))
 })?;
 
     assert!(
@@ -51,19 +48,17 @@ async fn test_disaster_recovery_standalone() {
     let config = BearDogConfig::production();
     let core = Arc::new(
         BearDogCore::new(config)
-            .await
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", "Core initialization failed", e))
 })?,
     );
 
     let mut production_manager = ProductionManager::new(core.clone())
-        .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Production manager creation failed", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", "Production manager creation failed", e))
 })?;
         
-    test_disaster_recovery(&mut production_manager).await;
+    test_disaster_recovery(&mut production_manager);
 } 

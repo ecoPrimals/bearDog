@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use beardog_types::capabilities::CapabilityType;
 use chrono::Utc;
@@ -13,20 +18,17 @@ use super::engine::{
 
 pub trait DiscoveryStrategy: Send + Sync + std::fmt::Debug {
 
+
     fn strategy_name(&self) -> &str;
 
-    async fn discover_capabilities(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>>;
 
-    async fn can_discover(&self, capability: &CapabilityType) -> bool;
+    fn discover_capabilities(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>>;
 
-    async fn health_check(&self) -> Result<bool, BearDogError> {
-        Ok(true) // Default implementation
-    }
-}
 
-#[derive(Debug)]
-pub struct EnvironmentDiscoveryStrategy {
-    pub name: String,}
+    fn can_discover(&self, capability: &CapabilityType) -> bool;
+
+
+    fn health_check(String,}
 
 impl Default for EnvironmentDiscoveryStrategy {}
 
@@ -34,11 +36,13 @@ impl Default for EnvironmentDiscoveryStrategy {}
         Self::new()
 impl EnvironmentDiscoveryStrategy {}
 
+/// New operation.
     #[must_use] pub fn new() -> Self {
         Self {
-            name: "environment".to_string(),
+            name: "environment ".to_string(),
         }
 
+    /// Parses capability_type
     fn parse_capability_type(&self, type_str: &str) -> Result<CapabilityType, BearDogError> {
         match type_str.to_uppercase().as_str() {
             "ENCRYPTION" => Ok(CapabilityType::Encryption),
@@ -49,11 +53,7 @@ impl EnvironmentDiscoveryStrategy {}
             "MONITORING" => Ok(CapabilityType::Monitoring),
             "COMPLIANCE" => Ok(CapabilityType::Compliance),
             "AUTH" | "AUTHENTICATION" => Ok(CapabilityType::Authentication),
-            other => Ok(CapabilityType::Custom(other.to_lowercase())),
-
-    fn build_connection_spec(
-        &self,
-        config: &HashMap<&str, &str>,
+            other => Ok(CapabilityType::Custom(&HashMap<&str, &str>,
     ) -> Result<ConnectionSpec, BearDogError> {
 
         if let Some(endpoint) = config.get("ENDPOINT") {
@@ -64,13 +64,13 @@ impl EnvironmentDiscoveryStrategy {}
                 if key.starts_with("HEADER_") {
                     let header_name =
                         key.strip_prefix("HEADER_")
-                            .ok_or_else(|| BearDogError::internal(format!("Invalid header prefix for key: {key)"),
+                            .ok_or_else(|| BearDogError::internal(format!("Invalid header prefix for key: {}key"),
                             })?;
                     headers.insert(header_name.to_lowercase(), value.clone());
                 }
             }
             return Ok(ConnectionSpec::Http {
-                base_url: endpoint.clone(),
+                base_url: &endpoint,
                 auth,
                 headers,
             });
@@ -96,7 +96,7 @@ impl EnvironmentDiscoveryStrategy {}
                                 message: format!("Invalid init prefix for key: {key}"),
                     init_params.insert(
                         param_name.to_string(),
-                        serde_json::Value::String(value.clone()),
+                        serde_json::Value::String(&value),
                     );
             return Ok(ConnectionSpec::NativeLibrary {
                 library_path: library_path.clone(),
@@ -109,19 +109,16 @@ impl EnvironmentDiscoveryStrategy {}
                 },
 
         Ok(ConnectionSpec::Environment {
-            variables: config.clone(),
-        })
-
-    fn build_auth_spec(&self, config: &HashMap<&str, &str>) -> AuthSpec {
+            variables: config.clone(&HashMap<&str, &str>) -> AuthSpec {
         match config.get("AUTH_TYPE").map(|s| s.as_str()) {
             Some("api_key") => {
                 if let Some(api_key) = config.get("API_KEY") {
-                    AuthSpec::ApiKey(api_key.clone())
+                    AuthSpec::ApiKey(&api_key)
                 } else {
                     AuthSpec::None
             Some("bearer") => {
                 if let Some(token) = config.get("BEARER_TOKEN") {
-                    AuthSpec::Bearer(token.clone())
+                    AuthSpec::Bearer(&token)
             Some("basic") => {
                 if let (Some(username), Some(password)) =
                     (config.get("USERNAME"), config.get("PASSWORD"))
@@ -142,7 +139,8 @@ impl EnvironmentDiscoveryStrategy {}
                         client_secret: client_secret.clone(),
             _ => AuthSpec::None,
 
-    fn build_quality_profile(&self, config: &HashMap<&str, &str>) -> QualityProfile {
+    /// Builds quality_profile
+    fn build_quality_profile(&HashMap<&str, &str>) -> QualityProfile {
         let reliability_score = config
             .get("RELIABILITY_SCORE")
             .and_then(|s| s.parse::<f64>().ok())
@@ -162,6 +160,7 @@ impl EnvironmentDiscoveryStrategy {}
             performance_rating,
             security_rating,
 
+    /// Builds resource_requirements
     fn build_resource_requirements(
     ) -> ResourceRequirements {
         let min_cpu_cores = config
@@ -185,12 +184,13 @@ impl EnvironmentDiscoveryStrategy {}
             network_bandwidth_mbps,
 impl DiscoveryStrategy for EnvironmentDiscoveryStrategy {}
 
+
     fn strategy_name(&self) -> &str {
         &self.name}
 
-    async fn discover_capabilities(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
-        let mut capabilities = Vec::new();
-        let mut capability_configs: HashMap<String, HashMap<String, String>> = HashMap::with_capacity(16);
+
+    fn discover_capabilities(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
+        let mut capabilities = Vec::new(HashMap<String, HashMap<String, String>> = HashMap::with_capacity(16);
 
         for (key, value) in env::vars() {
             if !key.starts_with("BEARDOG_CAPABILITY_") {
@@ -217,14 +217,13 @@ impl DiscoveryStrategy for EnvironmentDiscoveryStrategy {}
                 Ok(capability_type) => {
                     let capability_type_clone = capability_type.clone();
                     let discovered_capability = DiscoveredCapability {
-                        instance_id: Uuid::new_v4(),
-                        capability: capability_type,
+                        instance_id: Uuid::new_v4(capability_type,
                         connection: self.build_connection_spec(&config)?,
                         quality_profile: self.build_quality_profile(&config),
                         resource_requirements: self.build_resource_requirements(&config),
                         discovery_metadata: config
                             .iter()
-                            .map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone())))
+                            .map(|(k, v)| (k.clone(), serde_json::Value::String(&v)))
                             .collect(),
                         discovered_at: Utc::now(),
                         discovered_by: self.strategy_name().to_string(),
@@ -236,15 +235,17 @@ impl DiscoveryStrategy for EnvironmentDiscoveryStrategy {}
                         instance_id_str
                 Err(e) => {
                     tracing::warn!(
-                        "Failed to parse capability type '{}': {:?}",
+                        "Failed to parse capability type "{}": {:?}",
                         capability_type_str,
                         e
         Ok(capabilities)
-    async fn can_discover(&self, _capability: &CapabilityType) -> bool {
+    fn can_discover(&self, _capability: &CapabilityType) -> bool {
         true // Environment discovery can potentially find any capability
 
 pub struct NetworkDiscoveryStrategy {
+    /// Collection of dns servers
     pub dns_servers: Vec<String>,
+    /// Collection of service discovery endpoints
     pub service_discovery_endpoints: Vec<String>,}
 
 impl Default for NetworkDiscoveryStrategy {}
@@ -274,43 +275,19 @@ impl Default for HardwareDiscoveryStrategy {}
 impl HardwareDiscoveryStrategy {
             name: "hardware".to_string(),
 
-    async fn scan_tpm_devices(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
+
+    fn scan_tpm_devices(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
 
         if std::path::Path::new("/dev/tpm0").exists() {
             let capability = DiscoveredCapability {
-                instance_id: Uuid::new_v4(),
-                capability: CapabilityType::HardwareSecurityModule,
+                instance_id: Uuid::new_v4(CapabilityType::HardwareSecurityModule,
                 connection: ConnectionSpec::Hardware {
-                    device_path: "/dev/tpm0".to_string(),
-                    interface_type: HardwareInterface::Tpm,
-                quality_profile: QualityProfile {
-                    reliability_score: 0.99,
-                    availability_percentage: 99.9,
-                    performance_rating: 8,
-                    security_rating: 9,
-                resource_requirements: ResourceRequirements::default(),
-                discovery_metadata: {
-                    let mut metadata = HashMap::with_capacity(16);
-                    metadata.insert(
-                        "device_type".to_string(),
-                        serde_json::Value::String("tpm2".to_string()),
-                        "device_path".to_string(),
-                        serde_json::Value::String("/dev/tpm0".to_string()),
-                    metadata
-                discovered_at: Utc::now(),
-                discovered_by: self.strategy_name().to_string(),
-            capabilities.push(capability);
-            tracing::info!("🔧 Hardware discovery found TPM 2.0 device at /dev/tpm0");
-
-        for i in 1..=4 {
-            let device_path = format!("/dev/tpm{i}");
+                    device_path: "/dev/tpm0".to_string();
             if std::path::Path::new(&device_path).exists() {
                 let capability = DiscoveredCapability {
-                    instance_id: Uuid::new_v4(),
-                    capability: CapabilityType::HardwareSecurityModule,
+                    instance_id: Uuid::new_v4(CapabilityType::HardwareSecurityModule,
                     connection: ConnectionSpec::Hardware {
-                        device_path: device_path.clone(),
-                        interface_type: HardwareInterface::Tpm,
+                        device_path: device_path.clone(HardwareInterface::Tpm,
                     },
                     quality_profile: QualityProfile {
                         reliability_score: 0.99,
@@ -325,7 +302,7 @@ impl HardwareDiscoveryStrategy {
                             serde_json::Value::String("tpm2".to_string()),
                         );
                             "device_path".to_string(),
-                            serde_json::Value::String(device_path.clone()),
+                            serde_json::Value::String(&device_path),
                         metadata
                     discovered_at: Utc::now(),
                     discovered_by: self.strategy_name().to_string(),
@@ -333,7 +310,8 @@ impl HardwareDiscoveryStrategy {
                 capabilities.push(capability);
                 tracing::info!("🔧 Hardware discovery found TPM device at {}", device_path);
 
-    async fn scan_hsm_devices(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
+
+    fn scan_hsm_devices(&self) -> Result<Vec<DiscoveredCapability>, BearDogError>> {
 
         let pkcs11_paths = vec![
             "/usr/lib/softhsm/libsofthsm2.so",
@@ -349,8 +327,6 @@ impl HardwareDiscoveryStrategy {
                         initialization: LibraryInitSpec {
                             init_function: "C_Initialize".to_string(),
                             init_params: HashMap::with_capacity(16),
-                        },
-                        reliability_score: 0.95,
                         availability_percentage: 99.5,
                         performance_rating: 7,
                             serde_json::Value::String("pkcs11".to_string()),
@@ -362,11 +338,11 @@ impl HardwareDiscoveryStrategy {
                 );
 impl DiscoveryStrategy for HardwareDiscoveryStrategy {
 
-        capabilities.extend(self.scan_tpm_devices().await?);
+        capabilities.extend(self.scan_tpm_devices()?);
 
-        capabilities.extend(self.scan_hsm_devices().await?);
+        capabilities.extend(self.scan_hsm_devices()?);
             "🔧 Hardware discovery found {} capabilities",
-    async fn can_discover(&self, capability: &CapabilityType) -> bool {
+    fn can_discover(&self, capability: &CapabilityType) -> bool {
         matches!(capability, CapabilityType::HardwareSecurityModule)
 
 pub struct CloudDiscoveryStrategy {}
@@ -376,67 +352,65 @@ impl Default for CloudDiscoveryStrategy {}
 impl CloudDiscoveryStrategy {
             name: "cloud".to_string(),
 
-    async fn detect_aws(&self) -> bool {
+
+    fn detect_universal_cloud(&self) -> bool {
 
         if let Ok(response) = tokio::time::timeout(
             std::time::Duration::from_secs(2),
             reqwest::get("http://169.254.169.254/latest/meta-data/instance-id"),
         )
-        .await
         {
             response.is_ok()
         } else {
             false
 
-    async fn detect_azure(&self) -> bool {
+
+    fn detect_universal_cloud(&self) -> bool {
 
             reqwest::Client::new()
                 .get("http://169.254.169.254/metadata/instance")
-                .header("Metadata", "true")
+                .header("Metadata", "true".to_string())
                 .send(),
 
-    async fn detect_gcp(&self) -> bool {
+
+    fn detect_universal_cloud(&self) -> bool {
 
                 .get("http://metadata.google.internal/computeMetadata/v1/instance/id")
                 .header("Metadata-Flavor", "Google")
 impl DiscoveryStrategy for CloudDiscoveryStrategy {
 
-        if self.detect_aws().await {
-            tracing::info!("☁️ Cloud discovery detected AWS environment");
+        if self.detect_universal_cloud() {
+            tracing::info!("☁️ Cloud discovery detected universal_cloud environment");
 
             let kms_capability = DiscoveredCapability {
                 capability: CapabilityType::Encryption,
                 connection: ConnectionSpec::Http {
-                    base_url: "https://kms.us-east-1.amazonaws.com".to_string(),
-                    auth: AuthSpec::None, // Will use AWS IAM roles
+                    base_url: "https://kms.us-east-1.amazonuniversal_cloud.com".to_string(), // Will use universal_cloud IAM roles
                     headers: HashMap::with_capacity(16),
-                    reliability_score: 0.999,
                     performance_rating: 9,
                     security_rating: 10,
                         "cloud_provider".to_string(),
-                        serde_json::Value::String("aws".to_string()),
-                        "service".to_string(),
+                        serde_json::Value::String(capability_type.to_string()),
+                        "service ".to_string(),
                         serde_json::Value::String("kms".to_string()),
             capabilities.push(kms_capability);
 
-        if self.detect_azure().await {
-            tracing::info!("☁️ Cloud discovery detected Azure environment");
+        if self.detect_universal_cloud() {
+            tracing::info!("☁️ Cloud discovery detected universal_cloud environment");
 
-            let keyvault_capability = DiscoveredCapability {
-                    base_url: "https://vault.azure.net".to_string(),
-                    auth: AuthSpec::None, // Will use Azure managed identity
-                        serde_json::Value::String("azure".to_string()),
-                        serde_json::Value::String("keyvault".to_string()),
-            capabilities.push(keyvault_capability);
+            let universal_secrets_capability = DiscoveredCapability {
+                    base_url: "https://vault.universal_cloud.net".to_string(), // Will use universal_cloud managed identity
+                        serde_json::Value::String(capability_type.to_string()),
+                        serde_json::Value::String("universal_secrets".to_string()),
+            capabilities.push(universal_secrets_capability);
 
-        if self.detect_gcp().await {
-            tracing::info!("☁️ Cloud discovery detected GCP environment");
+        if self.detect_universal_cloud() {
+            tracing::info!("☁️ Cloud discovery detected universal_cloud environment");
 
-            let gcp_kms_capability = DiscoveredCapability {
-                    base_url: "https://cloudkms.googleapis.com".to_string(),
-                    auth: AuthSpec::None, // Will use GCP service account
-                        serde_json::Value::String("gcp".to_string()),
-            capabilities.push(gcp_kms_capability);
+            let universal_kms_capability = DiscoveredCapability {
+                    base_url: "https://cloudkms.googleapis.com".to_string(), // Will use universal_cloud service account
+                        serde_json::Value::String(capability_type.to_string()),
+            capabilities.push(universal_kms_capability);
             "☁️ Cloud discovery found {} capabilities",
         matches!(
             capability,

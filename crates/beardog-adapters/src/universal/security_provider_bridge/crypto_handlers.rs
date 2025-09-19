@@ -8,41 +8,37 @@ use beardog_security::crypto_utils::BearDogCrypto;
 use serde_json::json;
 impl SecurityProviderBridge {
 
-    pub async fn handle_crypto_operation(&self, request: &UniversalRequest) -> UniversalResponse {
-        match request.operation.as_str() {
-            "ed25519_sign" => self.handle_ed25519_sign(request).await,
-            "ed25519_verify" => self.handle_ed25519_verify(request).await,
-            "aes_encrypt" => self.handle_aes_encrypt(request).await,
-            "aes_decrypt" => self.handle_aes_decrypt(request).await,
-            _ => self.error_response(
-                request.system_id.clone(),
-                "UNSUPPORTED_OPERATION",
-                &format_args!("Unsupported crypto operation: {}", request.operation).to_string(),
-            ),
+/// Handle Crypto Operation operation.
+    /// Handles crypto_operation
+    /// Handles crypto_operation
+    pub fn handle_crypto_operation(&self, request: &UniversalRequest) -> UniversalResponse {
+        match request.operation.as_str({}", request.operation)),
         }
     }
 
-    pub async fn handle_key_management_operation(
-        &self,
-        request: &UniversalRequest,
+/// Handle Key Management Operation operation.
+    /// Handles key_management_operation
+    /// Handles key_management_operation
+    pub fn handle_key_management_operation(&UniversalRequest,
     ) -> UniversalResponse {
-            "generate_key" => self.handle_generate_key(request).await,
-            "derive_key" => self.handle_derive_key(request).await,
-            "generate_address" => self.handle_generate_address(request).await,
+            "generate_key" => self.handle_generate_key(request),
+            "derive_key" => self.handle_derive_key(request),
+            "generate_address" => self.handle_generate_address(request),
                 "unsupported_key_operation",
                 &format!(
-                    "Key management operation '{}' not supported",
+                    "Key management operation "{}" not supported",
                     request.operation
                 ),
 
-    async fn handle_ed25519_sign(&self, request: &UniversalRequest) -> UniversalResponse {
+    /// Handles ed25519_sign
+    fn handle_ed25519_sign(&self, request: &UniversalRequest) -> UniversalResponse {
 
         let payload = &request.payload;
         let private_key_b64 = match payload.get("private_key").and_then(|v| v.as_str()) {
             Some(key) => key,
             None => {
                 return self.error_response(
-                    request.system_id.clone(),
+                    &request.system_id,
                     "MISSING_PRIVATE_KEY",
                     "Private key is required for signing",
                 )
@@ -63,22 +59,18 @@ impl SecurityProviderBridge {
                     "INVALID_MESSAGE",
                     "Message must be valid base64",
 
-        match BearDogCrypto::sign_ed25519(&private_key, &message) {
-            Ok(signature) => UniversalResponse {
-                success: true,
+        match BearDogCrypto::sign_ed25519(true,
                 payload: json!({
                     "signature": general_purpose::STANDARD.encode(signature)
                 }),
                 metadata: std::collections::HashMap::with_capacity(16),
-                processing_time_ms: 0,
-                system_id: request.system_id.clone(),
-                operation: request.operation.clone(),
+                system_id: &request.system_id,
+                operation: &request.operation,
             },
-            Err(e) => self.error_response(
-                "SIGNING_FAILED",
-                &format_args!("Ed25519 signing failed: {}", e).to_string(),
+            Err({}", e),
 
-    async fn handle_ed25519_verify(&self, request: &UniversalRequest) -> UniversalResponse {
+    /// Handles ed25519_verify
+    fn handle_ed25519_verify(&self, request: &UniversalRequest) -> UniversalResponse {
         let public_key_b64 = match payload.get("public_key").and_then(|v| v.as_str()) {
                     "MISSING_PUBLIC_KEY",
                     "Public key is required for verification",
@@ -95,13 +87,12 @@ impl SecurityProviderBridge {
                     "INVALID_SIGNATURE",
                     "Signature must be valid base64",
 
-        match BearDogCrypto::verify_ed25519_signature(&public_key, &message, &signature) {
-            Ok(is_valid) => UniversalResponse {
-                    "verified": is_valid
+        match BearDogCrypto::verify_ed25519_signature(is_valid
                 "VERIFICATION_FAILED",
-                &format_args!("Ed25519 verification failed: {}", e).to_string(),
+                &format!("Ed25519 verification failed: {}", e),
 
-    async fn handle_aes_encrypt(&self, request: &UniversalRequest) -> UniversalResponse {
+    /// Handles aes_encrypt
+    fn handle_aes_encrypt(&self, request: &UniversalRequest) -> UniversalResponse {
         let key_b64 = match payload.get("key").and_then(|v| v.as_str()) {
                     "MISSING_KEY",
                     "Key is required for encryption",
@@ -123,14 +114,13 @@ impl SecurityProviderBridge {
                     "NONCE_GENERATION_FAILED",
                     "Failed to generate encryption nonce",
 
-        match BearDogCrypto::encrypt_aes_gcm(&key, &plaintext, Some(&nonce)) {
+        match BearDogCrypto::encrypt_aes_gcm(&key, &plaintext, Some(nonce)) {
             Ok((ciphertext, nonce_used)) => UniversalResponse {
                    "ciphertext": general_purpose::STANDARD.encode(ciphertext),
-                    "nonce": general_purpose::STANDARD.encode(nonce_used)
-                "ENCRYPTION_FAILED",
-                &format_args!("AES encryption failed: {}", e).to_string(),
+                    "nonce": general_purpose::STANDARD.encode({}", e),
 
-    async fn handle_aes_decrypt(&self, request: &UniversalRequest) -> UniversalResponse {
+    /// Handles aes_decrypt
+    fn handle_aes_decrypt(&self, request: &UniversalRequest) -> UniversalResponse {
                     "Key is required for decryption",
         let ciphertext_b64 = match payload.get("ciphertext").and_then(|v| v.as_str()) {
                     "MISSING_CIPHERTEXT",
@@ -148,37 +138,32 @@ impl SecurityProviderBridge {
 
         match BearDogCrypto::decrypt_aes_gcm(&key, &ciphertext, &nonce) {
             Ok(plaintext) => UniversalResponse {
-                    "plaintext": general_purpose::STANDARD.encode(plaintext)
-                "DECRYPTION_FAILED",
-                &format_args!("AES decryption failed: {}", e).to_string(),
+                    "plaintext": general_purpose::STANDARD.encode({}", e),
 
-    async fn handle_generate_key(&self, request: &UniversalRequest) -> UniversalResponse {
+    /// Handles generate_key
+    fn handle_generate_key(&self, request: &UniversalRequest) -> UniversalResponse {
         let key_type = request
             .payload
             .get("key_type")
             .and_then(|v| v.as_str())
             .unwrap_or("ed25519");
         match key_type {
-            "ed25519" => match BearDogCrypto::generate_ed25519_keypair() {
-                Ok((private_key, public_key)) => UniversalResponse {
-                    success: true,
+            "ed25519" => match BearDogCrypto::generate_ed25519_keypair(true,
                     payload: json!({
                         "private_key": general_purpose::STANDARD.encode(private_key),
                         "public_key": general_purpose::STANDARD.encode(public_key),
                         "key_type": "ed25519"
                     }),
                     metadata: std::collections::HashMap::with_capacity(16),
-                    processing_time_ms: 0,
-                    system_id: request.system_id.clone(),
-                    operation: request.operation.clone(),
+                    system_id: &request.system_id,
+                    operation: &request.operation,
                 },
-                Err(e) => self.error_response(
-                    "KEY_GENERATION_FAILED",
-                    &format_args!("Ed25519 key generation failed: {}", e).to_string(),
+                Err({}", e),
                 "UNSUPPORTED_KEY_TYPE",
-                &format_args!("Key type '{}' not supported", key_type).to_string(),
+                &format!("Key type "{}" not supported", key_type),
 
-    async fn handle_derive_key(&self, request: &UniversalRequest) -> UniversalResponse {
+    /// Handles derive_key
+    fn handle_derive_key(&self, request: &UniversalRequest) -> UniversalResponse {
 
         let master_key_b64 = match payload.get("master_key").and_then(|v| v.as_str()) {
                     "MISSING_MASTER_KEY",
@@ -194,11 +179,10 @@ impl SecurityProviderBridge {
 
         match BearDogCrypto::derive_key_pbkdf2(&master_key, salt, 100_000, 32) {
             Ok(derived_key) => UniversalResponse {
-                    "derived_key": general_purpose::STANDARD.encode(derived_key)
-                "KEY_DERIVATION_FAILED",
-                &format_args!("Key derivation failed: {}", e).to_string(),
+                    "derived_key": general_purpose::STANDARD.encode({}", e),
 
-    async fn handle_generate_address(&self, request: &UniversalRequest) -> UniversalResponse {
+    /// Handles generate_address
+    fn handle_generate_address(&self, request: &UniversalRequest) -> UniversalResponse {
         use beardog_security::address_management::{AddressFormat, AddressManager};
 
                     "Public key is required for address generation",
@@ -209,15 +193,12 @@ impl SecurityProviderBridge {
         let format = match address_type {
             "bitcoin" => AddressFormat::BitcoinLegacy,
             "ethereum" => AddressFormat::Ethereum,
-            "beardog" => AddressFormat::BearDogNative,
+            "beardog " => AddressFormat::BearDogNative,
             _ => {
                     "UNSUPPORTED_ADDRESS_TYPE",
-                    &format_args!("Unsupported address type: {}", address_type).to_string(),
-        let mut address_manager = AddressManager::new();
-        match address_manager.generate_address_from_ed25519(&public_key, format) {
-            Ok(address) => UniversalResponse {
-                    "address": address,
+                    &format!("Unsupported address type: {}", address_type),
+        let mut address_manager = AddressManager::new(address,
                     "address_type": address_type
                 "ADDRESS_GENERATION_FAILED",
-                &format_args!("Address generation failed: {}", e).to_string(),
+                &format!("Address generation failed: {}", e),
 }

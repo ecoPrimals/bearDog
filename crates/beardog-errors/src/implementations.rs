@@ -5,17 +5,26 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ErrorSeverity {
 
+
+    /// Represents low variant
     Low,
 
+
+    /// Represents medium variant
     Medium,
 
+
+    /// Represents high variant
     High,
 
+
+    /// Represents critical variant
     Critical,
 }
 
 impl BearDogError {
 
+/// Severity operation.
     pub fn severity(&self) -> ErrorSeverity {
         match self {
             BearDogError::Security { .. } => ErrorSeverity::High,
@@ -35,9 +44,11 @@ impl BearDogError {
             BearDogError::Cryptographic { .. } => ErrorSeverity::Critical,
             BearDogError::Monitoring { .. } => ErrorSeverity::Low,
             BearDogError::Compliance { .. } => ErrorSeverity::High,
+            BearDogError::Testing { .. } => ErrorSeverity::Low,
         }
     }
 
+/// Category operation.
     pub fn category(&self) -> ErrorCategory {
         match self {
             BearDogError::Security { .. } => ErrorCategory::Security,
@@ -57,9 +68,13 @@ impl BearDogError {
             BearDogError::Cryptographic { .. } => ErrorCategory::Security,
             BearDogError::Monitoring { .. } => ErrorCategory::System,
             BearDogError::Compliance { .. } => ErrorCategory::Security,
+            BearDogError::Testing { .. } => ErrorCategory::System,
         }
     }
 
+/// Is Retryable operation.
+    /// Checks if retryable
+    /// Checks if retryable
     pub fn is_retryable(&self) -> bool {
         match self {
             BearDogError::Security { .. } => false,
@@ -79,100 +94,91 @@ impl BearDogError {
             BearDogError::Cryptographic { .. } => false, // Crypto errors usually aren't retryable
             BearDogError::Monitoring { .. } => true, // Monitoring operations can be retried
             BearDogError::Compliance { .. } => false, // Compliance errors usually aren't retryable
+            BearDogError::Testing { .. } => true, // Test operations can be retried
         }
     }
 
+/// Get Context operation.
+    /// Gets context
+    /// Gets context
     pub fn get_context(&self) -> ErrorContext {
         match self {
             BearDogError::Security { message, category } => {
-                ErrorContext::Security(SecurityErrorContext {
-                    message: message.clone(),
+                ErrorContext::Security(message,
                     category: category.clone(),
                     recommendations: get_security_recommendations(category),
                 })
             }
             BearDogError::System { message, category } => {
-                ErrorContext::System(SystemErrorContext {
-                    message: message.clone(),
+                ErrorContext::System(message,
                     category: category.clone(),
                     recommendations: get_system_recommendations(category),
                 })
             }
             BearDogError::Business { message, category } => {
-                ErrorContext::Business(BusinessErrorContext {
-                    message: message.clone(),
+                ErrorContext::Business(message,
                     category: category.clone(),
                     recommendations: get_business_recommendations(category),
                 })
             }
             BearDogError::Network { message, category } => {
-                ErrorContext::Network(NetworkErrorContext {
-                    message: message.clone(),
+                ErrorContext::Network(message,
                     category: category.clone(),
                     recommendations: get_network_recommendations(category),
                 })
             }
             BearDogError::Configuration { message, category } => {
-                ErrorContext::Configuration(ConfigurationErrorContext {
-                    message: message.clone(),
+                ErrorContext::Configuration(message,
                     category: category.clone(),
                     recommendations: get_configuration_recommendations(category),
                 })
             }
             BearDogError::Initialization { message } => {
-                ErrorContext::Initialization(InitializationErrorContext {
-                    message: message.clone(),
+                ErrorContext::Initialization(message,
                     recommendations: vec!["Check system requirements".to_string(), "Verify configuration".to_string()],
                 })
             }
             BearDogError::Hsm { message, category } => {
-                ErrorContext::Hsm(HsmErrorContext {
-                    message: message.clone(),
+                ErrorContext::Hsm(message,
                     category: category.clone(),
                     provider: "unknown".to_string(),
                     recommendations: get_hsm_recommendations(category),
                 })
             }
             BearDogError::Api { message, category: _, status_code, endpoint } => {
-                ErrorContext::Api(ApiErrorContext {
-                    message: message.clone(),
+                ErrorContext::Api(message,
                     status_code: *status_code,
-                    endpoint: endpoint.clone(),
+                    endpoint: &endpoint,
                     recommendations: get_api_recommendations(status_code),
                 })
             }
             BearDogError::Workflow { message, category } => {
-                ErrorContext::Workflow(WorkflowErrorContext {
-                    message: message.clone(),
+                ErrorContext::Workflow(message,
                     workflow_id: "unknown".to_string(),
                     category: category.clone(),
                     recommendations: get_workflow_recommendations(category),
                 })
             }
             BearDogError::Genetics { message } => {
-                ErrorContext::Genetics(GeneticsErrorContext {
-                    message: message.clone(),
+                ErrorContext::Genetics(message,
                     operation: "unknown".to_string(),
                     recommendations: vec!["Check genetics configuration".to_string()],
                 })
             }
             BearDogError::Deployment { message } => {
-                ErrorContext::Deployment(DeploymentErrorContext {
-                    message: message.clone(),
+                ErrorContext::Deployment(message,
                     stage: "unknown".to_string(),
                     recommendations: vec!["Check deployment configuration".to_string()],
                 })
             }
             BearDogError::Memory { message } => {
-                ErrorContext::Memory(MemoryErrorContext {
-                    message: message.clone(),
+                ErrorContext::Memory(message,
                     operation: operation.clone(),
                     recommendations: vec!["Check memory usage".to_string(), "Increase memory limits".to_string()],
                 })
             }
             BearDogError::Adapter { message, adapter, target } => {
-                ErrorContext::Adapter(AdapterErrorContext {
-                    message: message.clone(),
+                ErrorContext::Adapter(message,
                     adapter: adapter.clone(),
                     target: target.clone(),
                     recommendations: vec!["Check adapter configuration".to_string()],
@@ -180,23 +186,20 @@ impl BearDogError {
             }
 
             BearDogError::Cryptographic { message, operation, algorithm } => {
-                ErrorContext::Cryptographic(CryptographicErrorContext {
-                    message: message.clone(),
+                ErrorContext::Cryptographic(message,
                     operation: operation.clone(),
                     algorithm: algorithm.clone(),
                     recommendations: vec!["Check cryptographic configuration".to_string()],
                 })
             }
             BearDogError::Monitoring { message, metric } => {
-                ErrorContext::Monitoring(MonitoringErrorContext {
-                    message: message.clone(),
+                ErrorContext::Monitoring(message,
                     metric: metric.clone(),
                     recommendations: vec!["Check monitoring configuration".to_string()],
                 })
             }
             BearDogError::Compliance { message, standard } => {
-                ErrorContext::Compliance(ComplianceErrorContext {
-                    message: message.clone(),
+                ErrorContext::Compliance(message,
                     standard: standard.clone(),
                     recommendations: vec!["Check compliance configuration".to_string()],
                 })
@@ -204,273 +207,187 @@ impl BearDogError {
         }
     }
 
-    pub fn user_message(&self) -> String {
+/// User Message operation.
+    pub fn user_message(&self) -> &str {
         match self {
-            BearDogError::Security { message, .. } => message.clone(),
-            BearDogError::System { message, .. } => message.clone(),
-            BearDogError::Business { message, .. } => message.clone(),
-            BearDogError::Network { message, .. } => message.clone(),
-            BearDogError::Configuration { message, .. } => message.clone(),
-            BearDogError::Initialization { message } => message.clone(),
-            BearDogError::Hsm { message, .. } => message.clone(),
-            BearDogError::Api { message, .. } => message.clone(),
-            BearDogError::Workflow { message, .. } => message.clone(),
-            BearDogError::Genetics { message, .. } => message.clone(),
-            BearDogError::Deployment { message, .. } => message.clone(),
-            BearDogError::Memory { message, .. } => message.clone(),
-            BearDogError::Adapter { message, .. } => message.clone(),
+            BearDogError::Security { message, .. } => message,
+            BearDogError::System { message, .. } => message,
+            BearDogError::Business { message, .. } => message,
+            BearDogError::Network { message, .. } => message,
+            BearDogError::Configuration { message, .. } => message,
+            BearDogError::Initialization { message } => message,
+            BearDogError::Hsm { message, .. } => message,
+            BearDogError::Api { message, .. } => message,
+            BearDogError::Workflow { message, .. } => message,
+            BearDogError::Genetics { message, .. } => message,
+            BearDogError::Deployment { message, .. } => message,
+            BearDogError::Memory { message, .. } => message,
+            BearDogError::Adapter { message, .. } => message,
 
-            BearDogError::Cryptographic { message, .. } => message.clone(),
-            BearDogError::Monitoring { message, .. } => message.clone(),
-            BearDogError::Compliance { message, .. } => message.clone(),
+            BearDogError::Cryptographic { message, .. } => message,
+            BearDogError::Monitoring { message, .. } => message,
+            BearDogError::Compliance { message, .. } => message,
+            BearDogError::Testing { message, .. } => message,
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ErrorCategory {
-
-    Security,
-
-    System,
-
-    Business,
-
-    Network,
-
-    Configuration,
-
-    Initialization,
-}
-
 #[derive(Debug, Clone)]
-pub enum ErrorContext {
-
-    Security(SecurityErrorContext),
-
-    System(SystemErrorContext),
-
-    Business(BusinessErrorContext),
-
-    Network(NetworkErrorContext),
-
-    Configuration(ConfigurationErrorContext),
-
-    Initialization(InitializationErrorContext),
-
-    Hsm(HsmErrorContext),
-
-    Api(ApiErrorContext),
-
-    Workflow(WorkflowErrorContext),
-
-    Genetics(GeneticsErrorContext),
-
-    Deployment(DeploymentErrorContext),
-
-    Memory(MemoryErrorContext),
-
-    Adapter(AdapterErrorContext),
-
-    Authentication(AuthenticationErrorContext),
-
-    Authorization(AuthorizationErrorContext),
-
-    Cryptographic(CryptographicErrorContext),
-
-    Monitoring(MonitoringErrorContext),
-
-    Compliance(ComplianceErrorContext),
-}
-
-#[derive(Debug, Clone)]
-pub struct SecurityErrorContext {
-
-    pub message: String,
-
+    /// The category value
     pub category: SecurityErrorCategory,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct SystemErrorContext {
-
-    pub message: String,
-
+    /// The category value
     pub category: SystemErrorCategory,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct BusinessErrorContext {
-
-    pub message: String,
-
+    /// The category value
     pub category: BusinessErrorCategory,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct NetworkErrorContext {
-
-    pub message: String,
-
+    /// The category value
     pub category: NetworkErrorCategory,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct ConfigurationErrorContext {
-
-    pub message: String,
-
+    /// The category value
     pub category: ConfigurationErrorCategory,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct InitializationErrorContext {
-
-    pub message: String,
-
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct HsmErrorContext {
-
-    pub message: String,
-
+    /// The category value
     pub category: HsmErrorCategory,
+
 
     pub provider: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct ApiErrorContext {
-
-    pub message: String,
-
+    /// Current status of the component_code
     pub status_code: Option<u16>,
 
+    /// Optional endpoint
     pub endpoint: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct WorkflowErrorContext {
-
-    pub message: String,
-
     pub workflow_id: Option<String>,
 
+    /// The category value
     pub category: WorkflowErrorCategory,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct GeneticsErrorContext {
-
-    pub message: String,
-
+    /// Optional operation
     pub operation: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct DeploymentErrorContext {
-
-    pub message: String,
-
+    /// Optional stage
     pub stage: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct MemoryErrorContext {
-
-    pub message: String,
-
+    /// Optional operation
     pub operation: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct AdapterErrorContext {
-
-    pub message: String,
-
+    /// Optional adapter
     pub adapter: Option<String>,
 
+    /// Optional target
     pub target: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct AuthenticationErrorContext {
-
-    pub message: String,
-
+    /// Optional method
     pub method: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct AuthorizationErrorContext {
-
-    pub message: String,
-
+    /// Optional required permission
     pub required_permission: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct CryptographicErrorContext {
-
-    pub message: String,
-
+    /// Optional operation
     pub operation: Option<String>,
 
+    /// Optional algorithm
     pub algorithm: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct MonitoringErrorContext {
-
-    pub message: String,
-
+    /// Optional metric
     pub metric: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct ComplianceErrorContext {
-
-    pub message: String,
-
+    /// Optional standard
     pub standard: Option<String>,
 
+    /// Collection of recommendations
     pub recommendations: Vec<String>,
 }
 
+/// Gets security_recommendations
 fn get_security_recommendations(category: &SecurityErrorCategory) -> Vec<String> {
     match category {
         SecurityErrorCategory::Authentication => vec![
@@ -489,6 +406,7 @@ fn get_security_recommendations(category: &SecurityErrorCategory) -> Vec<String>
     }
 }
 
+/// Gets system_recommendations
 fn get_system_recommendations(category: &SystemErrorCategory) -> Vec<String> {
     match category {
         SystemErrorCategory::FileSystem => vec![
@@ -503,6 +421,7 @@ fn get_system_recommendations(category: &SystemErrorCategory) -> Vec<String> {
     }
 }
 
+/// Gets business_recommendations
 fn get_business_recommendations(category: &BusinessErrorCategory) -> Vec<String> {
     match category {
         BusinessErrorCategory::Validation => vec![
@@ -513,6 +432,7 @@ fn get_business_recommendations(category: &BusinessErrorCategory) -> Vec<String>
     }
 }
 
+/// Gets network_recommendations
 fn get_network_recommendations(category: &NetworkErrorCategory) -> Vec<String> {
     match category {
         NetworkErrorCategory::Connection => vec![
@@ -527,6 +447,7 @@ fn get_network_recommendations(category: &NetworkErrorCategory) -> Vec<String> {
     }
 }
 
+/// Gets configuration_recommendations
 fn get_configuration_recommendations(category: &ConfigurationErrorCategory) -> Vec<String> {
     match category {
         ConfigurationErrorCategory::Parsing => vec![
@@ -541,6 +462,7 @@ fn get_configuration_recommendations(category: &ConfigurationErrorCategory) -> V
     }
 }
 
+/// Gets hsm_recommendations
 fn get_hsm_recommendations(category: &HsmErrorCategory) -> Vec<String> {
     match category {
         HsmErrorCategory::KeyGeneration => vec![
@@ -555,6 +477,7 @@ fn get_hsm_recommendations(category: &HsmErrorCategory) -> Vec<String> {
     }
 }
 
+/// Gets api_recommendations
 fn get_api_recommendations(status_code: &Option<u16>) -> Vec<String> {
     match status_code {
         Some(401) => vec!["Check authentication".to_string()],
@@ -565,6 +488,7 @@ fn get_api_recommendations(status_code: &Option<u16>) -> Vec<String> {
     }
 }
 
+/// Gets workflow_recommendations
 fn get_workflow_recommendations(category: &WorkflowErrorCategory) -> Vec<String> {
     match category {
         WorkflowErrorCategory::Execution => vec![

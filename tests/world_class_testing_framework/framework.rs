@@ -35,12 +35,12 @@ impl WorldClassTestingFramework {
     pub async fn run_comprehensive_testing(&self) -> Result<WorldClassTestResults, BearDogError> {
         let start_time = Instant::now();
 
-        let formal_verification = self.run_formal_verification().await?;
-        let property_based_testing = self.run_property_based_testing().await?;
-        let mutation_testing = self.run_mutation_testing().await?;
-        let invariant_validation = self.run_invariant_validation().await?;
-        let exhaustive_testing = self.run_exhaustive_testing().await?;
-        let quantum_resistance = self.run_quantum_resistance_testing().await?;
+        let formal_verification = self.run_formal_verification()?;
+        let property_based_testing = self.run_property_based_testing()?;
+        let mutation_testing = self.run_mutation_testing()?;
+        let invariant_validation = self.run_invariant_validation()?;
+        let exhaustive_testing = self.run_exhaustive_testing()?;
+        let quantum_resistance = self.run_quantum_resistance_testing()?;
 
         let execution_time_ms = start_time.elapsed().as_millis() as u64;
 
@@ -74,7 +74,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_formal_verification(&self) -> Result<FormalVerificationResults, BearDogError> {
+    fn run_formal_verification(&self) -> Result<FormalVerificationResults, BearDogError> {
         let mut proofs_generated = 0;
         let mut verified_components = Vec::new();
         let mut mathematical_proofs = Vec::new();
@@ -108,7 +108,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_property_based_testing(&self) -> Result<PropertyBasedTestResults, BearDogError> {
+    fn run_property_based_testing(&self) -> Result<PropertyBasedTestResults, BearDogError> {
         let mut properties_verified = 0;
         let mut test_cases_generated = 0;
         let mut counterexamples_found = Vec::new();
@@ -153,7 +153,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_mutation_testing(&self) -> Result<MutationTestResults, BearDogError> {
+    fn run_mutation_testing(&self) -> Result<MutationTestResults, BearDogError> {
         let mut mutations_tested = 0;
         let mut mutations_killed = 0;
         let mut surviving_mutants = Vec::new();
@@ -199,7 +199,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_invariant_validation(&self) -> Result<InvariantValidationResults, BearDogError> {
+    fn run_invariant_validation(&self) -> Result<InvariantValidationResults, BearDogError> {
         let mut invariants_verified = 0;
         let mut violations_detected = Vec::new();
 
@@ -232,7 +232,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_exhaustive_testing(&self) -> Result<ExhaustiveTestResults, BearDogError> {
+    fn run_exhaustive_testing(&self) -> Result<ExhaustiveTestResults, BearDogError> {
         let mut edge_cases_tested = 0;
         let mut boundary_violations = Vec::new();
 
@@ -261,7 +261,7 @@ impl WorldClassTestingFramework {
         })
     }
 
-    async fn run_quantum_resistance_testing(&self) -> Result<QuantumResistanceResults, BearDogError> {
+    fn run_quantum_resistance_testing(&self) -> Result<QuantumResistanceResults, BearDogError> {
         let mut quantum_attacks_simulated = 0;
         let mut vulnerable_algorithms = Vec::new();
 
@@ -273,7 +273,7 @@ impl WorldClassTestingFramework {
                 let result = validator.test_quantum_resistance(algorithm);
                 
                 if let QuantumResistanceResult::Vulnerable { weakness } = result {
-                    vulnerable_algorithms.push(format_args!("{}: {}", algorithm, weakness).to_string());
+                    vulnerable_algorithms.push({}", algorithm, weakness));
                 }
             }
         }
@@ -284,16 +284,7 @@ impl WorldClassTestingFramework {
             PostQuantumReadiness::PartiallyQuantumResistant
         };
 
-        Ok(QuantumResistanceResults {
-            quantum_attacks_simulated,
-            vulnerable_algorithms,
-            post_quantum_readiness,
-        })
-    }
-
-    fn calculate_mathematical_certainty_score(
-        &self,
-        formal: &FormalVerificationResults,
+        Ok(&FormalVerificationResults,
         property: &PropertyBasedTestResults,
         mutation: &MutationTestResults,
         invariant: &InvariantValidationResults,

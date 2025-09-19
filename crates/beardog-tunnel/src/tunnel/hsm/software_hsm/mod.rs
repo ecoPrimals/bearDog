@@ -1,62 +1,74 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use crate::tunnel::hsm::types::{KeyStorageType, KeyType, MemoryProtectionLevel};
 use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone)]
-pub enum CryptoBackend {
-    Ring,
-    OpenSsl,
-    RustCrypto,
-}
-pub enum Algorithm {
-    Aes256Gcm,
-    ChaCha20Poly1305,
-    EccP256,
-    EccP384,
-    EcdsaSha256,
-    RsaSha256,
-    HkdfSha256,}
-
-pub struct KeyStoreConfig {
-    pub storage_type: KeyStorageType,
+    /// The encryption key source value
     pub encryption_key_source: KeySource,
+    /// Whether backup is enabled
     pub backup_enabled: bool,
+    /// Number of cache_size
     pub cache_size: usize,
     pub file_config: Option<FileConfig>,
     pub db_config: Option<DatabaseConfig>,
 }
 
 pub enum KeySource {
+    /// State indicating derived
     Derived,
+    /// Represents hardware variant
     Hardware,
+    External,}
+    External,}
     External,}
 
 pub struct MemoryConfig {
+    /// The protection level value
     pub protection_level: MemoryProtectionLevel,
+    /// Whether secure_allocation is enabled
     pub secure_allocation: bool,
+    /// Whether clear_on_dealloc is enabled
     pub clear_on_dealloc: bool,
+    /// Whether lock_memory is enabled
     pub lock_memory: bool,
+    /// Whether guard_pages is enabled
     pub guard_pages: bool,
 pub struct FileConfig {
+    /// The base path value
     pub base_path: String,
+    /// Number of file_permissions
     pub file_permissions: u32,
+    /// Optional backup path
     pub backup_path: Option<String>,
 }
 
 pub struct SoftwareHsmConfig {
+    /// The implementation value
     pub implementation: String,
+    /// The crypto backend value
     pub crypto_backend: CryptoBackend,
+    /// The memory protection value
     pub memory_protection: MemoryProtectionLevel,
+    /// Whether enable_key_caching is enabled
     pub enable_key_caching: bool,
+    /// Number of max_cached_keys
     pub max_cached_keys: usize,
+    /// The key storage value
     pub key_storage: KeyStoreConfig,
     pub memory_config: MemoryConfig,
     pub key_store_config: KeyStoreConfig,
+    /// The encryption algorithm value
     pub encryption_algorithm: Algorithm,
 
 pub mod audit;
-
+ /// Core functionality
+ /// Core functionality
 pub mod core;
 
 pub mod crypto_providers;
@@ -83,9 +95,12 @@ pub use self::keystore::KeyStoreStatistics;
 pub use self::memory::{create_memory_protection_stats, MemoryProtectionStats, SecureMemoryRegion};
 pub use self::storage::{
 
+
     MemoryStorageStatistics, // StorageBackendCapabilities, StorageScalability,
 
+
 pub const VERSION: &str = "1.0.0";
+
 
 pub const BUILD_INFO: &str = concat!(
     "BearDog Software HSM v",
@@ -93,10 +108,12 @@ pub const BUILD_INFO: &str = concat!(
     " (built on unknown)"
 );
 
-pub async fn create_default_software_hsm() -> Result<RustSoftwareHsm, BearDogError> {
-    let config = SoftwareHsmConfig {};
-
-        implementation: format_args!("{:?}", SoftwareHsmType::RustSoftwareHsm).to_string(),
+/// Create Default Software Hsm operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+/// Creates default_software_hsm
+pub fn create_default_software_hsm(format!("{:?}", SoftwareHsmType::RustSoftwareHsm),
         crypto_backend: CryptoBackend::Ring,
         memory_protection: MemoryProtectionLevel::High,
         enable_key_caching: true,
@@ -109,7 +126,6 @@ pub async fn create_default_software_hsm() -> Result<RustSoftwareHsm, BearDogErr
             file_config: None,
             db_config: Some(DatabaseConfig {
                 database_url: "sqlite::memory:".to_string(),
-                connection_pool_size: 10,
                 connection_timeout_seconds: 30,
                 enable_encryption_at_rest: true,
             }),
@@ -124,20 +140,35 @@ pub async fn create_default_software_hsm() -> Result<RustSoftwareHsm, BearDogErr
         key_derivation_rounds: 100000,
         key_storage_path: "/tmp/beardog_software_hsm_keys".to_string(),
     };
-    RustSoftwareHsm::new(config).await
+    RustSoftwareHsm::new(config)
 
+/// Create File Software Hsm operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+/// Creates file_software_hsm
 pub async fn create_file_software_hsm() -> Result<RustSoftwareHsm, BearDogError> {
         implementation: "RustSoftwareHsm".to_string(),
         key_storage_path: "/tmp/beardog_file_hsm_keys".to_string(),
 
+/// Create Database Software Hsm operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+/// Creates database_software_hsm
 pub async fn create_database_software_hsm() -> Result<RustSoftwareHsm, BearDogError> {
         key_storage_path: "/tmp/beardog_database_hsm_keys".to_string(),
 
-pub fn validate_config(config: &SoftwareHsmConfig) -> Result<(), BearDogError> {
+/// Validate Config operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Validates config
+    /// Validates config
+    pub fn validate_config(config: &SoftwareHsmConfig) -> Result<(), BearDogError> {
 
     if config.key_store_config.cache_size == 0 {
-        return Err(beardog_errors::BearDogError::configuration("Cache size must be greater than 0".to_string(),
-        ));
+        return Err(beardog_errors::BearDogError::configuration("Cache size must be greater than 0"));
     }
 
     if matches!(
@@ -145,11 +176,7 @@ pub fn validate_config(config: &SoftwareHsmConfig) -> Result<(), BearDogError> {
         MemoryProtectionLevel::Maximum
     ) {
 
-    Ok(())
-
-pub fn get_capabilities_summary() -> SoftwareHsmCapabilities {
-    SoftwareHsmCapabilities {
-        supported_key_types: vec![
+    Ok(vec![
             KeyType::Aes256,
             KeyType::ChaCha20,
             KeyType::EccP256,
@@ -166,8 +193,7 @@ pub fn get_capabilities_summary() -> SoftwareHsmCapabilities {
             Algorithm::RsaSha256,
             Algorithm::HkdfSha256,
         supported_crypto_backends: get_supported_crypto_backends(),
-        supported_storage_backends: get_supported_storage_backends(),
-        max_key_size: 4096,
+        supported_storage_backends: get_supported_storage_backends(4096,
         supports_key_generation: true,
         supports_key_import: true,
         supports_key_export: false, // For security reasons
@@ -182,34 +208,49 @@ pub fn get_capabilities_summary() -> SoftwareHsmCapabilities {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SoftwareHsmCapabilities {
 
+    /// Collection of supported key types
     pub supported_key_types: Vec<KeyType>,
 
+    /// Collection of supported algorithms
     pub supported_algorithms: Vec<Algorithm>,
 
+    /// Collection of supported crypto backends
     pub supported_crypto_backends: Vec<CryptoBackend>,
 
+    /// Collection of supported storage backends
     pub supported_storage_backends: Vec<KeyStorageType>,
 
+    /// Number of max_key_size
     pub max_key_size: u32,
 
+    /// Whether supports_key_generation is enabled
     pub supports_key_generation: bool,
 
+    /// Whether supports_key_import is enabled
     pub supports_key_import: bool,
 
+    /// Whether supports_key_export is enabled
     pub supports_key_export: bool,
 
+    /// Whether supports_key_derivation is enabled
     pub supports_key_derivation: bool,
 
+    /// Whether supports_backup is enabled
     pub supports_backup: bool,
 
+    /// Whether supports_restore is enabled
     pub supports_restore: bool,
 
+    /// Whether supports_audit_logging is enabled
     pub supports_audit_logging: bool,
 
+    /// Whether supports_health_monitoring is enabled
     pub supports_health_monitoring: bool,
 
+    /// Whether memory_protection_available is enabled
     pub memory_protection_available: bool,
 
+    /// Whether hardware_backed is enabled
     pub hardware_backed: bool,
 #[cfg(test)]
 mod tests {
@@ -217,19 +258,12 @@ mod tests {
     use *;
 
     #[tokio::test]
-    async fn test_create_default_software_hsm() -> Result<(), BearDogError> {
-        let hsm = create_default_software_hsm().await;
-        assert!(hsm.is_ok());
-        Ok(())}
-
-    async fn test_key_store_creation() -> Result<(), BearDogError> {
-        let config = KeyStoreConfig {
-            storage_type: KeyStorageType::InMemory,
+    fn test_create_default_software_hsm(KeyStorageType::InMemory,
             backup_enabled: false,
             cache_size: 1024,
             db_config: None,
         };
-        let key_store = SoftwareKeyStore::new(&config).await;
+        let key_store = SoftwareKeyStore::new(&config);
         assert!(key_store.is_ok());
     #[test]
     fn test_get_capabilities_summary() -> Result<(), BearDogError> {
@@ -239,6 +273,7 @@ mod tests {
         assert!(capabilities.supports_audit_logging);
         assert!(capabilities.memory_protection_available);
     #[allow(clippy::const_is_empty)]}
+
 
     fn test_version_info() -> Result<(), BearDogError> {
         assert!(!VERSION.is_empty());

@@ -4,7 +4,9 @@ use beardog_errors::BearDogError;
 use std::time::Duration;
 use tracing::{debug, error, warn};
 
-pub async fn with_operation_context<F, Fut, T>(
+
+/// Creates instance with operation context
+pub fn with_operation_context<F, Fut, T>(
     operation_name: &str,
     operation: F,
 ) -> Result<T, BearDogError>
@@ -13,7 +15,7 @@ where
     Fut: std::future::Future<Output = Result<T, BearDogError>>,
 {
     debug!("🔄 Starting operation: {}", operation_name);
-    match operation().await {
+    match operation() {
         Ok(result) => {
             debug!("✅ Operation completed: {}", operation_name);
             Ok(result)
@@ -24,7 +26,9 @@ where
     }
 }
 
-pub async fn with_retry<F, Fut, T, E>(
+
+/// Creates instance with retry
+pub fn with_retry<F, Fut, T, E>(
     operation_name: &str,
     max_retries: usize,
     base_delay: Duration,
@@ -38,11 +42,11 @@ where
     let mut last_error = None;
     for attempt in 0..=max_retries {
         let delay = base_delay * 2_u32.pow(attempt as u32);
-        match operation().await {
+        match operation() {
             Ok(result) => {
                 if attempt > 0 {
                     debug!(
-                        "✅ Operation '{}' succeeded on attempt {}",
+                        "✅ Operation "{}" succeeded on attempt {}",
                         operation_name,
                         attempt + 1
                     );
@@ -53,7 +57,7 @@ where
                 last_error = Some(format!("{e}"));
                 if attempt < max_retries {
                     warn!(
-                        "⚠️ Operation '{}' failed on attempt {}: {} (retrying in {:?})",
+                        "⚠️ Operation "{}" failed on attempt {}: {} (retrying in {:?})",
                         operation_name,
                         attempt + 1,
                         e,
@@ -62,7 +66,7 @@ where
                     tokio::time::sleep(delay).await;
                 } else {
                     error!(
-                        "❌ Operation '{}' failed after {} attempts: {}",
+                        "❌ Operation "{}" failed after {} attempts: {}",
                         operation_name,
                         max_retries + 1,
                         e
@@ -73,13 +77,15 @@ where
     }
     
     Err(BearDogError::internal(format!(
-        "Operation '{}' failed after {} retries: {}",
+        "Operation "{}" failed after {} retries: {}",
         operation_name,
         max_retries + 1,
         last_error.unwrap_or_else(|| "Unknown error".to_string())
     )))
 }
 
+/// Validates input
+/// Validates input
 pub fn validate_input<T, F>(value: T, validator: F, field_name: &str) -> Result<T, BearDogError>
 where
     F: FnOnce(&T) -> bool,
@@ -91,7 +97,9 @@ where
     }
 }
 
-pub async fn with_cleanup<F, Fut, C, CleanupFut, T>(
+
+/// Creates instance with cleanup
+pub fn with_cleanup<F, Fut, C, CleanupFut, T>(
     operation_name: &str,
     operation: F,
     cleanup: C,
@@ -102,11 +110,11 @@ where
     C: FnOnce() -> CleanupFut,
     CleanupFut: std::future::Future<Output = Result<(), BearDogError>>,
 {
-    let result = operation().await;
+    let result = operation();
 
-    if let Err(cleanup_error) = cleanup().await {
+    if let Err(cleanup_error) = cleanup() {
         warn!(
-            "⚠️ Cleanup failed for operation '{}': {}",
+            "⚠️ Cleanup failed for operation "{}": {}",
             operation_name, cleanup_error
         );
     }
@@ -114,6 +122,8 @@ where
     result
 }
 
+/// Loads config_with_fallback
+/// Loads config_with_fallback
 pub fn load_config_with_fallback<T>(
     primary_loader: impl FnOnce() -> Result<T, BearDogError>,
     fallback_loader: impl FnOnce() -> Result<T, BearDogError>,

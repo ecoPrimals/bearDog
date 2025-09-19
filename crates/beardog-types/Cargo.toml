@@ -2,56 +2,71 @@
 name = "beardog-types"
 version = "3.0.0"
 edition = "2021"
-authors = ["BearDog Security Team"]
-description = "Canonical type definitions for BearDog Security Manager"
+description = "Canonical type system for the BearDog distributed security ecosystem"
 license = "AGPL-3.0-only"
-homepage.workspace = true
-repository.workspace = true
+repository = "https://github.com/ecoPrimals/beardog"
+authors = ["BearDog Team <beardog@ecoprimals.dev>"]
 readme = "README.md"
-keywords = ["types", "security", "canonical", "cryptography", "enterprise"]
-categories = ["data-structures", "cryptography", "security", "development-tools", "enterprise"]
+keywords = ["types", "security", "distributed", "canonical", "beardog"]
+categories = ["data-structures", "rust-patterns"]
 documentation = "https://docs.rs/beardog-types"
+rust-version = "1.75"
+homepage.workspace = true
 
 [dependencies]
-# Core dependencies
-beardog-errors = { path = "../beardog-errors" }
-
-# Core serialization
-serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-
-# Time handling
-chrono = { version = "0.4", features = ["serde"] }
-
-# UUID generation
-uuid = { version = "1.0", features = ["v4", "serde"] }
-
-# Error handling
-thiserror = "1.0"
-
-# Async runtime
-tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "time", "fs", "macros"], optional = true }
-
-# Configuration support (optional)
-serde_yaml = { version = "0.9", optional = true }
-toml = { version = "0.8", optional = true }
-
-# Crypto support (optional)  
-ring = { version = "0.17", optional = true }
-
-# Network support (optional)
-reqwest = { version = "0.12", features = ["json"], optional = true }
-
-# Logging
+thiserror = { workspace = true }
 tracing = "0.1"
+tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "time", "fs", "macros"], optional = true }
 rand = "0.8"
+async-trait = "0.1"
+
+# Safe concurrent data structures
+crossbeam = "0.8"
+parking_lot = "0.12"
 
 [dev-dependencies]
 tokio-test = "0.4"
+criterion = { version = "0.5", features = ["html_reports"] }
 
-# Feature flags for optional functionality
 [features]
-default = ["config"]
-crypto = ["ring"]
-network = ["reqwest", "tokio"]
-config = ["serde_yaml", "toml", "tokio"]  # Configuration loading features 
+default = [ "config",]
+crypto = [ "ring",]
+network = [ "reqwest", "tokio",]
+config = [ "serde_yaml", "toml", "tokio",]
+
+[[bench]]
+name = "config_benchmarks"
+harness = false
+
+[dependencies.beardog-errors]
+path = "../beardog-errors"
+
+[dependencies.serde]
+version = "1.0"
+features = [ "derive",]
+
+[dependencies.chrono]
+version = "0.4"
+features = [ "serde",]
+
+[dependencies.uuid]
+version = "1.0"
+features = [ "v4", "serde",]
+
+[dependencies.serde_yaml]
+version = "0.9"
+optional = true
+
+[dependencies.toml]
+version = "0.8"
+optional = true
+
+[dependencies.ring]
+version = "0.17"
+optional = true
+
+[dependencies.reqwest]
+version = "0.12"
+features = [ "json",]
+optional = true

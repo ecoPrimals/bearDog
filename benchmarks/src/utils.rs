@@ -15,12 +15,7 @@ pub fn calculate_stats(measurements: &[Duration]) -> BenchmarkStats {
             diff * diff
         })
         .sum::<f64>()
-        / measurements.len() as f64;
-
-    let std_dev = variance.sqrt();
-
-    BenchmarkStats {
-        mean_ns: mean,
+        / measurements.len(mean,
         std_dev_ns: std_dev,
         min_ns: measurements
             .iter()
@@ -32,13 +27,7 @@ pub fn calculate_stats(measurements: &[Duration]) -> BenchmarkStats {
             .max()
             .map(|d| d.as_nanos() as f64)
             .unwrap_or(0.0),
-        count: measurements.len(),
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct BenchmarkStats {
-    pub mean_ns: f64,
+        count: measurements.len(f64,
     pub std_dev_ns: f64,
     pub min_ns: f64,
     pub max_ns: f64,
@@ -46,9 +35,7 @@ pub struct BenchmarkStats {
 }
 
 impl Default for BenchmarkStats {
-    fn default() -> Self {
-        Self {
-            mean_ns: 0.0,
+    fn default(0.0,
             std_dev_ns: 0.0,
             min_ns: 0.0,
             max_ns: 0.0,

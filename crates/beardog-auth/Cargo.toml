@@ -1,24 +1,63 @@
 [package]
 name = "beardog-auth"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
 description = "BearDog auth module"
-authors.workspace = true
+repository = "https://github.com/eastgate-software/beardog"
+rust-version = "1.75"
+homepage = "https://beardog.dev"
+documentation = "https://docs.rs/beardog"
+keywords = [ "auth", "authentication", "authorization", "beardog", "security",]
+categories = [ "authentication", "security", "development-tools",]
 
-[dependencies]
-beardog-errors = { workspace = true }
-beardog-types = { workspace = true }
-beardog-traits = { workspace = true }
-beardog-security = { workspace = true }
-tokio = { workspace = true }
-serde = { workspace = true }
-chrono = { workspace = true }
-tracing = { workspace = true }
-uuid = { workspace = true }
-thiserror = { workspace = true }
-# async-trait = { workspace = true }  # REMOVED: Modernized to native async fn
-argon2 = { workspace = true }
-rand = { workspace = true }
-base64 = { workspace = true }
-serde_json = { workspace = true }
+[package.version]
+workspace = true
+
+[package.edition]
+workspace = true
+
+[package.license]
+workspace = true
+
+[package.authors]
+workspace = true
+
+[dependencies.beardog-errors]
+workspace = true
+
+[dependencies.beardog-types]
+workspace = true
+
+[dependencies.beardog-traits]
+workspace = true
+
+[dependencies.beardog-security]
+workspace = true
+
+[dependencies.tokio]
+workspace = true
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.chrono]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.uuid]
+workspace = true
+
+[dependencies.thiserror]
+workspace = true
+
+[dependencies.argon2]
+workspace = true
+
+[dependencies.rand]
+workspace = true
+
+[dependencies.base64]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true

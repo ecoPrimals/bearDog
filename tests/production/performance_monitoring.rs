@@ -1,6 +1,5 @@
 use beardog_errors::BearDogError;
 
-
 use beardog::production::*;
 
 pub async fn test_performance_monitoring(prod_manager: &mut ProductionManager) {
@@ -8,10 +7,9 @@ pub async fn test_performance_monitoring(prod_manager: &mut ProductionManager) {
 
     let performance_metrics = prod_manager
         .get_performance_metrics()
-        .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Performance metrics should be available", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Performance metrics should be available", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Performance metrics should be available", e))
 })?;
 
     assert!(
@@ -29,10 +27,9 @@ pub async fn test_performance_monitoring(prod_manager: &mut ProductionManager) {
 
     let benchmark_results = prod_manager
         .run_performance_benchmarks()
-        .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Performance benchmarks should succeed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Performance benchmarks should succeed", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Performance benchmarks should succeed", e))
 })?;
 
     assert!(
@@ -59,19 +56,17 @@ async fn test_performance_monitoring_standalone() {
     let config = BearDogConfig::production();
     let core = Arc::new(
         BearDogCore::new(config)
-            .await
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Core initialization failed", e))
 })?,
     );
 
     let mut production_manager = ProductionManager::new(core.clone())
-        .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Production manager creation failed", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Production manager creation failed", e))
 })?;
         
-    test_performance_monitoring(&mut production_manager).await;
+    test_performance_monitoring(&mut production_manager);
 } 

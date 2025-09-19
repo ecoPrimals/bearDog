@@ -48,38 +48,16 @@ impl MockSecurityProviderBridge {
 
     fn register_vendor_integration(&mut self, vendor: &str) {
         let integration = MockVendorHsmIntegration {
-            vendor_name: vendor.to_string(),
-            is_healthy: true,
-            performance_metrics: MockVendorPerformanceMetrics {
-                avg_latency_ms: match vendor {
-                    "SafeNet" => 15.0,
-                    "Thales" => 12.0,
-                    "BearDog" => 5.0,
-                    _ => 20.0,
-                },
-                operations_per_second: match vendor {
-                    "SafeNet" => 1000,
-                    "Thales" => 1200,
-                    "BearDog" => 2000,
-                    _ => 800,
-                },
-                error_rate: 0.001, // 0.1% error rate
-            },
-        };
-        
-        self.vendor_integrations.insert(vendor.to_string(), integration);
-    }
-
-    async fn perform_vendor_operation(&mut self, vendor: &str, operation: OperationType) -> Result<Vec<u8, BearDogError>> {
+            vendor_name: vendor.to_string() -> Result<Vec<u8, BearDogError>> {
         let start_time = Instant::now();
 
         let integration = self.vendor_integrations.get(vendor)
-            .ok_or_else(|| BearDogError::not_found(format_args!("Vendor {) not registered", vendor).to_string(),
+            .ok_or_else(|| BearDogError::not_found(format!("Vendor {) not registered", vendor),
             })?;
 
         if !integration.is_healthy {
             return Err(BearDogError::Hsm {
-                message: format_args!("Vendor {} is not healthy", vendor).to_string(),
+                message: format!("Vendor {} is not healthy", vendor),
             });
         }
 
@@ -92,7 +70,7 @@ impl MockSecurityProviderBridge {
             if rng.gen::<f64>() < integration.performance_metrics.error_rate {
                 self.metrics_collector.record_error(vendor, &operation);
                 return Err(BearDogError::Hsm {
-                    message: format_args!("Simulated error for vendor {}", vendor).to_string(),
+                    message: format!("Simulated error for vendor {}", vendor),
                 });
             }
         }
@@ -109,28 +87,19 @@ impl MockSecurityProviderBridge {
             OperationType::HumanEntropyGeneration => vec![0u8; 32], // 256 bits of entropy
         };
 
-        Ok(result_data)
-    }
-
-    async fn perform_multi_vendor_operation(&mut self, preferred_vendors: Vec<&str>, operation: OperationType) -> Result<Vec<u8, BearDogError>> {
+        Ok(Vec<&str>, operation: OperationType) -> Result<Vec<u8, BearDogError>> {
         let mut last_error = None;
         
         for vendor in preferred_vendors {
-            match self.perform_vendor_operation(vendor, operation.clone()).await {
-                Ok(result) => {
-                    println!("✅ Operation succeeded with vendor: {}", vendor);
-                    return Ok(result);
-                }
-                Err(err) => {
-                    println!("❌ Operation failed with vendor {}: {:?}", vendor, err);
+            match self.perform_vendor_operation({}", vendor);
+                    return Ok({:?}", vendor, err);
                     last_error = Some(err);
 
                 }
             }
         }
 
-        Err(last_error.unwrap_or_else(|| BearDogError::not_found("No vendors available".to_string(),
-        )))
+        Err(last_error.unwrap_or_else(|| BearDogError::not_found("No vendors available")))
     }
 
     fn get_security_metrics(&self) -> SecurityMetrics {
@@ -143,15 +112,7 @@ impl MockSecurityProviderBridge {
     }
 
     fn get_vendor_metrics(&self) -> HashMap<String, VendorMetrics> {
-        let mut vendor_metrics = HashMap::with_capacity(16);
-        
-        for (vendor_name, integration) in &self.vendor_integrations {
-            let operations = self.metrics_collector.operation_counters.get(vendor_name).unwrap_or(&0);
-            let errors = self.metrics_collector.error_counters.get(vendor_name).unwrap_or(&0);
-            let error_rate = if *operations > 0 { *errors as f64 / *operations as f64 } else { 0.0 };
-            
-            vendor_metrics.insert(vendor_name.clone(), VendorMetrics {
-                operations_count: *operations,
+        let mut vendor_metrics = HashMap::with_capacity(*operations,
                 avg_latency_ms: integration.performance_metrics.avg_latency_ms,
                 error_rate,
                 is_healthy: integration.is_healthy,
@@ -161,7 +122,7 @@ impl MockSecurityProviderBridge {
         vendor_metrics
     }
 
-    fn set_vendor_health(&mut self, vendor: &str, is_healthy: bool) {
+    fn set_vendor_health(&str, is_healthy: bool) {
         if let Some(integration) = self.vendor_integrations.get_mut(vendor) {
             integration.is_healthy = is_healthy;
         }
@@ -173,18 +134,11 @@ impl MockSecurityMetricsCollector {
         Self {
             operation_counters: HashMap::with_capacity(16),
             latency_metrics: HashMap::with_capacity(16),
-            error_counters: HashMap::with_capacity(16),
-        }
-    }
-
-    fn record_operation(&mut self, vendor: &str, operation: &OperationType, latency_ms: f64) {
-        let key = format_args!("{}_{:?}", vendor, operation).to_string();
+            error_counters: HashMap::with_capacity(&str, operation: &OperationType, latency_ms: f64) {
+        let key = format!("{}_{:?}", vendor, operation);
         *self.operation_counters.entry(key.clone()).or_insert(0) += 1;
-        self.latency_metrics.entry(key).or_insert_with(Vec::new).push(latency_ms);
-    }
-
-    fn record_error(&mut self, vendor: &str, operation: &OperationType) {
-        let key = format_args!("{}_{:?}", vendor, operation).to_string();
+        self.latency_metrics.entry(key).or_insert_with(Vec::new).push(&str, operation: &OperationType) {
+        let key = format!("{}_{:?}", vendor, operation);
         *self.error_counters.entry(key).or_insert(0) += 1;
     }
 
@@ -193,29 +147,20 @@ impl MockSecurityMetricsCollector {
         if all_latencies.is_empty() {
             0.0
         } else {
-            all_latencies.iter().sum::<f64>() / all_latencies.len() as f64
-        }
-    }
-}
-
-#[derive(Debug)]
-struct SecurityMetrics {
-    total_operations: u64,
+            all_latencies.iter().sum::<f64>() / all_latencies.len(u64,
     avg_latency_ms: f64,
     total_errors: u64,
     vendor_metrics: HashMap<String, VendorMetrics>,
 }
 
-#[derive(Debug)]
-struct VendorMetrics {
-    operations_count: u64,
+#[derive(Debug, Clone)]
     avg_latency_ms: f64,
     error_rate: f64,
     is_healthy: bool,
 }
 
 #[tokio::test]
-async fn test_vendor_registration() {
+fn test_vendor_registration() {
     let mut bridge = MockSecurityProviderBridge::new();
 
     let vendors = vec!["SafeNet", "Thales", "BearDog", "Utimaco"];
@@ -229,7 +174,7 @@ async fn test_vendor_registration() {
         assert!(bridge.vendor_integrations.contains_key(*vendor));
         let integration = bridge.vendor_integrations.get(*vendor).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
 })?;
         assert_eq!(integration.vendor_name, *vendor);
         assert!(integration.is_healthy);
@@ -254,25 +199,12 @@ async fn test_performance_monitoring() {
     
     for vendor in ["SafeNet", "Thales", "BearDog"] {
         for operation in &operations {
-            let result = bridge.perform_vendor_operation(vendor, operation.clone()).await;
+            let result = bridge.perform_vendor_operation(vendor, operation.clone());
             assert!(result.is_ok(), "Operation {:?} failed for vendor {}", operation, vendor);
         }
     }
 
-    let metrics = bridge.get_security_metrics();
-    assert_eq!(metrics.total_operations, 9); // 3 vendors × 3 operations
-    assert!(metrics.avg_latency_ms > 0.0);
-    assert_eq!(metrics.total_errors, 0); // No errors expected in normal operation
-
-    assert_eq!(metrics.vendor_metrics.len(), 3);
-    
-    for (vendor_name, vendor_metrics) in &metrics.vendor_metrics {
-        assert_eq!(vendor_metrics.operations_count, 3);
-        assert!(vendor_metrics.avg_latency_ms > 0.0);
-        assert!(vendor_metrics.error_rate < 0.01); // Less than 1% error rate
-        assert!(vendor_metrics.is_healthy);
-        
-        println!("📊 {} HSM: {} operations, {:.2}ms avg latency, {:.3}% error rate",
+    let metrics = bridge.get_security_metrics({} operations, {:.2}ms avg latency, {:.3}% error rate",
                  vendor_name, vendor_metrics.operations_count, 
                  vendor_metrics.avg_latency_ms, vendor_metrics.error_rate * 100.0);
     }
@@ -287,22 +219,22 @@ async fn test_multi_vendor_failover() {
     bridge.register_vendor_integration("BearDog");
 
     let preferred_vendors = vec!["SafeNet", "Thales", "BearDog"];
-    let result = bridge.perform_multi_vendor_operation(preferred_vendors.clone(), OperationType::GenerateKey).await;
+    let result = bridge.perform_multi_vendor_operation(preferred_vendors.clone(), OperationType::GenerateKey);
     assert!(result.is_ok());
 
     bridge.set_vendor_health("SafeNet", false);
 
-    let result = bridge.perform_multi_vendor_operation(preferred_vendors.clone(), OperationType::Sign).await;
+    let result = bridge.perform_multi_vendor_operation(preferred_vendors.clone(), OperationType::Sign);
     assert!(result.is_ok());
 
     bridge.set_vendor_health("Thales", false);
 
-    let result = bridge.perform_multi_vendor_operation(preferred_vendors.clone(), OperationType::Verify).await;
+    let result = bridge.perform_multi_vendor_operation(preferred_vendors.clone(), OperationType::Verify);
     assert!(result.is_ok());
 
     bridge.set_vendor_health("BearDog", false);
 
-    let result = bridge.perform_multi_vendor_operation(preferred_vendors, OperationType::Encrypt).await;
+    let result = bridge.perform_multi_vendor_operation(preferred_vendors, OperationType::Encrypt);
     assert!(result.is_err());
     
     println!("✅ Multi-vendor failover test completed successfully");
@@ -313,7 +245,7 @@ async fn test_concurrent_vendor_operations() {
     let bridge = std::sync::Arc::new(tokio::sync::Mutex::new(MockSecurityProviderBridge::new()));
 
     {
-        let mut bridge_lock = bridge.lock().await;
+        let mut bridge_lock = bridge.lock();
         bridge_lock.register_vendor_integration("SafeNet");
         bridge_lock.register_vendor_integration("Thales");
         bridge_lock.register_vendor_integration("BearDog");
@@ -329,14 +261,14 @@ async fn test_concurrent_vendor_operations() {
             let vendor_name = vendor.to_string();
             
             let task = tokio::spawn(async move {
-                let mut bridge_lock = bridge_clone.lock().await;
+                let mut bridge_lock = bridge_clone.lock();
                 let operation = match i % 3 {
                     0 => OperationType::GenerateKey,
                     1 => OperationType::Sign,
                     _ => OperationType::Verify,
                 };
                 
-                bridge_lock.perform_vendor_operation(&vendor_name, operation).await
+                bridge_lock.perform_vendor_operation(&vendor_name, operation)
             });
             
             tasks.push(task);
@@ -344,7 +276,7 @@ async fn test_concurrent_vendor_operations() {
     }
 
     let start_time = Instant::now();
-    let results = futures::future::join_all(tasks).await;
+    let results = futures::future::join_all(tasks);
     let total_duration = start_time.elapsed();
 
     let mut success_count = 0;
@@ -352,7 +284,7 @@ async fn test_concurrent_vendor_operations() {
         assert!(result.is_ok()); // Task should not panic
         if result.map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
 })?.is_ok() {
             success_count += 1;
         }
@@ -361,14 +293,13 @@ async fn test_concurrent_vendor_operations() {
     assert_eq!(success_count, 15); // 3 vendors × 5 operations each
 
     {
-        let bridge_lock = bridge.lock().await;
+        let bridge_lock = bridge.lock();
         let metrics = bridge_lock.get_security_metrics();
         assert_eq!(metrics.total_operations, 15);
         assert!(metrics.avg_latency_ms > 0.0);
     }
     
-    println!("✅ Completed {} concurrent vendor operations in {:?}", 
-             success_count, total_duration);
+    println!("✅ Completed {} concurrent vendor operations in {}", success_count);
 
     assert!(total_duration < Duration::from_secs(5));
 }
@@ -390,7 +321,7 @@ async fn test_security_provider_performance_load() {
             _ => OperationType::Encrypt,
         };
         
-        let result = bridge.perform_vendor_operation("BearDog", operation).await;
+        let result = bridge.perform_vendor_operation("BearDog", operation);
         assert!(result.is_ok(), "Operation {} failed", i);
     }
     
@@ -410,7 +341,7 @@ async fn test_security_provider_performance_load() {
 }
 
 #[tokio::test]
-async fn test_vendor_health_monitoring() {
+fn test_vendor_health_monitoring() {
     let mut bridge = MockSecurityProviderBridge::new();
 
     let vendors = vec!["SafeNet", "Thales", "BearDog"];
@@ -425,15 +356,15 @@ async fn test_vendor_health_monitoring() {
 
     bridge.set_vendor_health("SafeNet", false);
 
-    let result = bridge.perform_vendor_operation("SafeNet", OperationType::GenerateKey).await;
+    let result = bridge.perform_vendor_operation("SafeNet", OperationType::GenerateKey);
     assert!(result.is_err(), "Operation should fail for unhealthy vendor");
 
-    let result = bridge.perform_vendor_operation("Thales", OperationType::GenerateKey).await;
+    let result = bridge.perform_vendor_operation("Thales", OperationType::GenerateKey);
     assert!(result.is_ok(), "Operation should succeed for healthy vendor");
 
     bridge.set_vendor_health("SafeNet", true);
 
-    let result = bridge.perform_vendor_operation("SafeNet", OperationType::GenerateKey).await;
+    let result = bridge.perform_vendor_operation("SafeNet", OperationType::GenerateKey);
     assert!(result.is_ok(), "Operation should succeed for recovered vendor");
     
     println!("✅ Vendor health monitoring test completed successfully");
@@ -455,7 +386,7 @@ async fn test_security_metrics_collection() {
     ];
     
     for (vendor, operation) in test_operations {
-        let result = bridge.perform_vendor_operation(vendor, operation).await;
+        let result = bridge.perform_vendor_operation(vendor, operation);
         assert!(result.is_ok(), "Operation {:?} failed for vendor {}", operation, vendor);
     }
 
@@ -465,13 +396,13 @@ async fn test_security_metrics_collection() {
 
     let safenet_metrics = metrics.vendor_metrics.get("SafeNet").map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
 })?;
     assert_eq!(safenet_metrics.operations_count, 2);
     
     let beardog_metrics = metrics.vendor_metrics.get("BearDog").map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", e))
 })?;
     assert_eq!(beardog_metrics.operations_count, 3);
 

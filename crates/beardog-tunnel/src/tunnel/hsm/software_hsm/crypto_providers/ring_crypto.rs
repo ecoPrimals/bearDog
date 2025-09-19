@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use crate::tunnel::hsm::software_hsm::CryptoProvider;
 use crate::tunnel::hsm::types::KeyType; // Explicit KeyType import
 use crate::tunnel::hsm::types::*;
@@ -17,6 +22,11 @@ pub struct RingCryptoProvider {
 }
 impl RingCryptoProvider {
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub fn new() -> Result<Self, BearDogError> {
         info!("🔧 Initializing Ring crypto provider with hardware acceleration");
         Ok(Self {
@@ -25,22 +35,25 @@ impl RingCryptoProvider {
         })
     }
 
+/// Name operation.
     pub fn name(&self) -> &str {
         &self.name
 
 impl CryptoProvider for RingCryptoProvider {
 
-    async fn initialize(&self) -> Result<(), BearDogError> {
+    /// Initializes componentialize
+    fn initialize(&self) -> Result<(), BearDogError> {
         info!("🚀 Ring crypto provider initialized successfully");
         Ok(())
 
-    async fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, BearDogError>> {
+
+    fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, BearDogError>> {
         debug!("🔑 Generating {:?} key with Ring provider", key_type);
         let key_length = match key_type {
             KeyType::Aes256 => 32,
             KeyType::Ed25519 => 32,
             _ => {
-                return Err(BearDogError::unsupported_operation(format!("Unsupported key type: {key_type:?)"},
+                return Err(BearDogError::unsupported_operation({}key_type:?"},
                 })
             }
         };
@@ -50,10 +63,7 @@ impl CryptoProvider for RingCryptoProvider {
             .map_err(|e| BearDogError::Crypto {
                 message: format!("Failed to generate random key material: {e:?}"),
             })?;
-        debug!("✅ Generated {} bytes of key material", key_material.len());
-        Ok(key_material)
-
-    async fn encrypt(&self, key_material: &[u8], plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+        debug!("✅ Generated {} bytes of key material", key_material.len(&[u8], plaintext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
         debug!(
             "🔐 Encrypting {} bytes with Ring AES-256-GCM",
             plaintext.len()
@@ -83,12 +93,7 @@ impl CryptoProvider for RingCryptoProvider {
         key.seal_in_place_append_tag(nonce, ring::aead::Aad::empty(), &mut in_out)
                 message: format!("Failed to encrypt data: {e:?}"),
 
-        let mut result = nonce_bytes.to_vec();
-        result.extend_from_slice(&in_out);
-        debug!("✅ Encrypted to {} bytes (including nonce)", result.len());
-        Ok(result)
-
-    async fn decrypt(&self, key_material: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+        let mut result = nonce_bytes.to_vec(&[u8], ciphertext: &[u8]) -> Result<Vec<u8>, BearDogError>> {
             "🔓 Decrypting {} bytes with Ring AES-256-GCM",
             ciphertext.len()
         if ciphertext.len() < NONCE_LEN {
@@ -102,44 +107,20 @@ impl CryptoProvider for RingCryptoProvider {
         let plaintext = key
             .open_in_place(nonce, ring::aead::Aad::empty(), &mut in_out)
                 message: format!("Failed to decrypt data: {e:?}"),
-        debug!("✅ Decrypted to {} bytes", plaintext.len());
-        Ok(plaintext.to_vec())
-
-    async fn sign(&self, key_material: &[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
-        debug!("✍️ Signing {} bytes with Ring Ed25519", data.len());
-                    "Invalid private key length: expected 32, got {}",
+        debug!("✅ Decrypted to {} bytes", plaintext.len(&[u8], data: &[u8]) -> Result<Vec<u8>, BearDogError>> {
+        debug!("✍️ Signing {} bytes with Ring Ed25519", data.len(expected 32, got {}",
         let key_pair = Ed25519KeyPair::from_seed_unchecked(key_material).map_err(|e| {
             BearDogError::Crypto {
                 message: format!("Failed to create Ed25519 key pair: {e:?}"),
         })?;
-        let signature = key_pair.sign(data);
-            "✅ Generated signature of {} bytes",
-            signature.as_ref().len()
-        Ok(signature.as_ref().to_vec())
-
-    async fn verify(
-        &self,
-        key_material: &[u8],
+        let signature = key_pair.sign(&[u8],
         data: &[u8],
         signature: &[u8],
     ) -> Result<bool, BearDogError> {
             "🔍 Verifying {} byte signature for {} bytes of data",
-            signature.len(),
-            data.len()
-        if key_material.len() != ED25519_PUBLIC_KEY_LEN {
-                    "Invalid public key length: expected {}, got {}",
+            signature.len(expected {}, got {}",
                     ED25519_PUBLIC_KEY_LEN,
-        let public_key = UnparsedPublicKey::new(&ED25519, key_material);
-        match public_key.verify(data, signature) {
-            Ok(()) => {
-                debug!("✅ Signature verification successful");
-                Ok(true)
-            Err(_) => {
-                warn!("❌ Signature verification failed");
-                Ok(false)
-
-    async fn derive_key(
-        master_key: &[u8],
+        let public_key = UnparsedPublicKey::new(&[u8],
         derivation_data: &[u8],
     ) -> Result<Vec<u8>, BearDogError>> {
             "🔄 Deriving key from {} byte master key with {} bytes of derivation data",
@@ -161,10 +142,7 @@ impl CryptoProvider for RingCryptoProvider {
 impl Default for RingCryptoProvider {}
 
     fn default() -> Self {
-        Self::new().unwrap_or_else(|_| {
-
-            RingCryptoProvider {
-                rng: rand::rngs::OsRng,
+        Self::new(rand::rngs::OsRng,
             }
         })
 #[cfg(test)]
@@ -173,37 +151,33 @@ mod tests {
     use ring::signature::KeyPair;
     #[tokio::test]}
 
-    async fn test_ring_key_generation() -> Result<(), BearDogError> {
+
+    fn test_ring_key_generation() -> Result<(), BearDogError> {
         let provider = RingCryptoProvider::new().map_err(|e| {
             tracing::error!("Operation failed ({}): {:?}", "Provider creation failed", e);
-            beardog_errors::BearDogError::internal(format!(
-                "Operation failed ({}): {:?}",
-                "Provider creation failed", e
+            beardog_errors::BearDogError::internal(format!("Error: {:?}", "Provider creation failed", e
             ))
         let key = provider
             .generate_key_material(&KeyType::Aes256)
-            .await
             .map_err(|e| {
                 tracing::error!("Operation failed ({}): {:?}", "Key generation failed", e);
-                beardog_errors::BearDogError::internal(format!(
-                    "Operation failed ({}): {:?}",
-                    "Key generation failed", e
+                beardog_errors::BearDogError::internal(format!("Error: {:?}", "Key generation failed", e
                 ))
         assert_eq!(key.len(), 32);
         let key2 = provider
         assert_ne!(key, key2); // Keys should be different
-    async fn test_ring_encrypt_decrypt() -> Result<(), BearDogError> {
+    fn test_ring_encrypt_decrypt() -> Result<(), BearDogError> {
         let plaintext = b"Hello, Ring crypto world!";
-        let ciphertext = provider.encrypt(&key, plaintext).await.map_err(|e| {
+        let ciphertext = provider.encrypt(&key, plaintext).map_err(|e| {
             tracing::error!("Operation failed ({}): {:?}", "Encryption failed", e);
                 "Encryption failed", e
         assert_ne!(plaintext.to_vec(), ciphertext);
         assert!(ciphertext.len() > plaintext.len()); // Should be longer due to nonce + tag
-        let decrypted = provider.decrypt(&key, &ciphertext).await.map_err(|e| {
+        let decrypted = provider.decrypt(&key, &ciphertext).map_err(|e| {
             tracing::error!("Operation failed ({}): {:?}", "Decryption failed", e);
                 "Decryption failed", e
         assert_eq!(plaintext.to_vec(), decrypted);
-    async fn test_ring_sign_verify() -> Result<(), BearDogError> {
+    fn test_ring_sign_verify() -> Result<(), BearDogError> {
         let private_key = provider
             .generate_key_material(&KeyType::Ed25519)
 
@@ -212,7 +186,7 @@ mod tests {
                 "Key pair creation failed", e
         let public_key = key_pair.public_key().as_ref();
         let message = b"Ring crypto signature test";
-        let signature = provider.sign(&private_key, message).await.map_err(|e| {
+        let signature = provider.sign(&private_key, message).map_err(|e| {
             tracing::error!("Operation failed ({}): {:?}", "Signing failed", e);
                 "Signing failed", e
         let is_valid = provider

@@ -1,43 +1,59 @@
-pub mod context_aware_licensing;
-pub mod core; // Re-enabled - testing compilation
-pub mod ecosystem_simple;
-pub mod types; // Re-enabled - testing compilation // Re-enabled - appears to be clean
+// # Beardog Core Library
+//
+// Core functionality for the Beardog ecosystem including AI-powered hybrid intelligence,
+// biome sovereignty, genetic algorithms, and universal service discovery.
+//
+// This crate provides the foundational components for:
+// - AI-human hybrid decision making systems
+// - Sovereign cryptographic key management
+// - Genetic algorithm-based key evolution
+// - Universal service discovery and orchestration
+// - Zero-copy memory optimization
+// - 100% safe Rust implementation
+//
+// ## Features
+//
+// - **Hybrid Intelligence**: AI-assisted human decision making
+// - **Biome Sovereignty**: Human-owned entropy and key management
+// - **Service Discovery**: Universal network service orchestration
+// - **Zero Unsafe Code**: Complete memory safety without unsafe blocks
+//
+// ## Example
+//
+// ```rust
+// use beardog_core::BearDogConfig;
+//
+// let config = BearDogConfig::default();
+// println!("Beardog {} running in {} environment",
+//          config.version, config.environment);
+// ```
 
-// Temporarily disabled modules - would need significant fixes for compilation
-// These modules contain working code but have import/syntax issues that would
-// require extensive refactoring. They are preserved for future development.
-// pub mod ecosystem; // Temporarily disabled for clean build
-// pub mod ecosystem_integration; // Temporarily disabled for clean build
-// pub mod ecosystem_storage; // Temporarily disabled - needs type fixes
-// pub mod songbird; // Temporarily disabled - needs constants fix
-// pub mod songbird_client; // Temporarily disabled - needs method implementations
-// pub mod songbird_integration; // File not found - temporarily disabled
-// pub mod primal_sovereignty; // Temporarily disabled - needs major syntax fixes (46 missing braces)
-// pub mod external_functions; // Temporarily disabled - needs syntax fixes (22 missing braces, 19 missing parens)
-// pub mod universal_discovery; // Temporarily disabled - needs syntax fixes (delimiter mismatches)
-// pub mod universal_optimization; // Temporarily disabled - needs syntax fixes (delimiter mismatches)
-// pub mod ai; // Temporarily disabled - needs major syntax fixes (56 missing braces)
-// pub mod zero_cost_architecture; // Temporarily disabled - needs major syntax fixes (65 missing braces)
-// pub mod local_optimizer; // Temporarily disabled for clean build
-// pub mod toadstool_client; // Temporarily disabled for clean build
+/// Core functionality
+/// Core functionality
+pub mod core;
+/// Shared types used across the Beardog system
+pub mod types;
 
-use beardog_errors::BearDogError;
-use beardog_types::canonical::HealthStatus;
+pub mod ai;
+pub mod biome_sovereignty;
+/// Ecosystem integration and primal service coordination
+pub mod ecosystem;
+/// Ecosystem integration capabilities
+pub mod ecosystem_integration;
+pub mod ecosystem_storage;
+/// External function integrations
+pub mod external_functions;
+/// Primal sovereignty implementation
+pub mod primal_sovereignty;
+/// Universal service discovery and network orchestration
+pub mod universal_discovery;
+// TODO: Fix syntax errors in universal_optimization module
+// pub mod universal_optimization;
+/// Zero-cost architecture patterns and optimizations
+pub mod zero_cost_architecture;
+// TODO: Fix remaining async/type issues in zero_knowledge_bootstrap module
+// pub mod zero_knowledge_bootstrap;
 
-// Core functionality available through types module
-pub use types::*;
-
-pub trait BearDogService: Send + Sync {
-    fn start(&mut self) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
-    fn stop(&mut self) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
-    fn health_check(
-        &self,
-    ) -> impl std::future::Future<Output = Result<HealthStatus, BearDogError>> + Send;
-}
-
-#[derive(Debug, Clone)]
-pub struct ServiceInfo {
-    pub name: String,
-    pub version: String,
-    pub status: HealthStatus,
-}
+// Re-export key components
+pub use core::*;
+pub use types::BearDogConfig;

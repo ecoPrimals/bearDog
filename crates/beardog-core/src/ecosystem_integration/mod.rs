@@ -1,67 +1,22 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
-
+pub mod ecosystem_genetic_spawner;
 pub mod integration_engine;
 pub mod license_manager;
+pub mod performance_optimizer;
 pub mod types;
 pub mod universal_adapter;
-pub mod universal_hsm_provider;
-pub mod songbird_service_discovery;
-pub mod ecosystem_genetic_spawner;
-pub mod toadstool_client;
-pub mod examples;
+pub mod universal_compute_client;
 
-pub use integration_engine::IntegrationEngine;
-pub use license_manager::{LicenseConfig, LicenseManager};
-pub use types::{EcosystemConfig, EcosystemRequest, EcosystemResponse};
-pub use universal_adapter::{ProductionUniversalAdapter, ServiceEndpoint, UniversalAdapterConfig};
-
-pub use universal_hsm_provider::{
-    UniversalHsmProvider, 
-    EcosystemHsmProvider, 
-    EcosystemServiceDiscovery,
-    ProviderHealthStatus,
-    ProviderSelectionStrategy,
-    HsmFailoverManager,
-    IntelligentProviderSelector,
-    ProviderMetrics,
+pub use integration_engine::*;
+pub use license_manager::*;
+// Avoid ambiguous re-exports by aliasing conflicting types
+pub use performance_optimizer::{
+    CapabilityConnectionPool, ComputeCache, ConnectionMetrics as PerformanceConnectionMetrics,
+    EcosystemPerformanceOptimizer, PoolConfig as PerformancePoolConfig,
 };
-
-pub use songbird_service_discovery::{
-    SongbirdServiceDiscovery,
-    SongbirdServiceDiscoveryConfig,
-    SongbirdServiceDiscoveryFactory,
-    BearDogServiceInfo,
-    ServiceRegistration,
-    ServiceRegistryResponse,
-};
-
-pub use ecosystem_genetic_spawner::{
-    EcosystemGeneticSpawner,
-    EcosystemCapability,
-    EcosystemGeneticContribution,
-    EcosystemGeneticBlueprint,
-    EcosystemHybridNode,
-    EcosystemSpawningRequirements,
-    EcosystemResourceAllocation,
-    EcosystemSpawningOperation,
-    EcosystemSpawningStatistics,
-    EcosystemPrimalClient,
-    GeneticTrait,
-    TraitCategory,
-    SpawningStatus,
-    SpawningStage,
-    NodeHealthStatus,
-};
-
-pub use toadstool_client::{
-    ToadStoolComputeClient,
-    ToadStoolClientConfig,
-    ToadStoolClientFactory,
-    ToadStoolComputeGenetics,
-    ToadStoolComputeRequest,
-    ToadStoolComputeResponse,
-    ComputeArchitecture,
-    ProcessingCapability,
-    OptimizationType,
-    ComputePriority,
-};
+pub use types::*;
+pub use universal_adapter::*;
+pub use universal_compute_client::*;

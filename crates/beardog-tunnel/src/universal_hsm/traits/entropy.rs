@@ -1,89 +1,103 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 
 use super::*;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum HumanEntropyMethod {
-
-    MouseMovement,
-
-    KeystrokeTiming,
-
-    TouchGestures,
-
-    VoicePattern,
-
-    BiometricPattern,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HumanEntropyData {
-
-    pub entropy_bytes: Vec<u8>,
-
+#[derive(Debug, Clone)]
+    /// The collection method value
     pub collection_method: HumanEntropyMethod,
 
+    /// The estimated entropy bits value
     pub estimated_entropy_bits: f64,
 
+    /// The collected at value
     pub collected_at: DateTime<Utc>,
 
+    /// Number of collection_duration_ms
     pub collection_duration_ms: u64,
 
+    /// The quality score value
     pub quality_score: f64,
 
 pub struct HumanEntropyCapabilities {
 
+    /// Whether supports_ephemeral_seeds is enabled
     pub supports_ephemeral_seeds: bool,
 
+    /// Collection of collection methods
     pub collection_methods: Vec<HumanEntropyMethod>,
+
 
     pub realtime_entropy: bool,
 
+    /// Whether quality_assessment is enabled
     pub quality_assessment: bool,
 
+    /// Whether biometric_integration is enabled
     pub biometric_integration: bool,
 
+    /// The min entropy bits value
     pub min_entropy_bits: f64,
 
+    /// The max collection rate value
     pub max_collection_rate: f64,
 
 pub struct EphemeralSeed {
 
+    /// Collection of seed bytes
     pub seed_bytes: Vec<u8>,
 
+    /// Collection of source entropy
     pub source_entropy: Vec<u8>,
 
+    /// The expires at value
     pub expires_at: DateTime<Utc>,
+
 
     pub seed_id: String,
 
+    /// Mapping of metadata
     pub metadata: HashMap<String, serde_json::Value>,
 
+    /// Collection of initial seed
     pub initial_seed: Vec<u8>,
+    /// Collection of entropy source types
     pub entropy_source_types: Vec<String>,
 
 pub struct EntropyQualityAssessment {
 
+    /// The overall score value
     pub overall_score: f64,
 
+    /// The randomness score value
     pub randomness_score: f64,
 
+    /// The uniqueness score value
     pub uniqueness_score: f64,
 
+    /// The timing score value
     pub timing_score: f64,
 
+    /// The method effectiveness score value
     pub method_effectiveness_score: f64,
 
+    /// Mapping of detailed metrics
     pub detailed_metrics: HashMap<String, f64>,
 
+    /// The assessed at value
     pub assessed_at: DateTime<Utc>,}
 
 impl EntropyQualityAssessment {
 
-    pub fn new(
-        randomness_score: f64,
+/// New operation.
+    /// Creates a new instance
+    pub fn new(f64,
         uniqueness_score: f64,
         timing_score: f64,
         method_effectiveness_score: f64,
@@ -97,35 +111,37 @@ impl EntropyQualityAssessment {
             timing_score,
             method_effectiveness_score,
             detailed_metrics: HashMap::with_capacity(16),
-            assessed_at: Utc::now(),
-        }
-    }
-
-    pub fn with_metric(mut self, name: &str, value: f64) -> Self {
+            assessed_at: Utc::now(&str, value: f64) -> Self {
         self.detailed_metrics.insert(name, value);
         self
 
+/// Meets Threshold operation.
     pub fn meets_threshold(&self, threshold: f64) -> bool {
         self.overall_score >= threshold
 
 pub struct EntropyCollectionConfig {
 
+    /// Collection of preferred methods
     pub preferred_methods: Vec<HumanEntropyMethod>,
 
+    /// The min quality threshold value
     pub min_quality_threshold: f64,
+
 
     pub max_collection_time_ms: u64,
 
+    /// The target entropy bits value
     pub target_entropy_bits: f64,
+
 
     pub provide_feedback: bool,
 
+    /// Mapping of custom parameters
     pub custom_parameters: HashMap<String, String>,}
 
 impl Default for EntropyCollectionConfig {}
 
-    fn default() -> Self {
-            preferred_methods: vec![
+    fn default(vec![
                 HumanEntropyMethod::TouchGestures,
                 HumanEntropyMethod::KeystrokeTiming,
                 HumanEntropyMethod::MouseMovement,
@@ -139,6 +155,7 @@ impl Default for EntropyCollectionConfig {}
 mod tests {
     use super::*;
     #[test]}
+
 
     fn test_human_entropy_capabilities_default() -> Result<(), BearDogError> {
         let caps = HumanEntropyCapabilities::default();
@@ -156,6 +173,7 @@ mod tests {
             HumanEntropyMethod::Custom("test".to_string()).to_string(),
             "Custom: test"}
 
+
     fn test_human_entropy_data_creation() -> Result<(), BearDogError> {
         let entropy_data = HumanEntropyData::new(
             vec![1, 2, 3, 4, 5],
@@ -172,6 +190,7 @@ mod tests {
         assert_eq!(seed.size_bytes(), 4);
         assert!(!seed.is_expired());
         assert!(seed.estimated_entropy_bits() > 0.0);}
+
 
     fn test_entropy_quality_assessment() -> Result<(), BearDogError> {
         let assessment = EntropyQualityAssessment::new(0.8, 0.9, 0.7, 0.85);

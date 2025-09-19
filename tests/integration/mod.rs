@@ -10,6 +10,7 @@ pub mod security_provider;
 pub mod data_flow_integration;
 pub mod performance_tests;
 pub mod error_handling;
+pub mod storage_service_adapter;
 
 pub mod common;
 

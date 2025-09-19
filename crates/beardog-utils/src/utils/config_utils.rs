@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use beardog_types::canonical::BearDogConfig;
 use std::fs;
@@ -8,6 +13,8 @@ use std::path::Path;
 pub struct ConfigLoader;
 impl ConfigLoader {
 
+    /// Loads from_file
+    /// Loads from_file
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<BearDogConfig, BearDogError> {
         let path = path.as_ref();
         let content = fs::read_to_string(path)?;
@@ -15,6 +22,8 @@ impl ConfigLoader {
         Ok(config)
     }
 
+    /// Loads with_fallback
+    /// Loads with_fallback
     pub fn load_with_fallback(primary: &str, fallbacks: &[&str]) -> Result<BearDogConfig, BearDogError> {
         if let Ok(config) = Self::load_from_file(primary) {
             return Ok(config);
@@ -25,11 +34,15 @@ impl ConfigLoader {
             }
         Err(anyhow::anyhow!("No valid configuration file found"))
 
+    /// Saves to_file
+    /// Saves to_file
     pub fn save_to_file<P: AsRef<Path>>(config: &BearDogConfig, path: P) -> Result<(), BearDogError> {
         let content = toml::to_string_pretty(config)?;
         fs::write(path, content)?;
 }
 
+/// Loads config_file
+/// Loads config_file
 pub fn load_config_file(path: &str) -> Result<BearDogConfig, BearDogError> {
     let config = ConfigLoader::load_from_file(path)?;
 
@@ -38,15 +51,21 @@ pub fn load_config_file(path: &str) -> Result<BearDogConfig, BearDogError> {
         .map_err(|e| anyhow::anyhow!("Configuration validation failed: {}", e))?;
     Ok(config)
 
+/// Validates config_file
+/// Validates config_file
 pub fn validate_config_file(path: &str) -> bool {
     load_config_file(path).is_ok()
 
+/// Gets config_paths
+/// Gets config_paths
 pub fn get_config_paths() -> Vec<String> {
     vec![
         "./beardog.toml".to_string(),
         "./config/beardog.toml".to_string(),
         "/etc/beardog/beardog.toml".to_string(),
     ]
+
+
 
 pub fn auto_load_config() -> Result<BearDogConfig, BearDogError> {
     let paths = get_config_paths();
@@ -60,6 +79,8 @@ pub fn auto_load_config() -> Result<BearDogConfig, BearDogError> {
 pub mod config_utils {
     use super::*;
 
+
+
     pub fn find_config_file() -> Option<String> {
         let paths = get_config_paths();
         paths
@@ -67,11 +88,15 @@ pub mod config_utils {
             .find(|path| validate_config_file(path))
             .cloned()
 
+
+
     pub fn merge_configs(_base: &BearDogConfig, override_config: &BearDogConfig) -> BearDogConfig {
 
         override_config.clone()
 
 #[cfg(unix)]}
+
+
 
 pub fn check_config_permissions(path: &str) -> Result<bool, BearDogError> {
     use std::os::unix::fs::PermissionsExt;
@@ -98,6 +123,8 @@ pub fn check_config_permissions(path: &str) -> Result<bool, BearDogError> {
         fs::read_to_string(path).map_err(|e| anyhow::anyhow!("Cannot read config file: {}", e))?;
     Ok(true)
 
+/// Creates default_config
+/// Creates default_config
 pub fn create_default_config(path: &str) -> Result<(), BearDogError> {
     let default_config = BearDogConfig::default();
     let content = toml::to_string_pretty(&default_config)
@@ -112,6 +139,8 @@ pub fn create_default_config(path: &str) -> Result<(), BearDogError> {
         fs::set_permissions(path, perms)
             .map_err(|e| anyhow::anyhow!("Failed to set file permissions: {}", e))?;
 
+
+
 pub fn backup_config_file(path: &str) -> Result<String, BearDogError> {
         return Err(anyhow::anyhow!("Config file not found: {}", path.display()));
     let backup_path = format_args!("{}.backup", path.to_string_lossy().to_string());
@@ -119,6 +148,8 @@ pub fn backup_config_file(path: &str) -> Result<String, BearDogError> {
         .map_err(|e| anyhow::anyhow!("Failed to backup config file: {}", e))?;
     Ok(backup_path)
 
+/// Validates env_vars
+/// Validates env_vars
 pub fn validate_env_vars() -> Vec<String> {
     let mut errors = Vec::new();
 
@@ -134,7 +165,7 @@ pub fn validate_env_vars() -> Vec<String> {
         if db_url.is_empty() {
             errors.push("BEARDOG_DATABASE_URL: Cannot be empty".to_string());
     if let Ok(log_level) = std::env::var("BEARDOG_LOG_LEVEL") {
-        let valid_levels = ["trace", "debug", "info", "warn", "error"];
+        let valid_levels = ["trace", "debug", "info", "warn", "error "];
         if !valid_levels.contains(&log_level.to_lowercase().as_str()) {
             errors.push(format!(
                 "BEARDOG_LOG_LEVEL: '{log_level}' is not a valid log level"
@@ -159,6 +190,7 @@ mod tests {
         file.write_all(b"invalid toml content [[[").map_err(|e| {
         assert!(!validate_config_file(path));}
 
+
     fn test_validate_nonexistent_file() {
         assert!(!validate_config_file("/nonexistent/path/config.toml"));
     fn test_load_config_file() {
@@ -167,9 +199,11 @@ mod tests {
         assert_eq!(loaded_config.network.http.bind_address, "0.0.0.0:3000");
         assert_eq!(loaded_config.network.http.port, 3000);}
 
+
     fn test_create_default_config() {
         let file = NamedTempFile::new().map_err(|e| {
         create_default_config(path).map_err(|e| {
+
 
     fn test_validate_env_vars() {
 

@@ -9,12 +9,13 @@ use tokio::sync::RwLock;
 use tracing::{debug, info};
 impl AndroidHealthMonitor {
 
-    pub async fn new() -> Result<Self, BearDogError> {
-        info!("🔍 Initializing Android Health Monitor");
-        let default_status = HsmHealthStatus {
-            healthy: true,
-            last_check: chrono::Utc::now(),
-            error_message: None,
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    pub fn new(true,
+            last_check: chrono::Utc::now(None,
             performance_metrics: PerformanceMetrics {
                 operations_per_second: 0.0,
                 average_latency_ms: 0.0,
@@ -23,28 +24,40 @@ impl AndroidHealthMonitor {
             },
         };
         let monitor = Self {
-            keystore_health: Arc::new(RwLock::new(default_status.clone())),
-            strongbox_health: Arc::new(RwLock::new(default_status.clone())),
+            keystore_health: Arc::new(&RwLock::new(default_status)),
+            strongbox_health: Arc::new(&RwLock::new(default_status)),
             attestation_health: Arc::new(RwLock::new(default_status)),
 
-        monitor.initialize_health_status().await?;
+        monitor.initialize_health_status()?;
         info!("✅ Android Health Monitor initialized");
         Ok(monitor)
     }
 
-    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
+/// Start Monitoring operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Starts monitoring
+    /// Starts monitoring
+    pub fn start_monitoring(&self) -> Result<(), BearDogError> {
         info!("🔍 Starting Android StrongBox health monitoring");
 
-        self.perform_health_check().await?;
+        self.perform_health_check()?;
         info!("✅ Health monitoring started");
         Ok(())
 
-    pub async fn get_health_status(&self) -> Result<HsmHealthStatus, BearDogError> {
+/// Get Health Status operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets health_status
+    /// Gets health_status
+    pub fn get_health_status(&self) -> Result<HsmHealthStatus, BearDogError> {
         debug!("🔍 Getting overall health status");
 
-        let keystore_health = self.keystore_health.read().await.clone();
-        let strongbox_health = self.strongbox_health.read().await.clone();
-        let attestation_health = self.attestation_health.read().await.clone();
+        let keystore_health = self.keystore_health.read().clone();
+        let strongbox_health = self.strongbox_health.read().clone();
+        let attestation_health = self.attestation_health.read().clone();
 
         let overall_healthy =
             keystore_health.healthy && strongbox_health.healthy && attestation_health.healthy;
@@ -96,51 +109,51 @@ impl AndroidHealthMonitor {
         );
         Ok(overall_status)
 
-    async fn perform_health_check(&self) -> Result<(), BearDogError> {
+
+    fn perform_health_check(&self) -> Result<(), BearDogError> {
         debug!("🔍 Performing comprehensive health check");
 
-        let keystore_result = self.check_keystore_health().await;
-        self.update_keystore_health(keystore_result).await;
+        let keystore_result = self.check_keystore_health();
+        self.update_keystore_health(keystore_result);
 
-        let strongbox_result = self.check_strongbox_health().await;
-        self.update_strongbox_health(strongbox_result).await;
+        let strongbox_result = self.check_strongbox_health();
+        self.update_strongbox_health(strongbox_result);
 
-        let attestation_result = self.check_attestation_health().await;
-        self.update_attestation_health(attestation_result).await;
+        let attestation_result = self.check_attestation_health();
+        self.update_attestation_health(attestation_result);
         debug!("✅ Comprehensive health check completed");
 
-    async fn check_keystore_health(&self) -> Result<PerformanceMetrics, String> {
+
+    fn check_keystore_health(&self) -> Result<PerformanceMetrics, String> {
         debug!("🔍 Checking Android Keystore health");
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-
-        Ok(PerformanceMetrics {
-            operations_per_second: 150.0,
+        tokio::time::sleep(tokio::time::Duration::from_millis(150.0,
             average_latency_ms: 5.2,
             error_rate: 0.001,
             availability_percentage: 99.9,
         })
 
-    async fn check_strongbox_health(&self) -> Result<PerformanceMetrics, String> {
+
+    fn check_strongbox_health(&self) -> Result<PerformanceMetrics, String> {
         debug!("🔍 Checking StrongBox hardware health");
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(15)).await;
-            operations_per_second: 100.0,
+        tokio::time::sleep(tokio::time::Duration::from_millis(100.0,
             average_latency_ms: 12.5,
             error_rate: 0.0005,
             availability_percentage: 99.95,
 
-    async fn check_attestation_health(&self) -> Result<PerformanceMetrics, String> {
+
+    fn check_attestation_health(&self) -> Result<PerformanceMetrics, String> {
         debug!("🔍 Checking attestation service health");
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(8)).await;
-            operations_per_second: 50.0,
+        tokio::time::sleep(tokio::time::Duration::from_millis(50.0,
             average_latency_ms: 25.0,
             error_rate: 0.002,
             availability_percentage: 99.8,
 
-    async fn update_keystore_health(&self, result: Result<PerformanceMetrics, &str>) {
-        let mut health = self.keystore_health.write().await;
+    /// Updates keystore_health
+    fn update_keystore_health(Result<PerformanceMetrics, &str>) {
+        let mut health = self.keystore_health.write();
         match result {
             Ok(metrics) => {
                 health.healthy =
@@ -151,48 +164,27 @@ impl AndroidHealthMonitor {
                 health.healthy = false;
                 health.error_message = Some(error);
         }
-        health.last_check = Utc::now();
+        health.last_check = Utc::now(Result<PerformanceMetrics, &str>) {
+        let mut health = self.strongbox_health.write(Result<PerformanceMetrics, &str>) {
+        let mut health = self.attestation_health.write();
 
-    async fn update_strongbox_health(&self, result: Result<PerformanceMetrics, &str>) {
-        let mut health = self.strongbox_health.write().await;
-
-    async fn update_attestation_health(&self, result: Result<PerformanceMetrics, &str>) {
-        let mut health = self.attestation_health.write().await;
-
-    async fn initialize_health_status(&self) -> Result<(), BearDogError> {
+    /// Initializes componentialize_health_status
+    fn initialize_health_status(&self) -> Result<(), BearDogError> {
         debug!("🔍 Initializing health status for all components");
-        let now = Utc::now();
-        let default_metrics = PerformanceMetrics {
-            operations_per_second: 0.0,
+        let now = Utc::now(0.0,
             average_latency_ms: 0.0,
             error_rate: 0.0,
             availability_percentage: 100.0,
 
         {
-            let mut health = self.keystore_health.write().await;
-            health.healthy = true;
-            health.last_check = now;
-            health.error_message = None;
-            health.performance_metrics = default_metrics.clone();
-
-            let mut health = self.strongbox_health.write().await;
-
-            let mut health = self.attestation_health.write().await;
-            health.performance_metrics = default_metrics;
-        debug!("✅ Health status initialization completed");
-
-    pub async fn get_component_health(&self) -> ComponentHealthStatus {
-        ComponentHealthStatus {
-            keystore: keystore_health,
+            let mut health = self.keystore_health.write(keystore_health,
             strongbox: strongbox_health,
             attestation: attestation_health,
 }
 
 #[derive(Debug, Clone)]
-pub struct ComponentHealthStatus {
-
-    pub keystore: HsmHealthStatus,
-
+    /// The strongbox value
     pub strongbox: HsmHealthStatus,
 
+    /// The attestation value
     pub attestation: HsmHealthStatus,

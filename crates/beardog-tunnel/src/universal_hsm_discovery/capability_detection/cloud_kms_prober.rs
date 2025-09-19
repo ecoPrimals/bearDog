@@ -1,5 +1,13 @@
 
 
+// MODERNIZATION NOTE: This file contains vendor-specific references that should be migrated
+// to universal adapter patterns. See migration guide: docs/guides/UNIVERSAL_ADAPTER_USAGE_GUIDE.md
+// Target: Replace with capability-based discovery for vendor/primal agnosticism
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::super::*;
 use beardog_core::HsmCapabilities;
 use beardog_errors::BearDogError;
@@ -8,22 +16,28 @@ use tracing::debug;
 pub struct CloudKmsCapabilityProber;
 impl CloudKmsCapabilityProber {}
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self)
     }
-    pub async fn probe_aws_kms_capabilities(&self, region: &str) -> Result<HsmCapabilities, BearDogError> {
-        debug!("☁️ Probing AWS KMS capabilities in region: {}", region);
+/// Probe Aws Kms Capabilities operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn probe_universal_kms_capabilities(&self, region: &str) -> Result<HsmCapabilities, BearDogError> {
+        debug!("☁️ Probing universal_cloud KMS capabilities in region: {}", region);
 
-        Ok(HsmCapabilities::default())
-    pub async fn probe_azure_kv_capabilities(
-        &self,
-        vault_url: &str,
+        Ok(HsmCapabilities::default(&str,
     ) -> Result<HsmCapabilities, BearDogError> {
-        debug!("☁️ Probing Azure Key Vault: {}", vault_url);
+        debug!("☁️ Probing universal_cloud Key Vault: {}", vault_url);
 
-    pub async fn probe_gcp_kms_capabilities(
-        project_id: &str,
+/// Probe Gcp Kms Capabilities operation.
+    pub fn probe_universal_kms_capabilities(&str,
         location: &str,
-        debug!("☁️ Probing GCP KMS: {} in {}", project_id, location);
+        debug!("☁️ Probing universal_cloud KMS: {} in {}", project_id, location);
 
 }

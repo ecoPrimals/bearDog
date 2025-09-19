@@ -1,8 +1,6 @@
-
-
-use crate::common::{TestResult, TestContext};
+use crate::common::{TestContext, TestResult};
 use beardog_errors::BearDogError;
-use serde_json::{Value as JsonValue};
+use serde_json::Value as JsonValue;
 use std::{
     collections::HashMap,
     fmt,
@@ -16,13 +14,8 @@ pub struct TestMatcher {
 }
 
 pub trait MatcherFn: Send + Sync {
-    fn matches(&self, context: &TestContext, value: &JsonValue) -> MatchResult;
-    fn description(&self) -> String;
-}
-
-#[derive(Debug, Clone)]
-pub struct MatchResult {
-    pub success: bool,
+    fn matches(&TestContext, value: &JsonValue) -> MatchResult;
+    fn description(bool,
     pub message: String,
     pub details: HashMap<String, JsonValue>,
     pub suggestions: Vec<String>,
@@ -43,28 +36,6 @@ pub struct HttpResponseMatcher {
 }
 
 #[derive(Debug, Clone)]
-pub enum JsonPattern {
-    Exact(JsonValue),
-    Contains(String),
-    Regex(String),
-    Type(JsonType),
-    Range(f64, f64),
-    Length(usize, Option<usize>),
-    Custom(String), // Custom validation expression
-}
-
-#[derive(Debug, Clone)]
-pub enum JsonType {
-    String,
-    Number,
-    Boolean,
-    Array,
-    Object,
-    Null,
-}
-
-pub struct ErrorMatcher {
-    expected_error_type: Option<String>,
     expected_error_code: Option<String>,
     expected_message_pattern: Option<String>,
     expected_severity: Option<String>,
@@ -88,10 +59,9 @@ pub struct GeneticsMatcher {
 }
 
 impl TestMatcher {
-
-    pub fn new(name: impl Into<&str>) -> Self {
+    pub fn new<'a>(name: impl Into<&'a str>) -> Self {
         Self {
-            name: name.into(),
+            name: name.into().to_string(),
             description: String::with_capacity(64),
             matchers: Vec::new(),
         }
@@ -106,7 +76,9 @@ impl TestMatcher {
     where
         F: Fn(&TestContext, &JsonValue) -> MatchResult + Send + Sync + 'static,
     {
-        self.matchers.push(Box::new(FunctionMatcher { func: Box::new(matcher) }));
+        self.matchers.push(Box::new(FunctionMatcher {
+            func: Box::new(matcher),
+        }));
         self
     }
 
@@ -131,63 +103,29 @@ impl TestMatcher {
     }
 
     pub fn genetics(mut self, matcher: GeneticsMatcher) -> Self {
-        self.matchers.push(Box::new(matcher));
-        self
-    }
-
-    pub fn validate(&self, context: &TestContext, value: &JsonValue) -> MatchResult {
+        self.matchers.push(Box::new(&TestContext, value: &JsonValue) -> MatchResult {
         let mut all_success = true;
         let mut messages = Vec::new();
         let mut combined_details = HashMap::with_capacity(16);
-        let mut all_suggestions = Vec::new();
-
-        for matcher in &self.matchers {
-            let result = matcher.matches(context, value);
-            
-            if !result.success {
-                all_success = false;
-            }
-
-            messages.push(format_args!("{}: {}", matcher.description().to_string(), result.message));
-
-            for (key, val) in result.details {
-                combined_details.insert(key, val);
-            }
-
-            all_suggestions.extend(result.suggestions);
-        }
-
-        MatchResult {
-            success: all_success,
+        let mut all_suggestions = Vec::new({}",
+                matcher.description(all_success,
             message: if all_success {
-                format_args!("All {} matchers passed for '{}'", self.matchers.len().to_string(), self.name)
-            } else {
-                format_args!("Some matchers failed for '{}': {}", self.name, messages.join("; ").to_string())
-            },
-            details: combined_details,
+                format!(
+                    "All {} matchers passed for "{}"",
+                    self.matchers.len({}",
+                    self.name,
+                    messages.join(combined_details,
             suggestions: all_suggestions,
         }
     }
 }
 
 struct FunctionMatcher {
-    func: Box<dyn Fn(&TestContext, &JsonValue) -> MatchResult + Send + Sync>,
-}
-
-impl MatcherFn for FunctionMatcher {
-    fn matches(&self, context: &TestContext, value: &JsonValue) -> MatchResult {
+    func: Box<dyn Fn(&TestContext, value: &JsonValue) -> MatchResult {
         (self.func)(context, value)
     }
 
-    fn description(&self) -> String {
-        "Custom Function Matcher".to_string()
-    }
-}
-
-impl PerformanceMatcher {
-    pub fn new() -> Self {
-        Self {
-            max_duration: None,
+    fn description(None,
             min_duration: None,
             max_memory_mb: None,
             max_cpu_percent: None,
@@ -210,29 +148,28 @@ impl PerformanceMatcher {
     }
 
     pub fn max_cpu_percent(mut self, cpu_percent: f64) -> Self {
-        self.max_cpu_percent = Some(cpu_percent);
-        self
-    }
-}
-
-impl MatcherFn for PerformanceMatcher {
-    fn matches(&self, context: &TestContext, _value: &JsonValue) -> MatchResult {
+        self.max_cpu_percent = Some(&TestContext, _value: &JsonValue) -> MatchResult {
         let mut success = true;
         let mut messages = Vec::new();
         let mut details = HashMap::with_capacity(16);
         let mut suggestions = Vec::new();
 
         if let Some(total_duration) = context.performance_metrics.total_duration {
-            details.insert("actual_duration_ms".to_string(), 
-                          JsonValue::Number(total_duration.as_millis().into()));
+            details.insert(
+                "actual_duration_ms".to_string(),
+                JsonValue::Number(total_duration.as_millis().into()),
+            );
 
             if let Some(max_duration) = self.max_duration {
                 if total_duration > max_duration {
                     success = false;
-                    messages.push(format_args!("Duration {} exceeds maximum {}", 
-                                        format_duration(total_duration).to_string(), 
-                                        format_duration(max_duration)));
-                    suggestions.push("Consider optimizing performance-critical operations".to_string());
+                    messages.push(format!(
+                        "Duration {} exceeds maximum {}",
+                        format_duration(total_duration).to_string(),
+                        format_duration(max_duration)
+                    ));
+                    suggestions
+                        .push("Consider optimizing performance-critical operations".to_string());
                     suggestions.push("Check for unnecessary blocking operations".to_string());
                 }
             }
@@ -240,30 +177,41 @@ impl MatcherFn for PerformanceMatcher {
             if let Some(min_duration) = self.min_duration {
                 if total_duration < min_duration {
                     success = false;
-                    messages.push(format_args!("Duration {} is below minimum {} (possible timing issue)", 
-                                        format_duration(total_duration).to_string(), 
-                                        format_duration(min_duration)));
-                    suggestions.push("Verify test is actually performing expected operations".to_string());
+                    messages.push(format!(
+                        "Duration {} is below minimum {} (possible timing issue)",
+                        format_duration(total_duration).to_string(),
+                        format_duration(min_duration)
+                    ));
+                    suggestions
+                        .push("Verify test is actually performing expected operations".to_string());
                 }
             }
         }
 
         if let Some(peak_memory) = context.performance_metrics.memory_peak_mb {
-            details.insert("peak_memory_mb".to_string(), 
-                          JsonValue::Number(serde_json::Number::from_f64(peak_memory).unwrap_or_else(|e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format_args!("Operation failed: {:?}", e).to_string()
-).into())
-})));
+            details.insert(
+                "peak_memory_mb".to_string(),
+                JsonValue::Number(
+                    serde_json::Number::from_f64(peak_memory).unwrap_or_else(|e| {
+                        tracing::error!("Unwrap failed: {:?}", e);
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::Other,
+                            format!("Operation failed: {:?}", e),
+                        )
+                        .into());
+                    }),
+                ),
+            );
 
             if let Some(max_memory) = self.max_memory_mb {
                 if peak_memory > max_memory {
                     success = false;
-                    messages.push(format_args!("Peak memory {:.2} MB exceeds maximum {:.2} MB", 
-                                        peak_memory, max_memory).to_string());
-                    suggestions.push("Review memory usage patterns and potential leaks".to_string());
+                    messages.push(format!(
+                        "Peak memory {:.2} MB exceeds maximum {:.2} MB",
+                        peak_memory, max_memory
+                    ));
+                    suggestions
+                        .push("Review memory usage patterns and potential leaks".to_string());
                     suggestions.push("Consider implementing memory pooling".to_string());
                 }
             }
@@ -272,58 +220,31 @@ impl MatcherFn for PerformanceMatcher {
         MatchResult {
             success,
             message: if success {
-                "Performance constraints satisfied".to_string()
-            } else {
-                format_args!("Performance issues: {}", messages.join(", ").to_string())
-            },
-            details,
-            suggestions,
-        }
-    }
-
-    fn description(&self) -> String {
-        "Performance Matcher".to_string()
-    }
-}
-
-impl HttpResponseMatcher {
-    pub fn new() -> Self {
-        Self {
-            expected_status: None,
-            expected_headers: HashMap::with_capacity(16),
-            expected_body_patterns: Vec::new(),
-            max_response_time: None,
+                "Performance constraints satisfied".to_string(),
+            expected_body_patterns: Vec::new(None,
         }
     }
 
     pub fn status(mut self, status: u16) -> Self {
-        self.expected_status = Some(status);
-        self
-    }
-
-    pub fn header(mut self, key: impl Into<&str>, value: impl Into<&str>) -> Self {
+        self.expected_status = Some(impl Into<&str>, value: impl Into<&str>) -> Self {
         self.expected_headers.insert(key.into(), value.into());
         self
     }
 
     pub fn body_contains(mut self, pattern: impl Into<&str>) -> Self {
-        self.expected_body_patterns.push(JsonPattern::Contains(pattern.into()));
+        self.expected_body_patterns
+            .push(JsonPattern::Contains(pattern.into()));
         self
     }
 
     pub fn body_matches(mut self, regex: impl Into<&str>) -> Self {
-        self.expected_body_patterns.push(JsonPattern::Regex(regex.into()));
+        self.expected_body_patterns
+            .push(JsonPattern::Regex(regex.into()));
         self
     }
 
     pub fn max_response_time(mut self, duration: Duration) -> Self {
-        self.max_response_time = Some(duration);
-        self
-    }
-}
-
-impl MatcherFn for HttpResponseMatcher {
-    fn matches(&self, _context: &TestContext, value: &JsonValue) -> MatchResult {
+        self.max_response_time = Some(&TestContext, value: &JsonValue) -> MatchResult {
         let mut success = true;
         let mut messages = Vec::new();
         let mut details = HashMap::with_capacity(16);
@@ -331,45 +252,16 @@ impl MatcherFn for HttpResponseMatcher {
 
         if let Some(expected_status) = self.expected_status {
             if let Some(actual_status) = value.get("status_code").and_then(|v| v.as_u64()) {
-                details.insert("actual_status".to_string(), JsonValue::Number(actual_status.into()));
-                
-                if actual_status != expected_status as u64 {
-                    success = false;
-                    messages.push(format_args!("Expected status {}, got {}", expected_status, actual_status).to_string());
-                    
-                    if actual_status >= 400 {
-                        suggestions.push("Check API endpoint implementation".to_string());
-                        suggestions.push("Verify request parameters and authentication".to_string());
-                    }
-                }
-            } else {
-                success = false;
-                messages.push("Status code not found in response".to_string());
-                suggestions.push("Ensure response includes status_code field".to_string());
-            }
-        }
-
-        if let Some(headers) = value.get("headers").and_then(|v| v.as_object()) {
-            for (expected_key, expected_value) in &self.expected_headers {
-                if let Some(actual_value) = headers.get(expected_key).and_then(|v| v.as_str()) {
-                    if actual_value != expected_value {
-                        success = false;
-                        messages.push(format_args!("Header '{}': expected '{}', got '{}'", 
-                                            expected_key, expected_value, actual_value).to_string());
+                details.insert(
+                    "actual_status".to_string(),
+                    JsonValue::Number(expected "{}", got "{}"",
+                            expected_key, expected_value, actual_value
+                        ));
                     }
                 } else {
                     success = false;
-                    messages.push(format_args!("Missing expected header: {}", expected_key).to_string());
-                    suggestions.push(format_args!("Ensure API sets '{}' header", expected_key).to_string());
-                }
-            }
-        }
-
-        if let Some(body) = value.get("body") {
-            for pattern in &self.expected_body_patterns {
-                if !self.validate_json_pattern(body, pattern) {
-                    success = false;
-                    messages.push(format_args!("Body pattern validation failed: {:?}", pattern).to_string());
+                    messages.push({}", expected_key));
+                    suggestions.push({:?}", pattern));
                     suggestions.push("Review response body structure and content".to_string());
                 }
             }
@@ -378,27 +270,10 @@ impl MatcherFn for HttpResponseMatcher {
         MatchResult {
             success,
             message: if success {
-                "HTTP response validation passed".to_string()
-            } else {
-                format_args!("HTTP response validation failed: {}", messages.join(", ").to_string())
-            },
-            details,
-            suggestions,
-        }
-    }
-
-    fn description(&self) -> String {
-        "HTTP Response Matcher".to_string()
-    }
-}
-
-impl HttpResponseMatcher {
-    fn validate_json_pattern(&self, value: &JsonValue, pattern: &JsonPattern) -> bool {
+                "HTTP response validation passed".to_string() -> bool {
         match pattern {
             JsonPattern::Exact(expected) => value == expected,
-            JsonPattern::Contains(text) => {
-                value.to_string().contains(text)
-            }
+            JsonPattern::Contains(text) => value.to_string().contains(text),
             JsonPattern::Regex(regex_str) => {
                 if let Ok(regex) = regex::Regex::new(regex_str) {
                     regex.is_match(&value.to_string())
@@ -406,16 +281,14 @@ impl HttpResponseMatcher {
                     false
                 }
             }
-            JsonPattern::Type(json_type) => {
-                match json_type {
-                    JsonType::String => value.is_string(),
-                    JsonType::Number => value.is_number(),
-                    JsonType::Boolean => value.is_boolean(),
-                    JsonType::Array => value.is_array(),
-                    JsonType::Object => value.is_object(),
-                    JsonType::Null => value.is_null(),
-                }
-            }
+            JsonPattern::Type(json_type) => match json_type {
+                JsonType::String => value.is_string(),
+                JsonType::Number => value.is_number(),
+                JsonType::Boolean => value.is_boolean(),
+                JsonType::Array => value.is_array(),
+                JsonType::Object => value.is_object(),
+                JsonType::Null => value.is_null(),
+            },
             JsonPattern::Range(min, max) => {
                 if let Some(num) = value.as_f64() {
                     num >= *min && num <= *max
@@ -430,21 +303,10 @@ impl HttpResponseMatcher {
                     JsonValue::Object(obj) => obj.len(),
                     _ => return false,
                 };
-                
+
                 length >= *min_len && max_len.map_or(true, |max| length <= max)
             }
-            JsonPattern::Custom(_expr) => {
-
-                true
-            }
-        }
-    }
-}
-
-impl ErrorMatcher {
-    pub fn new() -> Self {
-        Self {
-            expected_error_type: None,
+            JsonPattern::Custom(None,
             expected_error_code: None,
             expected_message_pattern: None,
             expected_severity: None,
@@ -473,13 +335,7 @@ impl ErrorMatcher {
     }
 
     pub fn category(mut self, category: impl Into<&str>) -> Self {
-        self.expected_category = Some(category.into());
-        self
-    }
-}
-
-impl MatcherFn for ErrorMatcher {
-    fn matches(&self, _context: &TestContext, value: &JsonValue) -> MatchResult {
+        self.expected_category = Some(&TestContext, value: &JsonValue) -> MatchResult {
         let mut success = true;
         let mut messages = Vec::new();
         let mut details = HashMap::with_capacity(16);
@@ -487,18 +343,12 @@ impl MatcherFn for ErrorMatcher {
 
         let error_info = if value.is_object() {
             value.as_object().unwrap_or_else(|e| {
-    tracing::error!("Unwrap failed: {:?}", e);
-    return Err(std::io::Error::new(
-    std::io::ErrorKind::Other,
-    format_args!("Operation failed: {:?}", e).to_string()
-).into())
-})
-        } else {
-            success = false;
-            messages.push("Expected error object, got different type".to_string());
-            return MatchResult {
-                success,
-                message: messages.join(", "),
+                tracing::error!("Unwrap failed: {:?}", e);
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Operation failed: {:?}", e),
+                )
+                .into(messages.join(", "),
                 details,
                 suggestions: vec!["Ensure error is properly serialized as JSON object".to_string()],
             };
@@ -506,10 +356,13 @@ impl MatcherFn for ErrorMatcher {
 
         if let Some(expected_type) = &self.expected_error_type {
             if let Some(actual_type) = error_info.get("error_type").and_then(|v| v.as_str()) {
-                details.insert("error_type".to_string(), JsonValue::String(actual_type.to_string()));
+                details.insert("error_type".to_string(), JsonValue::String(actual_type));
                 if actual_type != expected_type {
                     success = false;
-                    messages.push(format_args!("Expected error type '{}', got '{}'", expected_type, actual_type).to_string());
+                    messages.push(format!(
+                        "Expected error type "{}", got "{}"",
+                        expected_type, actual_type
+                    ));
                 }
             } else {
                 success = false;
@@ -520,21 +373,28 @@ impl MatcherFn for ErrorMatcher {
 
         if let Some(expected_code) = &self.expected_error_code {
             if let Some(actual_code) = error_info.get("error_code").and_then(|v| v.as_str()) {
-                details.insert("error_code".to_string(), JsonValue::String(actual_code.to_string()));
+                details.insert("error_code".to_string(), JsonValue::String(actual_code));
                 if actual_code != expected_code {
                     success = false;
-                    messages.push(format_args!("Expected error code '{}', got '{}'", expected_code, actual_code).to_string());
+                    messages.push(format!(
+                        "Expected error code "{}", got "{}"",
+                        expected_code, actual_code
+                    ));
                 }
             }
         }
 
         if let Some(expected_pattern) = &self.expected_message_pattern {
             if let Some(actual_message) = error_info.get("message").and_then(|v| v.as_str()) {
-                details.insert("message".to_string(), JsonValue::String(actual_message.to_string()));
+                details.insert("message".to_string(), JsonValue::String(actual_message));
                 if !actual_message.contains(expected_pattern) {
                     success = false;
-                    messages.push(format_args!("Error message doesn't contain expected pattern '{}'", expected_pattern).to_string());
-                    suggestions.push("Review error message generation and localization".to_string());
+                    messages.push(format!(
+                        "Error message doesn't contain expected pattern "{}"",
+                        expected_pattern
+                    ));
+                    suggestions
+                        .push("Review error message generation and localization".to_string());
                 }
             }
         }
@@ -542,9 +402,8 @@ impl MatcherFn for ErrorMatcher {
         MatchResult {
             success,
             message: if success {
-                "Error validation passed".to_string()
-            } else {
-                format_args!("Error validation failed: {}", messages.join(", ").to_string())
+                "Error validation passed".to_string().to_string()
+                )
             },
             details,
             suggestions,
@@ -558,25 +417,21 @@ impl MatcherFn for ErrorMatcher {
 
 fn format_duration(duration: Duration) -> String {
     if duration.as_secs() > 0 {
-        format_args!("{:.2}s", duration.as_secs_f64().to_string())
+        format!("{:.2}s", duration.as_secs_f64())
     } else if duration.as_millis() > 0 {
-        format_args!("{}ms", duration.as_millis().to_string())
+        format!("{}ms", duration.as_millis())
     } else {
-        format_args!("{}μs", duration.as_micros().to_string())
+        format!("{}μs", duration.as_micros())
     }
 }
 
 #[macro_export]
 macro_rules! match_performance {
     (max_duration: $duration:expr) => {
-        $crate::common::matchers::PerformanceMatcher::new()
-            .max_duration($duration)
+        $crate::common::matchers::PerformanceMatcher::new().max_duration($duration)
     };
     (max_memory: $memory:expr) => {
-        $crate::common::matchers::PerformanceMatcher::new()
-            .max_memory_mb($memory)
-    };
-    (max_duration: $duration:expr, max_memory: $memory:expr) => {
+        $crate::common::matchers::PerformanceMatcher::new($duration:expr, max_memory: $memory:expr) => {
         $crate::common::matchers::PerformanceMatcher::new()
             .max_duration($duration)
             .max_memory_mb($memory)
@@ -586,10 +441,7 @@ macro_rules! match_performance {
 #[macro_export]
 macro_rules! match_http {
     (status: $status:expr) => {
-        $crate::common::matchers::HttpResponseMatcher::new()
-            .status($status)
-    };
-    (status: $status:expr, body_contains: $pattern:expr) => {
+        $crate::common::matchers::HttpResponseMatcher::new($status:expr, body_contains: $pattern:expr) => {
         $crate::common::matchers::HttpResponseMatcher::new()
             .status($status)
             .body_contains($pattern)
@@ -599,12 +451,9 @@ macro_rules! match_http {
 #[macro_export]
 macro_rules! match_error {
     (type: $error_type:expr) => {
-        $crate::common::matchers::ErrorMatcher::new()
-            .error_type($error_type)
-    };
-    (code: $error_code:expr, message: $pattern:expr) => {
+        $crate::common::matchers::ErrorMatcher::new($error_code:expr, message: $pattern:expr) => {
         $crate::common::matchers::ErrorMatcher::new()
             .error_code($error_code)
             .message_contains($pattern)
     };
-} 
+}

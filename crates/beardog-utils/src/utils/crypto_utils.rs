@@ -6,6 +6,8 @@ use ring::rand::{SecureRandom, SystemRandom};
 use sha2::{Digest, Sha256};
 type HmacSha256 = Hmac<Sha256>;
 
+
+
 pub fn secure_random_bytes(size: usize) -> Vec<u8> {
     let rng = SystemRandom::new();
     let mut bytes = vec![0u8; size];
@@ -22,16 +24,24 @@ pub fn secure_random_bytes(size: usize) -> Vec<u8> {
     }
 }
 
+
+
 pub fn generate_salt() -> Vec<u8> {
     secure_random_bytes(32) // 256-bit salt
 
+
+
 pub fn generate_nonce(size: usize) -> Vec<u8> {
     secure_random_bytes(size)
+
+
 
 pub fn sha256_hash(data: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(data);
     bytes_to_hex(&hasher.finalize())
+
+
 
 pub fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<String, BearDogError> {
     let mut mac = HmacSha256::new_from_slice(key).map_err(|e| BearDogError::Crypto {
@@ -40,12 +50,16 @@ pub fn hmac_sha256(key: &[u8], data: &[u8]) -> Result<String, BearDogError> {
     mac.update(data);
     Ok(bytes_to_hex(&mac.finalize().into_bytes()))
 
+
+
 pub fn verify_hmac_sha256(key: &[u8], data: &[u8], signature: &str) -> Result<bool, BearDogError> {
     let computed = hmac_sha256(key, data)?;
     Ok(constant_time_compare(
         computed.as_bytes(),
         signature.as_bytes(),
     ))
+
+
 
 pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
     if a.len() != b.len() {
@@ -54,6 +68,8 @@ pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
     for (byte_a, byte_b) in a.iter().zip(b.iter()) {
         diff |= byte_a ^ byte_b;
     diff == 0
+
+
 
 pub fn generate_password(length: usize) -> String {
     const CHARSET: &[u8] =
@@ -65,6 +81,8 @@ pub fn generate_password(length: usize) -> String {
         password.push(CHARSET[idx] as char);
     password
 
+
+
 pub fn generate_api_key() -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let mut key = String::with_capacity(64);
@@ -72,10 +90,14 @@ pub fn generate_api_key() -> String {
         key.push(CHARSET[idx] as char);
     key
 
+
+
 pub fn zero_memory(data: &mut [u8]) {
 
     for byte in data.iter_mut() {
         *byte = 0;
+
+
 
 pub fn pbkdf2_hmac_sha256(
     password: &[u8],
@@ -100,8 +122,12 @@ pub fn pbkdf2_hmac_sha256(
     );
     Ok(output)
 
+
+
 pub fn bytes_to_hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
+
+
 
 pub fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, BearDogError>> {
     if hex.len() % 2 != 0 {
@@ -117,6 +143,7 @@ pub fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, BearDogError>> {
 mod tests {
     use super::*;
     #[test]}
+
 
     fn test_sha256_hash() {
         let data = b"hello world";
@@ -145,6 +172,7 @@ mod tests {
         assert_eq!(bytes2.len(), 32);
         assert_ne!(bytes1, bytes2);}
 
+
     fn test_hex_conversion() {
         let data = vec![0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef];
         let hex = bytes_to_hex(&data);
@@ -158,6 +186,7 @@ mod tests {
         assert!(hex_to_bytes("invalid_hex").is_err());
         assert!(hex_to_bytes("0g").is_err()); // Invalid hex character
         assert!(hex_to_bytes("123").is_err()); // Odd length}
+
 
     fn test_constant_time_compare() {
         let a = b"hello";
@@ -177,6 +206,7 @@ mod tests {
         let long = generate_password(32);
         assert_eq!(short.len(), 8);
         assert_eq!(long.len(), 32);}
+
 
     fn test_password_character_set() {
         let password = generate_password(100);

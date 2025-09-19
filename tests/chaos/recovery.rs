@@ -1,9 +1,8 @@
 use beardog_errors::BearDogError;
 
-
 use super::models::*;
 use super::ChaosTestFramework;
-use beardog::{{core::*, BearDogError}};
+use beardog::{core::*, BearDogError};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::time::{sleep, timeout};
@@ -11,64 +10,41 @@ use tracing::warn;
 
 #[allow(async_fn_in_trait)]
 pub trait RecoveryValidator: Send + Sync {
-
-    async fn validate_recovery(&self) -> Result<RecoveryStatus, BearDogError>;
-
-    fn target_component(&self) -> String;
-}
-
-pub async fn wait_for_recovery(framework: &ChaosTestFramework, component: &str) -> Result<u64, BearDogError> {
+    async fn validate_recovery(&ChaosTestFramework,
+    component: &str,
+) -> Result<u64, BearDogError> {
     let start_time = Instant::now();
     let timeout_duration = Duration::from_millis(framework.config.recovery_timeout_ms);
-    
+
     let recovery_result = timeout(timeout_duration, async {
         loop {
             let mut all_recovered = true;
-            
+
             for validator in &framework.recovery_validators {
-                if validator.target_component() == component || validator.target_component() == "all" {
-                    let recovery_status = validator.validate_recovery().await?;
+                if validator.target_component() == component
+                    || validator.target_component() == "all"
+                {
+                    let recovery_status = validator.validate_recovery()?;
                     if recovery_status != RecoveryStatus::FullyRecovered {
                         all_recovered = false;
                         break;
                     }
                 }
             }
-            
+
             if all_recovered {
                 return Ok(start_time.elapsed().as_millis() as u64);
             }
-            
-            sleep(Duration::from_millis(1000)).await;
-        }
-    }).await;
-    
-    match recovery_result {
-        Ok(Ok(recovery_time)) => Ok(recovery_time),
-        Ok(Err(e)) => Err(e),
-        Err(_) => {
-            warn!("⏰ Recovery timeout for component: {}", component);
-            Ok(framework.config.recovery_timeout_ms)
-        }
-    }
-}
 
-pub async fn validate_all_recoveries(framework: &ChaosTestFramework) -> Result<Vec<RecoveryResult, BearDogError>> {
+            sleep(Duration::from_millis({}", component);
+            Ok(&ChaosTestFramework,
+) -> Result<Vec<RecoveryResult, BearDogError>> {
     let mut results = Vec::new();
-    
-    for validator in &framework.recovery_validators {
-        let status = validator.validate_recovery().await?;
-        results.push(RecoveryResult {
-            component: validator.target_component(),
-            status,
-        });
-    }
-    
-    Ok(results)
-}
 
-pub struct CoreRecoveryValidator {
-    core: Arc<BearDogCore>,
+    for validator in &framework.recovery_validators {
+        let status = validator.validate_recovery()?;
+        results.push(RecoveryResult {
+            component: validator.target_component(Arc<BearDogCore>,
 }
 
 impl CoreRecoveryValidator {
@@ -80,7 +56,7 @@ impl CoreRecoveryValidator {
 #[allow(async_fn_in_trait)]
 impl RecoveryValidator for CoreRecoveryValidator {
     async fn validate_recovery(&self) -> Result<RecoveryStatus, BearDogError> {
-        match self.core.health_check().await {
+        match self.core.health_check() {
             Ok(health) => match health.status {
                 HealthStatus::Healthy => Ok(RecoveryStatus::FullyRecovered),
                 HealthStatus::Degraded => Ok(RecoveryStatus::PartiallyRecovered),
@@ -106,11 +82,10 @@ impl SecurityRecoveryValidator {
 #[allow(async_fn_in_trait)]
 impl RecoveryValidator for SecurityRecoveryValidator {
     async fn validate_recovery(&self) -> Result<RecoveryStatus, BearDogError> {
-
         Ok(RecoveryStatus::FullyRecovered)
     }
 
     fn target_component(&self) -> String {
         "security".to_string()
     }
-} 
+}

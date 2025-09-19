@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -19,101 +24,78 @@ pub mod discovery;
 pub mod human_entropy_classifier;
 pub mod tier_manager;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum HsmType {
-
-    Hardware,
-
-    Software,
-
-    Cloud,
-
-    Smartphone,
-
-    NetworkHsm,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HsmEndpoint {
-
-    pub address: String,
-
+#[derive(Debug, Clone)]
+    /// Optional port
     pub port: Option<u16>,
 
+    /// The protocol value
     pub protocol: String,
 
+    /// Whether secure is enabled
     pub secure: bool,
+}
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum IntegrationStatus {
-
-    Discovered,
-
-    Integrating,
-
-    Available,
-
-    Failed,
-
-    Offline,
-
-pub struct DiscoveredHsm {
-
-    pub hsm_id: String,
-
-    pub name: String,
-
-    pub hsm_type: HsmType,
-
-    pub endpoint: HsmEndpoint,
-
-    pub capabilities: UniversalHsmCapabilities,
-
-    pub assigned_tier: HsmTier,
-
-    pub supports_human_entropy: bool,
-
-    pub health_status: HsmHealthStatus,
-
-    pub discovered_at: chrono::DateTime<chrono::Utc>,
-
-    pub last_health_check: chrono::DateTime<chrono::Utc>,
-
-    pub integration_status: IntegrationStatus,
-
-pub enum EntropyCollectionMethod {
-
-    TouchPatterns { pressure_sensitive: bool },
-
+#[derive(Debug, Clone)]
     TouchPatternsAdvanced { pressure_sensitive: bool },
+
 
     BiometricVariation,
 
+
     KeyboardTiming,
+
 
     DeviceMotion,
 
     EnvironmentalSensors { sensor_types: Vec<String> },
+}
 
-#[derive(Debug)]
-pub struct UniversalHsmDiscovery {
+#[derive(Debug, Clone)]
+    /// Name of the item
+    pub name: String,
 
-    pub discovered_hsms: Arc<RwLock<HashMap<String, DiscoveredHsm>>>,
+    /// The hsm type value
+    pub hsm_type: HsmType,
 
+    /// The endpoint value
+    pub endpoint: HsmEndpoint,
+
+    /// The capabilities value
+    pub capabilities: UniversalHsmCapabilities,
+
+    /// The assigned tier value
+    pub assigned_tier: HsmTier,
+
+    /// Whether supports_human_entropy is enabled
+    pub supports_human_entropy: bool,
+
+    /// Current status of the health
+    pub health_status: HsmHealthStatus,
+
+    /// The discovered at value
+    pub discovered_at: chrono::DateTime<chrono::Utc>,
+
+    /// The last health check value
+    pub last_health_check: chrono::DateTime<chrono::Utc>,
+
+    /// Current status of the integration
+    pub integration_status: IntegrationStatus,
+}
+
+#[derive(Arc<RwLock<HashMap<String, DiscoveredHsm>>>,
+    /// The tier manager value
     pub tier_manager: Arc<tier_manager::TierManager>,
-
+    /// The entropy classifier value
     pub entropy_classifier: Arc<human_entropy_classifier::HumanEntropyClassifier>,
-
     pub config: DiscoveryConfig,
+}
 
-impl Default for DiscoveryConfig {}
-
-    fn default() -> Self {
-        Self {
-            enable_cloud_discovery: true,
+impl Default for DiscoveryConfig {
+    fn default(true,
             enable_pkcs11_discovery: true,
             enable_smartphone_discovery: true,
             discovery_timeout_seconds: 30,
             enable_capability_detection: true,
         }
     }
+}

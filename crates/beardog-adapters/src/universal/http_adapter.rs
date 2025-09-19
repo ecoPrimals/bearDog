@@ -1,3 +1,8 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::service_registration::UniversalServiceRegistration;
 use beardog_errors::BearDogError;
 use chrono::Utc;
@@ -7,51 +12,41 @@ use std::future::Future;
 use crate::adapters::{ResponseStatus, UniversalRequest, UniversalResponse};
 
 pub trait ServiceMeshConnector {
-    fn register_service(
-        &self,
-        registration: &UniversalServiceRegistration,
+    fn register_service(&UniversalServiceRegistration,
     ) -> impl Future<Output = Result<(), BearDogError>> + Send;
 
-    fn health_check(&self) -> impl Future<Output = bool> + Send;
+
+    fn health_check(&self) -> impl Future<Output = bool;
+
 
     fn deregister(&self, service_id: &str)
         -> impl Future<Output = Result<(), BearDogError>> + Send;
 
-    fn send_request(
-        &self,
-        request: &UniversalRequest,
+
+    fn send_request(&UniversalRequest,
     ) -> impl Future<Output = Result<UniversalResponse, BearDogError>> + Send;
 }
 
-#[derive(Clone)]
 pub struct HttpAdapter {
     base_url: String,
     client: reqwest::Client,
 }
 
 impl HttpAdapter {
-    pub fn new(base_url: String) -> Self {
+    /// New operation.
+    /// Creates a new instance
+    pub fn new(base_url: &str) -> Self {
         Self {
-            base_url,
+            base_url: base_url.to_string(),
             client: reqwest::Client::new(),
         }
     }
 
-    async fn handle_mesh_request(&self, request: UniversalRequest) -> UniversalResponse {
+    /// Handles mesh_request
+    fn handle_mesh_request(&self, request: UniversalRequest) -> UniversalResponse {
         tracing::debug!("Handling HTTP mesh request: {}", request.request_id);
 
-        let endpoint = match request.operation.as_str() {
-            "sign" | "verify" | "encrypt" | "decrypt" | "generate_key" => "/api/v1/crypto",
-            "authenticate" | "authorize" | "create_session" => "/api/v1/auth",
-            "log_event" | "get_events" | "cleanup_events" => "/api/v1/audit",
-            "generate_address" | "verify_address" => "/api/v1/address",
-            _ => "/api/v1/generic",
-        };
-
-        let url = format!("{}{}", self.base_url, endpoint);
-
-        let body = json!({
-            "operation": request.operation,
+        let endpoint = match request.operation.as_str(request.operation,
             "payload": request.payload,
             "service_type": format!("{:?}", request.service_type),
             "request_id": request.request_id,
@@ -64,79 +59,67 @@ impl HttpAdapter {
             .json(&body)
             .timeout(std::time::Duration::from_secs(30))
             .send()
-            .await
         {
             Ok(response) => {
                 if response.status().is_success() {
-                    match response.json::<serde_json::Value>().await {
-                        Ok(data) => UniversalResponse {
-                            request_id: request.request_id,
-                            status: ResponseStatus::Success,
-                            payload: data,
-                            timestamp: Utc::now(),
-                            processing_time_ms: 0,
+                    match response.json::<serde_json::Value>() {
+                        Ok(response_payload) => UniversalResponse {
+                            request_id: request.request_id.clone(ResponseStatus::Success,
+                            payload: response_payload,
+                            timestamp: Utc::now(0,
                         },
                         Err(e) => UniversalResponse {
-                            request_id: request.request_id,
-                            status: ResponseStatus::Error,
+                            request_id: request.request_id.clone(ResponseStatus::Error,
                             payload: json!({
-                                "error": {
+                                "error ": {
                                     "code": "json_parse_error",
-                                    "message": format!("Failed to parse response JSON: {}", e)
+                                    "message": format!("Failed to parse response JSON: {e}")
                                 }
                             }),
-                            timestamp: Utc::now(),
-                            processing_time_ms: 0,
+                            timestamp: Utc::now(0,
                         },
                     }
                 } else {
                     let status = response.status();
                     let error_text = response
                         .text()
-                        .await
                         .unwrap_or_else(|_| "Unknown error".to_string());
 
                     UniversalResponse {
-                        request_id: request.request_id,
-                        status: ResponseStatus::Error,
+                        request_id: request.request_id.clone(ResponseStatus::Error,
                         payload: json!({
-                            "error": {
+                            "error ": {
                                 "code": "http_error",
-                                "message": format!("HTTP {} - {}", status, error_text),
+                                "message": format!("HTTP {status} - {error_text}"),
                                 "status_code": status.as_u16(),
                                 "url": url
                             }
                         }),
-                        timestamp: Utc::now(),
-                        processing_time_ms: 0,
+                        timestamp: Utc::now(0,
                     }
                 }
             }
             Err(e) => UniversalResponse {
-                request_id: request.request_id,
-                status: ResponseStatus::Error,
+                request_id: request.request_id.clone(ResponseStatus::Error,
                 payload: json!({
-                    "error": {
+                    "error ": {
                         "code": "network_error",
-                        "message": format!("Network request failed: {}", e),
+                        "message": format!("Network request failed: {e}"),
                         "url": url,
                         "error_type": "reqwest_error"
                     }
                 }),
-                timestamp: Utc::now(),
-                processing_time_ms: 0,
+                timestamp: Utc::now(0,
             },
         }
     }
 }
 
 impl ServiceMeshConnector for HttpAdapter {
-    fn register_service(
-        &self,
-        registration: &UniversalServiceRegistration,
+    fn register_service(&UniversalServiceRegistration,
     ) -> impl Future<Output = Result<(), BearDogError>> + Send {
         let url = format!("{}/api/v1/services/register", self.base_url);
-        let client = self.client.clone();
+        let client = &self.client;
         let registration = registration.clone();
 
         async move {
@@ -144,43 +127,17 @@ impl ServiceMeshConnector for HttpAdapter {
                 .post(&url)
                 .json(&registration)
                 .send()
-                .await
                 .map_err(|e| BearDogError::network(format!("Failed to register service: {e}")))?;
 
             if response.status().is_success() {
                 Ok(())
             } else {
-                Err(BearDogError::network(format!(
-                    "Service registration failed with status: {}",
-                    response.status()
-                )))
-            }
-        }
-    }
-
-    fn health_check(&self) -> impl Future<Output = bool> + Send {
-        let url = format!("{}/health", self.base_url);
-        let client = self.client.clone();
-
-        async move {
-            match client.get(&url).send().await {
-                Ok(response) => response.status().is_success(),
-                Err(_) => false,
-            }
-        }
-    }
-
-    fn deregister(
-        &self,
-        service_id: &str,
+                Err(BearDogError::network({}",
+                    response.status(&str,
     ) -> impl Future<Output = Result<(), BearDogError>> + Send {
         let url = format!("{}/api/v1/services/deregister", self.base_url);
-        let client = self.client.clone();
-        let service_id = service_id.to_string();
-
-        async move {
-            let deregister_request = json!({
-                "service_id": service_id,
+        let client = &self.client;
+        let service_id = service_id.to_string(),
                 "timestamp": Utc::now().to_rfc3339()
             });
 
@@ -188,26 +145,16 @@ impl ServiceMeshConnector for HttpAdapter {
                 .post(&url)
                 .json(&deregister_request)
                 .send()
-                .await
                 .map_err(|e| BearDogError::network(format!("Failed to deregister service: {e}")))?;
 
             if response.status().is_success() {
                 Ok(())
             } else {
-                Err(BearDogError::network(format!(
-                    "Service deregistration failed with status: {}",
-                    response.status()
-                )))
-            }
-        }
-    }
-
-    fn send_request(
-        &self,
-        request: &UniversalRequest,
+                Err(BearDogError::network({}",
+                    response.status(&UniversalRequest,
     ) -> impl Future<Output = Result<UniversalResponse, BearDogError>> + Send {
         let request = request.clone();
-        let adapter = self.clone();
+        let adapter = self;
 
         async move { Ok(adapter.handle_mesh_request(request).await) }
     }

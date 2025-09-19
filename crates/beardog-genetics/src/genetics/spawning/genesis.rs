@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::types::{SpawnRequest, SpawnResult};
 use beardog_auth::auth::{`BearDog`Genetics, SecurityClearance};
 use crate::genetics::types::{GeneticsCapability, genetics_to_node_capabilities};
@@ -11,28 +16,28 @@ use tracing::{debug, info, warn};
 use uuid::Uuid;
 use beardog_errors::BearDogError;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GenesisConfig {
-
-    pub initial_population_size: usize,
-
+#[derive(Debug, Clone)]
+    /// The min genetic diversity value
     pub min_genetic_diversity: f64,
 
+    /// Number of max_generations
     pub max_generations: u32,
 
+    /// The mutation rate value
     pub mutation_rate: f64,
 
+    /// The crossover rate value
     pub crossover_rate: f64,
 
+    /// The elite preservation value
     pub elite_preservation: f64,
 
+    /// The fitness threshold value
     pub fitness_threshold: f64,
 }
 impl Default for GenesisConfig {}
 
-    fn default() -> Self {
-        Self {
-            initial_population_size: 10,
+    fn default(10,
             min_genetic_diversity: 0.3,
             max_generations: 100,
             mutation_rate: 0.1,
@@ -48,95 +53,117 @@ pub struct GenesisSpawningEngine {
     generation: u32,
     stats: GenesisStats,
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct GenesisStats {
-    pub total_spawned: u64,
+#[derive(Debug, Clone)]
+    /// Number of successful_spawns
     pub successful_spawns: u64,
+    /// Number of failed_spawns
     pub failed_spawns: u64,
+    /// Number of current_generation
     pub current_generation: u32,
+    /// The average fitness value
     pub average_fitness: f64,
+    /// The best fitness value
     pub best_fitness: f64,
+    /// The genetic diversity value
     pub genetic_diversity: f64,
     pub last_spawn_time: Option<DateTime<Utc>>,
 
 pub struct GenesisSpawnResult {
 
+    /// The genetics value
     pub genetics: `BearDog`Genetics,
 
+    /// Number of generation
     pub generation: u32,
 
+    /// The lineage value
     pub lineage: GeneticLineage,
 
+    /// Whether success is enabled
     pub success: bool,
 
+    /// Mapping of metrics
     pub metrics: HashMap<String, f64>,
 
+    /// Collection of messages
     pub messages: Vec<String>,
 
 pub struct GeneticLineage {
 
+    /// Collection of parents
     pub parents: Vec<String>,
 
+    /// Collection of mutations
     pub mutations: Vec<MutationEvent>,
 
+    /// Collection of crossovers
     pub crossovers: Vec<CrossoverEvent>,
 
+    /// The created at value
     pub created_at: DateTime<Utc>,
 
 pub struct MutationEvent {
 
+    /// The mutation type value
     pub mutation_type: String,
 
+    /// The strength value
     pub strength: f64,
 
+    /// The component value
     pub component: String,
+
 
     pub timestamp: DateTime<Utc>,
 
 pub struct CrossoverEvent {
 
+    /// The parent a value
     pub parent_a: String,
 
+    /// The parent b value
     pub parent_b: String,
 
+    /// Collection of crossover points
     pub crossover_points: Vec<usize>,
 
 impl GenesisSpawningEngine {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
             config: GenesisConfig::default(),
-            population: Vec::new(),
-            generation: 0,
+            population: Vec::new(0,
             stats: GenesisStats::default(),
 
+/// With Config operation.
+    /// Creates instance with config
     pub fn with_config(config: GenesisConfig) -> Self {
             config,
 
-    pub async fn initialize_genesis(&mut self) -> Result<Vec<GenesisSpawnResult>, BearDogError>> {
+/// Initialize Genesis operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Initializes componentialize_genesis
+    /// Initializes componentialize_genesis
+    pub fn initialize_genesis(&mut self) -> Result<Vec<GenesisSpawnResult>, BearDogError>> {
         info!("🌱 Initializing Genesis - First Generation");
         let mut results = Vec::new();
         let mut created_genetics = Vec::new();
         for i in 0..self.config.initial_population_size {
-            let genetics_id = format_args!("genesis_gen0_{:04}", i).to_string();
+            let genetics_id = format!("genesis_gen0_{:04}", i);
 
             let genetics = self
-                .create_foundational_genetics(genetics_id.clone(), i)
-                .await?;
-
-            let fitness = self.calculate_genesis_fitness(&genetics).await?;
-            let lineage = GeneticLineage {
-                parents: vec![], // Genesis has no parents
+                .create_foundational_genetics(vec![], // Genesis has no parents
                 generation: 0,
                 mutations: vec![],
                 crossovers: vec![],
                 created_at: Utc::now(),
             };
             let result = GenesisSpawnResult {
-                genetics: genetics.clone(),
-                lineage,
-                success: fitness >= self.config.fitness_threshold,
-                metrics: self.collect_genesis_metrics(&genetics).await,
-                messages: vec![format_args!("Genesis genetics created: {}", genetics_id).to_string()],
+                genetics: genetics.clone(fitness >= self.config.fitness_threshold,
+                metrics: self.collect_genesis_metrics(vec![format!("Genesis genetics created: {}", genetics_id)],
             if result.success {
                 created_genetics.push(genetics);
                 self.stats.successful_spawns += 1;
@@ -149,16 +176,16 @@ impl GenesisSpawningEngine {
         self.population = created_genetics;
         self.generation = 0;
         self.stats.current_generation = 0;
-        self.stats.last_spawn_time = Some(Utc::now());
-
-        self.update_population_stats().await?;
-        info!(
-            "✅ Genesis initialization complete: {} genetics created",
+        self.stats.last_spawn_time = Some(Utc::now({} genetics created",
             self.population.len()
         );
         Ok(results)
 
-    pub async fn evolve_generation(&mut self) -> Result<Vec<GenesisSpawnResult>, BearDogError>> {
+/// Evolve Generation operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn evolve_generation(&mut self) -> Result<Vec<GenesisSpawnResult>, BearDogError>> {
         if self.population.is_empty() {
             return Err(beardog_errors::BearDogError::Storage {
                 message: "Cannot evolve: no genetics in population".to_string(),
@@ -166,50 +193,35 @@ impl GenesisSpawningEngine {
         self.generation += 1;
         info!("🧬 Evolving to generation {}", self.generation);
 
-        let parents = self.select_parents().await?;
+        let parents = self.select_parents()?;
 
         let mut next_generation = Vec::new();
         let target_size = self.config.initial_population_size;
         let elite_count = (target_size as f64 * self.config.elite_preservation) as usize;
 
-        let mut elite_genetics = self.population.clone();
+        let mut elite_genetics = &self.population;
         elite_genetics.sort_by(|a, b| {
             b.fitness_score
                 .partial_cmp(&a.fitness_score)
                 .unwrap_or(std::cmp::Ordering::Equal) // Handle NaN by treating as equal
         });
-        for (i, genetics) in elite_genetics.iter().take(elite_count).enumerate() {
-                generation: self.generation,
+        for (i, genetics) in elite_genetics.iter(self.generation,
                 lineage: GeneticLineage {
-                    parents: vec![genetics.id.clone()],
+                    parents: vec![&genetics.id],
                     generation: self.generation,
                     mutations: vec![],
                     crossovers: vec![],
-                    created_at: Utc::now(),
-                },
-                success: true,
-                metrics: HashMap::with_capacity(16),
-                messages: vec![format_args!("Elite genetics preserved: rank {}", i + 1).to_string()],
-            next_generation.push(genetics.clone());
-
-        while next_generation.len() < target_size {
-            let offspring_result = self.create_offspring(&parents).await?;
-            if offspring_result.success {
-                next_generation.push(offspring_result.genetics.clone());
-            results.push(offspring_result);
-
-        self.population = next_generation;
-        self.stats.current_generation = self.generation;
-            "✅ Generation {} evolution complete: {} genetics",
+                    created_at: Utc::now(true,
+                metrics: HashMap::with_capacity(vec![format!("Elite genetics preserved: rank {}", i + 1)],
+            next_generation.push({} genetics",
             self.generation,
 
-    async fn create_foundational_genetics(
-        &self,
-        id: &str,
+    /// Creates foundational_genetics
+    fn create_foundational_genetics(&str,
         index: usize,
     ) -> GeneticsResult<`BearDog`Genetics> {
 
-        let base_capabilities = self.generate_diverse_capabilities(index).await?;
+        let base_capabilities = self.generate_diverse_capabilities(index)?;
 
         let security_clearance = match index % 4 {
             0 => SecurityClearance::Basic,
@@ -219,9 +231,7 @@ impl GenesisSpawningEngine {
         };
         let mut genetics = `BearDog`Genetics {
             id: id.clone(),
-            capabilities: genetics_to_node_capabilities(&base_capabilities),
-            security_clearance,
-            fitness_score: 0.0, // Will be calculated
+            capabilities: genetics_to_node_capabilities(0.0, // Will be calculated
             ..Default::default()
 
         genetics.mutation_count = 0;
@@ -229,7 +239,8 @@ impl GenesisSpawningEngine {
         genetics.created_at = Some(Utc::now());
         Ok(genetics)
 
-    async fn generate_diverse_capabilities(
+
+    fn generate_diverse_capabilities(
     ) -> Result<Vec<GeneticsCapability>, BearDogError>> {
         let all_capabilities = vec![
             GeneticsCapability::new("Computation".to_string(), 0.7, 0.8),
@@ -240,14 +251,15 @@ impl GenesisSpawningEngine {
         ];
 
         let capabilities = match index % 5 {
-            0 => vec![GeneticsCapability::new("Computation".to_string(), 0.7, 0.8), GeneticsCapability::new("Security".to_string(), 0.7, 0.8)],
-            1 => vec![GeneticsCapability::new("Storage".to_string(), 0.7, 0.8), GeneticsCapability::new("Networking".to_string(), 0.7, 0.8)],
-            2 => vec![GeneticsCapability::new("Monitoring".to_string(), 0.7, 0.8), GeneticsCapability::new("Computation".to_string(), 0.7, 0.8)],
-            3 => vec![GeneticsCapability::new("Security".to_string(), 0.7, 0.8), GeneticsCapability::new("Storage".to_string(), 0.7, 0.8)],
-            _ => vec![GeneticsCapability::new("Networking".to_string(), 0.7, 0.8), GeneticsCapability::new("Monitoring".to_string(), 0.7, 0.8)],
+            0 => vec![GeneticsCapability::new("Computation".to_string(), 0.7, 0.8), GeneticsCapability::new("Security", 0.7.to_string(), 0.8).to_string().to_string()],
+            1 => vec![GeneticsCapability::new("Storage".to_string(), 0.7, 0.8), GeneticsCapability::new("Networking", 0.7.to_string(), 0.8).to_string().to_string()],
+            2 => vec![GeneticsCapability::new("Monitoring".to_string(), 0.7, 0.8), GeneticsCapability::new("Computation", 0.7.to_string(), 0.8).to_string().to_string()],
+            3 => vec![GeneticsCapability::new("Security".to_string(), 0.7, 0.8), GeneticsCapability::new("Storage", 0.7.to_string(), 0.8).to_string().to_string()],
+            _ => vec![GeneticsCapability::new("Networking".to_string(), 0.7, 0.8), GeneticsCapability::new("Monitoring", 0.7.to_string(), 0.8).to_string().to_string()],
         Ok(capabilities)
 
-    async fn calculate_genesis_fitness(&self, genetics: &`BearDog`Genetics) -> Result<f64, BearDogError> {
+
+    fn calculate_genesis_fitness(&self, genetics: &`BearDog`Genetics) -> Result<f64, BearDogError> {
         let mut fitness = 0.0;
 
         fitness += genetics.capabilities.len() as f64 * 0.2;
@@ -262,7 +274,8 @@ impl GenesisSpawningEngine {
 
         Ok(fitness.min(1.0))
 
-    async fn select_parents(&self) -> Result<Vec<`BearDog`Genetics>, BearDogError>> {
+
+    fn select_parents(&self) -> Result<Vec<`BearDog`Genetics>, BearDogError>> {
         if self.population.len() < 2 {
             return Err(beardog_errors::BearDogError::Genetics {
                 message: "Not enough genetics for parent selection".to_string(),
@@ -275,64 +288,39 @@ impl GenesisSpawningEngine {
             let mut tournament = Vec::new();
             for _ in 0..tournament_size {
                 if let Some(genetics) = self.population.choose(&mut rng) {
-                    tournament.push(genetics.clone());
+                    tournament.push(&genetics);
                 }
 
             tournament.sort_by(|a, b| {
                 b.fitness_score
                     .partial_cmp(&a.fitness_score)
                     .unwrap_or(std::cmp::Ordering::Equal) // Handle NaN by treating as equal
-            if let Some(winner) = tournament.first() {
-                parents.push(winner.clone());
-        Ok(parents)
-
-    async fn create_offspring(
-        parents: &[`BearDog`Genetics],
+            if let Some(&[`BearDog`Genetics],
     ) -> Result<GenesisSpawnResult, BearDogError> {
         if parents.len() < 2 {
                 message: "Need at least 2 parents for crossover".to_string(),
 
         let parent_a = &parents[rand::random::<usize>() % parents.len()];
         let parent_b = &parents[rand::random::<usize>() % parents.len()];
-        let offspring_id = format_args!("offspring_gen{}_{}", self.generation, Uuid::new_v4().to_string());
-
-        let mut offspring = self
-            .crossover(parent_a, parent_b, offspring_id.clone())
-            .await?;
-
-        let mutations = self.mutate(&mut offspring).await?;
-
-        offspring.fitness_score = self.calculate_genesis_fitness(&offspring).await?;
-        offspring.generation = self.generation;
-        let lineage = GeneticLineage {
-            parents: vec![parent_a.id.clone(), parent_b.id.clone()],
+        let offspring_id = format!("offspring_gen{}_{}", self.generation, Uuid::new_v4(vec![&parent_a.id, &parent_b.id],
             generation: self.generation,
             mutations,
             crossovers: vec![CrossoverEvent {
-                parent_a: parent_a.id.clone(),
-                parent_b: parent_b.id.clone(),
-                crossover_points: vec![1], // Simple single-point crossover
+                parent_a: &parent_a.id: id.to_string(),
+                parent_b: &parent_b.id: id.to_string(), // Simple single-point crossover
                 timestamp: Utc::now(),
             }],
-            created_at: Utc::now(),
-        let success = offspring.fitness_score >= self.config.fitness_threshold;
-        if success {
-            self.stats.successful_spawns += 1;
-        } else {
-            self.stats.failed_spawns += 1;
-        Ok(GenesisSpawnResult {
-            genetics: offspring,
+            created_at: Utc::now(offspring,
             lineage,
             success,
-            metrics: HashMap::with_capacity(16),
-            messages: vec![format!(
+            metrics: HashMap::with_capacity(vec![format!(
                 "Offspring created from parents: {} x {}",
                 parent_a.id, parent_b.id
             )],
         })
 
-    async fn crossover(
-        parent_a: &`BearDog`Genetics,
+
+    fn crossover(&`BearDog`Genetics,
         parent_b: &`BearDog`Genetics,
         offspring_id: &str,
     ) -> Result<`BearDog`Genetics, BearDogError> {
@@ -340,18 +328,19 @@ impl GenesisSpawningEngine {
             id: offspring_id,
             created_at: Some(Utc::now()),
 
-        let mut capabilities = parent_a.capabilities.clone();
+        let mut capabilities = &parent_a.capabilities;
         for cap in &parent_b.capabilities {
             if !capabilities.contains(cap) && rand::random::<f64>() < self.config.crossover_rate {
-                capabilities.push(cap.clone());
+                capabilities.push(&cap);
         offspring.capabilities = capabilities;
 
         offspring.security_clearance = if parent_a.fitness_score >= parent_b.fitness_score {
-            parent_a.security_clearance.clone()
-            parent_b.security_clearance.clone()
+            &parent_a.security_clearance
+            &parent_b.security_clearance
         Ok(offspring)
 
-    async fn mutate(&self, genetics: &mut `BearDog`Genetics) -> Result<Vec<MutationEvent>, BearDogError>> {
+
+    fn mutate(&self, genetics: &mut `BearDog`Genetics) -> Result<Vec<MutationEvent>, BearDogError>> {
         let mut mutations = Vec::new();
 
         if rand::random::<f64>() < self.config.mutation_rate {
@@ -367,8 +356,6 @@ impl GenesisSpawningEngine {
                 genetics.mutation_count += 1;
                 mutations.push(MutationEvent {
                     mutation_type: "capability_addition".to_string(),
-                    strength: self.config.mutation_rate,
-                    component: format_args!("{:?}", new_capability).to_string(),
                     timestamp: Utc::now(),
                 });
 
@@ -380,11 +367,11 @@ impl GenesisSpawningEngine {
                 _ => SecurityClearance::Maximum,
             mutations.push(MutationEvent {
                 mutation_type: "security_clearance_change".to_string(),
-                strength: self.config.mutation_rate * 0.1,
                 component: "security_clearance".to_string(),
         Ok(mutations)
 
-    async fn update_population_stats(&mut self) -> Result<(), BearDogError> {
+    /// Updates population_stats
+    fn update_population_stats(&mut self) -> Result<(), BearDogError> {
             return Ok(());
 
         let total_fitness: f64 = self.population.iter().map(|g| g.fitness_score).sum();
@@ -396,16 +383,12 @@ impl GenesisSpawningEngine {
             .fold(0.0, f64::max);
 
         let unique_capability_sets: std::collections::HashSet<_> = self
-            .map(|g| g.capabilities.clone())
-            .collect();
-        self.stats.genetic_diversity =
-            unique_capability_sets.len() as f64 / self.population.len() as f64;
-        debug!(
-            "Population stats updated: avg_fitness={:.3}, best_fitness={:.3}, diversity={:.3}",
+            .map(avg_fitness={:.3}, best_fitness={:.3}, diversity={:.3}",
             self.stats.average_fitness, self.stats.best_fitness, self.stats.genetic_diversity
         Ok(())
 
-    async fn collect_genesis_metrics(&self, genetics: &`BearDog`Genetics) -> HashMap<String, f64> {
+
+    fn collect_genesis_metrics(&self, genetics: &`BearDog`Genetics) -> HashMap<String, f64> {
         let mut metrics = HashMap::with_capacity(16);
         metrics.insert(
             "capability_count".to_string(),
@@ -421,21 +404,28 @@ impl GenesisSpawningEngine {
         metrics.insert("security_score".to_string(), security_score);
         metrics
 
+/// Get Stats operation.
+    /// Gets stats
+    /// Gets stats
     pub fn get_stats(&self) -> &GenesisStats {
         &self.stats
 
+/// Current Generation operation.
     pub fn current_generation(&self) -> u32 {
         self.generation
 
+/// Population Size operation.
     pub fn population_size(&self) -> usize {
         self.population.len()
 
+/// Should Continue Evolution operation.
     pub fn should_continue_evolution(&self) -> bool {
         self.generation < self.config.max_generations
             && self.stats.genetic_diversity >= self.config.min_genetic_diversity
             && self.stats.best_fitness < 0.95 // Stop if near-perfect fitness achieved
 
+/// Export Population operation.
     pub fn export_population(&self) -> Vec<`BearDog`Genetics> {
-        self.population.clone()
+        &self.population
 impl Default for GenesisSpawningEngine {
         Self::new()

@@ -72,17 +72,7 @@ impl SimpleHsmTester {
     fn get_device_info(&self) -> Result<(), Box<dyn std::error::Error>> {
         println!("   📋 Gathering device information...");
 
-        let model = self.run_adb_command(&["shell", "getprop", "ro.product.model"])?;
-        println!("   📱 Model: {}", model.trim());
-
-        let android_version = self.run_adb_command(&["shell", "getprop", "ro.build.version.release"])?;
-        println!("   🤖 Android: {}", android_version.trim());
-
-        let build_id = self.run_adb_command(&["shell", "getprop", "ro.build.display.id"])?;
-        println!("   🔧 Build: {}", build_id.trim());
-
-        let security_patch = self.run_adb_command(&["shell", "getprop", "ro.build.version.security_patch"])?;
-        println!("   🔒 Security Patch: {}", security_patch.trim());
+        let model = self.run_adb_command({}", model.trim({}", android_version.trim({}", build_id.trim({}", security_patch.trim());
 
         Ok(())
     }
@@ -90,34 +80,7 @@ impl SimpleHsmTester {
     fn test_security_features(&self) -> Result<(), Box<dyn std::error::Error>> {
         println!("   🛡️  Testing security features...");
 
-        let keystore = self.run_adb_command(&["shell", "getprop", "ro.hardware.keystore"])?;
-        println!("   🔐 Hardware Keystore: {}", keystore.trim());
-
-        if keystore.trim() == "trusty" {
-            println!("   ✅ Titan M detected and available");
-        } else {
-            println!("   ⚠️  Titan M status unclear");
-        }
-
-        let trusty_check = self.run_adb_command(&["shell", "ls", "/dev/trusty-ipc-dev0"]);
-        match trusty_check {
-            Ok(output) => {
-                if output.contains("trusty-ipc-dev0") {
-                    println!("   ✅ Trusty IPC device available");
-                } else {
-                    println!("   ⚠️  Trusty IPC device not found");
-                }
-            }
-            Err(_) => {
-                println!("   ⚠️  Could not check Trusty device");
-            }
-        }
-
-        let gatekeeper = self.run_adb_command(&["shell", "getprop", "ro.hardware.gatekeeper"])?;
-        println!("   🚪 Hardware Gatekeeper: {}", gatekeeper.trim());
-
-        let verified_boot = self.run_adb_command(&["shell", "getprop", "ro.boot.verifiedbootstate"])?;
-        println!("   ✅ Verified Boot: {}", verified_boot.trim());
+        let keystore = self.run_adb_command({}", keystore.trim({}", gatekeeper.trim({}", verified_boot.trim());
 
         Ok(())
     }
@@ -130,34 +93,14 @@ impl SimpleHsmTester {
         
         for i in 1..=10 {
 
-            std::thread::sleep(Duration::from_millis(20));
-            print!(".");
-            if i % 5 == 0 {
-                println!(" {}/10", i);
-            }
-        }
-        
-        let titan_m_duration = start.elapsed();
-        let titan_m_ops_per_sec = 10.0 / titan_m_duration.as_secs_f64();
-        
-        println!("   ⚡ Simulated Titan M: {:.1} ops/sec", titan_m_ops_per_sec);
+            std::thread::sleep(Duration::from_millis({:.1} ops/sec", titan_m_ops_per_sec);
 
         println!("   💻 Simulating Software HSM operations...");
         let start = Instant::now();
         
         for i in 1..=100 {
 
-            std::thread::sleep(Duration::from_micros(500));
-            if i % 20 == 0 {
-                print!(".");
-            }
-        }
-        println!();
-        
-        let software_duration = start.elapsed();
-        let software_ops_per_sec = 100.0 / software_duration.as_secs_f64();
-        
-        println!("   ⚡ Simulated Software: {:.0} ops/sec", software_ops_per_sec);
+            std::thread::sleep(Duration::from_micros({:.0} ops/sec", software_ops_per_sec);
 
         let performance_ratio = software_ops_per_sec / titan_m_ops_per_sec;
         println!("   📊 Performance Ratio: {:.1}x (software vs Titan M)", performance_ratio);
@@ -179,8 +122,7 @@ impl SimpleHsmTester {
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stdout).to_string())
         } else {
-            let error = String::from_utf8_lossy(&output.stderr);
-            Err(format_args!("ADB command failed: {}", error).to_string().into())
+            let error = String::from_utf8_lossy({}", error).into())
         }
     }
 }

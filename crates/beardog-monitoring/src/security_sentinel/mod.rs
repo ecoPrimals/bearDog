@@ -1,488 +1,245 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 use beardog_errors::BearDogError;
+use beardog_types::canonical::HealthStatus;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{error, info, warn};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AlertThresholds {
-    pub max_auth_failures: u32,
-
-    pub max_suspicious_score: f64,
-
-    pub max_threat_rate: u32,
-
-    pub max_compliance_violations: u32,
-}
-
-impl Default for AlertThresholds {
-    fn default() -> Self {
-        Self {
-            max_auth_failures: 5,
-            max_suspicious_score: 75.0,
-            max_threat_rate: 10,
-            max_compliance_violations: 3,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SecuritySentinelStats {
-    pub total_events: u64,
-
-    pub threats_detected: u64,
-
-    pub compliance_violations: u64,
-
-    pub auth_failures: u64,
-
-    pub last_updated: DateTime<Utc>,
-}
-
-impl Default for SecuritySentinelStats {
-    fn default() -> Self {
-        Self {
-            total_events: 0,
-            threats_detected: 0,
-            compliance_violations: 0,
-            auth_failures: 0,
-            last_updated: Utc::now(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SecurityStatusReport {
-    pub status: String,
-
-    pub threat_level: String,
-
-    pub active_measures: Vec<String>,
-
-    pub recent_events: Vec<String>,
-
-    pub generated_at: DateTime<Utc>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ThreatLandscapeReport {
-    pub threat_vectors: Vec<String>,
-
-    pub risk_score: f64,
-
-    pub recommendations: Vec<String>,
-
-    pub timestamp: DateTime<Utc>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CapabilitiesHealthReport {
-    pub capability_status: HashMap<String, String>,
-
-    pub health_score: f64,
-
-    pub issues: Vec<String>,
-
-    pub timestamp: DateTime<Utc>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SecurityPerformanceMetrics {
-    pub avg_processing_time_ms: f64,
-
-    pub events_per_second: f64,
-
-    pub detection_accuracy: f64,
-
-    pub false_positive_rate: f64,
-
-    pub timestamp: DateTime<Utc>,
-}
-
-#[derive(Debug, Clone)]
-pub struct ThreatIntelligence {
-    pub threat_signatures: Arc<RwLock<HashMap<String, String>>>,
-
-    pub last_update: Arc<RwLock<DateTime<Utc>>>,
-}
-
-impl ThreatIntelligence {
-    pub fn new() -> Self {
-        Self {
-            threat_signatures: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            last_update: Arc::new(RwLock::new(Utc::now())),
-        }
-    }
-}
-
-impl Default for ThreatIntelligence {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct CapabilityMonitor {
-    pub capabilities: Arc<RwLock<HashMap<String, bool>>>,
-
-    pub last_check: Arc<RwLock<DateTime<Utc>>>,
-}
-
-impl CapabilityMonitor {
-    pub fn new() -> Self {
-        Self {
-            capabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            last_check: Arc::new(RwLock::new(Utc::now())),
-        }
-    }
-}
-
-impl Default for CapabilityMonitor {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct PerformanceSentinel {
-    pub metrics: Arc<RwLock<SecurityPerformanceMetrics>>,
-
-    pub monitoring_active: Arc<AtomicBool>,
-}
-
-impl PerformanceSentinel {
-    pub fn new() -> Self {
-        Self {
-            metrics: Arc::new(RwLock::new(SecurityPerformanceMetrics {
-                avg_processing_time_ms: 0.0,
-                events_per_second: 0.0,
-                detection_accuracy: 0.0,
-                false_positive_rate: 0.0,
-                timestamp: Utc::now(),
-            })),
-            monitoring_active: Arc::new(AtomicBool::new(true)),
-        }
-    }
-}
-
-impl Default for PerformanceSentinel {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct SovereigntyMonitor {
-    pub status: Arc<RwLock<HashMap<String, String>>>,
-
-    pub compliance_state: Arc<RwLock<bool>>,
-}
-
-impl SovereigntyMonitor {
-    pub fn new() -> Self {
-        Self {
-            status: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            compliance_state: Arc::new(RwLock::new(true)),
-        }
-    }
-}
-
-impl Default for SovereigntyMonitor {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecuritySentinelConfig {
+    /// Whether security monitoring is enabled
+    /// Whether feature is enabled
     pub enabled: bool,
-
-    pub alert_thresholds: AlertThresholds,
-
+    /// Maximum number of events to track
+    /// Number of max_events
+    pub max_events: usize,
+    /// Event retention period in hours
+    /// Number of retention_hours
+    pub retention_hours: u64,
+    /// Whether to log security events
+    /// Whether log_events is enabled
+    pub log_events: bool,
+    /// Number of alert_threshold
+    pub alert_threshold: u32,
+    /// Whether to enable real-time monitoring
+    pub real_time_monitoring: bool,
+    /// Monitoring interval in seconds
+    /// Number of monitoring_interval_seconds
     pub monitoring_interval_seconds: u64,
-
-    pub enable_threat_intelligence: bool,
 }
 
 impl Default for SecuritySentinelConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            alert_thresholds: AlertThresholds::default(),
+            max_events: 10000,
+            retention_hours: 24,
+            log_events: true,
+            alert_threshold: 10,
+            real_time_monitoring: true,
             monitoring_interval_seconds: 60,
-            enable_threat_intelligence: true,
         }
     }
 }
 
+/// `SecuritySentinelStats` tracks security monitoring statistics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecuritySentinelStats {
+    /// Total number of security events processed
+    /// Number of total_events
+    pub total_events: u64,
+    /// Number of authentication failures
+    /// Number of auth_failures
+    pub auth_failures: u64,
+    /// Number of access violations
+    /// Number of access_violations
+    pub access_violations: u64,
+    /// Number of compliance violations
+    /// Number of compliance_violations
+    pub compliance_violations: u64,
+    /// Number of suspicious activities detected
+    /// Number of suspicious_activities
+    pub suspicious_activities: u64,
+    /// Number of blocked requests
+    /// Number of blocked_requests
+    pub blocked_requests: u64,
+    /// Last event timestamp
+    pub last_event_time: Option<DateTime<Utc>>,
+    /// Monitoring start time
+    pub monitoring_start_time: DateTime<Utc>,
+}
+
+impl Default for SecuritySentinelStats {
+    fn default() -> Self {
+        Self {
+            total_events: 0,
+            auth_failures: 0,
+            access_violations: 0,
+            compliance_violations: 0,
+            suspicious_activities: 0,
+            blocked_requests: 0,
+            last_event_time: None,
+            monitoring_start_time: Utc::now(),
+        }
+    }
+}
+
+/// `SecurityStatusReport` provides current security status
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityStatusReport {
+    /// Current monitoring status
+    /// Current status of the component
+    pub status: String,
+    /// Security statistics
+    /// The stats value
+    pub stats: SecuritySentinelStats,
+    /// Overall health status
+    /// Current status of the health
+    pub health_status: HealthStatus,
+    /// Report generation timestamp
+    pub timestamp: DateTime<Utc>,
+}
+
+/// `SecuritySentinel` provides comprehensive security monitoring
 #[derive(Debug)]
 pub struct SecuritySentinel {
-    pub config: SecuritySentinelConfig,
-
-    pub stats: SecuritySentinelStats,
-
-    pub threat_intelligence: Arc<ThreatIntelligence>,
-
-    pub capability_monitor: Arc<CapabilityMonitor>,
-
-    pub performance_sentinel: Arc<PerformanceSentinel>,
-
-    pub sovereignty_monitor: Arc<SovereigntyMonitor>,
-
-    pub event_counter: Arc<AtomicU64>,
-
-    pub monitoring_active: Arc<AtomicBool>,
+    config: SecuritySentinelConfig,
+    stats: Arc<RwLock<SecuritySentinelStats>>,
+    monitoring_active: Arc<AtomicBool>,
+    event_counter: Arc<AtomicUsize>,
 }
 
 impl SecuritySentinel {
-    pub fn new() -> Result<Self, BearDogError> {
-        Ok(Self {
-            config: SecuritySentinelConfig::default(),
-            stats: SecuritySentinelStats::default(),
-            threat_intelligence: Arc::new(ThreatIntelligence::new()),
-            capability_monitor: Arc::new(CapabilityMonitor::new()),
-            performance_sentinel: Arc::new(PerformanceSentinel::new()),
-            sovereignty_monitor: Arc::new(SovereigntyMonitor::new()),
-            event_counter: Arc::new(AtomicU64::new(0)),
-            monitoring_active: Arc::new(AtomicBool::new(true)),
-        })
-    }
-
-    pub async fn start_monitoring(&self) -> Result<(), BearDogError> {
-        info!("Starting BearDog Security Sentinel");
-        self.monitoring_active.store(true, Ordering::Relaxed);
-
-        let sentinel_clone = self.clone_for_background();
-        tokio::spawn(async move {
-            sentinel_clone.monitoring_loop().await;
-        });
-
-        Ok(())
-    }
-
-    pub async fn stop_monitoring(&self) -> Result<(), BearDogError> {
-        info!("Stopping BearDog Security Sentinel");
-        self.monitoring_active.store(false, Ordering::Relaxed);
-        Ok(())
-    }
-
-    pub async fn process_event(
-        &self,
-        event_type: &str,
-        event_data: HashMap<&str, &str>,
-    ) -> Result<(), BearDogError> {
-        let event_count = self.event_counter.fetch_add(1, Ordering::Relaxed);
-
-        info!("Processing security event #{}: {}", event_count, event_type);
-
-        self.update_stats(event_type, &event_data).await?;
-
-        self.check_threats(event_type, &event_data).await?;
-
-        Ok(())
-    }
-
-    pub async fn get_status_report(&self) -> Result<SecurityStatusReport, BearDogError> {
-        Ok(SecurityStatusReport {
-            status: "ACTIVE".to_string(),
-            threat_level: "LOW".to_string(),
-            active_measures: vec![
-                "Real-time monitoring".to_string(),
-                "Threat detection".to_string(),
-                "Compliance checking".to_string(),
-            ],
-            recent_events: vec!["System startup".to_string()],
-            generated_at: Utc::now(),
-        })
-    }
-
-    pub async fn get_threat_landscape(&self) -> Result<ThreatLandscapeReport, BearDogError> {
-        Ok(ThreatLandscapeReport {
-            threat_vectors: vec![
-                "Network intrusion".to_string(),
-                "Malware".to_string(),
-                "Social engineering".to_string(),
-            ],
-            risk_score: 25.0,
-            recommendations: vec![
-                "Maintain current security posture".to_string(),
-                "Continue monitoring".to_string(),
-            ],
-            timestamp: Utc::now(),
-        })
-    }
-
-    pub async fn get_capabilities_health(&self) -> Result<CapabilitiesHealthReport, BearDogError> {
-        let mut capability_status = HashMap::with_capacity(16);
-        capability_status.insert("encryption".to_string(), "HEALTHY".to_string());
-        capability_status.insert("authentication".to_string(), "HEALTHY".to_string());
-        capability_status.insert("authorization".to_string(), "HEALTHY".to_string());
-
-        Ok(CapabilitiesHealthReport {
-            capability_status,
-            health_score: 95.0,
-            issues: vec![],
-            timestamp: Utc::now(),
-        })
-    }
-
-    pub async fn get_performance_metrics(
-        &self,
-    ) -> Result<SecurityPerformanceMetrics, BearDogError> {
-        let metrics = self.performance_sentinel.metrics.read().await;
-        Ok(metrics.clone())
-    }
-
-    #[allow(dead_code)]
-    async fn monitoring_loop(&self) {
-        while self.monitoring_active.load(Ordering::Relaxed) {
-            if let Err(e) = self.perform_monitoring_cycle().await {
-                error!("Security monitoring cycle failed: {}", e);
-            }
-
-            tokio::time::sleep(tokio::time::Duration::from_secs(
-                self.config.monitoring_interval_seconds,
-            ))
-            .await;
-        }
-    }
-
-    #[allow(dead_code)]
-    async fn perform_monitoring_cycle(&self) -> Result<(), BearDogError> {
-        self.update_threat_intelligence().await?;
-
-        self.check_capabilities().await?;
-
-        self.update_performance_metrics().await?;
-
-        Ok(())
-    }
-
-    #[allow(dead_code)]
-    async fn update_threat_intelligence(&self) -> Result<(), BearDogError> {
-        if self.config.enable_threat_intelligence {
-            let mut last_update = self.threat_intelligence.last_update.write().await;
-            *last_update = Utc::now();
-        }
-        Ok(())
-    }
-
-    #[allow(dead_code)]
-    async fn check_capabilities(&self) -> Result<(), BearDogError> {
-        let mut last_check = self.capability_monitor.last_check.write().await;
-        *last_check = Utc::now();
-        Ok(())
-    }
-
-    #[allow(dead_code)]
-    async fn update_performance_metrics(&self) -> Result<(), BearDogError> {
-        let mut metrics = self.performance_sentinel.metrics.write().await;
-        metrics.timestamp = Utc::now();
-        metrics.events_per_second = 10.0; // Mock value
-        metrics.avg_processing_time_ms = 50.0; // Mock value
-        metrics.detection_accuracy = 95.0; // Mock value
-        metrics.false_positive_rate = 2.0; // Mock value
-        Ok(())
-    }
-
-    async fn update_stats(
-        &self,
-        event_type: &str,
-        _event_data: &HashMap<&str, &str>,
-    ) -> Result<(), BearDogError> {
-        match event_type {
-            "threat_detected" => {}
-            "auth_failure" => {}
-            "compliance_violation" => {}
-            _ => {}
-        }
-        Ok(())
-    }
-
-    async fn check_threats(
-        &self,
-        event_type: &str,
-        _event_data: &HashMap<&str, &str>,
-    ) -> Result<(), BearDogError> {
-        if event_type == "suspicious_activity" {
-            warn!("Suspicious activity detected");
-        }
-        Ok(())
-    }
-
-    fn clone_for_background(&self) -> SecuritySentinelBackground {
-        SecuritySentinelBackground {
-            config: self.config.clone(),
-            threat_intelligence: Arc::clone(&self.threat_intelligence),
-            capability_monitor: Arc::clone(&self.capability_monitor),
-            performance_sentinel: Arc::clone(&self.performance_sentinel),
-            sovereignty_monitor: Arc::clone(&self.sovereignty_monitor),
-            monitoring_active: Arc::clone(&self.monitoring_active),
-        }
-    }
-}
-
-#[derive(Clone)]
-struct SecuritySentinelBackground {
-    config: SecuritySentinelConfig,
-    #[allow(dead_code)]
-    threat_intelligence: Arc<ThreatIntelligence>,
-    #[allow(dead_code)]
-    capability_monitor: Arc<CapabilityMonitor>,
-    #[allow(dead_code)]
-    performance_sentinel: Arc<PerformanceSentinel>,
-    #[allow(dead_code)]
-    sovereignty_monitor: Arc<SovereigntyMonitor>,
-    monitoring_active: Arc<AtomicBool>,
-}
-
-impl SecuritySentinelBackground {
-    async fn monitoring_loop(&self) {
-        while self.monitoring_active.load(Ordering::Relaxed) {
-            tokio::time::sleep(tokio::time::Duration::from_secs(
-                self.config.monitoring_interval_seconds,
-            ))
-            .await;
-        }
-    }
-}
-
-impl Clone for SecuritySentinel {
-    fn clone(&self) -> Self {
+    /// Creates a new `SecuritySentinel` instance
+    #[must_use]
+    /// Creates a new instance
+    pub fn new(config: SecuritySentinelConfig) -> Self {
         Self {
-            config: self.config.clone(),
-            stats: self.stats.clone(),
-            threat_intelligence: Arc::clone(&self.threat_intelligence),
-            capability_monitor: Arc::clone(&self.capability_monitor),
-            performance_sentinel: Arc::clone(&self.performance_sentinel),
-            sovereignty_monitor: Arc::clone(&self.sovereignty_monitor),
-            event_counter: Arc::clone(&self.event_counter),
-            monitoring_active: Arc::clone(&self.monitoring_active),
+            config,
+            stats: Arc::new(RwLock::new(SecuritySentinelStats::default())),
+            monitoring_active: Arc::new(AtomicBool::new(false)),
+            event_counter: Arc::new(AtomicUsize::new(0)),
         }
+    }
+
+    /// Starts security monitoring
+    ///
+    /// # Errors
+    /// Returns an error if monitoring cannot be started
+    /// Starts monitoring
+    /// Starts monitoring
+    pub fn start_monitoring(&self) -> Result<(), BearDogError> {
+        self.monitoring_active.store(true, Ordering::Relaxed);
+        tracing::info!("Security monitoring started");
+        Ok(())
+    }
+
+    /// Stops security monitoring
+    ///
+    /// # Errors
+    /// Returns an error if monitoring cannot be stopped
+    /// Stops monitoring
+    /// Stops monitoring
+    pub fn stop_monitoring(&self) -> Result<(), BearDogError> {
+        self.monitoring_active.store(false, Ordering::Relaxed);
+        tracing::info!("Security monitoring stopped");
+        Ok(())
+    }
+
+    /// Processes a security event
+    ///
+    /// # Errors
+    /// Returns an error if the event cannot be processed
+    /// Processes security_event
+    /// Processes security_event
+    pub fn process_security_event(
+        &self,
+        event_type: &str,
+        _event_data: HashMap<&str, &str>,
+    ) -> Result<(), BearDogError> {
+        let _event_count = self.event_counter.fetch_add(1, Ordering::Relaxed);
+
+        {
+            let mut stats = self.stats.write();
+            stats.total_events += 1;
+            stats.last_event_time = Some(Utc::now());
+
+            match event_type {
+                "auth_failure" => {
+                    stats.auth_failures += 1;
+                }
+                "access_violation" => {
+                    stats.access_violations += 1;
+                }
+                "compliance_violation" => {
+                    stats.compliance_violations += 1;
+                }
+                _ => {
+                    stats.suspicious_activities += 1;
+                }
+            }
+        } // stats lock is dropped here
+
+        Ok(())
+    }
+
+    /// Gets a comprehensive security status report
+    ///
+    /// # Errors
+    /// Returns an error if the status report cannot be generated
+    /// Gets status_report
+    /// Gets status_report
+    pub fn get_status_report(&self) -> Result<SecurityStatusReport, BearDogError> {
+        let stats = self.stats.read().clone();
+        let status = if self.monitoring_active.load(Ordering::Relaxed) {
+            "ACTIVE"
+        } else {
+            "INACTIVE"
+        };
+
+        let health_status = if stats.compliance_violations > 0
+            || stats.suspicious_activities > self.config.alert_threshold.into()
+        {
+            HealthStatus::Unhealthy
+        } else if stats.auth_failures > 5 {
+            HealthStatus::Degraded
+        } else {
+            HealthStatus::Healthy
+        };
+
+        Ok(SecurityStatusReport {
+            status: status.to_string(),
+            stats,
+            health_status,
+            timestamp: Utc::now(),
+        })
+    }
+
+    /// Checks if monitoring is currently active
+    #[must_use]
+    /// Checks if monitoring active
+    /// Checks if monitoring active
+    pub fn is_monitoring_active(&self) -> bool {
+        self.monitoring_active.load(Ordering::Relaxed)
+    }
+
+    /// Gets the current event count
+    #[must_use]
+    /// Gets event_count
+    /// Gets event_count
+    pub fn get_event_count(&self) -> usize {
+        self.event_counter.load(Ordering::Relaxed)
     }
 }
 
 impl Default for SecuritySentinel {
     fn default() -> Self {
-        Self::new().unwrap_or_else(|e| {
-            tracing::error!(
-                "Failed to create SecuritySentinel with default configuration: {:?}",
-                e
-            );
-            tracing::warn!("Creating minimal SecuritySentinel instance as fallback");
-            Self {
-                config: SecuritySentinelConfig::default(),
-                stats: SecuritySentinelStats::default(),
-                threat_intelligence: Arc::new(ThreatIntelligence::new()),
-                capability_monitor: Arc::new(CapabilityMonitor::new()),
-                performance_sentinel: Arc::new(PerformanceSentinel::new()),
-                sovereignty_monitor: Arc::new(SovereigntyMonitor::new()),
-                event_counter: Arc::new(AtomicU64::new(0)),
-                monitoring_active: Arc::new(AtomicBool::new(false)), // Start disabled as fallback
-            }
-        })
+        Self::new(SecuritySentinelConfig::default())
     }
 }

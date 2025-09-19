@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 pub use advanced_observability::*;
 
 pub mod advanced_observability; 

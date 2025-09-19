@@ -1,19 +1,36 @@
-# BearDog Strategic Pedantic Compliance Configuration
-# Achieves absolute perfection with intelligent allowances for inherent design patterns
+# BearDog Pedantic Clippy Configuration - Balanced Excellence
+# Enforces high standards while maintaining practicality
 
-# Strategic allowances for security platform patterns
-avoid-breaking-exported-api = false
-msrv = "1.70"
+# Version requirements
+msrv = "1.70.0"
 
-# Allow inherent patterns in security/crypto domains
+# Cognitive complexity limits (reasonable)
+cognitive-complexity-threshold = 15
+
+# Type complexity limits  
+type-complexity-threshold = 300
+
+# Performance optimizations
+trivial-copy-size-limit = 128
+pass-by-value-size-limit = 256
+
+# Function complexity (balanced)
+too-many-lines-threshold = 150
+too-many-arguments-threshold = 8
+
+# Safety settings - high standards but practical
 allow-unwrap-in-tests = true
 allow-expect-in-tests = true
-allow-panic-in-tests = true
-allow-print-in-tests = true
-allow-dbg-in-tests = true
+allow-panic-in-tests = false
+allow-dbg-in-tests = false
 
-# Performance and complexity thresholds for security platforms
-cognitive-complexity-threshold = 100
-too-many-arguments-threshold = 15
-type-complexity-threshold = 1000
-trivial-copy-size-limit = 256 
+# Naming conventions - enforce quality names
+disallowed-names = ["foo", "bar", "baz", "tmp", "temp"]
+
+# Performance thresholds
+vec-box-size-threshold = 4096
+large-error-threshold = 256
+enum-variant-size-threshold = 512
+
+# Practical strictness
+single-char-binding-names-threshold = 2 

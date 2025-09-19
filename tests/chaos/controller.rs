@@ -1,5 +1,3 @@
-
-
 use super::models::*;
 use std::{
     collections::{HashMap, VecDeque},
@@ -28,25 +26,25 @@ impl ChaosController {
     }
 
     pub async fn track_active_fault(&self, fault: ActiveFault) {
-        let mut active_faults = self.active_faults.write().await;
+        let mut active_faults = self.active_faults.write();
         active_faults.insert(fault.id.clone(), fault);
     }
 
     pub async fn remove_active_fault(&self, fault_id: &str) {
-        let mut active_faults = self.active_faults.write().await;
+        let mut active_faults = self.active_faults.write();
         active_faults.remove(fault_id);
     }
 
     pub async fn get_active_faults(&self) -> Vec<ActiveFault> {
-        let active_faults = self.active_faults.read().await;
+        let active_faults = self.active_faults.read();
         active_faults.values().cloned().collect()
     }
 
     pub async fn add_fault_to_history(&self, fault_event: FaultEvent) {
         let mut history = self.fault_history.lock().unwrap_or_else(|poisoned| {
-        tracing::warn!("Mutex poisoned, recovering");
-        poisoned.into_inner()
-    });
+            tracing::warn!("Mutex poisoned, recovering");
+            poisoned.into_inner()
+        });
         history.push_back(fault_event);
 
         if history.len() > 1000 {
@@ -65,4 +63,4 @@ impl ChaosController {
     pub fn is_running(&self) -> bool {
         self.is_running.load(Ordering::SeqCst)
     }
-} 
+}

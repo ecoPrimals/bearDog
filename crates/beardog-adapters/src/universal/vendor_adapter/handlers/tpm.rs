@@ -8,20 +8,17 @@ use crate::adapters::universal::{
 };
 
 #[derive(Debug, Clone)]
-pub struct TpmCapabilityHandler {
-
-    pub tpm_version: String,
-
+    /// Whether tpm_available is enabled
     pub tpm_available: bool,
 
+    /// Optional device path
     pub device_path: Option<String>,
 }
 
 impl Default for TpmCapabilityHandler {
     fn default() -> Self {
         Self {
-            tpm_version: "2.0".to_string(),
-            tpm_available: false, // Will be detected during initialization
+            tpm_version: "2.0".to_string(), // Will be detected during initialization
             device_path: Some("/dev/tpm0".to_string()),
         }
     }
@@ -29,6 +26,8 @@ impl Default for TpmCapabilityHandler {
 
 impl TpmCapabilityHandler {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(tpm_version: &str) -> Self {
         Self {
             tpm_version,
@@ -37,15 +36,20 @@ impl TpmCapabilityHandler {
         }
     }
 
+/// With Device Path operation.
+    /// Creates instance with device path
     pub fn with_device_path(device_path: &str) -> Self {
         Self {
             tpm_version: "2.0".to_string(),
-            tpm_available: false,
             device_path: Some(device_path),
         }
     }
 
-    pub async fn detect_tpm(&mut self) -> Result<bool, BearDogError> {
+/// Detect Tpm operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn detect_tpm(&mut self) -> Result<bool, BearDogError> {
 
         if let Some(path) = &self.device_path {
 
@@ -60,44 +64,10 @@ impl CapabilityHandler for TpmCapabilityHandler {
         CapabilityType::HardwareSecurity
     }
 
-    async fn can_handle(&self, request: &UniversalVendorRequest) -> Result<f64, BearDogError> {
 
-        if let Some(operation) = &request.operation {
-            match operation.as_str() {
-                "generate_key" | "seal" | "unseal" => {
+    fn can_handle(&self, request: &UniversalVendorRequest) -> Result<f64, BearDogError> {
 
-                    if self.tpm_available {
-                        Ok(0.95)
-                    } else {
-                        Ok(0.0) // Can't handle without TPM
-                    }
-                },
-                "attest" | "quote" => {
-
-                    if self.tpm_available {
-                        Ok(0.98)
-                    } else {
-                        Ok(0.0)
-                    }
-                },
-                "encrypt" | "decrypt" => {
-
-                    if self.tpm_available {
-                        Ok(0.70)
-                    } else {
-                        Ok(0.0)
-                    }
-                },
-                _ => Ok(0.0)
-            }
-        } else {
-            Ok(0.0)
-        }
-    }
-
-    async fn execute(
-        &self,
-        request: UniversalVendorRequest,
+        if let Some(UniversalVendorRequest,
     ) -> Result<UniversalVendorResponse, BearDogError> {
         if !self.tpm_available {
             return Err(BearDogError::security("TPM not available on this system".to_string()));
@@ -106,25 +76,25 @@ impl CapabilityHandler for TpmCapabilityHandler {
         let operation = request.operation.as_deref().unwrap_or("unknown");
         
         match operation {
-            "generate_key" => self.handle_generate_key_request(request).await,
-            "seal" => self.handle_seal_request(request).await,
-            "unseal" => self.handle_unseal_request(request).await,
-            "attest" => self.handle_attest_request(request).await,
-            "quote" => self.handle_quote_request(request).await,
-            "encrypt" => self.handle_encrypt_request(request).await,
-            "decrypt" => self.handle_decrypt_request(request).await,
+            "generate_key" => self.handle_generate_key_request(request),
+            "seal" => self.handle_seal_request(request),
+            "unseal" => self.handle_unseal_request(request),
+            "attest" => self.handle_attest_request(request),
+            "quote" => self.handle_quote_request(request),
+            "encrypt" => self.handle_encrypt_request(request),
+            "decrypt" => self.handle_decrypt_request(request),
             _ => Err(BearDogError::configuration(
-                format_args!("TPM operation '{}' not supported", operation).to_string()
+                format!("TPM operation "{}" not supported", operation)
             ))
         }
     }
 }
 
 impl TpmCapabilityHandler {
-    async fn handle_generate_key_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
+    /// Handles generate_key_request
+    fn handle_generate_key_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
 
-        Ok(UniversalVendorResponse {
-            success: true,
+        Ok(true,
             payload: json!({
                 "operation": "generate_key",
                 "provider": "tpm",
@@ -134,22 +104,16 @@ impl TpmCapabilityHandler {
                 "hardware_backed": true
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::with_capacity(16);
-                meta.insert("provider".to_string(), "tpm".to_string());
-                meta.insert("tpm_version".to_string(), self.tpm_version.clone());
-                meta.insert("hardware_backed".to_string(), "true".to_string());
-                meta.insert("capability".to_string(), "hardware_key_generation".to_string());
-                meta
-            },
-            processing_time_ms: 150, // Hardware operations take longer
+                let mut meta = std::collections::HashMap::with_capacity(16), // Hardware operations take longer
             system_id: request.system_id,
             operation: request.operation,
         })
     }
     
-    async fn handle_seal_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
-        Ok(UniversalVendorResponse {
-            success: true,
+    /// Handles seal_request
+    
+    fn handle_seal_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
+        Ok(true,
             payload: json!({
                 "operation": "seal",
                 "provider": "tpm",
@@ -158,20 +122,16 @@ impl TpmCapabilityHandler {
                 "sealed": true
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::with_capacity(16);
-                meta.insert("provider".to_string(), "tpm".to_string());
-                meta.insert("operation_type".to_string(), "seal".to_string());
-                meta
-            },
-            processing_time_ms: 100,
+                let mut meta = std::collections::HashMap::with_capacity(16),
             system_id: request.system_id,
             operation: request.operation,
         })
     }
     
-    async fn handle_unseal_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
-        Ok(UniversalVendorResponse {
-            success: true,
+    /// Handles unseal_request
+    
+    fn handle_unseal_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
+        Ok(true,
             payload: json!({
                 "operation": "unseal",
                 "provider": "tpm",
@@ -179,20 +139,16 @@ impl TpmCapabilityHandler {
                 "unsealed": true
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::with_capacity(16);
-                meta.insert("provider".to_string(), "tpm".to_string());
-                meta.insert("operation_type".to_string(), "unseal".to_string());
-                meta
-            },
-            processing_time_ms: 80,
+                let mut meta = std::collections::HashMap::with_capacity(16),
             system_id: request.system_id,
             operation: request.operation,
         })
     }
     
-    async fn handle_attest_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
-        Ok(UniversalVendorResponse {
-            success: true,
+    /// Handles attest_request
+    
+    fn handle_attest_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
+        Ok(true,
             payload: json!({
                 "operation": "attest",
                 "provider": "tpm",
@@ -201,20 +157,16 @@ impl TpmCapabilityHandler {
                 "platform_verified": true
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::with_capacity(16);
-                meta.insert("provider".to_string(), "tpm".to_string());
-                meta.insert("attestation_type".to_string(), "platform".to_string());
-                meta
-            },
-            processing_time_ms: 200, // Attestation is complex
+                let mut meta = std::collections::HashMap::with_capacity(16), // Attestation is complex
             system_id: request.system_id,
             operation: request.operation,
         })
     }
     
-    async fn handle_quote_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
-        Ok(UniversalVendorResponse {
-            success: true,
+    /// Handles quote_request
+    
+    fn handle_quote_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
+        Ok(true,
             payload: json!({
                 "operation": "quote",
                 "provider": "tpm",
@@ -223,20 +175,16 @@ impl TpmCapabilityHandler {
                 "quote_signature": "would_be_tpm_signature"
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::with_capacity(16);
-                meta.insert("provider".to_string(), "tpm".to_string());
-                meta.insert("quote_type".to_string(), "pcr".to_string());
-                meta
-            },
-            processing_time_ms: 120,
+                let mut meta = std::collections::HashMap::with_capacity(16),
             system_id: request.system_id,
             operation: request.operation,
         })
     }
     
-    async fn handle_encrypt_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
-        Ok(UniversalVendorResponse {
-            success: true,
+    /// Handles encrypt_request
+    
+    fn handle_encrypt_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
+        Ok(true,
             payload: json!({
                 "operation": "encrypt",
                 "provider": "tpm",
@@ -244,20 +192,16 @@ impl TpmCapabilityHandler {
                 "algorithm": "RSA_OAEP_SHA256"
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::with_capacity(16);
-                meta.insert("provider".to_string(), "tpm".to_string());
-                meta.insert("hardware_backed".to_string(), "true".to_string());
-                meta
-            },
-            processing_time_ms: 90,
+                let mut meta = std::collections::HashMap::with_capacity(16),
             system_id: request.system_id,
             operation: request.operation,
         })
     }
     
-    async fn handle_decrypt_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
-        Ok(UniversalVendorResponse {
-            success: true,
+    /// Handles decrypt_request
+    
+    fn handle_decrypt_request(&self, request: UniversalVendorRequest) -> Result<UniversalVendorResponse, BearDogError> {
+        Ok(true,
             payload: json!({
                 "operation": "decrypt",
                 "provider": "tpm",
@@ -265,12 +209,7 @@ impl TpmCapabilityHandler {
                 "algorithm": "RSA_OAEP_SHA256"
             }),
             metadata: {
-                let mut meta = std::collections::HashMap::with_capacity(16);
-                meta.insert("provider".to_string(), "tpm".to_string());
-                meta.insert("hardware_backed".to_string(), "true".to_string());
-                meta
-            },
-            processing_time_ms: 85,
+                let mut meta = std::collections::HashMap::with_capacity(16),
             system_id: request.system_id,
             operation: request.operation,
         })

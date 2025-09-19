@@ -5,9 +5,7 @@ use beardog_errors::BearDogError;
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
-#[derive(Debug)]
-pub struct ByzantineChaosController {
-    config: ChaosConfig,
+#[derive(Debug, Clone)]
 }
 
 impl ByzantineChaosController {
@@ -15,33 +13,13 @@ impl ByzantineChaosController {
         Self { config }
     }
 
-    pub async fn test_byzantine_failures(&self) -> Result<TestResult, BearDogError> {
-        let start_time = Instant::now();
-        let mut operations_attempted = 0u64;
-        let mut operations_succeeded = 0u64;
-
-        info!("⚔️ Testing Byzantine fault tolerance");
-
-        while start_time.elapsed() < self.config.test_duration {
-            operations_attempted += 1;
-
-            let byzantine_result = self.simulate_byzantine_behavior().await;
-
-            match byzantine_result {
-                Ok(_) => operations_succeeded += 1,
-                Err(e) => warn!("Byzantine scenario failed: {}", e),
+    pub fn test_byzantine_failures(&self) -> Result<TestResult, BearDogError> {
+        let start_time = Instant::now({}", e),
             }
 
-            tokio::time::sleep(Duration::from_millis(20)).await;
-        }
-
-        let error_rate = 1.0 - (operations_succeeded as f64 / operations_attempted as f64);
-
-        Ok(TestResult {
-            success: error_rate < 0.33, // Should tolerate up to 33% Byzantine nodes
+            tokio::time::sleep(Duration::from_millis(error_rate < 0.33, // Should tolerate up to 33% Byzantine nodes
             test_name: "byzantine_failures".to_string(),
-            duration: start_time.elapsed(),
-            error_message: if error_rate >= 0.33 {
+            duration: start_time.elapsed(if error_rate >= 0.33 {
                 Some(format!(
                     "Byzantine tolerance exceeded: {:.2}%",
                     error_rate * 100.0
@@ -59,7 +37,7 @@ impl ByzantineChaosController {
         })
     }
 
-    async fn simulate_byzantine_behavior(&self) -> Result<(), BearDogError> {
+    fn simulate_byzantine_behavior(&self) -> Result<(), BearDogError> {
 
         let failure_mode = fastrand::u32(0..4);
 
@@ -105,20 +83,14 @@ impl ByzantineChaosController {
 pub struct ByzantineFailureTest;
 
 impl ByzantineFailureTest {
-    pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
+    pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         let config = ChaosConfig {
-            test_duration: Duration::from_secs(8),
-            failure_rate: 0.25, // 25% Byzantine failure rate
+            test_duration: Duration::from_secs(0.25, // 25% Byzantine failure rate
             enable_byzantine_failures: true,
             ..Default::default()
         };
 
-        let controller = ByzantineChaosController::new(config);
-        let result = controller.test_byzantine_failures().await?;
-
-        info!("⚔️ Byzantine fault tolerance test completed");
-        info!(
-            "   Operations: {} attempted, {} succeeded",
+        let controller = ByzantineChaosController::new({} attempted, {} succeeded",
             result.metrics.operations_attempted, result.metrics.operations_succeeded
         );
         info!("   Error rate: {:.2}%", result.metrics.error_rate * 100.0);

@@ -1,3 +1,7 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 pub mod authorization;
 pub mod genetics;
 pub mod node_registry;

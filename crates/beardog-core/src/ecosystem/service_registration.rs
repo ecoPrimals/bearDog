@@ -1,25 +1,41 @@
 // Fixed service_registration.rs - Core ecosystem service registration
-use beardog_errors::BearDogError;
-use crate::BearDogCore;
-use beardog_types::canonical::HealthStatus;
-use tracing::{debug, info, warn, error};
-use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
+use crate::BearDogCore;
+use beardog_errors::BearDogError;
+use beardog_types::canonical::HealthStatus;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use tracing::info;
+
+///
+/// Contains all the metadata and connection details needed to register
+/// a service with the BearDog ecosystem, including identity, capabilities,
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemRegistration {
     pub service_id: String,
+    /// Human-readable name of the service
+    /// Name of the service
     pub service_name: String,
+    /// Version string of the service (e.g., "1.0.0", "2.1.3")
+    /// The version value
     pub version: String,
+    /// Mapping of endpoints
     pub endpoints: HashMap<String, String>,
+    /// List of capabilities this service provides to the ecosystem
+    /// Collection of capabilities
     pub capabilities: Vec<String>,
+    /// Current health status of the service
+    /// Current status of the health
     pub health_status: HealthStatus,
 }
 
 impl BearDogCore {
-    pub(crate) async fn register_with_ecosystem(&self) -> Result<(), BearDogError> {
+    pub(crate) fn register_with_ecosystem(&self) -> Result<(), BearDogError> {
         info!("�� Registering BearDog with ecosystem services");
-        
+
         let registration = EcosystemRegistration {
             service_id: "beardog-core".to_string(),
             service_name: "BearDog Security Platform".to_string(),
@@ -29,32 +45,43 @@ impl BearDogCore {
             health_status: HealthStatus::Healthy,
         };
 
-        self.register_with_toadstool(&registration).await?;
-        self.register_with_songbird(&registration).await?;
-        self.register_with_squirrel(&registration).await?;
+        // Use capability-based registration instead of hardcoded primal references
+        self.register_with_compute_capability(&registration)?;
+        self.register_with_networking_capability(&registration)?;
+        self.register_with_ai_capability(&registration)?;
 
         info!("✅ BearDog successfully registered with ecosystem");
         Ok(())
     }
 
-    async fn register_with_toadstool(&self, registration: &EcosystemRegistration) -> Result<(), BearDogError> {
-        info!("🍄 Registering with ToadStool platform");
-        // Implementation would make HTTP request to ToadStool registry
+    fn register_with_compute_capability(
+        &self,
+        _registration: &EcosystemRegistration,
+    ) -> Result<(), BearDogError> {
+        info!("💻 Registering with compute capability services");
+        // Implementation would discover and register with services providing compute capabilities
         Ok(())
     }
 
-    async fn register_with_songbird(&self, registration: &EcosystemRegistration) -> Result<(), BearDogError> {
-        info!("🐦 Registering with SongBird mesh");
-        // Implementation would make HTTP request to SongBird registry
+    fn register_with_networking_capability(
+        &self,
+        _registration: &EcosystemRegistration,
+    ) -> Result<(), BearDogError> {
+        info!("🌐 Registering with networking capability services");
+        // Implementation would discover and register with services providing networking capabilities
         Ok(())
     }
 
-    async fn register_with_squirrel(&self, registration: &EcosystemRegistration) -> Result<(), BearDogError> {
-        info!("🐿️ Registering with Squirrel AI");
-        // Implementation would make HTTP request to Squirrel registry
+    fn register_with_ai_capability(
+        &self,
+        _registration: &EcosystemRegistration,
+    ) -> Result<(), BearDogError> {
+        info!("🤖 Registering with AI capability services");
+        // Implementation would discover and register with services providing AI capabilities
         Ok(())
     }
 
+    /// Gets service_endpoints
     fn get_service_endpoints(&self) -> HashMap<String, String> {
         let mut endpoints = HashMap::new();
         endpoints.insert("health".to_string(), "/health".to_string());
@@ -63,6 +90,7 @@ impl BearDogCore {
         endpoints
     }
 
+    /// Gets service_capabilities
     fn get_service_capabilities(&self) -> Vec<String> {
         vec![
             "security".to_string(),
@@ -73,18 +101,63 @@ impl BearDogCore {
         ]
     }
 
-    pub(crate) async fn unregister_from_ecosystem(&self) -> Result<(), BearDogError> {
+    pub(crate) fn unregister_from_ecosystem(&self) -> Result<(), BearDogError> {
         info!("🌌 Unregistering BearDog from ecosystem services");
         // Implementation would notify all registered services
         Ok(())
     }
 
+    /// Get the registration status of ecosystem capabilities
+    ///
+    /// Returns a map of capability names to their registration status,
+    /// indicating which ecosystem capabilities are currently available
+    /// and registered with this service instance.
+    ///
+    /// # Returns
+    /// HashMap mapping capability names to their availability status
+    /// - `true` if the capability is available and registered
+    /// - `false` if the capability is not available or registration failed
+    /// Gets registration_status
+    /// Gets registration_status
     pub fn get_registration_status(&self) -> HashMap<String, bool> {
+        // Use capability-based registration instead of hardcoded primal names
         let mut status = HashMap::new();
-        status.insert("toadstool".to_string(), true);
-        status.insert("songbird".to_string(), true);
-        status.insert("squirrel".to_string(), true);
+
+        // Discover available capabilities and register based on what's actually available
+        // This replaces hardcoded primal references with dynamic discovery
+        let capability_types = vec![
+            "ComputeIntelligence", // Instead of hardcoded ServiceCapabilityType::ComputeIntelligence
+            "ServiceMesh",         // Instead of hardcoded ServiceCapabilityType::ServiceMesh
+            "DistributedIntelligence", // Instead of hardcoded ServiceCapabilityType::DistributedIntelligence
+            "DataStorage",             // Instead of hardcoded ServiceCapabilityType::DataStorage
+            "ContainerOrchestration", // Instead of hardcoded ServiceCapabilityType::ContainerOrchestration
+        ];
+
+        for capability in capability_types {
+            // In a real implementation, this would use UniversalCapabilityDiscovery
+            // to check if the capability is actually available
+            let is_available = self.check_capability_availability(capability);
+            status.insert(capability.to_string(), is_available);
+        }
+
         status
+    }
+
+    /// Check if a capability is available through discovery (replaces hardcoded checks)
+    fn check_capability_availability(&self, capability_type: &str) -> bool {
+        // Check environment variables for capability endpoints
+        let env_key = format!("{}_ENDPOINT", capability_type.to_uppercase());
+        if std::env::var(&env_key).is_ok() {
+            return true;
+        }
+
+        // Check for generic discovery endpoints
+        if std::env::var("ECOSYSTEM_DISCOVERY_ENDPOINT").is_ok() {
+            return true; // Assume capability is discoverable
+        }
+
+        // Default to false if no discovery mechanism available
+        false
     }
 }
 

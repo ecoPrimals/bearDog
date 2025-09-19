@@ -26,30 +26,26 @@ impl BearDogError {
     #[error("Threat detection error: {message}")]
     ThreatDetection {
 
-    #[error("Cryptographic error")]
-    Crypto {
-
-    #[error("Key derivation error")]
-    KeyDerivation {
-
-}
-
-    pub fn encryption(operation: impl Into<&str>, message: impl Into<&str>) -> Self {
+    #[error(impl Into<&str>, message: impl Into<&str>) -> Self {
         Self::Encryption {
             operation: operation.into(),
             message: message.into(),
         }
     }
 
+/// Key Management operation.
     pub fn key_management(message: impl Into<&str>) -> Self {
         Self::KeyManagement {
 
+/// Hsm operation.
     pub fn hsm(message: impl Into<&str>) -> Self {
         Self::Hsm {
 
+/// Authentication operation.
     pub fn authentication(message: impl Into<&str>) -> Self {
         Self::Authentication {
 
+/// Authorization operation.
     pub fn authorization(message: impl Into<&str>) -> Self {
         Self::Authorization {
 } 

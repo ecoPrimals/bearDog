@@ -1,10 +1,6 @@
-
-
 use crate::testing_framework::traits::*;
 
-#[derive(Debug, Default)]
-pub struct WorldClassMetrics {
-    pub total_validations_run: u64,
+#[derive(u64,
     pub total_execution_time_ms: u64,
     pub formal_proofs_generated: u64,
     pub properties_verified: u64,
@@ -15,55 +11,41 @@ pub struct WorldClassMetrics {
     pub mathematical_certainty_achieved: bool,
 }
 
-#[derive(Debug)]
-pub struct FormalVerificationResults {
-    pub proofs_generated: u64,
+#[derive(u64,
     pub verified_components: Vec<String>,
     pub mathematical_proofs: Vec<MathematicalProof>,
     pub verification_confidence: f64,
 }
 
-#[derive(Debug)]
-pub struct PropertyBasedTestResults {
-    pub properties_verified: u64,
+#[derive(u64,
     pub test_cases_generated: u64,
     pub counterexamples_found: Vec<MinimalCounterexample>,
     pub property_confidence: f64,
 }
 
-#[derive(Debug)]
-pub struct MutationTestResults {
-    pub mutations_tested: u64,
+#[derive(u64,
     pub mutations_killed: u64,
     pub surviving_mutants: Vec<CodeMutation>,
     pub mutation_score: f64,
     pub test_suite_quality: TestSuiteQuality,
 }
 
-#[derive(Debug)]
-pub struct InvariantValidationResults {
-    pub invariants_verified: u64,
+#[derive(u64,
     pub violations_detected: Vec<InvariantViolation>,
     pub system_safety_level: SystemSafetyLevel,
 }
 
-#[derive(Debug)]
-pub struct ExhaustiveTestResults {
-    pub edge_cases_tested: u64,
+#[derive(u64,
     pub boundary_violations: Vec<BoundaryViolation>,
     pub exhaustive_coverage: ExhaustiveCoverage,
 }
 
-#[derive(Debug)]
-pub struct QuantumResistanceResults {
-    pub quantum_attacks_simulated: u64,
+#[derive(u64,
     pub vulnerable_algorithms: Vec<String>,
     pub post_quantum_readiness: PostQuantumReadiness,
 }
 
-#[derive(Debug)]
-pub struct WorldClassTestResults {
-    pub formal_verification: FormalVerificationResults,
+#[derive(FormalVerificationResults,
     pub property_based_testing: PropertyBasedTestResults,
     pub mutation_testing: MutationTestResults,
     pub invariant_validation: InvariantValidationResults,
@@ -74,72 +56,17 @@ pub struct WorldClassTestResults {
     pub mathematical_certainty_score: f64,
 }
 
-#[derive(Debug)]
-pub enum WorldClassStatus {
-    MathematicalCertaintyAchieved,
-    HighConfidence,
-    NeedsImprovement,
+#[derive(String,
 }
 
-#[derive(Debug)]
-pub enum TestSuiteQuality {
-    Excellent,
-    Good,
-    NeedsImprovement,
-}
-
-#[derive(Debug)]
-pub enum SystemSafetyLevel {
-    MathematicallyProvenSafe,
-    HighConfidenceSafe,
-}
-
-#[derive(Debug)]
-pub enum ExhaustiveCoverage {
-    Complete,
-    Comprehensive,
-}
-
-#[derive(Debug)]
-pub enum PostQuantumReadiness {
-    FullyQuantumResistant,
-    PartiallyQuantumResistant,
-}
-
-#[derive(Debug)]
-pub struct MinimalCounterexample {
-    pub description: String,
-}
-
-#[derive(Debug)]
-pub struct InvariantViolation {
-    pub invariant_name: String,
+#[derive(String,
     pub violation_description: String,
     pub criticality: InvariantCriticality,
     pub system_state: SystemState,
 }
 
 impl WorldClassMetrics {
-
-    pub fn calculate_confidence_score(&self) -> f64 {
-        if self.mathematical_certainty_achieved {
-            100.0
-        } else {
-
-            let formal_score = if self.formal_proofs_generated > 0 { 25.0 } else { 0.0 };
-            let property_score = if self.properties_verified > 10 { 25.0 } else { self.properties_verified as f64 * 2.5 };
-            let mutation_score = if self.mutations_tested > 100 { 25.0 } else { self.mutations_tested as f64 * 0.25 };
-            let invariant_score = if self.invariants_validated > 5 { 25.0 } else { self.invariants_validated as f64 * 5.0 };
-            
-            (formal_score + property_score + mutation_score + invariant_score).min(99.0)
-        }
-    }
-
-    pub fn generate_report(&self) -> String {
-        format!(
-            "🧪 World-Class Testing Framework Report\n\
-             =====================================\n\
-             Total Validations: {}\n\
+    pub fn calculate_confidence_score({}\n\
              Execution Time: {}ms\n\
              Formal Proofs: {}\n\
              Properties Verified: {}\n\
@@ -161,4 +88,4 @@ impl WorldClassMetrics {
             self.calculate_confidence_score()
         )
     }
-} 
+}

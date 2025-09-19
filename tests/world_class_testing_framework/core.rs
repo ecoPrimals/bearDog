@@ -14,9 +14,7 @@ pub struct WorldClassTestingFramework {
     pub test_metrics: Arc<RwLock<WorldClassMetrics>>,
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct WorldClassMetrics {
-    pub tests_executed: u64,
+#[derive(Debug, Clone)]
     pub verification_success_rate: f64,
     pub mutation_score: f64,
     pub invariant_violations: u64,
@@ -38,7 +36,7 @@ impl WorldClassTestingFramework {
         }
     }
 
-    pub async fn execute_comprehensive_testing(&mut self, target: &str) -> TestingResults {
+    pub fn execute_comprehensive_testing(&mut self, target: &str) -> TestingResults {
         let mut results = TestingResults::new();
 
         for verifier in &self.formal_verifiers {
@@ -116,8 +114,6 @@ impl WorldClassTestingFramework {
 }
 
 #[derive(Debug, Clone)]
-pub struct TestingResults {
-    pub verification_results: Vec<FormalVerificationResult>,
     pub property_results: Vec<PropertyTestResult>,
     pub mutation_results: Vec<MutationTestingResult>,
     pub invariant_results: Vec<InvariantValidationResult>,
@@ -134,8 +130,7 @@ impl TestingResults {
             mutation_results: Vec::new(),
             invariant_results: Vec::new(),
             exhaustive_results: Vec::new(),
-            quantum_results: Vec::new(),
-            overall_score: 0.0,
+            quantum_results: Vec::new(0.0,
         }
     }
     
@@ -151,39 +146,24 @@ impl TestingResults {
         } else {
             self.verification_results.iter()
                 .map(|r| if r.verified { 1.0 } else { 0.0 })
-                .sum::<f64>() / self.verification_results.len() as f64
-        };
-
-        self.overall_score = verification_score;
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct PropertyTestResult {
-    pub property_name: String,
+                .sum::<f64>() / self.verification_results.len(String,
     pub passed: bool,
     pub test_count: u32,
     pub failures: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct MutationTestingResult {
-    pub mutation_score: f64,
     pub mutants_killed: u32,
     pub total_mutants: u32,
     pub surviving_mutants: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct ExhaustiveTestResult {
-    pub coverage_percentage: f64,
     pub paths_tested: u32,
     pub boundary_violations: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct QuantumValidationResult {
-    pub quantum_resistant: bool,
     pub security_level: u32,
     pub vulnerabilities: Vec<String>,
 }

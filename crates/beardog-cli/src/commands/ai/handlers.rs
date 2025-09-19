@@ -13,9 +13,7 @@ use super::hsm::HsmOperation;
 use super::security::SecurityOperation;
 use super::types::{CliError, CliResponse, OutputFormat, StreamType};
 
-#[derive(Debug)]
-struct AssistantCommandParams {
-    prompt: Option<String>,
+#[derive(Debug, Clone)]
     context: Option<PathBuf>,
     model: String,
         format: OutputFormat,
@@ -26,8 +24,9 @@ struct AssistantCommandParams {
     stream: bool,
 }
 
-pub async fn execute_ai_command(
-    command: AiCommand,
+/// Execute Ai Command operation.
+/// Executes ai_command
+pub async fn execute_ai_command(AiCommand,
     core: &BearDogCore,
 ) -> Result<CliResponse<serde_json::Value>, Box<dyn std::error::Error + Send + Sync>> {
     let start_time = Instant::now();
@@ -58,20 +57,15 @@ pub async fn execute_ai_command(
                 },
                 core,
             )
-            .await
         }
-        AiCommand::Execute { command } => execute_ai_subcommand(command, core).await,
+        AiCommand::Execute { command } => execute_ai_subcommand(command, core),
     };
     let execution_time_ms = start_time.elapsed().as_millis().min(u64::MAX as u128) as u64;
     match result {
         Ok(data) => Ok(CliResponse::success(data, execution_time_ms)),
         Err(e) => {
             let error = CliError::new("EXECUTION_ERROR".to_string(), e.to_string(), 1);
-            Ok(CliResponse::error(error, execution_time_ms))
-    }
-
-async fn execute_assistant_command(
-    params: AssistantCommandParams,
+            Ok(CliResponse::error(AssistantCommandParams,
     _core: &BearDogCore,
 ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
     info!(
@@ -89,37 +83,30 @@ async fn execute_assistant_command(
         response["response"] =
             serde_json::Value::String("AI assistant response would be generated here".to_string());
     if let Some(context_file) = params.context {
-        let context_content = fs::read_to_string(context_file).await?;
+        let context_content = fs::read_to_string(context_file)?;
         response["context"] = serde_json::Value::String(context_content);
     if let Some(system_msg) = params.system {
-        response["system"] = serde_json::Value::String(system_msg);
-    Ok(response)
-
-async fn execute_ai_subcommand(
-    command: AiSubcommand,
+        response["system"] = serde_json::Value::String(AiSubcommand,
     match command {
         AiSubcommand::Status {
             detailed,
             watch,
             interval,
-        } => execute_status_command(format, detailed, watch, interval, core).await,
-        AiSubcommand::Security { operation } => execute_security_operation(operation, core).await,
-        AiSubcommand::Genetics { operation } => execute_genetics_operation(operation, core).await,
-        AiSubcommand::Hsm { operation } => execute_hsm_operation(operation, core).await,
+        } => execute_status_command(format, detailed, watch, interval, core),
+        AiSubcommand::Security { operation } => execute_security_operation(operation, core),
+        AiSubcommand::Genetics { operation } => execute_genetics_operation(operation, core),
+        AiSubcommand::Hsm { operation } => execute_hsm_operation(operation, core),
         AiSubcommand::Batch {
             file,
             max_parallel,
             continue_on_error,
             output,
-        } => execute_batch_operation(file, max_parallel, continue_on_error, output, core).await,
+        } => execute_batch_operation(file, max_parallel, continue_on_error, output, core),
         AiSubcommand::Stream {
             stream_type,
             duration,
-        } => execute_stream_operation(stream_type, output, duration, core).await,
-        AiSubcommand::Config { operation } => execute_config_operation(operation, core).await,
-
-async fn execute_status_command(
-    _format: OutputFormat,
+        } => execute_stream_operation(stream_type, output, duration, core),
+        AiSubcommand::Config { operation } => execute_config_operation(OutputFormat,
     detailed: bool,
     watch: bool,
     interval: u64,
@@ -141,11 +128,7 @@ async fn execute_status_command(
         });
     if watch {
         status["watch_interval"] = serde_json::Value::Number(interval.into());
-        status["watch_mode"] = serde_json::Value::Bool(true);
-    Ok(status)
-
-async fn execute_security_operation(
-    operation: SecurityOperation,
+        status["watch_mode"] = serde_json::Value::Bool(SecurityOperation,
     match operation {
         SecurityOperation::Encrypt {
             input,
@@ -161,7 +144,7 @@ async fn execute_security_operation(
                 "algorithm": algorithm,
                 "input_size": input.len(),
                 "output": output.map(|p| p.to_string_lossy().to_string()),
-                "status": "success"
+                "status": "success "
             }))
         SecurityOperation::Decrypt {
             input: _,
@@ -175,13 +158,12 @@ async fn execute_security_operation(
             attributes,
             info!("🔑 Generating key: {:?} for usage: {:?}", key_type, usage);
             let generated_key_id =
-                key_id.unwrap_or_else(|| format_args!("key_{}", uuid::Uuid::new_v4().to_string()));
-                "operation": "generate_key",
+                key_id.unwrap_or_else(|| format!("key_{}", uuid::Uuid::new_v4("generate_key",
                 "key_id": generated_key_id,
                 "key_type": key_type,
                 "usage": usage,
                 "attributes": attributes,
-                "export_public": export_public.map(|p| p.to_string_lossy().to_string()),
+                "export_public": export_public.map(|p| p.to_string_lossy()),
         SecurityOperation::ListKeys {
             format: _,
             info!("📋 Listing keys (type: {:?}, usage: {:?})", key_type, usage);
@@ -207,8 +189,8 @@ async fn execute_security_operation(
             "message": "This security operation is not yet implemented"
         })),
 
-async fn execute_genetics_operation(
-    operation: GeneticsOperation,
+/// Executes genetics_operation
+fn execute_genetics_operation(GeneticsOperation,
         GeneticsOperation::Spawn {
             count,
             template,
@@ -239,8 +221,8 @@ async fn execute_genetics_operation(
             "operation": "genetics",
             "message": "This genetics operation is not yet implemented"
 
-async fn execute_hsm_operation(
-    operation: HsmOperation,
+/// Executes hsm_operation
+fn execute_hsm_operation(HsmOperation,
         HsmOperation::Status {
             include_slots,
             include_mechanisms,
@@ -248,30 +230,28 @@ async fn execute_hsm_operation(
                 "operation": "hsm_status",
                 "hsm_available": true,
                 "provider": "software",
-                "slots": if include_slots { Some(vec!["slot_0", "slot_1"]) } else { None },
-                "mechanisms": if include_mechanisms { Some(vec!["RSA", "AES", "SHA256"]) } else { None },
+                "slots": if include_slots { Some(if include_mechanisms { Some(vec!["RSA", "AES", "SHA256"]) } else { None },
                 "status": "operational"
             "operation": "hsm",
             "message": "This HSM operation is not yet implemented"
 
-async fn execute_batch_operation(
-    file: PathBuf,
+/// Executes batch_operation
+fn execute_batch_operation(PathBuf,
     max_parallel: u32,
     continue_on_error: bool,
     output: Option<PathBuf>,
     info!("📦 Executing batch operations from file: {:?}", file);
-    let _batch_content = fs::read_to_string(file).await?;
+    let _batch_content = fs::read_to_string(file)?;
     Ok(serde_json::json!({
         "operation": "batch",
         "max_parallel": max_parallel,
         "continue_on_error": continue_on_error,
-        "output_file": output.map(|p| p.to_string_lossy().to_string()),
-        "operations_processed": 0,
-        "status": "completed"
+        "output_file": output.map(0,
+        "status": "completed "
     }))
 
-async fn execute_stream_operation(
-    stream_type: StreamType,
+/// Executes stream_operation
+fn execute_stream_operation(StreamType,
     duration: u64,
         "📡 Starting stream: {:?} for duration: {}s",
         stream_type, duration
@@ -280,8 +260,8 @@ async fn execute_stream_operation(
         "duration": duration,
         "status": "streaming"
 
-async fn execute_config_operation(
-    operation: ConfigOperation,
+/// Executes config_operation
+fn execute_config_operation(ConfigOperation,
         ConfigOperation::Get {
             key,
             show_path,
@@ -306,10 +286,5 @@ async fn execute_config_operation(
                 "operation": "config_list",
                 "config": {
                     "api_endpoint": "https://api.beardog.local",
-                    "security_level": "high",
-                    "debug_mode": false
-                "count": 3,
-                "modified_only": modified_only,
-                "include_descriptions": include_descriptions
-            "operation": "config",
+                    "security_level": "high".to_string(),
             "message": "This config operation is not yet implemented"

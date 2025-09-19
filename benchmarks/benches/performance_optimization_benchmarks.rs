@@ -21,9 +21,7 @@ fn benchmark_database_config(c: &mut Criterion) {
                 b.iter(|| {
                     config.validate().map_err(|e| {
                         tracing::error!("Operation failed: {:?}", e);
-                        beardog_errors::BearDogError::internal(
-                            format_args!("Operation failed: {:?}", e).to_string(),
-                        )
+                        beardog_errors::BearDogError::internal({:?}", e))
                     })?;
                 });
             },
@@ -36,9 +34,7 @@ fn benchmark_database_config(c: &mut Criterion) {
                 b.iter(|| {
                     toml::to_string(&config).map_err(|e| {
                         tracing::error!("Operation failed: {:?}", e);
-                        beardog_errors::BearDogError::internal(
-                            format_args!("Operation failed: {:?}", e).to_string(),
-                        )
+                        beardog_errors::BearDogError::internal({:?}", e))
                     })?;
                 });
             },
@@ -149,9 +145,7 @@ fn benchmark_unified_config(c: &mut Criterion) {
                 b.iter(|| {
                     config.validate().map_err(|e| {
                         tracing::error!("Operation failed: {:?}", e);
-                        beardog_errors::BearDogError::internal(
-                            format_args!("Operation failed: {:?}", e).to_string(),
-                        )
+                        beardog_errors::BearDogError::internal({:?}", e))
                     })?;
                 });
             },
@@ -190,13 +184,10 @@ fn benchmark_parallel_processing_simulation(c: &mut Criterion) {
             "Benchmark runtime creation failed",
             e
         );
-        beardog_errors::BearDogError::internal(
-            format_args!(
-                "Operation failed ({}): {:?}",
+        beardog_errors::BearDogError::internal({:?}",
                 "Benchmark runtime creation failed", e
             )
-            .to_string(),
-        )
+            )
     })?;
     let configs = vec![
         ("default", AsyncOptimizationConfig::default()),

@@ -7,16 +7,14 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
 
-use beardog_core::BearDogCore;
+use beardog_errors::BearDogCore;
 use beardog_security::quantum_crypto::{QuantumCryptoEngine, SecurityLevel, KemAlgorithm, SignatureAlgorithm};
 use beardog_utils::ai_optimization::{AIOptimizationEngine, OptimizationRecommendation};
 use beardog_deploy::global_edge::{GlobalEdgeManager, GlobalDeploymentConfig, DeploymentStrategy};
 use beardog_monitoring::advanced_observability::{AdvancedObservabilityEngine, SystemMetrics};
 use beardog_errors::BearDogError;
 
-#[pyclass(name = "BearDogSecurityManager")]
-pub struct PyBearDogSecurityManager {
-    runtime: Arc<Runtime>,
+#[pyclass(Arc<Runtime>,
     core: Arc<BearDogCore>,
     quantum_engine: Arc<QuantumCryptoEngine>,
     ai_engine: Arc<AIOptimizationEngine>,
@@ -24,90 +22,49 @@ pub struct PyBearDogSecurityManager {
     observability: Arc<AdvancedObservabilityEngine>,
 }
 
-#[pyclass(name = "QuantumCrypto")]
-pub struct PyQuantumCrypto {
-    engine: Arc<QuantumCryptoEngine>,
+#[pyclass(Arc<QuantumCryptoEngine>,
     runtime: Arc<Runtime>,
 }
 
-#[pyclass(name = "AIOptimizer")]
-pub struct PyAIOptimizer {
-    engine: Arc<AIOptimizationEngine>,
+#[pyclass(Arc<AIOptimizationEngine>,
     runtime: Arc<Runtime>,
 }
 
-#[pyclass(name = "GlobalEdgeDeployment")]
-pub struct PyGlobalEdgeDeployment {
-    manager: Arc<GlobalEdgeManager>,
+#[pyclass(Arc<GlobalEdgeManager>,
     runtime: Arc<Runtime>,
 }
 
-#[pyclass(name = "AdvancedObservability")]
-pub struct PyAdvancedObservability {
-    engine: Arc<AdvancedObservabilityEngine>,
+#[pyclass(Arc<AdvancedObservabilityEngine>,
     runtime: Arc<Runtime>,
 }
 
-#[pyclass(name = "SystemMetrics")]
-#[derive(Clone)]
-pub struct PySystemMetrics {
-    #[pyo3(get)]
-    pub timestamp: u64,
-    #[pyo3(get)]
-    pub cpu_usage: f64,
-    #[pyo3(get)]
-    pub memory_usage: f64,
-    #[pyo3(get)]
-    pub network_latency: f64,
-    #[pyo3(get)]
-    pub disk_utilization: f64,
-    #[pyo3(get)]
-    pub request_count: u64,
-    #[pyo3(get)]
-    pub error_rate: f64,
-    #[pyo3(get)]
-    pub response_time: f64,
+#[pyclass(u64,
+    #[pyo3(f64,
+    #[pyo3(f64,
+    #[pyo3(f64,
+    #[pyo3(f64,
+    #[pyo3(u64,
+    #[pyo3(f64,
+    #[pyo3(f64,
 }
 
-#[pyclass(name = "OptimizationRecommendation")]
-#[derive(Clone)]
-pub struct PyOptimizationRecommendation {
-    #[pyo3(get)]
-    pub optimization_type: String,
-    #[pyo3(get)]
-    pub confidence: f64,
-    #[pyo3(get)]
-    pub expected_improvement: f64,
-    #[pyo3(get)]
-    pub reasoning: String,
-    #[pyo3(get)]
-    pub priority: String,
+#[pyclass(String,
+    #[pyo3(f64,
+    #[pyo3(f64,
+    #[pyo3(String,
+    #[pyo3(String,
 }
 
-#[pyclass(name = "QuantumKeyExchange")]
-#[derive(Clone)]
-pub struct PyQuantumKeyExchange {
-    #[pyo3(get)]
-    pub shared_secret: Vec<u8>,
-    #[pyo3(get)]
-    pub encapsulated_key: Vec<u8>,
-    #[pyo3(get)]
-    pub algorithm: String,
-    #[pyo3(get)]
-    pub security_level: u8,
+#[pyclass(Vec<u8>,
+    #[pyo3(Vec<u8>,
+    #[pyo3(String,
+    #[pyo3(u8,
 }
 
-#[pyclass(name = "QuantumSignature")]
-#[derive(Clone)]
-pub struct PyQuantumSignature {
-    #[pyo3(get)]
-    pub signature: Vec<u8>,
-    #[pyo3(get)]
-    pub algorithm: String,
-    #[pyo3(get)]
-    pub security_level: u8,
-    #[pyo3(get)]
-    pub timestamp: u64,
+#[pyclass(Vec<u8>,
+    #[pyo3(String,
+    #[pyo3(u8,
+    #[pyo3(u64,
 }
 
 #[pymethods]
@@ -117,31 +74,30 @@ impl PyBearDogSecurityManager {
     fn new() -> PyResult<Self> {
         let runtime = Arc::new(
             Runtime::new()
-                .map_err(|e| PyRuntimeError::new_err(format_args!("Failed to create async runtime: {}", e).to_string()))?
+                .map_err(|e| PyRuntimeError::new_err({}", e)))?
         );
 
         let core = runtime.block_on(async {
             BearDogCore::new().await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to initialize BearDog core: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         let quantum_engine = runtime.block_on(async {
             QuantumCryptoEngine::new(SecurityLevel::Level5).await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to initialize quantum crypto: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         let ai_engine = runtime.block_on(async {
             AIOptimizationEngine::new(0.01, std::time::Duration::from_secs(60))
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to initialize AI engine: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         let observability = runtime.block_on(async {
             AdvancedObservabilityEngine::new()
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to initialize observability: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Ok(Self {
             runtime,
             core: Arc::new(core),
             quantum_engine: Arc::new(quantum_engine),
-            ai_engine: Arc::new(ai_engine),
-            edge_manager: None,
+            ai_engine: Arc::new(None,
             observability: Arc::new(observability),
         })
     }
@@ -162,7 +118,7 @@ impl PyBearDogSecurityManager {
                 
                 Ok::<(), BearDogError>(())
             })
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Initialization failed: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Ok(py.None())
     }
@@ -194,20 +150,15 @@ impl PyBearDogSecurityManager {
             auto_scaling_enabled: true,
             min_nodes_per_region: 3,
             max_nodes_per_region: 20,
-            health_check_interval: std::time::Duration::from_secs(30),
-            deployment_strategy: DeploymentStrategy::Parallel,
+            health_check_interval: std::time::Duration::from_secs(DeploymentStrategy::Parallel,
             rollback_threshold: 0.95,
         };
 
         let manager = self.runtime.block_on(async {
             GlobalEdgeManager::new(config)
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to create edge manager: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
-        let edge_manager = Arc::new(manager);
-        self.edge_manager = Some(edge_manager.clone());
-
-        Ok(PyGlobalEdgeDeployment {
-            manager: edge_manager,
+        let edge_manager = Arc::new(edge_manager,
             runtime: self.runtime.clone(),
         })
     }
@@ -219,7 +170,7 @@ impl PyBearDogSecurityManager {
             let quantum_stats = self.quantum_engine.get_stats();
 
             Ok::<_, BearDogError>((observability_stats, ai_stats, quantum_stats))
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to get system status: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Python::with_gil(|py| {
             let dict = PyDict::new(py);
@@ -243,7 +194,7 @@ impl PyBearDogSecurityManager {
             let system_metrics = self.observability.collect_system_metrics().await?;
 
             Ok::<_, BearDogError>((quantum_stats, system_metrics))
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Security audit failed: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Python::with_gil(|py| {
             let dict = PyDict::new(py);
@@ -275,7 +226,7 @@ impl PyQuantumCrypto {
 
         let keypair = self.runtime.block_on(async {
             self.engine.generate_kem_keypair(kem_algorithm).await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Key generation failed: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Python::with_gil(|py| {
             let dict = PyDict::new(py);
@@ -299,43 +250,21 @@ impl PyQuantumCrypto {
 
         let keypair = self.runtime.block_on(async {
             self.engine.generate_signature_keypair(sig_algorithm).await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Signature key generation failed: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Python::with_gil(|py| {
-            let dict = PyDict::new(py);
-            dict.set_item("algorithm", algorithm)?;
-            dict.set_item("public_key", keypair.public_key.clone())?;
-            dict.set_item("security_level", keypair.security_level as u8)?;
-            dict.set_item("has_private_key", keypair.private_key.is_some())?;
-
-            Ok(dict.into())
-        })
-    }
-
-    fn quantum_encrypt(&self, data: Vec<u8>, public_key: Vec<u8>) -> PyResult<PyDict> {
+            let dict = PyDict::new(Vec<u8>, public_key: Vec<u8>) -> PyResult<PyDict> {
 
         Python::with_gil(|py| {
-            let dict = PyDict::new(py);
-            dict.set_item("encrypted_data", data.clone())?; // Placeholder
-            dict.set_item("algorithm", "hybrid_quantum")?;
-            dict.set_item("key_size", public_key.len())?;
-            dict.set_item("quantum_resistant", true)?;
+            let dict = PyDict::new(Vec<u8>, algorithm: &str) -> PyResult<PyQuantumSignature> {
 
-            Ok(dict.into())
-        })
-    }
-
-    fn quantum_sign(&self, message: Vec<u8>, algorithm: &str) -> PyResult<PyQuantumSignature> {
-
-        Ok(PyQuantumSignature {
-            signature: vec![0u8; 2420], // Dilithium signature size
-            algorithm: algorithm.to_string(),
-            security_level: 5,
+        Ok(vec![0u8; 2420], // Dilithium signature size
+            algorithm: algorithm.to_string(5,
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?
                 .as_secs(),
         })
@@ -363,15 +292,13 @@ impl PyAIOptimizer {
     fn get_recommendations(&self) -> PyResult<Vec<PyOptimizationRecommendation>> {
         let recommendations = self.runtime.block_on(async {
             self.engine.generate_recommendations().await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to generate recommendations: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
-        let py_recommendations = recommendations.into_iter().map(|rec| {
-            PyOptimizationRecommendation {
-                optimization_type: format_args!("{:?}", rec.optimization_type).to_string(),
+        let py_recommendations = recommendations.into_iter(format!("{:?}", rec.optimization_type),
                 confidence: rec.confidence,
                 expected_improvement: rec.expected_improvement,
                 reasoning: rec.reasoning,
-                priority: format_args!("{:?}", rec.priority).to_string(),
+                priority: format!("{:?}", rec.priority),
             }
         }).collect();
 
@@ -386,7 +313,7 @@ impl PyAIOptimizer {
             
             self.engine.apply_optimizations(&limited_recommendations).await?;
             Ok::<_, BearDogError>(limited_recommendations.len() as u32)
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to apply optimizations: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Ok(applied_count)
     }
@@ -394,7 +321,7 @@ impl PyAIOptimizer {
     fn get_ai_stats(&self) -> PyResult<PyDict> {
         let stats = self.runtime.block_on(async {
             self.engine.get_stats().await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to get AI stats: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Python::with_gil(|py| {
             let dict = PyDict::new(py);
@@ -416,15 +343,12 @@ impl PyGlobalEdgeDeployment {
     fn deploy_globally(&self) -> PyResult<Vec<String>> {
         let deployed_regions = self.runtime.block_on(async {
             self.manager.deploy_globally().await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Global deployment failed: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
-        Ok(deployed_regions)
-    }
-
-    fn scale_region(&self, region_id: &str, target_capacity: f64) -> PyResult<()> {
+        Ok(&str, target_capacity: f64) -> PyResult<()> {
         self.runtime.block_on(async {
             self.manager.scale_region(region_id, target_capacity).await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Region scaling failed: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Ok(())
     }
@@ -432,7 +356,7 @@ impl PyGlobalEdgeDeployment {
     fn get_global_stats(&self) -> PyResult<PyDict> {
         let stats = self.runtime.block_on(async {
             self.manager.get_global_stats().await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to get global stats: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Python::with_gil(|py| {
             let dict = PyDict::new(py);
@@ -456,10 +380,9 @@ impl PyAdvancedObservability {
     fn collect_metrics(&self) -> PyResult<PySystemMetrics> {
         let metrics = self.runtime.block_on(async {
             self.engine.collect_system_metrics().await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to collect metrics: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
-        Ok(PySystemMetrics {
-            timestamp: metrics.timestamp,
+        Ok(metrics.timestamp,
             cpu_usage: metrics.cpu_metrics.usage_percent,
             memory_usage: (metrics.memory_metrics.used_bytes as f64) / (metrics.memory_metrics.total_bytes as f64),
             network_latency: metrics.network_metrics.latency_ms,
@@ -473,7 +396,7 @@ impl PyAdvancedObservability {
     fn get_predictive_alerts(&self) -> PyResult<Vec<PyDict>> {
         let alerts = self.runtime.block_on(async {
             self.engine.generate_predictive_recommendations().await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to generate alerts: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Python::with_gil(|py| {
             let py_alerts: PyResult<Vec<PyDict>> = alerts.into_iter().map(|alert| {
@@ -481,8 +404,8 @@ impl PyAdvancedObservability {
                 dict.set_item("alert_id", alert.alert_id)?;
                 dict.set_item("component", alert.component)?;
                 dict.set_item("confidence", alert.confidence)?;
-                dict.set_item("failure_type", format_args!("{:?}", alert.failure_type).to_string())?;
-                dict.set_item("severity", format_args!("{:?}", alert.severity).to_string())?;
+                dict.set_item("failure_type", format!("{:?}", alert.failure_type))?;
+                dict.set_item("severity", format!("{:?}", alert.severity))?;
                 dict.set_item("recommended_actions", alert.recommended_actions)?;
                 Ok(dict.into())
             }).collect();
@@ -494,13 +417,13 @@ impl PyAdvancedObservability {
     fn execute_healing(&self, condition: &str) -> PyResult<Vec<PyDict>> {
         let healing_actions = self.runtime.block_on(async {
             self.engine.execute_autonomous_healing(condition).await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Healing execution failed: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Python::with_gil(|py| {
             let py_actions: PyResult<Vec<PyDict>> = healing_actions.into_iter().map(|action| {
                 let dict = PyDict::new(py);
                 dict.set_item("action_id", action.action_id)?;
-                dict.set_item("action_type", format_args!("{:?}", action.action_type).to_string())?;
+                dict.set_item("action_type", format!("{:?}", action.action_type))?;
                 dict.set_item("success", action.success)?;
                 dict.set_item("rollback_available", action.rollback_available)?;
                 dict.set_item("executed_at", action.executed_at)?;
@@ -514,26 +437,10 @@ impl PyAdvancedObservability {
     fn get_observability_stats(&self) -> PyResult<PyDict> {
         let stats = self.runtime.block_on(async {
             self.engine.get_observability_stats().await
-        }).map_err(|e| PyRuntimeError::new_err(format_args!("Failed to get observability stats: {}", e).to_string()))?;
+        }).map_err(|e| PyRuntimeError::new_err({}", e)))?;
 
         Python::with_gil(|py| {
-            let dict = PyDict::new(py);
-            dict.set_item("metrics_per_second", stats.metrics_collected_per_second)?;
-            dict.set_item("traces_per_second", stats.traces_processed_per_second)?;
-            dict.set_item("alerts_generated", stats.alerts_generated)?;
-            dict.set_item("predictions_made", stats.predictions_made)?;
-            dict.set_item("healing_actions", stats.healing_actions_executed)?;
-            dict.set_item("prediction_accuracy", stats.prediction_accuracy)?;
-            dict.set_item("system_uptime", stats.system_uptime)?;
-            dict.set_item("anomalies_detected", stats.anomalies_detected)?;
-
-            Ok(dict.into())
-        })
-    }
-}
-
-#[pymodule]
-fn beardog_py(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+            let dict = PyDict::new(Python<'_>, m: &PyModule) -> PyResult<()> {
 
     m.add_class::<PyBearDogSecurityManager>()?;
     m.add_class::<PyQuantumCrypto>()?;
@@ -556,11 +463,11 @@ fn beardog_py(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 impl From<BearDogError> for PyErr {
     fn from(err: BearDogError) -> PyErr {
         match err {
-            BearDogError::Configuration(msg) => PyValueError::new_err(format_args!("Configuration error: {}", msg).to_string()),
-            BearDogError::Cryptographic(msg) => PyRuntimeError::new_err(format_args!("Cryptographic error: {}", msg).to_string()),
-            BearDogError::Network(msg) => PyRuntimeError::new_err(format_args!("Network error: {}", msg).to_string()),
-            BearDogError::Internal(msg) => PyRuntimeError::new_err(format_args!("Internal error: {}", msg).to_string()),
-            _ => PyRuntimeError::new_err(format_args!("BearDog error: {:?}", err).to_string()),
+            BearDogError::Configuration(msg) => PyValueError::new_err({}", msg)),
+            BearDogError::Cryptographic(msg) => PyRuntimeError::new_err({}", msg)),
+            BearDogError::Network(msg) => PyRuntimeError::new_err({}", msg)),
+            BearDogError::Internal(msg) => PyRuntimeError::new_err({}", msg)),
+            _ => PyRuntimeError::new_err({:?}", err)),
         }
     }
 } 

@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::{HsmCapabilityDetector, SecurityLevel, SecurityRequirements};
 use crate::tunnel::hsm::types::HsmCapability;
 use beardog_core::HsmTier; // Use the core HsmTier instead of local one
@@ -9,18 +14,23 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 pub struct DefaultHsmCapabilityDetector {
-    pub(crate) provider_capabilities: Arc<RwLock<HashMap<String, Vec<HsmCapability>>>>,
+    pub(Arc<RwLock<HashMap<String, Vec<HsmCapability>>>>,
 }
 impl DefaultHsmCapabilityDetector {
 
-    pub async fn new() -> Result<Self, BearDogError> {
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             provider_capabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
         })
     }
 
 impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
-    async fn detect_capabilities(&self) -> Result<Vec<HsmCapability>, BearDogError>> {
+    fn detect_capabilities(&self) -> Result<Vec<HsmCapability>, BearDogError>> {
 
         let capabilities = vec![
             HsmCapability::KeyGeneration,
@@ -30,26 +40,22 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
         ];
         Ok(capabilities)}
 
-    async fn is_hsm_available(&self, hsm_type: &HsmTier) -> Result<bool, BearDogError> {
+    /// Checks if hsm available
+    fn is_hsm_available(&self, hsm_type: &HsmTier) -> Result<bool, BearDogError> {
         match hsm_type {
             HsmTier::Software => Ok(true), // Software HSM always available
             HsmTier::Hardware => {
 
                 Ok(self
                     .check_hardware_hsm_availability()
-                    .await
                     .unwrap_or(false))
             }
             HsmTier::SmartCard => {
 
-                Ok(self.check_smartcard_availability().await.unwrap_or(false))
+                Ok(self.check_smartcard_availability().unwrap_or(false))
             HsmTier::CloudHsm => {
 
-                Ok(self.check_cloud_hsm_availability().await.unwrap_or(false))
-        }
-    async fn recommend_hsm_tier(
-        &self,
-        requirements: &SecurityRequirements,
+                Ok(&SecurityRequirements,
     ) -> Result<HsmTier, BearDogError> {
 
         match requirements.security_level {
@@ -66,16 +72,14 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
 
                 Ok(HsmTier::CloudHsm)
 
-    pub async fn get_provider_capabilities(
-        provider_id: &str,
+/// Get Provider Capabilities operation.
+    /// Gets provider_capabilities
+    /// Gets provider_capabilities
+    pub fn get_provider_capabilities(&str,
     ) -> Result<Vec<HsmCapability>, BearDogError>> {
-        let capabilities = self.provider_capabilities.read().await;
-        Ok(capabilities.get(provider_id).cloned().unwrap_or_default())
-
-    pub async fn update_provider_capabilities(
-        provider_id: &str,
+        let capabilities = self.provider_capabilities.read(&str,
         capabilities: Vec<HsmCapability>,
     ) -> Result<(), BearDogError> {
-        let mut provider_capabilities = self.provider_capabilities.write().await;
+        let mut provider_capabilities = self.provider_capabilities.write();
         provider_capabilities.insert(provider_id, capabilities);
         Ok(())

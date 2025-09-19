@@ -1,3 +1,7 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 use beardog_errors::BearDogError;
 use std::marker::PhantomData;
 
@@ -64,6 +68,8 @@ impl<const B: usize, const C: usize, const L: bool, const H: u32> ConstConfig<B,
         B * C + C * 64 // Buffer size + cache overhead
     }
 
+    /// Validates input
+    /// Validates input
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.total_memory_usage() > 100 * 1024 * 1024 {
             // 100MB limit
@@ -166,7 +172,7 @@ impl ConstTables {
 
             while j < 8 {
                 if crc & 1 != 0 {
-                    crc = (crc >> 1) ^ 0xEDB88320;
+                    crc = (crc >> 1) ^ 0xEDB8_8320;
                 } else {
                     crc >>= 1;
                 }
@@ -193,13 +199,13 @@ impl ConstTables {
         table
     }
 
-    const fn const_sin(x: f32) -> f32 {
-        let x2 = x * x;
-        let x3 = x2 * x;
+    const fn const_sin(angle: f32) -> f32 {
+        let x2 = angle * angle;
+        let x3 = x2 * angle;
         let x5 = x3 * x2;
         let x7 = x5 * x2;
 
-        x - (x3 / 6.0) + (x5 / 120.0) - (x7 / 5040.0)
+        angle - (x3 / 6.0) + (x5 / 120.0) - (x7 / 5040.0)
     }
 
     const fn generate_primes_1000() -> [u16; 168] {
@@ -218,10 +224,10 @@ impl ConstTables {
         primes
     }
 
-    pub fn crc32(data: &[u8]) -> u32 {
-        let mut crc = 0xFFFFFFFF;
+    pub fn crc32(input_bytes: &[u8]) -> u32 {
+        let mut crc = 0xFFFF_FFFF;
 
-        for &byte in data {
+        for &byte in input_bytes {
             let index = ((crc ^ byte as u32) & 0xFF) as usize;
             crc = (crc >> 8) ^ Self::CRC32_TABLE[index];
         }
@@ -234,6 +240,8 @@ impl ConstTables {
         Self::SINE_TABLE[index]
     }
 
+    /// Checks if small prime
+    /// Checks if small prime
     pub fn is_small_prime(n: u16) -> bool {
         if n > 1000 {
             return ConstMath::is_prime(n as u64);
@@ -330,7 +338,7 @@ impl<const SIZE: usize> ConstBuffer<SIZE> {
 
     pub fn push(&mut self, byte: u8) -> Result<(), BearDogError> {
         if self.len >= SIZE {
-            return Err(BearDogError::system("Buffer full"));
+            return Err(BearDogError::system("Buffer full".to_string()));
         }
 
         self.data[self.len] = byte;
@@ -347,6 +355,7 @@ impl<const SIZE: usize> ConstBuffer<SIZE> {
         Some(self.data[self.len])
     }
 
+    /// Returns as slice
     pub fn as_slice(&self) -> &[u8] {
         &self.data[..self.len]
     }

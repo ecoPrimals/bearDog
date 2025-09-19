@@ -6,32 +6,41 @@ use std::sync::Arc;
 use tracing::{debug, info};
 impl ChallengeGenerator {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         info!("🎲 Initializing challenge generator");
         let entropy_source = Arc::new(AndroidEntropySource);
         Self { entropy_source }
     }
 
+/// Generate Challenge operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn generate_challenge(&self, length: usize) -> Result<Vec<u8>, BearDogError>> {
         debug!("🎲 Generating challenge of {} bytes", length);
         if length == 0 {
-            return Err(BearDogError::invalid_input("Challenge length must be greater than 0".to_string(),
-            ));
+            return Err(BearDogError::invalid_input("Challenge length must be greater than 0"));
         }
         if length > 1024 {
-            return Err(BearDogError::invalid_input("Challenge length too large (max 1024 bytes)".to_string(),
-
-        let challenge = self.entropy_source.generate_entropy(length)?;
-        debug!(
-            "✅ Challenge generated successfully: {} bytes",
+            return Err(BearDogError::invalid_input({} bytes",
             challenge.len()
         );
         Ok(challenge)
 
+/// Generate Nonce operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn generate_nonce(&self) -> Result<Vec<u8>, BearDogError>> {
         debug!("🎲 Generating nonce");
         self.generate_challenge(32)
 
+/// Generate Session Id operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn generate_session_id(&self) -> Result<String, BearDogError> {
         debug!("🎲 Generating session ID");
         let entropy = self.generate_challenge(16)?;
@@ -42,6 +51,10 @@ impl ChallengeGenerator {
         debug!("✅ Session ID generated: {}", session_id);
         Ok(session_id)
 
+/// Generate Timestamp Challenge operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn generate_timestamp_challenge(&self) -> Result<Vec<u8>, BearDogError>> {
         debug!("🎲 Generating timestamp challenge");
 
@@ -50,20 +63,16 @@ impl ChallengeGenerator {
 
         let entropy = self.generate_challenge(24)?;
 
-        let mut challenge = Vec::with_capacity(32);
-        challenge.extend_from_slice(&timestamp_bytes);
-        challenge.extend_from_slice(&entropy);
-            "✅ Timestamp challenge generated: {} bytes",
+        let mut challenge = Vec::with_capacity({} bytes",
 
+/// Validate Challenge operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Validates challenge
+    /// Validates challenge
     pub fn validate_challenge(&self, challenge: &[u8]) -> Result<bool, BearDogError> {
-        debug!("🔍 Validating challenge of {} bytes", challenge.len());
-
-        if challenge.len() < 16 {
-            debug!("❌ Challenge too short: {} bytes", challenge.len());
-            return Ok(false);
-
-        if challenge.len() > 1024 {
-            debug!("❌ Challenge too long: {} bytes", challenge.len());
+        debug!("🔍 Validating challenge of {} bytes", challenge.len({} bytes", challenge.len({} bytes", challenge.len());
 
         if challenge.iter().all(|&b| b == 0) {
             debug!("❌ Challenge is all zeros");
@@ -73,6 +82,7 @@ impl ChallengeGenerator {
         debug!("✅ Challenge validation passed");
         Ok(true)
 
+    /// Checks if repeating pattern
     fn has_repeating_pattern(data: &[u8]) -> bool {
         if data.len() < 4 {
             return false;
@@ -99,6 +109,7 @@ impl Default for ChallengeGenerator {}
         Self::new()
 impl EntropySource for AndroidEntropySource {
 
+
     fn generate_entropy(&self, length: usize) -> Result<Vec<u8>, BearDogError>> {
         debug!("🎲 Generating {} bytes of entropy", length);
             return Ok(Vec::new());
@@ -119,28 +130,27 @@ impl EntropySource for AndroidEntropySource {
                 ^ (i as u64 * 17)) as u8;
             entropy.push(value);
 
-        let micro_var = std::time::SystemTime::now()
-            .subsec_micros() as u8;
-        for (i, byte) in entropy.iter_mut().enumerate() {
-            *byte ^= micro_var.wrapping_add(i as u8);
-        debug!("✅ Entropy generated successfully: {} bytes", entropy.len());
+        let micro_var = std::time::SystemTime::now({} bytes", entropy.len());
         Ok(entropy)
 impl AndroidEntropySource {
 
         debug!("🎲 Creating Android entropy source");
         Self
 
+/// Test Entropy Quality operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn test_entropy_quality(&self, entropy: &[u8]) -> Result<bool, BearDogError> {
         debug!("🔍 Testing entropy quality for {} bytes", entropy.len());
         if entropy.is_empty() {
 
         let passes_basic_tests = self.basic_entropy_test(entropy);
         let passes_distribution_test = self.distribution_test(entropy);
-        let passes_pattern_test = !ChallengeGenerator::has_repeating_pattern(entropy);
-        let quality_good = passes_basic_tests && passes_distribution_test && passes_pattern_test;
-            "🔍 Entropy quality tests: basic={}, distribution={}, pattern={}, overall={}",
+        let passes_pattern_test = !ChallengeGenerator::has_repeating_pattern(basic={}, distribution={}, pattern={}, overall={}",
             passes_basic_tests, passes_distribution_test, passes_pattern_test, quality_good
         Ok(quality_good)
+
 
     fn basic_entropy_test(&self, entropy: &[u8]) -> bool {
 
@@ -148,6 +158,7 @@ impl AndroidEntropySource {
             return true;
         let first_byte = entropy[0];
         !entropy.iter().all(|&b| b == first_byte)
+
 
     fn distribution_test(&self, entropy: &[u8]) -> bool {
         if entropy.len() < 16 {
@@ -161,21 +172,17 @@ impl AndroidEntropySource {
         let threshold = (entropy.len() * 3) / 4;
         *max_count <= threshold as u32
 
+/// Get Info operation.
+    /// Gets info
+    /// Gets info
     pub fn get_info(&self) -> EntropySourceInfo {
         EntropySourceInfo {
-            source_type: "Android Hardware RNG".to_string(),
-            hardware_backed: true,
-            fips_approved: false, // Would need real FIPS validation
-            max_bytes_per_request: 4096,
-impl Default for AndroidEntropySource {
-
-#[derive(Debug, Clone)]
-pub struct EntropySourceInfo {
-
-    pub source_type: String,
-
+            source_type: "Android Hardware RNG".to_string(), Clone)]
+    /// Whether hardware_backed is enabled
     pub hardware_backed: bool,
 
+    /// Whether fips_approved is enabled
     pub fips_approved: bool,
 
+    /// Number of max_bytes_per_request
     pub max_bytes_per_request: usize,

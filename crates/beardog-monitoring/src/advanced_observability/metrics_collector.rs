@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
@@ -18,6 +23,11 @@ pub struct RealTimeMetricCollector {
 
 impl RealTimeMetricCollector {
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             metrics_buffer: Arc::new(RwLock::new(MetricsBuffer::new())),
@@ -29,48 +39,67 @@ impl RealTimeMetricCollector {
         })
     }
 
-    pub async fn initialize(&self) -> Result<(), BearDogError> {
+/// Initialize operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Initializes componentialize
+    /// Initializes componentialize
+    pub fn initialize(&self) -> Result<(), BearDogError> {
 
-        self.setup_default_sources().await?;
+        self.setup_default_sources()?;
 
         self.setup_default_aggregation_rules();
         
         Ok(())
     }
 
-    pub async fn start(&self) -> Result<(), BearDogError> {
+/// Start operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Starts service
+    /// Starts service
+    pub fn start(&self) -> Result<(), BearDogError> {
         *self.is_running.write()
-            .map_err(|e| BearDogError::system(format_args!("Failed to acquire write lock: {}", e).to_string()))? = true;
+            .map_err(|e| BearDogError::system({}", e)))? = true;
 
-        self.start_collection_loop().await?;
+        self.start_collection_loop()?;
         
         Ok(())
     }
 
-    pub async fn is_healthy(&self) -> Result<bool, BearDogError> {
+/// Is Healthy operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Checks if healthy
+    /// Checks if healthy
+    pub fn is_healthy(&self) -> Result<bool, BearDogError> {
         let is_running = *self.is_running.read()
-            .map_err(|e| BearDogError::system(format_args!("Failed to acquire read lock: {}", e).to_string()))?;
+            .map_err(|e| BearDogError::system({}", e)))?;
         let buffer_size = self.metrics_buffer.read()
-            .map_err(|e| BearDogError::system(format_args!("Failed to acquire read lock: {}", e).to_string()))?.len();
+            .map_err(|e| BearDogError::system({}", e)))?.len();
 
         Ok(is_running && buffer_size < 10000)
     }
 
-    pub async fn shutdown(&self) -> Result<(), BearDogError> {
+/// Shutdown operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn shutdown(&self) -> Result<(), BearDogError> {
         *self.is_running.write()
-            .map_err(|e| BearDogError::system(format_args!("Failed to acquire write lock: {}", e).to_string()))? = false;
+            .map_err(|e| BearDogError::system({}", e)))? = false;
         Ok(())
     }
 
-    pub async fn collect_metrics(&self) -> Result<Vec<Metric>, BearDogError>> {
-        let mut all_metrics = Vec::new();
-        
-        for source in &self.metric_sources {
-            match source.collect().await {
-                Ok(mut metrics) => all_metrics.append(&mut metrics),
-                Err(e) => {
-
-                    eprintln!("Failed to collect from source {}: {}", source.name, e);
+/// Collect Metrics operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn collect_metrics(&self) -> Result<Vec<Metric>, BearDogError>> {
+        let mut all_metrics = Vec::new({}", source.name, e);
                 }
             }
         }
@@ -78,9 +107,13 @@ impl RealTimeMetricCollector {
         Ok(all_metrics)
     }
 
-    pub async fn add_metrics(&self, metrics: Vec<Metric>) -> Result<(), BearDogError> {
+/// Add Metrics operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn add_metrics(&self, metrics: Vec<Metric>) -> Result<(), BearDogError> {
         let mut buffer = self.metrics_buffer.write().map_err(|e| {
-            BearDogError::system(format_args!("Failed to acquire metrics buffer write lock: {}", e).to_string())
+            BearDogError::system({}", e))
         })?;
         
         for metric in metrics {
@@ -98,240 +131,177 @@ impl RealTimeMetricCollector {
         Ok(())
     }
 
-    pub async fn get_metrics_snapshot(&self) -> Result<MetricsSnapshot, BearDogError> {
+/// Get Metrics Snapshot operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets metrics_snapshot
+    /// Gets metrics_snapshot
+    pub fn get_metrics_snapshot(&self) -> Result<MetricsSnapshot, BearDogError> {
         let buffer = self.metrics_buffer.read().map_err(|e| {
-            BearDogError::system(format_args!("Failed to acquire metrics buffer read lock: {}", e).to_string())
+            BearDogError::system({}", e))
         })?;
         Ok(buffer.create_snapshot())
     }
 
-    async fn setup_default_sources(&mut self) -> Result<(), BearDogError> {
+    /// Sets valueup_default_sources
+    fn setup_default_sources(&mut self) -> Result<(), BearDogError> {
 
         self.metric_sources.push(MetricSource {
             name: "system".to_string(),
-            source_type: MetricSourceType::System,
-            collection_interval: Duration::from_millis(1000),
-            enabled: true,
         });
 
         self.metric_sources.push(MetricSource {
             name: "application".to_string(),
-            source_type: MetricSourceType::Application,
-            collection_interval: Duration::from_millis(500),
-            enabled: true,
         });
 
-        Ok(())
-    }
-
-    fn setup_default_aggregation_rules(&mut self) {
-
-        self.aggregation_rules.insert(
-            "cpu.usage".to_string(),
-            AggregationRule {
-                function: AggregationFunction::Average,
-                window: Duration::from_secs(60),
-            }
-        );
-
-        self.aggregation_rules.insert(
-            "memory.usage".to_string(),
-            AggregationRule {
-                function: AggregationFunction::Maximum,
-                window: Duration::from_secs(60),
-            }
-        );
-
-        self.aggregation_rules.insert(
-            "requests.count".to_string(),
-            AggregationRule {
-                function: AggregationFunction::Sum,
+        Ok(AggregationFunction::Average,
+                window: Duration::from_secs(AggregationFunction::Maximum,
+                window: Duration::from_secs(AggregationFunction::Sum,
                 window: Duration::from_secs(60),
             }
         );
     }
 
-    async fn start_collection_loop(&self) -> Result<(), BearDogError> {
+    /// Starts collection_loop
+    fn start_collection_loop(&self) -> Result<(), BearDogError> {
         let collector = self.clone();
         
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(collector.collection_interval);
-            
-            while collector.is_running.read().map(|guard| *guard).unwrap_or(false) {
-                interval.tick().await;
-                
-                match collector.collect_metrics().await {
-                    Ok(metrics) => {
-                        if let Err(e) = collector.add_metrics(metrics).await {
-                            eprintln!("Failed to add metrics to buffer: {}", e);
+            let mut interval = tokio::time::interval({}", e);
                         }
                     }
-                    Err(e) => {
-                        eprintln!("Failed to collect metrics: {}", e);
+                    Err({}", e);
                     }
                 }
             }
         });
         
-        Ok(())
-    }
-}
-
-impl Clone for RealTimeMetricCollector {
-    fn clone(&self) -> Self {
-        Self {
-            metrics_buffer: self.metrics_buffer.clone(),
+        Ok(&self.metrics_buffer,
             collection_interval: self.collection_interval,
-            metric_sources: self.metric_sources.clone(),
-            aggregation_rules: self.aggregation_rules.clone(),
-            retention_policy: self.retention_policy.clone(),
-            is_running: self.is_running.clone(),
+            metric_sources: &self.metric_sources,
+            aggregation_rules: &self.aggregation_rules,
+            retention_policy: &self.retention_policy,
+            is_running: &self.is_running,
         }
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct MetricSource {
-    pub name: String,
+    /// The source type value
     pub source_type: MetricSourceType,
+    /// The collection interval value
     pub collection_interval: Duration,
+    /// Whether feature is enabled
     pub enabled: bool,
 }
 
 impl MetricSource {
 
-    pub async fn collect(&self) -> Result<Vec<Metric>, BearDogError>> {
+/// Collect operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn collect(&self) -> Result<Vec<Metric>, BearDogError>> {
         if !self.enabled {
             return Ok(Vec::new());
         }
 
         match self.source_type {
-            MetricSourceType::System => self.collect_system_metrics().await,
-            MetricSourceType::Application => self.collect_application_metrics().await,
-            MetricSourceType::Network => self.collect_network_metrics().await,
-            MetricSourceType::Custom => self.collect_custom_metrics().await,
+            MetricSourceType::System => self.collect_system_metrics(),
+            MetricSourceType::Application => self.collect_application_metrics(),
+            MetricSourceType::Network => self.collect_network_metrics(),
+            MetricSourceType::Custom => self.collect_custom_metrics(),
         }
     }
 
-    async fn collect_system_metrics(&self) -> Result<Vec<Metric>, BearDogError>> {
+
+    fn collect_system_metrics(&self) -> Result<Vec<Metric>, BearDogError>> {
         let mut metrics = Vec::new();
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as u64;
 
         metrics.push(Metric {
-            name: "cpu.usage".to_string(),
-            value: 45.2, // Simulated CPU usage percentage
+            name: "cpu.usage".to_string(45.2, // Simulated CPU usage percentage
             timestamp,
-            tags: vec![("source".to_string(), "system".to_string())],
-            metric_type: MetricType::Gauge,
+            tags: vec![("source".to_string(),
         });
 
         metrics.push(Metric {
-            name: "memory.usage".to_string(),
-            value: 1024.0 * 1024.0 * 512.0, // 512MB in bytes
+            name: "memory.usage".to_string(1024.0 * 1024.0 * 512.0, // 512MB in bytes
             timestamp,
-            tags: vec![("source".to_string(), "system".to_string())],
-            metric_type: MetricType::Gauge,
+            tags: vec![("source".to_string(),
         });
 
         Ok(metrics)
     }
 
-    async fn collect_application_metrics(&self) -> Result<Vec<Metric>, BearDogError>> {
+
+    fn collect_application_metrics(&self) -> Result<Vec<Metric>, BearDogError>> {
         let mut metrics = Vec::new();
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as u64;
 
         metrics.push(Metric {
-            name: "requests.count".to_string(),
-            value: 150.0, // Requests per minute
+            name: "requests.count".to_string(150.0, // Requests per minute
             timestamp,
-            tags: vec![("source".to_string(), "application".to_string())],
-            metric_type: MetricType::Counter,
+            tags: vec![("source".to_string(),
         });
 
         metrics.push(Metric {
-            name: "response.time".to_string(),
-            value: 25.5, // Average response time in milliseconds
+            name: "response.time".to_string(25.5, // Average response time in milliseconds
             timestamp,
-            tags: vec![("source".to_string(), "application".to_string())],
-            metric_type: MetricType::Histogram,
+            tags: vec![("source".to_string(),
         });
 
         Ok(metrics)
     }
 
-    async fn collect_network_metrics(&self) -> Result<Vec<Metric>, BearDogError>> {
+
+    fn collect_network_metrics(&self) -> Result<Vec<Metric>, BearDogError>> {
 
         Ok(Vec::new())
     }
 
-    async fn collect_custom_metrics(&self) -> Result<Vec<Metric>, BearDogError>> {
 
-        Ok(Vec::new())
-    }
-}
+    fn collect_custom_metrics(&self) -> Result<Vec<Metric>, BearDogError>> {
 
-#[derive(Debug, Clone)]
-pub enum MetricSourceType {
-    System,
-    Application,
-    Network,
-    Custom,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Metric {
-    pub name: String,
+        Ok(Vec::new(String,
+    /// The value value
     pub value: f64,
     pub timestamp: u64,
+    /// Collection of tags
     pub tags: Vec<(String, String)>,
+    /// The metric type value
     pub metric_type: MetricType,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum MetricType {
-    Counter,
-    Gauge,
-    Histogram,
-    Summary,
-}
-
 #[derive(Debug, Clone)]
-pub struct AggregationRule {
-    pub function: AggregationFunction,
+    /// The window value
     pub window: Duration,
 }
 
 impl AggregationRule {
 
+/// Apply operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn apply(&self, metric: &Metric) -> Result<Metric, BearDogError> {
 
-        Ok(metric.clone())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum AggregationFunction {
-    Sum,
-    Average,
-    Maximum,
-    Minimum,
-    Count,
-}
-
-pub struct MetricsBuffer {
-    metrics: VecDeque<Metric>,
+        Ok(VecDeque<Metric>,
     max_size: usize,
 }
 
 impl MetricsBuffer {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
-            metrics: VecDeque::new(),
-            max_size: 10000, // Default buffer size
+            metrics: VecDeque::new(10000, // Default buffer size
         }
     }
 
+/// Add operation.
     pub fn add(&mut self, metric: Metric) {
         self.metrics.push_back(metric);
 
@@ -340,10 +310,12 @@ impl MetricsBuffer {
         }
     }
 
+/// Len operation.
     pub fn len(&self) -> usize {
         self.metrics.len()
     }
 
+/// Apply Retention operation.
     pub fn apply_retention(&mut self, policy: &RetentionPolicy) {
         let cutoff_time = match SystemTime::now().duration_since(UNIX_EPOCH) {
             Ok(duration) => duration.as_millis() as u64 - policy.max_age.as_millis() as u64,
@@ -356,34 +328,27 @@ impl MetricsBuffer {
         self.metrics.retain(|metric| metric.timestamp >= cutoff_time);
     }
 
+/// Create Snapshot operation.
+    /// Creates snapshot
+    /// Creates snapshot
     pub fn create_snapshot(&self) -> MetricsSnapshot {
         MetricsSnapshot {
             metrics: self.metrics.iter().cloned().collect(),
             snapshot_time: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .unwrap_or_else(|_| Duration::from_secs(0))
-                .as_millis() as u64,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct RetentionPolicy {
-    pub max_age: Duration,
+                .unwrap_or_else(|_| Duration::from_secs(Duration,
+    /// Number of max
     pub max_count: usize,
 }
 
 impl Default for RetentionPolicy {
     fn default() -> Self {
         Self {
-            max_age: Duration::from_secs(3600), // 1 hour
-            max_count: 10000,
+            max_age: Duration::from_secs(10000,
         }
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MetricsSnapshot {
-    pub metrics: Vec<Metric>,
+#[derive(Debug, Clone)]
     pub snapshot_time: u64,
 } 

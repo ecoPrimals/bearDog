@@ -1,51 +1,50 @@
 use beardog_errors::BearDogError;
 
-
 use super::models::*;
 use super::ChaosTestFramework;
-use beardog::{{BearDogError, BearDogError}};
 use std::time::Instant;
 use tracing::{error, info};
 use uuid::Uuid;
 
-#[allow(async_fn_in_trait)]
 pub trait FaultInjector: Send + Sync {
+    fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError>;
 
-    async fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError>;
-
-    async fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError>;
+    fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError>;
 
     async fn is_fault_active(&self, fault_id: &str) -> Result<bool, BearDogError>;
-
-    fn target_component(&self) -> String;
 }
 
-pub async fn inject_and_monitor_fault(framework: &mut ChaosTestFramework, fault: FaultType) -> Result<FaultResult, BearDogError> {
-    let fault_id = Uuid::new_v4().to_string();
-    let component = determine_target_component(&fault);
-    
-    info!("💥 Injecting fault: {:?} on component: {}", fault, component);
-    
+pub fn target_component(
+    framework: &mut ChaosTestFramework,
+    component: &str,
+    fault: FaultType,
+) -> Result<FaultResult, BearDogError> {
+    let fault_id = Uuid::new_v4();
+    info!(
+        "🎯 Targeting component '{}' with fault: {:?}",
+        component, fault
+    );
+
     let start_time = Instant::now();
 
-    let injector = framework.fault_injectors.get(&component)
-        .ok_or_else(|| BearDogError::internal(format_args!("No fault injector for component: {}", component).to_string()))?;
+    let injector = framework.fault_injectors.get(component).ok_or_else(|| {
+        BearDogError::internal(format!("No fault injector found for component: {}", component))
+    })?;
+
+    let injection_result = injector.inject_fault(fault.clone());
     
-    let injection_result = injector.inject_fault(fault.clone()).await;
-    
-    if let Err(e) = &injection_result {
-        error!("❌ Failed to inject fault: {}", e);
+    if let Err(e) = injection_result {
+        error!("Failed to inject fault: {}", e);
         return Ok(FaultResult {
-            fault_id,
+            fault_id: fault_id.to_string(),
             fault_type: fault,
-            target_component: component,
+            target_component: component.to_string(),
             injection_success: false,
             impact_metrics: SystemImpact::default(),
-            recovery_time_ms: None,
         });
     }
 
-    let impact_metrics = framework.measure_fault_impact().await?;
+    let impact_metrics = framework.measure_fault_impact()?;
 
     let active_fault = ActiveFault {
         id: fault_id.clone(),
@@ -55,21 +54,14 @@ pub async fn inject_and_monitor_fault(framework: &mut ChaosTestFramework, fault:
         target_component: component.clone(),
         severity: determine_fault_severity(&fault),
     };
-    
-    framework.chaos_controller.track_active_fault(active_fault).await;
+
+    framework
+        .chaos_controller
+        .track_active_fault(active_fault)
+        ;
 
     let fault_duration = get_fault_duration(&fault);
-    tokio::time::sleep(std::time::Duration::from_millis(fault_duration)).await;
-
-    let _ = injector.remove_fault(&fault_id).await;
-
-    let recovery_time = framework.wait_for_recovery(&component).await?;
-
-    framework.chaos_controller.remove_active_fault(&fault_id).await;
-    
-    Ok(FaultResult {
-        fault_id,
-        fault_type: fault,
+    tokio::time::sleep(std::time::Duration::from_millis(fault,
         target_component: component,
         injection_success: true,
         impact_metrics,
@@ -79,11 +71,20 @@ pub async fn inject_and_monitor_fault(framework: &mut ChaosTestFramework, fault:
 
 pub fn determine_target_component(fault: &FaultType) -> String {
     match fault {
-        FaultType::NetworkPartition { .. } | FaultType::NetworkLatency { .. } => "network".to_string(),
-        FaultType::ComponentCrash { component, .. } | FaultType::ComponentSlowdown { component, .. } => component.clone(),
-        FaultType::MemoryExhaustion { .. } | FaultType::CpuExhaustion { .. } | FaultType::DiskExhaustion { .. } => "resource".to_string(),
-        FaultType::DatabaseTimeout { .. } | FaultType::DatabaseCorruption { .. } => "database".to_string(),
-        FaultType::AuthenticationFailure { .. } | FaultType::CertificateExpiry { .. } => "security".to_string(),
+        FaultType::NetworkPartition { .. } | FaultType::NetworkLatency { .. } => {
+            "network".to_string()
+        }
+        FaultType::ComponentCrash { component, .. }
+        | FaultType::ComponentSlowdown { component, .. } => component.clone(),
+        FaultType::MemoryExhaustion { .. }
+        | FaultType::CpuExhaustion { .. }
+        | FaultType::DiskExhaustion { .. } => "resource".to_string(),
+        FaultType::DatabaseTimeout { .. } | FaultType::DatabaseCorruption { .. } => {
+            "database".to_string()
+        }
+        FaultType::AuthenticationFailure { .. } | FaultType::CertificateExpiry { .. } => {
+            "security".to_string()
+        }
         FaultType::ByzantineBehavior { .. } => "network".to_string(),
     }
 }
@@ -99,7 +100,9 @@ pub fn determine_fault_severity(fault: &FaultType) -> FaultSeverity {
     match fault {
         FaultType::NetworkPartition { .. } => FaultSeverity::Critical,
         FaultType::ComponentCrash { .. } => FaultSeverity::High,
-        FaultType::MemoryExhaustion { cause_oom: true, .. } => FaultSeverity::Critical,
+        FaultType::MemoryExhaustion {
+            cause_oom: true, ..
+        } => FaultSeverity::Critical,
         FaultType::ByzantineBehavior { .. } => FaultSeverity::High,
         _ => FaultSeverity::Medium,
     }
@@ -115,7 +118,7 @@ impl NetworkFaultInjector {
 
 #[allow(async_fn_in_trait)]
 impl FaultInjector for NetworkFaultInjector {
-    async fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
+    fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
         match fault {
             FaultType::NetworkPartition { .. } => {
                 info!("🌐 Simulating network partition");
@@ -127,16 +130,18 @@ impl FaultInjector for NetworkFaultInjector {
 
                 Ok(Uuid::new_v4().to_string())
             }
-            _ => Err(BearDogError::internal("Unsupported fault type for network injector")),
+            _ => Err(BearDogError::internal(
+                "Unsupported fault type for network injector",
+            )),
         }
     }
 
-    async fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
+    fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
         info!("🌐 Removing network fault: {}", fault_id);
         Ok(())
     }
 
-    async fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
+    fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
         Ok(false)
     }
 
@@ -155,26 +160,31 @@ impl SecurityFaultInjector {
 
 #[allow(async_fn_in_trait)]
 impl FaultInjector for SecurityFaultInjector {
-    async fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
+    fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
         match fault {
             FaultType::AuthenticationFailure { failure_rate } => {
-                info!("🔐 Injecting authentication failures at {:.2}% rate", failure_rate * 100.0);
+                info!(
+                    "🔐 Injecting authentication failures at {:.2}% rate",
+                    failure_rate * 100.0
+                );
                 Ok(Uuid::new_v4().to_string())
             }
             FaultType::CertificateExpiry { .. } => {
                 info!("🔐 Simulating certificate expiry");
                 Ok(Uuid::new_v4().to_string())
             }
-            _ => Err(BearDogError::internal("Unsupported fault type for security injector")),
+            _ => Err(BearDogError::internal(
+                "Unsupported fault type for security injector",
+            )),
         }
     }
 
-    async fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
+    fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
         info!("🔐 Removing security fault: {}", fault_id);
         Ok(())
     }
 
-    async fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
+    fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
         Ok(false)
     }
 
@@ -193,7 +203,7 @@ impl DatabaseFaultInjector {
 
 #[allow(async_fn_in_trait)]
 impl FaultInjector for DatabaseFaultInjector {
-    async fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
+    fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
         match fault {
             FaultType::DatabaseTimeout { timeout_ms } => {
                 info!("💾 Injecting database timeout of {}ms", timeout_ms);
@@ -203,16 +213,18 @@ impl FaultInjector for DatabaseFaultInjector {
                 info!("💾 Simulating database corruption");
                 Ok(Uuid::new_v4().to_string())
             }
-            _ => Err(BearDogError::internal("Unsupported fault type for database injector")),
+            _ => Err(BearDogError::internal(
+                "Unsupported fault type for database injector",
+            )),
         }
     }
 
-    async fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
+    fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
         info!("💾 Removing database fault: {}", fault_id);
         Ok(())
     }
 
-    async fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
+    fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
         Ok(false)
     }
 
@@ -231,7 +243,7 @@ impl ResourceFaultInjector {
 
 #[allow(async_fn_in_trait)]
 impl FaultInjector for ResourceFaultInjector {
-    async fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
+    fn inject_fault(&self, fault: FaultType) -> Result<String, BearDogError> {
         match fault {
             FaultType::MemoryExhaustion { memory_mb, .. } => {
                 info!("💾 Injecting memory exhaustion: {}MB", memory_mb);
@@ -243,20 +255,22 @@ impl FaultInjector for ResourceFaultInjector {
 
                 Ok(Uuid::new_v4().to_string())
             }
-            _ => Err(BearDogError::internal("Unsupported fault type for resource injector")),
+            _ => Err(BearDogError::internal(
+                "Unsupported fault type for resource injector",
+            )),
         }
     }
 
-    async fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
+    fn remove_fault(&self, fault_id: &str) -> Result<(), BearDogError> {
         info!("🔧 Removing resource fault: {}", fault_id);
         Ok(())
     }
 
-    async fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
+    fn is_fault_active(&self, _fault_id: &str) -> Result<bool, BearDogError> {
         Ok(false)
     }
 
     fn target_component(&self) -> String {
         "resource".to_string()
     }
-} 
+}

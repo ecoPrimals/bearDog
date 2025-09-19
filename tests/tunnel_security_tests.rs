@@ -1,5 +1,3 @@
-
-
 use beardog::tunnel::key_manager::{BStpKeyManager, CryptoAlgorithm};
 use beardog::tunnel::{config::BStpConfig, session::SessionManager};
 use beardog_errors::BearDogError;
@@ -8,7 +6,6 @@ use std::time::Duration;
 
 #[tokio::test]
 async fn test_configuration_profiles() -> Result<(), BearDogError> {
-
     let competitive = BStpConfig::competitive_gaming();
     assert!(competitive.performance.max_encryption_latency <= Duration::from_micros(100));
     assert!(competitive.gaming.ultra_low_latency);
@@ -29,21 +26,21 @@ async fn test_configuration_profiles() -> Result<(), BearDogError> {
 #[tokio::test]
 async fn test_key_management_basic() -> Result<(), BearDogError> {
     let config = BStpConfig::competitive_gaming();
-    let key_manager = Arc::new(BStpKeyManager::new(config.key_management).await?);
+    let key_manager = Arc::new(BStpKeyManager::new(config.key_management)?);
 
     let session_id = "test_session_001";
     let key1 = key_manager
         .generate_session_key(session_id, CryptoAlgorithm::Aes256Gcm)
-        .await?;
+        ?;
     let key2 = key_manager
         .generate_session_key(session_id, CryptoAlgorithm::ChaCha20Poly1305)
-        .await?;
+        ?;
 
     assert_ne!(key1.key, key2.key);
     assert_eq!(key1.algorithm, CryptoAlgorithm::Aes256Gcm);
     assert_eq!(key2.algorithm, CryptoAlgorithm::ChaCha20Poly1305);
 
-    let retrieved = key_manager.get_session_key(session_id).await;
+    let retrieved = key_manager.get_session_key(session_id);
     assert!(retrieved.is_some());
 
     Ok(())
@@ -55,7 +52,7 @@ async fn test_session_manager_basic() -> Result<(), BearDogError> {
 
     let session_id = "test_session_lifecycle";
 
-    let initial = session_manager.get_session(session_id).await;
+    let initial = session_manager.get_session(session_id);
     assert!(initial.is_none());
 
     Ok(())
@@ -64,19 +61,19 @@ async fn test_session_manager_basic() -> Result<(), BearDogError> {
 #[tokio::test]
 async fn test_algorithm_types() -> Result<(), BearDogError> {
     let config = BStpConfig::competitive_gaming();
-    let key_manager = Arc::new(BStpKeyManager::new(config.key_management).await?);
+    let key_manager = Arc::new(BStpKeyManager::new(config.key_management)?);
 
     let session_id = "algo_test_session";
 
     let aes_key = key_manager
         .generate_session_key(session_id, CryptoAlgorithm::Aes256Gcm)
-        .await?;
+        ?;
     assert_eq!(aes_key.algorithm, CryptoAlgorithm::Aes256Gcm);
     assert_eq!(aes_key.key.len(), 32); // 256 bits
 
     let chacha_key = key_manager
         .generate_session_key(session_id, CryptoAlgorithm::ChaCha20Poly1305)
-        .await?;
+        ?;
     assert_eq!(chacha_key.algorithm, CryptoAlgorithm::ChaCha20Poly1305);
     assert_eq!(chacha_key.key.len(), 32); // 256 bits
 
@@ -84,7 +81,7 @@ async fn test_algorithm_types() -> Result<(), BearDogError> {
 }
 
 #[tokio::test]
-async fn test_security_compliance_requirements() -> Result<(), BearDogError> {
+fn test_security_compliance_requirements() -> Result<(), BearDogError> {
     let config = BStpConfig::maximum_security();
 
     assert!(config.key_management.key_derivation_rounds >= 10000);
@@ -110,14 +107,14 @@ async fn test_gaming_performance_requirements() -> Result<(), BearDogError> {
 #[tokio::test]
 async fn test_key_generation_security() -> Result<(), BearDogError> {
     let config = BStpConfig::competitive_gaming();
-    let key_manager = Arc::new(BStpKeyManager::new(config.key_management).await?);
+    let key_manager = Arc::new(BStpKeyManager::new(config.key_management)?);
 
     let mut keys = Vec::new();
     for i in 0..10 {
         let session_id = format!("security_test_{i}");
         let key = key_manager
             .generate_session_key(&session_id, CryptoAlgorithm::Aes256Gcm)
-            .await?;
+            ?;
         keys.push(key.key);
     }
 

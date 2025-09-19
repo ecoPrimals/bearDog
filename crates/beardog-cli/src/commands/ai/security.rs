@@ -4,33 +4,21 @@ use super::types::OutputFormat;
 use clap::Subcommand;
 use std::path::PathBuf;
 
-#[derive(Debug, Subcommand)]
-pub enum SecurityOperation {
-
-    Encrypt {
-
-        #[arg(long)]
-        input: String,
-
+#[derive(Debug, Clone)]
         key_id: String,
 
         output: Option<PathBuf>,
 
-        #[arg(long, default_value = "AES256")]
-        algorithm: String,
+        #[arg(String,
     },
 
     Decrypt {
 
-        #[arg(long, value_enum)]
-        algorithm: Option<String>,
+        #[arg(Option<String>,
 
     Sign {
 
-        #[arg(long, default_value = "RSA_PSS")]
-
-        #[arg(long, default_value = "SHA256")]
-        hash: String,
+        #[arg(String,
 
     Verify {
 
@@ -38,11 +26,9 @@ pub enum SecurityOperation {
 
     GenerateKey {
 
-        #[arg(long, value_enum, default_value = "rsa2048")]
-        key_type: String,
+        #[arg(String,
 
-        #[arg(long, default_value = "general")]
-        usage: String,
+        #[arg(String,
 
         key_id: Option<String>,
 
@@ -52,8 +38,7 @@ pub enum SecurityOperation {
 
     ListKeys {
 
-        #[arg(long, value_enum, default_value = "json")]
-        format: OutputFormat,
+        #[arg(OutputFormat,
 
         key_type: Option<String>,
 
@@ -69,8 +54,7 @@ pub enum SecurityOperation {
 
         output: PathBuf,
 
-        #[arg(long, default_value = "PEM")]
-        format: String,
+        #[arg(String,
 
         include_private: bool,
 

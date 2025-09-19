@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -14,27 +19,26 @@ pub mod collector;
 pub use collector::HumanEntropyCollector;
 
 #[derive(Debug, Clone)]
-pub struct EntropyCollectionConfig {
-
-    pub min_quality_score: f64,
-
     pub max_collection_time_ms: u64,
 
+    /// The min entropy bits value
     pub min_entropy_bits: f64,
 
+    /// Whether enable_biometric is enabled
     pub enable_biometric: bool,
 
+    /// Whether enable_behavioral is enabled
     pub enable_behavioral: bool,
 
+    /// Whether enable_environmental is enabled
     pub enable_environmental: bool,
 
+    /// Whether enable_interactive is enabled
     pub enable_interactive: bool,
 }
 impl Default for EntropyCollectionConfig {}
 
-    fn default() -> Self {
-        Self {
-            min_quality_score: 0.7,
+    fn default(0.7,
             max_collection_time_ms: 5000,
             min_entropy_bits: 128.0,
             enable_biometric: true,
@@ -44,54 +48,50 @@ impl Default for EntropyCollectionConfig {}
         }
     }
 
-#[derive(Debug, Default)]
-pub struct EntropyCollectionStats {
-
-    pub total_collections: u64,
-
+#[derive(Debug, Clone)]
+    /// Number of successful_collections
     pub successful_collections: u64,
 
+    /// Number of failed_collections
     pub failed_collections: u64,
 
+    /// The average quality value
     pub average_quality: f64,
+
 
     pub average_collection_time_ms: f64,
 
+    /// Mapping of quality by method
     pub quality_by_method: HashMap<String, f64>,
 
+    /// Mapping of collections by method
     pub collections_by_method: HashMap<String, u64>,}
 
 impl EntropyCollectionStats {
 
-    pub fn update_collection_stats(&mut self, quality_score: f64, collection_time: std::time::Duration) {
+/// Update Collection Stats operation.
+    /// Updates collection_stats
+    /// Updates collection_stats
+    pub fn update_collection_stats(f64, collection_time: std::time::Duration) {
         self.total_collections += 1;
         self.successful_collections += 1;
 
         let total_quality = self.average_quality * (self.total_collections - 1) as f64 + quality_score;
         self.average_quality = total_quality / self.total_collections as f64;
 
-        let collection_time_ms = collection_time.as_millis() as f64;
-        let total_time = self.average_collection_time_ms * (self.total_collections - 1) as f64 + collection_time_ms;
-        self.average_collection_time_ms = total_time / self.total_collections as f64;
-
-    pub fn record_failed_collection(&mut self) {
-        self.failed_collections += 1;
-
-    pub fn success_rate(&self) -> f64 {
-        if self.total_collections == 0 {
-            0.0
-        } else {
-            (self.successful_collections as f64 / self.total_collections as f64) * 100.0
-
-#[derive(Debug)]
-pub struct EntropyQualityAssessor {
-    config: EntropyCollectionConfig,}
+        let collection_time_ms = collection_time.as_millis(EntropyCollectionConfig,}
 
 impl EntropyQualityAssessor {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(config: EntropyCollectionConfig) -> Self {
         Self { config }
 
+/// Assess Entropy Quality operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn assess_entropy_quality(&self, entropy_data: &HumanEntropyData) -> Result<f64, BearDogError> {
         debug!("🔍 Assessing entropy quality for {} method", 
             match entropy_data.collection_method {
@@ -119,26 +119,20 @@ impl EntropyQualityAssessor {
         };
         quality_score += method_score * 0.3; // 30% weight
 
-        let indicator_score = self.assess_quality_indicators(&entropy_data.quality_indicators);
-        quality_score += indicator_score * 0.1; // 10% weight
-
-        quality_score = quality_score.max(0.0).min(1.0);
-        debug!("✅ Entropy quality assessment: {:.3}", quality_score);
+        let indicator_score = self.assess_quality_indicators({:.3}", quality_score);
         Ok(quality_score)
 
+/// Update Config operation.
+    /// Updates config
+    /// Updates config
     pub fn update_config(&mut self, new_config: EntropyCollectionConfig) {
         self.config = new_config;
 
-    fn assess_quality_indicators(&self, indicators: &HashMap<&str, f64>) -> f64 {
+
+    fn assess_quality_indicators(&HashMap<&str, f64>) -> f64 {
         if indicators.is_empty() {
             return 0.5; // Default score if no indicators
-        let sum: f64 = indicators.values().sum();
-        let average = sum / indicators.len() as f64;
-        average.max(0.0).min(1.0)
-
-pub struct TierElevationEngine {
-
-    provider_scores: HashMap<String, f64>,
+        let sum: f64 = indicators.values(HashMap<String, f64>,
 
     method_success_counts: HashMap<String, u64>,
 
@@ -146,37 +140,40 @@ pub struct TierElevationEngine {
 
 impl TierElevationEngine {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
             provider_scores: HashMap::with_capacity(16),
             method_success_counts: HashMap::with_capacity(16),
-            method_total_counts: HashMap::with_capacity(16),
+            method_total_counts: HashMap::with_capacity(&HumanEntropyMethod, quality_score: f64) {
+        let method_name = format!("{:?}", method);
 
-    pub fn record_successful_collection(&mut self, method: &HumanEntropyMethod, quality_score: f64) {
-        let method_name = format_args!("{:?}", method).to_string();
+        *self.method_success_counts.entry({:.3}", method_name, new_score);
 
-        *self.method_success_counts.entry(method_name.clone()).or_insert(0) += 1;
-        *self.method_total_counts.entry(method_name.clone()).or_insert(0) += 1;
-
-        let current_score = self.provider_scores.get(&method_name).unwrap_or(&0.5);
-        let new_score = (current_score + quality_score) / 2.0; // Running average
-        self.provider_scores.insert(method_name, new_score);
-        debug!("📈 Updated provider score for {}: {:.3}", method_name, new_score);
-
+/// Record Failed Collection operation.
     pub fn record_failed_collection(&mut self, method: &HumanEntropyMethod) {
 
         let penalty = 0.1;
-        let new_score = (current_score - penalty).max(0.0);
-        warn!("📉 Decreased provider score for {}: {:.3}", method_name, new_score);
+        let new_score = (current_score - penalty).max({:.3}", method_name, new_score);
 
+/// Get Provider Scores operation.
+    /// Gets provider_scores
+    /// Gets provider_scores
     pub fn get_provider_scores(&self) -> HashMap<String, f64> {
-        self.provider_scores.clone()
+        &self.provider_scores
 
+/// Get Method Success Rate operation.
+    /// Gets method_success_rate
+    /// Gets method_success_rate
     pub fn get_method_success_rate(&self, method: &HumanEntropyMethod) -> f64 {
         let successes = self.method_success_counts.get(&method_name).unwrap_or(&0);
         let total = self.method_total_counts.get(&method_name).unwrap_or(&0);
         if *total == 0 {
             (*successes as f64 / *total as f64) * 100.0
 
+/// Get Tier Recommendations operation.
+    /// Gets tier_recommendations
+    /// Gets tier_recommendations
     pub fn get_tier_recommendations(&self) -> Vec<(String, f64, String)> {
         let mut recommendations = Vec::new();
         for (method, score) in &self.provider_scores {
@@ -201,12 +198,11 @@ impl Default for TierElevationEngine {
 pub mod utils {
     use super::*;
 
+/// Create Test Collector operation.
+    /// Creates test_collector
+    /// Creates test_collector
     pub fn create_test_collector() -> HumanEntropyCollector {
-        HumanEntropyCollector::new(EntropyCollectionConfig::default())
-
-    pub fn create_test_capabilities() -> HumanEntropyCapabilities {
-        HumanEntropyCapabilities {
-            biometric_available: true,
+        HumanEntropyCollector::new(EntropyCollectionConfig::default(true,
             behavioral_available: true,
             environmental_available: true,
             interactive_available: true,
@@ -220,9 +216,13 @@ pub mod utils {
             light_sensor_available: true,
             accelerometer_available: true,
 
-    pub fn validate_entropy_data(data: &HumanEntropyData, min_bits: f64) -> bool {
+/// Validate Entropy Data operation.
+    /// Validates entropy_data
+    /// Validates entropy_data
+    pub fn validate_entropy_data(&HumanEntropyData, min_bits: f64) -> bool {
         data.entropy_bits >= min_bits && !data.raw_data.is_empty()
 
+/// Calculate Entropy Diversity operation.
     pub fn calculate_entropy_diversity(sources: &[HumanEntropyMethod]) -> f64 {
         let unique_sources = sources.len();
         match unique_sources {
@@ -242,6 +242,7 @@ mod tests {
         assert!(config.enable_biometric);
         Ok(())}
 
+
     fn test_collection_stats() -> Result<(), BearDogError> {
         let mut stats = EntropyCollectionStats::default();
         stats.update_collection_stats(0.8, std::time::Duration::from_millis(100));
@@ -251,9 +252,7 @@ mod tests {
         assert_eq!(stats.success_rate(), 100.0);
         assert!((stats.average_quality - 0.85).abs() < 0.01);
     fn test_quality_assessor() -> Result<(), BearDogError> {
-        let assessor = EntropyQualityAssessor::new(config);
-        let entropy_data = HumanEntropyData {
-            raw_data: vec![0u8; 256],
+        let assessor = EntropyQualityAssessor::new(vec![0u8; 256],
             entropy_bits: 128.0,
             collection_method: HumanEntropyMethod::Biometric,
             timestamp: Utc::now(),
@@ -272,13 +271,11 @@ mod tests {
         let success_rate = engine.get_method_success_rate(&HumanEntropyMethod::Biometric);
         assert_eq!(success_rate, 100.0);}
 
+
     fn test_utility_functions() -> Result<(), BearDogError> {
         let collector = utils::create_test_collector();
         assert!(collector.get_statistics().total_collections == 0);
-        let capabilities = utils::create_test_capabilities();
-        assert!(capabilities.biometric_available);
-        assert!(capabilities.behavioral_available);
-            raw_data: vec![0u8; 64],
+        let capabilities = utils::create_test_capabilities(vec![0u8; 64],
             collection_method: HumanEntropyMethod::Hybrid,
         assert!(utils::validate_entropy_data(&entropy_data, 100.0));
         assert!(!utils::validate_entropy_data(&entropy_data, 200.0));
@@ -289,3 +286,6 @@ mod tests {
         ]);
         assert_eq!(diversity, 0.75);
 } 
+
+pub mod live_feed_validator;
+pub use live_feed_validator::*;

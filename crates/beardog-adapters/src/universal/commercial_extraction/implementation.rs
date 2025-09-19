@@ -1,3 +1,8 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::detector::*;
 use beardog_errors::BearDogError;
 
@@ -6,19 +11,18 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 impl CommercialExtractionDetector {
-    pub async fn analyze_request(
-        &mut self,
-        request: &UniversalRequest,
+    /// Analyze Request operation.
+    pub fn analyze_request(&UniversalRequest,
     ) -> CommercialClassification {
         let user_id = self.extract_user_identity(request);
 
-        self.update_usage_patterns(&user_id, request).await;
+        self.update_usage_patterns(&user_id, request);
 
-        let entropy_quality = self.analyze_entropy_quality(&user_id, request).await;
+        let entropy_quality = self.analyze_entropy_quality(&user_id, request);
 
-        let commercial_indicators = self.detect_commercial_indicators(&user_id).await;
+        let commercial_indicators = self.detect_commercial_indicators(&user_id);
 
-        let key_evolution_status = match self.check_key_evolution(&user_id).await {
+        let key_evolution_status = match self.check_key_evolution(&user_id) {
             Ok(status) => status,
             Err(_) => KeyEvolutionStatus::Uninitialized, // Fallback for errors
         };
@@ -29,8 +33,8 @@ impl CommercialExtractionDetector {
             commercial_indicators,
             key_evolution_status,
         )
-        .await
     }
+
 
     fn extract_user_identity(&self, request: &UniversalRequest) -> String {
         use sha2::{Digest, Sha256};
@@ -46,14 +50,7 @@ impl CommercialExtractionDetector {
         format!(
             "user_{:x}",
             hasher
-                .finalize()
-                .iter()
-                .take(8)
-                .fold(0u64, |acc, &b| acc << 8 | b as u64)
-        )
-    }
-
-    async fn update_usage_patterns(&mut self, user_id: &str, request: &UniversalRequest) {
+                .finalize(&str, request: &UniversalRequest) {
         let now = Utc::now();
         let pattern = self
             .usage_patterns
@@ -61,14 +58,10 @@ impl CommercialExtractionDetector {
             .or_insert_with(|| UsagePattern {
                 request_frequencies: Vec::new(),
                 function_patterns: HashMap::with_capacity(16),
-                timing_variance: 0.0,
                 network_patterns: NetworkBehaviorPattern {
                     connection_persistence: 0.0,
-                    batching_patterns: Vec::new(),
-                    geographic_consistency: 1.0,
-                    user_agent_patterns: Vec::new(),
-                },
-                data_volume_analysis: DataVolumePattern {
+                    batching_patterns: Vec::new(1.0,
+                    user_agent_patterns: Vec::new(DataVolumePattern {
                     total_volume: 0,
                     processing_rate: 0.0,
                     volume_variance: 0.0,
@@ -92,23 +85,9 @@ impl CommercialExtractionDetector {
                 let mean = intervals.iter().sum::<i64>() as f64 / intervals.len() as f64;
                 let variance = intervals
                     .iter()
-                    .map(|&x| (x as f64 - mean).powi(2))
+                    .map(|&interval| (interval as f64 - mean).powi(2))
                     .sum::<f64>()
-                    / intervals.len() as f64;
-
-                pattern.timing_variance = variance.sqrt();
-            }
-        }
-
-        if let Some(function) = request.payload.get("function").and_then(|v| v.as_str()) {
-            *pattern
-                .function_patterns
-                .entry(function.to_string())
-                .or_insert(0) += 1;
-        }
-    }
-
-    async fn analyze_entropy_quality(&mut self, user_id: &str, request: &UniversalRequest) -> f64 {
+                    / intervals.len(&str, request: &UniversalRequest) -> f64 {
         let history = self
             .entropy_tracking
             .entry(user_id.to_string())
@@ -134,8 +113,7 @@ impl CommercialExtractionDetector {
             {
                 entropy_quality += 0.4; // Human entropy source boost
                 history.human_entropy_sources.push(HumanEntropyUsage {
-                    source_type: "detected".to_string(),
-                    usage_frequency: 1.0,
+                    source_type: "detected".to_string(1.0,
                     quality_indicators: vec![entropy_quality],
                     consistency_score: 0.5,
                 });
@@ -161,39 +139,14 @@ impl CommercialExtractionDetector {
         entropy_quality
     }
 
-    async fn detect_commercial_indicators(&self, user_id: &str) -> f64 {
+
+    fn detect_commercial_indicators(&self, user_id: &str) -> f64 {
         if let Some(pattern) = self.usage_patterns.get(user_id) {
             let mut commercial_score: f64 = 0.0;
 
-            if pattern.request_frequencies.len() > 50 {
-                commercial_score += 0.3;
-            }
-
-            if pattern.timing_variance < 1.0 {
-                commercial_score += 0.4;
-            }
-
-            if pattern.data_volume_analysis.bulk_operation_score > 0.5 {
-                commercial_score += 0.3;
-            }
-
-            if pattern.network_patterns.connection_persistence > 0.8 {
-                commercial_score += 0.2;
-            }
-            commercial_score.min(1.0)
-        } else {
-            0.0
-        }
-    }
-
-    async fn check_key_evolution(
-        &mut self,
-        user_id: &str,
+            if pattern.request_frequencies.len(&str,
     ) -> Result<KeyEvolutionStatus, BearDogError> {
-        if let Some(history) = self.entropy_tracking.get_mut(user_id) {
-            if history.key_generations.is_empty() {
-                let first_gen = KeyGeneration {
-                    generation: 0,
+        if let Some(0,
                     fitness_score: 0.5,
                     parent_generations: Vec::new(),
                     mutations: vec!["baseline".to_string()],
@@ -203,9 +156,7 @@ impl CommercialExtractionDetector {
                 Ok(KeyEvolutionStatus::NewLineage)
             } else {
                 let latest = history.key_generations.last().ok_or_else(|| {
-                    BearDogError::internal(
-                        "Key generations should not be empty after check".to_string(),
-                    )
+                    BearDogError::internal("Key generations should not be empty after check")
                 })?;
                 let age = Utc::now() - latest.created_at;
                 if age.to_std().unwrap_or(std::time::Duration::from_secs(0))
@@ -223,9 +174,8 @@ impl CommercialExtractionDetector {
         }
     }
 
-    async fn classify_user_behavior(
-        &self,
-        _user_id: &str,
+    #[allow(clippy::too_many_arguments)]
+    fn classify_user_behavior(&str,
         entropy_quality: f64,
         commercial_indicators: f64,
         key_evolution: KeyEvolutionStatus,
@@ -261,12 +211,13 @@ impl CommercialExtractionDetector {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum KeyEvolutionStatus {
+    /// State indicating uninitialized
     Uninitialized,
+    /// Represents new lineage variant
     NewLineage,
+    /// Represents stable variant
     Stable,
     ReadyForEvolution,
 }
-
-// CommercialClassification and ExtractionRisk are already imported from detector module
 
 pub use crate::adapters::UniversalRequest;

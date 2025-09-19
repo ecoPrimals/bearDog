@@ -1,3 +1,7 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -13,6 +17,7 @@ pub struct SafePinnedBuffer {
 }
 
 impl SafePinnedBuffer {
+    /// Creates a new instance
     pub fn new(size: usize) -> Self {
         Self {
             data: vec![0u8; size],
@@ -28,6 +33,7 @@ impl SafePinnedBuffer {
         self.size
     }
 
+    /// Creates instance with slice
     pub fn with_slice<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&[u8]) -> R,
@@ -35,6 +41,7 @@ impl SafePinnedBuffer {
         f(&self.data)
     }
 
+    /// Creates instance with mut slice
     pub fn with_mut_slice<F, R>(&mut self, f: F) -> R
     where
         F: FnOnce(&mut [u8]) -> R,
@@ -54,6 +61,7 @@ impl<const SIZE: usize> Default for SafePooledBuffer<SIZE> {
 }
 
 impl<const SIZE: usize> SafePooledBuffer<SIZE> {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             buffer: SafePinnedBuffer::new(SIZE),
@@ -64,6 +72,7 @@ impl<const SIZE: usize> SafePooledBuffer<SIZE> {
         &self.buffer
     }
 
+    /// Returns mutable reference to buffer
     pub fn buffer_mut(&mut self) -> &mut SafePinnedBuffer {
         &mut self.buffer
     }
@@ -75,8 +84,11 @@ impl<const SIZE: usize> SafePooledBuffer<SIZE> {
 
 #[derive(Debug, Clone)]
 pub struct BufferPoolMetrics {
+    /// Number of total_requests
     pub total_requests: u64,
+    /// Number of cache_hits
     pub cache_hits: u64,
+    /// Number of cache_misses
     pub cache_misses: u64,
 }
 
@@ -87,6 +99,7 @@ impl Default for BufferPoolMetrics {
 }
 
 impl BufferPoolMetrics {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             total_requests: 0,
@@ -110,6 +123,7 @@ pub struct SafeBufferPool<const SIZE: usize> {
 }
 
 impl<const SIZE: usize> SafeBufferPool<SIZE> {
+    /// Creates a new instance
     pub fn new(initial_capacity: usize) -> Self {
         let mut available = Vec::with_capacity(initial_capacity);
         for _ in 0..initial_capacity {
@@ -122,6 +136,8 @@ impl<const SIZE: usize> SafeBufferPool<SIZE> {
         }
     }
 
+    /// Gets buffer
+    /// Gets buffer
     pub async fn get_buffer(&self) -> SafePooledBuffer<SIZE> {
         if let Some(_buffer) = self.available.lock().await.pop() {
             let mut metrics = self.metrics.lock().await;
@@ -154,6 +170,7 @@ impl Default for EnhancedMemoryPools {
 }
 
 impl EnhancedMemoryPools {
+    /// Creates a new instance
     pub fn new() -> Self {
         Self {
             small_pool: SafeBufferPool::new(10),
@@ -162,14 +179,20 @@ impl EnhancedMemoryPools {
         }
     }
 
+    /// Gets small
+    /// Gets small
     pub async fn get_small(&self) -> SafePooledBuffer<{ buffer_sizes::SMALL }> {
         self.small_pool.get_buffer().await
     }
 
+    /// Gets medium
+    /// Gets medium
     pub async fn get_medium(&self) -> SafePooledBuffer<{ buffer_sizes::MEDIUM }> {
         self.medium_pool.get_buffer().await
     }
 
+    /// Gets large
+    /// Gets large
     pub async fn get_large(&self) -> SafePooledBuffer<{ buffer_sizes::LARGE }> {
         self.large_pool.get_buffer().await
     }
@@ -198,28 +221,28 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_buffer_pool_operations() {
+    fn test_buffer_pool_operations() {
         let pool: SafeBufferPool<1024> = SafeBufferPool::new(2);
-        let _buffer1 = pool.get_buffer().await;
-        let _buffer2 = pool.get_buffer().await;
-        assert!(pool.metrics().await.total_requests >= 2);
+        let _buffer1 = pool.get_buffer();
+        let _buffer2 = pool.get_buffer();
+        assert!(pool.metrics().total_requests >= 2);
     }
 
     #[tokio::test]
-    async fn test_enhanced_memory_pools() {
+    fn test_enhanced_memory_pools() {
         let pools = EnhancedMemoryPools::new();
-        let small = pools.get_small().await;
-        let medium = pools.get_medium().await;
-        let large = pools.get_large().await;
+        let small = pools.get_small();
+        let medium = pools.get_medium();
+        let large = pools.get_large();
         assert_eq!(small.size(), buffer_sizes::SMALL);
         assert_eq!(medium.size(), buffer_sizes::MEDIUM);
         assert_eq!(large.size(), buffer_sizes::LARGE);
-        let metrics = pools.all_metrics().await;
+        let metrics = pools.all_metrics();
         assert!(metrics.total_requests >= 3);
     }
 
     #[tokio::test]
-    async fn test_safe_pinned_buffer_operations() {
+    fn test_safe_pinned_buffer_operations() {
         let mut buffer = SafePinnedBuffer::new(1024);
 
         buffer.with_mut_slice(|slice| {

@@ -4,16 +4,8 @@ use super::types::OutputFormat;
 use clap::Subcommand;
 use std::path::PathBuf;
 
-#[derive(Debug, Subcommand)]
-pub enum ConfigOperation {
-
-    Get {
-
-        #[arg(long)]
-        key: String,
-
-        #[arg(long, value_enum, default_value = "json")]
-        format: OutputFormat,
+#[derive(Debug, Clone)]
+        #[arg(OutputFormat,
 
         show_path: bool,
     },
@@ -44,8 +36,7 @@ pub enum ConfigOperation {
 
         output: PathBuf,
 
-        #[arg(long, default_value = "toml")]
-        format: String,
+        #[arg(String,
 
         include_defaults: bool,
 

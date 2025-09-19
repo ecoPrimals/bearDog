@@ -5,6 +5,9 @@ use beardog_errors::BearDogError;
 use super::types::*;
 impl CrossNodeAuthEngine {
 
+/// Get Ecosystem Capabilities operation.
+    /// Gets ecosystem_capabilities
+    /// Gets ecosystem_capabilities
     pub fn get_ecosystem_capabilities(&self, node_id: &str) -> Vec<NodeCapability> {
 
         let mut capabilities = Vec::new();
@@ -31,9 +34,8 @@ impl CrossNodeAuthEngine {
         capabilities
     }
 
-    pub async fn evaluate_network_effects(
-        &self,
-        operation: &NetworkOperation,
+/// Evaluate Network Effects operation.
+    pub fn evaluate_network_effects(&NetworkOperation,
     ) -> Result<NetworkEffectAnalysis, BearDogError> {
 
         let mut affected_nodes = Vec::new();
@@ -69,7 +71,11 @@ impl CrossNodeAuthEngine {
             security_implications,
         })
 
-    pub async fn discover_node_capabilities(&self, node_id: &str) -> Result<Vec<NodeCapability>, BearDogError>> {
+/// Discover Node Capabilities operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn discover_node_capabilities(&self, node_id: &str) -> Result<Vec<NodeCapability>, BearDogError>> {
 
         let capabilities = if node_id.starts_with("hsm_") {
             vec![
@@ -85,7 +91,11 @@ impl CrossNodeAuthEngine {
                 NodeCapability::NetworkCommunication,
         Ok(capabilities)
 
-    pub async fn analyze_network_effects(&self, capabilities: &[NodeCapability]) -> Result<f64, BearDogError> {
+/// Analyze Network Effects operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn analyze_network_effects(&self, capabilities: &[NodeCapability]) -> Result<f64, BearDogError> {
 
         let base_score = capabilities.len() as f64 * 0.1;
 

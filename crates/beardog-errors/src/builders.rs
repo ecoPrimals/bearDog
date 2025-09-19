@@ -1,5 +1,9 @@
-use beardog_errors::BearDogError;
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
+
+use beardog_errors::BearDogError;
 
 use crate::BearDogError; // Use canonical definition from lib.rs
 use crate::error_types::{
@@ -25,94 +29,101 @@ pub struct EnhancedErrorBuilder {
 }
 impl EnhancedErrorBuilder {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(error_code: &str) -> Self {
         Self {
             error_code,
             severity: ErrorSeverity::Medium,
             category: ErrorCategory::Internal,
-            message: String::with_capacity(64),
-            technical_details: None,
+            message: String::with_capacity(None,
             component: "unknown".to_string(),
-            operation: None,
-            user_id: None,
-            request_id: None,
             metadata: HashMap::with_capacity(16),
-            remediation_actions: Vec::new(),
-            retryable: false,
+            remediation_actions: Vec::new(false,
             retry_after_seconds: None,
             related_errors: Vec::new(),
         }
     }
 
+/// Severity operation.
     pub fn severity(mut self, severity: ErrorSeverity) -> Self {
         self.severity = severity;
         self
     }
 
+/// Category operation.
     pub fn category(mut self, category: ErrorCategory) -> Self {
         self.category = category;
         self
     }
 
+/// Message operation.
     pub fn message(mut self, message: impl Into<&str>) -> Self {
         self.message = message.into();
         self
     }
 
+/// Technical Details operation.
     pub fn technical_details(mut self, details: impl Into<&str>) -> Self {
         self.technical_details = Some(details.into());
         self
     }
 
+/// Component operation.
     pub fn component(mut self, component: impl Into<&str>) -> Self {
         self.component = component.into();
         self
     }
 
+/// Operation operation.
     pub fn operation(mut self, operation: impl Into<&str>) -> Self {
         self.operation = Some(operation.into());
         self
     }
 
+/// User Id operation.
     pub fn user_id(mut self, user_id: impl Into<&str>) -> Self {
         self.user_id = Some(user_id.into());
         self
     }
 
+/// Request Id operation.
     pub fn request_id(mut self, request_id: impl Into<&str>) -> Self {
-        self.request_id = Some(request_id.into());
-        self
-    }
-
-    pub fn metadata(mut self, key: impl Into<&str>, value: serde_json::Value) -> Self {
+        self.request_id = Some(impl Into<&str>, value: serde_json::Value) -> Self {
         self.metadata.insert(key.into(), value);
         self
     }
 
+/// Remediation Action operation.
     pub fn remediation_action(mut self, action: RemediationAction) -> Self {
         self.remediation_actions.push(action);
         self
     }
 
+/// Retryable operation.
     pub fn retryable(mut self, retryable: bool) -> Self {
         self.retryable = retryable;
         self
     }
 
+/// Retry After operation.
     pub fn retry_after(mut self, seconds: u64) -> Self {
         self.retry_after_seconds = Some(seconds);
         self
     }
 
+/// Related Error operation.
     pub fn related_error(mut self, error_code: impl Into<&str>) -> Self {
         self.related_errors.push(error_code.into());
         self
     }
 
+/// Build operation.
+    /// Builds component
+    /// Builds component
     pub fn build(self) -> BearDogError {
         let context = ErrorContext {
-            timestamp: chrono::Utc::now(),
-            component: self.component,
+            timestamp: chrono::Utc::now(self.component,
             operation: self.operation,
             user_id: self.user_id,
             request_id: self.request_id,
@@ -121,14 +132,9 @@ impl EnhancedErrorBuilder {
         };
         
         let info = EnhancedErrorInfo {
-            error_code: self.error_code.clone(),
-            severity: self.severity,
-            category: self.category,
-            message: self.message,
-            technical_details: self.technical_details,
-            context,
-            remediation_actions: self.remediation_actions,
-            retryable: self.retryable,
+            error_code: &self.error_code,
+            severity: self.severity: severity.to_string(),
+            remediation_actions: self.remediation_actions: actions.iter().map(std::string::ToString::to_string).collect(self.retryable,
             retry_after_seconds: self.retry_after_seconds,
             related_errors: self.related_errors,
         };

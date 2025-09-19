@@ -1,20 +1,11 @@
-
-
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
-    sync::{
-        atomic::AtomicU64,
-        Arc,
-    },
+    sync::{atomic::AtomicU64, Arc},
 };
 use tokio::sync::RwLock;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BenchmarkConfig {
-
-    pub iterations: usize,
-
+#[derive(Debug, Clone)]
     pub warmup_iterations: usize,
 
     pub max_duration_seconds: u64,
@@ -30,11 +21,7 @@ pub struct BenchmarkConfig {
     pub thresholds: PerformanceThresholds,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PerformanceThresholds {
-
-    pub encryption_ms_per_mb: f64,
-
+#[derive(Debug, Clone)]
     pub signature_generation_us: f64,
 
     pub signature_verification_us: f64,
@@ -53,9 +40,7 @@ pub struct PerformanceThresholds {
 }
 
 impl Default for BenchmarkConfig {
-    fn default() -> Self {
-        Self {
-            iterations: 1000,
+    fn default(1000,
             warmup_iterations: 100,
             max_duration_seconds: 300, // 5 minutes
             concurrency_levels: vec![1, 2, 4, 8, 16, 32],
@@ -82,10 +67,7 @@ pub struct PerformanceMetricsCollector {
     operation_counters: HashMap<String, Arc<AtomicU64>>,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct PerformanceMetrics {
-
-    pub crypto_encryption_ops_per_sec: f64,
+#[derive(Debug, Clone)]
     pub crypto_decryption_ops_per_sec: f64,
     pub crypto_signing_ops_per_sec: f64,
     pub crypto_verification_ops_per_sec: f64,
@@ -116,9 +98,7 @@ pub struct PerformanceMetrics {
     pub efficiency_score: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BenchmarkResult {
-    pub name: String,
+#[derive(Debug, Clone)]
     pub operations_per_second: f64,
     pub average_latency_ms: f64,
     pub p50_latency_ms: f64,
@@ -132,9 +112,7 @@ pub struct BenchmarkResult {
     pub concurrency_level: Option<usize>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BenchmarkReport {
-    pub suite_name: String,
+#[derive(Debug, Clone)]
     pub execution_time_seconds: f64,
     pub total_operations: u64,
     pub benchmark_results: Vec<BenchmarkResult>,
@@ -144,9 +122,7 @@ pub struct BenchmarkReport {
     pub recommendations: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SystemInfo {
-    pub os: String,
+#[derive(Debug, Clone)]
     pub cpu_model: String,
     pub cpu_cores: u32,
     pub memory_total_mb: u64,
@@ -161,51 +137,70 @@ impl PerformanceMetricsCollector {
         }
     }
 
-    pub async fn calculate_final_metrics(&self, results: &[BenchmarkResult]) -> PerformanceMetrics {
+    pub fn calculate_final_metrics(&self, results: &[BenchmarkResult]) -> PerformanceMetrics {
         let mut metrics = PerformanceMetrics::default();
 
-        let crypto_results: Vec<_> = results.iter().filter(|r| 
-            r.name.contains("Encryption") || r.name.contains("Signing") || r.name.contains("Hashing")
-        ).collect();
-        
+        let crypto_results: Vec<_> = results
+            .iter()
+            .filter(|r| {
+                r.name.contains("Encryption")
+                    || r.name.contains("Signing")
+                    || r.name.contains("Hashing")
+            })
+            .collect();
+
         if !crypto_results.is_empty() {
-            metrics.crypto_encryption_ops_per_sec = crypto_results.iter()
+            metrics.crypto_encryption_ops_per_sec = crypto_results
+                .iter()
                 .filter(|r| r.name.contains("Encryption"))
                 .map(|r| r.operations_per_second)
                 .fold(0.0, f64::max);
-            
-            metrics.crypto_signing_ops_per_sec = crypto_results.iter()
+
+            metrics.crypto_signing_ops_per_sec = crypto_results
+                .iter()
                 .filter(|r| r.name.contains("Signing"))
                 .map(|r| r.operations_per_second)
                 .fold(0.0, f64::max);
-            
-            metrics.crypto_hashing_ops_per_sec = crypto_results.iter()
+
+            metrics.crypto_hashing_ops_per_sec = crypto_results
+                .iter()
                 .filter(|r| r.name.contains("Hashing"))
                 .map(|r| r.operations_per_second)
                 .fold(0.0, f64::max);
         }
 
-        metrics.overall_throughput_ops_per_sec = results.iter()
+        metrics.overall_throughput_ops_per_sec = results
+            .iter()
             .map(|r| r.operations_per_second)
             .fold(0.0, f64::max);
 
-        metrics.peak_memory_usage_mb = results.iter()
+        metrics.peak_memory_usage_mb = results
+            .iter()
             .map(|r| r.memory_usage_mb)
             .fold(0.0, f64::max);
 
-        let concurrent_results: Vec<_> = results.iter()
+        let concurrent_results: Vec<_> = results
+            .iter()
             .filter(|r| r.name.contains("Concurrent"))
             .collect();
-        
+
         if concurrent_results.len() > 1 {
-            let min_ops = concurrent_results.iter().map(|r| r.operations_per_second).fold(f64::INFINITY, f64::min);
-            let max_ops = concurrent_results.iter().map(|r| r.operations_per_second).fold(0.0, f64::max);
-            metrics.system_scalability_score = (max_ops / min_ops).min(10.0) * 10.0; // Scale 0-100
+            let min_ops = concurrent_results
+                .iter()
+                .map(|r| r.operations_per_second)
+                .fold(f64::INFINITY, f64::min);
+            let max_ops = concurrent_results
+                .iter()
+                .map(|r| r.operations_per_second)
+                .fold(0.0, f64::max);
+            metrics.system_scalability_score = (max_ops / min_ops).min(10.0) * 10.0;
+            // Scale 0-100
         }
 
-        let pass_rate = results.iter().filter(|r| r.meets_threshold).count() as f64 / results.len() as f64;
+        let pass_rate =
+            results.iter().filter(|r| r.meets_threshold).count() as f64 / results.len() as f64;
         metrics.efficiency_score = pass_rate * 100.0;
 
         metrics
     }
-} 
+}

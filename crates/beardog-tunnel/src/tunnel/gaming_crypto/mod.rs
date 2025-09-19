@@ -1,4 +1,11 @@
 
+ /// Core functionality
+ /// Core functionality
+
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
 
 pub mod core;
 pub mod ecosystem_integration;

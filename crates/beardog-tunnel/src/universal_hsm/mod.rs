@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use beardog_types::canonical::crypto::KeyType;
 use beardog_types::canonical::KeyMetadata;
@@ -22,43 +27,45 @@ pub use registry::UniversalHsmRegistry;
 pub use traits::{
     AttestationData, EphemeralSeed, HumanEntropyCapabilities, HumanEntropyMethod, ProviderHealth,
     ProviderInfo, UniversalHsmProvider,
-#[derive(Debug)]};
-
-pub struct ProviderHealthMonitor {
-        provider_id: String,
+#[derive(Debug, Clone)]
     response_times: Vec<f64>,
 }
 impl ProviderHealthMonitor {}
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(provider_id: &str) -> Self {
         Self {
             provider_id,
             response_times: Vec::new(),
         }
     }
+/// Get Average Response Time operation.
+    /// Gets average_response_time
+    /// Gets average_response_time
     pub fn get_average_response_time(&self) -> Option<f64> {
         if self.response_times.is_empty() {
             None
         } else {
             Some(self.response_times.iter().sum::<f64>() / self.response_times.len() as f64)
+/// Record Response Time operation.
     pub fn record_response_time(&mut self, time_ms: f64) {
-        self.response_times.push(time_ms);
-
-        if self.response_times.len() > 100 {
-            self.response_times.remove(0);
-pub struct HsmRequirements {
-    pub security_level: beardog_types::canonical::hsm::traits::SecurityLevel,
+        self.response_times.push(beardog_types::canonical::hsm::traits::SecurityLevel,
+    /// The key type value
     pub key_type: beardog_types::canonical::KeyType,
+    /// Whether require_human_entropy is enabled
     pub require_human_entropy: bool,
+    /// Whether require_attestation is enabled
     pub require_attestation: bool,
+    /// Whether require_biometric is enabled
     pub require_biometric: bool,
+    /// Collection of preferred key types
     pub preferred_key_types: Vec<beardog_types::canonical::KeyType>,
     pub max_response_time_ms: Option<u64>,}
 
 impl Default for HsmRequirements {}
 
-    fn default() -> Self {
-            security_level: beardog_types::canonical::hsm::traits::SecurityLevel::Software,
+    fn default(beardog_types::canonical::hsm::traits::SecurityLevel::Software,
             key_type: beardog_types::canonical::KeyType::Ed25519,
             require_human_entropy: false,
             require_attestation: false,
@@ -82,7 +89,12 @@ pub struct UniversalHsmManager {
 
 impl UniversalHsmManager {
 
-    pub async fn new() -> Result<Self, BearDogError> {
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    pub fn new() -> Result<Self, BearDogError> {
         info!("🚀 Initializing Universal `HSM` Manager");
         let registry = Arc::new(RwLock::new(UniversalHsmRegistry::new()));
         let factory = UniversalHsmFactory::new();
@@ -98,36 +110,31 @@ impl UniversalHsmManager {
             health_monitors: HashMap::with_capacity(16),
         };
 
-        manager.auto_discover_providers().await?;
+        manager.auto_discover_providers()?;
         info!("✅ Universal `HSM` Manager initialized successfully");
         Ok(manager)
 
-    pub async fn auto_discover_providers(&mut self) -> Result<Vec<String>, BearDogError>> {
+/// Auto Discover Providers operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn auto_discover_providers(&mut self) -> Result<Vec<String>, BearDogError>> {
         info!("🔍 Auto-discovering `HSM` providers");
-        let discovered_provider_names = self.factory.auto_discover().await?;
-        let mut provider_ids = Vec::new();
-        for provider_name in discovered_provider_names {
-
-            let provider = match provider_name.as_str() {
-                "software" => {
-                    let software_provider = self.factory.create_software_provider().await?;
-                    software_provider as impl HsmProvider + Send + Sync
-                }
-                _ => {
-                    warn!("Unknown provider type: {}", provider_name);
+        let discovered_provider_names = self.factory.auto_discover()?;
+        let mut provider_ids = Vec::new({}", provider_name);
                     continue;
             };
             let provider_info = provider.get_provider_info();
-            let provider_id = format_args!("{}_{}", provider_info.name, provider_info.version).to_string();
+            let provider_id = format!("{}_{}", provider_info.name, provider_info.version);
 
             {
-                let registry = self.registry.write().await;
+                let registry = self.registry.write();
                 registry
                     .register_provider(provider_id.clone(), provider)
-                    .await?;
+                    ?;
             }
 
-            let health_monitor = ProviderHealthMonitor::new(provider_id.clone());
+            let health_monitor = ProviderHealthMonitor::new(&provider_id);
             self.health_monitors
                 .insert(provider_id.clone(), health_monitor);
             provider_ids.push(provider_id);
@@ -137,58 +144,37 @@ impl UniversalHsmManager {
             );
         info!(
             "🎯 Discovery complete: {} providers registered",
-            provider_ids.len()
-        );
-        Ok(provider_ids)
-
-    pub async fn get_best_provider(
-        &self,
-        requirements: HsmRequirements,
+            provider_ids.len(HsmRequirements,
     ) -> Result<impl HsmProvider + Send + Sync + 'static, BearDogError> {
         debug!(
             "🎯 Selecting best `HSM` provider for requirements: {:?}",
             requirements
-        let registry = self.registry.read().await;
-        let available_providers = registry.get_healthy_providers().await?;
+        let registry = self.registry.read();
+        let available_providers = registry.get_healthy_providers()?;
 
         let mut scored_providers = Vec::new();
         for (provider_id, provider) in available_providers {
-            let score = self.score_provider(&provider, &requirements).await?;
+            let score = self.score_provider(&provider, &requirements)?;
             scored_providers.push((provider_id, provider, score));
 
         scored_providers.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
         if let Some((provider_id, provider, score)) = scored_providers.first() {
                 "🏆 Selected provider: {} (score: {:.2})",
                 provider_id, score
-            Ok(provider.clone())
-            Err(BearDogError::Hsm("No suitable `HSM` provider found".to_string()))
-
-    pub async fn generate_key(
-        key_type: KeyType,
+            Ok(provider)
+            Err(BearDogError::Hsm(KeyType,
         metadata: KeyMetadata,
         requirements: Option<HsmRequirements>,
     ) -> Result<beardog_types::HsmKey, BearDogError> {
-        let requirements = requirements.unwrap_or_default();
-        let provider = self.get_best_provider(requirements).await?;
-            "🔑 Generating key using provider: {}",
-            provider.get_provider_info().name
-        provider.generate_key(key_type, metadata).await
-
-    pub async fn sign_data(
-        key_id: &str,
+        let requirements = requirements.unwrap_or_default({}",
+            provider.get_provider_info(&str,
         data: &[u8],
     ) -> Result<Vec<u8>, BearDogError>> {
             "✍️ Signing data using provider: {}",
-        provider.sign_data(key_id, data).await
-
-    pub async fn verify_signature(
-        signature: &[u8],
+        provider.sign_data(&[u8],
     ) -> Result<bool, BearDogError> {
             "🔍 Verifying signature using provider: {}",
-        provider.verify_signature(key_id, data, signature).await
-
-    pub async fn create_ephemeral_seed_with_human_entropy(
-        entropy_bits: u32,
+        provider.verify_signature(u32,
         quality_threshold: f64,
     ) -> Result<EphemeralSeed, BearDogError> {
             "🧠 Creating ephemeral seed with human entropy ({} bits)",
@@ -198,59 +184,33 @@ impl UniversalHsmManager {
             security_level: beardog_types::canonical::hsm::traits::SecurityLevel::Hardware,
             require_human_entropy: true,
             max_response_time_ms: Some(1000),
-        let entropy_capabilities = provider.get_human_entropy_capabilities().await?;
+        let entropy_capabilities = provider.get_human_entropy_capabilities()?;
         if !entropy_capabilities.supports_ephemeral_seeds {
             return Err(BearDogError::Hsm("Selected provider does not support ephemeral seed creation".to_string()));
 
         let entropy_method = entropy_capabilities
             .collection_methods
             .first()
-            .ok_or_else(|| BearDogError::Hsm("No entropy collection methods available".to_string()))?;
-        let entropy_data = provider
-            .collect_human_entropy(entropy_method, entropy_bits)
-            .await?;
-
-        let quality_score = self.quality_assessor.assess_quality(&entropy_data);
-        if quality_score < quality_threshold {
-            warn!(
-                "⚠️ Entropy quality below threshold: {:.2} < {:.2}",
+            .ok_or_else(|| BearDogError::Hsm({:.2} < {:.2}",
                 quality_score, quality_threshold
-            return Err(BearDogError::Hsm(format!("Entropy quality insufficient: {quality_score:.2)"},
+            return Err(BearDogError::Hsm({}quality_score:.2"},
             });
 
-        let seed = provider.create_ephemeral_seed(&entropy_data, 32).await?;
-            "✅ Created ephemeral seed with quality: {:.2}",
+        let seed = provider.create_ephemeral_seed({:.2}",
             quality_score
         Ok(seed)
 
-    pub async fn get_health_status(&self) -> Result<UniversalHsmHealthStatus, BearDogError> {
+/// Get Health Status operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets health_status
+    /// Gets health_status
+    pub fn get_health_status(&self) -> Result<UniversalHsmHealthStatus, BearDogError> {
         debug!("🏥 Getting Universal HSM health status");
-        let mut provider_health = HashMap::with_capacity(16);
-        let mut total_providers = 0;
-        let mut healthy_providers = 0;
-        let mut total_operations = 0u64;
-        let mut successful_operations = 0u64;
-        let mut failed_operations = 0u64;
-        let mut total_response_time = 0.0;
-        let mut response_count = 0;
-
-        let provider_ids = registry.list_provider_ids().await;
-        for provider_id in provider_ids {
-            if let Ok(Some(provider)) = registry.get_provider(&provider_id).await {
-                total_providers += 1;
-
-                let health = match provider.health_check().await {
-                    Ok(health) => {
-                        if health.is_healthy {
-                            healthy_providers += 1;
-                        }
-                        health
-                    }
-                    Err(e) => ProviderHealth {
-                        is_healthy: false,
+        let mut provider_health = HashMap::with_capacity(false,
                         error_message: Some(format!("Health check failed: {e}")),
-                        last_check: chrono::Utc::now(),
-                        response_time_ms: None,
+                        last_check: chrono::Utc::now(None,
                         capabilities_verified: false,
                     },
                 };
@@ -260,17 +220,9 @@ impl UniversalHsmManager {
                     successful_operations += 100;
                 } else {
                     failed_operations += 100;
-                if let Some(response_time) = health.response_time_ms {
-                    if response_time > 0.0 {
-                        total_response_time += response_time;
-                        response_count += 1;
-                provider_health.insert(
-                    provider_id.clone(),
-                    UniversalProviderHealth {
-                        is_healthy: health.is_healthy,
+                if let Some(health.is_healthy,
                         last_check: health.last_check,
-                        instance_id: provider_id.clone(),
-                        error_count: if health.is_healthy { 0 } else { 1 },
+                        instance_id: provider_id.clone(if health.is_healthy { 0 } else { 1 },
                         performance_metrics: UniversalProviderPerformanceMetrics {
                             operations_per_second: if let Some(response_time) =
                                 health.response_time_ms
@@ -283,8 +235,7 @@ impl UniversalHsmManager {
                             } else {
                                 0.0
                             },
-                            average_latency_ms: health.response_time_ms.unwrap_or(0.0),
-                            error_rate: if health.is_healthy { 0.0 } else { 1.0 },
+                            average_latency_ms: health.response_time_ms.unwrap_or(if health.is_healthy { 0.0 } else { 1.0 },
                         },
                 );
         let average_operation_time_ms = if response_count > 0 {
@@ -292,19 +243,7 @@ impl UniversalHsmManager {
             0.0
         let overall_healthy =
             healthy_providers > 0 && (healthy_providers as f64 / total_providers as f64) > 0.5;
-        Ok(UniversalHsmHealthStatus {
-            overall_healthy,
-            total_providers,
-            healthy_providers,
-            total_operations,
-            successful_operations,
-            failed_operations,
-            average_operation_time_ms,
-            provider_health,
-        })
-
-    async fn score_provider(
-        provider: &impl HsmProvider + Send + Sync + 'static,
+        Ok(&impl HsmProvider + Send + Sync + 'static,
         requirements: &HsmRequirements,
     ) -> Result<f64, BearDogError> {
         let provider_info = provider.get_provider_info();
@@ -318,61 +257,62 @@ impl UniversalHsmManager {
             beardog_types::canonical::hsm::traits::SecurityLevel::Software => 40.0,
 
         if requirements.require_human_entropy {
-            let entropy_caps = provider.get_human_entropy_capabilities().await?;
-            if entropy_caps.supports_ephemeral_seeds {
-                score += 50.0;
-
-        if requirements.require_attestation && provider_info.supports_attestation {
-            score += 30.0;
-
-        if let Some(health_monitor) = self.health_monitors.get(&provider_info.provider_id) {
-            if let Some(avg_response_time) = health_monitor.get_average_response_time() {
-
-                score += (1000.0 / avg_response_time.max(1.0)) * 10.0;
-        Ok(score)
-
-#[derive(Debug, Clone)]}
-
-pub struct UniversalHsmHealthStatus {
-    pub overall_healthy: bool,
+            let entropy_caps = provider.get_human_entropy_capabilities(bool,
     pub total_providers: usize,
     pub healthy_providers: usize,
+    /// Number of total_operations
     pub total_operations: u64,
+    /// Number of successful_operations
     pub successful_operations: u64,
+    /// Number of failed_operations
     pub failed_operations: u64,
     pub average_operation_time_ms: f64,
     pub provider_health: HashMap<String, UniversalProviderHealth>,
 
 pub struct UniversalProviderHealth {
+    /// Whether is_healthy is enabled
     pub is_healthy: bool,
+    /// The last check value
     pub last_check: chrono::DateTime<chrono::Utc>,
     pub instance_id: String,
+    /// Number of error
     pub error_count: u64,
     pub performance_metrics: UniversalProviderPerformanceMetrics,
 
 pub struct UniversalProviderPerformanceMetrics {
+    /// The operations per second value
     pub operations_per_second: f64,
+    /// The average latency ms value
     pub average_latency_ms: f64,
+    /// The error rate value
     pub error_rate: f64,
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SecurityLevel {
+    /// Represents software variant
     Software,
+    /// Represents tee variant
     Tee,
+    /// Represents hardware variant
     Hardware,
+    /// Represents certified hardware variant
     CertifiedHardware,
+    /// Represents maximum security variant
     MaximumSecurity,
+#[cfg(test)]}
+#[cfg(test)]}
 #[cfg(test)]}
 
 mod tests {
     use super::*;
     #[tokio::test]}
 
-    async fn test_universal_hsm_manager_creation() -> Result<(), BearDogError> {
-        let manager = UniversalHsmManager::new().await;
+
+    fn test_universal_hsm_manager_creation() -> Result<(), BearDogError> {
+        let manager = UniversalHsmManager::new();
         assert!(manager.is_ok());
         Ok(())
-    async fn test_hsm_requirements_default() -> Result<(), BearDogError> {
+    fn test_hsm_requirements_default() -> Result<(), BearDogError> {
         let requirements = HsmRequirements::default();
         assert_eq!(
             requirements.security_level,
@@ -380,6 +320,7 @@ mod tests {
         assert!(!requirements.require_human_entropy);
         assert!(!requirements.require_attestation);
     #[test]}
+
 
     fn test_security_level_ordering() -> Result<(), BearDogError> {
         assert!(SecurityLevel::MaximumSecurity > SecurityLevel::CertifiedHardware);

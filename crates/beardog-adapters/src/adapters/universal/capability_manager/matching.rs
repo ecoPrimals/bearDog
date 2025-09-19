@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -12,217 +17,285 @@ use super::super::traits::*;
 use super::monitoring::PerformanceMetrics;
 use beardog_errors::BearDogError;
 
-#[derive(Debug)]
-pub enum MatchingAlgorithmType {
-    Semantic(SemanticMatchingAlgorithm),
-    Fuzzy(FuzzyMatchingAlgorithm),
-    Exact(ExactMatchingAlgorithm),
-    Weighted(WeightedMatchingAlgorithm),
-}
-
-pub struct AdvancedCapabilityMatcher {
-
-    pub matching_algorithms: Vec<MatchingAlgorithmType>,
-
+#[derive(Debug, Clone)]
+    /// The matching history value
     pub matching_history: Arc<RwLock<HashMap<String, MatchingOutcome>>>,
 
+    /// The ecosystem preferences value
     pub ecosystem_preferences: Arc<RwLock<HashMap<String, MatchingPreferences>>>,
 }
 
 pub trait MatchingAlgorithm: Send + Sync {
-    fn algorithm_name(&self) -> &str;
-    fn calculate_match_score(
-        &self,
-        requirement: &CapabilityRequirement,
+    fn algorithm_name(&CapabilityRequirement,
         capability: &Capability,
         context: &MatchingContext,
     ) -> Result<f64, BearDogError>;
 
 #[derive(Debug, Clone)]
-pub struct CapabilityRequirement {
-
-    pub requirement_id: String,
-
+    /// The capability category value
     pub capability_category: CapabilityCategory,
 
+    /// Mapping of required attributes
     pub required_attributes: HashMap<String, RequiredAttribute>,
 
+    /// The qos requirements value
     pub qos_requirements: QoSRequirements,
 
+    /// The resource constraints value
     pub resource_constraints: ResourceConstraints,
 
+    /// The priority value
     pub priority: RequirementPriority,
 
+    /// Optional deadline
     pub deadline: Option<DateTime<Utc>>,
 
 pub struct RequiredAttribute {
 
+    /// The value value
     pub value: String,
 
+    /// The operator value
     pub operator: AttributeOperator,
 
+    /// The weight value
     pub weight: f64,
 
+    /// Whether required is enabled
     pub required: bool,
 
 pub enum AttributeOperator {
 
+
+    /// Represents equals variant
     Equals,
 
+
+    /// Represents not equals variant
     NotEquals,
 
+
+    /// Represents greater than variant
     GreaterThan,
 
+
+    /// Represents less than variant
     LessThan,
 
+
+    /// Represents greater or equal variant
     GreaterOrEqual,
 
+
+    /// Represents less or equal variant
     LessOrEqual,
 
+
+    /// Represents contains variant
     Contains,
 
+
+    /// Represents starts with variant
     StartsWith,
 
+
+    /// Represents ends with variant
     EndsWith,
 
+
+    /// Represents matches variant
     Matches,
 
 pub struct QoSRequirements {
 
+
     pub max_response_time_ms: Option<u64>,
 
+    /// Optional min availability percent
     pub min_availability_percent: Option<f64>,
 
+    /// Optional min throughput
     pub min_throughput: Option<ThroughputRequirement>,
 
+    /// Optional max error rate percent
     pub max_error_rate_percent: Option<f64>,
 
+    /// Collection of reliability requirements
     pub reliability_requirements: Vec<ReliabilityRequirement>,
 
 pub struct ThroughputRequirement {
 
+    /// Number of min_value
     pub min_value: u64,
 
+    /// The unit value
     pub unit: String,
 
+    /// The sustained duration value
     pub sustained_duration: Duration,
 
 pub struct ReliabilityRequirement {
 
+    /// The requirement type value
     pub requirement_type: ReliabilityType,
 
+    /// The threshold value
     pub threshold: f64,
 
+    /// The measurement period value
     pub measurement_period: Duration,
-
+/// Types of reliability
 pub enum ReliabilityType {
 
+
+    /// Represents uptime variant
     Uptime,
 
+
+    /// Represents data consistency variant
     DataConsistency,
 
+
+    /// Represents fault tolerance variant
     FaultTolerance,
 
+
+    /// Represents disaster recovery variant
     DisasterRecovery,
 
+
+    /// Represents backup integrity variant
     BackupIntegrity,
 
-#[derive(Debug, Clone, Default)]}
-
-pub struct ResourceConstraints {
-
-    pub max_cpu_cores: Option<u32>,
-
+#[derive(Debug, Clone)]
+    /// Optional max memory mb
     pub max_memory_mb: Option<u64>,
 
+    /// Optional max storage gb
     pub max_storage_gb: Option<u64>,
 
+    /// Optional max network mbps
     pub max_network_mbps: Option<u32>,
 
+    /// Collection of geographic restrictions
     pub geographic_restrictions: Vec<String>,
 
+    /// Collection of compliance requirements
     pub compliance_requirements: Vec<String>,
 
 pub enum RequirementPriority {
 
+
+    /// Represents low variant
     Low,
 
+
+    /// Represents medium variant
     Medium,
 
+
+    /// Represents high variant
     High,
 
+
+    /// Represents critical variant
     Critical,
 
+
+    /// Represents emergency variant
     Emergency,
 
 pub struct MatchingContext {
 
+    /// The requester ecosystem value
     pub requester_ecosystem: String,
 
+    /// The requester instance value
     pub requester_instance: String,
+
 
     pub request_timestamp: DateTime<Utc>,
 
+
     pub performance_history: Option<HashMap<String, PerformanceMetrics>>,
 
+    /// Mapping of ecosystem load
     pub ecosystem_load: HashMap<String, f64>,
 
+    /// Mapping of current conditions
     pub current_conditions: HashMap<String, String>,
 
 pub struct MatchingOutcome {
 
+
     pub match_id: String,
 
+    /// The requirement value
     pub requirement: CapabilityRequirement,
 
+    /// The selected capability value
     pub selected_capability: String,
 
+    /// The match score value
     pub match_score: f64,
 
+    /// Collection of alternatives
     pub alternatives: Vec<AlternativeMatch>,
+
 
     pub selection_timestamp: DateTime<Utc>,
 
+
     pub actual_performance: Option<PerformanceMetrics>,
 
+    /// Optional satisfaction score
     pub satisfaction_score: Option<f64>,
 
 pub struct AlternativeMatch {
 
+
     pub capability_id: String,
+
 
     pub provider_key: String,
 
+    /// Optional rejection reason
     pub rejection_reason: Option<String>,
 
 pub struct MatchingPreferences {
 
+
     pub ecosystem_id: String,
+
 
     pub preferred_providers: Vec<String>,
 
+    /// Mapping of algorithm weights
     pub algorithm_weights: HashMap<String, f64>,
+
 
     pub quality_vs_performance_bias: f64,
 
+    /// The risk tolerance value
     pub risk_tolerance: f64,
 
+    /// The innovation preference value
+    pub innovation_preference: f64,}
+    pub innovation_preference: f64,}
     pub innovation_preference: f64,}
 
 impl AdvancedCapabilityMatcher {
 
-    pub async fn new() -> Result<Self, BearDogError> {
-        Ok(Self {
-            matching_algorithms: vec![
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    pub fn new(vec![
 
             ],
             matching_history: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            ecosystem_preferences: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-        })
-    }
-
-    pub async fn find_matches(
-        available_capabilities: &[Capability],
+            ecosystem_preferences: Arc::new(RwLock::new(HashMap::with_capacity(&[Capability],
     ) -> Result<Vec<CapabilityMatch>, BearDogError>> {
         info!(
             "🔍 Finding matches for requirement: {}",
@@ -248,9 +321,8 @@ impl AdvancedCapabilityMatcher {
 
             if average_score > 0.3 {
                 matches.push(CapabilityMatch {
-                    capability: capability.clone(),
-                    provider_ecosystem: context.requester_ecosystem.clone(),
-                    provider_instance: context.requester_instance.clone(),
+                    capability: capability.clone(&context.requester_ecosystem,
+                    provider_instance: &context.requester_instance,
                     match_score: average_score,
                     compatibility_reasons: algorithm_scores
                         .iter()
@@ -265,43 +337,7 @@ impl AdvancedCapabilityMatcher {
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
 
-        self.record_matching_outcome(requirement, &matches, context)
-            .await?;
-        info!("✅ Found {} capability matches", matches.len());
-        Ok(matches)
-
-    fn calculate_basic_match_score(
-    ) -> f64 {
-
-        let category_match = if capability.category == requirement.capability_category {
-            1.0
-        } else {
-            0.0
-        };
-
-        let attribute_score = self.calculate_attribute_match_score(requirement, capability);
-
-        (category_match * 0.4) + (attribute_score * 0.6)
-
-    fn calculate_attribute_match_score(
-        if requirement.required_attributes.is_empty() {
-            return 1.0;
-        let mut total_score = 0.0;
-        let mut total_weight = 0.0;
-        for (attr_name, required_attr) in &requirement.required_attributes {
-            if let Some(capability_attribute) = capability.attributes.get(attr_name) {
-                let match_score =
-                    self.evaluate_attribute_match(required_attr, &capability_attribute.value);
-                total_score += match_score * required_attr.weight;
-                total_weight += required_attr.weight;
-            } else if required_attr.required {
-
-                return 0.0;
-        if total_weight > 0.0 {
-            total_score / total_weight
-
-    fn evaluate_attribute_match(
-        required_attr: &RequiredAttribute,
+        self.record_matching_outcome(&RequiredAttribute,
         capability_value: &str,
         match required_attr.operator {
             AttributeOperator::Equals => {
@@ -317,13 +353,7 @@ impl AdvancedCapabilityMatcher {
             AttributeOperator::StartsWith => {
                 if capability_value.starts_with(&required_attr.value) {
             AttributeOperator::EndsWith => {
-                if capability_value.ends_with(&required_attr.value) {
-            _ => {
-
-                0.5
-
-    async fn record_matching_outcome(
-        matches: &[CapabilityMatch],
+                if capability_value.ends_with(&[CapabilityMatch],
         _context: &MatchingContext,
     ) -> Result<(), BearDogError> {
         let outcome = MatchingOutcome {
@@ -331,7 +361,7 @@ impl AdvancedCapabilityMatcher {
             requirement: requirement.clone(),
             selected_capability: matches
                 .first()
-                .map(|m| m.capability.id.clone())
+                .map(&|m| m.capability.id)
                 .unwrap_or_default(),
             match_score: matches.first().map(|m| m.match_score).unwrap_or(0.0),
             alternatives: matches
@@ -339,106 +369,71 @@ impl AdvancedCapabilityMatcher {
                 .skip(1)
                 .take(5)
                 .map(|m| AlternativeMatch {
-                    capability_id: m.capability.id.clone(),
-                    provider_key: format_args!("{}:{}", m.provider_ecosystem, m.provider_instance).to_string(),
+                    capability_id: m.&capability.id: id.to_string(),
                     match_score: m.match_score,
                     rejection_reason: None,
                 })
                 .collect(),
-            selection_timestamp: Utc::now(),
-            actual_performance: None,
+            selection_timestamp: Utc::now(None,
             satisfaction_score: None,
         self.matching_history
-            .write()
-            .await
-            .insert(outcome.match_id.clone(), outcome);
-        Ok(())
-
-    pub async fn get_matching_history(&self) -> Result<Vec<MatchingOutcome>, BearDogError>> {
-        let history = self.matching_history.read().await;
-        Ok(history.values().cloned().collect())
-
-    pub async fn update_preferences(
-        ecosystem_id: &str,
+            .write(&str,
         preferences: MatchingPreferences,
         self.ecosystem_preferences
-            .insert(ecosystem_id.to_string(), preferences);
-
-    pub async fn get_preferences(
-    ) -> Result<Option<MatchingPreferences>, BearDogError>> {
-        let preferences = self.ecosystem_preferences.read().await;
-        Ok(preferences.get(ecosystem_id).cloned())
-
-impl CapabilityRequirement {
-
-    pub fn new(
-        capability_category: CapabilityCategory,
+            .insert(CapabilityCategory,
         required_attributes: HashMap<&str, RequiredAttribute>,
         qos_requirements: QoSRequirements,
         resource_constraints: ResourceConstraints,
         priority: RequirementPriority,
     ) -> Self {
         Self {
-            requirement_id: Uuid::new_v4().to_string(),
-            capability_category,
-            required_attributes,
-            qos_requirements,
-            resource_constraints,
-            priority,
-            deadline: None,
+            requirement_id: Uuid::new_v4(None,
 
+/// With Deadline operation.
+    /// Creates instance with deadline
     pub fn with_deadline(mut self, deadline: DateTime<Utc>) -> Self {
         self.deadline = Some(deadline);
         self
 
+/// Is Expired operation.
+    /// Checks if expired
+    /// Checks if expired
     pub fn is_expired(&self) -> bool {
         if let Some(deadline) = self.deadline {
-            Utc::now() > deadline
-            false
-impl RequiredAttribute {
-
-    pub fn new(value: &str, operator: AttributeOperator, weight: f64, required: bool) -> Self {
+            Utc::now(&str, operator: AttributeOperator, weight: f64, required: bool) -> Self {
             value,
             operator,
-            weight: weight.clamp(0.0, 1.0),
-            required,
-
-    pub fn equals(value: &str, weight: f64) -> Self {
+            weight: weight.clamp(&str, weight: f64) -> Self {
         Self::new(value, AttributeOperator::Equals, weight, true)
 
-    pub fn contains(value: &str, weight: f64) -> Self {
+/// Contains operation.
+    pub fn contains(&str, weight: f64) -> Self {
         Self::new(value, AttributeOperator::Contains, weight, false)
 impl Default for QoSRequirements {}
 
     fn default() -> Self {
             max_response_time_ms: Some(1000),
-            min_availability_percent: Some(99.0),
-            min_throughput: None,
+            min_availability_percent: Some(None,
             max_error_rate_percent: Some(1.0),
             reliability_requirements: Vec::new(),
 impl QoSRequirements {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         Self::default()
 
     pub fn high_performance() -> Self {
             max_response_time_ms: Some(100),
-            min_availability_percent: Some(99.9),
-            min_throughput: Some(ThroughputRequirement {
+            min_availability_percent: Some(Some(ThroughputRequirement {
                 min_value: 1000,
                 unit: "requests/sec".to_string(),
                 sustained_duration: Duration::from_secs(60),
             }),
-            max_error_rate_percent: Some(0.1),
-            reliability_requirements: vec![ReliabilityRequirement {
+            max_error_rate_percent: Some(vec![ReliabilityRequirement {
                 requirement_type: ReliabilityType::Uptime,
                 threshold: 99.99,
-                measurement_period: Duration::from_secs(3600),
-            }],
-impl ResourceConstraints {
-
-    pub fn strict(
-        max_cpu_cores: u32,
+                measurement_period: Duration::from_secs(u32,
         max_memory_mb: u64,
         max_storage_gb: u64,
         max_network_mbps: u32,
@@ -447,34 +442,26 @@ impl ResourceConstraints {
             max_storage_gb: Some(max_storage_gb),
             max_network_mbps: Some(max_network_mbps),
             geographic_restrictions: Vec::new(),
-            compliance_requirements: Vec::new(),
-impl MatchingContext {
-
-    pub fn new(requester_ecosystem: &str, requester_instance: &str) -> Self {
+            compliance_requirements: Vec::new(&str, requester_instance: &str) -> Self {
             requester_ecosystem,
             requester_instance,
-            request_timestamp: Utc::now(),
-            performance_history: None,
+            request_timestamp: Utc::now(None,
             ecosystem_load: HashMap::with_capacity(16),
-            current_conditions: HashMap::with_capacity(16),
-
-    pub fn with_performance_history(
-        mut self,
-        history: HashMap<&str, PerformanceMetrics>,
-        self.performance_history = Some(history);
-
-    pub fn with_ecosystem_load(mut self, load: HashMap<&str, f64>) -> Self {
+            current_conditions: HashMap::with_capacity(HashMap<&str, PerformanceMetrics>,
+        self.performance_history = Some(HashMap<&str, f64>) -> Self {
         self.ecosystem_load = load;
 
-    pub fn with_conditions(mut self, conditions: HashMap<&str, &str>) -> Self {
+/// With Conditions operation.
+    /// Creates instance with conditions
+    pub fn with_conditions(HashMap<&str, &str>) -> Self {
         self.current_conditions = conditions;
 impl MatchingPreferences {
 
+/// Default operation.
     pub fn default(ecosystem_id: &str) -> Self {
             ecosystem_id,
             preferred_providers: Vec::new(),
             algorithm_weights: HashMap::with_capacity(16),
-            quality_vs_performance_bias: 0.5,
             risk_tolerance: 0.3,
             innovation_preference: 0.2,
 
@@ -483,6 +470,7 @@ impl MatchingPreferences {
             risk_tolerance: 0.6,
             innovation_preference: 0.1,
 
+/// Quality Focused operation.
     pub fn quality_focused(ecosystem_id: &str) -> Self {
             quality_vs_performance_bias: 0.8, // Favor quality
             risk_tolerance: 0.1,

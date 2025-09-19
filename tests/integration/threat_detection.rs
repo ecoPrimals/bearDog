@@ -7,7 +7,7 @@ use beardog::tunnel::events::types::ThreatLevel;
 
 #[tokio::test]
 async fn test_threat_detection_engine() -> Result<(), BearDogError> {
-    let core = create_test_core().await?;
+    let core = create_test_core()?;
 
     let threat_engine = core.threat_detection_engine();
 
@@ -18,14 +18,13 @@ async fn test_threat_detection_engine() -> Result<(), BearDogError> {
         user_id: Some("test-user".to_string()),
         resource: "sensitive-file.txt".to_string(),
         action: "read".to_string(),
-        timestamp: chrono::Utc::now(),
-        metadata: serde_json::json!({
+        timestamp: chrono::Utc::now(serde_json::json!({
             "file_path": "/secure/sensitive-file.txt",
             "access_pattern": "unusual_time"
         }),
     };
 
-    let analysis_result = threat_engine.analyze_event(event).await?;
+    let analysis_result = threat_engine.analyze_event(event)?;
 
     assert!(!analysis_result.threat_id.is_empty());
     assert!(analysis_result.confidence >= 0.0 && analysis_result.confidence <= 1.0);
@@ -35,7 +34,7 @@ async fn test_threat_detection_engine() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_threat_detection_file_integrity() -> Result<(), BearDogError> {
-    let core = create_test_core().await?;
+    let core = create_test_core()?;
     let threat_engine = core.threat_detection_engine();
 
     let integrity_event = SecurityEvent {
@@ -45,15 +44,14 @@ async fn test_threat_detection_file_integrity() -> Result<(), BearDogError> {
         user_id: Some("admin".to_string()),
         resource: "system-config.conf".to_string(),
         action: "write".to_string(),
-        timestamp: chrono::Utc::now(),
-        metadata: serde_json::json!({
+        timestamp: chrono::Utc::now(serde_json::json!({
             "file_hash_before": "abc123",
             "file_hash_after": "def456",
             "modification_type": "unauthorized"
         }),
     };
 
-    let analysis = threat_engine.analyze_event(integrity_event).await?;
+    let analysis = threat_engine.analyze_event(integrity_event)?;
 
     assert!(analysis.confidence > 0.7);
     assert!(matches!(analysis.threat_level, ThreatLevel::High | ThreatLevel::Critical));

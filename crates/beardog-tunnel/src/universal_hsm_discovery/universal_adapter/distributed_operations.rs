@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::core_types::*;
 use beardog_errors::BearDogError;
 use beardog_types::canonical::{KeyType, HealthStatus};
@@ -9,13 +14,7 @@ use std::time::{Duration, SystemTime};
 use tracing::{debug, info, warn, error};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum KeyCeremonyType {
-
-    KeyGeneration {
-
-        key_type: KeyType,
-
+#[derive(Debug, Clone)]
         threshold: u32,
 
         total_participants: u32,
@@ -46,81 +45,83 @@ pub enum KeyCeremonyType {
         emergency_auth: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NetworkParticipant {
-
-    pub participant_id: Uuid,
-
+#[derive(Debug, Clone)]
+    /// Name of the item
     pub name: String,
 
+    /// The endpoint value
     pub endpoint: String,
 
+    /// Collection of public key
     pub public_key: Vec<u8>,
 
+    /// Collection of capabilities
     pub capabilities: Vec<String>,
 
+    /// Current status of the component
     pub status: ParticipantStatus,
 
+    /// Optional location
     pub location: Option<String>,
 
+    /// The security clearance value
     pub security_clearance: SecurityLevel,
 
+    /// The last seen value
     pub last_seen: SystemTime,
 
 pub enum ParticipantStatus {
 
+
+    /// Active or enabled state
     Active,
 
+
+    /// Represents unavailable variant
     Unavailable,
 
+
+    /// Represents offline variant
     Offline,
 
+
+    /// State indicating compromised
     Compromised,
 
+
+    /// Represents maintenance variant
     Maintenance,
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]}
-
-pub enum SecurityLevel {
-
-    Standard,
-
-    High,
-
-    Critical,
-
-    Maximum,
-
-pub enum DistributedHsmOperation {
-
-    DistributedKeyGeneration {
-
-        operation_id: Uuid,
-
+#[derive(Debug, Clone)]
         ceremony: KeyCeremonyType,
 
         participants: Vec<NetworkParticipant>,
 
         timeout: Duration,
 
+    /// Currently distributedsigning
     DistributedSigning {
 
         data: Vec<u8>,
 
+    /// Represents distributed verification variant
     DistributedVerification {
 
         signature: Vec<u8>,
 
+    /// Represents distributed backup variant
     DistributedBackup {
 
         strategy: BackupStrategy,
 
+    /// Represents distributed attestation variant
     DistributedAttestation {
 
         entity_id: String,
 
         challenge: Vec<u8>,
 
+    /// Represents custom variant
     Custom {
 
         operation_name: String,
@@ -129,16 +130,19 @@ pub enum DistributedHsmOperation {
 
 pub enum BackupStrategy {
 
+    /// Represents threshold variant
     Threshold {
 
         total_shares: u32,
 
+    /// Represents geographic variant
     Geographic {
 
         regions: Vec<String>,
 
         redundancy: u32,
 
+    /// State indicating timerotated
     TimeRotated {
 
         rotation_interval: Duration,
@@ -147,66 +151,95 @@ pub enum BackupStrategy {
 
 pub struct DistributedOperationResult {
 
+
     pub operation_id: Uuid,
 
+    /// Current status of the component
     pub status: OperationStatus,
 
+    /// Optional result data
     pub result_data: Option<Vec<u8>>,
 
+    /// Mapping of participant results
     pub participant_results: HashMap<Uuid, ParticipantResult>,
 
+    /// Mapping of metadata
     pub metadata: HashMap<String, String>,
 
+    /// The started at value
     pub started_at: SystemTime,
 
+    /// Optional completed at
     pub completed_at: Option<SystemTime>,
 
+    /// Optional error
     pub error: Option<String>,
 
 pub enum OperationStatus {
 
+
+    /// Currently initializing
     Initializing,
 
+
+    /// Operation in progress
     InProgress,
 
+
+    /// Successful completion state
     Completed,
 
+
+    /// Error or failure state
     Failed,
 
+
+    /// State indicating cancelled
     Cancelled,
 
+
+    /// Represents timed out variant
     TimedOut,
 
 pub struct ParticipantResult {
 
+    /// Current status of the component
     pub status: ResponseStatus,
 
+    /// Optional response data
     pub response_data: Option<Vec<u8>>,
+
 
     pub timestamp: SystemTime,
 
 pub enum ResponseStatus {
 
+
+    /// Successful completion state
     Success,
 
+
+    /// Represents timeout variant
     Timeout,
 
+
+    /// Represents invalid variant
     Invalid,
 
-#[derive(Debug)]}
-
-pub struct DistributedOperationCoordinator {
-
-    active_operations: HashMap<Uuid, DistributedHsmOperation>,
+#[derive(HashMap<Uuid, DistributedHsmOperation>,
 
     operation_results: HashMap<Uuid, DistributedOperationResult>,
 
     participants: HashMap<Uuid, NetworkParticipant>,
 
     default_timeout: Duration,}
+    default_timeout: Duration,}
+    default_timeout: Duration,}
 
 impl DistributedOperationCoordinator {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         info!("🎭 Initializing Distributed Operation Coordinator");
         
@@ -218,12 +251,22 @@ impl DistributedOperationCoordinator {
         }
     }
 
+/// Register Participant operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
     pub fn register_participant(&mut self, participant: NetworkParticipant) -> Result<(), BearDogError> {
         info!("📝 Registering participant: {}", participant.name);
         self.participants.insert(participant.participant_id, participant);
         Ok(())
 
-    pub async fn start_operation(&mut self, operation: DistributedHsmOperation) -> Result<Uuid, BearDogError> {
+/// Start Operation operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Starts operation
+    /// Starts operation
+    pub fn start_operation(&mut self, operation: DistributedHsmOperation) -> Result<Uuid, BearDogError> {
         let operation_id = match &operation {
             DistributedHsmOperation::DistributedKeyGeneration { operation_id, .. } => *operation_id,
             DistributedHsmOperation::DistributedSigning { operation_id, .. } => *operation_id,
@@ -240,8 +283,7 @@ impl DistributedOperationCoordinator {
             result_data: None,
             participant_results: HashMap::with_capacity(16),
             metadata: HashMap::with_capacity(16),
-            started_at: SystemTime::now(),
-            completed_at: None,
+            started_at: SystemTime::now(None,
             error: None,
         self.active_operations.insert(operation_id, operation);
         self.operation_results.insert(operation_id, result);
@@ -251,32 +293,37 @@ impl DistributedOperationCoordinator {
         debug!("✅ Operation {} initialized and tracking started", operation_id);
         Ok(operation_id)
 
+/// Get Operation Status operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets operation_status
+    /// Gets operation_status
     pub fn get_operation_status(&self, operation_id: Uuid) -> Result<OperationStatus, BearDogError> {
         if let Some(result) = self.operation_results.get(&operation_id) {
-            Ok(result.status.clone())
+            Ok(result.status)
         } else {
-            Err(BearDogError::not_found(format_args!("Operation not found: {}", operation_id).to_string()))
+            Err(BearDogError::not_found({}", operation_id)))
 
+/// Get Operation Result operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets operation_result
+    /// Gets operation_result
     pub fn get_operation_result(&self, operation_id: Uuid) -> Result<DistributedOperationResult, BearDogError> {
-            Ok(result.clone())
-            Err(BearDogError::not_found(format_args!("Operation result not found: {}", operation_id).to_string()))
+            Ok(result)
+            Err(BearDogError::not_found({}", operation_id)))
 
-    pub async fn cancel_operation(&mut self, operation_id: Uuid) -> Result<(), BearDogError> {
+/// Cancel Operation operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn cancel_operation(&mut self, operation_id: Uuid) -> Result<(), BearDogError> {
         info!("🛑 Cancelling operation: {}", operation_id);
         if let Some(result) = self.operation_results.get_mut(&operation_id) {
             result.status = OperationStatus::Cancelled;
-            result.completed_at = Some(SystemTime::now());
-
-            self.active_operations.remove(&operation_id);
-            Ok(())
-
-    pub fn list_active_operations(&self) -> Vec<Uuid> {
-        self.active_operations.keys().copied().collect()
-
-    pub fn health_check(&self) -> Result<HealthStatus, BearDogError> {
-        let active_count = self.active_operations.len();
-        let participant_count = self.participants.len();
-        debug!("🏥 Coordinator health check: {} active operations, {} participants", 
+            result.completed_at = Some(SystemTime::now({} active operations, {} participants", 
                active_count, participant_count);
 
         if active_count > 100 {

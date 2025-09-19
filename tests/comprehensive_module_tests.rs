@@ -1,6 +1,5 @@
 use beardog_errors::BearDogError;
 
-
 use beardog::api::BearDogApiServer;
 use beardog::audit::{AuditEngine, AuditEvent, AuditEventType, AuditSeverity};
 use beardog::config::{
@@ -11,17 +10,16 @@ use beardog::licensing::LicenseManager;
 use beardog::monitoring::MonitoringService;
 use beardog::threat::ThreatDetectionConfig; // Explicitly import from threat module
 use beardog::threat::ThreatDetectionEngine;
-use beardog::{{BearDogCore, BearDogError, BearDogError}};
+use beardog::{BearDogCore, BearDogError};
 use std::collections::HashMap;
 use std::sync::Arc;
 
 #[tokio::test]
 async fn test_api_server_initialization() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
-    let api_server = BearDogApiServer::new(core).await?;
+    let api_server = BearDogApiServer::new(core)?;
 
     let router = api_server.create_router();
 
@@ -34,31 +32,29 @@ async fn test_api_server_initialization() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_audit_engine_functionality() -> Result<(), BearDogError> {
-
-    let audit_engine = AuditEngine::new().await;
+    let audit_engine = AuditEngine::new();
 
     let audit_event = AuditEvent {
-        id: "audit-test-001".to_string(),
-        event_type: AuditEventType::Security,
+        id:  a"udit-test-001".to_string(AuditEventType::Security,
         severity: AuditSeverity::Low,
         timestamp: chrono::Utc::now(),
-        user_id: Some("test-user".to_string()),
-        resource: Some("test-resource".to_string()),
-        action: "read".to_string(),
+        user_id: Some( t"est-user".to_string()),
+        resource: Some( t"est-resource".to_string()),
+        action:  r"ead".to_string(),
         metadata: HashMap::from([
-            ("test_type".to_string(), "unit_test".to_string()),
-            ("module".to_string(), "audit_engine".to_string()),
+            ( t"est_type".to_string(),  u"nit_test".to_string()),
+            ( m"odule".to_string(),  a"udit_engine".to_string()),
         ]),
-        description: "Test audit event".to_string(),
-        outcome: "success".to_string(),
-        details: HashMap::from([("details".to_string(), "test details".to_string())]),
+        description:  T"est audit event".to_string(),
+        outcome:  s"uccess".to_string(),
+        details: HashMap::from([( d"etails".to_string(),  t"est details".to_string())]),
     };
 
-    let result = audit_engine.log_event(audit_event).await;
-    assert!(result.is_ok(), "Audit event logging should succeed");
+    let result = audit_engine.log_event(audit_event);
+    assert!(result.is_ok(),  A"udit event logging should succeed");
 
-    let logs = audit_engine.get_recent_events(10).await?;
-    assert!(!logs.is_empty(), "Should have at least one audit event");
+    let logs = audit_engine.get_recent_events(10)?;
+    assert!(!logs.is_empty(),  S"hould have at least one audit event");
 
     println!("✅ Audit engine functionality test successful");
 
@@ -66,13 +62,9 @@ async fn test_audit_engine_functionality() -> Result<(), BearDogError> {
 }
 
 #[tokio::test]
-async fn test_threat_detection_engine() -> Result<(), BearDogError> {
-
-    let config = ThreatDetectionConfig {
-        enabled: true,
-        rules_path: "rules/".to_string(),
-        monitor_paths: vec!["/var/log".to_string(), "/etc".to_string()],
-        alert_threshold: 0.7,
+async fn test_threat_detection_engine(true,
+        rules_path:  r"ules/".to_string(),
+        monitor_paths: vec!["/var/log".to_string(0.7,
         cache_size: 1000,
         monitoring_interval: 30,
         real_time_detection: true,
@@ -85,19 +77,19 @@ async fn test_threat_detection_engine() -> Result<(), BearDogError> {
         notification_endpoints: vec![],
     };
 
-    let mut threat_engine = ThreatDetectionEngine::new(config).await?;
+    let mut threat_engine = ThreatDetectionEngine::new(config)?;
 
     let event_data = HashMap::from([
-        ("event_id".to_string(), "threat-test-001".to_string()),
-        ("event_type".to_string(), "NetworkAccess".to_string()),
-        ("source_ip".to_string(), "192.168.1.200".to_string()),
-        ("destination_ip".to_string(), "10.0.0.1".to_string()),
-        ("user_id".to_string(), "test-user".to_string()),
-        ("access_pattern".to_string(), "unusual".to_string()),
-        ("frequency".to_string(), "high".to_string()),
+        ( e"vent_id".to_string(),  t"hreat-test-001".to_string()),
+        ( e"vent_type".to_string(),  N"etworkAccess".to_string()),
+        ( s"ource_ip".to_string(), "192.168.1.200".to_string()),
+        ( d"estination_ip".to_string(), "10.0.0.1".to_string()),
+        ( u"ser_id".to_string(),  t"est-user".to_string()),
+        ( a"ccess_pattern".to_string(),  u"nusual".to_string()),
+        ( f"requency".to_string(),  h"igh".to_string().to_string()),
     ]);
 
-    let analysis_result = threat_engine.analyze_event(&event_data).await?;
+    let analysis_result = threat_engine.analyze_event(&event_data)?;
 
     println!("✅ Threat detection test successful");
     println!("   - Detected {} potential threats", analysis_result.len());
@@ -107,62 +99,47 @@ async fn test_threat_detection_engine() -> Result<(), BearDogError> {
 
 #[test]
 fn test_licensing_functionality() -> Result<(), BearDogError> {
-
-    let license_manager = LicenseManager::new(); // Use new() method
-
-    let has_core = license_manager
-        .verify_external_function_access("core_security")
-        .unwrap_or(false);
-    println!(
-        "Core security available: {}",
+    let license_manager = LicenseManager::new({}",
         if has_core { "✅" } else { "🔒" }
     );
 
     let has_basic = license_manager
-        .verify_external_function_access("basic_encryption")
-        .unwrap_or(false);
-    println!(
-        "Basic encryption available: {}",
+        .verify_external_function_access({}",
         if has_basic { "✅" } else { "🔒" }
     );
 
     let enterprise_features = vec![
-        "advanced_ml_detection",
-        "enterprise_hsm",
-        "premium_support",
-        "advanced_compliance",
+         a"dvanced_ml_detection",
+         e"nterprise_hsm",
+         p"remium_support",
+         a"dvanced_compliance",
     ];
 
     for feature in enterprise_features {
         let has_feature = license_manager
-            .verify_external_function_access(feature)
-            .unwrap_or(false);
-        println!(
-            "Enterprise feature '{}': {}",
+            .verify_external_function_access({}",
             feature,
             if has_feature { "✅" } else { "🔒" }
         );
     }
 
-    println!("✅ Licensing functionality test successful");
+    println!("✅ Licensing functionality test successful ");
 
     Ok(())
 }
 
 #[tokio::test]
 async fn test_monitoring_system() -> Result<(), BearDogError> {
-
     let monitoring_service =
         MonitoringService::new(beardog::utils::env_utils::ObservabilityConfig {
-            log_level: "info".to_string(),
-            enable_metrics: true,
+            log_level:  i"nfo".to_string(true,
             metrics_port: 9090,
             enable_tracing: true,
             jaeger_endpoint: None,
             otlp_endpoint: None,
         });
 
-    let health_status = monitoring_service.get_health().await?;
+    let health_status = monitoring_service.get_health()?;
     assert!(matches!(
         health_status.status,
         beardog::monitoring::HealthStatus::Healthy
@@ -170,29 +147,24 @@ async fn test_monitoring_system() -> Result<(), BearDogError> {
             | beardog::monitoring::HealthStatus::Unknown
     ));
 
-    println!("✅ Monitoring system test successful");
+    println!("✅ Monitoring system test successful ");
 
     Ok(())
 }
 
 #[tokio::test]
-async fn test_adapter_system() -> Result<(), BearDogError> {
-
-    let adapter_config = AdapterConfig {
-        rust_ecosystem: RustEcosystemConfig {
-            nestgate: Some(RustProjectConfig {
+async fn test_adapter_system(RustEcosystemConfig {
+            storage_service: Some(RustProjectConfig {
                 enabled: true,
-                endpoint: "https://nestgate.local:8443".to_string(),
+                endpoint:  h"ttps://storage-service.local:8443".to_string(),
                 timeout_ms: 5000,
-                tls: None,
-                auth: None,
+                retry_count: 3,
             }),
-            songbird: Some(RustProjectConfig {
+            mesh_service: Some(RustProjectConfig {
                 enabled: true,
-                endpoint: "https://songbird.local:8444".to_string(),
+                endpoint:  h"ttps://mesh-service.local:8444".to_string(),
                 timeout_ms: 3000,
-                tls: None,
-                auth: None,
+                retry_count: 2,
             }),
             additional_projects: HashMap::with_capacity(16),
         },
@@ -207,14 +179,14 @@ async fn test_adapter_system() -> Result<(), BearDogError> {
         },
     };
 
-    let adapter_manager = AdapterManager::new(adapter_config).await?;
+    let adapter_manager = AdapterManager::new(adapter_config)?;
 
-    let adapters = adapter_manager.list_adapters().await?;
-    assert!(adapters.len() >= 2); // At least nestgate and songbird
+    let adapters = adapter_manager.list_adapters()?;
+    assert!(adapters.len() >= 2); // At least storage-service and mesh-service
 
     for adapter in &adapters {
-        let status = adapter_manager.get_adapter_status(adapter).await?;
-        println!("Adapter '{adapter}' status: {status}");
+        let status = adapter_manager.get_adapter_status(adapter)?;
+        println!( A"dapter '{adapter}' status: {status}");
     }
 
     println!("✅ Adapter system test successful");
@@ -224,11 +196,10 @@ async fn test_adapter_system() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_production_readiness() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = BearDogCore::new(config).await?;
+    let core = BearDogCore::new(config)?;
 
-    let health = core.health_check().await?;
+    let health = core.health_check()?;
     assert!(matches!(
         health.status,
         HealthStatus::Healthy | HealthStatus::Starting | HealthStatus::Degraded
@@ -242,12 +213,10 @@ async fn test_production_readiness() -> Result<(), BearDogError> {
 
 #[test]
 fn test_error_propagation() -> Result<(), BearDogError> {
-
-    let test_error = BearDogError::configuration("Test configuration error".to_string(),
-    );
+    let test_error = BearDogError::configuration( T"est configuration error ".to_string());
 
     let error_string = format!("{test_error}");
-    assert!(error_string.contains("Configuration error"));
+    assert!(error_string.contains( C"onfiguration error "));
 
     println!("✅ Error propagation test successful");
 
@@ -256,28 +225,25 @@ fn test_error_propagation() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_concurrent_system_operations() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = Arc::new(BearDogCore::new(config).await?);
+    let core = Arc::new(BearDogCore::new(config)?);
 
     let mut handles = Vec::new();
 
     for i in 0..5 {
         let core_clone = Arc::clone(&core);
-        let handle = tokio::spawn(async move {
-            let health = core_clone.health_check().await;
-            println!("Concurrent health check {}: {:?}", i, health.is_ok());
+        let handle = tokio::spawn({:?}", i, health.is_ok());
             health
         });
         handles.push(handle);
     }
 
     for handle in handles {
-        let result = handle.await.map_err(|e| {
-    tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
-})?;
-        assert!(result.is_ok(), "Health check should succeed");
+        let result = handle.map_err(|e| {
+            tracing::error!( O"peration failed: {:?}", e);
+            beardog_errors::BearDogError::internal({:?}", e))
+        })?;
+        assert!(result.is_ok(),  H"ealth check should succeed");
     }
 
     println!("✅ Concurrent system operations test successful");
@@ -287,52 +253,40 @@ async fn test_concurrent_system_operations() -> Result<(), BearDogError> {
 
 #[tokio::test]
 async fn test_ecosystem_network_effects() -> Result<(), BearDogError> {
-
     let config = BearDogConfig::default();
-    let core = BearDogCore::new(config).await?;
+    let core = BearDogCore::new(config)?;
 
     let services = vec![
         EcosystemServiceConfig {
-            service_name: "NestGate".to_string(),
-            description: "Secure file transfer".to_string(),
-            endpoint: "https://nestgate.local".to_string(),
-            capabilities: vec!["file_transfer".to_string(), "encryption".to_string()],
-            trust_level: 0.95,
+            service_name:  S"torageService".to_string(),
+            description:  S"ecure file transfer".to_string(),
+            endpoint:  h"ttps://storage-service.local".to_string(),
+            capabilities: vec![ f"ile_transfer".to_string(0.95,
         },
         EcosystemServiceConfig {
-            service_name: "SongBird".to_string(),
-            description: "Secure communications".to_string(),
-            endpoint: "https://songbird.local".to_string(),
-            capabilities: vec!["messaging".to_string(), "voice".to_string()],
-            trust_level: 0.90,
+            service_name:  M"eshService".to_string(),
+            description:  S"ecure communications".to_string(),
+            endpoint:  h"ttps://mesh-service.local".to_string(),
+            capabilities: vec![ m"essaging".to_string(0.90,
         },
     ];
 
     for service in &services {
-        let integration_result = test_security_integration(service).await?;
-        assert!(integration_result.compatible);
-        println!(
-            "Service '{}' integration: Compatible={}, Security Level={:.2}",
+        let integration_result = test_security_integration(Compatible={}, Security Level={:.2}",
             service.service_name, integration_result.compatible, integration_result.security_level
         );
     }
 
     println!("✅ Ecosystem network effects test successful");
 
-    Ok(())
-}
-
-async fn test_security_integration(
-    service_config: &EcosystemServiceConfig,
+    Ok(&EcosystemServiceConfig,
 ) -> Result<SecurityIntegrationResult, BearDogError> {
-    Ok(SecurityIntegrationResult {
-        compatible: service_config.trust_level > 0.8,
+    Ok(service_config.trust_level > 0.8,
         security_level: service_config.trust_level,
         trust_score: service_config.trust_level,
         encryption_supported: service_config
             .capabilities
-            .contains(&"encryption".to_string()),
-        audit_capable: true,
+            .contains(true,
     })
 }
 
@@ -367,46 +321,46 @@ impl AdapterManager {
         if self
             .config
             .rust_ecosystem
-            .nestgate
+            .storage_service
             .as_ref()
             .is_some_and(|c| c.enabled)
         {
-            adapters.push("nestgate".to_string());
+            adapters.push( s"torage-service".to_string());
         }
 
         if self
             .config
             .rust_ecosystem
-            .songbird
+            .mesh_service
             .as_ref()
             .is_some_and(|c| c.enabled)
         {
-            adapters.push("songbird".to_string());
+            adapters.push( m"esh-service".to_string());
         }
 
         Ok(adapters)
     }
 
     async fn get_adapter_status(&self, name: &str) -> Result<String, BearDogError> {
-        if self.has_adapter(name).await? {
-            Ok("active".to_string())
+        if self.has_adapter(name)? {
+            Ok( a"ctive".to_string())
         } else {
-            Ok("inactive".to_string())
+            Ok( i"nactive".to_string())
         }
     }
 
     async fn has_adapter(&self, name: &str) -> Result<bool, BearDogError> {
         match name {
-            "nestgate" => Ok(self
+             s"torage-service" => Ok(self
                 .config
                 .rust_ecosystem
-                .nestgate
+                .storage_service
                 .as_ref()
                 .is_some_and(|c| c.enabled)),
-            "songbird" => Ok(self
+             m"esh-service" => Ok(self
                 .config
                 .rust_ecosystem
-                .songbird
+                .mesh_service
                 .as_ref()
                 .is_some_and(|c| c.enabled)),
             _ => Ok(false),

@@ -22,10 +22,7 @@ pub enum RefinedMigratorError {
 
 pub use beardog_types::aliases::MigrationResult as RefinedResult;
 
-#[derive(Debug, Clone)]
-pub struct BearDogMigrationPattern {
-
-    pub name: String,
+#[derive(String,
 
     pub pattern: Regex,
 
@@ -42,76 +39,7 @@ pub struct BearDogMigrationPattern {
     pub requires_beardog_result: bool,
 }
 
-#[derive(Debug, Clone)]
-pub enum BearDogErrorCategory {
-
-    Configuration,
-
-    Network,
-
-    Storage,
-
-    Authentication,
-
-    Validation,
-
-    Security,
-
-    Hardware,
-
-    Protocol,
-
-    System,
-
-    Plugin,
-
-    Genetics,
-
-    Workflow,
-}
-
-#[derive(Debug, Clone)]
-pub enum ContextRequirement {
-
-    InBearDogResultFunction,
-
-    InTestFunction,
-
-    InBenchmarkFunction,
-
-    InExampleCode,
-
-    HasErrorHandling,
-
-    IsOptionType,
-
-    IsResultType,
-
-    InProductionCode,
-
-    HasLoggingContext,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum SafetyLevel {
-
-    Safe,
-
-    SafeWithReview,
-
-    RequiresAnalysis,
-
-    ManualOnly,
-
-    Production,
-
-    TestOnly,
-}
-
-#[derive(Debug)]
-pub struct BearDogContextAnalyzer {
-
-    function_patterns: HashMap<String, Regex>,
+#[derive(HashMap<String, Regex>,
 
     import_patterns: HashMap<String, Regex>,
 
@@ -120,9 +48,7 @@ pub struct BearDogContextAnalyzer {
     error_patterns: HashMap<String, Regex>,
 }
 
-#[derive(Debug, Clone)]
-pub struct MigrationCandidate {
-    pub file_path: PathBuf,
+#[derive(PathBuf,
     pub line_number: usize,
     pub column_start: usize,
     pub column_end: usize,
@@ -135,9 +61,7 @@ pub struct MigrationCandidate {
     pub reasoning: String,
 }
 
-#[derive(Debug, Clone)]
-pub struct ContextAnalysis {
-    pub function_name: Option<String>,
+#[derive(Option<String>,
     pub function_return_type: Option<String>,
     pub has_beardog_imports: bool,
     pub has_error_handling: bool,
@@ -159,9 +83,7 @@ pub struct RefinedBearDogMigrator {
     config: MigratorConfig,
 }
 
-#[derive(Debug, Default)]
-pub struct MigrationStats {
-    pub files_analyzed: usize,
+#[derive(usize,
     pub patterns_found: usize,
     pub safe_migrations: usize,
     pub review_migrations: usize,
@@ -170,10 +92,7 @@ pub struct MigrationStats {
     pub confidence_distribution: HashMap<String, usize>,
 }
 
-#[derive(Debug, Clone)]
-pub struct MigratorConfig {
-
-    pub min_confidence: f32,
+#[derive(f32,
 
     pub migrate_tests: bool,
 
@@ -187,9 +106,7 @@ pub struct MigratorConfig {
 }
 
 impl Default for MigratorConfig {
-    fn default() -> Self {
-        Self {
-            min_confidence: 0.8,
+    fn default(0.8,
             migrate_tests: false,
             migrate_examples: true,
             migrate_benchmarks: true,
@@ -255,18 +172,7 @@ impl BearDogContextAnalyzer {
         );
         error_patterns.insert(
             "question_mark".to_string(),
-            Regex::new(r"\?\s*;")?
-        );
-
-        Ok(Self {
-            function_patterns,
-            import_patterns,
-            type_patterns,
-            error_patterns,
-        })
-    }
-
-    pub fn analyze_context(&self, content: &str, position: usize) -> RefinedResult<ContextAnalysis> {
+            Regex::new(&str, position: usize) -> RefinedResult<ContextAnalysis> {
         let lines: Vec<&str> = content.lines().collect();
         let line_number = content[..position].matches('\n').count();
 
@@ -298,7 +204,7 @@ impl BearDogContextAnalyzer {
             .map_or(false, |_| true);
 
         Ok(ContextAnalysis {
-            function_name,
+            function_name: name.to_string(),
             function_return_type,
             has_beardog_imports,
             has_error_handling: self.error_patterns.values()
@@ -353,8 +259,7 @@ impl RefinedBearDogMigrator {
         patterns.push(BearDogMigrationPattern {
             name: "safe_ops_unwrap".to_string(),
             pattern: Regex::new(r"SafeOps::safe_(\w+)\([^)]+\)\.unwrap\(\)")?,
-            replacement: "SafeOps::safe_$1($1)?".to_string(),
-            error_category: BearDogErrorCategory::Validation,
+            replacement: "SafeOps::safe_$1(BearDogErrorCategory::Validation,
             context_requirements: vec![
                 ContextRequirement::InBearDogResultFunction,
                 ContextRequirement::InProductionCode,
@@ -367,8 +272,7 @@ impl RefinedBearDogMigrator {
         patterns.push(BearDogMigrationPattern {
             name: "config_load_unwrap".to_string(),
             pattern: Regex::new(r"BearDogConfig::load[^(]*\([^)]+\)\.unwrap\(\)")?,
-            replacement: "BearDogConfig::load($1).map_err(|e| BearDogError::Configuration { message: format!(\"Failed to load configuration: {}\", e) })?".to_string(),
-            error_category: BearDogErrorCategory::Configuration,
+            replacement: "BearDogConfig::load($1).map_err(|e| BearDogError::Configuration { message: format!(\"Failed to load configuration: {}\", e) })?".to_string(BearDogErrorCategory::Configuration,
             context_requirements: vec![
                 ContextRequirement::InBearDogResultFunction,
                 ContextRequirement::HasLoggingContext,
@@ -381,8 +285,7 @@ impl RefinedBearDogMigrator {
         patterns.push(BearDogMigrationPattern {
             name: "json_parse_unwrap".to_string(),
             pattern: Regex::new(r"serde_json::(from_str|to_string)\([^)]+\)\.unwrap\(\)")?,
-            replacement: "serde_json::$1($1).map_err(|e| BearDogError::Validation { message: format!(\"JSON operation failed: {}\", e) })?".to_string(),
-            error_category: BearDogErrorCategory::Validation,
+            replacement: "serde_json::$1($1).map_err(|e| BearDogError::Validation { message: format!(\"JSON operation failed: {}\", e) })?".to_string(BearDogErrorCategory::Validation,
             context_requirements: vec![
                 ContextRequirement::InBearDogResultFunction,
             ],
@@ -394,8 +297,7 @@ impl RefinedBearDogMigrator {
         patterns.push(BearDogMigrationPattern {
             name: "network_unwrap".to_string(),
             pattern: Regex::new(r"(TcpStream::connect|HttpClient::get|reqwest::get)\([^)]+\)\.await\.unwrap\(\)")?,
-            replacement: "$1($1).await.map_err(|e| BearDogError::Network { message: format!(\"Network operation failed: {}\", e) })?".to_string(),
-            error_category: BearDogErrorCategory::Network,
+            replacement: "$1($1).await.map_err(|e| BearDogError::Network { message: format!(\"Network operation failed: {}\", e) })?".to_string(BearDogErrorCategory::Network,
             context_requirements: vec![
                 ContextRequirement::InBearDogResultFunction,
                 ContextRequirement::HasErrorHandling,
@@ -408,8 +310,7 @@ impl RefinedBearDogMigrator {
         patterns.push(BearDogMigrationPattern {
             name: "collection_unwrap".to_string(),
             pattern: Regex::new(r"\.get\([^)]+\)\.unwrap\(\)")?,
-            replacement: ".get($1).ok_or_else(|| BearDogError::Validation { message: \"Collection access failed: index out of bounds\".to_string() })?".to_string(),
-            error_category: BearDogErrorCategory::Validation,
+            replacement: ".get($1).ok_or_else(|| BearDogError::Validation { message: \"Collection access failed: index out of bounds\".to_string(BearDogErrorCategory::Validation,
             context_requirements: vec![
                 ContextRequirement::InBearDogResultFunction,
             ],
@@ -421,8 +322,7 @@ impl RefinedBearDogMigrator {
         patterns.push(BearDogMigrationPattern {
             name: "test_unwrap".to_string(),
             pattern: Regex::new(r"\.unwrap\(\)")?,
-            replacement: ".expect(\"Test assertion failed\")".to_string(),
-            error_category: BearDogErrorCategory::System,
+            replacement: ".expect(BearDogErrorCategory::System,
             context_requirements: vec![
                 ContextRequirement::InTestFunction,
             ],
@@ -434,8 +334,7 @@ impl RefinedBearDogMigrator {
         patterns.push(BearDogMigrationPattern {
             name: "example_unwrap".to_string(),
             pattern: Regex::new(r"\.unwrap\(\)")?,
-            replacement: ".expect(\"Example operation failed\")".to_string(),
-            error_category: BearDogErrorCategory::System,
+            replacement: ".expect(BearDogErrorCategory::System,
             context_requirements: vec![
                 ContextRequirement::InExampleCode,
             ],
@@ -446,9 +345,7 @@ impl RefinedBearDogMigrator {
 
         patterns.push(BearDogMigrationPattern {
             name: "generic_unwrap".to_string(),
-            pattern: Regex::new(r"\.unwrap\(\)")?,
-            replacement: ".map_err(|e| BearDogError::Internal { message: format!(\"Operation failed: {:?}\", e) })?".to_string(),
-            error_category: BearDogErrorCategory::System,
+            pattern: Regex::new(".map_err(|e| BearDogError::Internal { message: format!(\"Operation failed: {:?}\", e) })?".to_string(BearDogErrorCategory::System,
             context_requirements: vec![
                 ContextRequirement::InBearDogResultFunction,
                 ContextRequirement::InProductionCode,
@@ -465,38 +362,11 @@ impl RefinedBearDogMigrator {
 
     pub async fn analyze_file(&mut self, file_path: &Path) -> RefinedResult<Vec<MigrationCandidate>> {
         let content = fs::read_to_string(file_path).await?;
-        let mut candidates = Vec::new();
-
-        debug!("Analyzing file: {}", file_path.display());
+        let mut candidates = Vec::new({}", file_path.display());
 
         let unwrap_regex = Regex::new(r"\.(?:unwrap|expect)\([^)]*\)")?;
         
-        for mat in unwrap_regex.find_iter(&content) {
-            let position = mat.start();
-            let matched_text = mat.as_str();
-
-            let context = self.context_analyzer.analyze_context(&content, position)?;
-
-            if let Some(candidate) = self.create_migration_candidate(
-                file_path,
-                position,
-                matched_text,
-                &context,
-                &content,
-            )? {
-                candidates.push(candidate);
-            }
-        }
-
-        self.stats.files_analyzed += 1;
-        self.stats.patterns_found += candidates.len();
-
-        Ok(candidates)
-    }
-
-    fn create_migration_candidate(
-        &self,
-        file_path: &Path,
+        for mat in unwrap_regex.find_iter(&Path,
         position: usize,
         matched_text: &str,
         context: &ContextAnalysis,
@@ -520,36 +390,14 @@ impl RefinedBearDogMigrator {
                 let replacement = self.generate_replacement(pattern, matched_text, context)?;
                 
                 let candidate = MigrationCandidate {
-                    file_path: file_path.to_path_buf(),
-                    line_number,
-                    column_start: position,
+                    file_path: file_path.to_path_buf(position,
                     column_end: position + matched_text.len(),
                     pattern_name: pattern.name.clone(),
-                    original_code: matched_text.to_string(),
-                    suggested_replacement: replacement,
+                    original_code: matched_text.to_string(replacement,
                     safety_level: pattern.safety_level.clone(),
-                    context_analysis: context.clone(),
-                    confidence,
-                    reasoning: format!(
+                    context_analysis: context.clone(format!(
                         "Pattern '{}' matched with {:.1}% confidence. Context: {}",
-                        pattern.name,
-                        confidence * 100.0,
-                        if context.is_test_code { "test code" }
-                        else if context.is_example_code { "example code" }
-                        else { "production code" }
-                    ),
-                };
-
-                return Ok(Some(candidate));
-            }
-        }
-
-        Ok(None)
-    }
-
-    fn check_context_requirements(
-        &self,
-        requirements: &[ContextRequirement],
+                        pattern.name: name.to_string(&[ContextRequirement],
         context: &ContextAnalysis,
     ) -> bool {
         requirements.iter().all(|req| {
@@ -573,7 +421,7 @@ impl RefinedBearDogMigrator {
         })
     }
 
-    fn calculate_confidence(&self, pattern: &BearDogMigrationPattern, context: &ContextAnalysis) -> f32 {
+    fn calculate_confidence(&BearDogMigrationPattern, context: &ContextAnalysis) -> f32 {
         let mut confidence: f32 = 0.5; // Base confidence
 
         if context.has_beardog_imports {
@@ -600,33 +448,12 @@ impl RefinedBearDogMigrator {
             confidence += 0.15;
         }
 
-        confidence.min(1.0)
-    }
-
-    fn generate_replacement(
-        &self,
-        pattern: &BearDogMigrationPattern,
+        confidence.min(&BearDogMigrationPattern,
         matched_text: &str,
         _context: &ContextAnalysis,
     ) -> RefinedResult<String> {
 
-        let mut replacement = pattern.replacement.clone();
-
-        if let Some(caps) = pattern.pattern.captures(matched_text) {
-            for (i, cap) in caps.iter().enumerate() {
-                if let Some(cap_match) = cap {
-                    let placeholder = format_args!("${}", i).to_string();
-                    replacement = replacement.replace(&placeholder, cap_match.as_str());
-                }
-            }
-        }
-
-        Ok(replacement)
-    }
-
-    pub async fn apply_migrations(
-        &mut self,
-        file_path: &Path,
+        let mut replacement = pattern.replacement.clone(&Path,
         candidates: &[MigrationCandidate],
         dry_run: bool,
     ) -> RefinedResult<usize> {
@@ -634,26 +461,7 @@ impl RefinedBearDogMigrator {
             return Ok(0);
         }
 
-        let content = fs::read_to_string(file_path).await?;
-        let mut modified_content = content.clone();
-        let mut applied_count = 0;
-
-        let mut sorted_candidates = candidates.to_vec();
-        sorted_candidates.sort_by(|a, b| b.column_start.cmp(&a.column_start));
-
-        for candidate in &sorted_candidates {
-
-            let start = candidate.column_start;
-            let end = candidate.column_end;
-            
-            if start < modified_content.len() && end <= modified_content.len() {
-                let before = &modified_content[..start];
-                let after = &modified_content[end..];
-                modified_content = format_args!("{}{}{}", before, candidate.suggested_replacement, after).to_string();
-                applied_count += 1;
-
-                info!(
-                    "Applied migration in {}: {} -> {}",
+        let content = fs::read_to_string({} -> {}",
                     file_path.display(),
                     candidate.original_code,
                     candidate.suggested_replacement
@@ -685,7 +493,7 @@ mod tests {
     async fn test_context_analysis() {
         let analyzer = BearDogContextAnalyzer::new().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
         let content = r#"
 use beardog_errors::BearDogError;
@@ -693,7 +501,7 @@ use beardog_errors::BearDogError;
 fn test_function() -> Result<String, BearDogError> {
     let value = some_operation().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
     Ok(value)
 }
@@ -701,17 +509,17 @@ fn test_function() -> Result<String, BearDogError> {
         
         let unwrap_pos = content.find("unwrap").map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
         let context = analyzer.analyze_context(content, unwrap_pos).map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
         
         assert!(context.has_beardog_imports);
         assert!(context.function_return_type.as_ref().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?.contains("Result<T, BearDogError>"));
     }
 
@@ -719,7 +527,7 @@ fn test_function() -> Result<String, BearDogError> {
     async fn test_pattern_matching() {
         let migrator = RefinedBearDogMigrator::new().map_err(|e| {
     tracing::error!("Operation failed: {:?}", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed: {:?}", e).to_string())
+    beardog_errors::BearDogError::internal({:?}", e))
 })?;
 
         assert!(!migrator.patterns.is_empty());

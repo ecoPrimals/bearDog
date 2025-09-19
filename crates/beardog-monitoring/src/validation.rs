@@ -4,8 +4,9 @@ use beardog_errors::{{improved_results::*}};
 use tracing::debug;
 use crate::types::MonitoringConfig;
 
-pub async fn validate_monitoring_config_improved(
-    config: &MonitoringConfig,
+/// Validate Monitoring Config Improved operation.
+/// Validates monitoring_config_improved
+pub fn validate_monitoring_config_improved(&MonitoringConfig,
 ) -> Result<ValidationOutcome, BearDogError> {
     debug!("🔍 Validating monitoring configuration: {}", config.config_id);
     let mut findings = Vec::new();
@@ -14,7 +15,6 @@ pub async fn validate_monitoring_config_improved(
         findings.push(ValidationFinding {
             field: "config_id".to_string(),
             message: "Configuration ID cannot be empty".to_string(),
-            severity: ValidationSeverity::Error,
             suggested_fix: Some("Provide a non-empty configuration ID".to_string()),
         });
     }
@@ -25,7 +25,6 @@ pub async fn validate_monitoring_config_improved(
             suggested_fix: Some("Set collection interval to at least 1 second".to_string()),
     } else if config.collection_interval_seconds < 10 {
             message: "Collection interval below 10 seconds may impact performance".to_string(),
-            severity: ValidationSeverity::Warning,
             suggested_fix: Some("Consider using intervals of 10 seconds or more".to_string()),
 
     if config.retention_days == 0 {

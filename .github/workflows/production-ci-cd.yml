@@ -1,0 +1,388 @@
+name: BearDog Production CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, production ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  BEARDOG_ENV: ci
+
+jobs:
+  # Phase 1: Code Quality and Security Checks
+  quality-checks:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy, rustfmt
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+      
+    - name: Run Clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+      
+    - name: Security audit
+      run: |
+        cargo install cargo-audit
+        cargo audit
+        
+    - name: Check for unsafe code patterns
+      run: |
+        # Ensure minimal unsafe code usage
+        unsafe_count=$(find . -name "*.rs" -not -path "./target/*" -exec grep -c "unsafe" {} \; | awk '{sum += $1} END {print sum}')
+        echo "Total unsafe blocks: $unsafe_count"
+        if [ "$unsafe_count" -gt 50 ]; then
+          echo "Too many unsafe blocks found: $unsafe_count (limit: 50)"
+          exit 1
+        fi
+
+  # Phase 2: Comprehensive Testing
+  comprehensive-tests:
+    name: Comprehensive Test Suite
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    strategy:
+      matrix:
+        rust: [stable, beta]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust ${{ matrix.rust }}
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target/
+        key: ${{ runner.os }}-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Run unit tests
+      run: cargo test --all --verbose
+      
+    - name: Run integration tests
+      run: cargo test --test '*' --verbose
+      
+    - name: Run benchmarks
+      run: cargo bench --no-run
+      
+    - name: Install tarpaulin for coverage
+      run: cargo install cargo-tarpaulin
+      
+    - name: Generate test coverage
+      run: |
+        cargo tarpaulin --all-features --workspace --timeout 300 --out Xml --output-dir coverage/
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: coverage/cobertura.xml
+        fail_ci_if_error: true
+
+  # Phase 3: Performance and Chaos Testing
+  performance-tests:
+    name: Performance & Chaos Testing
+    runs-on: ubuntu-latest
+    needs: comprehensive-tests
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target/
+        key: ${{ runner.os }}-perf-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Run performance benchmarks
+      run: |
+        cargo bench -- --output-format json | tee benchmark-results.json
+        
+    - name: Performance regression check
+      run: |
+        # Compare with baseline performance metrics
+        python3 scripts/check_performance_regression.py benchmark-results.json
+        
+    - name: Run chaos tests
+      run: |
+        cargo test chaos_ --release -- --nocapture --test-threads=1
+        
+    - name: Memory leak detection
+      run: |
+        # Install valgrind for memory leak detection
+        sudo apt-get update && sudo apt-get install -y valgrind
+        cargo build --release
+        valgrind --leak-check=full --error-exitcode=1 target/release/beardog --help
+
+  # Phase 4: Security and Compliance Validation
+  security-compliance:
+    name: Security & Compliance
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Install security tools
+      run: |
+        cargo install cargo-geiger
+        cargo install cargo-deny
+        
+    - name: Dependency vulnerability scan
+      run: cargo audit
+      
+    - name: License compliance check
+      run: cargo deny check licenses
+      
+    - name: Unsafe code analysis
+      run: cargo geiger --all-targets
+      
+    - name: FIPS compliance check
+      run: |
+        # Verify cryptographic implementations meet FIPS standards
+        cargo test fips_compliance --features fips -- --nocapture
+        
+    - name: SOC2 compliance validation
+      run: |
+        # Run SOC2 compliance tests
+        cargo test soc2_compliance -- --nocapture
+
+  # Phase 5: Build and Package
+  build-package:
+    name: Build & Package
+    runs-on: ${{ matrix.os }}
+    needs: [comprehensive-tests, performance-tests, security-compliance]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: beardog-linux-x64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: beardog-windows-x64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: beardog-macos-x64
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target/
+        key: ${{ runner.os }}-build-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Build release binary
+      run: cargo build --release --target ${{ matrix.target }}
+      
+    - name: Run post-build validation
+      run: |
+        # Verify binary integrity and functionality
+        ./target/${{ matrix.target }}/release/beardog --version
+        ./target/${{ matrix.target }}/release/beardog health-check
+        
+    - name: Create deployment package
+      run: |
+        mkdir -p dist/${{ matrix.artifact_name }}
+        cp target/${{ matrix.target }}/release/beardog* dist/${{ matrix.artifact_name }}/
+        cp -r configs/ dist/${{ matrix.artifact_name }}/
+        cp -r docs/deployment/ dist/${{ matrix.artifact_name }}/docs/
+        tar -czf ${{ matrix.artifact_name }}.tar.gz -C dist ${{ matrix.artifact_name }}
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: ${{ matrix.artifact_name }}.tar.gz
+
+  # Phase 6: Container Build and Security Scan
+  container-build:
+    name: Container Build & Scan
+    runs-on: ubuntu-latest
+    needs: build-package
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build container image
+      run: |
+        docker build -t beardog:${{ github.sha }} .
+        docker tag beardog:${{ github.sha }} beardog:latest
+        
+    - name: Container security scan
+      run: |
+        # Install and run container security scanner
+        curl -sSfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+        trivy image --exit-code 1 --severity HIGH,CRITICAL beardog:${{ github.sha }}
+        
+    - name: Container benchmarks
+      run: |
+        # Test container performance and resource usage
+        docker run --rm beardog:${{ github.sha }} benchmark --quick
+        
+    - name: Save container image
+      run: |
+        docker save beardog:${{ github.sha }} | gzip > beardog-container.tar.gz
+        
+    - name: Upload container artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: beardog-container
+        path: beardog-container.tar.gz
+
+  # Phase 7: Staging Deployment
+  staging-deployment:
+    name: Staging Deployment
+    runs-on: ubuntu-latest
+    needs: [build-package, container-build]
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Deploy to staging
+      run: |
+        # Deploy to staging environment
+        ./scripts/deploy-staging.sh
+        
+    - name: Staging smoke tests
+      run: |
+        # Run smoke tests against staging deployment
+        ./scripts/staging-smoke-tests.sh
+        
+    - name: Load testing
+      run: |
+        # Run load tests to validate performance under load
+        ./scripts/load-test-staging.sh
+
+  # Phase 8: Production Deployment
+  production-deployment:
+    name: Production Deployment
+    runs-on: ubuntu-latest
+    needs: staging-deployment
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: production
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Pre-deployment validation
+      run: |
+        # Final validation before production deployment
+        ./scripts/pre-production-validation.sh
+        
+    - name: Blue-Green deployment
+      run: |
+        # Execute blue-green deployment strategy
+        ./scripts/deploy-production-blue-green.sh
+        
+    - name: Production health checks
+      run: |
+        # Comprehensive health checks post-deployment
+        ./scripts/production-health-checks.sh
+        
+    - name: Rollback capability test
+      run: |
+        # Verify rollback procedures work correctly
+        ./scripts/test-rollback-capability.sh
+
+  # Phase 9: Post-Deployment Monitoring
+  post-deployment:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: production-deployment
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+    - name: Setup monitoring
+      run: |
+        # Configure monitoring and alerting for new deployment
+        ./scripts/setup-production-monitoring.sh
+        
+    - name: Performance baseline
+      run: |
+        # Establish performance baselines for monitoring
+        ./scripts/establish-performance-baseline.sh
+        
+    - name: Security monitoring
+      run: |
+        # Enable security monitoring and threat detection
+        ./scripts/enable-security-monitoring.sh
+        
+    - name: Compliance reporting
+      run: |
+        # Generate compliance reports for audit trail
+        ./scripts/generate-compliance-report.sh
+
+  # Notification and Reporting
+  notify-completion:
+    name: Notification & Reporting
+    runs-on: ubuntu-latest
+    needs: [production-deployment, post-deployment]
+    if: always()
+    steps:
+    - name: Generate deployment report
+      run: |
+        echo "# BearDog Deployment Report" > deployment-report.md
+        echo "## Deployment Status: ${{ job.status }}" >> deployment-report.md
+        echo "## Version: ${{ github.ref_name }}" >> deployment-report.md
+        echo "## Timestamp: $(date)" >> deployment-report.md
+        
+    - name: Notify team
+      run: |
+        # Send deployment notifications to team
+        echo "Deployment completed with status: ${{ job.status }}" 

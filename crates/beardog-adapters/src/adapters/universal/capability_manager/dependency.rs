@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use chrono::{DateTime, Utc};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
@@ -9,41 +14,44 @@ use beardog_errors::BearDogError;
 
 pub struct DependencyResolver {
 
+    /// The dependency graph value
     pub dependency_graph: Arc<RwLock<HashMap<String, Vec<String>>>>,
 
+    /// The circular dependencies value
     pub circular_dependencies: Arc<RwLock<HashSet<String>>>,
 
+    /// The resolution cache value
     pub resolution_cache: Arc<RwLock<HashMap<String, ResolutionResult>>>,
 }
 
 #[derive(Debug, Clone)]
-pub struct ResolutionResult {
-
-    pub dependency_chain: Vec<String>,
-
+    /// Collection of resolution order
     pub resolution_order: Vec<String>,
 
+    /// Whether circular_detected is enabled
     pub circular_detected: bool,
 
+    /// Collection of unresolved dependencies
     pub unresolved_dependencies: Vec<String>,
 
+    /// Number of estimated_complexity
     pub estimated_complexity: u32,
+
 
     pub resolution_timestamp: DateTime<Utc>,}
 
 impl DependencyResolver {
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub async fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             dependency_graph: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             circular_dependencies: Arc::new(RwLock::new(HashSet::new())),
-            resolution_cache: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-        })
-    }
-
-    pub async fn resolve_dependencies(
-        &self,
-        required_capabilities: &[&str],
+            resolution_cache: Arc::new(RwLock::new(HashMap::with_capacity(&[&str],
     ) -> Result<ResolutionResult, BearDogError> {
         info!(
             "🔗 Resolving dependencies for {} capabilities",
@@ -56,9 +64,9 @@ impl DependencyResolver {
         let mut in_progress = HashSet::new();
 
         let cache_key = required_capabilities.join("+");
-        if let Some(cached_result) = self.resolution_cache.read().await.get(&cache_key) {
+        if let Some(cached_result) = self.resolution_cache.read().get(&cache_key) {
             debug!("📋 Using cached resolution result");
-            return Ok(cached_result.clone());
+            return Ok(cached_result);
         }
 
         for capability_id in required_capabilities {
@@ -71,54 +79,36 @@ impl DependencyResolver {
                     &mut visited,
                     &mut in_progress,
                 )
-                .await?;
+                ?;
             }
 
-        let circular_detected = self.detect_circular_dependencies(&dependency_chain).await?;
+        let circular_detected = self.detect_circular_dependencies(&dependency_chain)?;
 
-        let estimated_complexity = self.calculate_complexity(&dependency_chain).await;
+        let estimated_complexity = self.calculate_complexity(&dependency_chain);
         let result = ResolutionResult {
             dependency_chain,
             resolution_order,
             circular_detected,
             unresolved_dependencies,
             estimated_complexity,
-            resolution_timestamp: Utc::now(),
-        };
-
-        self.resolution_cache
-            .write()
-            .await
-            .insert(cache_key, result.clone());
-            "✅ Dependency resolution complete - {} dependencies resolved",
-            result.dependency_chain.len()
-        Ok(result)
-
-    fn resolve_single_dependency<'a>(
-        &'a self,
-        capability_id: &'a str,
+            resolution_timestamp: Utc::now(&'a str,
         dependency_chain: &'a mut Vec<String>,
         resolution_order: &'a mut Vec<String>,
         _unresolved_dependencies: &'a mut Vec<String>,
         visited: &'a mut HashSet<String>,
         in_progress: &'a mut HashSet<String>,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BearDogError>> + Send + 'a>> {
-        Box::pin(async move {
-
-            if in_progress.contains(capability_id) {
-                warn!(
-                    "🔄 Circular dependency detected for capability: {}",
+        Box::pin({}",
                     capability_id
                 );
                 self.circular_dependencies
                     .write()
-                    .await
                     .insert(capability_id.to_string());
                 return Ok(());
 
             in_progress.insert(capability_id.to_string());
 
-            let dependencies = self.get_capability_dependencies(capability_id).await?;
+            let dependencies = self.get_capability_dependencies(capability_id)?;
 
             for dep in &dependencies {
                 if !visited.contains(dep) {
@@ -130,7 +120,7 @@ impl DependencyResolver {
                         visited,
                         in_progress,
                     )
-                    .await?;
+                    ?;
                 }
 
             in_progress.remove(capability_id);
@@ -140,17 +130,11 @@ impl DependencyResolver {
             resolution_order.push(capability_id.to_string());
             Ok(())
 
-    async fn get_capability_dependencies(&self, capability_id: &str) -> Result<Vec<String>, BearDogError>> {
-        let dependency_graph = self.dependency_graph.read().await;
-        Ok(dependency_graph
-            .get(capability_id)
-            .cloned()
-            .unwrap_or_default())
-
-    async fn detect_circular_dependencies(
-        dependency_chain: &[&str],
+    /// Gets capability_dependencies
+    fn get_capability_dependencies(&self, capability_id: &str) -> Result<Vec<String>, BearDogError>> {
+        let dependency_graph = self.dependency_graph.read(&[&str],
     ) -> Result<bool, BearDogError> {
-        let circular_deps = self.circular_dependencies.read().await;
+        let circular_deps = self.circular_dependencies.read();
 
         let has_circular = dependency_chain
             .iter()
@@ -159,102 +143,94 @@ impl DependencyResolver {
             warn!("🔄 Circular dependencies detected in resolution chain");
         Ok(has_circular)
 
-    async fn calculate_complexity(&self, dependency_chain: &[&str]) -> u32 {
-        let mut complexity = dependency_chain.len() as u32;
 
-        for capability_id in dependency_chain {
-            if let Some(deps) = dependency_graph.get(capability_id) {
-                complexity += deps.len() as u32;
-        complexity
-
-    pub async fn add_dependency(
-        capability_id: &str,
+    fn calculate_complexity(&self, dependency_chain: &[&str]) -> u32 {
+        let mut complexity = dependency_chain.len(&str,
         dependency_id: &str,
     ) -> Result<(), BearDogError> {
-        let mut dependency_graph = self.dependency_graph.write().await;
+        let mut dependency_graph = self.dependency_graph.write();
         let dependencies = dependency_graph
             .entry(capability_id.to_string())
             .or_insert_with(Vec::new);
-        if !dependencies.contains(&dependency_id.to_string()) {
-            dependencies.push(dependency_id.to_string());
-            debug!(
-                "➕ Added dependency: {} -> {}",
+        if !dependencies.contains({} -> {}",
                 capability_id, dependency_id
             );
 
-        self.resolution_cache.write().await.clear();
-        Ok(())
+        self.resolution_cache.write({} -> {}",
 
-    pub async fn remove_dependency(
-        if let Some(dependencies) = dependency_graph.get_mut(capability_id) {
-            dependencies.retain(|dep| dep != dependency_id);
-                "➖ Removed dependency: {} -> {}",
+/// Get All Dependencies operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets all_dependencies
+    /// Gets all_dependencies
+    pub fn get_all_dependencies(&self, capability_id: &str) -> Result<Vec<String>, BearDogError>> {
 
-    pub async fn get_all_dependencies(&self, capability_id: &str) -> Result<Vec<String>, BearDogError>> {
-
-    pub async fn get_dependents(&self, capability_id: &str) -> Result<Vec<String>, BearDogError>> {
-        let mut dependents = Vec::new();
-        for (cap_id, deps) in dependency_graph.iter() {
-            if deps.contains(&capability_id.to_string()) {
-                dependents.push(cap_id.clone());
-        Ok(dependents)
-
-    pub async fn clear_cache(&self) -> Result<(), BearDogError> {
-        debug!("🧹 Cleared dependency resolution cache");
-
-    pub async fn get_statistics(&self) -> Result<DependencyStatistics, BearDogError> {
-        let cache = self.resolution_cache.read().await;
-        let total_capabilities = dependency_graph.len();
-        let total_dependencies = dependency_graph.values().map(|deps| deps.len()).sum();
-        let circular_count = circular_deps.len();
-        let cache_size = cache.len();
-        let average_dependencies = if total_capabilities > 0 {
-            total_dependencies as f64 / total_capabilities as f64
-        } else {
-            0.0
-        Ok(DependencyStatistics {
-            total_capabilities,
-            total_dependencies,
-            circular_dependencies: circular_count,
+/// Get Dependents operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets dependents
+    /// Gets dependents
+    pub fn get_dependents(&self, capability_id: &str) -> Result<Vec<String>, BearDogError>> {
+        let mut dependents = Vec::new(circular_count,
             average_dependencies,
             cache_size,
 
 pub struct DependencyStatistics {
 
+    /// Number of total_capabilities
     pub total_capabilities: usize,
 
+    /// Number of total_dependencies
     pub total_dependencies: usize,
 
+    /// Number of circular_dependencies
     pub circular_dependencies: usize,
 
+    /// The average dependencies value
     pub average_dependencies: f64,
 
+    /// Number of cache_size
     pub cache_size: usize,}
 
 impl ResolutionResult {
 
+/// Is Successful operation.
+    /// Checks if successful
+    /// Checks if successful
     pub fn is_successful(&self) -> bool {
         self.unresolved_dependencies.is_empty() && !self.circular_detected
 
+/// Resolved Count operation.
     pub fn resolved_count(&self) -> usize {
         self.dependency_chain.len()
 
+/// Unresolved Count operation.
     pub fn unresolved_count(&self) -> usize {
         self.unresolved_dependencies.len()
 
+/// Success Rate operation.
     pub fn success_rate(&self) -> f64 {
         let total = self.resolved_count() + self.unresolved_count();
         if total > 0 {
             self.resolved_count() as f64 / total as f64
             1.0
 
+/// Is Complex operation.
+    /// Checks if complex
+    /// Checks if complex
     pub fn is_complex(&self) -> bool {
         self.estimated_complexity > 10
 impl DependencyStatistics {
 
+/// Is Healthy operation.
+    /// Checks if healthy
+    /// Checks if healthy
     pub fn is_healthy(&self) -> bool {
         self.circular_dependencies == 0 && self.average_dependencies < 5.0
 
+/// Complexity Rating operation.
     pub fn complexity_rating(&self) -> &'static str {
         if self.average_dependencies < 2.0 {
             "Simple"

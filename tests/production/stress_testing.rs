@@ -1,6 +1,5 @@
 use beardog_errors::BearDogError;
 
-
 use beardog::core::*;
 use beardog::production::*;
 use std::sync::Arc;
@@ -12,18 +11,16 @@ async fn test_production_stress_conditions() {
     let config = BearDogConfig::production();
     let core = Arc::new(
         BearDogCore::new(config)
-            .await
             .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Core initialization failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Core initialization failed", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Core initialization failed", e))
 })?,
     );
 
     let mut production_manager = ProductionManager::new(core.clone())
-        .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Production manager creation failed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Production manager creation failed", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Production manager creation failed", e))
 })?;
 
     let stress_test_config = StressTestConfiguration {
@@ -36,10 +33,9 @@ async fn test_production_stress_conditions() {
 
     let stress_test_results = production_manager
         .run_stress_test(&stress_test_config)
-        .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Stress test should succeed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Stress test should succeed", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Stress test should succeed", e))
 })?;
 
     assert!(
@@ -61,10 +57,9 @@ async fn test_production_stress_conditions() {
 
     let resource_exhaustion_test = production_manager
         .test_resource_exhaustion_handling()
-        .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Resource exhaustion test should succeed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Resource exhaustion test should succeed", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Resource exhaustion test should succeed", e))
 })?;
 
     assert!(
@@ -82,10 +77,9 @@ async fn test_production_stress_conditions() {
 
     let cascade_prevention_test = production_manager
         .test_cascade_failure_prevention()
-        .await
         .map_err(|e| {
     tracing::error!("Operation failed ({}): {:?}", "Cascade failure test should succeed", e);
-    beardog_errors::BearDogError::internal(format_args!("Operation failed ({}): {:?}", "Cascade failure test should succeed", e).to_string())
+    beardog_errors::BearDogError::internal(format!("Error: {:?}", "Cascade failure test should succeed", e))
 })?;
 
     assert!(
@@ -102,7 +96,7 @@ async fn test_production_stress_conditions() {
     );
 }
 
-pub async fn test_stress_testing_comprehensive(prod_manager: &mut ProductionManager) {
+pub fn test_stress_testing_comprehensive(prod_manager: &mut ProductionManager) {
 
     println!("🚀 Running comprehensive stress tests...");
 

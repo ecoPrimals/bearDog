@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::{
     HsmCapabilityDetector, HsmCapability, HsmTier, SecurityRequirements, SecurityLevel,
     SoftwareHsmType, KeyStorageType, MemoryProtectionLevel, SmartphoneType, SecureEnclaveType,
@@ -14,14 +19,19 @@ pub struct DefaultHsmCapabilityDetector {
     provider_capabilities: Arc<RwLock<HashMap<String, Vec<HsmCapability>>>>,
 }
 impl DefaultHsmCapabilityDetector {
-    pub async fn new() -> Result<Self, BearDogError> {
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    pub fn new() -> Result<Self, BearDogError> {
         Ok(Self {
             provider_capabilities: Arc::new(RwLock::new(HashMap::with_capacity(16))),
         })
     }
 
 impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
-    async fn detect_capabilities(&self) -> Result<Vec<HsmCapability>, BearDogError>> {
+    fn detect_capabilities(&self) -> Result<Vec<HsmCapability>, BearDogError>> {
 
         Ok(vec![
             HsmCapability::KeyGeneration,
@@ -31,7 +41,8 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
             HsmCapability::Verification,
         ])}
 
-    async fn is_hsm_available(&self, hsm_type: &HsmTier) -> Result<bool, BearDogError> {
+    /// Checks if hsm available
+    fn is_hsm_available(&self, hsm_type: &HsmTier) -> Result<bool, BearDogError> {
         match hsm_type {
             HsmTier::SoftwareHsm { .. } => Ok(true), // Always available
             HsmTier::SmartphoneHsm { .. } => {
@@ -39,11 +50,7 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
                 Ok(std::env::consts::OS == "android")
             }
             HsmTier::HardwareHsm { .. } => Ok(false), // Not implemented
-            HsmTier::HybridHsm { .. } => Ok(false),   // Not implemented
-        }
-    async fn recommend_hsm_tier(
-        &self,
-        requirements: &SecurityRequirements,
+            HsmTier::HybridHsm { .. } => Ok(&SecurityRequirements,
     ) -> Result<HsmTier, BearDogError> {
         match requirements.security_level {
             SecurityLevel::Basic => Ok(HsmTier::SoftwareHsm {}
@@ -66,11 +73,6 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
                             implementation: StrongBoxImplementation::TitanM {
                                 version: "1.0".to_string(),
                                 security_level: "EAL4+".to_string(),
-                            },
-                            hardware_backed: true,
-                            key_attestation: true,
-                        attestation_level: AttestationLevel::Hardware,
-                        user_presence_required: true,
                     })
                 } else {
                     Ok(HsmTier::SoftwareHsm {
@@ -93,9 +95,5 @@ impl HsmCapabilityDetector for DefaultHsmCapabilityDetector {
                         implementation: StrongBoxImplementation::TitanM {
                             version: "1.0".to_string(),
                             security_level: "EAL4+".to_string(),
-                        hardware_backed: true,
-                        key_attestation: true,
-                    attestation_level: AttestationLevel::Hardware,
-                    user_presence_required: true,
                 })
 } 

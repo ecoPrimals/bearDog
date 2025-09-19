@@ -1,0 +1,587 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: beardog-database-backup
+  namespace: beardog-production
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: postgres-backup
+            image: postgres:14-alpine
+            env:
+            - name: PGHOST
+              value: "postgres.database"
+            - name: PGPORT
+              value: "5432"
+            - name: PGDATABASE
+              value: "beardog_prod"
+            - name: PGUSER
+              value: "beardog_user"
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: beardog-secrets
+                  key: BEARDOG_DATABASE_PASSWORD
+            - name: BACKUP_RETENTION_DAYS
+              value: "30"
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              
+              # Create backup directory structure
+              BACKUP_DATE=$(date +%Y-%m-%d_%H-%M-%S)
+              BACKUP_DIR="/backup/database"
+              BACKUP_FILE="${BACKUP_DIR}/beardog-db-${BACKUP_DATE}.sql"
+              
+              mkdir -p "${BACKUP_DIR}"
+              
+              echo "Starting database backup: ${BACKUP_FILE}"
+              
+              # Create database dump with compression
+              pg_dump \
+                --verbose \
+                --clean \
+                --if-exists \
+                --create \
+                --format=custom \
+                --compress=9 \
+                --file="${BACKUP_FILE}.pgdump" \
+                "${PGDATABASE}"
+              
+              # Also create a plain SQL dump for easier recovery
+              pg_dump \
+                --verbose \
+                --clean \
+                --if-exists \
+                --create \
+                "${PGDATABASE}" | gzip > "${BACKUP_FILE}.gz"
+              
+              # Create metadata file
+              cat > "${BACKUP_FILE}.meta" << EOF
+              {
+                "backup_date": "${BACKUP_DATE}",
+                "database": "${PGDATABASE}",
+                "host": "${PGHOST}",
+                "port": "${PGPORT}",
+                "user": "${PGUSER}",
+                "backup_type": "full",
+                "compression": "gzip",
+                "size_bytes": $(stat -c%s "${BACKUP_FILE}.gz"),
+                "checksum": "$(sha256sum "${BACKUP_FILE}.gz" | cut -d' ' -f1)"
+              }
+              EOF
+              
+              # Cleanup old backups
+              find "${BACKUP_DIR}" -name "beardog-db-*.sql.gz" -mtime +${BACKUP_RETENTION_DAYS} -delete
+              find "${BACKUP_DIR}" -name "beardog-db-*.sql.pgdump" -mtime +${BACKUP_RETENTION_DAYS} -delete
+              find "${BACKUP_DIR}" -name "beardog-db-*.sql.meta" -mtime +${BACKUP_RETENTION_DAYS} -delete
+              
+              echo "Database backup completed successfully"
+              echo "Backup size: $(du -h "${BACKUP_FILE}.gz" | cut -f1)"
+              echo "Backup location: ${BACKUP_FILE}.gz"
+              
+              # Verify backup integrity
+              echo "Verifying backup integrity..."
+              gunzip -t "${BACKUP_FILE}.gz"
+              echo "Backup verification passed"
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "250m"
+              limits:
+                memory: "2Gi"
+                cpu: "1000m"
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-storage-pvc
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: beardog-config-backup
+  namespace: beardog-production
+spec:
+  schedule: "30 2 * * *"  # Daily at 2:30 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: beardog-backup-service-account
+          containers:
+          - name: config-backup
+            image: bitnami/kubectl:latest
+            env:
+            - name: BACKUP_RETENTION_DAYS
+              value: "90"
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              
+              BACKUP_DATE=$(date +%Y-%m-%d_%H-%M-%S)
+              BACKUP_DIR="/backup/config"
+              BACKUP_FILE="${BACKUP_DIR}/beardog-config-${BACKUP_DATE}"
+              
+              mkdir -p "${BACKUP_DIR}"
+              
+              echo "Starting configuration backup: ${BACKUP_FILE}"
+              
+              # Backup all BearDog-related Kubernetes resources
+              kubectl get all,configmaps,secrets,pvc,networkpolicies,serviceaccounts,roles,rolebindings \
+                -n beardog-production \
+                -o yaml > "${BACKUP_FILE}.yaml"
+              
+              # Backup monitoring configuration
+              kubectl get all,configmaps,secrets,pvc \
+                -n monitoring \
+                -l app.kubernetes.io/component=beardog \
+                -o yaml >> "${BACKUP_FILE}.yaml"
+              
+              # Compress the backup
+              gzip "${BACKUP_FILE}.yaml"
+              
+              # Create metadata
+              cat > "${BACKUP_FILE}.meta" << EOF
+              {
+                "backup_date": "${BACKUP_DATE}",
+                "namespace": "beardog-production",
+                "backup_type": "kubernetes_config",
+                "compression": "gzip",
+                "size_bytes": $(stat -c%s "${BACKUP_FILE}.yaml.gz"),
+                "checksum": "$(sha256sum "${BACKUP_FILE}.yaml.gz" | cut -d' ' -f1)"
+              }
+              EOF
+              
+              # Cleanup old backups
+              find "${BACKUP_DIR}" -name "beardog-config-*.yaml.gz" -mtime +${BACKUP_RETENTION_DAYS} -delete
+              find "${BACKUP_DIR}" -name "beardog-config-*.meta" -mtime +${BACKUP_RETENTION_DAYS} -delete
+              
+              echo "Configuration backup completed successfully"
+              echo "Backup size: $(du -h "${BACKUP_FILE}.yaml.gz" | cut -f1)"
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-storage-pvc
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: beardog-log-archive
+  namespace: beardog-production
+spec:
+  schedule: "0 3 * * 0"  # Weekly on Sunday at 3 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 4
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: beardog-backup-service-account
+          containers:
+          - name: log-archive
+            image: busybox:latest
+            env:
+            - name: ARCHIVE_RETENTION_WEEKS
+              value: "12"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              ARCHIVE_DATE=$(date +%Y-%m-%d_%H-%M-%S)
+              ARCHIVE_DIR="/backup/logs"
+              ARCHIVE_FILE="${ARCHIVE_DIR}/beardog-logs-${ARCHIVE_DATE}.tar.gz"
+              
+              mkdir -p "${ARCHIVE_DIR}"
+              
+              echo "Starting log archive: ${ARCHIVE_FILE}"
+              
+              # Archive logs older than 7 days
+              find /app/logs -name "*.log" -mtime +7 -print0 | \
+                tar --null -czf "${ARCHIVE_FILE}" -T -
+              
+              # Remove archived logs
+              find /app/logs -name "*.log" -mtime +7 -delete
+              
+              # Create metadata
+              cat > "${ARCHIVE_FILE}.meta" << EOF
+              {
+                "archive_date": "${ARCHIVE_DATE}",
+                "archive_type": "application_logs",
+                "compression": "gzip",
+                "size_bytes": $(stat -c%s "${ARCHIVE_FILE}"),
+                "checksum": "$(sha256sum "${ARCHIVE_FILE}" | cut -d' ' -f1)"
+              }
+              EOF
+              
+              # Cleanup old archives
+              find "${ARCHIVE_DIR}" -name "beardog-logs-*.tar.gz" -mtime +$((${ARCHIVE_RETENTION_WEEKS} * 7)) -delete
+              find "${ARCHIVE_DIR}" -name "beardog-logs-*.meta" -mtime +$((${ARCHIVE_RETENTION_WEEKS} * 7)) -delete
+              
+              echo "Log archive completed successfully"
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+            - name: app-logs
+              mountPath: /app/logs
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-storage-pvc
+          - name: app-logs
+            persistentVolumeClaim:
+              claimName: beardog-logs-pvc
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: beardog-backup-service-account
+  namespace: beardog-production
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: beardog-backup-role
+  namespace: beardog-production
+rules:
+- apiGroups: [""]
+  resources: ["*"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: beardog-backup-rolebinding
+  namespace: beardog-production
+subjects:
+- kind: ServiceAccount
+  name: beardog-backup-service-account
+  namespace: beardog-production
+roleRef:
+  kind: Role
+  name: beardog-backup-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-storage-pvc
+  namespace: beardog-production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
+  storageClassName: fast-ssd
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: beardog-logs-pvc
+  namespace: beardog-production
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: standard
+
+---
+# Disaster Recovery Job Template
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: beardog-disaster-recovery
+  namespace: beardog-production
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: beardog-backup-service-account
+      containers:
+      - name: disaster-recovery
+        image: postgres:14-alpine
+        env:
+        - name: PGHOST
+          value: "postgres.database"
+        - name: PGPORT
+          value: "5432"
+        - name: PGDATABASE
+          value: "beardog_prod"
+        - name: PGUSER
+          value: "beardog_user"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: beardog-secrets
+              key: BEARDOG_DATABASE_PASSWORD
+        - name: BACKUP_FILE
+          value: ""  # Set this when running recovery
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -euo pipefail
+          
+          if [ -z "${BACKUP_FILE}" ]; then
+            echo "ERROR: BACKUP_FILE environment variable must be set"
+            exit 1
+          fi
+          
+          echo "Starting disaster recovery from: ${BACKUP_FILE}"
+          
+          # Verify backup file exists and is readable
+          if [ ! -f "${BACKUP_FILE}" ]; then
+            echo "ERROR: Backup file not found: ${BACKUP_FILE}"
+            exit 1
+          fi
+          
+          # Verify backup integrity
+          echo "Verifying backup integrity..."
+          if [[ "${BACKUP_FILE}" == *.gz ]]; then
+            gunzip -t "${BACKUP_FILE}"
+          fi
+          
+          # Create recovery database if it doesn't exist
+          echo "Preparing database for recovery..."
+          createdb -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" "${PGDATABASE}" || true
+          
+          # Restore database
+          echo "Restoring database from backup..."
+          if [[ "${BACKUP_FILE}" == *.pgdump ]]; then
+            pg_restore \
+              --verbose \
+              --clean \
+              --if-exists \
+              --create \
+              --dbname="${PGDATABASE}" \
+              "${BACKUP_FILE}"
+          elif [[ "${BACKUP_FILE}" == *.gz ]]; then
+            gunzip -c "${BACKUP_FILE}" | psql -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d "${PGDATABASE}"
+          else
+            psql -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d "${PGDATABASE}" -f "${BACKUP_FILE}"
+          fi
+          
+          echo "Database recovery completed successfully"
+          
+          # Verify recovery
+          echo "Verifying database recovery..."
+          psql -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d "${PGDATABASE}" -c "SELECT COUNT(*) FROM information_schema.tables;"
+          
+          echo "Disaster recovery completed successfully"
+        volumeMounts:
+        - name: backup-storage
+          mountPath: /backup
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+      volumes:
+      - name: backup-storage
+        persistentVolumeClaim:
+          claimName: backup-storage-pvc
+
+---
+# Backup Monitoring and Alerting
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-monitoring-config
+  namespace: monitoring
+data:
+  backup-alerts.yml: |
+    groups:
+    - name: beardog.backup
+      rules:
+      - alert: BearDogBackupFailed
+        expr: increase(kube_job_status_failed{job_name=~"beardog-.*-backup"}[1h]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          service: beardog
+          team: infrastructure
+        annotations:
+          summary: "BearDog backup job failed"
+          description: "Backup job {{ $labels.job_name }} has failed"
+          runbook_url: "https://docs.beardog.com/runbooks/backup-failure"
+          
+      - alert: BearDogBackupMissing
+        expr: time() - kube_job_status_completion_time{job_name=~"beardog-.*-backup"} > 86400 * 2
+        for: 1h
+        labels:
+          severity: warning
+          service: beardog
+          team: infrastructure
+        annotations:
+          summary: "BearDog backup is overdue"
+          description: "No successful backup for {{ $labels.job_name }} in the last 48 hours"
+          
+      - alert: BearDogBackupStorageFull
+        expr: kubelet_volume_stats_used_bytes{persistentvolumeclaim="backup-storage-pvc"} / kubelet_volume_stats_capacity_bytes{persistentvolumeclaim="backup-storage-pvc"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: beardog
+          team: infrastructure
+        annotations:
+          summary: "Backup storage is nearly full"
+          description: "Backup storage is {{ $value | humanizePercentage }} full"
+
+---
+# Backup Verification Job
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: beardog-backup-verification
+  namespace: beardog-production
+spec:
+  schedule: "0 6 * * 1"  # Weekly on Monday at 6 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 4
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: backup-verification
+            image: postgres:14-alpine
+            env:
+            - name: VERIFICATION_DAYS
+              value: "7"
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              
+              echo "Starting backup verification process..."
+              
+              BACKUP_DIR="/backup/database"
+              VERIFICATION_REPORT="/backup/verification-$(date +%Y-%m-%d).txt"
+              
+              {
+                echo "BearDog Backup Verification Report"
+                echo "Generated: $(date)"
+                echo "=================================="
+                echo ""
+              } > "${VERIFICATION_REPORT}"
+              
+              # Find recent backups
+              RECENT_BACKUPS=$(find "${BACKUP_DIR}" -name "beardog-db-*.sql.gz" -mtime -${VERIFICATION_DAYS} | sort)
+              
+              if [ -z "${RECENT_BACKUPS}" ]; then
+                echo "ERROR: No recent backups found!" | tee -a "${VERIFICATION_REPORT}"
+                exit 1
+              fi
+              
+              # Verify each backup
+              for backup_file in ${RECENT_BACKUPS}; do
+                echo "Verifying: ${backup_file}" | tee -a "${VERIFICATION_REPORT}"
+                
+                # Check file integrity
+                if gunzip -t "${backup_file}"; then
+                  echo "  ✓ File integrity check passed" | tee -a "${VERIFICATION_REPORT}"
+                else
+                  echo "  ✗ File integrity check failed!" | tee -a "${VERIFICATION_REPORT}"
+                  continue
+                fi
+                
+                # Check metadata
+                meta_file="${backup_file%.*}.meta"
+                if [ -f "${meta_file}" ]; then
+                  echo "  ✓ Metadata file exists" | tee -a "${VERIFICATION_REPORT}"
+                  
+                  # Verify checksum
+                  expected_checksum=$(grep '"checksum"' "${meta_file}" | cut -d'"' -f4)
+                  actual_checksum=$(sha256sum "${backup_file}" | cut -d' ' -f1)
+                  
+                  if [ "${expected_checksum}" = "${actual_checksum}" ]; then
+                    echo "  ✓ Checksum verification passed" | tee -a "${VERIFICATION_REPORT}"
+                  else
+                    echo "  ✗ Checksum verification failed!" | tee -a "${VERIFICATION_REPORT}"
+                  fi
+                else
+                  echo "  ⚠ Metadata file missing" | tee -a "${VERIFICATION_REPORT}"
+                fi
+                
+                echo "  Size: $(du -h "${backup_file}" | cut -f1)" | tee -a "${VERIFICATION_REPORT}"
+                echo "" | tee -a "${VERIFICATION_REPORT}"
+              done
+              
+              echo "Backup verification completed successfully"
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "200m"
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-storage-pvc 

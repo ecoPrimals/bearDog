@@ -35,8 +35,7 @@ where
     QV: QuantumResistanceValidator + Send + Sync,
 {
 
-    pub fn new(
-        formal_verifier: FV,
+    pub fn new(FV,
         property_generator: PG,
         mutation_tester: MT,
         invariant_validator: IV,
@@ -54,7 +53,7 @@ where
         }
     }
 
-    pub async fn execute_comprehensive_testing(&self, target: &str) -> TestingResults {
+    pub fn execute_comprehensive_testing(&self, target: &str) -> TestingResults {
         let start_time = Instant::now();
         let mut results = TestingResults::new();
 
@@ -81,7 +80,7 @@ where
         let quantum_result = self.quantum_validator.test_quantum_resistance(target);
         results.add_quantum_result(quantum_result);
 
-        let mut metrics = self.test_metrics.write().await;
+        let mut metrics = self.test_metrics.write();
         metrics.tests_executed += 1;
         metrics.total_time += start_time.elapsed();
 
@@ -89,7 +88,7 @@ where
     }
 
     pub async fn get_metrics(&self) -> WorldClassMetrics {
-        self.test_metrics.read().await.clone()
+        self.test_metrics.read().clone()
     }
 }
 
@@ -107,19 +106,7 @@ pub fn create_canonical_zero_cost_framework() -> ZeroCostTestingFramework<
         super::verification::CanonicalMutationTester::new(),
         super::verification::CanonicalInvariantValidator::new(),
         super::verification::CanonicalExhaustiveTester::new(),
-        super::verification::CanonicalQuantumValidator::new(),
-    )
-}
-
-pub struct ZeroCostFrameworkBuilder<
-    FV = (),
-    PG = (),
-    MT = (),
-    IV = (),
-    ET = (),
-    QV = (),
-> {
-    formal_verifier: FV,
+        super::verification::CanonicalQuantumValidator::new(FV,
     property_generator: PG,
     mutation_tester: MT,
     invariant_validator: IV,
@@ -184,23 +171,7 @@ where
 {
 
     pub fn build(self) -> ZeroCostTestingFramework<FV, PG, MT, IV, ET, QV> {
-        ZeroCostTestingFramework::new(
-            self.formal_verifier,
-            self.property_generator,
-            self.mutation_tester,
-            self.invariant_validator,
-            self.exhaustive_tester,
-            self.quantum_validator,
-        )
-    }
-}
-
-pub struct FrameworkMigrationHelper;
-
-impl FrameworkMigrationHelper {
-
-    pub fn migrate_to_zero_cost(
-        _legacy_framework: super::core::WorldClassTestingFramework,
+        ZeroCostTestingFramework::new(super::core::WorldClassTestingFramework,
     ) -> ZeroCostTestingFramework<
         super::verification::CanonicalFormalVerifier,
         super::verification::CanonicalPropertyGenerator,
@@ -223,12 +194,12 @@ mod tests {
         let framework = create_canonical_zero_cost_framework();
         
         let start = Instant::now();
-        let results = framework.execute_comprehensive_testing("test_component").await;
+        let results = framework.execute_comprehensive_testing("test_component");
         let duration = start.elapsed();
 
         assert!(duration.as_millis() < 100); // Should be very fast due to compile-time dispatch
         
-        let metrics = framework.get_metrics().await;
+        let metrics = framework.get_metrics();
         assert_eq!(metrics.tests_executed, 1);
     }
 

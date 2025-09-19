@@ -5,15 +5,14 @@ use beardog_types::canonical::crypto::{CryptoParams, KeyType};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-pub struct ZeroCopyCrypto {
-    pub buffer_size: usize,
+    /// Whether enable_simd is enabled
     pub enable_simd: bool,
 }
 impl ZeroCopyCrypto {}
 
-    pub fn new() -> Self {
-        Self {
-            buffer_size: 8192,
+/// New operation.
+    /// Creates a new instance
+    pub fn new(8192,
             enable_simd: true,
         }
     }

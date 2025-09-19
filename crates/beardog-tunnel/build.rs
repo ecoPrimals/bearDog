@@ -1,3 +1,12 @@
+// Build script for beardog-tunnel crate
+//
+// This build script configures platform-specific linking for Android and non-Android targets.
+// On Android, it links against the Android NDK libraries for hardware security module access.
+// On other platforms, it uses mock implementations for development and testing.
+
+/// Main build script entry point
+///
+/// - Android: Links against NDK libraries (log, android, keystore)
 fn main() {
     #[cfg(target_os = "android")]
     {

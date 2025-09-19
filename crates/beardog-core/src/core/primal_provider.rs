@@ -10,16 +10,18 @@ use beardog_errors::idiomatic::SecurityResult;
 
 impl UniversalProvider for BearDogCore {
 
+
     fn metadata(&self) -> &PrimalMetadata {
         &self.primal_metadata
     }
+
 
     fn capabilities(&self) -> &[PrimalCapability] {
         &self.primal_capabilities
     }
 
     #[allow(clippy::vec_init_then_push)] // Complex service definitions are clearer with push
-    async fn services(&self) -> Result<Vec<PrimalService>, BearDogError> {
+    fn services(&self) -> Result<Vec<PrimalService>, BearDogError> {
         let mut services = Vec::new();
 
         services.push(PrimalService {
@@ -29,18 +31,21 @@ impl UniversalProvider for BearDogCore {
             endpoint: ServiceEndpoint {
                 protocol: "https".to_string(),
                 host: std::env::var("BEARDOG_SECURITY_HOST")
-                    .unwrap_or_else(|_| "beardog-security.ecosystem.internal".to_string()),
+                    .unwrap_or_else(|_| {
+                std::env::var("SECURITY_SERVICE_HOST")
+                    .unwrap_or_else(|_| "beardog-security.ecosystem.internal".to_string())
+            }),
                 port: std::env::var("BEARDOG_SECURITY_PORT")
-                    .unwrap_or_else(|_| "8443".to_string())
-                    .parse()
+                    .ok()
+                    .and_then(|p| p.parse().ok())
                     .unwrap_or(8443),
                 path: "/api/v1/security".to_string(),
-                security: EndpointSecurity {
+            },
+            security: EndpointSecurity {
                     require_tls: true,
                     require_client_cert: false,
-                    require_api_key: true,
-                    custom_auth: vec!["beardog-auth".to_string()],
-                },
+                                    require_api_key: true,
+                custom_auth: vec!["beardog-auth".to_string()],
             },
             capabilities: vec![
                 PrimalCapability::Security,
@@ -57,18 +62,21 @@ impl UniversalProvider for BearDogCore {
             endpoint: ServiceEndpoint {
                 protocol: "https".to_string(),
                 host: std::env::var("BEARDOG_THREAT_HOST")
-                    .unwrap_or_else(|_| "beardog-threat.ecosystem.internal".to_string()),
+                    .unwrap_or_else(|_| {
+                std::env::var("THREAT_SERVICE_HOST")
+                    .unwrap_or_else(|_| "beardog-threat.ecosystem.internal".to_string())
+            }),
                 port: std::env::var("BEARDOG_THREAT_PORT")
-                    .unwrap_or_else(|_| "8080".to_string())
-                    .parse()
+                    .ok()
+                    .and_then(|p| p.parse().ok())
                     .unwrap_or(8080),
                 path: "/api/v1/threat".to_string(),
-                security: EndpointSecurity {
+            },
+            security: EndpointSecurity {
                     require_tls: true,
                     require_client_cert: false,
                     require_api_key: true,
                     custom_auth: vec!["beardog-auth".to_string()],
-                },
             },
             capabilities: vec![
                 PrimalCapability::ThreatDetection,
@@ -85,100 +93,34 @@ impl UniversalProvider for BearDogCore {
             endpoint: ServiceEndpoint {
                 protocol: "https".to_string(),
                 host: std::env::var("BEARDOG_COMPLIANCE_HOST")
-                    .unwrap_or_else(|_| "beardog-compliance.ecosystem.internal".to_string()),
+                    .unwrap_or_else(|_| {
+                std::env::var("COMPLIANCE_SERVICE_HOST")
+                    .unwrap_or_else(|_| "beardog-compliance.ecosystem.internal".to_string())
+            }),
                 port: std::env::var("BEARDOG_COMPLIANCE_PORT")
                     .unwrap_or_else(|_| "8090".to_string())
                     .parse()
                     .unwrap_or(8090),
-                path: "/api/v1/compliance".to_string(),
-                security: EndpointSecurity {
-                    require_tls: true,
-                    require_client_cert: false,
-                    require_api_key: true,
-                    custom_auth: vec!["beardog-auth".to_string()],
-                },
-            },
-            capabilities: vec![PrimalCapability::Compliance, PrimalCapability::Monitoring],
-            health: ServiceHealth::Healthy,
-        });
+                path: "/api/v1/compliance".to_string();
 
         services.push(PrimalService {
-            id: "workflow".to_string(),
+            id: "workflow ".to_string(),
             name: "BearDog Workflow Engine".to_string(),
             description: "Multi-party workflow orchestration".to_string(),
             endpoint: ServiceEndpoint {
                 protocol: "https".to_string(),
                 host: std::env::var("BEARDOG_WORKFLOW_HOST")
-                    .unwrap_or_else(|_| "beardog-workflow.ecosystem.internal".to_string()),
+                    .unwrap_or_else(|_| {
+                std::env::var("WORKFLOW_SERVICE_HOST")
+                    .unwrap_or_else(|_| "beardog-workflow.ecosystem.internal".to_string())
+            }),
                 port: std::env::var("BEARDOG_WORKFLOW_PORT")
                     .unwrap_or_else(|_| "8100".to_string())
                     .parse()
                     .unwrap_or(8100),
-                path: "/api/v1/workflow".to_string(),
-                security: EndpointSecurity {
-                    require_tls: true,
-                    require_client_cert: false,
-                    require_api_key: true,
-                    custom_auth: vec!["beardog-auth".to_string()],
-                },
-            },
-            capabilities: vec![PrimalCapability::Workflow],
-            health: ServiceHealth::Healthy,
-        });
-        
-        Ok(services)
-    }
-
-    async fn register_with_ecosystem(&self, songbird_endpoint: &str) -> Result<(), BearDogError> {
-        use reqwest;
-        use serde_json;
-        
-        let client = reqwest::Client::new();
-        let registration_data = serde_json::json!({
-            "primal_metadata": self.metadata(),
-            "capabilities": self.capabilities(),
-            "services": self.services().await?,
-            "health": self.health_check().await?
-        });
-        
-        let response = client
-            .post(format!("{songbird_endpoint}/api/v1/primals/register"))
-            .header("Content-Type", "application/json")
-            .header("X-Primal-Type", "BearDog")
-            .json(&registration_data)
-            .send()
-            .await
-            .map_err(|e| {
-                BearDogError::internal(format!("Failed to register with Songbird: {e}"))
-            })?;
-            
-        if response.status().is_success() {
-            tracing::info!(
-                "Successfully registered BearDog with Songbird at {}",
-                songbird_endpoint
-            );
-            Ok(())
-        } else {
-            let error_text = response
-                .text()
-                .await
-                .unwrap_or_else(|_| "Unknown error".to_string());
-            Err(BearDogError::internal(format!(
-                "Failed to register with Songbird: {error_text}"
-            )))
-        }
-    }
-
-    async fn handle_service_request(
-        &self,
-        service_id: &str,
-        request_data: Vec<u8>,
-        context: ServiceContext,
-    ) -> Result<Vec<u8>, BearDogError> {
-        tracing::info!(
-            "Handling service request for {} from {} (request_id: {})",
+                path: "/api/v1/workflow".to_string()",
             service_id,
-            context.source.name,
+            context.source.name: name.to_string(),
             context.request_id
         );
         
@@ -190,7 +132,7 @@ impl UniversalProvider for BearDogCore {
                 })?;
 
                 let response = serde_json::json!({
-                    "success": true,
+                    "success ": true,
                     "message": "Security request handled via universal ecosystem integration",
                     "data": request_data
                 });
@@ -218,7 +160,7 @@ impl UniversalProvider for BearDogCore {
                 });
                 Ok(response.to_string().into_bytes())
             }
-            "workflow" => {
+            "workflow " => {
 
                 let response = serde_json::json!({
                     "status": "queued",
@@ -231,8 +173,9 @@ impl UniversalProvider for BearDogCore {
         }
     }
 
-    async fn health_check(&self) -> Result<ServiceHealth, BearDogError> {
-        let state = self.state.read().await;
+
+    fn health_check(&self) -> Result<ServiceHealth, BearDogError> {
+        let state = self.state.read();
         match state.health_status {
             crate::types::HealthStatus::Healthy => Ok(ServiceHealth::Healthy),
             crate::types::HealthStatus::Degraded => Ok(ServiceHealth::Degraded),
@@ -241,8 +184,9 @@ impl UniversalProvider for BearDogCore {
         }
     }
 
-    async fn shutdown(&self) -> Result<(), BearDogError> {
+
+    fn shutdown(&self) -> Result<(), BearDogError> {
         tracing::info!("Received shutdown notification from ecosystem");
-        self.stop().await
+        self.stop()
     }
 }

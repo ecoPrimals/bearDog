@@ -1,281 +1,675 @@
+// Detection Rules - Modern Implementation
+//
+// **MODERNIZED**: Clean, production-ready detection rule types for the BearDog threat detection engine.
+
+use super::conditions::RuleCondition;
+use crate::threat::types::{ThreatSeverity, ThreatType};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use super::super::core::{ThreatSeverity, ThreatType};
-use super::conditions::RuleCondition;
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum ThreatRuleType {
-    Behavioral,
-    Signature,
-    Anomaly,
-    Statistical,
-    MachineLearning,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DetectionRule {
+    pub id: String,
+    /// Name of the item
+    /// Name of the item
+    pub name: String,
+    /// The description value
+    /// The description value
+    pub description: String,
+    /// The rule type value
+    /// The rule type value
+    pub rule_type: ThreatRuleType,
+    /// The severity value
+    /// The severity value
+    pub severity: ThreatSeverity,
+    /// The condition value
+    /// The condition value
+    pub condition: RuleCondition,
+    /// Whether feature is enabled
+    /// Whether feature is enabled
+    pub enabled: bool,
+    /// Number of priority
+    /// Number of priority
+    pub priority: u8,
+    /// Collection of tags
+    /// Collection of tags
+    pub tags: Vec<String>,
+    /// The created at value
+    /// The created at value
+    pub created_at: DateTime<Utc>,
+    /// The updated at value
+    /// The updated at value
+    pub updated_at: DateTime<Utc>,
+    /// The created by value
+    /// The created by value
+    pub created_by: String,
+    /// The version value
+    /// The version value
+    pub version: String,
+    /// Mapping of metadata
+    /// Mapping of metadata
+    pub metadata: HashMap<String, String>,
+    // Additional fields needed by handlers
+    /// The threat type value
+    /// The threat type value
+    pub threat_type: ThreatType,
+    /// Number of detection
+    /// Number of detection
+    pub detection_count: u64,
+    /// Number of false_positive
+    /// Number of false_positive
+    pub false_positive_count: u64,
+    pub confidence_score: f64,
+    /// The detection logic value
+    /// The detection logic value
+    pub detection_logic: String,
+    /// Optional mitre technique
+    /// Optional mitre technique
+    pub mitre_technique: Option<String>,
+    /// Optional mitre tactic
+    /// Optional mitre tactic
+    pub mitre_tactic: Option<String>,
+    /// The author value
+    /// The author value
+    pub author: String,
+    /// Collection of actions
+    /// Collection of actions
+    pub actions: Vec<String>,
+    /// The modified at value
+    /// The modified at value
+    pub modified_at: DateTime<Utc>,
+    /// Collection of references
+    /// Collection of references
+    pub references: Vec<String>,
 }
 
-impl Default for ThreatRuleType {
+impl Default for DetectionRule {
     fn default() -> Self {
-        Self::Behavioral
+        let now = Utc::now();
+        Self {
+            id: Uuid::new_v4().to_string(),
+            name: "Default Rule".to_string(),
+            description: "Default detection rule".to_string(),
+            rule_type: ThreatRuleType::Signature,
+            severity: ThreatSeverity::Medium,
+            condition: RuleCondition::Always,
+            enabled: true,
+            priority: 5,
+            tags: Vec::new(),
+            created_at: now,
+            updated_at: now,
+            created_by: "system".to_string(),
+            version: "1.0.0".to_string(),
+            metadata: HashMap::new(),
+            // Additional fields
+            threat_type: ThreatType::Unknown,
+            detection_count: 0,
+            false_positive_count: 0,
+            confidence_score: 0.5,
+            detection_logic: "default_logic".to_string(),
+            mitre_technique: None,
+            mitre_tactic: None,
+            author: "system".to_string(),
+            actions: Vec::new(),
+            modified_at: now,
+            references: Vec::new(),
+        }
+    }
+}
+
+/// Types of threat detection rules
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// Types of threat rule
+/// Types of threat rule
+pub enum ThreatRuleType {
+    /// Signature-based detection
+    Signature,
+
+    /// Behavioral analysis
+    Behavioral,
+
+    /// Anomaly detection
+    Anomaly,
+
+    /// Heuristic analysis
+    Heuristic,
+
+    /// Machine learning based
+    MachineLearning,
+
+    /// Correlation rule
+    Correlation,
+
+    /// Threshold-based rule
+    Threshold,
+
+    /// Custom rule type
+    Custom(String),
+}
+
+/// Rule execution result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RuleExecutionResult {
+    pub rule_id: String,
+    /// Name of the rule
+    /// Name of the rule
+    pub rule_name: String,
+    /// Whether matched is enabled
+    /// Whether matched is enabled
+    pub matched: bool,
+    pub confidence: f64,
+    pub execution_time_ms: u64,
+    /// Collection of matched conditions
+    /// Collection of matched conditions
+    pub matched_conditions: Vec<String>,
+    /// Optional threat type
+    /// Optional threat type
+    pub threat_type: Option<ThreatType>,
+    /// The severity value
+    /// The severity value
+    pub severity: ThreatSeverity,
+    pub evidence: Vec<String>,
+    pub timestamp: DateTime<Utc>,
+    /// Mapping of metadata
+    /// Mapping of metadata
+    pub metadata: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RulePerformanceMetrics {
+    pub rule_id: String,
+    /// Number of total_executions
+    /// Number of total_executions
+    pub total_executions: u64,
+    /// Number of true_positives
+    /// Number of true_positives
+    pub true_positives: u64,
+    /// Number of false_positives
+    /// Number of false_positives
+    pub false_positives: u64,
+    /// Number of true_negatives
+    /// Number of true_negatives
+    pub true_negatives: u64,
+    /// Number of false_negatives
+    /// Number of false_negatives
+    pub false_negatives: u64,
+    pub avg_execution_time_ms: f64,
+    /// The accuracy value
+    /// The accuracy value
+    pub accuracy: f64,
+    /// The precision value
+    /// The precision value
+    pub precision: f64,
+    /// The recall value
+    /// The recall value
+    pub recall: f64,
+    /// The f1 score value
+    /// The f1 score value
+    pub f1_score: f64,
+    /// The last updated value
+    /// The last updated value
+    pub last_updated: DateTime<Utc>,
+}
+
+/// Rule validation result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RuleValidationResult {
+    pub is_valid: bool,
+    /// Collection of errors
+    /// Collection of errors
+    pub errors: Vec<String>,
+    /// Collection of warnings
+    /// Collection of warnings
+    pub warnings: Vec<String>,
+    /// Collection of suggestions
+    /// Collection of suggestions
+    pub suggestions: Vec<String>,
+}
+
+impl DetectionRule {
+    /// Create a new detection rule
+    /// Creates a new instance
+    pub fn new(
+        id: &str,
+        name: &str,
+        description: &str,
+        rule_type: ThreatRuleType,
+        severity: ThreatSeverity,
+        condition: RuleCondition,
+    ) -> Self {
+        let now = Utc::now();
+        Self {
+            id: id.to_string(),
+            name: name.to_string(),
+            description: description.to_string(),
+            rule_type,
+            severity,
+            condition,
+            enabled: true,
+            priority: 50, // Medium priority by default
+            tags: Vec::new(),
+            created_at: now,
+            updated_at: now,
+            created_by: "system".to_string(),
+            version: "1.0.0".to_string(),
+            metadata: HashMap::new(),
+            // Additional fields
+            threat_type: ThreatType::Unknown,
+            detection_count: 0,
+            false_positive_count: 0,
+            confidence_score: 0.5,
+            detection_logic: format!("Rule: {name}"),
+            mitre_technique: None,
+            mitre_tactic: None,
+            author: "system".to_string(),
+            actions: Vec::new(),
+            modified_at: now,
+            references: Vec::new(),
+        }
+    }
+
+    /// Execute the rule against event data
+    /// Executes operation
+    /// Executes operation
+    pub fn execute(&self, event_data: &HashMap<String, String>) -> RuleExecutionResult {
+        let start_time = std::time::Instant::now();
+
+        let matched = self.enabled && self.condition.evaluate(event_data);
+        let execution_time = start_time.elapsed().as_millis() as u64;
+
+        RuleExecutionResult {
+            rule_id: self.id.clone(),
+            rule_name: self.name.clone(),
+            matched,
+            confidence: if matched { 0.8 } else { 0.0 },
+            execution_time_ms: execution_time,
+            matched_conditions: if matched {
+                self.condition.referenced_fields()
+            } else {
+                Vec::new()
+            },
+            threat_type: if matched {
+                Some(ThreatType::Suspicious)
+            } else {
+                None
+            },
+            severity: self.severity.clone(),
+            evidence: if matched {
+                vec![format!("Rule {} matched", self.name)]
+            } else {
+                Vec::new()
+            },
+            timestamp: Utc::now(),
+            metadata: HashMap::new(),
+        }
+    }
+
+    /// Validate the rule configuration
+    /// Validates input
+    /// Validates input
+    pub fn validate(&self) -> RuleValidationResult {
+        let mut errors = Vec::new();
+        let mut warnings = Vec::new();
+        let mut suggestions = Vec::new();
+
+        // Check required fields
+        if self.id.is_empty() {
+            errors.push("Rule ID cannot be empty".to_string());
+        }
+
+        if self.name.is_empty() {
+            errors.push("Rule name cannot be empty".to_string());
+        }
+
+        if self.description.is_empty() {
+            warnings.push("Rule description is empty".to_string());
+        }
+
+        // Check complexity
+        if self.condition.complexity_score() > 10 {
+            warnings.push("Rule condition is very complex, consider simplifying".to_string());
+        }
+
+        // Check priority range
+        if self.priority > 100 {
+            errors.push("Rule priority must be between 0 and 100".to_string());
+        }
+
+        // Suggestions
+        if self.tags.is_empty() {
+            suggestions.push("Consider adding tags for better rule organization".to_string());
+        }
+
+        RuleValidationResult {
+            is_valid: errors.is_empty(),
+            errors,
+            warnings,
+            suggestions,
+        }
+    }
+
+    /// Enable the rule
+    pub fn enable(&mut self) {
+        self.enabled = true;
+        self.updated_at = Utc::now();
+    }
+
+    /// Disable the rule
+    pub fn disable(&mut self) {
+        self.enabled = false;
+        self.updated_at = Utc::now();
+    }
+
+    /// Add a tag to the rule
+    pub fn add_tag(&mut self, tag: &str) {
+        if !self.tags.contains(&tag.to_string()) {
+            self.tags.push(tag.to_string());
+            self.updated_at = Utc::now();
+        }
+    }
+
+    /// Remove a tag from the rule
+    /// Removes tag
+    /// Removes tag
+    pub fn remove_tag(&mut self, tag: &str) {
+        self.tags.retain(|t| t != tag);
+        self.updated_at = Utc::now();
+    }
+
+    /// Update rule priority
+    /// Sets priority
+    /// Sets priority
+    pub fn set_priority(&mut self, priority: u8) {
+        self.priority = priority.min(100);
+        self.updated_at = Utc::now();
+    }
+
+    /// Add metadata
+    pub fn add_metadata(&mut self, key: &str, value: &str) {
+        self.metadata.insert(key.to_string(), value.to_string());
+        self.updated_at = Utc::now();
+    }
+
+    /// Check if rule is high priority
+    /// Checks if high priority
+    /// Checks if high priority
+    pub fn is_high_priority(&self) -> bool {
+        self.priority >= 80
+    }
+
+    /// Check if rule is complex
+    /// Checks if complex
+    /// Checks if complex
+    pub fn is_complex(&self) -> bool {
+        self.condition.is_complex()
+    }
+
+    /// Get rule age in days
+    pub fn age_days(&self) -> i64 {
+        (Utc::now() - self.created_at).num_days()
+    }
+}
+
+impl RulePerformanceMetrics {
+    /// Creates a new instance
+    pub fn new(rule_id: &str) -> Self {
+        Self {
+            rule_id: rule_id.to_string(),
+            total_executions: 0,
+            true_positives: 0,
+            false_positives: 0,
+            true_negatives: 0,
+            false_negatives: 0,
+            avg_execution_time_ms: 0.0,
+            accuracy: 0.0,
+            precision: 0.0,
+            recall: 0.0,
+            f1_score: 0.0,
+            last_updated: Utc::now(),
+        }
+    }
+
+    /// Update metrics with execution result
+    /// Updates with_result
+    /// Updates with_result
+    pub fn update_with_result(
+        &mut self,
+        execution_time_ms: u64,
+        was_correct: bool,
+        was_positive: bool,
+    ) {
+        self.total_executions += 1;
+
+        // Update execution time average with proper precision handling
+        #[allow(clippy::cast_precision_loss)]
+        {
+            self.avg_execution_time_ms = (self.avg_execution_time_ms
+                * (self.total_executions - 1) as f64
+                + execution_time_ms as f64)
+                / self.total_executions as f64;
+        }
+
+        // Update confusion matrix
+        match (was_correct, was_positive) {
+            (true, true) => self.true_positives += 1,
+            (true, false) => self.true_negatives += 1,
+            (false, true) => self.false_positives += 1,
+            (false, false) => self.false_negatives += 1,
+        }
+
+        // Recalculate metrics
+        self.calculate_metrics();
+        self.last_updated = Utc::now();
+    }
+
+    #[allow(clippy::cast_precision_loss)]
+    fn calculate_metrics(&mut self) {
+        let total =
+            self.true_positives + self.true_negatives + self.false_positives + self.false_negatives;
+
+        if total > 0 {
+            self.accuracy = (self.true_positives + self.true_negatives) as f64 / total as f64;
+        }
+
+        let predicted_positive = self.true_positives + self.false_positives;
+        if predicted_positive > 0 {
+            self.precision = self.true_positives as f64 / predicted_positive as f64;
+        }
+
+        let actual_positive = self.true_positives + self.false_negatives;
+        if actual_positive > 0 {
+            self.recall = self.true_positives as f64 / actual_positive as f64;
+        }
+
+        if self.precision + self.recall > 0.0 {
+            self.f1_score = 2.0 * (self.precision * self.recall) / (self.precision + self.recall);
+        }
+    }
+
+    #[must_use]
+    pub fn is_performing_well(&self) -> bool {
+        self.accuracy > 0.8 && self.precision > 0.7 && self.recall > 0.7
     }
 }
 
 impl std::fmt::Display for ThreatRuleType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ThreatRuleType::Behavioral => write!(f, "Behavioral"),
             ThreatRuleType::Signature => write!(f, "Signature"),
+            ThreatRuleType::Behavioral => write!(f, "Behavioral"),
             ThreatRuleType::Anomaly => write!(f, "Anomaly"),
-            ThreatRuleType::Statistical => write!(f, "Statistical"),
+            ThreatRuleType::Heuristic => write!(f, "Heuristic"),
             ThreatRuleType::MachineLearning => write!(f, "Machine Learning"),
+            ThreatRuleType::Correlation => write!(f, "Correlation"),
+            ThreatRuleType::Threshold => write!(f, "Threshold"),
+            ThreatRuleType::Custom(name) => write!(f, "Custom: {name}"),
         }
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DetectionRule {
-    pub id: String,
-    pub name: String,
-    pub description: String,
-    pub condition: RuleCondition,
-    pub threat_type: ThreatType,
-    pub severity: ThreatSeverity,
-    pub enabled: bool,
-    pub detection_count: u64,
-    pub false_positive_count: u64,
-    // Additional fields that are referenced in the code
-    pub rule_type: String,
-    pub confidence: f64,
-    pub detection_logic: String,
-    pub mitre_technique_id: Option<String>,
-    pub mitre_tactic: Option<String>,
-    pub author: String,
-    pub version: String,
-    pub created_at: DateTime<Utc>,
-    pub modified_at: DateTime<Utc>,
-    pub tags: Vec<String>,
-    pub references: Vec<String>,
-    pub last_triggered: Option<DateTime<Utc>>,
-    pub metadata: HashMap<String, String>,
-    pub actions: Vec<String>, // Actions to take when rule triggers
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::threat::types::engine::conditions::RuleCondition;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ThreatDetectionRule {
-    pub rule_id: String,
-    pub name: String,
-    pub description: String,
-    pub severity: ThreatSeverity,
-    pub enabled: bool,
-    pub conditions: Vec<RuleCondition>,
-    pub actions: Vec<String>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    pub mitre_technique_id: Option<String>,
-    pub mitre_tactic: Option<String>,
-    pub author: String,
-    pub version: String,
-    pub tags: Vec<String>,
-    pub references: Vec<String>,
-    pub metadata: HashMap<String, String>,
-}
-
-impl Default for DetectionRule {
-    fn default() -> Self {
-        let now = chrono::Utc::now();
-        Self {
-            id: uuid::Uuid::new_v4().to_string(),
-            name: "Default Rule".to_string(),
-            description: "Default detection rule".to_string(),
-            condition: RuleCondition::Always,
-            threat_type: ThreatType::Unknown,
-            severity: ThreatSeverity::Medium,
-            enabled: true,
-            detection_count: 0,
-            false_positive_count: 0,
-            rule_type: "behavioral".to_string(),
-            confidence: 0.5,
-            detection_logic: "default_detection".to_string(),
-            mitre_technique_id: None,
-            mitre_tactic: None,
-            author: "BearDog System".to_string(),
-            version: "1.0.0".to_string(),
-            created_at: now,
-            modified_at: now,
-            tags: Vec::new(),
-            references: Vec::new(),
-            last_triggered: None,
-            metadata: HashMap::new(),
-            actions: Vec::new(),
-        }
-    }
-}
-
-impl Default for ThreatDetectionRule {
-    fn default() -> Self {
-        Self {
-            rule_id: uuid::Uuid::new_v4().to_string(),
-            name: "Default Rule".to_string(),
-            description: String::new(),
-            severity: super::super::core::ThreatSeverity::Medium,
-            enabled: true,
-            conditions: Vec::new(),
-            actions: Vec::new(),
-            created_at: chrono::Utc::now(),
-            updated_at: chrono::Utc::now(),
-            mitre_technique_id: None,
-            mitre_tactic: None,
-            author: "BearDog System".to_string(),
-            version: "1.0.0".to_string(),
-            tags: Vec::new(),
-            references: Vec::new(),
-            metadata: HashMap::with_capacity(16),
-        }
-    }
-}
-
-impl DetectionRule {
-    pub fn new(
-        name: &str,
-        description: &str,
-        rule_type: ThreatRuleType,
-        severity: ThreatSeverity,
-        detection_logic: &str,
-    ) -> Self {
-        Self {
-            id: Uuid::new_v4().to_string(),
-            name: name.to_string(),
-            description: description.to_string(),
-            condition: RuleCondition::Always, // Default condition
-            threat_type: ThreatType::Unknown,
-            severity,
-            enabled: true,
-            detection_count: 0,
-            false_positive_count: 0,
-            rule_type: rule_type.to_string(),
-            confidence: 0.8,
-            detection_logic: detection_logic.to_string(),
-            mitre_technique_id: None,
-            mitre_tactic: None,
-            author: "BearDog System".to_string(),
-            version: "1.0.0".to_string(),
-            created_at: Utc::now(),
-            modified_at: Utc::now(),
-            tags: Vec::new(),
-            references: Vec::new(),
-            last_triggered: None,
-            metadata: HashMap::new(),
-            actions: Vec::new(),
-        }
-    }
-
-    /// Simple constructor for basic threat rules
-    pub fn simple(
-        id: &str,
-        name: &str,
-        description: &str,
-        threat_type: ThreatType,
-        severity: ThreatSeverity,
-        condition: RuleCondition,
-        actions: Vec<String>,
-    ) -> Self {
-        Self {
-            id: id.to_string(),
-            name: name.to_string(),
-            description: description.to_string(),
+    #[test]
+    fn test_detection_rule_creation() {
+        let condition = RuleCondition::field_equals("event_type", "login");
+        let rule = DetectionRule::new(
+            "rule-1",
+            "Login Detection",
+            "Detects login events",
+            ThreatRuleType::Signature,
+            ThreatSeverity::Medium,
             condition,
-            threat_type,
-            severity,
-            enabled: true,
-            detection_count: 0,
-            false_positive_count: 0,
-            rule_type: "behavioral".to_string(),
-            confidence: 0.8,
-            detection_logic: description.to_string(),
-            mitre_technique_id: None,
-            mitre_tactic: None,
-            author: "BearDog System".to_string(),
-            version: "1.0.0".to_string(),
-            created_at: Utc::now(),
-            modified_at: Utc::now(),
-            tags: Vec::new(),
-            references: Vec::new(),
-            last_triggered: None,
-            metadata: HashMap::new(),
-            actions,
-        }
+        );
+
+        assert_eq!(rule.id, "rule-1");
+        assert_eq!(rule.name, "Login Detection");
+        assert!(rule.enabled);
+        assert_eq!(rule.priority, 50);
     }
 
-    pub fn enable(&mut self) {
-        self.enabled = true;
-        self.modified_at = Utc::now();
+    #[test]
+    fn test_rule_execution() {
+        let condition = RuleCondition::field_equals("event_type", "login");
+        let rule = DetectionRule::new(
+            "rule-1",
+            "Login Detection",
+            "Detects login events",
+            ThreatRuleType::Signature,
+            ThreatSeverity::Medium,
+            condition,
+        );
+
+        let mut event_data = HashMap::new();
+        event_data.insert("event_type".to_string(), "login".to_string());
+
+        let result = rule.execute(&event_data);
+        assert!(result.matched);
+        assert_eq!(result.rule_id, "rule-1");
+        assert!(!result.evidence.is_empty());
     }
 
-    pub fn disable(&mut self) {
-        self.enabled = false;
-        self.modified_at = Utc::now();
+    #[test]
+    fn test_rule_validation() {
+        let condition = RuleCondition::field_equals("event_type", "login");
+        let rule = DetectionRule::new(
+            "rule-1",
+            "Login Detection",
+            "Detects login events",
+            ThreatRuleType::Signature,
+            ThreatSeverity::Medium,
+            condition,
+        );
+
+        let validation = rule.validate();
+        assert!(validation.is_valid);
+        assert!(validation.errors.is_empty());
     }
 
-    pub fn record_detection(&mut self) {
-        self.detection_count += 1;
-        self.last_triggered = Some(Utc::now());
-        self.modified_at = Utc::now();
+    #[test]
+    fn test_rule_validation_errors() {
+        let condition = RuleCondition::field_equals("event_type", "login");
+        let mut rule = DetectionRule::new(
+            "", // Empty ID should cause error
+            "", // Empty name should cause error
+            "",
+            ThreatRuleType::Signature,
+            ThreatSeverity::Medium,
+            condition,
+        );
+        rule.priority = 150; // Invalid priority
+
+        let validation = rule.validate();
+        assert!(!validation.is_valid);
+        assert!(!validation.errors.is_empty());
     }
 
-    pub fn record_false_positive(&mut self) {
-        self.false_positive_count += 1;
-        self.modified_at = Utc::now();
+    #[test]
+    fn test_rule_performance_metrics() {
+        let mut metrics = RulePerformanceMetrics::new("rule-1");
+
+        // Simulate some executions
+        metrics.update_with_result(10, true, true); // True positive
+        metrics.update_with_result(15, true, false); // True negative
+        metrics.update_with_result(12, false, true); // False positive
+        metrics.update_with_result(8, false, false); // False negative
+
+        assert_eq!(metrics.total_executions, 4);
+        assert_eq!(metrics.true_positives, 1);
+        assert_eq!(metrics.false_positives, 1);
+        assert!(metrics.avg_execution_time_ms > 0.0);
     }
 
-    pub fn accuracy_rate(&self) -> f64 {
-        let total = self.detection_count + self.false_positive_count;
-        if total == 0 {
-            1.0
-        } else {
-            self.detection_count as f64 / total as f64
-        }
+    #[test]
+    fn test_rule_tags() {
+        let condition = RuleCondition::field_equals("event_type", "login");
+        let mut rule = DetectionRule::new(
+            "rule-1",
+            "Login Detection",
+            "Detects login events",
+            ThreatRuleType::Signature,
+            ThreatSeverity::Medium,
+            condition,
+        );
+
+        rule.add_tag("authentication");
+        rule.add_tag("security");
+        rule.add_tag("authentication"); // Duplicate should be ignored
+
+        assert_eq!(rule.tags.len(), 2);
+        assert!(rule.tags.contains(&"authentication".to_string()));
+        assert!(rule.tags.contains(&"security".to_string()));
+
+        rule.remove_tag("authentication");
+        assert_eq!(rule.tags.len(), 1);
+        assert!(!rule.tags.contains(&"authentication".to_string()));
     }
 
-    pub fn update_confidence(&mut self) {
-        let accuracy = self.accuracy_rate();
-        self.confidence = accuracy * 0.9; // Scale down slightly for safety
-        self.modified_at = Utc::now();
+    #[test]
+    fn test_rule_priority() {
+        let condition = RuleCondition::field_equals("event_type", "login");
+        let mut rule = DetectionRule::new(
+            "rule-1",
+            "Login Detection",
+            "Detects login events",
+            ThreatRuleType::Signature,
+            ThreatSeverity::Medium,
+            condition,
+        );
+
+        assert!(!rule.is_high_priority());
+
+        rule.set_priority(90);
+        assert!(rule.is_high_priority());
+        assert_eq!(rule.priority, 90);
+
+        // Test priority clamping
+        rule.set_priority(150);
+        assert_eq!(rule.priority, 100);
     }
 
-    pub fn add_tag(&mut self, tag: &str) {
-        let tag_string = tag.to_string();
-        if !self.tags.contains(&tag_string) {
-            self.tags.push(tag_string);
-        }
-    }
+    #[test]
+    fn test_rule_enable_disable() {
+        let condition = RuleCondition::field_equals("event_type", "login");
+        let mut rule = DetectionRule::new(
+            "rule-1",
+            "Login Detection",
+            "Detects login events",
+            ThreatRuleType::Signature,
+            ThreatSeverity::Medium,
+            condition,
+        );
 
-    pub fn remove_tag(&mut self, tag: &str) {
-        self.tags.retain(|t| t != tag);
-    }
+        assert!(rule.enabled);
 
-    pub fn set_mitre_mapping(&mut self, technique_id: &str, tactic: &str) {
-        self.mitre_technique_id = Some(technique_id.to_string());
-        self.mitre_tactic = Some(tactic.to_string());
-    }
+        rule.disable();
+        assert!(!rule.enabled);
 
-    pub fn clear_mitre_mapping(&mut self) {
-        self.mitre_technique_id = None;
-        self.mitre_tactic = None;
-        self.modified_at = Utc::now();
-    }
-
-    pub fn has_mitre_mapping(&self) -> bool {
-        self.mitre_technique_id.is_some() && self.mitre_tactic.is_some()
-    }
-
-    pub fn get_age_days(&self) -> i64 {
-        let now = Utc::now();
-        now.signed_duration_since(self.created_at).num_days()
-    }
-
-    pub fn is_recently_modified(&self) -> bool {
-        let now = Utc::now();
-        now.signed_duration_since(self.modified_at).num_days() < 7
+        rule.enable();
+        assert!(rule.enabled);
     }
 }

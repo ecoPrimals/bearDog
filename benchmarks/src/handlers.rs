@@ -4,38 +4,17 @@ pub mod threat_analysis {
     use crate::types::RiskLevel;
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct Subject {
-        pub subject_id: String,
+    #[derive(String,
         pub subject_type: SubjectType,
         pub name: String,
     }
 
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub enum SubjectType {
-        User,
-        Service,
-        System,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct Resource {
-        pub resource_id: String,
+    #[derive(String,
         pub classification: ResourceClassification,
         pub name: String,
     }
 
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub enum ResourceClassification {
-        Internal,
-        External,
-        Confidential,
-        Public,
-    }
-
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct Action {
-        pub action_type: ActionType,
+    #[derive(ActionType,
         pub risk_level: RiskLevel,
         pub description: String,
     }
@@ -53,9 +32,7 @@ pub mod session_management {
     use crate::types::AccountStatus;
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct UserInfo {
-        pub user_id: String,
+    #[derive(String,
         pub username: String,
         pub status: AccountStatus,
         pub roles: Vec<String>,

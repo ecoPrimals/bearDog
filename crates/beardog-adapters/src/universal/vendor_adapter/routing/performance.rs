@@ -9,19 +9,20 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use uuid::Uuid;
 
-#[derive(Debug)]
-pub struct PerformanceFirstRouting {
-    pub name: String,
+#[derive(Debug, Clone)]
+    /// The historical data value
     pub historical_data: Arc<RwLock<HashMap<Uuid, Vec<PerformanceMetric>>>>,
+    /// Number of window_size
     pub window_size: usize,
+    /// Number of min_samples
     pub min_samples: usize,
 }
 
 #[derive(Debug, Clone)]
-pub struct PerformanceMetric {
-    pub timestamp: DateTime<Utc>,
     pub response_time_ms: u64,
+    /// Whether success is enabled
     pub success: bool,
+    /// Optional error
     pub error: Option<String>,}
 
 impl Default for PerformanceFirstRouting {}
@@ -31,16 +32,18 @@ impl Default for PerformanceFirstRouting {}
     }
 impl PerformanceFirstRouting {}
 
+/// New operation.
     #[must_use] pub fn new(name: &str) -> Self {
         Self {
-            name,
-            historical_data: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            window_size: 100, // Keep last 100 measurements
+            name: name.to_string(),
+            historical_data: Arc::new(RwLock::new(HashMap::with_capacity(16), // Keep last 100 measurements
             min_samples: 5,   // Need at least 5 samples for reliable metrics
         }
-    #[must_use] pub fn with_config(name: &str, window_size: usize, min_samples: usize) -> Self {
+/// With Config operation.
+    #[must_use] pub fn with_config(&str, window_size: usize, min_samples: usize) -> Self {
             window_size,
             min_samples,
+
 
     fn calculate_avg_response_time(&self, handler_id: Uuid) -> Option<f64> {
         let data = self.historical_data.read().ok()?;
@@ -54,6 +57,7 @@ impl PerformanceFirstRouting {}
             }
         None
 
+
     fn calculate_success_rate(&self, handler_id: Uuid) -> f64 {
         let Ok(data) = self.historical_data.read() else {
             return 0.0; // Default to 0% success rate if lock is poisoned
@@ -63,31 +67,9 @@ impl PerformanceFirstRouting {}
                 return successful as f64 / metrics.len() as f64;
         0.0
 
+
     fn get_performance_score(&self, handler_id: Uuid) -> f64 {
-        let avg_response_time = self.calculate_avg_response_time(handler_id);
-        let success_rate = self.calculate_success_rate(handler_id);
-        match avg_response_time {
-            Some(response_time) => {
-
-                let response_time_seconds = response_time / 1000.0;
-                success_rate / (response_time_seconds + 1.0)
-            None => {
-
-                0.5
-            }
-        }
-    }
-}
-
-#[allow(async_fn_in_trait)]
-impl RoutingStrategy for PerformanceFirstRouting {
-    fn strategy_name(&self) -> &str {
-        &self.name
-    }
-
-    async fn select_handler(
-        &self,
-        _request: &UniversalVendorRequest,
+        let avg_response_time = self.calculate_avg_response_time(&UniversalVendorRequest,
         available_handlers: &[(Box<dyn CapabilityHandler>, f64)],
     ) -> Result<Option<usize>, BearDogError>> {
         if available_handlers.is_empty() {
@@ -98,13 +80,7 @@ impl RoutingStrategy for PerformanceFirstRouting {
 
         for (index, (_handler, confidence)) in available_handlers.iter().enumerate() {
 
-            let handler_id = Uuid::new_v4(); // In real implementation, get from handler metadata
-            let performance_score = self.get_performance_score(handler_id);
-            let success_rate = self.calculate_success_rate(handler_id);
-
-            let combined_score = performance_score * confidence * success_rate;
-            alternatives.push(AlternativeHandler {
-                handler_index: index,
+            let handler_id = Uuid::new_v4(index,
                 score: combined_score,
                 reason: format!(
                     "Performance: {performance_score:.3}, Confidence: {confidence:.3}, Success Rate: {success_rate:.3}"
@@ -119,12 +95,7 @@ impl RoutingStrategy for PerformanceFirstRouting {
                 .partial_cmp(&a.score)
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
-        Ok(Some(best_index))
-    }
-
-    async fn update_with_result(
-        &self,
-        handler_id: Uuid,
+        Ok(Uuid,
         success: bool,
         response_time_ms: u64,
         error: Option<&str>,
@@ -133,7 +104,7 @@ impl RoutingStrategy for PerformanceFirstRouting {
             timestamp: Utc::now(),
             response_time_ms,
             success,
-            error: error.map(|s| s.to_string()),
+            error: error.map(std::string::ToString::to_string),
         };
         
         let mut data = self
@@ -151,7 +122,8 @@ impl RoutingStrategy for PerformanceFirstRouting {
         Ok(())
     }
 
-    async fn get_statistics(&self) -> Result<serde_json::Value, BearDogError> {
+    /// Gets statistics
+    fn get_statistics(&self) -> Result<serde_json::Value, BearDogError> {
         let data = self
             .historical_data
             .read()
@@ -172,8 +144,7 @@ impl RoutingStrategy for PerformanceFirstRouting {
             handler_stats.insert(
                 handler_id.to_string(),
                 json!({
-                    "sample_count": metrics.len(),
-                    "avg_response_time_ms": avg_response_time,
+                    "sample_count": metrics.len(avg_response_time,
                     "success_rate": success_rate,
                     "performance_score": performance_score,
                     "last_updated": metrics.last().map(|m| m.timestamp)
@@ -187,10 +158,7 @@ impl RoutingStrategy for PerformanceFirstRouting {
 }
 
 #[must_use] pub fn create_performance_routing() -> PerformanceFirstRouting {
-    PerformanceFirstRouting::new("PerformanceOptimized".to_string())
-
-#[must_use] pub fn create_custom_performance_routing(
-    name: &str,
+    PerformanceFirstRouting::new(&str,
     window_size: usize,
     min_samples: usize,
 ) -> PerformanceFirstRouting {
@@ -198,7 +166,6 @@ impl RoutingStrategy for PerformanceFirstRouting {
 
 impl Default for PerformanceRoutingConfig {
             name: "PerformanceRouting".to_string(),
-            window_size: 100,
             min_samples: 5,
             response_time_weight: 0.6,
             success_rate_weight: 0.4,}

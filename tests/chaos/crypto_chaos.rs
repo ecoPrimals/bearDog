@@ -7,9 +7,7 @@ use std::time::{Duration, Instant};
 use tokio::time::timeout;
 use tracing::{error, info, warn};
 
-#[derive(Debug)]
-pub struct CryptoChaosController {
-    config: ChaosConfig,
+#[derive(Debug, Clone)]
     crypto: BearDogCrypto,
 }
 
@@ -21,7 +19,7 @@ impl CryptoChaosController {
         }
     }
 
-    pub async fn test_crypto_chaos(&self) -> Result<TestResult, BearDogError> {
+    pub fn test_crypto_chaos(&self) -> Result<TestResult, BearDogError> {
         let start_time = Instant::now();
         let mut operations_attempted = 0u64;
         let mut operations_succeeded = 0u64;
@@ -32,31 +30,16 @@ impl CryptoChaosController {
         while start_time.elapsed() < self.config.test_duration {
             operations_attempted += 1;
 
-            let operation_start = Instant::now();
-            let operation_result = self.perform_chaotic_crypto_operation().await;
-            let latency = operation_start.elapsed();
-            latencies.push(latency.as_millis() as f64);
-
-            match operation_result {
-                Ok(_) => operations_succeeded += 1,
-                Err(e) => warn!("Crypto operation failed: {}", e),
+            let operation_start = Instant::now({}", e),
             }
 
             tokio::time::sleep(Duration::from_millis(1)).await;
         }
 
         let average_latency = if !latencies.is_empty() {
-            latencies.iter().sum::<f64>() / latencies.len() as f64
-        } else {
-            0.0
-        };
-        let error_rate = 1.0 - (operations_succeeded as f64 / operations_attempted as f64);
-
-        Ok(TestResult {
-            success: error_rate < 0.1, // Crypto should be very reliable
+            latencies.iter().sum::<f64>() / latencies.len(error_rate < 0.1, // Crypto should be very reliable
             test_name: "crypto_chaos".to_string(),
-            duration: start_time.elapsed(),
-            error_message: if error_rate >= 0.1 {
+            duration: start_time.elapsed(if error_rate >= 0.1 {
                 Some(format!(
                     "High crypto error rate: {:.2}%",
                     error_rate * 100.0
@@ -74,14 +57,13 @@ impl CryptoChaosController {
         })
     }
 
-    async fn perform_chaotic_crypto_operation(&self) -> Result<(), BearDogError> {
+    fn perform_chaotic_crypto_operation(&self) -> Result<(), BearDogError> {
 
-        let test_data = format_args!("chaos_test_data_{}", fastrand::u64(..).to_string());
-        let test_key = format_args!("chaos_key_{}", fastrand::u64(..).to_string());
+        let test_data = format!("chaos_test_data_{}", fastrand::u64(..));
+        let test_key = format!("chaos_key_{}", fastrand::u64(..));
 
         if fastrand::f64() < self.config.failure_rate {
-            return Err(BearDogError::encryption("crypto", "Simulated crypto chaos failure".to_string(),
-            ));
+            return Err(BearDogError::encryption("crypto", "Simulated crypto chaos failure"));
         }
 
         let encrypted =
@@ -101,19 +83,13 @@ impl CryptoChaosController {
 pub struct CryptoStressTest;
 
 impl CryptoStressTest {
-    pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
+    pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         let config = ChaosConfig {
-            test_duration: Duration::from_secs(5),
-            failure_rate: 0.05, // 5% failure rate for crypto
+            test_duration: Duration::from_secs(0.05, // 5% failure rate for crypto
             ..Default::default()
         };
 
-        let controller = CryptoChaosController::new(config);
-        let result = controller.test_crypto_chaos().await?;
-
-        info!("🔐 Crypto chaos test completed");
-        info!(
-            "   Operations: {} attempted, {} succeeded",
+        let controller = CryptoChaosController::new({} attempted, {} succeeded",
             result.metrics.operations_attempted, result.metrics.operations_succeeded
         );
         info!(

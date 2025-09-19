@@ -1,0 +1,180 @@
+// Ecosystem Storage Manager Implementation
+
+use super::backends::StorageBackend;
+use super::cache::CacheManager;
+use super::config::EcosystemStorageConfig;
+use super::metrics::StorageMetrics;
+use super::operations::{StorageRequest, StorageResponse};
+use super::types::*;
+
+use beardog_errors::BearDogError;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+/// Ecosystem storage manager
+pub struct EcosystemStorageManager {
+    /// Storage configuration
+    config: EcosystemStorageConfig,
+    /// Storage backends
+    backends: Vec<Arc<dyn StorageBackend>>,
+    /// Cache manager
+    cache: Arc<RwLock<CacheManager>>,
+    /// Storage metrics
+    metrics: Arc<RwLock<StorageMetrics>>,
+}
+
+impl std::fmt::Debug for EcosystemStorageManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EcosystemStorageManager")
+            .field("config", &self.config)
+            .field("backends_count", &self.backends.len())
+            .field("cache", &"<CacheManager>")
+            .field("metrics", &"<StorageMetrics>")
+            .finish()
+    }
+}
+
+impl EcosystemStorageManager {
+    /// Create a new storage manager
+    /// Creates a new instance
+    pub fn new(config: EcosystemStorageConfig) -> Self {
+        let cache_config = super::cache::CacheConfig {
+            max_size_bytes: config.cache_size_limit_bytes,
+            ..Default::default()
+        };
+
+        Self {
+            config,
+            backends: Vec::new(),
+            cache: Arc::new(RwLock::new(CacheManager::new(cache_config))),
+            metrics: Arc::new(RwLock::new(StorageMetrics::default())),
+        }
+    }
+
+    /// Process a storage request
+    /// Processes request
+    /// Processes request
+    pub fn process_request(
+        &self,
+        request: StorageRequest,
+    ) -> Result<StorageResponse, BearDogError> {
+        match request.operation {
+            StorageOperation::Store => self.handle_store(request),
+            StorageOperation::Retrieve => self.handle_retrieve(request),
+            StorageOperation::Delete => self.handle_delete(request),
+            StorageOperation::List => self.handle_list(request),
+            _ => Err(BearDogError::business(
+                "Operation not implemented".to_string(),
+            )),
+        }
+    }
+
+    /// Add a storage backend
+    pub fn add_backend(&mut self, backend: Arc<dyn StorageBackend>) {
+        self.backends.push(backend);
+    }
+
+    /// Get storage metrics
+    /// Gets metrics
+    /// Gets metrics
+    pub fn get_metrics(&self) -> StorageMetrics {
+        self.metrics.read().clone()
+    }
+
+    /// Get configuration
+    pub fn config(&self) -> &EcosystemStorageConfig {
+        &self.config
+    }
+
+    /// Handles store
+    fn handle_store(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
+        // Try to store in the first available backend
+        if let Some(backend) = self.backends.first() {
+            let response = backend.store(request.clone())?;
+
+            // Cache the stored data if successful
+            if response.status == StorageStatus::Success {
+                if let Some(data) = &request.data {
+                    let mut cache = self.cache.write();
+                    cache.put(request.key, data.clone());
+                }
+            }
+
+            Ok(response)
+        } else {
+            Err(BearDogError::business(
+                STORAGE_BACKEND_AVAILABLE.to_string(),
+            ))
+        }
+    }
+
+    /// Handles retrieve
+    fn handle_retrieve(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
+        // Try cache first
+        {
+            let mut cache = self.cache.write();
+            if let Some(data) = cache.get(&request.key) {
+                // Convert Arc<Vec<u8>> back to Vec<u8> for response compatibility
+                return Ok(StorageResponse::success(
+                    request.request_id,
+                    Some((*data).clone()),
+                ));
+            }
+        }
+
+        // Try backends
+        if let Some(backend) = self.backends.first() {
+            let response = backend.retrieve(request.clone())?;
+
+            // Cache the retrieved data if successful
+            if response.status == StorageStatus::Success {
+                if let Some(data) = &response.data {
+                    let mut cache = self.cache.write();
+                    cache.put(request.key, data.clone());
+                }
+            }
+
+            Ok(response)
+        } else {
+            Err(BearDogError::business(
+                STORAGE_BACKEND_AVAILABLE.to_string(),
+            ))
+        }
+    }
+
+    /// Handles delete
+    fn handle_delete(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
+        // Remove from cache
+        {
+            let mut cache = self.cache.write();
+            cache.remove(&request.key);
+        }
+
+        // Delete from backend
+        if let Some(backend) = self.backends.first() {
+            backend.delete(request)
+        } else {
+            Err(BearDogError::business(
+                STORAGE_BACKEND_AVAILABLE.to_string(),
+            ))
+        }
+    }
+
+    /// Handles list
+    fn handle_list(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
+        if let Some(backend) = self.backends.first() {
+            let items = backend.list(request.clone())?;
+            let response_data = serde_json::to_vec(&items)
+                .map_err(|e| BearDogError::business(format!("Serialization error: {}", e)))?;
+
+            Ok(StorageResponse::success(
+                request.request_id,
+                Some(response_data),
+            ))
+        } else {
+            Err(BearDogError::business(
+                STORAGE_BACKEND_AVAILABLE.to_string(),
+            ))
+        }
+    }
+}

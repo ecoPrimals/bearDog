@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use beardog_types::canonical::{
     crypto::KeyType,
@@ -28,59 +33,69 @@ pub struct SoftwareUniversalProvider {
 }
 
 #[derive(Debug, Clone)]
-pub struct SoftwareHsmConfig {
-
-    pub memory_protection: bool,
-
+    /// Whether encrypted_storage is enabled
     pub encrypted_storage: bool,
 
+    /// Number of max_keys
     pub max_keys: usize,
 
+    /// Number of pbkdf2_iterations
     pub pbkdf2_iterations: u32,
 
 struct StoredKey {
+    /// Collection of key material
     pub key_material: Vec<u8>,
+    /// The key type value
     pub key_type: KeyType,
+    /// The metadata value
     pub metadata: KeyMetadata,
+    /// The created at value
     pub created_at: chrono::DateTime<chrono::Utc>,
+    /// Number of usage
     pub usage_count: u64,}
 
 impl SoftwareUniversalProvider {
 
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
     pub async fn new() -> Result<Self, BearDogError> {
-        let config = SoftwareHsmConfig::default();
-        
-        let mut provider = Self {
-            capabilities: None,
+        let config = SoftwareHsmConfig::default(None,
             key_store: Arc::new(RwLock::new(HashMap::with_capacity(16))),
             config,
         };
 
-        let capabilities = provider.discover_capabilities().await?;
+        let capabilities = provider.discover_capabilities()?;
         provider.capabilities = Some(capabilities);
         Ok(provider)
     }
 
-    pub async fn with_config(config: SoftwareHsmConfig) -> Result<Self, BearDogError> {
+/// With Config operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates instance with config
+    pub fn with_config(config: SoftwareHsmConfig) -> Result<Self, BearDogError> {
 
-    fn detect_security_features(&self) -> HardwareFeatures {
 
-        let memory_protection = self.config.memory_protection && self.has_memory_protection();
-        HardwareFeatures {
-            tamper_resistance: TamperResistance::None, // Software has no tamper resistance
-            true_rng: self.has_hardware_rng(),
-            secure_storage: self.config.encrypted_storage,
+    fn detect_security_features(TamperResistance::None, // Software has no tamper resistance
+            true_rng: self.has_hardware_rng(self.config.encrypted_storage,
             attestation: false, // Software can't provide hardware attestation
             physical_security: vec![], // No physical security features
         }
 
+    /// Checks if memory protection
     fn has_memory_protection(&self) -> bool {
 
         cfg!(unix)
 
+    /// Checks if hardware rng
     fn has_hardware_rng(&self) -> bool {
 
         true
+
 
     fn generate_key_material(&self, key_type: &KeyType) -> Result<Vec<u8>, BearDogError>> {
         match key_type {
@@ -95,25 +110,19 @@ impl SoftwareUniversalProvider {
                 let mut key_material = vec![0u8; 32]; // P-256 private key size
             KeyType::Aes256Gcm => {
                 let mut key_material = vec![0u8; 32]; // AES-256 key size
-            _ => Err(BearDogError::unsupported_operation(format_args!("Key type {:?) not supported by software provider", key_type},
-            }).to_string(),
+            _ => Err(BearDogError::unsupported_operation(format!("Key type {:?) not supported by software provider", key_type},
+            }),
+
 
     fn fill_random(&self, buffer: &mut [u8]) -> Result<(), BearDogError> {
 
-        for (i, byte) in buffer.iter_mut().enumerate() {
-            *byte = (i % 256) as u8;
-        Ok(())
-
-    fn sign_data_software(&self, key_material: &[u8], data: &[u8], key_type: &KeyType) -> Result<Vec<u8>, BearDogError>> {
+        for (i, byte) in buffer.iter_mut(&[u8], data: &[u8], key_type: &KeyType) -> Result<Vec<u8>, BearDogError>> {
 
         let mut signature = Vec::new();
         signature.extend_from_slice(b"software_sig_");
         signature.extend_from_slice(&key_type.to_string().as_bytes()[..4]);
         signature.extend_from_slice(&data[..std::cmp::min(16, data.len())]);
-        signature.extend_from_slice(&key_material[..std::cmp::min(16, key_material.len())]);
-        Ok(signature)
-
-    fn verify_signature_software(&self, key_material: &[u8], data: &[u8], signature: &[u8], key_type: &KeyType) -> bool {
+        signature.extend_from_slice(&key_material[..std::cmp::min(&[u8], data: &[u8], signature: &[u8], key_type: &KeyType) -> bool {
 
         if let Ok(expected_signature) = self.sign_data_software(key_material, data, key_type) {
             expected_signature == signature
@@ -121,9 +130,9 @@ impl SoftwareUniversalProvider {
             false
 
 impl UniversalHsmProvider for SoftwareUniversalProvider {
-    async fn discover_capabilities(&self) -> Result<HsmCapabilities, BearDogError> {
+    fn discover_capabilities(&self) -> Result<HsmCapabilities, BearDogError> {
         if let Some(ref capabilities) = self.capabilities {
-            return Ok(capabilities.clone());
+            return Ok(capabilities);
         let hardware_features = self.detect_security_features();
 
         let crypto_operations = vec![
@@ -163,13 +172,9 @@ impl UniversalHsmProvider for SoftwareUniversalProvider {
                 version: "1.0.0".to_string(),
                 metadata: {
                     let mut metadata = HashMap::with_capacity(16);
-                    metadata.insert("platform".to_string(), std::env::consts::OS.to_string());
-                    metadata.insert("arch".to_string(), std::env::consts::ARCH.to_string());
-                    metadata.insert("memory_protection".to_string(), self.config.memory_protection.to_string());
-                    metadata.insert("encrypted_storage".to_string(), self.config.encrypted_storage.to_string());
-                    metadata
-                },
-            security_level: SecurityLevel::Software,
+                    metadata.insert("platform".to_string(), std::env::consts::OS);
+                    metadata.insert("arch".to_string(), std::env::consts::ARCH);
+                    metadata.insert(SecurityLevel::Software,
             crypto_operations,
             supported_key_types,
             authentication_methods: auth_methods,
@@ -177,13 +182,8 @@ impl UniversalHsmProvider for SoftwareUniversalProvider {
             performance_profile,
             certifications: vec![], // No certifications for software implementation
         Ok(capabilities)
-    async fn supports_operation(&self, operation: &CryptoOperation) -> bool {
-        if let Ok(capabilities) = self.discover_capabilities().await {
-            capabilities.crypto_operations.contains(operation)}
-
-    async fn generate_key(
-        &self,
-        key_type: KeyType,
+    fn supports_operation(&self, operation: &CryptoOperation) -> bool {
+        if let Ok(KeyType,
         metadata: KeyMetadata,
         _auth: Option<AuthenticationContext>,
     ) -> Result<HsmKey, BearDogError> {
@@ -196,8 +196,7 @@ impl UniversalHsmProvider for SoftwareUniversalProvider {
             key_material: key_material.clone(),
             key_type: key_type.clone(),
             metadata: metadata.clone(),
-            created_at: chrono::Utc::now(),
-            usage_count: 0,
+            created_at: chrono::Utc::now(0,
         {
             let mut key_store = self.key_store.write().unwrap_or_else(|poisoned| {
         tracing::warn!("RwLock poisoned for write, recovering");
@@ -207,17 +206,12 @@ impl UniversalHsmProvider for SoftwareUniversalProvider {
         let hsm_key = HsmKey {
             id: key_id.clone(),
             key_type,
-            material: beardog_types::canonical::hsm::KeyMaterial::Reference(key_id),
-            metadata,
-            health: beardog_types::canonical::hsm::KeyHealth::Healthy,
+            material: beardog_types::canonical::hsm::KeyMaterial::Reference(beardog_types::canonical::hsm::KeyHealth::Healthy,
             expires_at: None,
-            key_name: Some("software_generated_key".to_string()),
-            last_used: None,
+            key_name: Some(None,
             is_hardware_backed: false, // Software keys are not hardware-backed
         info!("✅ Software key generated successfully: {}", key_id);
-        Ok(hsm_key)
-    async fn sign_data(
-        key_id: &str,
+        Ok(&str,
         data: &[u8],
     ) -> Result<Vec<u8>, BearDogError>> {
         info!("✍️ Signing data with software key: {}", key_id);
@@ -229,22 +223,16 @@ impl UniversalHsmProvider for SoftwareUniversalProvider {
 })?;
             key_store.get(key_id).cloned()
         let stored_key = stored_key.ok_or_else(|| BearDogError::KeyManagement {
-            message: format_args!("Key not found: {}", key_id).to_string(),
+            message: format!("Key not found: {}", key_id),
         })?;
 
-        let signature = self.sign_data_software(&stored_key.key_material, data, &stored_key.key_type)?;
-
-            if let Some(key) = key_store.get_mut(key_id) {
-                key.usage_count += 1;
-        info!("✅ Data signed successfully with software key");
-    async fn verify_signature(
-        signature: &[u8],
+        let signature = self.sign_data_software(&[u8],
     ) -> Result<bool, BearDogError> {
         info!("🔍 Verifying signature with software key: {}", key_id);
 
-        let valid = self.verify_signature_software(&stored_key.key_material, data, signature, &stored_key.key_type);
-        info!("✅ Signature verification result: {}", valid);
+        let valid = self.verify_signature_software({}", valid);
         Ok(valid)
+    /// Gets provider_info
     fn get_provider_info(&self) -> VendorInfo {
         VendorInfo {
             name: "BearDog".to_string(),
@@ -252,60 +240,61 @@ impl UniversalHsmProvider for SoftwareUniversalProvider {
             version: "1.0.0".to_string(),
             metadata: {
                 let mut metadata = HashMap::with_capacity(16);
-                metadata.insert("platform".to_string(), std::env::consts::OS.to_string());
-                metadata.insert("type".to_string(), "software".to_string());
+                metadata.insert("platform".to_string(), std::env::consts::OS);
+                metadata.insert("type".to_string(), "software");
                 metadata}
 
-    async fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
+
+    fn health_check(&self) -> Result<HsmHealthStatus, BearDogError> {
 
         let key_count = {
             key_store.len()
         if key_count > self.config.max_keys {
             Ok(HsmHealthStatus::Warning {
-                message: format_args!("Key store is near capacity: {}/{}", key_count, self.config.max_keys).to_string(),
+                message: format!("Key store is near capacity: {}/{}", key_count, self.config.max_keys),
             })
             Ok(HsmHealthStatus::Healthy)
 impl Default for SoftwareHsmConfig {}
 
-    fn default() -> Self {
-        Self {
-            memory_protection: true,
+    fn default(true,
             encrypted_storage: true,
             max_keys: 10000,
             pbkdf2_iterations: 100000,
 impl Clone for SoftwareUniversalProvider {}
 
-    fn clone(&self) -> Self {
-            capabilities: self.capabilities.clone(),
-            key_store: Arc::clone(&self.key_store),
-            config: self.config.clone(),
+    fn clone(&self.capabilities,
+            key_store: Arc::clone(&self.config,
 impl Default for SoftwareUniversalProvider {
 
             config: SoftwareHsmConfig::default(),
 
+/// Get Statistics operation.
+    /// Gets statistics
+    /// Gets statistics
     pub fn get_statistics(&self) -> SoftwareHsmStatistics {
         let key_store = self.key_store.read().map_err(|e| {
         let mut key_type_counts = HashMap::with_capacity(16);
         let mut total_usage = 0;
         for stored_key in key_store.values() {
-            *key_type_counts.entry(stored_key.key_type.clone()).or_insert(0) += 1;
+            *key_type_counts.entry(stored_key.key_type).or_insert(0) += 1;
             total_usage += stored_key.usage_count;
         SoftwareHsmStatistics {
-            total_keys: key_store.len(),
-            key_type_distribution: key_type_counts,
+            total_keys: key_store.len(key_type_counts,
             total_operations: total_usage,
             memory_protection_enabled: self.config.memory_protection,
             encrypted_storage_enabled: self.config.encrypted_storage,
 
-    pub fn clear_keys(&self) -> Result<(), BearDogError> {
-        let mut key_store = self.key_store.write().unwrap_or_else(|poisoned| {
-        key_store.clear();
-        info!("🧹 Software HSM key store cleared");
-
-pub struct SoftwareHsmStatistics {
-    pub total_keys: usize,
+/// Clear Keys operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn clear_keys(usize,
+    /// Mapping of key type distribution
     pub key_type_distribution: HashMap<KeyType, usize>,
+    /// Number of total_operations
     pub total_operations: u64,
+    /// Whether memory_protection is enabled
     pub memory_protection_enabled: bool,
+    /// Whether encrypted_storage is enabled
     pub encrypted_storage_enabled: bool,
 } 

@@ -1,16 +1,13 @@
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
 
 
+use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use beardog_errors::BearDogError;
 
 pub use beardog_types::canonical::configuration::security::{
-    SecurityConfig as UnifiedSecurityConfig,
-    MfaConfig,
-    TotpConfig,
-    BackupCodesConfig,
-    PasswordPolicyConfig,
-    RateLimitConfig,
-    UnifiedAuthConfig,
-    SessionStorage,
+    BackupCodesConfig, MfaConfig, PasswordPolicyConfig, RateLimitConfig,
+    SecurityConfig as UnifiedSecurityConfig, SessionStorage, TotpConfig, UnifiedAuthConfig,
 };

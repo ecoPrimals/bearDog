@@ -4,25 +4,26 @@ use std::collections::HashMap;
 use std::time::Instant;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CachedFitnessAnalysis {
-
-    pub fitness_score: f64,
-
+#[derive(Debug, Clone)]
     pub performance_score: f64,
 
+    /// The security score value
     pub security_score: f64,
 
+    /// The adaptability score value
     pub adaptability_score: f64,
 
+    /// The calculated at value
     pub calculated_at: Instant,
 
+    /// Number of genetic_hash
     pub genetic_hash: u64,
 }
 impl CachedFitnessAnalysis {
 
-    pub fn new(
-        fitness_score: f64,
+/// New operation.
+    /// Creates a new instance
+    pub fn new(f64,
         performance_score: f64,
         security_score: f64,
         adaptability_score: f64,
@@ -38,72 +39,78 @@ impl CachedFitnessAnalysis {
         }
     }
 
+/// Is Valid operation.
+    /// Checks if valid
+    /// Checks if valid
     pub fn is_valid(&self, max_age_seconds: u64) -> bool {
-        self.calculated_at.elapsed().as_secs() < max_age_seconds
+        self.calculated_at.elapsed(String,
 
-    pub fn get_combined_score(&self) -> f64 {
-        (self.fitness_score + self.performance_score + self.security_score + self.adaptability_score) / 4.0
-
-pub struct ChunkAnalysis {
-
-    pub chunk_id: String,
-
+    /// Number of chunk_size
     pub chunk_size: usize,
 
+    /// Number of entity
     pub entity_count: u32,
 
+    /// The average fitness value
     pub average_fitness: f64,
+
 
     pub processing_time_us: u64,}
 
 impl ChunkAnalysis {
 
-    pub fn new(chunk_id: &str, chunk_size: usize, entity_count: u32) -> Self {
+/// New operation.
+    /// Creates a new instance
+    pub fn new(&str, chunk_size: usize, entity_count: u32) -> Self {
             chunk_id,
             chunk_size,
             entity_count,
             average_fitness: 0.0,
             processing_time_us: 0,
 
+/// Set Average Fitness operation.
+    /// Sets average_fitness
+    /// Sets average_fitness
     pub fn set_average_fitness(&mut self, average_fitness: f64) {
         self.average_fitness = average_fitness;
 
+/// Set Processing Time operation.
+    /// Sets processing_time
+    /// Sets processing_time
     pub fn set_processing_time(&mut self, processing_time_us: u64) {
         self.processing_time_us = processing_time_us;
 
-    pub fn get_processing_efficiency(&self) -> f64 {
-        if self.processing_time_us == 0 {
-            0.0
-        } else {
-            self.entity_count as f64 / self.processing_time_us as f64
+/// Get Processing Efficiency operation.
+    /// Gets processing_efficiency
+    /// Gets processing_efficiency
+    pub fn get_processing_efficiency(u32,
 
-pub struct PopulationAnalysis {
-
-    pub population_size: u32,
-
+    /// The best fitness value
     pub best_fitness: f64,
 
+    /// The worst fitness value
     pub worst_fitness: f64,
 
+    /// The fitness std dev value
     pub fitness_std_dev: f64,
 
+    /// The genetic diversity value
     pub genetic_diversity: f64,
 
+    /// The analyzed at value
     pub analyzed_at: Instant,}
 
 impl PopulationAnalysis {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(population_size: u32) -> Self {
             population_size,
             best_fitness: f64::NEG_INFINITY,
             worst_fitness: f64::INFINITY,
             fitness_std_dev: 0.0,
             genetic_diversity: 0.0,
-            analyzed_at: Instant::now(),
-
-    pub fn update_fitness_stats(
-        &mut self,
-        average: f64,
+            analyzed_at: Instant::now(f64,
         best: f64,
         worst: f64,
         std_dev: f64,
@@ -113,27 +120,28 @@ impl PopulationAnalysis {
         self.worst_fitness = worst;
         self.fitness_std_dev = std_dev;
 
+/// Set Genetic Diversity operation.
+    /// Sets genetic_diversity
+    /// Sets genetic_diversity
     pub fn set_genetic_diversity(&mut self, diversity: f64) {
         self.genetic_diversity = diversity.max(0.0).min(1.0);
 
+/// Get Fitness Range operation.
+    /// Gets fitness_range
+    /// Gets fitness_range
     pub fn get_fitness_range(&self) -> f64 {
         self.best_fitness - self.worst_fitness
 
+/// Is Converging operation.
+    /// Checks if converging
+    /// Checks if converging
     pub fn is_converging(&self, diversity_threshold: f64) -> bool {
         self.genetic_diversity < diversity_threshold
 
-    pub fn get_health_score(&self) -> f64 {
-
-        let fitness_score = if self.best_fitness > 0.0 {
-            self.average_fitness / self.best_fitness
-        };
-
-        (fitness_score * 0.7 + self.genetic_diversity * 0.3).max(0.0).min(1.0)
-
-#[derive(Debug)]
-pub struct FitnessCache {
-
-    cache: HashMap<u64, CachedFitnessAnalysis>,
+/// Get Health Score operation.
+    /// Gets health_score
+    /// Gets health_score
+    pub fn get_health_score(HashMap<u64, CachedFitnessAnalysis>,
 
     max_size: usize,
 
@@ -143,29 +151,22 @@ pub struct FitnessCache {
 
 impl FitnessCache {
 
+/// New operation.
+    /// Creates a new instance
     pub fn new(max_size: usize) -> Self {
             cache: HashMap::with_capacity(16),
-            max_size,
-            hits: 0,
             misses: 0,
 
-    pub fn get(&mut self, genetic_hash: u64, max_age_seconds: u64) -> Option<&CachedFitnessAnalysis> {
-        if let Some(analysis) = self.cache.get(&genetic_hash) {
-            if analysis.is_valid(max_age_seconds) {
-                self.hits += 1;
-                return Some(analysis);
-            } else {
-
-                self.cache.remove(&genetic_hash);
-            }
-        self.misses += 1;
-        None
-
-    pub fn store(&mut self, genetic_hash: u64, analysis: CachedFitnessAnalysis) {
+/// Get operation.
+    /// Gets value
+    /// Gets value
+    pub fn get(u64, max_age_seconds: u64) -> Option<&CachedFitnessAnalysis> {
+        if let Some(u64, analysis: CachedFitnessAnalysis) {
 
         if self.cache.len() >= self.max_size {
             self.evict_oldest();
         self.cache.insert(genetic_hash, analysis);
+
 
     fn evict_oldest(&mut self) {
         if self.cache.is_empty() {
@@ -174,12 +175,16 @@ impl FitnessCache {
         if let Some(key) = self.cache.keys().next().copied() {
             self.cache.remove(&key);
 
+/// Get Stats operation.
+    /// Gets stats
+    /// Gets stats
     pub fn get_stats(&self) -> (u64, u64, f64, usize) {
         let total_requests = self.hits + self.misses;
         let hit_rate = if total_requests == 0 {
             self.hits as f64 / total_requests as f64 * 100.0
         (self.hits, self.misses, hit_rate, self.cache.len())
 
+/// Clear operation.
     pub fn clear(&mut self) {
         self.cache.clear();
         self.hits = 0;

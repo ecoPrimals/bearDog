@@ -14,17 +14,19 @@ trusted_hosts = [
     "localhost",
     "127.0.0.1",
     "beardog.local",
-    "songbird.beardog.local",
-    "nestgate.beardog.local",
-    "squirrel.beardog.local",
-    "toadstool.beardog.local",
-    "biomeos.beardog.local"
+    # ✅ SOVEREIGNTY COMPLIANT: Capability-based host discovery
+    "service-mesh.beardog.local",
+    "storage-service.beardog.local",
+    "ai-service.beardog.local",
+    "compute-service.beardog.local",
+    "container-platform.beardog.local"
 ]
 
 cors_origins = [
     "https://beardog.local",
-    "https://songbird.beardog.local",
-    "https://nestgate.beardog.local"
+    # ✅ SOVEREIGNTY COMPLIANT: Capability-based CORS origins
+    "https://service-mesh.beardog.local",
+    "https://storage-service.beardog.local"
 ]
 
 trusted_ip_ranges = [
@@ -108,13 +110,14 @@ connection_timeout_secs = 30
 idle_timeout_secs = 300          # 5 minutes
 max_lifetime_secs = 3600         # 1 hour
 
-[external_services]
-# External service endpoints - configurable instead of hardcoded
-songbird_endpoint = "https://songbird.beardog.local:8443"
-nestgate_endpoint = "https://nestgate.beardog.local:8443"
-squirrel_endpoint = "https://squirrel.beardog.local:8443"
-toadstool_endpoint = "https://toadstool.beardog.local:8443"
-biomeos_endpoint = "https://biomeos.beardog.local:8443"
+[capability_endpoints]
+# ✅ SOVEREIGNTY COMPLIANT: Capability-based service discovery
+# These endpoints are discovered dynamically via universal adapter
+service_mesh_endpoint = "https://service-mesh.beardog.local:8443"
+storage_service_endpoint = "https://storage-service.beardog.local:8443"
+ai_service_endpoint = "https://ai-service.beardog.local:8443"
+compute_service_endpoint = "https://compute-service.beardog.local:8443"
+container_platform_endpoint = "https://container-platform.beardog.local:8443"
 
 # Email configuration
 smtp_server = "localhost"

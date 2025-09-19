@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use super::config::PerformanceConfig;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
@@ -7,63 +12,75 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 #[derive(Debug, Clone)]
-pub struct OperationMetrics {
-
-    pub total_operations: u64,
-
+    /// Number of successful_operations
     pub successful_operations: u64,
 
+    /// Number of failed_operations
     pub failed_operations: u64,
 
+    /// The average latency ms value
     pub average_latency_ms: f64,
 
+    /// The min latency ms value
     pub min_latency_ms: f64,
 
+    /// The max latency ms value
     pub max_latency_ms: f64,
+
 
     pub last_operation_time: chrono::DateTime<chrono::Utc>,
 }
 
 pub struct HsmPerformanceTracker {
 
-    pub(crate) operation_metrics: Arc<RwLock<HashMap<String, OperationMetrics>>>,
+    pub(Arc<RwLock<HashMap<String, OperationMetrics>>>,
 
-    pub(crate) performance_config: PerformanceConfig,}
+    pub(PerformanceConfig,}
 
 impl HsmPerformanceTracker {
 
-    pub async fn new(config: PerformanceConfig) -> Result<Self, BearDogError> {
+/// New operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Creates a new instance
+    pub fn new(config: PerformanceConfig) -> Result<Self, BearDogError> {
         Ok(Self {
-            operation_metrics: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            performance_config: config,
+            operation_metrics: Arc::new(RwLock::new(HashMap::with_capacity(config,
         })
     }
 
-    pub async fn record_success(&self, provider_id: &str, latency_ms: f64) -> Result<(), BearDogError> {
-        let mut metrics = self.operation_metrics.write().await;
+/// Record Success operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn record_success(&str, latency_ms: f64) -> Result<(), BearDogError> {
+        let mut metrics = self.operation_metrics.write();
         let entry = metrics
             .entry(provider_id.to_string())
             .or_insert_with(OperationMetrics::new);
-        entry.record_success(latency_ms);
-        Ok(())
-
-    pub async fn record_failure(&self, provider_id: &str, latency_ms: f64) -> Result<(), BearDogError> {
-        entry.record_failure(latency_ms);
-
-    pub async fn get_provider_metrics(
-        &self,
-        provider_id: &str,
+        entry.record_success(&str, latency_ms: f64) -> Result<(), BearDogError> {
+        entry.record_failure(&str,
     ) -> Result<Option<OperationMetrics>, BearDogError>> {
-        let metrics = self.operation_metrics.read().await;
+        let metrics = self.operation_metrics.read();
         Ok(metrics.get(provider_id).cloned())
 
-    pub async fn get_all_metrics(&self) -> Result<HashMap<String, OperationMetrics, BearDogError>> {
-        Ok(metrics.clone())
+/// Get All Metrics operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    /// Gets all_metrics
+    /// Gets all_metrics
+    pub fn get_all_metrics(&self) -> Result<HashMap<String, OperationMetrics, BearDogError>> {
+        Ok(metrics)
 
     pub fn get_performance_config(&self) -> &PerformanceConfig {
         &self.performance_config
 
-    pub async fn meets_performance_thresholds(&self, provider_id: &str) -> Result<bool, BearDogError> {
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn meets_performance_thresholds(&self, provider_id: &str) -> Result<bool, BearDogError> {
         if let Some(provider_metrics) = metrics.get(provider_id) {
 
             let config = &self.performance_config;
@@ -75,12 +92,7 @@ impl HsmPerformanceTracker {
 impl Default for OperationMetrics {}
 
     fn default() -> Self {
-        Self::new()
-impl OperationMetrics {
-
-    pub fn new() -> Self {
-        Self {
-            total_operations: 0,
+        Self::new(0,
             successful_operations: 0,
             failed_operations: 0,
             average_latency_ms: 0.0,
@@ -88,13 +100,16 @@ impl OperationMetrics {
             max_latency_ms: 0.0,
             last_operation_time: chrono::Utc::now(),}
 
+/// Record Success operation.
     pub fn record_success(&mut self, latency_ms: f64) {
         self.total_operations += 1;
         self.successful_operations += 1;
         self.update_latency(latency_ms);
+/// Record Failure operation.
     pub fn record_failure(&mut self, latency_ms: f64) {
         self.failed_operations += 1;}
 
+    /// Updates latency
     fn update_latency(&mut self, latency_ms: f64) {
 
         if latency_ms < self.min_latency_ms {

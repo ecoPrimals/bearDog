@@ -1,7 +1,16 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 pub mod attestation;
+/// Configuration management
+/// Configuration management
 pub mod config;
+/// Core functionality
+/// Core functionality
 pub mod core;
 pub mod crypto;
 pub mod entropy;

@@ -1,5 +1,10 @@
 
 
+// Module documentation
+//
+// This module provides functionality for the BearDog ecosystem.
+
+
 use beardog_errors::BearDogError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -10,13 +15,13 @@ pub struct SecurityPostureMonitor {
 
     stats: PostureStats,
 }
-#[derive(Debug, Default)]
-struct PostureStats {
-    assessments_performed: AtomicU64,
+#[derive(Debug, Clone)]
     posture_improvements_detected: AtomicU64,
     configuration_issues_found: AtomicU64,
 impl SecurityPostureMonitor {}
 
+/// New operation.
+    /// Creates a new instance
     pub fn new() -> Self {
         info!("🛡️ Initializing Security Posture Monitor");
         Self {
@@ -24,17 +29,21 @@ impl SecurityPostureMonitor {}
         }
     }
 
-    pub async fn assess_security_posture(&self) -> Result<SecurityPostureReport, BearDogError> {
-        self.stats
+/// Assess Security Posture operation.
+///
+/// # Errors
+/// Returns an error if the operation fails.
+    pub fn assess_security_posture(&self) -> Result<SecurityPostureReport, BearDogError> {
+        &self.stats
             .assessments_performed
             .fetch_add(1, Ordering::Relaxed);
         debug!("🔍 Assessing security posture - checking our defensive capabilities");
 
-        let crypto_health = self.assess_cryptographic_capabilities().await?;
-        let auth_health = self.assess_authentication_systems().await?;
-        let access_control_health = self.assess_access_controls().await?;
-        let data_protection_health = self.assess_data_protection().await?;
-        let incident_response_health = self.assess_incident_response_readiness().await?;
+        let crypto_health = self.assess_cryptographic_capabilities()?;
+        let auth_health = self.assess_authentication_systems()?;
+        let access_control_health = self.assess_access_controls()?;
+        let data_protection_health = self.assess_data_protection()?;
+        let incident_response_health = self.assess_incident_response_readiness()?;
 
         let overall_score = (crypto_health.health_score
             + auth_health.health_score
@@ -43,15 +52,15 @@ impl SecurityPostureMonitor {}
             + incident_response_health.health_score)
             / 5.0;
 
-        let posture_trends = self.analyze_posture_trends().await;
-        let improvement_areas = self.identify_improvement_areas(overall_score).await;
+        let posture_trends = self.analyze_posture_trends();
+        let improvement_areas = self.identify_improvement_areas(overall_score);
 
         let improvements_count = posture_trends
             .iter()
             .filter(|trend| trend.trend == "improving")
             .count();
         if improvements_count > 0 {
-            self.stats
+            &self.stats
                 .posture_improvements_detected
                 .fetch_add(improvements_count as u64, Ordering::Relaxed);
 
@@ -75,7 +84,8 @@ impl SecurityPostureMonitor {}
         );
         Ok(report)
 
-    async fn assess_cryptographic_capabilities(&self) -> Result<PostureComponent, BearDogError> {
+
+    fn assess_cryptographic_capabilities(&self) -> Result<PostureComponent, BearDogError> {
 
         let health_indicators = vec![
             ("AES-GCM Encryption", 0.95), // Hardware accelerated
@@ -105,7 +115,8 @@ impl SecurityPostureMonitor {}
                 vec![]
         })
 
-    async fn assess_authentication_systems(&self) -> Result<PostureComponent, BearDogError> {
+
+    fn assess_authentication_systems(&self) -> Result<PostureComponent, BearDogError> {
             ("JWT Authentication", 0.92),
             ("Multi-Factor Auth", 0.88),
             ("Session Management", 0.90),
@@ -113,7 +124,8 @@ impl SecurityPostureMonitor {}
             component_name: "Authentication Systems".to_string(),
                 vec!["Review authentication configuration".to_string()]
 
-    async fn assess_access_controls(&self) -> Result<PostureComponent, BearDogError> {
+
+    fn assess_access_controls(&self) -> Result<PostureComponent, BearDogError> {
             ("Role-Based Access Control", 0.89),
             ("API Authorization", 0.93),
             ("Resource Permissions", 0.87),
@@ -121,7 +133,8 @@ impl SecurityPostureMonitor {}
             component_name: "Access Controls".to_string(),
                 vec!["Strengthen access control policies".to_string()]
 
-    async fn assess_data_protection(&self) -> Result<PostureComponent, BearDogError> {
+
+    fn assess_data_protection(&self) -> Result<PostureComponent, BearDogError> {
             ("Data Encryption at Rest", 0.95),
             ("Data Encryption in Transit", 0.98),
             ("Backup Security", 0.85),
@@ -129,7 +142,8 @@ impl SecurityPostureMonitor {}
             component_name: "Data Protection".to_string(),
                 vec!["Enhance data protection measures".to_string()]
 
-    async fn assess_incident_response_readiness(&self) -> Result<PostureComponent, BearDogError> {
+
+    fn assess_incident_response_readiness(&self) -> Result<PostureComponent, BearDogError> {
             ("Threat Detection Systems", 0.91),
             ("Alert Mechanisms", 0.88),
             ("Response Procedures", 0.84),
@@ -137,70 +151,21 @@ impl SecurityPostureMonitor {}
             component_name: "Incident Response".to_string(),
                 vec!["Improve incident response procedures".to_string()]
 
-    async fn analyze_posture_trends(&self) -> Vec<PostureTrend> {
+
+    fn analyze_posture_trends(&self) -> Vec<PostureTrend> {
 
         vec![
             PostureTrend {
                 component: "Overall Security".to_string(),
-                trend: "improving".to_string(),
-                confidence: 0.85,
+                trend: "improving".to_string(0.85,
                 time_period: "last_7_days".to_string(),
                 component: "Cryptographic Performance".to_string(),
-                trend: "stable".to_string(),
-                confidence: 0.92,
+                trend: "stable".to_string(0.92,
                 time_period: "last_30_days".to_string(),
         ]
 
-    async fn identify_improvement_areas(&self, _overall_score: f64) -> Vec<String> {
 
-            "Consider implementing additional crypto hardware acceleration".to_string(),
-            "Evaluate backup security procedures".to_string(),
-            "Review incident response automation opportunities".to_string(),
+    fn identify_improvement_areas(&self, _overall_score: f64) -> Vec<String> {
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SecurityPostureReport {
-
-    pub overall_posture_score: f64,
-
-    pub cryptographic_capabilities: PostureComponent,
-
-    pub authentication_systems: PostureComponent,
-
-    pub access_controls: PostureComponent,
-
-    pub data_protection: PostureComponent,
-
-    pub incident_response: PostureComponent,
-
-    pub posture_trends: Vec<PostureTrend>,
-
-    pub improvement_areas: Vec<String>,
-
-pub struct PostureComponent {
-
-    pub component_name: String,
-
-    pub health_score: f64,
-
-    pub status: String,
-
-    pub indicators: Vec<(String, f64)>,
-
-    pub last_assessment: DateTime<Utc>,
-
-    pub recommendations: Vec<String>,
-
-pub struct PostureTrend {
-
-    pub component: String,
-
-    pub trend: String,
-
-    pub confidence: f64,
-
-    pub time_period: String,}
-
-impl Default for SecurityPostureMonitor {}
-
-    fn default() -> Self {
+            "Consider implementing additional crypto hardware acceleration".to_string() -> Self {
         Self::new()

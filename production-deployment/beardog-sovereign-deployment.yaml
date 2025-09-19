@@ -1,0 +1,640 @@
+# BearDog Sovereign Production Deployment
+# Zero-Knowledge Bootstrap with True Primal Sovereignty
+# Deployment Date: January 2025
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: beardog-sovereign
+  labels:
+    app: beardog
+    deployment-type: sovereign
+    sovereignty-level: maximum
+    hardcoding-level: zero
+    bootstrap-type: zero-knowledge
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: beardog-sovereign-config
+  namespace: beardog-sovereign
+data:
+  # Zero-Knowledge Bootstrap Configuration
+  BEARDOG_BOOTSTRAP_MODE: "zero-knowledge"
+  BEARDOG_SOVEREIGNTY_LEVEL: "maximum"
+  BEARDOG_HARDCODING_ELIMINATION: "complete"
+  
+  # Performance Optimization Settings
+  BEARDOG_TARGET_DISCOVERY_TIME_MS: "100"
+  BEARDOG_ENABLE_AGGRESSIVE_CACHING: "true"
+  BEARDOG_PRELOAD_COMMON_CAPABILITIES: "true"
+  BEARDOG_MAX_CONCURRENT_TASKS: "10"
+  
+  # Discovery Protocol Configuration
+  BEARDOG_ENABLE_MDNS_DISCOVERY: "true"
+  BEARDOG_ENABLE_HTTP_DISCOVERY: "true"
+  BEARDOG_ENABLE_ENVIRONMENT_DISCOVERY: "true"
+  BEARDOG_ENABLE_SERVICE_MESH_DISCOVERY: "true"
+  
+  # Universal Adapter Settings
+  BEARDOG_UNIVERSAL_ADAPTER_ENABLED: "true"
+  BEARDOG_CAPABILITY_DISCOVERY_TIMEOUT_MS: "5000"
+  BEARDOG_CONNECTION_POOL_SIZE: "50"
+  BEARDOG_HEALTH_CHECK_INTERVAL_SEC: "30"
+  
+  # Sovereignty Compliance
+  BEARDOG_PRIMAL_SOVEREIGNTY_MODE: "strict"
+  BEARDOG_VENDOR_INDEPENDENCE_MODE: "complete"
+  BEARDOG_DYNAMIC_DISCOVERY_ONLY: "true"
+  
+  # Logging and Monitoring
+  BEARDOG_LOG_LEVEL: "info"
+  BEARDOG_ENABLE_PERFORMANCE_PROFILING: "true"
+  BEARDOG_ENABLE_SOVEREIGNTY_MONITORING: "true"
+  BEARDOG_METRICS_PORT: "9090"
+  
+  # Security Configuration
+  BEARDOG_SECURITY_LEVEL: "maximum"
+  BEARDOG_TLS_ENABLED: "true"
+  BEARDOG_MUTUAL_AUTH_ENABLED: "true"
+  BEARDOG_HSM_DISCOVERY_ENABLED: "true"
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: beardog-sovereign-secrets
+  namespace: beardog-sovereign
+type: Opaque
+data:
+  # These will be populated by the deployment process
+  # No hardcoded secrets - discovered via capability discovery
+  tls-cert: ""
+  tls-key: ""
+  ca-cert: ""
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beardog-sovereign
+  namespace: beardog-sovereign
+  labels:
+    app: beardog
+    version: "3.0.0"
+    deployment-type: sovereign
+    bootstrap-type: zero-knowledge
+spec:
+  replicas: 3  # High availability
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: beardog
+      deployment-type: sovereign
+  template:
+    metadata:
+      labels:
+        app: beardog
+        deployment-type: sovereign
+        bootstrap-type: zero-knowledge
+        sovereignty-level: maximum
+      annotations:
+        # Sovereignty compliance annotations
+        beardog.io/sovereignty-level: "maximum"
+        beardog.io/hardcoding-eliminated: "true"
+        beardog.io/vendor-independence: "complete"
+        beardog.io/bootstrap-type: "zero-knowledge"
+        beardog.io/discovery-protocols: "mdns,http,environment,service-mesh"
+    spec:
+      serviceAccountName: beardog-sovereign
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: beardog-sovereign
+        image: beardog:3.0.0-sovereign
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: https
+          containerPort: 8443
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        - name: discovery
+          containerPort: 5353
+          protocol: UDP  # mDNS
+        env:
+        # Zero-Knowledge Bootstrap Environment
+        - name: BEARDOG_BOOTSTRAP_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_BOOTSTRAP_MODE
+        - name: BEARDOG_SOVEREIGNTY_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_SOVEREIGNTY_LEVEL
+        - name: BEARDOG_HARDCODING_ELIMINATION
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_HARDCODING_ELIMINATION
+        
+        # Performance Configuration
+        - name: BEARDOG_TARGET_DISCOVERY_TIME_MS
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_TARGET_DISCOVERY_TIME_MS
+        - name: BEARDOG_ENABLE_AGGRESSIVE_CACHING
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_ENABLE_AGGRESSIVE_CACHING
+        - name: BEARDOG_PRELOAD_COMMON_CAPABILITIES
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_PRELOAD_COMMON_CAPABILITIES
+        
+        # Discovery Protocol Configuration
+        - name: BEARDOG_ENABLE_MDNS_DISCOVERY
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_ENABLE_MDNS_DISCOVERY
+        - name: BEARDOG_ENABLE_HTTP_DISCOVERY
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_ENABLE_HTTP_DISCOVERY
+        - name: BEARDOG_ENABLE_ENVIRONMENT_DISCOVERY
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_ENABLE_ENVIRONMENT_DISCOVERY
+        - name: BEARDOG_ENABLE_SERVICE_MESH_DISCOVERY
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_ENABLE_SERVICE_MESH_DISCOVERY
+        
+        # Universal Adapter Configuration
+        - name: BEARDOG_UNIVERSAL_ADAPTER_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_UNIVERSAL_ADAPTER_ENABLED
+        - name: BEARDOG_CAPABILITY_DISCOVERY_TIMEOUT_MS
+          valueFrom:
+            configMapKeyRef:
+              name: beardog-sovereign-config
+              key: BEARDOG_CAPABILITY_DISCOVERY_TIMEOUT_MS
+        
+        # Dynamic Discovery Configuration
+        # Note: No hardcoded service endpoints - all discovered dynamically
+        - name: BEARDOG_DISCOVERY_ENDPOINT
+          value: "http://discovery.ecosystem.internal:8080"  # Default fallback only
+        
+        # Kubernetes-specific discovery
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: KUBERNETES_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KUBERNETES_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        
+        # Security Configuration
+        - name: BEARDOG_TLS_CERT_PATH
+          value: "/etc/tls/tls.crt"
+        - name: BEARDOG_TLS_KEY_PATH
+          value: "/etc/tls/tls.key"
+        - name: BEARDOG_CA_CERT_PATH
+          value: "/etc/tls/ca.crt"
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Health checks optimized for zero-knowledge bootstrap
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        # Startup probe for zero-knowledge bootstrap
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 1
+          failureThreshold: 30  # Allow up to 60 seconds for bootstrap
+        
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /etc/tls
+          readOnly: true
+        - name: cache-volume
+          mountPath: /var/cache/beardog
+        - name: temp-volume
+          mountPath: /tmp
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE  # For binding to ports < 1024 if needed
+      
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: beardog-sovereign-secrets
+          items:
+          - key: tls-cert
+            path: tls.crt
+          - key: tls-key
+            path: tls.key
+          - key: ca-cert
+            path: ca.crt
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: temp-volume
+        emptyDir:
+          sizeLimit: 100Mi
+      
+      # DNS configuration for service discovery
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "2"
+        - name: edns0
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: beardog-sovereign-service
+  namespace: beardog-sovereign
+  labels:
+    app: beardog
+    deployment-type: sovereign
+  annotations:
+    # Service discovery annotations
+    beardog.io/capability-types: "security,key-management,authentication"
+    beardog.io/discovery-enabled: "true"
+    beardog.io/sovereignty-level: "maximum"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: https
+    port: 8443
+    targetPort: 8443
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: beardog
+    deployment-type: sovereign
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: beardog-sovereign-discovery
+  namespace: beardog-sovereign
+  labels:
+    app: beardog
+    service-type: discovery
+  annotations:
+    # mDNS service discovery
+    beardog.io/mdns-service-name: "_beardog._tcp.local"
+    beardog.io/discovery-protocols: "mdns,http"
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service for mDNS
+  ports:
+  - name: discovery
+    port: 5353
+    targetPort: 5353
+    protocol: UDP
+  selector:
+    app: beardog
+    deployment-type: sovereign
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: beardog-sovereign
+  namespace: beardog-sovereign
+  labels:
+    app: beardog
+    deployment-type: sovereign
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: beardog-sovereign-discovery
+  labels:
+    app: beardog
+    deployment-type: sovereign
+rules:
+# Minimal permissions for service discovery
+- apiGroups: [""]
+  resources: ["services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch"]
+# For capability discovery
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: beardog-sovereign-discovery
+  labels:
+    app: beardog
+    deployment-type: sovereign
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: beardog-sovereign-discovery
+subjects:
+- kind: ServiceAccount
+  name: beardog-sovereign
+  namespace: beardog-sovereign
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: beardog-sovereign-network-policy
+  namespace: beardog-sovereign
+  labels:
+    app: beardog
+    deployment-type: sovereign
+spec:
+  podSelector:
+    matchLabels:
+      app: beardog
+      deployment-type: sovereign
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow ingress from other BearDog instances
+  - from:
+    - podSelector:
+        matchLabels:
+          app: beardog
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8443
+  # Allow ingress for metrics
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090
+  # Allow mDNS discovery
+  - from: []
+    ports:
+    - protocol: UDP
+      port: 5353
+  egress:
+  # Allow egress for service discovery
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8443
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: UDP
+      port: 5353  # mDNS
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: beardog-sovereign-metrics
+  namespace: beardog-sovereign
+  labels:
+    app: beardog
+    deployment-type: sovereign
+spec:
+  selector:
+    matchLabels:
+      app: beardog
+      deployment-type: sovereign
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    honorLabels: true
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: beardog-sovereign-dashboard
+  namespace: beardog-sovereign
+  labels:
+    app: beardog
+    deployment-type: sovereign
+    grafana_dashboard: "1"
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "title": "BearDog Sovereign - Zero-Knowledge Bootstrap",
+        "panels": [
+          {
+            "title": "Bootstrap Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "beardog_bootstrap_discovery_time_ms",
+                "legendFormat": "Discovery Time (ms)"
+              },
+              {
+                "expr": "beardog_bootstrap_target_time_ms",
+                "legendFormat": "Target Time (ms)"
+              }
+            ]
+          },
+          {
+            "title": "Sovereignty Compliance",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "beardog_sovereignty_compliance_percentage",
+                "legendFormat": "Compliance %"
+              }
+            ]
+          },
+          {
+            "title": "Discovered Capabilities",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "beardog_discovered_capabilities_total",
+                "legendFormat": "Capabilities"
+              }
+            ]
+          },
+          {
+            "title": "Cache Effectiveness",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "beardog_cache_hit_rate",
+                "legendFormat": "Cache Hit Rate"
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+---
+
+# Horizontal Pod Autoscaler for dynamic scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: beardog-sovereign-hpa
+  namespace: beardog-sovereign
+  labels:
+    app: beardog
+    deployment-type: sovereign
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: beardog-sovereign
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Custom metrics for bootstrap performance
+  - type: Pods
+    pods:
+      metric:
+        name: beardog_bootstrap_discovery_time_ms
+      target:
+        type: AverageValue
+        averageValue: "100"  # Scale up if discovery time > 100ms
+
+---
+
+# Pod Disruption Budget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: beardog-sovereign-pdb
+  namespace: beardog-sovereign
+  labels:
+    app: beardog
+    deployment-type: sovereign
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: beardog
+      deployment-type: sovereign 
