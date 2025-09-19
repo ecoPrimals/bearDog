@@ -61,7 +61,7 @@ pub trait WorkflowProvider: BaseProvider {
     ) -> impl std::future::Future<Output = Result<WorkflowResult, BearDogError>> + Send;
 
     /// Get workflow status
-    /// Gets workflow_status
+    /// Gets `workflow_status`
     fn get_workflow_status(
         &self,
         workflow_id: &str,
@@ -79,7 +79,7 @@ pub trait WorkflowProvider: BaseProvider {
     ) -> impl std::future::Future<Output = Result<Vec<WorkflowInfo>, BearDogError>> + Send;
 
     /// Get workflow execution history
-    /// Gets workflow_executions
+    /// Gets `workflow_executions`
     fn get_workflow_executions(
         &self,
         workflow_id: &str,

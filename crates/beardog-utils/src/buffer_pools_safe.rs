@@ -5,15 +5,15 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Default)]
 pub struct PoolStats {
-    /// Number of buffers_allocated
+    /// Number of `buffers_allocated`
     pub buffers_allocated: u64,
-    /// Number of buffers_reused
+    /// Number of `buffers_reused`
     pub buffers_reused: u64,
-    /// Number of buffers_returned
+    /// Number of `buffers_returned`
     pub buffers_returned: u64,
-    /// Number of peak_usage
+    /// Number of `peak_usage`
     pub peak_usage: u64,
-    /// Number of current_usage
+    /// Number of `current_usage`
     pub current_usage: u64,
 }
 
@@ -26,7 +26,7 @@ pub struct SafeBufferPool {
 impl SafeBufferPool {
     /// Creates a new safe buffer pool
     /// Creates a new instance
-    pub fn new(max_pool_size: usize) -> Self {
+    #[must_use] pub fn new(max_pool_size: usize) -> Self {
         Self {
             pools: HashMap::with_capacity(16),
             stats: PoolStats::default(),
@@ -78,7 +78,7 @@ impl SafeBufferPool {
     /// Gets statistics about pool usage
     /// Gets stats
     /// Gets stats
-    pub fn get_stats(&self) -> &PoolStats {
+    #[must_use] pub fn get_stats(&self) -> &PoolStats {
         &self.stats
     }
 
@@ -88,7 +88,7 @@ impl SafeBufferPool {
         self.stats = PoolStats::default();
     }
 
-    /// Gets size_class
+    /// Gets `size_class`
     fn get_size_class(&self, size: usize) -> usize {
         match size {
             0..=64 => 64,

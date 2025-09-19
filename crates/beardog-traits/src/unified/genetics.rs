@@ -64,7 +64,7 @@ pub trait BiomeGenetics: Send + Sync {
     type TrustLevel: Send + Sync + Clone + Serialize + for<'de> Deserialize<'de>;
 
     /// Get biome genetic signature
-    /// Gets biome_signature
+    /// Gets `biome_signature`
     fn get_biome_signature(
         &self,
         biome_id: &str,
@@ -76,13 +76,13 @@ pub trait BiomeGenetics: Send + Sync {
         biome_id: &str,
     ) -> impl std::future::Future<Output = Result<bool, BearDogError>> + Send;
 
-    /// Gets biome_identity
+    /// Gets `biome_identity`
     fn get_biome_identity(
         &self,
         biome_id: &str,
     ) -> impl std::future::Future<Output = Result<Self::BiomeIdentity, BearDogError>> + Send;
 
-    /// Gets trust_level
+    /// Gets `trust_level`
     fn get_trust_level(
         &self,
     ) -> impl std::future::Future<Output = Result<Self::TrustLevel, BearDogError>> + Send;
@@ -148,7 +148,7 @@ pub trait EvolutionEngine: Send + Sync {
     ) -> impl std::future::Future<Output = Result<bool, Self::Error>> + Send;
 
     /// Get evolution statistics
-    /// Gets evolution_stats
+    /// Gets `evolution_stats`
     fn get_evolution_stats(
         &self,
     ) -> impl std::future::Future<Output = Result<EvolutionStats, Self::Error>> + Send;
@@ -169,7 +169,7 @@ pub trait LineageTracker: Send + Sync {
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
     /// Get lineage history
-    /// Gets lineage_history
+    /// Gets `lineage_history`
     fn get_lineage_history(
         &self,
         entity_id: &Self::EntityId,
@@ -245,9 +245,9 @@ pub trait EntropyQualityAssessor: Send + Sync {
 pub struct GeneticParameters {
     /// The entropy source value
     pub entropy_source: String,
-    /// Number of signature_length
+    /// Number of `signature_length`
     pub signature_length: usize,
-    /// Number of complexity_level
+    /// Number of `complexity_level`
     pub complexity_level: u8,
     /// Mapping of metadata
     pub metadata: HashMap<String, String>,
@@ -269,7 +269,7 @@ pub struct AuthorizationResult {
 pub struct EvolutionStats {
     /// Number of generation
     pub generation: u64,
-    /// Number of population_size
+    /// Number of `population_size`
     pub population_size: usize,
     /// The average fitness value
     pub average_fitness: f64,
@@ -341,8 +341,8 @@ pub struct GeneticsProviderUtils;
 
 impl GeneticsProviderUtils {
     /// Create a basic genetics provider
-    /// Creates basic_provider
-    /// Creates basic_provider
+    /// Creates `basic_provider`
+    /// Creates `basic_provider`
     pub fn create_basic_provider(
         _config: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
@@ -354,8 +354,8 @@ impl GeneticsProviderUtils {
     }
 
     /// Create a biome genetics handler
-    /// Creates biome_handler
-    /// Creates biome_handler
+    /// Creates `biome_handler`
+    /// Creates `biome_handler`
     pub fn create_biome_handler(
         biome_config: serde_json::Value,
     ) -> Result<BiomeGeneticsData, BearDogError> {
@@ -373,8 +373,8 @@ impl GeneticsProviderUtils {
     }
 
     /// Validate genetic parameters
-    /// Validates genetic_params
-    /// Validates genetic_params
+    /// Validates `genetic_params`
+    /// Validates `genetic_params`
     pub fn validate_genetic_params(
         params: &GeneticParameters,
     ) -> impl std::future::Future<Output = Result<Vec<serde_json::Value>, BearDogError>> + Send
@@ -400,8 +400,8 @@ pub struct EvolutionEngineUtils;
 
 impl EvolutionEngineUtils {
     /// Create a basic evolution engine
-    /// Creates basic_engine
-    /// Creates basic_engine
+    /// Creates `basic_engine`
+    /// Creates `basic_engine`
     pub fn create_basic_engine(
         _config: serde_json::Value,
     ) -> Result<serde_json::Value, BearDogError> {
@@ -412,8 +412,8 @@ impl EvolutionEngineUtils {
     }
 
     /// Create biome genetics data
-    /// Creates biome_data
-    /// Creates biome_data
+    /// Creates `biome_data`
+    /// Creates `biome_data`
     pub fn create_biome_data(biome_id: String) -> Result<BiomeGeneticsData, BearDogError> {
         Ok(BiomeGeneticsData {
             biome_id,
@@ -427,7 +427,7 @@ impl EvolutionEngineUtils {
 
 ///
 /// Create genetics provider from configuration
-/// Creates genetics_provider
+/// Creates `genetics_provider`
 pub fn create_genetics_provider(
     provider_type: &str,
     _config: serde_json::Value,
@@ -445,7 +445,7 @@ pub fn create_genetics_provider(
 }
 
 /// Create evolution engine from configuration
-/// Creates evolution_engine
+/// Creates `evolution_engine`
 pub fn create_evolution_engine(
     engine_type: &str,
     _config: serde_json::Value,

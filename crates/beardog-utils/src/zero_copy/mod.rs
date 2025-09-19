@@ -21,7 +21,7 @@ use tracing::{debug, trace};
 
 /// Simple capability validation
 /// Checks if valid service capability
-pub fn is_valid_service_capability(capability: &str) -> bool {
+#[must_use] pub fn is_valid_service_capability(capability: &str) -> bool {
     matches!(
         capability,
         "communication_mesh"
@@ -37,8 +37,8 @@ pub fn is_valid_service_capability(capability: &str) -> bool {
 }
 
 /// Get all standard capabilities
-/// Gets all_standard_capabilities
-pub fn get_all_standard_capabilities() -> Vec<&'static str> {
+/// Gets `all_standard_capabilities`
+#[must_use] pub fn get_all_standard_capabilities() -> Vec<&'static str> {
     vec![
         "communication_mesh",
         "storage_services",
@@ -71,7 +71,7 @@ pub struct ZeroCopyManager {
 
 impl ZeroCopyManager {
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             string_cache: RwLock::new(HashMap::new()),
             config_cache: RwLock::new(HashMap::new()),
@@ -80,8 +80,8 @@ impl ZeroCopyManager {
         }
     }
 
-    /// Gets shared_string
-    /// Gets shared_string
+    /// Gets `shared_string`
+    /// Gets `shared_string`
     pub fn get_shared_string<S: AsRef<str>>(&self, s: S) -> Arc<str> {
         let s_ref = s.as_ref();
 
@@ -113,8 +113,8 @@ impl ZeroCopyManager {
         arc_str
     }
 
-    /// Gets shared_config
-    /// Gets shared_config
+    /// Gets `shared_config`
+    /// Gets `shared_config`
     pub fn get_shared_config<T, F>(&self, key: &str, factory: F) -> Arc<T>
     where
         T: Send + Sync + 'static,

@@ -31,7 +31,7 @@ pub struct ThreatResponseConfig {
 impl AutomatedThreatResponseHandler {
     /// Create new handler
     /// Creates a new instance
-    pub fn new(config: ThreatResponseConfig) -> Self {
+    #[must_use] pub fn new(config: ThreatResponseConfig) -> Self {
         Self {
             config,
             event_history: Arc::new(RwLock::new(Vec::new())),
@@ -39,8 +39,8 @@ impl AutomatedThreatResponseHandler {
     }
 
     /// Handle threat event - SIMPLIFIED
-    /// Handles threat_event
-    /// Handles threat_event
+    /// Handles `threat_event`
+    /// Handles `threat_event`
     pub fn handle_threat_event(&self, threat_event: &ThreatEvent) -> Result<(), BearDogError> {
         if !self.config.enabled {
             return Ok(());
@@ -59,8 +59,8 @@ impl AutomatedThreatResponseHandler {
     }
 
     /// Update threat intelligence - SIMPLIFIED
-    /// Updates threat_intelligence
-    /// Updates threat_intelligence
+    /// Updates `threat_intelligence`
+    /// Updates `threat_intelligence`
     pub fn update_threat_intelligence(
         &self,
         threat_event: &ThreatEvent,
@@ -87,7 +87,7 @@ impl AutomatedThreatResponseHandler {
 
     /// Execute mitigation - SIMPLIFIED
     #[allow(dead_code)]
-    /// Executes mitigation_step
+    /// Executes `mitigation_step`
     fn execute_mitigation_step(&self, mitigation: &MitigationStep) -> Result<(), BearDogError> {
         let _ = mitigation; // Acknowledge parameter
         Ok(())

@@ -68,7 +68,7 @@ pub trait CacheProvider: BaseProvider {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CacheStats {
     /// Memory usage in bytes
-    /// Number of memory_usage_bytes
+    /// Number of `memory_usage_bytes`
     pub memory_usage_bytes: u64,
     /// Number of evictions
     /// Number of eviction
@@ -93,7 +93,7 @@ pub struct AdvancedCacheStats {
     pub miss_rate: f64,
     /// Number of eviction
     pub eviction_count: u64,
-    /// Number of memory_usage
+    /// Number of `memory_usage`
     pub memory_usage: u64,
 }
 
@@ -116,7 +116,7 @@ pub trait EnhancedCacheProvider: CacheProvider {
         keys: &[&str],
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
-    /// Gets advanced_stats
+    /// Gets `advanced_stats`
     fn get_advanced_stats(
         &self,
     ) -> impl std::future::Future<Output = Result<AdvancedCacheStats, BearDogError>> + Send;

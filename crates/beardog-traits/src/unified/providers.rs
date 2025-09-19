@@ -70,9 +70,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
 
-/// Core provider trait that all BearDog providers must implement
+/// Core provider trait that all `BearDog` providers must implement
 ///
-/// This trait defines the fundamental operations that every provider in the BearDog
+/// This trait defines the fundamental operations that every provider in the `BearDog`
 /// ecosystem must support, including health monitoring, metrics collection, and
 /// lifecycle management.
 pub trait BearDogProvider: Send + Sync + 'static {
@@ -165,7 +165,7 @@ pub trait SecurityProvider: BearDogProvider {
 
     /// **Security Requirements**
     ///
-    /// Gets security_requirements
+    /// Gets `security_requirements`
     fn get_security_requirements(
         &self,
         resource: &str,
@@ -313,7 +313,7 @@ pub trait HsmProvider: BearDogProvider + SecurityProvider + CryptoProvider {
     ///
     /// Returns metadata about a specific key without exposing the key itself.
     /// This includes key type, creation time, usage counters, etc.
-    /// Gets key_metadata
+    /// Gets `key_metadata`
     fn get_key_metadata(
         &self,
         key_id: &str,
@@ -331,7 +331,7 @@ pub trait HsmProvider: BearDogProvider + SecurityProvider + CryptoProvider {
     /// **Hardware Attestation**
     ///
     /// Returns a hardware attestation proving the authenticity of the HSM.
-    /// Gets hardware_attestation
+    /// Gets `hardware_attestation`
     fn get_hardware_attestation(
         &self,
     ) -> impl std::future::Future<Output = Result<Option<Vec<u8>>, Self::Error>> + Send;
@@ -347,7 +347,7 @@ pub trait HsmProvider: BearDogProvider + SecurityProvider + CryptoProvider {
     ///
     /// Returns the security certification level of the HSM hardware.
     /// Examples: "FIPS 140-2 Level 3", "Common Criteria EAL4+"
-    /// Gets security_level
+    /// Gets `security_level`
     fn get_security_level(&self) -> String;
 }
 
@@ -425,7 +425,7 @@ pub trait MonitoringProvider: BearDogProvider {
 
 /// **Adapter Provider Trait**
 ///
-/// Adapters enable BearDog to integrate with legacy systems and external services.
+/// Adapters enable `BearDog` to integrate with legacy systems and external services.
 pub trait AdapterProvider: BearDogProvider {
     /// External system connection type
     type Connection: Send + Sync + Clone;
@@ -456,7 +456,7 @@ pub trait AdapterProvider: BearDogProvider {
     /// **Protocol Support**
     ///
     /// Returns a list of external protocols supported by this adapter.
-    /// Gets supported_operations
+    /// Gets `supported_operations`
     fn get_supported_operations(&self) -> Vec<String>;
 
     fn transform_request(
@@ -495,7 +495,7 @@ pub trait WorkflowProvider: BearDogProvider {
     ///
     /// Returns the current status of a running workflow instance.
     /// This enables monitoring and management of long-running processes.
-    /// Gets workflow_status
+    /// Gets `workflow_status`
     fn get_workflow_status(
         &self,
         execution_id: &str,
@@ -515,7 +515,7 @@ pub trait WorkflowProvider: BearDogProvider {
     ) -> impl std::future::Future<Output = Result<(), Self::Error>> + Send;
 
     /// Get execution history
-    /// Gets execution_history
+    /// Gets `execution_history`
     fn get_execution_history(
         &self,
         workflow_id: &str,

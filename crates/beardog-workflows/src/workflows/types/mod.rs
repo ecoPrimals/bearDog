@@ -5,10 +5,10 @@
 // This module provides functionality for the BearDog ecosystem.
 
 pub struct WorkflowConfig {
-    /// Number of max_concurrent_workflows
+    /// Number of `max_concurrent_workflows`
     pub max_concurrent_workflows: usize,
     pub default_timeout_seconds: u64,
-    /// Whether enable_logging is enabled
+    /// Whether `enable_logging` is enabled
     pub enable_logging: bool,
 }
 

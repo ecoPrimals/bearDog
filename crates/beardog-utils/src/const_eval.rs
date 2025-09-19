@@ -48,23 +48,23 @@ impl<const B: usize, const C: usize, const L: bool, const H: u32> ConstConfig<B,
         })
     }
 
-    pub const fn buffer_size(&self) -> usize {
+    #[must_use] pub const fn buffer_size(&self) -> usize {
         B
     }
 
-    pub const fn cache_size(&self) -> usize {
+    #[must_use] pub const fn cache_size(&self) -> usize {
         C
     }
 
-    pub const fn logging_enabled(&self) -> bool {
+    #[must_use] pub const fn logging_enabled(&self) -> bool {
         L
     }
 
-    pub const fn hash_rounds(&self) -> u32 {
+    #[must_use] pub const fn hash_rounds(&self) -> u32 {
         H
     }
 
-    pub const fn total_memory_usage(&self) -> usize {
+    #[must_use] pub const fn total_memory_usage(&self) -> usize {
         B * C + C * 64 // Buffer size + cache overhead
     }
 
@@ -89,14 +89,14 @@ impl<const B: usize, const C: usize, const L: bool, const H: u32> ConstConfig<B,
 pub struct ConstMath;
 
 impl ConstMath {
-    pub const fn factorial(n: u64) -> u64 {
+    #[must_use] pub const fn factorial(n: u64) -> u64 {
         match n {
             0 | 1 => 1,
             _ => n * Self::factorial(n - 1),
         }
     }
 
-    pub const fn pow(base: u64, exp: u32) -> u64 {
+    #[must_use] pub const fn pow(base: u64, exp: u32) -> u64 {
         match exp {
             0 => 1,
             1 => base,
@@ -111,7 +111,7 @@ impl ConstMath {
         }
     }
 
-    pub const fn gcd(a: u64, b: u64) -> u64 {
+    #[must_use] pub const fn gcd(a: u64, b: u64) -> u64 {
         if b == 0 {
             a
         } else {
@@ -119,11 +119,11 @@ impl ConstMath {
         }
     }
 
-    pub const fn lcm(a: u64, b: u64) -> u64 {
+    #[must_use] pub const fn lcm(a: u64, b: u64) -> u64 {
         (a * b) / Self::gcd(a, b)
     }
 
-    pub const fn is_prime(n: u64) -> bool {
+    #[must_use] pub const fn is_prime(n: u64) -> bool {
         if n < 2 {
             return false;
         }
@@ -144,7 +144,7 @@ impl ConstMath {
         true
     }
 
-    pub const fn fibonacci(n: u32) -> u64 {
+    #[must_use] pub const fn fibonacci(n: u32) -> u64 {
         match n {
             0 => 0,
             1 => 1,
@@ -224,27 +224,27 @@ impl ConstTables {
         primes
     }
 
-    pub fn crc32(input_bytes: &[u8]) -> u32 {
+    #[must_use] pub fn crc32(input_bytes: &[u8]) -> u32 {
         let mut crc = 0xFFFF_FFFF;
 
         for &byte in input_bytes {
-            let index = ((crc ^ byte as u32) & 0xFF) as usize;
+            let index = ((crc ^ u32::from(byte)) & 0xFF) as usize;
             crc = (crc >> 8) ^ Self::CRC32_TABLE[index];
         }
 
         !crc
     }
 
-    pub fn fast_sin(degrees: u16) -> f32 {
+    #[must_use] pub fn fast_sin(degrees: u16) -> f32 {
         let index = (degrees % 360) as usize;
         Self::SINE_TABLE[index]
     }
 
     /// Checks if small prime
     /// Checks if small prime
-    pub fn is_small_prime(n: u16) -> bool {
+    #[must_use] pub fn is_small_prime(n: u16) -> bool {
         if n > 1000 {
-            return ConstMath::is_prime(n as u64);
+            return ConstMath::is_prime(u64::from(n));
         }
 
         Self::PRIMES_1000.contains(&n)
@@ -254,15 +254,15 @@ impl ConstTables {
 pub struct ConstStr;
 
 impl ConstStr {
-    pub const fn len(s: &str) -> usize {
+    #[must_use] pub const fn len(s: &str) -> usize {
         s.len()
     }
 
-    pub const fn is_empty(s: &str) -> bool {
+    #[must_use] pub const fn is_empty(s: &str) -> bool {
         s.len() == 0
     }
 
-    pub const fn eq(a: &str, b: &str) -> bool {
+    #[must_use] pub const fn eq(a: &str, b: &str) -> bool {
         if a.len() != b.len() {
             return false;
         }
@@ -281,7 +281,7 @@ impl ConstStr {
         true
     }
 
-    pub const fn hash(s: &str) -> u64 {
+    #[must_use] pub const fn hash(s: &str) -> u64 {
         let bytes = s.as_bytes();
         let mut hash = 0u64;
         let mut i = 0;
@@ -316,23 +316,23 @@ impl<const SIZE: usize> ConstBuffer<SIZE> {
         })
     }
 
-    pub const fn capacity(&self) -> usize {
+    #[must_use] pub const fn capacity(&self) -> usize {
         SIZE
     }
 
-    pub const fn len(&self) -> usize {
+    #[must_use] pub const fn len(&self) -> usize {
         self.len
     }
 
-    pub const fn is_empty(&self) -> bool {
+    #[must_use] pub const fn is_empty(&self) -> bool {
         self.len == 0
     }
 
-    pub const fn is_full(&self) -> bool {
+    #[must_use] pub const fn is_full(&self) -> bool {
         self.len == SIZE
     }
 
-    pub const fn remaining(&self) -> usize {
+    #[must_use] pub const fn remaining(&self) -> usize {
         SIZE - self.len
     }
 
@@ -356,7 +356,7 @@ impl<const SIZE: usize> ConstBuffer<SIZE> {
     }
 
     /// Returns as slice
-    pub fn as_slice(&self) -> &[u8] {
+    #[must_use] pub fn as_slice(&self) -> &[u8] {
         &self.data[..self.len]
     }
 
@@ -406,7 +406,7 @@ macro_rules! const_config {
 pub struct ConstMetrics;
 
 impl ConstMetrics {
-    pub const fn theoretical_throughput(
+    #[must_use] pub const fn theoretical_throughput(
         buffer_size: usize,
         processing_time_ns: u64,
         parallelism: usize,
@@ -417,7 +417,7 @@ impl ConstMetrics {
         items_per_buffer as u64 * buffers_per_second * parallelism as u64
     }
 
-    pub const fn memory_requirements(
+    #[must_use] pub const fn memory_requirements(
         buffer_size: usize,
         buffer_count: usize,
         cache_size: usize,

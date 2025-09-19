@@ -9,9 +9,9 @@ use tracing::{debug, info};
 /// Safe crypto engine configuration
 #[derive(Debug, Clone)]
 pub struct SafeCryptoConfig {
-    /// Whether enable_timing_attack_protection is enabled
+    /// Whether `enable_timing_attack_protection` is enabled
     pub enable_timing_attack_protection: bool,
-    /// Whether use_secure_random is enabled
+    /// Whether `use_secure_random` is enabled
     pub use_secure_random: bool,
 }
 
@@ -28,7 +28,7 @@ impl Default for SafeCryptoConfig {
 #[derive(Debug, Clone, Default)]
 pub struct SafeCryptoStats {
     pub operations_performed: u64,
-    /// Number of total_bytes_processed
+    /// Number of `total_bytes_processed`
     pub total_bytes_processed: u64,
 }
 
@@ -80,7 +80,7 @@ impl SafeCryptoEngine {
     /// Get engine statistics
     /// Gets stats
     /// Gets stats
-    pub fn get_stats(&self) -> HashMap<String, String> {
+    #[must_use] pub fn get_stats(&self) -> HashMap<String, String> {
         let mut info = HashMap::new();
         info.insert(
             "operations".to_string(),

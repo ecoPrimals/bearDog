@@ -85,7 +85,7 @@ impl Workflow for ExampleWorkflow {
         &self.status
     }
 
-    /// Creates itemd_at
+    /// Creates `itemd_at`
     fn created_at(&self) -> chrono::DateTime<chrono::Utc> {
         self.created_at
     }
@@ -94,7 +94,7 @@ impl Workflow for ExampleWorkflow {
 impl ExampleWorkflow {
     /// New operation.
     /// Creates a new instance
-    pub fn new(id: &str, name: &str) -> Self {
+    #[must_use] pub fn new(id: &str, name: &str) -> Self {
         let now = chrono::Utc::now();
         Self {
             id: ExampleWorkflowId(id.to_string()),
@@ -108,7 +108,7 @@ impl ExampleWorkflow {
 
     /// With Data operation.
     /// Creates instance with data
-    pub fn with_data(mut self, workflow_data: serde_json::Value) -> Self {
+    #[must_use] pub fn with_data(mut self, workflow_data: serde_json::Value) -> Self {
         self.data = Some(workflow_data);
         self
     }
@@ -116,7 +116,7 @@ impl ExampleWorkflow {
     /// Set Status operation.
     /// Sets status
     /// Sets status
-    pub fn set_status(mut self, status: ExampleWorkflowStatus) -> Self {
+    #[must_use] pub fn set_status(mut self, status: ExampleWorkflowStatus) -> Self {
         self.status = status;
         self.updated_at = chrono::Utc::now();
         self
@@ -132,21 +132,21 @@ pub struct InMemoryWorkflowRepository {
 impl InMemoryWorkflowRepository {
     /// New operation.
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             workflows: Arc::new(Mutex::new(HashMap::with_capacity(16))),
         }
     }
 
     /// Len operation.
-    pub fn len(&self) -> usize {
+    #[must_use] pub fn len(&self) -> usize {
         self.workflows.lock().map(|w| w.len()).unwrap_or(0)
     }
 
     /// Is Empty operation.
     /// Checks if empty
     /// Checks if empty
-    pub fn is_empty(&self) -> bool {
+    #[must_use] pub fn is_empty(&self) -> bool {
         self.workflows.lock().map(|w| w.is_empty()).unwrap_or(true)
     }
 }
@@ -264,7 +264,7 @@ pub struct ExampleWorkflowProcessor {
 impl ExampleWorkflowProcessor {
     /// New operation.
     /// Creates a new instance
-    pub fn new(name: &'static str) -> Self {
+    #[must_use] pub fn new(name: &'static str) -> Self {
         Self { name }
     }
 }
@@ -423,12 +423,12 @@ pub struct StartWorkflowCommand {
 impl StartWorkflowCommand {
     /// New operation.
     /// Creates a new instance
-    pub fn new(context: ProcessingContext) -> Self {
+    #[must_use] pub fn new(context: ProcessingContext) -> Self {
         Self { context }
     }
 
     /// Context operation.
-    pub fn context(&self) -> &ProcessingContext {
+    #[must_use] pub fn context(&self) -> &ProcessingContext {
         &self.context
     }
 }
@@ -466,7 +466,7 @@ impl WorkflowCommand for StartWorkflowCommand {
 ///
 /// # Errors
 /// Returns an error if the operation fails.
-/// Runs comprehensive_example
+/// Runs `comprehensive_example`
 pub async fn run_comprehensive_example() -> Result<(), BearDogError> {
     info!("🚀 Starting comprehensive workflow example");
 

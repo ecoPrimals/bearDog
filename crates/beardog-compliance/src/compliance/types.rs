@@ -12,7 +12,7 @@ use std::collections::HashMap;
 pub struct ComplianceConfig {
     /// Collection of standards
     pub standards: Vec<ComplianceStandard>,
-    /// Whether feature_standards is enabled
+    /// Whether `feature_standards` is enabled
     pub enabled_standards: Vec<ComplianceStandard>,
     /// The reporting value
     pub reporting: ReportingConfig,
@@ -378,7 +378,7 @@ pub struct ConsentRecord {
     pub data_subject_id: String,
     /// The purpose value
     pub purpose: String,
-    /// Whether consent_given is enabled
+    /// Whether `consent_given` is enabled
     pub consent_given: bool,
     /// The consent date value
     pub consent_date: DateTime<Utc>,
@@ -425,7 +425,7 @@ pub struct DataBreachRecord {
     /// The discovery date value
     pub discovery_date: DateTime<Utc>,
     pub incident_type: BreachType,
-    /// Number of affected_records
+    /// Number of `affected_records`
     pub affected_records: u64,
     /// Collection of data types affected
     pub data_types_affected: Vec<String>,
@@ -433,11 +433,11 @@ pub struct DataBreachRecord {
     pub cause: String,
     /// Collection of containment measures
     pub containment_measures: Vec<String>,
-    /// Whether notification_required is enabled
+    /// Whether `notification_required` is enabled
     pub notification_required: bool,
     /// Optional notification date
     pub notification_date: Option<DateTime<Utc>>,
-    /// Whether regulatory_reported is enabled
+    /// Whether `regulatory_reported` is enabled
     pub regulatory_reported: bool,
     /// Current status of the component
     pub status: IncidentStatus,
@@ -451,7 +451,7 @@ pub struct ComplianceMetrics {
     pub standards_compliance: HashMap<ComplianceStandard, f64>,
     /// Collection of recent violations
     pub recent_violations: Vec<ComplianceViolation>,
-    /// Number of audit_trail_size
+    /// Number of `audit_trail_size`
     pub audit_trail_size: u64,
     /// Optional last assessment date
     pub last_assessment_date: Option<DateTime<Utc>>,

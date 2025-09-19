@@ -321,19 +321,19 @@
 //
 // **`BearDog` Types v3.0.0 - Pedantic Perfection Achieved** 🏆✨
 
-//! # BearDog Types v3.0.0
+//! # `BearDog` Types v3.0.0
 //!
-//! **Production-grade type system for the BearDog sovereign computing ecosystem.**
+//! **Production-grade type system for the `BearDog` sovereign computing ecosystem.**
 //!
 //! This crate provides the foundational type definitions, configurations, and data structures
-//! that power the BearDog ecosystem's quantum-enhanced, zero-knowledge, and sovereignty-preserving
+//! that power the `BearDog` ecosystem's quantum-enhanced, zero-knowledge, and sovereignty-preserving
 //! architecture.
 //!
 //! ## Features
 //!
 //! - **Zero-Copy Optimization**: Efficient memory management with minimal allocations
 //! - **Canonical Type System**: Unified, consistent type definitions across all components
-//! - **HSM Integration**: Hardware Security Module support for Android StrongBox and iOS Secure Enclave
+//! - **HSM Integration**: Hardware Security Module support for Android `StrongBox` and iOS Secure Enclave
 //! - **Quantum-Enhanced**: Advanced quantum-inspired discovery and capability types
 //! - **Human Dignity Preservation**: Types designed to protect user privacy and autonomy
 //! - **Production-Ready**: Comprehensive error handling and validation
@@ -359,7 +359,7 @@
 //!
 //! ## Safety
 //!
-//! This crate maintains BearDog's commitment to memory safety with:
+//! This crate maintains `BearDog`'s commitment to memory safety with:
 //! - Zero unsafe code
 //! - Comprehensive error handling
 //! - Production-grade validation

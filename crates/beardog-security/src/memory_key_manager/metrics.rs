@@ -7,18 +7,18 @@ use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct KeyManagerMetrics {
-    /// Number of total_keys
+    /// Number of `total_keys`
     pub total_keys: usize,
-    /// Number of keys_created
+    /// Number of `keys_created`
     pub keys_created: u64,
-    /// Number of keys_accessed
+    /// Number of `keys_accessed`
     pub keys_accessed: u64,
-    /// Number of keys_expired
+    /// Number of `keys_expired`
     pub keys_expired: u64,
     pub avg_access_time: Duration,
     /// The cache hit rate value
     pub cache_hit_rate: f64,
-    /// Number of memory_usage
+    /// Number of `memory_usage`
     pub memory_usage: usize,
 }
 

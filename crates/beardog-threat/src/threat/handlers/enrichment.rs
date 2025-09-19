@@ -14,7 +14,7 @@ pub struct ThreatEnrichmentHandler {
 impl ThreatEnrichmentHandler {
     /// Create a new enrichment handler
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self { enabled: true }
     }
 
@@ -52,8 +52,8 @@ pub struct NetworkContextInfo {
     /// The access level value
     /// The access level value
     pub access_level: String,
-    /// Whether is_trusted is enabled
-    /// Whether is_trusted is enabled
+    /// Whether `is_trusted` is enabled
+    /// Whether `is_trusted` is enabled
     pub is_trusted: bool,
 }
 

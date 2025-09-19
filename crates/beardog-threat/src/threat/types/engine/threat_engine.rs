@@ -73,19 +73,19 @@ pub struct MlModel {
     /// The model type value
     /// The model type value
     pub model_type: String,
-    /// Number of training_data_size
-    /// Number of training_data_size
+    /// Number of `training_data_size`
+    /// Number of `training_data_size`
     pub training_data_size: u64,
-    /// Whether is_active is enabled
-    /// Whether is_active is enabled
+    /// Whether `is_active` is enabled
+    /// Whether `is_active` is enabled
     pub is_active: bool,
 }
 
 /// Threat detection statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatDetectionStats {
-    /// Number of total_threats_detected
-    /// Number of total_threats_detected
+    /// Number of `total_threats_detected`
+    /// Number of `total_threats_detected`
     pub total_threats_detected: u64,
     /// Mapping of threats by severity
     /// Mapping of threats by severity
@@ -138,9 +138,9 @@ impl ThreatDetectionEngine {
         self.threat_feeds.insert(feed.id.clone(), feed);
     }
 
-    /// Update a threat feed  
-    /// Updates threat_feed
-    /// Updates threat_feed
+    /// Update a threat feed\
+    /// Updates `threat_feed`
+    /// Updates `threat_feed`
     pub fn update_threat_feed(&mut self, feed: ThreatIntelligenceFeed) {
         self.threat_feeds.insert(feed.id.clone(), feed);
     }
@@ -170,7 +170,7 @@ impl ThreatDetectionEngine {
     /// Get detection statistics
     /// Gets stats
     /// Gets stats
-    pub fn get_stats(&self) -> &ThreatDetectionStats {
+    #[must_use] pub fn get_stats(&self) -> &ThreatDetectionStats {
         &self.stats
     }
 }

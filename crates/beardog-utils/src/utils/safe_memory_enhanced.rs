@@ -18,18 +18,18 @@ pub struct SafePinnedBuffer {
 
 impl SafePinnedBuffer {
     /// Creates a new instance
-    pub fn new(size: usize) -> Self {
+    #[must_use] pub fn new(size: usize) -> Self {
         Self {
             data: vec![0u8; size],
             size,
         }
     }
 
-    pub fn named(size: usize, _name: &str) -> Self {
+    #[must_use] pub fn named(size: usize, _name: &str) -> Self {
         Self::new(size)
     }
 
-    pub fn size(&self) -> usize {
+    #[must_use] pub fn size(&self) -> usize {
         self.size
     }
 
@@ -62,13 +62,13 @@ impl<const SIZE: usize> Default for SafePooledBuffer<SIZE> {
 
 impl<const SIZE: usize> SafePooledBuffer<SIZE> {
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             buffer: SafePinnedBuffer::new(SIZE),
         }
     }
 
-    pub fn buffer(&self) -> &SafePinnedBuffer {
+    #[must_use] pub fn buffer(&self) -> &SafePinnedBuffer {
         &self.buffer
     }
 
@@ -77,18 +77,18 @@ impl<const SIZE: usize> SafePooledBuffer<SIZE> {
         &mut self.buffer
     }
 
-    pub fn size(&self) -> usize {
+    #[must_use] pub fn size(&self) -> usize {
         SIZE
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct BufferPoolMetrics {
-    /// Number of total_requests
+    /// Number of `total_requests`
     pub total_requests: u64,
-    /// Number of cache_hits
+    /// Number of `cache_hits`
     pub cache_hits: u64,
-    /// Number of cache_misses
+    /// Number of `cache_misses`
     pub cache_misses: u64,
 }
 
@@ -100,7 +100,7 @@ impl Default for BufferPoolMetrics {
 
 impl BufferPoolMetrics {
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             total_requests: 0,
             cache_hits: 0,
@@ -108,7 +108,7 @@ impl BufferPoolMetrics {
         }
     }
 
-    pub fn hit_rate(&self) -> f64 {
+    #[must_use] pub fn hit_rate(&self) -> f64 {
         if self.total_requests == 0 {
             0.0
         } else {
@@ -124,7 +124,7 @@ pub struct SafeBufferPool<const SIZE: usize> {
 
 impl<const SIZE: usize> SafeBufferPool<SIZE> {
     /// Creates a new instance
-    pub fn new(initial_capacity: usize) -> Self {
+    #[must_use] pub fn new(initial_capacity: usize) -> Self {
         let mut available = Vec::with_capacity(initial_capacity);
         for _ in 0..initial_capacity {
             available.push(SafePinnedBuffer::new(SIZE));
@@ -171,7 +171,7 @@ impl Default for EnhancedMemoryPools {
 
 impl EnhancedMemoryPools {
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             small_pool: SafeBufferPool::new(10),
             medium_pool: SafeBufferPool::new(5),

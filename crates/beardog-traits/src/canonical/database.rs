@@ -12,7 +12,7 @@ use std::collections::HashMap;
 pub struct QueryResult {
     /// Collection of rows
     pub rows: Vec<std::collections::HashMap<String, serde_json::Value>>,
-    /// Number of affected_rows
+    /// Number of `affected_rows`
     pub affected_rows: u64,
 }
 

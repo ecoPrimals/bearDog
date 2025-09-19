@@ -14,17 +14,17 @@ pub struct SafeMemoryPool<T> {
 /// Memory pool statistics
 #[derive(Debug, Clone, Default)]
 pub struct PoolStats {
-    /// Number of total_allocations
+    /// Number of `total_allocations`
     pub total_allocations: u64,
-    /// Number of total_deallocations
+    /// Number of `total_deallocations`
     pub total_deallocations: u64,
-    /// Number of pool_hits
+    /// Number of `pool_hits`
     pub pool_hits: u64,
-    /// Number of pool_misses
+    /// Number of `pool_misses`
     pub pool_misses: u64,
-    /// Number of peak_usage
+    /// Number of `peak_usage`
     pub peak_usage: usize,
-    /// Number of current_usage
+    /// Number of `current_usage`
     pub current_usage: usize,
 }
 
@@ -34,7 +34,7 @@ where
 {
     /// Create new safe memory pool
     /// Creates a new instance
-    pub fn new(max_size: usize) -> Self {
+    #[must_use] pub fn new(max_size: usize) -> Self {
         Self {
             pool: Arc::new(Mutex::new(VecDeque::with_capacity(max_size))),
             max_size,

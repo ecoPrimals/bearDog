@@ -55,10 +55,10 @@ pub use providers::{
 // **MODERNIZED**: All legacy re-exports removed - use canonical providers system
 // Use beardog_types::canonical::providers_unified::traits::* for all provider functionality
 
-/// Core trait that all BearDog components must implement
+/// Core trait that all `BearDog` components must implement
 ///
 /// This is the root of the trait hierarchy and provides fundamental functionality
-/// that every component in the BearDog ecosystem requires.
+/// that every component in the `BearDog` ecosystem requires.
 pub trait BearDogCore: Send + Sync + Debug {
     type Error: Send + Sync + Into<BearDogError>;
 
@@ -169,7 +169,7 @@ pub trait BearDogComponent: BearDogCore {
 /// Component health status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ComponentHealth {
-    /// Whether is_healthy is enabled
+    /// Whether `is_healthy` is enabled
     pub is_healthy: bool,
     /// Current status of the component
     pub status: String,
@@ -200,11 +200,11 @@ pub enum ServiceStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMetrics {
     pub uptime_seconds: u64,
-    /// Number of requests_processed
+    /// Number of `requests_processed`
     pub requests_processed: u64,
-    /// Number of errors_enitemsered
+    /// Number of `errors_enitemsered`
     pub errors_encountered: u64,
-    /// Number of memory_usage_bytes
+    /// Number of `memory_usage_bytes`
     pub memory_usage_bytes: u64,
     /// The cpu usage percent value
     pub cpu_usage_percent: f64,

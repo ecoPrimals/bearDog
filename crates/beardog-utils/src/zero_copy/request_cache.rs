@@ -26,7 +26,7 @@ pub struct RequestCache<T> {
 impl<T: Clone> RequestCache<T> {
     /// Create new request cache
     /// Creates a new instance
-    pub fn new(default_ttl: Duration) -> Self {
+    #[must_use] pub fn new(default_ttl: Duration) -> Self {
         Self {
             cache: RwLock::new(HashMap::new()),
             default_ttl,

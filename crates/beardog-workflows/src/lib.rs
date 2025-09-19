@@ -8,12 +8,12 @@ pub mod workflows;
 // Canonical workflow configuration - modernized
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct WorkflowConfig {
-    /// Number of max_concurrent_workflows
+    /// Number of `max_concurrent_workflows`
     pub max_concurrent_workflows: usize,
     pub default_timeout_seconds: u64,
-    /// Number of retry_attempts
+    /// Number of `retry_attempts`
     pub retry_attempts: u32,
-    /// Whether enable_audit_logging is enabled
+    /// Whether `enable_audit_logging` is enabled
     pub enable_audit_logging: bool,
     /// The workflow storage path value
     pub workflow_storage_path: String,
@@ -28,7 +28,7 @@ pub use workflows::{
 
 pub const WORKFLOW_SYSTEM_VERSION: &str = "3.1.0";
 
-/// Canonical BearDog workflow system - modernized and unified
+/// Canonical `BearDog` workflow system - modernized and unified
 #[derive(Debug)]
 pub struct BearDogWorkflowSystem<R, P, O>
 where

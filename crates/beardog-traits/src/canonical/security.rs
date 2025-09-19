@@ -46,7 +46,7 @@ pub struct SecureSession {
 
 ///
 /// **UNIFICATION NOTE**: This trait exists alongside `unified::SecurityProvider`.
-/// Future versions should consolidate to a single SecurityProvider interface
+/// Future versions should consolidate to a single `SecurityProvider` interface
 /// that combines the best of both approaches.
 #[allow(clippy::type_complexity)]
 pub trait SecurityProvider: BaseProvider {
@@ -79,7 +79,7 @@ pub trait SecurityProvider: BaseProvider {
         event: SecurityEvent,
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
-    /// Gets security_requirements
+    /// Gets `security_requirements`
     fn get_security_requirements(
         resource_type: &str,
     ) -> impl std::future::Future<Output = Result<Vec<String>, BearDogError>> + Send;
