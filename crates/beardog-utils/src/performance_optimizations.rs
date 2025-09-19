@@ -15,11 +15,11 @@ pub struct CloneOptimizer {
 #[derive(Debug, Clone, Default)]
 pub struct OptimizationStats {
     pub clones_avoided: u64,
-    /// Number of memory_saved
+    /// Number of `memory_saved`
     pub memory_saved: u64,
-    /// Number of cache_hits
+    /// Number of `cache_hits`
     pub cache_hits: u64,
-    /// Number of cache_misses
+    /// Number of `cache_misses`
     pub cache_misses: u64,
 }
 
@@ -32,7 +32,7 @@ impl Default for CloneOptimizer {
 impl CloneOptimizer {
     /// New operation.
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             string_cache: HashMap::with_capacity(16),
             buffer_pools: HashMap::with_capacity(16),
@@ -60,8 +60,8 @@ impl CloneOptimizer {
     }
 
     /// Get Optimized Buffer operation.
-    /// Gets optimized_buffer
-    /// Gets optimized_buffer
+    /// Gets `optimized_buffer`
+    /// Gets `optimized_buffer`
     pub fn get_optimized_buffer(&mut self, size: usize) -> BytesMut {
         let size_class = self.get_size_class(size);
 
@@ -91,7 +91,7 @@ impl CloneOptimizer {
     /// Get Stats operation.
     /// Gets stats
     /// Gets stats
-    pub fn get_stats(&self) -> &OptimizationStats {
+    #[must_use] pub fn get_stats(&self) -> &OptimizationStats {
         &self.stats
     }
 
@@ -99,7 +99,7 @@ impl CloneOptimizer {
         s.len() > 10 && s.len() < 1000
     }
 
-    /// Gets size_class
+    /// Gets `size_class`
     fn get_size_class(&self, size: usize) -> usize {
         match size {
             0..=64 => 64,
@@ -122,7 +122,7 @@ pub struct ZeroCopyProcessor {
 impl ZeroCopyProcessor {
     /// New operation.
     /// Creates a new instance
-    pub fn new(initial_capacity: usize) -> Self {
+    #[must_use] pub fn new(initial_capacity: usize) -> Self {
         Self {
             shared_buffer: BytesMut::with_capacity(initial_capacity),
             shared_refs: HashMap::with_capacity(16),
@@ -133,8 +133,8 @@ impl ZeroCopyProcessor {
     }
 
     /// Process Zero Copy operation.
-    /// Processes zero_copy
-    /// Processes zero_copy
+    /// Processes `zero_copy`
+    /// Processes `zero_copy`
     pub fn process_zero_copy(&mut self, input_buffer: &[u8]) -> ProcessingResult {
         if input_buffer.is_empty() {
             return ProcessingResult::InvalidInput;
@@ -156,8 +156,8 @@ impl ZeroCopyProcessor {
     }
 
     /// Create Shared Reference operation with zero-copy when possible
-    /// Creates shared_reference
-    /// Creates shared_reference
+    /// Creates `shared_reference`
+    /// Creates `shared_reference`
     pub fn create_shared_reference(&mut self, input_buffer: &[u8]) -> Arc<Bytes> {
         // Try to reuse existing shared buffer space if available
         if self.shared_buffer.capacity() - self.shared_buffer.len() >= input_buffer.len() {
@@ -192,9 +192,9 @@ impl ZeroCopyProcessor {
     }
 
     /// Get stored reference by name
-    /// Gets shared_reference
-    /// Gets shared_reference
-    pub fn get_shared_reference(&self, name: &str) -> Option<Arc<Bytes>> {
+    /// Gets `shared_reference`
+    /// Gets `shared_reference`
+    #[must_use] pub fn get_shared_reference(&self, name: &str) -> Option<Arc<Bytes>> {
         self.shared_refs.get(name).cloned()
     }
 
@@ -207,7 +207,7 @@ impl ZeroCopyProcessor {
     /// Get statistics
     /// Gets stats
     /// Gets stats
-    pub fn get_stats(&self) -> (usize, usize, usize) {
+    #[must_use] pub fn get_stats(&self) -> (usize, usize, usize) {
         (
             self.processed_count,
             self.shared_references,
@@ -216,9 +216,9 @@ impl ZeroCopyProcessor {
     }
 
     /// Create zero-copy slice from existing shared reference
-    /// Creates zero_copy_slice
-    /// Creates zero_copy_slice
-    pub fn create_zero_copy_slice(
+    /// Creates `zero_copy_slice`
+    /// Creates `zero_copy_slice`
+    #[must_use] pub fn create_zero_copy_slice(
         &self,
         name: &str,
         start: usize,
@@ -293,7 +293,7 @@ impl ZeroCopyProcessor {
         }
     }
 
-    pub const fn create_data_view<'a>(&self, input_buffer: &'a [u8]) -> DataView<'a> {
+    #[must_use] pub const fn create_data_view<'a>(&self, input_buffer: &'a [u8]) -> DataView<'a> {
         DataView {
             buffer: input_buffer,
             offset: 0,
@@ -329,9 +329,9 @@ pub struct DataView<'a> {
     length: usize,
 }
 
-impl<'a> DataView<'a> {
+impl DataView<'_> {
     /// Get slice of data at offset
-    pub fn slice(&self, start: usize, len: usize) -> Option<&[u8]> {
+    #[must_use] pub fn slice(&self, start: usize, len: usize) -> Option<&[u8]> {
         if start + len <= self.length {
             Some(&self.buffer[self.offset + start..self.offset + start + len])
         } else {
@@ -340,14 +340,14 @@ impl<'a> DataView<'a> {
     }
 
     /// Get the effective length of the view
-    pub fn len(&self) -> usize {
+    #[must_use] pub fn len(&self) -> usize {
         self.length
     }
 
     /// Check if the view is empty
     /// Checks if empty
     /// Checks if empty
-    pub fn is_empty(&self) -> bool {
+    #[must_use] pub fn is_empty(&self) -> bool {
         self.length == 0
     }
 }
@@ -358,9 +358,9 @@ pub struct SimdAccelerator {
 
 #[derive(Debug, Clone)]
 pub struct CpuFeatures {
-    /// Whether sse4_1 is enabled
+    /// Whether `sse4_1` is enabled
     pub sse4_1: bool,
-    /// Whether aes_ni is enabled
+    /// Whether `aes_ni` is enabled
     pub aes_ni: bool,
 }
 
@@ -373,7 +373,7 @@ impl Default for SimdAccelerator {
 impl SimdAccelerator {
     /// New operation.
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             features: CpuFeatures {
                 sse4_1: false, // Will be detected at runtime
@@ -383,7 +383,7 @@ impl SimdAccelerator {
     }
 
     /// Accelerated Hash operation.
-    pub fn accelerated_hash(&self, buffer_data: &[u8]) -> u64 {
+    #[must_use] pub fn accelerated_hash(&self, buffer_data: &[u8]) -> u64 {
         // Safe SIMD-style acceleration without unsafe code
         buffer_data
             .chunks(8)
@@ -391,7 +391,7 @@ impl SimdAccelerator {
                 chunk
                     .iter()
                     .enumerate()
-                    .map(|(i, &b)| (b as u64) << (i * 8))
+                    .map(|(i, &b)| u64::from(b) << (i * 8))
                     .sum::<u64>()
             })
             .sum()
@@ -400,7 +400,7 @@ impl SimdAccelerator {
     /// Get Features operation.
     /// Gets features
     /// Gets features
-    pub fn get_features(&self) -> &CpuFeatures {
+    #[must_use] pub fn get_features(&self) -> &CpuFeatures {
         &self.features
     }
 }

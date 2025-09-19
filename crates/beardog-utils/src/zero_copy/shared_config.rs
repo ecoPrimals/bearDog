@@ -14,15 +14,15 @@ pub struct SharedConfigManager {
 impl SharedConfigManager {
     /// Create new shared config manager
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             configs: RwLock::new(HashMap::new()),
         }
     }
 
     /// Get or create shared configuration
-    /// Gets or_create
-    /// Gets or_create
+    /// Gets `or_create`
+    /// Gets `or_create`
     pub fn get_or_create<T, F>(&self, key: &str, factory: F) -> Arc<T>
     where
         T: Send + Sync + 'static,
@@ -89,7 +89,7 @@ pub fn global_shared_config() -> &'static SharedConfigManager {
 }
 
 /// Get or create a shared configuration
-/// Gets shared_config
+/// Gets `shared_config`
 pub fn get_shared_config<T, F>(key: &str, factory: F) -> Arc<T>
 where
     T: Send + Sync + 'static,

@@ -23,7 +23,7 @@ pub trait Workflow: Clone + Send + Sync + std::fmt::Debug {
 
     fn id(&self) -> &Self::Id;
     fn status(&self) -> &Self::Status;
-    /// Creates itemd_at
+    /// Creates `itemd_at`
     fn created_at(&self) -> chrono::DateTime<chrono::Utc>;
 }
 

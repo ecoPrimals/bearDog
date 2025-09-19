@@ -7,13 +7,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryKeyConfig {
     /// Maximum number of keys to store in memory
-    /// Number of max_keys
+    /// Number of `max_keys`
     pub max_keys: usize,
     /// Key expiration time in seconds (0 = no expiration)
-    /// Number of key_expiration_seconds
+    /// Number of `key_expiration_seconds`
     pub key_expiration_seconds: u64,
     /// Enable key rotation
-    /// Whether enable_rotation is enabled
+    /// Whether `enable_rotation` is enabled
     pub enable_rotation: bool,
 }
 
@@ -36,10 +36,10 @@ pub struct KeyStorageConfig {
     /// The backend value
     pub backend: String,
     /// Maximum storage capacity
-    /// Number of max_capacity
+    /// Number of `max_capacity`
     pub max_capacity: usize,
     /// Enable encryption at rest
-    /// Whether encrypt_at_rest is enabled
+    /// Whether `encrypt_at_rest` is enabled
     pub encrypt_at_rest: bool,
 }
 

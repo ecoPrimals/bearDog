@@ -13,9 +13,9 @@ pub struct SafeSimdProcessor {
 
 #[derive(Debug, Clone)]
 pub struct SimdCapabilities {
-    /// Whether avx2_available is enabled
+    /// Whether `avx2_available` is enabled
     pub avx2_available: bool,
-    /// Whether sse42_available is enabled
+    /// Whether `sse42_available` is enabled
     pub sse42_available: bool,
     pub vector_width: usize,
 }
@@ -122,7 +122,7 @@ impl SafeSimdProcessor {
     }
 
     /// Safe memory comparison using optimized algorithms
-    pub fn safe_compare_arrays(&self, a: &[u8], b: &[u8]) -> bool {
+    #[must_use] pub fn safe_compare_arrays(&self, a: &[u8], b: &[u8]) -> bool {
         if a.len() != b.len() {
             return false;
         }

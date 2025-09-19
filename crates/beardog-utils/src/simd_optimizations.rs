@@ -9,13 +9,13 @@ use tracing::{debug, info};
 
 #[derive(Debug, Clone)]
 pub struct SafeSimdConfig {
-    /// Whether enable_auto_vectorization is enabled
+    /// Whether `enable_auto_vectorization` is enabled
     pub enable_auto_vectorization: bool,
-    /// Whether enable_vectorization_hints is enabled
+    /// Whether `enable_vectorization_hints` is enabled
     pub enable_vectorization_hints: bool,
-    /// Whether prefer_iterator_chains is enabled
+    /// Whether `prefer_iterator_chains` is enabled
     pub prefer_iterator_chains: bool,
-    /// Whether use_rayon_parallel is enabled
+    /// Whether `use_rayon_parallel` is enabled
     pub use_rayon_parallel: bool,
 }
 
@@ -32,13 +32,13 @@ impl Default for SafeSimdConfig {
 
 #[derive(Debug, Clone, Default)]
 pub struct SafeSimdStats {
-    /// Number of operations_completed
+    /// Number of `operations_completed`
     pub operations_completed: u64,
-    /// Number of bytes_processed
+    /// Number of `bytes_processed`
     pub bytes_processed: u64,
-    /// Number of parallel_operations
+    /// Number of `parallel_operations`
     pub parallel_operations: u64,
-    /// Number of vectorized_operations
+    /// Number of `vectorized_operations`
     pub vectorized_operations: u64,
 }
 
@@ -235,11 +235,11 @@ impl SafeSimdOptimizer {
     /// Get processing statistics
     /// Gets stats
     /// Gets stats
-    pub fn get_stats(&self) -> &SafeSimdStats {
+    #[must_use] pub fn get_stats(&self) -> &SafeSimdStats {
         &self.stats
     }
 
-    pub fn get_performance_info(&self) -> HashMap<String, String> {
+    #[must_use] pub fn get_performance_info(&self) -> HashMap<String, String> {
         let mut info = HashMap::with_capacity(8);
 
         info.insert(
@@ -301,22 +301,22 @@ impl Default for SafeSimdOptimizer {
 }
 
 pub mod safe_utils {
-    use super::*;
+    use super::BearDogError;
 
     /// Safe parallel sum with overflow protection
-    pub fn safe_parallel_sum(input_slice: &[u64]) -> u64 {
+    #[must_use] pub fn safe_parallel_sum(input_slice: &[u64]) -> u64 {
         input_slice
             .iter()
             .fold(0u64, |acc, &value| acc.saturating_add(value))
     }
 
     /// Safe parallel maximum
-    pub fn safe_parallel_max(input_slice: &[u64]) -> Option<u64> {
+    #[must_use] pub fn safe_parallel_max(input_slice: &[u64]) -> Option<u64> {
         input_slice.iter().max().copied()
     }
 
     /// Safe parallel minimum
-    pub fn safe_parallel_min(input_slice: &[u64]) -> Option<u64> {
+    #[must_use] pub fn safe_parallel_min(input_slice: &[u64]) -> Option<u64> {
         input_slice.iter().min().copied()
     }
 
@@ -339,7 +339,7 @@ pub mod safe_utils {
     }
 
     /// Safe pattern matching in byte arrays
-    pub fn safe_pattern_match(input_buffer: &[u8], pattern: &[u8]) -> Vec<usize> {
+    #[must_use] pub fn safe_pattern_match(input_buffer: &[u8], pattern: &[u8]) -> Vec<usize> {
         if pattern.is_empty() {
             return Vec::new();
         }
@@ -374,13 +374,13 @@ pub struct AlignedBuffer {
 pub struct SIMDMetrics {
     /// Number of operations
     pub operations_count: u64,
-    /// Number of cache_hits
+    /// Number of `cache_hits`
     pub cache_hits: u64,
-    /// Number of cache_misses
+    /// Number of `cache_misses`
     pub cache_misses: u64,
-    /// Number of buffer_reuses
+    /// Number of `buffer_reuses`
     pub buffer_reuses: u64,
-    /// Number of total_bytes_processed
+    /// Number of `total_bytes_processed`
     pub total_bytes_processed: u64,
     pub avg_operation_time_ns: f64,
 }
@@ -400,8 +400,8 @@ impl AdvancedSIMDOptimizer {
     }
 
     /// ⚡ PERFORMANCE: Get optimized buffer with SIMD alignment
-    /// Gets aligned_buffer
-    /// Gets aligned_buffer
+    /// Gets `aligned_buffer`
+    /// Gets `aligned_buffer`
     pub fn get_aligned_buffer(&mut self, size: usize) -> Option<&mut AlignedBuffer> {
         // First, try to find an available buffer
         for (index, buffer) in self.aligned_buffers.iter_mut().enumerate() {
@@ -438,8 +438,8 @@ impl AdvancedSIMDOptimizer {
     }
 
     /// ⚡ PERFORMANCE: Fast buffer from pool with zero-copy when possible
-    /// Gets fast_buffer
-    /// Gets fast_buffer
+    /// Gets `fast_buffer`
+    /// Gets `fast_buffer`
     pub fn get_fast_buffer(&mut self, size: usize) -> Vec<u8> {
         self.metrics.operations_count += 1;
 
@@ -590,12 +590,12 @@ impl AdvancedSIMDOptimizer {
 
     /// Gets metrics
     /// Gets metrics
-    pub fn get_metrics(&self) -> &SIMDMetrics {
+    #[must_use] pub fn get_metrics(&self) -> &SIMDMetrics {
         &self.metrics
     }
 
     /// 📊 Get cache efficiency
-    pub fn cache_hit_rate(&self) -> f64 {
+    #[must_use] pub fn cache_hit_rate(&self) -> f64 {
         let total_accesses = self.metrics.cache_hits + self.metrics.cache_misses;
         if total_accesses == 0 {
             0.0
@@ -629,7 +629,7 @@ impl AdvancedSIMDOptimizer {
         );
     }
 
-    pub fn performance_report(&self) -> HashMap<String, String> {
+    #[must_use] pub fn performance_report(&self) -> HashMap<String, String> {
         let mut report = HashMap::new();
 
         report.insert(

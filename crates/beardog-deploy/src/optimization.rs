@@ -7,10 +7,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BuildFeatures {
     /// Enable parallel compilation
-    /// Whether parallel_builds is enabled
+    /// Whether `parallel_builds` is enabled
     pub parallel_builds: bool,
     /// Enable incremental compilation
-    /// Whether incremental_builds is enabled
+    /// Whether `incremental_builds` is enabled
     pub incremental_builds: bool,
     /// Optimization settings
     /// The optimization value
@@ -23,7 +23,7 @@ pub struct OptimizationSettings {
     /// Whether lto is enabled
     pub lto: bool,
     /// Strip debug symbols from binaries
-    /// Whether strip_symbols is enabled
+    /// Whether `strip_symbols` is enabled
     pub strip_symbols: bool,
 }
 
@@ -123,8 +123,8 @@ impl DeploymentOptimizationConfig {
     ///
     /// # Returns
     #[must_use]
-    /// Gets rustc_flags
-    /// Gets rustc_flags
+    /// Gets `rustc_flags`
+    /// Gets `rustc_flags`
     pub fn get_rustc_flags(&self) -> Vec<String> {
         let mut flags = Vec::new();
 
@@ -158,8 +158,8 @@ impl DeploymentOptimizationConfig {
     ///
     /// # Returns
     #[must_use]
-    /// Gets cargo_flags
-    /// Gets cargo_flags
+    /// Gets `cargo_flags`
+    /// Gets `cargo_flags`
     pub fn get_cargo_flags(&self) -> Vec<String> {
         let mut flags = Vec::new();
 

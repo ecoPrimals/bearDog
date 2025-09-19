@@ -8,19 +8,19 @@ use tracing::{debug, info};
 
 #[derive(Debug, Clone)]
 pub struct SimdCapabilities {
-    /// Whether has_aes_ni is enabled
+    /// Whether `has_aes_ni` is enabled
     pub has_aes_ni: bool,
-    /// Whether has_avx2 is enabled
+    /// Whether `has_avx2` is enabled
     pub has_avx2: bool,
-    /// Whether has_sse42 is enabled
+    /// Whether `has_sse42` is enabled
     pub has_sse42: bool,
-    /// Whether has_sha_extensions is enabled
+    /// Whether `has_sha_extensions` is enabled
     pub has_sha_extensions: bool,
 }
 
 impl SimdCapabilities {
     /// Detect available SIMD capabilities
-    pub fn detect() -> Self {
+    #[must_use] pub fn detect() -> Self {
         Self {
             has_aes_ni: std::arch::is_x86_feature_detected!("aes"),
             has_avx2: std::arch::is_x86_feature_detected!("avx2"),
@@ -32,9 +32,9 @@ impl SimdCapabilities {
 
 #[derive(Debug, Clone)]
 pub struct SimdConfig {
-    /// Whether prefer_safe_software is enabled
+    /// Whether `prefer_safe_software` is enabled
     pub prefer_safe_software: bool,
-    /// Whether enable_timing_attack_protection is enabled
+    /// Whether `enable_timing_attack_protection` is enabled
     pub enable_timing_attack_protection: bool,
     pub use_constant_time_ops: bool,
 }
@@ -109,7 +109,7 @@ impl SimdCryptoAccelerator {
         let mut state = 0x5A5A_5A5A_u32;
 
         for &byte in input_buffer {
-            state = state.wrapping_mul(0x9E37_79B1).wrapping_add(byte as u32);
+            state = state.wrapping_mul(0x9E37_79B1).wrapping_add(u32::from(byte));
             let hash_index = (state as usize) % 32;
             hash[hash_index] ^= byte;
         }
@@ -118,7 +118,7 @@ impl SimdCryptoAccelerator {
         Ok(hash)
     }
 
-    pub fn get_performance_metrics(&self) -> HashMap<String, f64> {
+    #[must_use] pub fn get_performance_metrics(&self) -> HashMap<String, f64> {
         let mut metrics = HashMap::new();
 
         if self.capabilities.has_aes_ni {
@@ -170,7 +170,7 @@ impl SimdCryptoAccelerator {
         Ok(results)
     }
 
-    pub fn capabilities(&self) -> &SimdCapabilities {
+    #[must_use] pub fn capabilities(&self) -> &SimdCapabilities {
         &self.capabilities
     }
 }

@@ -2,7 +2,7 @@
 //
 // **MODERNIZED**: Clean, production-ready threat intelligence feed processing.
 
-use crate::threat::types::*;
+use crate::threat::types::{ThreatDetectionEngine, ThreatEvent, ThreatIntelligenceFeed, ThreatIndicator, IndicatorType, ThreatSource, SourceClassification, ThreatTarget, AssetCriticality, ProtectionLevel, ThreatSeverity, ThreatType, ThreatStatus, DetectionMethod, ThreatAction};
 use beardog_errors::BearDogError;
 use chrono::Utc;
 use std::collections::HashMap;
@@ -81,7 +81,7 @@ impl ThreatDetectionEngine {
     }
 
     /// Create threat event from intelligence match
-    /// Creates threat_event_from_intelligence
+    /// Creates `threat_event_from_intelligence`
     fn create_threat_event_from_intelligence(
         &self,
         feed: &ThreatIntelligenceFeed,
@@ -177,8 +177,8 @@ impl ThreatDetectionEngine {
     }
 
     /// Update threat intelligence feed (delegated to engine)
-    /// Updates threat_feed_handler
-    /// Updates threat_feed_handler
+    /// Updates `threat_feed_handler`
+    /// Updates `threat_feed_handler`
     pub fn update_threat_feed_handler(
         &mut self,
         feed: ThreatIntelligenceFeed,
@@ -198,9 +198,9 @@ impl ThreatDetectionEngine {
     }
 
     /// Get threat feed statistics
-    /// Gets feed_statistics
-    /// Gets feed_statistics
-    pub fn get_feed_statistics(&self) -> ThreatFeedStats {
+    /// Gets `feed_statistics`
+    /// Gets `feed_statistics`
+    #[must_use] pub fn get_feed_statistics(&self) -> ThreatFeedStats {
         let total_feeds = self.threat_feeds.len();
         let total_indicators: usize = self
             .threat_feeds
@@ -226,14 +226,14 @@ impl ThreatDetectionEngine {
 /// Threat feed statistics
 #[derive(Debug, Clone)]
 pub struct ThreatFeedStats {
-    /// Number of total_feeds
-    /// Number of total_feeds
+    /// Number of `total_feeds`
+    /// Number of `total_feeds`
     pub total_feeds: usize,
-    /// Number of active_feeds
-    /// Number of active_feeds
+    /// Number of `active_feeds`
+    /// Number of `active_feeds`
     pub active_feeds: usize,
-    /// Number of total_indicators
-    /// Number of total_indicators
+    /// Number of `total_indicators`
+    /// Number of `total_indicators`
     pub total_indicators: usize,
     /// The last updated value
     /// The last updated value

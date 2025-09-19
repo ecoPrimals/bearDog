@@ -16,7 +16,7 @@ use uuid::Uuid;
 #[derive(Debug, Clone)]
 pub struct ComplianceHandler {
     pub config: ComplianceConfig,
-    /// Whether feature_standards is enabled
+    /// Whether `feature_standards` is enabled
     pub enabled_standards: Vec<ComplianceStandard>,
     /// Collection of audit trail
     pub audit_trail: Vec<AuditEntry>,
@@ -25,7 +25,7 @@ pub struct ComplianceHandler {
 impl ComplianceHandler {
     /// New operation.
     /// Creates a new instance
-    pub fn new(config: ComplianceConfig) -> Self {
+    #[must_use] pub fn new(config: ComplianceConfig) -> Self {
         let enabled_standards = config.enabled_standards.clone();
 
         Self {
@@ -199,7 +199,7 @@ impl ComplianceHandler {
     }
 
     /// Generate Metrics operation.
-    pub fn generate_metrics(&self) -> ComplianceMetrics {
+    #[must_use] pub fn generate_metrics(&self) -> ComplianceMetrics {
         let recent_violations: Vec<ComplianceViolation> = Vec::new(); // Would be populated from recent evaluations
 
         let mut standards_compliance = HashMap::with_capacity(16);
@@ -250,7 +250,7 @@ impl ComplianceHandler {
         false
     }
 
-    /// Helper function to create a ComplianceViolation with proper structure
+    /// Helper function to create a `ComplianceViolation` with proper structure
     #[allow(clippy::too_many_arguments)]
     /// Creates violation
     fn create_violation(
@@ -267,7 +267,7 @@ impl ComplianceHandler {
             description: description.to_string(),
             severity,
             remediation: remediation.to_string(),
-            affected_data: affected_data.map(|s| s.to_string()),
+            affected_data: affected_data.map(std::string::ToString::to_string),
         }
     }
 

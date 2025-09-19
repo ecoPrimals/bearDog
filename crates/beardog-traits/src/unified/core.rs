@@ -98,7 +98,7 @@ pub trait Validatable: Identifiable {
     ) -> impl std::future::Future<Output = Result<ValidationResult, BearDogError>> + Send;
 
     /// Batch validate multiple configurations
-    fn batch_validate(
+    #[must_use] fn batch_validate(
         configs: Vec<Self::Config>,
     ) -> impl std::future::Future<Output = Result<ValidationResult, BearDogError>> + Send
     where

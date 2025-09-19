@@ -19,18 +19,18 @@ pub struct BenchmarkSuite {
 
 #[derive(Debug, Clone)]
 pub struct BenchmarkConfig {
-    /// Number of warmup_iterations
+    /// Number of `warmup_iterations`
     pub warmup_iterations: u32,
 
-    /// Number of measurement_iterations
+    /// Number of `measurement_iterations`
     pub measurement_iterations: u32,
 
     pub max_time: Duration,
 
-    /// Whether enable_memory_profiling is enabled
+    /// Whether `enable_memory_profiling` is enabled
     pub enable_memory_profiling: bool,
 
-    /// Whether enable_latency_analysis is enabled
+    /// Whether `enable_latency_analysis` is enabled
     pub enable_latency_analysis: bool,
 }
 
@@ -75,16 +75,16 @@ pub struct LatencyPercentiles {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryStats {
-    /// Number of peak_memory
+    /// Number of `peak_memory`
     pub peak_memory: u64,
 
-    /// Number of total_allocations
+    /// Number of `total_allocations`
     pub total_allocations: u64,
 
     /// The allocation rate value
     pub allocation_rate: f64,
 
-    /// Number of avg_allocation_size
+    /// Number of `avg_allocation_size`
     pub avg_allocation_size: u64,
 }
 
@@ -104,11 +104,11 @@ pub enum PerformanceGrade {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SuiteStats {
-    /// Number of total_benchmarks
+    /// Number of `total_benchmarks`
     pub total_benchmarks: u32,
-    /// Number of passed_benchmarks
+    /// Number of `passed_benchmarks`
     pub passed_benchmarks: u32,
-    /// Number of failed_benchmarks
+    /// Number of `failed_benchmarks`
     pub failed_benchmarks: u32,
     pub total_execution_time: Duration,
     pub average_performance_grade: f64,
@@ -128,7 +128,7 @@ impl Default for BenchmarkConfig {
 
 impl BenchmarkSuite {
     /// Creates a new instance
-    pub fn new(config: BenchmarkConfig) -> Self {
+    #[must_use] pub fn new(config: BenchmarkConfig) -> Self {
         Self {
             benchmarks: HashMap::with_capacity(16),
             config,
@@ -271,17 +271,17 @@ impl BenchmarkSuite {
 
     /// Gets result
     /// Gets result
-    pub fn get_result(&self, name: &str) -> Option<&BenchmarkResult> {
+    #[must_use] pub fn get_result(&self, name: &str) -> Option<&BenchmarkResult> {
         self.benchmarks.get(name)
     }
 
-    /// Gets all_results
-    /// Gets all_results
-    pub fn get_all_results(&self) -> &HashMap<String, BenchmarkResult> {
+    /// Gets `all_results`
+    /// Gets `all_results`
+    #[must_use] pub fn get_all_results(&self) -> &HashMap<String, BenchmarkResult> {
         &self.benchmarks
     }
 
-    pub fn generate_report(&self) -> PerformanceReport {
+    #[must_use] pub fn generate_report(&self) -> PerformanceReport {
         let mut excellent_count = 0;
         let mut good_count = 0;
         let mut average_count = 0;
@@ -300,10 +300,10 @@ impl BenchmarkSuite {
 
         let total_ops_per_second: f64 = self.benchmarks.values().map(|r| r.ops_per_second).sum();
 
-        let avg_ops_per_second = if !self.benchmarks.is_empty() {
-            total_ops_per_second / self.benchmarks.len() as f64
-        } else {
+        let avg_ops_per_second = if self.benchmarks.is_empty() {
             0.0
+        } else {
+            total_ops_per_second / self.benchmarks.len() as f64
         };
 
         PerformanceReport {

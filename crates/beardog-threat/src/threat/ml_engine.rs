@@ -2,7 +2,7 @@
 //
 // **MODERNIZED**: Clean, production-ready ML engine for threat detection.
 
-use crate::threat::types::*;
+use crate::threat::types::SecurityEvent;
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::future::Future;
@@ -88,7 +88,7 @@ impl Default for MlEngine {
 impl MlEngine {
     /// Create a new ML engine instance
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             models: HashMap::with_capacity(16),
             universal_adapter: None,
@@ -100,7 +100,7 @@ impl MlEngine {
 
     /// Configure the engine with a universal compute adapter
     /// Creates instance with universal adapter
-    pub fn with_universal_adapter(mut self, adapter: Box<dyn UniversalComputeAdapter>) -> Self {
+    #[must_use] pub fn with_universal_adapter(mut self, adapter: Box<dyn UniversalComputeAdapter>) -> Self {
         self.universal_adapter = Some(adapter);
         self
     }
@@ -186,12 +186,12 @@ impl MlEngine {
         // Parse response
         let confidence = response
             .get("confidence")
-            .and_then(|v| v.as_f64())
+            .and_then(serde_json::Value::as_f64)
             .unwrap_or(0.5);
 
         let risk_score = response
             .get("risk_score")
-            .and_then(|v| v.as_f64())
+            .and_then(serde_json::Value::as_f64)
             .unwrap_or(0.5);
 
         let reasoning = response
@@ -260,7 +260,7 @@ impl MlEngine {
     /// Get engine statistics
     /// Gets stats
     /// Gets stats
-    pub fn get_stats(&self) -> MlEngineStats {
+    #[must_use] pub fn get_stats(&self) -> MlEngineStats {
         MlEngineStats {
             local_predictions: self.local_predictions,
             network_predictions: self.network_predictions,
@@ -279,17 +279,17 @@ impl MlEngine {
 /// ML engine statistics
 #[derive(Debug, Clone)]
 pub struct MlEngineStats {
-    /// Number of local_predictions
-    /// Number of local_predictions
+    /// Number of `local_predictions`
+    /// Number of `local_predictions`
     pub local_predictions: u64,
-    /// Number of network_predictions
-    /// Number of network_predictions
+    /// Number of `network_predictions`
+    /// Number of `network_predictions`
     pub network_predictions: u64,
-    /// Number of models_loaded
-    /// Number of models_loaded
+    /// Number of `models_loaded`
+    /// Number of `models_loaded`
     pub models_loaded: usize,
-    /// Number of cache_size
-    /// Number of cache_size
+    /// Number of `cache_size`
+    /// Number of `cache_size`
     pub cache_size: usize,
 }
 

@@ -43,8 +43,8 @@ impl ThreatDetectionEngine {
     }
 
     /// Remove Detection Rule operation.
-    /// Removes detection_rule
-    /// Removes detection_rule
+    /// Removes `detection_rule`
+    /// Removes `detection_rule`
     pub fn remove_detection_rule(&mut self, rule_id: &str) -> bool {
         let initial_len = self.detection_rules.len();
         self.detection_rules.retain(|rule| rule.id != rule_id);
@@ -71,7 +71,7 @@ impl ThreatDetectionEngine {
     /// Get Statistics operation.
     /// Gets statistics
     /// Gets statistics
-    pub fn get_statistics(&self) -> &ThreatDetectionStats {
+    #[must_use] pub fn get_statistics(&self) -> &ThreatDetectionStats {
         &self.stats
     }
 
@@ -81,8 +81,8 @@ impl ThreatDetectionEngine {
     }
 
     /// Update Detection Rule operation.
-    /// Updates detection_rule
-    /// Updates detection_rule
+    /// Updates `detection_rule`
+    /// Updates `detection_rule`
     pub fn update_detection_rule(&mut self, rule_id: &str, updated_rule: DetectionRule) -> bool {
         for rule in &mut self.detection_rules {
             if rule.id == rule_id {
@@ -98,8 +98,8 @@ impl ThreatDetectionEngine {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Loads default_rules
-    /// Loads default_rules
+    /// Loads `default_rules`
+    /// Loads `default_rules`
     pub fn load_default_rules(&mut self) -> Result<(), BearDogError> {
         let brute_force_rule = DetectionRule {
             name: "Brute Force Attack Detection".to_string(),
@@ -141,9 +141,9 @@ impl ThreatDetectionEngine {
     }
 
     /// Get System Health operation.
-    /// Gets system_health
-    /// Gets system_health
-    pub fn get_system_health(&self) -> SystemHealth {
+    /// Gets `system_health`
+    /// Gets `system_health`
+    #[must_use] pub fn get_system_health(&self) -> SystemHealth {
         let mut component_status = HashMap::new();
 
         // Add component health based on system state
@@ -203,9 +203,9 @@ impl ThreatDetectionEngine {
     }
 
     /// Get system status
-    /// Gets system_status
-    /// Gets system_status
-    pub fn get_system_status(&self) -> SystemStatus {
+    /// Gets `system_status`
+    /// Gets `system_status`
+    #[must_use] pub fn get_system_status(&self) -> SystemStatus {
         SystemStatus {
             system_uptime: "N/A".to_string(), // Would be calculated from start time
             memory_usage: "N/A".to_string(),  // Would be calculated from system metrics
@@ -228,25 +228,25 @@ pub struct SystemStatus {
 /// Threat management statistics
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ThreatStats {
-    /// Number of total_rules
-    /// Number of total_rules
+    /// Number of `total_rules`
+    /// Number of `total_rules`
     pub total_rules: usize,
-    /// Number of active_threats
-    /// Number of active_threats
+    /// Number of `active_threats`
+    /// Number of `active_threats`
     pub active_threats: usize,
-    /// Number of blocked_sources
-    /// Number of blocked_sources
+    /// Number of `blocked_sources`
+    /// Number of `blocked_sources`
     pub blocked_sources: usize,
-    /// Number of quarantined_systems
-    /// Number of quarantined_systems
+    /// Number of `quarantined_systems`
+    /// Number of `quarantined_systems`
     pub quarantined_systems: usize,
-    /// Number of threat_feeds
-    /// Number of threat_feeds
+    /// Number of `threat_feeds`
+    /// Number of `threat_feeds`
     pub threat_feeds: usize,
-    /// Number of ml_models
-    /// Number of ml_models
+    /// Number of `ml_models`
+    /// Number of `ml_models`
     pub ml_models: usize,
-    /// Number of events_processed
-    /// Number of events_processed
+    /// Number of `events_processed`
+    /// Number of `events_processed`
     pub events_processed: usize,
 }

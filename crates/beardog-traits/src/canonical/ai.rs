@@ -81,7 +81,7 @@ pub trait AiProvider: BaseProvider {
         config: ModelConfig,
     ) -> impl std::future::Future<Output = Result<String, BearDogError>> + Send;
 
-    /// Gets model_status
+    /// Gets `model_status`
     fn get_model_status(
         &self,
         model_id: &str,
@@ -93,7 +93,7 @@ pub trait AiProvider: BaseProvider {
         model_id: &str,
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
-    /// Gets model_info
+    /// Gets `model_info`
     fn get_model_info(
         model_id: &str,
     ) -> impl std::future::Future<Output = Result<ModelInfo, BearDogError>> + Send;

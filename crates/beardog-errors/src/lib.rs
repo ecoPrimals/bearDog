@@ -28,8 +28,8 @@ pub use core::BearDogError;
 
 /// A convenient type alias for `Result<T, BearDogError>`
 ///
-/// This type alias provides a consistent return type across the BearDog ecosystem
-/// for operations that may fail with a BearDogError.
+/// This type alias provides a consistent return type across the `BearDog` ecosystem
+/// for operations that may fail with a `BearDogError`.
 pub type BearDogResult<T> = Result<T, BearDogError>;
 
 use std::fmt::Display;
@@ -37,7 +37,7 @@ use std::fmt::Display;
 /// Extension trait for Result types to add BearDog-specific error context
 ///
 /// This trait provides convenient methods for adding contextual information
-/// to errors and converting them to BearDogError types.
+/// to errors and converting them to `BearDogError` types.
 pub trait ResultExt<T, E> {
     /// Add security context to an error result
     ///

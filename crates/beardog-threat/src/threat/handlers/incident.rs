@@ -3,15 +3,15 @@
 // This module provides incident response functionality for the BearDog threat detection system.
 
 use super::core::ThreatDetectionEngine;
-use crate::threat::types::*;
+use crate::threat::types::ThreatEvent;
 use beardog_errors::BearDogError;
 use chrono::Utc;
 // Removed unused imports: std::collections::HashMap, std::sync::{Arc, RwLock}
 
 impl ThreatDetectionEngine {
     /// Create incident from threat event
-    /// Creates incident_from_threat
-    /// Creates incident_from_threat
+    /// Creates `incident_from_threat`
+    /// Creates `incident_from_threat`
     pub fn create_incident_from_threat(
         &self,
         threat_event: &ThreatEvent,
@@ -55,8 +55,8 @@ impl ThreatDetectionEngine {
     }
 
     /// Update incident status
-    /// Updates incident_status
-    /// Updates incident_status
+    /// Updates `incident_status`
+    /// Updates `incident_status`
     pub fn update_incident_status(
         &self,
         incident_id: &str,
@@ -83,8 +83,8 @@ impl ThreatDetectionEngine {
     }
 
     /// Get active incidents
-    /// Gets active_incidents
-    /// Gets active_incidents
+    /// Gets `active_incidents`
+    /// Gets `active_incidents`
     pub fn get_active_incidents(&self) -> Result<Vec<IncidentResponse>, BearDogError> {
         // Simplified implementation for compilation
         Ok(Vec::new())

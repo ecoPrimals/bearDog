@@ -58,8 +58,8 @@ pub struct DetectionRule {
     /// Number of detection
     /// Number of detection
     pub detection_count: u64,
-    /// Number of false_positive
-    /// Number of false_positive
+    /// Number of `false_positive`
+    /// Number of `false_positive`
     pub false_positive_count: u64,
     pub confidence_score: f64,
     /// The detection logic value
@@ -180,20 +180,20 @@ pub struct RuleExecutionResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RulePerformanceMetrics {
     pub rule_id: String,
-    /// Number of total_executions
-    /// Number of total_executions
+    /// Number of `total_executions`
+    /// Number of `total_executions`
     pub total_executions: u64,
-    /// Number of true_positives
-    /// Number of true_positives
+    /// Number of `true_positives`
+    /// Number of `true_positives`
     pub true_positives: u64,
-    /// Number of false_positives
-    /// Number of false_positives
+    /// Number of `false_positives`
+    /// Number of `false_positives`
     pub false_positives: u64,
-    /// Number of true_negatives
-    /// Number of true_negatives
+    /// Number of `true_negatives`
+    /// Number of `true_negatives`
     pub true_negatives: u64,
-    /// Number of false_negatives
-    /// Number of false_negatives
+    /// Number of `false_negatives`
+    /// Number of `false_negatives`
     pub false_negatives: u64,
     pub avg_execution_time_ms: f64,
     /// The accuracy value
@@ -231,7 +231,7 @@ pub struct RuleValidationResult {
 impl DetectionRule {
     /// Create a new detection rule
     /// Creates a new instance
-    pub fn new(
+    #[must_use] pub fn new(
         id: &str,
         name: &str,
         description: &str,
@@ -273,7 +273,7 @@ impl DetectionRule {
     /// Execute the rule against event data
     /// Executes operation
     /// Executes operation
-    pub fn execute(&self, event_data: &HashMap<String, String>) -> RuleExecutionResult {
+    #[must_use] pub fn execute(&self, event_data: &HashMap<String, String>) -> RuleExecutionResult {
         let start_time = std::time::Instant::now();
 
         let matched = self.enabled && self.condition.evaluate(event_data);
@@ -309,7 +309,7 @@ impl DetectionRule {
     /// Validate the rule configuration
     /// Validates input
     /// Validates input
-    pub fn validate(&self) -> RuleValidationResult {
+    #[must_use] pub fn validate(&self) -> RuleValidationResult {
         let mut errors = Vec::new();
         let mut warnings = Vec::new();
         let mut suggestions = Vec::new();
@@ -395,26 +395,26 @@ impl DetectionRule {
     /// Check if rule is high priority
     /// Checks if high priority
     /// Checks if high priority
-    pub fn is_high_priority(&self) -> bool {
+    #[must_use] pub fn is_high_priority(&self) -> bool {
         self.priority >= 80
     }
 
     /// Check if rule is complex
     /// Checks if complex
     /// Checks if complex
-    pub fn is_complex(&self) -> bool {
+    #[must_use] pub fn is_complex(&self) -> bool {
         self.condition.is_complex()
     }
 
     /// Get rule age in days
-    pub fn age_days(&self) -> i64 {
+    #[must_use] pub fn age_days(&self) -> i64 {
         (Utc::now() - self.created_at).num_days()
     }
 }
 
 impl RulePerformanceMetrics {
     /// Creates a new instance
-    pub fn new(rule_id: &str) -> Self {
+    #[must_use] pub fn new(rule_id: &str) -> Self {
         Self {
             rule_id: rule_id.to_string(),
             total_executions: 0,
@@ -432,8 +432,8 @@ impl RulePerformanceMetrics {
     }
 
     /// Update metrics with execution result
-    /// Updates with_result
-    /// Updates with_result
+    /// Updates `with_result`
+    /// Updates `with_result`
     pub fn update_with_result(
         &mut self,
         execution_time_ms: u64,

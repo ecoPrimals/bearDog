@@ -71,7 +71,7 @@ pub struct AuditEvent {
 impl AuditEvent {
     /// Create new audit event
     /// Creates a new instance
-    pub fn new(
+    #[must_use] pub fn new(
         event_type: AuditEventType,
         resource: String,
         action: String,
@@ -94,14 +94,14 @@ impl AuditEvent {
 
     /// Add user context to event
     /// Creates instance with user
-    pub fn with_user(mut self, user_id: String) -> Self {
+    #[must_use] pub fn with_user(mut self, user_id: String) -> Self {
         self.user_id = Some(user_id);
         self
     }
 
     /// Add source IP to event
     /// Creates instance with source ip
-    pub fn with_source_ip(mut self, ip: &str) -> Self {
+    #[must_use] pub fn with_source_ip(mut self, ip: &str) -> Self {
         self.source_ip = Some(ip.to_string());
         self
     }
@@ -115,7 +115,7 @@ impl AuditEvent {
 
     /// Add metadata to event
     /// Creates instance with metadata
-    pub fn with_metadata(mut self, key: String, value: String) -> Self {
+    #[must_use] pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self
     }
@@ -130,7 +130,7 @@ pub struct AuditEngine {
 impl AuditEngine {
     /// Create new audit engine
     /// Creates a new instance
-    pub fn new(max_events: usize) -> Self {
+    #[must_use] pub fn new(max_events: usize) -> Self {
         Self {
             events: Vec::with_capacity(max_events),
             max_events,
@@ -148,9 +148,9 @@ impl AuditEngine {
     }
 
     /// Get events by type
-    /// Gets events_by_type
-    /// Gets events_by_type
-    pub fn get_events_by_type(&self, event_type: &AuditEventType) -> Vec<&AuditEvent> {
+    /// Gets `events_by_type`
+    /// Gets `events_by_type`
+    #[must_use] pub fn get_events_by_type(&self, event_type: &AuditEventType) -> Vec<&AuditEvent> {
         self.events
             .iter()
             .filter(|event| {
@@ -160,9 +160,9 @@ impl AuditEngine {
     }
 
     /// Get events by user
-    /// Gets events_by_user
-    /// Gets events_by_user
-    pub fn get_events_by_user(&self, user_id: &str) -> Vec<&AuditEvent> {
+    /// Gets `events_by_user`
+    /// Gets `events_by_user`
+    #[must_use] pub fn get_events_by_user(&self, user_id: &str) -> Vec<&AuditEvent> {
         self.events
             .iter()
             .filter(|event| event.user_id.as_deref() == Some(user_id))
@@ -170,9 +170,9 @@ impl AuditEngine {
     }
 
     /// Get events in time range
-    /// Gets events_in_range
-    /// Gets events_in_range
-    pub fn get_events_in_range(
+    /// Gets `events_in_range`
+    /// Gets `events_in_range`
+    #[must_use] pub fn get_events_in_range(
         &self,
         start: chrono::DateTime<chrono::Utc>,
         end: chrono::DateTime<chrono::Utc>,
@@ -184,7 +184,7 @@ impl AuditEngine {
     }
 
     /// Generate compliance report
-    pub fn generate_compliance_report(&self) -> HashMap<String, usize> {
+    #[must_use] pub fn generate_compliance_report(&self) -> HashMap<String, usize> {
         let mut report = HashMap::new();
 
         for event in &self.events {
@@ -197,14 +197,14 @@ impl AuditEngine {
     }
 
     /// Clear old events
-    /// Cleans up old_events
-    /// Cleans up old_events
+    /// Cleans up `old_events`
+    /// Cleans up `old_events`
     pub fn cleanup_old_events(&mut self, cutoff: chrono::DateTime<chrono::Utc>) {
         self.events.retain(|event| event.timestamp > cutoff);
     }
 
     /// Get total event count
-    pub fn event_count(&self) -> usize {
+    #[must_use] pub fn event_count(&self) -> usize {
         self.events.len()
     }
 

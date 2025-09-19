@@ -11,7 +11,7 @@ use tokio::sync::RwLock;
 use super::history::OptimizationHistory;
 use super::neural_network::SimpleNeuralNetwork;
 use super::predictor::ResourcePredictor;
-use super::types::*;
+use super::types::{PerformanceModel, PerformanceSample, OptimizationRecommendation, OptimizationType, RecommendationPriority, OptimizationAction, AIOptimizationStats};
 
 pub struct AIOptimizationEngine {
     performance_model: Arc<RwLock<PerformanceModel>>,
@@ -197,7 +197,7 @@ impl AIOptimizationEngine {
     }
 
     /// Get current CPU usage percentage
-    /// Gets cpu_usage
+    /// Gets `cpu_usage`
     fn get_cpu_usage(&self) -> Result<f64, BearDogError> {
         // Basic CPU usage estimation using load average
         // In production, this would use proper system monitoring libraries
@@ -215,7 +215,7 @@ impl AIOptimizationEngine {
     }
 
     /// Get current memory usage percentage
-    /// Gets memory_usage
+    /// Gets `memory_usage`
     fn get_memory_usage(&self) -> Result<f64, BearDogError> {
         // Basic memory usage calculation
         // In production, this would use proper system monitoring
@@ -299,7 +299,7 @@ impl AIOptimizationEngine {
     }
 
     /// Get system load average
-    /// Gets system_load
+    /// Gets `system_load`
     fn get_system_load(&self) -> Result<f64, BearDogError> {
         let load =
             std::fs::read_to_string("/proc/loadavg").unwrap_or_else(|_| "0.6 0.5 0.4".to_string());

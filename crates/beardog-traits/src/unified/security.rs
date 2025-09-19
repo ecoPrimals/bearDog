@@ -54,7 +54,7 @@ pub trait SecurityProvider: BearDogProvider {
         action: &str,
     ) -> impl std::future::Future<Output = Result<bool, Self::Error>> + Send;
 
-    /// Gets security_requirements
+    /// Gets `security_requirements`
     fn get_security_requirements(
         &self,
         resource: &str,
@@ -291,7 +291,7 @@ pub struct AuditQuery {
 /// Audit statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuditStats {
-    /// Number of total_events
+    /// Number of `total_events`
     pub total_events: usize,
     /// Mapping of events by type
     pub events_by_type: HashMap<String, usize>,
@@ -373,25 +373,25 @@ pub struct SecureSession {
     pub permissions: Vec<String>,
     /// Mapping of metadata
     pub metadata: HashMap<String, serde_json::Value>,
-    /// Whether is_active is enabled
+    /// Whether `is_active` is enabled
     pub is_active: bool,
 }
 
 /// Unified security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UnifiedSecurityConfig {
-    /// Whether enable_authentication is enabled
+    /// Whether `enable_authentication` is enabled
     pub enable_authentication: bool,
-    /// Whether enable_authorization is enabled
+    /// Whether `enable_authorization` is enabled
     pub enable_authorization: bool,
-    /// Whether enable_audit is enabled
+    /// Whether `enable_audit` is enabled
     pub enable_audit: bool,
     pub session_timeout_minutes: u64,
-    /// Number of max_failed_attempts
+    /// Number of `max_failed_attempts`
     pub max_failed_attempts: u32,
-    /// Number of lockout_duration_minutes
+    /// Number of `lockout_duration_minutes`
     pub lockout_duration_minutes: u64,
-    /// Whether require_mfa is enabled
+    /// Whether `require_mfa` is enabled
     pub require_mfa: bool,
     /// Collection of supported auth methods
     pub supported_auth_methods: Vec<String>,
@@ -399,9 +399,9 @@ pub struct UnifiedSecurityConfig {
     pub crypto_algorithms: Vec<String>,
     /// Whether hsm is enabled
     pub hsm_enabled: bool,
-    /// Number of audit_retention_days
+    /// Number of `audit_retention_days`
     pub audit_retention_days: u32,
-    /// Number of policy_refresh_interval_minutes
+    /// Number of `policy_refresh_interval_minutes`
     pub policy_refresh_interval_minutes: u64,
 }
 

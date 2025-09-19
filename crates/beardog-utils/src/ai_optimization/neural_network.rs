@@ -123,9 +123,9 @@ impl SimpleNeuralNetwork {
         Ok(())
     }
 
-    /// Gets prediction_confidence
-    /// Gets prediction_confidence
-    pub fn get_prediction_confidence(&self) -> f64 {
+    /// Gets `prediction_confidence`
+    /// Gets `prediction_confidence`
+    #[must_use] pub fn get_prediction_confidence(&self) -> f64 {
         // Simple confidence measure based on output variance
         if self.output_layer.is_empty() {
             return 0.0;

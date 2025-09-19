@@ -15,7 +15,7 @@ pub struct IdManager {
 impl IdManager {
     /// Create new ID manager
     /// Creates a new instance
-    pub fn new(prefix: &str) -> Self {
+    #[must_use] pub fn new(prefix: &str) -> Self {
         Self {
             counter: AtomicU64::new(0),
             prefix: prefix.to_string(),
@@ -49,6 +49,6 @@ pub fn global_id_manager() -> &'static IdManager {
 }
 
 /// Generate a global ID
-pub fn generate_id() -> String {
+#[must_use] pub fn generate_id() -> String {
     global_id_manager().next_id()
 }

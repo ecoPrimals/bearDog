@@ -343,16 +343,13 @@ where
     pub fn pop(&self) -> Option<T> {
         debug!("⬅️ Safe concurrent queue pop");
 
-        match self.inner.pop() {
-            Some(item) => {
-                self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
-                self.stats.size.fetch_sub(1, Ordering::Relaxed);
-                Some(item)
-            }
-            None => {
-                self.stats.cache_misses.fetch_add(1, Ordering::Relaxed);
-                None
-            }
+        if let Some(item) = self.inner.pop() {
+            self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
+            self.stats.size.fetch_sub(1, Ordering::Relaxed);
+            Some(item)
+        } else {
+            self.stats.cache_misses.fetch_add(1, Ordering::Relaxed);
+            None
         }
     }
 

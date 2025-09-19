@@ -35,7 +35,7 @@ pub trait MonitoringProvider: BaseProvider {
         data: HashMap<&str, &str>,
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
-    /// Gets service_health
+    /// Gets `service_health`
     fn get_service_health(
         service_name: &str,
     ) -> impl std::future::Future<Output = Result<ServiceHealth, BearDogError>> + Send;

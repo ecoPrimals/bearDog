@@ -16,7 +16,7 @@ pub struct PerformanceModel {
     pub network_latency_weights: Vec<f64>,
     pub crypto_performance_weights: Vec<f64>,
     pub confidence_scores: HashMap<String, f64>,
-    /// Number of last_updated
+    /// Number of `last_updated`
     pub last_updated: u64,
 }
 
@@ -103,9 +103,9 @@ pub enum RecommendationPriority {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIOptimizationStats {
-    /// Number of total_optimizations
+    /// Number of `total_optimizations`
     pub total_optimizations: u64,
-    /// Number of successful_optimizations
+    /// Number of `successful_optimizations`
     pub successful_optimizations: u64,
     /// The average improvement value
     pub average_improvement: f64,
@@ -113,7 +113,7 @@ pub struct AIOptimizationStats {
     pub learning_accuracy: f64,
     /// The prediction accuracy value
     pub prediction_accuracy: f64,
-    /// Number of anomalies_detected
+    /// Number of `anomalies_detected`
     pub anomalies_detected: u64,
     pub model_confidence: f64,
 }
@@ -126,7 +126,7 @@ impl Default for PerformanceModel {
 
 impl PerformanceModel {
     /// Creates a new instance
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             cpu_utilization_weights: vec![0.3, 0.2, 0.1, 0.4],
             memory_usage_weights: vec![0.4, 0.3, 0.2, 0.1],

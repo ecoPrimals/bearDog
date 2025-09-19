@@ -47,8 +47,8 @@ impl RustBuilder {
     ///
     /// # Errors
     /// Returns error if any build step fails
-    /// Builds android_app
-    /// Builds android_app
+    /// Builds `android_app`
+    /// Builds `android_app`
     pub async fn build_android_app(&self, release: bool, target: &str) -> AnyhowResult<()> {
         info!("🔨 Building BearDog Android application...");
 
@@ -73,7 +73,7 @@ impl RustBuilder {
     ///
     /// # Errors
     /// Returns error if NDK is not found or target is unsupported
-    /// Sets valueup_build_environment
+    /// Sets `valueup_build_environment`
     fn setup_build_environment(target: &str) -> Result<(), BearDogError> {
         debug!("🔧 Setting up build environment for {target}");
 
@@ -98,7 +98,7 @@ impl RustBuilder {
     ///
     /// # Errors
     /// Returns error if NDK path is not configured
-    /// Gets ndk_path
+    /// Gets `ndk_path`
     fn get_ndk_path() -> Result<String, BearDogError> {
         env::var("ANDROID_NDK_HOME")
             .or_else(|_| env::var("NDK_HOME"))
@@ -110,7 +110,7 @@ impl RustBuilder {
     /// Host architecture string
     ///
     /// # Errors
-    /// Gets host_architecture
+    /// Gets `host_architecture`
     fn get_host_architecture() -> Result<&'static str, BearDogError> {
         if cfg!(target_os = "linux") && cfg!(target_arch = "x86_64") {
             Ok("linux-x86_64")
@@ -161,7 +161,7 @@ impl RustBuilder {
     /// # Arguments
     /// * `toolchain_path` - Path to toolchain binaries
     /// * `api_level` - Android API level
-    ///   Sets aarch64_toolchain
+    ///   Sets `aarch64_toolchain`
     fn set_aarch64_toolchain(toolchain_path: &std::path::Path, api_level: &str) {
         env::set_var(
             "CC_aarch64_linux_android",
@@ -183,7 +183,7 @@ impl RustBuilder {
     /// # Arguments
     /// * `toolchain_path` - Path to toolchain binaries
     /// * `api_level` - Android API level
-    ///   Sets armv7_toolchain
+    ///   Sets `armv7_toolchain`
     fn set_armv7_toolchain(toolchain_path: &std::path::Path, api_level: &str) {
         env::set_var(
             "CC_armv7_linux_androideabi",
@@ -212,7 +212,7 @@ impl RustBuilder {
     ///
     /// # Errors
     /// Returns error if library compilation fails
-    /// Builds android_library
+    /// Builds `android_library`
     async fn build_android_library(&self, release: bool, target: &str) -> AnyhowResult<()> {
         let mut cmd = Command::new("cargo");
         cmd.args(["build", "--lib", "--target", target])
@@ -248,7 +248,7 @@ impl RustBuilder {
     ///
     /// # Errors
     /// Returns error if example app compilation fails
-    /// Builds example_app
+    /// Builds `example_app`
     async fn build_example_app(&self, release: bool, target: &str) -> AnyhowResult<()> {
         let android_dir = self.project_root.join("android");
 

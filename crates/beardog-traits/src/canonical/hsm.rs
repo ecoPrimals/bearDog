@@ -56,7 +56,7 @@ pub struct KeyPolicy {
     pub allowed_operations: Vec<String>,
     /// Optional expiration
     pub expiration: Option<chrono::DateTime<chrono::Utc>>,
-    /// Number of minimum_key_size
+    /// Number of `minimum_key_size`
     pub minimum_key_size: u32,
 }
 
@@ -107,7 +107,7 @@ pub trait HsmProvider: BaseProvider {
         key_id: &str,
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
-    /// Gets key_info
+    /// Gets `key_info`
     fn get_key_info(
         &self,
         key_id: &str,
@@ -128,13 +128,13 @@ pub trait HsmProvider: BaseProvider {
         key_id: &str,
     ) -> impl std::future::Future<Output = Result<HsmKey, BearDogError>> + Send;
 
-    /// Sets key_policy
+    /// Sets `key_policy`
     fn set_key_policy(
         key_id: &str,
         policy: KeyPolicy,
     ) -> impl std::future::Future<Output = Result<(), BearDogError>> + Send;
 
-    /// Gets key_policy
+    /// Gets `key_policy`
     fn get_key_policy(
         &self,
         key_id: &str,

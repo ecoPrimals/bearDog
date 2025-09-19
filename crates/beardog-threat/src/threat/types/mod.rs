@@ -17,12 +17,12 @@ pub use engine::threat_engine::*;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatDetectionConfig {
     /// Enable machine learning enhancement
-    /// Whether ml_enhancement is enabled
-    /// Whether ml_enhancement is enabled
+    /// Whether `ml_enhancement` is enabled
+    /// Whether `ml_enhancement` is enabled
     pub ml_enhancement: bool,
     /// Maximum number of active threats to track
-    /// Number of max_active_threats
-    /// Number of max_active_threats
+    /// Number of `max_active_threats`
+    /// Number of `max_active_threats`
     pub max_active_threats: usize,
     /// Threat detection sensitivity level (0.0 - 1.0)
     /// The sensitivity value
@@ -31,8 +31,8 @@ pub struct ThreatDetectionConfig {
     /// Enable real-time monitoring
     pub real_time_monitoring: bool,
     /// Automatic response enabled
-    /// Whether auto_response is enabled
-    /// Whether auto_response is enabled
+    /// Whether `auto_response` is enabled
+    /// Whether `auto_response` is enabled
     pub auto_response: bool,
     /// Quarantine threshold score
     /// The quarantine threshold value
@@ -235,8 +235,8 @@ pub struct ThreatTarget {
     /// Node identifier
     pub node_id: Option<String>,
     /// User account if applicable
-    /// Number of user_acitems
-    /// Number of user_acitems
+    /// Number of `user_acitems`
+    /// Number of `user_acitems`
     pub user_account: Option<String>,
     /// Asset criticality
     /// The asset criticality value
@@ -365,7 +365,7 @@ pub enum ThreatSeverity {
 impl ThreatSeverity {
     /// Convert severity to string representation
     /// Returns as str
-    pub fn as_str(&self) -> &'static str {
+    #[must_use] pub fn as_str(&self) -> &'static str {
         match self {
             ThreatSeverity::Low => "low",
             ThreatSeverity::Medium => "medium",
@@ -374,7 +374,7 @@ impl ThreatSeverity {
         }
     }
 
-    pub fn score(&self) -> u8 {
+    #[must_use] pub fn score(&self) -> u8 {
         match self {
             ThreatSeverity::Low => 1,
             ThreatSeverity::Medium => 2,
@@ -638,7 +638,7 @@ pub struct SecurityEvent {
 impl SecurityEvent {
     /// Create a new security event
     /// Creates a new instance
-    pub fn new(event_type: &str, timestamp: chrono::DateTime<chrono::Utc>, source: &str) -> Self {
+    #[must_use] pub fn new(event_type: &str, timestamp: chrono::DateTime<chrono::Utc>, source: &str) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             event_type: event_type.to_string(),
@@ -652,7 +652,7 @@ impl SecurityEvent {
 
     /// Add source IP to event data
     /// Creates instance with source ip
-    pub fn with_source_ip(mut self, source_ip: &str) -> Self {
+    #[must_use] pub fn with_source_ip(mut self, source_ip: &str) -> Self {
         self.data
             .insert("source_ip".to_string(), source_ip.to_string());
         self
@@ -660,7 +660,7 @@ impl SecurityEvent {
 
     /// Add user ID to event data
     /// Creates instance with user id
-    pub fn with_user_id(mut self, user_id: &str) -> Self {
+    #[must_use] pub fn with_user_id(mut self, user_id: &str) -> Self {
         self.data.insert("user_id".to_string(), user_id.to_string());
         self
     }
@@ -786,7 +786,7 @@ pub struct ResponseAction {
 impl ThreatEvent {
     /// Create a new threat event
     /// Creates a new instance
-    pub fn new(
+    #[must_use] pub fn new(
         id: String,
         threat_type: ThreatType,
         severity: ThreatSeverity,
@@ -834,7 +834,7 @@ impl ThreatEvent {
     /// Check if threat is active
     /// Checks if active
     /// Checks if active
-    pub fn is_active(&self) -> bool {
+    #[must_use] pub fn is_active(&self) -> bool {
         matches!(
             self.status,
             ThreatStatus::Detected | ThreatStatus::Analyzing | ThreatStatus::Mitigating
@@ -898,7 +898,7 @@ impl Default for DetectionRule {
 impl DetectionRule {
     /// Create a new detection rule
     /// Creates a new instance
-    pub fn new(
+    #[must_use] pub fn new(
         id: String,
         name: String,
         description: String,
@@ -935,7 +935,7 @@ impl DetectionRule {
 impl MitigationStep {
     /// Create a new mitigation step
     /// Creates a new instance
-    pub fn new(id: String, action: String, result: String, success: bool) -> Self {
+    #[must_use] pub fn new(id: String, action: String, result: String, success: bool) -> Self {
         Self {
             id,
             action,

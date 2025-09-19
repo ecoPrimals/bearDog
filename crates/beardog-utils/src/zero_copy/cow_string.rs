@@ -14,13 +14,13 @@ pub struct ZeroCopyString {
 impl ZeroCopyString {
     /// Create from shared string
     /// Creates instance from shared
-    pub fn from_shared(s: Arc<str>) -> Self {
+    #[must_use] pub fn from_shared(s: Arc<str>) -> Self {
         Self { inner: s }
     }
 
     /// Create from owned string
     /// Creates instance from owned
-    pub fn from_owned(s: &str) -> Self {
+    #[must_use] pub fn from_owned(s: &str) -> Self {
         Self {
             inner: Arc::from(s),
         }
@@ -34,19 +34,19 @@ impl ZeroCopyString {
 
     /// Get as string slice
     /// Returns as str
-    pub fn as_str(&self) -> &str {
+    #[must_use] pub fn as_str(&self) -> &str {
         &self.inner
     }
 
     /// Get length
-    pub fn len(&self) -> usize {
+    #[must_use] pub fn len(&self) -> usize {
         self.inner.len()
     }
 
     /// Check if empty
     /// Checks if empty
     /// Checks if empty
-    pub fn is_empty(&self) -> bool {
+    #[must_use] pub fn is_empty(&self) -> bool {
         self.inner.is_empty()
     }
 }
@@ -106,9 +106,9 @@ pub enum CommonString {
 
 impl CommonString {
     /// Try to create from string
-    /// Parses common_string
-    /// Parses common_string
-    pub fn parse_common_string(s: &str) -> Option<Self> {
+    /// Parses `common_string`
+    /// Parses `common_string`
+    #[must_use] pub fn parse_common_string(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "get" => Some(Self::Get),
             "post" => Some(Self::Post),
@@ -128,7 +128,7 @@ impl CommonString {
 
     /// Get as static string
     /// Returns as str
-    pub fn as_str(&self) -> &'static str {
+    #[must_use] pub fn as_str(&self) -> &'static str {
         match self {
             Self::Get => "GET",
             Self::Post => "POST",
@@ -148,7 +148,7 @@ impl CommonString {
 
 /// Helper functions
 /// Checks if likely id
-pub fn is_likely_id(s: &str) -> bool {
+#[must_use] pub fn is_likely_id(s: &str) -> bool {
     s.starts_with("id_")
         || s.ends_with("_id")
         || (s.len() > 10 && s.chars().all(|c| c.is_alphanumeric() || c == '-'))
@@ -156,6 +156,6 @@ pub fn is_likely_id(s: &str) -> bool {
 
 /// Checks if common value
 /// Checks if common value
-pub fn is_common_value(s: &str) -> bool {
+#[must_use] pub fn is_common_value(s: &str) -> bool {
     CommonString::parse_common_string(s).is_some()
 }

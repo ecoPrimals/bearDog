@@ -228,7 +228,7 @@ pub struct ExecutionResult {
     pub success: bool,
     /// The message value
     pub message: String,
-    /// Number of execution_duration_ms
+    /// Number of `execution_duration_ms`
     pub execution_duration_ms: u64,
     /// Optional data
     pub data: Option<serde_json::Value>,
@@ -246,9 +246,9 @@ pub struct WorkflowExecution {
 pub struct ExecutionMetrics {
     pub start_time: chrono::DateTime<chrono::Utc>,
     pub end_time: Option<chrono::DateTime<chrono::Utc>>,
-    /// Number of duration_ms
+    /// Number of `duration_ms`
     pub duration_ms: u64,
-    /// Number of memory_used
+    /// Number of `memory_used`
     pub memory_used: u64,
     pub cpu_time_ms: u64,
 }
@@ -271,11 +271,11 @@ pub struct ApprovalRecord {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EscalationConfig {
     pub escalation_id: String,
-    /// Number of tier_level
+    /// Number of `tier_level`
     pub tier_level: u32,
     /// The expires at value
     pub expires_at: chrono::DateTime<chrono::Utc>,
-    /// Whether notification_sent is enabled
+    /// Whether `notification_sent` is enabled
     pub notification_sent: bool,
 }
 

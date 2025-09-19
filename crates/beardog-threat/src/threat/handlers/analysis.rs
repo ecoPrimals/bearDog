@@ -6,20 +6,20 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 // Removed unused import: tracing::info
 
-use crate::threat::types::*;
+use crate::threat::types::{DetectionRule, ThreatType};
 use beardog_errors::BearDogError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatDetectionConfig {
     pub enable_realtime_detection: bool,
-    /// Number of max_concurrent_analyses
-    /// Number of max_concurrent_analyses
+    /// Number of `max_concurrent_analyses`
+    /// Number of `max_concurrent_analyses`
     pub max_concurrent_analyses: usize,
     /// The detection sensitivity value
     /// The detection sensitivity value
     pub detection_sensitivity: f64,
-    /// Whether enable_threat_feeds is enabled
-    /// Whether enable_threat_feeds is enabled
+    /// Whether `enable_threat_feeds` is enabled
+    /// Whether `enable_threat_feeds` is enabled
     pub enable_threat_feeds: bool,
 }
 
@@ -37,11 +37,11 @@ impl Default for ThreatDetectionConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatAnalysisMetrics {
     pub analyses_performed: u64,
-    /// Number of threats_detected
-    /// Number of threats_detected
+    /// Number of `threats_detected`
+    /// Number of `threats_detected`
     pub threats_detected: u64,
-    /// Number of false_positives
-    /// Number of false_positives
+    /// Number of `false_positives`
+    /// Number of `false_positives`
     pub false_positives: u64,
     /// The detection accuracy value
     /// The detection accuracy value
@@ -74,7 +74,7 @@ pub struct ThreatDetectionEngine {
 
 impl ThreatDetectionEngine {
     /// Creates a new instance
-    pub fn new(config: ThreatDetectionConfig) -> Self {
+    #[must_use] pub fn new(config: ThreatDetectionConfig) -> Self {
         Self {
             config,
             detection_rules: Vec::new(),
@@ -95,8 +95,8 @@ impl ThreatDetectionEngine {
         self.detection_rules.len() < initial_len
     }
 
-    /// Updates threat_signatures
-    /// Updates threat_signatures
+    /// Updates `threat_signatures`
+    /// Updates `threat_signatures`
     pub fn update_threat_signatures(
         &mut self,
         signatures: HashMap<String, String>,
@@ -139,8 +139,8 @@ impl Default for ThreatDetectionEngine {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatAnalysisResult {
-    /// Whether threat_detected is enabled
-    /// Whether threat_detected is enabled
+    /// Whether `threat_detected` is enabled
+    /// Whether `threat_detected` is enabled
     pub threat_detected: bool,
     pub confidence_score: f64,
     /// The threat type value

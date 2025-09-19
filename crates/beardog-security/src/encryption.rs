@@ -28,7 +28,7 @@ impl Default for EncryptionAlgorithm {
 pub struct EncryptionConfig {
     /// The algorithm value
     pub algorithm: EncryptionAlgorithm,
-    /// Number of key_size
+    /// Number of `key_size`
     pub key_size: usize,
 }
 
@@ -60,7 +60,7 @@ impl EncryptionService {
     /// Check if the service is initialized
     /// Checks if initialized
     /// Checks if initialized
-    pub fn is_initialized(&self) -> bool {
+    #[must_use] pub fn is_initialized(&self) -> bool {
         true // Always initialized after construction
     }
 

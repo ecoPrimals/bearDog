@@ -33,8 +33,8 @@ pub struct MlModel {
     /// The f1 score value
     /// The f1 score value
     pub f1_score: f64,
-    /// Number of training_data_size
-    /// Number of training_data_size
+    /// Number of `training_data_size`
+    /// Number of `training_data_size`
     pub training_data_size: usize,
     /// Number of feature
     /// Number of feature
@@ -54,8 +54,8 @@ pub struct MlModel {
     /// The last updated value
     /// The last updated value
     pub last_updated: DateTime<Utc>,
-    /// Whether is_active is enabled
-    /// Whether is_active is enabled
+    /// Whether `is_active` is enabled
+    /// Whether `is_active` is enabled
     pub is_active: bool,
     pub performance_metrics: ModelPerformanceMetrics,
     /// Mapping of metadata
@@ -125,24 +125,24 @@ pub struct ModelPerformanceMetrics {
     pub cross_validation_score: f64,
     pub training_time_ms: u64,
     pub inference_time_ms: u64,
-    /// Number of model_size_bytes
-    /// Number of model_size_bytes
+    /// Number of `model_size_bytes`
+    /// Number of `model_size_bytes`
     pub model_size_bytes: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ConfusionMatrix {
-    /// Number of true_positives
-    /// Number of true_positives
+    /// Number of `true_positives`
+    /// Number of `true_positives`
     pub true_positives: u64,
-    /// Number of true_negatives
-    /// Number of true_negatives
+    /// Number of `true_negatives`
+    /// Number of `true_negatives`
     pub true_negatives: u64,
-    /// Number of false_positives
-    /// Number of false_positives
+    /// Number of `false_positives`
+    /// Number of `false_positives`
     pub false_positives: u64,
-    /// Number of false_negatives
-    /// Number of false_negatives
+    /// Number of `false_negatives`
+    /// Number of `false_negatives`
     pub false_negatives: u64,
 }
 
@@ -206,24 +206,24 @@ pub struct ModelTrainingConfig {
     pub test_split: f64,
     pub cross_validation_folds: u32,
     pub max_training_time_minutes: u32,
-    /// Number of early_stopping_patience
-    /// Number of early_stopping_patience
+    /// Number of `early_stopping_patience`
+    /// Number of `early_stopping_patience`
     pub early_stopping_patience: u32,
     /// The target accuracy value
     /// The target accuracy value
     pub target_accuracy: f64,
-    /// Whether feature_selection is enabled
-    /// Whether feature_selection is enabled
+    /// Whether `feature_selection` is enabled
+    /// Whether `feature_selection` is enabled
     pub feature_selection: bool,
-    /// Whether feature_engineering is enabled
-    /// Whether feature_engineering is enabled
+    /// Whether `feature_engineering` is enabled
+    /// Whether `feature_engineering` is enabled
     pub feature_engineering: bool,
 }
 
 impl MlModel {
     /// Create a new ML model
     /// Creates a new instance
-    pub fn new(
+    #[must_use] pub fn new(
         name: &str,
         description: &str,
         model_type: MlModelType,
@@ -256,20 +256,20 @@ impl MlModel {
     /// Check if model is high accuracy
     /// Checks if high accuracy
     /// Checks if high accuracy
-    pub fn is_high_accuracy(&self) -> bool {
+    #[must_use] pub fn is_high_accuracy(&self) -> bool {
         self.accuracy > 0.85
     }
 
     /// Check if model needs retraining
-    pub fn needs_retraining(&self) -> bool {
+    #[must_use] pub fn needs_retraining(&self) -> bool {
         let days_since_training = (Utc::now() - self.last_trained).num_days();
         days_since_training > 30 || self.accuracy < 0.7
     }
 
     /// Get model age in days
-    /// Gets age_days
-    /// Gets age_days
-    pub fn get_age_days(&self) -> i64 {
+    /// Gets `age_days`
+    /// Gets `age_days`
+    #[must_use] pub fn get_age_days(&self) -> i64 {
         (Utc::now() - self.created_at).num_days()
     }
 
@@ -282,8 +282,8 @@ impl MlModel {
     }
 
     /// Update training timestamp
-    /// Updates training_timestamp
-    /// Updates training_timestamp
+    /// Updates `training_timestamp`
+    /// Updates `training_timestamp`
     pub fn update_training_timestamp(&mut self) {
         self.last_trained = Utc::now();
         self.last_updated = Utc::now();
@@ -308,7 +308,7 @@ impl MlModel {
     }
 
     /// Get model summary
-    pub fn summary(&self) -> ModelSummary {
+    #[must_use] pub fn summary(&self) -> ModelSummary {
         ModelSummary {
             id: self.id.clone(),
             name: self.name.clone(),
@@ -334,11 +334,11 @@ pub struct ModelSummary {
     /// The accuracy value
     /// The accuracy value
     pub accuracy: f64,
-    /// Whether is_active is enabled
-    /// Whether is_active is enabled
+    /// Whether `is_active` is enabled
+    /// Whether `is_active` is enabled
     pub is_active: bool,
-    /// Number of age_days
-    /// Number of age_days
+    /// Number of `age_days`
+    /// Number of `age_days`
     pub age_days: i64,
     /// Number of feature
     /// Number of feature
@@ -369,7 +369,7 @@ impl Default for ModelPerformanceMetrics {
 
 impl ConfusionMatrix {
     /// Calculate accuracy from confusion matrix
-    pub fn accuracy(&self) -> f64 {
+    #[must_use] pub fn accuracy(&self) -> f64 {
         let total =
             self.true_positives + self.true_negatives + self.false_positives + self.false_negatives;
         if total == 0 {
@@ -380,7 +380,7 @@ impl ConfusionMatrix {
     }
 
     /// Calculate precision from confusion matrix
-    pub fn precision(&self) -> f64 {
+    #[must_use] pub fn precision(&self) -> f64 {
         let predicted_positive = self.true_positives + self.false_positives;
         if predicted_positive == 0 {
             0.0
@@ -390,7 +390,7 @@ impl ConfusionMatrix {
     }
 
     /// Calculate recall from confusion matrix
-    pub fn recall(&self) -> f64 {
+    #[must_use] pub fn recall(&self) -> f64 {
         let actual_positive = self.true_positives + self.false_negatives;
         if actual_positive == 0 {
             0.0
@@ -400,7 +400,7 @@ impl ConfusionMatrix {
     }
 
     /// Calculate F1 score from confusion matrix
-    pub fn f1_score(&self) -> f64 {
+    #[must_use] pub fn f1_score(&self) -> f64 {
         let precision = self.precision();
         let recall = self.recall();
         if precision + recall == 0.0 {
@@ -414,7 +414,7 @@ impl ConfusionMatrix {
 impl ModelPrediction {
     /// Create a new model prediction
     /// Creates a new instance
-    pub fn new(model_id: &str, prediction: PredictionValue, confidence: f64) -> Self {
+    #[must_use] pub fn new(model_id: &str, prediction: PredictionValue, confidence: f64) -> Self {
         Self {
             model_id: model_id.to_string(),
             prediction,
@@ -430,7 +430,7 @@ impl ModelPrediction {
     /// Check if prediction is high confidence
     /// Checks if high confidence
     /// Checks if high confidence
-    pub fn is_high_confidence(&self) -> bool {
+    #[must_use] pub fn is_high_confidence(&self) -> bool {
         self.confidence > 0.8
     }
 

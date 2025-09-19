@@ -76,7 +76,7 @@ pub struct SecurityIncident {
 impl SecurityIncident {
     /// Create a new security incident
     /// Creates a new instance
-    pub fn new(
+    #[must_use] pub fn new(
         id: String,
         title: String,
         description: String,
