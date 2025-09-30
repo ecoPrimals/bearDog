@@ -51,8 +51,8 @@ pub mod universal_discovery;
 // pub mod universal_optimization;
 /// Zero-cost architecture patterns and optimizations
 pub mod zero_cost_architecture;
-// TODO: Fix remaining async/type issues in zero_knowledge_bootstrap module
-// pub mod zero_knowledge_bootstrap;
+/// Zero-knowledge bootstrap and self-discovery
+pub mod zero_knowledge_bootstrap;
 
 // Re-export key components
 pub use core::*;
