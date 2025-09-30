@@ -55,7 +55,7 @@ impl AuthenticationHandler {
     }
 
     /// Authenticate user and create session with rate limiting
-    pub fn authenticate(&mut self, credentials: &str) -> Result<SessionData, BearDogError> {
+    pub async fn authenticate(&mut self, credentials: &str) -> Result<SessionData, BearDogError> {
         // Extract user identifier from credentials (simplified for demo)
         let user_id = self.extract_user_id(credentials)?;
 
@@ -72,7 +72,7 @@ impl AuthenticationHandler {
         }
 
         // Simulate authentication (replace with actual authentication logic)
-        let auth_success = self.verify_credentials(credentials)?;
+        let auth_success = self.verify_credentials(credentials).await?;
 
         if auth_success {
             // Reset failed attempts on successful login
@@ -140,7 +140,7 @@ impl AuthenticationHandler {
     }
 
     /// Verify credentials (placeholder implementation)
-    fn verify_credentials(&self, credentials: &str) -> Result<bool, BearDogError> {
+    async fn verify_credentials(&self, credentials: &str) -> Result<bool, BearDogError> {
         // Simulate credential verification with some processing time
         tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 

@@ -6,7 +6,12 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::auth::{BearDogGenetics, ResourcePermission};
+// Note: BearDogGenetics and ResourcePermission types to be defined when needed
+// use crate::auth::{BearDogGenetics, ResourcePermission};
+
+// Placeholder types until proper types are defined
+pub type BearDogGenetics = String;
+pub type ResourcePermission = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VerificationResult {
