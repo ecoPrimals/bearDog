@@ -118,32 +118,32 @@ impl MonitoringService {
     ///
     /// # Errors
     /// Returns an error if the metric cannot be recorded
-    pub fn record_counter(&self, name: &str, value: u64) -> Result<(), BearDogError> {
-        self.metrics_collector.record_counter(name, value)
+    pub async fn record_counter(&self, name: &str, value: u64) -> Result<(), BearDogError> {
+        self.metrics_collector.record_counter(name, value).await
     }
 
     /// Records a gauge metric
     ///
     /// # Errors
     /// Returns an error if the metric cannot be recorded
-    pub fn record_gauge(&self, name: &str, value: f64) -> Result<(), BearDogError> {
-        self.metrics_collector.record_gauge(name, value)
+    pub async fn record_gauge(&self, name: &str, value: f64) -> Result<(), BearDogError> {
+        self.metrics_collector.record_gauge(name, value).await
     }
 
     /// Records histogram values
     ///
     /// # Errors
     /// Returns an error if the metric cannot be recorded
-    pub fn record_histogram(&self, name: &str, values: Vec<f64>) -> Result<(), BearDogError> {
-        self.metrics_collector.record_histogram(name, values)
+    pub async fn record_histogram(&self, name: &str, values: Vec<f64>) -> Result<(), BearDogError> {
+        self.metrics_collector.record_histogram(name, values).await
     }
 
     /// Records a timer metric
     ///
     /// # Errors
     /// Returns an error if the metric cannot be recorded
-    pub fn record_timer(&self, name: &str, duration: Duration) -> Result<(), BearDogError> {
-        self.metrics_collector.record_timer(name, duration)
+    pub async fn record_timer(&self, name: &str, duration: Duration) -> Result<(), BearDogError> {
+        self.metrics_collector.record_timer(name, duration).await
     }
 
     /// Starts the monitoring service
@@ -172,7 +172,7 @@ impl MonitoringService {
     ///
     /// # Errors
     /// Returns an error if the snapshot cannot be created
-    pub fn take_snapshot(&self) -> Result<MonitoringSnapshot, BearDogError> {
+    pub async fn take_snapshot(&self) -> Result<MonitoringSnapshot, BearDogError> {
         let performance = self.collect_performance_metrics()?;
         let health_summary = self.collect_health_summary()?;
         let alerts = self.alerts.read().await.clone();
@@ -224,8 +224,8 @@ impl MonitoringService {
     /// Returns an error if snapshots cannot be retrieved
     /// Gets snapshots
     /// Gets snapshots
-    pub fn get_snapshots(&self) -> Result<Vec<MonitoringSnapshot>, BearDogError> {
-        Ok(self.snapshots.read().clone())
+    pub async fn get_snapshots(&self) -> Result<Vec<MonitoringSnapshot>, BearDogError> {
+        Ok(self.snapshots.read().await.clone())
     }
 
     /// Gets the most recent snapshot
@@ -321,8 +321,8 @@ impl MonitoringService {
     ///
     /// # Errors
     /// Returns an error if the alert cannot be added
-    pub fn add_alert(&self, alert: &str) -> Result<(), BearDogError> {
-        self.alerts.write().push(alert.to_string());
+    pub async fn add_alert(&self, alert: &str) -> Result<(), BearDogError> {
+        self.alerts.write().await.push(alert.to_string());
         Ok(())
     }
 

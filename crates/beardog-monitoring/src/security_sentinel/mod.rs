@@ -166,7 +166,7 @@ impl SecuritySentinel {
         let _event_count = self.event_counter.fetch_add(1, Ordering::Relaxed);
 
         {
-            let mut stats = self.stats.write();.await;
+            let mut stats = self.stats.write().await;
             stats.total_events += 1;
             stats.last_event_time = Some(Utc::now());
 
@@ -195,8 +195,8 @@ impl SecuritySentinel {
     /// Returns an error if the status report cannot be generated
     /// Gets status_report
     /// Gets status_report
-    pub fn get_status_report(&self) -> Result<SecurityStatusReport, BearDogError> {
-        let stats = self.stats.read().clone();
+    pub async fn get_status_report(&self) -> Result<SecurityStatusReport, BearDogError> {
+        let stats = self.stats.read().await.clone();
         let status = if self.monitoring_active.load(Ordering::Relaxed) {
             "ACTIVE"
         } else {
