@@ -29,12 +29,12 @@ pub async fn demonstrate_security_sentinel() -> Result<(), BearDogError> {
     event_data.insert("source_ip", "192.168.1.100");
     event_data.insert("user_id", "user123");
 
-    sentinel.process_security_event("auth_failure", event_data.clone())?;
-    sentinel.process_security_event("access_violation", event_data.clone())?;
-    sentinel.process_security_event("compliance_violation", event_data)?;
+    sentinel.process_security_event("auth_failure", event_data.clone()).await?;
+    sentinel.process_security_event("access_violation", event_data.clone()).await?;
+    sentinel.process_security_event("compliance_violation", event_data).await?;
 
     // Get status report
-    let report = sentinel.get_status_report()?;
+    let report = sentinel.get_status_report().await?;
     println!("Security Status: {}", report.status);
     println!("Total Events: {}", report.stats.total_events);
     println!("Auth Failures: {}", report.stats.auth_failures);
@@ -55,12 +55,12 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    fn test_security_sentinel_basic() -> Result<(), BearDogError> {
+    async fn test_security_sentinel_basic() -> Result<(), BearDogError> {
         let sentinel = SecuritySentinel::default();
 
         sentinel.start_monitoring()?;
 
-        let status = sentinel.get_status_report()?;
+        let status = sentinel.get_status_report().await?;
         assert_eq!(status.status, "ACTIVE");
 
         sentinel.stop_monitoring()?;
@@ -69,15 +69,15 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_security_event_processing() -> Result<(), BearDogError> {
+    async fn test_security_event_processing() -> Result<(), BearDogError> {
         let sentinel = SecuritySentinel::default();
 
         let mut event_data = HashMap::new();
         event_data.insert("test", "data");
 
-        sentinel.process_security_event("auth_failure", event_data)?;
+        sentinel.process_security_event("auth_failure", event_data).await?;
 
-        let stats = sentinel.get_statistics();
+        let stats = sentinel.get_statistics().await;
         assert!(stats.auth_failures > 0);
 
         Ok(())

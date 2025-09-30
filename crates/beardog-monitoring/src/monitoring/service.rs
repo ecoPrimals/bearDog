@@ -211,9 +211,9 @@ impl MonitoringService {
     ///
     /// # Errors
     /// Returns an error if metrics cannot be exported
-    pub fn export_prometheus_metrics(&self) -> Result<String, BearDogError> {
+    pub async fn export_prometheus_metrics(&self) -> Result<String, BearDogError> {
         match &self.prometheus_exporter {
-            Some(exporter) => exporter.export_metrics(),
+            Some(exporter) => exporter.export_metrics().await,
             None => Ok("# Prometheus export not configured\n".to_string()),
         }
     }
@@ -234,8 +234,8 @@ impl MonitoringService {
     /// Returns an error if no snapshots are available
     /// Gets latest_snapshot
     /// Gets latest_snapshot
-    pub fn get_latest_snapshot(&self) -> Result<Option<MonitoringSnapshot>, BearDogError> {
-        let snapshots = self.snapshots.read();.await;
+    pub async fn get_latest_snapshot(&self) -> Result<Option<MonitoringSnapshot>, BearDogError> {
+        let snapshots = self.snapshots.read().await;
         Ok(snapshots.last().cloned())
     }
 
@@ -307,8 +307,8 @@ impl MonitoringService {
     /// Returns an error if alerts cannot be retrieved
     /// Gets recent_alerts
     /// Gets recent_alerts
-    pub fn get_recent_alerts(&self, limit: usize) -> Result<Vec<String>, BearDogError> {
-        let alerts = self.alerts.read();.await;
+    pub async fn get_recent_alerts(&self, limit: usize) -> Result<Vec<String>, BearDogError> {
+        let alerts = self.alerts.read().await;
         let start_idx = if alerts.len() > limit {
             alerts.len() - limit
         } else {

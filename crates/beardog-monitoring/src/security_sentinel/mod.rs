@@ -158,7 +158,7 @@ impl SecuritySentinel {
     /// Returns an error if the event cannot be processed
     /// Processes security_event
     /// Processes security_event
-    pub fn process_security_event(
+    pub async fn process_security_event(
         &self,
         event_type: &str,
         _event_data: HashMap<&str, &str>,
@@ -187,6 +187,14 @@ impl SecuritySentinel {
         } // stats lock is dropped here
 
         Ok(())
+    }
+
+    /// Gets the current security statistics
+    ///
+    /// # Errors
+    /// Returns an error if statistics cannot be retrieved
+    pub async fn get_statistics(&self) -> SecuritySentinelStats {
+        self.stats.read().await.clone()
     }
 
     /// Gets a comprehensive security status report
