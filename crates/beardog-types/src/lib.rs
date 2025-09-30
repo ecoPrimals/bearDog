@@ -415,7 +415,6 @@ pub mod zero_cost;
 /// 🔧 **CONFIGURATION** - Legacy configuration system
 ///
 /// New code should use [`canonical::config`] instead.
-// REMOVED: pub mod configuration; - Deprecated in favor of canonical::config::unified
 /// 🏭 **PRODUCTION** - Production-ready components
 ///
 pub mod production;

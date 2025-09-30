@@ -182,7 +182,7 @@ pub struct ResponseTimeMetrics {
     pub p99: f64,
 }
 
-/// REMOVED: PrimalType enum violated primal sovereignty by hardcoding primal names
+/// Note: PrimalType enum was removed as it violated primal sovereignty
 ///
 /// Migration completed: Use capability-based discovery instead
 /// ✅ SOVEREIGNTY COMPLIANCE: Use capability-based discovery instead of hardcoded primal names

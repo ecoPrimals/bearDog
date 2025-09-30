@@ -27,8 +27,7 @@ pub mod capabilities;
 /// Configuration management
 /// Configuration management
 pub mod config; // ✅ NEW: Unified canonical configuration system
-                // REMOVED: configuration - deprecated consolidated config system
-                // Use config::unified_simple::WorkingUnifiedConfig instead
+                // Use config::unified_simple::WorkingUnifiedConfig
 /// Constants module
 pub mod constants;
 /// Cryptographic types and operations
@@ -121,11 +120,10 @@ pub use capabilities::{
     since = "3.1.0",
     note = "Use canonical::config::app::UnifiedAppConfig instead"
 )]
-// REMOVED: Legacy imports now available through canonical paths:
+// Legacy imports available through canonical paths:
 // - AppConfig: use beardog_types::canonical::config::AppConfig
 // - BearDogConfig: use beardog_types::canonical::config::unified::BearDogConfig
-// REMOVED: Canonical configuration exports - deprecated
-// Use config::unified_simple::WorkingUnifiedConfig instead
+// Use config::unified_simple::WorkingUnifiedConfig for configuration
 // Constants
 pub use constants::*;
 
