@@ -1,5 +1,8 @@
 // **SIMPLIFIED UNIFIED CONFIGURATION** - Phase 3 Implementation
 //
+// ⚠️ DEPRECATED: This module has been merged into unified.rs
+// Use `SimplifiedBearDogConfig` from `canonical::config::unified` instead
+//
 // This is a **working implementation** of the unified configuration system that
 // eliminates fragmentation while maintaining compilation compatibility.
 

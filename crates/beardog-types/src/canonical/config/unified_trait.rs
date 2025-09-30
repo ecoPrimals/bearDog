@@ -1,7 +1,14 @@
-//! # Unified Configuration Trait
+//! # Unified Configuration Trait (DEPRECATED)
 //!
-//! This module defines the unified `BearDogConfig` trait that provides a consistent
-//! interface for all configuration types across the BearDog ecosystem.
+//! **⚠️ DEPRECATED: This module has been replaced by `trait.rs`**
+//!
+//! **Migration Path:**
+//! - Use `BearDogConfig` from `canonical::config::r#trait` module
+//! - Import as: `use beardog_types::canonical::config::BearDogConfig;`
+//! - All trait definitions and utilities moved to `trait.rs`
+//!
+//! This module is kept for backward compatibility but will be removed in v4.0.0.
+//! (Deprecation attribute applied at module level in mod.rs)
 
 use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
