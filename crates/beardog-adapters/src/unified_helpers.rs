@@ -838,40 +838,8 @@ pub trait UniversalAdapter: Send + Sync {
 }
 
 // =============================================================================
-// LEGACY COMPATIBILITY - Maintain existing API
+// TESTS - Unified Adapter Helpers validation
 // =============================================================================
-
-/// Legacy compatibility for capability helpers
-pub mod legacy {
-    use super::*;
-
-    /// Legacy capability discovery - MIGRATED
-    pub async fn discover_capabilities_legacy(
-        capability_type: ServiceCapabilityType,
-    ) -> BearDogResult<Vec<DiscoveredCapability>> {
-        warn!("⚠️ Using legacy discover_capabilities - migrate to UnifiedAdapterHelpers");
-        let request = UnifiedAdapterHelpers::create_capability_request(
-            capability_type,
-            SecurityLevel::Medium,
-            None,
-        );
-        
-        // Return empty result for legacy compatibility
-        Ok(Vec::new())
-    }
-
-    /// Legacy encryption context - MIGRATED
-    pub fn get_encryption_context_legacy() -> BearDogResult<EncryptionContext> {
-        warn!("⚠️ Using legacy get_encryption_context - migrate to UnifiedAdapterHelpers");
-        UnifiedAdapterHelpers::get_encryption_context(SecurityLevel::Medium)
-    }
-
-    /// Legacy nonce generation - MIGRATED
-    pub fn generate_secure_nonce_legacy(size: usize) -> BearDogResult<Vec<u8>> {
-        warn!("⚠️ Using legacy generate_secure_nonce - migrate to UnifiedAdapterHelpers");
-        UnifiedAdapterHelpers::generate_secure_nonce(size, EntropySource::SecureRandom)
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -929,15 +897,5 @@ mod tests {
         assert!(metrics.consolidation_benefit >= 35.0);
         assert!(metrics.memory_reduction_mb > 8.0);
         assert!(metrics.adapter_operations_per_second > 10000.0);
-    }
-
-    #[test]
-    fn test_legacy_compatibility() {
-        // Test legacy functions still work
-        let context = legacy::get_encryption_context_legacy().unwrap();
-        assert!(matches!(context.algorithm, EncryptionAlgorithm::Aes256Gcm));
-
-        let nonce = legacy::generate_secure_nonce_legacy(8).unwrap();
-        assert_eq!(nonce.len(), 8);
     }
 } 
