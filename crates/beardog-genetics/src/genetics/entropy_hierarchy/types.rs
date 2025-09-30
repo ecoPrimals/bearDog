@@ -223,12 +223,6 @@ pub enum MixingStrategy {
     HashMix {
         hash_algorithm: String,
     },
-    HashMix {
-        hash_algorithm: String,
-    },
-    HashMix {
-        hash_algorithm: String,
-    },
     /// Cryptographic mixing
     CryptoMix {
         cipher: String,
