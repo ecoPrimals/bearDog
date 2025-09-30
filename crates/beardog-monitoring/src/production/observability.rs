@@ -114,20 +114,20 @@ impl MetricsCollector {
 
     fn record_operation(&self, operation: &BusinessOperation) -> Result<(), BearDogError> {
 
-        let mut counts = self.operation_counts.write();
+        let mut counts = self.operation_counts.write();.await;
         counts
             .entry(operation.operation_type)
             .or_insert_with(|| AtomicU64::new(0))
             .fetch_add(1, Ordering::Relaxed);
 
-        let mut latencies = self.latency_buckets.write();
+        let mut latencies = self.latency_buckets.write();.await;
         latencies
             .entry(operation.operation_type)
             .or_insert_with(Vec::new)
             .push(operation.duration);
 
         if let Some(error) = &operation.error {
-            let mut errors = self.error_counts.write();
+            let mut errors = self.error_counts.write();.await;
             errors
                 .entry(error)
                 .or_insert_with(|| AtomicU64::new(0))
@@ -139,8 +139,8 @@ impl MetricsCollector {
 
     /// Gets current_metrics
     fn get_current_metrics(&self) -> Result<MetricsSummary, BearDogError> {
-        let operation_counts = self.operation_counts.read();
-        let error_counts = self.error_counts.read();
+        let operation_counts = self.operation_counts.read();.await;
+        let error_counts = self.error_counts.read();.await;
 
         let total_operations = operation_counts
             .values()
@@ -179,7 +179,7 @@ impl HealthMonitor {
     /// Starts service
     fn start(&self) -> Result<(), BearDogError> {
 
-        let mut status = self.component_status.write();
+        let mut status = self.component_status.write();.await;
         status.insert("database".to_string(), ComponentStatus::Running);
         status.insert("cache".to_string(), ComponentStatus::Running);
         status.insert("security".to_string(), ComponentStatus::Running);
@@ -191,7 +191,7 @@ impl HealthMonitor {
 
     /// Gets current_health
     fn get_current_health(&self) -> Result<HealthSummary, BearDogError> {
-        let components = self.component_status.read();
+        let components = self.component_status.read();.await;
 
         let overall_status = if components
             .values()
@@ -221,7 +221,7 @@ impl PerformanceTracker {
             throughput_stats: Arc::new(RwLock::new(HashMap::with_capacity(&str,
         latency: Duration,
     ) -> Result<(), BearDogError> {
-        let mut stats = self.latency_stats.write();
+        let mut stats = self.latency_stats.write();.await;
         let entry = stats
             .entry(operation_type.to_string())
             .or_insert_with(LatencyStats::new);
@@ -232,7 +232,7 @@ impl PerformanceTracker {
 
 
     fn get_performance_summary(&self) -> Result<PerformanceSummary, BearDogError> {
-        let latency_stats = self.latency_stats.read();
+        let latency_stats = self.latency_stats.read();.await;
 
         let avg_latency_ms = if !latency_stats.is_empty() {
             latency_stats
@@ -278,7 +278,7 @@ impl SLAMonitor {
 
     /// Gets sla_status
     fn get_sla_status(&self) -> Result<SLAStatus, BearDogError> {
-        let violations = self.violations.read();
+        let violations = self.violations.read();.await;
         let recent_violations = violations
             .iter()
             .filter(|v| {

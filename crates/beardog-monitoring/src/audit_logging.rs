@@ -301,7 +301,7 @@ impl AuditLogger {
         self.compliance_tracker.check_violations(&event)?;
 
         {
-            let mut buffer = self.event_buffer.write();
+            let mut buffer = self.event_buffer.write();.await;
             buffer.push(&event);
 
             if buffer.len() >= self.config.buffer_size {
@@ -531,7 +531,7 @@ impl ComplianceTracker {
         };
 
         let events = audit_logger.query_events(&query)?;
-        let violations = self.violations.read();
+        let violations = self.violations.read();.await;
         
         let report = ComplianceReport {
             standard,

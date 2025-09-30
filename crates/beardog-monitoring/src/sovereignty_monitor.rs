@@ -333,15 +333,15 @@ impl SovereigntyMonitor {
     /// Get current sovereignty status
     /// Gets sovereignty_status
     /// Gets sovereignty_status
-    pub fn get_sovereignty_status(&self) -> SovereigntyStatus {
-        self.sovereignty_status.read().clone()
+    pub async fn get_sovereignty_status(&self) -> SovereigntyStatus {
+        self.sovereignty_status.read().await.clone()
     }
 
     /// Get all detected violations
     /// Gets violations
     /// Gets violations
-    pub fn get_violations(&self) -> Vec<SovereigntyViolation> {
-        self.violations.read().clone()
+    pub async fn get_violations(&self) -> Vec<SovereigntyViolation> {
+        self.violations.read().await.clone()
     }
 
     pub fn assess_sovereignty(&mut self) -> BearDogResult<SovereigntyStatus> {
@@ -381,7 +381,7 @@ impl SovereigntyMonitor {
         };
 
         // Update stored status
-        *self.sovereignty_status.write() = status;
+        *self.sovereignty_status.write() .await = status;
 
         info!("📊 Sovereignty Assessment Complete:");
         info!("   🏛️ Sovereignty Score: {:.2}", status.sovereignty_score);
@@ -432,7 +432,7 @@ impl SovereigntyMonitor {
         };
 
         self.active_monitors
-            .write()
+            .write().await
             .insert(task.id.clone(), task);
         info!("🔍 Hardcoding detection monitor started");
         Ok(())
@@ -450,7 +450,7 @@ impl SovereigntyMonitor {
         };
 
         self.active_monitors
-            .write()
+            .write().await
             .insert(task.id.clone(), task);
         info!("⚡ Capability discovery health monitor started");
         Ok(())
@@ -467,7 +467,7 @@ impl SovereigntyMonitor {
         };
 
         self.active_monitors
-            .write()
+            .write().await
             .insert(task.id.clone(), task);
         info!("🚀 Universal adapter performance monitor started");
         Ok(())
@@ -485,7 +485,7 @@ impl SovereigntyMonitor {
         };
 
         self.active_monitors
-            .write()
+            .write().await
             .insert(task.id.clone(), task);
         info!("🍼 Infant discovery pattern monitor started");
         Ok(())

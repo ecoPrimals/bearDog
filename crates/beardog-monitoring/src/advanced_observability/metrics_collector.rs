@@ -61,7 +61,7 @@ impl RealTimeMetricCollector {
     /// Starts service
     /// Starts service
     pub fn start(&self) -> Result<(), BearDogError> {
-        *self.is_running.write()
+        *self.is_running.write().await
             .map_err(|e| BearDogError::system({}", e)))? = true;
 
         self.start_collection_loop()?;
@@ -76,9 +76,9 @@ impl RealTimeMetricCollector {
     /// Checks if healthy
     /// Checks if healthy
     pub fn is_healthy(&self) -> Result<bool, BearDogError> {
-        let is_running = *self.is_running.read()
+        let is_running = *self.is_running.read().await
             .map_err(|e| BearDogError::system({}", e)))?;
-        let buffer_size = self.metrics_buffer.read()
+        let buffer_size = self.metrics_buffer.read().await
             .map_err(|e| BearDogError::system({}", e)))?.len();
 
         Ok(is_running && buffer_size < 10000)
@@ -89,7 +89,7 @@ impl RealTimeMetricCollector {
 /// # Errors
 /// Returns an error if the operation fails.
     pub fn shutdown(&self) -> Result<(), BearDogError> {
-        *self.is_running.write()
+        *self.is_running.write().await
             .map_err(|e| BearDogError::system({}", e)))? = false;
         Ok(())
     }

@@ -166,7 +166,7 @@ impl SecuritySentinel {
         let _event_count = self.event_counter.fetch_add(1, Ordering::Relaxed);
 
         {
-            let mut stats = self.stats.write();
+            let mut stats = self.stats.write();.await;
             stats.total_events += 1;
             stats.last_event_time = Some(Utc::now());
 

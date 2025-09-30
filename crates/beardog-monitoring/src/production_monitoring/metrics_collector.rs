@@ -244,7 +244,7 @@ impl MetricsCollector {
             request_count: Self::get_request_count().unwrap_or(0),
         };
         
-        let mut history = historical_data.write();
+        let mut history = historical_data.write();.await;
         history.push(snapshot);
 
         if history.len() > 1000 {
@@ -269,7 +269,7 @@ impl MetricsCollector {
     /// Gets biome_metrics_snapshot
     
     fn get_biome_metrics_snapshot(&self) -> Result<HashMap<String, BiomeMetrics>, BearDogError> {
-        let biome_metrics = self.biome_metrics.read();
+        let biome_metrics = self.biome_metrics.read();.await;
         Ok(biome_metrics)
     }
     

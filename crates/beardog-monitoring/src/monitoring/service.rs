@@ -175,7 +175,7 @@ impl MonitoringService {
     pub fn take_snapshot(&self) -> Result<MonitoringSnapshot, BearDogError> {
         let performance = self.collect_performance_metrics()?;
         let health_summary = self.collect_health_summary()?;
-        let alerts = self.alerts.read().clone();
+        let alerts = self.alerts.read().await.clone();
 
         let snapshot = MonitoringSnapshot {
             id: uuid::Uuid::new_v4().to_string(),
@@ -188,7 +188,7 @@ impl MonitoringService {
         };
 
         {
-            let mut snapshots = self.snapshots.write();
+            let mut snapshots = self.snapshots.write().await;
             snapshots.push(snapshot.clone());
             if snapshots.len() > self.config.max_snapshots {
                 snapshots.remove(0);
@@ -235,7 +235,7 @@ impl MonitoringService {
     /// Gets latest_snapshot
     /// Gets latest_snapshot
     pub fn get_latest_snapshot(&self) -> Result<Option<MonitoringSnapshot>, BearDogError> {
-        let snapshots = self.snapshots.read();
+        let snapshots = self.snapshots.read();.await;
         Ok(snapshots.last().cloned())
     }
 
@@ -308,7 +308,7 @@ impl MonitoringService {
     /// Gets recent_alerts
     /// Gets recent_alerts
     pub fn get_recent_alerts(&self, limit: usize) -> Result<Vec<String>, BearDogError> {
-        let alerts = self.alerts.read();
+        let alerts = self.alerts.read();.await;
         let start_idx = if alerts.len() > limit {
             alerts.len() - limit
         } else {
