@@ -1,7 +1,22 @@
 // Canonical Compliance Configuration
+//
+// This module provides both simple and consolidated compliance configurations:
+// - CanonicalComplianceConfig: Simple compliance config
+// - ConsolidatedComplianceConfiguration: Rich compliance config (from domains/)
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+
+// Re-export consolidated compliance types from domains module
+pub use super::domains::compliance::{
+    ComplianceStandard,
+    ConsolidatedComplianceConfiguration,
+    DataSovereigntyConfiguration,
+    PrivacyAuditConfiguration,
+    ReportingConfiguration,
+    ReportFormat,
+    ReportFrequency,
+};
 
 /// Compliance framework types
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]

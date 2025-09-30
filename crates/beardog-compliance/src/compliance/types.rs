@@ -2,163 +2,34 @@
 //!
 //! This module provides compliance-related types for the BearDog ecosystem.
 //! 
-//! **NOTE**: These types are local to beardog-compliance and provide rich compliance functionality.
-//! A simpler CanonicalComplianceConfig exists in beardog-types for basic config needs.
+//! **Configuration types** are imported from the canonical location in beardog-types.
+//! **Runtime/operational types** (events, reports, metrics) are defined here.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-// Local compliance configuration types (richer than canonical)
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct ComplianceConfig {
-    /// Collection of standards
-    pub standards: Vec<ComplianceStandard>,
-    /// Whether `feature_standards` is enabled
-    pub enabled_standards: Vec<ComplianceStandard>,
-    /// The reporting value
-    pub reporting: ReportingConfig,
-    /// The data sovereignty value
-    pub data_sovereignty: DataSovereigntyConfig,
-    /// The privacy audit value
-    pub privacy_audit: PrivacyAuditConfig,
-}
+// ============================================================================
+// CONFIGURATION TYPES - Imported from canonical location
+// ============================================================================
 
-impl Default for ComplianceConfig {
-    fn default() -> Self {
-        Self {
-            standards: vec![ComplianceStandard::Gdpr],
-            enabled_standards: vec![ComplianceStandard::Gdpr],
-            reporting: ReportingConfig::default(),
-            data_sovereignty: DataSovereigntyConfig::default(),
-            privacy_audit: PrivacyAuditConfig::default(),
-        }
-    }
-}
+// Import configuration types from canonical location
+// Note: File is in domains/ directory but exported at config:: level
+pub use beardog_types::canonical::config::compliance::{
+    ComplianceStandard,
+    ConsolidatedComplianceConfiguration as ComplianceConfig,
+    DataSovereigntyConfiguration as DataSovereigntyConfig,
+    PrivacyAuditConfiguration as PrivacyAuditConfig,
+    ReportingConfiguration as ReportingConfig,
+    ReportFormat,
+    ReportFrequency,
+};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-pub enum ComplianceStandard {
-    /// Represents gdpr variant
-    Gdpr,
-    /// Represents hipaa variant
-    Hipaa,
-    /// Represents sox variant
-    Sox,
-    /// Represents pci variant
-    Pci,
-    /// Represents pci dss variant
-    PciDss,
-    /// Represents iso27001 variant
-    Iso27001,
-    /// Represents soc2 variant
-    Soc2,
-    /// Represents ccpa variant
-    Ccpa,
-    /// Represents custom variant
-    Custom(String),
-}
-
-impl std::fmt::Display for ComplianceStandard {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Gdpr => write!(f, "GDPR"),
-            Self::Hipaa => write!(f, "HIPAA"),
-            Self::Sox => write!(f, "SOX"),
-            Self::Pci => write!(f, "PCI"),
-            Self::PciDss => write!(f, "PCI-DSS"),
-            Self::Iso27001 => write!(f, "ISO-27001"),
-            Self::Soc2 => write!(f, "SOC-2"),
-            Self::Ccpa => write!(f, "CCPA"),
-            Self::Custom(name) => write!(f, "{name}"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct DataSovereigntyConfig {
-    /// The jurisdiction value
-    pub jurisdiction: String,
-    pub data_residency_required: bool,
-    /// Collection of cross border restrictions
-    pub cross_border_restrictions: Vec<String>,
-}
-
-impl Default for DataSovereigntyConfig {
-    fn default() -> Self {
-        Self {
-            jurisdiction: "US".to_string(),
-            data_residency_required: true,
-            cross_border_restrictions: vec![],
-        }
-    }
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct PrivacyAuditConfig {
-    /// The frequency value
-    pub frequency: ReportFrequency,
-    /// Whether automated is enabled
-    pub automated: bool,
-    /// Optional external auditor
-    pub external_auditor: Option<String>,
-}
-
-impl Default for PrivacyAuditConfig {
-    fn default() -> Self {
-        Self {
-            frequency: ReportFrequency::Quarterly,
-            automated: true,
-            external_auditor: None,
-        }
-    }
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct ReportingConfig {
-    pub format: ReportFormat,
-    /// The frequency value
-    pub frequency: ReportFrequency,
-    /// Collection of recipients
-    pub recipients: Vec<String>,
-}
-
-impl Default for ReportingConfig {
-    fn default() -> Self {
-        Self {
-            format: ReportFormat::Json,
-            frequency: ReportFrequency::Monthly,
-            recipients: vec![],
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-pub enum ReportFormat {
-    /// Represents json variant
-    Json,
-    /// Represents xml variant
-    Xml,
-    /// Represents pdf variant
-    Pdf,
-    /// Represents html variant
-    Html,
-    /// Represents csv variant
-    Csv,
-}
-
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-pub enum ReportFrequency {
-    /// Represents daily variant
-    Daily,
-    /// Represents weekly variant
-    Weekly,
-    /// Represents monthly variant
-    Monthly,
-    /// Represents quarterly variant
-    Quarterly,
-    /// Represents annually variant
-    Annually,
-}
+// ============================================================================
+// RUNTIME/OPERATIONAL TYPES - Defined locally
+// ============================================================================
+// These types represent runtime data (events, reports, metrics) rather than
+// configuration, so they appropriately remain in the beardog-compliance crate.
 
 // Additional canonical compliance types
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
