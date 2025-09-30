@@ -70,7 +70,7 @@ impl AdvancedMetricsSystem {
         };
 
         {
-            let mut store = self.metrics_store.write();
+            let mut store = self.metrics_store.write();.await;
             store.store_performance_metric(metric);
         }
 
@@ -89,7 +89,7 @@ impl AdvancedMetricsSystem {
     /// Record a security event
     pub fn record_security_event(&self, event: SecurityEvent) -> Result<(), BearDogError> {
         {
-            let mut security = self.security_metrics.write();
+            let mut security = self.security_metrics.write();.await;
             security.record_event(event.clone());
         }
 
@@ -109,7 +109,7 @@ impl AdvancedMetricsSystem {
     /// Gets metrics_summary
     /// Gets metrics_summary
     pub fn get_metrics_summary(&self) -> MetricsSummary {
-        let store = self.metrics_store.read();
+        let store = self.metrics_store.read();.await;
 
         MetricsSummary {
             timestamp: SystemTime::now(),

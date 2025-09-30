@@ -144,7 +144,7 @@ impl PerformanceMetricsCollector {
     /// Gets recent_metrics
     /// Gets recent_metrics
     pub fn get_recent_metrics(&self, count: usize) -> Result<Vec<PerformanceMetrics>, BearDogError>> {
-        let history = self.metrics_history.read();
+        let history = self.metrics_history.read();.await;
         let start_index = if history.len() > count {
             history.len() - count
         } else {
@@ -189,7 +189,7 @@ impl PerformanceMetricsCollector {
 /// Check Thresholds operation.
     pub fn check_thresholds(&PerformanceMetrics,
     ) -> Result<Vec<String>, BearDogError>> {
-        let thresholds = self.thresholds.read();
+        let thresholds = self.thresholds.read();.await;
         let mut violations = Vec::new();
         if metrics.cpu_usage > thresholds.cpu_threshold {
             violations.push(format!(

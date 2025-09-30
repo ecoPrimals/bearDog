@@ -40,9 +40,10 @@ impl MetricsCollector {
     ///
     /// # Errors
     /// Returns an error if the metrics storage cannot be accessed
-    pub fn record_counter(&self, name: &str, value: u64) -> Result<(), BearDogError> {
+    pub async fn record_counter(&self, name: &str, value: u64) -> Result<(), BearDogError> {
         self.metrics
-            .write()
+            .write().await
+            .await
             .insert(name.to_string(), MetricValue::Counter(value));
         self.counter.fetch_add(1, Ordering::Relaxed);
         Ok(())
@@ -52,9 +53,10 @@ impl MetricsCollector {
     ///
     /// # Errors
     /// Returns an error if the metrics storage cannot be accessed
-    pub fn record_gauge(&self, name: &str, value: f64) -> Result<(), BearDogError> {
+    pub async fn record_gauge(&self, name: &str, value: f64) -> Result<(), BearDogError> {
         self.metrics
-            .write()
+            .write().await
+            .await
             .insert(name.to_string(), MetricValue::Gauge(value));
         self.counter.fetch_add(1, Ordering::Relaxed);
         Ok(())
@@ -63,9 +65,10 @@ impl MetricsCollector {
     ///
     /// # Errors
     /// Returns an error if the metrics storage cannot be accessed
-    pub fn record_histogram(&self, name: &str, values: Vec<f64>) -> Result<(), BearDogError> {
+    pub async fn record_histogram(&self, name: &str, values: Vec<f64>) -> Result<(), BearDogError> {
         self.metrics
-            .write()
+            .write().await
+            .await
             .insert(name.to_string(), MetricValue::Histogram(values));
         self.counter.fetch_add(1, Ordering::Relaxed);
         Ok(())
@@ -81,7 +84,7 @@ impl MetricsCollector {
         duration: std::time::Duration,
     ) -> Result<(), BearDogError> {
         self.metrics
-            .write()
+            .write().await
             .insert(name.to_string(), MetricValue::Timer(duration));
         self.counter.fetch_add(1, Ordering::Relaxed);
         Ok(())

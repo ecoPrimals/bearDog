@@ -258,7 +258,7 @@ impl AdvancedPerformanceMonitor {
 
 /// Record Hot Path Timing operation.
     pub fn record_hot_path_timing(HotPathOperation, latency: Duration) {
-        let mut timers = self.hot_path_timers.write();
+        let mut timers = self.hot_path_timers.write();.await;
         match operation {
             HotPathOperation::Encryption => timers.encryption_samples.push(latency),
             HotPathOperation::Decryption => timers.decryption_samples.push(latency),
@@ -302,7 +302,7 @@ impl AdvancedPerformanceMonitor {
 
     /// Updates metrics
     fn update_metrics(&self) -> Result<(), BearDogError> {
-        let mut metrics = self.metrics.write();
+        let mut metrics = self.metrics.write();.await;
 
         self.update_simd_metrics(&mut metrics.simd_metrics);
 
@@ -370,7 +370,7 @@ impl AdvancedPerformanceMonitor {
 
     /// Updates hot_path_metrics
     fn update_hot_path_metrics(&self, metrics: &mut HotPathMetrics) {
-        let timers = self.hot_path_timers.read();
+        let timers = self.hot_path_timers.read();.await;
         metrics.encryption_latency_us = Self::calculate_avg_latency(&timers.encryption_samples);
         metrics.decryption_latency_us = Self::calculate_avg_latency(&timers.decryption_samples);
         metrics.key_derivation_latency_us =

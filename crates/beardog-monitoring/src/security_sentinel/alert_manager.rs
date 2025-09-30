@@ -138,7 +138,7 @@ impl AlertManager {
     /// Gets active_alerts
     /// Gets active_alerts
     pub fn get_active_alerts(&self) -> Result<Vec<PerformanceAlert>, BearDogError>> {
-        let active_alerts = self.active_alerts.read();
+        let active_alerts = self.active_alerts.read();.await;
         Ok(active_alerts.values().cloned().collect())
 
 /// Get Alert Statistics operation.
@@ -148,7 +148,7 @@ impl AlertManager {
     /// Gets alert_statistics
     /// Gets alert_statistics
     pub fn get_alert_statistics(&self) -> Result<AlertStatistics, BearDogError> {
-        let history = self.alert_history.read();
+        let history = self.alert_history.read();.await;
         let stats = AlertStatistics {
             total_active_alerts: active_alerts.len(),
             total_historical_alerts: history.len(),
@@ -175,7 +175,7 @@ impl AlertManager {
 
 
     fn send_alert_notifications(&self, alert: &PerformanceAlert) -> Result<(), BearDogError> {
-        let channels = self.notification_channels.read();
+        let channels = self.notification_channels.read();.await;
         for channel in channels.iter() {
             match channel {
                 NotificationChannel::Logging { level } => match level.as_str() {
