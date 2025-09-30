@@ -1,0 +1,82 @@
+# BearDog Network Configuration Defaults
+# This file centralizes network configuration to eliminate hardcoded values
+
+[development]
+# Development environment defaults
+api_host = "127.0.0.1"
+api_port = 8080
+metrics_host = "127.0.0.1" 
+metrics_port = 9091
+database_port = 5432
+redis_port = 6379
+
+# Development endpoints - capability-based discovery
+service_mesh_endpoint = "http://localhost:8080"
+monitoring_endpoint = "http://localhost:3000"
+ecosystem_discovery = "http://localhost:8080"
+
+# Development timeouts (milliseconds)
+default_timeout_ms = 30000
+short_timeout_ms = 3000
+collection_timeout_ms = 10000
+
+[production]
+# Production environment defaults
+api_host = "0.0.0.0"
+api_port = 8080
+metrics_host = "127.0.0.1"
+metrics_port = 9091
+database_port = 5432
+redis_port = 6379
+
+# Production endpoints (capability-based discovery via environment)
+service_mesh_endpoint = "${SERVICE_MESH_ENDPOINT:-http://mesh.ecosystem.internal:8080}"
+monitoring_endpoint = "${MONITORING_ENDPOINT:-http://monitoring.ecosystem.internal:3000}"
+ecosystem_discovery = "${DISCOVERY_ENDPOINT:-http://discovery.ecosystem.internal:8080}"
+
+# Production timeouts (milliseconds)
+default_timeout_ms = 30000
+short_timeout_ms = 5000
+collection_timeout_ms = 15000
+
+[testing]
+# Testing environment defaults
+api_host = "127.0.0.1"
+api_port = 0  # Random port assignment
+metrics_host = "127.0.0.1"
+metrics_port = 0  # Random port assignment
+database_port = 0  # In-memory database
+redis_port = 0  # Mock redis
+
+# Testing endpoints
+service_mesh_endpoint = "http://localhost:8080"
+monitoring_endpoint = "http://localhost:3000"
+ecosystem_discovery = "http://localhost:8080"
+
+# Testing timeouts (milliseconds) - shorter for faster tests
+default_timeout_ms = 5000
+short_timeout_ms = 1000
+collection_timeout_ms = 3000
+
+[dns]
+# DNS configuration - Use environment variables for sovereignty compliance
+# DNS_SERVERS environment variable should contain comma-separated DNS servers
+# Falls back to system DNS if not specified (maintaining sovereignty)
+servers = ["${DNS_SERVERS:-system}"]  # Uses system DNS by default for sovereignty
+timeout_ms = 5000
+# Alternative sovereign DNS options (uncomment to use):
+# servers = ["9.9.9.9", "149.112.112.112"]  # Quad9 (privacy-focused)
+# servers = ["1.0.0.1", "1.1.1.1"]          # Cloudflare (if acceptable)
+# servers = ["system"]                       # Use system-configured DNS (recommended)
+
+[security]
+# Security-related network configuration
+trusted_hosts = ["localhost", "127.0.0.1"]
+private_networks = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+allowed_ports = [80, 443, 8080, 8443, 9090, 9091]
+
+[load_balancing]
+# Load balancing configuration
+health_check_interval_ms = 30000
+retry_attempts = 3
+circuit_breaker_threshold = 5 

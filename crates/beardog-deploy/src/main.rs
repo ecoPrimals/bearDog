@@ -131,7 +131,7 @@ async fn main() -> Result<()> {
             logs_command(&device_manager, &package, follow)?;
         }
         Commands::Full { release } => {
-            full_command(&builder, &android_deployment, &device_manager, release)?;
+            full_command(&builder, &android_deployment, &device_manager, release).await?;
         }
     }
 

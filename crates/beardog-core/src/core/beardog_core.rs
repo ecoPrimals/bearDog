@@ -1,0 +1,187 @@
+//! Main BearDog Core System
+//!
+//! This module provides the central BearDogCore struct that coordinates all
+//! ecosystem components and provides the main entry point for the system.
+
+use crate::types::{ComponentStatus, HealthStatus, SystemStatus, BearDogResult};
+use beardog_errors::BearDogError;
+use beardog_types::canonical::config::unified::UnifiedBearDogConfig;
+use std::collections::HashMap;
+use std::sync::{Arc, RwLock};
+use tracing::{info, warn};
+
+/// Main BearDog Core system coordinator
+#[derive(Debug)]
+pub struct BearDogCore {
+    /// System configuration
+    config: UnifiedBearDogConfig,
+    /// Overall system status
+    pub status: Arc<RwLock<SystemStatus>>,
+    /// Component registry
+    components: Arc<RwLock<HashMap<String, ComponentStatus>>>,
+    /// System state management
+    pub state: Arc<RwLock<HashMap<String, ComponentStatus>>>,
+    /// Universal adapter for ecosystem integration
+    pub universal_adapter: Option<String>, // Placeholder for universal adapter
+    /// System started flag
+    started: bool,
+}
+
+impl BearDogCore {
+    /// Create a new BearDog Core instance
+    pub fn new(config: UnifiedBearDogConfig) -> Self {
+        info!("Initializing BearDog Core system");
+        
+        Self {
+            config,
+            status: Arc::new(RwLock::new(SystemStatus::new())),
+            components: Arc::new(RwLock::new(HashMap::new())),
+            state: Arc::new(RwLock::new(HashMap::new())),
+            universal_adapter: None,
+            started: false,
+        }
+    }
+
+    /// Create a BearDog Core instance with default configuration
+    pub fn with_default_config() -> BearDogResult<Self> {
+        let config = UnifiedBearDogConfig::development(); // Use development config as default
+        Ok(Self::new(config))
+    }
+
+    /// Start the BearDog Core system
+    pub async fn start(&mut self) -> BearDogResult<()> {
+        if self.started {
+            warn!("BearDog Core system is already started");
+            return Ok(());
+        }
+
+        info!("Starting BearDog Core system");
+
+        // Initialize core components
+        self.initialize_components().await?;
+        
+        // Start health monitoring
+        self.start_health_monitoring().await?;
+
+        self.started = true;
+        info!("BearDog Core system started successfully");
+        
+        Ok(())
+    }
+
+    /// Stop the BearDog Core system
+    pub async fn stop(&mut self) -> BearDogResult<()> {
+        if !self.started {
+            warn!("BearDog Core system is not running");
+            return Ok(());
+        }
+
+        info!("Stopping BearDog Core system");
+
+        // Gracefully shutdown components
+        self.shutdown_components().await?;
+
+        self.started = false;
+        info!("BearDog Core system stopped");
+        
+        Ok(())
+    }
+
+    /// Check if the system is running
+    #[must_use]
+    pub fn is_running(&self) -> bool {
+        self.started
+    }
+
+    /// Get current system status
+    pub fn get_status(&self) -> BearDogResult<SystemStatus> {
+        let status = self.status.read()
+            .map_err(|e| BearDogError::system(format!("Failed to read status: {}", e)))?;
+        Ok(status.clone())
+    }
+
+    #[must_use]
+    /// Get system configuration
+    pub fn get_config(&self) -> &UnifiedBearDogConfig {
+        &self.config
+    }
+
+    /// Register a component
+    pub fn register_component(&self, name: String, status: ComponentStatus) -> BearDogResult<()> {
+        let mut components = self.components.write()
+            .map_err(|e| BearDogError::system(format!("Failed to write components: {}", e)))?;
+        
+        components.insert(name.clone(), status);
+        info!("Registered component: {}", name);
+        
+        Ok(())
+    }
+
+    /// Update component status
+    pub fn update_component_status(&self, name: &str, status: ComponentStatus) -> BearDogResult<()> {
+        let mut components = self.components.write()
+            .map_err(|e| BearDogError::system(format!("Failed to write components: {}", e)))?;
+        
+        if let Some(current_status) = components.get_mut(name) {
+            *current_status = status.clone();
+            info!("Updated component {} status to {:?}", name, status);
+        } else {
+            warn!("Attempted to update non-existent component: {}", name);
+        }
+        
+        Ok(())
+    }
+
+    /// Get health status
+    pub fn get_health(&self) -> BearDogResult<HealthStatus> {
+        let status = self.get_status()?;
+        Ok(status.health)
+    }
+
+    // Private helper methods
+    async fn initialize_components(&self) -> BearDogResult<()> {
+        info!("Initializing system components");
+        
+        // Register core components
+        self.register_component("core".to_string(), ComponentStatus::Starting)?;
+        self.register_component("ai".to_string(), ComponentStatus::Starting)?;
+        self.register_component("security".to_string(), ComponentStatus::Starting)?;
+        self.register_component("networking".to_string(), ComponentStatus::Starting)?;
+        
+        // Mark components as healthy after initialization
+        self.update_component_status("core", ComponentStatus::Healthy)?;
+        self.update_component_status("ai", ComponentStatus::Healthy)?;
+        self.update_component_status("security", ComponentStatus::Healthy)?;
+        self.update_component_status("networking", ComponentStatus::Healthy)?;
+        
+        Ok(())
+    }
+
+    async fn start_health_monitoring(&self) -> BearDogResult<()> {
+        info!("Starting health monitoring");
+        // Health monitoring implementation would go here
+        Ok(())
+    }
+
+    async fn shutdown_components(&self) -> BearDogResult<()> {
+        info!("Shutting down system components");
+        
+        let component_names: Vec<String> = {
+            let components = self.components.read()
+                .map_err(|e| BearDogError::system(format!("Failed to read components: {}", e)))?;
+            components.keys().cloned().collect()
+        };
+
+        for name in component_names {
+            self.update_component_status(&name, ComponentStatus::Stopping)?;
+        }
+        
+        Ok(())
+    }
+}
+
+impl Default for BearDogCore {
+    fn default() -> Self {
+        Self::new(UnifiedBearDogConfig::default())
+    }
+} 

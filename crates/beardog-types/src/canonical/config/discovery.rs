@@ -1,0 +1,574 @@
+//! Discovery Configuration Module - Consolidated Service Discovery Configuration
+//!
+//! This module consolidates all service discovery configuration types from across the codebase
+//! into a unified, canonical system. It replaces scattered config types from:
+//! - `beardog-core/src/universal_discovery/mod.rs`
+//! - `beardog-core/src/universal_discovery/network.rs`
+//! - `beardog-core/src/universal_discovery/health.rs`
+//! - `beardog-core/src/universal_discovery/load_balancing.rs`
+//! - `beardog-core/src/universal_discovery/registry.rs`
+//!
+//! ## Consolidation Strategy
+//! - Single source of truth for all discovery configurations
+//! - Hierarchical organization by discovery domain (Network, Health, Load Balancing, Registry)
+//! - Protocol-agnostic design with pluggable discovery mechanisms
+//! - Environment-aware defaults for different deployment scenarios
+
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use std::net::{IpAddr, SocketAddr};
+use std::time::Duration;
+
+/// **CONSOLIDATED DISCOVERY CONFIGURATION** - Master discovery system configuration
+///
+/// This is the single source of truth for all service discovery configuration across BearDog.
+/// It consolidates and replaces all scattered discovery config types.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConsolidatedDiscoveryConfig {
+    /// Service identifier
+    pub service_id: String,
+    /// Discovery protocols to enable
+    pub enabled_protocols: Vec<DiscoveryProtocol>,
+    /// Service registry configuration
+    pub registry: ServiceRegistryConfig,
+    /// Health monitoring configuration
+    pub health: HealthCheckConfig,
+    /// Load balancing configuration
+    pub load_balancing: LoadBalancingConfig,
+    /// Network configuration
+    pub network: NetworkConfig,
+    /// Cache configuration
+    pub cache: CacheConfig,
+    /// Security configuration
+    pub security: SecurityConfig,
+}
+
+/// Discovery Protocol Configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum DiscoveryProtocol {
+    /// HTTP-based service discovery with REST endpoints
+    Http {
+        endpoint: String,
+        headers: HashMap<String, String>,
+        timeout_ms: u64,
+    },
+    /// DNS-based service discovery using SRV records
+    Dns {
+        domain: String,
+        servers: Vec<String>,
+        query_timeout_ms: u64,
+    },
+    /// mDNS (Multicast DNS) service discovery
+    Mdns {
+        service_type: String,
+        interface: String,
+        timeout_ms: u64,
+        continuous_monitoring: bool,
+    },
+    /// Consul-based service discovery and health checking
+    Consul {
+        address: String,
+        datacenter: String,
+        token: Option<String>,
+    },
+    /// etcd-based distributed service discovery
+    Etcd {
+        endpoints: Vec<String>,
+        key_prefix: String,
+        timeout_ms: u64,
+        auth: Option<EtcdAuth>,
+    },
+    /// Kubernetes-native service discovery
+    Kubernetes {
+        namespace: String,
+        label_selector: HashMap<String, String>,
+        field_selector: HashMap<String, String>,
+    },
+}
+
+impl Hash for DiscoveryProtocol {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            DiscoveryProtocol::Http { endpoint, .. } => {
+                "Http".hash(state);
+                endpoint.hash(state);
+            }
+            DiscoveryProtocol::Dns { domain, servers, .. } => {
+                "Dns".hash(state);
+                domain.hash(state);
+                servers.hash(state);
+            }
+            DiscoveryProtocol::Mdns { service_type, interface, .. } => {
+                "Mdns".hash(state);
+                service_type.hash(state);
+                interface.hash(state);
+            }
+            DiscoveryProtocol::Consul { address, datacenter, .. } => {
+                "Consul".hash(state);
+                address.hash(state);
+                datacenter.hash(state);
+            }
+            DiscoveryProtocol::Etcd { endpoints, key_prefix, .. } => {
+                "Etcd".hash(state);
+                endpoints.hash(state);
+                key_prefix.hash(state);
+            }
+            DiscoveryProtocol::Kubernetes { namespace, .. } => {
+                "Kubernetes".hash(state);
+                namespace.hash(state);
+            }
+        }
+    }
+}
+
+/// Service Registry Configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceRegistryConfig {
+    /// Maximum number of services to track
+    pub max_services: usize,
+    /// Service TTL (time-to-live)
+    pub service_ttl: Duration,
+    /// Cleanup interval for stale services
+    pub cleanup_interval: Duration,
+    /// Enable service versioning
+    pub enable_versioning: bool,
+    /// Service metadata storage
+    pub metadata_storage: MetadataStorageConfig,
+}
+
+/// Health Check Configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealthCheckConfig {
+    /// Health check interval
+    pub check_interval: Duration,
+    /// Health check timeout
+    pub check_timeout: Duration,
+    /// Number of consecutive failures before marking unhealthy
+    pub failure_threshold: u32,
+    /// Number of consecutive successes before marking healthy
+    pub success_threshold: u32,
+    /// Enable detailed health metrics
+    pub enable_metrics: bool,
+    /// Health check endpoints
+    pub endpoints: Vec<HealthEndpoint>,
+}
+
+/// Load Balancing Configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoadBalancingConfig {
+    /// Load balancing algorithm
+    pub algorithm: LoadBalancingAlgorithm,
+    /// Health-based routing
+    pub health_based_routing: bool,
+    /// Circuit breaker configuration
+    pub circuit_breaker: CircuitBreakerConfig,
+    /// Retry configuration
+    pub retry: RetryConfig,
+    /// Sticky sessions configuration
+    pub sticky_sessions: Option<StickySessionsConfig>,
+}
+
+/// Network Configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkConfig {
+    /// Bind address for discovery service
+    pub bind_address: SocketAddr,
+    /// Multicast address for mDNS
+    pub multicast_address: IpAddr,
+    /// Multicast port
+    pub multicast_port: u16,
+    /// Discovery port range
+    pub discovery_port_range: (u16, u16),
+    /// Maximum packet size
+    pub max_packet_size: usize,
+    /// Connection timeout
+    pub connection_timeout: Duration,
+    /// Read timeout
+    pub read_timeout: Duration,
+    /// Write timeout
+    pub write_timeout: Duration,
+    /// Enable IPv6
+    pub enable_ipv6: bool,
+    /// Network interface to bind to
+    pub interface: Option<String>,
+    /// TLS configuration
+    pub tls: Option<TlsConfig>,
+}
+
+/// Cache Configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CacheConfig {
+    /// Maximum number of cache entries
+    pub max_entries: usize,
+    /// Cache TTL (time-to-live)
+    pub ttl: Duration,
+    /// Cache eviction policy
+    pub eviction_policy: EvictionPolicy,
+    /// Enable cache compression
+    pub enable_compression: bool,
+    /// Cache persistence
+    pub persistence: Option<CachePersistenceConfig>,
+}
+
+/// Security Configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityConfig {
+    /// Enable TLS for discovery communications
+    pub enable_tls: bool,
+    /// Verify TLS certificates
+    pub verify_certificates: bool,
+    /// Certificate authority bundle
+    pub ca_bundle: Option<String>,
+    /// Client certificate for mutual TLS
+    pub client_cert: Option<ClientCertConfig>,
+    /// Authentication configuration
+    pub authentication: Option<AuthenticationConfig>,
+    /// Authorization configuration
+    pub authorization: Option<AuthorizationConfig>,
+}
+
+// Supporting types and enums
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct EtcdAuth {
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MetadataStorageConfig {
+    /// Storage backend type
+    pub backend: MetadataBackend,
+    /// Storage capacity limits
+    pub capacity_limits: CapacityLimits,
+    /// Enable encryption at rest
+    pub encrypt_at_rest: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum MetadataBackend {
+    Memory,
+    File { path: String },
+    Database { connection_string: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CapacityLimits {
+    pub max_metadata_size_mb: usize,
+    pub max_services: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealthEndpoint {
+    pub path: String,
+    pub method: String,
+    pub expected_status: u16,
+    pub timeout: Duration,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum LoadBalancingAlgorithm {
+    RoundRobin,
+    WeightedRoundRobin,
+    LeastConnections,
+    WeightedLeastConnections,
+    Random,
+    ConsistentHash,
+    HealthBased,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CircuitBreakerConfig {
+    /// Failure threshold to open circuit
+    pub failure_threshold: u32,
+    /// Success threshold to close circuit
+    pub success_threshold: u32,
+    /// Timeout before attempting to close circuit
+    pub timeout: Duration,
+    /// Half-open state request limit
+    pub half_open_max_calls: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RetryConfig {
+    /// Maximum number of retries
+    pub max_retries: u32,
+    /// Base delay between retries
+    pub base_delay: Duration,
+    /// Maximum delay between retries
+    pub max_delay: Duration,
+    /// Backoff strategy
+    pub backoff_strategy: BackoffStrategy,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum BackoffStrategy {
+    Fixed,
+    Linear,
+    Exponential,
+    ExponentialWithJitter,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StickySessionsConfig {
+    /// Cookie name for session affinity
+    pub cookie_name: String,
+    /// Session timeout
+    pub timeout: Duration,
+    /// Enable secure cookies
+    pub secure_cookies: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TlsConfig {
+    /// Certificate file path
+    pub cert_file: String,
+    /// Private key file path
+    pub key_file: String,
+    /// CA certificate file path
+    pub ca_file: Option<String>,
+    /// Verify peer certificates
+    pub verify_peer: bool,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum EvictionPolicy {
+    LRU,  // Least Recently Used
+    LFU,  // Least Frequently Used
+    FIFO, // First In, First Out
+    TTL,  // Time To Live based
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CachePersistenceConfig {
+    /// Persistence backend
+    pub backend: PersistenceBackend,
+    /// Persistence interval
+    pub persist_interval: Duration,
+    /// Enable compression for persisted data
+    pub compress: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum PersistenceBackend {
+    File { path: String },
+    Redis { connection_string: String },
+    Database { connection_string: String },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClientCertConfig {
+    pub cert_file: String,
+    pub key_file: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthenticationConfig {
+    /// Authentication method
+    pub method: AuthMethod,
+    /// Token configuration
+    pub token: Option<TokenConfig>,
+    /// Certificate-based authentication
+    pub certificate: Option<CertAuthConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AuthMethod {
+    None,
+    Token,
+    Certificate,
+    OAuth2,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TokenConfig {
+    pub token: String,
+    pub header_name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CertAuthConfig {
+    pub client_cert: String,
+    pub client_key: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthorizationConfig {
+    /// Authorization policy
+    pub policy: AuthPolicy,
+    /// Role-based access control
+    pub rbac: Option<RbacConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AuthPolicy {
+    AllowAll,
+    DenyAll,
+    RoleBased,
+    Custom { rules: Vec<AuthRule> },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RbacConfig {
+    pub roles: HashMap<String, Vec<String>>,
+    pub permissions: HashMap<String, Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthRule {
+    pub resource: String,
+    pub action: String,
+    pub effect: AuthEffect,
+    pub conditions: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum AuthEffect {
+    Allow,
+    Deny,
+}
+
+// Default implementations
+
+impl Default for ConsolidatedDiscoveryConfig {
+    fn default() -> Self {
+        Self {
+            service_id: "beardog-discovery".to_string(),
+            enabled_protocols: vec![
+                DiscoveryProtocol::Http {
+                    endpoint: "http://localhost:beardog_types::constants::domains::network::ports::DEFAULT_API_PORT/discovery".to_string(),
+                    headers: HashMap::new(),
+                    timeout_ms: beardog_types::constants::domains::network::defaults::DEFAULT_CONNECTION_TIMEOUT.as_millis() as u64,
+                },
+            ],
+            registry: ServiceRegistryConfig::default(),
+            health: HealthCheckConfig::default(),
+            load_balancing: LoadBalancingConfig::default(),
+            network: NetworkConfig::default(),
+            cache: CacheConfig::default(),
+            security: SecurityConfig::default(),
+        }
+    }
+}
+
+impl Default for ServiceRegistryConfig {
+    fn default() -> Self {
+        Self {
+            max_services: beardog_types::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE,
+            service_ttl: Duration::from_secs(300),
+            cleanup_interval: Duration::from_secs(60),
+            enable_versioning: true,
+            metadata_storage: MetadataStorageConfig::default(),
+        }
+    }
+}
+
+impl Default for MetadataStorageConfig {
+    fn default() -> Self {
+        Self {
+            backend: MetadataBackend::Memory,
+            capacity_limits: CapacityLimits {
+                max_metadata_size_mb: 100,
+                max_services: beardog_types::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE,
+            },
+            encrypt_at_rest: false,
+        }
+    }
+}
+
+impl Default for HealthCheckConfig {
+    fn default() -> Self {
+        Self {
+            check_interval: Duration::from_secs(30),
+            check_timeout: Duration::from_secs(5),
+            failure_threshold: 3,
+            success_threshold: 2,
+            enable_metrics: true,
+            endpoints: vec![HealthEndpoint {
+                path: "/health".to_string(),
+                method: "GET".to_string(),
+                expected_status: 200,
+                timeout: Duration::from_secs(5),
+            }],
+        }
+    }
+}
+
+impl Default for LoadBalancingConfig {
+    fn default() -> Self {
+        Self {
+            algorithm: LoadBalancingAlgorithm::RoundRobin,
+            health_based_routing: true,
+            circuit_breaker: CircuitBreakerConfig::default(),
+            retry: RetryConfig::default(),
+            sticky_sessions: None,
+        }
+    }
+}
+
+impl Default for CircuitBreakerConfig {
+    fn default() -> Self {
+        Self {
+            failure_threshold: 5,
+            success_threshold: 3,
+            timeout: Duration::from_secs(60),
+            half_open_max_calls: 3,
+        }
+    }
+}
+
+impl Default for RetryConfig {
+    fn default() -> Self {
+        Self {
+            max_retries: 3,
+            base_delay: beardog_types::constants::domains::network::timeouts::DEFAULT_RETRY_DELAY,
+            max_delay: Duration::from_secs(30),
+            backoff_strategy: BackoffStrategy::ExponentialWithJitter,
+        }
+    }
+}
+
+impl Default for NetworkConfig {
+    fn default() -> Self {
+        use std::str::FromStr;
+        Self {
+            bind_address: SocketAddr::from_str("0.0.0.0:beardog_types::constants::domains::network::ports::DEFAULT_API_PORT").unwrap(),
+            multicast_address: IpAddr::from_str("224.0.0.251").unwrap(),
+            multicast_port: 5353,
+            discovery_port_range: (beardog_types::constants::domains::network::ports::DEFAULT_API_PORT, 8090),
+            max_packet_size: 1500,
+            connection_timeout: Duration::from_secs(beardog_types::constants::domains::system::defaults::DEFAULT_POOL_SIZE as u64),
+            read_timeout: Duration::from_secs(30),
+            write_timeout: Duration::from_secs(30),
+            enable_ipv6: false,
+            interface: None,
+            tls: None,
+        }
+    }
+}
+
+impl Default for CacheConfig {
+    fn default() -> Self {
+        Self {
+            max_entries: beardog_types::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE,
+            ttl: Duration::from_secs(300),
+            eviction_policy: EvictionPolicy::LRU,
+            enable_compression: false,
+            persistence: None,
+        }
+    }
+}
+
+impl Default for SecurityConfig {
+    fn default() -> Self {
+        Self {
+            enable_tls: true,
+            verify_certificates: true,
+            ca_bundle: None,
+            client_cert: None,
+            authentication: None,
+            authorization: None,
+        }
+    }
+} 
