@@ -111,8 +111,19 @@ pub use hsm::UnifiedHsmConfig;
 pub use network::CanonicalNetworkConfig;
 pub use security::CanonicalSecurityConfig;
 
+// Re-export the UNIFIED CONFIGURATION TRAIT SYSTEM
+pub use r#trait::{
+    BearDogConfig, ConfigBuilder, ConfigLoader, ConfigMetadata, ConfigSource, ValidationStatus,
+    validation,
+};
+
 // Re-export the UNIFIED CONFIGURATION SYSTEM as primary interface
 pub use unified::{
+    // Comprehensive configuration
+    UnifiedBearDogConfig,
+    // Simplified configuration (NEW - merged from unified_simple.rs)
+    SimplifiedBearDogConfig,
+    // Supporting types
     DeploymentMode,
     Environment,
     LogLevel,
@@ -121,19 +132,27 @@ pub use unified::{
     RolloutStrategy,
     SystemMetadata,
     UnifiedAppConfig,
-    UnifiedBearDogConfig as MasterUnifiedBearDogConfig,
-    // UnifiedHsmConfig, // Already imported above
     UnifiedDatabaseConfig,
     UnifiedGeneticsConfig,
     UnifiedNetworkConfig,
     UnifiedSecurityConfig,
     UnifiedVersionInfo,
+    // Simplified config types (NEW - merged from unified_simple.rs)
+    NetworkSettings,
+    SecuritySettings,
+    DatabaseSettings,
+    MonitoringSettings,
+    PerformanceSettings,
 };
 
-// Re-export the WORKING UNIFIED CONFIGURATION as primary interface
+// Backward compatibility aliases
+pub use unified::SimplifiedBearDogConfig as WorkingUnifiedConfig;
+pub use UnifiedBearDogConfig as MasterUnifiedBearDogConfig;
+
+// DEPRECATED: unified_simple module (functionality moved to unified.rs)
+#[deprecated(since = "3.1.0", note = "Use unified module instead - types moved to unified.rs")]
 pub use unified_simple::{
-    ConfigurationMigrator, DatabaseSettings, MonitoringSettings, NetworkSettings,
-    PerformanceSettings, SecuritySettings, WorkingUnifiedConfig,
+    ConfigurationMigrator,
 };
 
 /// Master configuration that unifies all domain configurations
@@ -500,7 +519,9 @@ pub struct ConfigurationSummary {
     pub total_domains: usize,
 }
 
-// Compatibility aliases for migration
-pub type UnifiedBearDogConfig = BearDogMasterConfig;
+// Compatibility aliases for migration (DEPRECATED - use actual types from unified module)
+#[deprecated(since = "3.1.0", note = "Use BearDogMasterConfig directly")]
 pub type MasterConfig = BearDogMasterConfig;
+
+#[deprecated(since = "3.1.0", note = "Use BearDogMasterConfig directly")]
 pub type GlobalConfig = BearDogMasterConfig;
