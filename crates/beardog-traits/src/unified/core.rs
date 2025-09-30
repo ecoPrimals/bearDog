@@ -193,7 +193,7 @@ impl ValidationUtils {
         if entity_id.contains('\0') {
             return Err(BearDogError::Security {
                 message: "Entity ID contains null bytes - potential security risk".to_string(),
-                category: beardog_errors::SecurityErrorCategory::InputValidation,
+                category: beardog_errors::SecurityErrorCategory::General,
             });
         }
         
@@ -223,7 +223,7 @@ impl ValidationUtils {
         if entity_id.chars().any(|c| c.is_control()) {
             return Err(BearDogError::Security {
                 message: "Entity ID contains control characters - potential security risk".to_string(),
-                category: beardog_errors::SecurityErrorCategory::InputValidation,
+                category: beardog_errors::SecurityErrorCategory::General,
             });
         }
         
