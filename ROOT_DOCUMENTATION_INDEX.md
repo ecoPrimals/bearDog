@@ -1,7 +1,7 @@
 # 📚 BearDog Root Documentation Index
 
 **Last Updated**: September 30, 2025  
-**Status**: ✅ Clean and organized (14 essential files)
+**Status**: ✅ Clean and organized (16 essential files)
 
 ---
 
@@ -11,11 +11,12 @@ For new developers or returning to the project:
 
 1. **README.md** - Project overview and quick start
 2. **CURRENT_STATUS_2025_SEPT_30.md** - Current project status (Sept 30, 2025)
-3. **UNIFICATION_QUICK_REFERENCE.md** - Daily developer guide ⭐ MOST USEFUL
+3. **UNIFICATION_NEXT_STEPS.md** - Actionable unification tasks ⭐ MOST USEFUL
+4. **UNIFICATION_QUICK_REFERENCE.md** - Daily developer guide
 
 ---
 
-## 📖 ESSENTIAL DOCUMENTATION (14 Files)
+## 📖 ESSENTIAL DOCUMENTATION (16 Files)
 
 ### Core Project Documents
 - **README.md** - Main project overview
@@ -25,7 +26,9 @@ For new developers or returning to the project:
 
 ### Status & Planning  
 - **CURRENT_STATUS_2025_SEPT_30.md** - Comprehensive current status
-- **UNIFICATION_QUICK_REFERENCE.md** ⭐ - Daily developer reference
+- **UNIFICATION_NEXT_STEPS.md** ⭐ - Week-by-week actionable tasks (NEW!)
+- **UNIFICATION_STATUS_REPORT_SEPT_30_2025.md** - Complete unification analysis (NEW!)
+- **UNIFICATION_QUICK_REFERENCE.md** - Daily developer reference
 - **UNIFICATION_DEEP_REVIEW_SEPT_30_2025.md** - Complete technical analysis
 - **CONFIG_MIGRATION_STATUS.md** - Config consolidation tracking
 
@@ -47,17 +50,18 @@ For new developers or returning to the project:
 
 ### "I want to start contributing"
 1. README.md
-2. UNIFICATION_QUICK_REFERENCE.md ⭐
+2. UNIFICATION_NEXT_STEPS.md ⭐
 3. BEARDOG_CODING_STANDARDS.md
 
 ### "I need current status"
 1. CURRENT_STATUS_2025_SEPT_30.md
-2. UNIFICATION_QUICK_REFERENCE.md
+2. UNIFICATION_STATUS_REPORT_SEPT_30_2025.md
 
 ### "I'm working on unification"
-1. UNIFICATION_QUICK_REFERENCE.md ⭐
-2. UNIFICATION_DEEP_REVIEW_SEPT_30_2025.md
-3. CONFIG_MIGRATION_STATUS.md
+1. UNIFICATION_NEXT_STEPS.md ⭐ (Week-by-week tasks)
+2. UNIFICATION_STATUS_REPORT_SEPT_30_2025.md (Full analysis)
+3. UNIFICATION_QUICK_REFERENCE.md (Quick commands)
+4. CONFIG_MIGRATION_STATUS.md
 
 ### "I need to deploy"
 1. DEPLOYMENT_READY.md
@@ -78,14 +82,16 @@ All archived documentation is organized in `/docs/archive/`:
 ## ✅ DOCUMENTATION HEALTH
 
 **Status**: 🟢 **EXCELLENT**
-- 14 essential root files (optimal size)
+- 16 essential root files (optimal size)
 - Clear organization
 - No duplicates
 - All files current (Sept 30, 2025)
 - Historical files properly archived
+- **NEW**: Comprehensive unification reports added
 
 ---
 
 **Maintained By**: BearDog Development Team  
 **Last Cleanup**: September 30, 2025  
-**Next Review**: As needed
+**Last Update**: September 30, 2025 (Added unification reports)  
+**Next Review**: After config migration completion (Week 2)
