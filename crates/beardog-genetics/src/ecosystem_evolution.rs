@@ -670,8 +670,6 @@ pub struct AdaptiveSecurity {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BinaryAccessPattern {
     Whitelist { allowed_entities: Vec<String> },
-    Whitelist { allowed_entities: Vec<String> },
-    Whitelist { allowed_entities: Vec<String> },
     Blacklist { blocked_entities: Vec<String> },
     Simple { is_allowed: bool },
 }
