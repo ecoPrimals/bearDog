@@ -1,13 +1,15 @@
-// Module documentation
-//
-// This module provides functionality for the BearDog ecosystem.
+//! # Compliance Types Module
+//!
+//! This module provides compliance-related types for the BearDog ecosystem.
+//! 
+//! **NOTE**: These types are local to beardog-compliance and provide rich compliance functionality.
+//! A simpler CanonicalComplianceConfig exists in beardog-types for basic config needs.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-// use uuid::Uuid; // Cleaned up unused import
 
-// Local definitions since these types are not available in beardog_types
+// Local compliance configuration types (richer than canonical)
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ComplianceConfig {
     /// Collection of standards
@@ -70,6 +72,92 @@ impl std::fmt::Display for ComplianceStandard {
             Self::Custom(name) => write!(f, "{name}"),
         }
     }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct DataSovereigntyConfig {
+    /// The jurisdiction value
+    pub jurisdiction: String,
+    pub data_residency_required: bool,
+    /// Collection of cross border restrictions
+    pub cross_border_restrictions: Vec<String>,
+}
+
+impl Default for DataSovereigntyConfig {
+    fn default() -> Self {
+        Self {
+            jurisdiction: "US".to_string(),
+            data_residency_required: true,
+            cross_border_restrictions: vec![],
+        }
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct PrivacyAuditConfig {
+    /// The frequency value
+    pub frequency: ReportFrequency,
+    /// Whether automated is enabled
+    pub automated: bool,
+    /// Optional external auditor
+    pub external_auditor: Option<String>,
+}
+
+impl Default for PrivacyAuditConfig {
+    fn default() -> Self {
+        Self {
+            frequency: ReportFrequency::Quarterly,
+            automated: true,
+            external_auditor: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ReportingConfig {
+    pub format: ReportFormat,
+    /// The frequency value
+    pub frequency: ReportFrequency,
+    /// Collection of recipients
+    pub recipients: Vec<String>,
+}
+
+impl Default for ReportingConfig {
+    fn default() -> Self {
+        Self {
+            format: ReportFormat::Json,
+            frequency: ReportFrequency::Monthly,
+            recipients: vec![],
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum ReportFormat {
+    /// Represents json variant
+    Json,
+    /// Represents xml variant
+    Xml,
+    /// Represents pdf variant
+    Pdf,
+    /// Represents html variant
+    Html,
+    /// Represents csv variant
+    Csv,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum ReportFrequency {
+    /// Represents daily variant
+    Daily,
+    /// Represents weekly variant
+    Weekly,
+    /// Represents monthly variant
+    Monthly,
+    /// Represents quarterly variant
+    Quarterly,
+    /// Represents annually variant
+    Annually,
 }
 
 // Additional canonical compliance types
@@ -205,92 +293,7 @@ pub struct ComplianceResult {
     pub timestamp: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct DataSovereigntyConfig {
-    /// The jurisdiction value
-    pub jurisdiction: String,
-    pub data_residency_required: bool,
-    /// Collection of cross border restrictions
-    pub cross_border_restrictions: Vec<String>,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct PrivacyAuditConfig {
-    /// The frequency value
-    pub frequency: ReportFrequency,
-    /// Whether automated is enabled
-    pub automated: bool,
-    /// Optional external auditor
-    pub external_auditor: Option<String>,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct ReportingConfig {
-    pub format: ReportFormat,
-    /// The frequency value
-    pub frequency: ReportFrequency,
-    /// Collection of recipients
-    pub recipients: Vec<String>,
-}
-
-impl Default for ReportingConfig {
-    fn default() -> Self {
-        Self {
-            format: ReportFormat::Json,
-            frequency: ReportFrequency::Monthly,
-            recipients: vec![],
-        }
-    }
-}
-
-impl Default for DataSovereigntyConfig {
-    fn default() -> Self {
-        Self {
-            jurisdiction: "US".to_string(),
-            data_residency_required: true,
-            cross_border_restrictions: vec![],
-        }
-    }
-}
-
-impl Default for PrivacyAuditConfig {
-    fn default() -> Self {
-        Self {
-            frequency: ReportFrequency::Quarterly,
-            automated: true,
-            external_auditor: None,
-        }
-    }
-}
-
-// Local definitions for report types
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-pub enum ReportFormat {
-    /// Represents json variant
-    Json,
-    /// Represents xml variant
-    Xml,
-    /// Represents pdf variant
-    Pdf,
-    /// Represents html variant
-    Html,
-    /// Represents csv variant
-    Csv,
-}
-
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-pub enum ReportFrequency {
-    /// Represents daily variant
-    Daily,
-    /// Represents weekly variant
-    Weekly,
-    /// Represents monthly variant
-    Monthly,
-    /// Represents quarterly variant
-    Quarterly,
-    /// Represents annually variant
-    Annually,
-}
+// Config structs imported from canonical location above
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComplianceEvent {
