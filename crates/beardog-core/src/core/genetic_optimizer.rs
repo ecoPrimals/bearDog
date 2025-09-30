@@ -117,7 +117,7 @@ impl GeneticOptimizer {
     }
 
     /// Run the genetic optimization algorithm
-    pub fn optimize(
+    pub async fn optimize(
         &self,
         fitness_function: impl Fn(&[f64]) -> f64 + Send + Sync,
     ) -> Result<Vec<f64>, BearDogError> {
@@ -149,7 +149,7 @@ impl GeneticOptimizer {
 
             // Update optimization state
             {
-                let mut state = self.optimization_state.write();
+                let mut state = self.optimization_state.write().await;
                 state.current_generation = generation;
                 state.best_fitness = best_fitness;
 
@@ -174,7 +174,7 @@ impl GeneticOptimizer {
 
             // Record performance metric
             {
-                let mut history = self.performance_history.write();
+                let mut history = self.performance_history.write().await;
                 let improvement_rate = if generation > 0 {
                     if let Some(last_metric) = history.last() {
                         best_fitness - last_metric.fitness_score
@@ -299,12 +299,12 @@ impl GeneticOptimizer {
     /// Get the current optimization state
     /// Gets optimization_state
     /// Gets optimization_state
-    pub fn get_optimization_state(&self) -> OptimizationState {
-        self.optimization_state.read().clone()
+    pub async fn get_optimization_state(&self) -> OptimizationState {
+        self.optimization_state.read().await.clone()
     }
 
-    pub fn get_performance_history(&self) -> Vec<PerformanceMetric> {
-        self.performance_history.read().clone()
+    pub async fn get_performance_history(&self) -> Vec<PerformanceMetric> {
+        self.performance_history.read().await.clone()
     }
 }
 
