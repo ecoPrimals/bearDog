@@ -3,7 +3,7 @@
 //! Network and communication configuration for `BearDog` including ports,
 //! timeouts, SSL settings, and connection management.
 
-use crate::canonical::config::unified_trait::BearDogConfig;
+use crate::canonical::config::r#trait::BearDogConfig;
 use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 
