@@ -7,7 +7,7 @@ use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-use crate::canonical::config::unified_trait::BearDogConfig;
+use crate::canonical::config::r#trait::BearDogConfig;
 
 /// **CONSOLIDATED DISCOVERY CONFIGURATION** - Unifies all discovery configs
 ///

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-use crate::canonical::config::unified_trait::BearDogConfig;
+use crate::canonical::config::r#trait::BearDogConfig;
 
 /// **CONSOLIDATED MONITORING CONFIGURATION** - Unifies all monitoring configs
 ///

@@ -3,7 +3,7 @@
 // Comprehensive validation tests for production deployment readiness.
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::config::unified_simple::WorkingUnifiedConfig;
+use beardog_types::canonical::config::SimplifiedBearDogConfig as WorkingUnifiedConfig;
 use std::time::Instant;
 
 #[test]

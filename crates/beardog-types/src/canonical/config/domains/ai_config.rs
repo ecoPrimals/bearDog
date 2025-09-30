@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-use crate::canonical::config::unified_trait::BearDogConfig;
+use crate::canonical::config::r#trait::BearDogConfig;
 
 /// **CONSOLIDATED AI CONFIGURATION** - Unifies all AI/ML related configs
 ///

@@ -453,8 +453,9 @@ pub mod health_status;
 pub mod workflow;
 
 // **MODERNIZED CONFIGURATION EXPORTS** - Canonical unified configuration system
-pub use canonical::config::unified_simple::WorkingUnifiedConfig as UnifiedBearDogConfig;
-pub use canonical::config::unified_simple::{
+// NEW: Use unified configuration exports (migrated from unified_simple)
+pub use canonical::config::SimplifiedBearDogConfig as UnifiedBearDogConfig;
+pub use canonical::config::{
     ConfigurationMigrator, DatabaseSettings, MonitoringSettings, NetworkSettings,
     PerformanceSettings, SecuritySettings,
 };

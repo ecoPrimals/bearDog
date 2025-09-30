@@ -11,7 +11,7 @@
 //! - **Environment Awareness**: Dynamic configuration based on deployment
 //! - **Modular Design**: Each domain under 300 lines for maintainability
 
-use crate::canonical::config::unified_trait::BearDogConfig;
+use crate::canonical::config::r#trait::BearDogConfig;
 use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
