@@ -397,8 +397,8 @@ pub enum UniversalHsmProvider {
         /// Provider endpoint
         endpoint: String,
     },
-    // REMOVED: Legacy hardcoded providers eliminated for sovereignty compliance
-    // Use Discovered variant with capability-based identification instead
+    // Legacy hardcoded providers eliminated for sovereignty compliance
+    // Use Discovered variant with capability-based identification
 }
 
 /// Cloud credentials configuration
