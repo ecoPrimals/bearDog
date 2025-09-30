@@ -4,7 +4,7 @@
 // of the unified BearDog trait system.
 
 use beardog_errors::BearDogError;
-use beardog_types::canonical::config::unified::BearDogConfig;
+use beardog_types::canonical::config::r#trait::BearDogConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
