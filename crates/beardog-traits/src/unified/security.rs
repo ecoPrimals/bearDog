@@ -459,32 +459,46 @@ impl BearDogConfig for UnifiedSecurityConfig {
         Ok(())
     }
 
-    fn merge(&mut self, other: Self) -> Result<(), beardog_errors::BearDogError> {
-        self.enable_authentication = other.enable_authentication;
-        self.enable_authorization = other.enable_authorization;
-        self.enable_audit = other.enable_audit;
+    fn merge(&self, other: &Self) -> Result<Self, beardog_errors::BearDogError> {
+        let mut merged = self.clone();
+        merged.enable_authentication = other.enable_authentication;
+        merged.enable_authorization = other.enable_authorization;
+        merged.enable_audit = other.enable_audit;
 
         if other.session_timeout_minutes != Self::default().session_timeout_minutes {
-            self.session_timeout_minutes = other.session_timeout_minutes;
+            merged.session_timeout_minutes = other.session_timeout_minutes;
         }
         if other.max_failed_attempts != Self::default().max_failed_attempts {
-            self.max_failed_attempts = other.max_failed_attempts;
+            merged.max_failed_attempts = other.max_failed_attempts;
         }
         if other.lockout_duration_minutes != Self::default().lockout_duration_minutes {
-            self.lockout_duration_minutes = other.lockout_duration_minutes;
+            merged.lockout_duration_minutes = other.lockout_duration_minutes;
         }
 
-        self.require_mfa = other.require_mfa;
-        self.hsm_enabled = other.hsm_enabled;
+        merged.require_mfa = other.require_mfa;
+        merged.hsm_enabled = other.hsm_enabled;
 
         if !other.supported_auth_methods.is_empty() {
-            self.supported_auth_methods = other.supported_auth_methods;
+            merged.supported_auth_methods = other.supported_auth_methods.clone();
         }
         if !other.crypto_algorithms.is_empty() {
-            self.crypto_algorithms = other.crypto_algorithms;
+            merged.crypto_algorithms = other.crypto_algorithms.clone();
         }
 
-        Ok(())
+        Ok(merged)
+    }
+
+    fn to_toml(&self) -> Result<String, beardog_errors::BearDogError> {
+        serde_json::to_string_pretty(self).map_err(|e| {
+            beardog_errors::BearDogError::System {
+                message: format!("Failed to serialize security config: {}", e),
+                category: beardog_errors::SystemErrorCategory::General,
+            }
+        })
+    }
+
+    fn domain() -> &'static str {
+        "security"
     }
 
     /// Creates instance from env

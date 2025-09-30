@@ -46,7 +46,7 @@ impl AdvancedMetricsSystem {
         }
     }
 
-    pub fn record_performance_metric(
+    pub async fn record_performance_metric(
         &self,
         name: String,
         value: f64,
