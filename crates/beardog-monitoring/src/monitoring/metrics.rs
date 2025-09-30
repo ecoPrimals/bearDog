@@ -43,7 +43,6 @@ impl MetricsCollector {
     pub async fn record_counter(&self, name: &str, value: u64) -> Result<(), BearDogError> {
         self.metrics
             .write().await
-            .await
             .insert(name.to_string(), MetricValue::Counter(value));
         self.counter.fetch_add(1, Ordering::Relaxed);
         Ok(())
@@ -56,7 +55,6 @@ impl MetricsCollector {
     pub async fn record_gauge(&self, name: &str, value: f64) -> Result<(), BearDogError> {
         self.metrics
             .write().await
-            .await
             .insert(name.to_string(), MetricValue::Gauge(value));
         self.counter.fetch_add(1, Ordering::Relaxed);
         Ok(())
@@ -68,7 +66,6 @@ impl MetricsCollector {
     pub async fn record_histogram(&self, name: &str, values: Vec<f64>) -> Result<(), BearDogError> {
         self.metrics
             .write().await
-            .await
             .insert(name.to_string(), MetricValue::Histogram(values));
         self.counter.fetch_add(1, Ordering::Relaxed);
         Ok(())
@@ -78,7 +75,7 @@ impl MetricsCollector {
     ///
     /// # Errors
     /// Returns an error if the metrics storage cannot be accessed
-    pub fn record_timer(
+    pub async fn record_timer(
         &self,
         name: &str,
         duration: std::time::Duration,
@@ -96,8 +93,8 @@ impl MetricsCollector {
     /// Returns an error if the metrics storage cannot be accessed
     /// Gets all_metrics
     /// Gets all_metrics
-    pub fn get_all_metrics(&self) -> Result<HashMap<String, MetricValue>, BearDogError> {
-        Ok(self.metrics.read().clone())
+    pub async fn get_all_metrics(&self) -> Result<HashMap<String, MetricValue>, BearDogError> {
+        Ok(self.metrics.read().await.clone())
     }
 
     /// Gets the total number of recorded metrics
@@ -112,8 +109,8 @@ impl MetricsCollector {
     ///
     /// # Errors
     /// Returns an error if the metrics storage cannot be accessed
-    pub fn clear_metrics(&self) -> Result<(), BearDogError> {
-        self.metrics.write().clear();
+    pub async fn clear_metrics(&self) -> Result<(), BearDogError> {
+        self.metrics.write().await.clear();
         self.counter.store(0, Ordering::Relaxed);
         Ok(())
     }
@@ -138,8 +135,8 @@ impl PrometheusExporter {
 
     ///
     /// # Errors
-    pub fn export_metrics(&self) -> Result<String, BearDogError> {
-        let metrics = self.collector.get_all_metrics()?;
+    pub async fn export_metrics(&self) -> Result<String, BearDogError> {
+        let metrics = self.collector.get_all_metrics().await?;
         let mut output = String::new();
 
         for (name, value) in &metrics {
