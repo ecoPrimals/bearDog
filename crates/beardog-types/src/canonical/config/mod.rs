@@ -53,6 +53,10 @@ pub mod security;
 /// Workflow module
 pub mod workflow;
 
+// Domain configuration submodules (consolidated types)
+/// Domains module containing consolidated configuration types
+pub mod domains;
+
 // UNIFIED CONFIGURATION SYSTEM - Single source of truth
 /// Type Aliases module
 pub mod type_aliases;
@@ -60,6 +64,8 @@ pub mod type_aliases;
 pub mod unified;
 /// Unified Simple module
 pub mod unified_simple; // WORKING IMPLEMENTATION // PEDANTIC: Type aliases for missing config types
+/// Unified trait module
+pub mod unified_trait;
 
 // MODULAR PRODUCTION CONFIGURATION - Split from oversized production.rs
 // This replaces the 1,436-line production.rs file with focused domain modules
