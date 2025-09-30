@@ -60,11 +60,15 @@ pub mod domains;
 // UNIFIED CONFIGURATION SYSTEM - Single source of truth
 /// Type Aliases module
 pub mod type_aliases;
+/// Unified configuration trait and validation utilities
+#[path = "trait.rs"]
+pub mod r#trait;
 /// Unified module
 pub mod unified;
 /// Unified Simple module
 pub mod unified_simple; // WORKING IMPLEMENTATION // PEDANTIC: Type aliases for missing config types
-/// Unified trait module
+/// Unified trait module (DEPRECATED - use r#trait)
+#[deprecated(since = "3.1.0", note = "Use config::r#trait module instead")]
 pub mod unified_trait;
 
 // MODULAR PRODUCTION CONFIGURATION - Split from oversized production.rs
