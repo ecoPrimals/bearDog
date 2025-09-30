@@ -241,14 +241,7 @@ pub enum MetricValue {
     Gauge(f64),
     /// Represents histogram variant
     Histogram(Vec<f64>),
-    Summary {
-        sum: f64,
-        count: u64,
-    },
-    Summary {
-        sum: f64,
-        count: u64,
-    },
+    /// Represents summary variant
     Summary {
         sum: f64,
         count: u64,
