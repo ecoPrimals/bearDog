@@ -2,6 +2,8 @@
 //!
 //! This module provides production-ready management capabilities including
 //! monitoring, health checks, and operational controls.
+//!
+//! **Configuration types** are imported from the canonical location in beardog-types.
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -9,7 +11,24 @@ use tracing::{debug, info};
 
 use beardog_errors::BearDogError;
 
-/// Production configuration
+// ============================================================================
+// CONFIGURATION TYPES - Imported from canonical location
+// ============================================================================
+
+// Import production config types from canonical location
+pub use beardog_types::canonical::config::production::{
+    BackupConfig,
+    MaintenanceConfig,
+    OperationalConfig,
+    UnifiedProductionConfig,
+    EnvironmentLevel as Environment,
+    ProductionCoreConfig,
+};
+
+/// Local production configuration wrapper for ProductionManager
+/// 
+/// This is a simplified config for runtime operations. For full production
+/// configuration, use `UnifiedProductionConfig` from beardog-types.
 #[derive(Debug, Clone)]
 pub struct ProductionConfig {
     /// Environment type
@@ -20,30 +39,7 @@ pub struct ProductionConfig {
     pub maintenance_config: MaintenanceConfig,
 }
 
-/// Environment type
-#[derive(Debug, Clone, PartialEq)]
-pub enum Environment {
-    /// Production environment
-    Production,
-    /// Development environment
-    Development,
-}
-
-/// Backup configuration
-#[derive(Debug, Clone)]
-pub struct BackupConfig {
-    /// Whether backup is enabled
-    pub enabled: bool,
-}
-
-/// Maintenance configuration
-#[derive(Debug, Clone)]
-pub struct MaintenanceConfig {
-    /// Maintenance windows
-    pub maintenance_windows: Vec<MaintenanceWindow>,
-}
-
-/// Maintenance window
+/// Maintenance window (local type for runtime scheduling)
 #[derive(Debug, Clone)]
 pub struct MaintenanceWindow {
     /// Window start time
@@ -106,10 +102,10 @@ impl ProductionManager {
     /// Starts maintenance scheduler
     fn start_maintenance_scheduler(&self) -> Result<(), BearDogError> {
         info!("🔧 Starting maintenance scheduler ");
-        let _maintenance_config = &self.config.maintenance_config;
+        let maintenance_config = &self.config.maintenance_config;
         let _interval = tokio::time::interval(Duration::from_secs(300));
-        if Self::is_maintenance_window(&_maintenance_config.maintenance_windows) {
-            info!("🔧 Maintenance window active ");
+        if maintenance_config.enabled {
+            info!("🔧 Maintenance mode enabled");
         }
         Ok(())
     }
@@ -139,10 +135,8 @@ impl ProductionManager {
     pub fn default_production_config() -> ProductionConfig {
         ProductionConfig {
             environment: Environment::Production,
-            backup_config: BackupConfig { enabled: true },
-            maintenance_config: MaintenanceConfig {
-                maintenance_windows: vec![],
-            },
+            backup_config: BackupConfig::default(),
+            maintenance_config: MaintenanceConfig::default(),
         }
     }
 
@@ -184,11 +178,6 @@ impl ProductionManager {
         Ok(())
     }
 
-    /// Check if in maintenance window
-    fn is_maintenance_window(_windows: &[MaintenanceWindow]) -> bool {
-        false
-    }
-
     /// Should run backup
     #[allow(dead_code)]
     fn should_run_backup(_schedule: &str) -> bool {
@@ -223,6 +212,7 @@ mod tests {
     async fn test_default_production_config() {
         let config = ProductionManager::default_production_config();
         assert_eq!(config.environment, Environment::Production);
+        // Canonical BackupConfig uses default values from beardog-types
         assert!(config.backup_config.enabled);
     }
 
