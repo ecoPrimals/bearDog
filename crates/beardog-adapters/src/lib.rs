@@ -140,7 +140,7 @@ impl UniversalAdapter {
     /// Execute capability request with timeout, retry, and caching
     /// Executes capability
     /// Executes capability
-    pub fn execute_capability(
+    pub async fn execute_capability(
         &mut self,
         request: CapabilityRequest,
     ) -> Result<CapabilityResponse, BearDogError> {
@@ -171,7 +171,7 @@ impl UniversalAdapter {
         // Execute with retry logic
         let mut last_error = None;
         for attempt in 0..self.config.retry_attempts {
-            match self.execute_capability_internal(&request) {
+            match self.execute_capability_internal(&request).await {
                 Ok(mut response) => {
                     // Cache successful response if enabled
                     if self.config.enable_caching && response.success {
@@ -204,7 +204,7 @@ impl UniversalAdapter {
 
     /// Internal capability execution with timeout
     /// Executes capability_internal
-    fn execute_capability_internal(
+    async fn execute_capability_internal(
         &self,
         request: &CapabilityRequest,
     ) -> Result<CapabilityResponse, BearDogError> {
@@ -213,7 +213,7 @@ impl UniversalAdapter {
         match timeout(
             timeout_duration,
             self.simulate_capability_execution(request),
-        ) {
+        ).await {
             Ok(result) => result,
             Err(_) => Err(BearDogError::Adapter {
                 message: format!(
@@ -225,7 +225,7 @@ impl UniversalAdapter {
     }
 
     /// Simulate capability execution (replace with actual implementation)
-    fn simulate_capability_execution(
+    async fn simulate_capability_execution(
         &self,
         request: &CapabilityRequest,
     ) -> Result<CapabilityResponse, BearDogError> {
