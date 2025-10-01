@@ -1,6 +1,5 @@
 // Configuration types for hybrid intelligence system
 
-// use super::learning::PredictionHorizon; // TODO: Remove if truly unused
 use super::{IntelligenceCapability, MachineLearningConfig};
 use serde::{Deserialize, Serialize};
 
