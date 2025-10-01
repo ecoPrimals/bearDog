@@ -298,16 +298,16 @@ impl CapabilityConnectionPool {
 
     /// Gets connection
     /// Gets connection
-    pub fn get_connection(&self, capability: &str) -> Result<String, BearDogError> {
-        let connections = self.service_mesh_connections.read();
+    pub async fn get_connection(&self, capability: &str) -> Result<String, BearDogError> {
+        let connections = self.service_mesh_connections.read().await;
         connections
             .get(capability)
             .map(|conn| conn.endpoint.clone())
             .ok_or_else(|| BearDogError::validation("Connection not available"))
     }
 
-    pub fn add_connection(&self, capability: String, endpoint: String) -> Result<(), BearDogError> {
-        let mut connections = self.service_mesh_connections.write();
+    pub async fn add_connection(&self, capability: String, endpoint: String) -> Result<(), BearDogError> {
+        let mut connections = self.service_mesh_connections.write().await;
         let pooled_connection = PooledConnection {
             id: uuid::Uuid::new_v4().to_string(),
             endpoint,
