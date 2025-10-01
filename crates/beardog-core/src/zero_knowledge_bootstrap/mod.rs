@@ -188,7 +188,7 @@ impl ZeroKnowledgeBootstrap {
     /// Bootstrap the ecosystem with zero prior knowledge
     /// 
     /// to full ecosystem participant through dynamic discovery
-    pub fn bootstrap(&mut self) -> BearDogResult<()> {
+    pub async fn bootstrap(&mut self) -> BearDogResult<()> {
         let start_time = std::time::Instant::now();
         
         info!("🚀 Starting Zero-Knowledge Bootstrap Process");
@@ -208,10 +208,10 @@ impl ZeroKnowledgeBootstrap {
         }
         
         // Phase 3: Active discovery of ecosystem capabilities
-        self.discover_ecosystem_capabilities()?;
+        self.discover_ecosystem_capabilities().await?;
         
         // Phase 4: Build capability registry from discoveries
-        self.build_capability_registry()?;
+        self.build_capability_registry().await?;
         
         // Phase 5: Enable network effects (primal-to-primal communication)
         self.enable_network_effects()?;
@@ -295,7 +295,7 @@ impl ZeroKnowledgeBootstrap {
     }
     
     /// Discover ecosystem capabilities through active probing
-    fn discover_ecosystem_capabilities(&mut self) -> BearDogResult<()> {
+    async fn discover_ecosystem_capabilities(&mut self) -> BearDogResult<()> {
         info!("🔍 Discovering ecosystem capabilities...");
         
         let mut discovery_attempts = 0;
@@ -343,11 +343,11 @@ impl ZeroKnowledgeBootstrap {
     
     /// Build dynamic capability registry from discoveries
     /// Builds capability_registry
-    fn build_capability_registry(&mut self) -> BearDogResult<()> {
+    async fn build_capability_registry(&mut self) -> BearDogResult<()> {
         info!("🏗️ Building dynamic capability registry...");
         
-        let capabilities = self.discovered_capabilities.read();
-        let primals = self.discovered_primals.read();
+        let capabilities = self.discovered_capabilities.read().await;
+        let primals = self.discovered_primals.read().await;
         
         for (capability_type, providers) in capabilities.iter() {
             for provider in providers {
