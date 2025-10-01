@@ -33,11 +33,10 @@ pub enum SecurityEvent {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SessionEvent {
+    /// Session successfully established
     SessionEstablished { session_id: String, peer_id: String },
-    SessionEstablished { session_id: String, peer_id: String },
-    SessionEstablished { session_id: String, peer_id: String },
-
+    /// Session terminated
     SessionTerminated { session_id: String, reason: String },
-
+    /// Security configuration adapted
     SecurityAdapted { reason: String, source_peer: String },
 }

@@ -113,7 +113,7 @@ impl SessionManager {
 
     /// Creates session
     /// Creates session
-    pub fn create_session(
+    pub async fn create_session(
         &self,
         session_id: String,
         peer_node_id: String,
@@ -127,29 +127,29 @@ impl SessionManager {
             gaming_profile,
         )?;
 
-        let mut sessions = self.sessions.write();
+        let mut sessions = self.sessions.write().await;
         sessions.insert(session_id, session);
         Ok(())
     }
 
     /// Gets session
     /// Gets session
-    pub fn get_session(&self, session_id: &str) -> Option<SecureSession> {
-        let sessions = self.sessions.read();
+    pub async fn get_session(&self, session_id: &str) -> Option<SecureSession> {
+        let sessions = self.sessions.read().await;
         sessions.get(session_id).cloned()
     }
 
     /// Removes session
     /// Removes session
-    pub fn remove_session(&self, session_id: &str) -> Option<SecureSession> {
-        let mut sessions = self.sessions.write();
+    pub async fn remove_session(&self, session_id: &str) -> Option<SecureSession> {
+        let mut sessions = self.sessions.write().await;
         sessions.remove(session_id)
     }
 
     /// Cleans up expired_sessions
     /// Cleans up expired_sessions
-    pub fn cleanup_expired_sessions(&self) -> Result<usize, BearDogError> {
-        let mut sessions = self.sessions.write();
+    pub async fn cleanup_expired_sessions(&self) -> Result<usize, BearDogError> {
+        let mut sessions = self.sessions.write().await;
         let initial_count = sessions.len();
 
         sessions.retain(|_, session| !session.is_expired());
@@ -158,8 +158,8 @@ impl SessionManager {
         Ok(removed_count)
     }
 
-    pub fn session_count(&self) -> usize {
-        let sessions = self.sessions.read();
+    pub async fn session_count(&self) -> usize {
+        let sessions = self.sessions.read().await;
         sessions.len()
     }
 }

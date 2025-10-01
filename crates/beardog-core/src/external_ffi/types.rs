@@ -4,10 +4,12 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+/// FFI registry configuration
+/// Renamed from RegistryConfig to FfiRegistryConfig for clarity
 #[derive(Debug, Clone)]
-/// Configuration setting: registryconfig
+/// Configuration setting: ffiregistryconfig
 /// Comprehensive documentation
-pub struct RegistryConfig { /// Maximum number of loaded libraries
+pub struct FfiRegistryConfig { /// Maximum number of loaded libraries
     /// Number of max_libraries
     pub max_libraries: usize,
     /// Enable function caching

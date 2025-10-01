@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::time::Duration;
 
-use beardog_traits::canonical::{PlatformProvider, UniversalProvider};
+use beardog_traits::unified::{PlatformProvider, UniversalProvider};
 use beardog_types::config::{ProcessorType, UnifiedProcessorConfig};
 
 struct UnifiedProviderImpl {

@@ -1,7 +1,7 @@
 // Configuration types for hybrid intelligence system
 
 // use super::learning::PredictionHorizon; // TODO: Remove if truly unused
-use super::types::IntelligenceCapability;
+use super::{IntelligenceCapability, MachineLearningConfig};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
@@ -144,7 +144,7 @@ pub struct HybridIntelligenceConfig {
     /// Whether feature_capabilities is enabled
     pub enabled_capabilities: Vec<IntelligenceCapability>,
     /// Machine learning configuration settings
-    pub ml_config: super::types::MachineLearningConfig,
+    pub ml_config: MachineLearningConfig,
     /// Neural network configuration
     pub neural_config: super::types::NeuralNetworkConfig,
     /// Decision engine configuration
@@ -166,7 +166,7 @@ impl Default for HybridIntelligenceConfig {
             ai_confidence_threshold: 0.8,
             system_id: "default-hybrid-intelligence".to_string(),
             enabled_capabilities: vec![],
-            ml_config: super::types::MachineLearningConfig::default(),
+            ml_config: MachineLearningConfig::default(),
             neural_config: create_default_neural_config_for_default(),
             decision_config: create_default_decision_config_for_default(),
             learning_config: super::types::LearningConfig::default(),

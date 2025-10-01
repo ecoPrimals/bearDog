@@ -27,8 +27,8 @@ impl ConnectionPool {
     }
 
     /// Get pool statistics
-    pub fn stats(&self) -> PoolStats {
-        let connections = self.connections.read();
+    pub async fn stats(&self) -> PoolStats {
+        let connections = self.connections.read().await;
         PoolStats {
             total_connections: connections.len() as u32,
             active_connections: connections.len() as u32, // Simplified

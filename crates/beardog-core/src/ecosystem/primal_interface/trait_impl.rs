@@ -23,20 +23,20 @@ pub trait PrimalTrait {
 
     /// Initialize the primal component with the given configuration
     /// Initializes componentialize
-    fn initialize(&self, config: &UniversalIntegrationConfig) -> Result<(), PrimalError>;
+    async fn initialize(&self, config: &UniversalIntegrationConfig) -> Result<(), PrimalError>;
 
-    fn health_check(&self) -> Result<PrimalHealth, PrimalError>;
+    async fn health_check(&self) -> Result<PrimalHealth, PrimalError>;
 
     /// Handle an incoming request to the primal component
     /// Handles request
-    fn handle_request(&self, request: PrimalRequest) -> Result<PrimalResponse, PrimalError>;
+    async fn handle_request(&self, request: PrimalRequest) -> Result<PrimalResponse, PrimalError>;
 
     /// Discover AI capabilities available in this primal component
-    fn discover_ai_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
+    async fn discover_ai_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
 
     /// Discover compute capabilities available in this primal component
-    fn discover_compute_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
-    fn discover_storage_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
+    async fn discover_compute_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
+    async fn discover_storage_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError>;
 }
 
 impl PrimalTrait for BearDogCore {
@@ -79,14 +79,14 @@ impl PrimalTrait for BearDogCore {
 
     #[allow(deprecated)]
     /// Initializes componentialize
-    fn initialize(&self, config: &UniversalIntegrationConfig) -> Result<(), PrimalError> {
+    async fn initialize(&self, config: &UniversalIntegrationConfig) -> Result<(), PrimalError> {
         info!("🚀 Initializing BearDog primal with ecosystem integration");
 
         // Initialize core systems first - removed recursive call
         info!("✅ Core systems initialized");
 
         // Discover and register AI capabilities if available
-        if let Err(e) = self.discover_ai_capabilities() {
+        if let Err(e) = self.discover_ai_capabilities().await {
             warn!("AI capability discovery failed: {:?}", e);
         }
 
@@ -94,7 +94,7 @@ impl PrimalTrait for BearDogCore {
         if config.enable_capability_discovery {
             // Discover required capabilities
             for capability in &config.required_capabilities {
-                if let Err(e) = self.discover_capability(capability) {
+                if let Err(e) = self.discover_capability(capability).await {
                     warn!(
                         "Failed to discover required capability {:?}: {:?}",
                         capability, e
@@ -104,7 +104,7 @@ impl PrimalTrait for BearDogCore {
 
             // Discover optional capabilities
             for capability in &config.optional_capabilities {
-                if let Err(e) = self.discover_capability(capability) {
+                if let Err(e) = self.discover_capability(capability).await {
                     warn!(
                         "Failed to discover optional capability {:?}: {:?}",
                         capability, e
@@ -117,11 +117,12 @@ impl PrimalTrait for BearDogCore {
         Ok(())
     }
 
-    fn health_check(&self) -> Result<PrimalHealth, PrimalError> {
+    async fn health_check(&self) -> Result<PrimalHealth, PrimalError> {
         debug!("🏥 Performing BearDog primal health check");
 
         let health_status = self
             .get_ecosystem_integration_health()
+            .await
             .map_err(|e| PrimalError::health_check_failed(format!("Health check failed: {}", e)))?;
 
         Ok(PrimalHealth {
@@ -138,7 +139,7 @@ impl PrimalTrait for BearDogCore {
     }
 
     /// Handles request
-    fn handle_request(&self, request: PrimalRequest) -> Result<PrimalResponse, PrimalError> {
+    async fn handle_request(&self, request: PrimalRequest) -> Result<PrimalResponse, PrimalError> {
         debug!("📥 Handling primal request: {:?}", request.operation_type);
 
         match request.operation_type.as_str() {
@@ -158,7 +159,7 @@ impl PrimalTrait for BearDogCore {
                 })
             }
             "health_check" => {
-                let _health = self.health_check()?;
+                let _health = self.health_check().await?;
                 Ok(PrimalResponse {
                     id: uuid::Uuid::new_v4().to_string(),
                     request_id: request.request_id,
@@ -179,7 +180,7 @@ impl PrimalTrait for BearDogCore {
         }
     }
 
-    fn discover_ai_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
+    async fn discover_ai_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
         info!("🤖 Discovering AI capabilities through universal adapter");
 
         let mut capabilities = Vec::new();
@@ -188,6 +189,7 @@ impl PrimalTrait for BearDogCore {
         match self
             .universal_adapter
             .discover_capability_endpoint(ServiceCapabilityType::ArtificialIntelligence)
+            .await
         {
             Ok(_endpoint) => {
                 capabilities.push(ServiceCapabilityType::ArtificialIntelligence);
@@ -203,7 +205,7 @@ impl PrimalTrait for BearDogCore {
         Ok(capabilities)
     }
 
-    fn discover_compute_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
+    async fn discover_compute_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
         info!("🔧 Discovering compute capabilities through universal adapter");
 
         let mut capabilities = Vec::new();
@@ -212,6 +214,7 @@ impl PrimalTrait for BearDogCore {
         match self
             .universal_adapter
             .discover_capability_endpoint(ServiceCapabilityType::Compute)
+            .await
         {
             Ok(_endpoint) => {
                 capabilities.push(ServiceCapabilityType::Compute);
@@ -227,7 +230,7 @@ impl PrimalTrait for BearDogCore {
         Ok(capabilities)
     }
 
-    fn discover_storage_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
+    async fn discover_storage_capabilities(&self) -> Result<Vec<ServiceCapabilityType>, BearDogError> {
         info!("💾 Discovering storage capabilities through universal adapter");
 
         let mut capabilities = Vec::new();
@@ -236,6 +239,7 @@ impl PrimalTrait for BearDogCore {
         match self
             .universal_adapter
             .discover_capability_endpoint(ServiceCapabilityType::Storage)
+            .await
         {
             Ok(_endpoint) => {
                 capabilities.push(ServiceCapabilityType::Storage);
@@ -256,15 +260,15 @@ impl PrimalTrait for BearDogCore {
 
 impl BearDogCore {
     /// Generic capability discovery method (private helper)
-    fn discover_capability(&self, capability: &ServiceCapabilityType) -> Result<(), BearDogError> {
+    async fn discover_capability(&self, capability: &ServiceCapabilityType) -> Result<(), BearDogError> {
         info!("🔍 Discovering capability: {:?}", capability);
 
         match capability {
             ServiceCapabilityType::ArtificialIntelligence => {
-                self.discover_ai_capabilities().map(|_| ())
+                self.discover_ai_capabilities().await.map(|_| ())
             }
-            ServiceCapabilityType::Compute => self.discover_compute_capabilities().map(|_| ()),
-            ServiceCapabilityType::Storage => self.discover_storage_capabilities().map(|_| ()),
+            ServiceCapabilityType::Compute => self.discover_compute_capabilities().await.map(|_| ()),
+            ServiceCapabilityType::Storage => self.discover_storage_capabilities().await.map(|_| ()),
             _ => {
                 debug!(
                     "ℹ️ Capability {:?} discovery not yet implemented",

@@ -16,16 +16,16 @@
 //
 // This eliminates the 2^n hardcoding problem by using O(1) universal adapter patterns.
 
-use beardog_errors::{BearDogError, BearDogResult};
+use beardog_errors::BearDogResult;
 use beardog_types::canonical::capabilities::{
-    ServiceCapabilityType, UniversalCapability, CapabilityDiscoveryRequest,
+    ServiceCapabilityType, UniversalCapability,
 };
-use crate::ecosystem::primal_types::{DiscoveredPrimal, PrimalMetadata, UniversalEndpoint, PrimalMetrics};
+use crate::ecosystem::primal_types::{DiscoveredPrimal, PrimalMetadata, UniversalEndpoint};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, warn, debug, error};
+use tracing::{info, warn, debug};
 
 pub mod self_discovery;
 pub mod ecosystem_listener;
@@ -74,6 +74,14 @@ pub struct SelfIdentity {
 }
 
 /// Bootstrap configuration
+/// 
+/// DEPRECATED: Use beardog_types::canonical::config::domains::bootstrap::UnifiedBootstrapConfig instead
+#[deprecated(
+    since = "3.0.1",
+    note = "Use beardog_types::canonical::config::domains::bootstrap::UnifiedBootstrapConfig instead. \
+            This provides a more comprehensive bootstrap configuration with infant patterns, \
+            discovery protocols, and performance settings. Removal planned for v3.3.0 (Q1 2026)."
+)]
 #[derive(Debug, Clone)]
 pub struct BootstrapConfig {
     /// Discovery timeout in milliseconds
@@ -107,7 +115,7 @@ pub enum DiscoveryProtocol {
 }
 
 /// Bootstrap metrics and statistics
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct BootstrapMetrics {
     /// Total bootstrap time
     /// Number of bootstrap_duration_ms
@@ -157,7 +165,7 @@ impl ZeroKnowledgeBootstrap {
         let config = BootstrapConfig::default();
         
         // Step 1: Discover our own identity and capabilities (only thing we can know)
-        let self_discovery = self_discovery::SelfDiscoveryEngine::new()?;
+        let mut self_discovery = self_discovery::SelfDiscoveryEngine::new()?;
         let self_identity = self_discovery.discover_self_identity()?;
         
         info!("🔍 Self-discovery complete: primal_id={}, capabilities={:?}", 
@@ -280,7 +288,7 @@ impl ZeroKnowledgeBootstrap {
     fn start_ecosystem_listening(&mut self) -> BearDogResult<()> {
         info!("👂 Starting passive ecosystem listening...");
         
-        let listener = ecosystem_listener::EcosystemListener::new(
+        let mut listener = ecosystem_listener::EcosystemListener::new(
             self.config.clone(),
             self.discovered_primals.clone(),
             self.discovered_capabilities.clone(),
@@ -347,18 +355,19 @@ impl ZeroKnowledgeBootstrap {
         info!("🏗️ Building dynamic capability registry...");
         
         let capabilities = self.discovered_capabilities.read().await;
-        let primals = self.discovered_primals.read().await;
+        let _primals = self.discovered_primals.read().await;
         
-        for (capability_type, providers) in capabilities.iter() {
-            for provider in providers {
-                self.capability_registry.register_capability(
-                    capability_type.clone(),
-                    provider.clone(),
-                )?;
-            }
-        }
+        // TODO: Uncomment when capability_registry module is implemented
+        // for (capability_type, providers) in capabilities.iter() {
+        //     for provider in providers {
+        //         self.capability_registry.register_capability(
+        //             capability_type.clone(),
+        //             provider.clone(),
+        //         )?;
+        //     }
+        // }
         
-        info!("✅ Capability registry built with {} capability types", capabilities.len());
+        info!("✅ Capability registry stub - {} capability types discovered", capabilities.len());
         Ok(())
     }
     
@@ -376,9 +385,9 @@ impl ZeroKnowledgeBootstrap {
     /// Get current ecosystem state
     /// Gets ecosystem_state
     /// Gets ecosystem_state
-    pub fn get_ecosystem_state(&self) -> EcosystemState {
-        let capabilities = self.discovered_capabilities.read();
-        let primals = self.discovered_primals.read();
+    pub async fn get_ecosystem_state(&self) -> EcosystemState {
+        let capabilities = self.discovered_capabilities.read().await;
+        let primals = self.discovered_primals.read().await;
         
         EcosystemState {
             self_identity: self.self_identity.clone(),

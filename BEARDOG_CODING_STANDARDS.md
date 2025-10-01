@@ -26,6 +26,63 @@ BearDog maintains high coding standards as the security provider for the ecoPrim
 
 ---
 
+## 🔧 **Configuration Standards**
+
+### **Configuration Naming Conventions**
+
+**Canonical Configuration Types**
+- ✅ **Primary Pattern**: `Canonical{Domain}Config` for all domain configs
+  - Examples: `CanonicalAppConfig`, `CanonicalSecurityConfig`, `CanonicalNetworkConfig`
+- ✅ **Unified Pattern**: `Unified{Domain}Config` for consolidated multi-domain configs
+  - Examples: `UnifiedBearDogConfig`, `UnifiedHsmConfig`, `UnifiedProductionConfig`
+- ✅ **Simplified Pattern**: `Simplified{Domain}Config` for developer-friendly configs
+  - Examples: `SimplifiedBearDogConfig`
+
+**Type Alias Guidelines**
+- ✅ **Domain Aliases**: Use short aliases for frequently used configs
+  - Pattern: `{Domain}Config = Canonical{Domain}Config`
+  - Examples: `AppConfig`, `AuthConfig`, `DatabaseConfig`
+  - Purpose: Backwards compatibility and convenience
+- ❌ **Avoid Master/Global Aliases**: Don't create `MasterConfig`, `GlobalConfig`, `UnifiedConfig`
+  - Reason: Ambiguous, use specific type names directly
+- ❌ **Avoid Duplicate Aliases**: Each config should have ONE canonical name
+  - Use `grep "pub type.*Config.*=" -r crates/` to audit
+
+**Configuration Organization**
+```rust
+// ✅ GOOD: Clear, canonical pattern
+pub struct CanonicalAppConfig { ... }
+pub type AppConfig = CanonicalAppConfig;  // Backwards compat
+
+// ✅ GOOD: Unified pattern for consolidated configs
+pub struct UnifiedBearDogConfig { ... }
+// No alias needed - use the type directly
+
+// ❌ BAD: Multiple aliases for same type
+pub type MasterConfig = UnifiedBearDogConfig;
+pub type GlobalConfig = UnifiedBearDogConfig;
+pub type Config = UnifiedBearDogConfig;
+```
+
+**Configuration Location**
+- ✅ **Primary Location**: `beardog-types/src/canonical/config/{domain}.rs`
+- ✅ **Domain Modules**: Split large configs into `{domain}/mod.rs` with submodules
+- ✅ **Unified Config**: `beardog-types/src/canonical/config/unified.rs`
+- ❌ **Avoid**: Scattered config definitions across multiple crates
+
+**Deprecation Strategy**
+```rust
+// When deprecating config types, use this pattern:
+#[deprecated(since = "3.2.0", note = "Use UnifiedBearDogConfig instead")]
+pub struct OldConfig { ... }
+
+// Allow deprecated code to use itself
+#[allow(deprecated)]
+impl Default for OldConfig { ... }
+```
+
+---
+
 ## 🔒 **Security Standards**
 
 ### **Memory Safety**

@@ -11,9 +11,13 @@ use chrono::{DateTime, Utc};
 use tracing::info;
 use uuid::Uuid;
 
-/// Simple sovereignty configuration
+// Type alias for compatibility - using PrimalSovereigntyConfig
+type SovereigntyConfig = PrimalSovereigntyConfig;
+
+/// Primal sovereignty configuration
+/// Renamed from SovereigntyConfig to avoid collision with sovereignty::SovereigntyConfig
 #[derive(Debug, Clone, Default)]
-pub struct SovereigntyConfig {
+pub struct PrimalSovereigntyConfig {
     pub primal_id: String,
     /// Whether to enable sovereignty monitoring
     /// Whether enable_sovereignty_monitoring is enabled
@@ -51,7 +55,7 @@ impl Default for SovereigntyState {
 
 #[derive(Debug)]
 pub struct SovereigntyManager {
-    config: SovereigntyConfig,
+    config: PrimalSovereigntyConfig,
     genetics: GeneticSpawningEngine,
     crypto_config: EncryptionConfig,
     hierarchy_manager: EntropyHierarchyManager,
@@ -61,7 +65,7 @@ pub struct SovereigntyManager {
 impl SovereigntyManager {
     /// Create a new sovereignty manager
     /// Creates a new instance
-    pub fn new(config: SovereigntyConfig) -> Result<Self, BearDogError> {
+    pub fn new(config: PrimalSovereigntyConfig) -> Result<Self, BearDogError> {
         info!("🏛️ Initializing Primal Sovereignty Manager");
 
         let genetics = GeneticSpawningEngine::new();

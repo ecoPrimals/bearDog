@@ -137,6 +137,1032 @@ pub struct NeuralNetworkConfig {
     
     /// Optimizer configuration
     pub optimizer: OptimizerConfig,
+    
+    /// Detailed network architecture (extended from beardog-core)
+    pub detailed_architecture: Option<DetailedNetworkArchitecture>,
+}
+
+// ============================================================================
+// DETAILED NEURAL NETWORK TYPES (migrated from beardog-core)
+// ============================================================================
+
+/// Detailed network architecture definition with layer-by-layer configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DetailedNetworkArchitecture {
+    /// Architecture type
+    pub architecture_type: DetailedArchitectureType,
+    /// Input layer configuration
+    pub input_layer: InputLayerConfig,
+    /// Hidden layers configuration
+    pub hidden_layers: Vec<LayerConfig>,
+    /// Output layer configuration
+    pub output_layer: OutputLayerConfig,
+    /// Skip connections (for ResNet-like architectures)
+    pub skip_connections: Vec<SkipConnection>,
+}
+
+/// Detailed architecture types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum DetailedArchitectureType {
+    /// Feedforward neural network
+    Feedforward,
+    /// Convolutional neural network
+    Convolutional,
+    /// Recurrent neural network
+    Recurrent,
+    /// Long Short-Term Memory network
+    Lstm,
+    /// Gated Recurrent Unit network
+    Gru,
+    /// Transformer architecture
+    Transformer,
+    /// Autoencoder
+    Autoencoder,
+    /// Generative Adversarial Network
+    Gan,
+    /// Variational Autoencoder
+    Vae,
+    /// Custom architecture
+    Custom,
+}
+
+/// Input layer configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct InputLayerConfig {
+    /// Input shape (e.g., [28, 28, 1] for images)
+    pub input_shape: Vec<u32>,
+    /// Input data type
+    pub data_type: DataType,
+    /// Normalization configuration
+    pub normalization: Option<NormalizationConfig>,
+}
+
+/// Layer configuration for hidden and other layers
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LayerConfig {
+    /// Layer type
+    pub layer_type: LayerType,
+    /// Layer-specific parameters
+    pub parameters: LayerParameters,
+    /// Activation function
+    pub activation: Option<ActivationFunction>,
+    /// Regularization configuration
+    pub regularization: Option<LayerRegularization>,
+}
+
+/// Output layer configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct OutputLayerConfig {
+    /// Number of output units
+    pub units: u32,
+    /// Activation function
+    pub activation: ActivationFunction,
+    /// Loss function
+    pub loss_function: LossFunction,
+}
+
+/// Skip connection definition (for residual networks)
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SkipConnection {
+    /// Source layer index
+    pub from_layer: u32,
+    /// Target layer index
+    pub to_layer: u32,
+    /// Connection type
+    pub connection_type: ConnectionType,
+}
+
+/// Data types for neural network inputs
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum DataType {
+    /// 32-bit floating point
+    Float32,
+    /// 64-bit floating point
+    Float64,
+    /// 32-bit integer
+    Int32,
+    /// 64-bit integer
+    Int64,
+    /// Boolean
+    Bool,
+}
+
+/// Normalization configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct NormalizationConfig {
+    /// Normalization type
+    pub normalization_type: NormalizationType,
+    /// Normalization parameters
+    pub parameters: HashMap<String, f64>,
+}
+
+/// Normalization types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum NormalizationType {
+    /// Batch normalization
+    Batch,
+    /// Layer normalization
+    Layer,
+    /// Instance normalization
+    Instance,
+    /// Group normalization
+    Group,
+}
+
+/// Layer types available in neural networks
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LayerType {
+    /// Dense/fully connected layer
+    Dense,
+    /// 2D Convolutional layer
+    Conv2d,
+    /// 1D Convolutional layer
+    Conv1d,
+    /// 3D Convolutional layer
+    Conv3d,
+    /// Max pooling layer (2D)
+    MaxPool2d,
+    /// Average pooling layer (2D)
+    AvgPool2d,
+    /// Global average pooling
+    GlobalAvgPool,
+    /// Dropout layer
+    Dropout,
+    /// LSTM layer
+    Lstm,
+    /// GRU layer
+    Gru,
+    /// Attention layer
+    Attention,
+    /// Multi-head attention
+    MultiHeadAttention,
+    /// Embedding layer
+    Embedding,
+    /// Batch normalization layer
+    BatchNorm,
+    /// Layer normalization
+    LayerNorm,
+}
+
+/// Layer parameters container (holds type-specific configs)
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LayerParameters {
+    /// Dense layer parameters
+    pub dense: Option<DenseLayerConfig>,
+    /// Convolutional layer parameters
+    pub conv: Option<ConvLayerConfig>,
+    /// Pooling layer parameters
+    pub pooling: Option<PoolingLayerConfig>,
+    /// RNN layer parameters
+    pub rnn: Option<RnnLayerConfig>,
+    /// Attention layer parameters
+    pub attention: Option<AttentionLayerConfig>,
+    /// Embedding layer parameters
+    pub embedding: Option<EmbeddingLayerConfig>,
+}
+
+/// Dense (fully connected) layer configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DenseLayerConfig {
+    /// Number of units/neurons
+    pub units: u32,
+    /// Use bias term
+    pub use_bias: bool,
+    /// Weight initialization strategy
+    pub weight_init: WeightInitialization,
+    /// Bias initialization strategy
+    pub bias_init: WeightInitialization,
+}
+
+/// Convolutional layer configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ConvLayerConfig {
+    /// Number of filters/kernels
+    pub filters: u32,
+    /// Kernel size (e.g., [3, 3] for 3x3 kernel)
+    pub kernel_size: Vec<u32>,
+    /// Stride (e.g., [1, 1])
+    pub strides: Vec<u32>,
+    /// Padding type
+    pub padding: PaddingType,
+    /// Dilation rate
+    pub dilation_rate: Vec<u32>,
+    /// Use bias term
+    pub use_bias: bool,
+}
+
+/// Pooling layer configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct PoolingLayerConfig {
+    /// Pool size (e.g., [2, 2] for 2x2 pooling)
+    pub pool_size: Vec<u32>,
+    /// Stride
+    pub strides: Vec<u32>,
+    /// Padding type
+    pub padding: PaddingType,
+}
+
+/// RNN layer configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RnnLayerConfig {
+    /// Number of units
+    pub units: u32,
+    /// RNN cell type
+    pub cell_type: RnnCellType,
+    /// Return sequences (all timesteps) or just last output
+    pub return_sequences: bool,
+    /// Dropout rate
+    pub dropout_rate: f64,
+}
+
+/// Attention layer configuration
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+pub struct AttentionLayerConfig {
+    /// Number of attention heads
+    pub num_heads: u32,
+    /// Key dimension
+    pub key_dim: u32,
+    /// Value dimension (if None, uses key_dim)
+    pub value_dim: Option<u32>,
+    /// Dropout rate
+    pub dropout_rate: f64,
+}
+
+/// Embedding layer configuration
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+pub struct EmbeddingLayerConfig {
+    /// Input dimension (vocabulary size)
+    pub input_dim: u32,
+    /// Output dimension (embedding size)
+    pub output_dim: u32,
+    /// Mask zero values
+    pub mask_zero: bool,
+    /// Input length (sequence length)
+    pub input_length: Option<u32>,
+}
+
+/// Padding types for convolutional and pooling layers
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum PaddingType {
+    /// Valid padding (no padding)
+    Valid,
+    /// Same padding (output same size as input)
+    Same,
+    /// Custom padding value
+    Custom(u32),
+}
+
+/// RNN cell types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum RnnCellType {
+    /// Simple RNN cell
+    SimpleRnn,
+    /// Long Short-Term Memory cell
+    Lstm,
+    /// Gated Recurrent Unit cell
+    Gru,
+}
+
+/// Weight initialization strategies
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum WeightInitialization {
+    /// Initialize with zeros
+    Zeros,
+    /// Initialize with ones
+    Ones,
+    /// Random normal distribution
+    RandomNormal {
+        /// Mean value
+        mean: f64,
+        /// Standard deviation
+        stddev: f64,
+    },
+    /// Random uniform distribution
+    RandomUniform {
+        /// Minimum value
+        minval: f64,
+        /// Maximum value
+        maxval: f64,
+    },
+    /// Glorot/Xavier uniform initialization
+    GlorotUniform,
+    /// Glorot/Xavier normal initialization
+    GlorotNormal,
+    /// He uniform initialization
+    HeUniform,
+    /// He normal initialization
+    HeNormal,
+    /// Human entropy-driven initialization (Sovereign Security Enhancement)
+    HumanEntropyInitialization {
+        /// Entropy tier requirement (1=Machine, 2=HumanSupervised, 3=HumanLived)
+        required_entropy_tier: u8,
+        /// Human identity identifier
+        human_identity_id: String,
+        /// Distribution type for entropy
+        distribution: EntropyDistribution,
+        /// Fallback to machine RNG if human entropy unavailable
+        fallback_to_machine: bool,
+    },
+}
+
+/// Entropy distribution types for human-entropy-driven initialization
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub enum EntropyDistribution {
+    /// Normal distribution using human entropy as seed
+    Normal {
+        /// Mean value
+        mean: f64,
+        /// Standard deviation
+        stddev: f64,
+    },
+    /// Uniform distribution
+    Uniform {
+        /// Minimum value
+        min: f64,
+        /// Maximum value
+        max: f64,
+    },
+    /// Xavier/Glorot initialization
+    Xavier,
+    /// He initialization
+    He,
+}
+
+/// Layer regularization configuration
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+pub struct LayerRegularization {
+    /// L1 regularization strength
+    pub l1_strength: f32,
+    /// L2 regularization strength
+    pub l2_strength: f32,
+    /// Dropout rate
+    pub dropout_rate: f32,
+    /// Batch normalization momentum
+    pub batch_norm_momentum: f32,
+}
+
+/// Loss functions for training
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LossFunction {
+    /// Mean squared error (regression)
+    MeanSquaredError,
+    /// Mean absolute error (regression)
+    MeanAbsoluteError,
+    /// Binary crossentropy (binary classification)
+    BinaryCrossentropy,
+    /// Categorical crossentropy (multi-class classification)
+    CategoricalCrossentropy,
+    /// Sparse categorical crossentropy
+    SparseCategoricalCrossentropy,
+    /// Huber loss (robust regression)
+    Huber,
+    /// Hinge loss (SVM-like)
+    Hinge,
+    /// KL divergence
+    KlDivergence,
+    /// Custom loss function
+    Custom(String),
+}
+
+/// Connection types for skip connections
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ConnectionType {
+    /// Add connection (residual)
+    Add,
+    /// Concatenate connection
+    Concatenate,
+    /// Multiply connection
+    Multiply,
+}
+
+/// Training parameters
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TrainingParams {
+    /// Batch size
+    pub batch_size: u32,
+    /// Number of epochs
+    pub epochs: u32,
+    /// Learning rate
+    pub learning_rate: f64,
+    /// Learning rate scheduler
+    pub lr_scheduler: Option<LrScheduler>,
+    /// Optimizer
+    pub optimizer: Optimizer,
+    /// Loss function
+    pub loss_function: LossFunction,
+    /// Metrics to track during training
+    pub metrics: Vec<Metric>,
+}
+
+/// Optimizer configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Optimizer {
+    /// Optimizer type
+    pub optimizer_type: OptimizerType,
+    /// Optimizer-specific parameters
+    pub parameters: HashMap<String, f64>,
+}
+
+/// Learning rate scheduler
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct LrScheduler {
+    /// Scheduler type
+    pub scheduler_type: LrSchedulerType,
+    /// Scheduler parameters
+    pub parameters: HashMap<String, f64>,
+}
+
+/// Learning rate scheduler types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LrSchedulerType {
+    /// Step decay (reduce LR at fixed intervals)
+    StepDecay,
+    /// Exponential decay
+    ExponentialDecay,
+    /// Cosine annealing
+    CosineAnnealing,
+    /// Reduce on plateau (adaptive)
+    ReduceOnPlateau,
+    /// Cyclic learning rate
+    CyclicLr,
+}
+
+/// Training metrics
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Metric {
+    /// Accuracy
+    Accuracy,
+    /// Precision
+    Precision,
+    /// Recall
+    Recall,
+    /// F1 score
+    F1Score,
+    /// Area under ROC curve
+    AucRoc,
+    /// Area under precision-recall curve
+    AucPr,
+    /// Mean absolute error
+    Mae,
+    /// Mean squared error
+    Mse,
+    /// Root mean squared error
+    Rmse,
+    /// Custom metric
+    Custom(String),
+}
+
+/// Network optimization settings
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct NetworkOptimization {
+    /// Use mixed precision training (FP16/FP32)
+    pub mixed_precision: bool,
+    /// Gradient clipping configuration
+    pub gradient_clipping: Option<GradientClipping>,
+    /// Enable batch size optimization
+    pub batch_size_optimization: bool,
+    /// Enable memory optimization
+    pub memory_optimization: bool,
+}
+
+/// Gradient clipping configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct GradientClipping {
+    /// Clipping type
+    pub clip_type: ClipType,
+    /// Clipping value
+    pub clip_value: f64,
+}
+
+/// Gradient clipping types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ClipType {
+    /// Clip by value
+    Value,
+    /// Clip by norm
+    Norm,
+    /// Clip by global norm
+    GlobalNorm,
+}
+
+/// Network regularization techniques
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct NetworkRegularization {
+    /// Dropout configuration
+    pub dropout: Option<DropoutConfig>,
+    /// Enable batch normalization
+    pub batch_normalization: bool,
+    /// Weight decay coefficient
+    pub weight_decay: f64,
+    /// Early stopping configuration
+    pub early_stopping: Option<EarlyStoppingConfig>,
+}
+
+/// Dropout configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DropoutConfig {
+    /// Dropout rate (0.0 to 1.0)
+    pub rate: f64,
+    /// Apply dropout during training only
+    pub training_only: bool,
+    /// Dropout schedule (if adaptive)
+    pub schedule: Option<DropoutSchedule>,
+}
+
+/// Dropout schedule for adaptive dropout
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DropoutSchedule {
+    /// Initial dropout rate
+    pub initial_rate: f64,
+    /// Final dropout rate
+    pub final_rate: f64,
+    /// Schedule type
+    pub schedule_type: ScheduleType,
+}
+
+/// Schedule types for dropout
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ScheduleType {
+    /// Linear schedule
+    Linear,
+    /// Exponential schedule
+    Exponential,
+    /// Step schedule
+    Step,
+}
+
+/// Early stopping configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct EarlyStoppingConfig {
+    /// Metric to monitor (e.g., "val_loss")
+    pub monitor: String,
+    /// Minimum change to qualify as improvement
+    pub min_delta: f64,
+    /// Number of epochs with no improvement to wait
+    pub patience: u32,
+    /// Restore best weights on early stop
+    pub restore_best_weights: bool,
+    /// Monitoring mode
+    pub mode: MonitoringMode,
+}
+
+/// Monitoring mode for early stopping
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum MonitoringMode {
+    /// Minimize the monitored metric
+    Min,
+    /// Maximize the monitored metric
+    Max,
+    /// Auto-detect based on metric name
+    Auto,
+}
+
+// ============================================================================
+// LEARNING CONFIGURATION TYPES (Phase 2 - migrated from beardog-core)
+// ============================================================================
+
+/// Online learning configuration for continuous model updates
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct OnlineLearningConfig {
+    /// Learning rate adaptation strategy
+    pub learning_rate_adaptation: LearningRateAdaptationType,
+    /// Batch size for online learning
+    pub online_batch_size: u32,
+    /// Memory buffer size for experience replay
+    pub memory_buffer_size: u32,
+    /// Update frequency for model updates
+    pub update_frequency: UpdateFrequency,
+}
+
+/// Learning rate adaptation strategies
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LearningRateAdaptationType {
+    /// Fixed learning rate throughout training
+    Fixed,
+    /// Adaptive learning rate based on performance
+    Adaptive,
+    /// Decay-based learning rate schedule
+    Decay,
+    /// Performance-based adaptation
+    PerformanceBased,
+}
+
+/// Update frequency for online learning
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum UpdateFrequency {
+    /// Update after each sample
+    PerSample,
+    /// Update after each batch
+    PerBatch,
+    /// Update after each epoch
+    PerEpoch,
+    /// Update based on time interval
+    TimeInterval(Duration),
+    /// Update when performance threshold reached
+    PerformanceThreshold(f64),
+}
+
+/// Transfer learning configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TransferLearningConfig {
+    /// Source domain configuration
+    pub source_domain: DomainConfig,
+    /// Target domain configuration
+    pub target_domain: DomainConfig,
+    /// Transfer learning strategy
+    pub transfer_strategy: TransferStrategy,
+    /// Fine-tuning configuration
+    pub fine_tuning: Option<FineTuningConfig>,
+}
+
+/// Domain configuration for transfer learning
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DomainConfig {
+    /// Domain identifier
+    pub domain_id: String,
+    /// Domain description
+    pub description: String,
+    /// Feature space configuration
+    pub feature_space: FeatureSpaceConfig,
+    /// Label space configuration
+    pub label_space: LabelSpaceConfig,
+}
+
+/// Feature space configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FeatureSpaceConfig {
+    /// Number of features
+    pub num_features: u32,
+    /// Feature types
+    pub feature_types: Vec<FeatureType>,
+    /// Normalization strategy
+    pub normalization: NormalizationStrategy,
+}
+
+/// Feature types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum FeatureType {
+    /// Continuous numerical feature
+    Continuous,
+    /// Categorical feature
+    Categorical,
+    /// Binary feature
+    Binary,
+    /// Ordinal feature
+    Ordinal,
+    /// Text feature
+    Text,
+    /// Image feature
+    Image,
+}
+
+/// Normalization strategies
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum NormalizationStrategy {
+    /// Min-max normalization (0-1 range)
+    MinMax,
+    /// Z-score normalization (mean=0, std=1)
+    ZScore,
+    /// Robust scaling (median and IQR)
+    Robust,
+    /// Unit vector scaling
+    UnitVector,
+    /// No normalization
+    None,
+}
+
+/// Label space configuration
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+pub struct LabelSpaceConfig {
+    /// Number of labels
+    pub num_labels: u32,
+    /// Label type
+    pub label_type: LabelType,
+    /// Label encoding strategy
+    pub encoding: LabelEncoding,
+}
+
+/// Label types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LabelType {
+    /// Binary classification (2 classes)
+    Binary,
+    /// Multi-class classification (3+ classes)
+    MultiClass,
+    /// Multi-label classification (multiple labels per instance)
+    MultiLabel,
+    /// Regression (continuous output)
+    Regression,
+    /// Structured prediction (sequences, graphs)
+    Structured,
+}
+
+/// Label encoding strategies
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LabelEncoding {
+    /// One-hot encoding
+    OneHot,
+    /// Label encoding (integer mapping)
+    Label,
+    /// Binary encoding
+    Binary,
+    /// Target encoding
+    Target,
+}
+
+/// Transfer learning strategies
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum TransferStrategy {
+    /// Use pre-trained model for feature extraction only
+    FeatureExtraction,
+    /// Fine-tune pre-trained model
+    FineTuning,
+    /// Domain adaptation techniques
+    DomainAdaptation,
+    /// Multi-task learning
+    MultiTask,
+    /// Few-shot learning
+    FewShot,
+    /// Zero-shot learning
+    ZeroShot,
+}
+
+/// Fine-tuning configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FineTuningConfig {
+    /// Layers to freeze (by index)
+    pub frozen_layers: Vec<u32>,
+    /// Learning rate for fine-tuning
+    pub fine_tune_learning_rate: f64,
+    /// Number of fine-tuning epochs
+    pub fine_tune_epochs: u32,
+    /// Enable gradual unfreezing of layers
+    pub gradual_unfreezing: bool,
+}
+
+/// Meta-learning configuration (learning to learn)
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MetaLearningConfig {
+    /// Meta-learning algorithm
+    pub algorithm: MetaLearningAlgorithm,
+    /// Number of meta-training tasks
+    pub num_meta_train_tasks: u32,
+    /// Number of shots per task (examples per class)
+    pub num_shots: u32,
+    /// Inner loop configuration
+    pub inner_loop: InnerLoopConfig,
+    /// Outer loop configuration
+    pub outer_loop: OuterLoopConfig,
+}
+
+/// Meta-learning algorithms
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum MetaLearningAlgorithm {
+    /// Model-Agnostic Meta-Learning
+    Maml,
+    /// First-Order MAML
+    Fomaml,
+    /// Reptile
+    Reptile,
+    /// Prototypical Networks
+    ProtoNet,
+    /// Matching Networks
+    MatchingNet,
+    /// Relation Networks
+    RelationNet,
+}
+
+/// Inner loop configuration for meta-learning
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct InnerLoopConfig {
+    /// Inner loop learning rate
+    pub learning_rate: f64,
+    /// Number of inner gradient steps
+    pub num_steps: u32,
+    /// Inner loop optimizer
+    pub optimizer: OptimizerType,
+}
+
+/// Outer loop configuration for meta-learning
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct OuterLoopConfig {
+    /// Outer loop learning rate
+    pub learning_rate: f64,
+    /// Number of outer gradient steps
+    pub num_steps: u32,
+    /// Outer loop optimizer
+    pub optimizer: OptimizerType,
+}
+
+/// Ensemble learning configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct EnsembleConfigLearning {
+    /// Base models in the ensemble
+    pub base_models: Vec<BaseModelLearning>,
+    /// Ensemble combination method
+    pub ensemble_method: EnsembleMethodType,
+    /// Model weights (if weighted voting/averaging)
+    pub model_weights: Option<HashMap<String, f64>>,
+    /// Diversity measures to track
+    pub diversity_measures: Vec<DiversityMeasure>,
+}
+
+/// Base model configuration for ensembles
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BaseModelLearning {
+    /// Model identifier
+    pub id: String,
+    /// Model type
+    pub model_type: ModelTypeLearning,
+    /// Model-specific configuration
+    pub configuration: HashMap<String, serde_json::Value>,
+    /// Model weight in ensemble
+    pub weight: f64,
+}
+
+/// Model types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ModelTypeLearning {
+    /// Linear model
+    Linear,
+    /// Logistic regression
+    Logistic,
+    /// Decision tree
+    DecisionTree,
+    /// Random forest
+    RandomForest,
+    /// Support vector machine
+    SVM,
+    /// Neural network
+    NeuralNetwork,
+    /// Ensemble model
+    Ensemble,
+}
+
+/// Ensemble combination methods
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum EnsembleMethodType {
+    /// Simple majority voting
+    Voting,
+    /// Weighted voting
+    WeightedVoting,
+    /// Stacking (meta-learner)
+    Stacking,
+    /// Blending
+    Blending,
+    /// Bagging (Bootstrap Aggregating)
+    Bagging,
+    /// Boosting
+    Boosting,
+    /// Random Forest
+    RandomForest,
+}
+
+/// Diversity measures for ensemble models
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum DiversityMeasure {
+    /// Disagreement measure
+    Disagreement,
+    /// Double-fault measure
+    DoubleFault,
+    /// Kohavi-Wolpert variance
+    KohaviWolpert,
+    /// Inter-rater agreement
+    InterRater,
+    /// Entropy measure
+    Entropy,
+}
+
+/// Hyperparameter optimization configuration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct HyperparameterOptimizationConfig {
+    /// Optimization method
+    pub method: HyperparameterOptimizationMethod,
+    /// Maximum number of trials
+    pub max_trials: u32,
+    /// Optimization timeout in seconds
+    pub timeout_secs: u64,
+    /// Objective metric to optimize
+    pub objective_metric: String,
+    /// Optimization direction
+    pub optimization_direction: OptimizationDirectionType,
+}
+
+/// Hyperparameter optimization methods
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum HyperparameterOptimizationMethod {
+    /// Random search
+    RandomSearch,
+    /// Grid search
+    GridSearch,
+    /// Bayesian optimization
+    BayesianOptimization,
+    /// Hyperband
+    Hyperband,
+    /// Population-based training
+    PopulationBasedTraining,
+    /// Optuna framework
+    Optuna,
+}
+
+/// Optimization direction
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum OptimizationDirectionType {
+    /// Minimize the objective
+    Minimize,
+    /// Maximize the objective
+    Maximize,
+}
+
+/// Prediction horizon for time-series forecasting
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum PredictionHorizon {
+    /// Short-term prediction
+    ShortTerm,
+    /// Medium-term prediction
+    MediumTerm,
+    /// Long-term prediction
+    LongTerm,
+    /// Custom horizon duration
+    Custom(Duration),
+}
+
+/// Learning algorithm types
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LearningAlgorithmType {
+    /// Supervised learning
+    Supervised,
+    /// Unsupervised learning
+    Unsupervised,
+    /// Reinforcement learning
+    Reinforcement,
+    /// Semi-supervised learning
+    SemiSupervised,
+    /// Transfer learning
+    Transfer,
+    /// Meta learning
+    Meta,
+    /// Online learning
+    Online,
+    /// Federated learning
+    Federated,
+}
+
+/// Validation strategies
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum ValidationStrategy {
+    /// Hold-out validation
+    HoldOut,
+    /// K-fold cross-validation
+    CrossValidation,
+    /// Time series cross-validation
+    TimeSeriesCrossValidation,
+    /// Bootstrap validation
+    Bootstrap,
+    /// Monte Carlo cross-validation
+    MonteCarlo,
+}
+
+// ============================================================================
+// Default implementations for learning configuration types
+// ============================================================================
+
+impl Default for OnlineLearningConfig {
+    fn default() -> Self {
+        Self {
+            learning_rate_adaptation: LearningRateAdaptationType::Fixed,
+            online_batch_size: 32,
+            memory_buffer_size: 1000,
+            update_frequency: UpdateFrequency::PerBatch,
+        }
+    }
+}
+
+// ============================================================================
+// Default implementations for detailed neural network types
+// ============================================================================
+
+impl Default for TrainingParams {
+    fn default() -> Self {
+        Self {
+            batch_size: 32,
+            epochs: 100,
+            learning_rate: 0.001,
+            lr_scheduler: None,
+            optimizer: Optimizer::default(),
+            loss_function: LossFunction::MeanSquaredError,
+            metrics: vec![],
+        }
+    }
+}
+
+impl Default for Optimizer {
+    fn default() -> Self {
+        Self {
+            optimizer_type: OptimizerType::Adam,
+            parameters: HashMap::new(),
+        }
+    }
 }
 
 /// **DECISION ENGINE CONFIGURATION** - AI decision making settings
@@ -485,6 +1511,7 @@ impl Default for NeuralNetworkConfig {
             dropout_rate: 0.1,
             regularization: RegularizationConfig::default(),
             optimizer: OptimizerConfig::default(),
+            detailed_architecture: None,
         }
     }
 }

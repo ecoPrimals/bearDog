@@ -3,7 +3,7 @@ use std::time::Duration;
 use tokio::runtime::Runtime;
 
 use beardog_errors::BearDogError;
-use beardog_traits::canonical::{BaseProvider, HsmProvider, SecurityProvider};
+use beardog_traits::unified::{BaseProvider, HsmProvider, SecurityProvider};
 use beardog_types::canonical::hsm::{HsmKey, KeyMetadata, KeyType};
 use beardog_types::canonical::providers_unified::migration::{AuthenticationCredentials, ProviderHealthStatus};
 

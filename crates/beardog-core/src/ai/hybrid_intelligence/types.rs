@@ -4,17 +4,18 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-// Import core types from the new module
-use crate::ai::hybrid_intelligence::core_types::{
-    IntelligenceCapability, MachineLearningConfig, ModelType,
+// MIGRATED: Using canonical config types from beardog-types
+use beardog_types::canonical::config::domains::ai_config::{
+    OnlineLearningConfig, TransferLearningConfig, MetaLearningConfig,
 };
+// Import core types from the new module
 use crate::ai::hybrid_intelligence::decision_engine::{
     ConsensusStrategy, DecisionCriteria, DecisionStrategy,
 };
 use crate::ai::hybrid_intelligence::learning::{
     ConstraintConfig, EnsembleConfig, HyperparameterOptimization, LearningAlgorithmType,
-    MetaLearningConfig, OnlineLearningConfig, OptimizationAlgorithm, PredictionHorizon,
-    PredictionModel, TransferLearningConfig,
+    OptimizationAlgorithm, PredictionHorizon,
+    PredictionModel,
 };
 use crate::ai::hybrid_intelligence::neural_networks::{
     NetworkArchitecture, NetworkOptimization, NetworkRegularization, TrainingParams,

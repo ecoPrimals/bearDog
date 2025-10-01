@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
 
-use crate::canonical::config::unified_trait::{BearDogConfig, validation};
+use crate::canonical::config::r#trait::{BearDogConfig, validation};
 
 /// **UNIFIED ADAPTER CONFIGURATION** - Single source of truth for all adapter functionality
 ///

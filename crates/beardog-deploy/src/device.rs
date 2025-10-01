@@ -4,8 +4,7 @@
 // device discovery, status monitoring, and deployment operations for Android and iOS devices.
 // All operations maintain sovereignty compliance and zero hardcoded assumptions.
 
-use anyhow::Result as AnyhowResult;
-use beardog_errors::BearDogError;
+use beardog_errors::{BearDogError, BearDogResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tracing::{debug, info, warn};
@@ -148,7 +147,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    pub fn deploy_app(&self, release: bool) -> AnyhowResult<()> {
+    pub fn deploy_app(&self, release: bool) -> BearDogResult<()> {
         let build_type = if release { "release" } else { "debug" };
         info!("📲 Deploying {} build to device...", build_type);
 
@@ -163,7 +162,7 @@ impl DeviceManager {
     /// Returns an error if the operation fails.
     /// Runs app
     /// Runs app
-    pub fn run_app(&self, args: &[String]) -> AnyhowResult<()> {
+    pub fn run_app(&self, args: &[String]) -> BearDogResult<()> {
         info!("🚀 Running app with args: {:?}", args);
 
         // Mock app execution
@@ -175,7 +174,7 @@ impl DeviceManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    pub fn show_logs(&self, package: &str, follow: bool) -> AnyhowResult<()> {
+    pub fn show_logs(&self, package: &str, follow: bool) -> BearDogResult<()> {
         let follow_msg = if follow { " (following)" } else { "" };
         info!("📊 Showing logs for package: {}{}", package, follow_msg);
 

@@ -9,12 +9,12 @@ use crate::ecosystem::primal_types::{
 };
 use crate::zero_knowledge_bootstrap::BootstrapConfig;
 use beardog_errors::{BearDogError, BearDogResult};
-use beardog_types::canonical::capabilities::{ServiceCapabilityType, UniversalCapability};
+use beardog_types::canonical::capabilities::{CapabilityType, ServiceCapabilityType, UniversalCapability};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 pub struct EcosystemListener {
     config: BootstrapConfig,
@@ -177,6 +177,7 @@ impl EcosystemListener {
                                 &discovered_primals,
                                 &discovered_capabilities,
                             )
+                            .await
                             {
                                 warn!("Failed to process mDNS announcement: {}", e);
                             }
@@ -214,6 +215,7 @@ impl EcosystemListener {
                                 &discovered_primals,
                                 &discovered_capabilities,
                             )
+                            .await
                             {
                                 warn!("Failed to process HTTP announcement: {}", e);
                             }
@@ -251,6 +253,7 @@ impl EcosystemListener {
                                 &discovered_primals,
                                 &discovered_capabilities,
                             )
+                            .await
                             {
                                 warn!("Failed to process environment announcement: {}", e);
                             }
@@ -288,6 +291,7 @@ impl EcosystemListener {
                                 &discovered_primals,
                                 &discovered_capabilities,
                             )
+                            .await
                             {
                                 warn!("Failed to process service mesh announcement: {}", e);
                             }
@@ -309,7 +313,7 @@ impl EcosystemListener {
     async fn listen_mdns_announcements() -> BearDogResult<Vec<PrimalAnnouncement>> {
         debug!("🔍 Listening for mDNS primal announcements...");
 
-        let mut announcements = Vec::new();
+        let announcements = Vec::new();
 
         // Check if mDNS discovery is enabled via environment
         if std::env::var("BEARDOG_MDNS_DISCOVERY").unwrap_or_else(|_| "false".to_string()) == "true"
@@ -413,13 +417,7 @@ impl EcosystemListener {
                     endpoints: vec![UniversalEndpoint {
                         url: endpoint,
                         protocols: vec!["HTTP".to_string()],
-                        auth_requirements: beardog_types::canonical::capabilities::AuthConfig {
-                            auth_type: beardog_types::canonical::capabilities::AuthType::None,
-                            api_key: None,
-                            bearer_token: None,
-                            cert_path: None,
-                            custom_params: std::collections::HashMap::new(),
-                        },
+                        auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
                         security_config: Default::default(),
                     }],
                     metadata: PrimalMetadata {
@@ -428,6 +426,11 @@ impl EcosystemListener {
                         protocol_versions: vec!["1.0".to_string()],
                         security_attestations: vec![],
                         custom_fields: HashMap::new(),
+                        capabilities: vec![],
+                        dependencies: vec![],
+                        supported_protocols: vec!["http".to_string()],
+                        health_check_endpoint: "/health".to_string(),
+                        metrics_endpoint: "/metrics".to_string(),
                     },
                     announcement_timestamp: std::time::SystemTime::now(),
                     source_protocol: "environment ".to_string(),
@@ -451,7 +454,7 @@ impl EcosystemListener {
 
     /// Process primal announcement
     /// Processes primal_announcement
-    fn process_primal_announcement(
+    async fn process_primal_announcement(
         announcement: PrimalAnnouncement,
         discovered_primals: &Arc<RwLock<HashMap<String, DiscoveredPrimal>>>,
         discovered_capabilities: &Arc<
@@ -477,10 +480,8 @@ impl EcosystemListener {
                 UniversalEndpoint {
                     url: "unknown".to_string(),
                     protocols: vec![],
-                    auth_requirements:
-                        beardog_types::canonical::capabilities::AuthConfig { auth_type: beardog_types::canonical::capabilities::AuthType::None, api_key: None, bearer_token: None, cert_path: None, custom_params: std::collections::HashMap::new() },
-                    security_config:
-                        Default::default(),
+                    auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
+                    security_config: Default::default(),
                 }
             }),
             metadata: announcement.metadata.clone(),
@@ -509,7 +510,7 @@ impl EcosystemListener {
 
         // Store discovered primal with capability-based identification
         {
-            let mut primals = discovered_primals.write();
+            let mut primals = discovered_primals.write().await;
             primals.insert(
                 discovered_primal.primal_id.clone(),
                 discovered_primal.clone(),
@@ -518,24 +519,39 @@ impl EcosystemListener {
 
         // Store discovered capabilities
         {
-            let mut capabilities = discovered_capabilities.write();
-            for capability_type in announcement.capabilities {
+            let mut capabilities = discovered_capabilities.write().await;
+            for capability_type in &announcement.capabilities {
                 let universal_capability = UniversalCapability {
-                    capability_type: capability_type.clone(),
-                    provider_id: announcement.primal_id.clone(),
-                    endpoint: announcement.endpoints.first().cloned().unwrap_or_else(|| UniversalEndpoint {
-                        url: "unknown".to_string(),
-                        protocols: vec![],
-                        auth_requirements: beardog_types::canonical::capabilities::AuthConfig { auth_type: beardog_types::canonical::capabilities::AuthType::None, api_key: None, bearer_token: None, cert_path: None, custom_params: std::collections::HashMap::new() },
-                        security_config: Default::default(),
-                    }),
-                    metadata: HashMap::new(),
+                    capability_type: CapabilityType::Custom(capability_type.to_string()),
+                    provider: beardog_types::canonical::capabilities::ProviderInfo {
+                        provider_id: announcement.primal_id.clone(),
+                        provider_name: format!("Primal-{}", &announcement.primal_id[..8.min(announcement.primal_id.len())]),
+                        provider_type: beardog_types::canonical::providers_unified::core::ProviderType::Custom("primal".to_string()),
+                        version: "1.0".to_string(),
+                        region: None,
+                    },
+                    endpoint: beardog_types::canonical::capabilities::EndpointConfig {
+                        base_url: announcement.endpoints.first().map(|e| e.url.clone()).unwrap_or_else(|| "unknown".to_string()),
+                        api_version: Some("1.0".to_string()),
+                        timeout_ms: 30000,
+                        max_retries: 3,
+                        circuit_breaker: beardog_types::canonical::capabilities::CircuitBreakerConfig::default(),
+                    },
+                    auth_config: beardog_types::canonical::capabilities::AuthConfig { 
+                        auth_type: beardog_types::canonical::capabilities::AuthType::None, 
+                        api_key: None, 
+                        bearer_token: None, 
+                        cert_path: None, 
+                        custom_params: HashMap::new() 
+                    },
                     health_status: beardog_types::canonical::capabilities::HealthStatus::Healthy,
-                    performance_metrics: beardog_types::canonical::capabilities::PerformanceMetrics::default(),
+                    performance: beardog_types::canonical::capabilities::PerformanceMetrics::default(),
+                    security_level: beardog_types::canonical::capabilities::SecurityLevel::Standard,
+                    metadata: HashMap::new(),
                 };
 
                 capabilities
-                    .entry(capability_type)
+                    .entry(capability_type.clone())
                     .or_insert_with(Vec::new)
                     .push(universal_capability);
             }

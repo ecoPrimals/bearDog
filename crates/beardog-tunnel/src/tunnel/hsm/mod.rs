@@ -29,7 +29,7 @@ pub use beardog_types::canonical::configuration::{
 
 pub use types::*;
 
-pub use beardog_traits::canonical::HsmProvider;
+pub use beardog_traits::unified::HsmProvider;
 
 #[derive(Debug, Clone)]
     /// The usage policy value

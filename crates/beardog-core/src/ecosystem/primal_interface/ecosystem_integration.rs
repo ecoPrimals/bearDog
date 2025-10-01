@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 impl BearDogCore {
     /// Execute ecosystem coordination with multiple services
-    pub fn coordinate_ecosystem_operation(
+    pub async fn coordinate_ecosystem_operation(
         &self,
         operation_id: Uuid,
         required_capabilities: Vec<CapabilityType>,
@@ -21,6 +21,7 @@ impl BearDogCore {
             match self
                 .universal_adapter
                 .discover_capability_endpoint(capability.clone())
+                .await
             {
                 Ok(endpoint) => {
                     info!(
@@ -65,13 +66,14 @@ impl BearDogCore {
     }
 
     /// Check service availability by capability name
-    fn check_service_availability(
+    async fn check_service_availability(
         &self,
         capability: &CapabilityType,
     ) -> Result<bool, BearDogError> {
         match self
             .universal_adapter
             .discover_capability_endpoint(capability.clone())
+            .await
         {
             Ok(_) => Ok(true),
             Err(_) => Ok(false),
@@ -123,7 +125,7 @@ impl BearDogCore {
     /// Get ecosystem integration health status
     /// Gets ecosystem_integration_health
     /// Gets ecosystem_integration_health
-    pub fn get_ecosystem_integration_health(&self) -> Result<HealthStatus, BearDogError> {
+    pub async fn get_ecosystem_integration_health(&self) -> Result<HealthStatus, BearDogError> {
         info!("🏥 Checking ecosystem integration health");
 
         // Check core capabilities
@@ -138,7 +140,7 @@ impl BearDogCore {
 
         for capability in core_capabilities {
             total_services += 1;
-            if self.check_service_availability(&capability)? {
+            if self.check_service_availability(&capability).await? {
                 healthy_services += 1;
             }
         }

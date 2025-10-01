@@ -17,13 +17,15 @@ use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 use crate::ecosystem_integration::universal_compute_client::{
     UniversalComputeClient, UniversalComputeConfig, UniversalComputeRequest, 
-    UniversalComputeResponse, ComputeArchitecture, ComputePriority, OptimizationType
+    UniversalComputeResponse, ComputeArchitecture, ComputePriority, OptimizationType,
+    ProcessingCapability
 };
 use beardog_types::canonical::capabilities::{CapabilityType, ServiceCapabilityType};
 
-/// Universal compute client configuration
+/// ToadStool-specific compute client configuration
+/// This extends the universal config with ToadStool-specific fields
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UniversalComputeConfig {
+pub struct ToadStoolComputeConfig {
     /// ToadStool service endpoint URL
     /// The compute capability discovery value
     pub compute_capability_discovery: CapabilityDiscoveryConfig,
@@ -47,56 +49,17 @@ pub struct UniversalComputeConfig {
     pub enable_metrics: bool,
 }
 
-/// Compute architecture specifications
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum ComputeArchitecture {
-    /// x86-64 architecture
-    X86_64,
-    /// ARM64 architecture
-    Arm64,
-    /// RISC-V architecture
-    RiscV,
-    /// GPU compute (CUDA)
-    Cuda,
-    /// GPU compute (OpenCL)
-    OpenCl,
-    /// Custom architecture
-    Custom(String),
-}
+// CLEANED: Removed duplicate enum definitions - using canonical types from universal_compute_client
+// - ComputeArchitecture (already imported)
+// - ComputePriority (already imported)
+// - OptimizationType (already imported)
+// - ProcessingCapability (already imported)
 
-/// Compute priority levels
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub enum ComputePriority {
-    /// Low priority computation
-    Low,
-    /// Normal priority computation
-    Normal,
-    /// High priority computation
-    High,
-    /// Critical priority computation
-    Critical,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-/// Types of optimization
-pub enum OptimizationType {
-    /// Genetic algorithm optimization
-    GeneticAlgorithm,
-    /// Simulated annealing
-    SimulatedAnnealing,
-    /// Particle swarm optimization
-    ParticleSwarm,
-    /// Differential evolution
-    DifferentialEvolution,
-    /// Multi-objective optimization
-    MultiObjective,
-    /// Custom optimization algorithm
-    Custom(String),
-}
-
-/// Processing capabilities
+/// ToadStool-specific processing capability extension
+/// Note: This type previously duplicated ProcessingCapability from universal_compute_client
+/// Now properly reuses the canonical type
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProcessingCapability {
+pub struct ToadStoolProcessingCapability {
     /// Capability name
     /// Name of the item
     pub name: String,
@@ -301,7 +264,7 @@ pub struct TerminationCriteria {
 /// ToadStool compute client
 pub struct ToadStoolComputeClient {
     /// Configuration
-    config: UniversalComputeConfig,
+    config: ToadStoolComputeConfig,
     http_client: reqwest::Client,
     /// Concurrent request semaphore
     request_semaphore: Arc<Semaphore>,
@@ -335,7 +298,7 @@ pub struct ClientMetrics {
 
 pub struct ToadStoolClientFactory;
 
-impl Default for UniversalComputeConfig {
+impl Default for ToadStoolComputeConfig {
     fn default() -> Self {
         Self {
             compute_endpoint: std::env::var("COMPUTE_SERVICE_ENDPOINT")
@@ -367,7 +330,7 @@ impl Default for ClientMetrics {
 impl ToadStoolComputeClient {
     /// Creates a new ToadStool compute client
     /// Creates a new instance
-    pub fn new(config: UniversalComputeConfig) -> Self {
+    pub fn new(config: ToadStoolComputeConfig) -> Self {
         let http_client = reqwest::Client::builder()
             .timeout(Duration::from_millis(config.request_timeout_ms))
             .build()
@@ -528,7 +491,7 @@ impl ToadStoolClientFactory {
     /// Creates a new ToadStool client
     /// Creates item
     /// Creates item
-    pub fn create(config: UniversalComputeConfig) -> ToadStoolComputeClient {
+    pub fn create(config: ToadStoolComputeConfig) -> ToadStoolComputeClient {
         UniversalComputeClient::new(discovered_capabilities)?
     }
 
@@ -543,7 +506,7 @@ impl ToadStoolClientFactory {
     /// Creates with_endpoint
     /// Creates with_endpoint
     pub fn create_with_endpoint(endpoint: String) -> ToadStoolComputeClient {
-        let mut config = UniversalComputeConfig::default();
+        let mut config = ToadStoolComputeConfig::default();
         config.toadstool_endpoint = endpoint;
         UniversalComputeClient::new(discovered_capabilities)?
     }

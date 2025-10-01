@@ -6,7 +6,7 @@
 
 
 use beardog_errors::BearDogError;
-use beardog_traits::canonical::HsmProvider;
+use beardog_traits::unified::HsmProvider;
 use beardog_types::canonical::hsm::{HsmKey, HsmTier, KeyMetadata, KeyType};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

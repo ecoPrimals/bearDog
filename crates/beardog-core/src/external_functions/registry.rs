@@ -2,9 +2,9 @@
 
 use super::safety::{ParameterValue, SafetyChecker};
 use super::types::{
-    ExternalFunction, FunctionHandle, FunctionMetadata, FunctionParameter, FunctionResult,
+    ExternalFunction, ExternalFunctionsRegistryConfig, FunctionHandle, FunctionMetadata, FunctionParameter, FunctionResult,
     FunctionSignature, FunctionValue, LibraryHandle, LibraryMetadata, LibraryStatus,
-    RegistryConfig, SecurityClearance,
+    SecurityClearance,
 };
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
@@ -15,7 +15,7 @@ use uuid::Uuid;
 /// External function registry
 #[derive(Debug)]
 pub struct ExternalFunctionRegistry {
-    config: RegistryConfig,
+    config: ExternalFunctionsRegistryConfig,
     libraries: HashMap<String, LibraryHandle>,
     functions: HashMap<String, FunctionHandle>,
     safety_checker: Arc<SafetyChecker>,
@@ -23,14 +23,14 @@ pub struct ExternalFunctionRegistry {
 
 impl Default for ExternalFunctionRegistry {
     fn default() -> Self {
-        Self::new(RegistryConfig::default())
+        Self::new(ExternalFunctionsRegistryConfig::default())
     }
 }
 
 impl ExternalFunctionRegistry {
     /// Create a new registry
     /// Creates a new instance
-    pub fn new(config: RegistryConfig) -> Self {
+    pub fn new(config: ExternalFunctionsRegistryConfig) -> Self {
         Self {
             config,
             libraries: HashMap::new(),

@@ -54,14 +54,14 @@ impl EcosystemStorageManager {
     /// Process a storage request
     /// Processes request
     /// Processes request
-    pub fn process_request(
+    pub async fn process_request(
         &self,
         request: StorageRequest,
     ) -> Result<StorageResponse, BearDogError> {
         match request.operation {
-            StorageOperation::Store => self.handle_store(request),
-            StorageOperation::Retrieve => self.handle_retrieve(request),
-            StorageOperation::Delete => self.handle_delete(request),
+            StorageOperation::Store => self.handle_store(request).await,
+            StorageOperation::Retrieve => self.handle_retrieve(request).await,
+            StorageOperation::Delete => self.handle_delete(request).await,
             StorageOperation::List => self.handle_list(request),
             _ => Err(BearDogError::business(
                 "Operation not implemented".to_string(),
@@ -77,8 +77,8 @@ impl EcosystemStorageManager {
     /// Get storage metrics
     /// Gets metrics
     /// Gets metrics
-    pub fn get_metrics(&self) -> StorageMetrics {
-        self.metrics.read().clone()
+    pub async fn get_metrics(&self) -> StorageMetrics {
+        self.metrics.read().await.clone()
     }
 
     /// Get configuration
@@ -87,7 +87,7 @@ impl EcosystemStorageManager {
     }
 
     /// Handles store
-    fn handle_store(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
+    async fn handle_store(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
         // Try to store in the first available backend
         if let Some(backend) = self.backends.first() {
             let response = backend.store(request.clone())?;
@@ -95,7 +95,7 @@ impl EcosystemStorageManager {
             // Cache the stored data if successful
             if response.status == StorageStatus::Success {
                 if let Some(data) = &request.data {
-                    let mut cache = self.cache.write();
+                    let mut cache = self.cache.write().await;
                     cache.put(request.key, data.clone());
                 }
             }
@@ -109,10 +109,10 @@ impl EcosystemStorageManager {
     }
 
     /// Handles retrieve
-    fn handle_retrieve(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
+    async fn handle_retrieve(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
         // Try cache first
         {
-            let mut cache = self.cache.write();
+            let mut cache = self.cache.write().await;
             if let Some(data) = cache.get(&request.key) {
                 // Convert Arc<Vec<u8>> back to Vec<u8> for response compatibility
                 return Ok(StorageResponse::success(
@@ -129,7 +129,7 @@ impl EcosystemStorageManager {
             // Cache the retrieved data if successful
             if response.status == StorageStatus::Success {
                 if let Some(data) = &response.data {
-                    let mut cache = self.cache.write();
+                    let mut cache = self.cache.write().await;
                     cache.put(request.key, data.clone());
                 }
             }
@@ -143,10 +143,10 @@ impl EcosystemStorageManager {
     }
 
     /// Handles delete
-    fn handle_delete(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
+    async fn handle_delete(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
         // Remove from cache
         {
-            let mut cache = self.cache.write();
+            let mut cache = self.cache.write().await;
             cache.remove(&request.key);
         }
 

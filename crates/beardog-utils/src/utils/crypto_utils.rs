@@ -36,6 +36,12 @@ pub fn generate_nonce(size: usize) -> Vec<u8> {
 
 
 
+/// DEPRECATED: Use beardog_security::crypto_utils::BearDogCrypto::sha256_hash instead
+#[deprecated(
+    since = "3.0.1",
+    note = "Use beardog_security::crypto_utils::BearDogCrypto::sha256_hash instead. \
+            Crypto functions should be in beardog-security crate. Removal planned for v3.3.0 (Q1 2026)."
+)]
 pub fn sha256_hash(data: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(data);

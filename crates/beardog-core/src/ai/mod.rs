@@ -11,8 +11,10 @@ pub use hybrid_intelligence::{
     HybridIntelligenceConfig,
     InferenceConfig,
     IntelligenceCapability,
+    MachineLearningConfig,
+    ModelType,
     // Note: Ambiguous types commented out due to multiple definitions:
-    // ConsensusStrategy, LearningAlgorithm, OnlineLearningConfig, ModelType
+    // ConsensusStrategy, LearningAlgorithm, OnlineLearningConfig
 };
 
 // Note: These types don't exist in the current implementation:

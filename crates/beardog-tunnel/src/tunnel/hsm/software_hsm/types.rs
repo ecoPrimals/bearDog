@@ -122,7 +122,7 @@ pub struct ProtectedMemory {
     /// Whether protected is enabled
     pub protected: bool,
 
-pub use beardog_traits::canonical::CryptoProvider;
+pub use beardog_traits::unified::CryptoProvider;
 
 pub trait MemoryProtector: Send + Sync {
 

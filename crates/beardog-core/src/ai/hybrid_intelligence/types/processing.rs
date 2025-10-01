@@ -6,12 +6,15 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+// MIGRATED: Using canonical config types from beardog-types
+use beardog_types::canonical::config::domains::ai_config::{
+    OnlineLearningConfig, TransferLearningConfig, MetaLearningConfig,
+};
 use crate::ai::hybrid_intelligence::decision_engine::{
     ConsensusStrategy, DecisionCriteria, DecisionStrategy,
 };
 use crate::ai::hybrid_intelligence::learning::{
     ConstraintConfig, EnsembleConfig, HyperparameterOptimization, LearningAlgorithmType,
-    MetaLearningConfig, OnlineLearningConfig, TransferLearningConfig,
 };
 use crate::ai::hybrid_intelligence::neural_networks::{
     NetworkArchitecture, NetworkOptimization, NetworkRegularization, TrainingParams,

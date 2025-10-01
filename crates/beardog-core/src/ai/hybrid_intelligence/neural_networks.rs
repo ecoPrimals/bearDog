@@ -1,9 +1,29 @@
 // Neural network architectures and configurations
+//
+// ⚠️ DEPRECATED: This module is being migrated to the canonical location.
+// 
+// **New Location**: `beardog_types::canonical::config::domains::ai_config`
+// 
+// These types will be removed in v3.3.0 (Q1 2026). Please update your imports to:
+// ```rust
+// use beardog_types::canonical::config::domains::ai_config::{
+//     DetailedNetworkArchitecture, LayerConfig, InputLayerConfig, ...
+// };
+// ```
+//
+// Migration Status: Phase 1 Complete (October 2025)
+// - All neural network config types now available in canonical location
+// - Detailed architecture types fully migrated
+// - Training params and optimizer configs unified
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Network architecture definition
+#[deprecated(
+    since = "3.0.1",
+    note = "Use beardog_types::canonical::config::domains::ai_config::DetailedNetworkArchitecture instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkArchitecture {
     /// Architecture type
@@ -46,6 +66,10 @@ pub enum ArchitectureType {
 }
 
 /// Input layer configuration
+#[deprecated(
+    since = "3.0.1",
+    note = "Use beardog_types::canonical::config::domains::ai_config::InputLayerConfig instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputLayerConfig {
     /// Input shape
@@ -478,6 +502,20 @@ pub struct TrainingParams {
     pub metrics: Vec<Metric>,
 }
 
+impl Default for TrainingParams {
+    fn default() -> Self {
+        Self {
+            batch_size: 32,
+            epochs: 100,
+            learning_rate: 0.001,
+            lr_scheduler: None,
+            optimizer: Optimizer::default(),
+            loss_function: LossFunction::MeanSquaredError,
+            metrics: vec![],
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Optimizer {
     /// Optimizer type
@@ -486,6 +524,15 @@ pub struct Optimizer {
     /// Optimizer parameters
     /// Mapping of parameters
     pub parameters: HashMap<String, f64>,
+}
+
+impl Default for Optimizer {
+    fn default() -> Self {
+        Self {
+            optimizer_type: OptimizerType::Adam,
+            parameters: HashMap::new(),
+        }
+    }
 }
 
 /// Learning rate scheduler

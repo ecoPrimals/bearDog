@@ -6,7 +6,7 @@
 
 
 use beardog_errors::BearDogError;
-use beardog_traits::canonical::HsmProvider;
+use beardog_traits::unified::HsmProvider;
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 

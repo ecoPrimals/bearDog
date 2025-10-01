@@ -1,24 +1,24 @@
-use beardog_types::canonical::config::BearDogMasterConfig;
+use beardog_types::canonical::config::UnifiedBearDogConfig;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn benchmark_config_creation(c: &mut Criterion) {
     c.bench_function("config_creation_default", |b| {
-        b.iter(|| black_box(BearDogMasterConfig::default()))
+        b.iter(|| black_box(UnifiedBearDogConfig::default()))
     });
 
     c.bench_function("config_creation_new", |b| {
-        b.iter(|| black_box(BearDogMasterConfig::new()))
+        b.iter(|| black_box(UnifiedBearDogConfig::new()))
     });
 }
 
 fn benchmark_config_validation(c: &mut Criterion) {
-    let config = BearDogMasterConfig::default();
+    let config = UnifiedBearDogConfig::default();
 
     c.bench_function("config_validation_default", |b| {
         b.iter(|| black_box(config.validate()).unwrap())
     });
 
-    let mut production_config = BearDogMasterConfig::default();
+    let mut production_config = UnifiedBearDogConfig::default();
     production_config.app.name = "BearDog".to_string();
     production_config.app.version = "3.0.0".to_string();
     production_config.network.port = 8080;
@@ -31,7 +31,7 @@ fn benchmark_config_validation(c: &mut Criterion) {
 }
 
 fn benchmark_config_serialization(c: &mut Criterion) {
-    let config = BearDogMasterConfig::default();
+    let config = UnifiedBearDogConfig::default();
 
     c.bench_function("config_serialize_json", |b| {
         b.iter(|| black_box(serde_json::to_string(&config)).unwrap())
@@ -39,15 +39,15 @@ fn benchmark_config_serialization(c: &mut Criterion) {
 
     let json_str = serde_json::to_string(&config).unwrap();
     c.bench_function("config_deserialize_json", |b| {
-        b.iter(|| black_box(serde_json::from_str::<BearDogMasterConfig>(&json_str)).unwrap())
+        b.iter(|| black_box(serde_json::from_str::<UnifiedBearDogConfig>(&json_str)).unwrap())
     });
 }
 
 fn benchmark_config_merge(c: &mut Criterion) {
-    let mut base_config = BearDogMasterConfig::default();
+    let mut base_config = UnifiedBearDogConfig::default();
     base_config.app.name = "BearDog".to_string();
 
-    let mut override_config = BearDogMasterConfig::default();
+    let mut override_config = UnifiedBearDogConfig::default();
     override_config.app.version = "3.0.0".to_string();
     override_config.network.port = 8080;
 
@@ -60,7 +60,7 @@ fn benchmark_config_merge(c: &mut Criterion) {
 }
 
 fn benchmark_config_summary(c: &mut Criterion) {
-    let config = BearDogMasterConfig::default();
+    let config = UnifiedBearDogConfig::default();
 
     c.bench_function("config_summary", |b| b.iter(|| black_box(config.summary())));
 }
@@ -72,7 +72,7 @@ fn benchmark_config_from_env(c: &mut Criterion) {
     std::env::set_var("BEARDOG_PORT", "8080");
 
     c.bench_function("config_from_env", |b| {
-        b.iter(|| black_box(BearDogMasterConfig::from_env()).unwrap())
+        b.iter(|| black_box(UnifiedBearDogConfig::from_env()).unwrap())
     });
 
     // Clean up

@@ -6,7 +6,7 @@
 
 
 use crate::tunnel::hsm::types::*;
-use beardog_traits::canonical::HsmProvider;
+use beardog_traits::unified::HsmProvider;
 use beardog_core::{HsmHealthStatus, HsmKey};
 use beardog_errors::BearDogError;
 use std::collections::HashMap;

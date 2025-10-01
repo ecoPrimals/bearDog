@@ -20,7 +20,7 @@ readme = "README.md"
 [dependencies]
 tracing = "0.1"
 tracing-subscriber = "0.3"
-anyhow = "1.0"
+# CLEANED: anyhow removed - using BearDogError/BearDogResult (October 2025)
 thiserror = { workspace = true }
 walkdir = "2.0"
 serde_json = "1.0"

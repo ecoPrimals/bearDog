@@ -1,5 +1,5 @@
 use beardog_errors::BearDogError;
-use beardog_traits::canonical::{BaseProvider, ProviderInfo, ProviderMetrics};
+use beardog_traits::unified::{BaseProvider, ProviderInfo, ProviderMetrics};
 use beardog_types::canonical::{hsm::KeyMetadata, HealthStatus, ProviderConfig, ProviderStatus};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::collections::HashMap;

@@ -320,7 +320,7 @@ impl WorkflowProcessor for ExampleWorkflowProcessor {
             }
 
             workflow = workflow.set_status(ExampleWorkflowStatus::Processing);
-            sleep(Duration::from_millis(100)); // Simulate work
+            let _ = sleep(Duration::from_millis(100)); // Simulate work
 
             let processed_data = serde_json::json!({
                 "processed_by": processor_name,
