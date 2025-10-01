@@ -853,14 +853,14 @@ impl BearDogCore {
     ///
     /// # Errors
     /// Returns an error if registration fails.
-    pub fn register_with_ai_service_alt(&self) -> Result<(), BearDogError> {
+    pub async fn register_with_ai_service_alt(&self) -> Result<(), BearDogError> {
         info!("🐿️ Registering with AI coordination services via capability discovery");
 
         // Universal AI capability references
         // This maintains sovereignty compliance
 
         {
-            let mut state = self.state.write();
+            let mut state = self.state.write().await;
             state
                 .components
                 .insert("ai_coordination".to_string(), ComponentStatus::Starting);
@@ -870,7 +870,7 @@ impl BearDogCore {
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
         {
-            let mut state = self.state.write();
+            let mut state = self.state.write().await;
             state
                 .components
                 .insert("ai_coordination".to_string(), ComponentStatus::Running);
