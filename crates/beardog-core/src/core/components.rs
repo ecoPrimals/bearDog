@@ -26,12 +26,12 @@ impl ComponentManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    pub fn register_component(
+    pub async fn register_component(
         &self,
         name: &str,
         status: ComponentStatus,
     ) -> Result<(), BearDogError> {
-        let mut components = self.components.write();
+        let mut components = self.components.write().await;
         components.insert(name.to_string(), status);
         Ok(())
     }
@@ -42,12 +42,12 @@ impl ComponentManager {
     /// Returns an error if the operation fails.
     /// Updates component_status
     /// Updates component_status
-    pub fn update_component_status(
+    pub async fn update_component_status(
         &self,
         name: &str,
         status: ComponentStatus,
     ) -> Result<(), BearDogError> {
-        let mut components = self.components.write();
+        let mut components = self.components.write().await;
         if let Some(component_status) = components.get_mut(name) {
             *component_status = status;
             Ok(())
@@ -64,8 +64,8 @@ impl ComponentManager {
     /// Returns an error if the operation fails.
     /// Gets component_status
     /// Gets component_status
-    pub fn get_component_status(&self, name: &str) -> Result<ComponentStatus, BearDogError> {
-        let components = self.components.read();
+    pub async fn get_component_status(&self, name: &str) -> Result<ComponentStatus, BearDogError> {
+        let components = self.components.read().await;
         components
             .get(name)
             .cloned()
@@ -75,8 +75,8 @@ impl ComponentManager {
     /// Get All Components operation.
     /// Gets all_components
     /// Gets all_components
-    pub fn get_all_components(&self) -> Result<HashMap<String, ComponentStatus>, BearDogError> {
-        let components = self.components.read();
+    pub async fn get_all_components(&self) -> Result<HashMap<String, ComponentStatus>, BearDogError> {
+        let components = self.components.read().await;
         Ok(components.clone())
     }
 
@@ -84,8 +84,8 @@ impl ComponentManager {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    pub fn all_components_healthy(&self) -> Result<bool, BearDogError> {
-        let components = self.components.read();
+    pub async fn all_components_healthy(&self) -> Result<bool, BearDogError> {
+        let components = self.components.read().await;
         let all_healthy = components
             .values()
             .all(|status| matches!(status, ComponentStatus::Running));
@@ -98,8 +98,8 @@ impl ComponentManager {
     /// Returns an error if the operation fails.
     /// Gets system_health
     /// Gets system_health
-    pub fn get_system_health(&self) -> Result<HealthStatus, BearDogError> {
-        let all_healthy = self.all_components_healthy()?;
+    pub async fn get_system_health(&self) -> Result<HealthStatus, BearDogError> {
+        let all_healthy = self.all_components_healthy().await?;
         Ok(if all_healthy {
             HealthStatus::Healthy
         } else {
