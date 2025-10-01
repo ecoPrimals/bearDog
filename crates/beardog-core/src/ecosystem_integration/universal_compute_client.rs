@@ -299,11 +299,11 @@ impl UniversalComputeClient {
         Ok(response)
     }
 
-    fn discover_best_provider(
+    async fn discover_best_provider(
         &self,
         _request: &UniversalComputeRequest,
     ) -> Result<UniversalCapability, BearDogError> {
-        let capabilities = self.discovered_capabilities.read();
+        let capabilities = self.discovered_capabilities.read().await;
 
         // Filter capabilities by compute intelligence type
         let compute_capabilities: Vec<_> = capabilities
@@ -379,8 +379,8 @@ impl UniversalComputeClient {
     }
 
     /// Updates metrics
-    fn update_metrics(&self, response: &UniversalComputeResponse) {
-        let mut metrics = self.metrics.write();
+    async fn update_metrics(&self, response: &UniversalComputeResponse) {
+        let mut metrics = self.metrics.write().await;
         metrics.total_requests += 1;
 
         if response.success {
@@ -399,8 +399,8 @@ impl UniversalComputeClient {
 
     /// Gets metrics
     /// Gets metrics
-    pub fn get_metrics(&self) -> ComputeMetrics {
-        self.metrics.read().clone()
+    pub async fn get_metrics(&self) -> ComputeMetrics {
+        self.metrics.read().await.clone()
     }
 
     /// Refresh discovered compute capabilities
