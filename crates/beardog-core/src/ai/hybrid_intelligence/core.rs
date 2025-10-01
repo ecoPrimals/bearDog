@@ -347,7 +347,7 @@ impl HybridIntelligenceSystem {
     }
 
     /// Makes a prediction using the hybrid intelligence system
-    pub fn predict(
+    pub async fn predict(
         &self,
         input_data: Vec<f64>,
         model_id: Option<String>,
@@ -382,7 +382,7 @@ impl HybridIntelligenceSystem {
 
         // Update metrics
         {
-            let mut metrics = self.metrics.write();
+            let mut metrics = self.metrics.write().await;
             metrics.total_predictions += 1;
         }
 
@@ -410,7 +410,7 @@ impl HybridIntelligenceSystem {
     }
 
     /// Makes a decision using the hybrid intelligence system
-    pub fn make_decision(
+    pub async fn make_decision(
         &self,
         context: HashMap<String, serde_json::Value>,
     ) -> Result<DecisionResult, BearDogError> {
@@ -431,7 +431,7 @@ impl HybridIntelligenceSystem {
 
         // Update metrics
         {
-            let mut metrics = self.metrics.write();
+            let mut metrics = self.metrics.write().await;
             metrics.total_decisions += 1;
             // Update average confidence (simple moving average)
             let total_decisions = metrics.total_decisions as f64;
@@ -482,15 +482,15 @@ impl HybridIntelligenceSystem {
     /// Gets current system metrics
     /// Gets metrics
     /// Gets metrics
-    pub fn get_metrics(&self) -> IntelligenceMetrics {
-        self.metrics.read().clone()
+    pub async fn get_metrics(&self) -> IntelligenceMetrics {
+        self.metrics.read().await.clone()
     }
 
     /// Gets current system health
     /// Gets health
     /// Gets health
-    pub fn get_health(&self) -> HealthStatus {
-        self.health.read().clone()
+    pub async fn get_health(&self) -> HealthStatus {
+        self.health.read().await.clone()
     }
 
     /// Initializes a capability
