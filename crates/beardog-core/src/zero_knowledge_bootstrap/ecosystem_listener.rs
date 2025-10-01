@@ -169,7 +169,7 @@ impl EcosystemListener {
 
             loop {
                 // Listen for mDNS announcements
-                match Self::listen_mdns_announcements() {
+                match Self::listen_mdns_announcements().await {
                     Ok(announcements) => {
                         for announcement in announcements {
                             if let Err(e) = Self::process_primal_announcement(
@@ -206,7 +206,7 @@ impl EcosystemListener {
 
             loop {
                 // Poll HTTP discovery endpoints
-                match Self::poll_http_discovery() {
+                match Self::poll_http_discovery().await {
                     Ok(announcements) => {
                         for announcement in announcements {
                             if let Err(e) = Self::process_primal_announcement(
@@ -243,7 +243,7 @@ impl EcosystemListener {
 
             loop {
                 // Check environment variables for primal announcements
-                match Self::check_environment_announcements() {
+                match Self::check_environment_announcements().await {
                     Ok(announcements) => {
                         for announcement in announcements {
                             if let Err(e) = Self::process_primal_announcement(
@@ -306,7 +306,7 @@ impl EcosystemListener {
         Ok(task)
     }
 
-    fn listen_mdns_announcements() -> BearDogResult<Vec<PrimalAnnouncement>> {
+    async fn listen_mdns_announcements() -> BearDogResult<Vec<PrimalAnnouncement>> {
         debug!("🔍 Listening for mDNS primal announcements...");
 
         let mut announcements = Vec::new();
@@ -321,7 +321,7 @@ impl EcosystemListener {
             // Check for local services advertising BearDog capabilities
             if let Ok(response) = tokio::process::Command::new("avahi-browse")
                 .args(&["-t", "_beardog._tcp"])
-                .output()
+                .output().await
             {
                 if response.status.success() {
                     let output = String::from_utf8_lossy(&response.stdout);
@@ -338,7 +338,7 @@ impl EcosystemListener {
     }
 
     /// Poll HTTP discovery endpoints
-    fn poll_http_discovery() -> BearDogResult<Vec<PrimalAnnouncement>> {
+    async fn poll_http_discovery() -> BearDogResult<Vec<PrimalAnnouncement>> {
         debug!("🌐 Polling HTTP discovery endpoints...");
 
         let mut announcements = Vec::new();
@@ -360,7 +360,7 @@ impl EcosystemListener {
             match tokio::time::timeout(
                 std::time::Duration::from_secs(5),
                 Self::make_discovery_request(&endpoint),
-            )
+            ).await
             {
                 Ok(Ok(discovered)) => {
                     announcements.extend(discovered);
@@ -377,7 +377,7 @@ impl EcosystemListener {
         Ok(announcements)
     }
 
-    fn check_environment_announcements() -> BearDogResult<Vec<PrimalAnnouncement>> {
+    async fn check_environment_announcements() -> BearDogResult<Vec<PrimalAnnouncement>> {
         debug!("🔧 Checking environment for primal announcements...");
 
         let mut announcements = Vec::new();
@@ -582,7 +582,7 @@ impl Drop for EcosystemListener {
 
 impl EcosystemListener {
     /// Make HTTP discovery request to endpoint
-    fn make_discovery_request(endpoint: &str) -> BearDogResult<Vec<PrimalAnnouncement>> {
+    async fn make_discovery_request(endpoint: &str) -> BearDogResult<Vec<PrimalAnnouncement>> {
         debug!("Making discovery request to: {}", endpoint);
 
         // Use tokio's HTTP client implementation instead of external dependency
@@ -638,11 +638,12 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_environment_discovery() {
+    async fn test_environment_discovery() {
         // Simulate an environment-based announcement discovery
         std::env::set_var("COMPUTE_ENDPOINT", "http://discovered-compute-service:8081");
 
         let announcements = EcosystemListener::check_environment_announcements()
+            .await
             .unwrap();
 
         // Should discover compute capability without hardcoded primal names
