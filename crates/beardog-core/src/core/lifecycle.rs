@@ -33,11 +33,11 @@ impl BearDogCore {
     /// Returns an error if the operation fails.
     /// Starts serviceup
     /// Starts serviceup
-    pub fn startup(&self) -> Result<(), BearDogError> {
+    pub async fn startup(&self) -> Result<(), BearDogError> {
         info!("🚀 BearDog Core startup initiated");
 
         {
-            let mut state = self.state.write();
+            let mut state = self.state.write().await;
             state
                 .components
                 .insert("security".to_string(), ComponentStatus::Running);
@@ -58,11 +58,11 @@ impl BearDogCore {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    pub fn shutdown(&self) -> Result<(), BearDogError> {
+    pub async fn shutdown(&self) -> Result<(), BearDogError> {
         info!("🛑 BearDog Core shutdown initiated");
 
         {
-            let mut state = self.state.write();
+            let mut state = self.state.write().await;
             for (_name, status) in state.components.iter_mut() {
                 *status = ComponentStatus::Inactive;
             }
@@ -81,8 +81,8 @@ impl BearDogCore {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    pub fn health_check(&self) -> Result<HealthCheck, BearDogError> {
-        let state = self.state.read();
+    pub async fn health_check(&self) -> Result<HealthCheck, BearDogError> {
+        let state = self.state.read().await;
         let overall_healthy = state
             .components
             .values()
