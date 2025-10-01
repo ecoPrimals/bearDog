@@ -790,11 +790,11 @@ impl BearDogCore {
     /// Returns an error if the operation fails.
     /// Initializes componentialize
     /// Initializes componentialize
-    pub fn initialize(&mut self) -> Result<(), BearDogError> {
+    pub async fn initialize(&mut self) -> Result<(), BearDogError> {
         info!("🚀 Initializing BearDog Core");
 
         {
-            let mut state = self.state.write();
+            let mut state = self.state.write().await;
             state
                 .components
                 .insert("core".to_string(), ComponentStatus::Starting);
@@ -804,7 +804,7 @@ impl BearDogCore {
         self.genetic_optimizer.initialize()?;
 
         {
-            let mut state = self.state.write();
+            let mut state = self.state.write().await;
             state
                 .components
                 .insert("core".to_string(), ComponentStatus::Running);
@@ -821,7 +821,7 @@ impl BearDogCore {
     /// Returns an error if HSM initialization fails.
     /// Initializes componentialize_hsm_management
     /// Initializes componentialize_hsm_management
-    pub fn initialize_hsm_management(&self) -> Result<(), BearDogError> {
+    pub async fn initialize_hsm_management(&self) -> Result<(), BearDogError> {
         info!("🔐 Initializing HSM management capabilities");
 
         // Initialize HSM providers and key management
@@ -829,7 +829,7 @@ impl BearDogCore {
         // For now, we'll use a mock implementation
 
         {
-            let mut state = self.state.write();
+            let mut state = self.state.write().await;
             state
                 .components
                 .insert("hsm".to_string(), ComponentStatus::Starting);
@@ -839,7 +839,7 @@ impl BearDogCore {
         tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
         {
-            let mut state = self.state.write();
+            let mut state = self.state.write().await;
             state
                 .components
                 .insert("hsm".to_string(), ComponentStatus::Running);
