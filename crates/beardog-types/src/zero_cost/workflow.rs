@@ -140,7 +140,7 @@ mod tests {
     use crate::zero_cost::types::WorkflowStep;
 
     #[tokio::test]
-    fn test_workflow_engine_config_default() {
+    async fn test_workflow_engine_config_default() {
         let config = WorkflowEngineConfig::default();
         assert_eq!(config.max_concurrent, 100);
         assert_eq!(config.timeout_ms, 30000);
