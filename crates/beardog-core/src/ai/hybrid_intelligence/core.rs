@@ -1,6 +1,7 @@
 // Main implementation and system orchestration for hybrid intelligence
 
 use super::config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm};
+use super::core_types::{IntelligenceCapability, MachineLearningConfig, ModelType};
 use super::learning::PredictionHorizon;
 use super::types::*;
 
