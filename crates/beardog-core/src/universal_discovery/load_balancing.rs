@@ -178,7 +178,7 @@ impl LoadBalancer {
     }
 
     /// Select the best service from available options using the configured algorithm
-    pub fn select_service(
+    pub async fn select_service(
         &self,
         services: &[ServiceInfo],
         session_id: Option<&str>,
@@ -190,7 +190,7 @@ impl LoadBalancer {
         // Check for sticky session
         if let Some(session_id) = session_id {
             if self.config.enable_sticky_sessions {
-                let state = self.state.read();
+                let state = self.state.read().await;
                 if let Some(service_id) = state.session_map.get(session_id) {
                     if let Some(service) = services.iter().find(|s| s.name == *service_id) {
                         return Ok(Some(service.clone()));
@@ -206,7 +206,7 @@ impl LoadBalancer {
         // Update sticky session if enabled
         if let (Some(session_id), Some(ref service)) = (session_id, &selected_service) {
             if self.config.enable_sticky_sessions {
-                let mut state = self.state.write();
+                let mut state = self.state.write().await;
                 state
                     .session_map
                     .insert(session_id.to_string(), service.name.clone());
@@ -217,7 +217,7 @@ impl LoadBalancer {
     }
 
     // Load balancing algorithm implementations
-    fn round_robin_balance(
+    async fn round_robin_balance(
         &self,
         services: Vec<&ServiceInfo>,
     ) -> Result<Vec<ServiceInfo>, BearDogError> {
@@ -225,7 +225,7 @@ impl LoadBalancer {
             return Ok(services.into_iter().cloned().collect());
         }
 
-        let mut state = self.state.write();
+        let mut state = self.state.write().await;
         let index = state.current_index % services.len();
         state.current_index = (state.current_index + 1) % services.len();
 
@@ -382,14 +382,14 @@ impl LoadBalancer {
 
     /// Updates service_weight
     /// Updates service_weight
-    pub fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<(), BearDogError> {
-        let mut state = self.state.write();
+    pub async fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<(), BearDogError> {
+        let mut state = self.state.write().await;
         state.service_weights.insert(service_id.to_string(), weight);
         Ok(())
     }
 
-    pub fn increment_connections(&self, service_id: &str) -> Result<(), BearDogError> {
-        let mut state = self.state.write();
+    pub async fn increment_connections(&self, service_id: &str) -> Result<(), BearDogError> {
+        let mut state = self.state.write().await;
         let current_count = state
             .service_connections
             .get(service_id)
@@ -401,8 +401,8 @@ impl LoadBalancer {
         Ok(())
     }
 
-    pub fn decrement_connections(&self, service_id: &str) -> Result<(), BearDogError> {
-        let mut state = self.state.write();
+    pub async fn decrement_connections(&self, service_id: &str) -> Result<(), BearDogError> {
+        let mut state = self.state.write().await;
         if let Some(count) = state.service_connections.get_mut(service_id) {
             if *count > 0 {
                 *count -= 1;
