@@ -27,7 +27,7 @@ use std::time::Duration;
 
 // Import canonical configuration types
 use crate::canonical::config::network::{
-    CircuitBreakerConfig, LoadBalancingConfig, RateLimitConfig,
+    CircuitBreakerConfig, LoadBalancingConfig,
 };
 use crate::canonical::config::security::{
     CanonicalAuditConfig, CanonicalAuthenticationConfig, CanonicalAuthorizationConfig,
@@ -358,7 +358,6 @@ pub struct UnifiedSecurityConfig {
 // REMOVED: Duplicate alias (Phase 2 cleanup - October 2025)
 // Use CanonicalHsmConfig directly or HsmConfig alias
 // REMOVED: Commented alias - use crate::canonical::hsm_unified::CanonicalHsmConfig directly
-
 /// **UNIFIED DATABASE CONFIG** - Consolidates all database configurations
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UnifiedDatabaseConfig {

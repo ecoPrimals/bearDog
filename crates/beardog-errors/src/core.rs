@@ -493,7 +493,7 @@ impl BearDogError {
 // FROM TRAIT IMPLEMENTATIONS - Automatic Error Conversions
 // ============================================================================
 
-/// Convert std::io::Error to BearDogError::System
+/// Convert `std::io::Error` to `BearDogError::System`
 impl From<std::io::Error> for BearDogError {
     fn from(err: std::io::Error) -> Self {
         Self::System {
@@ -503,7 +503,7 @@ impl From<std::io::Error> for BearDogError {
     }
 }
 
-/// Convert std::fmt::Error to BearDogError::System
+/// Convert `std::fmt::Error` to `BearDogError::System`
 impl From<std::fmt::Error> for BearDogError {
     fn from(err: std::fmt::Error) -> Self {
         Self::System {

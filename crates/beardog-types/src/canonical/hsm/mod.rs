@@ -1,7 +1,6 @@
 /// HSM (Hardware Security Module) types and configurations
 //
 // This module provides functionality for the BearDog ecosystem.
-
 /// Android HSM module
 pub mod android;
 /// Capabilities module
