@@ -102,7 +102,7 @@ impl PolicyEngine for SafetyChecker {
     type Policy = SafetyPolicy;
     type Decision = SafetyDecision;
 
-    fn evaluate(
+    async fn evaluate(
         &self,
         policy: &Self::Policy,
         _context: PolicyContext,
@@ -128,24 +128,24 @@ impl PolicyEngine for SafetyChecker {
     }
 
     /// Loads policy
-    fn load_policy(&mut self, policy: Self::Policy) -> Result<(), UnifiedTraitError> {
+    async fn load_policy(&mut self, policy: Self::Policy) -> Result<(), UnifiedTraitError> {
         self.loaded_policies
             .insert(policy.policy_id.clone(), policy);
         Ok(())
     }
 
-    fn list_policies(&self) -> Result<Vec<String>, UnifiedTraitError> {
+    async fn list_policies(&self) -> Result<Vec<String>, UnifiedTraitError> {
         Ok(self.loaded_policies.keys().cloned().collect())
     }
 
     /// Removes policy
-    fn remove_policy(&mut self, policy_id: &str) -> Result<(), UnifiedTraitError> {
+    async fn remove_policy(&mut self, policy_id: &str) -> Result<(), UnifiedTraitError> {
         self.loaded_policies.remove(policy_id);
         Ok(())
     }
 
     /// Validates policy
-    fn validate_policy(&self, policy: &Self::Policy) -> Result<bool, UnifiedTraitError> {
+    async fn validate_policy(&self, policy: &Self::Policy) -> Result<bool, UnifiedTraitError> {
         // Basic policy validation
         Ok(!policy.policy_id.is_empty() && !policy.function_patterns.is_empty())
     }
