@@ -39,7 +39,7 @@ impl UniversalAdapter {
     /// Process an adapter request
     /// Processes request
     /// Processes request
-    pub fn process_request(
+    pub async fn process_request(
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
@@ -47,17 +47,17 @@ impl UniversalAdapter {
 
         // Update metrics
         {
-            let mut metrics = self.metrics.write();
+            let mut metrics = self.metrics.write().await;
             metrics.total_requests += 1;
         }
 
         // Process the request based on operation type
         match request.operation {
-            super::types::AdapterOperation::Connect => self.handle_connect_request(request),
-            super::types::AdapterOperation::Disconnect => self.handle_disconnect_request(request),
-            super::types::AdapterOperation::Request => self.handle_generic_request(request),
+            super::types::AdapterOperation::Connect => self.handle_connect_request(request).await,
+            super::types::AdapterOperation::Disconnect => self.handle_disconnect_request(request).await,
+            super::types::AdapterOperation::Request => self.handle_generic_request(request).await,
             super::types::AdapterOperation::HealthCheck => {
-                self.handle_health_check_request(request)
+                self.handle_health_check_request(request).await
             }
             _ => {
                 warn!("Unsupported operation: {:?}", request.operation);
@@ -68,7 +68,7 @@ impl UniversalAdapter {
 
     /// Handle connect request
     /// Handles connect_request
-    fn handle_connect_request(
+    async fn handle_connect_request(
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
@@ -87,7 +87,7 @@ impl UniversalAdapter {
 
         // Store connection
         {
-            let mut connections = self.connections.write();
+            let mut connections = self.connections.write().await;
             connections.insert(request.endpoint.clone(), connection_info);
         }
 
@@ -105,7 +105,7 @@ impl UniversalAdapter {
 
     /// Handle disconnect request
     /// Handles disconnect_request
-    fn handle_disconnect_request(
+    async fn handle_disconnect_request(
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
@@ -113,7 +113,7 @@ impl UniversalAdapter {
 
         // Remove connection
         {
-            let mut connections = self.connections.write();
+            let mut connections = self.connections.write().await;
             connections.remove(&request.endpoint);
         }
 
@@ -131,7 +131,7 @@ impl UniversalAdapter {
 
     /// Handle generic request
     /// Handles generic_request
-    fn handle_generic_request(
+    async fn handle_generic_request(
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
@@ -154,7 +154,7 @@ impl UniversalAdapter {
 
     /// Handle health check request
     /// Handles health_check_request
-    fn handle_health_check_request(
+    async fn handle_health_check_request(
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
@@ -163,8 +163,8 @@ impl UniversalAdapter {
         let health_status = serde_json::json!({
             "status": "healthy",
             "adapter_id": self.config.adapter_id,
-            "connections": self.connections.read().len(),
-            "endpoints": self.endpoints.read().len()
+            "connections": self.connections.read().await.len(),
+            "endpoints": self.endpoints.read().await.len()
         });
 
         Ok(AdapterResponse {
@@ -184,17 +184,17 @@ impl UniversalAdapter {
     }
 
     /// Get current metrics
-    pub fn metrics(&self) -> AdapterMetrics {
-        self.metrics.read().clone()
+    pub async fn metrics(&self) -> AdapterMetrics {
+        self.metrics.read().await.clone()
     }
 
     /// Get connection count
-    pub fn connection_count(&self) -> usize {
-        self.connections.read().len()
+    pub async fn connection_count(&self) -> usize {
+        self.connections.read().await.len()
     }
 
     /// Get endpoint count
-    pub fn endpoint_count(&self) -> usize {
-        self.endpoints.read().len()
+    pub async fn endpoint_count(&self) -> usize {
+        self.endpoints.read().await.len()
     }
 }
