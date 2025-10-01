@@ -99,19 +99,19 @@ impl EcosystemGeneticSpawner {
     }
 
     /// Register Primal Client operation.
-    pub fn register_primal_client(
+    pub async fn register_primal_client(
         &self,
         primal_id: &str,
         client: UniversalComputeClient,
     ) -> Result<(), BearDogError> {
-        let mut clients = self.primal_clients.write();
+        let mut clients = self.primal_clients.write().await;
         clients.insert(primal_id.to_string(), client);
         debug!("🔌 Registered primal client: {}", primal_id);
         Ok(())
     }
 
     /// Spawn Ecosystem Hybrid Node operation.
-    pub fn spawn_ecosystem_hybrid_node(
+    pub async fn spawn_ecosystem_hybrid_node(
         &self,
         requirements: EcosystemSpawningRequirements,
     ) -> Result<EcosystemHybridNode, BearDogError> {
@@ -133,14 +133,14 @@ impl EcosystemGeneticSpawner {
         };
 
         {
-            let mut active_spawns = self.active_spawns.write();
+            let mut active_spawns = self.active_spawns.write().await;
             active_spawns.insert(operation_id.clone(), operation.clone());
         }
 
         match self.execute_ecosystem_spawning(&mut operation) {
             Ok(hybrid_node) => {
                 {
-                    let mut stats = self.statistics.write();
+                    let mut stats = self.statistics.write().await;
                     stats.successful_spawns += 1;
                     stats.total_hybrid_nodes += 1;
                     stats.last_updated = chrono::Utc::now();
@@ -154,7 +154,7 @@ impl EcosystemGeneticSpawner {
             Err(e) => {
                 error!("❌ Failed to spawn hybrid node: {}", e);
                 {
-                    let mut stats = self.statistics.write();
+                    let mut stats = self.statistics.write().await;
                     stats.failed_spawns += 1;
                     stats.last_updated = chrono::Utc::now();
                 }
@@ -383,8 +383,8 @@ impl EcosystemGeneticSpawner {
     /// Get Spawning Statistics operation.
     /// Gets spawning_statistics
     /// Gets spawning_statistics
-    pub fn get_spawning_statistics(&self) -> Result<EcosystemSpawningStatistics, BearDogError> {
-        let stats = self.statistics.read();
+    pub async fn get_spawning_statistics(&self) -> Result<EcosystemSpawningStatistics, BearDogError> {
+        let stats = self.statistics.read().await;
         Ok(stats.clone())
     }
 
@@ -394,8 +394,8 @@ impl EcosystemGeneticSpawner {
     /// Returns an error if the operation fails.
     /// Gets active_spawns
     /// Gets active_spawns
-    pub fn get_active_spawns(&self) -> Result<Vec<EcosystemSpawningOperation>, BearDogError> {
-        let active_spawns = self.active_spawns.read();
+    pub async fn get_active_spawns(&self) -> Result<Vec<EcosystemSpawningOperation>, BearDogError> {
+        let active_spawns = self.active_spawns.read().await;
         Ok(active_spawns.values().cloned().collect())
     }
 
@@ -405,8 +405,8 @@ impl EcosystemGeneticSpawner {
     /// Returns an error if the operation fails.
     /// Gets hybrid_nodes
     /// Gets hybrid_nodes
-    pub fn get_hybrid_nodes(&self) -> Result<Vec<EcosystemHybridNode>, BearDogError> {
-        let nodes = self.hybrid_nodes.read();
+    pub async fn get_hybrid_nodes(&self) -> Result<Vec<EcosystemHybridNode>, BearDogError> {
+        let nodes = self.hybrid_nodes.read().await;
         Ok(nodes.values().cloned().collect())
     }
 }
