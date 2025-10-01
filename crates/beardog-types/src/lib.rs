@@ -174,7 +174,7 @@
 // #### **OLD (Fragmented):**
 // ```rust
 // // Multiple imports from different locations
-// use beardog_traits::canonical::HsmProvider;
+// Removed: use beardog_traits::canonical::HsmProvider; - now use unified::
 // use beardog_traits::unified::SecurityProvider;
 // use local_module::CustomProvider;
 // ```
@@ -424,10 +424,8 @@ pub mod production;
 /// Security-related types and utilities. Consider using
 pub mod security;
 
-/// 🌐 **SERVICES** - Service abstraction types
-///
-/// Service-level abstractions and interfaces.
-pub mod services;
+// CLEANED: Legacy services module removed - use canonical::services instead
+// Use: beardog_types::canonical::services::UnifiedServiceDefinition
 
 /// 🧬 **GENETICS** - Genetic algorithm types
 ///
@@ -453,15 +451,15 @@ pub mod health_status;
 pub mod workflow;
 
 // **MODERNIZED CONFIGURATION EXPORTS** - Canonical unified configuration system
-// NEW: Use unified configuration exports (migrated from unified_simple)
+// NEW: Use unified configuration exports (from unified.rs)
 pub use canonical::config::SimplifiedBearDogConfig as UnifiedBearDogConfig;
 pub use canonical::config::{
-    ConfigurationMigrator, DatabaseSettings, MonitoringSettings, NetworkSettings,
+    DatabaseSettings, MonitoringSettings, NetworkSettings,
     PerformanceSettings, SecuritySettings,
 };
 
 // **REMOVED**: Legacy configuration compatibility layers
-// Use canonical::config::unified_simple::WorkingUnifiedConfig for all configuration
+// Use canonical::config::unified::SimplifiedBearDogConfig for all configuration
 
 // **CANONICAL PROVIDER SYSTEM** - Unified provider traits and types
 pub use canonical::providers_unified::traits::{

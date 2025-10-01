@@ -91,7 +91,6 @@ pub use hsm_unified::{
 
 // Re-export the new unified configuration system
 pub use config::{
-    BearDogMasterConfig,
     // Domain-specific canonical configs (avoiding conflicts with existing imports)
     CanonicalAppConfig,
     CanonicalAuthConfig,
@@ -102,8 +101,7 @@ pub use config::{
     CanonicalPerformanceConfig,
     CanonicalProductionConfig,
     CanonicalWorkflowConfig,
-    GlobalConfig,
-    MasterConfig,
+    // REMOVED: GlobalConfig, MasterConfig - use BearDogMasterConfig directly
     // Compatibility aliases
     UnifiedBearDogConfig,
 };

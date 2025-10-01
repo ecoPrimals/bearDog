@@ -3,7 +3,7 @@
 #[cfg(target_os = "android")]
 use android_logger::{Config, FilterBuilder};
 
-use beardog_traits::canonical::HsmProvider;
+use beardog_traits::unified::HsmProvider;
 use beardog_errors::{{BearDogError}};
 use std::sync::Arc;
 use std::collections::HashMap;

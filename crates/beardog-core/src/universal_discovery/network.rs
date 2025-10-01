@@ -216,21 +216,21 @@ impl NetworkUtils {
     /// Check if port is available
     /// Checks if port available
     /// Checks if port available
-    pub fn is_port_available(addr: &SocketAddr) -> Result<bool, BearDogError> {
+    pub async fn is_port_available(addr: &SocketAddr) -> Result<bool, BearDogError> {
         use tokio::net::TcpListener;
-        match TcpListener::bind(addr) {
+        match TcpListener::bind(addr).await {
             Ok(_) => Ok(true),
             Err(_) => Ok(false),
         }
     }
 
     /// Find available port in range
-    pub fn find_available_port(start: u16, end: u16) -> Result<Option<u16>, BearDogError> {
+    pub async fn find_available_port(start: u16, end: u16) -> Result<Option<u16>, BearDogError> {
         for port in start..=end {
             let addr: SocketAddr = format!("127.0.0.1:{}", port).parse().map_err(|e| {
                 BearDogError::system(format!("Invalid address format for port {}: {}", port, e))
             })?;
-            if Self::is_port_available(&addr)? {
+            if Self::is_port_available(&addr).await? {
                 return Ok(Some(port));
             }
         }

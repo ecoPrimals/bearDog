@@ -53,7 +53,10 @@ pub use environment::{EnvironmentType, EnvironmentValidation, ModernSecretsConfi
 
 ///
 /// across the `BearDog` ecosystem while maintaining backward compatibility.
-pub type CanonicalProductionConfig = UnifiedProductionConfig;
+/// Type alias for backwards compatibility
+/// Note: Consider using UnifiedProductionConfig directly in new code
+// Use UnifiedProductionConfig directly - this alias adds no value
+pub type CanonicalProductionConfig = UnifiedProductionConfig; // TODO: Remove this alias in v3.3.0
 
 /// **UNIFIED PRODUCTION CONFIGURATION** - Master production config
 ///

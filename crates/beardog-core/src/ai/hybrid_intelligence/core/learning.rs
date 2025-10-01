@@ -9,20 +9,8 @@ use std::collections::HashMap;
 use std::time::Duration;
 use beardog_errors::BearDogError;
 
-/// Online learning configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct OnlineLearningConfig {
-    /// Enable online learning
-    pub enabled: bool,
-    /// Learning rate for online updates
-    pub learning_rate: f64,
-    /// Batch size for online learning
-    pub batch_size: usize,
-    /// Memory buffer size
-    pub memory_buffer_size: usize,
-    /// Update frequency
-    pub update_frequency: Duration,
-}
+// CLEANED: Duplicate OnlineLearningConfig removed - use canonical version:
+// use beardog_types::canonical::config::domains::ai_config::OnlineLearningConfig;
 
 /// Learning rate adaptation strategies
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]

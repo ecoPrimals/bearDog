@@ -12,7 +12,7 @@ use super::super::{
     types::{HsmProviderType, HsmTier, BearDogError, HsmHealth, HsmHealthStatus}
 };
 use beardog_types::canonical::hsm::status::HealthMetrics;
-use beardog_traits::canonical::HsmProvider;
+use beardog_traits::unified::HsmProvider;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;

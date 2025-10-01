@@ -90,6 +90,14 @@ pub enum LearningPhase {
 }
 
 /// Configuration for infant pattern discovery
+/// 
+/// DEPRECATED: Use beardog_types::canonical::config::domains::bootstrap::InfantPatternConfig instead
+#[deprecated(
+    since = "3.0.1",
+    note = "Use beardog_types::canonical::config::domains::bootstrap::InfantPatternConfig instead. \
+            The canonical version includes additional fields for continuous learning and consolidation. \
+            Removal planned for v3.3.0 (Q1 2026)."
+)]
 #[derive(Debug, Clone)]
 pub struct InfantPatternConfig {
     /// Minimum observations before forming a pattern

@@ -1,4 +1,22 @@
 // Learning systems and optimization algorithms
+//
+// ⚠️ DEPRECATED: This module is being migrated to the canonical location.
+// 
+// **New Location**: `beardog_types::canonical::config::domains::ai_config`
+// 
+// These types will be removed in v3.3.0 (Q1 2026). Please update your imports to:
+// ```rust
+// use beardog_types::canonical::config::domains::ai_config::{
+//     OnlineLearningConfig, TransferLearningConfig, MetaLearningConfig,
+//     EnsembleConfigLearning, HyperparameterOptimizationConfig, ...
+// };
+// ```
+//
+// Migration Status: Phase 2 Complete (October 2025)
+// - All learning config types now available in canonical location
+// - OnlineLearningConfig duplicate resolved (use canonical version)
+// - Transfer learning, meta-learning, ensemble configs migrated
+// - Hyperparameter optimization configs unified
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -25,31 +43,8 @@ pub enum LearningAlgorithmType {
     Federated,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct OnlineLearningConfig {
-    /// Learning rate adaptation
-    /// The learning rate adaptation value
-    pub learning_rate_adaptation: LearningRateAdaptation,
-    /// Number of online_batch_size
-    pub online_batch_size: u32,
-    /// Memory buffer size
-    /// Number of memory_buffer_size
-    pub memory_buffer_size: u32,
-    /// Update frequency
-    /// The update frequency value
-    pub update_frequency: UpdateFrequency,
-}
-
-impl Default for OnlineLearningConfig {
-    fn default() -> Self {
-        Self {
-            learning_rate_adaptation: LearningRateAdaptation::Fixed,
-            online_batch_size: 32,
-            memory_buffer_size: 1000,
-            update_frequency: UpdateFrequency::PerBatch,
-        }
-    }
-}
+// CLEANED: Duplicate OnlineLearningConfig removed - use canonical version:
+// use beardog_types::canonical::config::domains::ai_config::OnlineLearningConfig;
 
 /// Learning rate adaptation strategies
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

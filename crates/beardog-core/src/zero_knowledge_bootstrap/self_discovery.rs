@@ -4,7 +4,7 @@
 // It enables a primal to discover its own capabilities and identity without any hardcoded
 // knowledge about the ecosystem.
 
-use crate::ecosystem::primal_types::{PrimalMetadata, PrimalMetrics, UniversalEndpoint};
+use crate::ecosystem::primal_types::{PrimalMetadata, UniversalEndpoint};
 use crate::zero_knowledge_bootstrap::{BootstrapConfig, SelfIdentity};
 use beardog_errors::{BearDogError, BearDogResult};
 use beardog_types::canonical::capabilities::ServiceCapabilityType;
@@ -304,13 +304,7 @@ impl SelfDiscoveryEngine {
         Ok(UniversalEndpoint {
             url: format!("http://127.0.0.1:{}", port),
             protocols: vec!["HTTP".to_string(), "HTTPS".to_string()],
-            auth_requirements: beardog_types::canonical::capabilities::AuthConfig {
-                auth_type: beardog_types::canonical::capabilities::AuthType::None,
-                api_key: None,
-                bearer_token: None,
-                cert_path: None,
-                custom_params: std::collections::HashMap::new(),
-            },
+            auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
             security_config: Default::default(),
         })
     }
@@ -324,13 +318,7 @@ impl SelfDiscoveryEngine {
         Ok(UniversalEndpoint {
             url: format!("http://{}:{}", host, port),
             protocols: vec!["HTTP".to_string(), "HTTPS".to_string(), "gRPC".to_string()],
-            auth_requirements: beardog_types::canonical::capabilities::AuthConfig {
-                auth_type: beardog_types::canonical::capabilities::AuthType::None,
-                api_key: None,
-                bearer_token: None,
-                cert_path: None,
-                custom_params: std::collections::HashMap::new(),
-            },
+            auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
             security_config: Default::default(),
         })
     }
@@ -350,13 +338,7 @@ impl SelfDiscoveryEngine {
                 "gRPC".to_string(),
                 "WebSocket".to_string(),
             ],
-            auth_requirements: beardog_types::canonical::capabilities::AuthConfig {
-                auth_type: beardog_types::canonical::capabilities::AuthType::None,
-                api_key: None,
-                bearer_token: None,
-                cert_path: None,
-                custom_params: std::collections::HashMap::new(),
-            },
+            auth_requirements: crate::ecosystem::primal_types::AuthRequirements::default(),
             security_config: Default::default(),
         })
     }
@@ -388,6 +370,11 @@ impl SelfDiscoveryEngine {
             protocol_versions: vec!["1.0".to_string(), "2.0".to_string()],
             security_attestations: Vec::new(), // TODO: Implement SecurityAttestation when type is available
             custom_fields,
+            capabilities: vec![],
+            dependencies: vec![],
+            supported_protocols: vec!["http".to_string(), "https".to_string()],
+            health_check_endpoint: "/health".to_string(),
+            metrics_endpoint: "/metrics".to_string(),
         })
     }
 

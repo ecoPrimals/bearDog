@@ -4,8 +4,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+/// External functions registry configuration
+/// Renamed from RegistryConfig to ExternalFunctionsRegistryConfig for clarity
 #[derive(Debug, Clone)]
-pub struct RegistryConfig {
+pub struct ExternalFunctionsRegistryConfig {
     /// Maximum number of loaded libraries
     /// Number of max_libraries
     pub max_libraries: usize,
@@ -392,7 +394,7 @@ pub struct FunctionResult {
     pub execution_time_us: u64,
 }
 
-impl Default for RegistryConfig {
+impl Default for ExternalFunctionsRegistryConfig {
     fn default() -> Self {
         Self {
             max_libraries: 100,

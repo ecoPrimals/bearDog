@@ -11,17 +11,21 @@ use chrono::{DateTime, Utc};
 use tracing::info;
 use uuid::Uuid;
 
-/// Simple sovereignty configuration
+/// Ecosystem sovereignty configuration
+/// Renamed from SovereigntyConfig to EcosystemSovereigntyConfig for clarity
+/// (to avoid collision with PrimalSovereigntyConfig in primal_sovereignty.rs)
 #[derive(Debug, Clone, Default)]
-/// Configuration setting: sovereigntyconfig
-/// Comprehensive documentation
-pub struct SovereigntyConfig { /// Primal identifier
+pub struct EcosystemSovereigntyConfig {
+    /// Primal identifier
     pub primal_id: String,
     /// Whether to enable sovereignty monitoring
-    /// Whether enable_sovereignty_monitoring is enabled
     pub enable_sovereignty_monitoring: bool,
     /// The sovereignty threshold value
-    pub sovereignty_threshold: f64 }
+    pub sovereignty_threshold: f64,
+}
+
+// Backward compatibility alias
+pub type SovereigntyConfig = EcosystemSovereigntyConfig;
 
 #[derive(Debug, Clone)]
 /// SovereigntyState structure for BearDog operations

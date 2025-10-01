@@ -172,7 +172,7 @@ pub struct EndpointHealth {
     pub status: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct ResponseTimeMetrics {
     /// The average value
     pub average: f64,
@@ -668,16 +668,18 @@ pub struct SecurityAttestation {
     pub issuer: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct AuthRequirements {
     /// The auth type value
+    #[serde(default)]
     pub auth_type: String,
     /// Collection of required scopes
+    #[serde(default)]
     pub required_scopes: Vec<String>,
     pub token_lifetime: Option<u64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct EndpointSecurityConfig {
     /// Whether tls_required is enabled
     pub tls_required: bool,
@@ -688,7 +690,7 @@ pub struct EndpointSecurityConfig {
     pub auth_requirements: AuthRequirements,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct LoadMetrics {
     /// The cpu usage value
     pub cpu_usage: f64,
@@ -700,11 +702,12 @@ pub struct LoadMetrics {
     pub requests_per_second: f64,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub struct ErrorRateMetrics {
     /// The error rate value
     pub error_rate: f64,
     pub timeout_rate: f64,
     /// Mapping of failure categories
+    #[serde(default)]
     pub failure_categories: HashMap<String, u32>,
 }

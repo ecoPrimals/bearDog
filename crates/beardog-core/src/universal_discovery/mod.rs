@@ -294,7 +294,7 @@ impl UniversalServiceDiscovery {
         // Initialize protocol handlers
         let mut discovery_instances = HashMap::new();
         for protocol in &config.enabled_protocols {
-            let handler = create_modern_discovery(protocol)?;
+            let handler = create_modern_discovery(protocol).await?;
             discovery_instances.insert(protocol.clone(), handler);
         }
 
@@ -421,7 +421,7 @@ impl UniversalServiceDiscovery {
     }
 
     /// Discover services by name
-    pub fn discover_services(&self, service_name: &str) -> Result<Vec<ServiceInfo>, BearDogError> {
+    pub async fn discover_services(&self, service_name: &str) -> Result<Vec<ServiceInfo>, BearDogError> {
         debug!("Discovering services with name: {}", service_name);
 
         let mut discovered_services = Vec::new();
@@ -441,7 +441,7 @@ impl UniversalServiceDiscovery {
 
         // Remove duplicates and apply load balancing
         let unique_services = self.deduplicate_services(discovered_services);
-        let balanced_services = self.load_balancer.balance_services(unique_services)?;
+        let balanced_services = self.load_balancer.balance_services(unique_services).await?;
 
         debug!(
             "Discovered {} services for name: {}",

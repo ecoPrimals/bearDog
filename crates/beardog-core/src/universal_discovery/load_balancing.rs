@@ -129,7 +129,7 @@ impl LoadBalancer {
     }
 
     /// Apply load balancing algorithm
-    pub fn balance_services(
+    pub async fn balance_services(
         &self,
         services: Vec<ServiceInfo>,
     ) -> Result<Vec<ServiceInfo>, BearDogError> {
@@ -151,7 +151,7 @@ impl LoadBalancer {
 
         // Apply the configured algorithm
         let result = match self.config.algorithm {
-            LoadBalancingAlgorithm::RoundRobin => self.round_robin_balance(healthy_services)?,
+            LoadBalancingAlgorithm::RoundRobin => self.round_robin_balance(healthy_services).await?,
             LoadBalancingAlgorithm::LeastConnections => {
                 self.least_connections_balance(&services)?
             }
@@ -200,7 +200,7 @@ impl LoadBalancer {
         }
 
         // Apply load balancing algorithm
-        let balanced_services = self.balance_services(services.to_vec())?;
+        let balanced_services = self.balance_services(services.to_vec()).await?;
         let selected_service = balanced_services.first().cloned();
 
         // Update sticky session if enabled

@@ -1,7 +1,7 @@
 // Main implementation and system orchestration for hybrid intelligence
 
 use super::config::{HybridIntelligenceConfig, IntelligenceMode, LearningAlgorithm};
-use super::core_types::{IntelligenceCapability, MachineLearningConfig, ModelType};
+use super::core_types::{IntelligenceCapability, MachineLearningConfig};
 use super::learning::PredictionHorizon;
 use super::types::*;
 
@@ -38,18 +38,8 @@ pub enum LearningFeedback {
     Neutral,
 }
 
-#[derive(Debug, Clone)]
-pub struct OnlineLearningConfig {
-    /// The learning rate adaptation value
-    pub learning_rate_adaptation: LearningRateAdaptation,
-    /// Number of online_batch_size
-    pub online_batch_size: usize,
-    /// Number of memory_buffer_size
-    pub memory_buffer_size: usize,
-    /// Frequency of model updates during online learning
-    /// The update frequency value
-    pub update_frequency: UpdateFrequency,
-}
+// CLEANED: Duplicate OnlineLearningConfig removed - use canonical version:
+// use beardog_types::canonical::config::domains::ai_config::OnlineLearningConfig;
 
 #[derive(Debug, Clone)]
 pub enum LearningRateAdaptation {
@@ -532,10 +522,10 @@ impl HybridIntelligenceSystem {
             let mut interval = interval(Duration::from_secs(60));
 
             loop {
-                interval.tick();
+                interval.tick().await;
 
                 // Update uptime
-                let mut metrics_guard = metrics.write();
+                let mut metrics_guard = metrics.write().await;
                 metrics_guard.uptime_secs =
                     Utc::now().signed_duration_since(start_time).num_seconds() as u64;
             }
@@ -640,12 +630,12 @@ impl HybridIntelligenceSystem {
     /// Gets comprehensive system status
     /// Gets status
     /// Gets status
-    pub fn get_status(&self) -> SystemStatus {
+    pub async fn get_status(&self) -> SystemStatus {
         SystemStatus {
             system_id: self.config.system_id.clone(),
-            health: self.get_health(),
-            active_capabilities: self.active_capabilities.read().clone(),
-            metrics: self.get_metrics(),
+            health: self.get_health().await,
+            active_capabilities: self.active_capabilities.read().await.clone(),
+            metrics: self.get_metrics().await,
             last_updated: Utc::now(),
         }
     }
@@ -757,75 +747,7 @@ impl HybridIntelligenceBuilder {
         let system_id = self.system_id.unwrap_or_else(|| Uuid::new_v4().to_string());
 
         // Create default configurations if not provided
-        let _ml_config = self.ml_config.unwrap_or_else(|| MachineLearningConfig {
-            supported_models: vec![ModelType::NeuralNetwork],
-            training_config: TrainingConfig {
-                batch_size: 32,
-                epochs: 100,
-                learning_rate: 0.001,
-                validation_split: 0.2,
-                early_stopping: None,
-                regularization: None,
-                optimizer: OptimizerConfig {
-                    optimizer_type: OptimizerType::Adam {
-                        beta1: 0.9,
-                        beta2: 0.999,
-                        epsilon: 1e-8,
-                    },
-                    learning_rate: 0.001,
-                    learning_rate_schedule: None,
-                    weight_decay: 0.0,
-                },
-            },
-            inference_config: InferenceConfig {
-                batch_size: 1,
-                max_inference_time_ms: 1000,
-                serving_config: ServingConfig {
-                    max_concurrent_requests: 10,
-                    request_timeout: Duration::from_secs(30),
-                    load_balancing: LoadBalancingStrategy::RoundRobin,
-                },
-                caching: None,
-            },
-            model_management: ModelManagementConfig {
-                versioning_strategy: VersioningStrategy::Semantic,
-                registry_config: RegistryConfig {
-                    registry_type: RegistryType::Local,
-                    endpoint: "local://models".to_string(),
-                    auth: None,
-                },
-                deployment_config: DeploymentConfig {
-                    strategy: DeploymentStrategy::Rolling,
-                    resources: ResourceRequirements {
-                        cpu: 1.0,
-                        memory: 1024,
-                        gpu: None,
-                        storage: 10,
-                    },
-                    health_check: HealthCheckConfig {
-                        endpoint: "/health".to_string(),
-                        interval: Duration::from_secs(30),
-                        timeout: Duration::from_secs(5),
-                        failure_threshold: 3,
-                    },
-                },
-                monitoring_config: MonitoringConfig {
-                    metrics: vec![MetricType::ModelAccuracy, MetricType::RequestLatency],
-                    alerting: None,
-                    logging: LoggingConfig {
-                        level: LogLevel::Info,
-                        format: LogFormat::Json,
-                        destinations: vec![LogDestination::Stdout],
-                    },
-                },
-            },
-            preprocessing_config: PreprocessingConfig {
-                normalization: NormalizationStrategy::ZScore,
-                feature_selection: None,
-                data_augmentation: None,
-                missing_value_handling: MissingValueStrategy::FillMean,
-            },
-        });
+        let _ml_config = self.ml_config.unwrap_or_else(|| MachineLearningConfig::default());
 
         // Create simplified default neural configuration for compilation
         let _neural_config = self.neural_config.unwrap_or_else(|| {
@@ -903,13 +825,8 @@ impl Default for HybridIntelligenceBuilder {
 
 // Helper functions to create default configurations
 fn create_simple_ml_config() -> MachineLearningConfig {
-    MachineLearningConfig {
-        supported_models: vec![ModelType::NeuralNetwork],
-        training_config: TrainingConfig::default(),
-        inference_config: InferenceConfig::default(),
-        model_management: ModelManagementConfig::default(),
-        preprocessing_config: PreprocessingConfig::default(),
-    }
+    // Use Default implementation from core_types.rs which has the correct fields
+    MachineLearningConfig::default()
 }
 
 /// Creates default_neural_config

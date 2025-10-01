@@ -239,7 +239,7 @@ impl EcosystemPerformanceOptimizer {
     }
 
     /// Optimize service mesh capability discovery
-    pub fn optimize_service_mesh_discovery(
+    pub async fn optimize_service_mesh_discovery(
         &self,
         service_type: &str,
     ) -> Result<Vec<String>, BearDogError> {
@@ -247,6 +247,7 @@ impl EcosystemPerformanceOptimizer {
         let _permit = self
             .rate_limiter
             .acquire()
+            .await
             .map_err(|e| BearDogError::system(format!("Rate limit error: {}", e)))?;
 
         debug!("Performing cached service discovery for: {}", service_type);
@@ -257,8 +258,8 @@ impl EcosystemPerformanceOptimizer {
     }
 
     /// Gets cached_result
-    fn get_cached_result(&self, request_id: &str) -> Result<Option<Arc<Vec<u8>>>, BearDogError> {
-        let cache = self.compute_cache.read();
+    async fn get_cached_result(&self, request_id: &str) -> Result<Option<Arc<Vec<u8>>>, BearDogError> {
+        let cache = self.compute_cache.read().await;
         if let Some(cached) = cache.cache.get(request_id) {
             if cached.cached_at.elapsed() < cached.ttl {
                 // ⚡ ZERO-COPY OPTIMIZATION: Return Arc reference directly (no data clone!)

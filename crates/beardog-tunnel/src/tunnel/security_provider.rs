@@ -21,9 +21,9 @@ use std::time::{Instant, SystemTime};
 use tokio::sync::RwLock;
 use tracing::debug;
 
-use beardog_traits::canonical::SecurityProvider;
+use beardog_traits::unified::SecurityProvider;
 
-pub use beardog_traits::canonical::PlatformProvider as BStpSecurityProvider;
+pub use beardog_traits::unified::PlatformProvider as BStpSecurityProvider;
 
 pub struct BStpSecurityManager {
 

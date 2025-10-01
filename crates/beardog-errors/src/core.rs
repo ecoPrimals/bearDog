@@ -489,6 +489,30 @@ impl BearDogError {
     }
 }
 
+// ============================================================================
+// FROM TRAIT IMPLEMENTATIONS - Automatic Error Conversions
+// ============================================================================
+
+/// Convert std::io::Error to BearDogError::System
+impl From<std::io::Error> for BearDogError {
+    fn from(err: std::io::Error) -> Self {
+        Self::System {
+            message: format!("IO error: {err}"),
+            category: SystemErrorCategory::FileSystem,
+        }
+    }
+}
+
+/// Convert std::fmt::Error to BearDogError::System
+impl From<std::fmt::Error> for BearDogError {
+    fn from(err: std::fmt::Error) -> Self {
+        Self::System {
+            message: format!("Formatting error: {err}"),
+            category: SystemErrorCategory::General,
+        }
+    }
+}
+
 // Result<T, BearDogError> type alias has been removed in favor of idiomatic Result<T, BearDogError>
 //
 // Migration completed! All code should now use Result<T, BearDogError> directly.

@@ -417,8 +417,8 @@ impl SystemMonitor {
     /// Current `SystemMetrics` with resource utilization data
     /// Gets system_metrics
     /// Gets system_metrics
-    pub fn get_system_metrics(&self) -> SystemMetrics {
-        self.metrics.read().clone()
+    pub async fn get_system_metrics(&self) -> SystemMetrics {
+        self.metrics.read().await.clone()
     }
 
     ///
@@ -432,8 +432,8 @@ impl SystemMonitor {
     /// - `None` if the component is not being monitored
     /// Gets component_health
     /// Gets component_health
-    pub fn get_component_health(&self, component: &str) -> Option<ComponentHealth> {
-        self.health_checks.read().get(component).cloned()
+    pub async fn get_component_health(&self, component: &str) -> Option<ComponentHealth> {
+        self.health_checks.read().await.get(component).cloned()
     }
 
     /// Add an alert handler to the monitoring system
@@ -447,11 +447,11 @@ impl SystemMonitor {
     /// # Returns
     /// - `Ok(())` if the handler was added successfully
     /// - `Err(BearDogError)` if adding the handler failed
-    pub fn add_alert_handler(
+    pub async fn add_alert_handler(
         &self,
         handler: Box<dyn AlertHandler + Send + Sync>,
     ) -> Result<(), BearDogError> {
-        self.alert_handlers.write().push(handler);
+        self.alert_handlers.write().await.push(handler);
         Ok(())
     }
 
@@ -629,7 +629,7 @@ impl SecurityProvider for CoreSecurityProvider {
     type Session = String;
     type Credentials = String;
 
-    fn authenticate(
+    async fn authenticate(
         &self,
         _credentials: Self::Credentials,
     ) -> Result<Self::AuthResult, Self::Error> {
@@ -637,20 +637,20 @@ impl SecurityProvider for CoreSecurityProvider {
     }
 
     /// Creates session
-    fn create_session(&self, user_id: &str) -> Result<Self::Session, Self::Error> {
+    async fn create_session(&self, user_id: &str) -> Result<Self::Session, Self::Error> {
         Ok(format!("session_{}", user_id))
     }
 
     /// Validates session
-    fn validate_session(&self, _session_id: &str) -> Result<bool, Self::Error> {
+    async fn validate_session(&self, _session_id: &str) -> Result<bool, Self::Error> {
         Ok(true)
     }
 
-    fn revoke_session(&self, _session_id: &str) -> Result<(), Self::Error> {
+    async fn revoke_session(&self, _session_id: &str) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    fn authorize(
+    async fn authorize(
         &self,
         _session_id: &str,
         _resource: &str,
@@ -660,7 +660,7 @@ impl SecurityProvider for CoreSecurityProvider {
     }
 
     /// Gets security_requirements
-    fn get_security_requirements(&self, _resource: &str) -> Result<Vec<String>, Self::Error> {
+    async fn get_security_requirements(&self, _resource: &str) -> Result<Vec<String>, Self::Error> {
         Ok(vec!["authentication".to_string()])
     }
 }
@@ -690,11 +690,11 @@ impl UniversalAdapter {
     /// # Returns
     /// - `Ok(String)` containing the endpoint URL if the capability is registered
     /// - `Err(BearDogError)` if the capability is not available
-    pub fn discover_capability_endpoint(
+    pub async fn discover_capability_endpoint(
         &self,
         capability: CapabilityType,
     ) -> Result<String, BearDogError> {
-        let capabilities = self.capabilities.read();
+        let capabilities = self.capabilities.read().await;
         capabilities
             .get(&capability)
             .cloned()
@@ -713,12 +713,12 @@ impl UniversalAdapter {
     /// # Returns
     /// - `Ok(())` if the capability was registered successfully
     /// - `Err(BearDogError)` if registration failed
-    pub fn register_capability(
+    pub async fn register_capability(
         &self,
         capability: CapabilityType,
         endpoint: String,
     ) -> Result<(), BearDogError> {
-        let mut capabilities = self.capabilities.write();
+        let mut capabilities = self.capabilities.write().await;
         capabilities.insert(capability, endpoint);
         Ok(())
     }

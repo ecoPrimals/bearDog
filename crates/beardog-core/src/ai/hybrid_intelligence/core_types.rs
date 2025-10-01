@@ -1,16 +1,15 @@
 //! Core types for the hybrid intelligence system
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::time::Duration;
 
-use crate::ai::hybrid_intelligence::decision_engine::{
-    ConsensusStrategy, DecisionCriteria, DecisionStrategy,
+// MIGRATED: Using canonical config types from beardog-types
+use beardog_types::canonical::config::domains::ai_config::{
+    OnlineLearningConfig, TransferLearningConfig, MetaLearningConfig,
 };
 use crate::ai::hybrid_intelligence::learning::{
     ConstraintConfig, EnsembleConfig, HyperparameterOptimization, LearningAlgorithmType,
-    MetaLearningConfig, OnlineLearningConfig, OptimizationAlgorithm, PredictionHorizon,
-    PredictionModel, TransferLearningConfig,
+    OptimizationAlgorithm, PredictionHorizon,
+    PredictionModel,
 };
 use crate::ai::hybrid_intelligence::neural_networks::{
     NetworkArchitecture, NetworkOptimization, NetworkRegularization, TrainingParams,
@@ -103,4 +102,26 @@ pub struct MachineLearningConfig {
     pub prediction_horizon: Option<PredictionHorizon>,
     /// Optimization algorithm
     pub optimization_algorithm: Option<OptimizationAlgorithm>,
+}
+
+impl Default for MachineLearningConfig {
+    fn default() -> Self {
+        Self {
+            model_type: ModelType::NeuralNetwork,
+            training_params: TrainingParams::default(),
+            network_architecture: None,
+            network_optimization: None,
+            network_regularization: None,
+            learning_algorithm: LearningAlgorithmType::Supervised,
+            online_learning: None,
+            meta_learning: None,
+            transfer_learning: None,
+            ensemble: None,
+            hyperparameter_optimization: None,
+            constraints: None,
+            prediction_model: None,
+            prediction_horizon: None,
+            optimization_algorithm: None,
+        }
+    }
 }

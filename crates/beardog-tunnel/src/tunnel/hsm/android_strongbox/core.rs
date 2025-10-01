@@ -3,7 +3,7 @@
 use super::super::types::{AndroidHsmConfig, HsmCapability, HsmTier, KeyType};
 use super::types::AndroidDeviceInfo;
 use crate::tunnel::hsm::types::*;
-use beardog_traits::canonical::HsmProvider;
+use beardog_traits::unified::HsmProvider;
 use beardog_core::{HsmHealthStatus, HsmKey}; // Use canonical types for trait compatibility
 use beardog_errors::BearDogError;
 use chrono::Utc;

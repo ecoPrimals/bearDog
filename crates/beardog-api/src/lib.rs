@@ -111,11 +111,14 @@ pub async fn start_api_server(core: Arc<BearDogCore>, bind_addr: &str) -> Result
 
     let app = create_router(core);
     let listener = tokio::net::TcpListener::bind(bind_addr)
+        .await
         .map_err(|e| BearDogError::system(format!("Failed to bind to {}: {}", bind_addr, e)))?;
 
     info!("✅ API server listening on {}", bind_addr);
 
-    axum::serve(listener, app).map_err(|e| BearDogError::system(format!("Server error: {}", e)))?;
+    axum::serve(listener, app)
+        .await
+        .map_err(|e| BearDogError::system(format!("Server error: {}", e)))?;
 
     Ok(())
 }

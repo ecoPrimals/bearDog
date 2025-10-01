@@ -5,7 +5,7 @@
 // This module provides functionality for the BearDog ecosystem.
 
 use beardog_errors::BearDogError;
-use beardog_traits::canonical::PlatformProvider;
+use beardog_traits::unified::PlatformProvider;
 use tracing::info;
 
 pub mod capability;

@@ -299,5 +299,5 @@ pub struct RateLimitConfig {
     pub burst_size: u32,
 }
 
-// Compatibility aliases
-pub type EndpointConfig = CanonicalNetworkConfig;
+// Compatibility aliases REMOVED:
+// - EndpointConfig was deprecated (3.2.0) - Use CanonicalNetworkConfig directly

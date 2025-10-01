@@ -6,7 +6,7 @@
 
 
 use beardog_errors::BearDogError;
-use beardog_traits::canonical::PlatformProvider;
+use beardog_traits::unified::PlatformProvider;
 use std::collections::HashMap;
 
 pub struct SafeIosProvider {

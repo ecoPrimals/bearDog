@@ -25,9 +25,6 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
 
-// Import the unified trait from the trait module
-use super::r#trait::BearDogConfig;
-
 // Import canonical configuration types
 use crate::canonical::config::network::{
     CircuitBreakerConfig, LoadBalancingConfig, RateLimitConfig,
@@ -42,14 +39,12 @@ use crate::canonical::config::type_aliases::{
     DatabaseBackupConfig, EntropyCollectionConfig, EntropyHierarchyConfig, GeneticAlgorithmConfig,
     HumanEntropyConfig, SimdOptimizationConfig,
 };
-use crate::canonical::providers_unified::resilience::RetryConfig;
+use crate::canonical::config::hsm::UnifiedHsmConfig;
+// Removed unused import: RetryConfig (used directly where needed)
 // Note: SecurityPolicy will be aliased to SecurityConfig for now
 
-// Type aliases for compatibility
-pub type RetryPolicyConfig = RetryConfig;
-pub type RateLimitingConfig = RateLimitConfig;
-pub type SecurityPolicyConfig = crate::canonical::SecurityConfig;
-pub type ThreatDetectionConfig = crate::canonical::monitoring::ThreatDetectionConfig;
+// Type aliases for compatibility - REMOVED October 2025
+// Use the canonical types directly: RetryConfig, RateLimitConfig, SecurityConfig, etc.
 
 ///
 /// This is the **ROOT** of the unified configuration system that eliminates all
@@ -314,10 +309,10 @@ pub struct UnifiedNetworkConfig {
     pub circuit_breaker: CircuitBreakerConfig,
     /// Retry Policy
     /// The retry policy value
-    pub retry_policy: RetryPolicyConfig,
+    pub retry_policy: crate::canonical::providers_unified::resilience::RetryConfig,
     /// Rate Limiting
     /// The rate limiting value
-    pub rate_limiting: RateLimitingConfig,
+    pub rate_limiting: crate::canonical::config::security::RateLimitingConfig,
 }
 
 /// **UNIFIED SECURITY CONFIG** - Consolidates all security configurations
@@ -345,7 +340,7 @@ pub struct UnifiedSecurityConfig {
 
     /// **SECURITY POLICIES**
     /// The policies value
-    pub policies: SecurityPolicyConfig,
+    pub policies: crate::canonical::SecurityConfig,
 
     /// **AUDIT & COMPLIANCE**
     /// The audit value
@@ -353,14 +348,16 @@ pub struct UnifiedSecurityConfig {
 
     /// **THREAT DETECTION**
     /// The threat detection value
-    pub threat_detection: ThreatDetectionConfig,
+    pub threat_detection: crate::canonical::monitoring::ThreatDetectionConfig,
 }
 
 /// **UNIFIED HSM CONFIG** - Consolidates all HSM configurations
 ///
 /// **MIGRATION COMPLETE**: This now uses the canonical HSM system from `hsm_unified`.
 /// All legacy HSM configurations from beardog-tunnel have been consolidated.
-pub type UnifiedHsmConfig = crate::canonical::hsm_unified::CanonicalHsmConfig;
+// REMOVED: Duplicate alias (Phase 2 cleanup - October 2025)
+// Use CanonicalHsmConfig directly or HsmConfig alias
+// REMOVED: Commented alias - use crate::canonical::hsm_unified::CanonicalHsmConfig directly
 
 /// **UNIFIED DATABASE CONFIG** - Consolidates all database configurations
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -914,7 +911,8 @@ impl SimplifiedBearDogConfig {
 }
 
 // Backward compatibility type alias
-#[deprecated(since = "3.1.0", note = "Use SimplifiedBearDogConfig directly")]
-pub type WorkingUnifiedConfig = SimplifiedBearDogConfig;
+// REMOVED: Deprecated alias (Phase 2 cleanup - October 2025)
+// Use SimplifiedBearDogConfig directly
+// REMOVED: Deprecated WorkingUnifiedConfig alias - use SimplifiedBearDogConfig directly
 
 // Additional supporting configuration types would be implemented here...

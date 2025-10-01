@@ -13,7 +13,7 @@ use super::types::*;
 use crate::tunnel::hsm::software_hsm::{CryptoBackend, MemoryConfig};
 use crate::tunnel::hsm::types::config::SoftwareHsmConfig as CanonicalSoftwareHsmConfig;
 use crate::tunnel::hsm::types::*;
-use beardog_traits::canonical::HsmProvider;
+use beardog_traits::unified::HsmProvider;
 use crate::tunnel::hsm::{GenerateKeyRequest, HsmConfig, HsmInfo, HsmKeyInfo};
 use beardog_core::HsmKey; // Use core HsmKey to match trait expectation
 use beardog_errors::BearDogError;

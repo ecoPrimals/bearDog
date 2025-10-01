@@ -96,9 +96,8 @@ impl UnifiedProvider for UniversalProviderImpl {
     }
 }
 
-// LEGACY COMPATIBILITY: Keep the legacy BaseProvider implementation for now
-// This will be removed in the next phase of cleanup
-impl beardog_traits::canonical::UniversalProvider for UniversalProviderImpl {
+// UNIFIED: Migrated from canonical to unified trait system
+impl beardog_traits::unified::UniversalProvider for UniversalProviderImpl {
     fn provider_type(&self) -> &str {
         match self {
             Self::Cloud(_) => "cloud",
@@ -117,8 +116,8 @@ impl beardog_traits::canonical::UniversalProvider for UniversalProviderImpl {
     }
 }
 
-// MODERNIZED: Remove async_trait and use native async functions
-impl beardog_traits::canonical::BaseProvider for UniversalProviderImpl {
+// MODERNIZED: Using unified traits with native async functions
+impl beardog_traits::unified::BaseProvider for UniversalProviderImpl {
     fn provider_id(&self) -> &str {
         match self {
             Self::Cloud(_) => "cloud-universal",

@@ -48,14 +48,14 @@ pub use registry::ExternalFunctionRegistry;
 pub use types::{
     AccessRestriction, CallingConvention, CpuIntensity, FunctionAttribute, FunctionHandle,
     FunctionMetadata, FunctionParameter, FunctionResult, FunctionValue, LibraryHandle,
-    LibraryMetadata, ParameterType, PerformanceInfo, RegistryConfig, SafetyLevel,
+    ExternalFunctionsRegistryConfig, LibraryMetadata, ParameterType, PerformanceInfo, SafetyLevel,
     SecurityClearance, SecurityInfo,
 };
 
 pub use safety::{ParameterValue, SafetyChecker};
 
-pub fn default_config() -> RegistryConfig {
-    RegistryConfig::default()
+pub fn default_config() -> ExternalFunctionsRegistryConfig {
+    ExternalFunctionsRegistryConfig::default()
 }
 
 /// Creates a new external function registry with default configuration
@@ -66,7 +66,7 @@ pub fn create_registry() -> ExternalFunctionRegistry {
 
 /// Creates a new external function registry with custom configuration
 /// Creates registry_with_config
-pub fn create_registry_with_config(config: RegistryConfig) -> ExternalFunctionRegistry {
+pub fn create_registry_with_config(config: ExternalFunctionsRegistryConfig) -> ExternalFunctionRegistry {
     ExternalFunctionRegistry::new(config)
 }
 
@@ -76,7 +76,7 @@ mod tests {
 
     #[tokio::test]
     fn test_registry_creation() {
-        let config = RegistryConfig::default();
+        let config = ExternalFunctionsRegistryConfig::default();
         let registry = ExternalFunctionRegistry::new(config);
         let libraries = registry.list_libraries().unwrap();
         assert!(libraries.is_empty());
@@ -84,7 +84,7 @@ mod tests {
 
     #[tokio::test]
     fn test_registry_library_management() {
-        let config = RegistryConfig::default();
+        let config = ExternalFunctionsRegistryConfig::default();
         let registry = ExternalFunctionRegistry::new(config);
         let libraries = registry.list_libraries().unwrap();
         assert!(libraries.is_empty());

@@ -33,12 +33,12 @@ impl ProductionUniversalAdapter {
     /// Process request with production enhancements
     /// Processes request
     /// Processes request
-    pub fn process_request(
+    pub async fn process_request(
         &self,
         request: AdapterRequest,
     ) -> Result<AdapterResponse, BearDogError> {
         // Add production enhancements here (circuit breaker, rate limiting, etc.)
-        self.core_adapter.process_request(request)
+        self.core_adapter.process_request(request).await
     }
 
     /// Get production configuration

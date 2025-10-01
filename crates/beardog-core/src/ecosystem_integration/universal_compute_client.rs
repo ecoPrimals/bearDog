@@ -275,7 +275,7 @@ impl UniversalComputeClient {
     }
 
     /// Submit compute request using capability-based routing
-    pub fn submit_compute(
+    pub async fn submit_compute(
         &self,
         request: UniversalComputeRequest,
     ) -> Result<UniversalComputeResponse, BearDogError> {
@@ -283,7 +283,7 @@ impl UniversalComputeClient {
         debug!("📊 Request details: {:?}", request);
 
         // Discover best compute provider for this request
-        let provider = self.discover_best_provider(&request)?;
+        let provider = self.discover_best_provider(&request).await?;
 
         // Execute computation through discovered provider
         let response = self.execute_compute_request(&request, &provider)?;
@@ -404,12 +404,12 @@ impl UniversalComputeClient {
     }
 
     /// Refresh discovered compute capabilities
-    pub fn refresh_capabilities(&self) -> Result<(), BearDogError> {
+    pub async fn refresh_capabilities(&self) -> Result<(), BearDogError> {
         info!("🔄 Refreshing compute capabilities through universal discovery");
 
         // In real implementation, this would trigger new capability discovery
         // For now, we'll log the refresh
-        let capabilities_count = self.discovered_capabilities.read().len();
+        let capabilities_count = self.discovered_capabilities.read().await.len();
         info!("✅ Refreshed {} compute capabilities", capabilities_count);
 
         Ok(())

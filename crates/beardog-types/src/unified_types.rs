@@ -63,30 +63,8 @@ pub type MigrationResult<T> = Result<T, BearDogError>;
 // CONFIGURATION TYPES - Unified configuration system
 // =============================================================================
 
-/// **Primary Configuration Type** - Main `BearDog` configuration
-pub type UnifiedConfig = UnifiedBearDogConfig;
-
-/// **Master Configuration Alias** - Alternative name for unified config
-pub type MasterConfig = UnifiedBearDogConfig;
-
-/// **Global Configuration Alias** - Alternative name for unified config
-pub type GlobalConfig = UnifiedBearDogConfig;
-
-/// **Application Configuration Type** - Application-specific configuration
-// Legacy type - use UnifiedBearDogConfig instead
-// pub type AppConfig = CanonicalAppConfig;
-
-/// **Application Configuration Alias** - Alternative name for app config
-// Legacy type - use UnifiedBearDogConfig instead
-// pub type ApplicationConfig = CanonicalAppConfig;
-
-/// **Database Configuration Type** - Database configuration
-// Legacy type - use UnifiedBearDogConfig::database instead
-// pub type DatabaseConfig = CanonicalDatabaseConfig;
-
-/// **Genetics Configuration Type** - Genetics algorithm configuration
-// Legacy import - consolidated_simple module deprecated
-// pub type GeneticsConfig = crate::canonical::config::consolidated_simple::GeneticsConfig;
+// CLEANED: Removed commented type aliases (October 2025 unification)
+// Use canonical types directly - see beardog-types/src/canonical/config/ for all configs
 
 /// **HSM Configuration Type** - Hardware security module configuration
 pub type HsmConfig = crate::canonical::hsm_unified::CanonicalHsmConfig;
