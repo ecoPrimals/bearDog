@@ -250,15 +250,15 @@ impl SystemMonitor {
                 tokio::time::interval(std::time::Duration::from_millis(config.check_interval_ms));
 
             loop {
-                interval.tick();
+                interval.tick().await;
 
                 // Collect system metrics
-                if let Err(e) = Self::collect_system_metrics(&metrics_clone) {
+                if let Err(e) = Self::collect_system_metrics(&metrics_clone).await {
                     error!("Failed to collect system metrics: {}", e);
                 }
 
                 // Check component health
-                if let Err(e) = Self::check_component_health(&health_checks_clone) {
+                if let Err(e) = Self::check_component_health(&health_checks_clone).await {
                     error!("Failed to check component health: {}", e);
                 }
 
@@ -268,7 +268,7 @@ impl SystemMonitor {
                     &health_checks_clone,
                     &alert_handlers_clone,
                     &config,
-                ) {
+                ).await {
                     error!("Failed to process alerts: {}", e);
                 }
             }
@@ -278,7 +278,7 @@ impl SystemMonitor {
         Ok(())
     }
 
-    fn collect_system_metrics(metrics: &Arc<RwLock<SystemMetrics>>) -> Result<(), BearDogError> {
+    async fn collect_system_metrics(metrics: &Arc<RwLock<SystemMetrics>>) -> Result<(), BearDogError> {
         // In a real implementation, this would use system APIs to collect metrics
         // For now, we'll simulate with reasonable values using a thread-safe random source
         use rand::rngs::StdRng;
@@ -286,7 +286,7 @@ impl SystemMonitor {
 
         let mut rng = StdRng::from_entropy();
 
-        let mut system_metrics = metrics.write();
+        let mut system_metrics = metrics.write().await;
         system_metrics.cpu_usage_percent = rng.gen_range(10.0..70.0);
         system_metrics.memory_usage_percent = rng.gen_range(20.0..60.0);
         system_metrics.disk_usage_percent = rng.gen_range(30.0..80.0);
@@ -298,7 +298,7 @@ impl SystemMonitor {
         Ok(())
     }
 
-    fn check_component_health(
+    async fn check_component_health(
         health_checks: &Arc<RwLock<HashMap<String, ComponentHealth>>>,
     ) -> Result<(), BearDogError> {
         use rand::rngs::StdRng;
@@ -307,7 +307,7 @@ impl SystemMonitor {
         let mut rng = StdRng::from_entropy();
 
         let components = vec!["core", "security", "monitoring", "genetics", "adapters"];
-        let mut health_map = health_checks.write();
+        let mut health_map = health_checks.write().await;
 
         for component in components {
             let health = ComponentHealth {
@@ -329,15 +329,15 @@ impl SystemMonitor {
     }
 
     /// Processes alerts
-    fn process_alerts(
+    async fn process_alerts(
         metrics: &Arc<RwLock<SystemMetrics>>,
         health_checks: &Arc<RwLock<HashMap<String, ComponentHealth>>>,
         alert_handlers: &Arc<RwLock<Vec<Box<dyn AlertHandler + Send + Sync>>>>,
         config: &SystemMonitorConfig,
     ) -> Result<(), BearDogError> {
-        let system_metrics = metrics.read();
-        let health_map = health_checks.read();
-        let handlers = alert_handlers.read();
+        let system_metrics = metrics.read().await;
+        let health_map = health_checks.read().await;
+        let handlers = alert_handlers.read().await;
 
         // Check for CPU alerts
         if system_metrics.cpu_usage_percent > config.alert_threshold_cpu {
