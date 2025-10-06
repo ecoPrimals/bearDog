@@ -49,13 +49,19 @@ impl Default for ClientConfiguration {
             request_timeout_seconds: 60,
             max_redirects: 5,
             enable_connection_pooling: true,
-            user_agent: format!("BearDog/{}", beardog_types::constants::domains::system::versions::BEARDOG_VERSION),
+            user_agent: format!(
+                "BearDog/{}",
+                crate::constants::domains::system::versions::BEARDOG_VERSION
+            ),
             default_headers: HashMap::new(),
             retry: RetryConfiguration {
-                max_attempts: beardog_types::constants::domains::system::defaults::DEFAULT_MAX_RETRIES,
-                base_delay_ms: beardog_types::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE as u64,
-                max_delay_ms: beardog_types::constants::domains::network::timeouts::DEFAULT_REQUEST_TIMEOUT.as_millis() as u64,
-                backoff_multiplier: beardog_types::constants::domains::system::defaults::DEFAULT_BACKOFF_MULTIPLIER,
+                max_attempts: crate::constants::domains::system::defaults::DEFAULT_MAX_RETRIES,
+                base_delay_ms: crate::constants::domains::system::defaults::DEFAULT_QUEUE_SIZE
+                    as u64,
+                max_delay_ms: crate::constants::domains::network::timeouts::REQUEST_TIMEOUT
+                    .as_millis() as u64,
+                backoff_multiplier:
+                    crate::constants::domains::system::defaults::DEFAULT_BACKOFF_MULTIPLIER,
                 enable_exponential_backoff: true,
                 retryable_status_codes: vec![408, 429, 500, 502, 503, 504],
             },
@@ -67,19 +73,23 @@ impl ClientConfiguration {
     /// Validate client configuration
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.connection_timeout_seconds == 0 {
-            return Err(BearDogError::configuration("Client connection timeout cannot be zero"));
+            return Err(BearDogError::configuration(
+                "Client connection timeout cannot be zero",
+            ));
         }
-        
+
         if self.request_timeout_seconds == 0 {
-            return Err(BearDogError::configuration("Client request timeout cannot be zero"));
+            return Err(BearDogError::configuration(
+                "Client request timeout cannot be zero",
+            ));
         }
-        
+
         if self.user_agent.is_empty() {
             return Err(BearDogError::configuration("User agent cannot be empty"));
         }
-        
+
         self.retry.validate()?;
-        
+
         Ok(())
     }
 }
@@ -88,17 +98,21 @@ impl RetryConfiguration {
     /// Validate retry configuration
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.max_attempts == 0 {
-            return Err(BearDogError::configuration("Max retry attempts cannot be zero"));
+            return Err(BearDogError::configuration(
+                "Max retry attempts cannot be zero",
+            ));
         }
-        
+
         if self.base_delay_ms == 0 {
             return Err(BearDogError::configuration("Base delay cannot be zero"));
         }
-        
+
         if self.backoff_multiplier <= 0.0 {
-            return Err(BearDogError::configuration("Backoff multiplier must be positive"));
+            return Err(BearDogError::configuration(
+                "Backoff multiplier must be positive",
+            ));
         }
-        
+
         Ok(())
     }
 }
@@ -135,4 +149,4 @@ mod tests {
         config.user_agent = String::new();
         assert!(config.validate().is_err());
     }
-} 
+}

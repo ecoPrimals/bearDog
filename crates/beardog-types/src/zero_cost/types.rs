@@ -212,7 +212,7 @@ pub struct ArcDynAnalysisReport {
     /// Name of the crate being analyzed
     /// Name of the crate
     pub crate_name: String,
-    /// Total number of Arc<dyn> patterns found
+    /// Total number of `Arc<dyn>` patterns found
     /// Number of `total_arc_dyn_patterns`
     pub total_arc_dyn_patterns: usize,
     /// Number of patterns that can be migrated
@@ -226,7 +226,7 @@ pub struct ArcDynAnalysisReport {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ArcDynPattern {
-    /// Name of the trait being used with Arc<dyn>
+    /// Name of the trait being used with `Arc<dyn>`
     /// Name of the trait
     pub trait_name: String,
     /// File path where the pattern is found
@@ -245,7 +245,7 @@ pub struct ArcDynPattern {
 /// Zero-cost migration plan
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZeroCostMigrationPlan {
-    /// List of Arc<dyn> patterns to migrate
+    /// List of `Arc<dyn>` patterns to migrate
     /// Collection of patterns
     pub patterns: Vec<ArcDynPattern>,
     /// Expected increase in compilation time (percentage)

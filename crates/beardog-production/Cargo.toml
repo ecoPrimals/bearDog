@@ -24,6 +24,9 @@ workspace = true
 [dependencies.beardog-errors]
 workspace = true
 
+[dependencies.beardog-types]
+workspace = true
+
 [dependencies.tokio]
 workspace = true
 
@@ -40,4 +43,13 @@ workspace = true
 workspace = true
 
 [dependencies.thiserror]
+workspace = true
+
+[dependencies.toml]
+workspace = true
+
+[dependencies.serde_yaml]
+workspace = true
+
+[dependencies.serde_json]
 workspace = true

@@ -157,7 +157,7 @@ impl EcosystemEvent {
     }
 
     /// Creates instance with priority
-    pub fn with_priority(mut self, priority: EventPriority) -> Self {
+    pub const fn with_priority(mut self, priority: EventPriority) -> Self {
         self.priority = priority;
         self
     }

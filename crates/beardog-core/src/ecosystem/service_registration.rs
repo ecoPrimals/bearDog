@@ -12,7 +12,7 @@ use tracing::info;
 
 ///
 /// Contains all the metadata and connection details needed to register
-/// a service with the BearDog ecosystem, including identity, capabilities,
+/// a service with the `BearDog` ecosystem, including identity, capabilities,
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EcosystemRegistration {
     pub service_id: String,
@@ -33,6 +33,7 @@ pub struct EcosystemRegistration {
 }
 
 impl BearDogCore {
+    #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
     pub(crate) fn register_with_ecosystem(&self) -> Result<(), BearDogError> {
         info!("�� Registering BearDog with ecosystem services");
 
@@ -54,6 +55,7 @@ impl BearDogCore {
         Ok(())
     }
 
+    #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
     fn register_with_compute_capability(
         &self,
         _registration: &EcosystemRegistration,
@@ -63,6 +65,7 @@ impl BearDogCore {
         Ok(())
     }
 
+    #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
     fn register_with_networking_capability(
         &self,
         _registration: &EcosystemRegistration,
@@ -72,6 +75,7 @@ impl BearDogCore {
         Ok(())
     }
 
+    #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
     fn register_with_ai_capability(
         &self,
         _registration: &EcosystemRegistration,
@@ -81,7 +85,8 @@ impl BearDogCore {
         Ok(())
     }
 
-    /// Gets service_endpoints
+    /// Gets `service_endpoints`
+    #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
     fn get_service_endpoints(&self) -> HashMap<String, String> {
         let mut endpoints = HashMap::new();
         endpoints.insert("health".to_string(), "/health".to_string());
@@ -90,7 +95,8 @@ impl BearDogCore {
         endpoints
     }
 
-    /// Gets service_capabilities
+    /// Gets `service_capabilities`
+    #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
     fn get_service_capabilities(&self) -> Vec<String> {
         vec![
             "security".to_string(),
@@ -101,6 +107,7 @@ impl BearDogCore {
         ]
     }
 
+    #[allow(dead_code)] // TODO: Enable when ecosystem module is fully integrated
     pub(crate) fn unregister_from_ecosystem(&self) -> Result<(), BearDogError> {
         info!("🌌 Unregistering BearDog from ecosystem services");
         // Implementation would notify all registered services
@@ -114,11 +121,11 @@ impl BearDogCore {
     /// and registered with this service instance.
     ///
     /// # Returns
-    /// HashMap mapping capability names to their availability status
+    /// `HashMap` mapping capability names to their availability status
     /// - `true` if the capability is available and registered
     /// - `false` if the capability is not available or registration failed
-    /// Gets registration_status
-    /// Gets registration_status
+    /// Gets `registration_status`
+    /// Gets `registration_status`
     pub fn get_registration_status(&self) -> HashMap<String, bool> {
         // Use capability-based registration instead of hardcoded primal names
         let mut status = HashMap::new();

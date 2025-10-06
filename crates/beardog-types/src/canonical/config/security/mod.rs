@@ -41,7 +41,7 @@ pub use session::*;
 
 /// **CANONICAL SECURITY CONFIGURATION** - Single source of truth
 ///
-/// This is the master security configuration that consolidates all security
+/// This is the primary security configuration that consolidates all security
 /// settings across the `BearDog` ecosystem, replacing fragmented security configs.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CanonicalSecurityConfig {

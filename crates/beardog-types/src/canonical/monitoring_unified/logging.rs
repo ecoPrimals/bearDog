@@ -1,23 +1,11 @@
-// Logging Configuration
+// Logging Configuration (DEPRECATED - use canonical system config)
+//
+// **MIGRATION**: Use `crate::canonical::config::domains::system::LoggingConfig` instead.
+//
+// This type alias will be removed in v3.3.0.
 
-use beardog_errors::BearDogError;
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct LoggingConfig {
-    /// Enabled
-    /// Whether feature is enabled
-    pub enabled: bool,
-    /// Level
-    /// The level value
-    pub level: String,
-}
-
-impl LoggingConfig {
-    /// Validate
-    /// Validates input
-    /// Validates input
-    pub fn validate(&self) -> Result<(), BearDogError> {
-        Ok(())
-    }
-}
+#[deprecated(
+    since = "3.1.0",
+    note = "Use crate::canonical::config::domains::system::LoggingConfig instead"
+)]
+pub type LoggingConfig = crate::canonical::config::domains::system::LoggingConfig;

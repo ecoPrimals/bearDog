@@ -134,10 +134,10 @@ impl CryptoProvider for OpenSslCryptoProvider {
 
         debug!("Deriving key with OpenSSL crypto provider (HMAC-SHA256)");
 
-        if master_key.is_empty() {
-                message: "Master key cannot be empty".to_string(),
+        if root_key.is_empty() {
+                message: "Root key cannot be empty".to_string(),
 
-        let key = PKey::hmac(master_key).map_err(|e| BearDogError::Crypto {
+        let key = PKey::hmac(root_key).map_err(|e| BearDogError::Crypto {
             message: format!("Failed to create HMAC key: {e}"),
         let mut signer =
             Signer::new(MessageDigest::sha256(), &key).map_err(|e| BearDogError::Crypto {
@@ -206,10 +206,10 @@ mod tests {
             .verify(&key_material, different_data, &signature)
         assert!(!is_invalid);
     fn test_key_derivation() -> Result<(), BearDogError> {
-        let master_key = b"master_key_for_derivation_test";
+        let root_key = b"root_key_for_derivation_test";
         let derivation_data = b"derivation_context";
         let derived_key1 = provider
-            .derive_key(master_key, derivation_data)
+            .derive_key(root_key, derivation_data)
         let derived_key2 = provider
 
         assert_eq!(derived_key1, derived_key2);
@@ -217,5 +217,5 @@ mod tests {
 
         let different_derivation_data = b"different_context";
         let different_key = provider
-            .derive_key(master_key, different_derivation_data)
+            .derive_key(root_key, different_derivation_data)
         assert_ne!(derived_key1, different_key);

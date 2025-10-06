@@ -5,17 +5,17 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 /// External functions registry configuration
-/// Renamed from RegistryConfig to ExternalFunctionsRegistryConfig for clarity
+/// Renamed from `RegistryConfig` to `ExternalFunctionsRegistryConfig` for clarity
 #[derive(Debug, Clone)]
 pub struct ExternalFunctionsRegistryConfig {
     /// Maximum number of loaded libraries
-    /// Number of max_libraries
+    /// Number of `max_libraries`
     pub max_libraries: usize,
     /// Enable function caching
-    /// Whether enable_caching is enabled
+    /// Whether `enable_caching` is enabled
     pub enable_caching: bool,
     /// Enable safety checks
-    /// Whether enable_safety_checks is enabled
+    /// Whether `enable_safety_checks` is enabled
     pub enable_safety_checks: bool,
     /// Allowed library directories
     /// Collection of allowed directories
@@ -23,7 +23,7 @@ pub struct ExternalFunctionsRegistryConfig {
     /// Function call timeout in milliseconds
     pub function_timeout_ms: u64,
     /// Enable logging of FFI calls
-    /// Whether enable_logging is enabled
+    /// Whether `enable_logging` is enabled
     pub enable_logging: bool,
 }
 
@@ -246,7 +246,7 @@ pub struct PerformanceInfo {
     /// The cpu intensity value
     pub cpu_intensity: CpuIntensity,
     /// I/O operations expected
-    /// Whether io_operations is enabled
+    /// Whether `io_operations` is enabled
     pub io_operations: bool,
 }
 
@@ -269,10 +269,10 @@ pub struct SecurityInfo {
     /// The clearance required value
     pub clearance_required: SecurityClearance,
     /// Audit logging required
-    /// Whether audit_required is enabled
+    /// Whether `audit_required` is enabled
     pub audit_required: bool,
     /// Sandbox required
-    /// Whether sandbox_required is enabled
+    /// Whether `sandbox_required` is enabled
     pub sandbox_required: bool,
     /// Access restrictions
     /// Collection of access restrictions

@@ -17,138 +17,133 @@ use crate::canonical::config::r#trait::BearDogConfig;
 pub struct ConsolidatedWorkflowConfig {
     /// Enable workflow processing
     pub enabled: bool,
-    
+
     /// Workflow engine configuration
     pub engine: WorkflowEngineConfig,
-    
+
     /// Escalation configuration
     pub escalation: WorkflowEscalationConfig,
-    
+
     /// Scheduling configuration
     pub scheduling: SchedulingConfig,
-    
+
     /// Persistence configuration
     pub persistence: PersistenceConfig,
 }
 
 /// Workflow engine configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct WorkflowEngineConfig {
     /// Engine type
     pub engine_type: String,
-    
+
     /// Worker pool size
     pub worker_pool_size: usize,
-    
+
     /// Queue configuration
     pub queue: QueueConfig,
-    
+
     /// Timeout configuration
     pub timeouts: TimeoutConfig,
 }
 
 /// Workflow escalation configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct WorkflowEscalationConfig {
     /// Enable escalation
     pub enabled: bool,
-    
+
     /// Escalation rules
     pub rules: Vec<EscalationRule>,
-    
+
     /// Default escalation timeout
     pub default_timeout: Duration,
-    
+
     /// Notification configuration
     pub notifications: NotificationConfig,
 }
 
 /// Escalation rule
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct EscalationRule {
     /// Rule name
     pub name: String,
-    
+
     /// Condition
     pub condition: String,
-    
+
     /// Escalation target
     pub target: String,
-    
+
     /// Timeout
     pub timeout: Duration,
 }
 
 /// Notification configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct NotificationConfig {
     /// Notification channels
     pub channels: Vec<String>,
-    
+
     /// Templates
     pub templates: HashMap<String, String>,
-    
+
     /// Rate limiting
-    pub rate_limit: RateLimitConfig,
+    pub rate_limit: super::network::RateLimitConfig,
 }
 
-/// Rate limiting configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct RateLimitConfig {
-    /// Enable rate limiting
-    pub enabled: bool,
-    
-    /// Requests per second
-    pub requests_per_second: u32,
-    
-    /// Burst size
-    pub burst_size: u32,
-}
+/// Rate limiting configuration (DEPRECATED - use canonical network config)
+///
+/// **MIGRATION**: Use `super::network::RateLimitConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(since = "3.1.0", note = "Use super::network::RateLimitConfig instead")]
+pub type RateLimitConfig = super::network::RateLimitConfig;
 
 /// Scheduling configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SchedulingConfig {
     /// Scheduler type
     pub scheduler_type: String,
-    
+
     /// Default schedule
     pub default_schedule: String,
-    
+
     /// Time zone
     pub timezone: String,
-    
+
     /// Concurrent execution limit
     pub max_concurrent: usize,
 }
 
 /// Queue configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct QueueConfig {
     /// Queue type
     pub queue_type: String,
-    
+
     /// Queue capacity
     pub capacity: usize,
-    
+
     /// Message TTL
     pub message_ttl: Duration,
-    
+
     /// Dead letter queue
     pub dead_letter_queue: Option<String>,
 }
 
 /// Timeout configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TimeoutConfig {
     /// Default timeout
     pub default: Duration,
-    
+
     /// Maximum timeout
     pub maximum: Duration,
-    
+
     /// Connection timeout
     pub connection: Duration,
-    
+
     /// Read timeout
     pub read: Duration,
 }
@@ -158,16 +153,16 @@ pub struct TimeoutConfig {
 pub struct PersistenceConfig {
     /// Enable persistence
     pub enabled: bool,
-    
+
     /// Storage backend
     pub backend: String,
-    
+
     /// Connection configuration
     pub connection: ConnectionConfig,
-    
+
     /// Retention configuration
     pub retention: RetentionConfig,
-    
+
     /// Archive configuration
     pub archive: ArchiveConfig,
 }
@@ -177,42 +172,42 @@ pub struct PersistenceConfig {
 pub struct ConnectionConfig {
     /// Connection URL
     pub url: String,
-    
+
     /// Connection pool size
     pub pool_size: usize,
-    
+
     /// Connection timeout
     pub timeout: Duration,
-    
+
     /// Retry configuration
     pub retry: RetryConfig,
 }
 
 /// Retention configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct RetentionConfig {
     /// Retention period
     pub period: Duration,
-    
+
     /// Cleanup interval
     pub cleanup_interval: Duration,
-    
+
     /// Archive before deletion
     pub archive_before_delete: bool,
 }
 
 /// Archive configuration
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ArchiveConfig {
     /// Enable archiving
     pub enabled: bool,
-    
+
     /// Archive storage
     pub storage: String,
-    
+
     /// Compression
     pub compression: bool,
-    
+
     /// Encryption
     pub encryption: bool,
 }
@@ -222,13 +217,13 @@ pub struct ArchiveConfig {
 pub struct RetryConfig {
     /// Maximum retry attempts
     pub max_attempts: usize,
-    
+
     /// Initial delay
     pub initial_delay: Duration,
-    
+
     /// Backoff multiplier
     pub backoff_multiplier: f64,
-    
+
     /// Maximum delay
     pub max_delay: Duration,
 }
@@ -273,20 +268,12 @@ impl Default for NotificationConfig {
         Self {
             channels: vec!["email".to_string()],
             templates: HashMap::new(),
-            rate_limit: RateLimitConfig::default(),
+            rate_limit: super::network::RateLimitConfig::default(),
         }
     }
 }
 
-impl Default for RateLimitConfig {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            requests_per_second: 10,
-            burst_size: 20,
-        }
-    }
-}
+// RateLimitConfig Default implementation removed - using canonical version
 
 impl Default for SchedulingConfig {
     fn default() -> Self {
@@ -347,7 +334,7 @@ impl Default for ConnectionConfig {
 impl Default for RetentionConfig {
     fn default() -> Self {
         Self {
-            period: Duration::from_secs(86400 * 30), // 30 days
+            period: Duration::from_secs(86400 * 30),     // 30 days
             cleanup_interval: Duration::from_secs(3600), // 1 hour
             archive_before_delete: true,
         }
@@ -381,28 +368,38 @@ impl BearDogConfig for ConsolidatedWorkflowConfig {
     fn validate(&self) -> BearDogResult<()> {
         if self.enabled {
             if self.engine.worker_pool_size == 0 {
-                return Err(BearDogError::validation("Worker pool size must be greater than 0"));
+                return Err(BearDogError::validation(
+                    "Worker pool size must be greater than 0",
+                ));
             }
-            
+
             if self.engine.queue.capacity == 0 {
-                return Err(BearDogError::validation("Queue capacity must be greater than 0"));
+                return Err(BearDogError::validation(
+                    "Queue capacity must be greater than 0",
+                ));
             }
-            
+
             if self.scheduling.max_concurrent == 0 {
-                return Err(BearDogError::validation("Max concurrent workflows must be greater than 0"));
+                return Err(BearDogError::validation(
+                    "Max concurrent workflows must be greater than 0",
+                ));
             }
-            
+
             if self.persistence.enabled && self.persistence.connection.pool_size == 0 {
-                return Err(BearDogError::validation("Connection pool size must be greater than 0 when persistence is enabled"));
+                return Err(BearDogError::validation(
+                    "Connection pool size must be greater than 0 when persistence is enabled",
+                ));
             }
-            
+
             if self.escalation.enabled && self.escalation.rules.is_empty() {
-                return Err(BearDogError::validation("Escalation rules cannot be empty when escalation is enabled"));
+                return Err(BearDogError::validation(
+                    "Escalation rules cannot be empty when escalation is enabled",
+                ));
             }
         }
         Ok(())
     }
-    
+
     fn merge(&self, other: &Self) -> BearDogResult<Self> {
         Ok(Self {
             enabled: other.enabled,
@@ -428,44 +425,45 @@ impl BearDogConfig for ConsolidatedWorkflowConfig {
             },
         })
     }
-    
+
     fn from_env() -> BearDogResult<Self> {
         let mut config = Self::default();
-        
+
         if let Ok(enabled) = std::env::var("BEARDOG_WORKFLOW_ENABLED") {
             config.enabled = enabled.parse().unwrap_or(true);
         }
-        
+
         if let Ok(worker_pool_size) = std::env::var("BEARDOG_WORKFLOW_WORKER_POOL_SIZE") {
             config.engine.worker_pool_size = worker_pool_size.parse().unwrap_or(10);
         }
-        
+
         if let Ok(queue_capacity) = std::env::var("BEARDOG_WORKFLOW_QUEUE_CAPACITY") {
             config.engine.queue.capacity = queue_capacity.parse().unwrap_or(1000);
         }
-        
+
         if let Ok(max_concurrent) = std::env::var("BEARDOG_WORKFLOW_MAX_CONCURRENT") {
             config.scheduling.max_concurrent = max_concurrent.parse().unwrap_or(5);
         }
-        
+
         if let Ok(persistence_enabled) = std::env::var("BEARDOG_WORKFLOW_PERSISTENCE_ENABLED") {
             config.persistence.enabled = persistence_enabled.parse().unwrap_or(true);
         }
-        
+
         if let Ok(backend) = std::env::var("BEARDOG_WORKFLOW_PERSISTENCE_BACKEND") {
             config.persistence.backend = backend;
         }
-        
+
         config.validate()?;
         Ok(config)
     }
-    
+
     fn to_toml(&self) -> BearDogResult<String> {
-        toml::to_string(self)
-            .map_err(|e| BearDogError::system(format!("Failed to serialize workflow config to TOML: {e}")))
+        toml::to_string(self).map_err(|e| {
+            BearDogError::system(format!("Failed to serialize workflow config to TOML: {e}"))
+        })
     }
-    
+
     fn domain() -> &'static str {
         "workflows"
     }
-} 
+}

@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Ecosystem membership spectrum replacing binary whitelist/blacklist
+/// Ecosystem membership spectrum replacing binary allowlist/blocklist
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum EcosystemMembership { /// Trusted ecosystem maintainer with full stewardship rights
     CoreSteward {

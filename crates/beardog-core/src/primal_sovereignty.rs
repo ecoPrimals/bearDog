@@ -15,12 +15,12 @@ use uuid::Uuid;
 type SovereigntyConfig = PrimalSovereigntyConfig;
 
 /// Primal sovereignty configuration
-/// Renamed from SovereigntyConfig to avoid collision with sovereignty::SovereigntyConfig
+/// Renamed from `SovereigntyConfig` to avoid collision with `sovereignty::SovereigntyConfig`
 #[derive(Debug, Clone, Default)]
 pub struct PrimalSovereigntyConfig {
     pub primal_id: String,
     /// Whether to enable sovereignty monitoring
-    /// Whether enable_sovereignty_monitoring is enabled
+    /// Whether `enable_sovereignty_monitoring` is enabled
     pub enable_sovereignty_monitoring: bool,
     /// The sovereignty threshold value
     pub sovereignty_threshold: f64,
@@ -32,7 +32,7 @@ pub struct SovereigntyState {
     /// When this primal was first initialized
     pub genesis_timestamp: DateTime<Utc>,
     /// Whether sovereignty is currently active
-    /// Whether is_active is enabled
+    /// Whether `is_active` is enabled
     pub is_active: bool,
     /// Current sovereignty score (0.0-1.0)
     /// The sovereignty score value
@@ -105,8 +105,8 @@ impl SovereigntyManager {
     }
 
     /// Get current sovereignty status
-    /// Gets sovereignty_status
-    /// Gets sovereignty_status
+    /// Gets `sovereignty_status`
+    /// Gets `sovereignty_status`
     pub fn get_sovereignty_status(&self) -> SovereigntyStatus {
         SovereigntyStatus {
             primal_id: self.sovereignty_state.primal_id.clone(),
@@ -136,7 +136,7 @@ impl SovereigntyManager {
 pub struct SovereigntyStatus {
     pub primal_id: String,
     pub genesis_timestamp: DateTime<Utc>,
-    /// Whether is_active is enabled
+    /// Whether `is_active` is enabled
     pub is_active: bool,
     /// The sovereignty score value
     pub sovereignty_score: f64,

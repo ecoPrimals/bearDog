@@ -14,10 +14,10 @@ pub struct ReplicationStatus {
     /// Collection of replica locations
     pub replica_locations: Vec<String>,
     /// Replication factor (desired number of replicas)
-    /// Number of replication_factor
+    /// Number of `replication_factor`
     pub replication_factor: u32,
     /// Current number of healthy replicas
-    /// Number of healthy_replicas
+    /// Number of `healthy_replicas`
     pub healthy_replicas: u32,
     /// Overall replication health
     /// The health value

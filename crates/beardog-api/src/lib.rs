@@ -133,7 +133,7 @@ mod tests {
     use tower::ServiceExt;
 
     #[tokio::test]
-    fn test_health_endpoint() {
+    async fn test_health_endpoint() {
         let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
         let core = Arc::new(BearDogCore::new(config));
         let app = create_router(core);
@@ -146,12 +146,13 @@ mod tests {
 
         let response = app
             .oneshot(request)
+            .await
             .expect("Health endpoint should respond successfully");
         assert_eq!(response.status(), StatusCode::OK);
     }
 
     #[tokio::test]
-    fn test_status_endpoint() {
+    async fn test_status_endpoint() {
         let config = beardog_types::canonical::config::unified::UnifiedBearDogConfig::default();
         let core = Arc::new(BearDogCore::new(config));
         let app = create_router(core);
@@ -164,6 +165,7 @@ mod tests {
 
         let response = app
             .oneshot(request)
+            .await
             .expect("Status endpoint should respond successfully");
         assert_eq!(response.status(), StatusCode::OK);
     }

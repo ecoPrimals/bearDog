@@ -2,6 +2,17 @@
 
 Unified trait system for the `BearDog` distributed security ecosystem.
 
+## ⚠️ Migration Notice
+
+**Current Status**: This crate is in **active migration** to consolidate provider traits.
+
+**Three Provider Hierarchies**:
+1. **`canonical/`** - 🟡 **LEGACY** (Deprecated, maintained for compatibility)
+2. **`unified/`** - 🟢 **CURRENT** (Active use, recommended for now)
+3. **`beardog-types::canonical::providers_unified/`** - 🔵 **TARGET** (Final location)
+
+**Recommendation**: Use `unified::*` traits for new code. Migration to final location in `beardog-types` planned for Week 3-4.
+
 ## Overview
 
 This crate provides zero-cost abstractions and type-safe traits that enable seamless integration across all `BearDog` components. The trait system ensures compile-time guarantees while maintaining runtime performance.
@@ -33,6 +44,27 @@ struct MyComponent {
     config: MyConfig,
 }
 ```
+
+## Migration Guide
+
+### Current Provider Trait Usage
+
+```rust
+// ✅ RECOMMENDED: Use unified traits
+use beardog_traits::unified::{BearDogProvider, SecurityProvider};
+
+// ⚠️ LEGACY: Avoid canonical traits (will be removed)
+// use beardog_traits::canonical::BaseProvider;  // Deprecated
+
+// 🔵 FUTURE: Eventually migrate to beardog-types
+// use beardog_types::canonical::providers_unified::UnifiedProvider;
+```
+
+### Migration Timeline
+
+- **Now**: Use `unified::*` traits
+- **Week 3-4**: Migrate to `beardog-types::canonical::providers_unified::*`
+- **Future**: Remove `canonical/` (legacy) entirely
 
 ## License
 

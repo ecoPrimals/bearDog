@@ -42,18 +42,18 @@ impl ProductionUniversalAdapter {
     }
 
     /// Get production configuration
-    pub fn production_config(&self) -> &ProductionConfig {
+    pub const fn production_config(&self) -> &ProductionConfig {
         &self.production_config
     }
 
     /// Get underlying core adapter
-    pub fn core_adapter(&self) -> &UniversalAdapter {
+    pub const fn core_adapter(&self) -> &UniversalAdapter {
         &self.core_adapter
     }
 
     /// Execute operation on a specific system
-    /// Executes on_system
-    /// Executes on_system
+    /// Executes `on_system`
+    /// Executes `on_system`
     pub fn execute_on_system(
         &self,
         system: &str,

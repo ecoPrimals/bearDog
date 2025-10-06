@@ -39,8 +39,13 @@ pub struct AlertingConfig {
     pub notification_channels: Vec<String>,
 }
 
+/// Monitoring system health check configuration
+///
+/// Domain-specific configuration for monitoring system health checks.
+/// Renamed from `HealthCheckConfig` for clarity and to avoid ambiguity
+/// with other domain-specific health check configurations.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct HealthCheckConfig {
+pub struct MonitoringHealthCheckConfig {
     /// Enabled
     /// Whether feature is enabled
     pub enabled: bool,
@@ -50,3 +55,13 @@ pub struct HealthCheckConfig {
     /// Timeout
     pub timeout: u64,
 }
+
+/// Health check configuration
+///
+/// **DEPRECATED**: Use `super::super::config::domains::network::monitoring::HealthCheckConfiguration` instead.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use canonical::config::domains::network::monitoring::HealthCheckConfiguration instead"
+)]
+pub type HealthCheckConfig =
+    super::super::config::domains::network::monitoring::HealthCheckConfiguration;

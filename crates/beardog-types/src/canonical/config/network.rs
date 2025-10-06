@@ -229,7 +229,7 @@ pub struct CanonicalNetworkConfig {
     pub load_balancing: LoadBalancingConfig,
     /// Rate limiting configuration
     /// The rate limiting value
-    pub rate_limiting: RateLimitConfig,
+    pub rate_limiting: super::domains::network::RateLimitConfig,
 }
 
 /// TLS configuration
@@ -285,19 +285,16 @@ pub enum LoadBalancingStrategy {
     Random,
 }
 
-/// Rate limiting configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct RateLimitConfig {
-    /// Enabled
-    /// Whether feature is enabled
-    pub enabled: bool,
-    /// Requests Per Second
-    /// The requests per second value
-    pub requests_per_second: f64,
-    /// Burst Size
-    /// Number of `burst_size`
-    pub burst_size: u32,
-}
+/// Rate limiting configuration (DEPRECATED - use canonical domains/network)
+///
+/// **MIGRATION**: Use `super::domains::network::RateLimitConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use super::domains::network::RateLimitConfig instead"
+)]
+pub type RateLimitConfig = super::domains::network::RateLimitConfig;
 
 // Compatibility aliases REMOVED:
 // - EndpointConfig was deprecated (3.2.0) - Use CanonicalNetworkConfig directly

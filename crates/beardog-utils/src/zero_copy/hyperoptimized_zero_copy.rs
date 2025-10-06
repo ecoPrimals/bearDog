@@ -12,7 +12,7 @@ use tracing::{debug, info, trace};
 /// SIMD-aligned buffer with safe memory management
 ///
 pub struct AlignedBuffer {
-    /// Safely managed memory via Vec<u8>
+    /// Safely managed memory via `Vec<u8>`
     data: Vec<u8>,
     /// Actual used length
     length: usize,
@@ -95,9 +95,14 @@ impl AlignedBuffer {
     }
 }
 
-// Safe Send/Sync implementation (no unsafe needed)
-unsafe impl Send for AlignedBuffer {}
-unsafe impl Sync for AlignedBuffer {}
+// 🛡️ SAFETY: AlignedBuffer is automatically Send + Sync!
+// - Vec<u8> is Send + Sync (standard library guarantee)
+// - usize is Copy + Send + Sync (primitive type guarantee)
+// - No manual unsafe impl needed - Rust auto-derives these traits!
+//
+// Previously had unsafe impl Send/Sync, but they're unnecessary.
+// Rust's type system automatically implements these traits when all fields
+// are Send/Sync, which they are. This is safer and more maintainable.
 
 /// Advanced zero-copy statistics with detailed metrics
 #[derive(Debug, Default)]

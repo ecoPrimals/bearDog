@@ -14,6 +14,7 @@ use tokio::sync::{RwLock, Semaphore};
 use tracing::debug;
 
 #[derive(Debug)]
+#[allow(dead_code)] // TODO: Enable when ecosystem performance optimization is activated
 pub struct EcosystemPerformanceOptimizer {
     capability_pool: Arc<CapabilityConnectionPool>,
     compute_cache: Arc<RwLock<ComputeCache>>,
@@ -63,10 +64,10 @@ pub struct ConnectionHealth {
     /// The success rate value
     pub success_rate: f64,
     /// Total requests processed
-    /// Number of total_requests
+    /// Number of `total_requests`
     pub total_requests: u64,
     /// Failed requests count
-    /// Number of failed_requests
+    /// Number of `failed_requests`
     pub failed_requests: u64,
     /// Last health check
     /// The last check value
@@ -76,10 +77,10 @@ pub struct ConnectionHealth {
 #[derive(Debug, Clone, Default)]
 pub struct ConnectionMetrics {
     /// Total bytes sent
-    /// Number of bytes_sent
+    /// Number of `bytes_sent`
     pub bytes_sent: u64,
     /// Total bytes received
-    /// Number of bytes_received
+    /// Number of `bytes_received`
     pub bytes_received: u64,
     /// Request count
     /// Number of request
@@ -89,7 +90,7 @@ pub struct ConnectionMetrics {
 }
 
 /// Connection state
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConnectionState {
     /// Connection is healthy and available
     Active,
@@ -135,10 +136,10 @@ pub struct CacheStats {
     /// Number of misses
     pub misses: u64,
     /// Total cached items
-    /// Number of total_items
+    /// Number of `total_items`
     pub total_items: u64,
     /// Cache size in bytes
-    /// Number of size_bytes
+    /// Number of `size_bytes`
     pub size_bytes: u64,
 }
 
@@ -158,10 +159,10 @@ pub struct PerformanceMetrics {
 #[derive(Debug, Default, Clone)]
 pub struct ServiceMetrics {
     /// Total requests
-    /// Number of total_requests
+    /// Number of `total_requests`
     pub total_requests: u64,
     /// Successful requests
-    /// Number of successful_requests
+    /// Number of `successful_requests`
     pub successful_requests: u64,
     /// Average response time
     pub avg_response_time: Duration,
@@ -189,7 +190,7 @@ pub struct EcosystemMetrics {
 #[derive(Debug, Clone)]
 pub struct EcosystemOptimizerConfig {
     /// Maximum concurrent connections
-    /// Number of max_connections
+    /// Number of `max_connections`
     pub max_connections: usize,
     /// Connection timeout
     pub connection_timeout: Duration,
@@ -197,7 +198,7 @@ pub struct EcosystemOptimizerConfig {
     /// The cache ttl value
     pub cache_ttl: Duration,
     /// Rate limit (requests per second)
-    /// Number of rate_limit
+    /// Number of `rate_limit`
     pub rate_limit: u32,
     /// Health check interval
     /// The health check interval value
@@ -207,10 +208,10 @@ pub struct EcosystemOptimizerConfig {
 #[derive(Debug, Clone)]
 pub struct PoolConfig {
     /// Maximum pool size
-    /// Number of max_pool_size
+    /// Number of `max_pool_size`
     pub max_pool_size: usize,
     /// Minimum pool size
-    /// Number of min_pool_size
+    /// Number of `min_pool_size`
     pub min_pool_size: usize,
     /// Connection idle timeout
     pub idle_timeout: Duration,
@@ -230,7 +231,7 @@ impl EcosystemPerformanceOptimizer {
         };
 
         Self {
-            capability_pool: Arc::new(CapabilityConnectionPool::new(pool_config.clone())),
+            capability_pool: Arc::new(CapabilityConnectionPool::new(pool_config)),
             compute_cache: Arc::new(RwLock::new(ComputeCache::new())),
             metrics: Arc::new(RwLock::new(PerformanceMetrics::default())),
             rate_limiter: Arc::new(Semaphore::new(config.rate_limit as usize)),
@@ -248,7 +249,7 @@ impl EcosystemPerformanceOptimizer {
             .rate_limiter
             .acquire()
             .await
-            .map_err(|e| BearDogError::system(format!("Rate limit error: {}", e)))?;
+            .map_err(|e| BearDogError::system(format!("Rate limit error: {e}")))?;
 
         debug!("Performing cached service discovery for: {}", service_type);
         Ok(vec![
@@ -257,8 +258,11 @@ impl EcosystemPerformanceOptimizer {
         ])
     }
 
-    /// Gets cached_result
-    async fn get_cached_result(&self, request_id: &str) -> Result<Option<Arc<Vec<u8>>>, BearDogError> {
+    /// Gets `cached_result`
+    async fn get_cached_result(
+        &self,
+        request_id: &str,
+    ) -> Result<Option<Arc<Vec<u8>>>, BearDogError> {
         let cache = self.compute_cache.read().await;
         if let Some(cached) = cache.cache.get(request_id) {
             if cached.cached_at.elapsed() < cached.ttl {
@@ -269,7 +273,7 @@ impl EcosystemPerformanceOptimizer {
         Ok(None)
     }
 
-    /// Executes compute_request
+    /// Executes `compute_request`
     fn execute_compute_request(
         &self,
         _connection: &PooledConnection,
@@ -307,7 +311,11 @@ impl CapabilityConnectionPool {
             .ok_or_else(|| BearDogError::validation("Connection not available"))
     }
 
-    pub async fn add_connection(&self, capability: String, endpoint: String) -> Result<(), BearDogError> {
+    pub async fn add_connection(
+        &self,
+        capability: String,
+        endpoint: String,
+    ) -> Result<(), BearDogError> {
         let mut connections = self.service_mesh_connections.write().await;
         let pooled_connection = PooledConnection {
             id: uuid::Uuid::new_v4().to_string(),
@@ -379,7 +387,7 @@ pub struct CacheHealth {
 }
 
 /// Connection health status
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConnectionHealthStatus {
     /// Connection is operating normally
     Healthy,

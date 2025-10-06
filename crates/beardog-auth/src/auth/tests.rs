@@ -2,13 +2,11 @@
 // Module documentation
 //
 // This module provides functionality for the BearDog ecosystem.
-
 mod auth_tests {
-    use super::*;
     use argon2::{Argon2, PasswordHash, PasswordVerifier};
     use tokio;
     #[tokio::test]
-    fn test_password_hashing() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_password_hashing() -> Result<(), Box<dyn std::error::Error>> {
         let password = "test_password_123";
         let hash = hash_password(password)?;
         assert!(verify_password_hash(password, &hash)?);
@@ -17,7 +15,7 @@ mod auth_tests {
     }
 
     #[tokio::test]
-    fn test_token_generation() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_token_generation() -> Result<(), Box<dyn std::error::Error>> {
         let token = generate_secure_token(32)?;
         assert!(!token.is_empty());
         assert_eq!(token.len(), 32); // 32 characters as requested
@@ -51,7 +49,7 @@ mod auth_tests {
     }
 
     #[tokio::test]
-    fn test_session_validation() {
+    async fn test_session_validation() {
         let session_id = "test_session_123";
         let user_id = "user123";
 
@@ -65,7 +63,7 @@ mod auth_tests {
     }
 
     #[tokio::test]
-    fn test_mfa_token_generation() {
+    async fn test_mfa_token_generation() {
         let user_id = "test_user_123";
         let token = generate_mfa_token(user_id.to_string()).unwrap_or_else(|e| {
             eprintln!("MFA token generation should succeed: {e:?}");
@@ -76,14 +74,14 @@ mod auth_tests {
     }
 
     #[tokio::test]
-    fn test_decentralized_auth_token_operations() {
+    async fn test_decentralized_auth_token_operations() {
         let token = "mock_token_123456";
         assert_eq!(token.len(), 17);
         assert!(token.starts_with("mock_token"));
     }
 
     #[tokio::test]
-    fn test_user_authentication_flow() {
+    async fn test_user_authentication_flow() {
         let username = "testuser";
         let password = "secure_password_123";
 
@@ -103,7 +101,7 @@ mod auth_tests {
     }
 
     #[tokio::test]
-    fn test_role_based_access() {
+    async fn test_role_based_access() {
         let user_roles = vec!["user", "read_only"];
         let required_role = "user";
         assert!(has_required_role(&user_roles, required_role));
@@ -172,8 +170,10 @@ mod auth_tests {
         /// The password hash value
         pub password_hash: String,
         /// Collection of roles
+        #[allow(dead_code)]
         pub roles: Vec<String>,
         /// Whether is_active is enabled
+        #[allow(dead_code)]
         pub is_active: bool,
     }
 

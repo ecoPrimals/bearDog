@@ -20,7 +20,7 @@ pub struct MemoryHsmStorage {
 
     storage: Arc<RwLock<HashMap<String, StoredKey>>>,
 
-    master_key: Arc<Key<Aes256Gcm>>,
+    root_key: Arc<Key<Aes256Gcm>>,
 
     stats: Arc<RwLock<StorageStats>>,
 }
@@ -75,19 +75,19 @@ impl MemoryHsmStorage {
     /// Creates a new instance
     pub fn new() -> Result<Self, BearDogError> {
 
-        let master_key_bytes = rand::random::<[u8; 32]>();
-        let master_key = Key::<Aes256Gcm>::from_slice(&master_key_bytes);
-        info!("Initialized memory HSM storage with secure master key");
+        let root_key_bytes = rand::random::<[u8; 32]>();
+        let root_key = Key::<Aes256Gcm>::from_slice(&root_key_bytes);
+        info!("Initialized memory HSM storage with secure root key");
         Ok(Self {
             storage: Arc::new(RwLock::new(HashMap::with_capacity(16))),
-            master_key: Arc::new(*master_key),
+            root_key: Arc::new(*root_key),
             stats: Arc::new(RwLock::new(StorageStats::default(&str,
         key_data: &[u8],
         metadata: KeyMetadata,
     ) -> Result<(), BearDogError> {
         debug!("Storing key in memory HSM: {}", key_id);
 
-        let cipher = Aes256Gcm::new(&self.master_key);
+        let cipher = Aes256Gcm::new(&self.root_key);
         let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
         let encrypted_data =
             cipher
@@ -240,7 +240,7 @@ impl Default for MemoryHsmStorage {}
 
     fn default() -> Self {
 
-        let master_key = Arc::new(*Key::<Aes256Gcm>::from_slice(Arc::new(RwLock::new(StorageStats {
+        let primary_key = Arc::new(*Key::<Aes256Gcm>::from_slice(Arc::new(RwLock::new(StorageStats {
                 total_keys: 0,
                 total_size: 0,
                 operations_count: 0,

@@ -7,6 +7,7 @@ use tracing::{debug, info};
 
 impl BearDogCore {
     /// Initialize HSM providers - used by ecosystem integration
+    #[allow(dead_code)]
     pub(crate) fn initialize_hsm_providers(&self) -> Result<(), BearDogError> {
         info!("🔧 Initializing universal HSM providers");
         info!("🛠️ Initializing Software HSM provider");
@@ -22,6 +23,7 @@ impl BearDogCore {
     }
 
     /// Shutdown HSM providers - used by ecosystem cleanup
+    #[allow(dead_code)]
     pub(crate) fn shutdown_hsm_providers(&self) -> Result<(), BearDogError> {
         debug!("🔍 Closing hardware HSM connections");
 
@@ -35,6 +37,7 @@ impl BearDogCore {
     }
 
     /// Check HSM health - used by health monitoring
+    #[allow(dead_code)]
     pub(crate) fn check_hsm_health(&self) -> HealthStatus {
         debug!("🏥 Checking HSM provider health");
 
@@ -48,6 +51,7 @@ impl BearDogCore {
     }
 
     /// Get HSM metrics - used by monitoring system
+    #[allow(dead_code)] // TODO: Enable when monitoring integration is active
     pub(crate) fn get_hsm_metrics(&self) -> HashMap<String, serde_json::Value> {
         let mut metrics = HashMap::new();
 

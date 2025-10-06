@@ -34,7 +34,7 @@ use uuid::Uuid;
 
         participants: Vec<String>,
 
-    MasterKeyGeneration {
+    PrimaryKeyGeneration {
 
         security_level: SecurityLevel,
 

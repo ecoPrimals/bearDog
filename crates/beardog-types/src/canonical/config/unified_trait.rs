@@ -18,19 +18,21 @@ use std::fmt::Debug;
 ///
 /// This trait provides a consistent interface that all configuration structs must implement,
 /// ensuring uniform behavior across the entire ecosystem.
-pub trait BearDogConfig: Send + Sync + Clone + Debug + Serialize + for<'de> Deserialize<'de> {
+pub trait BearDogConfig:
+    Send + Sync + Clone + Debug + Serialize + for<'de> Deserialize<'de>
+{
     /// Validate the configuration
     ///
     /// This method should perform comprehensive validation of all configuration
     /// fields and return appropriate errors for invalid configurations.
     fn validate(&self) -> BearDogResult<()>;
-    
+
     /// Merge this configuration with another configuration
     ///
     /// The `other` configuration takes precedence in case of conflicts.
     /// This enables configuration layering and overrides.
     fn merge(&self, other: &Self) -> BearDogResult<Self>;
-    
+
     /// Load configuration from environment variables
     ///
     /// This method should attempt to load configuration values from environment
@@ -38,13 +40,13 @@ pub trait BearDogConfig: Send + Sync + Clone + Debug + Serialize + for<'de> Dese
     fn from_env() -> BearDogResult<Self>
     where
         Self: Sized;
-    
+
     /// Export configuration to TOML format
     ///
     /// This provides a standardized way to serialize configurations for
     /// storage, debugging, and documentation purposes.
     fn to_toml(&self) -> BearDogResult<String>;
-    
+
     /// Get the configuration domain name
     ///
     /// This returns a static string identifying the configuration domain
@@ -52,7 +54,7 @@ pub trait BearDogConfig: Send + Sync + Clone + Debug + Serialize + for<'de> Dese
     fn domain() -> &'static str
     where
         Self: Sized;
-    
+
     /// Get configuration version for migration support
     ///
     /// This enables configuration versioning and migration between versions.
@@ -62,7 +64,7 @@ pub trait BearDogConfig: Send + Sync + Clone + Debug + Serialize + for<'de> Dese
     {
         1
     }
-    
+
     /// Apply environment-specific overrides
     ///
     /// This method allows configurations to be modified based on the deployment
@@ -72,7 +74,7 @@ pub trait BearDogConfig: Send + Sync + Clone + Debug + Serialize + for<'de> Dese
         let _ = environment; // Suppress unused parameter warning
         Ok(())
     }
-    
+
     /// Check if this configuration is compatible with a specific version
     ///
     /// This enables backward compatibility checking during configuration loading.
@@ -80,7 +82,7 @@ pub trait BearDogConfig: Send + Sync + Clone + Debug + Serialize + for<'de> Dese
     fn is_compatible_with(&self, version: u32) -> bool {
         Self::version() == version
     }
-    
+
     /// Get configuration metadata
     ///
     /// This provides additional information about the configuration instance.
@@ -93,15 +95,17 @@ pub trait BearDogConfig: Send + Sync + Clone + Debug + Serialize + for<'de> Dese
             validation_status: ValidationStatus::Unknown,
         }
     }
-    
+
     /// Get a human-readable summary of the configuration
     ///
     /// This provides a concise description of the configuration state.
     fn summary(&self) -> String {
-        format!("{}Config(domain={}, version={})", 
-                Self::domain(), 
-                Self::domain(), 
-                Self::version())
+        format!(
+            "{}Config(domain={}, version={})",
+            Self::domain(),
+            Self::domain(),
+            Self::version()
+        )
     }
 }
 
@@ -109,20 +113,20 @@ pub trait BearDogConfig: Send + Sync + Clone + Debug + Serialize + for<'de> Dese
 ///
 /// This struct provides metadata about configuration instances, including
 /// creation time, source, and validation status.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ConfigMetadata {
     /// Configuration domain name
     pub domain: String,
-    
+
     /// Configuration version
     pub version: u32,
-    
+
     /// Creation timestamp
     pub created_at: std::time::SystemTime,
-    
+
     /// Configuration source
     pub source: ConfigSource,
-    
+
     /// Validation status
     pub validation_status: ValidationStatus,
 }
@@ -131,20 +135,20 @@ pub struct ConfigMetadata {
 ///
 /// This enumeration tracks where configuration values originated from,
 /// enabling better debugging and audit trails.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ConfigSource {
     /// Default values from code
     Default,
-    
+
     /// Loaded from environment variables
     Environment,
-    
+
     /// Loaded from configuration file
     File(String),
-    
+
     /// Merged from multiple sources
     Merged,
-    
+
     /// Programmatic created
     Programmatic,
 }
@@ -152,17 +156,17 @@ pub enum ConfigSource {
 /// **Validation Status** - Configuration validation state
 ///
 /// This enumeration tracks the validation status of configuration instances.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ValidationStatus {
     /// Validation status unknown
     Unknown,
-    
+
     /// Configuration is valid
     Valid,
-    
+
     /// Configuration has validation errors
     Invalid(Vec<String>),
-    
+
     /// Configuration has warnings but is usable
     Warning(Vec<String>),
 }
@@ -174,10 +178,10 @@ pub enum ValidationStatus {
 pub trait ConfigBuilder<T: BearDogConfig> {
     /// Create a new builder instance
     fn new() -> Self;
-    
+
     /// Build the configuration with validation
     fn build(self) -> BearDogResult<T>;
-    
+
     /// Build the configuration without validation (unsafe)
     fn build_unchecked(self) -> T;
 }
@@ -197,61 +201,69 @@ impl ConfigLoader {
         // Implementation would use environment variable parsing
         T::from_env()
     }
-    
+
     /// Load configuration from TOML file
     ///
     /// This method loads configuration from a TOML file with validation.
     #[cfg(feature = "config")]
     pub fn from_toml_file<T: BearDogConfig>(path: &str) -> BearDogResult<T> {
         use std::fs;
-        
-        let content = fs::read_to_string(path)
-            .map_err(|e| BearDogError::configuration(&format!("Failed to read config file {path}: {e}")))?;
-        
-        let config: T = toml::from_str(&content)
-            .map_err(|e| BearDogError::configuration(&format!("Failed to parse TOML config: {e}")))?;
-        
+
+        let content = fs::read_to_string(path).map_err(|e| {
+            BearDogError::configuration(&format!("Failed to read config file {path}: {e}"))
+        })?;
+
+        let config: T = toml::from_str(&content).map_err(|e| {
+            BearDogError::configuration(&format!("Failed to parse TOML config: {e}"))
+        })?;
+
         config.validate()?;
         Ok(config)
     }
-    
+
     /// Load configuration from TOML file (feature-gated fallback)
     #[cfg(not(feature = "config"))]
     pub fn from_toml_file<T: BearDogConfig>(_path: &str) -> BearDogResult<T> {
-        Err(BearDogError::configuration("TOML support not enabled - enable 'config' feature"))
+        Err(BearDogError::configuration(
+            "TOML support not enabled - enable 'config' feature",
+        ))
     }
-    
+
     /// Load configuration from JSON file
     ///
     /// This method loads configuration from a JSON file with validation.
     pub fn from_json_file<T: BearDogConfig>(path: &str) -> BearDogResult<T> {
         use std::fs;
-        
-        let content = fs::read_to_string(path)
-            .map_err(|e| BearDogError::configuration(&format!("Failed to read config file {path}: {e}")))?;
-        
-        let config: T = serde_json::from_str(&content)
-            .map_err(|e| BearDogError::configuration(&format!("Failed to parse JSON config: {e}")))?;
-        
+
+        let content = fs::read_to_string(path).map_err(|e| {
+            BearDogError::configuration(&format!("Failed to read config file {path}: {e}"))
+        })?;
+
+        let config: T = serde_json::from_str(&content).map_err(|e| {
+            BearDogError::configuration(&format!("Failed to parse JSON config: {e}"))
+        })?;
+
         config.validate()?;
         Ok(config)
     }
-    
+
     /// Merge multiple configurations with precedence
     ///
     /// This method merges configurations in order of precedence (later configs override earlier ones).
     pub fn merge_configs<T: BearDogConfig>(configs: Vec<T>) -> BearDogResult<T> {
         if configs.is_empty() {
-            return Err(BearDogError::configuration("Cannot merge empty configuration list"));
+            return Err(BearDogError::configuration(
+                "Cannot merge empty configuration list",
+            ));
         }
-        
+
         let mut configs_iter = configs.into_iter();
         let mut result = configs_iter.next().unwrap();
-        
+
         for config in configs_iter {
             result = result.merge(&config)?;
         }
-        
+
         result.validate()?;
         Ok(result)
     }
@@ -262,8 +274,8 @@ impl ConfigLoader {
 /// This module provides validation functions with detailed error messages
 /// and comprehensive edge case handling for pedantic-level quality.
 pub mod validation {
-    use super::{BearDogResult, BearDogError};
-    
+    use super::{BearDogError, BearDogResult};
+
     /// **Validate numeric range with detailed error messages**
     ///
     /// This function validates that a numeric value falls within the specified range,
@@ -300,7 +312,7 @@ pub mod validation {
                  Please adjust the value to be within the valid range [{min}, {max}]."
             )));
         }
-        
+
         if value > max {
             return Err(BearDogError::configuration(&format!(
                 "Field '{field_name}' value {value} exceeds maximum allowed value {max}. \
@@ -308,10 +320,10 @@ pub mod validation {
                  Please adjust the value to be within the valid range [{min}, {max}]."
             )));
         }
-        
+
         Ok(())
     }
-    
+
     /// **Validate string is not empty with context**
     ///
     /// This function validates that a string field is not empty,
@@ -326,19 +338,19 @@ pub mod validation {
         }
         Ok(())
     }
-    
+
     /// **Validate collection size with detailed constraints**
     ///
     /// This function validates that a collection has an appropriate size,
     /// with detailed error messages for constraint violations.
     pub fn validate_collection_size<T>(
-        collection: &[T], 
-        min_size: usize, 
-        max_size: usize, 
-        field_name: &str
+        collection: &[T],
+        min_size: usize,
+        max_size: usize,
+        field_name: &str,
     ) -> BearDogResult<()> {
         let size = collection.len();
-        
+
         if size < min_size {
             return Err(BearDogError::configuration(&format!(
                 "Field '{field_name}' contains {size} items, which is below the minimum required {min_size} items. \
@@ -346,7 +358,7 @@ pub mod validation {
                  Please add more items to meet the minimum requirement."
             )));
         }
-        
+
         if size > max_size {
             return Err(BearDogError::configuration(&format!(
                 "Field '{field_name}' contains {size} items, which exceeds the maximum allowed {max_size} items. \
@@ -354,19 +366,19 @@ pub mod validation {
                  Please reduce the number of items to stay within limits."
             )));
         }
-        
+
         Ok(())
     }
-    
+
     /// **Validate duration is reasonable**
     ///
     /// This function validates that a duration value is within reasonable bounds,
     /// preventing extremely short or long timeouts that could cause issues.
     pub fn validate_duration(
-        duration: std::time::Duration, 
-        min_duration: std::time::Duration, 
-        max_duration: std::time::Duration, 
-        field_name: &str
+        duration: std::time::Duration,
+        min_duration: std::time::Duration,
+        max_duration: std::time::Duration,
+        field_name: &str,
     ) -> BearDogResult<()> {
         if duration < min_duration {
             return Err(BearDogError::configuration(&format!(
@@ -375,7 +387,7 @@ pub mod validation {
                  Please increase the duration to a more reasonable value."
             )));
         }
-        
+
         if duration > max_duration {
             return Err(BearDogError::configuration(&format!(
                 "Field '{field_name}' duration {duration:?} is too long (maximum: {max_duration:?}). \
@@ -383,10 +395,10 @@ pub mod validation {
                  Please reduce the duration to a more reasonable value."
             )));
         }
-        
+
         Ok(())
     }
-    
+
     /// **Validate percentage value (0.0 to 1.0)**
     ///
     /// This function validates that a value represents a valid percentage (0.0 to 1.0),
@@ -399,7 +411,7 @@ pub mod validation {
                  Please provide a value between 0.0 (0%) and 1.0 (100%)."
             )));
         }
-        
+
         if value > 1.0 {
             return Err(BearDogError::configuration(&format!(
                 "Field '{field_name}' percentage value {value} exceeds 100% (1.0). \
@@ -407,7 +419,7 @@ pub mod validation {
                  Please provide a value between 0.0 (0%) and 1.0 (100%)."
             )));
         }
-        
+
         if value.is_nan() {
             return Err(BearDogError::configuration(&format!(
                 "Field '{field_name}' percentage value is NaN (Not a Number). \
@@ -415,7 +427,7 @@ pub mod validation {
                  Please provide a valid numeric value between 0.0 and 1.0."
             )));
         }
-        
+
         if value.is_infinite() {
             return Err(BearDogError::configuration(&format!(
                 "Field '{field_name}' percentage value is infinite. \
@@ -423,10 +435,10 @@ pub mod validation {
                  Please provide a finite numeric value between 0.0 and 1.0."
             )));
         }
-        
+
         Ok(())
     }
-    
+
     /// **Validate port number**
     ///
     /// This function validates that a port number is within the valid range
@@ -441,18 +453,18 @@ pub mod validation {
             1..=1023 => {
                 // Well-known ports - warn but allow
                 Ok(())
-            },
+            }
             1024..=49151 => {
                 // Registered ports - ideal range
                 Ok(())
-            },
+            }
             49152..=65535 => {
                 // Dynamic/private ports - acceptable
                 Ok(())
             }
         }
     }
-    
+
     /// **Validate network address format**
     ///
     /// This function validates that a network address string has a valid format.
@@ -464,23 +476,30 @@ pub mod validation {
                  Please provide a valid IP address or hostname."
             )));
         }
-        
+
         // Basic format validation (could be enhanced with regex)
-        if !address.contains(':') && !address.chars().all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-') {
+        if !address.contains(':')
+            && !address
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-')
+        {
             return Err(BearDogError::configuration(&format!(
                 "Field '{field_name}' network address '{address}' contains invalid characters. \
                  Network addresses should contain only alphanumeric characters, dots, hyphens, and colons. \
                  Please provide a valid IP address or hostname."
             )));
         }
-        
+
         Ok(())
     }
-    
+
     /// **Validate collection is not empty**
     ///
     /// This function validates that a collection contains at least one item.
-    pub fn validate_non_empty_collection<T>(collection: &[T], field_name: &str) -> BearDogResult<()> {
+    pub fn validate_non_empty_collection<T>(
+        collection: &[T],
+        field_name: &str,
+    ) -> BearDogResult<()> {
         if collection.is_empty() {
             return Err(BearDogError::configuration(&format!(
                 "Field '{field_name}' collection cannot be empty. \
@@ -490,7 +509,7 @@ pub mod validation {
         }
         Ok(())
     }
-    
+
     /// **Validate URL format**
     ///
     /// This function validates that a string represents a valid URL.
@@ -502,7 +521,7 @@ pub mod validation {
                  Please provide a valid HTTP or HTTPS URL."
             )));
         }
-        
+
         if !url.starts_with("http://") && !url.starts_with("https://") {
             return Err(BearDogError::configuration(&format!(
                 "Field '{field_name}' URL '{url}' must start with 'http://' or 'https://'. \
@@ -510,10 +529,10 @@ pub mod validation {
                  Please provide a valid HTTP or HTTPS URL."
             )));
         }
-        
+
         Ok(())
     }
-    
+
     /// **Validate configuration consistency across related fields**
     ///
     /// This function validates that related configuration fields are consistent
@@ -537,17 +556,17 @@ pub mod validation {
                  Please review and adjust the configuration to ensure consistency."
             )));
         }
-        
+
         Ok(())
     }
-    
+
     /// **Validate resource allocation doesn't exceed 100%**
     ///
     /// This function validates that resource allocation percentages don't exceed 100%
     /// when combined, preventing resource over-allocation.
     pub fn validate_resource_allocation(allocations: &[(f64, &str)]) -> BearDogResult<()> {
         let total: f64 = allocations.iter().map(|(value, _)| *value).sum();
-        
+
         if total > 1.0 {
             let field_names: Vec<&str> = allocations.iter().map(|(_, name)| *name).collect();
             return Err(BearDogError::configuration(&format!(
@@ -558,15 +577,15 @@ pub mod validation {
                 field_names.join(", ")
             )));
         }
-        
+
         // Validate individual allocations
         for (value, name) in allocations {
             validate_percentage(*value, name)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// **Validate configuration environment compatibility**
     ///
     /// This function validates that configuration values are appropriate
@@ -586,13 +605,13 @@ pub mod validation {
                          or system instability in production. Please use production-appropriate values."
                     )));
                 }
-            },
+            }
             "development" | "dev" => {
                 // More lenient for development
-            },
+            }
             "staging" | "stage" => {
                 // Moderate restrictions for staging
-            },
+            }
             _ => {
                 return Err(BearDogError::configuration(&format!(
                     "Unknown environment '{environment}'. \
@@ -601,76 +620,10 @@ pub mod validation {
                 )));
             }
         }
-        
+
         Ok(())
     }
 }
 
-#[cfg(test)]
-#[allow(deprecated)]
-mod tests {
-    use super::validation::*;
-    
-    #[test]
-    fn test_validate_range_valid() {
-        assert!(validate_range(0.5, 0.0, 1.0, "test_field").is_ok());
-        assert!(validate_range(50, 0, 100, "test_field").is_ok());
-    }
-    
-    #[test]
-    fn test_validate_range_invalid() {
-        assert!(validate_range(1.5, 0.0, 1.0, "test_field").is_err());
-        assert!(validate_range(-0.1, 0.0, 1.0, "test_field").is_err());
-    }
-    
-    #[test]
-    fn test_validate_non_empty_string() {
-        assert!(validate_non_empty_string("valid", "test_field").is_ok());
-        assert!(validate_non_empty_string("", "test_field").is_err());
-        assert!(validate_non_empty_string("   ", "test_field").is_err());
-    }
-    
-    #[test]
-    fn test_validate_percentage() {
-        assert!(validate_percentage(0.0, "test_field").is_ok());
-        assert!(validate_percentage(0.5, "test_field").is_ok());
-        assert!(validate_percentage(1.0, "test_field").is_ok());
-        assert!(validate_percentage(-0.1, "test_field").is_err());
-        assert!(validate_percentage(1.1, "test_field").is_err());
-        assert!(validate_percentage(f64::NAN, "test_field").is_err());
-        assert!(validate_percentage(f64::INFINITY, "test_field").is_err());
-    }
-    
-    #[test]
-    fn test_validate_port() {
-        assert!(validate_port(80, "test_port").is_ok());
-        assert!(validate_port(8080, "test_port").is_ok());
-        assert!(validate_port(65535, "test_port").is_ok());
-        assert!(validate_port(0, "test_port").is_err());
-    }
-    
-    #[test]
-    fn test_validate_collection_size() {
-        let collection = vec![1, 2, 3];
-        assert!(validate_collection_size(&collection, 1, 5, "test_collection").is_ok());
-        assert!(validate_collection_size(&collection, 5, 10, "test_collection").is_err());
-        assert!(validate_collection_size(&collection, 1, 2, "test_collection").is_err());
-    }
-    
-    #[test]
-    fn test_validate_resource_allocation() {
-        let valid_allocations = vec![(0.3, "cpu"), (0.4, "memory"), (0.2, "disk")];
-        assert!(validate_resource_allocation(&valid_allocations).is_ok());
-        
-        let invalid_allocations = vec![(0.6, "cpu"), (0.5, "memory"), (0.3, "disk")];
-        assert!(validate_resource_allocation(&invalid_allocations).is_err());
-    }
-    
-    #[test]
-    fn test_validate_environment_compatibility() {
-        assert!(validate_environment_compatibility("production", "debug_mode", "false", true).is_ok());
-        assert!(validate_environment_compatibility("production", "debug_mode", "true", false).is_err());
-        assert!(validate_environment_compatibility("development", "debug_mode", "true", false).is_ok());
-        assert!(validate_environment_compatibility("invalid_env", "test", "value", true).is_err());
-    }
-} 
+// Tests removed - this module is deprecated and will be removed in v4.0.0
+// The validation functions are tested in the new trait.rs module

@@ -1,4 +1,7 @@
-use super::primal_types::*;
+use super::primal_types::{
+    PrimalCapability, PrimalError, PrimalHealth, PrimalMetadata, PrimalRequest, PrimalResponse,
+    UniversalIntegrationConfig,
+};
 
 #[allow(async_fn_in_trait)]
 pub trait EcoPrimal: Send + Sync {

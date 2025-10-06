@@ -2,16 +2,18 @@
 //
 // This module provides functionality for the BearDog ecosystem.
 
-use super::types::*;
+use super::types::{
+    EcosystemCapability, EcosystemGeneticBlueprint, EcosystemResourceAllocation, TraitCategory,
+};
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 
 #[allow(async_fn_in_trait)]
 pub trait EcosystemPrimalClient: Send + Sync {
-    /// Gets primal_id
+    /// Gets `primal_id`
     fn get_primal_id(&self, capabilities: &[EcosystemCapability]) -> Result<bool, BearDogError>;
 
-    /// Gets resource_availability
+    /// Gets `resource_availability`
     fn get_resource_availability(
         &self,
         allocation: &EcosystemResourceAllocation,
@@ -19,7 +21,7 @@ pub trait EcosystemPrimalClient: Send + Sync {
 
     fn release_resources(&self, reservation_id: &str) -> Result<(), BearDogError>;
 
-    /// Creates hybrid_component
+    /// Creates `hybrid_component`
     fn create_hybrid_component(
         &self,
         blueprint: &EcosystemGeneticBlueprint,
@@ -52,14 +54,14 @@ pub struct EcosystemGeneticTrait {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EcosystemResourceAvailability {
-    /// Number of available_cpu_cores
+    /// Number of `available_cpu_cores`
     pub available_cpu_cores: u32,
-    /// Number of available_memory_gb
+    /// Number of `available_memory_gb`
     pub available_memory_gb: u32,
-    /// Number of available_storage_gb
+    /// Number of `available_storage_gb`
     pub available_storage_gb: u32,
     pub available_bandwidth_mbps: u32,
-    /// Number of available_gpu_units
+    /// Number of `available_gpu_units`
     pub available_gpu_units: u32,
     /// The cost per hour value
     pub cost_per_hour: f64,

@@ -30,7 +30,7 @@ impl WorkflowId for ExampleWorkflowId {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ExampleWorkflowStatus {
     /// State indicating created
     Created,
@@ -46,7 +46,7 @@ pub enum ExampleWorkflowStatus {
     Cancelled,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ExampleWorkflow {
     pub id: ExampleWorkflowId,
     /// Name of the item
@@ -247,7 +247,7 @@ impl WorkflowRepository for InMemoryWorkflowRepository {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProcessingContext {
     pub user_id: String,
     pub timeout_seconds: u64,
@@ -265,7 +265,7 @@ impl Default for ProcessingContext {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ExampleWorkflowProcessor {
     /// Name of the item
     pub name: &'static str,
@@ -320,7 +320,7 @@ impl WorkflowProcessor for ExampleWorkflowProcessor {
             }
 
             workflow = workflow.set_status(ExampleWorkflowStatus::Processing);
-            let _ = sleep(Duration::from_millis(100)); // Simulate work
+            sleep(Duration::from_millis(100)).await; // Simulate work
 
             let processed_data = serde_json::json!({
                 "processed_by": processor_name,
@@ -349,7 +349,7 @@ impl WorkflowProcessor for ExampleWorkflowProcessor {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct LoggingWorkflowObserver {
     /// Name of the item
     pub name: String,
@@ -425,7 +425,7 @@ impl WorkflowObserver for LoggingWorkflowObserver {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct StartWorkflowCommand {
     /// The context value
     pub context: ProcessingContext,
@@ -526,21 +526,24 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    fn test_repository_operations() -> Result<(), BearDogError> {
+    async fn test_repository_operations() -> Result<(), BearDogError> {
         let repo = InMemoryWorkflowRepository::new();
         let workflow = ExampleWorkflow::new("test-1", "Test Workflow");
         let workflow_id = workflow.id().clone();
 
         repo.save(workflow.clone())
+            .await
             .map_err(|e| BearDogError::system(format!("Failed to save workflow: {e:?}")))?;
         assert_eq!(
             repo.count()
+                .await
                 .map_err(|e| BearDogError::system(format!("Failed to count workflows: {e:?}")))?,
             1
         );
 
         let found = repo
             .find_by_id(&workflow_id)
+            .await
             .map_err(|e| BearDogError::system(format!("Failed to find workflow: {e:?}")))?;
         assert!(found.is_some());
         let found_workflow =
@@ -549,20 +552,25 @@ mod tests {
 
         assert!(repo
             .exists(&workflow_id)
+            .await
             .map_err(|e| BearDogError::system(format!(
                 "Failed to check workflow existence: {e:?}"
             )))?);
 
         let updated = workflow.set_status(ExampleWorkflowStatus::Completed);
         repo.update(updated)
+            .await
             .map_err(|e| BearDogError::system(format!("Failed to update workflow: {e:?}")))?;
 
         repo.delete(&workflow_id)
+            .await
             .map_err(|e| BearDogError::system(format!("Failed to delete workflow: {e:?}")))?;
         assert_eq!(
-            repo.count().map_err(|e| BearDogError::system(format!(
-                "Failed to count workflows after delete: {e:?}"
-            )))?,
+            repo.count()
+                .await
+                .map_err(|e| BearDogError::system(format!(
+                    "Failed to count workflows after delete: {e:?}"
+                )))?,
             0
         );
 
@@ -570,7 +578,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_processor() -> Result<(), BearDogError> {
+    async fn test_processor() -> Result<(), BearDogError> {
         let processor = ExampleWorkflowProcessor::new("TestProcessor");
         let workflow = ExampleWorkflow::new("test-2", "Test Processing");
         let context = ProcessingContext::default();
@@ -579,6 +587,7 @@ mod tests {
 
         let result = processor
             .process(workflow, context)
+            .await
             .map_err(|e| BearDogError::system(format!("Failed to process workflow: {e:?}")))?;
         assert!(matches!(result.status, ExampleWorkflowStatus::Completed));
 
@@ -593,31 +602,36 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_observer() -> Result<(), BearDogError> {
+    async fn test_observer() -> Result<(), BearDogError> {
         let observer = LoggingWorkflowObserver::new("TestObserver");
         let workflow = ExampleWorkflow::new("test-3", "Test Observer");
 
         observer
             .on_created(&workflow)
+            .await
             .map_err(|e| BearDogError::system(format!("Failed on_created: {e:?}")))?;
         observer
             .on_started(&workflow)
+            .await
             .map_err(|e| BearDogError::system(format!("Failed on_started: {e:?}")))?;
         observer
             .on_completed(&workflow)
+            .await
             .map_err(|e| BearDogError::system(format!("Failed on_completed: {e:?}")))?;
         observer
             .on_failed(&workflow, "test error")
+            .await
             .map_err(|e| BearDogError::system(format!("Failed on_failed: {e:?}")))?;
         observer
             .on_cancelled(&workflow)
+            .await
             .map_err(|e| BearDogError::system(format!("Failed on_cancelled: {e:?}")))?;
 
         Ok(())
     }
 
     #[tokio::test]
-    fn test_command() -> Result<(), BearDogError> {
+    async fn test_command() -> Result<(), BearDogError> {
         let command = StartWorkflowCommand::new(ProcessingContext::default());
         let workflow = ExampleWorkflow::new("test-4", "Test Command");
 
@@ -626,6 +640,7 @@ mod tests {
 
         let result = command
             .execute(workflow)
+            .await
             .map_err(|e| BearDogError::system(format!("Failed to execute command: {e:?}")))?;
         assert!(matches!(result.status, ExampleWorkflowStatus::Started));
 
@@ -633,7 +648,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_full_integration() -> Result<(), BearDogError> {
+    async fn test_full_integration() -> Result<(), BearDogError> {
         let repository = InMemoryWorkflowRepository::new();
         let processor = ExampleWorkflowProcessor::new("IntegrationProcessor");
         let observer = LoggingWorkflowObserver::new("IntegrationObserver");
@@ -645,16 +660,19 @@ mod tests {
 
         service
             .create_workflow(workflow.clone())
+            .await
             .map_err(|e| BearDogError::system(format!("Failed to create workflow: {e:?}")))?;
         // Execute workflow using the service
-        let execution_result =
-            service.execute_workflow(workflow.id(), ProcessingContext::default());
+        let execution_result = service
+            .execute_workflow(workflow.id(), ProcessingContext::default())
+            .await;
 
         assert!(execution_result.is_ok());
         assert_eq!(
             service
                 .repository()
                 .count()
+                .await
                 .map_err(|e| BearDogError::system(format!("Failed to count workflows: {e:?}")))?,
             1
         );

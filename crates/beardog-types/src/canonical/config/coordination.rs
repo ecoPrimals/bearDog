@@ -1,12 +1,12 @@
-// # Coordination Configuration - Evolved from Master/Slave Patterns
+// # Coordination Configuration - Evolved from Primary/Replica Patterns
 //
 // This module implements the evolved coordination configuration system that replaces
-// traditional master/slave hierarchical patterns with symbiotic coordination models
+// traditional primary/replica hierarchical patterns with symbiotic coordination models
 // based on biological ecosystem principles.
 //
 // ## Evolution from Binary to Spectrum
 //
-// **OLD**: Master/Slave binary hierarchy
+// **OLD**: Primary/Replica binary hierarchy
 // **NEW**: Symbiotic coordination spectrum with contextual authority
 //
 // This evolution enables:
@@ -18,7 +18,7 @@
 //
 // ## Horizontal Gene Transfer Integration
 //
-// This configuration integrates genetic material from the Squirrel team's
+// This configuration integrates genetic material from cross-primal
 // ecosystem evolution initiative, enabling biological coordination patterns.
 
 use beardog_errors::BearDogError;
@@ -27,7 +27,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 use chrono::{DateTime, Utc};
 
-/// Evolved coordination configuration that replaces master/slave patterns
+/// Evolved coordination configuration that replaces primary/replica patterns
 /// with symbiotic coordination models
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CoordinationConfig {
@@ -48,7 +48,7 @@ pub struct CoordinationConfig {
     pub ecosystem_integration: EcosystemIntegrationConfig,
 }
 
-/// Symbiotic coordination models - replaces master/slave hierarchical patterns
+/// Symbiotic coordination models - replaces primary/replica hierarchical patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CoordinationModel {
     /// Collective decision making with no single authority
@@ -910,28 +910,28 @@ pub struct FeedbackSystem {
     pub collection_method: String,
 }
 
-/// Migration utility to evolve from master/slave patterns to coordination models
-pub fn migrate_from_master_slave(
-    master_config: &str,
-    slave_configs: &[String],
+/// Migration utility to evolve from primary/replica patterns to coordination models
+pub fn migrate_from_primary_replica(
+    primary_config: &str,
+    replica_configs: &[String],
 ) -> Result<CoordinationConfig, BearDogError> {
     // This would implement the actual migration logic
     // For now, return a default collaborative configuration
     
     let mut config = CoordinationConfig::default();
     
-    // Set up collaborative model based on master/slave structure
+    // Set up collaborative model based on primary/replica structure
     if let CoordinationModel::Collaborative { 
         decision_protocol, 
         collaboration_frameworks,
         .. 
     } = &mut config.coordination_model {
-        // Create a decision protocol that includes the former "master" as a facilitator
+        // Create a decision protocol that includes the former "primary" as a facilitator
         decision_protocol.decision_steps.push(DecisionStep {
             step_id: "proposal".to_string(),
             description: "Propose decision for collaborative review".to_string(),
-            required_participants: vec![master_config.to_string()],
-            optional_participants: slave_configs.to_vec(),
+            required_participants: vec![primary_config.to_string()],
+            optional_participants: replica_configs.to_vec(),
             min_participation: 0.5,
         });
         

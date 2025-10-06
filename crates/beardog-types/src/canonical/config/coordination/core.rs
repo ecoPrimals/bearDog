@@ -14,7 +14,7 @@ use super::{
     ecosystem::EcosystemIntegrationConfig,
 };
 
-/// Evolved coordination configuration that replaces master/slave patterns
+/// Evolved coordination configuration that replaces primary/replica patterns
 /// with symbiotic coordination models
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CoordinationConfig {
@@ -35,7 +35,7 @@ pub struct CoordinationConfig {
     pub ecosystem_integration: EcosystemIntegrationConfig,
 }
 
-/// Symbiotic coordination models that replace master/slave hierarchies
+/// Symbiotic coordination models that replace primary/replica hierarchies
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CoordinationModel {
     /// Distributed consensus-based coordination

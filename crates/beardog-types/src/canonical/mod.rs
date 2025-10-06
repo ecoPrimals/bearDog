@@ -48,9 +48,11 @@ pub mod hsm_unified;
 /// Monitoring Unified module
 pub mod monitoring_unified; // ✅ MODERNIZED: Split into modular structure
 /// Network Unified module
-pub mod network_unified; // ✅ MODERNIZED: Split into modular structure
+pub mod network_unified;
 /// Providers Unified module
 pub mod providers_unified; // ✅ MODERNIZED: Split into modular structure
+/// Rate limiting configuration - canonical implementation
+pub mod rate_limiting; // ✅ MODERNIZED: Split into modular structure
 /// Security Unified module
 pub mod security_unified; // ✅ MODERNIZED: Split into modular structure // ✅ MODERNIZED: Split into modular structure
 
@@ -77,6 +79,12 @@ pub use providers_unified::{
     ResilienceConfig,
 };
 
+// Export the canonical MonitoringConfig
+pub use monitoring::MonitoringConfig;
+
+// Backward compatibility aliases
+// DEPRECATED: Old monitoring config - use canonical::monitoring::MonitoringConfig
+#[allow(deprecated)]
 pub use monitoring_unified::CanonicalMonitoringConfig;
 
 pub use network_unified::{
@@ -101,7 +109,7 @@ pub use config::{
     CanonicalPerformanceConfig,
     CanonicalProductionConfig,
     CanonicalWorkflowConfig,
-    // REMOVED: GlobalConfig, MasterConfig - use BearDogMasterConfig directly
+    // REMOVED: GlobalConfig, deprecated config types - use UnifiedBearDogConfig directly
     // Compatibility aliases
     UnifiedBearDogConfig,
 };
@@ -140,18 +148,13 @@ pub use hsm::{
     // KeyUsage conflicts with crypto, using hsm::KeyUsage when needed
 };
 
-// Monitoring - specific exports to avoid conflicts
-pub use monitoring::{
-    AlertConfig,
-    IntegrationMonitoringConfig,
-    MetricsConfig,
-    // LoggingConfig and MonitoringConfig conflict with configuration module
-    // HealthCheckConfig conflicts with network module
-};
+// Monitoring - export the unified config (sub-configs accessed through MonitoringConfig fields)
+// Old specific exports removed - all available through MonitoringConfig
+// e.g., config.alerting, config.metrics, config.health, etc.
 
 // Network - specific exports to avoid conflicts
 pub use network::{
-    ConnectionPoolConfig,
+    // ConnectionPoolConfig, // Use config::domains::network::ConnectionPoolConfig instead
     LoadBalancerConfig,
     TimeoutConfig,
     // NetworkConfig conflicts with configuration module

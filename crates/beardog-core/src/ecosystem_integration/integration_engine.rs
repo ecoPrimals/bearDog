@@ -19,7 +19,7 @@ pub struct IntegrationEngine {
     pub universal_hsm: Option<Arc<UniversalHsmManager>>,
     // Universal service mesh_discovery - replaced with universal adapter
     /// Whether the ecosystem is fully integrated
-    /// Whether ecosystem_integrated is enabled
+    /// Whether `ecosystem_integrated` is enabled
     pub ecosystem_integrated: bool,
 }
 
@@ -32,7 +32,7 @@ impl Default for IntegrationEngine {
 impl IntegrationEngine {
     /// New operation.
     /// Creates a new instance
-    pub fn new(config: IntegrationConfig) -> Self {
+    pub const fn new(config: IntegrationConfig) -> Self {
         Self {
             config,
             universal_hsm: None,
@@ -42,7 +42,7 @@ impl IntegrationEngine {
 
     /// From Config operation.
     /// Creates instance from config
-    pub fn from_config(config: IntegrationConfig) -> Self {
+    pub const fn from_config(config: IntegrationConfig) -> Self {
         Self {
             config,
             universal_hsm: None,
@@ -55,8 +55,8 @@ impl IntegrationEngine {
     ///
     /// # Errors
     /// Returns an error if the operation fails.
-    /// Initializes componentialize_universal_hsm
-    /// Initializes componentialize_universal_hsm
+    /// Initializes `componentialize_universal_hsm`
+    /// Initializes `componentialize_universal_hsm`
     pub fn initialize_universal_hsm(&mut self) -> Result<(), BearDogError> {
         info!("🔐 Initializing Universal HSM Architecture");
 
@@ -151,7 +151,7 @@ impl IntegrationEngine {
     }
 
     /// Get Discovered Services Count operation.
-    /// Gets discovered_services_count
+    /// Gets `discovered_services_count`
     fn get_discovered_services_count(&self) -> Result<u32, BearDogError> {
         if let Some(_universal_hsm) = self.universal_hsm.clone() {
             match self.discover_ecosystem_services() {
@@ -238,12 +238,12 @@ impl IntegrationEngine {
         Ok(serde_json::Value::Object(health_status))
     }
 
-    fn check_universal_adapter_health(&self) -> Result<(), BearDogError> {
+    const fn check_universal_adapter_health(&self) -> Result<(), BearDogError> {
         // Universal adapter health check implementation
         Ok(())
     }
 
-    fn check_capability_discovery_health(&self) -> Result<(), BearDogError> {
+    const fn check_capability_discovery_health(&self) -> Result<(), BearDogError> {
         // Capability discovery health check implementation
         Ok(())
     }

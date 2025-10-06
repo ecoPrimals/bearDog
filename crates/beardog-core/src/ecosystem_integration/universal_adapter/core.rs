@@ -54,7 +54,9 @@ impl UniversalAdapter {
         // Process the request based on operation type
         match request.operation {
             super::types::AdapterOperation::Connect => self.handle_connect_request(request).await,
-            super::types::AdapterOperation::Disconnect => self.handle_disconnect_request(request).await,
+            super::types::AdapterOperation::Disconnect => {
+                self.handle_disconnect_request(request).await
+            }
             super::types::AdapterOperation::Request => self.handle_generic_request(request).await,
             super::types::AdapterOperation::HealthCheck => {
                 self.handle_health_check_request(request).await
@@ -67,7 +69,7 @@ impl UniversalAdapter {
     }
 
     /// Handle connect request
-    /// Handles connect_request
+    /// Handles `connect_request`
     async fn handle_connect_request(
         &self,
         request: AdapterRequest,
@@ -104,7 +106,7 @@ impl UniversalAdapter {
     }
 
     /// Handle disconnect request
-    /// Handles disconnect_request
+    /// Handles `disconnect_request`
     async fn handle_disconnect_request(
         &self,
         request: AdapterRequest,
@@ -130,7 +132,7 @@ impl UniversalAdapter {
     }
 
     /// Handle generic request
-    /// Handles generic_request
+    /// Handles `generic_request`
     async fn handle_generic_request(
         &self,
         request: AdapterRequest,
@@ -153,7 +155,7 @@ impl UniversalAdapter {
     }
 
     /// Handle health check request
-    /// Handles health_check_request
+    /// Handles `health_check_request`
     async fn handle_health_check_request(
         &self,
         request: AdapterRequest,
@@ -179,7 +181,7 @@ impl UniversalAdapter {
     }
 
     /// Get adapter configuration
-    pub fn config(&self) -> &UniversalAdapterConfig {
+    pub const fn config(&self) -> &UniversalAdapterConfig {
         &self.config
     }
 

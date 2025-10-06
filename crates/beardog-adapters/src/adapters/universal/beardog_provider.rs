@@ -9,7 +9,7 @@ pub mod capabilities;
 /// Core functionality
 pub mod core;
 pub mod handlers;
-pub mod helpers;
+// pub mod helpers; // REMOVED - use universal::capability_helpers instead
 pub mod provider;
 
 pub use core::BearDogPrimalProvider;

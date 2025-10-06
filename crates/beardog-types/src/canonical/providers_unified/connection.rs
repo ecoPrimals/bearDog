@@ -24,8 +24,9 @@ pub struct ConnectionConfig {
     pub keep_alive: KeepAliveConfig,
 
     /// Connection pool configuration
-    /// The pool value
-    pub pool: ConnectionPoolConfig,
+    ///
+    /// Uses the canonical `network::ConnectionPoolConfig` from `config::domains::network`.
+    pub pool: crate::canonical::config::domains::network::ConnectionPoolConfig,
 
     /// TLS configuration
     /// Optional tls
@@ -43,7 +44,7 @@ impl Default for ConnectionConfig {
             retry_attempts: 3,
             retry_delay: Duration::from_millis(1000),
             keep_alive: KeepAliveConfig::default(),
-            pool: ConnectionPoolConfig::default(),
+            pool: crate::canonical::config::domains::network::ConnectionPoolConfig::default(),
             tls: None,
             auth: None,
         }
@@ -75,39 +76,16 @@ impl Default for KeepAliveConfig {
     }
 }
 
-/// Connection pool configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConnectionPoolConfig {
-    /// Minimum pool size
-    /// Number of `min_size`
-    pub min_size: usize,
-
-    /// Maximum pool size
-    /// Number of `max_size`
-    pub max_size: usize,
-
-    /// Connection idle timeout
-    pub idle_timeout: Duration,
-
-    /// Maximum connection lifetime
-    pub max_lifetime: Option<Duration>,
-
-    /// Connection test on borrow
-    /// Whether `test_on_borrow` is enabled
-    pub test_on_borrow: bool,
-}
-
-impl Default for ConnectionPoolConfig {
-    fn default() -> Self {
-        Self {
-            min_size: 1,
-            max_size: 10,
-            idle_timeout: Duration::from_secs(300),
-            max_lifetime: Some(Duration::from_secs(3600)),
-            test_on_borrow: true,
-        }
-    }
-}
+/// Connection pool configuration (DEPRECATED - use canonical config)
+///
+/// **MIGRATION**: Use `canonical::config::domains::network::ConnectionPoolConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use canonical::config::domains::network::ConnectionPoolConfig instead"
+)]
+pub type ConnectionPoolConfig = crate::canonical::config::domains::network::ConnectionPoolConfig;
 
 /// TLS configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

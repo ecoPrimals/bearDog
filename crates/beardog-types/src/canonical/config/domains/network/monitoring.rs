@@ -68,4 +68,4 @@ impl Default for ServiceDiscoveryConfiguration {
             discovery_timeout_seconds: 5,
         }
     }
-} 
+}

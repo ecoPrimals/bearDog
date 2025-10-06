@@ -44,7 +44,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_consensus_engine_creation() {
+    async fn test_consensus_engine_creation() {
         let config = ConsensusConfig::default();
         let engine = GeneticConsensusEngine::new(config);
         
@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_create_proposal() {
+    async fn test_create_proposal() {
         let config = ConsensusConfig::default();
         let engine = GeneticConsensusEngine::new(config);
         let mock_biome = MockBiome::new("test_biome", 0.8);
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_voting_manager() {
+    async fn test_voting_manager() {
         let voting_manager = VotingManager::new();
         
         let vote_id = voting_manager
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_trust_network() {
+    async fn test_trust_network() {
         let trust_network = TrustNetwork::new();
 
         let score = trust_network.get_trust_score("biome_1");
@@ -161,7 +161,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_consensus_metrics() {
+    async fn test_consensus_metrics() {
         let metrics = ConsensusMetrics::new();
 
         assert_eq!(metrics.get_total_proposals(), 0);
@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_genetic_validator() {
+    async fn test_genetic_validator() {
         let validator = GeneticValidator::new();
         
         let high_quality_signature = GeneticSignature {
@@ -218,7 +218,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_proposal_status_transitions() {
+    async fn test_proposal_status_transitions() {
         let config = ConsensusConfig::default();
         let engine = GeneticConsensusEngine::new(config);
         let mock_biome = MockBiome::new("test_biome", 0.8);

@@ -1,6 +1,10 @@
 // Unified Monitoring Configuration
 //
+// ⚠️  DEPRECATED: This module is deprecated. Use `beardog_types::canonical::monitoring` instead.
+//
 // Consolidated monitoring configuration for the BearDog ecosystem.
+
+#![allow(deprecated)]
 
 use serde::{Deserialize, Serialize};
 
@@ -18,6 +22,13 @@ pub mod metrics;
 pub use core::*;
 
 /// Canonical monitoring configuration
+///
+/// ⚠️  DEPRECATED: Use `beardog_types::canonical::monitoring::MonitoringConfig` instead
+#[allow(deprecated)]
+#[deprecated(
+    since = "3.1.0",
+    note = "Use beardog_types::canonical::monitoring::MonitoringConfig instead"
+)]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CanonicalMonitoringConfig {
     /// Core monitoring settings
@@ -34,7 +45,8 @@ pub struct CanonicalMonitoringConfig {
 
     /// Health check configuration
     /// The health value
-    pub health: HealthCheckConfig,
+    pub health: MonitoringHealthCheckConfig,
 }
 
-pub type MonitoringConfig = CanonicalMonitoringConfig;
+// Backward compatibility: redirect to canonical location
+pub use crate::canonical::monitoring::MonitoringConfig as NewMonitoringConfig;

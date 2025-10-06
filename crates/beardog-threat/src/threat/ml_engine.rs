@@ -35,7 +35,7 @@ pub struct MlPrediction {
 }
 
 /// Risk level classification
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RiskLevel {
     /// Represents critical variant
     Critical,
@@ -307,17 +307,18 @@ pub struct MlEngineStats {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::threat::ThreatSeverity;
     use chrono::Utc;
 
     #[tokio::test]
-    fn test_ml_engine_creation() {
+    async fn test_ml_engine_creation() {
         let engine = MlEngine::new();
         assert_eq!(engine.models.len(), 0);
         assert!(engine.universal_adapter.is_none());
     }
 
     #[tokio::test]
-    fn test_risk_level_conversion() {
+    async fn test_risk_level_conversion() {
         let engine = MlEngine::new();
 
         assert_eq!(engine.score_to_risk_level(0.95), RiskLevel::Critical);
@@ -328,7 +329,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_threat_score_calculation() {
+    async fn test_threat_score_calculation() {
         let engine = MlEngine::new();
 
         let event = SecurityEvent {
@@ -346,7 +347,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_local_prediction() {
+    async fn test_local_prediction() {
         let engine = MlEngine::new();
 
         let mut event_data = std::collections::HashMap::new();

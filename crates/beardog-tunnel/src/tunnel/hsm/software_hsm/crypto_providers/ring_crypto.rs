@@ -123,13 +123,13 @@ impl CryptoProvider for RingCryptoProvider {
         let public_key = UnparsedPublicKey::new(&[u8],
         derivation_data: &[u8],
     ) -> Result<Vec<u8>, BearDogError>> {
-            "🔄 Deriving key from {} byte master key with {} bytes of derivation data",
-            master_key.len(),
+            "🔄 Deriving key from {} byte root key with {} bytes of derivation data",
+            root_key.len(),
             derivation_data.len()
 
         use ring::hkdf;
         let salt = hkdf::Salt::new(hkdf::HKDF_SHA256, &[]);
-        let prk = salt.extract(master_key);
+        let prk = salt.extract(root_key);
         let info = [derivation_data];
         let okm = prk
             .expand(&info, hkdf::HKDF_SHA256)

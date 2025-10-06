@@ -8,38 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
-/// Threat detection configuration - modernized with canonical constants
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ThreatDetectionConfig {
-    /// Enable machine learning enhancement
-    pub ml_enhancement: bool,
-    /// Maximum number of active threats to track - uses canonical constants
-    pub max_active_threats: usize,
-    /// Threat detection sensitivity level (0.0 - 1.0)
-    pub sensitivity: f64,
-    /// Enable real-time monitoring
-    pub real_time_monitoring: bool,
-    /// Automatic response enabled
-    pub auto_response: bool,
-    /// Quarantine threshold score
-    pub quarantine_threshold: f64,
-    /// Block threshold score
-    pub block_threshold: f64,
-}
-
-impl Default for ThreatDetectionConfig {
-    fn default() -> Self {
-        Self {
-            ml_enhancement: true,
-            max_active_threats: DEFAULT_QUEUE_SIZE,
-            sensitivity: 0.7,
-            real_time_monitoring: true,
-            auto_response: false,
-            quarantine_threshold: 0.8,
-            block_threshold: 0.9,
-        }
-    }
-}
+// Use canonical threat detection configuration
+pub use beardog_types::canonical::config::domains::threat::ThreatDetectionConfig;
 
 /// Threat event representing a detected security incident
 #[derive(Debug, Clone, Serialize, Deserialize)]

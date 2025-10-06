@@ -125,8 +125,8 @@ pub struct ObjectPool<T> {
     factory: Arc<dyn Fn() -> T + Send + Sync>,
     /// Maximum pool size
     max_size: usize,
-    /// Pool statistics
-    stats: PoolStats,
+    /// Pool statistics (wrapped in Arc for safe sharing)
+    stats: Arc<PoolStats>,
 }
 
 /// Object pool statistics
@@ -162,7 +162,7 @@ where
             pool: Arc::new(Mutex::new(VecDeque::with_capacity(max_size))),
             factory: Arc::new(factory),
             max_size,
-            stats: PoolStats::default(),
+            stats: Arc::new(PoolStats::default()),  // Wrap in Arc for safe sharing
         }
     }
 
@@ -186,7 +186,7 @@ where
         Ok(PooledObject {
             object: Some(obj),
             pool: self.pool.clone(),
-            stats: &self.stats,
+            stats: Arc::clone(&self.stats),  // Clone the Arc (cheap!)
         })
     }
 
@@ -246,10 +246,12 @@ pub struct PoolStatistics {
 ///
 /// RAII wrapper for objects borrowed from the pool.
 /// Automatically returns the object to the pool when dropped.
+/// 
+/// 🛡️ 100% SAFE: Uses Arc for safe shared statistics access.
 pub struct PooledObject<T> {
     object: Option<T>,
     pool: Arc<Mutex<VecDeque<T>>>,
-    stats: *const PoolStats,
+    stats: Arc<PoolStats>,  // Safe Arc instead of raw pointer!
 }
 
 impl<T> PooledObject<T> {
@@ -284,16 +286,26 @@ impl<T> Drop for PooledObject<T> {
             let mut pool = self.pool.lock().unwrap();
             pool.push_back(obj);
             
-            unsafe {
-                (*self.stats).available.fetch_add(1, Ordering::Relaxed);
-                (*self.stats).borrowed.fetch_sub(1, Ordering::Relaxed);
-            }
+            // 🛡️ 100% SAFE: Arc provides all safety guarantees!
+            // No unsafe code needed - atomics are thread-safe by design.
+            self.stats.available.fetch_add(1, Ordering::Relaxed);
+            self.stats.borrowed.fetch_sub(1, Ordering::Relaxed);
         }
     }
 }
 
-unsafe impl<T: Send> Send for PooledObject<T> {}
-unsafe impl<T: Send + Sync> Sync for PooledObject<T> {}
+// 🛡️ SAFETY: PooledObject is automatically Send + Sync!
+// 
+// Rust automatically implements Send + Sync for PooledObject<T> when:
+// - T: Send (for Send)
+// - T: Send + Sync (for Sync)
+// 
+// All fields are safe:
+// - Option<T>: Send/Sync when T is Send/Sync
+// - Arc<Mutex<VecDeque<T>>>: Always Send, Sync when T: Send
+// - Arc<PoolStats>: Always Send + Sync (PoolStats has only atomics)
+//
+// No manual unsafe impl needed - Rust's type system guarantees safety!
 
 /// **Lock-Free Statistics**
 ///

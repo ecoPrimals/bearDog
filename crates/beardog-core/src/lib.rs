@@ -28,30 +28,69 @@
 //          config.version, config.environment);
 // ```
 
-/// Core functionality
-/// Core functionality
+/// Core functionality providing the foundational `BearDog` implementation
+///
+/// This module contains the main `BearDogCore` struct and related functionality
+/// for initializing and managing `BearDog` instances.
 pub mod core;
+
 /// Shared types used across the Beardog system
 pub mod types;
 
+/// AI-powered hybrid intelligence system
+///
+/// Combines human decision-making with AI assistance for sovereign operations.
+/// Includes neural network integration, learning systems, and performance optimization.
 pub mod ai;
+
+/// Biome sovereignty and human-centric key management
+///
+/// Implements human-controlled entropy generation and sovereign key management
+/// without corporate control or surveillance.
 pub mod biome_sovereignty;
 /// Ecosystem integration and primal service coordination
 pub mod ecosystem;
 /// Ecosystem integration capabilities
 pub mod ecosystem_integration;
+/// Ecosystem storage and state management
+///
+/// Provides persistent storage solutions for ecosystem state,
+/// primal relationships, and capability registries.
 pub mod ecosystem_storage;
+
 /// External function integrations
+///
+/// Foreign Function Interface (FFI) system for integrating with external
+/// libraries, native code, and system-level operations with safety guarantees.
 pub mod external_functions;
+
 /// Primal sovereignty implementation
+///
+/// Core implementation of primal sovereignty patterns, ensuring human control
+/// and autonomous operation without corporate dependencies.
 pub mod primal_sovereignty;
+
 /// Universal service discovery and network orchestration
+///
+/// Zero-knowledge discovery system that finds and coordinates services
+/// without hardcoded assumptions, using the infant learning pattern.
 pub mod universal_discovery;
+
 // TODO: Fix syntax errors in universal_optimization module
 // pub mod universal_optimization;
+
 /// Zero-cost architecture patterns and optimizations
+///
+/// Memory and performance optimizations using zero-copy techniques
+/// and Rust's zero-cost abstractions for maximum efficiency.
 pub mod zero_cost_architecture;
+
 /// Zero-knowledge bootstrap and self-discovery
+///
+/// Revolutionary bootstrap system that starts with zero ecosystem knowledge
+/// and discovers everything dynamically through observation and learning.
+///
+/// This eliminates the 2^n hardcoding problem by using O(1) universal patterns.
 pub mod zero_knowledge_bootstrap;
 
 // Re-export key components

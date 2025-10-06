@@ -43,23 +43,16 @@ impl Default for SecurityProviderConfig {
     }
 }
 
-/// Rate limiting configuration
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct RateLimitConfig {
-    /// Number of requests_per_minute
-    pub requests_per_minute: u32,
-    /// The window value
-    pub window: std::time::Duration,
-}
-
-impl Default for RateLimitConfig {
-    fn default() -> Self {
-        Self {
-            requests_per_minute: 100,
-            window: std::time::Duration::from_secs(60),
-        }
-    }
-}
+/// Rate limiting configuration (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `beardog_types::canonical::config::domains::network::RateLimitConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use beardog_types::canonical::config::domains::network::RateLimitConfig instead"
+)]
+pub type RateLimitConfig = beardog_types::canonical::config::domains::network::RateLimitConfig;
 
 #[derive(Debug, Clone)]
 pub struct BearDogSecurityProvider {

@@ -1,7 +1,7 @@
 // Canonical Relationship System - Ecosystem Evolution Patterns
 //
 // This module implements the horizontal gene transfer patterns from the parent
-// ecosystem, replacing binary whitelist/blacklist patterns with spectrum-based
+// ecosystem, replacing binary allowlist/blocklist patterns with spectrum-based
 // relationship intelligence.
 //
 // ## Architecture

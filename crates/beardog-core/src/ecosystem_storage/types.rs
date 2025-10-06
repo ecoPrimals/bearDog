@@ -87,10 +87,10 @@ pub struct StorageLocationInfo {
     /// The path value
     pub path: String,
     /// Available space in bytes
-    /// Number of available_space_bytes
+    /// Number of `available_space_bytes`
     pub available_space_bytes: u64,
     /// Used space in bytes
-    /// Number of used_space_bytes
+    /// Number of `used_space_bytes`
     pub used_space_bytes: u64,
     /// Location health status
     /// Current status of the health
@@ -107,19 +107,19 @@ pub struct StorageOperationMetrics {
     /// The operation value
     pub operation: StorageOperation,
     /// Total operations count
-    /// Number of total_operations
+    /// Number of `total_operations`
     pub total_operations: u64,
     /// Successful operations count
-    /// Number of successful_operations
+    /// Number of `successful_operations`
     pub successful_operations: u64,
     /// Failed operations count
-    /// Number of failed_operations
+    /// Number of `failed_operations`
     pub failed_operations: u64,
     /// Average operation duration in milliseconds
     /// The avg duration ms value
     pub avg_duration_ms: f64,
     /// Total bytes processed
-    /// Number of total_bytes_processed
+    /// Number of `total_bytes_processed`
     pub total_bytes_processed: u64,
 }
 
@@ -131,7 +131,7 @@ pub struct StorageItem {
     /// The key value
     pub key: String,
     /// Item size in bytes
-    /// Number of size_bytes
+    /// Number of `size_bytes`
     pub size_bytes: u64,
     /// Content type/MIME type
     /// Optional content type
@@ -185,24 +185,42 @@ pub struct CacheEntry {
     /// Number of access
     pub access_count: u64,
     /// Entry size in bytes
-    /// Number of size_bytes
+    /// Number of `size_bytes`
     pub size_bytes: u64,
     /// Time-to-live (optional)
     /// Optional ttl
     pub ttl: Option<chrono::DateTime<Utc>>,
 }
 
-// Constants for performance optimization
-pub const STORAGE_BACKEND_AVAILABLE: &str = "No storage backend available";
-pub const CACHE_LOCATION: &str = "cache";
-pub const MEMORY_LOCATION: &str = "memory";
-pub const BACKEND_LOCATION: &str = "backend";
-pub const DELETED_LOCATION: &str = "deleted";
-pub const LIST_LOCATION: &str = "list";
+/// Ecosystem storage operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum EcosystemStorageOperation {
+    Store { key: String },
+    Retrieve { key: String },
+    Delete { key: String },
+    List,
+}
 
-// Error message constants
-pub const STORE_REQUEST_MISSING_DATA: &str = "Store request missing data";
-pub const COPY_NOT_IMPLEMENTED: &str = "Copy operation not yet implemented";
-pub const MOVE_NOT_IMPLEMENTED: &str = "Move operation not yet implemented";
-pub const BACKUP_NOT_IMPLEMENTED: &str = "Backup operation not yet implemented";
-pub const RESTORE_NOT_IMPLEMENTED: &str = "Restore operation not yet implemented";
+/// Ecosystem storage request
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EcosystemStorageRequest {
+    /// Operation to perform
+    pub operation: EcosystemStorageOperation,
+    /// Data payload
+    pub data: Vec<u8>,
+}
+
+impl EcosystemStorageRequest {
+    pub const fn new(operation: EcosystemStorageOperation, data: Vec<u8>) -> Self {
+        Self { operation, data }
+    }
+}
+
+// MIGRATION NOTE: These constants are still in use in manager.rs
+// They will be migrated when manager.rs is updated to use canonical constants
+// Use: beardog_types::constants::domains::storage::*
+#[deprecated(
+    since = "3.6.0",
+    note = "Use beardog_types::constants::domains::storage::messages::NO_BACKEND_AVAILABLE"
+)]
+pub const STORAGE_BACKEND_AVAILABLE: &str = "No storage backend available";

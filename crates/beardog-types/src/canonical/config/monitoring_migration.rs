@@ -3,9 +3,9 @@
 // This module provides utilities to migrate fragmented monitoring configurations
 // from various sources into the unified canonical monitoring system.
 
-use super::monitoring::{
-    UnifiedAlertingConfig, UnifiedHealthConfig, UnifiedLoggingConfig, UnifiedMetricsConfig,
-    UnifiedMonitoringConfig, UnifiedTracingConfig,
+use crate::canonical::monitoring::{
+    MonitoringConfig, UnifiedAlertingConfig, UnifiedHealthConfig, UnifiedLoggingConfig,
+    UnifiedMetricsConfig, UnifiedTracingConfig,
 };
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,7 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub struct MonitoringMigrationResult {
     /// The unified canonical monitoring configuration
-    pub unified_config: UnifiedMonitoringConfig,
+    pub unified_config: MonitoringConfig,
     /// Migration report with details about what was migrated
     /// The report value
     pub report: MonitoringMigrationReport,
@@ -166,7 +166,7 @@ impl MonitoringMigrationService {
     ) -> Result<MonitoringMigrationResult, BearDogError> {
         // Starting monitoring configuration migration
 
-        let mut unified_config = UnifiedMonitoringConfig::default();
+        let mut unified_config = MonitoringConfig::default();
         let mut report = MonitoringMigrationReport {
             legacy_configs_processed: legacy_configs.len(),
             successful_migrations: Vec::new(),
@@ -208,7 +208,7 @@ impl MonitoringMigrationService {
     fn migrate_single_monitoring_config(
         &self,
         legacy_config: LegacyMonitoringConfig,
-        unified_config: &mut UnifiedMonitoringConfig,
+        unified_config: &mut MonitoringConfig,
     ) -> Result<String, BearDogError> {
         match legacy_config {
             LegacyMonitoringConfig::ConfigurationMonitoring {
@@ -218,7 +218,7 @@ impl MonitoringMigrationService {
                 health,
                 alerting,
             } => {
-                self.migrate_configuration_monitoring(
+                Self::migrate_configuration_monitoring(
                     metrics,
                     tracing,
                     logging,
@@ -253,15 +253,14 @@ impl MonitoringMigrationService {
     }
 
     /// Migrate configuration monitoring settings
-    #[allow(clippy::unused_async)]
+    #[allow(clippy::unused_async, clippy::unnecessary_wraps)]
     fn migrate_configuration_monitoring(
-        &self,
         metrics: Option<HashMap<String, serde_json::Value>>,
         tracing: Option<HashMap<String, serde_json::Value>>,
         logging: Option<HashMap<String, serde_json::Value>>,
         health: Option<HashMap<String, serde_json::Value>>,
         alerting: Option<HashMap<String, serde_json::Value>>,
-        unified_config: &mut UnifiedMonitoringConfig,
+        unified_config: &mut MonitoringConfig,
     ) -> Result<(), BearDogError> {
         // Migrate metrics configuration
         if let Some(metrics_config) = metrics {
@@ -292,13 +291,13 @@ impl MonitoringMigrationService {
     }
 
     /// Migrate production monitoring settings
-    #[allow(clippy::unused_async)]
+    #[allow(clippy::unused_async, clippy::unused_self, clippy::unnecessary_wraps)]
     fn migrate_production_monitoring(
         &self,
         _observability: HashMap<String, serde_json::Value>,
         _performance: Option<HashMap<String, serde_json::Value>>,
         _security: Option<HashMap<String, serde_json::Value>>,
-        _unified_config: &mut UnifiedMonitoringConfig,
+        _unified_config: &mut MonitoringConfig,
     ) -> Result<(), BearDogError> {
         // Migrate observability settings to production config
         // self.migrate_observability_config(observability, &mut unified_config.metrics)?;
@@ -319,7 +318,7 @@ impl MonitoringMigrationService {
     /// Migrate beardog-monitoring configurations
     fn migrate_beardog_monitoring(
         config: &HashMap<String, serde_json::Value>,
-        unified_config: &mut UnifiedMonitoringConfig,
+        unified_config: &mut MonitoringConfig,
     ) {
         // Extract core monitoring settings
         if let Some(enabled) = config.get("enabled") {
@@ -339,7 +338,7 @@ impl MonitoringMigrationService {
     /// Migrate provider monitoring configurations
     fn migrate_provider_monitoring(
         provider_configs: Vec<HashMap<String, serde_json::Value>>,
-        _unified_config: &mut UnifiedMonitoringConfig,
+        _unified_config: &mut MonitoringConfig,
     ) {
         // Merge settings from multiple providers
         for _provider_config in provider_configs {
@@ -387,7 +386,7 @@ impl MonitoringMigrationService {
     #[allow(dead_code)]
     fn migrate_observability_config(
         _observability_config: HashMap<String, serde_json::Value>,
-        _production_config: &mut super::monitoring::UnifiedMonitoringConfig,
+        _production_config: &mut crate::canonical::monitoring::MonitoringConfig,
     ) {
         // Implementation would extract observability settings
     }
@@ -395,7 +394,7 @@ impl MonitoringMigrationService {
     #[allow(dead_code)]
     fn migrate_performance_monitoring_config(
         _perf_config: HashMap<String, serde_json::Value>,
-        _production_config: &mut super::monitoring::UnifiedMonitoringConfig,
+        _production_config: &mut crate::canonical::monitoring::MonitoringConfig,
     ) {
         // Implementation would extract performance monitoring settings
     }
@@ -403,14 +402,14 @@ impl MonitoringMigrationService {
     #[allow(dead_code)]
     fn migrate_security_monitoring_config(
         _sec_config: HashMap<String, serde_json::Value>,
-        _production_config: &mut super::monitoring::UnifiedMonitoringConfig,
+        _production_config: &mut crate::canonical::monitoring::MonitoringConfig,
     ) {
         // Implementation would extract security monitoring settings
     }
 
     /// Validate the unified monitoring configuration
     /// Validates `unified_monitoring_config`
-    fn validate_unified_monitoring_config(_unified_config: &UnifiedMonitoringConfig) {
+    fn validate_unified_monitoring_config(_unified_config: &MonitoringConfig) {
         // Implementation would validate the unified monitoring configuration
         // Check for required fields, valid ranges, port conflicts, etc.
     }

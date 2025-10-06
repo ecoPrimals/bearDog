@@ -6,8 +6,8 @@ fn benchmark_config_creation(c: &mut Criterion) {
         b.iter(|| black_box(UnifiedBearDogConfig::default()))
     });
 
-    c.bench_function("config_creation_new", |b| {
-        b.iter(|| black_box(UnifiedBearDogConfig::new()))
+    c.bench_function("config_creation_load", |b| {
+        b.iter(|| black_box(UnifiedBearDogConfig::load()).unwrap())
     });
 }
 
@@ -19,11 +19,9 @@ fn benchmark_config_validation(c: &mut Criterion) {
     });
 
     let mut production_config = UnifiedBearDogConfig::default();
-    production_config.app.name = "BearDog".to_string();
-    production_config.app.version = "3.0.0".to_string();
-    production_config.network.port = 8080;
-    production_config.database.connection_string =
-        "postgresql://localhost:5432/beardog".to_string();
+    production_config.app.app_name = "BearDog".to_string();
+    production_config.app.app_description = "Production deployment".to_string();
+    production_config.metadata.version.beardog_version = "3.0.0".to_string();
 
     c.bench_function("config_validation_production", |b| {
         b.iter(|| black_box(production_config.validate()).unwrap())
@@ -43,42 +41,33 @@ fn benchmark_config_serialization(c: &mut Criterion) {
     });
 }
 
-fn benchmark_config_merge(c: &mut Criterion) {
-    let mut base_config = UnifiedBearDogConfig::default();
-    base_config.app.name = "BearDog".to_string();
+fn benchmark_config_clone(c: &mut Criterion) {
+    let config = UnifiedBearDogConfig::default();
 
-    let mut override_config = UnifiedBearDogConfig::default();
-    override_config.app.version = "3.0.0".to_string();
-    override_config.network.port = 8080;
-
-    c.bench_function("config_merge", |b| {
+    c.bench_function("config_clone", |b| {
         b.iter(|| {
-            let mut config = base_config.clone();
-            black_box(config.merge(override_config.clone())).unwrap()
+            let cloned = config.clone();
+            black_box(cloned)
         })
     });
 }
 
-fn benchmark_config_summary(c: &mut Criterion) {
-    let config = UnifiedBearDogConfig::default();
-
-    c.bench_function("config_summary", |b| b.iter(|| black_box(config.summary())));
+fn benchmark_config_migration(c: &mut Criterion) {
+    c.bench_function("config_migrate_from_legacy", |b| {
+        b.iter(|| black_box(UnifiedBearDogConfig::migrate_from_legacy()).unwrap())
+    });
 }
 
 fn benchmark_config_from_env(c: &mut Criterion) {
     // Set up environment variables
     std::env::set_var("BEARDOG_ENVIRONMENT", "production");
-    std::env::set_var("BEARDOG_DEBUG", "false");
-    std::env::set_var("BEARDOG_PORT", "8080");
 
-    c.bench_function("config_from_env", |b| {
-        b.iter(|| black_box(UnifiedBearDogConfig::from_env()).unwrap())
+    c.bench_function("config_load_from_env", |b| {
+        b.iter(|| black_box(UnifiedBearDogConfig::load()).unwrap())
     });
 
     // Clean up
     std::env::remove_var("BEARDOG_ENVIRONMENT");
-    std::env::remove_var("BEARDOG_DEBUG");
-    std::env::remove_var("BEARDOG_PORT");
 }
 
 criterion_group!(
@@ -86,8 +75,8 @@ criterion_group!(
     benchmark_config_creation,
     benchmark_config_validation,
     benchmark_config_serialization,
-    benchmark_config_merge,
-    benchmark_config_summary,
+    benchmark_config_clone,
+    benchmark_config_migration,
     benchmark_config_from_env
 );
 

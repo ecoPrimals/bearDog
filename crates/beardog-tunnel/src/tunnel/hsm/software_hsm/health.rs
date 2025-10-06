@@ -244,7 +244,7 @@ impl SoftwareHealthMonitor {
 
         use hkdf::Hkdf;
         use sha2::Sha256;
-        let hkdf = Hkdf::<Sha256>::new(None, master_key);
+        let hkdf = Hkdf::<Sha256>::new(None, root_key);
         let mut derived_key = vec![0u8; 32];
         hkdf.expand(derivation_data, &mut derived_key)
                 message: format!("Key derivation failed: {e}"),

@@ -9,13 +9,8 @@ use std::collections::HashSet;
 
 // Re-export consolidated compliance types from domains module
 pub use super::domains::compliance::{
-    ComplianceStandard,
-    ConsolidatedComplianceConfiguration,
-    DataSovereigntyConfiguration,
-    PrivacyAuditConfiguration,
-    ReportingConfiguration,
-    ReportFormat,
-    ReportFrequency,
+    ComplianceStandard, ConsolidatedComplianceConfiguration, DataSovereigntyConfiguration,
+    PrivacyAuditConfiguration, ReportFormat, ReportFrequency, ReportingConfiguration,
 };
 
 /// Compliance framework types

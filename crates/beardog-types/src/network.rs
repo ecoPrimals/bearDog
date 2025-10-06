@@ -81,34 +81,16 @@ impl Default for NetworkConnection {
     }
 }
 
-/// Connection pool configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConnectionPoolConfig {
-    /// Minimum connections in pool
-    /// Number of min_connections
-    pub min_connections: u32,
-    /// Maximum connections in pool
-    /// Number of max_connections
-    pub max_connections: u32,
-    /// Connection timeout
-    pub connection_timeout: Duration,
-    /// Idle timeout
-    pub idle_timeout: Duration,
-    /// Maximum lifetime of a connection
-    pub max_lifetime: Duration,
-}
-
-impl Default for ConnectionPoolConfig {
-    fn default() -> Self {
-        Self {
-            min_connections: 1,
-            max_connections: 10,
-            connection_timeout: Duration::from_secs(30),
-            idle_timeout: Duration::from_secs(600),
-            max_lifetime: Duration::from_secs(3600),
-        }
-    }
-}
+/// Network connection pool configuration (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `beardog_types::canonical::config::domains::network::ConnectionPoolConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use canonical::config::domains::network::ConnectionPoolConfig instead"
+)]
+pub type ConnectionPoolConfig = crate::canonical::config::domains::network::ConnectionPoolConfig;
 
 /// Network security configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -146,29 +128,16 @@ impl Default for NetworkSecurityConfig {
     }
 }
 
-/// Network rate limiting configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RateLimitConfig {
-    /// Requests per minute
-    /// Number of requests_per_minute
-    pub requests_per_minute: u32,
-    /// Burst size
-    /// Number of burst_size
-    pub burst_size: u32,
-    /// Enable rate limiting
-    /// Whether feature is enabled
-    pub enabled: bool,
-}
-
-impl Default for RateLimitConfig {
-    fn default() -> Self {
-        Self {
-            requests_per_minute: 1000,
-            burst_size: 100,
-            enabled: true,
-        }
-    }
-}
+/// Network rate limiting configuration (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `canonical::config::domains::network::RateLimitConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use canonical::config::domains::network::RateLimitConfig instead"
+)]
+pub type RateLimitConfig = crate::canonical::config::domains::network::RateLimitConfig;
 
 /// Complete network configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

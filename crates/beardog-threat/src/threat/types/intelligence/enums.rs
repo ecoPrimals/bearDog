@@ -64,8 +64,8 @@ pub enum FeedType {
     DomainReputation,
     /// Represents file hashes variant
     FileHashes,
-    /// Represents url blacklist variant
-    UrlBlacklist,
+    /// Represents url blocklist variant
+    UrlBlocklist,
     /// Represents malware signatures variant
     MalwareSignatures,
     /// Represents attack patterns variant
@@ -160,7 +160,7 @@ impl std::fmt::Display for FeedType {
             FeedType::IpReputation => write!(f, "IP Reputation"),
             FeedType::DomainReputation => write!(f, "Domain Reputation"),
             FeedType::FileHashes => write!(f, "File Hashes"),
-            FeedType::UrlBlacklist => write!(f, "URL Blacklist"),
+            FeedType::UrlBlocklist => write!(f, "URL Blocklist"),
             FeedType::MalwareSignatures => write!(f, "Malware Signatures"),
             FeedType::AttackPatterns => write!(f, "Attack Patterns"),
             FeedType::ThreatActors => write!(f, "Threat Actors"),

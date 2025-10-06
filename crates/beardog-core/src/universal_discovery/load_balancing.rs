@@ -2,7 +2,7 @@
 //
 // This module contains load balancing algorithms and traffic distribution functionality.
 
-use super::*;
+use super::ServiceInfo;
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -15,7 +15,7 @@ pub struct LoadBalancingConfig {
     /// The algorithm value
     pub algorithm: LoadBalancingAlgorithm,
     /// Enable sticky sessions
-    /// Whether enable_sticky_sessions is enabled
+    /// Whether `enable_sticky_sessions` is enabled
     pub enable_sticky_sessions: bool,
     /// Session affinity timeout in seconds
     pub session_timeout_secs: u64,
@@ -23,7 +23,7 @@ pub struct LoadBalancingConfig {
     /// The health weight factor value
     pub health_weight_factor: f64,
     /// Enable adaptive load balancing
-    /// Whether enable_adaptive is enabled
+    /// Whether `enable_adaptive` is enabled
     pub enable_adaptive: bool,
     /// Circuit breaker configuration
     /// The circuit breaker value
@@ -62,11 +62,11 @@ pub enum LoadBalancingAlgorithm {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CircuitBreakerConfig {
-    /// Number of failure_threshold
+    /// Number of `failure_threshold`
     pub failure_threshold: u32,
     pub recovery_timeout_secs: u64,
     /// Maximum calls allowed in half-open state
-    /// Number of half_open_max_calls
+    /// Number of `half_open_max_calls`
     pub half_open_max_calls: u32,
 }
 
@@ -107,7 +107,7 @@ impl LoadBalancer {
         };
 
         Ok(Self {
-            config: config.clone(),
+            config: *config,
             state: Arc::new(RwLock::new(state)),
         })
     }
@@ -115,7 +115,7 @@ impl LoadBalancer {
     /// Start the load balancer background tasks
     /// Starts service
     /// Starts service
-    pub fn start(&self) -> Result<(), BearDogError> {
+    pub const fn start(&self) -> Result<(), BearDogError> {
         // Implementation would start background tasks for adaptive load balancing
         Ok(())
     }
@@ -123,7 +123,7 @@ impl LoadBalancer {
     /// Stop the load balancer and clean up resources
     /// Stops service
     /// Stops service
-    pub fn stop(&self) -> Result<(), BearDogError> {
+    pub const fn stop(&self) -> Result<(), BearDogError> {
         // Implementation would stop background tasks
         Ok(())
     }
@@ -151,7 +151,9 @@ impl LoadBalancer {
 
         // Apply the configured algorithm
         let result = match self.config.algorithm {
-            LoadBalancingAlgorithm::RoundRobin => self.round_robin_balance(healthy_services).await?,
+            LoadBalancingAlgorithm::RoundRobin => {
+                self.round_robin_balance(healthy_services).await?
+            }
             LoadBalancingAlgorithm::LeastConnections => {
                 self.least_connections_balance(&services)?
             }
@@ -380,9 +382,13 @@ impl LoadBalancer {
             .collect())
     }
 
-    /// Updates service_weight
-    /// Updates service_weight
-    pub async fn update_service_weight(&self, service_id: &str, weight: f64) -> Result<(), BearDogError> {
+    /// Updates `service_weight`
+    /// Updates `service_weight`
+    pub async fn update_service_weight(
+        &self,
+        service_id: &str,
+        weight: f64,
+    ) -> Result<(), BearDogError> {
         let mut state = self.state.write().await;
         state.service_weights.insert(service_id.to_string(), weight);
         Ok(())

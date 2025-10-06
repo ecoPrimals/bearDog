@@ -82,11 +82,12 @@ impl HealthChecker for DatabaseHealthChecker {
             metadata: {
                 let mut meta = HashMap::with_capacity(16);
                 meta.insert("type".to_string(), "PostgreSQL".to_string());
-                meta.insert(
-                    "host".to_string(),
-                    std::env::var("BEARDOG_DB_HOST")
-                        .unwrap_or_else(|_| "localhost:5432".to_string()),
-                );
+                // Modern approach: require explicit configuration
+                let db_host = std::env::var("BEARDOG_DB_HOST")
+                    .map_err(|_| BearDogError::configuration(
+                        "BEARDOG_DB_HOST must be configured. Set environment variable BEARDOG_DB_HOST=host:port"
+                    ))?;
+                meta.insert("host".to_string(), db_host);
                 meta
             },
         })
@@ -129,11 +130,12 @@ impl HealthChecker for CacheHealthChecker {
             metadata: {
                 let mut meta = HashMap::with_capacity(16);
                 meta.insert("type".to_string(), "Redis".to_string());
-                meta.insert(
-                    "host".to_string(),
-                    std::env::var("BEARDOG_REDIS_HOST")
-                        .unwrap_or_else(|_| "localhost:6379".to_string()),
-                );
+                // Modern approach: require explicit configuration
+                let redis_host = std::env::var("BEARDOG_REDIS_HOST")
+                    .map_err(|_| BearDogError::configuration(
+                        "BEARDOG_REDIS_HOST must be configured. Set environment variable BEARDOG_REDIS_HOST=host:port"
+                    ))?;
+                meta.insert("host".to_string(), redis_host);
                 meta
             },
         })

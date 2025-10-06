@@ -285,15 +285,15 @@ mod tests {
         }
 
         /// Initializes componentialize
-        fn initialize(&mut self) -> Result<(), Self::Error> {
+        async fn initialize(&mut self) -> Result<(), Self::Error> {
             Ok(())
         }
 
-        fn shutdown(&mut self) -> Result<(), Self::Error> {
+        async fn shutdown(&mut self) -> Result<(), Self::Error> {
             Ok(())
         }
 
-        fn health_check(&self) -> Result<ComponentHealth, Self::Error> {
+        async fn health_check(&self) -> Result<ComponentHealth, Self::Error> {
             Ok(ComponentHealth {
                 is_healthy: true,
                 status: "OK".to_string(),
@@ -307,27 +307,27 @@ mod tests {
         type Parameters = ();
 
         /// Executes operation
-        fn execute(&self, _params: Self::Parameters) -> Result<(), Self::Error> {
+        async fn execute(&self, _params: Self::Parameters) -> Result<(), Self::Error> {
             Ok(())
         }
     }
 
     #[tokio::test]
-    fn test_unified_traits() {
+    async fn test_unified_traits() {
         let mut component = TestComponent {
             id: "test".to_string(),
         };
 
         assert_eq!(component.id(), "test");
         assert_eq!(component.version(), "1.0.0");
-        assert!(component.initialize().is_ok());
-        assert!(component.health_check().is_ok());
-        assert!(component.execute(()).is_ok());
-        assert!(component.shutdown().is_ok());
+        assert!(component.initialize().await.is_ok());
+        assert!(component.health_check().await.is_ok());
+        assert!(component.execute(()).await.is_ok());
+        assert!(component.shutdown().await.is_ok());
     }
 
     #[tokio::test]
-    fn test_provider_status_serialization() {
+    async fn test_provider_status_serialization() {
         let status = ServiceStatus::Running;
         let serialized = serde_json::to_string(&status).unwrap();
         let deserialized: ServiceStatus = serde_json::from_str(&serialized).unwrap();

@@ -20,19 +20,19 @@ pub struct CacheManager {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheConfig {
     /// Maximum cache size in bytes
-    /// Number of max_size_bytes
+    /// Number of `max_size_bytes`
     pub max_size_bytes: u64,
     /// Maximum number of entries
-    /// Number of max_entries
+    /// Number of `max_entries`
     pub max_entries: usize,
     /// Default TTL in seconds
-    /// Number of default_ttl_secs
+    /// Number of `default_ttl_secs`
     pub default_ttl_secs: u64,
     /// Eviction policy
     /// The eviction policy value
     pub eviction_policy: CacheEvictionPolicy,
     /// Enable cache compression
-    /// Whether enable_compression is enabled
+    /// Whether `enable_compression` is enabled
     pub enable_compression: bool,
 }
 
@@ -49,10 +49,10 @@ pub struct CacheMetrics {
     /// Number of evictions
     pub evictions: u64,
     /// Current cache size in bytes
-    /// Number of current_size_bytes
+    /// Number of `current_size_bytes`
     pub current_size_bytes: u64,
     /// Current number of entries
-    /// Number of current_entries
+    /// Number of `current_entries`
     pub current_entries: usize,
     /// Cache hit rate (0.0 to 1.0)
     /// The hit rate value
@@ -155,11 +155,11 @@ impl CacheManager {
     }
 
     /// Get cache metrics
-    pub fn metrics(&self) -> &CacheMetrics {
+    pub const fn metrics(&self) -> &CacheMetrics {
         &self.metrics
     }
 
-    fn should_evict(&self, new_item_size: u64) -> bool {
+    const fn should_evict(&self, new_item_size: u64) -> bool {
         self.metrics.current_size_bytes + new_item_size > self.config.max_size_bytes
             || self.metrics.current_entries >= self.config.max_entries
     }
@@ -177,7 +177,7 @@ impl CacheManager {
         }
     }
 
-    /// Updates hit_rate
+    /// Updates `hit_rate`
     fn update_hit_rate(&mut self) {
         let total_requests = self.metrics.hits + self.metrics.misses;
         if total_requests > 0 {

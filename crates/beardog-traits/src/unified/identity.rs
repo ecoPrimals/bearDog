@@ -4,7 +4,7 @@
 // including unique identification, versioning, and metadata management.
 
 // Re-export core identity traits
-pub use super::core::{Identifiable, Versionable, Serializable};
+pub use super::core::{Identifiable, Serializable, Versionable};
 
 use beardog_errors::BearDogError;
 use serde::{Deserialize, Serialize};
@@ -52,29 +52,29 @@ pub trait IdentityWithLineage: Identifiable {
 }
 
 /// Identity information structure
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct IdentityInfo {
     /// Unique identifier
     pub id: String,
-    
+
     /// Entity type
     pub entity_type: String,
-    
+
     /// Human-readable name
     pub name: String,
-    
+
     /// Version string
     pub version: String,
-    
+
     /// Creation timestamp
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
-    
+
     /// Last update timestamp
     pub updated_at: Option<chrono::DateTime<chrono::Utc>>,
-    
+
     /// Associated tags
     pub tags: Vec<String>,
-    
+
     /// Additional metadata
     pub metadata: HashMap<String, String>,
 }
@@ -99,10 +99,10 @@ impl Default for IdentityInfo {
 pub struct IdentityValidation {
     /// Whether the identity is valid
     pub valid: bool,
-    
+
     /// Validation errors
     pub errors: Vec<String>,
-    
+
     /// Validation warnings
     pub warnings: Vec<String>,
 }
@@ -114,7 +114,7 @@ pub trait IdentityValidator: Send + Sync {
         &self,
         identity_info: &IdentityInfo,
     ) -> impl std::future::Future<Output = Result<IdentityValidation, BearDogError>> + Send;
-    
+
     /// Validate identity uniqueness
     fn validate_uniqueness(
         &self,

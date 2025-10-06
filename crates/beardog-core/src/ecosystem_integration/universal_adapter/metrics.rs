@@ -6,13 +6,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdapterMetrics {
     /// Total number of requests processed
-    /// Number of total_requests
+    /// Number of `total_requests`
     pub total_requests: u64,
     /// Total number of successful requests
-    /// Number of successful_requests
+    /// Number of `successful_requests`
     pub successful_requests: u64,
     /// Total number of failed requests
-    /// Number of failed_requests
+    /// Number of `failed_requests`
     pub failed_requests: u64,
     /// Average response time in milliseconds
     pub avg_response_time_ms: f64,
@@ -37,13 +37,13 @@ impl Default for AdapterMetrics {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConnectionMetrics {
     /// Total number of connections established
-    /// Number of total_connections
+    /// Number of `total_connections`
     pub total_connections: u64,
     /// Number of active connections
-    /// Number of active_connections
+    /// Number of `active_connections`
     pub active_connections: u32,
     /// Number of failed connections
-    /// Number of failed_connections
+    /// Number of `failed_connections`
     pub failed_connections: u64,
     /// Average connection establishment time in milliseconds
     pub avg_connection_time_ms: f64,

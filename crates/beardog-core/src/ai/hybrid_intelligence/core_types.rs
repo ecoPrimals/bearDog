@@ -3,13 +3,10 @@
 use serde::{Deserialize, Serialize};
 
 // MIGRATED: Using canonical config types from beardog-types
-use beardog_types::canonical::config::domains::ai_config::{
-    OnlineLearningConfig, TransferLearningConfig, MetaLearningConfig,
-};
 use crate::ai::hybrid_intelligence::learning::{
     ConstraintConfig, EnsembleConfig, HyperparameterOptimization, LearningAlgorithmType,
-    OptimizationAlgorithm, PredictionHorizon,
-    PredictionModel,
+    MetaLearningConfig, OnlineLearningConfig, OptimizationAlgorithm, PredictionHorizon,
+    PredictionModel, TransferLearningConfig,
 };
 use crate::ai::hybrid_intelligence::neural_networks::{
     NetworkArchitecture, NetworkOptimization, NetworkRegularization, TrainingParams,

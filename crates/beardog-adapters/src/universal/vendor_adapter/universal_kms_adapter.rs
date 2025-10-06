@@ -411,33 +411,13 @@ impl UniversalKmsAdapter {
 }
 
 // Legacy compatibility layer - DEPRECATED
-#[deprecated(note = "Use UniversalKmsAdapter instead")]
-pub struct AwsKmsAdapter {
-    universal_adapter: UniversalKmsAdapter,
-}
-
-#[allow(deprecated)]
-impl AwsKmsAdapter {
-    #[deprecated(note = "Use UniversalKmsAdapter::new instead")]
-    /// Creates a new instance
-    pub fn new(capabilities: Vec<UniversalCapability>) -> Self {
-        warn!("⚠️ Using deprecated AwsKmsAdapter - migrate to UniversalKmsAdapter");
-        Self {
-            universal_adapter: UniversalKmsAdapter::new(capabilities),
-        }
-    }
-}
-
-// More legacy compatibility layers for universal_cloud, universal_cloud, etc.
-#[deprecated(note = "Use UniversalKmsAdapter instead")]
-pub struct universal_cloudKmsAdapter {
-    universal_adapter: UniversalKmsAdapter,
-}
-
-#[deprecated(note = "Use UniversalKmsAdapter instead")]
-pub struct GcpKmsAdapter {
-    universal_adapter: UniversalKmsAdapter,
-}
+// REMOVED deprecated adapters - use UniversalKmsAdapter directly
+// These deprecated types were removed in v3.1.0:
+//   - AwsKmsAdapter (deprecated since v3.0.0) → Use UniversalKmsAdapter
+//   - GcpKmsAdapter (deprecated since v3.0.0) → Use UniversalKmsAdapter
+//   - universal_cloudKmsAdapter (deprecated since v3.0.0) → Use UniversalKmsAdapter
+//
+// Migration: Replace all instances with UniversalKmsAdapter::new(capabilities)
 
 #[cfg(test)]
 mod tests {

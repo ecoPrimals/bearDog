@@ -89,7 +89,7 @@ pub struct AdapterResponse {
     /// Response timestamp
     pub timestamp: DateTime<Utc>,
     /// Processing duration in milliseconds
-    /// Number of duration_ms
+    /// Number of `duration_ms`
     pub duration_ms: u64,
 }
 
@@ -219,7 +219,7 @@ impl AdapterRequest {
 
     /// Set request timeout
     /// Creates instance with timeout
-    pub fn with_timeout(mut self, timeout_ms: u64) -> Self {
+    pub const fn with_timeout(mut self, timeout_ms: u64) -> Self {
         self.timeout_ms = Some(timeout_ms);
         self
     }

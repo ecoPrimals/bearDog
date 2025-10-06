@@ -12,6 +12,14 @@ pub struct ZeroCostConfig<const CACHE_SIZE: usize, const MAX_CONNECTIONS: usize>
     _phantom: PhantomData<()>,
 }
 
+impl<const CACHE_SIZE: usize, const MAX_CONNECTIONS: usize> Default
+    for ZeroCostConfig<CACHE_SIZE, MAX_CONNECTIONS>
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<const CACHE_SIZE: usize, const MAX_CONNECTIONS: usize>
     ZeroCostConfig<CACHE_SIZE, MAX_CONNECTIONS>
 {
@@ -39,6 +47,12 @@ pub struct ZeroCostCache<T> {
     _phantom: PhantomData<T>,
 }
 
+impl<T> Default for ZeroCostCache<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> ZeroCostCache<T> {
     /// Create new zero-cost cache
     pub const fn new() -> Self {
@@ -50,7 +64,7 @@ impl<T> ZeroCostCache<T> {
     /// Compile-time optimized operation
     /// Processes data
     /// Processes data
-    pub fn process(&self, _item: T) -> Result<T, BearDogError>
+    pub const fn process(&self, _item: T) -> Result<T, BearDogError>
     where
         T: Clone,
     {
@@ -63,6 +77,12 @@ impl<T> ZeroCostCache<T> {
 #[derive(Debug)]
 pub struct ZeroCostSecurity<const KEY_SIZE: usize> {
     _phantom: PhantomData<[u8; KEY_SIZE]>,
+}
+
+impl<const KEY_SIZE: usize> Default for ZeroCostSecurity<KEY_SIZE> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<const KEY_SIZE: usize> ZeroCostSecurity<KEY_SIZE> {
@@ -79,7 +99,7 @@ impl<const KEY_SIZE: usize> ZeroCostSecurity<KEY_SIZE> {
     }
 }
 
-/// Zero-cost BearDog system
+/// Zero-cost `BearDog` system
 #[derive(Debug)]
 pub struct ZeroCostBearDog<C, S> {
     cache: C,
@@ -87,16 +107,16 @@ pub struct ZeroCostBearDog<C, S> {
 }
 
 impl<C, S> ZeroCostBearDog<C, S> {
-    /// Create new zero-cost BearDog system
+    /// Create new zero-cost `BearDog` system
     /// Creates a new instance
-    pub fn new(cache: C, security: S) -> Self {
+    pub const fn new(cache: C, security: S) -> Self {
         Self { cache, security }
     }
 
     /// Process data with zero-cost abstractions
     /// Processes data
     /// Processes data
-    pub fn process_data<T>(&self, data: T) -> Result<T, BearDogError>
+    pub const fn process_data<T>(&self, data: T) -> Result<T, BearDogError>
     where
         C: std::fmt::Debug,
         S: std::fmt::Debug,
@@ -116,7 +136,7 @@ pub struct ZeroCostBuilder<C, S> {
 impl<C, S> ZeroCostBuilder<C, S> {
     /// Create new builder
     /// Creates a new instance
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             cache: None,
             security: None,
@@ -154,7 +174,7 @@ impl<C, S> ZeroCostBuilder<C, S> {
 
 /// Example implementations
 pub mod examples {
-    use super::*;
+    use super::{BearDogError, ZeroCostBearDog, ZeroCostBuilder, ZeroCostCache, ZeroCostSecurity};
 
     pub type MemoryCache = ZeroCostCache<String>;
 
@@ -196,14 +216,14 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    fn test_zero_cost_architecture() -> Result<(), BearDogError> {
+    async fn test_zero_cost_architecture() -> Result<(), BearDogError> {
         let _system = examples::development_config()?;
         assert!(true, "Zero-cost architecture system created successfully");
         Ok(())
     }
 
     #[tokio::test]
-    fn test_zero_cost_demo() -> Result<(), BearDogError> {
+    async fn test_zero_cost_demo() -> Result<(), BearDogError> {
         examples::zero_cost_demo()?;
         Ok(())
     }

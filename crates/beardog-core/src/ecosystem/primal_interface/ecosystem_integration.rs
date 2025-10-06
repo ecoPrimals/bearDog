@@ -81,7 +81,7 @@ impl BearDogCore {
     }
 
     /// Execute coordinated operation with available services
-    /// Executes coordinated_operation
+    /// Executes `coordinated_operation`
     fn execute_coordinated_operation(
         &self,
         operation_id: Uuid,
@@ -101,6 +101,7 @@ impl BearDogCore {
         }))
     }
 
+    #[allow(dead_code)]
     fn probe_service_endpoint(
         &self,
         capability: &CapabilityType,
@@ -123,8 +124,8 @@ impl BearDogCore {
     }
 
     /// Get ecosystem integration health status
-    /// Gets ecosystem_integration_health
-    /// Gets ecosystem_integration_health
+    /// Gets `ecosystem_integration_health`
+    /// Gets `ecosystem_integration_health`
     pub async fn get_ecosystem_integration_health(&self) -> Result<HealthStatus, BearDogError> {
         info!("🏥 Checking ecosystem integration health");
 
@@ -145,7 +146,7 @@ impl BearDogCore {
             }
         }
 
-        let health_ratio = healthy_services as f64 / total_services as f64;
+        let health_ratio = f64::from(healthy_services) / f64::from(total_services);
 
         if health_ratio >= 0.8 {
             Ok(HealthStatus::Healthy)

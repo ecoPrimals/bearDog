@@ -2,34 +2,123 @@
 //!
 //! Comprehensive error handling with rich context, categorization, and automated remediation.
 //! Provides sovereignty-compliant error management with zero hardcoded dependencies.
+//!
+//! ## Overview
+//!
+//! The `BearDog` error system provides a unified, type-safe approach to error handling across
+//! the entire ecosystem. All errors are categorized by domain (Security, System, Business, etc.)
+//! with rich context and detailed categorization.
+//!
+//! ## Key Features
+//!
+//! - **Domain Categorization** - Errors organized by functional domain
+//! - **Rich Context** - Detailed categorization and remediation suggestions
+//! - **Zero-Cost** - Efficient error propagation without overhead
+//! - **Type Safety** - Compile-time error handling guarantees
+//! - **Sovereignty Compliant** - No hardcoded dependencies or vendor lock-in
+//!
+//! ## Error Domains
+//!
+//! - **Security** - Authentication, authorization, cryptography
+//! - **System** - Resource exhaustion, I/O, OS interactions
+//! - **Business** - Validation, workflow, business logic
+//! - **Network** - Connectivity, timeouts, protocol errors
+//! - **Configuration** - Invalid config, missing parameters
+//! - **HSM** - Hardware security module operations
+//! - **Workflow** - Process orchestration, state machines
+//!
+//! ## Quick Start
+//!
+//! ```rust
+//! use beardog_errors::{BearDogError, BearDogResult, ResultExt};
+//!
+//! // Create domain-specific errors
+//! fn authenticate_user(token: &str) -> BearDogResult<UserId> {
+//!     if token.is_empty() {
+//!         return Err(BearDogError::security("Invalid authentication token"));
+//!     }
+//!     // ... authentication logic
+//!     Ok(UserId::new(123))
+//! }
+//!
+//! // Add context to external errors
+//! fn load_config(path: &str) -> BearDogResult<Config> {
+//!     std::fs::read_to_string(path)
+//!         .system_context("Failed to read configuration file")?;
+//!     // ... parse config
+//!     Ok(Config::default())
+//! }
+//!
+//! // Error propagation with ?
+//! fn process_request() -> BearDogResult<Response> {
+//!     let user = authenticate_user(token)?;
+//!     let config = load_config("/etc/beardog/config.toml")?;
+//!     Ok(Response::success())
+//! }
+//! ```
+//!
+//! ## Error Construction
+//!
+//! Use the convenient constructor methods:
+//!
+//! ```rust
+//! use beardog_errors::BearDogError;
+//!
+//! // Simple constructors
+//! let err = BearDogError::security("Authentication failed");
+//! let err = BearDogError::system("Out of memory");
+//! let err = BearDogError::business("Invalid email format");
+//! let err = BearDogError::network("Connection timeout");
+//! ```
 
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 #![warn(rust_2018_idioms)]
 
 /// Core error types and definitions
-/// Core functionality
-/// Core functionality
+///
+/// The main `BearDogError` enum and core error handling functionality.
 pub mod core;
 
 /// Error category definitions for classification
+///
+/// Detailed categorization enums for each error domain (Security, System, Business, etc.).
 pub mod categories;
 
 /// Unified error construction utilities
+///
+/// Convenient constructor functions for creating domain-specific errors.
 pub mod constructors_unified;
 
-/// Rich error types with context and remediation
 // pub mod error_types; // Removed - using categories.rs as single source
+
 /// Idiomatic Rust error handling patterns
+///
+/// Extension traits and helpers for idiomatic error handling in Rust.
 pub mod idiomatic;
 
 pub use categories::*;
 pub use core::BearDogError;
 
-/// A convenient type alias for `Result<T, BearDogError>`
+/// Convenient type alias for `Result<T, BearDogError>`
 ///
 /// This type alias provides a consistent return type across the `BearDog` ecosystem
 /// for operations that may fail with a `BearDogError`.
+///
+/// ## Usage
+///
+/// ```rust
+/// use beardog_errors::{BearDogResult, BearDogError};
+///
+/// fn do_something() -> BearDogResult<String> {
+///     if condition_fails() {
+///         return Err(BearDogError::business("Operation failed"));
+///     }
+///     Ok("Success!".to_string())
+/// }
+/// ```
+///
+/// This is equivalent to `Result<T, BearDogError>` but more concise.
 pub type BearDogResult<T> = Result<T, BearDogError>;
 
 use std::fmt::Display;
@@ -37,34 +126,118 @@ use std::fmt::Display;
 /// Extension trait for Result types to add BearDog-specific error context
 ///
 /// This trait provides convenient methods for adding contextual information
-/// to errors and converting them to `BearDogError` types.
+/// to errors and converting them to `BearDogError` types. It's particularly
+/// useful for wrapping errors from external crates.
+///
+/// ## Example
+///
+/// ```rust
+/// use beardog_errors::{ResultExt, BearDogResult};
+///
+/// fn read_user_data(path: &str) -> BearDogResult<Vec<u8>> {
+///     // Wrap std::fs errors with BearDog context
+///     let data = std::fs::read(path)
+///         .system_context("Failed to read user data file")?;
+///     Ok(data)
+/// }
+///
+/// fn authenticate(token: &str) -> BearDogResult<User> {
+///     // Wrap authentication errors with security context
+///     validate_token(token)
+///         .security_context("Token validation failed")?;
+///     Ok(User::new())
+/// }
+/// ```
+///
+/// ## Benefits
+///
+/// - **Rich Context** - Adds descriptive context to external errors
+/// - **Domain Classification** - Automatically categorizes errors by domain
+/// - **Ergonomic** - Works seamlessly with the `?` operator
+/// - **Type Safety** - Preserves type information while adding context
 pub trait ResultExt<T, E> {
     /// Add security context to an error result
     ///
+    /// Wraps the error in a `BearDogError::Security` variant with additional context.
+    /// Use for authentication, authorization, and cryptographic errors.
+    ///
     /// # Errors
     ///
-    /// Returns a `BearDogError::Security` if the original result contains an error
+    /// Returns a `BearDogError::Security` if the original result contains an error.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use beardog_errors::{ResultExt, BearDogResult};
+    /// fn verify_signature(data: &[u8], sig: &[u8]) -> BearDogResult<()> {
+    ///     crypto_lib::verify(data, sig)
+    ///         .security_context("Signature verification failed")?;
+    ///     Ok(())
+    /// }
+    /// ```
     fn security_context(self, context: &str) -> Result<T, BearDogError>;
 
     /// Add system context to an error result
     ///
+    /// Wraps the error in a `BearDogError::System` variant with additional context.
+    /// Use for I/O, resource exhaustion, and OS-level errors.
+    ///
     /// # Errors
     ///
-    /// Returns a `BearDogError::System` if the original result contains an error
+    /// Returns a `BearDogError::System` if the original result contains an error.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use beardog_errors::{ResultExt, BearDogResult};
+    /// fn allocate_buffer(size: usize) -> BearDogResult<Vec<u8>> {
+    ///     vec_with_capacity(size)
+    ///         .system_context("Buffer allocation failed")?;
+    ///     Ok(vec![0; size])
+    /// }
+    /// ```
     fn system_context(self, context: &str) -> Result<T, BearDogError>;
 
     /// Add business context to an error result
     ///
+    /// Wraps the error in a `BearDogError::Business` variant with additional context.
+    /// Use for validation, workflow, and business logic errors.
+    ///
     /// # Errors
     ///
-    /// Returns a `BearDogError::Business` if the original result contains an error
+    /// Returns a `BearDogError::Business` if the original result contains an error.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use beardog_errors::{ResultExt, BearDogResult};
+    /// fn validate_email(email: &str) -> BearDogResult<()> {
+    ///     email_validator::validate(email)
+    ///         .business_context("Invalid email address format")?;
+    ///     Ok(())
+    /// }
+    /// ```
     fn business_context(self, context: &str) -> Result<T, BearDogError>;
 
     /// Add network context to an error result
     ///
+    /// Wraps the error in a `BearDogError::Network` variant with additional context.
+    /// Use for connectivity, timeout, and protocol errors.
+    ///
     /// # Errors
     ///
-    /// Returns a `BearDogError::Network` if the original result contains an error
+    /// Returns a `BearDogError::Network` if the original result contains an error.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use beardog_errors::{ResultExt, BearDogResult};
+    /// fn fetch_data(url: &str) -> BearDogResult<String> {
+    ///     http_client::get(url)
+    ///         .network_context("Failed to fetch data from API")?;
+    ///     Ok("data".to_string())
+    /// }
+    /// ```
     fn network_context(self, context: &str) -> Result<T, BearDogError>;
 }
 

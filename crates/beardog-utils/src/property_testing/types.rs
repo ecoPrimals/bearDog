@@ -1,39 +1,37 @@
-// Types and structures for property-based testing framework
-//
-// This module contains all type definitions used by the property-based testing
-// framework to maintain clean separation and keep files under 1000 lines.
+//! Property-Based Testing Types - Canonical Location
+//!
+//! **Unified type definitions** for property-based testing framework.
+//! All property testing types are consolidated here to eliminate fragmentation.
 
 use beardog_errors::BearDogError;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::time::Duration;
+use tracing::info;
 
+/// Property-based testing framework - main orchestrator
 pub struct PropertyBasedTestFramework {
     pub config: PropertyTestConfig,
     /// Test execution statistics
-    /// The statistics value
     pub statistics: PropertyTestStatistics,
     /// Generated test cases
-    /// Collection of test cases
     pub test_cases: Vec<TestCase>,
     /// Property validation results
-    /// Collection of results
     pub results: Vec<PropertyTestResult>,
 }
 
+/// Configuration for property-based testing
 #[derive(Debug, Clone)]
 pub struct PropertyTestConfig {
     /// Number of test cases to generate
-    /// Number of test_cases
     pub test_cases: usize,
     /// Maximum test execution time
     pub max_execution_time: Duration,
-    /// Whether enable_shrinking is enabled
+    /// Whether shrinking is enabled
     pub enable_shrinking: bool,
-    /// Optional seed
+    /// Optional seed for reproducibility
     pub seed: Option<u64>,
     /// Verbosity level
-    /// Whether verbose is enabled
     pub verbose: bool,
 }
 
@@ -49,138 +47,199 @@ impl Default for PropertyTestConfig {
     }
 }
 
+/// Test execution statistics
 #[derive(Debug, Default)]
 pub struct PropertyTestStatistics {
-    /// Number of total_tests
     pub total_tests: u64,
-    /// Number of passed_tests
     pub passed_tests: u64,
-    /// Number of failed_tests
     pub failed_tests: u64,
-    /// Number of shrunk_tests
-    pub shrunk_tests: u64,
-    pub total_execution_time: Duration,
-    pub average_execution_time: Duration,
-    pub min_execution_time: Duration,
-    pub max_execution_time: Duration,
+    pub properties_tested: u64,
+    pub average_execution_time_ms: f64,
+    pub min_execution_time_ms: f64,
+    pub max_execution_time_ms: f64,
 }
 
+/// Individual test case
 #[derive(Debug, Clone)]
 pub struct TestCase {
-    pub id: String,
-    /// The input value
-    pub input: PropertyValue,
-    /// Optional expected output
-    pub expected_output: Option<PropertyValue>,
-    /// Optional actual output
-    pub actual_output: Option<PropertyValue>,
-    pub execution_time: Duration,
+    pub id: u64,
+    pub input_data: Vec<u8>,
+    pub test_type: String,
+    pub expected_properties: Vec<String>,
 }
 
-/// Result of property-based test execution
+/// Result of a property test
 #[derive(Debug, Clone)]
 pub struct PropertyTestResult {
-    /// The test case value
-    pub test_case: TestCase,
-    /// Whether passed is enabled
+    pub test_case_id: u64,
+    pub property_name: String,
     pub passed: bool,
-    /// Optional error
-    pub error: Option<BearDogError>,
-    /// Number of shrink_attempts
-    pub shrink_attempts: u32,
-    /// Number of finalerexample
-    pub final_counterexample: Option<PropertyValue>,
+    pub execution_time_ms: f64,
+    pub error_message: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+/// Property value types
+#[derive(Debug, Clone)]
 pub enum PropertyValue {
-    /// Represents integer variant
-    Integer(i64),
-    /// Represents float variant
-    Float(f64),
-    /// Currently string
     String(String),
-    /// Represents boolean variant
+    Integer(i64),
+    Float(f64),
     Boolean(bool),
-    /// Represents list variant
-    List(Vec<PropertyValue>),
-    /// Represents map variant
-    Map(HashMap<String, PropertyValue>),
-    /// Represents binary variant
-    Binary(Vec<u8>),
-    /// No none specified
-    None,
+    Bytes(Vec<u8>),
 }
 
+/// Property trait - defines what can be tested
 pub trait Property<T> {
-    /// Test the property with the given input
+    /// Test the property against the input
     fn test(&self, input: &T) -> Result<bool, BearDogError>;
 
-    fn generate(&self) -> T;
-
-    /// Shrink a failing input to find minimal counterexample
-    fn shrink(&self, input: &T) -> Vec<T>;
-
+    /// Get the property name
     fn name(&self) -> &str;
+
+    /// Get the property description
+    fn description(&self) -> &str;
 }
 
-pub trait Generator<T> {
-    /// Generate a random value
-    fn generate(&mut self) -> T;
+// ============================================================================
+// Implementation
+// ============================================================================
 
-    /// Generate within specific constraints
-    fn generate_constrained(&mut self, constraints: &GeneratorConstraints) -> T;
+impl PropertyBasedTestFramework {
+    /// Create a new property-based testing framework
+    pub fn new(config: PropertyTestConfig) -> Self {
+        info!("🧪 Initializing Property-Based Testing Framework");
+        info!("   📊 Test cases: {}", config.test_cases);
+        info!("   ⏱️  Max execution time: {:?}", config.max_execution_time);
+        info!("   🔧 Shrinking enabled: {}", config.enable_shrinking);
 
-    fn shrink(&self, value: &T) -> Vec<T>;
-}
-
-#[derive(Debug, Clone)]
-pub struct GeneratorConstraints {
-    /// Optional min size
-    pub min_size: Option<usize>,
-    /// Optional max size
-    pub max_size: Option<usize>,
-    /// Optional min value
-    pub min_value: Option<i64>,
-    /// Optional max value
-    pub max_value: Option<i64>,
-    /// Optional allowed chars
-    pub allowed_chars: Option<String>,
-    /// Mapping of custom constraints
-    pub custom_constraints: HashMap<String, PropertyValue>,
-}
-
-/// Test execution context
-#[derive(Debug)]
-pub struct TestContext {
-    pub test_id: String,
-    /// Number of iteration
-    pub iteration: u64,
-    pub start_time: std::time::Instant,
-    pub config: PropertyTestConfig,
-    /// Number of random_seed
-    pub random_seed: u64,
-}
-
-#[derive(Debug, Clone)]
-pub enum ShrinkStrategy {
-    /// Remove elements from collections
-    RemoveElements,
-    /// Reduce numeric values towards zero
-    ReduceToZero,
-    /// Simplify strings by removing characters
-    SimplifyStrings,
-    /// Custom shrinking logic
-    Custom(fn(&PropertyValue) -> Vec<PropertyValue>),
-}
-
-impl Default for PropertyBasedTestFramework {
-    fn default() -> Self {
         Self {
-            config: PropertyTestConfig::default(),
+            config,
             statistics: PropertyTestStatistics::default(),
             test_cases: Vec::new(),
             results: Vec::new(),
         }
+    }
+
+    /// Generate comprehensive property test report
+    pub fn generate_property_test_report(&self) -> HashMap<String, String> {
+        let mut report = HashMap::new();
+
+        let success_rate = if self.statistics.total_tests > 0 {
+            (self.statistics.passed_tests as f64 / self.statistics.total_tests as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        report.insert("success_rate".to_string(), format!("{:.2}%", success_rate));
+        report.insert(
+            "total_tests".to_string(),
+            self.statistics.total_tests.to_string(),
+        );
+        report.insert(
+            "passed_tests".to_string(),
+            self.statistics.passed_tests.to_string(),
+        );
+        report.insert(
+            "failed_tests".to_string(),
+            self.statistics.failed_tests.to_string(),
+        );
+        report.insert(
+            "properties_tested".to_string(),
+            self.statistics.properties_tested.to_string(),
+        );
+        report.insert(
+            "average_execution_time_ms".to_string(),
+            format!("{:.2}", self.statistics.average_execution_time_ms),
+        );
+
+        // Property-specific statistics
+        let mut property_stats: HashMap<String, (u64, u64)> = HashMap::new();
+        for result in &self.results {
+            let entry = property_stats
+                .entry(result.property_name.clone())
+                .or_insert((0, 0));
+            if result.passed {
+                entry.0 += 1;
+            } else {
+                entry.1 += 1;
+            }
+        }
+
+        for (property, (passed, failed)) in property_stats {
+            let total = passed + failed;
+            let success_rate = if total > 0 {
+                (passed as f64 / total as f64) * 100.0
+            } else {
+                0.0
+            };
+            report.insert(
+                format!(
+                    "property_{}_success_rate",
+                    property.replace(" ", "_").to_lowercase()
+                ),
+                format!("{:.1}%", success_rate),
+            );
+        }
+
+        report
+    }
+
+    /// Record test result
+    pub fn record_result(&mut self, test_case_id: u64, property_name: &str, passed: bool) {
+        self.results.push(PropertyTestResult {
+            test_case_id,
+            property_name: property_name.to_string(),
+            passed,
+            execution_time_ms: 0.0,
+            error_message: if passed {
+                None
+            } else {
+                Some("Property violation detected".to_string())
+            },
+        });
+
+        if passed {
+            self.statistics.passed_tests += 1;
+        } else {
+            self.statistics.failed_tests += 1;
+        }
+        self.statistics.total_tests += 1;
+    }
+
+    /// Log comprehensive statistics
+    pub fn log_statistics(&self) {
+        info!("📊 Property-Based Testing Statistics:");
+        info!("   🧪 Total Tests: {}", self.statistics.total_tests);
+        info!("   ✅ Passed: {}", self.statistics.passed_tests);
+        info!("   ❌ Failed: {}", self.statistics.failed_tests);
+        info!(
+            "   🔍 Properties Tested: {}",
+            self.statistics.properties_tested
+        );
+
+        if self.statistics.total_tests > 0 {
+            let success_rate =
+                (self.statistics.passed_tests as f64 / self.statistics.total_tests as f64) * 100.0;
+            info!("   📈 Success Rate: {:.2}%", success_rate);
+        }
+
+        info!(
+            "   ⏱️  Average Execution Time: {:.2}ms",
+            self.statistics.average_execution_time_ms
+        );
+        info!(
+            "   ⚡ Min Execution Time: {:.2}ms",
+            self.statistics.min_execution_time_ms
+        );
+        info!(
+            "   🐌 Max Execution Time: {:.2}ms",
+            self.statistics.max_execution_time_ms
+        );
+    }
+}
+
+impl Default for PropertyBasedTestFramework {
+    fn default() -> Self {
+        Self::new(PropertyTestConfig::default())
     }
 }

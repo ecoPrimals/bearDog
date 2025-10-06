@@ -14,17 +14,17 @@ use std::net::SocketAddr;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ServiceRegistryConfig {
     /// Maximum number of services that can be registered
-    /// Number of max_services
+    /// Number of `max_services`
     pub max_services: usize,
-    /// Number of heartbeat_interval_secs
+    /// Number of `heartbeat_interval_secs`
     pub heartbeat_interval_secs: u64,
     /// Service timeout after which services are considered dead
     pub service_timeout_secs: u64,
     /// Whether to enable automatic health checks
-    /// Whether enable_health_checks is enabled
+    /// Whether `enable_health_checks` is enabled
     pub enable_health_checks: bool,
     /// Whether to enable service tagging and metadata
-    /// Whether enable_tagging is enabled
+    /// Whether `enable_tagging` is enabled
     pub enable_tagging: bool,
 }
 
@@ -75,7 +75,7 @@ impl ServiceRegistry {
     /// Creates a new instance
     pub fn new(config: &ServiceRegistryConfig) -> Result<Self, BearDogError> {
         Ok(Self {
-            config: config.clone(),
+            config: *config,
             services: HashMap::new(),
         })
     }
@@ -117,8 +117,8 @@ impl ServiceRegistry {
     }
 
     /// Get the total number of registered services
-    /// Gets service_count
-    /// Gets service_count
+    /// Gets `service_count`
+    /// Gets `service_count`
     pub fn get_service_count(&self) -> Result<usize, BearDogError> {
         Ok(self.services.len())
     }
@@ -133,8 +133,8 @@ impl ServiceRegistry {
     }
 
     /// Update the health status of a registered service
-    /// Updates service_health
-    /// Updates service_health
+    /// Updates `service_health`
+    /// Updates `service_health`
     pub fn update_service_health(
         &mut self,
         service_id: &str,
@@ -148,8 +148,8 @@ impl ServiceRegistry {
     }
 
     /// Remove services that have exceeded their timeout
-    /// Cleans up expired_services
-    /// Cleans up expired_services
+    /// Cleans up `expired_services`
+    /// Cleans up `expired_services`
     pub fn cleanup_expired_services(&mut self) -> Result<Vec<String>, BearDogError> {
         let timeout_duration = chrono::Duration::seconds(self.config.service_timeout_secs as i64);
         let cutoff_time = Utc::now() - timeout_duration;

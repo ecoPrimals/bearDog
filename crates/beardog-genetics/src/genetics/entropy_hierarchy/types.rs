@@ -61,7 +61,7 @@ impl PartialOrd for EntropyClass {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BiometricHash {
     /// Hash of biometric data
     /// Collection of hash
@@ -82,7 +82,7 @@ impl BiometricHash {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct OwnershipProof {
     /// Proof data
     /// Collection of proof data
@@ -177,7 +177,7 @@ pub enum MachineSourceType {
     },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct HumanIdentity {
     /// Unique identity identifier
     pub identity_id: String,
@@ -192,7 +192,7 @@ pub struct HumanIdentity {
 }
 
 /// Levels of identity verification
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum VerificationLevel {
     /// Basic verification
     Basic,
@@ -220,13 +220,9 @@ pub enum MixingStrategy {
     /// Simple XOR mixing
     XorMix,
     /// Hash-based mixing
-    HashMix {
-        hash_algorithm: String,
-    },
+    HashMix { hash_algorithm: String },
     /// Cryptographic mixing
-    CryptoMix {
-        cipher: String,
-    },
+    CryptoMix { cipher: String },
 }
 
 /// Entropy seed containing classified entropy

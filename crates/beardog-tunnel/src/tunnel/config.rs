@@ -163,35 +163,27 @@ impl Default for ResilienceConfig {
     }
 }
 
+/// Tunnel-specific monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MonitoringConfig {
-    /// Whether enable_metrics is enabled
+pub struct TunnelMonitoringConfig {
     pub enable_metrics: bool,
-    /// Number of metrics_port
     pub metrics_port: u16,
-    /// Whether enable_tracing is enabled
     pub enable_tracing: bool,
-    /// The trace sample rate value
     pub trace_sample_rate: f64,
-    /// Whether enable_logging is enabled
     pub enable_logging: bool,
-    /// The log level value
     pub log_level: String,
-    /// Whether enable_health_endpoint is enabled
     pub enable_health_endpoint: bool,
-    /// Number of health_endpoint_port
     pub health_endpoint_port: u16,
-    /// Whether enable_profiling is enabled
     pub enable_profiling: bool,
-    /// Number of profiling_port
     pub profiling_port: u16,
-    /// Whether enable_alerts is enabled
     pub enable_alerts: bool,
-    /// The alert thresholds value
     pub alert_thresholds: AlertThresholds,
-    /// The aggregation window value
     pub aggregation_window: Duration,
 }
+
+// Backward compatibility alias
+#[deprecated(since = "3.1.0", note = "Use TunnelMonitoringConfig instead")]
+pub type MonitoringConfig = TunnelMonitoringConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AlertThresholds {
@@ -213,7 +205,7 @@ impl Default for AlertThresholds {
     }
 }
 
-impl Default for MonitoringConfig {
+impl Default for TunnelMonitoringConfig {
     fn default() -> Self {
         Self {
             enable_metrics: true,
@@ -256,7 +248,7 @@ impl Default for UnifiedProcessorConfig {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TunnelConfig {
     pub performance: PerformanceConfig,
     /// The security value
@@ -266,19 +258,7 @@ pub struct TunnelConfig {
     /// The resilience value
     pub resilience: ResilienceConfig,
     /// The monitoring value
-    pub monitoring: MonitoringConfig,
-}
-
-impl Default for TunnelConfig {
-    fn default() -> Self {
-        Self {
-            performance: PerformanceConfig::default(),
-            security: SecurityConfig::default(),
-            gaming: GamingConfig::default(),
-            resilience: ResilienceConfig::default(),
-            monitoring: MonitoringConfig::default(),
-        }
-    }
+    pub monitoring: TunnelMonitoringConfig,
 }
 
 #[cfg(test)]

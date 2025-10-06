@@ -165,19 +165,19 @@ impl SecurityProviderBridge {
     /// Handles derive_key
     fn handle_derive_key(&self, request: &UniversalRequest) -> UniversalResponse {
 
-        let master_key_b64 = match payload.get("master_key").and_then(|v| v.as_str()) {
-                    "MISSING_MASTER_KEY",
-                    "Master key is required for derivation",
+        let root_key_b64 = match payload.get("root_key").and_then(|v| v.as_str()) {
+                    "MISSING_ROOT_KEY",
+                    "Root key is required for derivation",
         let derivation_path = match payload.get("derivation_path").and_then(|v| v.as_str()) {
             Some(path) => path,
                     "MISSING_DERIVATION_PATH",
                     "Derivation path is required",
-        let master_key = match general_purpose::STANDARD.decode(master_key_b64) {
-                    "INVALID_MASTER_KEY",
-                    "Master key must be valid base64",
+        let root_key = match general_purpose::STANDARD.decode(root_key_b64) {
+                    "INVALID_ROOT_KEY",
+                    "Root key must be valid base64",
         let salt = derivation_path.as_bytes();
 
-        match BearDogCrypto::derive_key_pbkdf2(&master_key, salt, 100_000, 32) {
+        match BearDogCrypto::derive_key_pbkdf2(&root_key, salt, 100_000, 32) {
             Ok(derived_key) => UniversalResponse {
                     "derived_key": general_purpose::STANDARD.encode({}", e),
 

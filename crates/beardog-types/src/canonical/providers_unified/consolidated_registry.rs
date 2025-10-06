@@ -110,12 +110,13 @@ pub struct ConsolidatedProviderRegistry {
     /// Provider health cache
     health_cache: Arc<RwLock<HashMap<String, ProviderHealth>>>,
     /// Registry configuration
-    config: RegistryConfig,
+    config: ProviderRegistryConfig,
 }
 
-/// Registry configuration
+/// Provider registry configuration
+/// Renamed from RegistryConfig to ProviderRegistryConfig for clarity
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RegistryConfig {
+pub struct ProviderRegistryConfig {
     /// Maximum number of providers
     pub max_providers: usize,
     /// Health check interval in seconds
@@ -126,7 +127,11 @@ pub struct RegistryConfig {
     pub provider_timeout_secs: u64,
 }
 
-impl Default for RegistryConfig {
+/// Backward compatibility alias
+#[deprecated(since = "3.2.0", note = "Use ProviderRegistryConfig instead")]
+pub type RegistryConfig = ProviderRegistryConfig;
+
+impl Default for ProviderRegistryConfig {
     fn default() -> Self {
         Self {
             max_providers: 100,

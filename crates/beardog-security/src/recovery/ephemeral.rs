@@ -66,11 +66,11 @@ impl EphemeralRecoveryKey {
         use hkdf::Hkdf;
         use sha2::Sha256;
 
-        let master_key = base64::engine::general_purpose::STANDARD_NO_PAD
+        let primary_key = base64::engine::general_purpose::STANDARD_NO_PAD
             .decode(&self.key_value)
             .map_err(|_| "Invalid key format")?;
 
-        let hk = Hkdf::<Sha256>::new(Some(salt), &master_key);
+        let hk = Hkdf::<Sha256>::new(Some(salt), &primary_key);
         let mut derived_key = [0u8; 32];
         hk.expand(info, &mut derived_key)
             .map_err(|_| "Key derivation failed")?;

@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 pub struct ConsolidatedComplianceConfiguration {
     /// Enable compliance monitoring system
     pub enabled: bool,
-    
+
     /// **COMPLIANCE STANDARDS**
     /// Active compliance standards (GDPR, HIPAA, SOX, PCI-DSS, ISO-27001, SOC2, CCPA)
     pub standards: Vec<ComplianceStandard>,
@@ -24,19 +24,19 @@ pub struct ConsolidatedComplianceConfiguration {
     pub enabled_standards: Vec<ComplianceStandard>,
     /// Compliance frameworks for orchestration
     pub compliance_frameworks: Vec<String>,
-    
+
     /// **AUDIT & RETENTION**
     /// Audit retention period in days (default: 2555 days = 7 years)
     pub audit_retention_days: u32,
     /// Audit frequency in hours (for automated audits)
     pub audit_frequency_hours: u64,
-    
+
     /// **REPORTING CONFIGURATION**
     pub reporting: ReportingConfiguration,
-    
+
     /// **DATA SOVEREIGNTY**
     pub data_sovereignty: DataSovereigntyConfiguration,
-    
+
     /// **PRIVACY AUDIT**
     pub privacy_audit: PrivacyAuditConfiguration,
 }
@@ -94,7 +94,7 @@ pub struct ReportingConfiguration {
 }
 
 /// Report output formats
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ReportFormat {
     /// JSON format
     Json,
@@ -109,7 +109,7 @@ pub enum ReportFormat {
 }
 
 /// Report generation frequency
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ReportFrequency {
     /// Daily reports
     Daily,
@@ -201,22 +201,26 @@ impl ConsolidatedComplianceConfiguration {
     /// Validate compliance configuration
     pub fn validate(&self) -> Result<(), BearDogError> {
         if self.audit_retention_days == 0 {
-            return Err(BearDogError::configuration("Audit retention cannot be zero"));
-        }
-        
-        if self.audit_frequency_hours == 0 {
-            return Err(BearDogError::configuration("Audit frequency cannot be zero"));
-        }
-        
-        if self.enabled && self.enabled_standards.is_empty() {
             return Err(BearDogError::configuration(
-                "At least one compliance standard must be enabled when compliance is enabled"
+                "Audit retention cannot be zero",
             ));
         }
-        
+
+        if self.audit_frequency_hours == 0 {
+            return Err(BearDogError::configuration(
+                "Audit frequency cannot be zero",
+            ));
+        }
+
+        if self.enabled && self.enabled_standards.is_empty() {
+            return Err(BearDogError::configuration(
+                "At least one compliance standard must be enabled when compliance is enabled",
+            ));
+        }
+
         Ok(())
     }
-    
+
     /// Create development configuration
     pub fn development() -> Self {
         let mut config = Self::default();
@@ -225,19 +229,22 @@ impl ConsolidatedComplianceConfiguration {
         config.reporting.frequency = ReportFrequency::Daily;
         config
     }
-    
+
     /// Create production configuration
     pub fn production() -> Self {
         Self::default()
     }
-    
+
     /// Check if a specific standard is enabled
     pub fn is_standard_enabled(&self, standard: &ComplianceStandard) -> bool {
         self.enabled && self.enabled_standards.contains(standard)
     }
-    
+
     /// Get all enabled standards as strings
     pub fn enabled_standards_as_strings(&self) -> Vec<String> {
-        self.enabled_standards.iter().map(std::string::ToString::to_string).collect()
+        self.enabled_standards
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect()
     }
-} 
+}

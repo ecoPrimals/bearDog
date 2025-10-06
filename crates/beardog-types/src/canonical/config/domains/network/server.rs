@@ -43,9 +43,9 @@ impl Default for ServerConfiguration {
     fn default() -> Self {
         Self {
             bind_address: crate::constants::domains::network::addresses::LOCALHOST_IPV4.to_string(),
-            port: crate::constants::domains::network::defaults::DEFAULT_API_PORT,
+            port: crate::constants::domains::network::defaults::default_api_port(),
             enable_ipv6: true,
-            max_connections: crate::constants::domains::system::defaults::DEFAULT_MAX_CONNECTIONS as usize,
+            max_connections: crate::constants::domains::system::defaults::DEFAULT_MAX_CONNECTIONS,
             backlog_size: 1024,
             enable_keepalive: true,
             keepalive_timeout_seconds: 60,
@@ -58,8 +58,8 @@ impl Default for ServerConfiguration {
 impl Default for SocketBufferConfiguration {
     fn default() -> Self {
         Self {
-            send_buffer_size: beardog_types::constants::domains::system::defaults::DEFAULT_BUFFER_SIZE,
-            recv_buffer_size: beardog_types::constants::domains::system::defaults::DEFAULT_BUFFER_SIZE,
+            send_buffer_size: crate::constants::domains::system::defaults::DEFAULT_BUFFER_SIZE,
+            recv_buffer_size: crate::constants::domains::system::defaults::DEFAULT_BUFFER_SIZE,
             enable_auto_tuning: true,
         }
     }
@@ -71,15 +71,15 @@ impl ServerConfiguration {
         if self.port == 0 {
             return Err(BearDogError::configuration("Server port cannot be 0"));
         }
-        
+
         if self.max_connections == 0 {
             return Err(BearDogError::configuration("Max connections cannot be 0"));
         }
-        
+
         if self.bind_address.is_empty() {
             return Err(BearDogError::configuration("Bind address cannot be empty"));
         }
-        
+
         Ok(())
     }
 }
@@ -90,11 +90,13 @@ impl SocketBufferConfiguration {
         if self.send_buffer_size == 0 {
             return Err(BearDogError::configuration("Send buffer size cannot be 0"));
         }
-        
+
         if self.recv_buffer_size == 0 {
-            return Err(BearDogError::configuration("Receive buffer size cannot be 0"));
+            return Err(BearDogError::configuration(
+                "Receive buffer size cannot be 0",
+            ));
         }
-        
+
         Ok(())
     }
 }
@@ -107,7 +109,10 @@ mod tests {
     fn test_default_server_config() {
         let config = ServerConfiguration::default();
         assert!(config.validate().is_ok());
-        assert_eq!(config.port, crate::constants::domains::network::defaults::DEFAULT_API_PORT);
+        assert_eq!(
+            config.port,
+            crate::constants::domains::network::defaults::default_api_port()
+        );
         assert!(config.enable_ipv6);
         assert!(config.enable_keepalive);
         assert!(config.tcp_nodelay);
@@ -131,9 +136,9 @@ mod tests {
     fn test_socket_buffer_validation() {
         let config = SocketBufferConfiguration::default();
         assert!(config.validate().is_ok());
-        
+
         let mut invalid_config = config.clone();
         invalid_config.send_buffer_size = 0;
         assert!(invalid_config.validate().is_err());
     }
-} 
+}

@@ -15,12 +15,13 @@ pub struct ServiceRegistry {
     /// Registered services
     services: Arc<RwLock<HashMap<String, EcosystemService>>>,
     /// Registry configuration
-    config: RegistryConfig,
+    config: ServiceRegistryConfig,
 }
 
 /// Configuration for service registry
+/// Renamed from RegistryConfig to ServiceRegistryConfig for clarity
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RegistryConfig {
+pub struct ServiceRegistryConfig {
     /// Maximum number of services
     pub max_services: usize,
     /// Service timeout in seconds
@@ -28,6 +29,10 @@ pub struct RegistryConfig {
     /// Enable service health checks
     pub enable_health_checks: bool,
 }
+
+/// Backward compatibility alias
+#[deprecated(since = "3.2.0", note = "Use ServiceRegistryConfig instead")]
+pub type RegistryConfig = ServiceRegistryConfig;
 
 /// Service registration request
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,7 +45,7 @@ pub struct RegistrationRequest {
 
 impl ServiceRegistry {
     /// Create a new service registry
-    pub fn new(config: RegistryConfig) -> Self {
+    pub fn new(config: ServiceRegistryConfig) -> Self {
         Self {
             services: Arc::new(RwLock::new(HashMap::new())),
             config,
@@ -87,7 +92,7 @@ impl ServiceRegistry {
     }
 }
 
-impl Default for RegistryConfig {
+impl Default for ServiceRegistryConfig {
     fn default() -> Self {
         Self {
             max_services: 100,

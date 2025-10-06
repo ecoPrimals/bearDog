@@ -306,7 +306,7 @@ impl OptimizedBytes {
         }
     }
 
-    /// Convert to Vec<u8> (may clone if necessary)
+    /// Convert to `Vec<u8>` (may clone if necessary)
     /// Converts to vec
     #[must_use]
     pub fn to_vec(&self) -> Vec<u8> {

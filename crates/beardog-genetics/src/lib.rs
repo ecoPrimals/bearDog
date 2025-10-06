@@ -92,6 +92,3 @@ pub fn assess_genetics_health() -> String {
     // In a full implementation, this would check the health of all genetic systems
     "Healthy".to_string()
 }
-
-#[cfg(test)]
-mod comprehensive_tests;

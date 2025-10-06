@@ -46,9 +46,9 @@ pub mod types;
 // Re-export main types and functions
 pub use registry::ExternalFunctionRegistry;
 pub use types::{
-    AccessRestriction, CallingConvention, CpuIntensity, FunctionAttribute, FunctionHandle,
-    FunctionMetadata, FunctionParameter, FunctionResult, FunctionValue, LibraryHandle,
-    ExternalFunctionsRegistryConfig, LibraryMetadata, ParameterType, PerformanceInfo, SafetyLevel,
+    AccessRestriction, CallingConvention, CpuIntensity, ExternalFunctionsRegistryConfig,
+    FunctionAttribute, FunctionHandle, FunctionMetadata, FunctionParameter, FunctionResult,
+    FunctionValue, LibraryHandle, LibraryMetadata, ParameterType, PerformanceInfo, SafetyLevel,
     SecurityClearance, SecurityInfo,
 };
 
@@ -65,8 +65,10 @@ pub fn create_registry() -> ExternalFunctionRegistry {
 }
 
 /// Creates a new external function registry with custom configuration
-/// Creates registry_with_config
-pub fn create_registry_with_config(config: ExternalFunctionsRegistryConfig) -> ExternalFunctionRegistry {
+/// Creates `registry_with_config`
+pub fn create_registry_with_config(
+    config: ExternalFunctionsRegistryConfig,
+) -> ExternalFunctionRegistry {
     ExternalFunctionRegistry::new(config)
 }
 
@@ -75,7 +77,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    fn test_registry_creation() {
+    async fn test_registry_creation() {
         let config = ExternalFunctionsRegistryConfig::default();
         let registry = ExternalFunctionRegistry::new(config);
         let libraries = registry.list_libraries().unwrap();
@@ -83,7 +85,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_registry_library_management() {
+    async fn test_registry_library_management() {
         let config = ExternalFunctionsRegistryConfig::default();
         let registry = ExternalFunctionRegistry::new(config);
         let libraries = registry.list_libraries().unwrap();
@@ -91,7 +93,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_safety_checker() {
+    async fn test_safety_checker() {
         use super::safety::{SafetyChecker, SafetyPolicy};
         use super::types::SecurityClearance;
         use beardog_traits::unified::PolicyEngine;
@@ -114,11 +116,11 @@ mod tests {
         };
 
         // Load policies
-        checker.load_policy(policy1).unwrap();
-        checker.load_policy(policy2).unwrap();
+        checker.load_policy(policy1).await.unwrap();
+        checker.load_policy(policy2).await.unwrap();
 
         // Test list_policies
-        let policies = checker.list_policies().unwrap();
+        let policies = checker.list_policies().await.unwrap();
         assert!(!policies.is_empty());
         assert!(policies.contains(&"parameter_validation".to_string()));
         assert!(policies.contains(&"memory_bounds".to_string()));

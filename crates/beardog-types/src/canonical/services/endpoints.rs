@@ -167,61 +167,38 @@ pub enum TlsVersion {
     V1_3,
 }
 
-/// Rate limiting configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RateLimitConfig {
-    /// Maximum requests per time window
-    pub max_requests: u64,
-    
-    /// Time window in seconds
-    pub window_seconds: u64,
-    
-    /// Burst allowance
-    pub burst_size: Option<u64>,
-    
-    /// Rate limit scope
-    pub scope: RateLimitScope,
-}
+/// Rate limiting configuration (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `super::super::config::domains::network::RateLimitConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use super::super::config::domains::network::RateLimitConfig instead"
+)]
+pub type RateLimitConfig = super::super::config::domains::network::RateLimitConfig;
 
-/// Rate limiting scope
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub enum RateLimitScope {
-    /// Per IP address
-    PerIp,
-    /// Per authenticated user
-    PerUser,
-    /// Per API key
-    PerApiKey,
-    /// Global rate limit
-    Global,
-    /// Custom scope
-    Custom(String),
-}
+/// Rate limiting scope (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `super::super::config::domains::network::RateLimitScope` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use super::super::config::domains::network::RateLimitScope instead"
+)]
+pub type RateLimitScope = super::super::config::domains::network::RateLimitScope;
 
 /// Health check configuration for endpoints
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HealthCheckConfig {
-    /// Health check endpoint path
-    pub path: String,
-    
-    /// Health check interval in seconds
-    pub interval_seconds: u64,
-    
-    /// Health check timeout in seconds
-    pub timeout_seconds: u64,
-    
-    /// Number of consecutive failures before marking unhealthy
-    pub failure_threshold: u32,
-    
-    /// Number of consecutive successes before marking healthy
-    pub success_threshold: u32,
-    
-    /// Expected HTTP status codes for healthy response
-    pub expected_status_codes: Vec<u16>,
-    
-    /// Expected response body content
-    pub expected_body_content: Option<String>,
-}
+///
+/// **DEPRECATED**: Use `super::super::config::domains::network::monitoring::HealthCheckConfiguration` instead.
+///
+/// For specialized health checks, use the appropriate type from `canonical::monitoring::health`.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use canonical::config::domains::network::monitoring::HealthCheckConfiguration or canonical::monitoring::health types"
+)]
+pub type HealthCheckConfig = super::super::config::domains::network::monitoring::HealthCheckConfiguration;
 
 impl Default for UnifiedServiceEndpoint {
     fn default() -> Self {

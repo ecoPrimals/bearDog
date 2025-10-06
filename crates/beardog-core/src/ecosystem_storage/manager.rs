@@ -5,9 +5,10 @@ use super::cache::CacheManager;
 use super::config::EcosystemStorageConfig;
 use super::metrics::StorageMetrics;
 use super::operations::{StorageRequest, StorageResponse};
-use super::types::*;
+use super::types::{StorageOperation, StorageStatus};
 
 use beardog_errors::BearDogError;
+use beardog_types::constants::domains::storage::messages::NO_BACKEND_AVAILABLE;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -82,7 +83,7 @@ impl EcosystemStorageManager {
     }
 
     /// Get configuration
-    pub fn config(&self) -> &EcosystemStorageConfig {
+    pub const fn config(&self) -> &EcosystemStorageConfig {
         &self.config
     }
 
@@ -102,14 +103,15 @@ impl EcosystemStorageManager {
 
             Ok(response)
         } else {
-            Err(BearDogError::business(
-                STORAGE_BACKEND_AVAILABLE.to_string(),
-            ))
+            Err(BearDogError::business(NO_BACKEND_AVAILABLE.to_string()))
         }
     }
 
     /// Handles retrieve
-    async fn handle_retrieve(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
+    async fn handle_retrieve(
+        &self,
+        request: StorageRequest,
+    ) -> Result<StorageResponse, BearDogError> {
         // Try cache first
         {
             let mut cache = self.cache.write().await;
@@ -136,14 +138,15 @@ impl EcosystemStorageManager {
 
             Ok(response)
         } else {
-            Err(BearDogError::business(
-                STORAGE_BACKEND_AVAILABLE.to_string(),
-            ))
+            Err(BearDogError::business(NO_BACKEND_AVAILABLE.to_string()))
         }
     }
 
     /// Handles delete
-    async fn handle_delete(&self, request: StorageRequest) -> Result<StorageResponse, BearDogError> {
+    async fn handle_delete(
+        &self,
+        request: StorageRequest,
+    ) -> Result<StorageResponse, BearDogError> {
         // Remove from cache
         {
             let mut cache = self.cache.write().await;
@@ -154,9 +157,7 @@ impl EcosystemStorageManager {
         if let Some(backend) = self.backends.first() {
             backend.delete(request)
         } else {
-            Err(BearDogError::business(
-                STORAGE_BACKEND_AVAILABLE.to_string(),
-            ))
+            Err(BearDogError::business(NO_BACKEND_AVAILABLE.to_string()))
         }
     }
 
@@ -165,16 +166,14 @@ impl EcosystemStorageManager {
         if let Some(backend) = self.backends.first() {
             let items = backend.list(request.clone())?;
             let response_data = serde_json::to_vec(&items)
-                .map_err(|e| BearDogError::business(format!("Serialization error: {}", e)))?;
+                .map_err(|e| BearDogError::business(format!("Serialization error: {e}")))?;
 
             Ok(StorageResponse::success(
                 request.request_id,
                 Some(response_data),
             ))
         } else {
-            Err(BearDogError::business(
-                STORAGE_BACKEND_AVAILABLE.to_string(),
-            ))
+            Err(BearDogError::business(NO_BACKEND_AVAILABLE.to_string()))
         }
     }
 }

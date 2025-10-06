@@ -2,6 +2,10 @@
 //
 // This module provides comprehensive type aliases to resolve all missing type references
 // during the unified configuration system integration.
+//
+// Note: Some types in this module are intentionally deprecated with clear migration paths.
+
+#![allow(deprecated)]
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -136,21 +140,31 @@ pub struct TracingConfig {
     pub trace_id_format: String,
 }
 
+/// Generic health check configuration (DEPRECATED)
+///
+/// This generic health check config is being phased out in favor of
+/// domain-specific configurations. Use the appropriate domain config instead:
+/// - Production: `canonical::config::production::operations::HealthCheckConfig`
+/// - Discovery: `canonical::config::discovery::HealthCheckConfig`
+/// - Network: `canonical::network::HealthCheckConfig`
+/// - Services: `canonical::services::endpoints::HealthCheckConfig`
+/// - AI: `beardog_core::ai::hybrid_intelligence::types::HealthCheckConfig`
 /// Health check configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct HealthCheckConfig {
-    /// Enabled
-    /// Whether feature is enabled
-    pub enabled: bool,
-    /// Check Interval
-    /// The check interval value
-    pub check_interval: Duration,
-    /// Timeout
-    pub timeout: Duration,
-    /// Endpoints
-    /// Collection of endpoints
-    pub endpoints: Vec<String>,
-}
+///
+/// **DEPRECATED**: Use `super::domains::network::monitoring::HealthCheckConfiguration` instead.
+///
+/// For specialized health checks, see:
+/// - Production: `super::production::operations::HealthCheckConfig`
+/// - Discovery: `super::discovery::HealthCheckConfig`
+/// - Services: `canonical::services::endpoints::HealthCheckConfig`
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use canonical::config::domains::network::monitoring::HealthCheckConfiguration instead"
+)]
+#[allow(deprecated)]
+pub type HealthCheckConfig = super::domains::network::monitoring::HealthCheckConfiguration;
 
 /// Alerting configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

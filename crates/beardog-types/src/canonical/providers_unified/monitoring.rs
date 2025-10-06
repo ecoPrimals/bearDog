@@ -22,7 +22,7 @@ pub struct ProviderMonitoringConfig {
 
     /// Logging configuration
     /// The logging value
-    pub logging: LoggingConfig,
+    pub logging: super::super::config::domains::system::LoggingConfig,
 
     /// Metrics configuration
     /// The metrics value
@@ -43,7 +43,7 @@ impl Default for ProviderMonitoringConfig {
             enabled: true,
             metrics_enabled: true,
             tracing_enabled: true,
-            logging: LoggingConfig::default(),
+            logging: super::super::config::domains::system::LoggingConfig::default(),
             metrics: MetricsConfig::default(),
             alerting: AlertingConfig::default(),
             custom_hooks: Vec::new(),
@@ -51,13 +51,16 @@ impl Default for ProviderMonitoringConfig {
     }
 }
 
-/// Logging configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct LoggingConfig {
-    /// Log level
-    /// The level value
-    pub level: String,
-}
+/// Logging configuration (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `super::super::config::domains::system::LoggingConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use super::super::config::domains::system::LoggingConfig instead"
+)]
+pub type LoggingConfig = super::super::config::domains::system::LoggingConfig;
 
 /// Metrics configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

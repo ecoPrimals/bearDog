@@ -350,7 +350,7 @@ mod tests {
     use crate::types::AlertLevel;
 
     #[tokio::test]
-    fn test_monitoring_service_creation() -> Result<(), BearDogError> {
+    async fn test_monitoring_service_creation() -> Result<(), BearDogError> {
         let config = MonitoringConfig::default();
         let service = MonitoringService::new(config);
         let metrics = service.collect_performance_metrics()?;
@@ -362,7 +362,7 @@ mod tests {
     }
 
     #[tokio::test]
-    fn test_alert_generation() -> Result<(), BearDogError> {
+    async fn test_alert_generation() -> Result<(), BearDogError> {
         let config = MonitoringConfig {
             ..Default::default()
         };
@@ -371,7 +371,7 @@ mod tests {
         let metrics = service.collect_performance_metrics()?;
 
         service.check_alerts(&metrics)?;
-        let alerts = service.get_recent_alerts(10)?;
+        let alerts = service.get_recent_alerts(10).await?;
 
         let _alert_count = alerts.len(); // Validates API returns successfully
 
@@ -380,7 +380,7 @@ mod tests {
 
     #[test]
     fn test_alert_level_ordering() {
-        assert_eq!(AlertLevel::Info, AlertLevel::Info);
-        assert_ne!(AlertLevel::Warning, AlertLevel::Critical);
+        assert_eq!(AlertLevel::Low, AlertLevel::Low);
+        assert_ne!(AlertLevel::Medium, AlertLevel::Critical);
     }
 }

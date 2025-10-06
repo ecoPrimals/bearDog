@@ -179,13 +179,12 @@ mod tests {
             })
         }
 
-        /// Validates workflow
-        async fn validate_workflow(&self, _workflow: &Workflow) -> Result<(), Self::Error> {
-            Ok(())
-        }
-
         fn supported_types(&self) -> &Self::SupportedWorkflows {
             &MockWorkflowTypes
+        }
+
+        fn validate_workflow(&self, _workflow: &Workflow) -> Result<(), Self::Error> {
+            Ok(())
         }
     }
 

@@ -1,9 +1,9 @@
 // Learning systems and optimization algorithms
 //
 // ⚠️ DEPRECATED: This module is being migrated to the canonical location.
-// 
+//
 // **New Location**: `beardog_types::canonical::config::domains::ai_config`
-// 
+//
 // These types will be removed in v3.3.0 (Q1 2026). Please update your imports to:
 // ```rust
 // use beardog_types::canonical::config::domains::ai_config::{
@@ -43,8 +43,31 @@ pub enum LearningAlgorithmType {
     Federated,
 }
 
-// CLEANED: Duplicate OnlineLearningConfig removed - use canonical version:
-// use beardog_types::canonical::config::domains::ai_config::OnlineLearningConfig;
+// TODO(canonical-migration): OnlineLearningConfig needs to be exported from canonical
+// Temporary local definition until ai_config_original.rs is properly split and modularized
+/// Online learning configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OnlineLearningConfig {
+    /// Whether online learning is enabled
+    pub enabled: bool,
+    /// Learning rate for online updates
+    pub learning_rate: f64,
+    /// Batch size for online learning
+    pub batch_size: usize,
+    /// Update frequency in samples
+    pub update_frequency: usize,
+}
+
+impl Default for OnlineLearningConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            learning_rate: 0.001,
+            batch_size: 32,
+            update_frequency: 100,
+        }
+    }
+}
 
 /// Learning rate adaptation strategies
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -105,7 +128,7 @@ pub struct DomainConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FeatureSpaceConfig {
     /// Number of features
-    /// Number of num_features
+    /// Number of `num_features`
     pub num_features: u32,
     /// Feature types
     /// Collection of feature types
@@ -136,7 +159,7 @@ pub enum FeatureType {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LabelSpaceConfig {
     /// Number of labels
-    /// Number of num_labels
+    /// Number of `num_labels`
     pub num_labels: u32,
     /// Label type
     /// The label type value
@@ -201,10 +224,10 @@ pub struct FineTuningConfig {
     /// The fine tune learning rate value
     pub fine_tune_learning_rate: f64,
     /// Number of fine-tuning epochs
-    /// Number of fine_tune_epochs
+    /// Number of `fine_tune_epochs`
     pub fine_tune_epochs: u32,
     /// Gradual unfreezing
-    /// Whether gradual_unfreezing is enabled
+    /// Whether `gradual_unfreezing` is enabled
     pub gradual_unfreezing: bool,
 }
 
@@ -214,10 +237,10 @@ pub struct MetaLearningConfig {
     /// Meta-learning algorithm
     /// The algorithm value
     pub algorithm: MetaLearningAlgorithm,
-    /// Number of num_meta_train_tasks
+    /// Number of `num_meta_train_tasks`
     pub num_meta_train_tasks: u32,
     /// Number of shots per task
-    /// Number of num_shots
+    /// Number of `num_shots`
     pub num_shots: u32,
     /// Inner loop configuration
     /// The inner loop value
@@ -250,7 +273,7 @@ pub struct InnerLoopConfig {
     /// The learning rate value
     pub learning_rate: f64,
     /// Number of inner steps
-    /// Number of num_steps
+    /// Number of `num_steps`
     pub num_steps: u32,
     /// Inner optimizer
     /// The optimizer value
@@ -263,7 +286,7 @@ pub struct OuterLoopConfig {
     /// The learning rate value
     pub learning_rate: f64,
     /// Number of outer steps
-    /// Number of num_steps
+    /// Number of `num_steps`
     pub num_steps: u32,
     /// Outer optimizer
     /// The optimizer value
@@ -433,7 +456,7 @@ pub struct HyperparameterOptimization {
     /// The method value
     pub method: HyperparameterOptimizationMethod,
     /// Maximum trials
-    /// Number of max_trials
+    /// Number of `max_trials`
     pub max_trials: u32,
     /// Optimization timeout in seconds
     pub timeout_secs: u64,
@@ -509,7 +532,7 @@ pub enum LayerType {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ActivationFunction {
-    /// ReLU activation
+    /// `ReLU` activation
     Relu,
     /// Sigmoid activation
     Sigmoid,
@@ -517,7 +540,7 @@ pub enum ActivationFunction {
     Tanh,
     /// Softmax activation
     Softmax,
-    /// Leaky ReLU activation
+    /// Leaky `ReLU` activation
     LeakyRelu,
     /// ELU activation
     Elu,
@@ -571,10 +594,10 @@ pub enum PerformanceEstimationMethod {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct EarlyStoppingCriteria {
     /// Minimum epochs
-    /// Number of min_epochs
+    /// Number of `min_epochs`
     pub min_epochs: u32,
     /// Maximum epochs
-    /// Number of max_epochs
+    /// Number of `max_epochs`
     pub max_epochs: u32,
     /// Patience
     /// Number of patience
@@ -590,10 +613,10 @@ pub struct ResourceConstraints {
     /// The max memory gb value
     pub max_memory_gb: f64,
     /// Maximum GPU usage
-    /// Number of max_gpu
+    /// Number of `max_gpu`
     pub max_gpu_count: u32,
     /// Maximum CPU cores
-    /// Number of max_cpu_cores
+    /// Number of `max_cpu_cores`
     pub max_cpu_cores: u32,
 }
 
@@ -639,9 +662,9 @@ pub enum OptimizerType {
     Sgd,
     /// Adam optimizer
     Adam,
-    /// AdamW optimizer
+    /// `AdamW` optimizer
     AdamW,
-    /// RMSprop optimizer
+    /// `RMSprop` optimizer
     RmsProp,
     /// Adagrad optimizer
     Adagrad,
@@ -696,7 +719,7 @@ pub struct HyperparameterOptimizer {
     /// The method value
     pub method: HyperparameterOptimizationMethod,
     /// Completed trials
-    /// Number of completed_trials
+    /// Number of `completed_trials`
     pub completed_trials: u32,
     /// Best trial result
     /// Optional best trial

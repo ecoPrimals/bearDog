@@ -242,10 +242,7 @@ pub enum MetricValue {
     /// Represents histogram variant
     Histogram(Vec<f64>),
     /// Represents summary variant
-    Summary {
-        sum: f64,
-        count: u64,
-    },
+    Summary { sum: f64, count: u64 },
 }
 
 /// Comprehensive system metrics

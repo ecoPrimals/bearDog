@@ -1,7 +1,7 @@
 // Ecosystem Membership - Spectrum-based Access Control
 //
 // This module implements the EcosystemMembership pattern from the parent reference,
-// replacing binary whitelist/blacklist patterns with a nuanced spectrum of 
+// replacing binary allowlist/blocklist patterns with a nuanced spectrum of 
 // relationship levels that reflect biological ecosystem dynamics.
 
 use beardog_errors::{BearDogError, BearDogResult};
@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
-/// Ecosystem membership levels - replaces binary whitelist/blacklist patterns
+/// Ecosystem membership levels - replaces binary allowlist/blocklist patterns
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum EcosystemMembership {
     /// Trusted ecosystem maintainer with stewardship responsibilities

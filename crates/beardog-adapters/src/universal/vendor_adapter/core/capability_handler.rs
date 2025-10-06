@@ -389,8 +389,8 @@ pub struct SecuritySettings {
 
     pub oauth2_config: Option<OAuth2Config>,
 
-    /// Collection of ip whitelist
-    pub ip_whitelist: Vec<String>,
+    /// Collection of ip allowlist
+    pub ip_allowlist: Vec<String>,
 
     /// Optional rate limiting
     pub rate_limiting: Option<RateLimitConfig>,}

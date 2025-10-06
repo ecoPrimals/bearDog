@@ -17,6 +17,8 @@
 pub mod network;
 /// Security module
 pub mod security;
+/// Storage module
+pub mod storage;
 /// System module
 pub mod system;
 
@@ -24,7 +26,8 @@ pub mod system;
 pub use system::{defaults::*, limits::MAX_CONNECTIONS, versions::BEARDOG_VERSION};
 
 pub use network::{
-    addresses::{DEFAULT_DNS_PORT, DEFAULT_METRICS_BIND},
+    addresses::DEFAULT_DNS_PORT,
+    // Note: Use default_metrics_bind() for environment-aware configuration
     timeouts::CONNECTION_TIMEOUT,
 };
 

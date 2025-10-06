@@ -39,47 +39,16 @@ pub mod protocols;
 pub mod registry;
 
 // Re-export types for convenience
+// HealthCheckConfig is a domain-specific config for universal discovery
 pub use health::{HealthCheckConfig, HealthMonitor, ServiceHealthState};
 pub use load_balancing::{LoadBalancer, LoadBalancingAlgorithm, LoadBalancingConfig};
 pub use protocols::ModernServiceDiscovery;
 pub use registry::{ExtendedServiceInfo, ServiceRegistry, ServiceRegistryConfig};
 
-// Define missing config types locally (except HealthCheckConfig which comes from health module)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct CacheConfig {
-    /// Maximum number of cache entries
-    /// Number of max_entries
-    pub max_entries: usize,
-    /// Number of ttl_secs
-    pub ttl_secs: u64,
-}
+// Import canonical config types from network module
+use network::{CacheConfig as CanonicalCacheConfig, SecurityConfig as CanonicalSecurityConfig};
 
-impl Default for CacheConfig {
-    fn default() -> Self {
-        Self {
-            max_entries: 1000,
-            ttl_secs: 300,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct SecurityConfig {
-    /// Whether enable_tls is enabled
-    pub enable_tls: bool,
-    /// Verify TLS certificates
-    /// Whether verify_certificates is enabled
-    pub verify_certificates: bool,
-}
-
-impl Default for SecurityConfig {
-    fn default() -> Self {
-        Self {
-            enable_tls: true,
-            verify_certificates: true,
-        }
-    }
-}
+// Canonical config types are in submodules: network::CacheConfig, network::SecurityConfig, etc.
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DiscoveryProtocol {
@@ -118,7 +87,7 @@ pub enum DiscoveryProtocol {
 impl Hash for DiscoveryProtocol {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            DiscoveryProtocol::Http {
+            Self::Http {
                 endpoint,
                 headers: _,
             } => {
@@ -126,12 +95,12 @@ impl Hash for DiscoveryProtocol {
                 endpoint.hash(state);
                 // Skip headers as they're not hashable
             }
-            DiscoveryProtocol::Dns { domain, servers } => {
+            Self::Dns { domain, servers } => {
                 "Dns".hash(state);
                 domain.hash(state);
                 servers.hash(state);
             }
-            DiscoveryProtocol::Mdns {
+            Self::Mdns {
                 service_type,
                 interface,
                 timeout_ms,
@@ -143,7 +112,7 @@ impl Hash for DiscoveryProtocol {
                 timeout_ms.hash(state);
                 continuous_monitoring.hash(state);
             }
-            DiscoveryProtocol::Consul {
+            Self::Consul {
                 address,
                 datacenter,
             } => {
@@ -151,7 +120,7 @@ impl Hash for DiscoveryProtocol {
                 address.hash(state);
                 datacenter.hash(state);
             }
-            DiscoveryProtocol::Etcd {
+            Self::Etcd {
                 endpoints,
                 key_prefix,
                 timeout_ms,
@@ -165,16 +134,18 @@ impl Hash for DiscoveryProtocol {
     }
 }
 
-/// **UNIVERSAL DISCOVERY CONFIGURATION** - Master discovery config
+/// **UNIVERSAL DISCOVERY CONFIGURATION** - Primary discovery config
 ///
 /// This consolidates all discovery configurations into a single, comprehensive system
 /// that provides enterprise-grade service discovery capabilities across all environments.
+///
+/// **Updated**: Now uses canonical config types from the network module for cache and security.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UniversalDiscoveryConfig {
     /// Service identifier
     pub service_id: String,
     /// Discovery protocols to enable
-    /// Whether feature_protocols is enabled
+    /// Whether `feature_protocols` is enabled
     pub enabled_protocols: Vec<DiscoveryProtocol>,
     /// Service registry configuration
     pub registry_config: ServiceRegistryConfig,
@@ -184,10 +155,10 @@ pub struct UniversalDiscoveryConfig {
     pub load_balancing_config: LoadBalancingConfig,
     /// Network configuration
     pub network_config: NetworkConfig,
-    /// Cache configuration
-    pub cache_config: CacheConfig,
-    /// Security configuration
-    pub security_config: SecurityConfig,
+    /// Cache configuration (canonical from network module)
+    pub cache_config: CanonicalCacheConfig,
+    /// Security configuration (canonical from network module)
+    pub security_config: CanonicalSecurityConfig,
 }
 
 /// **UNIVERSAL SERVICE DISCOVERY** - The unified discovery orchestrator
@@ -275,8 +246,8 @@ impl Default for UniversalDiscoveryConfig {
             health_config: HealthCheckConfig::default(),
             load_balancing_config: LoadBalancingConfig::default(),
             network_config: NetworkConfig::default(),
-            cache_config: CacheConfig::default(),
-            security_config: SecurityConfig::default(),
+            cache_config: CanonicalCacheConfig::default(),
+            security_config: CanonicalSecurityConfig::default(),
         }
     }
 }
@@ -321,7 +292,7 @@ impl UniversalServiceDiscovery {
         // Start protocol handlers
         for (protocol, handler) in &self.discovery_instances {
             handler.start().map_err(|e| BearDogError::Network {
-                message: format!("Failed to start protocol handler for {:?}: {}", protocol, e),
+                message: format!("Failed to start protocol handler for {protocol:?}: {e}"),
                 category: beardog_errors::NetworkErrorCategory::Protocol,
             })?;
         }
@@ -342,8 +313,8 @@ impl UniversalServiceDiscovery {
     pub fn stop(&self) -> Result<(), BearDogError> {
         info!("Stopping Universal Discovery Service");
 
-        // Send shutdown signal
-        let _ = self.shutdown_tx.send(());
+        // Send shutdown signal (using try_send for non-async context)
+        let _ = self.shutdown_tx.try_send(());
 
         // Stop protocol handlers
         for (protocol, handler) in &self.discovery_instances {
@@ -384,7 +355,7 @@ impl UniversalServiceDiscovery {
         // Send registration event
         let _ = self.event_tx.send(DiscoveryEvent::ServiceRegistered {
             service_id: service.name.clone(),
-            service_name: service.name.clone(),
+            service_name: service.name,
         });
 
         Ok(())
@@ -421,7 +392,10 @@ impl UniversalServiceDiscovery {
     }
 
     /// Discover services by name
-    pub async fn discover_services(&self, service_name: &str) -> Result<Vec<ServiceInfo>, BearDogError> {
+    pub async fn discover_services(
+        &self,
+        service_name: &str,
+    ) -> Result<Vec<ServiceInfo>, BearDogError> {
         debug!("Discovering services with name: {}", service_name);
 
         let mut discovered_services = Vec::new();
@@ -452,9 +426,9 @@ impl UniversalServiceDiscovery {
     }
 
     /// Get the health status of a specific service
-    /// Gets service_health
-    /// Gets service_health
-    pub fn get_service_health(
+    /// Gets `service_health`
+    /// Gets `service_health`
+    pub const fn get_service_health(
         &self,
         service_id: &str,
     ) -> Result<Option<HealthStatus>, BearDogError> {
@@ -467,8 +441,8 @@ impl UniversalServiceDiscovery {
     }
 
     /// Get comprehensive discovery statistics
-    /// Gets discovery_statistics
-    /// Gets discovery_statistics
+    /// Gets `discovery_statistics`
+    /// Gets `discovery_statistics`
     pub fn get_discovery_statistics(&self) -> Result<DiscoveryStatistics, BearDogError> {
         let total_services = self.discovery_instances.len();
         let stats = self.health_monitor.get_health_statistics();
@@ -491,8 +465,8 @@ impl UniversalServiceDiscovery {
     }
 
     /// Get count of healthy services
-    /// Gets healthy_service_count
-    /// Gets healthy_service_count
+    /// Gets `healthy_service_count`
+    /// Gets `healthy_service_count`
     pub fn get_healthy_service_count(&self) -> Result<usize, BearDogError> {
         let stats = self.health_monitor.get_health_statistics();
         Ok(stats.healthy_services)
@@ -507,7 +481,7 @@ impl UniversalServiceDiscovery {
         unique_services.into_values().collect()
     }
 
-    /// Gets protocol_statistics
+    /// Gets `protocol_statistics`
     fn get_protocol_statistics(
         &self,
     ) -> Result<HashMap<DiscoveryProtocol, ProtocolStatistics>, BearDogError> {
@@ -520,7 +494,7 @@ impl UniversalServiceDiscovery {
     }
 
     /// Gets uptime
-    fn get_uptime(&self) -> Duration {
+    const fn get_uptime(&self) -> Duration {
         // This would be implemented with actual start time tracking
         Duration::from_secs(0)
     }
@@ -530,13 +504,13 @@ impl UniversalServiceDiscovery {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiscoveryStatistics {
     /// Total number of registered services
-    /// Number of total_services
+    /// Number of `total_services`
     pub total_services: usize,
     /// Number of services currently healthy
-    /// Number of healthy_services
+    /// Number of `healthy_services`
     pub healthy_services: usize,
     /// Number of services currently unhealthy
-    /// Number of unhealthy_services
+    /// Number of `unhealthy_services`
     pub unhealthy_services: usize,
     /// Statistics broken down by discovery protocol
     /// Mapping of protocol statistics
@@ -549,13 +523,13 @@ pub struct DiscoveryStatistics {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ProtocolStatistics {
     /// Total number of services discovered via this protocol
-    /// Number of services_discovered
+    /// Number of `services_discovered`
     pub services_discovered: usize,
     /// Total number of discovery requests processed
-    /// Number of discovery_requests
+    /// Number of `discovery_requests`
     pub discovery_requests: usize,
     /// Total number of service registration requests
-    /// Number of registration_requests
+    /// Number of `registration_requests`
     pub registration_requests: usize,
     /// Total number of errors encountered
     /// Number of errors
@@ -587,6 +561,12 @@ pub trait ProtocolHandler: Send + Sync + std::fmt::Debug {
 pub struct MockProtocolHandler {
     /// Handler identifier
     pub id: String,
+}
+
+impl Default for MockProtocolHandler {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MockProtocolHandler {

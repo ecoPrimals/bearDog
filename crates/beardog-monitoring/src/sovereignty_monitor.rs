@@ -214,32 +214,34 @@ pub enum ViolationSeverity {
     Critical,
 }
 
-/// Monitoring configuration
+/// Sovereignty monitoring configuration
+/// 
+/// This is a specialized configuration for sovereignty monitoring tasks.
+/// Different from the general monitoring config.
 #[derive(Debug, Clone)]
-pub struct MonitoringConfig {
+pub struct SovereigntyMonitoringConfig {
     /// How often to run sovereignty assessments
-    /// The assessment interval value
     pub assessment_interval: Duration,
 
     /// Maximum violations to track
-    /// Number of max_violations
     pub max_violations: usize,
 
     /// Minimum sovereignty score to maintain
-    /// The min sovereignty score value
     pub min_sovereignty_score: f64,
 
     /// Enable real-time violation alerts
-    /// Whether enable_alerts is enabled
     pub enable_alerts: bool,
 
     /// Collection of monitored paths
     pub monitored_paths: Vec<String>,
 
     /// Hardcoding patterns to detect
-    /// Collection of violation patterns
     pub violation_patterns: Vec<ViolationPattern>,
 }
+
+// Backward compatibility alias - will be removed in v4.0
+#[deprecated(since = "3.1.0", note = "Use SovereigntyMonitoringConfig instead")]
+pub type MonitoringConfig = SovereigntyMonitoringConfig;
 
 #[derive(Debug, Clone)]
 pub struct ViolationPattern {

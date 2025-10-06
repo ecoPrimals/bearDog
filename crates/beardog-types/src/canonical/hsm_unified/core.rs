@@ -1,43 +1,99 @@
-// Core HSM Types and Configuration
+//! Core HSM Types and Configuration
+//!
+//! Hardware Security Module integration types supporting multiple HSM backends
+//! including software HSMs, hardware devices, cloud services, and PKCS#11 interfaces.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Core HSM configuration
+/// Core HSM Configuration
+///
+/// Central configuration for Hardware Security Module integration.
+/// Supports multiple HSM types (hardware, software, cloud) with
+/// comprehensive algorithm and capability detection.
+///
+/// ## Example
+///
+/// ```rust
+/// use beardog_types::canonical::hsm_unified::core::{HsmCoreConfig, HsmType};
+///
+/// let config = HsmCoreConfig {
+///     enabled: true,
+///     hsm_type: HsmType::Hardware,
+///     name: "production-hsm".to_string(),
+///     version: "2.0".to_string(),
+///     ..Default::default()
+/// };
+/// ```
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HsmCoreConfig {
-    /// HSM enabled
-    /// Whether feature is enabled
+    /// Whether HSM integration is enabled
+    ///
+    /// When disabled, operations fall back to software implementations.
     pub enabled: bool,
 
-    /// HSM type
-    /// The hsm type value
+    /// Type of HSM backend being used
+    ///
+    /// Determines which HSM provider to use (hardware, software, cloud, etc.).
     pub hsm_type: HsmType,
 
-    /// HSM name/identifier
-    /// Name of the item
+    /// Human-readable HSM name or identifier
+    ///
+    /// Used for logging, monitoring, and multi-HSM configurations.
     pub name: String,
 
-    /// HSM version
-    /// The version value
+    /// HSM version string
+    ///
+    /// Version of the HSM hardware, firmware, or software implementation.
     pub version: String,
 
-    /// Supported algorithms
-    /// Collection of supported algorithms
+    /// Cryptographic algorithms supported by this HSM
+    ///
+    /// List of algorithms that this HSM can perform (RSA, ECDSA, AES, etc.).
     pub supported_algorithms: Vec<HsmAlgorithm>,
 
-    /// HSM capabilities
-    /// Collection of capabilities
+    /// HSM capabilities and features
+    ///
+    /// Functional capabilities like key generation, signing, encryption, etc.
     pub capabilities: Vec<HsmCapability>,
 
-    /// Configuration metadata
-    /// Mapping of metadata
+    /// Additional HSM-specific metadata
+    ///
+    /// Custom key-value pairs for HSM-specific configuration options.
     pub metadata: HashMap<String, String>,
 }
 
-/// HSM types
+/// HSM Type - Hardware Security Module Backend Types
+///
+/// Defines the various types of HSM backends supported by BearDog.
+/// Each type has different characteristics, performance profiles, and use cases.
+///
+/// ## HSM Types
+///
+/// - **Software** - Software-based HSM (default, no hardware required)
+/// - **Hardware** - Dedicated HSM hardware (highest security)
+/// - **Network** - Network-attached HSM (shared across systems)
+/// - **Cloud** - Cloud-based HSM service (AWS CloudHSM, Azure Key Vault)
+/// - **UsbToken** - USB security token (YubiKey, etc.)
+/// - **SmartCard** - Smart card HSM
+/// - **Mobile** - Mobile device secure enclave
+/// - **Pkcs11** - PKCS#11 standard interface HSM
+///
+/// ## Example
+///
+/// ```rust
+/// use beardog_types::canonical::hsm_unified::core::HsmType;
+///
+/// // Production: Use hardware HSM for maximum security
+/// let prod_hsm = HsmType::Hardware;
+///
+/// // Development: Use software HSM for convenience
+/// let dev_hsm = HsmType::Software;
+///
+/// // Cloud deployment: Use cloud HSM service
+/// let cloud_hsm = HsmType::Cloud;
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-/// Types of hsm
 pub enum HsmType {
     /// Software-based HSM implementation (default)
     #[default]

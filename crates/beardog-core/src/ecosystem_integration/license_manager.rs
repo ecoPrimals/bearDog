@@ -49,6 +49,7 @@ pub struct LicenseValidation {
 }
 
 impl BearDogCore {
+    #[allow(dead_code)] // TODO: Enable when licensing module is activated
     pub(crate) async fn initialize_licensing(&self) -> Result<(), BearDogError> {
         info!("📜 Initializing context-aware licensing system");
 
@@ -60,7 +61,8 @@ impl BearDogCore {
         Ok(())
     }
 
-    /// Loads license_configuration
+    /// Loads `license_configuration`
+    #[allow(dead_code)] // TODO: Enable when licensing module is activated
     fn load_license_configuration(&self) -> Result<LicenseInfo, BearDogError> {
         debug!("📄 Loading license configuration");
 
@@ -82,7 +84,8 @@ impl BearDogCore {
         })
     }
 
-    /// Validates license_integrity
+    /// Validates `license_integrity`
+    #[allow(dead_code)] // TODO: Enable when licensing module is activated
     fn validate_license_integrity(&self, license: &LicenseInfo) -> Result<(), BearDogError> {
         debug!("🔍 Validating license integrity");
 
@@ -97,6 +100,7 @@ impl BearDogCore {
         Ok(())
     }
 
+    #[allow(dead_code)] // TODO: Enable when licensing module is activated
     fn register_license_with_ecosystem(&self, _license: &LicenseInfo) -> Result<(), BearDogError> {
         debug!("🌐 Registering license with ecosystem");
 
@@ -112,8 +116,8 @@ impl BearDogCore {
     /// and any active restrictions. This provides a complete view of
     ///
     /// # Returns
-    /// Gets license_status
-    /// Gets license_status
+    /// Gets `license_status`
+    /// Gets `license_status`
     pub fn get_license_status(&self) -> LicenseValidation {
         LicenseValidation {
             is_valid: true,
@@ -151,6 +155,7 @@ impl BearDogCore {
             .contains(&capability.to_string()))
     }
 
+    #[allow(dead_code)] // TODO: Enable when licensing module is activated
     pub(crate) fn refresh_license(&self) -> Result<(), BearDogError> {
         info!("🔄 Refreshing license information");
 

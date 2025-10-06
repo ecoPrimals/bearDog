@@ -1,7 +1,7 @@
 // # Pure Genetics Evolution Demonstration
 //
 // This example demonstrates the ecosystem evolution genetics capabilities
-// from the horizontal gene transfer integration with the Squirrel team,
+// from horizontal gene transfer integration across ecosystem primals,
 // using only the beardog-genetics crate directly.
 
 use beardog_genetics::ecosystem_evolution::{
@@ -9,15 +9,12 @@ use beardog_genetics::ecosystem_evolution::{
     EcosystemGeneticEngine, EcosystemMembership, HierarchicalPattern, TrustEvolution,
 };
 use beardog_types::canonical::HealthStatus;
-use chrono::Utc;
-use std::collections::HashMap;
-use tokio;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧬 BearDog Pure Genetics Evolution Demonstration");
     println!("===============================================");
-    println!("🌱 Showcasing Horizontal Gene Transfer from Squirrel Team");
+    println!("🌱 Showcasing Horizontal Gene Transfer Across Ecosystem Primals");
     println!();
 
     // === Initialize Ecosystem Genetic Engine ===
@@ -48,8 +45,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let test_patterns = vec![
         (
-            "Whitelist Pattern",
-            BinaryAccessPattern::Whitelist {
+            "Allowlist Pattern",
+            BinaryAccessPattern::Allowlist {
                 allowed_entities: vec![
                     "alice@security-team.com".to_string(),
                     "bob@dev-team.com".to_string(),
@@ -156,10 +153,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let coordination_scenarios = vec![
         (
-            "Master/Slave",
-            HierarchicalPattern::MasterSlave {
-                master: "control_node".to_string(),
-                slaves: vec!["worker_1".to_string(), "worker_2".to_string()],
+            "Primary/Replica",
+            HierarchicalPattern::PrimaryReplica {
+                primary: "control_node".to_string(),
+                replicas: vec!["worker_1".to_string(), "worker_2".to_string()],
             },
         ),
         (
@@ -246,19 +243,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 PHASE 7: Legacy System Migration");
     println!("-----------------------------------");
 
-    let legacy_whitelist = vec![
+    let legacy_allowlist = vec![
         "admin@company.com".to_string(),
         "dev-lead@company.com".to_string(),
     ];
 
-    let legacy_blacklist = vec!["spam-bot@malicious.com".to_string()];
+    let legacy_blocklist = vec!["spam-bot@malicious.com".to_string()];
 
     println!("📋 Legacy Systems to Migrate:");
-    println!("   ✅ Whitelist Entries: {}", legacy_whitelist.len());
-    println!("   ❌ Blacklist Entries: {}", legacy_blacklist.len());
+    println!("   ✅ Allowlist Entries: {}", legacy_allowlist.len());
+    println!("   ❌ Blocklist Entries: {}", legacy_blocklist.len());
 
     let migrated_memberships =
-        migrate_from_binary_patterns(legacy_whitelist.clone(), legacy_blacklist.clone())?;
+        migrate_from_binary_patterns(legacy_allowlist.clone(), legacy_blocklist.clone())?;
 
     println!(
         "🌱 Migration Results: {} total memberships created",

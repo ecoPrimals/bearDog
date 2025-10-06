@@ -13,7 +13,7 @@ pub struct PerformanceConfig {
 
     /// Request rate limiting
     /// The rate limiting value
-    pub rate_limiting: RateLimitConfig,
+    pub rate_limiting: super::super::config::domains::network::RateLimitConfig,
 
     /// Caching configuration
     /// The caching value
@@ -35,7 +35,7 @@ impl Default for PerformanceConfig {
     fn default() -> Self {
         Self {
             max_concurrent_requests: 100,
-            rate_limiting: RateLimitConfig::default(),
+            rate_limiting: super::super::config::domains::network::RateLimitConfig::default(),
             caching: CachingConfig::default(),
             compression: CompressionConfig::default(),
             buffer: BufferConfig::default(),
@@ -44,54 +44,27 @@ impl Default for PerformanceConfig {
     }
 }
 
-/// Rate limiting configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RateLimitConfig {
-    /// Rate limiting enabled
-    /// Whether feature is enabled
-    pub enabled: bool,
+/// Rate limiting configuration (DEPRECATED - use canonical)
+///
+/// **MIGRATION**: Use `super::super::config::domains::network::RateLimitConfig` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use super::super::config::domains::network::RateLimitConfig instead"
+)]
+pub type RateLimitConfig = super::super::config::domains::network::RateLimitConfig;
 
-    /// Requests per second
-    /// The requests per second value
-    pub requests_per_second: f64,
-
-    /// Burst capacity
-    /// Number of `burst_capacity`
-    pub burst_capacity: u32,
-
-    /// Rate limit window
-    /// The window value
-    pub window: Duration,
-
-    /// Rate limit algorithm
-    /// The algorithm value
-    pub algorithm: RateLimitAlgorithm,
-}
-
-impl Default for RateLimitConfig {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            requests_per_second: 100.0,
-            burst_capacity: 200,
-            window: Duration::from_secs(60),
-            algorithm: RateLimitAlgorithm::TokenBucket,
-        }
-    }
-}
-
-/// Rate limiting algorithms
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum RateLimitAlgorithm {
-    /// `TokenBucket` variant
-    TokenBucket,
-    /// `LeakyBucket` variant
-    LeakyBucket,
-    /// `FixedWindow` variant
-    FixedWindow,
-    /// `SlidingWindow` variant
-    SlidingWindow,
-}
+/// Rate limiting algorithms (DEPRECATED - use canonical RateLimitStrategy)
+///
+/// **MIGRATION**: Use `super::super::config::domains::network::RateLimitStrategy` instead.
+///
+/// This type alias will be removed in v3.3.0.
+#[deprecated(
+    since = "3.1.0",
+    note = "Use super::super::config::domains::network::RateLimitStrategy instead"
+)]
+pub type RateLimitAlgorithm = super::super::config::domains::network::RateLimitStrategy;
 
 /// Caching configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

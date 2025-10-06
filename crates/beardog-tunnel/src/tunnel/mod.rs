@@ -12,7 +12,7 @@ pub use session::*;
 
 pub use beardog_errors::BearDogError;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SecurityLevel {
     /// Represents low variant
     Low,

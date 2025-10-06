@@ -78,6 +78,6 @@ impl CryptoProvider for RustCryptoProvider {
         derivation_data: &[u8],
     ) -> Result<Vec<u8>, BearDogError>> {
 
-        let mut derived_key = master_key.to_vec();
+        let mut derived_key = root_key.to_vec();
         derived_key.extend_from_slice(derivation_data);
         Ok(derived_key)

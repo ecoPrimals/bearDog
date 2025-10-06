@@ -9,14 +9,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticAlgorithmConfig {
-    /// Number of population_size
+    /// Number of `population_size`
     pub population_size: usize,
     /// The mutation rate value
     pub mutation_rate: f64,
     /// The crossover rate value
     pub crossover_rate: f64,
     /// Maximum number of generations to evolve
-    /// Number of max_generations
+    /// Number of `max_generations`
     pub max_generations: usize,
     /// The fitness threshold value
     pub fitness_threshold: f64,
@@ -33,15 +33,15 @@ pub struct GeneticAlgorithmConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PartnershipConfig {
     /// Maximum number of partners in key sharing
-    /// Number of max_partners
+    /// Number of `max_partners`
     pub max_partners: usize,
     /// The min trust score value
     pub min_trust_score: f64,
     /// Partnership duration in seconds
-    /// Number of partnership_duration_secs
+    /// Number of `partnership_duration_secs`
     pub partnership_duration_secs: u64,
     /// Enable automatic partner discovery
-    /// Whether auto_discovery is enabled
+    /// Whether `auto_discovery` is enabled
     pub auto_discovery: bool,
 }
 
@@ -49,13 +49,13 @@ pub struct PartnershipConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CorporateAccessControl {
     /// Block all corporate surveillance attempts
-    /// Whether block_corporate_access is enabled
+    /// Whether `block_corporate_access` is enabled
     pub block_corporate_access: bool,
     /// List of explicitly blocked corporate entities
     /// Collection of blocked entities
     pub blocked_entities: Vec<String>,
     /// Enable privacy protection mechanisms
-    /// Whether privacy_protection is enabled
+    /// Whether `privacy_protection` is enabled
     pub privacy_protection: bool,
     /// The sovereignty level value
     pub sovereignty_level: SovereigntyLevel,
@@ -64,18 +64,18 @@ pub struct CorporateAccessControl {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrivacyProtectionSettings {
     /// Enable zero-knowledge proof systems
-    /// Whether zero_knowledge_proofs is enabled
+    /// Whether `zero_knowledge_proofs` is enabled
     pub zero_knowledge_proofs: bool,
-    /// Whether homomorphic_encryption is enabled
+    /// Whether `homomorphic_encryption` is enabled
     pub homomorphic_encryption: bool,
     /// Enable secure multi-party computation
-    /// Whether secure_multiparty_computation is enabled
+    /// Whether `secure_multiparty_computation` is enabled
     pub secure_multiparty_computation: bool,
     /// Data minimization and retention policies
-    /// Whether data_minimization is enabled
+    /// Whether `data_minimization` is enabled
     pub data_minimization: bool,
     /// Anonymous credential systems
-    /// Whether anonymous_credentials is enabled
+    /// Whether `anonymous_credentials` is enabled
     pub anonymous_credentials: bool,
 }
 
@@ -89,7 +89,7 @@ pub struct DiversityConfig {
     /// The diversity metric value
     pub diversity_metric: String,
     /// Enable adaptive mutation rates
-    /// Whether adaptive_mutation is enabled
+    /// Whether `adaptive_mutation` is enabled
     pub adaptive_mutation: bool,
     /// The immigration rate value
     pub immigration_rate: f64,
@@ -102,13 +102,13 @@ pub struct HumanIdentityConfig {
     /// Collection of biometric auth
     pub biometric_auth: Vec<String>,
     /// Multi-factor authentication requirements
-    /// Whether mfa_required is enabled
+    /// Whether `mfa_required` is enabled
     pub mfa_required: bool,
     /// Identity verification threshold
     /// The verification threshold value
     pub verification_threshold: f64,
     /// Enable continuous authentication
-    /// Whether continuous_auth is enabled
+    /// Whether `continuous_auth` is enabled
     pub continuous_auth: bool,
 }
 
@@ -119,10 +119,10 @@ pub struct GeneticEvolutionConfig {
     /// The evolution speed value
     pub evolution_speed: f64,
     /// Adaptation to environmental changes
-    /// Whether environmental_adaptation is enabled
+    /// Whether `environmental_adaptation` is enabled
     pub environmental_adaptation: bool,
     /// Key strength evolution parameters
-    /// Whether strength_evolution is enabled
+    /// Whether `strength_evolution` is enabled
     pub strength_evolution: bool,
 }
 
@@ -179,7 +179,7 @@ pub struct PlatformVerification {
     /// Hardware security level assessment
     /// The hardware security level value
     pub hardware_security_level: String,
-    /// Whether bootloader_locked is enabled
+    /// Whether `bootloader_locked` is enabled
     pub bootloader_locked: bool,
 }
 
@@ -217,7 +217,7 @@ pub struct BiomeAutonomousRules {
 /// Human permissions and partnership configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanPermissions {
-    /// Whether consent_required is enabled
+    /// Whether `consent_required` is enabled
     pub consent_required: bool,
     /// The partnership criteria value
     pub partnership_criteria: PartnershipCriteria,
@@ -246,10 +246,10 @@ pub struct PartnershipCriteria {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PartnershipDurationLimits {
     /// Maximum partnership duration in seconds
-    /// Number of max_partnership_duration_seconds
+    /// Number of `max_partnership_duration_seconds`
     pub max_partnership_duration_seconds: u64,
     /// Default partnership duration in seconds
-    /// Number of default_partnership_duration_seconds
+    /// Number of `default_partnership_duration_seconds`
     pub default_partnership_duration_seconds: u64,
     /// Collection of renewal requirements
     pub renewal_requirements: Vec<String>,
@@ -269,7 +269,7 @@ pub struct TrustRequirements {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneticEvolutionPreferences {
     /// Whether genetic evolution is allowed
-    /// Whether allow_evolution is enabled
+    /// Whether `allow_evolution` is enabled
     pub allow_evolution: bool,
     /// The crossover preferences value
     pub crossover_preferences: CrossoverPreferences,
@@ -304,7 +304,7 @@ pub struct FitnessCriterion {
     pub measurement_method: String,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CorporateAccessLevel {
     /// No corporate access allowed
     None,

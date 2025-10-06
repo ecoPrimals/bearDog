@@ -88,7 +88,7 @@ pub struct MemoryStats {
     pub avg_allocation_size: u64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum PerformanceGrade {
     /// Represents excellent variant
     Excellent, // > 1M ops/sec

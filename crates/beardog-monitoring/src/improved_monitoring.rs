@@ -13,7 +13,7 @@ use tracing::{debug, info};
 
 /// Monitor System Health Improved operation.
 pub async fn monitor_system_health_improved(Vec<&str>,
-    monitoring_config: &MonitoringConfig,
+    monitoring_config: &ImprovedMonitoringConfig,
 ) -> Result<ProcessingOutcome<SystemHealthResult, BearDogError>> {
     let _start_time = Instant::now();
     info!(
@@ -136,7 +136,7 @@ pub async fn collect_metrics_improved(Vec<MetricSource>,
             timeout_seconds: 10,
 
 /// Validates monitoring_config_improved
-fn validate_monitoring_config_improved(&MonitoringConfig,
+fn validate_monitoring_config_improved(&ImprovedMonitoringConfig,
 ) -> Result<ValidationOutcome, BearDogError> {
     debug!(
         "🔍 Validating monitoring configuration: {}",
@@ -195,7 +195,7 @@ fn validate_monitoring_config_improved(&MonitoringConfig,
         criteria,
             started_at: chrono::Utc::now(),
             completed_at: chrono::Utc::now(&str,
-    _config: &MonitoringConfig,
+    _config: &ImprovedMonitoringConfig,
 ) -> Result<SystemHealthResult, BearDogError> {
     debug!("🔍 Monitoring component health: {}", component);
 
@@ -287,22 +287,23 @@ async fn process_individual_alert(&Alert,
         "✅ Alert processing completed: {} ({} actions taken)",
         alert.alert_id, notifications_sent
 
+/// Improved monitoring configuration
+/// 
+/// This is a specialized configuration for improved monitoring features.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct MonitoringConfig {
+pub struct ImprovedMonitoringConfig {
     pub config_id: String,
-    /// Number of collection_interval_seconds
     pub collection_interval_seconds: u64,
-    /// Number of retention_days
     pub retention_days: u32,
-    /// The cpu threshold percent value
     pub cpu_threshold_percent: f64,
-    /// The memory threshold percent value
     pub memory_threshold_percent: f64,
-    /// The disk threshold percent value
     pub disk_threshold_percent: f64,
-    /// Whether enable_alerting is enabled
     pub enable_alerting: bool,
 }
+
+// Backward compatibility alias - will be removed in v4.0
+#[deprecated(since = "3.1.0", note = "Use ImprovedMonitoringConfig instead")]
+pub type MonitoringConfig = ImprovedMonitoringConfig;
 
 pub struct MetricCollectionConfig {
     /// Number of batch_size
@@ -437,8 +438,8 @@ pub struct AlertProcessingResult {
 mod tests {
     use super::*;
     /// Creates test_monitoring_config
-    fn create_test_monitoring_config() -> MonitoringConfig {
-        MonitoringConfig {
+    fn create_test_monitoring_config() -> ImprovedMonitoringConfig {
+        ImprovedMonitoringConfig {
             config_id: "test_monitoring_config".to_string(),
             retention_days: 7,
             cpu_threshold_percent: 80.0,

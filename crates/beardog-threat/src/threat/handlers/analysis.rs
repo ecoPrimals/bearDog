@@ -9,30 +9,8 @@ use std::collections::HashMap;
 use crate::threat::types::{DetectionRule, ThreatType};
 use beardog_errors::BearDogError;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ThreatDetectionConfig {
-    pub enable_realtime_detection: bool,
-    /// Number of `max_concurrent_analyses`
-    /// Number of `max_concurrent_analyses`
-    pub max_concurrent_analyses: usize,
-    /// The detection sensitivity value
-    /// The detection sensitivity value
-    pub detection_sensitivity: f64,
-    /// Whether `enable_threat_feeds` is enabled
-    /// Whether `enable_threat_feeds` is enabled
-    pub enable_threat_feeds: bool,
-}
-
-impl Default for ThreatDetectionConfig {
-    fn default() -> Self {
-        Self {
-            enable_realtime_detection: true,
-            max_concurrent_analyses: 10,
-            detection_sensitivity: 0.7,
-            enable_threat_feeds: true,
-        }
-    }
-}
+// Use canonical threat detection configuration
+use beardog_types::canonical::config::domains::threat::ThreatDetectionConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreatAnalysisMetrics {
